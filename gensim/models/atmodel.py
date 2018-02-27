@@ -54,10 +54,7 @@ logger = logging.getLogger('gensim.models.atmodel')
 
 class AuthorTopicState(LdaState):
     """
-    NOTE: distributed mode not available yet in the author-topic model. This AuthorTopicState
-    object is kept so that when the time comes to implement it, it will be easier.
-
-    Encapsulate information for distributed computation of AuthorTopicModel objects.
+    Encapsulate information for computation of AuthorTopicModel objects.
 
     Objects of this class are sent over the network, so try to keep them lean to
     reduce traffic.
@@ -75,6 +72,11 @@ class AuthorTopicState(LdaState):
             Initialize topic parameters.
         gamma_shape: int
             Initialize topic parameters.
+            
+        Note
+        ----
+        Distributed mode not available yet in the author-topic model. This AuthorTopicState
+        object is kept so that when the time comes to implement it, it will be easier.
 
         """
         self.eta = eta
@@ -164,16 +166,16 @@ class AuthorTopicModel(LdaModel):
 
         Parameters
         ----------
-        corpus : iterable of iterable of (int, int)
+        corpus : iterable of list of (int, number)
             Corpus of documents in appropriate format(BoW, UCI etc).
         num_topics : int, optional
             Number of topics to be extracted from the training corpus.
-        id2word : dict of {int: str}, optional
+        id2word : dict of (int: str), optional
             A mapping from word ids (integers) to words (strings).
-        author2doc : dict of {str: list of int}
+        author2doc : dict of (str: list of int)
             A dictionary where keys are the names of authors and values are lists of
             documents that the author contributes to.
-        doc2author : dict of {int: list of str}
+        doc2author : dict of (int: list of str)
             A dictionary where the keys are document IDs and the values are lists of author names.
         passes : int
             Number of times the model makes a pass over the entire training data.
@@ -345,7 +347,7 @@ class AuthorTopicModel(LdaModel):
 
         Parameters
         ----------
-        corpus : iterable of iterable of (int, int)
+        corpus : iterable of list of (int, number)
             Corpus of documents.
         """
         if self.serialized:
@@ -412,10 +414,10 @@ class AuthorTopicModel(LdaModel):
         ----------
         chunk : int
             The chunk numer of the sparse document vector on which inference needs to be done.
-        author2doc : dict of {str: list of int}
+        author2doc : dict of (str: list of int)
             A dictionary where keys are the names of authors and values are lists of
             documents that the author contributes to.
-        doc2author : dict of {int: list of str}
+        doc2author : dict of (int: list of str)
             A dictionary where the keys are document IDs and the values are lists of author names.
         rhot : float
             Value of rho for conducting inference on documents.
@@ -542,10 +544,10 @@ class AuthorTopicModel(LdaModel):
         ----------
         chunk : int
             The chunk numer of the sparse document vector on which inference needs to be done.
-        author2doc : dict of {str: list of ints}
+        author2doc : dict of (str: list of ints)
             A dictionary where keys are the names of authors and values are lists of
             documents that the author contributes to.
-        doc2author : dict of {int: list of str}
+        doc2author : dict of (int: list of str)
             A dictionary where the keys are document IDs and the values are lists of author names.
         rhot : float
             Value of rho for conducting inference on documents.
@@ -642,12 +644,12 @@ class AuthorTopicModel(LdaModel):
 
         Parameters
         ----------
-        corpus : iterable of iterable of (int, int)
+        corpus : iterable of list of (int, number)
             The corpus with which the author-topic model should be updated.
-        author2doc : dict of {str: list of ints}
+        author2doc : dict of (str: list of ints)
             A dictionary where keys are the names of authors and values are lists of
             documents that the author contributes to.
-        doc2author : dict of {int: list of str}
+        doc2author : dict of (int: list of str)
             A dictionary where the keys are document IDs and the values are lists of author names.
         chunksize : int
             Controls the size of the mini-batches.
@@ -910,10 +912,10 @@ class AuthorTopicModel(LdaModel):
         ----------
         chunk : int
             The chunk numer of the sparse document vector on which inference needs to be done.
-        author2doc : dict of {str: list of ints}
+        author2doc : dict of (str: list of ints)
             A dictionary where keys are the names of authors and values are lists of
             documents that the author contributes to.
-        doc2author : dict of {int: list of str}
+        doc2author : dict of (int: list of str)
             A dictionary where the keys are document IDs and the values are lists of author names.
         chunk_doc_idx : numpy.ndarray
             Assigns the value for document index.
@@ -1085,8 +1087,6 @@ class AuthorTopicModel(LdaModel):
         Return topic distribution for input author as a list of
         (topic_id, topic_probabiity) 2-tuples.
 
-        Ignores topics with probaility less than `eps`.
-
         Do not call this method directly, instead use `model[author_names]`.
 
         Parameters
@@ -1095,6 +1095,10 @@ class AuthorTopicModel(LdaModel):
             Name of the author for which the topic distribution needs to be estimated.
         eps : float, optional
             Sets the minimum probability value for showing the topics of a given author.
+        
+        Warnings
+        --------
+        Ignores topics with probaility less than `eps`.
         
         Returns
         -------
