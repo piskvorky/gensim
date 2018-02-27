@@ -80,32 +80,6 @@ SLIDING_WINDOW_SIZES = {
 class CoherenceModel(interfaces.TransformationABC):
     """Objects of this class allow for building and maintaining a model for topic coherence.
 
-    The main methods are:
-
-    1. Constructor, which initializes the four stage pipeline by accepting a coherence measure,
-    2. The :meth:`~gensim.models.coherencemodel.get_coherence` method, which returns the topic coherence.
-
-    Pipeline phases can also be executed individually. Methods for doing this are:
-
-    1. :meth:`~gensim.models.coherencemodel.CoherenceModel.segment_topics`,
-        which performs segmentation of the given topics into their comparison sets.
-    2. :meth:`~gensim.models.coherencemodel.CoherenceModel.estimate_probabilities`,
-        which accumulates word occurrence stats from the given corpus or texts.
-        The output of this is also cached on the :class:`~gensim.models.coherencemodel.CoherenceModel`,
-        so calling this method can be used as a precomputation step for the next phase.
-    3. :meth:`~gensim.models.coherencemodel.CoherenceModel.get_coherence_per_topic`, which uses the segmented topics and estimated
-        probabilities to compute the coherence of each topic. This output can be used to rank topics in order of most
-        coherent to least. Such a ranking is useful if the intended use case of a topic model is document exploration
-        by a human. It is also useful for filtering out incoherent topics (keep top-n from ranked list).
-    4. :meth:`~gensim.models.coherencemodel.CoherenceModel.aggregate_measures`,
-        which uses the pipeline's aggregation method to compute the overall coherence from the topic coherences.
-
-    One way of using this feature is through providing a trained topic model. A dictionary has to be explicitly
-    provided if the model does not contain a dictionary already::
-
-        cm = CoherenceModel(model=tm, corpus=corpus, coherence='u_mass')  # tm is the trained topic model
-        cm.get_coherence()
-
     Another way of using this feature is through providing tokenized topics such as::
 
         topics = [['human', 'computer', 'system', 'interface'],
@@ -115,11 +89,28 @@ class CoherenceModel(interfaces.TransformationABC):
         cm.get_coherence()
 
     Model persistency is achieved via its load/save methods.
+
+    #TODO: fix annotation for example
+    Example
+    ---------
+    >>> # One way of using this feature is through providing a trained topic model. A dictionary has to be explicitly
+    >>> # provided if the model does not contain a dictionary already:
+    >>>
+    >>> from gensim.test.utils import common_corpus, common_dictionary
+    >>> from gensim.models.ldamodel import LdaModel
+    >>> from gensim.models.coherencemodel import CoherenceModel
+    >>> ldamod = LdaModel(common_corpus,100, common_dictionary)
+    >>> # ldamod is the trained topic model.
+    >>> cm = CoherenceModel(model=ldamod, corpus=common_corpus, coherence='u_mass')
+    >>> cm.get_coherence()
+    -14.576100452444123
+
     """
 
     def __init__(self, model=None, topics=None, texts=None, corpus=None, dictionary=None,
                  window_size=None, keyed_vectors=None, coherence='c_v', topn=20, processes=-1):
         """
+
         Parameters
         ----------
         model : {:class:`~gensim.models.ldamodel.LdaModel`, :class:`~gensim.models.ldamulticore.LdaMulticore`}, optional
@@ -215,17 +206,22 @@ class CoherenceModel(interfaces.TransformationABC):
 
         Parameters
         ----------
-        models : list of :class:`~gensim.models.ldamodel.LdaModel`
-            List of models to evaluate coherence of; the only requirement is that each has a `get_topics` methods.
+        models : list of {:class:`~gensim.models.ldamodel.LdaModel`, :class:`~gensim.models.ldamulticore.LdaMulticore`}
+            List of models to evaluate coherence of; the only requirement is that each has a
+            :meth:`~gensim.models.ldamodel.LdaModel.get_topics` method.
         dictionary : :class:`~gensim.corpora.dictionary.Dictionary`
             Gensim dictionary mapping of id word.
         topn : int, optional
-            TODO: gonna check it later
+            Integer corresponding to the number of top words to be extracted from each topic.
+        kwargs : object
+            Sequence of arguments, see :class:`~gensim.models.coherencemodel.CoherenceModel` for more
+            information.
 
         Return
         ------
         :class:`~gensim.models.coherencemodel.CoherenceModel`
             CoherenceModel with estimated probabilities for all of the given models.
+
         """
         topics = [cls.top_topics_as_word_lists(model, dictionary, topn) for model in models]
         kwargs['dictionary'] = dictionary
@@ -234,6 +230,23 @@ class CoherenceModel(interfaces.TransformationABC):
 
     @staticmethod
     def top_topics_as_word_lists(model, dictionary, topn=20):
+        """Return `topn` topics in list-of-list-of-words format.
+
+        Parameters
+        ----------
+        model : {:class:`~gensim.models.ldamodel.LdaModel`, :class:`~gensim.models.ldamulticore.LdaMulticore`}
+            Pre-trained topic model.
+        dictionary : :class:`~gensim.corpora.dictionary.Dictionary`
+            Gensim dictionary mapping of id word.
+        topn : int, optional
+            Integer corresponding to the number of top words to be extracted from each topic.
+
+        Return
+        ------
+        list of list of str
+            Topics in list-of-list-of-words format.
+
+        """
         if not dictionary.id2token:
             dictionary.id2token = {v: k for k, v in dictionary.token2id.items()}
 
@@ -286,6 +299,14 @@ class CoherenceModel(interfaces.TransformationABC):
 
     @property
     def model(self):
+        """Get model.
+
+        Return
+        ------
+        {:class:`~gensim.models.ldamodel.LdaModel`, :class:`~gensim.models.ldamulticore.LdaMulticore`}
+            Used model.
+
+        """
         return self._model
 
     @model.setter
@@ -298,6 +319,14 @@ class CoherenceModel(interfaces.TransformationABC):
 
     @property
     def topn(self):
+        """Get number of top words.
+
+        Return
+        ------
+        int
+            Integer corresponding to the number of top words.
+
+        """
         return self._topn
 
     @topn.setter
@@ -316,10 +345,24 @@ class CoherenceModel(interfaces.TransformationABC):
 
     @property
     def measure(self):
+        """Make pipeline, according to `coherence` parameter value.
+
+        Return
+        ------
+        Tuple with named fields
+            Pipeline.
+        """
         return COHERENCE_MEASURES[self.coherence]
 
     @property
     def topics(self):
+        """Get topics.
+
+        Return
+        ------
+        list of list of str #TODO or is this list of numpy.ndarray?
+            Topics.
+        """
         if len(self._topics[0]) > self._topn:
             return [topic[:self._topn] for topic in self._topics]
         else:
@@ -450,6 +493,18 @@ class CoherenceModel(interfaces.TransformationABC):
     def compare_model_topics(self, model_topics):
         """Perform the coherence evaluation for each of the models.
 
+        Parameters
+        ----------
+        model_topics : list of list of str
+            list of list of words for the model trained with that number of topics.
+
+        Return
+        ------
+        list of `(avg_topic_coherences, avg_coherence)`. #TODO: Find out types.
+                These are the coherence values per topic and the overall model coherence.
+
+        Notes
+        -----
         This first precomputes the probabilities once, then evaluates coherence for
         each model.
 
@@ -457,13 +512,6 @@ class CoherenceModel(interfaces.TransformationABC):
         involves using the accumulated stats in the `CoherenceModel` to
         perform the evaluations, which should be pretty quick.
 
-        Args:
-            model_topics (list): of lists of top-N words for the model trained with that
-                number of topics.
-
-        Returns:
-            list: of `(avg_topic_coherences, avg_coherence)`.
-                These are the coherence values per topic and the overall model coherence.
         """
         orig_topics = self._topics
         orig_topn = self.topn
@@ -477,6 +525,13 @@ class CoherenceModel(interfaces.TransformationABC):
         return coherences
 
     def _compare_model_topics(self, model_topics):
+        """Get average topic and model coherences.
+
+        Parameters
+        ----------
+        model_topics : list of list of str
+            list of list of words for the model trained with that number of topics.
+        """
         coherences = []
         last_topn_value = min(self.topn - 1, 4)
         topn_grid = list(range(self.topn, last_topn_value, -5))
