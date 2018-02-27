@@ -33,9 +33,8 @@ from gensim.utils import tokenize
 
 
 class Text2BowTransformer(TransformerMixin, BaseEstimator):
-    """Base Text2Bow module.
+    """Base Text2Bow module , wraps :class:`~gensim.corpora.dictionary.Dictionary`.
 
-    Wraps :class:`~gensim.corpora.dictionary.Dictionary`.
     For more information on the inner workings please take a look at
     the original class.
 

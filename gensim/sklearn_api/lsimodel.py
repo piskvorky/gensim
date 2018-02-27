@@ -41,9 +41,8 @@ from gensim import matutils
 
 
 class LsiTransformer(TransformerMixin, BaseEstimator):
-    """Base LSI module.
+    """Base LSI module, wraps :class:`~gensim.model.lsimodel.LsiModel`.
 
-    Wraps :class:`~gensim.model.lsimodel.LsiModel`.
     For more information on the inner working please take a look at
     the original class.
 

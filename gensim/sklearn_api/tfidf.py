@@ -31,9 +31,8 @@ import gensim
 
 
 class TfIdfTransformer(TransformerMixin, BaseEstimator):
-    """Base TfIdf module.
+    """Base TfIdf module, wraps :class:`~gensim.models.tfidfmodel.TfidfModel`.
 
-    Wraps :class:`~gensim.models.tfidfmodel.TfidfModel`.
     For more information on the inner workings please take a look at
     the original class.
 
@@ -81,12 +80,7 @@ class TfIdfTransformer(TransformerMixin, BaseEstimator):
                 * `n` - none,
                 * `c` - cosine.
 
-            For more information visit [1]_.
-
-        References
-        ----------
-
-        .. [1] https://en.wikipedia.org/wiki/SMART_Information_Retrieval_System
+            For more info, visit `"Wikipedia" <https://en.wikipedia.org/wiki/SMART_Information_Retrieval_System>`_.
 
         """
         self.gensim_model = None

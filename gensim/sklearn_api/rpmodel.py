@@ -32,9 +32,8 @@ from gensim import matutils
 
 
 class RpTransformer(TransformerMixin, BaseEstimator):
-    """Base Word2Vec module.
+    """Base Word2Vec module, wraps :class:`~gensim.models.rpmodel.RpModel`.
 
-        Wraps :class:`~gensim.models.rpmodel.RpModel`.
         For more information on the inner workings please take a look at
         the original class.
 

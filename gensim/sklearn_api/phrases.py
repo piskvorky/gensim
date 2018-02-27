@@ -68,8 +68,10 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
             or with a function with the expected parameter names. Two built-in scoring functions are available
             by setting `scoring` to a string:
 
-            'default': from [1]_.
-            'npmi': normalized pointwise mutual information, from [2]_.
+            'default': Explained in `Mikolov, et. al: "Efficient Estimation of Word Representations in Vector Space"
+            <https://arxiv.org/pdf/1301.3781.pdf>`_.
+            'npmi': Explained in `Gerlof Bouma: "Normalized (Pointwise) Mutual Information in Collocation Extraction"
+            <https://svn.spraakdata.gu.se/repos/gerlof/pub/www/Docs/npmi-pfd.pdf>`_.
 
             'npmi' is more robust when dealing with common words that form part of common bigrams, and
             ranges from -1 to 1, but is slower to calculate than the default.
@@ -87,11 +89,6 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
 
             A scoring function without any of these parameters (even if the parameters are not used) will
             raise a ValueError on initialization of the Phrases class. The scoring function must be pic
-
-        References
-        ----------
-        .. [1] "Efficient Estimaton of Word Representations in Vector Space" by Mikolov, et. al.
-        .. [2] "Normalized (Pointwise) Mutual Information in Colocation Extraction" by Gerlof Bouma.
 
         """
         self.gensim_model = None

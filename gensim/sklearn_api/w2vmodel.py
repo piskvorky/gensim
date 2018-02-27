@@ -35,9 +35,8 @@ from gensim import models
 
 
 class W2VTransformer(TransformerMixin, BaseEstimator):
-    """Base Word2Vec module.
+    """Base Word2Vec module, wraps :class:`~gensim.models.word2vec.Word2Vec`.
 
-    Wraps :class:`~gensim.models.word2vec.Word2Vec`.
     For more information on the inner workings please take a look at
     the original class.
 

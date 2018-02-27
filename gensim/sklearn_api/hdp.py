@@ -12,12 +12,12 @@ Follows scikit-learn API conventions to facilitate using gensim along with sciki
 Examples
 --------
 
-    >>> from gensim.test.utils import common_dictionary, common_corpus
-    >>> from gensim.sklearn_api import HdpTransformer
-    >>>
-    >>> # Lets extract the distribution of each document in topics
-    >>> model = HdpTransformer(id2word=common_dictionary)
-    >>> distr = model.fit_transform(common_corpus)
+>>> from gensim.test.utils import common_dictionary, common_corpus
+>>> from gensim.sklearn_api import HdpTransformer
+>>>
+>>> # Lets extract the distribution of each document in topics
+>>> model = HdpTransformer(id2word=common_dictionary)
+>>> distr = model.fit_transform(common_corpus)
 
 """
 
@@ -31,9 +31,8 @@ from gensim import matutils
 
 
 class HdpTransformer(TransformerMixin, BaseEstimator):
-    """Base HDP module.
+    """Base HDP module, wraps :class:`~gensim.models.hdpmodel.HdpModel`.
 
-    Wraps :class:`~gensim.models.hdpmodel.HdpModel`.
     For more information on the inner workings please take a look at
     the original class. The inner workings of this class heavily depends on `Wang, Paisley, Blei: "Online Variational
     Inference for the Hierarchical Dirichlet Process, JMLR (2011)"

@@ -39,9 +39,8 @@ from gensim.models import doc2vec
 
 
 class D2VTransformer(TransformerMixin, BaseEstimator):
-    """Base Dov2Vec module.
+    """Base Dov2Vec module, wraps :class:`~gensim.models.doc2vec.Doc2Vec`.
 
-    Wraps :class:`~gensim.models.doc2vec.Doc2Vec`.
     For more information on the inner workings please take a look at
     the original class.
 

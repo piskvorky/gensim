@@ -32,10 +32,12 @@ from gensim import matutils
 
 
 class LdaTransformer(TransformerMixin, BaseEstimator):
-    """Base LDA module.
+    """Base LDA module, wraps :class:`~gensim.models.ldamodel.LdaModel`.
 
-    Wraps :class:`~gensim.models.ldamodel.LdaModel`.
     For more information on the inner workings please take a look at the original class.
+    The inner workings of this class depends heavily on `Matthew D. Hoffman, David M. Blei, Francis Bach:
+    "Online Learning for Latent Dirichlet Allocation NIPS'10"
+    <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
 
     """
 
@@ -43,7 +45,7 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
                  eta=None, decay=0.5, offset=1.0, eval_every=10, iterations=50, gamma_threshold=0.001,
                  minimum_probability=0.01, random_state=None, scorer='perplexity', dtype=np.float32):
 
-        """Sklearn wrapper for LDA model. Based on [1]_.
+        """Sklearn wrapper for LDA model.
 
         Notes
         -----
@@ -53,12 +55,6 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
         * batch: update_every == None
 
         By default, 'online (single-pass)' mode is used for training the LDA model.
-
-        References
-        ----------
-        .. [1] Matthew D. Hoffman, David M. Blei, Francis Bach, "Online Learning for Latent Dirichlet Allocation",
-               NIPS'10 Proceedings of the 23rd International Conference on Neural Information Processing Systems -
-               Volume 1 Pages 856-864, https://www.di.ens.fr/~fbach/mdhnips2010.pdf
 
         Parameters
         ----------
@@ -87,10 +83,13 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
                 * the string 'auto' to learn the asymmetric prior from the data.
         decay : float, optional
             A number between (0.5, 1] to weight what percentage of the previous lambda value is forgotten
-            when each new document is examined. Corresponds to Kappa from [1]_.
+            when each new document is examined. Corresponds to Kappa from
+            `Matthew D. Hoffman, David M. Blei, Francis Bach:
+            "Online Learning for Latent Dirichlet Allocation NIPS'10" <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
         offset : float, optional
             Hyper-parameter that controls how much we will slow down the first steps the first few iterations.
-            Corresponds to Tau_0 from [1]_.
+            Corresponds to Tau_0 from `Matthew D. Hoffman, David M. Blei, Francis Bach:
+            "Online Learning for Latent Dirichlet Allocation NIPS'10" <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
         eval_every : int, optional
             Log perplexity is estimated every that many updates. Setting this to one slows down training by ~2x.
         iterations : int, optional
