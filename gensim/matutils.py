@@ -640,6 +640,8 @@ def ret_normalized_vec(vec, length):
 
 
 def ret_log_normalize_vec(vec, axis=1):
+    #TODO: Write docstring
+
     log_max = 100.0
     if len(vec.shape) == 1:
         max_val = np.max(vec)

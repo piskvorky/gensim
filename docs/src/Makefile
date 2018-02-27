@@ -38,7 +38,6 @@ clean:
 
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
-	rm -r $(BUILDDIR)/html/_sources
 	@echo
 	@echo "Build finished. The HTML pages are in /docs"
 
