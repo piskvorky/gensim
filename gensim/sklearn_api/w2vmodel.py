@@ -10,6 +10,7 @@ Scikit learn interface for gensim for easy use of gensim with scikit-learn
 Follows scikit-learn API conventions
 """
 
+import warnings
 import numpy as np
 import six
 from sklearn.base import TransformerMixin, BaseEstimator
