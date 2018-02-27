@@ -259,7 +259,13 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 				// var doc_text_div_blue = document.createElement("div");
 
-				
+				var doc_text_div_blue = d3.select("body")
+			    .append("div")
+			    .style("position", "absolute")
+			    .style("top", margin.top + 2*margin.pad)
+			    .style("background-color", "#5bb0ff")
+			    .style("width", mdswidth + margin.pad)
+			    .style("height", mdsheight);
 
 			    var doc_text_div_white = d3.select("body")
 			    .append("div")
