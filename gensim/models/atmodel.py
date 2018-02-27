@@ -214,9 +214,21 @@ class AuthorTopicModel(LdaModel):
         -------
         >>> import numpy as np
         >>> from gensim.models import AuthorTopicModel
-        >>> model = AuthorTopicModel(corpus, num_topics=100, author2doc=author2doc, id2word=id2word)  # train model
+        >>> from gensim.corpora import mmcorpus
+        >>> from gensim.test.utils import (datapath, common_dictionary as dictionary, common_corpus as corpus)
+        >>> author2doc = {
+        ...     'john': [0, 1, 2, 3, 4, 5, 6],
+        ...     'jane': [2, 3, 4, 5, 6, 7, 8],
+        ...     'jack': [0, 2, 4, 6, 8]
+        ... }
+        >>> doc2author = {
+        ...     0: ['john', 'jack'],
+        ...     1: ['john', 'jill'],
+        ...     2: ['john', 'jane', 'jack']
+        ... }
+        >>> corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
+        >>> model = AuthorTopicModel(corpus, author2doc=author2doc, id2word=dictionary, num_topics=4, passes=100)  # train model
         >>> model.update(corpus, author2doc)  # update the author-topic model with additional documents
-
 
         """
         # NOTE: this doesn't call constructor of a base class, but duplicates most of this code
