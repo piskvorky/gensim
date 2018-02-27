@@ -49,14 +49,15 @@ var LDAvis = function(to_select, data_or_file_name) {
 		top: 30,
 		right: 30,
 		bottom: 70,
-		left: 30
+		left: 5,
+		pad: 10
 	},
 		mdswidth = 390,
 		mdsheight = 530,
 		mdsarea = mdsheight * mdswidth;
 	// controls how big the maximum circle can be
 	// doesn't depend on data, only on mds width and height:
-	var rMax = 40;
+	var rMax = 200;
 
 	// proportion of area of MDS plot to which the sum of default topic circle areas is set
 	var circle_prop = 0.25;
@@ -225,32 +226,87 @@ var LDAvis = function(to_select, data_or_file_name) {
 				var doc_to_show = document.getElementById(docID + vis_state.doc);
 				var doc_to_show_data = doc_to_show.__data__;
 
-				var dic_text_div = docs_text_tooltip.append("g")
-				.attr("x", 0)
-				.attr("y", 0)
-				// docs_text_tooltip.append("div")
-				.text(doc_to_show_data.doc_texts)
-				// .style("position", "fixed")
-				.style("left", "8px")
-				.style("padding", "5px")
-				.style("width", 1*mdswidth + "px")
-				.style("height", mdsheight)
-				// .style("top", margin.top + 20 + "px")
-				// .style("z-index", "100")
-				.style("background", "white")
-				.style("border-radius", "10px")
-				.style("overflow-y", "scroll")
-				.style("font-family", "sans-serif")
-				.style("-webkit-scrollbar-track","background: none;")
-				.style("-webkit-scrollbar", "width: 10px;")
-				.style("-webkit-scrollbar", "height: 10px;")
-				.style("-webkit-scrollbar-thumb", "background: #ccc;")
-				.style("-webkit-scrollbar-thumb", "border-radius: 5px;");
+				// docs_text_tooltip.transition()
+				// .duration(500)
 				// .style("visibility", "visible");
 
-				docs_text_tooltip.transition()
-				.duration(500)
-				.style("visibility", "visible");
+				// var dic_text_div = docs_text_tooltip.append("g")
+				// // .attr("x", 0)
+				// // .attr("y", 0)
+				// // docs_text_tooltip.append("div")
+				// // dic_text_div.text(doc_to_show_data.doc_texts)
+				// // .style("position", "fixed")
+				// // .style("left", "2px")
+				// .style("padding", "2px")
+				// .style("width", 1*mdswidth + "px")
+				// .style("height", mdsheight)
+				// // .attr("xml:space", "preserve")
+				// // .style("letter-spacing", "10")
+				// // .style("word-spacing", "0")
+				// // .style("kerning", "20")
+				// // .style("top", margin.top + 20 + "px")
+				// // .style("z-index", "100")
+				// .style("background", "white")
+				// .style("border-radius", "10px")
+				// .style("overflow-y", "scroll")
+				// .style("-webkit-scrollbar-track","background: none;")
+				// .style("-webkit-scrollbar", "width: 10px;")
+				// .style("-webkit-scrollbar", "height: 10px;")
+				// .style("-webkit-scrollbar-thumb", "background: #ccc;")
+				// .style("-webkit-scrollbar-thumb", "border-radius: 5px;");
+
+
+
+				// var doc_text_div_blue = document.createElement("div");
+
+				
+
+			    var doc_text_div_white = d3.select("body")
+			    .append("div")
+			    .style("position", "absolute")
+			    .style("top", margin.top + 3*margin.pad)
+			    .style("left", "18px")
+			    .style("background-color", "white")
+			    .text(doc_to_show_data.doc_texts)
+			    .style("white-space", "pre-wrap")
+			    .style("width", mdswidth - 2*margin.pad)
+			    .style("height", mdsheight - 3*margin.pad)
+			    .style("overflow-y", "scroll")
+			    .style("border-radius", "10px")
+			    .style("padding", "5px");
+
+				// doc_text_div_blue.setAttribute("style", "transformOrigin: 0 0; position: absolute; background-color: blue; width: " + mdswidth +"px; height: " + mdsheight + "px; padding: 5px");
+
+
+				// document.getElementById(visID).appendChild(doc_text_div_blue);
+
+				
+				// var doc_text_div_white = document.createElement("div");
+				// doc_text_div_white.setAttribute("style", "background-color: white; border-radius: 15px; overflow-y: scroll");
+				// .style("border-radius", "15px")
+				// .style("overflow", "scroll");
+
+				// doc_text_div_blue.append(doc_text_div_white);
+
+				// var content = document.createTextNode(doc_to_show_data.doc_texts);
+				// content.setAttribute("xml:space", "preserve");
+				// doc_text_div_white.appendChild(content);
+
+				// doc_text_div_white.addEventListener('scroll', function(evt) {
+				//   label.node().setAttribute('y', 10 + this.scrollTop);
+				// }, false)
+
+				// doc_text_div_white.addEventListener('scroll');
+
+
+				// docs_text_tooltip.append("text")
+				// .text(doc_to_show_data.doc_texts)
+				// .attr("font-family", "georgia")
+				// .attr("font-size", "12")
+				// // .attr("letter-spacing", "-10")
+				// .style("white-space", "pre-wrap");
+
+				
 		});
 
 		d3.select("#" + topicID)
@@ -322,6 +378,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 			doc_ypad = 0.05;
 
 		if (doc_xdiff > doc_ydiff) {
+			// range: mds width - rMax
 			var doc_xScale = d3.scaleLinear()
 					.range([0, mdswidth])
 					.domain([doc_xrange[0] - doc_xpad * doc_xdiff, doc_xrange[1] + doc_xpad * doc_xdiff]);
@@ -353,7 +410,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 		if (topic_xdiff > topic_ydiff) {
 			var topic_xScale = d3.scaleLinear()
-					.range([0, mdswidth])
+					.range([0, mdswidth - rMax])
 					.domain([topic_xrange[0] - topic_xpad * topic_xdiff, topic_xrange[1] + topic_xpad * topic_xdiff]);
 
 			var topic_yScale = d3.scaleLinear()
@@ -361,7 +418,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 					.domain([topic_yrange[0] - 0.5*(topic_xdiff - topic_ydiff) - topic_ypad*topic_xdiff, topic_yrange[1] + 0.5*(topic_xdiff - topic_ydiff) + topic_ypad*topic_xdiff]);
 		} else {
 			var topic_xScale = d3.scaleLinear()
-					.range([0, mdswidth])
+					.range([0, mdswidth - rMax])
 					.domain([topic_xrange[0] - 0.5*(topic_ydiff - topic_xdiff) - topic_xpad*topic_ydiff, topic_xrange[1] + 0.5*(topic_ydiff - topic_xdiff) + topic_xpad*topic_ydiff]);
 
 			var topic_yScale = d3.scaleLinear()
@@ -401,31 +458,21 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 		// Create new svg element (that will contain everything):
 		var svg = d3.select(to_select).append("svg")
-				.attr("width", 3 * (mdswidth + margin.left) + margin.right)
-				.attr("height", mdsheight + 2 * margin.top + margin.bottom + 2 * rMax);
-
-		var docs_text_tooltip = d3.select("body")
-			.append("g")
-		    .style("position", "absolute")
-		    .attr("transform", "translate(0, 0)")
-		    // .style("z-index", "100")
-		    // .style("overflow-y", "scroll")
-		    .style("visibility", "hidden")
-		    .style("background-color", "#5bb0ff");
-		    // .attr("stroke", "black")
-	    	// .text("docs_text_tooltip");
+				.attr("width", (3 * mdswidth) + (2 * margin.left) + (3 * margin.pad))
+				.attr("height", mdsheight);
 
 		// Add a group for the doc plot
 		var doc_plot = svg.append("g")
 				.attr("id", docPanelID)
-				.attr("class", "docpoints")
-				.attr("transform", "translate(0, 0)");
+				.attr("class", "docpoints");
+
 
 		// Create line element b/w doc and topic plot
 		var doc_topic_partition = svg.append("line")
-       			.attr("x1", 1*mdswidth + 10 + "px")
-       			.attr("x2", 1*mdswidth + 10 + "px")
-       			.attr("y1", 20)
+				.style("border", "1px solid black")
+       			.attr("x1", 1*mdswidth + margin.pad + (margin.left/2))
+       			.attr("x2", 1*mdswidth + margin.pad + (margin.left/2))
+       			.attr("y1", 0)
        			.attr("y2", mdsheight)
        			.attr("stroke", "black");
 
@@ -433,14 +480,13 @@ var LDAvis = function(to_select, data_or_file_name) {
 		var topic_plot = svg.append("g")
 				.attr("id", topicPanelID)
 				.attr("class", "topicpoints")
-				// .attr("align","center")
-				.attr("transform", "translate(" + (1*mdswidth + 20) + ", 0)");
+				.attr("transform", "translate(" + (1*mdswidth + margin.pad + margin.left) + ", 0)");
 
 		// Create line element b/w doc and topic plot
 		var word_topic_partition = svg.append("line")
-       			.attr("x1", 2*mdswidth + margin.left + "px")
-       			.attr("x2", 2*mdswidth + margin.left + "px")
-       			.attr("y1", 20)
+       			.attr("x1", 2*mdswidth + 2*margin.pad + 3*(margin.left/2))
+       			.attr("x2", 2*mdswidth + 2*margin.pad + 3*(margin.left/2))
+       			.attr("y1", 0)
        			.attr("y2", mdsheight)
        			.attr("stroke", "black");
 
@@ -449,34 +495,39 @@ var LDAvis = function(to_select, data_or_file_name) {
 				.attr("id", wordPanelID)
 				.attr("class", "wordpoints")
 				// .attr("align","right")
-				.attr("transform", "translate(" + (2 * mdswidth + 1 * margin.left) + ", 0)");
+				.attr("transform", "translate(" + (2*(mdswidth + margin.pad + margin.left)) + ", 0)");
 
 
 		// Clicking on the doc_plot should clear the selection
-		doc_plot
+		var doc_rec = doc_plot
 			.append("rect")
-			.attr("x", 0)
-			.attr("y", 0)
 			.style("fill", "none")
 			.attr("pointer-events", "all")
 			.attr("height", mdsheight)
-			.attr("width", mdswidth)
+			.attr("width", (1*mdswidth + margin.pad))
 			// .attr("opacity", 0)
 			.on("click", function() {
 				state_reset();
 				state_save(true);
 			})
 			.call(d3.zoom()
-        		.scaleExtent([1, 28])
+        		.scaleExtent([1, 10])
         		.on("zoom", zoom));
+
+		var docs_text_tooltip = doc_plot
+		.append("g")
+	    // .style("position", "absolute")
+		// .style("fill", "#5bb0ff")
+	    // .style("z-index", "100")
+	    // .style("overflow-y", "scroll")
+	    // .style("background", "#5bb0ff")
+	    .style("visibility", "hidden");
 
 		// Clicking on the topic_plot should clear the selection
 		topic_plot
 			.append("rect")
-			.attr("x", 0)
-			.attr("y", 0)
 			.attr("height", mdsheight)
-			.attr("width", mdswidth)
+			.attr("width", (1*mdswidth + margin.pad))
 			.style("fill", color1)
 			.attr("opacity", 0)
 			.on("click", function() {
@@ -487,10 +538,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 		// Clicking on the word_plot should clear the selection
 		word_plot
 			.append("rect")
-			.attr("x", 0)
-			.attr("y", 0)
 			.attr("height", mdsheight)
-			.attr("width", mdswidth)
+			.attr("width", (1*mdswidth + margin.pad))
 			.style("fill", color1)
 			.attr("opacity", 0)
 			.on("click", function() {
@@ -499,12 +548,12 @@ var LDAvis = function(to_select, data_or_file_name) {
 			});        
 
 
-		// bind mdsData to the points in the doc panel:
+		// bind mdsData to the points in the doc panel and draw circles
 		var docpoints = doc_plot.selectAll("circle")
-				.data(docMdsData)
-				.enter()
-				.append("circle")
-				.attr("class", "docdot")
+			.data(docMdsData)
+			.enter()
+			.append("circle")
+			.attr("class", "docdot")
 			.style("opacity", function(d) {
 				return ((d.Freq/10)*0.2);
 			})
@@ -568,68 +617,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 		    .attr("stroke", "black")
 	    	.text("docs_tooltip");
 
-		// draw circles
-		// docpoints.append("circle")
-			// .attr("class", "docdot")
-			// .style("opacity", function(d) {
-			// 	return ((d.Freq/10)*0.2);
-			// })
-			// .style("fill", color1)
-			// .attr("r", Math.sqrt(mdswidth*mdsheight*circle_prop/Math.PI)/(1.5*D))
-			// .attr("cx", function(d) {
-			// 	return (doc_xScale(+d.x));
-			// })
-			// .attr("cy", function(d) {
-			// 	return (doc_yScale(+d.y));
-			// })
-			// .attr("stroke", "black")
-			// .attr("id", function(d) {
-			// 	return (docID + d.docs);
-			// })
-			// .attr("transform", transform(d3.zoomIdentity))
-			// .text(function(d) {
-			// 	return d.docs;
-			// })
-			// .on("mouseover", function(d) {
-			// 	docs_tooltip.text(d.docs); 
-			// 	docs_tooltip.style("visibility", "visible");
-			// 	var old_doc = docID + vis_state.doc;
-			// 	if (vis_state.topic > 0){
-			// 		doc_topic_on()
-			// 	}
-			// 	if (vis_state.doc > 0 && old_doc!= this.id) {
-			// 		doc_off(document.getElementById(old_doc));
-			// 	}
-			// 	doc_on(this);
-			// })
-			// .on("click", function(d) {
-			// 	// prevent click event defined on the div container from firing
-			// 	// http://bl.ocks.org/jasondavies/3186840
-			// 	// d3.event.stopPropagation();
-
-			// 	var old_doc = docID + vis_state.doc;
-			// 	if (vis_state.doc > 0 && old_doc != this.id) {
-			// 		doc_off(document.getElementById(old_doc));
-			// 	}
-			// 	// make sure doc input box value and fragment reflects clicked selection
-			// 	document.getElementById(docID).value = vis_state.doc = d.docs;
-			// 	state_save(true);
-			// 	doc_on(this);
-
-			// })
-			// .on("mousemove", function(){
-			// 	docs_tooltip.style("top", (d3.event.pageY-10)+"px").style("left",(d3.event.pageX+10)+"px");
-			// })
-			// .on("mouseout", function(d) {
-			// 	docs_tooltip.style("visibility", "hidden");
-			// 	if (vis_state.doc != d.docs) doc_off(this);
-			// 	if (vis_state.doc > 0) doc_on(document.getElementById(docID + vis_state.doc));
-			// });
 
 		function zoom() {
-		  // console.log("docpoints", docpoints);
-		  // console.log("docpoints type", typeof docpoints);
-		  console.log("transform bug 2", d3.event.transform);
 		  docpoints.attr("transform", transform(d3.event.transform));
 		}
 
@@ -671,7 +660,11 @@ var LDAvis = function(to_select, data_or_file_name) {
 				return ((d.Freq/10)*0.2);
 			})
 			.style("fill", color1)
-			.attr("r", Math.sqrt(mdswidth*mdsheight*circle_prop/Math.PI)/(1.5*T))
+			// .attr("r", Math.sqrt(mdswidth*mdsheight*circle_prop/Math.PI)/(1.5*T))
+			.attr("r", function(d) {
+                // return (rScaleMargin(+d.Freq));
+                return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
+            })
 			.attr("cx", function(d) {
 				return (topic_xScale(+d.x));
 			})
@@ -773,7 +766,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 				if (typeof vis_state.word === 'string') word_on(document.getElementById(wordID + vis_state.word));
 			});
 
-
+// 40 pixel extra
 		// dynamically create the doc/topic/word input forms at the top of the page
 		function init_forms(docID, topicID, wordID) {
 
@@ -818,7 +811,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 			// topic input container:
 			var topicDiv = document.createElement("div");
-			topicDiv.setAttribute("style", "padding: 5px; background-color: #e8e8e8; display: inline-block; width: " + mdswidth + "px; height: " + margin.top + "px; float: left; margin-left: 5px");
+			topicDiv.setAttribute("style", "padding: 5px; background-color: #e8e8e8; display: inline-block; width: " + mdswidth + "px; height: " + margin.top + "px; margin-left: 5px");
 			inputDiv.appendChild(topicDiv);
 
 			var topicLabel = document.createElement("label");
@@ -845,7 +838,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 			// word input container:
 			var wordDiv = document.createElement("div");
-			wordDiv.setAttribute("style", "padding: 5px; background-color: #e8e8e8; display: inline-block; width: " + mdswidth + "px; height: " + margin.top + "px; float: right");
+			wordDiv.setAttribute("style", "padding: 5px; background-color: #e8e8e8; display: inline-block; width: " + mdswidth + "px; height: " + margin.top + "px; margin-left: 5px");
 			inputDiv.appendChild(wordDiv);
 
 			var wordLabel = document.createElement("label");
@@ -872,6 +865,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 		}
 
+		var rScaleCond = d3.scaleSqrt()
+                    .domain([0, 1]).range([0, rMax]);
 
 		//////////////////////////////////////////////////////////////////////////////
 
@@ -913,7 +908,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 				.transition()
 				.attr("r", function(d) {
 					//return (rScaleCond(d));
-					return (Math.sqrt(d*mdswidth*mdsheight*circle_prop/Math.PI));
+					return (Math.sqrt(d*mdswidth*mdsheight*circle_prop/Math.PI)/(1.5*W));
 				});
 
 			// re-bind mdsData so we can handle multiple selection
@@ -942,8 +937,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 				.data(topic_radius)
 				.transition()
 				.attr("r", function(d) {
-					//return (rScaleCond(d));
-					return (Math.sqrt(d*mdswidth*mdsheight*circle_prop/Math.PI));
+					return (rScaleCond(d));
+					// return (Math.sqrt(d*mdswidth*mdsheight*circle_prop/Math.PI));
 				});
 
 			// re-bind mdsData so we can handle multiple selection
@@ -1097,8 +1092,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 				.data(topic_radius)
 				.transition()
 				.attr("r", function(d) {
-					//return (rScaleCond(d));
-					return (Math.sqrt(d*mdswidth*mdsheight*circle_prop/Math.PI));
+					return (rScaleCond(d));
+					// return (Math.sqrt(d*mdswidth*mdsheight*circle_prop/Math.PI));
 				});
 
 			// re-bind mdsData so we can handle multiple selection
