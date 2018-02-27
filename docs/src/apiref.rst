@@ -191,6 +191,7 @@ Classes
     docsim.Shard
     docsim.Similarity
     docsim.MatrixSimilarity
+    docsim.SoftCosineSimilarity
     docsim.SparseMatrixSimilarity
     index.AnnoyIndexer
 
