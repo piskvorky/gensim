@@ -11,21 +11,21 @@ Follows scikit-learn API conventions to facilitate using gensim along with sciki
 Examples
 --------
 
-    >>> from gensim.test.utils import common_texts
-    >>> from gensim.sklearn_api import D2VTransformer
-    >>> from gensim.similarities import Similarity
-    >>>
-    >>> # Lets represent each document using a 50 dimensional vector
-    >>> model = D2VTransformer(min_count=1, size=5)
-    >>> docvecs = model.fit_transform(common_texts)
-    >>>
-    >>> # Let's use the vector representations to compute similarities with one of the documents.
-    >>> index = Similarity(None, docvecs, num_features=5)
-    >>>
-    >>> # Which document is most similar to the last one in the corpus? Probably itself!
-    >>> result = index[docvecs[8]]
-    >>> result.argmax()
-    8
+>>> from gensim.test.utils import common_texts
+>>> from gensim.sklearn_api import D2VTransformer
+>>> from gensim.similarities import Similarity
+>>>
+>>> # Lets represent each document using a 50 dimensional vector
+>>> model = D2VTransformer(min_count=1, size=5)
+>>> docvecs = model.fit_transform(common_texts)
+>>>
+>>> # Let's use the vector representations to compute similarities with one of the documents.
+>>> index = Similarity(None, docvecs, num_features=5)
+>>>
+>>> # Which document is most similar to the last one in the corpus? Probably itself!
+>>> result = index[docvecs[8]]
+>>> result.argmax()
+8
 
 """
 

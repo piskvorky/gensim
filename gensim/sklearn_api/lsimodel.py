@@ -13,21 +13,21 @@ Examples
 --------
 Integrate with sklearn Pipelines:
 
-    >>> from sklearn.pipeline import Pipeline
-    >>> from sklearn import linear_model
-    >>> from gensim.test.utils import common_corpus, common_dictionary
-    >>> from gensim.sklearn_api import LsiTransformer
-    >>>
-    >>> # Create stages for our pipeline (including gensim and sklearn models alike).
-    >>> model = LsiTransformer(num_topics=15, id2word=common_dictionary)
-    >>> clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
-    >>> pipe = Pipeline([('features', model,), ('classifier', clf)])
-    >>>
-    >>> # Create some random binary labels for our documents.
-    >>> labels = np.random.choice([0, 1], len(common_corpus))
-    >>>
-    >>> # How well does our pipeline perform on the training set?
-    >>> score = pipe.fit(common_corpus, labels).score(common_corpus, labels)
+>>> from sklearn.pipeline import Pipeline
+>>> from sklearn import linear_model
+>>> from gensim.test.utils import common_corpus, common_dictionary
+>>> from gensim.sklearn_api import LsiTransformer
+>>>
+>>> # Create stages for our pipeline (including gensim and sklearn models alike).
+>>> model = LsiTransformer(num_topics=15, id2word=common_dictionary)
+>>> clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
+>>> pipe = Pipeline([('features', model,), ('classifier', clf)])
+>>>
+>>> # Create some random binary labels for our documents.
+>>> labels = np.random.choice([0, 1], len(common_corpus))
+>>>
+>>> # How well does our pipeline perform on the training set?
+>>> score = pipe.fit(common_corpus, labels).score(common_corpus, labels)
 
 """
 

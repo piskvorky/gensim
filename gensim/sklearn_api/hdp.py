@@ -33,14 +33,11 @@ from gensim import matutils
 class HdpTransformer(TransformerMixin, BaseEstimator):
     """Base HDP module.
 
-    Wraps :class:`~gensim.models.hdpmodel.HdpModel.
+    Wraps :class:`~gensim.models.hdpmodel.HdpModel`.
     For more information on the inner workings please take a look at
-    the original class. The inner workings of this class heavily depends on _[1].
-
-    References
-    ----------
-    .. [1] Wang, Paisley, Blei: Online Variational Inference for the Hierarchical Dirichlet
-           Process, JMLR (2011), http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf
+    the original class. The inner workings of this class heavily depends on `Wang, Paisley, Blei: "Online Variational
+    Inference for the Hierarchical Dirichlet Process, JMLR (2011)"
+    <http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_.
 
     """
 
@@ -60,19 +57,25 @@ class HdpTransformer(TransformerMixin, BaseEstimator):
         chunksize : int, optional
             Number of documents to be processed by the model in each mini-batch.
         kappa : float, optional
-            Learning rate. See _[1].
+            Learning rate, see `Wang, Paisley, Blei: "Online Variational Inference for the Hierarchical Dirichlet
+            Process, JMLR (2011)" <http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_.
         tau : float, optional
             Slow down parameter.
         K : int, optional
-            Second level truncation level. See _[1].
+            Second level truncation level, see `Wang, Paisley, Blei: "Online Variational Inference for the Hierarchical
+            Dirichlet Process, JMLR (2011)" <http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_.
         T : int, optional
-            Top level truncation level. See _[1].
+            Top level truncation level, see `Wang, Paisley, Blei: "Online Variational Inference for the Hierarchical
+            Dirichlet  Process, JMLR (2011)" <http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_.
         alpha : int, optional
-            Second level concentration. See _[1].
+            Second level concentration, see `Wang, Paisley, Blei: "Online Variational Inference for the Hierarchical
+            Dirichlet  Process, JMLR (2011)" <http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_.
         gamma : int, optional
-            First level concentration. See _[1].
+            First level concentration, see `Wang, Paisley, Blei: "Online Variational Inference for the Hierarchical
+            Dirichlet  Process, JMLR (2011)" <http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_.
         eta : float, optional
-            The topic Dirichlet. See _[1].
+            The topic Dirichlet, see `Wang, Paisley, Blei: "Online Variational Inference for the Hierarchical
+            Dirichlet  Process, JMLR (2011)" <http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_.
         scale : float, optional
             Weights information from the mini-chunk of corpus to calculate rhot.
         var_converge : float, optional
@@ -167,8 +170,8 @@ class HdpTransformer(TransformerMixin, BaseEstimator):
 
         Uses the parameters set in the constructor.
         This method can be used in two ways:
-            1. On an unfitted model in which case the model is initialized and trained on `X`.
-            2. On an already fitted model in which case the model is **updated** by `X`.
+        * On an unfitted model in which case the model is initialized and trained on `X`.
+        * On an already fitted model in which case the model is **updated** by `X`.
 
         Parameters
         ----------
