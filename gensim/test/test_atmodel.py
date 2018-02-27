@@ -457,7 +457,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             passes=100, random_state=np.random.seed(0)
         )
         author2doc_newauthor = {}
-        author2doc_newauthor["test"] = [0,1]
+        author2doc_newauthor["test"] = [0, 1]
         model.update(corpus=corpus[0:2], author2doc=author2doc_newauthor)
 
         # temp save model state vars before get_new_author_topics is called
@@ -480,7 +480,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
 
         # produce an error to test if rollback occurs
         with self.assertRaises(TypeError):
-            new_author_topics_error = model.get_new_author_topics(corpus=corpus[0])
+            model.get_new_author_topics(corpus=corpus[0])
 
         # assure rollback was successful and the model state is as before
         self.assertEqual(state_gamma_len, len(model.state.gamma))
@@ -488,7 +488,6 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.assertEqual(author2id_len, len(model.author2id))
         self.assertEqual(id2author_len, len(model.id2author))
         self.assertEqual(doc2author_len, len(model.doc2author))
-
 
     def testPasses(self):
         # long message includes the original error message with a custom one
