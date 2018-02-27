@@ -11,14 +11,14 @@ Follows scikit-learn API conventions to facilitate using gensim along with sciki
 Examples
 --------
 
-    >>> from gensim.test.utils import common_corpus, common_dictionary
-    >>> from gensim.sklearn_api import TfIdfTransformer
-    >>>
-    >>> # Transform the word counts inversely to their global frequency using the sklearn interface.
-    >>> model = TfIdfTransformer(dictionary=common_dictionary)
-    >>> weighted_corpus = model.fit_transform(common_corpus)
-    >>> weighted_corpus[0]
-    [(0, 0.57735026918962573), (1, 0.57735026918962573), (2, 0.57735026918962573)]
+>>> from gensim.test.utils import common_corpus, common_dictionary
+>>> from gensim.sklearn_api import TfIdfTransformer
+>>>
+>>> # Transform the word counts inversely to their global frequency using the sklearn interface.
+>>> model = TfIdfTransformer(dictionary=common_dictionary)
+>>> weighted_corpus = model.fit_transform(common_corpus)
+>>> weighted_corpus[0]
+[(0, 0.57735026918962573), (1, 0.57735026918962573), (2, 0.57735026918962573)]
 
 """
 

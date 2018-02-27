@@ -10,18 +10,17 @@ Follows scikit-learn API conventions to facilitate using gensim along with sciki
 
 Examples
 --------
-
-    >>> from gensim.sklearn_api import Text2BowTransformer
-    >>>
-    >>> # Get a corpus as an iterable of unicode strings.
-    >>> texts = [u'complier system computer', u'loading computer system']
-    >>>
-    >>> # Create a transformer..
-    >>> model = Text2BowTransformer()
-    >>>
-    >>> # Use sklearn style `fit_transform` to get the BOW representation of each document.
-    >>> model.fit_transform(texts)
-    [[(0, 1), (1, 1), (2, 1)], [(1, 1), (2, 1), (3, 1)]]
+>>> from gensim.sklearn_api import Text2BowTransformer
+>>>
+>>> # Get a corpus as an iterable of unicode strings.
+>>> texts = [u'complier system computer', u'loading computer system']
+>>>
+>>> # Create a transformer..
+>>> model = Text2BowTransformer()
+>>>
+>>> # Use sklearn style `fit_transform` to get the BOW representation of each document.
+>>> model.fit_transform(texts)
+[[(0, 1), (1, 1), (2, 1)], [(1, 1), (2, 1), (3, 1)]]
 
 """
 

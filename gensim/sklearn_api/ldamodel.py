@@ -12,13 +12,13 @@ Follows scikit-learn API conventions to facilitate using gensim along with sciki
 Examples
 --------
 
-    >>> from gensim.test.utils import common_corpus, common_dictionary
-    >>> from gensim.sklearn_api import LdaTransformer
-    >>>
-    >>> # Reduce each document to 2 dimensions (topics) using the sklearn interface.
-    >>> model = LdaTransformer(num_topics=2, id2word=common_dictionary, iterations=20, random_state=1)
-    >>> docvecs = model.fit_transform(common_corpus)
-    >>> assert docvecs.shape == (len(common_corpus), 2)
+>>> from gensim.test.utils import common_corpus, common_dictionary
+>>> from gensim.sklearn_api import LdaTransformer
+>>>
+>>> # Reduce each document to 2 dimensions (topics) using the sklearn interface.
+>>> model = LdaTransformer(num_topics=2, id2word=common_dictionary, iterations=20, random_state=1)
+>>> docvecs = model.fit_transform(common_corpus)
+>>> assert docvecs.shape == (len(common_corpus), 2)
 
 """
 
@@ -35,8 +35,7 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
     """Base LDA module.
 
     Wraps :class:`~gensim.models.ldamodel.LdaModel`.
-    For more information on the inner workings please take a look at
-    the original class.
+    For more information on the inner workings please take a look at the original class.
 
     """
 
@@ -44,16 +43,14 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
                  eta=None, decay=0.5, offset=1.0, eval_every=10, iterations=50, gamma_threshold=0.001,
                  minimum_probability=0.01, random_state=None, scorer='perplexity', dtype=np.float32):
 
-        """Sklearn wrapper for LDA model.
-        Based on [1]_.
+        """Sklearn wrapper for LDA model. Based on [1]_.
 
         Notes
         -----
         Configure `passes` and `update_every` params to choose the mode among:
-
-            - online (single-pass): update_every != None and passes == 1
-            - online (multi-pass): update_every != None and passes > 1
-            - batch: update_every == None
+        * online (single-pass): update_every != None and passes == 1
+        * online (multi-pass): update_every != None and passes > 1
+        * batch: update_every == None
 
         By default, 'online (single-pass)' mode is used for training the LDA model.
 
@@ -80,14 +77,14 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
             Can be set to an 1D array of length equal to the number of expected topics that expresses
             our a-priori belief for the each topics' probability.
             Alternatively default prior selecting strategies can be employed by supplying a string:
-                'asymmetric': Uses a fixed normalized assymetric prior of `1.0 / topicno`.
-                'default': Learns an assymetric prior from the corpus.
+            'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / topicno`.
+            'default': Learns an asymmetric prior from the corpus.
         eta : {float, np.array, str}, optional
-            A-priori belief on word probability. This can be:
-                a scalar for a symmetric prior over topic/word probability.
-                a vector : of length num_words to denote an asymmetric user defined probability for each word.
-                a matrix of shape (num_topics, num_words) to assign a probability for each word-topic combination.
-                the string 'auto' to learn the asymmetric prior from the data.
+            A-priori belief on word probability, this can be:
+                * scalar for a symmetric prior over topic/word probability,
+                * vector : of length num_words to denote an asymmetric user defined probability for each word,
+                * matrix of shape (num_topics, num_words) to assign a probability for each word-topic combination,
+                * the string 'auto' to learn the asymmetric prior from the data.
         decay : float, optional
             A number between (0.5, 1] to weight what percentage of the previous lambda value is forgotten
             when each new document is examined. Corresponds to Kappa from [1]_.
@@ -105,10 +102,9 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
         random_state : {np.random.RandomState, int}, optional
             Either a randomState object or a seed to generate one. Useful for reproducibility.
         scorer : str, optional
-            Method to compute a score reflecting how well the model has fit the input corpus.
-            Allowed values are:
-                'perplexity': Minimize the model's perplexity.
-                'mass_u': Use :class:`~gensim.models.coherencemodel.CoherenceModel` to compute a topics coherence.
+            Method to compute a score reflecting how well the model has fit the input corpus, allowed values are:
+            * 'perplexity': Minimize the model's perplexity.
+            * 'mass_u': Use :class:`~gensim.models.coherencemodel.CoherenceModel` to compute a topics coherence.
         dtype : type, optional
             Data-type to use during calculations inside model. All inputs are also converted.
             Available types: `numpy.float16`, `numpy.float32`, `numpy.float64`.
@@ -194,8 +190,8 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
 
         Uses the parameters set in the constructor.
         This method can be used in two ways:
-            1. On an unfitted model in which case the model is initialized and trained on `X`.
-            2. On an already fitted model in which case the model is **updated** by `X`.
+        * On an unfitted model in which case the model is initialized and trained on `X`.
+        * On an already fitted model in which case the model is **updated** by `X`.
 
         Parameters
         ----------

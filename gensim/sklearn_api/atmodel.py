@@ -11,21 +11,23 @@ Follows scikit-learn API conventions to facilitate using gensim along with sciki
 
 Examples
 --------
-
-    >>> from gensim.test.utils import common_texts, common_dictionary, common_corpus
-    >>> from gensim.sklearn_api.atmodel import AuthorTopicTransformer
-    >>>
-    >>> # Pass a mapping from authors to the documents they contributed to.
-    >>> author2doc = {'john': [0, 1, 2, 3, 4, 5, 6], 'jane': [2, 3, 4, 5, 6, 7, 8], 'jack': [0, 2, 4, 6, 8]}
-    >>>
-    >>> # Lets use the model to discover 2 different topics.
-    >>> model = AuthorTopicTransformer(id2word=common_dictionary, author2doc=author2doc, num_topics=2, passes=100)
-    >>>
-    >>> # In which of those 2 topics does jack mostly contribute to?
-    >>> jacks_topic_distr = model.fit(common_corpus).transform('jack')
+>>> from gensim.test.utils import common_texts, common_dictionary, common_corpus
+>>> from gensim.sklearn_api.atmodel import AuthorTopicTransformer
+>>>
+>>> # Pass a mapping from authors to the documents they contributed to.
+>>> author2doc = {
+...     'john': [0, 1, 2, 3, 4, 5, 6],
+...     'jane': [2, 3, 4, 5, 6, 7, 8],
+...     'jack': [0, 2, 4, 6, 8]
+... }
+>>>
+>>> # Lets use the model to discover 2 different topics.
+>>> model = AuthorTopicTransformer(id2word=common_dictionary, author2doc=author2doc, num_topics=2, passes=100)
+>>>
+>>> # In which of those 2 topics does jack mostly contribute to?
+>>> topic_dist = model.fit(common_corpus).transform('jack')
 
 """
-
 import numpy as np
 from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
@@ -35,24 +37,19 @@ from gensim import matutils
 
 
 class AuthorTopicTransformer(TransformerMixin, BaseEstimator):
-    """Base Author Topic module.
+    """Base Author Topic module, wraps :class:`~gensim.models.atmodel.AuthorTopicModel`.
 
-    Wraps :class:`~gensim.models.atmodel.AuthorTopicModel`.
-    For more information on the inner workings please take a look at
-    the original class. The model's internal workings are heavily based on _[1].
-
-    References
-    ----------
-    .. [1] Osen-Zvi et. al 2004, https://mimno.infosci.cornell.edu/info6150/readings/398.pdf.
+    For more information on the inner workings please take a look at the original class. The model's internal workings
+    are heavily based on `"The Author-Topic Model for Authors and Documents", Osen-Zvi et. al 2004
+    <https://mimno.infosci.cornell.edu/info6150/readings/398.pdf>`_.
 
     """
-
     def __init__(self, num_topics=100, id2word=None, author2doc=None, doc2author=None,
                  chunksize=2000, passes=1, iterations=50, decay=0.5, offset=1.0,
                  alpha='symmetric', eta='symmetric', update_every=1, eval_every=10,
                  gamma_threshold=0.001, serialized=False, serialization_path=None,
                  minimum_probability=0.01, random_state=None):
-        """Sklearn wrapper for Author-Topic model.
+        """
 
         Parameters
         ----------
@@ -76,22 +73,24 @@ class AuthorTopicTransformer(TransformerMixin, BaseEstimator):
             of the EM algorithm.
         decay : float, optional
             A number between (0.5, 1] to weight what percentage of the previous lambda value is forgotten
-            when each new document is examined. Corresponds to Kappa from [1]_.
+            when each new document is examined. Corresponds to Kappa from `"The Author-Topic Model for Authors
+            and Documents", Osen-Zvi et. al 2004 <https://mimno.infosci.cornell.edu/info6150/readings/398.pdf>`_.
         offset : float, optional
             Hyper-parameter that controls how much we will slow down the first steps the first few iterations.
-            Corresponds to Tau_0 from [1]_.
+            Corresponds to Tau_0 from `"The Author-Topic Model for Authors and Documents", Osen-Zvi et. al 2004
+            <https://mimno.infosci.cornell.edu/info6150/readings/398.pdf>`_.
         alpha : {np.array, str}, optional
             Can be set to an 1D array of length equal to the number of expected topics that expresses
             our a-priori belief for the each topics' probability.
             Alternatively default prior selecting strategies can be employed by supplying a string:
-                'asymmetric': Uses a fixed normalized assymetric prior of `1.0 / topicno`.
-                'default': Learns an assymetric prior from the corpus.
+            'asymmetric': Uses a fixed normalized assymetric prior of `1.0 / topicno`.
+            'default': Learns an assymetric prior from the corpus.
         eta : {float, np.array, str}, optional
-            A-priori belief on word probability. This can be:
-                a scalar for a symmetric prior over topic/word probability.
-                a vector : of length num_words to denote an asymmetric user defined probability for each word.
-                a matrix of shape (num_topics, num_words) to assign a probability for each word-topic combination.
-                the string 'auto' to learn the asymmetric prior from the data.
+            A-priori belief on word probability, this can be:
+                * scalar for a symmetric prior over topic/word probability,
+                * vector : of length num_words to denote an asymmetric user defined probability for each word,
+                * matrix of shape (num_topics, num_words) to assign a probability for each word-topic combination,
+                * the string 'auto' to learn the asymmetric prior from the data.
         update_every : int, optional
             Number of mini-batches between each model update.
         eval_every : int, optional
@@ -186,11 +185,10 @@ class AuthorTopicTransformer(TransformerMixin, BaseEstimator):
     def partial_fit(self, X, author2doc=None, doc2author=None):
         """Train model over a potentially incomplete set of documents.
 
-        Uses the parameters set in the constructor.
         This method can be used in two ways:
-            1. On an unfitted model in which case the model is initialized and trained on `X`.
-            2. On an already fitted model in which case the model is **updated** by `X`. Additional authors
-               can be passed using `author2doc` or `doc2author`
+        * On an unfitted model in which case the model is initialized and trained on `X`.
+        * On an already fitted model in which case the model is **updated** by `X`.
+
 
         Parameters
         ----------
