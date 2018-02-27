@@ -14,7 +14,7 @@ API Reference
     :no-members:
     :no-inherited-members:
 
-Document -> Vector
+Document ➔ Vector
 ------------------
 .. currentmodule:: gensim.models
 
@@ -31,7 +31,7 @@ Document -> Vector
     atmodel.AuthorTopicModel
     doc2vec.Doc2Vec
 
-Word -> Vector
+Word ➔ Vector
 --------------
 .. currentmodule:: gensim.models
 
@@ -55,8 +55,9 @@ Utils
     coherencemodel.CoherenceModel
     basemodel.BaseTopicModel
 
-Workers
--------
+Distributed
+-----------
+
 .. currentmodule:: gensim.models
 
 .. autosummary::
@@ -64,17 +65,8 @@ Workers
     :template: class.rst
 
     lsi_worker.Worker
-    lda_worker.Worker
-
-Dispatchers
------------
-.. currentmodule:: gensim.models
-
-.. autosummary::
-    :toctree: generated/
-    :template: class.rst
-
     lsi_dispatcher.Dispatcher
+    lda_worker.Worker
     lda_dispatcher.Dispatcher
 
 Wrappers
