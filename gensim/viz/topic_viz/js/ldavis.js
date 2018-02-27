@@ -93,6 +93,9 @@ var LDAvis = function(to_select, data_or_file_name) {
 	var topicPanelID = visID + "-topicPanel";
 	var wordPanelID = visID + "-wordPanel";
 
+	var DocTextID = visID + "-docText";
+	var DocTextBoundaryID = visID + "-docTextBoundary";
+
 	//////////////////////////////////////////////////////////////////////////////
 
 
@@ -220,6 +223,32 @@ var LDAvis = function(to_select, data_or_file_name) {
 				state_save(true);
 			});
 
+
+		// Document text border and content div
+		var doc_text_div_blue = d3.select("body")
+			    .append("div")
+			    .attr("id", DocTextBoundaryID)
+			    .style("position", "absolute")
+			    .style("top", margin.top + 2*margin.pad)
+			    .style("background-color", "#5bb0ff")
+			    .style("width", mdswidth + margin.pad)
+			    .style("height", mdsheight)
+			    .style("visibility", "hidden");
+		var doc_text_div_white = d3.select("body")
+			    .append("div")
+			    .attr("id", DocTextID)
+			    .style("position", "absolute")
+			    .style("top", margin.top + 3*margin.pad)
+			    .style("left", "18px")
+			    .style("background-color", "white")
+			    .style("width", mdswidth - 2*margin.pad)
+			    .style("height", mdsheight - 3*margin.pad)
+			    .style("overflow-y", "scroll")
+			    .style("border-radius", "10px")
+			    .style("padding", "5px")
+			    .style("visibility", "hidden");
+
+
 		d3.select("#" + docShow)
 			.on("click", function() {
 
@@ -259,27 +288,37 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 				// var doc_text_div_blue = document.createElement("div");
 
-				var doc_text_div_blue = d3.select("body")
-			    .append("div")
-			    .style("position", "absolute")
-			    .style("top", margin.top + 2*margin.pad)
-			    .style("background-color", "#5bb0ff")
-			    .style("width", mdswidth + margin.pad)
-			    .style("height", mdsheight);
+				// var doc_text_div_blue = d3.select("body")
+			 //    .append("div")
+			 //    .attr("id", DocTextBoundaryID)
+			 //    .style("position", "absolute")
+			 //    .style("top", margin.top + 2*margin.pad)
+			 //    .style("background-color", "#5bb0ff")
+			 //    .style("width", mdswidth + margin.pad)
+			 //    .style("height", mdsheight)
+			 //    .style("visibility", "visible");
 
-			    var doc_text_div_white = d3.select("body")
-			    .append("div")
-			    .style("position", "absolute")
-			    .style("top", margin.top + 3*margin.pad)
-			    .style("left", "18px")
-			    .style("background-color", "white")
-			    .text(doc_to_show_data.doc_texts)
+			 //    var doc_text_div_white = d3.select("body")
+			 //    .append("div")
+			 //    .attr("id", DocTextID)
+			 //    .style("position", "absolute")
+			 //    .style("top", margin.top + 3*margin.pad)
+			 //    .style("left", "18px")
+			 //    .style("background-color", "white")
+			 //    .text(doc_to_show_data.doc_texts)
+			 //    .style("white-space", "pre-wrap")
+			 //    .style("width", mdswidth - 2*margin.pad)
+			 //    .style("height", mdsheight - 3*margin.pad)
+			 //    .style("overflow-y", "scroll")
+			 //    .style("border-radius", "10px")
+			 //    .style("padding", "5px")
+			 //    .style("visibility", "visible");
+
+			    doc_text_div_blue.style("visibility", "visible");
+			    doc_text_div_white.text(doc_to_show_data.doc_texts)
 			    .style("white-space", "pre-wrap")
-			    .style("width", mdswidth - 2*margin.pad)
-			    .style("height", mdsheight - 3*margin.pad)
 			    .style("overflow-y", "scroll")
-			    .style("border-radius", "10px")
-			    .style("padding", "5px");
+			    .style("visibility", "visible");
 
 				// doc_text_div_blue.setAttribute("style", "transformOrigin: 0 0; position: absolute; background-color: blue; width: " + mdswidth +"px; height: " + mdsheight + "px; padding: 5px");
 
@@ -520,14 +559,14 @@ var LDAvis = function(to_select, data_or_file_name) {
         		.scaleExtent([1, 10])
         		.on("zoom", zoom));
 
-		var docs_text_tooltip = doc_plot
-		.append("g")
+		// var docs_text_tooltip = doc_plot
+		// .append("g")
 	    // .style("position", "absolute")
 		// .style("fill", "#5bb0ff")
 	    // .style("z-index", "100")
 	    // .style("overflow-y", "scroll")
 	    // .style("background", "#5bb0ff")
-	    .style("visibility", "hidden");
+	    // .style("visibility", "hidden");
 
 		// Clicking on the topic_plot should clear the selection
 		topic_plot
@@ -630,8 +669,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 		function transform(t) {
 		  return function(d) {
-		  	console.log("transform bug 0", t);
-		  	console.log("transform bug 1", d);
 		    return "translate(" + t.apply([+d.x, +d.y]) + ")";
 		  };
 		}
@@ -1273,15 +1310,24 @@ var LDAvis = function(to_select, data_or_file_name) {
 				word_off(document.getElementById(wordID + vis_state.word));
 			}
 
-			if (docs_text_tooltip.visibility !== 'hidden') {
-				docs_text_tooltip.transition()
-				.duration(500)
-				.style("visibility", "hidden");
-			}
-
 			document.getElementById(docID).value = vis_state.doc = 0;
 			document.getElementById(topicID).value = vis_state.topic = 0;
 			document.getElementById(wordID).value = vis_state.word = 0;
+
+			var doc_text_display = document.getElementById(DocTextID)
+			var doc_text_boundary = document.getElementById(DocTextBoundaryID)
+
+			if (doc_text_display.style.visibility !== "hidden") {
+				doc_text_display.style.visibility = "hidden";
+				doc_text_boundary.style.visibility = "hidden";
+        	}
+
+			// if (docs_text_tooltip.visibility !== 'hidden') {
+			// 	docs_text_tooltip.transition()
+			// 	.duration(500)
+			// 	.style("visibility", "hidden");
+			// }
+
 			state_save(true);
 		}
 
