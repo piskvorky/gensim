@@ -51,6 +51,8 @@ Modules:
     models/coherencemodel
     models/basemodel
     models/callbacks
+    models/utils_any2vec
+    models/_utils_any2vec
     models/wrappers/ldamallet
     models/wrappers/dtmmodel
     models/wrappers/ldavowpalwabbit.rst
