@@ -1606,12 +1606,14 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
                 ngram_weights = self.vectors_ngrams_norm
             else:
                 ngram_weights = self.vectors_ngrams
+            ngrams_found = 0
             for ngram in ngrams:
                 ngram_hash = _ft_hash(ngram) % self.bucket
                 if ngram_hash in self.hash2index:
                     word_vec += ngram_weights[self.hash2index[ngram_hash]]
+                    ngrams_found += 1
             if word_vec.any():
-                return word_vec / len(ngrams)
+                return word_vec / max(1, ngrams_found)
             else:  # No ngrams of the word are present in self.ngrams
                 raise KeyError('all ngrams for word %s absent from model' % word)
 

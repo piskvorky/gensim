@@ -775,19 +775,16 @@ class FastTextTrainables(Word2VecTrainables):
             wv.hash2index = {}
             wv.buckets_word = {}
             ngram_indices = []
-            new_hash_count = 0
-            wv.num_ngram_vectors = 0
             for word, vocab in wv.vocab.items():
                 buckets = []
                 for ngram in _compute_ngrams(word, wv.min_n, wv.max_n):
                     ngram_hash = _ft_hash(ngram) % self.bucket
                     if ngram_hash not in wv.hash2index:
-                        wv.num_ngram_vectors += 1
+                        wv.hash2index[ngram_hash] = len(ngram_indices)
                         ngram_indices.append(ngram_hash)
-                        wv.hash2index[ngram_hash] = new_hash_count
-                        new_hash_count = new_hash_count + 1
                     buckets.append(wv.hash2index[ngram_hash])
                 wv.buckets_word[vocab.index] = tuple(buckets)
+            wv.num_ngram_vectors = len(ngram_indices)
 
             logger.info("Total number of ngrams is %d", wv.num_ngram_vectors)
 
@@ -795,17 +792,14 @@ class FastTextTrainables(Word2VecTrainables):
             self.vectors_ngrams_lockf = self.vectors_ngrams_lockf.take(ngram_indices, axis=0)
             self.reset_ngrams_weights(wv)
         else:
-            if not wv.buckets_word:
-                wv.buckets_word = {}
-            new_hash_count = 0
+            wv.buckets_word = {}
             num_new_ngrams = 0
             for word, vocab in wv.vocab.items():
                 buckets = []
                 for ngram in _compute_ngrams(word, wv.min_n, wv.max_n):
                     ngram_hash = _ft_hash(ngram) % self.bucket
                     if ngram_hash not in wv.hash2index:
-                        wv.hash2index[ngram_hash] = new_hash_count + self.old_hash2index_len
-                        new_hash_count = new_hash_count + 1
+                        wv.hash2index[ngram_hash] = num_new_ngrams + self.old_hash2index_len
                         num_new_ngrams += 1
                     buckets.append(wv.hash2index[ngram_hash])
                 wv.buckets_word[vocab.index] = tuple(buckets)
@@ -879,9 +873,9 @@ class FastTextTrainables(Word2VecTrainables):
                 ngram_hash = _ft_hash(ngram) % self.bucket
                 if ngram_hash in wv.hash2index:
                     continue
+                wv.hash2index[ngram_hash] = len(ngram_indices)
                 ngram_indices.append(len(wv.vocab) + ngram_hash)
-                wv.hash2index[ngram_hash] = wv.num_ngram_vectors
-                wv.num_ngram_vectors += 1
+        wv.num_ngram_vectors = len(ngram_indices)
         wv.vectors_ngrams = wv.vectors_ngrams.take(ngram_indices, axis=0)
 
         ngram_weights = wv.vectors_ngrams
