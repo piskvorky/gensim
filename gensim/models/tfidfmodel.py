@@ -423,7 +423,9 @@ class TfidfModel(interfaces.TransformationABC):
             n_samples = sparse_norm_wts.shape[0]
 
             if self.pivot is None:
-                self.pivot = sparse_norm_wts.mean()
+                # self.pivot = sparse_norm_wts.mean()
+                import math
+                self.pivot = 1.0 * math.sqrt(sum(val ** 2 for _, val in vector))
 
             pivoted_norm = (1 - self.slope) * self.pivot + self.slope * sparse_norm_wts
 
