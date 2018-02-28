@@ -699,7 +699,7 @@ class FastText(BaseWordEmbeddingsModel):
             Path to the file.
 
         """
-        kwargs['ignore'] = kwargs.get('ignore', ['vectors_norm', 'vectors_vocab_norm', 'vectors_ngrams_norm'])
+        kwargs['ignore'] = kwargs.get('ignore', ['vectors_norm', 'vectors_vocab_norm', 'vectors_ngrams_norm', 'buckets_word'])
         super(FastText, self).save(*args, **kwargs)
 
     @classmethod

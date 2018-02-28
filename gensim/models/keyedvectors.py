@@ -1584,7 +1584,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
 
         """
         # don't bother storing the cached normalized vectors
-        kwargs['ignore'] = kwargs.get('ignore', ['vectors_norm', 'vectors_vocab_norm', 'vectors_ngrams_norm'])
+        kwargs['ignore'] = kwargs.get('ignore', ['vectors_norm', 'vectors_vocab_norm', 'vectors_ngrams_norm', 'buckets_word'])
         super(FastTextKeyedVectors, self).save(*args, **kwargs)
 
     def word_vec(self, word, use_norm=False):
