@@ -24,8 +24,8 @@ class W2VTransformer(TransformerMixin, BaseEstimator):
     Base Word2Vec module
     """
 
-    def __init__(self, size=100, alpha=0.025, window=5, min_count=5, max_vocab_size=None, sample=1e-3, seed=1,
-                 workers=3, min_alpha=0.0001, sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
+    def __init__(self, size=None, alpha=0.025, window=5, min_count=5, max_vocab_size=None, sample=1e-3, seed=1,
+                 workers=3, min_alpha=0.0001, sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=None, null_word=0,
                  trim_rule=None, sorted_vocab=1, batch_words=10000,**kwargs):
         """
         Sklearn wrapper for Word2Vec model. See gensim.models.Word2Vec for parameter details.
@@ -33,10 +33,14 @@ class W2VTransformer(TransformerMixin, BaseEstimator):
         if iter is not None:
             warnings.warn("The parameter `iter` is deprecated, will be removed in 4.0.0, use `epochs` instead.")
             kwargs['epochs'] = iter
+        if iter is None and 'epochs' not in kwargs:
+            kwargs['epochs'] = 5
 
         if size is not None:
             warnings.warn("The parameter `size` is deprecated, will be removed in 4.0.0, use `vector_size` instead.")
             kwargs['vector_size'] = size
+        if size is None and 'vector_size' not in kwargs:
+            kwargs['vector_size'] = 100
         
         self.gensim_model = None
         self.size = size
