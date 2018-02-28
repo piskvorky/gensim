@@ -520,11 +520,12 @@ class TestFastTextModel(unittest.TestCase):
         model.build_vocab(sentences)
         report = model.estimate_memory()
         self.assertEqual(report['vocab'], 2800)
-        self.assertEqual(report['syn0_vocab'], 1600)
-        self.assertEqual(report['syn1'], 1600)
-        self.assertEqual(report['syn1neg'], 1600)
-        self.assertEqual(report['syn0_ngrams'], 22400)
-        self.assertEqual(report['total'], 30000)
+        self.assertEqual(report['syn0_vocab'], 160)
+        self.assertEqual(report['syn1'], 160)
+        self.assertEqual(report['syn1neg'], 160)
+        self.assertEqual(report['syn0_ngrams'], 2240)
+        self.assertEqual(report['buckets_word'], 640)
+        self.assertEqual(report['total'], 6160)
 
     def testLoadOldModel(self):
         """Test loading fasttext models from previous version"""
