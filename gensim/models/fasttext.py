@@ -86,13 +86,12 @@ except ImportError:
                 window_pos = enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start)
                 word2_indices = [word2.index for pos2, word2 in window_pos if (word2 is not None and pos2 != pos)]
 
-                word2_subwords = []
                 vocab_subwords_indices = []
                 ngrams_subwords_indices = []
 
                 for index in word2_indices:
                     vocab_subwords_indices += [index]
-                    ngram_subwords_indices.extend(model.wv.buckets_word[index])
+                    ngrams_subwords_indices.extend(model.wv.buckets_word[index])
 
                 l1_vocab = np_sum(model.wv.syn0_vocab[vocab_subwords_indices], axis=0)  # 1 x vector_size
                 l1_ngrams = np_sum(model.wv.syn0_ngrams[ngrams_subwords_indices], axis=0)  # 1 x vector_size
@@ -695,7 +694,8 @@ class FastText(BaseWordEmbeddingsModel):
             Path to the file.
 
         """
-        kwargs['ignore'] = kwargs.get('ignore', ['vectors_norm', 'vectors_vocab_norm', 'vectors_ngrams_norm', 'buckets_word'])
+        kwargs['ignore'] = kwargs.get(
+            'ignore', ['vectors_norm', 'vectors_vocab_norm', 'vectors_ngrams_norm', 'buckets_word'])
         super(FastText, self).save(*args, **kwargs)
 
     @classmethod
