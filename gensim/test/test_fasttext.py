@@ -516,7 +516,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(model.wv.syn0_ngrams.shape, (20, 10))
 
     def test_estimate_memory(self):
-        model = FT_gensim(sg=1, hs=1, negative=5, min_count=3)
+        model = FT_gensim(sg=1, hs=1, size=10, negative=5, min_count=3)
         model.build_vocab(sentences)
         report = model.estimate_memory()
         self.assertEqual(report['vocab'], 2800)
