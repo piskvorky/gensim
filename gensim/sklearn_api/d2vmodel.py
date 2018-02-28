@@ -24,9 +24,9 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
     """
 
     def __init__(self, dm_mean=None, dm=1, dbow_words=0, dm_concat=0, dm_tag_count=1, docvecs=None,
-                 docvecs_mapfile=None, comment=None, trim_rule=None, size=100, alpha=0.025, window=5, min_count=5,
+                 docvecs_mapfile=None, comment=None, trim_rule=None, size=None, alpha=0.025, window=5, min_count=5,
                  max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001, hs=0, negative=5, cbow_mean=1,
-                 hashfxn=hash, iter=5, sorted_vocab=1, batch_words=10000,**kwargs):
+                 hashfxn=hash, iter=None, sorted_vocab=1, batch_words=10000,**kwargs):
         """
         Sklearn api for Doc2Vec model. See gensim.models.Doc2Vec and gensim.models.Word2Vec for parameter details.
         """
@@ -34,10 +34,14 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
         if iter is not None:
             warnings.warn("The parameter `iter` is deprecated, will be removed in 4.0.0, use `epochs` instead.")
             kwargs['epochs'] = iter
+        if iter is None and 'epochs' not in kwargs:
+            kwargs['epochs'] = 5
 
         if size is not None:
             warnings.warn("The parameter `size` is deprecated, will be removed in 4.0.0, use `vector_size` instead.")
             kwargs['vector_size'] = size
+        if size is None and 'vector_size' not in kwargs:
+            kwargs['vector_size'] = 100
             
         self.gensim_model = None
         self.dm_mean = dm_mean
