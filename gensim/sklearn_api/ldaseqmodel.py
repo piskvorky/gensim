@@ -12,6 +12,15 @@ Follows scikit-learn API conventions to facilitate using gensim along with sciki
 Examples
 --------
 
+>>> from gensim.test.utils import common_corpus, common_dictionary
+>>> from gensim.sklearn_api.ldaseqmodel import LdaSeqTransformer
+>>>
+>>> # Create a sequential LDA transformer to extract 2 topics from the common corpus.
+>>> # Divide the work into 3 unequal time slices.
+>>> model = LdaSeqTransformer(id2word=common_dictionary, num_topics=2, time_slice=[3, 4, 2], initialize='gensim')
+>>>
+>>> # Each document almost entirely belongs to one of the two topics.
+>>> transformed_corpus = model.fit_transform(common_corpus)
 
 """
 import numpy as np
@@ -48,19 +57,17 @@ class LdaSeqTransformer(TransformerMixin, BaseEstimator):
             Number of latent topics to be discovered in the corpus.
         initialize : str {'gensim', 'own', 'ldamodel'}
             Controls the initialization of the DTM model. Supports three different modes:
-                - 'gensim', default: Uses gensim's own LDA initialization.
-                - 'own': You can use your own initialization matrix of an LDA model previously trained by passing it to `sstats`.
-                - 'lda_model': Use a previously used LDA model, passing it through the `lda_model` argument.
+                * 'gensim', default: Uses gensim's own LDA initialization.
+                * 'own': Uses your own initialization matrix of an LDA model that has been previously trained.
+                * 'lda_model': Use a previously used LDA model, passing it through the `lda_model` argument.
         sstats : np.ndarray of shape (vocab_len, `num_topics`)
             If `initialize` is set to 'own' this will be used to initialize the DTM model.
         lda_model : :class:`~gensim.models.ldamodel.LdaModel`
             If `initialize` is set to 'lda_model' this object will be used to create the `sstats` initialization matrix.
         obs_variance : float
-            Observed variance used to approximate the true and forward variance as shown in _[1].
-
-            References
-            ----------
-            http://repository.cmu.edu/cgi/viewcontent.cgi?article=2036&context=compsci
+            Observed variance used to approximate the true and forward variance as shown in
+            `David M. Blei, John D. Lafferty: "Dynamic Topic Models"
+             <https://mimno.infosci.cornell.edu/info6150/readings/398.pdf>`_.
         chain_variance : float
             Gaussian parameter defined in the beta distribution to dictate how the beta values evolve.
         passes : int
