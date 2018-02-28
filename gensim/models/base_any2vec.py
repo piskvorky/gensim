@@ -445,12 +445,11 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
     def build_vocab(self, sentences, update=False, progress_per=10000, keep_raw_vocab=False, trim_rule=None, **kwargs):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
-        Each sentence is a iterable of iterables (can simply be a list of unicode strings too).
 
         Parameters
         ----------
-        sentences : iterable of iterables of str
-            The `sentences` iterable can be simply a list of lists of tokens, but for larger corpora,
+        sentences : iterable of iterable of str
+            Can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
@@ -458,6 +457,19 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             If true, the new words in `sentences` will be added to model's vocab.
         progress_per : int
             Indicates how many words to process before showing/updating the progress.
+        keep_raw_vocab : bool
+            If False, the raw vocabulary will be deleted after the scaling is done to free up RAM.
+        trim_rule : function
+            Vocabulary trimming rule, specifies whether certain words should remain in the vocabulary,
+            be trimmed away, or handled using the default (discard if word count < min_count).
+            Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
+            or a callable that accepts parameters (word, count, min_count) and returns either
+            :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
+            Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
+            of the model.
+        **kwargs
+            Key word arguments propagated to `self.vocabulary.prepare_vocab`
+
 
         """
         total_words, corpus_count = self.vocabulary.scan_vocab(
@@ -471,12 +483,10 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
     def build_vocab_from_freq(self, word_freq, keep_raw_vocab=False, corpus_count=None, trim_rule=None, update=False):
         """Build vocabulary from a dictionary of word frequencies.
-        Build model vocabulary from a passed dictionary that contains (word,word count).
-        Words must be of type unicode strings.
 
         Parameters
         ----------
-        word_freq : dict of (str, int)
+        word_freq : dict of (unicode str, int)
             A mapping from a word in the vocabulary to its frequency count.
         keep_raw_vocab : bool
             If False, delete the raw vocabulary after the scaling is done to free up RAM.
@@ -510,7 +520,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             len(raw_vocab), sum(itervalues(raw_vocab))
         )
 
-        # Since no sentences are provided, this is to control the corpus_count
+        # Since no sentences are provided, this is to control the `corpus_count`
         self.corpus_count = corpus_count or 0
         self.vocabulary.raw_vocab = raw_vocab
 
@@ -523,7 +533,20 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             self.hs, self.negative, self.wv, update=update, vocabulary=self.vocabulary)  # build tables & arrays
 
     def estimate_memory(self, vocab_size=None, report=None):
-        """Estimate required memory for a model using current settings and provided vocabulary size."""
+        """Estimate required memory for a model using current settings and provided vocabulary size.
+
+        Parameters
+        ----------
+        vocab_size : int, optional
+            Number of unique tokens in the vocabulary
+        report : dict of (str, int), optional
+            A dictionary from string representations of the model's memory consuming members to their size in bytes.
+
+        Returns
+        -------
+        dict of (str, int), optional
+            A dictionary from string representations of the model's memory consuming members to their size in bytes.
+        """
         vocab_size = vocab_size or len(self.wv.vocab)
         report = report or {}
         report['vocab'] = vocab_size * (700 if self.hs else 500)
@@ -542,6 +565,42 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
     def train(self, sentences, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None, word_count=0,
               queue_factor=2, report_delay=1.0, compute_loss=False, callbacks=()):
+        """Train the model. If the hyper-parameters are passed, they override the ones set in the constructor.
+
+        Parameters
+        ----------
+        sentences : iterable of iterable of str
+            Can be simply a list of lists of tokens, but for larger corpora,
+            consider an iterable that streams the sentences directly from disk/network.
+            See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
+            or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
+        total_examples : int
+            Count of sentences.
+        total_words : int
+            Count of raw words in sentences.
+        epochs : int
+            Number of iterations (epochs) over the corpus.
+        start_alpha : float
+            Initial learning rate.
+        end_alpha : float
+            Final learning rate. Drops linearly with the number of iterations from `start_alpha`.
+        word_count : int
+            Count of words already trained. Leave this to 0 for the usual case of training on all words in sentences.
+        queue_factor : int
+            Multiplier for size of queue -> size = number of workers * queue_factor.
+        report_delay : float
+            Seconds to wait before reporting progress.
+        compute_loss : bool
+            If True, loss will be computed while training the Word2Vec model and stored in
+            :attr:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel.running_training_loss`.
+        callbacks : list of :class: `~gensim.models.callbacks.CallbackAny2Vec`
+            List of callbacks that need to be executed/run at specific stages during training.
+
+        Returns
+        -------
+        (int, int)
+            Tuple of (effective word count after ignoring unknown words and sentence length trimming, total word count).
+        """
 
         self.alpha = start_alpha or self.alpha
         self.min_alpha = end_alpha or self.min_alpha
@@ -553,11 +612,39 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             queue_factor=queue_factor, report_delay=report_delay, compute_loss=compute_loss, callbacks=callbacks)
 
     def _get_job_params(self, cur_epoch):
-        """Get the parameter required for each batch."""
+        """Get the learning rate used in the current epoch.
+
+        Parameters
+        ----------
+        cur_epoch : int
+            Current iteration through the corpus
+
+        Returns
+        -------
+        float
+            The learning rate for this epoch (it is linearly reduced with epochs from `self.alpha` to `self.min_alpha`).
+        """
         alpha = self.alpha - ((self.alpha - self.min_alpha) * float(cur_epoch) / self.epochs)
         return alpha
 
     def _update_job_params(self, job_params, epoch_progress, cur_epoch):
+        """Returns the correct learning rate for the next iteration.
+
+        Parameters
+        ----------
+        job_params : dict of (str, obj)
+            Unused. TODO: Delete this.
+        epoch_progress : float
+            Ratio of finished work in the current epoch.
+        cur_epoch : int
+            Number of current iteration.
+
+        Returns
+        -------
+        float
+            The learning rate to be used in the next training epoch.
+
+        """
         start_alpha = self.alpha
         end_alpha = self.min_alpha
         progress = (cur_epoch + epoch_progress) / self.epochs
@@ -567,12 +654,30 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         return next_alpha
 
     def _get_thread_working_mem(self):
+        """Computes the memory used per worker thread.
+
+        Returns
+        -------
+        (np.ndarray, np.ndarray)
+            Each worker threads private work memory.
+        """
         work = matutils.zeros_aligned(self.trainables.layer1_size, dtype=REAL)  # per-thread private work memory
         neu1 = matutils.zeros_aligned(self.trainables.layer1_size, dtype=REAL)
         return work, neu1
 
     def _raw_word_count(self, job):
-        """Get the number of words in a given job."""
+        """Get the number of words in a given job.
+
+        Parameters
+        ----------
+        job: iterable of iterable of str
+            The corpus chunk processed in a single batch.
+
+        Returns
+        -------
+        int
+            Number of raw words in the corpus chunk.
+        """
         return sum(len(sentence) for sentence in job)
 
     def _check_training_sanity(self, epochs=None, total_examples=None, total_words=None, **kwargs):
