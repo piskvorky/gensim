@@ -12,16 +12,16 @@ Follows scikit-learn API conventions to facilitate using gensim along with sciki
 
 Examples
 --------
-    >>> from gensim.test.utils import common_texts
-    >>> from gensim.sklearn_api import W2VTransformer
-    >>>
-    >>> # Create a model to represent each word by a 10 dimensional vector.
-    >>> model = W2VTransformer(size=10, min_count=1, seed=1)
-    >>>
-    >>> # What is the vector representation of the word 'graph'?
-    >>> wordvecs = model.fit(common_texts).transform(['graph', 'system'])
-    >>> assert wordvecs.shape == (2, 10)
 
+>>> from gensim.test.utils import common_texts
+>>> from gensim.sklearn_api import W2VTransformer
+>>>
+>>> # Create a model to represent each word by a 10 dimensional vector.
+>>> model = W2VTransformer(size=10, min_count=1, seed=1)
+>>>
+>>> # What is the vector representation of the word 'graph'?
+>>> wordvecs = model.fit(common_texts).transform(['graph', 'system'])
+>>> assert wordvecs.shape == (2, 10)
 
 """
 
@@ -35,9 +35,8 @@ from gensim import models
 
 
 class W2VTransformer(TransformerMixin, BaseEstimator):
-    """Base Word2Vec module.
+    """Base Word2Vec module, wraps :class:`~gensim.models.word2vec.Word2Vec`.
 
-    Wraps :class:`~gensim.models.word2vec.Word2Vec`.
     For more information on the inner workings please take a look at
     the original class.
 
@@ -87,8 +86,8 @@ class W2VTransformer(TransformerMixin, BaseEstimator):
             If set to 0, no negative sampling is used.
         cbow_mean : int {1,0}
             If 0, use the sum of the context word vectors. If 1, use the mean, only applies when cbow is used.
-        hashfxn : function
-            Hash function to use to randomly initialize weights, for increased training reproducibility.
+        hashfxn : callable (object -> int), optional
+            A hashing function. Used to create an initial random reproducible vector by hashing the random seed.
         iter : int
             Number of iterations (epochs) over the corpus.
         null_word : int {1, 0}

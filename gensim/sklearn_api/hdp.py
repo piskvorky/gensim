@@ -4,9 +4,21 @@
 # Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""
-Scikit learn interface for gensim for easy use of gensim with scikit-learn
-Follows scikit-learn API conventions
+"""Scikit learn interface for :class:`~gensim.models.hdpmodel.HdpModel`.
+
+Follows scikit-learn API conventions to facilitate using gensim along with scikit-learn.
+
+
+Examples
+--------
+
+>>> from gensim.test.utils import common_dictionary, common_corpus
+>>> from gensim.sklearn_api import HdpTransformer
+>>>
+>>> # Lets extract the distribution of each document in topics
+>>> model = HdpTransformer(id2word=common_dictionary)
+>>> distr = model.fit_transform(common_corpus)
+
 """
 
 import numpy as np
@@ -19,14 +31,59 @@ from gensim import matutils
 
 
 class HdpTransformer(TransformerMixin, BaseEstimator):
-    """
-    Base HDP module
+    """Base HDP module, wraps :class:`~gensim.models.hdpmodel.HdpModel`.
+
+    For more information on the inner workings please take a look at
+    the original class. The inner workings of this class heavily depends on `Wang, Paisley, Blei: "Online Variational
+    Inference for the Hierarchical Dirichlet Process, JMLR (2011)"
+    <http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_.
+
     """
 
     def __init__(self, id2word, max_chunks=None, max_time=None, chunksize=256, kappa=1.0, tau=64.0, K=15, T=150,
                  alpha=1, gamma=1, eta=0.01, scale=1.0, var_converge=0.0001, outputdir=None, random_state=None):
-        """
-        Sklearn api for HDP model. See gensim.models.HdpModel for parameter details.
+        """Sklearn api for HDP model.
+
+        Parameters
+        ----------
+        id2word : {dict of (int, str), :class:`~gensim.corpora.dictionary.Dictionary`}
+            Mapping between a words ID and the word itself in the vocabulary.
+        max_chunks : int, optional
+            Upper bound on how many chunks to process.It wraps around corpus beginning in another corpus pass,
+            if there are not enough chunks in the corpus
+        max_time : int, optional
+            Upper bound on time in seconds for which model will be trained.
+        chunksize : int, optional
+            Number of documents to be processed by the model in each mini-batch.
+        kappa : float, optional
+            Learning rate, see `Wang, Paisley, Blei: "Online Variational Inference for the Hierarchical Dirichlet
+            Process, JMLR (2011)" <http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_.
+        tau : float, optional
+            Slow down parameter.
+        K : int, optional
+            Second level truncation level, see `Wang, Paisley, Blei: "Online Variational Inference for the Hierarchical
+            Dirichlet Process, JMLR (2011)" <http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_.
+        T : int, optional
+            Top level truncation level, see `Wang, Paisley, Blei: "Online Variational Inference for the Hierarchical
+            Dirichlet  Process, JMLR (2011)" <http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_.
+        alpha : int, optional
+            Second level concentration, see `Wang, Paisley, Blei: "Online Variational Inference for the Hierarchical
+            Dirichlet  Process, JMLR (2011)" <http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_.
+        gamma : int, optional
+            First level concentration, see `Wang, Paisley, Blei: "Online Variational Inference for the Hierarchical
+            Dirichlet  Process, JMLR (2011)" <http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_.
+        eta : float, optional
+            The topic Dirichlet, see `Wang, Paisley, Blei: "Online Variational Inference for the Hierarchical
+            Dirichlet  Process, JMLR (2011)" <http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_.
+        scale : float, optional
+            Weights information from the mini-chunk of corpus to calculate rhot.
+        var_converge : float, optional
+            Lower bound on the right side of convergence. Used when updating variational parameters for a
+            single document.
+        outputdir : str, optional
+            Path to a directory where topic and options information will be stored.
+        random_state : int, optional
+            Seed used to create a :class:`~np.random.RandomState`. Useful for obtaining reproducible results.
         """
         self.gensim_model = None
         self.id2word = id2word
@@ -46,9 +103,18 @@ class HdpTransformer(TransformerMixin, BaseEstimator):
         self.random_state = random_state
 
     def fit(self, X, y=None):
-        """
-        Fit the model according to the given training data.
-        Calls gensim.models.HdpModel
+        """Fit the model according to the given training data.
+
+        Parameters
+        ----------
+        X : {iterable of iterable of (int, int), scipy.sparse matrix}
+            A collection of documents in BOW format used for training the model.
+
+        Returns
+        -------
+        :class:`~gensim.sklearn_api.hdp.HdpTransformer`
+            The trained model.
+
         """
         if sparse.issparse(X):
             corpus = matutils.Sparse2Corpus(sparse=X, documents_columns=False)
@@ -64,14 +130,19 @@ class HdpTransformer(TransformerMixin, BaseEstimator):
         return self
 
     def transform(self, docs):
-        """
-        Takes a list of documents as input ('docs').
-        Returns a matrix of topic distribution for the given document bow, where a_ij
+        """Returns a matrix of topic distribution for the given document bow, where a_ij
         indicates (topic_i, topic_probability_j).
-        The input `docs` should be in BOW format and can be a list of documents like
-        [[(4, 1), (7, 1)],
-        [(9, 1), (13, 1)], [(2, 1), (6, 1)]]
-        or a single document like : [(4, 1), (7, 1)]
+
+        Parameters
+        ----------
+        docs : iterable of iterable of (int, int)
+            A list of documents in BOW format to be transformed.
+
+        Returns
+        -------
+        np.ndarray of shape (`len(docs), num_topics`)
+            Topic distribution for each input document.
+
         """
         if self.gensim_model is None:
             raise NotFittedError(
@@ -94,8 +165,23 @@ class HdpTransformer(TransformerMixin, BaseEstimator):
         return np.reshape(np.array(distribution), (len(docs), max_num_topics))
 
     def partial_fit(self, X):
-        """
-        Train model over X.
+        """Train model over a potentially incomplete set of documents.
+
+        Uses the parameters set in the constructor.
+        This method can be used in two ways:
+        * On an unfitted model in which case the model is initialized and trained on `X`.
+        * On an already fitted model in which case the model is **updated** by `X`.
+
+        Parameters
+        ----------
+        X : {iterable of iterable of (int, int), scipy.sparse matrix}
+            A collection of documents in BOW format used for training the model.
+
+        Returns
+        -------
+        :class:`~gensim.sklearn_api.hdp.HdpTransformer`
+            The trained model.
+
         """
         if sparse.issparse(X):
             X = matutils.Sparse2Corpus(sparse=X, documents_columns=False)

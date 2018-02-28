@@ -11,20 +11,20 @@ Follows scikit-learn API conventions to facilitate using gensim along with sciki
 Examples
 --------
 
-    >>> from gensim.sklearn_api.phrases import PhrasesTransformer
-    >>>
-    >>> # Create the model. Make sure no term is ignored and combinations seen 3+ times are captured.
-    >>> m = PhrasesTransformer(min_count=1, threshold=3)
-    >>> texts = [
-    ...   ['I', 'love', 'computer', 'science'],
-    ...   ['computer', 'science', 'is', 'my', 'passion'],
-    ...   ['I', 'studied', 'computer', 'science']
-    ... ]
-    >>>
-    >>> # Use sklearn fit_transform to see the transformation.
-    >>> # Since computer and science were seen together 3+ times they are considered a phrase.
-    >>> m.fit_transform(texts)[0]
-    ['I', 'love', 'computer_science']
+>>> from gensim.sklearn_api.phrases import PhrasesTransformer
+>>>
+>>> # Create the model. Make sure no term is ignored and combinations seen 3+ times are captured.
+>>> m = PhrasesTransformer(min_count=1, threshold=3)
+>>> texts = [
+...   ['I', 'love', 'computer', 'science'],
+...   ['computer', 'science', 'is', 'my', 'passion'],
+...   ['I', 'studied', 'computer', 'science']
+... ]
+>>>
+>>> # Use sklearn fit_transform to see the transformation.
+>>> # Since computer and science were seen together 3+ times they are considered a phrase.
+>>> m.fit_transform(texts)[0]
+['I', 'love', 'computer_science']
 
 """
 
@@ -68,8 +68,10 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
             or with a function with the expected parameter names. Two built-in scoring functions are available
             by setting `scoring` to a string:
 
-            'default': from [1]_.
-            'npmi': normalized pointwise mutual information, from [2]_.
+            'default': Explained in `Mikolov, et. al: "Efficient Estimation of Word Representations in Vector Space"
+            <https://arxiv.org/pdf/1301.3781.pdf>`_.
+            'npmi': Explained in `Gerlof Bouma: "Normalized (Pointwise) Mutual Information in Collocation Extraction"
+            <https://svn.spraakdata.gu.se/repos/gerlof/pub/www/Docs/npmi-pfd.pdf>`_.
 
             'npmi' is more robust when dealing with common words that form part of common bigrams, and
             ranges from -1 to 1, but is slower to calculate than the default.
@@ -87,11 +89,6 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
 
             A scoring function without any of these parameters (even if the parameters are not used) will
             raise a ValueError on initialization of the Phrases class. The scoring function must be pic
-
-        References
-        ----------
-        .. [1] "Efficient Estimaton of Word Representations in Vector Space" by Mikolov, et. al.
-        .. [2] "Normalized (Pointwise) Mutual Information in Colocation Extraction" by Gerlof Bouma.
 
         """
         self.gensim_model = None

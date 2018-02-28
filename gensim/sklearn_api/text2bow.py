@@ -10,18 +10,17 @@ Follows scikit-learn API conventions to facilitate using gensim along with sciki
 
 Examples
 --------
-
-    >>> from gensim.sklearn_api import Text2BowTransformer
-    >>>
-    >>> # Get a corpus as an iterable of unicode strings.
-    >>> texts = [u'complier system computer', u'loading computer system']
-    >>>
-    >>> # Create a transformer..
-    >>> model = Text2BowTransformer()
-    >>>
-    >>> # Use sklearn style `fit_transform` to get the BOW representation of each document.
-    >>> model.fit_transform(texts)
-    [[(0, 1), (1, 1), (2, 1)], [(1, 1), (2, 1), (3, 1)]]
+>>> from gensim.sklearn_api import Text2BowTransformer
+>>>
+>>> # Get a corpus as an iterable of unicode strings.
+>>> texts = [u'complier system computer', u'loading computer system']
+>>>
+>>> # Create a transformer..
+>>> model = Text2BowTransformer()
+>>>
+>>> # Use sklearn style `fit_transform` to get the BOW representation of each document.
+>>> model.fit_transform(texts)
+[[(0, 1), (1, 1), (2, 1)], [(1, 1), (2, 1), (3, 1)]]
 
 """
 
@@ -34,9 +33,8 @@ from gensim.utils import tokenize
 
 
 class Text2BowTransformer(TransformerMixin, BaseEstimator):
-    """Base Text2Bow module.
+    """Base Text2Bow module , wraps :class:`~gensim.corpora.dictionary.Dictionary`.
 
-    Wraps :class:`~gensim.corpora.dictionary.Dictionary`.
     For more information on the inner workings please take a look at
     the original class.
 

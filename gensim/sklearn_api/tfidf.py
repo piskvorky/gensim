@@ -11,14 +11,14 @@ Follows scikit-learn API conventions to facilitate using gensim along with sciki
 Examples
 --------
 
-    >>> from gensim.test.utils import common_corpus, common_dictionary
-    >>> from gensim.sklearn_api import TfIdfTransformer
-    >>>
-    >>> # Transform the word counts inversely to their global frequency using the sklearn interface.
-    >>> model = TfIdfTransformer(dictionary=common_dictionary)
-    >>> weighted_corpus = model.fit_transform(common_corpus)
-    >>> weighted_corpus[0]
-    [(0, 0.57735026918962573), (1, 0.57735026918962573), (2, 0.57735026918962573)]
+>>> from gensim.test.utils import common_corpus, common_dictionary
+>>> from gensim.sklearn_api import TfIdfTransformer
+>>>
+>>> # Transform the word counts inversely to their global frequency using the sklearn interface.
+>>> model = TfIdfTransformer(dictionary=common_dictionary)
+>>> weighted_corpus = model.fit_transform(common_corpus)
+>>> weighted_corpus[0]
+[(0, 0.57735026918962573), (1, 0.57735026918962573), (2, 0.57735026918962573)]
 
 """
 
@@ -31,9 +31,8 @@ import gensim
 
 
 class TfIdfTransformer(TransformerMixin, BaseEstimator):
-    """Base TfIdf module.
+    """Base TfIdf module, wraps :class:`~gensim.models.tfidfmodel.TfidfModel`.
 
-    Wraps :class:`~gensim.models.tfidfmodel.TfidfModel`.
     For more information on the inner workings please take a look at
     the original class.
 
@@ -81,12 +80,7 @@ class TfIdfTransformer(TransformerMixin, BaseEstimator):
                 * `n` - none,
                 * `c` - cosine.
 
-            For more information visit [1]_.
-
-        References
-        ----------
-
-        .. [1] https://en.wikipedia.org/wiki/SMART_Information_Retrieval_System
+            For more info, visit `"Wikipedia" <https://en.wikipedia.org/wiki/SMART_Information_Retrieval_System>`_.
 
         """
         self.gensim_model = None
