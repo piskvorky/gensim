@@ -409,11 +409,16 @@ class FastText(BaseWordEmbeddingsModel):
             report['syn1neg'] = len(self.wv.vocab) * l1_size
         if self.word_ngrams > 0 and self.wv.vocab:
             buckets = set()
+            num_ngrams = 0
             for word in self.wv.vocab:
                 ngrams = _compute_ngrams(word, self.min_n, self.max_n)
+                num_ngrams += len(ngrams)
                 buckets.update(_ft_hash(ng) % self.bucket for ng in ngrams)
             num_buckets = len(buckets)
             report['syn0_ngrams'] = len(buckets) * vec_size
+            # A tuple (48 bytes) with num_ngrams_word ints (8 bytes) for each word
+            # Only used during training, not stored with the model
+            report['buckets_word'] = 48 * len(self.wv.vocab) + 8 * num_ngrams
         elif self.word_ngrams > 0:
             logger.warn(
                 'subword information is enabled, but no vocabulary could be found, estimated required memory might be '
