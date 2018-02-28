@@ -92,7 +92,7 @@ except ImportError:
 
                 for index in word2_indices:
                     vocab_subwords_indices += [index]
-                    word2_subwords += _compute_ngrams(model.wv.index2word[index], model.min_n, model.max_n)
+                    word2_subwords += list(model.wv.buckets_word[index])
 
                 for subword in word2_subwords:
                     ngrams_subwords_indices.append(
@@ -143,11 +143,8 @@ except ImportError:
                 # now go over all words from the (reduced) window, predicting each one in turn
                 start = max(0, pos - model.window + reduced_window)
 
-                subwords_indices = [word.index]
-                word2_subwords = _compute_ngrams(model.wv.index2word[word.index], model.min_n, model.max_n)
-
-                for subword in word2_subwords:
-                    subwords_indices.append(model.wv.hash2index[_ft_hash(subword) % model.bucket])
+                subwords_indices = (word.index,)
+                subwords_indices += model.wv.buckets_word[word.index]
 
                 for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
                     if pos2 != pos:  # don't train on the `word` itself
