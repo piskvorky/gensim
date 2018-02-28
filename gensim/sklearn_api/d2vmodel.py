@@ -8,7 +8,7 @@
 Scikit learn interface for gensim for easy use of gensim with scikit-learn
 Follows scikit-learn API conventions
 """
-
+import warnings
 import numpy as np
 from six import string_types
 from sklearn.base import TransformerMixin, BaseEstimator
