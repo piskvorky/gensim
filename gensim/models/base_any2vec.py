@@ -449,7 +449,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
         Parameters
         ----------
-        sentences : iterable of iterables
+        sentences : iterable of iterables of str
             The `sentences` iterable can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
@@ -476,10 +476,10 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
         Parameters
         ----------
-        word_freq : dict
-            Word,Word_Count dictionary.
+        word_freq : dict of (str, int)
+            A mapping from a word in the vocabulary to its frequency count.
         keep_raw_vocab : bool
-            If not true, delete the raw vocabulary after the scaling is done and free up RAM.
+            If False, delete the raw vocabulary after the scaling is done to free up RAM.
         corpus_count : int
             Even if no corpus is provided, this argument can set corpus_count explicitly.
         trim_rule : function
@@ -576,6 +576,31 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         return sum(len(sentence) for sentence in job)
 
     def _check_training_sanity(self, epochs=None, total_examples=None, total_words=None, **kwargs):
+        """Checks whether the training parameters make sense.
+
+        Called right before training starts in :meth:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel.train`
+        and raises warning or errors depending on the severity of the issue in case an inconsistent parameter combination
+        is detected.
+
+        Parameters
+        ----------
+        epochs : int
+            Number of training epochs. Must have a (non None) value.
+        total_examples : int
+            Number of documents in the corpus. Either `total_examples` or `total_words` **must** be supplied.
+        total_words : int
+            Number of words in the corpus. Either `total_examples` or `total_words` **must** be supplied.
+        **kwargs
+            Unused. Present to preserve signature among base and inherited implementations.
+
+        Raises
+        ------
+        RuntimeError
+            If one of the required training pre/post processing steps have not been performed.
+        ValueError
+            If the combination of input parameters is inconsistent.
+
+        """
         if self.alpha > self.min_alpha_yet_reached:
             logger.warning("Effective 'alpha' higher than previous training cycles")
         if self.model_trimmed_post_training:
@@ -610,6 +635,35 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
     @classmethod
     def load(cls, *args, **kwargs):
+        """Load a previously saved object (using :meth:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel.save`) from file.
+
+
+        Also initializes extra instance attributes in case the loaded model does not include them.
+        `*args` or `**kwargs` **MUST** include the fname argument (path to saved file).
+        See :meth:`~gensim.utils.SaveLoad.load`.
+
+        Parameters
+        ----------
+        *args
+            Positional arguments passed to :meth:`~gensim.utils.SaveLoad.load`.
+        **kwargs
+            Key word arguments passed to :meth:`~gensim.utils.SaveLoad.load`.
+
+        See Also
+        --------
+        :meth:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel.save`
+
+        Returns
+        -------
+        :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
+            Model loaded from disk.
+
+        Raises
+        ------
+        IOError
+            When methods are called on instance (should be called from class).
+        """
+
         model = super(BaseWordEmbeddingsModel, cls).load(*args, **kwargs)
         if model.negative and hasattr(model.wv, 'index2word'):
             model.vocabulary.make_cum_table(model.wv)  # rebuild cum_table from vocabulary
@@ -626,6 +680,24 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
     def _log_progress(self, job_queue, progress_queue, cur_epoch, example_count, total_examples,
                       raw_word_count, total_words, trained_word_count, elapsed):
+        """Callback used to log progress for long running jobs.
+
+        Parameters
+        ----------
+        job_queue :
+        progress_queue
+        cur_epoch
+        example_count
+        total_examples
+        raw_word_count
+        total_words
+        trained_word_count
+        elapsed
+
+        Returns
+        -------
+
+        """
         if total_examples:
             # examples-based progress %
             logger.info(
