@@ -92,11 +92,7 @@ except ImportError:
 
                 for index in word2_indices:
                     vocab_subwords_indices += [index]
-                    word2_subwords += list(model.wv.buckets_word[index])
-
-                for subword in word2_subwords:
-                    ngrams_subwords_indices.append(
-                        model.wv.hash2index[_ft_hash(subword) % model.bucket])
+                    ngram_subwords_indices.extend(model.wv.buckets_word[index])
 
                 l1_vocab = np_sum(model.wv.syn0_vocab[vocab_subwords_indices], axis=0)  # 1 x vector_size
                 l1_ngrams = np_sum(model.wv.syn0_ngrams[ngrams_subwords_indices], axis=0)  # 1 x vector_size
