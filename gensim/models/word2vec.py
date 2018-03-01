@@ -419,7 +419,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
     and `Word2VecKeyedVectors.load_word2vec_format()`.
     """
 
-    def __init__( sentences=None, size=None, vector_size=100, alpha=0.025, window=5, min_count=5,
+    def __init__(self, sentences=None, size=None, vector_size=100, alpha=0.025, window=5, min_count=5,
                  max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
                  sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=None, epochs=5, null_word=0,
                  trim_rule=None, sorted_vocab=1, compute_loss=False, callbacks=()):
