@@ -646,7 +646,7 @@ class TestRpWrapper(unittest.TestCase):
 class TestWord2VecWrapper(unittest.TestCase):
     def setUp(self):
         numpy.random.seed(0)
-        self.model = W2VTransformer(size=10, min_count=0, seed=42)
+        self.model = W2VTransformer(vector_size=10, min_count=0, seed=42)
         self.model.fit(texts)
 
     def testTransform(self):
@@ -665,7 +665,7 @@ class TestWord2VecWrapper(unittest.TestCase):
 
     def testConsistencyWithGensimModel(self):
         # training a W2VTransformer
-        self.model = W2VTransformer(size=10, min_count=0, seed=42)
+        self.model = W2VTransformer(vector_size=10, min_count=0, seed=42)
         self.model.fit(texts)
 
         # training a Gensim Word2Vec model with the same params
@@ -679,7 +679,7 @@ class TestWord2VecWrapper(unittest.TestCase):
 
     def testPipeline(self):
         numpy.random.seed(0)  # set fixed seed to get similar values everytime
-        model = W2VTransformer(size=10, min_count=1)
+        model = W2VTransformer(vector_size=10, min_count=1)
         model.fit(w2v_texts)
 
         class_dict = {'mathematics': 1, 'physics': 0}
@@ -724,7 +724,7 @@ class TestWord2VecWrapper(unittest.TestCase):
         self.assertTrue(passed)
 
     def testModelNotFitted(self):
-        w2vmodel_wrapper = W2VTransformer(size=10, min_count=0, seed=42)
+        w2vmodel_wrapper = W2VTransformer(vector_size=10, min_count=0, seed=42)
         word = texts[0][0]
         self.assertRaises(NotFittedError, w2vmodel_wrapper.transform, word)
 
