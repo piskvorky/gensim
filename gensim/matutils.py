@@ -695,9 +695,9 @@ def unitvec(vec, norm='l2'):
         if norm == 'l2':
             veclen = np.sqrt(np.sum(vec.data ** 2))
         if veclen > 0.0:
-            return vec / veclen
+            return vec / veclen, veclen
         else:
-            return vec
+            return vec, veclen
 
     if isinstance(vec, np.ndarray):
         vec = np.asarray(vec, dtype=float)
@@ -708,7 +708,7 @@ def unitvec(vec, norm='l2'):
         if veclen > 0.0:
             return blas_scal(1.0 / veclen, vec)
         else:
-            return vec
+            return vec, veclen
 
     try:
         first = next(iter(vec))  # is there at least one element?
@@ -721,7 +721,7 @@ def unitvec(vec, norm='l2'):
         if norm == 'l2':
             length = 1.0 * math.sqrt(sum(val ** 2 for _, val in vec))
         assert length > 0.0, "sparse documents must not contain any explicit zero entries"
-        return ret_normalized_vec(vec, length)
+        return ret_normalized_vec(vec, length), length
     else:
         raise ValueError("unknown input type")
 

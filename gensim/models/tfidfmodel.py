@@ -386,6 +386,7 @@ class TfidfModel(interfaces.TransformationABC):
             TfIdf corpus, if `bow` is corpus.
 
         """
+        # print(self.normalize, "90")
         # if the input vector is in fact a corpus, return a transformed corpus as a result
         is_corpus, bow = utils.is_corpus(bow)
         if is_corpus:
@@ -405,20 +406,22 @@ class TfidfModel(interfaces.TransformationABC):
             (termid, tf * self.idfs.get(termid))
             for termid, tf in zip(termid_array, tf_array) if abs(self.idfs.get(termid, 0.0)) > eps
         ]
+        # print(self.normalize, "o")
 
+        veclen = 1
         if self.normalize is True:
+            print("here")
             self.normalize = matutils.unitvec
         elif self.normalize is False:
             self.normalize = utils.identity
 
         # and finally, normalize the vector either to unit length, or use a
         # user-defined normalization function
-        norm_vector = self.normalize(vector)
-
-        # Need to check if self.pivot_norm variable is in the local scope or not to
-        # mantain backward compatibility.
+        norm_vector, veclen = self.normalize(vector)
+        # TODO xnorm is not normalized norm
         if self.pivot_norm is True:
-            norm_vector = np.array(norm_vector)
+            norm_vector = np.array(veclen)
+            print (veclen)
             sparse_norm_wts = np.array(norm_vector)[:, 1]
             n_samples = sparse_norm_wts.shape[0]
 
@@ -426,14 +429,14 @@ class TfidfModel(interfaces.TransformationABC):
                 # self.pivot = sparse_norm_wts.mean()
                 import math
                 self.pivot = 1.0 * math.sqrt(sum(val ** 2 for _, val in vector))
-
             pivoted_norm = (1 - self.slope) * self.pivot + self.slope * sparse_norm_wts
-
             _diag_pivoted_norm = sp.spdiags(1. / pivoted_norm, diags=0, m=n_samples,
                 n=n_samples, format='csr')
 
             norm_vector[:, 1] = _diag_pivoted_norm.dot(np.array(vector)[:, 1])
             norm_vector = norm_vector.tolist()
+            if np.allclose(self.normalize(vector), norm_vector):
+                print ("True")
 
         norm_vector = [(termid, weight) for termid, weight in norm_vector if abs(weight) > eps]
         return norm_vector
