@@ -82,7 +82,7 @@ from six import string_types, integer_types
 from six.moves import xrange, zip
 from scipy import sparse, stats
 from gensim.utils import deprecated
-from gensim.models.utils_any2vec import _save_word2vec_format, _load_word2vec_format, _compute_ngrams
+from gensim.models.utils_any2vec import _save_word2vec_format, _load_word2vec_format, _compute_ngrams, _ft_hash
 
 logger = logging.getLogger(__name__)
 
@@ -1539,9 +1539,8 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         self.vectors_vocab_norm = None
         self.vectors_ngrams = None
         self.vectors_ngrams_norm = None
-        self.ngrams = {}
+        self.buckets_word = None
         self.hash2index = {}
-        self.ngrams_word = {}
         self.min_n = min_n
         self.max_n = max_n
         self.num_ngram_vectors = 0
@@ -1574,9 +1573,8 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         if word in self.vocab:
             return True
         else:
-            # from gensim.models.fasttext import compute_ngrams
             char_ngrams = _compute_ngrams(word, self.min_n, self.max_n)
-            return any(ng in self.ngrams for ng in char_ngrams)
+            return any(_ft_hash(ng) % self.bucket in self.hash2index for ng in char_ngrams)
 
     def save(self, *args, **kwargs):
         """Saves the keyedvectors. This saved model can be loaded again using
@@ -1590,7 +1588,8 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
 
         """
         # don't bother storing the cached normalized vectors
-        kwargs['ignore'] = kwargs.get('ignore', ['vectors_norm', 'vectors_vocab_norm', 'vectors_ngrams_norm'])
+        kwargs['ignore'] = kwargs.get(
+            'ignore', ['vectors_norm', 'vectors_vocab_norm', 'vectors_ngrams_norm', 'buckets_word'])
         super(FastTextKeyedVectors, self).save(*args, **kwargs)
 
     def word_vec(self, word, use_norm=False):
@@ -1607,15 +1606,18 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
             # from gensim.models.fasttext import compute_ngrams
             word_vec = np.zeros(self.vectors_ngrams.shape[1], dtype=np.float32)
             ngrams = _compute_ngrams(word, self.min_n, self.max_n)
-            ngrams = [ng for ng in ngrams if ng in self.ngrams]
             if use_norm:
                 ngram_weights = self.vectors_ngrams_norm
             else:
                 ngram_weights = self.vectors_ngrams
+            ngrams_found = 0
             for ngram in ngrams:
-                word_vec += ngram_weights[self.ngrams[ngram]]
+                ngram_hash = _ft_hash(ngram) % self.bucket
+                if ngram_hash in self.hash2index:
+                    word_vec += ngram_weights[self.hash2index[ngram_hash]]
+                    ngrams_found += 1
             if word_vec.any():
-                return word_vec / len(ngrams)
+                return word_vec / max(1, ngrams_found)
             else:  # No ngrams of the word are present in self.ngrams
                 raise KeyError('all ngrams for word %s absent from model' % word)
 
