@@ -750,8 +750,8 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         """Checks whether the training parameters make sense.
 
         Called right before training starts in :meth:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel.train`
-        and raises warning or errors depending on the severity of the issue in case an inconsistent parameter combination
-        is detected.
+        and raises warning or errors depending on the severity of the issue in case an inconsistent parameter
+        combination is detected.
 
         Parameters
         ----------
