@@ -36,14 +36,14 @@ This separates the read-only word vector lookup operations in KeyedVectors from 
   array([-0.00449447, -0.00310097,  0.02421786, ...], dtype=float32)
 
 The word vectors can also be instantiated from an existing file on disk in the word2vec C format
-as a KeyedVectors instance::
+as a KeyedVectors instance.
 
-    NOTE: It is impossible to continue training the vectors loaded from the C format because hidden weights,
-    vocabulary frequency and the binary tree is missing::
+NOTE: It is impossible to continue training the vectors loaded from the C format because hidden weights,
+vocabulary frequency and the binary tree is missing::
 
-        >>> from gensim.models import KeyedVectors
-        >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
-        >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.bin', binary=True)  # C binary format
+    >>> from gensim.models import KeyedVectors
+    >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
+    >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.bin', binary=True)  # C binary format
 
 
 You can perform various NLP word tasks with the model. Some of them
@@ -441,7 +441,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
             in some other way.
 
         sg : int {1, 0}
-            Defines the training algorithm. If 1, CBOW is used, otherwise, skip-gram is employed.
+            Defines the training algorithm. If 1, skip-gram is employed; otherwise, CBOW is used.
         size : int
             Dimensionality of the feature vectors.
         window : int

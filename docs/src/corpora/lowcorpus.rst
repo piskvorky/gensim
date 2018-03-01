@@ -1,8 +1,8 @@
-:mod:`corpora.lowcorpus` -- Corpus in List-of-Words format
-===========================================================
+:mod:`corpora.lowcorpus` -- Corpus in GibbsLda++ format
+=======================================================
 
 .. automodule:: gensim.corpora.lowcorpus
-    :synopsis: Corpus in List-of-Words format
+    :synopsis: Corpus in GibbsLda++ format
     :members:
     :inherited-members:
     :undoc-members:

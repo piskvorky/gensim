@@ -39,7 +39,6 @@ cdef REAL_t[EXP_TABLE_SIZE] LOG_TABLE
 cdef int ONE = 1
 cdef REAL_t ONEF = <REAL_t>1.0
 
-
 cdef unsigned long long fast_sentence_sg_neg(
     const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len,
     REAL_t *syn0_vocab, REAL_t *syn0_ngrams, REAL_t *syn1neg, const int size,
@@ -317,8 +316,8 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
                 continue
             indexes[effective_words] = word.index
 
-            subwords = [model.wv.ngrams[subword_i] for subword_i in model.wv.ngrams_word[model.wv.index2word[word.index]]]
-            word_subwords = np.array([word.index] + subwords, dtype=np.uint32)
+            subwords = model.wv.buckets_word[word.index]
+            word_subwords = np.array((word.index,) + subwords, dtype=np.uint32)
             subwords_idx_len[effective_words] = <int>(len(subwords) + 1)
             subwords_idx[effective_words] = <np.uint32_t *>np.PyArray_DATA(word_subwords)
             # ensures reference count of word_subwords doesn't reach 0
@@ -446,7 +445,7 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1):
                 continue
             indexes[effective_words] = word.index
 
-            subwords = [model.wv.ngrams[subword_i] for subword_i in model.wv.ngrams_word[model.wv.index2word[word.index]]]
+            subwords = model.wv.buckets_word[word.index]
             word_subwords = np.array(subwords, dtype=np.uint32)
             subwords_idx_len[effective_words] = <int>len(subwords)
             subwords_idx[effective_words] = <np.uint32_t *>np.PyArray_DATA(word_subwords)

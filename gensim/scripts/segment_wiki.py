@@ -4,39 +4,51 @@
 # Author: Jayant Jain <jayant@rare-technologies.com>
 # Copyright (C) 2016 RaRe Technologies
 
-"""
-CLI script for extracting plain text out of a raw Wikipedia dump. Input is an xml.bz2 file provided by MediaWiki \
-that looks like <LANG>wiki-<YYYYMMDD>-pages-articles.xml.bz2 or <LANG>wiki-latest-pages-articles.xml.bz2 \
+"""This script using for extracting plain text out of a raw Wikipedia dump. Input is an xml.bz2 file provided
+by MediaWiki that looks like <LANG>wiki-<YYYYMMDD>-pages-articles.xml.bz2 or <LANG>wiki-latest-pages-articles.xml.bz2
 (e.g. 14 GB of https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2).
 
-It streams through all the XML articles using multiple cores (#cores - 1, by default), \
+It streams through all the XML articles using multiple cores (#cores - 1, by default),
 decompressing on the fly and extracting plain text from the articles and their sections.
 
 For each extracted article, it prints its title, section names and plain text section contents, in json-line format.
 
-Examples
---------
+How to use
+----------
+#. Process Wikipedia dump with this script ::
 
-  python -m gensim.scripts.segment_wiki -h
+    python -m gensim.scripts.segment_wiki -i -f enwiki-latest-pages-articles.xml.bz2 -o enwiki-latest.json.gz
 
-  python -m gensim.scripts.segment_wiki -f enwiki-latest-pages-articles.xml.bz2 -o enwiki-latest.json.gz
+#. Read output in simple way
 
-Processing the entire English Wikipedia dump takes 1.7 hours (about 3 million articles per hour, \
+    >>> from smart_open import smart_open
+    >>> import json
+    >>>
+    >>> # iterate over the plain text data we just created
+    >>> for line in smart_open('enwiki-latest.json.gz'):
+    >>>    # decode each JSON line into a Python dictionary object
+    >>>    article = json.loads(line)
+    >>>
+    >>>    # each article has a "title", a mapping of interlinks and a list of "section_titles" and "section_texts".
+    >>>    print("Article title: %s" % article['title'])
+    >>>    print("Interlinks: %s" + article['interlinks'])
+    >>>    for section_title, section_text in zip(article['section_titles'], article['section_texts']):
+    >>>        print("Section title: %s" % section_title)
+    >>>        print("Section text: %s" % section_text)
+
+
+Notes
+-----
+Processing the entire English Wikipedia dump takes 1.7 hours (about 3 million articles per hour,
 or 10 MB of XML per second) on an 8 core Intel i7-7700 @3.60GHz.
 
-You can then read the created output (~6.1 GB gzipped) with:
 
->>> # iterate over the plain text data we just created
->>> for line in smart_open('enwiki-latest.json.gz'):
->>>    # decode each JSON line into a Python dictionary object
->>>    article = json.loads(line)
->>>
->>>    # each article has a "title", a mapping of interlinks and a list of "section_titles" and "section_texts".
->>>    print("Article title: %s" % article['title'])
->>>    print("Interlinks: %s" + article['interlinks'])
->>>    for section_title, section_text in zip(article['section_titles'], article['section_texts']):
->>>        print("Section title: %s" % section_title)
->>>        print("Section text: %s" % section_text)
+Command line arguments
+----------------------
+
+.. program-output:: python -m gensim.scripts.segment_wiki --help
+   :ellipsis: 0, -10
+
 """
 
 import argparse
@@ -338,10 +350,8 @@ class _WikiSectionsCorpus(WikiCorpus):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(format='%(asctime)s : %(processName)s : %(levelname)s : %(message)s', level=logging.INFO)
-    logger.info("running %s", " ".join(sys.argv))
-
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, description=globals()['__doc__'])
+    logging.basicConfig(format='%(asctime)s - %(module)s - %(levelname)s - %(message)s', level=logging.INFO)
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, description=__doc__[:-136])
     default_workers = max(1, multiprocessing.cpu_count() - 1)
     parser.add_argument('-f', '--file', help='Path to MediaWiki database dump (read-only).', required=True)
     parser.add_argument(
@@ -367,6 +377,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
+    logger.info("running %s", " ".join(sys.argv))
     segment_and_write_all_articles(
         args.file, args.output,
         min_article_character=args.min_article_character,

@@ -5,4 +5,5 @@
     :synopsis: Worker for distributed LSI
     :members:
     :inherited-members:
-
+    :undoc-members:
+    :show-inheritance:

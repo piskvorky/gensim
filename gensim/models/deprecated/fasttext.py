@@ -103,8 +103,6 @@ def load_old_fasttext(*args, **kwargs):
     new_model.wv.index2word = old_model.wv.index2word
     new_model.vocabulary.cum_table = old_model.cum_table
 
-    new_model.wv.ngrams_word = old_model.wv.ngrams_word
-    new_model.wv.ngrams = old_model.wv.ngrams
     new_model.wv.hash2index = old_model.wv.hash2index
 
     new_model.train_count = old_model.train_count

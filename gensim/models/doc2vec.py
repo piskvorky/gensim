@@ -70,6 +70,7 @@ from six import string_types, integer_types, itervalues
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 from gensim.models.keyedvectors import Doc2VecKeyedVectors
 from types import GeneratorType
+from gensim.utils import deprecated
 
 logger = logging.getLogger(__name__)
 
@@ -245,6 +246,12 @@ class TaggedDocument(namedtuple('TaggedDocument', 'words tags')):
 
     def __str__(self):
         return '%s(%s, %s)' % (self.__class__.__name__, self.words, self.tags)
+
+
+# for compatibility
+@deprecated("Class will be removed in 4.0.0, use TaggedDocument instead")
+class LabeledSentence(TaggedDocument):
+    pass
 
 
 class Doctag(namedtuple('Doctag', 'offset, word_count, doc_count')):

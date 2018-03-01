@@ -16,12 +16,13 @@ import os
 import numpy
 import scipy
 
+from smart_open import smart_open
+from gensim.corpora import Dictionary
 from gensim.models import word2vec
 from gensim.models import doc2vec
 from gensim.models import KeyedVectors
-from gensim.models.wrappers import fasttext
 from gensim import matutils, similarities
-from gensim.models import Word2Vec
+from gensim.models import Word2Vec, FastText
 from gensim.test.utils import (datapath, get_tmpfile,
     common_texts as texts, common_dictionary as dictionary, common_corpus as corpus)
 
@@ -38,6 +39,10 @@ class _TestSimilarityABC(object):
     """
     Base class for SparseMatrixSimilarity and MatrixSimilarity unit tests.
     """
+
+    def factoryMethod(self):
+        """Creates a SimilarityABC instance."""
+        return self.cls(corpus, num_features=len(dictionary))
 
     def testFull(self, num_best=None, shardsize=100):
         if self.cls == similarities.Similarity:
@@ -103,6 +108,15 @@ class _TestSimilarityABC(object):
         self.assertTrue(scipy.sparse.issparse(matrix_scipy_clipped))
         self.assertTrue([matutils.scipy2sparse(x) for x in matrix_scipy_clipped], [expected] * 3)
 
+    def testEmptyQuery(self):
+        index = self.factoryMethod()
+        query = []
+        try:
+            sims = index[query]
+            self.assertTrue(sims is not None)
+        except IndexError:
+            self.assertTrue(False)
+
     def testChunking(self):
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
@@ -155,12 +169,7 @@ class _TestSimilarityABC(object):
             return
 
         fname = get_tmpfile('gensim_similarities.tst.pkl')
-        if self.cls == similarities.Similarity:
-            index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
-        elif self.cls == similarities.WmdSimilarity:
-            index = self.cls(texts, self.w2v_model)
-        else:
-            index = self.cls(corpus, num_features=len(dictionary))
+        index = self.factoryMethod()
         index.save(fname)
         index2 = self.cls.load(fname)
         if self.cls == similarities.Similarity:
@@ -180,12 +189,7 @@ class _TestSimilarityABC(object):
             return
 
         fname = get_tmpfile('gensim_similarities.tst.pkl.gz')
-        if self.cls == similarities.Similarity:
-            index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
-        elif self.cls == similarities.WmdSimilarity:
-            index = self.cls(texts, self.w2v_model)
-        else:
-            index = self.cls(corpus, num_features=len(dictionary))
+        index = self.factoryMethod()
         index.save(fname)
         index2 = self.cls.load(fname)
         if self.cls == similarities.Similarity:
@@ -205,12 +209,7 @@ class _TestSimilarityABC(object):
             return
 
         fname = get_tmpfile('gensim_similarities.tst.pkl')
-        if self.cls == similarities.Similarity:
-            index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
-        elif self.cls == similarities.WmdSimilarity:
-            index = self.cls(texts, self.w2v_model)
-        else:
-            index = self.cls(corpus, num_features=len(dictionary))
+        index = self.factoryMethod()
         # store all arrays separately
         index.save(fname, sep_limit=0)
 
@@ -232,12 +231,7 @@ class _TestSimilarityABC(object):
             return
 
         fname = get_tmpfile('gensim_similarities.tst.pkl.gz')
-        if self.cls == similarities.Similarity:
-            index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
-        elif self.cls == similarities.WmdSimilarity:
-            index = self.cls(texts, self.w2v_model)
-        else:
-            index = self.cls(corpus, num_features=len(dictionary))
+        index = self.factoryMethod()
         # store all arrays separately
         index.save(fname, sep_limit=0)
 
@@ -259,12 +253,7 @@ class _TestSimilarityABC(object):
             return
 
         fname = get_tmpfile('gensim_similarities.tst.pkl')
-        if self.cls == similarities.Similarity:
-            index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
-        elif self.cls == similarities.WmdSimilarity:
-            index = self.cls(texts, self.w2v_model)
-        else:
-            index = self.cls(corpus, num_features=len(dictionary))
+        index = self.factoryMethod()
         # store all arrays separately
         index.save(fname, sep_limit=0)
 
@@ -287,12 +276,7 @@ class _TestSimilarityABC(object):
             return
 
         fname = get_tmpfile('gensim_similarities.tst.pkl.gz')
-        if self.cls == similarities.Similarity:
-            index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
-        elif self.cls == similarities.WmdSimilarity:
-            index = self.cls(texts, self.w2v_model)
-        else:
-            index = self.cls(corpus, num_features=len(dictionary))
+        index = self.factoryMethod()
         # store all arrays separately
         index.save(fname, sep_limit=0)
 
@@ -309,6 +293,10 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
     def setUp(self):
         self.cls = similarities.WmdSimilarity
         self.w2v_model = Word2Vec(texts, min_count=1)
+
+    def factoryMethod(self):
+        # Override factoryMethod.
+        return self.cls(texts, self.w2v_model)
 
     def testFull(self, num_best=None):
         # Override testFull.
@@ -382,6 +370,80 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
             self.assertTrue(numpy.alltrue(sims <= 1.0))
 
 
+class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
+    def setUp(self):
+        self.cls = similarities.SoftCosineSimilarity
+        self.dictionary = Dictionary(texts)
+        self.corpus = [dictionary.doc2bow(document) for document in texts]
+        similarity_matrix = scipy.sparse.identity(12, format="lil")
+        similarity_matrix[dictionary.token2id["user"], dictionary.token2id["human"]] = 0.5
+        similarity_matrix[dictionary.token2id["human"], dictionary.token2id["user"]] = 0.5
+        self.similarity_matrix = similarity_matrix.tocsc()
+
+    def factoryMethod(self):
+        # Override factoryMethod.
+        return self.cls(self.corpus, self.similarity_matrix)
+
+    def testFull(self, num_best=None):
+        # Override testFull.
+
+        index = self.cls(self.corpus, self.similarity_matrix, num_best=num_best)
+        query = self.dictionary.doc2bow(texts[0])
+        sims = index[query]
+
+        if num_best is not None:
+            # Sparse array.
+            for i, sim in sims:
+                self.assertTrue(numpy.alltrue(sim <= 1.0))
+                self.assertTrue(numpy.alltrue(sim >= 0.0))
+        else:
+            self.assertTrue(sims[0] == 1.0)  # Similarity of a document with itself is 1.0.
+            self.assertTrue(numpy.alltrue(sims[1:] >= 0.0))
+            self.assertTrue(numpy.alltrue(sims[1:] < 1.0))
+            expected = 2.1889350195476758
+            self.assertAlmostEqual(expected, numpy.sum(sims))
+
+    def testNonIncreasing(self):
+        """ Check that similarities are non-increasing when `num_best` is not `None`."""
+        # NOTE: this could be implemented for other similarities as well (i.e. in _TestSimilarityABC).
+
+        index = self.cls(self.corpus, self.similarity_matrix, num_best=5)
+        query = self.dictionary.doc2bow(texts[0])
+        sims = index[query]
+        sims2 = numpy.asarray(sims)[:, 1]  # Just the similarities themselves.
+
+        # The difference of adjacent elements should be negative.
+        cond = sum(numpy.diff(sims2) < 0) == len(sims2) - 1
+        self.assertTrue(cond)
+
+    def testChunking(self):
+        # Override testChunking.
+
+        index = self.cls(self.corpus, self.similarity_matrix)
+        query = [self.dictionary.doc2bow(document) for document in texts[:3]]
+        sims = index[query]
+
+        for i in range(3):
+            self.assertTrue(numpy.alltrue(sims[i, i] == 1.0))  # Similarity of a document with itself is 1.0.
+
+        # test the same thing but with num_best
+        index.num_best = 5
+        sims = index[query]
+        for i, chunk in enumerate(sims):
+            expected = i
+            self.assertAlmostEquals(expected, chunk[0][0], places=2)
+            expected = 1.0
+            self.assertAlmostEquals(expected, chunk[0][1], places=2)
+
+    def testIter(self):
+        # Override testIter.
+
+        index = self.cls(self.corpus, self.similarity_matrix)
+        for sims in index:
+            self.assertTrue(numpy.alltrue(sims >= 0.0))
+            self.assertTrue(numpy.alltrue(sims <= 1.0))
+
+
 class TestSparseMatrixSimilarity(unittest.TestCase, _TestSimilarityABC):
     def setUp(self):
         self.cls = similarities.SparseMatrixSimilarity
@@ -418,6 +480,10 @@ class TestSparseMatrixSimilarity(unittest.TestCase, _TestSimilarityABC):
 class TestSimilarity(unittest.TestCase, _TestSimilarityABC):
     def setUp(self):
         self.cls = similarities.Similarity
+
+    def factoryMethod(self):
+        # Override factoryMethod.
+        return self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
 
     def testSharding(self):
         for num_best in [None, 0, 1, 9, 1000]:
@@ -472,12 +538,16 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         self.assertLoadedIndexEqual(index, model)
 
     def testFastText(self):
-        ft_home = os.environ.get('FT_HOME', None)
-        ft_path = os.path.join(ft_home, 'fasttext') if ft_home else None
-        if not ft_path:
-            return
-        corpus_file = datapath('lee.cor')
-        model = fasttext.FastText.train(ft_path, corpus_file)
+        class LeeReader(object):
+            def __init__(self, fn):
+                self.fn = fn
+
+            def __iter__(self):
+                with smart_open(self.fn, 'r', encoding="latin_1") as infile:
+                    for line in infile:
+                        yield line.lower().strip().split()
+
+        model = FastText(LeeReader(datapath('lee.cor')))
         model.init_sims()
         index = self.indexer(model, 10)
 
@@ -509,7 +579,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         word, similarity = approx_neighbors[0]
 
         self.assertEqual(word, label)
-        self.assertEqual(similarity, 1.0)
+        self.assertAlmostEqual(similarity, 1.0, places=2)
 
     def assertApproxNeighborsMatchExact(self, model, wv, index):
         vector = wv.syn0norm[0]
@@ -562,7 +632,7 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
         doc, similarity = approx_neighbors[0]
 
         self.assertEqual(doc, 0)
-        self.assertEqual(similarity, 1.0)
+        self.assertAlmostEqual(similarity, 1.0, places=2)
 
     def testApproxNeighborsMatchExact(self):
         approx_neighbors = self.model.docvecs.most_similar([self.vector], topn=5, indexer=self.index)

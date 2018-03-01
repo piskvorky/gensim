@@ -4,7 +4,7 @@
 # Author: Shiva Manne <s.manne@rare-technologies.com>
 # Copyright (C) 2018 RaRe Technologies s.r.o.
 
-"""This module contains various general functions useful for any2vec models."""
+"""General functions used for any2vec models."""
 
 import logging
 import numpy as np
@@ -17,57 +17,62 @@ from six import iteritems
 
 logger = logging.getLogger(__name__)
 
+try:
+    from gensim.models._utils_any2vec import ft_hash as _ft_hash, compute_ngrams as _compute_ngrams
+except ImportError:
+    FAST_VERSION = -1
 
-def _compute_ngrams(word, min_n, max_n):
-    """Returns the list of all possible ngrams for a given word.
+    # failed... fall back to plain python
+    def _ft_hash(string):
+        """Calculate hash based on `string`.
+        Reproduce `hash method from Facebook fastText implementation
+        <https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc>`_.
 
-    Parameters
-    ----------
-    word : str
-        The word whose ngrams need to be computed
-    min_n : int
-        minimum character length of the ngrams
-    max_n : int
-        maximum character length of the ngrams
+        Parameters
+        ----------
+        string : str
+            The string whose hash needs to be calculated.
 
-    Returns
-    -------
-    :obj:`list` of :obj:`str`
-        List of character ngrams
+        Returns
+        -------
+        int
+            The hash of the string.
 
-    """
-    BOW, EOW = ('<', '>')  # Used by FastText to attach to all words as prefix and suffix
-    extended_word = BOW + word + EOW
-    ngrams = []
-    for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
-        for i in range(0, len(extended_word) - ngram_length + 1):
-            ngrams.append(extended_word[i:i + ngram_length])
-    return ngrams
+        """
+        # Runtime warnings for integer overflow are raised, this is expected behaviour. These warnings are suppressed.
+        old_settings = np.seterr(all='ignore')
+        h = np.uint32(2166136261)
+        for c in string:
+            h = h ^ np.uint32(ord(c))
+            h = h * np.uint32(16777619)
+        np.seterr(**old_settings)
+        return h
 
+    def _compute_ngrams(word, min_n, max_n):
+        """Get the list of all possible ngrams for a given word.
 
-def _ft_hash(string):
-    """Reproduces [hash method](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
-    used in [1]_.
+        Parameters
+        ----------
+        word : str
+            The word whose ngrams need to be computed.
+        min_n : int
+            Minimum character length of the ngrams.
+        max_n : int
+            Maximum character length of the ngrams.
 
-    Parameter
-    ---------
-    string : str
-        The string whose hash needs to be calculated
+        Returns
+        -------
+        list of str
+            Sequence of character ngrams.
 
-    Returns
-    -------
-    int
-        The hash of the string
-
-    """
-    # Runtime warnings for integer overflow are raised, this is expected behaviour. These warnings are suppressed.
-    old_settings = np.seterr(all='ignore')
-    h = np.uint32(2166136261)
-    for c in string:
-        h = h ^ np.uint32(ord(c))
-        h = h * np.uint32(16777619)
-    np.seterr(**old_settings)
-    return h
+        """
+        BOW, EOW = ('<', '>')  # Used by FastText to attach to all words as prefix and suffix
+        extended_word = BOW + word + EOW
+        ngrams = []
+        for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
+            for i in range(0, len(extended_word) - ngram_length + 1):
+                ngrams.append(extended_word[i:i + ngram_length])
+        return ngrams
 
 
 def _save_word2vec_format(fname, vocab, vectors, fvocab=None, binary=False, total_vec=None):
@@ -109,9 +114,10 @@ def _save_word2vec_format(fname, vocab, vectors, fvocab=None, binary=False, tota
             for word, vocab_ in sorted(iteritems(vocab), key=lambda item: -item[1].count):
                 row = vectors[vocab_.index]
                 if binary:
+                    row = row.astype(REAL)
                     fout.write(utils.to_utf8(word) + b" " + row.tostring())
                 else:
-                    fout.write(utils.to_utf8("%s %s\n" % (word, ' '.join("%f" % val for val in row))))
+                    fout.write(utils.to_utf8("%s %s\n" % (word, ' '.join(repr(val) for val in row))))
 
 
 def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
@@ -205,7 +211,7 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
                     if ch != b'\n':  # ignore newlines in front of words (some binary files have)
                         word.append(ch)
                 word = utils.to_unicode(b''.join(word), encoding=encoding, errors=unicode_errors)
-                weights = fromstring(fin.read(binary_len), dtype=REAL)
+                weights = fromstring(fin.read(binary_len), dtype=REAL).astype(datatype)
                 add_word(word, weights)
         else:
             for line_no in xrange(vocab_size):
@@ -215,7 +221,7 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
                 parts = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
                 if len(parts) != vector_size + 1:
                     raise ValueError("invalid vector on line %s (is this really the text format?)" % line_no)
-                word, weights = parts[0], [REAL(x) for x in parts[1:]]
+                word, weights = parts[0], [datatype(x) for x in parts[1:]]
                 add_word(word, weights)
     if result.vectors.shape[0] != len(result.vocab):
         logger.info(
