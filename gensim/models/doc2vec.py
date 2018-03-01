@@ -278,7 +278,6 @@ class Doc2Vec(BaseWordEmbeddingsModel):
                  docvecs=None, docvecs_mapfile=None, comment=None, trim_rule=None, callbacks=(), **kwargs):
         """Initialize the model from an iterable of `documents`. Each document is a
         TaggedDocument object that will be used for training.
-
         Parameters
         ----------
         documents : iterable of iterables
@@ -286,11 +285,9 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             consider an iterable that streams the documents directly from disk/network.
             If you don't supply `documents`, the model is left uninitialized -- use if
             you plan to initialize it in some other way.
-
         dm : int {1,0}
             Defines the training algorithm. If `dm=1`, 'distributed memory' (PV-DM) is used.
             Otherwise, `distributed bag of words` (PV-DBOW) is employed.
-
         size : int
             Dimensionality of the feature vectors.
         window : int
@@ -349,7 +346,6 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             of the model.
         callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`
             List of callbacks that need to be executed/run at specific stages during training.
-
         """
 
         if 'sentences' in kwargs:
@@ -404,7 +400,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             self.train(
                 documents, total_examples=self.corpus_count, epochs=self.epochs,
                 start_alpha=self.alpha, end_alpha=self.min_alpha, callbacks=callbacks)
-
+    
     @property
     def dm(self):
         """int {1,0} : `dm=1` indicates 'distributed memory' (PV-DM) else
