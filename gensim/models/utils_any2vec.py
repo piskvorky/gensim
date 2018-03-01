@@ -4,7 +4,7 @@
 # Author: Shiva Manne <s.manne@rare-technologies.com>
 # Copyright (C) 2018 RaRe Technologies s.r.o.
 
-"""This module contains various general functions useful for any2vec models."""
+"""General functions used for any2vec models."""
 
 import logging
 import numpy as np
@@ -18,24 +18,25 @@ from six import iteritems
 logger = logging.getLogger(__name__)
 
 try:
-    from gensim.models._utils_any2vec import (
-        ft_hash as _ft_hash,
-        compute_ngrams as _compute_ngrams)
+    from gensim.models._utils_any2vec import ft_hash as _ft_hash, compute_ngrams as _compute_ngrams
 except ImportError:
-    # failed... fall back to plain python (~100x slower than the above)
-    def _ft_hash(string):
-        """Reproduces [hash method](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
-        used in [1]_.
+    FAST_VERSION = -1
 
-        Parameter
-        ---------
+    # failed... fall back to plain python
+    def _ft_hash(string):
+        """Calculate hash based on `string`.
+        Reproduce `hash method from Facebook fastText implementation
+        <https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc>`_.
+
+        Parameters
+        ----------
         string : str
-            The string whose hash needs to be calculated
+            The string whose hash needs to be calculated.
 
         Returns
         -------
         int
-            The hash of the string
+            The hash of the string.
 
         """
         # Runtime warnings for integer overflow are raised, this is expected behaviour. These warnings are suppressed.
@@ -48,21 +49,21 @@ except ImportError:
         return h
 
     def _compute_ngrams(word, min_n, max_n):
-        """Returns the list of all possible ngrams for a given word.
+        """Get the list of all possible ngrams for a given word.
 
         Parameters
         ----------
         word : str
-            The word whose ngrams need to be computed
+            The word whose ngrams need to be computed.
         min_n : int
-            minimum character length of the ngrams
+            Minimum character length of the ngrams.
         max_n : int
-            maximum character length of the ngrams
+            Maximum character length of the ngrams.
 
         Returns
         -------
-        :obj:`list` of :obj:`str`
-            List of character ngrams
+        list of str
+            Sequence of character ngrams.
 
         """
         BOW, EOW = ('<', '>')  # Used by FastText to attach to all words as prefix and suffix
