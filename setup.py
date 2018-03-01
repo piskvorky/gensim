@@ -244,7 +244,7 @@ linux_testenv = win_testenv + [
 
 setup(
     name='gensim',
-    version='3.3.0',
+    version='3.4.0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
