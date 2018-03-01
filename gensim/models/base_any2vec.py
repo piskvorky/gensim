@@ -284,6 +284,64 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
     def __init__(self, sentences=None, workers=3, vector_size=100, epochs=5, callbacks=(), batch_words=10000,
                  trim_rule=None, sg=0, alpha=0.025, window=5, seed=1, hs=0, negative=5, cbow_mean=1,
                  min_alpha=0.0001, compute_loss=False, fast_version=0, **kwargs):
+        """Construct a base word embeddings model.
+
+        Parameters
+        ----------
+        sentences : iterable of iterable of str
+            Can be simply a list of lists of tokens, but for larger corpora,
+            consider an iterable that streams the sentences directly from disk/network.
+            See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
+            or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
+        workers : int
+            Number of working threads, used for multiprocessing.
+        vector_size : int
+            Dimensionality of the feature vectors.
+        epochs : int
+            Number of iterations (epochs) of training through the corpus.
+        callbacks : list of :class: `~gensim.models.callbacks.CallbackAny2Vec`, optional
+            List of callbacks that need to be executed/run at specific stages during training.
+        batch_words : int
+            Number of words to be processed by a single job.
+        trim_rule : function, optional
+            Vocabulary trimming rule, specifies whether certain words should remain in the vocabulary,
+            be trimmed away, or handled using the default (discard if word count < min_count).
+            Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
+            or a callable that accepts parameters (word, count, min_count) and returns either
+            :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
+            Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
+            of the model.
+        sg : int {1, 0}
+            Defines the training algorithm. If 1, skip-gram is used, otherwise, CBOW is employed.
+        alpha : float
+            The beginning learning rate. This will linearly reduce with iterations until it reaches `min_alpha`.
+        window : int
+            The maximum distance between the current and predicted word within a sentence.
+        seed : int
+            Seed for the random number generator. Initial vectors for each word are seeded with a hash of
+            the concatenation of word + `str(seed)`. Note that for a fully deterministically-reproducible run,
+            you must also limit the model to a single worker thread (`workers=1`), to eliminate ordering jitter
+            from OS thread scheduling. (In Python 3, reproducibility between interpreter launches also requires
+            use of the `PYTHONHASHSEED` environment variable to control hash randomization).
+        hs : int {1,0}
+            If 1, hierarchical softmax will be used for model training.
+            If set to 0, and `negative` is non-zero, negative sampling will be used.
+        negative : int
+            If > 0, negative sampling will be used, the int for negative specifies how many "noise words"
+            should be drawn (usually between 5-20).
+            If set to 0, no negative sampling is used.
+        cbow_mean : int {1,0}
+            If 0, use the sum of the context word vectors. If 1, use the mean, only applies when cbow is used.
+        min_alpha : float, optional
+            Final learning rate. Drops linearly with the number of iterations from `alpha`.
+        compute_loss : bool, optional
+            If True, loss will be computed while training the Word2Vec model and stored in
+            :attr:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel.running_training_loss`.
+        fast_version : int {-1, 1}
+            Whether or not the fast cython implementation of the internal training methods is available. 1 means it is.
+        **kwargs
+            Key word arguments needed to allow children classes to accept more arguments.
+        """
         self.sg = int(sg)
         if vector_size % 4 != 0:
             logger.warning("consider setting layer size to a multiple of 4 for greater performance")
@@ -439,6 +497,14 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         del self.vocabulary.cum_table
 
     def __str__(self):
+        """Return a human readable representation of the object.
+
+        Returns
+        -------
+        str
+            A human readable string containing the class name, as well as the id to word mapping, number of
+            features and starting learning rate used by the object.
+        """
         return "%s(vocab=%s, size=%s, alpha=%s)" % (
             self.__class__.__name__, len(self.wv.index2word), self.vector_size, self.alpha
         )
@@ -453,13 +519,13 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
-        update : bool
+        update : bool, optional
             If true, the new words in `sentences` will be added to model's vocab.
-        progress_per : int
+        progress_per : int, optional
             Indicates how many words to process before showing/updating the progress.
-        keep_raw_vocab : bool
+        keep_raw_vocab : bool, optional
             If False, the raw vocabulary will be deleted after the scaling is done to free up RAM.
-        trim_rule : function
+        trim_rule : function, optional
             Vocabulary trimming rule, specifies whether certain words should remain in the vocabulary,
             be trimmed away, or handled using the default (discard if word count < min_count).
             Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
@@ -488,11 +554,11 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         ----------
         word_freq : dict of (unicode str, int)
             A mapping from a word in the vocabulary to its frequency count.
-        keep_raw_vocab : bool
+        keep_raw_vocab : bool, optional
             If False, delete the raw vocabulary after the scaling is done to free up RAM.
-        corpus_count : int
+        corpus_count : int, optional
             Even if no corpus is provided, this argument can set corpus_count explicitly.
-        trim_rule : function
+        trim_rule : function, optional
             Vocabulary trimming rule, specifies whether certain words should remain in the vocabulary,
             be trimmed away, or handled using the default (discard if word count < min_count).
             Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
@@ -500,7 +566,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
             Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
             of the model.
-        update : bool
+        update : bool, optional
             If true, the new provided words in `word_freq` dict will be added to model's vocab.
 
         Examples
@@ -574,26 +640,26 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
-        total_examples : int
+        total_examples : int, optional
             Count of sentences.
-        total_words : int
+        total_words : int, optional
             Count of raw words in sentences.
-        epochs : int
+        epochs : int, optional
             Number of iterations (epochs) over the corpus.
-        start_alpha : float
+        start_alpha : float, optional
             Initial learning rate.
-        end_alpha : float
+        end_alpha : float, optional
             Final learning rate. Drops linearly with the number of iterations from `start_alpha`.
-        word_count : int
+        word_count : int, optional
             Count of words already trained. Leave this to 0 for the usual case of training on all words in sentences.
-        queue_factor : int
+        queue_factor : int, optional
             Multiplier for size of queue -> size = number of workers * queue_factor.
-        report_delay : float
+        report_delay : float, optional
             Seconds to wait before reporting progress.
-        compute_loss : bool
+        compute_loss : bool, optional
             If True, loss will be computed while training the Word2Vec model and stored in
             :attr:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel.running_training_loss`.
-        callbacks : list of :class: `~gensim.models.callbacks.CallbackAny2Vec`
+        callbacks : list of :class: `~gensim.models.callbacks.CallbackAny2Vec`, optional
             List of callbacks that need to be executed/run at specific stages during training.
 
         Returns
@@ -689,11 +755,11 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
         Parameters
         ----------
-        epochs : int
+        epochs : int, optional
             Number of training epochs. Must have a (non None) value.
-        total_examples : int
+        total_examples : int, optional
             Number of documents in the corpus. Either `total_examples` or `total_words` **must** be supplied.
-        total_words : int
+        total_words : int, optional
             Number of words in the corpus. Either `total_examples` or `total_words` **must** be supplied.
         **kwargs
             Unused. Present to preserve signature among base and inherited implementations.
@@ -742,7 +808,6 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
     def load(cls, *args, **kwargs):
         """Load a previously saved object (using :meth:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel.save`) from file.
 
-
         Also initializes extra instance attributes in case the loaded model does not include them.
         `*args` or `**kwargs` **MUST** include the fname argument (path to saved file).
         See :meth:`~gensim.utils.SaveLoad.load`.
@@ -789,18 +854,29 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
         Parameters
         ----------
-        job_queue :
-        progress_queue
-        cur_epoch
-        example_count
-        total_examples
-        raw_word_count
-        total_words
-        trained_word_count
-        elapsed
-
-        Returns
-        -------
+        job_queue : Queue of (iterable of object, dict of (str, float))
+            The queue of jobs still to be performed by workers. Each job is represented as a tuple containing
+            the batch of data to be processed and the parameters to be used for the processing as a dict.
+        progress_queue : Queue of (int, int, int)
+            A queue of progress reports. Each report is represented as a tuple of these 3 elements:
+                * size of data chunk processed, for example number of sentences in the corpus chunk.
+                * Effective word count used in training (after ignoring unknown words and trimming the sentence length).
+                * Total word count used in training.
+        cur_epoch : int
+            The current training iteration through the corpus.
+        example_count : int
+            Number of examples (could be sentences for example) processed until now.
+        total_examples : int
+            Number of all examples present in the input corpus.
+        raw_word_count : int
+            Number of words used in training until now.
+        total_words : int
+            Number of all words in the input corpus.
+        trained_word_count : int
+            Number of effective words used in training until now (after ignoring unknown words and trimming
+            the sentence length).
+        elapsed : int
+            Elapsed time since the beginning of training in seconds.
 
         """
         if total_examples:
@@ -820,6 +896,31 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
     def _log_epoch_end(self, cur_epoch, example_count, total_examples, raw_word_count, total_words,
                        trained_word_count, elapsed):
+        """Callback used to log the end of a training epoch
+
+        Parameters
+        ----------
+        cur_epoch : int
+            The current training iteration through the corpus.
+        example_count : int
+            Number of examples (could be sentences for example) processed until now.
+        total_examples : int
+            Number of all examples present in the input corpus.
+        raw_word_count : int
+            Number of words used in training until now.
+        total_words : int
+            Number of all words in the input corpus.
+        trained_word_count : int
+            Number of effective words used in training until now (after ignoring unknown words and trimming
+            the sentence length).
+        elapsed : int
+            Elapsed time since the beginning of training in seconds.
+
+        Warnings
+        --------
+        In case the corpus is changed while the epoch was running.
+
+        """
         logger.info(
             "EPOCH - %i : training on %i raw words (%i effective words) took %.1fs, %.0f effective words/s",
             cur_epoch + 1, raw_word_count, trained_word_count, elapsed, trained_word_count / elapsed
@@ -838,6 +939,20 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             )
 
     def _log_train_end(self, raw_word_count, trained_word_count, total_elapsed, job_tally):
+        """Callback to log the end of training.
+
+        Parameters
+        ----------
+        raw_word_count : int
+            Number of words used in the whole training.
+        trained_word_count : int
+            Number of effective words used in training (after ignoring unknown words and trimming the sentence length).
+        total_elapsed : int
+            Total time spent during training in seconds.
+        job_tally : int
+            Total number of jobs processed during training.
+
+        """
         logger.info(
             "training on a %i raw words (%i effective words) took %.1fs, %.0f effective words/s",
             raw_word_count, trained_word_count, total_elapsed, trained_word_count / total_elapsed
