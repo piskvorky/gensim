@@ -411,25 +411,21 @@ def score_cbow_pair(model, word, l1):
 
 class Word2Vec(BaseWordEmbeddingsModel):
     """Class for training, using and evaluating neural networks described in https://code.google.com/p/word2vec/
-
     If you're finished training a model (=no more updates, only querying)
     then switch to the :mod:`gensim.models.KeyedVectors` instance in wv
-
     The model can be stored/loaded via its :meth:`~gensim.models.word2vec.Word2Vec.save()` and
     :meth:`~gensim.models.word2vec.Word2Vec.load()` methods, or stored/loaded in a format
     compatible with the original word2vec implementation via `wv.save_word2vec_format()`
     and `Word2VecKeyedVectors.load_word2vec_format()`.
-
     """
 
-    def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
+    def __init__( sentences=None, size=None, vector_size=100, alpha=0.025, window=5, min_count=5,
                  max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
-                 sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
-                 trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False, callbacks=()):
+                 sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=None, epochs=5, null_word=0,
+                 trim_rule=None, sorted_vocab=1, compute_loss=False, callbacks=()):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
-
         Parameters
         ----------
         sentences : iterable of iterables
@@ -439,7 +435,6 @@ class Word2Vec(BaseWordEmbeddingsModel):
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
             If you don't supply `sentences`, the model is left uninitialized -- use if you plan to initialize it
             in some other way.
-
         sg : int {1, 0}
             Defines the training algorithm. If 1, skip-gram is employed; otherwise, CBOW is used.
         size : int
@@ -498,30 +493,38 @@ class Word2Vec(BaseWordEmbeddingsModel):
             If True, computes and stores loss value which can be retrieved using `model.get_latest_training_loss()`.
         callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`
             List of callbacks that need to be executed/run at specific stages during training.
-
         Examples
         --------
         Initialize and train a `Word2Vec` model
-
         >>> from gensim.models import Word2Vec
         >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
         >>>
         >>> model = Word2Vec(sentences, min_count=1)
         >>> say_vector = model['say']  # get vector for word
-
         """
-
+        
+        
+        if iter is not None:
+            warnings.warn("The parameter `iter` is deprecated, will be removed in 4.0.0, use `epochs` instead.")
+            epochs = iter
+            
+        if size is not None:
+            warnings.warn("The parameter `iter` is deprecated, will be removed in 4.0.0, use `epochs` instead.")
+            vector_size = size
+            
+        self.vector_size = vector_size
+        self.epochs = epochs
         self.callbacks = callbacks
         self.load = call_on_class_only
 
-        self.wv = Word2VecKeyedVectors(size)
+        self.wv = Word2VecKeyedVectors(vector_size)
         self.vocabulary = Word2VecVocab(
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
             sorted_vocab=bool(sorted_vocab), null_word=null_word)
-        self.trainables = Word2VecTrainables(seed=seed, vector_size=size, hashfxn=hashfxn)
+        self.trainables = Word2VecTrainables(seed=seed, vector_size=vector_size, hashfxn=hashfxn)
 
         super(Word2Vec, self).__init__(
-            sentences=sentences, workers=workers, vector_size=size, epochs=iter, callbacks=callbacks,
+            sentences=sentences, workers=workers, vector_size=vector_size, epochs=epochs, callbacks=callbacks,
             batch_words=batch_words, trim_rule=trim_rule, sg=sg, alpha=alpha, window=window, seed=seed,
             hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, compute_loss=compute_loss,
             fast_version=FAST_VERSION)
