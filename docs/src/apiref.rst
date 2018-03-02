@@ -483,14 +483,6 @@ Functions
     :no-members:
     :no-inherited-members:
 
-Classes
--------
-.. currentmodule:: gensim._matutils
-
-.. autosummary::
-    :toctree: generated/
-    :template: class.rst
-
 Functions
 ---------
 .. currentmodule:: gensim._matutils
@@ -500,3 +492,8 @@ Functions
     :template: function.rst
 
     mean_absolute_difference
+    logsumexp
+    dirichlet_expectation
+    dirichlet_expectation_1d
+    dirichlet_expectation_2d
+    digamma
