@@ -39,7 +39,7 @@ clean:
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
-	@echo "Build finished. The HTML pages are in /docs"
+	@echo "Build finished. The HTML pages are in /docs/src/_build/html"
 
 upload:
 	scp -r _build/html/* rr:public_html/gensim/

@@ -115,21 +115,36 @@ Functions
     :no-members:
     :no-inherited-members:
 
-Functions
----------
+Scripts
+-------
 .. currentmodule:: gensim.scripts
 
 .. autosummary::
     :toctree: generated/
-    :template: function.rst
+    :template: module.rst
 
-    glove2word2vec.get_glove_info
-    glove2word2vec.glove2word2vec
-    word2vec2tensor.word2vec2tensor
-    segment_wiki.segment_all_articles
-    segment_wiki.segment_and_write_all_articles
-    segment_wiki.extract_page_xmls
-    segment_wiki.segment
+    glove2word2vec
+
+.. command-output:: python -m gensim.scripts.glove2word2vec --help
+    :ellipsis: 0, -5
+
+.. autosummary::
+    :toctree: generated/
+    :template: module.rst
+
+    word2vec2tensor
+
+.. command-output:: python -m gensim.scripts.word2vec2tensor --help
+    :ellipsis: 0, -7
+
+.. autosummary::
+    :toctree: generated/
+    :template: module.rst
+
+    segment_wiki
+
+.. command-output:: python -m gensim.scripts.segment_wiki --help
+    :ellipsis: 0, -10
 
 .. _corpora_ref:
 
@@ -496,4 +511,3 @@ Functions
     dirichlet_expectation
     dirichlet_expectation_1d
     dirichlet_expectation_2d
-    digamma
