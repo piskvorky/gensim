@@ -708,7 +708,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 			.style("fill", color1)
 			.attr("r", function(d) {
                 // return (rScaleMargin(+d.Freq));
-                console.log("max radius", (Math.sqrt((99/(100*Math.PI))*mdswidth*mdsheight*circle_prop/Math.PI)));
                 return (Math.sqrt((d.Freq/(100*Math.PI))*mdswidth*mdsheight*circle_prop/Math.PI));
             })
 			.attr("cx", function(d) {
@@ -815,7 +814,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 				if (typeof vis_state.word === 'string') word_on(document.getElementById(wordID + vis_state.word));
 			});
 
-// 40 pixel extra
+
 		// dynamically create the doc/topic/word input forms at the top of the page
 		function init_forms(docID, topicID, wordID) {
 
@@ -957,7 +956,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 				.transition()
 				.attr("r", function(d) {
 					//return (rScaleCond(d));
-					return (Math.sqrt(d*mdswidth*mdsheight*circle_prop/Math.PI)/(1.5*W));
+					return (Math.sqrt((d/(100*Math.PI))*mdswidth*mdsheight*circle_prop/Math.PI));
 				});
 
 			// re-bind mdsData so we can handle multiple selection
@@ -986,8 +985,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 				.data(topic_radius)
 				.transition()
 				.attr("r", function(d) {
-					return (rScaleCond(d));
-					// return (Math.sqrt(d*mdswidth*mdsheight*circle_prop/Math.PI));
+					return (Math.sqrt((d/(100*Math.PI))*mdswidth*mdsheight*circle_prop/Math.PI));
 				});
 
 			// re-bind mdsData so we can handle multiple selection
@@ -1031,8 +1029,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 				.data(doc_radius)
 				.transition()
 				.attr("r", function(d) {
-					//return (rScaleCond(d));
-					return (Math.sqrt(d*mdswidth*mdsheight*circle_prop/Math.PI));
+					return (Math.sqrt((d/(100*Math.PI))*mdswidth*mdsheight*circle_prop/Math.PI));
 				});
 
 			// re-bind mdsData so we can handle multiple selection
@@ -1061,8 +1058,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 				.data(word_radius)
 				.transition()
 				.attr("r", function(d) {
-					//return (rScaleCond(d));
-					return (Math.sqrt(d*mdswidth*mdsheight*circle_prop/Math.PI));
+					return (Math.sqrt((d/(100*Math.PI))*mdswidth*mdsheight*circle_prop/Math.PI));
 				});
 
 			// re-bind mdsData so we can handle multiple selection
@@ -1112,8 +1108,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 				.data(doc_radius)
 				.transition()
 				.attr("r", function(d) {
-					//return (rScaleCond(d));
-					return (Math.sqrt(d*mdswidth*mdsheight*circle_prop/Math.PI));
+					return (Math.sqrt((d/(100*Math.PI))*mdswidth*mdsheight*circle_prop/Math.PI));
 				});
 
 			// re-bind mdsData so we can handle multiple selection
@@ -1141,8 +1136,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 				.data(topic_radius)
 				.transition()
 				.attr("r", function(d) {
-					return (rScaleCond(d));
-					// return (Math.sqrt(d*mdswidth*mdsheight*circle_prop/Math.PI));
+					return (Math.sqrt((d/(100*Math.PI))*mdswidth*mdsheight*circle_prop/Math.PI));
 				});
 
 			// re-bind mdsData so we can handle multiple selection
