@@ -273,6 +273,13 @@ class BaseAny2VecModel(utils.SaveLoad):
             callback.on_train_end(self)
         return trained_word_count, raw_word_count
 
+    @classmethod
+    def load(cls, fname_or_handle, **kwargs):
+        return super(BaseAny2VecModel, cls).load(fname_or_handle, **kwargs)
+
+    def save(self, fname_or_handle, **kwargs):
+        super(BaseAny2VecModel, self).save(fname_or_handle, **kwargs)
+
 
 class BaseWordEmbeddingsModel(BaseAny2VecModel):
     """
@@ -280,6 +287,15 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
     For example - `Word2Vec`, `FastText`, etc.
 
     """
+
+    def _clear_post_train(self):
+        raise NotImplementedError()
+
+    def _do_train_job(self, data_iterable, job_parameters, thread_private_mem):
+        raise NotImplementedError()
+
+    def _set_train_params(self, **kwargs):
+        raise NotImplementedError()
 
     def __init__(self, sentences=None, workers=3, vector_size=100, epochs=5, callbacks=(), batch_words=10000,
                  trim_rule=None, sg=0, alpha=0.025, window=5, seed=1, hs=0, negative=5, cbow_mean=1,
