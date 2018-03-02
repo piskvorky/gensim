@@ -57,7 +57,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 		mdsarea = mdsheight * mdswidth;
 	// controls how big the maximum circle can be
 	// doesn't depend on data, only on mds width and height:
-	var rMax = 200;
+	var rMax = 72;
 
 	// proportion of area of MDS plot to which the sum of default topic circle areas is set
 	var circle_prop = 0.25;
@@ -425,19 +425,19 @@ var LDAvis = function(to_select, data_or_file_name) {
 		if (doc_xdiff > doc_ydiff) {
 			// range: mds width - rMax
 			var doc_xScale = d3.scaleLinear()
-					.range([0, mdswidth])
+					.range([rMax, mdswidth - rMax])
 					.domain([doc_xrange[0] - doc_xpad * doc_xdiff, doc_xrange[1] + doc_xpad * doc_xdiff]);
 
 			var doc_yScale = d3.scaleLinear()
-					.range([mdsheight, 0])
+					.range([mdsheight - rMax, rMax])
 					.domain([doc_yrange[0] - 0.5*(doc_xdiff - doc_ydiff) - doc_ypad*doc_xdiff, doc_yrange[1] + 0.5*(doc_xdiff - doc_ydiff) + doc_ypad*doc_xdiff]);
 		} else {
 			var doc_xScale = d3.scaleLinear()
-					.range([0, mdswidth])
+					.range([rMax, mdswidth - rMax])
 					.domain([doc_xrange[0] - 0.5*(doc_ydiff - doc_xdiff) - doc_xpad*doc_ydiff, doc_xrange[1] + 0.5*(doc_ydiff - doc_xdiff) + doc_xpad*doc_ydiff]);
 
 			var doc_yScale = d3.scaleLinear()
-					.range([mdsheight, 0])
+					.range([mdsheight - rMax, rMax])
 					.domain([doc_yrange[0] - doc_ypad * doc_ydiff, doc_yrange[1] + doc_ypad * doc_ydiff]);
 		}
 
@@ -455,19 +455,19 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 		if (topic_xdiff > topic_ydiff) {
 			var topic_xScale = d3.scaleLinear()
-					.range([0, mdswidth - rMax])
+					.range([rMax, mdswidth - rMax])
 					.domain([topic_xrange[0] - topic_xpad * topic_xdiff, topic_xrange[1] + topic_xpad * topic_xdiff]);
 
 			var topic_yScale = d3.scaleLinear()
-					.range([mdsheight, 0])
+					.range([mdsheight - rMax, rMax])
 					.domain([topic_yrange[0] - 0.5*(topic_xdiff - topic_ydiff) - topic_ypad*topic_xdiff, topic_yrange[1] + 0.5*(topic_xdiff - topic_ydiff) + topic_ypad*topic_xdiff]);
 		} else {
 			var topic_xScale = d3.scaleLinear()
-					.range([0, mdswidth - rMax])
+					.range([rMax, mdswidth - rMax])
 					.domain([topic_xrange[0] - 0.5*(topic_ydiff - topic_xdiff) - topic_xpad*topic_ydiff, topic_xrange[1] + 0.5*(topic_ydiff - topic_xdiff) + topic_xpad*topic_ydiff]);
 
 			var topic_yScale = d3.scaleLinear()
-					.range([mdsheight, 0])
+					.range([mdsheight - rMax, rMax])
 					.domain([topic_yrange[0] - topic_ypad * topic_ydiff, topic_yrange[1] + topic_ypad * topic_ydiff]);
 		}
 
@@ -485,19 +485,19 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 		if (word_xdiff > word_ydiff) {
 			var word_xScale = d3.scaleLinear()
-					.range([0, mdswidth])
+					.range([rMax, mdswidth - rMax])
 					.domain([word_xrange[0] - word_xpad * word_xdiff, word_xrange[1] + word_xpad * word_xdiff]);
 
 			var word_yScale = d3.scaleLinear()
-					.range([mdsheight, 0])
+					.range([mdsheight - rMax, rMax])
 					.domain([word_yrange[0] - 0.5*(word_xdiff - word_ydiff) - word_ypad*word_xdiff, word_yrange[1] + 0.5*(word_xdiff - word_ydiff) + word_ypad*word_xdiff]);
 		} else {
 			var word_xScale = d3.scaleLinear()
-					.range([0, mdswidth])
+					.range([rMax, mdswidth - rMax])
 					.domain([word_xrange[0] - 0.5*(word_ydiff - word_xdiff) - word_xpad*word_ydiff, word_xrange[1] + 0.5*(word_ydiff - word_xdiff) + word_xpad*word_ydiff]);
 
 			var word_yScale = d3.scaleLinear()
-					.range([mdsheight, 0])
+					.range([mdsheight - rMax, rMax])
 					.domain([word_yrange[0] - word_ypad * word_ydiff, word_yrange[1] + word_ypad * word_ydiff]);
 		}
 
@@ -603,7 +603,10 @@ var LDAvis = function(to_select, data_or_file_name) {
 				return ((d.Freq/10)*0.2);
 			})
 			.style("fill", color1)
-			.attr("r", Math.sqrt(mdswidth*mdsheight*circle_prop/Math.PI)/(1.5*D))
+			.attr("r", function(d) {
+                // return (rScaleMargin(+d.Freq));
+                return (Math.sqrt((d.Freq/(100*Math.PI))*mdswidth*mdsheight*circle_prop/Math.PI));
+            })
 			.attr("cx", function(d) {
 				return (doc_xScale(+d.x));
 			})
@@ -703,10 +706,10 @@ var LDAvis = function(to_select, data_or_file_name) {
 				return ((d.Freq/10)*0.2);
 			})
 			.style("fill", color1)
-			// .attr("r", Math.sqrt(mdswidth*mdsheight*circle_prop/Math.PI)/(1.5*T))
 			.attr("r", function(d) {
                 // return (rScaleMargin(+d.Freq));
-                return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
+                console.log("max radius", (Math.sqrt((99/(100*Math.PI))*mdswidth*mdsheight*circle_prop/Math.PI)));
+                return (Math.sqrt((d.Freq/(100*Math.PI))*mdswidth*mdsheight*circle_prop/Math.PI));
             })
 			.attr("cx", function(d) {
 				return (topic_xScale(+d.x));
@@ -764,7 +767,10 @@ var LDAvis = function(to_select, data_or_file_name) {
 				return ((d.Freq/10)*0.2);
 			})
 			.style("fill", color1)
-			.attr("r", Math.sqrt(mdswidth*mdsheight*circle_prop/Math.PI)/(1.5*W))
+			.attr("r", function(d) {
+                // return (rScaleMargin(+d.Freq));
+                return (Math.sqrt((d.Freq/(100*Math.PI))*mdswidth*mdsheight*circle_prop/Math.PI));
+            })
 			.attr("cx", function(d) {
 				return (word_xScale(+d.x));
 			})
