@@ -1833,7 +1833,7 @@ def sample_dict(d, n=10, use_random=True):
 
 
 def strided_windows(ndarray, window_size):
-    """Produce a numpy.ndarray of windows, as from a sliding window.
+    """Produce a `numpy.ndarray` of windows, as from a sliding window.
 
     Parameters
     ----------

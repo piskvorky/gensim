@@ -221,7 +221,7 @@ def zeros_aligned(shape, dtype, order='C', align=128):
 
 
 def ismatrix(m):
-    """Check does `m` numpy.ndarray or `scipy.sparse` matrix.
+    """Check does `m` `numpy.ndarray` or `scipy.sparse` matrix.
 
     Parameters
     ----------
@@ -238,7 +238,7 @@ def ismatrix(m):
 
 
 def any2sparse(vec, eps=1e-9):
-    """Convert a numpy.ndarray or `scipy.sparse` vector into gensim BoW format.
+    """Convert a `numpy.ndarray` or `scipy.sparse` vector into gensim BoW format.
 
     Parameters
     ----------
@@ -315,7 +315,7 @@ def scipy2scipy_clipped(matrix, topn, eps=1e-9):
 
 
 def scipy2sparse(vec, eps=1e-9):
-    """Convert a scipy.sparse vector BoW format.
+    """Convert a `scipy.sparse` vector BoW format.
 
     Parameters
     ----------
@@ -538,7 +538,7 @@ class Dense2Corpus(object):
 
 
 class Sparse2Corpus(object):
-    """Convert a matrix in scipy.sparse format into a streaming gensim corpus.
+    """Convert a matrix in `scipy.sparse` format into a streaming gensim corpus.
 
     See Also
     --------
