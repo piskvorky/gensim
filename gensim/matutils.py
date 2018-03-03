@@ -666,7 +666,7 @@ blas_nrm2 = blas('nrm2', np.array([], dtype=float))
 blas_scal = blas('scal', np.array([], dtype=float))
 
 
-def unitvec(vec, norm='l2'):
+def unitvec(vec, norm='l2', return_norm=False):
     """Scale a vector to unit length.
 
     Parameters
@@ -695,9 +695,15 @@ def unitvec(vec, norm='l2'):
         if norm == 'l2':
             veclen = np.sqrt(np.sum(vec.data ** 2))
         if veclen > 0.0:
-            return vec / veclen, veclen
+            if return_norm:
+                return vec / veclen, veclen
+            else:
+                return vec / veclen
         else:
-            return vec, veclen
+            if return_norm:
+                return vec, 1
+            else:
+                return vec
 
     if isinstance(vec, np.ndarray):
         vec = np.asarray(vec, dtype=float)
@@ -706,9 +712,15 @@ def unitvec(vec, norm='l2'):
         if norm == 'l2':
             veclen = blas_nrm2(vec)
         if veclen > 0.0:
-            return blas_scal(1.0 / veclen, vec)
+            if return_norm:
+                return blas_scal(1.0 / veclen, vec), veclen
+            else:
+                return blas_scal(1.0 / veclen, vec)
         else:
-            return vec, veclen
+            if return_norm:
+                return vec, 1
+            else:
+                return vec
 
     try:
         first = next(iter(vec))  # is there at least one element?
@@ -721,7 +733,10 @@ def unitvec(vec, norm='l2'):
         if norm == 'l2':
             length = 1.0 * math.sqrt(sum(val ** 2 for _, val in vec))
         assert length > 0.0, "sparse documents must not contain any explicit zero entries"
-        return ret_normalized_vec(vec, length), length
+        if return_norm:
+            return ret_normalized_vec(vec, length), length
+        else:
+            return ret_normalized_vec(vec, length)
     else:
         raise ValueError("unknown input type")
 

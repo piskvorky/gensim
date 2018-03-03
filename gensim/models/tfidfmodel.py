@@ -68,10 +68,10 @@ def resolve_weights(smartirs):
     if w_tf not in 'nlabL':
         raise ValueError("Expected term frequency weight to be one of 'nlabL', except got {}".format(w_tf))
 
-    if w_df not in 'ntp':
+    if w_df not in 'ntps':
         raise ValueError("Expected inverse document frequency weight to be one of 'ntp', except got {}".format(w_df))
 
-    if w_n not in 'ncb':
+    if w_n not in 'ncu':
         raise ValueError("Expected normalization weight to be one of 'ncb', except got {}".format(w_n))
 
     return w_tf, w_df, w_n
@@ -176,9 +176,11 @@ def updated_wglobal(docfreq, totaldocs, n_df):
         return np.log(1.0 * totaldocs / docfreq) / np.log(2)
     elif n_df == "p":
         return np.log((1.0 * totaldocs - docfreq) / docfreq) / np.log(2)
+    elif n_df == "s":
+        return np.log(float(totaldocs + 1) / (docfreq + 1)) + 1.0
 
 
-def updated_normalize(x, n_n):
+def updated_normalize(x, n_n, return_norm=False):
     """Normalizes the final tf-idf value according to the value of `n_n`.
 
     Parameters
@@ -195,9 +197,12 @@ def updated_normalize(x, n_n):
 
     """
     if n_n == "n":
-        return x
+        if return_norm:
+            return x, 1
+        else:
+            return x
     elif n_n == "c":
-        return matutils.unitvec(x)
+        return matutils.unitvec(x, return_norm=return_norm)
 
 
 class TfidfModel(interfaces.TransformationABC):
@@ -293,6 +298,7 @@ class TfidfModel(interfaces.TransformationABC):
         self.pivot_norm = pivot_norm
         self.slope = slope
         self.pivot = pivot
+        self.eps = 1e-12
 
         # If smartirs is not None, override wlocal, wglobal and normalize
         if smartirs is not None:
@@ -300,7 +306,8 @@ class TfidfModel(interfaces.TransformationABC):
 
             self.wlocal = partial(updated_wlocal, n_tf=n_tf)
             self.wglobal = partial(updated_wglobal, n_df=n_df)
-            self.normalize = partial(updated_normalize, n_n=n_n)
+            # also return norm factor if pivot_norm is True
+            self.normalize = partial(updated_normalize, n_n=n_n, return_norm=self.pivot_norm)
 
         if dictionary is not None:
             # user supplied a Dictionary object, which already contains all the
@@ -386,7 +393,7 @@ class TfidfModel(interfaces.TransformationABC):
             TfIdf corpus, if `bow` is corpus.
 
         """
-        # print(self.normalize, "90")
+        self.eps = eps
         # if the input vector is in fact a corpus, return a transformed corpus as a result
         is_corpus, bow = utils.is_corpus(bow)
         if is_corpus:
@@ -404,39 +411,46 @@ class TfidfModel(interfaces.TransformationABC):
 
         vector = [
             (termid, tf * self.idfs.get(termid))
-            for termid, tf in zip(termid_array, tf_array) if abs(self.idfs.get(termid, 0.0)) > eps
+            for termid, tf in zip(termid_array, tf_array) if abs(self.idfs.get(termid, 0.0)) > self.eps
         ]
-        # print(self.normalize, "o")
 
-        veclen = 1
         if self.normalize is True:
-            print("here")
             self.normalize = matutils.unitvec
         elif self.normalize is False:
             self.normalize = utils.identity
 
         # and finally, normalize the vector either to unit length, or use a
         # user-defined normalization function
-        norm_vector, veclen = self.normalize(vector)
-        # TODO xnorm is not normalized norm
-        if self.pivot_norm is True:
-            norm_vector = np.array(veclen)
-            print (veclen)
-            sparse_norm_wts = np.array(norm_vector)[:, 1]
-            n_samples = sparse_norm_wts.shape[0]
+        if self.pivot_norm is False:
+            norm_vector = self.normalize(vector)
+            norm_vector = [(termid, weight) for termid, weight in norm_vector if abs(weight) > self.eps]
+            return norm_vector
+        else:
+            logger.info("You need to explicitly call pivoted_normalization.")
+            return vector
 
-            if self.pivot is None:
-                # self.pivot = sparse_norm_wts.mean()
-                import math
-                self.pivot = 1.0 * math.sqrt(sum(val ** 2 for _, val in vector))
-            pivoted_norm = (1 - self.slope) * self.pivot + self.slope * sparse_norm_wts
-            _diag_pivoted_norm = sp.spdiags(1. / pivoted_norm, diags=0, m=n_samples,
-                n=n_samples, format='csr')
+    def pivoted_normalization(self, tfidf_matrix):
+        X = matutils.corpus2csc(tfidf_matrix).T
+        n_samples, n_features = X.shape
+        X_norm = []
 
-            norm_vector[:, 1] = _diag_pivoted_norm.dot(np.array(vector)[:, 1])
-            norm_vector = norm_vector.tolist()
-            if np.allclose(self.normalize(vector), norm_vector):
-                print ("True")
+        for vec in tfidf_matrix:
+            _, norm = self.normalize(vec, return_norm=True)
+            X_norm.append(norm)
 
-        norm_vector = [(termid, weight) for termid, weight in norm_vector if abs(weight) > eps]
+        X_norm = np.array(X_norm)
+
+        if self.pivot is None:
+            self.pivot = X_norm.mean()
+
+        pivoted_norm = (1 - self.slope) * self.pivot + self.slope * X_norm
+        _diag_pivoted_norm = sp.spdiags(1. / pivoted_norm, diags=0, m=n_samples,
+                                    n=n_samples, format='csr')
+        X = _diag_pivoted_norm.dot(X)
+
+        norm_vector = []
+
+        X = matutils.Scipy2Corpus(X)
+        for doc in X:
+            norm_vector.append([(termid, weight) for termid, weight in doc if abs(weight) > self.eps])
         return norm_vector

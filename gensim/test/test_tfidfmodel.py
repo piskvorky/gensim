@@ -129,7 +129,7 @@ class TestTfidfModel(unittest.TestCase):
         self.assertTrue(np.allclose(model3[tstvec[1]], model4[tstvec[1]]))
         self.assertTrue(np.allclose(model3[[]], model4[[]]))  # try projecting an empty vector
 
-    def TestConsistency(self):
+    def testConsistency(self):
         docs = [corpus[1], corpus[2]]
 
         # Test if `ntc` yields the default docs.
@@ -283,7 +283,34 @@ class TestTfidfModel(unittest.TestCase):
         self.assertTrue(np.allclose(transformed_docs[0], expected_docs[0]))
         self.assertTrue(np.allclose(transformed_docs[1], expected_docs[1]))
 
+    def testPivotedNormalization(self):
+        docs = [corpus[1], corpus[2]]
 
+        # Test if slope=1 yields the default docs for pivoted normalization.
+        model = tfidfmodel.TfidfModel(self.corpus)
+        transformed_docs = [model[docs[0]], model[docs[1]]]
+
+        model = tfidfmodel.TfidfModel(self.corpus, slope=1, pivot_norm=True)
+        expected_docs = model.pivoted_normalization([model[docs[0]], model[docs[1]]])
+
+        self.assertTrue(np.allclose(transformed_docs[0], expected_docs[0]))
+        self.assertTrue(np.allclose(transformed_docs[1], expected_docs[1]))
+
+        model = tfidfmodel.TfidfModel(self.corpus, slope=0.5, pivot_norm=True)
+        expected_docs = pivoted_normalization([model[docs[0]], model[docs[1]]])
+        print (expected_docs)
+        expected_docs = [[(3, 2),
+                          (4, 2),
+                          (5, 3),
+                          (6, 2),
+                          (7, 3),
+                          (8, 2)],
+                         [(5, 6),
+                          (9, 3),
+                          (10, 3)]]
+
+        self.assertTrue(np.allclose(transformed_docs[0], expected_docs[0]))
+        self.assertTrue(np.allclose(transformed_docs[1], expected_docs[1]))
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()

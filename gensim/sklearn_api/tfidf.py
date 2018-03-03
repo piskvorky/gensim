@@ -22,7 +22,7 @@ class TfIdfTransformer(TransformerMixin, BaseEstimator):
     """
 
     def __init__(self, id2word=None, dictionary=None, wlocal=gensim.utils.identity,
-                 wglobal=gensim.models.tfidfmodel.df2idf, normalize=True, smartirs=None,
+                 wglobal=gensim.models.tfidfmodel.df2idf, normalize=True, smartirs="ntc",
                  pivot_norm=False, slope=0.65, pivot=None):
         """
         Sklearn wrapper for Tf-Idf model.
@@ -61,4 +61,9 @@ class TfIdfTransformer(TransformerMixin, BaseEstimator):
         # input as python lists
         if isinstance(docs[0], tuple):
             docs = [docs]
-        return [self.gensim_model[doc] for doc in docs]
+
+        tfidf_matrix = [self.gensim_model[doc] for doc in docs]
+        if self.pivot_norm is True:
+            return self.gensim_model.pivoted_normalization(tfidf_matrix)
+        else:
+            return tfidf_matrix
