@@ -68,10 +68,10 @@ def resolve_weights(smartirs):
     if w_tf not in 'nlabL':
         raise ValueError("Expected term frequency weight to be one of 'nlabL', except got {}".format(w_tf))
 
-    if w_df not in 'ntps':
+    if w_df not in 'ntp':
         raise ValueError("Expected inverse document frequency weight to be one of 'ntp', except got {}".format(w_df))
 
-    if w_n not in 'ncu':
+    if w_n not in 'nc':
         raise ValueError("Expected normalization weight to be one of 'ncb', except got {}".format(w_n))
 
     return w_tf, w_df, w_n
@@ -176,8 +176,6 @@ def updated_wglobal(docfreq, totaldocs, n_df):
         return np.log(1.0 * totaldocs / docfreq) / np.log(2)
     elif n_df == "p":
         return np.log((1.0 * totaldocs - docfreq) / docfreq) / np.log(2)
-    elif n_df == "s":
-        return np.log(float(totaldocs + 1) / (docfreq + 1)) + 1.0
 
 
 def updated_normalize(x, n_n, return_norm=False):
