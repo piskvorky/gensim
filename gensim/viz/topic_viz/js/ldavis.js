@@ -138,6 +138,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 			wordMdsData.push(obj);
 		}
 
+
 		doc_topic_info = [];
 		for (var i = 0; i < data['doc_topic.info'].Doc.length; i++) {
 			var obj = {};
@@ -191,6 +192,13 @@ var LDAvis = function(to_select, data_or_file_name) {
 			}
 			word_topic_info.push(obj);
 		}
+
+		docMdsData.sort(function(a, b) {
+		    return a.Freq - b.Freq;
+		});
+		wordMdsData.sort(function(a, b) {
+		    return a.Freq - b.Freq;
+		});
 
 		// Create the doc/topic/word input forms
 		init_forms(docID, topicID, wordID);
@@ -768,7 +776,10 @@ var LDAvis = function(to_select, data_or_file_name) {
 			.style("fill", color1)
 			.attr("r", function(d) {
                 // return (rScaleMargin(+d.Freq));
-                return (Math.sqrt((d.Freq/(100*Math.PI))*mdswidth*mdsheight*circle_prop/Math.PI));
+                if (d.Freq < 0.1)
+                	return 0;
+                else
+                	return (Math.sqrt((d.Freq/(100*Math.PI))*mdswidth*mdsheight*circle_prop/Math.PI));
             })
 			.attr("cx", function(d) {
 				return (word_xScale(+d.x));
@@ -991,7 +1002,6 @@ var LDAvis = function(to_select, data_or_file_name) {
 			// re-bind mdsData so we can handle multiple selection
 			d3.selectAll(to_select + " .topicdot")
 				.data(topicMdsData);
-
 		}
 
 		// function to update doc/word plot when a topic is selected
@@ -1156,7 +1166,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 				.transition()
 				.attr("r", function(d) {
 					//return (rScaleMargin(+d.Freq));
-					return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
+					return (Math.sqrt((d.Freq/(100*Math.PI))*mdswidth*mdsheight*circle_prop/Math.PI));
 				});
 
 			d3.selectAll(to_select + " .worddot")
@@ -1164,7 +1174,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 				.transition()
 				.attr("r", function(d) {
 					//return (rScaleMargin(+d.Freq));
-					return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
+					return (Math.sqrt((d.Freq/(100*Math.PI))*mdswidth*mdsheight*circle_prop/Math.PI));
 				});
 
 			// // Change sizes of topic numbers:
@@ -1185,7 +1195,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 				.transition()
 				.attr("r", function(d) {
 					//return (rScaleMargin(+d.Freq));
-					return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
+					return (Math.sqrt((d.Freq/(100*Math.PI))*mdswidth*mdsheight*circle_prop/Math.PI));
 				});
 
 			d3.selectAll(to_select + " .worddot")
@@ -1193,7 +1203,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 				.transition()
 				.attr("r", function(d) {
 					//return (rScaleMargin(+d.Freq));
-					return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
+					return (Math.sqrt((d.Freq/(100*Math.PI))*mdswidth*mdsheight*circle_prop/Math.PI));
 				});
 
 			// // Change sizes of topic numbers:
@@ -1214,7 +1224,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 				.transition()
 				.attr("r", function(d) {
 					//return (rScaleMargin(+d.Freq));
-					return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
+					return (Math.sqrt((d.Freq/(100*Math.PI))*mdswidth*mdsheight*circle_prop/Math.PI));
 				});
 
 			d3.selectAll(to_select + " .topicdot")
@@ -1222,7 +1232,7 @@ var LDAvis = function(to_select, data_or_file_name) {
 				.transition()
 				.attr("r", function(d) {
 					//return (rScaleMargin(+d.Freq));
-					return (Math.sqrt((d.Freq/100)*mdswidth*mdsheight*circle_prop/Math.PI));
+					return (Math.sqrt((d.Freq/(100*Math.PI))*mdswidth*mdsheight*circle_prop/Math.PI));
 				});
 
 			// // Change sizes of topic numbers:
