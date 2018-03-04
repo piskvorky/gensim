@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""
-Automatically detect common phrases (multiword expressions) from a stream of sentences.
+"""Automatically detect common phrases (multiword expressions) from a stream of sentences.
 
-The phrases are collocations (frequently co-occurring tokens). See [1]_ for the
-exact formula.
+The phrases are collocations (frequently co-occurring tokens). See `Tomas Mikolov, Ilya Sutskever, Kai Chen,
+Greg Corrado, and Jeffrey Dean. Distributed Representations of Words and Phrases and their Compositionality.`
+In Proceedings of NIPS, 2013. for the exact formula.
 
 For example, if your input stream (=an iterable, with each value a list of token strings) looks like:
 
@@ -69,9 +69,7 @@ The phraser will of course inherit the common_terms from Phrases.
 [u'the', u'mayor', u'shows', u'his', u'lack_of_interest']
 
 
-.. [1] Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg Corrado, and Jeffrey Dean.
-       Distributed Representations of Words and Phrases and their Compositionality.
-       In Proceedings of NIPS, 2013.
+.. [1]
 
 """
 
