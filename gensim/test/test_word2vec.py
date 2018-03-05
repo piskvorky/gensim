@@ -155,7 +155,7 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertEqual(reported_values['retain_total'], 4)
         self.assertEqual(reported_values['num_retained_words'], 1)
         self.assertEqual(model.vocabulary.min_count, 4)
-    
+
         # Test for more restricting effect of max_vocab
         # results in setting a min_count more restricting than specified min_count
         model = word2vec.Word2Vec(size=10, max_vocab=4, min_count=2, sample=0)
@@ -165,7 +165,6 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertEqual(reported_values['retain_total'], 13)
         self.assertEqual(reported_values['num_retained_words'], 4)
         self.assertEqual(model.vocabulary.min_count, 3)
-
 
     def testOnlineLearning(self):
         """Test that the algorithm is able to add new words to the
