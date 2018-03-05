@@ -645,6 +645,18 @@ class TestWikiCorpus(TestTextCorpus):
         corpus = self.corpus_class(self.enwiki, processes=1, token_max_len=16, lemmatize=False)
         self.assertTrue(u'collectivization' in next(corpus.get_texts()))
 
+    def test_removed_table_markup(self):
+        """
+        Check if all the table markup has been removed.
+        """
+        enwiki_file = datapath('enwiki-table-markup.xml.bz2')
+        corpus = self.corpus_class(enwiki_file)
+        texts = corpus.get_texts() 
+        table_markup = ["style", "class", "border", "cellspacing", "cellpadding", "colspan", "rowspan"]
+        for text in texts:
+            for word in table_markup:
+                self.assertTrue(word not in text)
+
     # #TODO: sporadic failure to be investigated
     # def test_get_texts_returns_generator_of_lists(self):
     #     corpus = self.corpus_class(self.enwiki)
