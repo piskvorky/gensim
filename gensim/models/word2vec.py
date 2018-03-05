@@ -499,6 +499,9 @@ class Word2Vec(BaseWordEmbeddingsModel):
             If True, computes and stores loss value which can be retrieved using `model.get_latest_training_loss()`.
         callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`
             List of callbacks that need to be executed/run at specific stages during training.
+        max_vocab : int
+            Limits the vocab to a target vocab size by automatically picking a matching min_count. If the specified
+            min_count is more than the calculated min_count, the specified min_count will be used.
 
         Examples
         --------
@@ -1214,17 +1217,17 @@ class Word2VecVocab(utils.SaveLoad):
             sorted_vocab = sorted(self.raw_vocab.keys(), key=lambda word: self.raw_vocab[word], reverse=True)
 
             if self.max_vocab < len(sorted_vocab):
-                calc_min_count = self.raw_vocab[sorted_vocab[self.max_vocab]] + 1
+                effective_min_count = self.raw_vocab[sorted_vocab[self.max_vocab]] + 1
             else:
-                calc_min_count = 1
+                effective_min_count = 1
 
-            if calc_min_count > min_count:
+            if effective_min_count > min_count:
                 logger.info("min_count was set to %d due to max_vocab being set to %d" %
-                           (calc_min_count, self.max_vocab))
-                min_count = calc_min_count
+                           (effective_min_count, self.max_vocab))
+                min_count = effective_min_count
             else:
-                logger.info("specified min_count = %d is larger that min_count calculated \
-                    by max_vocab = %d, using specified min_count" % (min_count, calc_min_count))
+                logger.info("""specified min_count = %d is larger that min_count calculated
+                               by max_vocab = %d, using specified min_count""" % (min_count, effective_min_count))
 
         if not update:
             logger.info("Loading a fresh vocabulary")
