@@ -1,5 +1,153 @@
 Changes
 ===========
+## 3.3.0, 2018-01-02
+
+:star2: New features:
+* Re-designed all "*2vec" implementations (__[@manneshiva](https://github.com/manneshiva)__, [#1777](https://github.com/RaRe-Technologies/gensim/pull/1777))
+    - Modular organization of `Word2Vec`, `Doc2Vec`, `FastText`, etc ..., making it easier to add new models in the future and re-use code
+    - Fully backward compatible (even with loading models stored by a previous Gensim version)
+    - [Detailed documentation for the *2vec refactoring project](https://github.com/manneshiva/gensim/wiki/Any2Vec-Refactoring-Summary)
+
+* Improve `gensim.scripts.segment_wiki` by retaining interwiki links. Fix #1712
+ (__[@steremma](https://github.com/steremma)__, [PR #1839](https://github.com/RaRe-Technologies/gensim/pull/1839))
+    - Optionally extract interlinks from Wikipedia pages (use the `--include-interlinks` option). This will output one additional JSON dict for each article:
+        ```
+        {
+            "interlinks": {
+                "article title 1": "interlink text 1",
+                "article title 2": "interlink text 2",
+                ...
+            }
+        }
+        ```
+
+    - Example: extract the Wikipedia graph with article links as edges, from a raw Wikipedia dump:
+        ```bash
+        python -m gensim.scripts.segment_wiki --include-interlinks --file ~/Downloads/enwiki-latest-pages-articles.xml.bz2 --output ~/Desktop/enwiki-latest.jsonl.gz
+        ```
+        - Read this field from the `segment_wiki` output:
+
+        ```python
+        import json
+        from smart_open import smart_open
+
+        with smart_open("enwiki-latest.jsonl.gz") as infile:
+            for doc in infile:
+                doc = json.loads(doc)
+
+                src_node = doc['title']
+                dst_nodes = doc['interlinks'].keys()
+
+                print(u"Source node: {}".format(src_node))
+                print(u"Destination nodes: {}".format(u", ".join(dst_nodes)))
+                break
+
+        """
+        OUTPUT:
+
+        Source node: Anarchism
+        Destination nodes: anarcha-feminist, Ivan Illich, Adolf Brand, Josiah Warren, will (philosophy), anarcha-feminism, Anarchism in Mexico, Lysander Spooner, English Civil War, G8, Sebastien Faure, Nihilist movement, Sébastien Faure, Left-wing politics, imamate, Pierre Joseph Proudhon, anarchist communism, Università popolare (Italian newspaper), 1848 Revolution, Synthesis anarchism, labour movement, anarchist communists, collectivist anarchism, polyamory, post-humanism, postcolonialism, anti war movement, State (polity), security culture, Catalan people, Stoicism, Progressive education, stateless society, Umberto I of Italy, German language, Anarchist schools of thought, NEFAC, Jacques Ellul, Spanish Communist Party, Crypto-anarchism, ruling class, non-violence, Platformist, The History of Sexuality, Revolutions of 1917–23, Federación Anarquista Ibérica, propaganda of the deed, William B. Greene, Platformism, mutually exclusive, Fraye Arbeter Shtime, Adolf Hitler, oxymoron, Paris Commune, Anarchism in Italy#Postwar years and today, Oranienburg, abstentionism, Free Society, Henry David Thoreau, privative alpha, George I of Greece, communards, Gustav Landauer, Lucifer the Lightbearer, Moses Harman, coercion, regicide, rationalist, Resistance during World War II, Christ (title), Bohemianism, individualism, Crass, black bloc, Spanish Revolution of 1936, Erich Mühsam, Empress Elisabeth of Austria, Free association (communism and anarchism), general strike, Francesc Ferrer i Guàrdia, Catalan anarchist pedagogue and free-thinker, veganarchism, Traditional knowledge, Japanese Anarchist Federation, Diogenes of Sinope, Hierarchy, sexual revolution, Naturism, Bavarian Soviet Republic, February Revolution, Eugene Varlin, Renaissance humanism, Mexican Liberal Party, Friedrich Engels, Fernando Tarrida del Mármol, Caliphate, Marxism, Jesus, John Cage, Umanita Nova, Anarcho-pacifism, Peter Kropotkin, Religious anarchism, Anselme Bellegarrigue, civilisation, moral obligation, hedonist, Free Territory (Ukraine), -ism, neo-liberalism, Austrian School, philosophy, freethought, Joseph Goebbels, Conservatism, anarchist economics, Cavalier, Maximilien de Robespierre, Comstockery, Dorothy Day, Anarchism in France, Fédération anarchiste, World Economic Forum, Amparo Poch y Gascón, Sex Pistols, women's rights, collectivisation, Taoism, common ownership, William Batchelder Greene, Collective farming, popular education, biphobia, targeted killings, Protestant Christianity, state socialism, Marie François Sadi Carnot, Stephen Pearl Andrews, World Trade Organization, Communist Party of Spain (main), Pluto Press, Levante, Spain, Alexander Berkman, Wilhelm Weitling, Kharijites, Bolshevik, Liberty (1881–1908), Anarchist Aragon, social democrats, Dielo Truda, Post-left anarchy, Age of Enlightenment, Blanquism, Walden, mutual aid (organization), Far-left politics, privative, revolutions of 1848, anarchism and nationalism, punk rock, Étienne de La Boétie, Max Stirner, Jacobin (politics), agriculture, anarchy, Confederacion General del Trabajo de España, toleration, reformism, International Anarchist Congress of Amsterdam, The Ego and Its Own, Ukraine, Civil Disobedience (Thoreau), Spanish Civil War, David Graeber, Anarchism and issues related to love and sex, James Guillaume, Insurrectionary anarchism, Political repression, International Workers' Association, Barcelona, Bulgaria, Voline, Zeno of Citium, anarcho-communists, organized religion, libertarianism, bisexuality, Ricardo Flores Magón, Henri Zisly, Eight-hour day, Freetown Christiania, heteronormativity, Mikhail Bakunin, Propagandaministerium, Ezra Heywood, individual reappropriation, Modern School (United States), archon, Confédération nationale du travail, socialist movement, History of Islam, Max Nettlau, Political Justice, Reichstag fire, Anti-Christianity, decentralised, Issues in anarchism#Communism, deschooling, Christian movement, squatter, Anarchism in Germany, Catalonia, Louise Michel, Solidarity Federation, What is Property?, European individualist anarchism, Pierre-Joseph Proudhon, Mexican Revolution, wikt:anarchism, Blackshirts, Jewish anarchism, Russian Civil War, property rights, anti-authoritarian, individual reclamation, propaganda by the deed, from each according to his ability, to each according to his need, Feminist movement, Confiscation, social anarchism, Anarchism in Russia, Daniel Guérin, Uruguayan Anarchist Federation, Anarcha-feminism, Enragés, Cynicism (philosophy), workers' council, The Word (free love), Allen Ginsberg, Campaign for Nuclear Disarmament, antimilitarism, Workers' self-management, Federación Obrera Regional Argentina, self-governance, free market, Carlos I of Portugal, Simon Critchley, Anti-clericalism, heterosexual, Layla AbdelRahim, Mexican Anarchist Federation, Anarchism and Marxism, October Revolution, Anti-nuclear movement, Joseph Déjacque, Bolsheviks, Luigi Fabbri, morality, Communist party, Sam Dolgoff, united front, Ammon Hennacy, social ecology, commune (intentional community), Oscar Wilde, French Revolution, egoist anarchism, Comintern, transphobia, anarchism without adjectives, social control, means of production, Michel Onfray, Anarchism in France#The Fourth Republic (1945–1958), syndicalism, Anarchism in Spain, Iberian Anarchist Federation, International of Anarchist Federations, Emma Goldman, Netherlands, anarchist free school, International Workingmen's Association, Queer anarchism, Cantonal Revolution, trade unionism, Karl Marx, LGBT community, humanism, Anti-fascism, Carrara, political philosophy, Anarcho-transhumanism, libertarian socialist, Russian Revolution (1917), Two Cheers for Anarchism: Six Easy Pieces on Autonomy, Dignity, and Meaningful Work and Play, Emile Armand, insurrectionary anarchism, individual, Zhuang Zhou, Free Territory, White movement, Greenwich Village, Virginia Bolten, transcendentalist, public choice theory, wikt:brigand, Issues in anarchism#Participation in statist democracy, free love, Mutualism (economic theory), Anarchist St. Imier International, censorship, federalist, 6 February 1934 crisis, biennio rosso, anti-clerical, centralism, Anarchism: A Documentary History of Libertarian Ideas, minarchism, James C. Scott, First International, homosexuality, political theology, spontaneous order, Oranienburg concentration camp, anarcho-communism, negative liberty, post-modernism, Anarchism in Italy, Leopold Kohr, union of egoists, counterculture, Miguel Gimenez Igualada, philosophical anarchism, International Libertarian Solidarity, homosexual, Counterculture of the 1960s, Errico Malatesta, strikebreaker, Workers' Party of Marxist Unification, Clifford Harper, Reification (fallacy), patriarchy, anarchist law, Apostle (Christian), market (economics), Summerhill School, positive liberty, socialism, feminism, Direct action, Melchor Rodríguez García, William Godwin, Nazi concentration camps, Synthesist anarchism, Margaret Anderson, Han Ryner, Federation of Organized Trades and Labor Unions, technology, Workers Solidarity Movement, Edmund Burke, Encyclopædia Britannica, state (polity), Herbert Read, Park Güell, utilitarian, far right leagues, Limited government, self-ownership, Pejorative, homophobia, Industrial Workers of the World, The Dispossessed, Hague Congress (1872), Stalinism, Reciprocity (cultural anthropology), Fernand Pelloutier, individualist anarchism in France, The False Principle of our Education, individualist anarchism, Pierre Monatte, Soviet Union, counter-economics, Rudolf Rocker, Anarchism and capitalism, Parma, Black Rose Books, lesbian, Arditi del Popolo, Emile Armand (1872–1962), who propounded the virtues of free love in the Parisian anarchist milieu of the early 20th century, collectivism, Development criticism, John Henry Mackay, Benoît Broutchoux, Illegalism, Laozi, feminist, Christiaan Cornelissen, Syndicalist Workers' Federation, anarcho-syndicalism, Andalusia, Renzo Novatore, trade union, autonomist marxism, dictatorship of the proletariat, Mujeres Libres, Voltairine de Cleyre, Post-anarchism, participatory economics, Confederación Nacional del Trabajo, Syncretic politics, direct democracy, Jean-Jacques Rousseau, Green anarchism, Surrealism, labour unions, A. S. Neill, christian anarchist, Bonnot Gang, Anti-capitalism, Anarchism in Brazil, simple living, enlightened self-interest, Confédération générale du travail, class conflict, International Workers' Day, Hébertists, Gerrard Winstanley, Francoism, anarcho-pacifist, Andrej Grubacic, individualist anarchist and social anarchist thinkers., April Carter, private property, penal colonies, Libertarian socialism, Camillo Berneri, Christian anarchism, transhumanism, Lucifer, the Light-Bearer, Edna St. Vincent Millay, unschooling, Leo Tolstoy, M. E. Lazarus, Spanish Anarchists, Buddhist anarchism, ideology, William McKinley, anarcho-primitivism, Francesc Pi i Margall, :Category:Anarchism by country, International Workers Association, Anarcho-capitalism, Lois Waisbrooker, wikt:Solidarity, Baja California, social revolution, Unione Sindacale Italiana, Lev Chernyi, Alex Comfort, Sonnenburg, Leon Czolgosz, Volin, utopian, Argentine Libertarian Federation, Nudism, Left-wing market anarchism, insurrection, definitional concerns in anarchist theory, infinitive, affinity group, World Trade Organization Ministerial Conference of 1999 protest activity, class struggle, nonviolence, John Zerzan, poststructuralist, Noam Chomsky, Second Fitna, Julian Beck, Philadelphes, League of Peace and Freedom, Fédération Anarchiste, Kronstadt rebellion, Cold War, André Breton, Silvio Gesell, libertarian anarchism, voluntary association, anti-globalisation movement, birth control, L. Susan Brown, anarcho-naturism, personal property, Roundhead, Harold Barclay, The Joy of Sex, Council communism, Lucía Sánchez Saornil, tyrannicide, Neopaganism, lois scélérates, Johann Most, Anarchist Catalonia, Albert Camus, Protests of 1968, Alexander II of Russia, Spain's economy, Federazione Anarchica Italiana, Cuba, German Revolution of 1918–1919, stirner, Property is theft, Situationist International, law and economics
+
+        ```
+
+* Add support for [SMART notation](https://nlp.stanford.edu/IR-book/html/htmledition/document-and-query-weighting-schemes-1.html) for `TfidfModel`. Fix #1785 (__[@markroxor](https://github.com/markroxor)__, [#1791](https://github.com/RaRe-Technologies/gensim/pull/1791))
+    - Natural extension of `TfidfModel` to allow different weighting and normalization schemes
+        ```python
+        from gensim.corpora import Dictionary
+        from gensim.models import TfidfModel
+        import gensim.downloader as api
+
+        data = api.load("text8")
+        dct = Dictionary(data)
+        corpus = [dct.doc2bow(line) for line in data]
+
+        # Train Tfidf model using the SMART notation, smartirs="ntc" where
+        # 'n' - natural term frequency
+        # 't' - idf document frequency
+        # 'c' - cosine normalization
+        #
+        # More information about possible values available in documentation or https://nlp.stanford.edu/IR-book/html/htmledition/document-and-query-weighting-schemes-1.html
+
+        model = TfidfModel(corpus, id2word=dct, smartirs="ntc")
+        vectorized_corpus = list(model[corpus])
+
+        ```
+    - [SMART Information Retrieval System (wiki)](https://en.wikipedia.org/wiki/SMART_Information_Retrieval_System)
+
+* Add CircleCI for building Gensim documentation. Fix #1807 (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1822](https://github.com/RaRe-Technologies/gensim/pull/1822))
+    - An easy way to preview the rendered documentation (especially, if don't use Linux)
+        - Go to "Details" link of CircleCI in your PR, click on the "Artifacts" tab, choose the HTML file that you want to view; a new tab will open with the rendered HTML page
+    - Integration with Github, to see the documentation directly from the pull request page
+        - Install a user-script plugin: [greasemonkey (for firefox)](https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/) or [tampermonkey (for chrome)](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo?hl=en)
+        - Add [this user-script](https://gist.github.com/menshikh-iv/bfe9b8ef2db10e9511aa9fe5935a7289) to the plugin
+        - Now you’ll see a new button "See CircleCI doc for this PR" in each PR in the Gensim repository. Click it to see the full rendered documentation.
+
+
+:red_circle: Bug fixes:
+* Fix import in `get_my_ip`. Fix #1771 (__[@darindf](https://github.com/darindf)__, [#1772](https://github.com/RaRe-Technologies/gensim/pull/1772))
+* Fix tox.ini/setup.cfg configuration (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1815](https://github.com/RaRe-Technologies/gensim/pull/1815))
+* Fix formula in `gensim.summarization.bm25`. Fix #1828 (__[@sj29-innovate](https://github.com/sj29-innovate)__, [#1833](https://github.com/RaRe-Technologies/gensim/pull/1833))
+* Fix the train method of `TranslationMatrix` (__[@robotcator](https://github.com/robotcator)__, [#1838](https://github.com/RaRe-Technologies/gensim/pull/1838))
+* Fix positional params used for `gensim.models.CoherenceModel` in `gensim.models.callbacks` (__[@Alexjmsherman](https://github.com/Alexjmsherman)__, [#1823](https://github.com/RaRe-Technologies/gensim/pull/1823))
+* Fix parameter setting for `FastText.train`. Fix #1818 (__[@sj29-innovate](https://github.com/sj29-innovate)__, [#1837](https://github.com/RaRe-Technologies/gensim/pull/1837))
+* Pin python2 explicitly for building documentation (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1840](https://github.com/RaRe-Technologies/gensim/pull/1840))
+* Remove dispatcher deadlock for distributed LDA (__[@darindf](https://github.com/darindf)__, [#1817](https://github.com/RaRe-Technologies/gensim/pull/1817))
+* Fix `score_function` from `LexicalEntailmentEvaluation`. Fix #1858 (__[@hachibaka](https://github.com/hachibaka)__, [#1863](https://github.com/RaRe-Technologies/gensim/pull/1863))
+* Fix symmetrical case for hellinger distance. Fix #1854 (__[@caiyulun](https://github.com/caiyulun)__, [#1860](https://github.com/RaRe-Technologies/gensim/pull/1860))
+* Remove wrong logging at import. Fix #1706 (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1871](https://github.com/RaRe-Technologies/gensim/pull/1871))
+
+
+:books: Tutorial and doc improvements:
+* Refactor documentation API Reference for `gensim.summarization` (__[@yurkai](https://github.com/yurkai)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1709](https://github.com/RaRe-Technologies/gensim/pull/1709))
+* Fix docstrings for `gensim.similarities.index`. Partial fix #1666 (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1681](https://github.com/RaRe-Technologies/gensim/pull/1681))
+* Fix docstrings for `gensim.models.translation_matrix` (__[@KokuKUSIAKU](https://github.com/KokuKUSIAKU)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1806](https://github.com/RaRe-Technologies/gensim/pull/1806))
+* Fix docstrings for `gensim.models.rpmodel` (__[@jazzmuesli](https://github.com/jazzmuesli)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1802](https://github.com/RaRe-Technologies/gensim/pull/1802))
+* Fix docstrings for `gensim.utils` (__[@kakshay21](https://github.com/kakshay21)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1797](https://github.com/RaRe-Technologies/gensim/pull/1797))
+* Fix docstrings for `gensim.matutils` (__[@Cheukting](https://github.com/Cheukting)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1804](https://github.com/RaRe-Technologies/gensim/pull/1804))
+* Fix docstrings for `gensim.models.logentropy_model` (__[@minggli](https://github.com/minggli)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1803](https://github.com/RaRe-Technologies/gensim/pull/1803))
+* Fix docstrings for `gensim.models.normmodel` (__[@AustenLamacraft](https://github.com/AustenLamacraft)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1805](https://github.com/RaRe-Technologies/gensim/pull/1805))
+* Refactor API reference `gensim.topic_coherence`. Fix #1669 (__[@CLearERR](https://github.com/CLearERR)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1714](https://github.com/RaRe-Technologies/gensim/pull/1714))
+* Fix documentation for `gensim.corpora.dictionary` and `gensim.corpora.hashdictionary`. Partial fix #1671 (__[@CLearERR](https://github.com/CLearERR)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1814](https://github.com/RaRe-Technologies/gensim/pull/1814))
+* Fix documentation for `gensim.corpora`. Partial fix #1671 (__[@anotherbugmaster](https://github.com/anotherbugmaster)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1729](https://github.com/RaRe-Technologies/gensim/pull/1729))
+* Update banner in doc pages (__[@piskvorky](https://github.com/piskvorky)__, [#1865](https://github.com/RaRe-Technologies/gensim/pull/1865))
+* Fix errors in the doc2vec-lee notebook (__[@PeterHamilton](https://github.com/PeterHamilton)__, [#1841](https://github.com/RaRe-Technologies/gensim/pull/1841))
+* Add wordnet mammal train file for Poincare notebook (__[@jayantj](https://github.com/jayantj)__, [#1781](https://github.com/RaRe-Technologies/gensim/pull/1781))
+* Update Poincare notebooks (#1774) (__[@jayantj](https://github.com/jayantj)__, [#1774](https://github.com/RaRe-Technologies/gensim/pull/1774))
+* Update contributing guide. Fix #1786 (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1793](https://github.com/RaRe-Technologies/gensim/pull/1793))
+* Add `model_to_dict` one-liner to word2vec notebook. Fix #1269 (__[@kakshay21](https://github.com/kakshay21)__, [#1776](https://github.com/RaRe-Technologies/gensim/pull/1776))
+* Add word embedding viz to word2vec notebook. Fix #1419 (__[@markroxor](https://github.com/markroxor)__, [#1800](https://github.com/RaRe-Technologies/gensim/pull/1800))
+* Fix description of `sg` parameter for `gensim.models.FastText` (__[@akutuzov](https://github.com/akutuzov)__, [#1801](https://github.com/RaRe-Technologies/gensim/pull/1801))
+* Fix typo in `doc2vec-IMDB`. Fix #1788 (__[@apoorvaeternity](https://github.com/apoorvaeternity)__, [#1796](https://github.com/RaRe-Technologies/gensim/pull/1796))
+* Remove outdated bz2 examples from tutorials[2] (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1868](https://github.com/RaRe-Technologies/gensim/pull/1868))
+* Remove outdated `bz2` + `MmCorpus` examples from tutorials (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1867](https://github.com/RaRe-Technologies/gensim/pull/1867))
+
+
+
+:+1: Improvements:
+* Refactor tests for `gensim.corpora.WikiCorpus` (__[@steremma](https://github.com/steremma)__, [#1821](https://github.com/RaRe-Technologies/gensim/pull/1821))
+
+
+:warning: Deprecations (will be removed in the next major release)
+* Remove
+    - `gensim.models.wrappers.fasttext` (obsoleted by the new native `gensim.models.fasttext` implementation)
+    - `gensim.examples`
+    - `gensim.nosy`
+    - `gensim.scripts.word2vec_standalone`
+    - `gensim.scripts.make_wiki_lemma`
+    - `gensim.scripts.make_wiki_online`
+    - `gensim.scripts.make_wiki_online_lemma`
+    - `gensim.scripts.make_wiki_online_nodebug`
+    - `gensim.scripts.make_wiki` (all of these obsoleted by the new native  `gensim.scripts.segment_wiki` implementation)
+    - "deprecated" functions and attributes
+
+* Move
+    - `gensim.scripts.make_wikicorpus` ➡ `gensim.scripts.make_wiki.py`
+    - `gensim.summarization` ➡ `gensim.models.summarization`
+    - `gensim.topic_coherence` ➡ `gensim.models._coherence`
+    - `gensim.utils` ➡ `gensim.utils.utils` (old imports will continue to work)
+    - `gensim.parsing.*` ➡ `gensim.utils.text_utils`
+
+
 ## 3.2.0, 2017-12-09
 
 :star2: New features:
