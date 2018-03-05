@@ -1222,7 +1222,8 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
     @classmethod
     def load(cls, *args, **kwargs):
-        """Loads a previously saved `Word2Vec` model. Also see :meth:`~gensim.models.word2vec.Word2Vec.save`.
+        """Loads a previously saved :class:`~gensim.models.word2vec.Word2Vec` model.
+         Also see :meth:`~gensim.models.word2vec.Word2Vec.save`.
 
         Parameters
         ----------
@@ -1232,7 +1233,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
         Returns
         -------
         :class:`~gensim.models.word2vec.Word2Vec`
-            Loaded model as an instance of :class:`~gensim.models.word2vec.Word2Vec`.
+            Loaded model.
         """
         try:
             return super(Word2Vec, cls).load(*args, **kwargs)
