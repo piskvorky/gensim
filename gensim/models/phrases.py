@@ -5,8 +5,10 @@
 """Automatically detect common phrases (multiword expressions) from a stream of sentences.
 
 The phrases are collocations (frequently co-occurring tokens). See `Tomas Mikolov, Ilya Sutskever, Kai Chen,
-Greg Corrado, and Jeffrey Dean. Distributed Representations of Words and Phrases and their Compositionality.`
-In Proceedings of NIPS, 2013. for the exact formula.
+Greg Corrado, and Jeffrey Dean. Distributed Representations of Words and Phrases and their Compositionality.
+In Proceedings of NIPS, 2013.
+<https://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf>`_
+for the exact formula.
 
 For example, if your input stream (=an iterable, with each value a list of token strings) looks like:
 
@@ -69,7 +71,6 @@ The phraser will of course inherit the common_terms from Phrases.
 [u'the', u'mayor', u'shows', u'his', u'lack_of_interest']
 
 
-.. [1]
 
 """
 
@@ -97,13 +98,21 @@ logger = logging.getLogger(__name__)
 
 
 def _is_single(obj):
-    """
-    Check whether `obj` is a single document or an entire corpus.
-    Returns (is_single, new) 2-tuple, where `new` yields the same
-    sequence as `obj`.
+    """Check whether `obj` is a single document or an entire corpus.
 
-    `obj` is a single document if it is an iterable of strings.  It
-    is a corpus if it is an iterable of documents.
+    Parameters
+    ----------
+    obj : object
+
+    Return
+    ------
+    (bool, object)
+        (is_single, new) tuple, where `new` yields the same sequence as `obj`.
+
+    Notes
+    -----
+    `obj` is a single document if it is an iterable of strings. It is a corpus if it is an iterable of documents.
+
     """
     obj_iter = iter(obj)
     temp_iter = obj_iter
@@ -138,15 +147,19 @@ class SentenceAnalyzer(object):
         return -1
 
     def analyze_sentence(self, sentence, threshold, common_terms, scorer):
-        """Analyze a sentence
+        """Analyze a sentence.
 
-        `sentence` a token list representing the sentence to be analyzed.
+        Parameters
+        ----------
+        sentence : list of str
+            Token list representing the sentence to be analyzed.
+        threshold : int
+        The minimum score for a bigram to be taken into account.
+        common_terms : list of object
+        List of common terms, they have a special treatment.
+        scorer : {'default', 'npmi'}
+        Scorer function, as given to Phrases.
 
-        `threshold` the minimum score for a bigram to be taken into account
-
-        `common_terms` the list of common terms, they have a special treatment
-
-        `scorer` the scorer function, as given to Phrases
         """
         s = [utils.any2utf8(w) for w in sentence]
         last_uncommon = None
@@ -188,10 +201,9 @@ class PhrasesTransformation(interfaces.TransformationABC):
 
     @classmethod
     def load(cls, *args, **kwargs):
-        """
-        Load a previously saved Phrases/Phraser class. Handles backwards compatibility from
-            older Phrases/Phraser versions which did not support  pluggable scoring functions.
-            Otherwise, relies on utils.load
+        """Load a previously saved Phrases/Phraser class. Handles backwards compatibility from
+        older Phrases/Phraser versions which did not support  pluggable scoring functions.
+        Otherwise, relies on utils.load
         """
 
         model = super(PhrasesTransformation, cls).load(*args, **kwargs)
@@ -224,9 +236,8 @@ class PhrasesTransformation(interfaces.TransformationABC):
 
 
 class Phrases(SentenceAnalyzer, PhrasesTransformation):
-    """
-    Detect phrases, based on collected collocation counts. Adjacent words that appear
-    together more frequently than expected are joined together with the `_` character.
+    """Detect phrases, based on collected collocation counts. Adjacent words that appear together more frequently than
+    expected are joined together with the `_` character.
 
     It can be used to generate phrases on the fly, using the `phrases[sentence]`
     and `phrases[corpus]` syntax.
@@ -350,8 +361,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
 
     @classmethod
     def load(cls, *args, **kwargs):
-        """
-        Load a previously saved Phrases class. Handles backwards compatibility from
+        """Load a previously saved Phrases class. Handles backwards compatibility from
             older Phrases versions which did not support  pluggable scoring functions.
         """
         model = super(Phrases, cls).load(*args, **kwargs)
@@ -409,8 +419,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         return min_reduce, vocab, total_words
 
     def add_vocab(self, sentences):
-        """
-        Merge the collected counts `vocab` into this phrase detector.
+        """Merge the collected counts `vocab` into this phrase detector.
 
         """
         # uses a separate vocab to collect the token counts from `sentences`.
