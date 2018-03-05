@@ -282,9 +282,11 @@ class BaseAny2VecModel(utils.SaveLoad):
 
 
 class BaseWordEmbeddingsModel(BaseAny2VecModel):
-    """
-    Base class containing common methods for training, using & evaluating word embeddings learning models.
-    For example - `Word2Vec`, `FastText`, etc.
+    """Base class containing common methods for training, using & evaluating word embeddings learning models.
+
+    Example implementations are
+        * :class:`~gensim.models.word2vec.Word2Vec`
+        * :class:`~gensim.models.word2vec.FastText`, etc.
 
     """
 

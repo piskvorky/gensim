@@ -145,12 +145,34 @@ except ImportError:
     MAX_WORDS_IN_BATCH = 10000
 
     def train_batch_sg(model, sentences, alpha, work=None, compute_loss=False):
-        """
-        Update skip-gram model by training on a sequence of sentences.
-        Each sentence is a list of string tokens, which are looked up in the model's
-        vocab dictionary. Called internally from `Word2Vec.train()`.
+        """Update skip-gram model by training on a batch of sentences.
+
+        Called internally from :meth:`~gensim.models.word2vec.Word2Vec.train`.
+
+        Notes
+        -----
         This is the non-optimized, Python version. If you have cython installed, gensim
-        will use the optimized version from word2vec_inner instead.
+        will use the optimized version found in :mod:`~gensim.models.word2vec_inner` instead.
+
+        Parameters
+        ----------
+        model : :class:`~gensim.models.word2Vec.Word2Vec`
+            The Word2Vec model instance to train.
+        sentences : iterable of iterable of str
+            The corpus used to train the model.
+        alpha : float
+            The learning rate
+        work : object, optional
+            Unused.
+        compute_loss : bool, optional
+            Whether or not the training loss should be computed in this batch.
+
+        Returns
+        -------
+        int
+            Number of words in the vocabulary actually used for training (They already existed in the vocabulary
+            and were not discarded by negative sampling).
+
         """
         result = 0
         for sentence in sentences:
@@ -172,12 +194,35 @@ except ImportError:
         return result
 
     def train_batch_cbow(model, sentences, alpha, work=None, neu1=None, compute_loss=False):
-        """
-        Update CBOW model by training on a sequence of sentences.
-        Each sentence is a list of string tokens, which are looked up in the model's
-        vocab dictionary. Called internally from `Word2Vec.train()`.
+        """Update CBOW model by training on a batch of sentences.
+
+        Called internally from :meth:`~gensim.models.word2vec.Word2Vec.train`.
+
+        Notes
+        -----
         This is the non-optimized, Python version. If you have cython installed, gensim
-        will use the optimized version from word2vec_inner instead.
+        will use the optimized version found in :mod:`~gensim.models.word2vec_inner` instead.
+
+        Parameters
+        ----------
+        model : :class:`~gensim.models.word2Vec.Word2Vec`
+            The Word2Vec model instance to train.
+        sentences : iterable of iterable of str
+            The corpus used to train the model.
+        alpha : float
+            The learning rate
+        work : object, optional
+            Unused.
+        neu1 : object, optional
+            Unused.
+        compute_loss : bool, optional
+            Whether or not the training loss should be computed in this batch.
+
+        Returns
+        -------
+        int
+            Number of words in the vocabulary actually used for training (They already existed in the vocabulary
+            and were not discarded by negative sampling).
         """
         result = 0
         for sentence in sentences:
@@ -197,11 +242,27 @@ except ImportError:
 
     def score_sentence_sg(model, sentence, work=None):
         """
-        Obtain likelihood score for a single sentence in a fitted skip-gram representaion.
-        The sentence is a list of Vocab objects (or None, when the corresponding
-        word is not in the vocabulary). Called internally from `Word2Vec.score()`.
+        Obtain likelihood score for a single sentence in a fitted skip-gram representation.
+
+        Notes
+        -----
         This is the non-optimized, Python version. If you have cython installed, gensim
-        will use the optimized version from word2vec_inner instead.
+        will use the optimized version found in :mod:`~gensim.models.word2vec_inner` instead.
+
+        Parameters
+        ----------
+        model : :class:`~gensim.models.word2vec.Word2Vec`
+            The trained model. It **MUST** have been trained using hierarchical softmax and the skip-gram algorithm.
+        sentence : list of str
+            The words comprising the sentence to be scored.
+        work : object, optional
+            Unused.
+
+        Returns
+        -------
+        float
+            The probability assigned to this sentence by the Skip-Gram model.
+
         """
         log_prob_sentence = 0.0
         if model.negative:
@@ -223,11 +284,29 @@ except ImportError:
 
     def score_sentence_cbow(model, sentence, work=None, neu1=None):
         """
-        Obtain likelihood score for a single sentence in a fitted CBOW representaion.
-        The sentence is a list of Vocab objects (or None, where the corresponding
-        word is not in the vocabulary. Called internally from `Word2Vec.score()`.
+        Obtain likelihood score for a single sentence in a fitted CBOW representation.
+
+        Notes
+        -----
         This is the non-optimized, Python version. If you have cython installed, gensim
-        will use the optimized version from word2vec_inner instead.
+        will use the optimized version found in :mod:`~gensim.models.word2vec_inner` instead.
+
+        Parameters
+        ----------
+        model : :class:`~gensim.models.word2vec.Word2Vec`
+            The trained model. It **MUST** have been trained using hierarchical softmax and the CBOW algorithm.
+        sentence : list of str
+            The words comprising the sentence to be scored.
+        work : object, optional
+            Unused.
+        neu1 : object, optional
+            Unused.
+
+        Returns
+        -------
+        float
+            The probability assigned to this sentence by the Skip-Gram model.
+
         """
         log_prob_sentence = 0.0
         if model.negative:
@@ -251,6 +330,38 @@ except ImportError:
 
 def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_hidden=True,
                   context_vectors=None, context_locks=None, compute_loss=False, is_ft=False):
+    """Trains the passed model instance on a word and its context, using the Skip-gram algorithm.
+
+    Parameters
+    ----------
+    model : :class:`~gensim.models.word2vec.Word2Vec`
+        The model to be trained.
+    word : str
+        The label (predicted) word.
+    context_index : list of int
+        The vocabulary indices of the words in the context.
+    alpha : float
+        Learning rate.
+    learn_vectors : bool, optional
+        Whether the vectors should be updated.
+    learn_hidden : bool, optional
+        Whether the weights of the hidden layer should be updated.
+    context_vectors : list of list of float, optional
+        Vector representations of the words in the context. If None, these will be retrieved from the model.
+    context_locks : list of float, optional
+        The lock factors for each word in the context.
+    compute_loss : bool, optional
+        Whether or not the training loss should be computed.
+    is_ft : bool, optional
+        If True, weights will be computed using `model.wv.syn0_vocab` and `model.wv.syn0_ngrams`
+        instead of `model.wv.syn0`
+
+    Returns
+    -------
+    list of float
+        Error vector to be back-propagated.
+
+    """
     if context_vectors is None:
         if is_ft:
             context_vectors_vocab = model.wv.syn0_vocab
@@ -327,6 +438,40 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
 
 def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=True, learn_hidden=True,
                     compute_loss=False, context_vectors=None, context_locks=None, is_ft=False):
+    """Trains the passed model instance on a word and its context, using the CBOW algorithm.
+
+    Parameters
+    ----------
+    model : :class:`~gensim.models.word2vec.Word2Vec`
+        The model to be trained.
+    word : str
+        The label (predicted) word.
+    input_word_indices : list of int
+        The vocabulary indices of the words in the context.
+    l1 : list of float
+        Vector representation of the label word.
+    alpha : float
+        Learning rate.
+    learn_vectors : bool, optional
+        Whether the vectors should be updated.
+    learn_hidden : bool, optional
+        Whether the weights of the hidden layer should be updated.
+    compute_loss : bool, optional
+        Whether or not the training loss should be computed.
+    context_vectors : list of list of float, optional
+        Vector representations of the words in the context. If None, these will be retrieved from the model.
+    context_locks : list of float, optional
+        The lock factors for each word in the context.
+    is_ft : bool, optional
+        If True, weights will be computed using `model.wv.syn0_vocab` and `model.wv.syn0_ngrams`
+        instead of `model.wv.syn0`
+
+    Returns
+    -------
+    list of float
+        Error vector to be back-propagated.
+
+    """
     if context_vectors is None:
         if is_ft:
             context_vectors_vocab = model.wv.syn0_vocab
@@ -395,6 +540,22 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
 
 
 def score_sg_pair(model, word, word2):
+    """Score the trained Skip-gram model on a pair of words.
+
+    Parameters
+    ----------
+    model : :class:`~gensim.models.word2vec.Word2Vec`
+        The trained model.
+    word : :class:`~gensim.models.keyedvectors.Vocab`
+        Vocabulary representation of the first word.
+    word2 : :class:`~gensim.models.keyedvectors.Vocab`
+        Vocabulary representation of the second word.
+
+    Returns
+    -------
+    float
+        Logarithm of the sum of exponentiations of input words.
+    """
     l1 = model.wv.syn0[word2.index]
     l2a = deepcopy(model.syn1[word.point])  # 2d matrix, codelen x layer1_size
     sgn = (-1.0) ** word.code  # ch function, 0-> 1, 1 -> -1
@@ -403,6 +564,22 @@ def score_sg_pair(model, word, word2):
 
 
 def score_cbow_pair(model, word, l1):
+    """Score the trained CBOW model on a pair of words.
+
+    Parameters
+    ----------
+    model : :class:`~gensim.models.word2vec.Word2Vec`
+        The trained model.
+    word : :class:`~gensim.models.keyedvectors.Vocab`
+        Vocabulary representation of the first word.
+    l1 : list of float
+        Vector representation of the second word.
+
+    Returns
+    -------
+    float
+        Logarithm of the sum of exponentiations of input words.
+    """
     l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
     sgn = (-1.0) ** word.code  # ch function, 0-> 1, 1 -> -1
     lprob = -logaddexp(0, -sgn * dot(l1, l2a.T))
@@ -527,9 +704,22 @@ class Word2Vec(BaseWordEmbeddingsModel):
             fast_version=FAST_VERSION)
 
     def _do_train_job(self, sentences, alpha, inits):
-        """
-        Train a single batch of sentences. Return 2-tuple `(effective word count after
-        ignoring unknown words and sentence length trimming, total word count)`.
+        """Train the model on a single batch of sentences. Return`.
+
+        Parameters
+        ----------
+        sentences : iterable of iterable of str
+            Corpus chunk to be used in this training batch.
+        alpha : float
+            The learning rate used in this batch.
+        inits : (np.ndarray, np.ndarray)
+            Each worker threads private work memory.
+
+        Returns
+        -------
+        (int, int)
+             2-tuple (effective word count after ignoring unknown words and sentence length trimming, total word count).
+
         """
         work, neu1 = inits
         tally = 0
@@ -540,10 +730,23 @@ class Word2Vec(BaseWordEmbeddingsModel):
         return tally, self._raw_word_count(sentences)
 
     def _clear_post_train(self):
-        """Resets certain properties of the model, post training."""
+        """Removes all L2-normalized vectors for words from the model.
+
+        Notes
+        -----
+        You will have to recompute them using :meth:`~gensim.models.word2vec.Word2Vec.init_sims`.
+        """
         self.wv.vectors_norm = None
 
     def _set_train_params(self, **kwargs):
+        """If `compute_loss` is passed, then it overrides the value set in the constructor.
+
+        Parameters
+        ----------
+        **kwargs
+            Key word model parameters which could include the `compute_loss` boolean.
+
+        """
         if 'compute_loss' in kwargs:
             self.compute_loss = kwargs['compute_loss']
         self.running_training_loss = 0
@@ -572,24 +775,24 @@ class Word2Vec(BaseWordEmbeddingsModel):
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
-        total_examples : int
+        total_examples : int, optional
             Count of sentences.
-        total_words : int
+        total_words : int, optional
             Count of raw words in sentences.
-        epochs : int
+        epochs : int, optional
             Number of iterations (epochs) over the corpus.
-        start_alpha : float
+        start_alpha : float, optional
             Initial learning rate.
-        end_alpha : float
+        end_alpha : float, optional
             Final learning rate. Drops linearly from `start_alpha`.
-        word_count : int
+        word_count : int, optional
             Count of words already trained. Set this to 0 for the usual
             case of training on all words in sentences.
-        queue_factor : int
+        queue_factor : int, optional
             Multiplier for size of queue (number of workers * queue_factor).
-        report_delay : float
+        report_delay : float, optional
             Seconds to wait before reporting progress.
-        compute_loss: bool
+        compute_loss: bool, optional
             If True, computes and stores loss value which can be retrieved using `model.get_latest_training_loss()`.
         callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`
             List of callbacks that need to be executed/run at specific stages during training.
@@ -616,7 +819,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
         This does not change the fitted model in any way (see Word2Vec.train() for that).
 
         We have currently only implemented score for the hierarchical softmax scheme,
-        so you need to have run word2vec with hs=1 and negative=0 for this to work.
+        so you need to have run word2vec with `hs = 1` and `negative = 0` for this to work.
 
         Note that you should specify total_sentences; we'll run into problems if you ask to
         score more than this number of sentences but it is inefficient to set the value too high.
@@ -635,13 +838,13 @@ class Word2Vec(BaseWordEmbeddingsModel):
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
-        total_sentences : int
+        total_sentences : int, optional
             Count of sentences.
-        chunksize : int
+        chunksize : int, optional
             Chunksize of jobs
-        queue_factor : int
+        queue_factor : int, optional
             Multiplier for size of queue (number of workers * queue_factor).
-        report_delay : float
+        report_delay : float, optional
             Seconds to wait before reporting progress.
 
         """
@@ -750,29 +953,36 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
     def clear_sims(self):
         """Removes all L2-normalized vectors for words from the model.
-        You will have to recompute them using init_sims method.
-        """
 
+        Notes
+        -----
+        You will have to recompute them using :meth:`~gensim.models.word2vec.Word2Vec.init_sims`.
+        """
         self.wv.vectors_norm = None
 
     def intersect_word2vec_format(self, fname, lockf=0.0, binary=False, encoding='utf8', unicode_errors='strict'):
-        """Merge the input-hidden weight matrix from the original C word2vec-tool format
-        given, where it intersects with the current vocabulary. (No words are added to the
-        existing vocabulary, but intersecting words adopt the file's weights, and
-        non-intersecting words are left alone.)
+        """Merge the input-hidden weight matrix from the original C word2vec-tool format given,
+        where it intersects with the current vocabulary.
+
+        Notes
+        -----
+        No words are added to the existing vocabulary, but intersecting words adopt the file's weights, and
+        non-intersecting words are left alone.
 
         Parameters
         ----------
         fname : str
             The file path used to save the vectors in
-
-        binary : bool
-            If True, the data wil be saved in binary word2vec format, else it will be saved in plain text.
-
-        lockf : float
+        lockf : float, optional
             Lock-factor value to be set for any imported word-vectors; the
             default value of 0.0 prevents further updating of the vector during subsequent
             training. Use 1.0 to allow further training updates of merged vectors.
+        binary : bool, optional
+            If True, the data wil be saved in binary word2vec format, else it will be saved in plain text.
+        encoding : str, optional
+            Encoding of `text` for `unicode` function (python2 only).
+        unicode_errors : str, optional
+            Error handling behaviour, used as parameter for `unicode` function (python2 only).
 
         """
         overlap_count = 0
@@ -834,14 +1044,14 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
         Parameters
         ----------
-        context_words_list : :obj: `list` of :obj: `str`
-            List of context words
-        topn: int
+        context_words_list : list of str
+            List of context words.
+        topn: int, optional
             Return `topn` words and their probabilities
 
         Returns
         -------
-        :obj: `list` of :obj: `tuple`
+        list of tuple of (str, float)
             `topn` length list of tuples of (word, probability)
 
         """
@@ -873,18 +1083,40 @@ class Word2Vec(BaseWordEmbeddingsModel):
         return [(self.wv.index2word[index1], prob_values[index1]) for index1 in top_indices]
 
     def init_sims(self, replace=False):
-        """
-        init_sims() resides in KeyedVectors because it deals with syn0/vectors mainly, but because syn1 is not an
+        """Precompute L2-normalized vectors.
+
+        Parameters
+        ----------
+        replace : bool, optional
+             If True, forget the original vectors and only keep the normalized ones. This will save a lot of RAM.
+
+        Notes
+        -----
+        `init_sims` resides in KeyedVectors because it deals with syn0/vectors mainly, but because syn1 is not an
         attribute of KeyedVectors, it has to be deleted in this class, and the normalizing of syn0/vectors happens
-        inside of KeyedVectors
+        inside of KeyedVectors.
+
         """
         if replace and hasattr(self.trainables, 'syn1'):
             del self.trainables.syn1
-        return self.wv.init_sims(replace)
+        self.wv.init_sims(replace)
 
     def reset_from(self, other_model):
-        """Borrow shareable pre-built structures (like vocab) from the other_model. Useful
-        if testing multiple models in parallel on the same corpus.
+        """Borrow shareable pre-built structures the other_model and reset hidden layer weights.
+
+        Structures copied are:
+            * Vocabulary
+            * Index to word mapping
+            * Cum table (used for negative sampling)
+            * Cached Corpus length
+
+        Useful if testing multiple models in parallel on the same corpus.
+
+        Parameters
+        ----------
+        other_model : :class:`~gensim.models.word2vec.Word2Vec`
+            Another model from where internal structures will be copied.
+
         """
         self.wv.vocab = other_model.wv.vocab
         self.wv.index2word = other_model.wv.index2word
@@ -894,7 +1126,17 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
     @staticmethod
     def log_accuracy(section):
-        return Word2VecKeyedVectors.log_accuracy(section)
+        """Logs the models accuracy scored on a single section of a corpus.
+
+        Static wrapper for :meth:`~gensim.models.word2vec.Word2VecKeyedVectors.log_accuracy`.
+
+        Parameters
+        ----------
+        section : iterable of iterable of str
+            Chunk of sentences use to score the models accuracy.
+
+        """
+        Word2VecKeyedVectors.log_accuracy(section)
 
     @deprecated("Method will be removed in 4.0.0, use self.wv.accuracy() instead")
     def accuracy(self, questions, restrict_vocab=30000, most_similar=None, case_insensitive=True):
@@ -902,14 +1144,27 @@ class Word2Vec(BaseWordEmbeddingsModel):
         return self.wv.accuracy(questions, restrict_vocab, most_similar, case_insensitive)
 
     def __str__(self):
+        """Human readable representation of the model's state.
+
+        Returns
+        -------
+        str
+            Human readable representation of the model's state (vocabulary size, vector size and learning rate).
+
+        """
         return "%s(vocab=%s, size=%s, alpha=%s)" % (
             self.__class__.__name__, len(self.wv.index2word), self.wv.vector_size, self.alpha
         )
 
     def delete_temporary_training_data(self, replace_word_vectors_with_normalized=False):
-        """Discard parameters that are used in training and score. Use if you're sure you're done training a model.
-        If `replace_word_vectors_with_normalized` is set, forget the original vectors and only keep the normalized
-        ones = saves lots of memory!
+        """Discard parameters that are used in training and score.
+
+        Use if you're sure you're done training a model.
+
+        Parameters
+        ----------
+        replace_word_vectors_with_normalized : bool, optional
+            If True, forget the original vectors and only keep the normalizedto save RAM.
         """
         if replace_word_vectors_with_normalized:
             self.init_sims(replace=True)
@@ -930,6 +1185,14 @@ class Word2Vec(BaseWordEmbeddingsModel):
         super(Word2Vec, self).save(*args, **kwargs)
 
     def get_latest_training_loss(self):
+        """Getter for the current value of the training loss.
+
+        Returns
+        -------
+        float
+            Current training loss.
+
+        """
         return self.running_training_loss
 
     @deprecated(
@@ -959,7 +1222,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
     @classmethod
     def load(cls, *args, **kwargs):
-        """Loads a previously saved `Word2Vec` model. Also see `save()`.
+        """Loads a previously saved `Word2Vec` model. Also see :meth:`~gensim.models.word2vec.Word2Vec.save`.
 
         Parameters
         ----------
@@ -968,8 +1231,8 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
         Returns
         -------
-        :obj: `~gensim.models.word2vec.Word2Vec`
-            Returns the loaded model as an instance of :class: `~gensim.models.word2vec.Word2Vec`.
+        :class:`~gensim.models.word2vec.Word2Vec`
+            Loaded model as an instance of :class:`~gensim.models.word2vec.Word2Vec`.
         """
         try:
             return super(Word2Vec, cls).load(*args, **kwargs)
