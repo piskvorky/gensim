@@ -293,24 +293,26 @@ class TestTfidfModel(unittest.TestCase):
         model = tfidfmodel.TfidfModel(self.corpus, slope=1, pivot_norm=True)
         expected_docs = model.pivoted_normalization([model[docs[0]], model[docs[1]]])
 
-        self.assertTrue(np.allclose(transformed_docs[0], expected_docs[0]))
-        self.assertTrue(np.allclose(transformed_docs[1], expected_docs[1]))
+        self.assertTrue(np.allclose(sorted(transformed_docs[0]), sorted(expected_docs[0])))
+        self.assertTrue(np.allclose(sorted(transformed_docs[1]), sorted(expected_docs[1])))
 
+        # Test if pivoted model is consistent
         model = tfidfmodel.TfidfModel(self.corpus, slope=0.5, pivot_norm=True)
-        expected_docs = pivoted_normalization([model[docs[0]], model[docs[1]]])
-        print (expected_docs)
-        expected_docs = [[(3, 2),
-                          (4, 2),
-                          (5, 3),
-                          (6, 2),
-                          (7, 3),
-                          (8, 2)],
-                         [(5, 6),
-                          (9, 3),
-                          (10, 3)]]
+        transformed_docs = model.pivoted_normalization([model[docs[0]], model[docs[1]]])
+        expected_docs = [[(8, 0.4682642467547897),
+                          (7, 0.34203084025552255),
+                          (6, 0.4682642467547897),
+                          (5, 0.34203084025552255),
+                          (4, 0.4682642467547897),
+                          (3, 0.4682642467547897)],
+                         [(10, 0.3834996737115108),
+                         (9, 0.3834996737115108),
+                         (5, 0.7669993474230216)]]
 
-        self.assertTrue(np.allclose(transformed_docs[0], expected_docs[0]))
-        self.assertTrue(np.allclose(transformed_docs[1], expected_docs[1]))
+        self.assertTrue(np.allclose(sorted(transformed_docs[0]), sorted(expected_docs[0])))
+        self.assertTrue(np.allclose(sorted(transformed_docs[1]), sorted(expected_docs[1])))
+
+
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
