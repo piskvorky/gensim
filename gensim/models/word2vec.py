@@ -1217,17 +1217,22 @@ class Word2VecVocab(utils.SaveLoad):
             sorted_vocab = sorted(self.raw_vocab.keys(), key=lambda word: self.raw_vocab[word], reverse=True)
 
             if self.max_vocab < len(sorted_vocab):
-                effective_min_count = self.raw_vocab[sorted_vocab[self.max_vocab]] + 1
+                calc_min_count = self.raw_vocab[sorted_vocab[self.max_vocab]] + 1
             else:
-                effective_min_count = 1
+                calc_min_count = 1
 
-            if effective_min_count > min_count:
-                logger.info("min_count was set to %d due to max_vocab being set to %d" %
-                           (effective_min_count, self.max_vocab))
-                min_count = effective_min_count
+            if calc_min_count > min_count:
+                logger.info("effective_min_count was set to %d due to max_vocab being set to %d" %
+                           (calc_min_count, self.max_vocab))
+                effective_min_count = calc_min_count
             else:
                 logger.info("""specified min_count = %d is larger that min_count calculated
-                               by max_vocab = %d, using specified min_count""" % (min_count, effective_min_count))
+                               by max_vocab = %d, using specified min_count""" % (min_count, calc_min_count))
+                effective_min_count = None
+        else:
+            # if max_vocab is not specified
+            # do not use the effective_min_count
+            effective_min_count = None
 
         if not update:
             logger.info("Loading a fresh vocabulary")
@@ -1236,12 +1241,15 @@ class Word2VecVocab(utils.SaveLoad):
             if not dry_run:
                 wv.index2word = []
                 # make stored settings match these applied settings
-                self.min_count = min_count
+                if effective_min_count is not None:
+                    self.min_count = effective_min_count
+                else:
+                    self.min_count = min_count
                 self.sample = sample
                 wv.vocab = {}
 
             for word, v in iteritems(self.raw_vocab):
-                if keep_vocab_item(word, v, min_count, trim_rule=trim_rule):
+                if keep_vocab_item(word, v, self.min_count, trim_rule=trim_rule):
                     retain_words.append(word)
                     retain_total += v
                     if not dry_run:
@@ -1254,20 +1262,20 @@ class Word2VecVocab(utils.SaveLoad):
             retain_unique_pct = len(retain_words) * 100 / max(original_unique_total, 1)
             logger.info(
                 "min_count=%d retains %i unique words (%i%% of original %i, drops %i)",
-                min_count, len(retain_words), retain_unique_pct, original_unique_total, drop_unique
+                self.min_count, len(retain_words), retain_unique_pct, original_unique_total, drop_unique
             )
             original_total = retain_total + drop_total
             retain_pct = retain_total * 100 / max(original_total, 1)
             logger.info(
                 "min_count=%d leaves %i word corpus (%i%% of original %i, drops %i)",
-                min_count, retain_total, retain_pct, original_total, drop_total
+                self.min_count, retain_total, retain_pct, original_total, drop_total
             )
         else:
             logger.info("Updating model with new vocabulary")
             new_total = pre_exist_total = 0
             new_words = pre_exist_words = []
             for word, v in iteritems(self.raw_vocab):
-                if keep_vocab_item(word, v, min_count, trim_rule=trim_rule):
+                if keep_vocab_item(word, v, self.min_count, trim_rule=trim_rule):
                     if word in wv.vocab:
                         pre_exist_words.append(word)
                         pre_exist_total += v
