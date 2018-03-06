@@ -8,40 +8,37 @@
 
 """
 Deep learning via the distributed memory and distributed bag of words models from
-[1]_, using either hierarchical softmax or negative sampling [2]_ [3]_. See [#tutorial]_
+`Quoc Le and Tomas Mikolov: "Distributed Representations of Sentences and Documents"
+<http://arxiv.org/pdf/1405.4053v2.pdf>`_, using either hierarchical softmax or negative sampling, see
+`Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean: "Efficient Estimation of Word Representations in
+Vector Space, in Proceedings of Workshop at ICLR, 2013" <https://arxiv.org/pdf/1301.3781.pdf>`_ and
+`Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg Corrado, and Jeffrey Dean: "Distributed Representations of Words
+and Phrases and their Compositionality. In Proceedings of NIPS, 2013"
+<https://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf>`_.
+
+For a real world usage scenario, see the `Doc2vec in gensim tutorial
+<https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/doc2vec-lee.ipynb>`_
 
 **Make sure you have a C compiler before installing gensim, to use optimized (compiled)
 doc2vec training** (70x speedup [blog]_).
 
-Initialize a model with e.g.::
+Examples
+--------
+
+#. Initialize a model with e.g.::
 
 >>> model = Doc2Vec(documents, size=100, window=8, min_count=5, workers=4)
 
-Persist a model to disk with::
+#. Persist a model to disk with::
 
 >>> model.save(fname)
 >>> model = Doc2Vec.load(fname)  # you can continue training with the loaded model!
 
 If you're finished training a model (=no more updates, only querying), you can do
 
-  >>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True):
+>>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True):
 
 to trim unneeded model memory = use (much) less RAM.
-
-
-
-.. [1] Quoc Le and Tomas Mikolov. Distributed Representations of Sentences and Documents.
-       http://arxiv.org/pdf/1405.4053v2.pdf
-.. [2] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean.
-       Efficient Estimation of Word Representations in Vector Space. In Proceedings of Workshop at ICLR, 2013.
-.. [3] Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg Corrado, and Jeffrey Dean.
-       Distributed Representations of Words and Phrases and their Compositionality. In Proceedings of NIPS, 2013.
-.. [blog] Optimizing word2vec in gensim, http://radimrehurek.com/2013/09/word2vec-in-python-part-two-optimizing/
-
-.. [#tutorial] Doc2vec in gensim tutorial,
-               https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/doc2vec-lee.ipynb
-
-
 
 """
 
@@ -338,6 +335,7 @@ except ImportError:
 
 class TaggedDocument(namedtuple('TaggedDocument', 'words tags')):
     """Represents a document along with a tag.
+
     A single document, made up of `words` (a list of unicode string tokens)
     and `tags` (a list of tokens). Tags may be one or more unicode string
     tokens, but typical practice (which will also be most memory-efficient) is
@@ -348,6 +346,14 @@ class TaggedDocument(namedtuple('TaggedDocument', 'words tags')):
     """
 
     def __str__(self):
+        """Human readable representation of the object's state, used for debugging.
+
+        Returns
+        -------
+        str
+           Human readable representation of the object's state.
+
+        """
         return '%s(%s, %s)' % (self.__class__.__name__, self.words, self.tags)
 
 
@@ -994,12 +1000,62 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
 
 class Doc2VecVocab(Word2VecVocab):
+    """Vocabulary used by :class:`~gensim.models.doc2vec.Doc2Vec`.
+
+    This includes a mapping from words found in the corpus to their total occurence count.
+
+    """
     def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0):
+        """Initialize the vocabulary.
+
+        Parameters
+        ----------
+        max_vocab_size : int, optional
+            Maximum number of words in the Vocabulary. Used to limit the RAM during vocabulary building;
+            if there are more unique words than this, then prune the infrequent ones.
+            Every 10 million word types need about 1GB of RAM. Set to `None` for no limit.
+        min_count : int
+            Words with frequency lower than this limit will be discarded form the vocabulary.
+        sample : float, optional
+            The threshold for configuring which higher-frequency words are randomly downsampled,
+            useful range is (0, 1e-5).
+        sorted_vocab : bool
+            If True, sort the vocabulary by descending frequency before assigning word indexes.
+        null_word : int {0, 1}
+            If True, a null pseudo-word will be created for padding when using concatenative L1 (run-of-words).
+            This word is only ever input – never predicted – so count, huffman-point, etc doesn't matter.
+
+        """
         super(Doc2VecVocab, self).__init__(
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
             sorted_vocab=sorted_vocab, null_word=null_word)
 
     def scan_vocab(self, documents, docvecs, progress_per=10000, trim_rule=None):
+        """Create the models Vocabulary: A mapping from unique words in the corpus to their occurence count.
+
+        Parameters
+        ----------
+        documents : iterable of :class:`~gensim.models.doc2vec.TaggedDocument`
+            The tagged documents used to create the vocabulary. Their tags can be either str tokens or ints (faster).
+        docvecs : list of :class:`~gensim.models.keyedvectors.Doc2VecKeyedVectors`
+            The vector representations of the documents in our corpus. Each of them has a size == `vector_size`.
+        progress_per : int
+            Progress will be logged every `progress_per` documents.
+        trim_rule : function, optional
+            Vocabulary trimming rule, specifies whether certain words should remain in the vocabulary,
+            be trimmed away, or handled using the default (discard if word count < min_count).
+            Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
+            or a callable that accepts parameters (word, count, min_count) and returns either
+            :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
+            Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
+            of the model.
+
+        Returns
+        -------
+        (int, int)
+            Tuple of (Total words in the corpus, number of documents)
+
+        """
         logger.info("collecting all words and their counts")
         document_no = -1
         total_words = 0
@@ -1047,7 +1103,20 @@ class Doc2VecVocab(Word2VecVocab):
         return total_words, corpus_count
 
     def note_doctag(self, key, document_no, document_length, docvecs):
-        """Note a document tag during initial corpus scan, for structure sizing."""
+        """Note a document tag during initial corpus scan, for correctly setting the keyedvectors size.
+
+        Parameters
+        ----------
+        key : {int, str}
+            The tag to be noted.
+        document_no : int
+            The document's index in `docvecs`. Unused.
+        document_length : int
+            The document's length in words.
+        docvecs : list of :class:`~gensim.models.keyedvectors.Doc2VecKeyedVectors`
+            Vector representations of the documents in the corpus. Each vector has size == `vector_size`
+
+        """
         if isinstance(key, integer_types + (integer,)):
             docvecs.max_rawint = max(docvecs.max_rawint, key)
         else:
@@ -1059,12 +1128,41 @@ class Doc2VecVocab(Word2VecVocab):
         docvecs.count = docvecs.max_rawint + 1 + len(docvecs.offset2doctag)
 
     def indexed_doctags(self, doctag_tokens, docvecs):
-        """Return indexes and backing-arrays used in training examples."""
+        """Return indexes and backing-arrays used in training examples.
+
+        Parameters
+        ----------
+        doctag_tokens : list of {str, int}
+            A list of tags for which we want the index.
+        docvecs : list of :class:`~gensim.models.keyedvectors.Doc2VecKeyedVectors`
+            Vector representations of the documents in the corpus. Each vector has size == `vector_size`
+
+        Returns
+        -------
+        list of int
+            Indices of the provided tag keys.
+
+        """
         return [
             Doc2VecKeyedVectors._int_index(index, docvecs.doctags, docvecs.max_rawint)
             for index in doctag_tokens if self._tag_seen(index, docvecs)]
 
     def _tag_seen(self, index, docvecs):
+        """Whether or not the tag exists in our Vocabulary.
+
+        Parameters
+        ----------
+        index : {str, int}
+            The tag to be checked.
+        docvecs : :class:`~gensim.models.keyedvectors.Doc2VecKeyedVectors`
+            Vector representations of the documents in the corpus. Each vector has size == `vector_size`
+
+        Returns
+        -------
+        bool
+            Whether or not the passed tag exists in our vocabulary.
+
+        """
         if isinstance(index, integer_types + (integer,)):
             return index < docvecs.count
         else:
