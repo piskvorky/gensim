@@ -163,7 +163,7 @@ class BaseKeyedVectors(utils.SaveLoad):
             logger.warning("duplicate entity '%s' in vocab, keeping old vector", entity)
             return
 
-        self.vocab[entity] = Vocab(index=entity_id, count=None)
+        self.vocab[entity] = Vocab(index=entity_id, count=1)
         self.vectors = vstack((self.vectors, weights))
         self.index2entity.append(entity)
 
