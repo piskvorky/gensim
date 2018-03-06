@@ -27,16 +27,16 @@ Examples
 
 #. Initialize a model with e.g.::
 
->>> model = Doc2Vec(documents, size=100, window=8, min_count=5, workers=4)
+    >>> model = Doc2Vec(documents, size=100, window=8, min_count=5, workers=4)
 
 #. Persist a model to disk with::
 
->>> model.save(fname)
->>> model = Doc2Vec.load(fname)  # you can continue training with the loaded model!
+    >>> model.save(fname)
+    >>> model = Doc2Vec.load(fname)  # you can continue training with the loaded model!
 
-If you're finished training a model (=no more updates, only querying), you can do
+If you're finished training a model (=no more updates, only querying), you can do::
 
->>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True):
+    >>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True):
 
 to trim unneeded model memory = use (much) less RAM.
 
