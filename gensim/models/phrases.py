@@ -136,6 +136,22 @@ def _is_single(obj):
 class SentenceAnalyzer(object):
 
     def score_item(self, worda, wordb, components, scorer):
+        """Get sentence statistics.
+
+        Parameters
+        ----------
+        worda : str
+        wordb : str
+        components : TODO
+        scorer : {'default', 'npmi'}
+            Scorer function, as given to Phrases.
+
+        Return
+        ------
+        {'default', 'npmi'}
+            Scorer function with filled `worda`, `wordb` & `bigram` counters.
+
+        """
         vocab = self.vocab
         if worda in vocab and wordb in vocab:
             bigram = self.delimiter.join(components)
@@ -154,11 +170,11 @@ class SentenceAnalyzer(object):
         sentence : list of str
             Token list representing the sentence to be analyzed.
         threshold : int
-        The minimum score for a bigram to be taken into account.
+            The minimum score for a bigram to be taken into account.
         common_terms : list of object
-        List of common terms, they have a special treatment.
+            List of common terms, they have a special treatment.
         scorer : {'default', 'npmi'}
-        Scorer function, as given to Phrases.
+            Scorer function, as given to Phrases.
 
         """
         s = [utils.any2utf8(w) for w in sentence]
@@ -201,11 +217,17 @@ class PhrasesTransformation(interfaces.TransformationABC):
 
     @classmethod
     def load(cls, *args, **kwargs):
-        """Load a previously saved Phrases/Phraser class. Handles backwards compatibility from
-        older Phrases/Phraser versions which did not support  pluggable scoring functions.
-        Otherwise, relies on utils.load
-        """
+        """Load a previously saved Phrases/Phraser class. Handles backwards compatibility from older Phrases/Phraser
+        versions which did not support pluggable scoring functions. Otherwise, relies on utils.load.
 
+        Parameters
+        ----------
+        args : object
+            Sequence of arguments, see :meth:`...` for more information.
+        kwargs : object
+            Sequence of arguments, see :meth:`...` for more information.
+
+        """
         model = super(PhrasesTransformation, cls).load(*args, **kwargs)
         # update older models
         # if no scoring parameter, use default scoring
@@ -247,10 +269,11 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
     def __init__(self, sentences=None, min_count=5, threshold=10.0,
                  max_vocab_size=40000000, delimiter=b'_', progress_per=10000,
                  scoring='default', common_terms=frozenset()):
-        """
-        Initialize the model from an iterable of `sentences`. Each sentence must be
+        """Initialize the model from an iterable of `sentences`. Each sentence must be
         a list of words (unicode strings) that will be used for training.
 
+
+        sentences : list of str
         The `sentences` iterable can be simply a list, but for larger corpora,
         consider a generator that streams the sentences directly from disk/network,
         without storing everything in RAM. See :class:`BrownCorpus`,
