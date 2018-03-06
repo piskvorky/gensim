@@ -154,6 +154,19 @@ class BaseKeyedVectors(utils.SaveLoad):
         else:
             raise KeyError("'%s' not in vocabulary" % entity)
 
+    def add(self, entity, weights):
+        """Accept an entity specified by string tag and vector weights as 1D numpy array with shape (`vector_size`,).
+        If `entity` is already in vocabulary, the call of method has no effect.
+        """
+        entity_id = len(self.vocab)
+        if entity in self.vocab:
+            logger.warning("duplicate entity '%s' in vocab, keeping old vector", entity)
+            return
+
+        self.vocab[entity] = Vocab(index=entity_id, count=None)
+        self.vectors = vstack((self.vectors, weights))
+        self.index2entity.append(entity)
+
     def __getitem__(self, entities):
         """
         Accept a single entity (string tag) or list of entities as input.
