@@ -17,7 +17,7 @@ and Phrases and their Compositionality. In Proceedings of NIPS, 2013"
 <https://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf>`_.
 
 For a real world usage scenario, see the `Doc2vec in gensim tutorial
-<https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/doc2vec-lee.ipynb>`_
+<https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/doc2vec-lee.ipynb>`_.
 
 **Make sure you have a C compiler before installing gensim, to use optimized (compiled)
 doc2vec training** (70x speedup [blog]_).

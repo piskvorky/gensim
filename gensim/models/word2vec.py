@@ -824,12 +824,10 @@ class Word2Vec(BaseWordEmbeddingsModel):
         Note that you should specify total_sentences; we'll run into problems if you ask to
         score more than this number of sentences but it is inefficient to set the value too high.
 
-        See the article by [#taddy]_ and the gensim demo at [#deepir]_ for examples of
+        See the `article by Matt Taddy: "Document Classification by Inversion of Distributed Language Representations"
+        <https://arxiv.org/pdf/1504.07295.pdf>`_ and the
+        `gensim demo <https://github.com/piskvorky/gensim/blob/develop/docs/notebooks/deepir.ipynb>`_ for examples of
         how to use such scores in document classification.
-
-        .. [#taddy] Taddy, Matt.  Document Classification by Inversion of Distributed Language Representations,
-                    in Proceedings of the 2015 Conference of the Association of Computational Linguistics.
-        .. [#deepir] https://github.com/piskvorky/gensim/blob/develop/docs/notebooks/deepir.ipynb
 
         Parameters
         ----------
