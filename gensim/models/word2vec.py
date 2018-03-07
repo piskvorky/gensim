@@ -499,9 +499,10 @@ class Word2Vec(BaseWordEmbeddingsModel):
             If True, computes and stores loss value which can be retrieved using `model.get_latest_training_loss()`.
         callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`
             List of callbacks that need to be executed/run at specific stages during training.
-        max_vocab : int
+        max_final_vocab : int
             Limits the vocab to a target vocab size by automatically picking a matching min_count. If the specified
             min_count is more than the calculated min_count, the specified min_count will be used.
+            Set to `None` if not required
 
         Examples
         --------
@@ -514,7 +515,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
         >>> say_vector = model['say']  # get vector for word
 
         """
-        self.max_vocab = max_vocab
+        self.max_final_vocab = max_final_vocab
 
         self.callbacks = callbacks
         self.load = call_on_class_only
@@ -522,7 +523,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
         self.wv = Word2VecKeyedVectors(size)
         self.vocabulary = Word2VecVocab(
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
-            sorted_vocab=bool(sorted_vocab), null_word=null_word, max_vocab=max_vocab)
+            sorted_vocab=bool(sorted_vocab), null_word=null_word, max_final_vocab=max_final_vocab)
         self.trainables = Word2VecTrainables(seed=seed, vector_size=size, hashfxn=hashfxn)
 
         super(Word2Vec, self).__init__(
@@ -1137,7 +1138,7 @@ class PathLineSentences(object):
 
 class Word2VecVocab(utils.SaveLoad):
     def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0,
-        max_vocab=None):
+        max_final_vocab=None):
         self.max_vocab_size = max_vocab_size
         self.min_count = min_count
         self.sample = sample
@@ -1145,7 +1146,7 @@ class Word2VecVocab(utils.SaveLoad):
         self.null_word = null_word
         self.cum_table = None  # for negative sampling
         self.raw_vocab = None
-        self.max_vocab = max_vocab
+        self.max_final_vocab = max_final_vocab
 
     def scan_vocab(self, sentences, progress_per=10000, trim_rule=None):
         """Do an initial scan of all words appearing in sentences."""
@@ -1211,26 +1212,26 @@ class Word2VecVocab(utils.SaveLoad):
         sample = sample or self.sample
         drop_total = drop_unique = 0
 
-        # if max_vocab is specified instead of min_count
-        # pick a min_count which satisfies max_vocab as well as possible
-        if self.max_vocab is not None:
+        # if max_final_vocab is specified instead of min_count
+        # pick a min_count which satisfies max_final_vocab as well as possible
+        if self.max_final_vocab is not None:
             sorted_vocab = sorted(self.raw_vocab.keys(), key=lambda word: self.raw_vocab[word], reverse=True)
 
-            if self.max_vocab < len(sorted_vocab):
-                calc_min_count = self.raw_vocab[sorted_vocab[self.max_vocab]] + 1
+            if self.max_final_vocab < len(sorted_vocab):
+                calc_min_count = self.raw_vocab[sorted_vocab[self.max_final_vocab]] + 1
             else:
                 calc_min_count = 1
 
             if calc_min_count > min_count:
-                logger.info("effective_min_count was set to %d due to max_vocab being set to %d" %
-                           (calc_min_count, self.max_vocab))
+                logger.info("effective_min_count was set to %d due to max_finavocab being set to %d" %
+                           (calc_min_count, self.max_final_vocab))
                 effective_min_count = calc_min_count
             else:
                 logger.info("""specified min_count = %d is larger that min_count calculated
-                               by max_vocab = %d, using specified min_count""" % (min_count, calc_min_count))
+                               by max_final_vocab = %d, using specified min_count""" % (min_count, calc_min_count))
                 effective_min_count = min_count
         else:
-            logger.info("max_vocab is None. Setting effective_min_count to specified min_count")
+            logger.info("max_final_vocab is None. Setting effective_min_count to specified min_count")
             effective_min_count = min_count
 
         if not update:
