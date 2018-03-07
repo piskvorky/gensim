@@ -153,6 +153,27 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
         """Test that the deprecated `wv` property returns `self`. To be removed in v4.0.0."""
         self.assertTrue(self.vectors is self.vectors.wv)
 
+    def test_add_word(self):
+        """Test that adding word in a manual way works correctly."""
+        from numpy.random import randn
+        words = ['___some_word{}_not_present_in_keyed_vectors___'.format(i) for i in range(5)]
+        word_vectors = [randn(self.vectors.vector_size) for _ in range(5)]
+
+        # Test `add_word` on already filled kv.
+        for word, vector in zip(words, word_vectors):
+            self.vectors.add_word(word, vector)
+
+        for word, vector in zip(words, word_vectors):
+            self.assertTrue(np.allclose(self.vectors[word], vector))
+
+        # Test `add_word` on empty kv.
+        kv = EuclideanKeyedVectors(self.vectors.vector_size)
+        for word, vector in zip(words, word_vectors):
+            kv.add_word(word, vector)
+
+        for word, vector in zip(words, word_vectors):
+            self.assertTrue(np.allclose(kv[word], vector))
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
