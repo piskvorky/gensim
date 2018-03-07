@@ -1240,7 +1240,6 @@ class Word2VecVocab(utils.SaveLoad):
             # Discard words less-frequent than min_count
             if not dry_run:
                 wv.index2word = []
-                
                 # make stored settings match these applied settings
                 self.min_count = min_count
                 self.sample = sample
