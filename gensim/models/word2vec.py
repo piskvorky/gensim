@@ -426,7 +426,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
                  max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
                  sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
                  trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False, callbacks=(),
-                 max_vocab=None):
+                 max_final_vocab=None):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -463,6 +463,10 @@ class Word2Vec(BaseWordEmbeddingsModel):
             Limits the RAM during vocabulary building; if there are more unique
             words than this, then prune the infrequent ones. Every 10 million word types need about 1GB of RAM.
             Set to `None` for no limit.
+        max_final_vocab : int
+            Limits the vocab to a target vocab size by automatically picking a matching min_count. If the specified
+            min_count is more than the calculated min_count, the specified min_count will be used.
+            Set to `None` if not required.
         sample : float
             The threshold for configuring which higher-frequency words are randomly downsampled,
             useful range is (0, 1e-5).
@@ -499,10 +503,6 @@ class Word2Vec(BaseWordEmbeddingsModel):
             If True, computes and stores loss value which can be retrieved using `model.get_latest_training_loss()`.
         callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`
             List of callbacks that need to be executed/run at specific stages during training.
-        max_final_vocab : int
-            Limits the vocab to a target vocab size by automatically picking a matching min_count. If the specified
-            min_count is more than the calculated min_count, the specified min_count will be used.
-            Set to `None` if not required
 
         Examples
         --------
