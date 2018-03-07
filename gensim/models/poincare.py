@@ -202,8 +202,12 @@ class PoincareModel(utils.SaveLoad):
         """
 
         if self._negatives_buffer.num_items() < self.negative:
-            # Note: np.random.choice much slower than random.sample for large populations, possible bottleneck
-            uniform_numbers = self._np_random.random_sample(self._negatives_buffer_size)
+            # self._node_probabilities_cumsum sometimes doesn't have 1 as the last value due to floating point error.
+            # This causes np.searchsorted to return last index + 1 when the random generated number is greater
+            # than the max_value in _node_probabilities_cumsum. Randomly generated numbers are multiplied
+            # by max_cumsum_value to avoid this.
+            max_cumsum_value = self._node_probabilities_cumsum[-1]
+            uniform_numbers = self._np_random.random_sample(self._negatives_buffer_size) * max_cumsum_value
             cumsum_table_indices = np.searchsorted(self._node_probabilities_cumsum, uniform_numbers)
             self._negatives_buffer = NegativesBuffer(cumsum_table_indices)
         return self._negatives_buffer.get_items(self.negative)
