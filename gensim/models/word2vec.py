@@ -105,6 +105,7 @@ import logging
 import sys
 import os
 import heapq
+from bounter import bounter
 from timeit import default_timer
 from copy import deepcopy
 from collections import defaultdict
@@ -1146,7 +1147,9 @@ class Word2VecVocab(utils.SaveLoad):
         sentence_no = -1
         total_words = 0
         min_reduce = 1
+        use_bounter = True
         vocab = defaultdict(int)
+        word_counts = bounter(size_mb=1024)
         checked_string_types = 0
         for sentence_no, sentence in enumerate(sentences):
             if not checked_string_types:
@@ -1160,15 +1163,37 @@ class Word2VecVocab(utils.SaveLoad):
             if sentence_no % progress_per == 0:
                 logger.info(
                     "PROGRESS: at sentence #%i, processed %i words, keeping %i word types",
-                    sentence_no, total_words, len(vocab)
+                    sentence_no, total_words, max(len(vocab), word_counts.total())
                 )
-            for word in sentence:
-                vocab[word] += 1
+
             total_words += len(sentence)
 
-            if self.max_vocab_size and len(vocab) > self.max_vocab_size:
-                utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
-                min_reduce += 1
+            if use_bounter:
+                word_counts.update(sentence)
+
+                if self.max_vocab_size and word_counts.total() > self.max_vocab_size:
+                    utils.prune_bounter_vocab(word_counts, min_reduce, trim_rule=trim_rule)
+                    min_reduce += 1
+            else:
+
+                for word in sentence:
+                    vocab[word] += 1
+                
+                if self.max_vocab_size and len(vocab) > self.max_vocab_size:
+                    utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
+                    min_reduce += 1
+
+        if use_bounter:
+            vocab = dict(word_counts.iteritems())
+
+
+        logger.info(
+            "collected %i word types from a corpus of %i raw words and %i sentences",
+            len(vocab), total_words, sentence_no + 1
+        )
+        corpus_count = sentence_no + 1
+        self.raw_vocab = vocab
+        return total_words, corpus_count
 
         logger.info(
             "collected %i word types from a corpus of %i raw words and %i sentences",
