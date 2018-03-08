@@ -241,8 +241,7 @@ except ImportError:
         return result
 
     def score_sentence_sg(model, sentence, work=None):
-        """
-        Obtain likelihood score for a single sentence in a fitted skip-gram representation.
+        """Obtain likelihood score for a single sentence in a fitted skip-gram representation.
 
         Notes
         -----
@@ -283,8 +282,7 @@ except ImportError:
         return log_prob_sentence
 
     def score_sentence_cbow(model, sentence, work=None, neu1=None):
-        """
-        Obtain likelihood score for a single sentence in a fitted CBOW representation.
+        """Obtain likelihood score for a single sentence in a fitted CBOW representation.
 
         Notes
         -----
@@ -657,12 +655,16 @@ class Word2Vec(BaseWordEmbeddingsModel):
             Hash function to use to randomly initialize weights, for increased training reproducibility.
         iter : int
             Number of iterations (epochs) over the corpus.
-        trim_rule : function
+        trim_rule : function, optional
             Vocabulary trimming rule, specifies whether certain words should remain in the vocabulary,
             be trimmed away, or handled using the default (discard if word count < min_count).
             Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
             or a callable that accepts parameters (word, count, min_count) and returns either
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
+            The input parameters are of the following types
+                * word: str. The word we are examining
+                * count: int. The word's occurence count in the corpus
+                * min_count: int. The minimum count threshold.
             Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
             of the model.
         sorted_vocab : int {1,0}

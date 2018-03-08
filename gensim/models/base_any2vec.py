@@ -97,7 +97,7 @@ class BaseAny2VecModel(utils.SaveLoad):
 
         Parameters
         ----------
-        job_queue : Queue of (iterable of object, dict)
+        job_queue : Queue of (list of object, dict)
             A queue of jobs still to be processed. The worker will take up jobs from this queue.
             Each job is represented by a tuple where the first element is the corpus chunk to be processed and
             the second is the dictionary of parameters.
@@ -137,9 +137,9 @@ class BaseAny2VecModel(utils.SaveLoad):
 
         Parameters
         ----------
-        data_iterator : iterable of iterable of object
+        data_iterator : iterable of list of object
             The input corpus. This will be split in chunks and these chunks will be pushed to the queue.
-        job_queue : Queue of (iterable of object, dict)
+        job_queue : Queue of (list of object, dict)
             A queue of jobs still to be processed. The worker will take up jobs from this queue.
             Each job is represented by a tuple where the first element is the corpus chunk to be processed and
             the second is the dictionary of parameters.
@@ -222,7 +222,7 @@ class BaseAny2VecModel(utils.SaveLoad):
                 * size of data chunk processed, for example number of sentences in the corpus chunk.
                 * Effective word count used in training (after ignoring unknown words and trimming the sentence length).
                 * Total word count used in training.
-        job_queue : Queue of (iterable of object, dict)
+        job_queue : Queue of (list of object, dict)
             A queue of jobs still to be processed. The worker will take up jobs from this queue.
             Each job is represented by a tuple where the first element is the corpus chunk to be processed and
             the second is the dictionary of parameters.
@@ -287,7 +287,7 @@ class BaseAny2VecModel(utils.SaveLoad):
 
         Parameters
         ----------
-        data_iterable : iterable of iterable of object
+        data_iterable : iterable of list of object
             The input corpus. This will be split in chunks and these chunks will be pushed to the queue.
         cur_epoch : int, optional
             The current training epoch, needed to compute the training parameters for each job.
@@ -343,7 +343,7 @@ class BaseAny2VecModel(utils.SaveLoad):
 
         Parameters
         ----------
-        data_iterable : iterable of iterable of object
+        data_iterable : iterable of list of object
             The input corpus. This will be split in chunks and these chunks will be pushed to the queue.
         epochs : int, optional
             Number of epochs (training iterations over the whole input) of training.
@@ -445,20 +445,20 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
         Parameters
         ----------
-        sentences : iterable of iterable of str
+        sentences : iterable of list of str, optional
             Can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
-            or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
-        workers : int
+            or :class:`~gensim.models.word2vec.LineSentence` for such examples.
+        workers : int, optional
             Number of working threads, used for multiprocessing.
-        vector_size : int
+        vector_size : int, optional
             Dimensionality of the feature vectors.
-        epochs : int
+        epochs : int, optional
             Number of iterations (epochs) of training through the corpus.
         callbacks : list of :class: `~gensim.models.callbacks.CallbackAny2Vec`, optional
             List of callbacks that need to be executed/run at specific stages during training.
-        batch_words : int
+        batch_words : int, optional
             Number of words to be processed by a single job.
         trim_rule : function, optional
             Vocabulary trimming rule, specifies whether certain words should remain in the vocabulary,
@@ -466,35 +466,39 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
             or a callable that accepts parameters (word, count, min_count) and returns either
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
+            The input parameters are of the following types
+                * word: str. The word we are examining
+                * count: int. The word's occurence count in the corpus
+                * min_count: int. The minimum count threshold.
             Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
             of the model.
-        sg : int {1, 0}
+        sg : {1, 0}, optional
             Defines the training algorithm. If 1, skip-gram is used, otherwise, CBOW is employed.
-        alpha : float
+        alpha : float, optional
             The beginning learning rate. This will linearly reduce with iterations until it reaches `min_alpha`.
-        window : int
+        window : int, optional
             The maximum distance between the current and predicted word within a sentence.
-        seed : int
+        seed : int, optional
             Seed for the random number generator. Initial vectors for each word are seeded with a hash of
             the concatenation of word + `str(seed)`. Note that for a fully deterministically-reproducible run,
             you must also limit the model to a single worker thread (`workers=1`), to eliminate ordering jitter
             from OS thread scheduling. (In Python 3, reproducibility between interpreter launches also requires
             use of the `PYTHONHASHSEED` environment variable to control hash randomization).
-        hs : int {1,0}
+        hs : {1,0}, optional
             If 1, hierarchical softmax will be used for model training.
             If set to 0, and `negative` is non-zero, negative sampling will be used.
-        negative : int
+        negative : int, optional
             If > 0, negative sampling will be used, the int for negative specifies how many "noise words"
             should be drawn (usually between 5-20).
             If set to 0, no negative sampling is used.
-        cbow_mean : int {1,0}
+        cbow_mean : {1,0}, optional
             If 0, use the sum of the context word vectors. If 1, use the mean, only applies when cbow is used.
         min_alpha : float, optional
             Final learning rate. Drops linearly with the number of iterations from `alpha`.
         compute_loss : bool, optional
             If True, loss will be computed while training the Word2Vec model and stored in
             :attr:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel.running_training_loss`.
-        fast_version : int {-1, 1}
+        fast_version : {-1, 1}, optional
             Whether or not the fast cython implementation of the internal training methods is available. 1 means it is.
         **kwargs
             Key word arguments needed to allow children classes to accept more arguments.
@@ -654,7 +658,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         del self.vocabulary.cum_table
 
     def __str__(self):
-        """Return a human readable representation of the object.
+        """Get a human readable representation of the object.
 
         Returns
         -------
@@ -671,11 +675,11 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
         Parameters
         ----------
-        sentences : iterable of iterable of str
+        sentences : iterable of list of str
             Can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
-            or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
+            or :class:`~gensim.models.word2vec.LineSentence` module for such examples.
         update : bool, optional
             If true, the new words in `sentences` will be added to model's vocab.
         progress_per : int, optional
@@ -688,6 +692,10 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
             or a callable that accepts parameters (word, count, min_count) and returns either
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
+            The input parameters are of the following types
+                * word: str. The word we are examining
+                * count: int. The word's occurence count in the corpus
+                * min_count: int. The minimum count threshold.
             Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
             of the model.
         **kwargs
@@ -709,7 +717,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
         Parameters
         ----------
-        word_freq : dict of (unicode str, int)
+        word_freq : dict of (str, int)
             A mapping from a word in the vocabulary to its frequency count.
         keep_raw_vocab : bool, optional
             If False, delete the raw vocabulary after the scaling is done to free up RAM.
@@ -721,6 +729,10 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
             or a callable that accepts parameters (word, count, min_count) and returns either
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
+            The input parameters are of the following types
+                * word: str. The word we are examining
+                * count: int. The word's occurence count in the corpus
+                * min_count: int. The minimum count threshold.
             Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
             of the model.
         update : bool, optional
@@ -767,7 +779,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
         Returns
         -------
-        dict of (str, int), optional
+        dict of (str, int)
             A dictionary from string representations of the model's memory consuming members to their size in bytes.
         """
         vocab_size = vocab_size or len(self.wv.vocab)
@@ -792,11 +804,11 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
         Parameters
         ----------
-        sentences : iterable of iterable of str
+        sentences : iterable of list of str
             Can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
-            or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
+            or :class:`~gensim.models.word2vec.LineSentence` module for such examples.
         total_examples : int, optional
             Count of sentences.
         total_words : int, optional
@@ -851,7 +863,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         return alpha
 
     def _update_job_params(self, job_params, epoch_progress, cur_epoch):
-        """Returns the correct learning rate for the next iteration.
+        """Get the correct learning rate for the next iteration.
 
         Parameters
         ----------
@@ -893,7 +905,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
         Parameters
         ----------
-        job: iterable of iterable of str
+        job: iterable of list of str
             The corpus chunk processed in a single batch.
 
         Returns
@@ -1011,7 +1023,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
         Parameters
         ----------
-        job_queue : Queue of (iterable of object, dict of (str, float))
+        job_queue : Queue of (list of object, dict of (str, float))
             The queue of jobs still to be performed by workers. Each job is represented as a tuple containing
             the batch of data to be processed and the parameters to be used for the processing as a dict.
         progress_queue : Queue of (int, int, int)

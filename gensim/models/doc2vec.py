@@ -451,6 +451,10 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
             or a callable that accepts parameters (word, count, min_count) and returns either
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
+            The input parameters are of the following types
+                * word: str. The word we are examining
+                * count: int. The word's occurence count in the corpus
+                * min_count: int. The minimum count threshold.
             Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
             of the model.
         callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`, optional
@@ -648,7 +652,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             queue_factor=queue_factor, report_delay=report_delay, callbacks=callbacks)
 
     def _raw_word_count(self, job):
-        """Return the number of words in a given job.
+        """Get the number of words in a given job.
 
         Parameters
         ----------
@@ -923,12 +927,16 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             Indicates how many words to process before showing/updating the progress.
         keep_raw_vocab : bool
             If not true, delete the raw vocabulary after the scaling is done and free up RAM.
-        trim_rule : function
+        trim_rule : function, optional
             Vocabulary trimming rule, specifies whether certain words should remain in the vocabulary,
             be trimmed away, or handled using the default (discard if word count < min_count).
             Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
             or a callable that accepts parameters (word, count, min_count) and returns either
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
+            The input parameters are of the following types
+                * word: str. The word we are examining
+                * count: int. The word's occurence count in the corpus
+                * min_count: int. The minimum count threshold.
             Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
             of the model.
         **kwargs
@@ -965,6 +973,10 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
             or a callable that accepts parameters (word, count, min_count) and returns either
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
+            The input parameters are of the following types
+                * word: str. The word we are examining
+                * count: int. The word's occurence count in the corpus
+                * min_count: int. The minimum count threshold.
             Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
             of the model.
         update : bool, optional
@@ -1047,6 +1059,10 @@ class Doc2VecVocab(Word2VecVocab):
             Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
             or a callable that accepts parameters (word, count, min_count) and returns either
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
+            The input parameters are of the following types
+                * word: str. The word we are examining
+                * count: int. The word's occurence count in the corpus
+                * min_count: int. The minimum count threshold.
             Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
             of the model.
 
@@ -1128,7 +1144,7 @@ class Doc2VecVocab(Word2VecVocab):
         docvecs.count = docvecs.max_rawint + 1 + len(docvecs.offset2doctag)
 
     def indexed_doctags(self, doctag_tokens, docvecs):
-        """Return indexes and backing-arrays used in training examples.
+        """Get the indexes and backing-arrays used in training examples.
 
         Parameters
         ----------
