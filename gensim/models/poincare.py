@@ -178,11 +178,9 @@ class PoincareModel(utils.SaveLoad):
         self.kv.index2word = index2word
         self.indices_set = set((range(len(index2word))))  # Set of all node indices
         self.indices_array = np.array(range(len(index2word)))  # Numpy array of all node indices
-        counts = np.array([self.kv.vocab[index2word[i]].count for i in range(len(index2word))], dtype=np.float64)
-        self._node_counts_cumsum = np.cumsum(counts)
-        self._node_probabilities = counts / counts.sum()
         self.all_relations = all_relations
         self.node_relations = node_relations
+        self._init_node_probabilities()
         self._negatives_buffer = NegativesBuffer([])  # Buffer for negative samples, to reduce calls to sampling method
         self._negatives_buffer_size = 2000
 
@@ -190,6 +188,15 @@ class PoincareModel(utils.SaveLoad):
         """Randomly initialize vectors for the items in the vocab."""
         shape = (len(self.kv.index2word), self.size)
         self.kv.syn0 = self._np_random.uniform(self.init_range[0], self.init_range[1], shape).astype(self.dtype)
+
+    def _init_node_probabilities(self):
+        counts = np.array([
+                self.kv.vocab[self.kv.index2word[i]].count
+                for i in range(len(self.kv.index2word))
+            ],
+            dtype=np.float64)
+        self._node_counts_cumsum = np.cumsum(counts)
+        self._node_probabilities = counts / counts.sum()
 
     def _get_candidate_negatives(self):
         """Returns candidate negatives of size `self.negative` from the negative examples buffer.
@@ -329,12 +336,15 @@ class PoincareModel(utils.SaveLoad):
     def save(self, *args, **kwargs):
         """Save complete model to disk, inherited from :class:`gensim.utils.SaveLoad`."""
         self._loss_grad = None  # Can't pickle autograd fn to disk
+        attrs_to_ignore = ['_node_probabilities', '_node_counts_cumsum']
+        kwargs['ignore'] = set(list(kwargs.get('ignore', [])) + attrs_to_ignore)
         super(PoincareModel, self).save(*args, **kwargs)
 
     @classmethod
     def load(cls, *args, **kwargs):
         """Load model from disk, inherited from :class:`~gensim.utils.SaveLoad`."""
         model = super(PoincareModel, cls).load(*args, **kwargs)
+        model._init_node_probabilities()
         return model
 
     def _prepare_training_batch(self, relations, all_negatives, check_gradients=False):
