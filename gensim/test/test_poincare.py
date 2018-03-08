@@ -94,7 +94,7 @@ class TestPoincareModel(unittest.TestCase):
         self.models_equal(model, loaded)
 
     def test_train_after_load(self):
-        """Tests whether the model is saved and loaded correctly."""
+        """Tests whether the model can be trained correctly after loading from disk."""
         model = PoincareModel(self.data, burn_in=0, negative=3)
         model.train(epochs=1)
         model.save(testfile())
@@ -104,7 +104,7 @@ class TestPoincareModel(unittest.TestCase):
         self.models_equal(model, loaded)
 
     def test_persistence_old_model(self):
-        """Tests whether the model is saved and loaded correctly."""
+        """Tests whether model from older gensim version is loaded correctly."""
         loaded = PoincareModel.load(datapath('poincare_test_3.4.0'))
         self.assertEqual(loaded.kv.syn0.shape, (239, 2))
         self.assertEqual(len(loaded.kv.vocab), 239)
@@ -112,7 +112,7 @@ class TestPoincareModel(unittest.TestCase):
         self.assertEqual(len(loaded.all_relations), 200)
 
     def test_train_old_model_after_load(self):
-        """Tests whether the model is saved and loaded correctly."""
+        """Tests whether loaded model from older gensim version can be trained correctly."""
         loaded = PoincareModel.load(datapath('poincare_test_3.4.0'))
         old_vectors = np.copy(loaded.kv.syn0)
         loaded.train(epochs=2)
