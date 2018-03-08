@@ -155,9 +155,8 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
 
     def test_add_word(self):
         """Test that adding word in a manual way works correctly."""
-        from numpy.random import randn
         words = ['___some_word{}_not_present_in_keyed_vectors___'.format(i) for i in range(5)]
-        word_vectors = [randn(self.vectors.vector_size) for _ in range(5)]
+        word_vectors = [np.random.randn(self.vectors.vector_size) for _ in range(5)]
 
         # Test `add_word` on already filled kv.
         for word, vector in zip(words, word_vectors):
