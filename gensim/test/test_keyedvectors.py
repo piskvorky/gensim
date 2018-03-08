@@ -158,17 +158,17 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
         words = ['___some_word{}_not_present_in_keyed_vectors___'.format(i) for i in range(5)]
         word_vectors = [np.random.randn(self.vectors.vector_size) for _ in range(5)]
 
-        # Test `add_word` on already filled kv.
+        # Test `add_entity` on already filled kv.
         for word, vector in zip(words, word_vectors):
-            self.vectors.add_word(word, vector)
+            self.vectors.add_entity(word, vector)
 
         for word, vector in zip(words, word_vectors):
             self.assertTrue(np.allclose(self.vectors[word], vector))
 
-        # Test `add_word` on empty kv.
+        # Test `add_entity` on empty kv.
         kv = EuclideanKeyedVectors(self.vectors.vector_size)
         for word, vector in zip(words, word_vectors):
-            kv.add_word(word, vector)
+            kv.add_entity(word, vector)
 
         for word, vector in zip(words, word_vectors):
             self.assertTrue(np.allclose(kv[word], vector))
