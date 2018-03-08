@@ -93,6 +93,31 @@ class TestPoincareModel(unittest.TestCase):
         loaded = PoincareModel.load(testfile())
         self.models_equal(model, loaded)
 
+    def test_train_after_load(self):
+        """Tests whether the model is saved and loaded correctly."""
+        model = PoincareModel(self.data, burn_in=0, negative=3)
+        model.train(epochs=1)
+        model.save(testfile())
+        loaded = PoincareModel.load(testfile())
+        model.train(epochs=1)
+        loaded.train(epochs=1)
+        self.models_equal(model, loaded)
+
+    def test_persistence_old_model(self):
+        """Tests whether the model is saved and loaded correctly."""
+        loaded = PoincareModel.load(datapath('poincare_test_3.4.0'))
+        self.assertEqual(loaded.kv.syn0.shape, (239, 2))
+        self.assertEqual(len(loaded.kv.vocab), 239)
+        self.assertEqual(loaded.size, 2)
+        self.assertEqual(len(loaded.all_relations), 200)
+
+    def test_train_old_model_after_load(self):
+        """Tests whether the model is saved and loaded correctly."""
+        loaded = PoincareModel.load(datapath('poincare_test_3.4.0'))
+        old_vectors = np.copy(loaded.kv.syn0)
+        loaded.train(epochs=2)
+        self.assertFalse(np.allclose(old_vectors, loaded.kv.syn0))
+
     def test_invalid_data_raises_error(self):
         """Tests that error is raised on invalid input data."""
         with self.assertRaises(ValueError):
