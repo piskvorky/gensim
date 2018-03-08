@@ -28,7 +28,14 @@ logger = logging.getLogger(__name__)
 
 class BaseAny2VecModel(utils.SaveLoad):
     """Base class for training, using and evaluating any2vec model.
-    Contains implementation for multi-threaded training.
+
+    Contains implementation for multi-threaded training. The purpose of this class is to provide a
+    reference interface for concrete embedding implementations, whether the input space is a corpus
+    of words, documents or anything else. At the same time, functionality that we expect to be common
+    for those implementations is provided here to avoid code duplication.
+
+    In the special but usual case where the input space consists of words, a more specialized layer
+    is provided, consider inheriting from :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
 
     """
 
@@ -83,7 +90,24 @@ class BaseAny2VecModel(utils.SaveLoad):
         raise NotImplementedError()
 
     def _worker_loop(self, job_queue, progress_queue):
-        """Train the model, lifting lists of data from the job_queue."""
+        """Train the model, lifting lists of data from the queue.
+
+        This function will be called in paralle by multiple workers (threads or processes) to make
+        optimal use of multicore machines.
+
+        Parameters
+        ----------
+        job_queue : Queue of (iterable of object, dict)
+            A queue of jobs still to be processed. The worker will take up jobs from this queue.
+            Each job is represented by a tuple where the first element is the corpus chunk to be processed and
+            the second is the dictionary of parameters.
+        progress_queue : Queue of (int, int, int)
+            A queue of progress reports. Each report is represented as a tuple of these 3 elements:
+                * size of data chunk processed, for example number of sentences in the corpus chunk.
+                * Effective word count used in training (after ignoring unknown words and trimming the sentence length).
+                * Total word count used in training.
+
+        """
         thread_private_mem = self._get_thread_working_mem()
         jobs_processed = 0
         while True:
@@ -106,7 +130,30 @@ class BaseAny2VecModel(utils.SaveLoad):
         logger.debug("worker exiting, processed %i jobs", jobs_processed)
 
     def _job_producer(self, data_iterator, job_queue, cur_epoch=0, total_examples=None, total_words=None):
-        """Fill jobs queue using the input `data_iterator`."""
+        """Fill the jobs queue using the data found in the input stream.
+
+        Each job is represented by a tuple where the first element is the corpus chunk to be processed and
+        the second is the dictionary of parameters.
+
+        Parameters
+        ----------
+        data_iterator : iterable of iterable of object
+            The input corpus. This will be split in chunks and these chunks will be pushed to the queue.
+        job_queue : Queue of (iterable of object, dict)
+            A queue of jobs still to be processed. The worker will take up jobs from this queue.
+            Each job is represented by a tuple where the first element is the corpus chunk to be processed and
+            the second is the dictionary of parameters.
+        cur_epoch : int, optional
+            The current training epoch, needed to compute the training parameters for each job.
+            For example in many implementations the learning rate would be dropping with the number of epochs.
+        total_examples : int, optional
+            Count of objects in the `data_iterator`. In the usual case this would correspond to the number of sentences
+            in a corpus. Used to log progress.
+        total_words : int, optional
+            Count of total objects in `data_iterator`. In the usual case this would correspond to the number of raw
+            words in a corpus. Used to log progress.
+
+        """
         job_batch, batch_size = [], 0
         pushed_words, pushed_examples = 0, 0
         next_job_params = self._get_job_params(cur_epoch)
@@ -166,6 +213,40 @@ class BaseAny2VecModel(utils.SaveLoad):
 
     def _log_epoch_progress(self, progress_queue, job_queue, cur_epoch=0, total_examples=None, total_words=None,
                             report_delay=1.0):
+        """Get the progress report for a single training epoch.
+
+        Parameters
+        ----------
+        progress_queue : Queue of (int, int, int)
+            A queue of progress reports. Each report is represented as a tuple of these 3 elements:
+                * size of data chunk processed, for example number of sentences in the corpus chunk.
+                * Effective word count used in training (after ignoring unknown words and trimming the sentence length).
+                * Total word count used in training.
+        job_queue : Queue of (iterable of object, dict)
+            A queue of jobs still to be processed. The worker will take up jobs from this queue.
+            Each job is represented by a tuple where the first element is the corpus chunk to be processed and
+            the second is the dictionary of parameters.
+        cur_epoch : int, optional
+            The current training epoch, needed to compute the training parameters for each job.
+            For example in many implementations the learning rate would be dropping with the number of epochs.
+        total_examples : int, optional
+            Count of objects in the `data_iterator`. In the usual case this would correspond to the number of sentences
+            in a corpus. Used to log progress.
+        total_words : int, optional
+            Count of total objects in `data_iterator`. In the usual case this would correspond to the number of raw
+            words in a corpus. Used to log progress.
+        report_delay : float, optional
+            Number of seconds between two consecutive progress report messages in the logger.
+
+        Returns
+        -------
+        (int, int, int)
+            The epoch report consisting of three elements:
+                * size of data chunk processed, for example number of sentences in the corpus chunk.
+                * Effective word count used in training (after ignoring unknown words and trimming the sentence length).
+                * Total word count used in training.
+
+        """
         example_count, trained_word_count, raw_word_count = 0, 0, 0
         start, next_report = default_timer() - 0.00001, 1.0
         job_tally = 0
@@ -202,7 +283,35 @@ class BaseAny2VecModel(utils.SaveLoad):
 
     def _train_epoch(self, data_iterable, cur_epoch=0, total_examples=None,
                      total_words=None, queue_factor=2, report_delay=1.0):
-        """Train one epoch."""
+        """Train the model for a single epoch.
+
+        Parameters
+        ----------
+        data_iterable : iterable of iterable of object
+            The input corpus. This will be split in chunks and these chunks will be pushed to the queue.
+        cur_epoch : int, optional
+            The current training epoch, needed to compute the training parameters for each job.
+            For example in many implementations the learning rate would be dropping with the number of epochs.
+        total_examples : int, optional
+            Count of objects in the `data_iterator`. In the usual case this would correspond to the number of sentences
+            in a corpus. Used to log progress.
+        total_words : int, optional
+            Count of total objects in `data_iterator`. In the usual case this would correspond to the number of raw
+            words in a corpus. Used to log progress.
+        queue_factor : int, optional
+            Multiplier for size of queue -> size = number of workers * queue_factor.
+        report_delay : float, optional
+            Number of seconds between two consecutive progress report messages in the logger.
+
+        Returns
+        -------
+        (int, int, int)
+            The training report for this epoch consisting of three elements:
+                * size of data chunk processed, for example number of sentences in the corpus chunk.
+                * Effective word count used in training (after ignoring unknown words and trimming the sentence length).
+                * Total word count used in training.
+
+        """
         job_queue = Queue(maxsize=queue_factor * self.workers)
         progress_queue = Queue(maxsize=(queue_factor + 1) * self.workers)
 
@@ -230,7 +339,37 @@ class BaseAny2VecModel(utils.SaveLoad):
 
     def train(self, data_iterable, epochs=None, total_examples=None,
               total_words=None, queue_factor=2, report_delay=1.0, callbacks=(), **kwargs):
-        """Handle multi-worker training."""
+        """Train the model for every epochs using multiple workers.
+
+        Parameters
+        ----------
+        data_iterable : iterable of iterable of object
+            The input corpus. This will be split in chunks and these chunks will be pushed to the queue.
+        epochs : int, optional
+            Number of epochs (training iterations over the whole input) of training.
+        total_examples : int, optional
+            Count of objects in the `data_iterator`. In the usual case this would correspond to the number of sentences
+            in a corpus. Used to log progress.
+        total_words : int, optional
+            Count of total objects in `data_iterator`. In the usual case this would correspond to the number of raw
+            words in a corpus. Used to log progress.
+        queue_factor : int, optional
+            Multiplier for size of queue -> size = number of workers * queue_factor.
+        report_delay : float, optional
+            Number of seconds between two consecutive progress report messages in the logger.
+        callbacks : list of :class: `~gensim.models.callbacks.CallbackAny2Vec`, optional
+            List of callbacks that need to be executed/run at specific stages during training.
+        **kwargs
+            Additional key word parameters for the specific model inheriting from this class.
+
+        Returns
+        -------
+        (int, int)
+            The total training report consisting of two elements:
+                * size of total data processed, for example number of sentences in the whole corpus.
+                * Effective word count used in training (after ignoring unknown words and trimming the sentence length).
+
+        """
         self._set_train_params(**kwargs)
         if callbacks:
             self.callbacks = callbacks
