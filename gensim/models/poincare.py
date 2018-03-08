@@ -179,8 +179,8 @@ class PoincareModel(utils.SaveLoad):
         self.indices_set = set((range(len(index2word))))  # Set of all node indices
         self.indices_array = np.array(range(len(index2word)))  # Numpy array of all node indices
         counts = np.array([self.kv.vocab[index2word[i]].count for i in range(len(index2word))], dtype=np.float64)
+        self._node_counts_cumsum = np.cumsum(counts)
         self._node_probabilities = counts / counts.sum()
-        self._node_probabilities_cumsum = np.cumsum(self._node_probabilities)
         self.all_relations = all_relations
         self.node_relations = node_relations
         self._negatives_buffer = NegativesBuffer([])  # Buffer for negative samples, to reduce calls to sampling method
@@ -202,13 +202,12 @@ class PoincareModel(utils.SaveLoad):
         """
 
         if self._negatives_buffer.num_items() < self.negative:
-            # self._node_probabilities_cumsum sometimes doesn't have 1 as the last value due to floating point error.
-            # This causes np.searchsorted to return last index + 1 when the random generated number is greater
-            # than the max_value in _node_probabilities_cumsum. Randomly generated numbers are multiplied
-            # by max_cumsum_value to avoid this.
-            max_cumsum_value = self._node_probabilities_cumsum[-1]
-            uniform_numbers = self._np_random.random_sample(self._negatives_buffer_size) * max_cumsum_value
-            cumsum_table_indices = np.searchsorted(self._node_probabilities_cumsum, uniform_numbers)
+            # cumsum table of counts used instead of the standard approach of a probability cumsum table
+            # this is to avoid floating point errors that result when the number of nodes is very high
+            # for reference: https://github.com/RaRe-Technologies/gensim/issues/1917
+            max_cumsum_value = self._node_counts_cumsum[-1]
+            uniform_numbers = self._np_random.randint(1, max_cumsum_value + 1, self._negatives_buffer_size)
+            cumsum_table_indices = np.searchsorted(self._node_counts_cumsum, uniform_numbers)
             self._negatives_buffer = NegativesBuffer(cumsum_table_indices)
         return self._negatives_buffer.get_items(self.negative)
 
