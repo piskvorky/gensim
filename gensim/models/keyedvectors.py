@@ -1115,7 +1115,7 @@ class Word2VecKeyedVectors(WordEmbeddingsKeyedVectors):
         """
         # from gensim.models.word2vec import load_word2vec_format
         return _load_word2vec_format(
-            Word2VecKeyedVectors, fname, fvocab=fvocab, binary=binary, encoding=encoding, unicode_errors=unicode_errors,
+            cls, fname, fvocab=fvocab, binary=binary, encoding=encoding, unicode_errors=unicode_errors,
             limit=limit, datatype=datatype)
 
     def get_keras_embedding(self, train_embeddings=False):
