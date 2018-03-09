@@ -869,7 +869,7 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         """
         return _load_word2vec_format(
-            PoincareKeyedVectors, fname, fvocab=fvocab, binary=binary, encoding=encoding, unicode_errors=unicode_errors,
+            cls, fname, fvocab=fvocab, binary=binary, encoding=encoding, unicode_errors=unicode_errors,
             limit=limit, datatype=datatype)
 
     @staticmethod
