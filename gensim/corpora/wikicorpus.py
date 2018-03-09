@@ -70,7 +70,7 @@ RE_P11 = re.compile(r'<(.*?)>', re.DOTALL | re.UNICODE)
 """All other tags."""
 RE_P12 = re.compile(r'(({\|)|(\|-(?!\d))|(\|}))(.*?)(?=\n)', re.UNICODE)
 """Table formatting."""
-RE_P13 = re.compile(r'(\||\!)(.*?\|)*([^|]*?)', re.UNICODE)
+RE_P13 = re.compile(r'(?<=(\n[ ])|(\n\n)|([ ]{2})|(.\n)|(.\t))(\||\!)([^[\]\n]*?\|)*', re.UNICODE)
 """Table cell formatting."""
 RE_P14 = re.compile(r'\[\[Category:[^][]*\]\]', re.UNICODE)
 """Categories."""
@@ -78,7 +78,7 @@ RE_P15 = re.compile(r'\[\[([fF]ile:|[iI]mage)[^]]*(\]\])', re.UNICODE)
 """Remove File and Image templates."""
 RE_P16 = re.compile(r'\[{2}(.*?)\]{2}', re.UNICODE)
 """Capture interlinks text and article linked"""
-RE_P17 = re.compile(r'(\n[ ]{0,2}((bgcolor)|(\d{0,1}[ ]?colspan)|(rowspan)|(style=)|(class=)|(align=))(.*))|(^[ ]{0,2}((bgcolor)|(\d{0,1}[ ]?colspan)|(rowspan)|(style=)|(class=)|(align=))(.*))', re.UNICODE)
+RE_P17 = re.compile(r'(\n.{0,4}((bgcolor)|(\d{0,1}[ ]?colspan)|(rowspan)|(style=)|(class=)|(align=)|(scope=))(.*))|(^.{0,2}((bgcolor)|(\d{0,1}[ ]?colspan)|(rowspan)|(style=)|(class=)|(align=))(.*))', re.UNICODE)
 """Table markup"""
 IGNORED_NAMESPACES = [
     'Wikipedia', 'Category', 'File', 'Portal', 'Template',
@@ -186,13 +186,13 @@ def remove_markup(text, promote_remaining=True, simplify_links=True):
         if simplify_links:
             text = re.sub(RE_P6, '\\2', text)  # simplify links, keep description only
         # remove table markup
-        text = text.replace("!!", "\n|")  # leave only cell content(in table head)
+        text = text.replace("!!", "\n|")  # each table head cell on a separate line
         text = text.replace("|-||", "\n|")  # for cases where a cell is filled with '-'
         text = re.sub(RE_P12, '\n', text)  # remove formatting lines
         text = text.replace('|||', '|\n|')  # each table cell on a separate line(where |{{a|b}}||cell-content)
         text = text.replace('||', '\n|')  # each table cell on a separate line
-        text = re.sub(RE_P13, '\n\\3', text)  # leave only cell content
-        text = re.sub(RE_P17, '', text)  # remove formatting lines
+        text = re.sub(RE_P13, '\n', text)  # leave only cell content
+        text = re.sub(RE_P17, '\n', text)  # remove formatting lines
 
         # remove empty mark-up
         text = text.replace('[]', '')

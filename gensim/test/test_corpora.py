@@ -651,7 +651,7 @@ class TestWikiCorpus(TestTextCorpus):
         """
         enwiki_file = datapath('enwiki-table-markup.xml.bz2')
         corpus = self.corpus_class(enwiki_file)
-        texts = corpus.get_texts() 
+        texts = corpus.get_texts()
         table_markup = ["style", "class", "border", "cellspacing", "cellpadding", "colspan", "rowspan"]
         for text in texts:
             for word in table_markup:
