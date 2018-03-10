@@ -90,7 +90,6 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
         )
         return self
 
-
     def transform(self, docs):
         """
         Return the vector representations for the input documents.
