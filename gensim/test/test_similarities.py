@@ -20,6 +20,7 @@ from smart_open import smart_open
 from gensim.models import word2vec
 from gensim.models import doc2vec
 from gensim.models import KeyedVectors
+from gensim.models import TfidfModel
 from gensim import matutils, similarities
 from gensim.models import Word2Vec, FastText
 from gensim.test.utils import (datapath, get_tmpfile,
@@ -372,6 +373,7 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
 class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
     def setUp(self):
         self.cls = similarities.SoftCosineSimilarity
+        self.tfidf = TfidfModel(dictionary=dictionary)
         similarity_matrix = scipy.sparse.identity(12, format="lil")
         similarity_matrix[dictionary.token2id["user"], dictionary.token2id["human"]] = 0.5
         similarity_matrix[dictionary.token2id["human"], dictionary.token2id["user"]] = 0.5
@@ -385,9 +387,10 @@ class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
         # Override testFull.
 
         index = self.cls(corpus, self.similarity_matrix, num_best=num_best)
-        query = self.dictionary.doc2bow(texts[0])
-        sims = index[query]
 
+        # Single query
+        query = dictionary.doc2bow(texts[0])
+        sims = index[query]
         if num_best is not None:
             # Sparse array.
             for i, sim in sims:
@@ -399,6 +402,25 @@ class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
             self.assertTrue(numpy.alltrue(sims[1:] < 1.0))
             expected = 2.1889350195476758
             self.assertAlmostEqual(expected, numpy.sum(sims))
+
+        # Corpora
+        for query in (
+                corpus,  # Basic text corpus.
+                self.tfidf[corpus]):  # Transformed corpus without slicing support.
+            sims = index[query]
+            if num_best is not None:
+                # Sparse array.
+                for result in sims:
+                    for i, sim in result:
+                        self.assertTrue(numpy.alltrue(sim <= 1.0))
+                        self.assertTrue(numpy.alltrue(sim >= 0.0))
+            else:
+                for i, result in enumerate(sims):
+                    self.assertTrue(result[i] == 1.0)  # Similarity of a document with itself is 1.0.
+                    self.assertTrue(numpy.alltrue(result[:i] >= 0.0))
+                    self.assertTrue(numpy.alltrue(result[:i] < 1.0))
+                    self.assertTrue(numpy.alltrue(result[i:] >= 0.0))
+                    self.assertTrue(numpy.alltrue(result[i:] < 1.0))
 
     def testNonIncreasing(self):
         """ Check that similarities are non-increasing when `num_best` is not `None`."""
