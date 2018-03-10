@@ -64,11 +64,11 @@ class W2VTransformer(TransformerMixin, BaseEstimator):
         Calls gensim.models.Word2Vec
         """
         self.gensim_model = models.Word2Vec(
-            sentences=X, vector_size=self.vector_size, alpha=self.alpha,
+            sentences=X, size=self.vector_size, alpha=self.alpha,
             window=self.window, min_count=self.min_count, max_vocab_size=self.max_vocab_size,
             sample=self.sample, seed=self.seed, workers=self.workers, min_alpha=self.min_alpha,
             sg=self.sg, hs=self.hs, negative=self.negative, cbow_mean=self.cbow_mean,
-            hashfxn=self.hashfxn, epochs=self.epochs, null_word=self.null_word, trim_rule=self.trim_rule,
+            hashfxn=self.hashfxn, iter=self.epochs, null_word=self.null_word, trim_rule=self.trim_rule,
             sorted_vocab=self.sorted_vocab, batch_words=self.batch_words
         )
         return self
