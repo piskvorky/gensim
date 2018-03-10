@@ -29,16 +29,13 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
                  cbow_mean=1, hashfxn=hash, iter=None, epochs=5, sorted_vocab=1, batch_words=10000):
         """
         Sklearn api for Doc2Vec model. See gensim.models.Doc2Vec and gensim.models.Word2Vec for parameter details.
-        """
-        
+        """  
         if iter is not None:
             warnings.warn("The parameter `iter` is deprecated, will be removed in 4.0.0, use `epochs` instead.")
             epochs = iter
-
         if size is not None:
             warnings.warn("The parameter `size` is deprecated, will be removed in 4.0.0, use `vector_size` instead.")
             vector_size = size
-          
         self.gensim_model = None
         self.dm_mean = dm_mean
         self.dm = dm
