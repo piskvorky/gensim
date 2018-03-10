@@ -17,7 +17,6 @@ import numpy
 import scipy
 
 from smart_open import smart_open
-from gensim.corpora import Dictionary
 from gensim.models import word2vec
 from gensim.models import doc2vec
 from gensim.models import KeyedVectors
@@ -373,8 +372,6 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
 class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
     def setUp(self):
         self.cls = similarities.SoftCosineSimilarity
-        self.dictionary = Dictionary(texts)
-        self.corpus = [dictionary.doc2bow(document) for document in texts]
         similarity_matrix = scipy.sparse.identity(12, format="lil")
         similarity_matrix[dictionary.token2id["user"], dictionary.token2id["human"]] = 0.5
         similarity_matrix[dictionary.token2id["human"], dictionary.token2id["user"]] = 0.5
@@ -382,12 +379,12 @@ class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
 
     def factoryMethod(self):
         # Override factoryMethod.
-        return self.cls(self.corpus, self.similarity_matrix)
+        return self.cls(corpus, self.similarity_matrix)
 
     def testFull(self, num_best=None):
         # Override testFull.
 
-        index = self.cls(self.corpus, self.similarity_matrix, num_best=num_best)
+        index = self.cls(corpus, self.similarity_matrix, num_best=num_best)
         query = self.dictionary.doc2bow(texts[0])
         sims = index[query]
 
@@ -407,8 +404,8 @@ class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
         """ Check that similarities are non-increasing when `num_best` is not `None`."""
         # NOTE: this could be implemented for other similarities as well (i.e. in _TestSimilarityABC).
 
-        index = self.cls(self.corpus, self.similarity_matrix, num_best=5)
-        query = self.dictionary.doc2bow(texts[0])
+        index = self.cls(corpus, self.similarity_matrix, num_best=5)
+        query = dictionary.doc2bow(texts[0])
         sims = index[query]
         sims2 = numpy.asarray(sims)[:, 1]  # Just the similarities themselves.
 
@@ -419,8 +416,8 @@ class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
     def testChunking(self):
         # Override testChunking.
 
-        index = self.cls(self.corpus, self.similarity_matrix)
-        query = [self.dictionary.doc2bow(document) for document in texts[:3]]
+        index = self.cls(corpus, self.similarity_matrix)
+        query = [dictionary.doc2bow(document) for document in texts[:3]]
         sims = index[query]
 
         for i in range(3):
@@ -438,7 +435,7 @@ class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
     def testIter(self):
         # Override testIter.
 
-        index = self.cls(self.corpus, self.similarity_matrix)
+        index = self.cls(corpus, self.similarity_matrix)
         for sims in index:
             self.assertTrue(numpy.alltrue(sims >= 0.0))
             self.assertTrue(numpy.alltrue(sims <= 1.0))
