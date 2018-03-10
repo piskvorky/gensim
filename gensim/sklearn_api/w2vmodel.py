@@ -58,7 +58,8 @@ class W2VTransformer(TransformerMixin, BaseEstimator):
         self.trim_rule = trim_rule
         self.sorted_vocab = sorted_vocab
         self.batch_words = batch_words
-        def fit(self, X, y=None):
+        
+    def fit(self, X, y=None):
         """
         Fit the model according to the given training data.
         Calls gensim.models.Word2Vec
