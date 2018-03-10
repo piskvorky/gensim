@@ -35,7 +35,7 @@ class W2VTransformer(TransformerMixin, BaseEstimator):
             epochs = iter
         if size is not None:
             warnings.warn("The parameter `size` is deprecated, will be removed in 4.0.0, use `vector_size` instead.")
-            vector_size = size 
+            vector_size = size
         self.gensim_model = None
         self.vector_size = vector_size
         self.size = vector_size
