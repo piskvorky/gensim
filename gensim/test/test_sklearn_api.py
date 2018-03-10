@@ -679,7 +679,7 @@ class TestWord2VecWrapper(unittest.TestCase):
 
     def testPipeline(self):
         numpy.random.seed(0)  # set fixed seed to get similar values everytime
-        model = W2VTransformer(min_count=1,vector_size=10)
+        model = W2VTransformer(min_count=1, vector_size=10)
         model.fit(w2v_texts)
 
         class_dict = {'mathematics': 1, 'physics': 0}
