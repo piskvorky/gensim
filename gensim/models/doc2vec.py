@@ -636,7 +636,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         """Store the input-hidden weight matrix in the same format used by the original
         C word2vec-tool, for compatibility.
        
-       Parameters
+        Parameters
         ----------
         fname : str
             The file path used to save the vectors in.
