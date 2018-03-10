@@ -52,6 +52,7 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
 
         # attributes associated with gensim.models.Word2Vec
         self.vector_size = vector_size
+        self.size = vector_size
         self.alpha = alpha
         self.window = window
         self.min_count = min_count
