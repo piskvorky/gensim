@@ -40,6 +40,7 @@ class W2VTransformer(TransformerMixin, BaseEstimator):
         
         self.gensim_model = None
         self.vector_size = vector_size
+        self.size = vector_size
         self.alpha = alpha
         self.window = window
         self.min_count = min_count
