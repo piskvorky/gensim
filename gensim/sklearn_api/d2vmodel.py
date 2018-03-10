@@ -68,7 +68,7 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
         self.sorted_vocab = sorted_vocab
         self.batch_words = batch_words
         
-         def fit(self, X, y=None):
+    def fit(self, X, y=None):
         """
         Fit the model according to the given training data.
         Calls gensim.models.Doc2Vec
