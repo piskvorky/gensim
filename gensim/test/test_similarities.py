@@ -386,9 +386,8 @@ class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
     def testFull(self, num_best=None):
         # Override testFull.
 
-        index = self.cls(corpus, self.similarity_matrix, num_best=num_best)
-
         # Single query
+        index = self.cls(corpus, self.similarity_matrix, num_best=num_best)
         query = dictionary.doc2bow(texts[0])
         sims = index[query]
         if num_best is not None:
@@ -407,6 +406,7 @@ class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
         for query in (
                 corpus,  # Basic text corpus.
                 self.tfidf[corpus]):  # Transformed corpus without slicing support.
+            index = self.cls(query, self.similarity_matrix, num_best=num_best)
             sims = index[query]
             if num_best is not None:
                 # Sparse array.
