@@ -397,7 +397,7 @@ class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
                 self.assertTrue(numpy.alltrue(sim <= 1.0))
                 self.assertTrue(numpy.alltrue(sim >= 0.0))
         else:
-            self.assertTrue(sims[0] == 1.0)  # Similarity of a document with itself is 1.0.
+            self.assertAlmostEqual(1.0, sims[0])  # Similarity of a document with itself is 1.0.
             self.assertTrue(numpy.alltrue(sims[1:] >= 0.0))
             self.assertTrue(numpy.alltrue(sims[1:] < 1.0))
             expected = 2.1889350195476758
@@ -416,7 +416,7 @@ class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
                         self.assertTrue(numpy.alltrue(sim >= 0.0))
             else:
                 for i, result in enumerate(sims):
-                    self.assertTrue(result[i] == 1.0)  # Similarity of a document with itself is 1.0.
+                    self.assertAlmostEqual(1.0, result[i])  # Similarity of a document with itself is 1.0.
                     self.assertTrue(numpy.alltrue(result[:i] >= 0.0))
                     self.assertTrue(numpy.alltrue(result[:i] < 1.0))
                     self.assertTrue(numpy.alltrue(result[i + 1:] >= 0.0))
