@@ -12,7 +12,6 @@ from functools import partial
 from gensim import interfaces, matutils, utils
 from six import iteritems
 
-from scipy import sparse as sp
 import numpy as np
 
 logger = logging.getLogger(__name__)
@@ -224,7 +223,7 @@ class TfidfModel(interfaces.TransformationABC):
 
     def __init__(self, corpus=None, id2word=None, dictionary=None, wlocal=utils.identity,
                  wglobal=df2idf, normalize=True, smartirs=None,
-                 pivot_norm=False, slope=0.65, pivot=None):
+                 pivot_norm=False, slope=0.65, pivot=100):
         """Compute tf-idf by multiplying a local component (term frequency) with a global component
         (inverse document frequency), and normalizing the resulting documents to unit length.
         Formula for non-normalized weight of term :math:`i` in document :math:`j` in a corpus of :math:`D` documents
@@ -283,7 +282,7 @@ class TfidfModel(interfaces.TransformationABC):
         slope : float, optional
             It is the parameter required by pivoted document length normalization which determines the slope to which
             the `old normalization` can be tilted.
-        pivot : int/float, optional
+        pivot : float, optional
             Pivot is the point before which we consider a document to be short and after which the document is
             considered long. It can be found by plotting the retrieval and relevence curves of a set of documents using
             a general normalization function. The point where both these curves coincide is the pivot point.
@@ -419,36 +418,13 @@ class TfidfModel(interfaces.TransformationABC):
 
         # and finally, normalize the vector either to unit length, or use a
         # user-defined normalization function
-        if self.pivot_norm is False:
+        if self.pivot_norm:
+            _, old_norm = self.normalize(vector, return_norm=True)
+            pivoted_norm = (1 - self.slope) * self.pivot + self.slope * old_norm
+            norm_vector = [(termid, weight / float(pivoted_norm))
+                for termid, weight in vector if abs(weight / float(pivoted_norm)) > self.eps
+            ]
+        else:
             norm_vector = self.normalize(vector)
             norm_vector = [(termid, weight) for termid, weight in norm_vector if abs(weight) > self.eps]
-            return norm_vector
-        else:
-            logger.info("You need to explicitly call pivoted_normalization.")
-            return vector
-
-    def pivoted_normalization(self, tfidf_matrix):
-        X = matutils.corpus2csc(tfidf_matrix).T
-        n_samples, n_features = X.shape
-        X_norm = []
-
-        for vec in tfidf_matrix:
-            _, norm = self.normalize(vec, return_norm=True)
-            X_norm.append(norm)
-
-        X_norm = np.array(X_norm)
-
-        if self.pivot is None:
-            self.pivot = X_norm.mean()
-
-        pivoted_norm = (1 - self.slope) * self.pivot + self.slope * X_norm
-        _diag_pivoted_norm = sp.spdiags(1. / pivoted_norm, diags=0, m=n_samples,
-                                    n=n_samples, format='csr')
-        X = _diag_pivoted_norm.dot(X)
-
-        norm_vector = []
-
-        X = matutils.Scipy2Corpus(X)
-        for doc in X:
-            norm_vector.append([(termid, weight) for termid, weight in doc if abs(weight) > self.eps])
         return norm_vector

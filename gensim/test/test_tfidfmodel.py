@@ -39,7 +39,7 @@ class TestTfidfModel(unittest.TestCase):
     def setUp(self):
         self.corpus = MmCorpus(datapath('testcorpus.mm'))
 
-    def testTransform(self):
+    def test_transform(self):
         # create the transformation model
         model = tfidfmodel.TfidfModel(self.corpus, normalize=True)
 
@@ -50,7 +50,7 @@ class TestTfidfModel(unittest.TestCase):
         expected = [(0, 0.57735026918962573), (1, 0.57735026918962573), (2, 0.57735026918962573)]
         self.assertTrue(np.allclose(transformed, expected))
 
-    def testInit(self):
+    def test_init(self):
         # create the transformation model by analyzing a corpus
         # uses the global `corpus`!
         model1 = tfidfmodel.TfidfModel(common_corpus)
@@ -65,7 +65,7 @@ class TestTfidfModel(unittest.TestCase):
         model2 = tfidfmodel.TfidfModel(dictionary=common_dictionary)
         self.assertEqual(model1.idfs, model2.idfs)
 
-    def testPersistence(self):
+    def test_persistence(self):
         # Test persistence without using `smartirs`
         fname = get_tmpfile('gensim_models.tst')
         model = tfidfmodel.TfidfModel(self.corpus, normalize=True)
@@ -97,7 +97,25 @@ class TestTfidfModel(unittest.TestCase):
         self.assertTrue(np.allclose(model3[tstvec[1]], model4[tstvec[1]]))
         self.assertTrue(np.allclose(model3[[]], model4[[]]))  # try projecting an empty vector
 
-    def testPersistenceCompressed(self):
+        # Test persistence with using pivoted normalization
+        fname = get_tmpfile('gensim_models_smartirs.tst')
+        model = tfidfmodel.TfidfModel(self.corpus, pivot_norm=True, pivot=0, slope=1)
+        model.save(fname)
+        model2 = tfidfmodel.TfidfModel.load(fname, mmap=None)
+        self.assertTrue(model.idfs == model2.idfs)
+        tstvec = [corpus[1], corpus[2]]
+        self.assertTrue(np.allclose(model[tstvec[0]], model2[tstvec[0]]))
+        self.assertTrue(np.allclose(model[tstvec[1]], model2[tstvec[1]]))
+
+        # Test persistence between Gensim v3.2.0 and pivoted normalization compressed model.
+        model3 = tfidfmodel.TfidfModel(self.corpus, pivot_norm=True, pivot=0, slope=1)
+        model4 = tfidfmodel.TfidfModel.load(datapath('tfidf_model.tst'))
+        self.assertTrue(model3.idfs == model4.idfs)
+        tstvec = [corpus[1], corpus[2]]
+        self.assertTrue(np.allclose(model3[tstvec[0]], model4[tstvec[0]]))
+        self.assertTrue(np.allclose(model3[tstvec[1]], model4[tstvec[1]]))
+
+    def test_persistence_compressed(self):
         # Test persistence without using `smartirs`
         fname = get_tmpfile('gensim_models.tst.gz')
         model = tfidfmodel.TfidfModel(self.corpus, normalize=True)
@@ -129,7 +147,25 @@ class TestTfidfModel(unittest.TestCase):
         self.assertTrue(np.allclose(model3[tstvec[1]], model4[tstvec[1]]))
         self.assertTrue(np.allclose(model3[[]], model4[[]]))  # try projecting an empty vector
 
-    def testConsistency(self):
+        # Test persistence with using pivoted normalization
+        fname = get_tmpfile('gensim_models_smartirs.tst.gz')
+        model = tfidfmodel.TfidfModel(self.corpus, pivot_norm=True, pivot=0, slope=1)
+        model.save(fname)
+        model2 = tfidfmodel.TfidfModel.load(fname, mmap=None)
+        self.assertTrue(model.idfs == model2.idfs)
+        tstvec = [corpus[1], corpus[2]]
+        self.assertTrue(np.allclose(model[tstvec[0]], model2[tstvec[0]]))
+        self.assertTrue(np.allclose(model[tstvec[1]], model2[tstvec[1]]))
+
+        # Test persistence between Gensim v3.2.0 and pivoted normalization compressed model.
+        model3 = tfidfmodel.TfidfModel(self.corpus, pivot_norm=True, pivot=0, slope=1)
+        model4 = tfidfmodel.TfidfModel.load(datapath('tfidf_model.tst.bz2'))
+        self.assertTrue(model3.idfs == model4.idfs)
+        tstvec = [corpus[1], corpus[2]]
+        self.assertTrue(np.allclose(model3[tstvec[0]], model4[tstvec[0]]))
+        self.assertTrue(np.allclose(model3[tstvec[1]], model4[tstvec[1]]))
+
+    def test_consistency(self):
         docs = [corpus[1], corpus[2]]
 
         # Test if `ntc` yields the default docs.
@@ -283,31 +319,26 @@ class TestTfidfModel(unittest.TestCase):
         self.assertTrue(np.allclose(transformed_docs[0], expected_docs[0]))
         self.assertTrue(np.allclose(transformed_docs[1], expected_docs[1]))
 
-    def testPivotedNormalization(self):
+    def test_pivoted_normalization(self):
         docs = [corpus[1], corpus[2]]
 
         # Test if slope=1 yields the default docs for pivoted normalization.
         model = tfidfmodel.TfidfModel(self.corpus)
         transformed_docs = [model[docs[0]], model[docs[1]]]
 
-        model = tfidfmodel.TfidfModel(self.corpus, slope=1, pivot_norm=True)
+        model = tfidfmodel.TfidfModel(self.corpus, pivot_norm=True, pivot=0, slope=1)
         expected_docs = model.pivoted_normalization([model[docs[0]], model[docs[1]]])
 
         self.assertTrue(np.allclose(sorted(transformed_docs[0]), sorted(expected_docs[0])))
         self.assertTrue(np.allclose(sorted(transformed_docs[1]), sorted(expected_docs[1])))
 
         # Test if pivoted model is consistent
-        model = tfidfmodel.TfidfModel(self.corpus, slope=0.5, pivot_norm=True)
+        model = tfidfmodel.TfidfModel(self.corpus, pivot_norm=True, pivot=0, slope=0.5)
         transformed_docs = model.pivoted_normalization([model[docs[0]], model[docs[1]]])
-        expected_docs = [[(8, 0.4682642467547897),
-                          (7, 0.34203084025552255),
-                          (6, 0.4682642467547897),
-                          (5, 0.34203084025552255),
-                          (4, 0.4682642467547897),
-                          (3, 0.4682642467547897)],
-                         [(10, 0.3834996737115108),
-                         (9, 0.3834996737115108),
-                         (5, 0.7669993474230216)]]
+        expected_docs = [[(8, 0.8884910505493495), (7, 0.648974041227711), (6, 0.8884910505493495),
+            (5, 0.648974041227711), (4, 0.8884910505493495), (3, 0.8884910505493495)],
+            [(10, 0.8164965809277263), (9, 0.8164965809277263), (5, 1.6329931618554525)]
+            ]
 
         self.assertTrue(np.allclose(sorted(transformed_docs[0]), sorted(expected_docs[0])))
         self.assertTrue(np.allclose(sorted(transformed_docs[1]), sorted(expected_docs[1])))
