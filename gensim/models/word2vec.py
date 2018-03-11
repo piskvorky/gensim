@@ -501,9 +501,9 @@ class Word2Vec(BaseWordEmbeddingsModel):
         callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`
             List of callbacks that need to be executed/run at specific stages during training.
         bounter_size: int
-            If set, allocates `bounter_size` MB for the Bounded Counter(bounter) which allows fast probabilistic counting
-            of item frequencies in massive datasets, using a small fixed memory footprint of `bounter_size`
-            Set to `None` for no limit.
+            If set, allocates `bounter_size` MB for the Bounded Counter(bounter) which allows fast probabilistic
+            counting of item frequencies in massive datasets, using a small fixed memory footprint of `bounter_size`
+            Set to `None` if not needed.
 
         Examples
         --------
@@ -1137,7 +1137,8 @@ class PathLineSentences(object):
 
 
 class Word2VecVocab(utils.SaveLoad):
-    def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0, bounter_size=None):
+    def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0,
+                 bounter_size=None):
         self.max_vocab_size = max_vocab_size
         self.min_count = min_count
         self.sample = sample
@@ -1183,7 +1184,7 @@ class Word2VecVocab(utils.SaveLoad):
             else:
                 for word in sentence:
                     vocab[word] += 1
-            
+
             if self.max_vocab_size and len(vocab) > self.max_vocab_size:
                 if bounter_size is not None:
                     vocab = dict(word_counts)

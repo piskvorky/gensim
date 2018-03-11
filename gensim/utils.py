@@ -1708,6 +1708,7 @@ def prune_vocab(vocab, min_reduce, trim_rule=None):
     )
     return result
 
+
 def qsize(queue):
     """Get the (approximate) queue size where available.
 
