@@ -419,8 +419,8 @@ class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
                     self.assertTrue(result[i] == 1.0)  # Similarity of a document with itself is 1.0.
                     self.assertTrue(numpy.alltrue(result[:i] >= 0.0))
                     self.assertTrue(numpy.alltrue(result[:i] < 1.0))
-                    self.assertTrue(numpy.alltrue(result[i:] >= 0.0))
-                    self.assertTrue(numpy.alltrue(result[i:] < 1.0))
+                    self.assertTrue(numpy.alltrue(result[i + 1:] >= 0.0))
+                    self.assertTrue(numpy.alltrue(result[i + 1:] < 1.0))
 
     def testNonIncreasing(self):
         """ Check that similarities are non-increasing when `num_best` is not `None`."""
