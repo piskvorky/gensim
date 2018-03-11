@@ -1708,37 +1708,6 @@ def prune_vocab(vocab, min_reduce, trim_rule=None):
     )
     return result
 
-def prune_bounter_vocab(counts, min_reduce, trim_rule=None):
-    """Remove all entries from the `vocab` dictionary with count smaller than `min_reduce`.
-
-    Modifies `vocab` in place, returns the sum of all counts that were pruned.
-    Parameters
-    ----------
-    vocab : dict
-        Input dictionary.
-    min_reduce : int
-        Frequency threshold for tokens in `vocab`.
-    trim_rule : function, optional
-        Function for trimming entities from vocab, default behaviour is `vocab[w] <= min_reduce`.
-
-    Returns
-    -------
-    result : int
-        Sum of all counts that were pruned.
-
-    """
-    result = 0
-    old_len = counts.total()
-    for w in list(counts.iteritems()):  # make a copy of dict's keys
-        if not keep_vocab_item(w, counts[w], min_reduce, trim_rule):  # vocab[w] <= min_reduce:
-            result += counts[w]
-            del counts[w]
-    logger.info(
-        "pruned out %i tokens with count <=%i (before %i, after %i)",
-        old_len - counts.total(), min_reduce, old_len, counts.total()
-    )
-    return result
-
 def qsize(queue):
     """Get the (approximate) queue size where available.
 

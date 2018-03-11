@@ -426,7 +426,8 @@ class Word2Vec(BaseWordEmbeddingsModel):
     def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
                  max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
                  sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
-                 trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False, callbacks=()):
+                 trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False, callbacks=(),
+                 bounter_size=None):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -499,6 +500,10 @@ class Word2Vec(BaseWordEmbeddingsModel):
             If True, computes and stores loss value which can be retrieved using `model.get_latest_training_loss()`.
         callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`
             List of callbacks that need to be executed/run at specific stages during training.
+        bounter_size: int
+            If set, allocates `bounter_size` MB for the Bounded Counter(bounter) which allows fast probabilistic counting
+            of item frequencies in massive datasets, using a small fixed memory footprint of `bounter_size`
+            Set to `None` for no limit.
 
         Examples
         --------
@@ -518,7 +523,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
         self.wv = Word2VecKeyedVectors(size)
         self.vocabulary = Word2VecVocab(
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
-            sorted_vocab=bool(sorted_vocab), null_word=null_word)
+            sorted_vocab=bool(sorted_vocab), null_word=null_word, bounter_size=bounter_size)
         self.trainables = Word2VecTrainables(seed=seed, vector_size=size, hashfxn=hashfxn)
 
         super(Word2Vec, self).__init__(
@@ -1132,12 +1137,13 @@ class PathLineSentences(object):
 
 
 class Word2VecVocab(utils.SaveLoad):
-    def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0):
+    def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0, bounter_size=None):
         self.max_vocab_size = max_vocab_size
         self.min_count = min_count
         self.sample = sample
         self.sorted_vocab = sorted_vocab
         self.null_word = null_word
+        self.bounter_size = bounter_size
         self.cum_table = None  # for negative sampling
         self.raw_vocab = None
 
@@ -1147,10 +1153,13 @@ class Word2VecVocab(utils.SaveLoad):
         sentence_no = -1
         total_words = 0
         min_reduce = 1
-        use_bounter = True
         vocab = defaultdict(int)
-        word_counts = bounter(size_mb=1024)
         checked_string_types = 0
+        bounter_size = self.bounter_size
+
+        if bounter_size is not None:
+            word_counts = bounter(size_mb=bounter_size)
+
         for sentence_no, sentence in enumerate(sentences):
             if not checked_string_types:
                 if isinstance(sentence, string_types):
@@ -1161,31 +1170,28 @@ class Word2VecVocab(utils.SaveLoad):
                     )
                 checked_string_types += 1
             if sentence_no % progress_per == 0:
+
                 logger.info(
                     "PROGRESS: at sentence #%i, processed %i words, keeping %i word types",
-                    sentence_no, total_words, max(len(vocab), word_counts.total())
+                    sentence_no, total_words, len(vocab) if bounter_size is None else word_counts.cardinality()
                 )
 
             total_words += len(sentence)
 
-            if use_bounter:
+            if bounter_size is not None:
                 word_counts.update(sentence)
-
-                if self.max_vocab_size and word_counts.total() > self.max_vocab_size:
-                    utils.prune_bounter_vocab(word_counts, min_reduce, trim_rule=trim_rule)
-                    min_reduce += 1
             else:
-
                 for word in sentence:
                     vocab[word] += 1
-                
-                if self.max_vocab_size and len(vocab) > self.max_vocab_size:
-                    utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
-                    min_reduce += 1
+            
+            if self.max_vocab_size and len(vocab) > self.max_vocab_size:
+                if bounter_size is not None:
+                    vocab = dict(word_counts)
+                utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
+                min_reduce += 1
 
-        if use_bounter:
-            vocab = dict(word_counts.iteritems())
-
+        if bounter_size is not None:
+            vocab = dict(word_counts)
 
         logger.info(
             "collected %i word types from a corpus of %i raw words and %i sentences",
