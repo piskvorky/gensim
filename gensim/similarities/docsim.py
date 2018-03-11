@@ -931,14 +931,14 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
             Similarity matrix.
 
         """
-        if isinstance(query, numpy.ndarray):
-            # Convert document indexes to actual documents.
-            query = [self.corpus[i] for i in query]
-
 
         is_corpus, query = utils.is_corpus(query)
         if not is_corpus:
-            query = [query]
+            if isinstance(query, numpy.ndarray):
+                # Convert document indexes to actual documents.
+                query = [self.corpus[i] for i in query]
+            else:
+                query = [query]
 
         result = []
         for query_document in query:
