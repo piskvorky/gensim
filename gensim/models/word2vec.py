@@ -984,6 +984,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
             from gensim.models.deprecated.word2vec import load_old_word2vec
             return load_old_word2vec(*args, **kwargs)
 
+
 class BrownCorpus(object):
     """Iterate over sentences from the Brown corpus (part of NLTK data)."""
 
