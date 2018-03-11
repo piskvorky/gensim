@@ -984,7 +984,6 @@ class Word2Vec(BaseWordEmbeddingsModel):
             from gensim.models.deprecated.word2vec import load_old_word2vec
             return load_old_word2vec(*args, **kwargs)
 
-
 class BrownCorpus(object):
     """Iterate over sentences from the Brown corpus (part of NLTK data)."""
 
@@ -1212,6 +1211,9 @@ class Word2VecVocab(utils.SaveLoad):
         sample = sample or self.sample
         drop_total = drop_unique = 0
 
+        # set effective_min_count to min_count in case max_final_vocab isn't set
+        self.effective_min_count = min_count
+
         # if max_final_vocab is specified instead of min_count
         # pick a min_count which satisfies max_final_vocab as well as possible
         if self.max_final_vocab is not None:
@@ -1221,18 +1223,10 @@ class Word2VecVocab(utils.SaveLoad):
             if self.max_final_vocab < len(sorted_vocab):
                 calc_min_count = self.raw_vocab[sorted_vocab[self.max_final_vocab]] + 1
 
-            effective_min_count = max(calc_min_count, min_count)
-            if calc_min_count > min_count:
-                logger.info("effective_min_count was set to %d due to max_finavocab being set to %d" %
-                           (calc_min_count, self.max_final_vocab))
-                effective_min_count = calc_min_count
-            else:
-                logger.info("""specified min_count = %d is larger that min_count calculated
-                               by max_final_vocab = %d, using specified min_count""" % (min_count, calc_min_count))
-                effective_min_count = min_count
-        else:
-            logger.info("max_final_vocab is None. Setting effective_min_count to specified min_count")
-            effective_min_count = min_count
+            self.effective_min_count = max(calc_min_count, min_count)
+            logger.info("max_final_vocab=%d and min_count=%d resulted in calc_min_count=%d, effective_min_count=%d",
+                        self.max_final_vocab, min_count, calc_min_count, self.effective_min_count
+                )
 
         if not update:
             logger.info("Loading a fresh vocabulary")
@@ -1246,7 +1240,7 @@ class Word2VecVocab(utils.SaveLoad):
                 wv.vocab = {}
 
             for word, v in iteritems(self.raw_vocab):
-                if keep_vocab_item(word, v, effective_min_count, trim_rule=trim_rule):
+                if keep_vocab_item(word, v, self.effective_min_count, trim_rule=trim_rule):
                     retain_words.append(word)
                     retain_total += v
                     if not dry_run:
@@ -1259,20 +1253,20 @@ class Word2VecVocab(utils.SaveLoad):
             retain_unique_pct = len(retain_words) * 100 / max(original_unique_total, 1)
             logger.info(
                 "effective_min_count=%d retains %i unique words (%i%% of original %i, drops %i)",
-                effective_min_count, len(retain_words), retain_unique_pct, original_unique_total, drop_unique
+                self.effective_min_count, len(retain_words), retain_unique_pct, original_unique_total, drop_unique
             )
             original_total = retain_total + drop_total
             retain_pct = retain_total * 100 / max(original_total, 1)
             logger.info(
                 "effective_min_count=%d leaves %i word corpus (%i%% of original %i, drops %i)",
-                effective_min_count, retain_total, retain_pct, original_total, drop_total
+                self.effective_min_count, retain_total, retain_pct, original_total, drop_total
             )
         else:
             logger.info("Updating model with new vocabulary")
             new_total = pre_exist_total = 0
             new_words = pre_exist_words = []
             for word, v in iteritems(self.raw_vocab):
-                if keep_vocab_item(word, v, effective_min_count, trim_rule=trim_rule):
+                if keep_vocab_item(word, v, self.effective_min_count, trim_rule=trim_rule):
                     if word in wv.vocab:
                         pre_exist_words.append(word)
                         pre_exist_total += v
