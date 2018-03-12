@@ -450,7 +450,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             of the resulting term similarity matrix.
         tfidf : :class:`gensim.models.tfidfmodel.TfidfModel`, optional
             A model that specifies the relative importance of the terms in the dictionary. The rows
-            of the term similarity matrix will be build in an increasing order of importance of terms,
+            of the term similarity matrix will be build in a decreasing order of importance of terms,
             or in the order of term identifiers if None.
         threshold : float, optional
             Only pairs of words whose embeddings are more similar than `threshold` are considered
@@ -1115,7 +1115,7 @@ class Word2VecKeyedVectors(WordEmbeddingsKeyedVectors):
         """
         # from gensim.models.word2vec import load_word2vec_format
         return _load_word2vec_format(
-            Word2VecKeyedVectors, fname, fvocab=fvocab, binary=binary, encoding=encoding, unicode_errors=unicode_errors,
+            cls, fname, fvocab=fvocab, binary=binary, encoding=encoding, unicode_errors=unicode_errors,
             limit=limit, datatype=datatype)
 
     def get_keras_embedding(self, train_embeddings=False):
@@ -1514,7 +1514,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         """Return string key for given i_index, if available. Otherwise return raw int doctag (same int)."""
         candidate_offset = i_index - self.max_rawint - 1
         if 0 <= candidate_offset < len(self.offset2doctag):
-            return self.ffset2doctag[candidate_offset]
+            return self.offset2doctag[candidate_offset]
         else:
             return i_index
 

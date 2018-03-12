@@ -88,7 +88,6 @@ def load_old_doc2vec(*args, **kwargs):
         'dbow_words': old_model.dbow_words,
         'dm_concat': old_model.dm_concat,
         'dm_tag_count': old_model.dm_tag_count,
-        'docvecs': old_model.__dict__.get('docvecs', None),
         'docvecs_mapfile': old_model.__dict__.get('docvecs_mapfile', None),
         'comment': old_model.__dict__.get('comment', None),
         'size': old_model.vector_size,
