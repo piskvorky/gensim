@@ -1,7 +1,0 @@
-{
-  "docs/notebooks/test_notebooks.py": true, 
-  "gensim/test/test_tfidfmodel.py::TestTfidfModel::testPersistence": true, 
-  "gensim/test/test_tfidfmodel.py::TestTfidfModel::testPersistenceCompressed": true, 
-  "gensim/test/test_tfidfmodel.py::TestTfidfModel::testPivotedNormalization": true, 
-  "gensim/test/test_tfidfmodel.py::TestTfidfModel::test_pivotedNormalization": true
-}

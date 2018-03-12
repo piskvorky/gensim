@@ -99,7 +99,7 @@ class TestTfidfModel(unittest.TestCase):
 
         # Test persistence with using pivoted normalization
         fname = get_tmpfile('gensim_models_smartirs.tst')
-        model = tfidfmodel.TfidfModel(self.corpus, pivot_norm=True, pivot=0, slope=1)
+        model = tfidfmodel.TfidfModel(self.corpus, pivot=0, slope=1)
         model.save(fname)
         model2 = tfidfmodel.TfidfModel.load(fname, mmap=None)
         self.assertTrue(model.idfs == model2.idfs)
@@ -108,7 +108,7 @@ class TestTfidfModel(unittest.TestCase):
         self.assertTrue(np.allclose(model[tstvec[1]], model2[tstvec[1]]))
 
         # Test persistence between Gensim v3.2.0 and pivoted normalization compressed model.
-        model3 = tfidfmodel.TfidfModel(self.corpus, pivot_norm=True, pivot=0, slope=1)
+        model3 = tfidfmodel.TfidfModel(self.corpus, pivot=0, slope=1)
         model4 = tfidfmodel.TfidfModel.load(datapath('tfidf_model.tst'))
         self.assertTrue(model3.idfs == model4.idfs)
         tstvec = [corpus[1], corpus[2]]
@@ -149,7 +149,7 @@ class TestTfidfModel(unittest.TestCase):
 
         # Test persistence with using pivoted normalization
         fname = get_tmpfile('gensim_models_smartirs.tst.gz')
-        model = tfidfmodel.TfidfModel(self.corpus, pivot_norm=True, pivot=0, slope=1)
+        model = tfidfmodel.TfidfModel(self.corpus, pivot=0, slope=1)
         model.save(fname)
         model2 = tfidfmodel.TfidfModel.load(fname, mmap=None)
         self.assertTrue(model.idfs == model2.idfs)
@@ -158,7 +158,7 @@ class TestTfidfModel(unittest.TestCase):
         self.assertTrue(np.allclose(model[tstvec[1]], model2[tstvec[1]]))
 
         # Test persistence between Gensim v3.2.0 and pivoted normalization compressed model.
-        model3 = tfidfmodel.TfidfModel(self.corpus, pivot_norm=True, pivot=0, slope=1)
+        model3 = tfidfmodel.TfidfModel(self.corpus, pivot=0, slope=1)
         model4 = tfidfmodel.TfidfModel.load(datapath('tfidf_model.tst.bz2'))
         self.assertTrue(model3.idfs == model4.idfs)
         tstvec = [corpus[1], corpus[2]]
@@ -326,14 +326,14 @@ class TestTfidfModel(unittest.TestCase):
         model = tfidfmodel.TfidfModel(self.corpus)
         transformed_docs = [model[docs[0]], model[docs[1]]]
 
-        model = tfidfmodel.TfidfModel(self.corpus, pivot_norm=True, pivot=0, slope=1)
+        model = tfidfmodel.TfidfModel(self.corpus, pivot=0, slope=1)
         expected_docs = [model[docs[0]], model[docs[1]]]
 
         self.assertTrue(np.allclose(sorted(transformed_docs[0]), sorted(expected_docs[0])))
         self.assertTrue(np.allclose(sorted(transformed_docs[1]), sorted(expected_docs[1])))
 
         # Test if pivoted model is consistent
-        model = tfidfmodel.TfidfModel(self.corpus, pivot_norm=True, pivot=0, slope=0.5)
+        model = tfidfmodel.TfidfModel(self.corpus, pivot=0, slope=0.5)
         transformed_docs = [model[docs[0]], model[docs[1]]]
         expected_docs = [[(8, 0.8884910505493495), (7, 0.648974041227711), (6, 0.8884910505493495),
             (5, 0.648974041227711), (4, 0.8884910505493495), (3, 0.8884910505493495)],

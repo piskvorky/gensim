@@ -675,11 +675,16 @@ def unitvec(vec, norm='l2', return_norm=False):
         Input vector in any format
     norm : {'l1', 'l2'}, optional
         Normalization that will be used.
+    return_norm : bool, optional
+        if set to true, it returns the normalization factor along with the
+        normalized vector.
 
     Returns
     -------
-    {numpy.ndarray, scipy.sparse, list of (int, float)}
+    numpy.ndarray, scipy.sparse, list of (int, float)}
         Normalized vector in same format as `vec`.
+    int
+        Normalizing factor.
 
     Notes
     -----

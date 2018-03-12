@@ -186,11 +186,16 @@ def updated_normalize(x, n_n, return_norm=False):
         Input array
     n_n : {'n', 'c'}
         Parameter that decides the normalizing function to be used.
+    return_norm : bool, optional
+        if set to true, it also returns the normalization factor along with the
+        normalized vector.
 
     Returns
     -------
     numpy.ndarray
         Normalized array.
+    int
+        Normalizing factor.
 
     """
     if n_n == "n":
@@ -223,7 +228,7 @@ class TfidfModel(interfaces.TransformationABC):
 
     def __init__(self, corpus=None, id2word=None, dictionary=None, wlocal=utils.identity,
                  wglobal=df2idf, normalize=True, smartirs=None,
-                 pivot_norm=False, slope=0.65, pivot=100):
+                 pivot=None, slope=0.65):
         """Compute tf-idf by multiplying a local component (term frequency) with a global component
         (inverse document frequency), and normalizing the resulting documents to unit length.
         Formula for non-normalized weight of term :math:`i` in document :math:`j` in a corpus of :math:`D` documents
@@ -277,22 +282,18 @@ class TfidfModel(interfaces.TransformationABC):
                 * `c` - cosine.
 
             For more information visit [1]_.
-        pivot_norm : bool, optional
-            If pivot_norm is True, then pivoted document length normalization will be applied.
         slope : float, optional
             It is the parameter required by pivoted document length normalization which determines the slope to which
             the `old normalization` can be tilted.
         pivot : float, optional
-            Pivot is the point before which we consider a document to be short and after which the document is
-            considered long. It can be found by plotting the retrieval and relevence curves of a set of documents using
-            a general normalization function. The point where both these curves coincide is the pivot point.
+            It is the point around which the traditional normalization curve is `tilted` to get the new pivoted
+            normalization curve.
         """
 
         self.id2word = id2word
         self.wlocal, self.wglobal, self.normalize = wlocal, wglobal, normalize
         self.num_docs, self.num_nnz, self.idfs = None, None, None
         self.smartirs = smartirs
-        self.pivot_norm = pivot_norm
         self.slope = slope
         self.pivot = pivot
         self.eps = 1e-12
@@ -303,8 +304,11 @@ class TfidfModel(interfaces.TransformationABC):
 
             self.wlocal = partial(updated_wlocal, n_tf=n_tf)
             self.wglobal = partial(updated_wglobal, n_df=n_df)
-            # also return norm factor if pivot_norm is True
-            self.normalize = partial(updated_normalize, n_n=n_n, return_norm=self.pivot_norm)
+            # also return norm factor if pivot is not none
+            if self.pivot is None:
+                self.normalize = partial(updated_normalize, n_n=n_n)
+            else:
+                self.normalize = partial(updated_normalize, n_n=n_n, return_norm=True)
 
         if dictionary is not None:
             # user supplied a Dictionary object, which already contains all the
@@ -333,10 +337,10 @@ class TfidfModel(interfaces.TransformationABC):
             older TfidfModel versions which did not use pivoted document normalization.
         """
         model = super(TfidfModel, cls).load(*args, **kwargs)
-        if not hasattr(model, 'pivot_norm'):
-            logger.info('older version of %s loaded without pivot_norm arg', cls.__name__)
-            logger.info('Setting pivot_norm to False.')
-            model.pivot_norm = False
+        if not hasattr(model, 'pivot'):
+            logger.info('older version of %s loaded without pivot arg', cls.__name__)
+            logger.info('Setting pivot to None.')
+            model.pivot = None
         return model
 
     def __str__(self):
@@ -418,13 +422,13 @@ class TfidfModel(interfaces.TransformationABC):
 
         # and finally, normalize the vector either to unit length, or use a
         # user-defined normalization function
-        if self.pivot_norm:
+        if self.pivot is None:
+            norm_vector = self.normalize(vector)
+            norm_vector = [(termid, weight) for termid, weight in norm_vector if abs(weight) > self.eps]
+        else:
             _, old_norm = self.normalize(vector, return_norm=True)
             pivoted_norm = (1 - self.slope) * self.pivot + self.slope * old_norm
             norm_vector = [(termid, weight / float(pivoted_norm))
-                for termid, weight in vector if abs(weight / float(pivoted_norm)) > self.eps
+            for termid, weight in vector if abs(weight / float(pivoted_norm)) > self.eps
             ]
-        else:
-            norm_vector = self.normalize(vector)
-            norm_vector = [(termid, weight) for termid, weight in norm_vector if abs(weight) > self.eps]
         return norm_vector
