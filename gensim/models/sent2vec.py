@@ -753,7 +753,7 @@ class Sent2Vec(BaseWordEmbeddingsModel):
         sent_vec = np.zeros(self.vector_size)
         line = self.vocabulary.add_ngrams(context=words, n=self.word_ngrams)
         for word_vec in line:
-                sent_vec += self.wi[word_vec]
+            sent_vec += self.wi[word_vec]
         if len(line) > 0:
             sent_vec *= (1.0 / len(line))
         return sent_vec
