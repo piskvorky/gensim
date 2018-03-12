@@ -450,7 +450,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             of the resulting term similarity matrix.
         tfidf : :class:`gensim.models.tfidfmodel.TfidfModel`, optional
             A model that specifies the relative importance of the terms in the dictionary. The rows
-            of the term similarity matrix will be build in an increasing order of importance of terms,
+            of the term similarity matrix will be build in a decreasing order of importance of terms,
             or in the order of term identifiers if None.
         threshold : float, optional
             Only pairs of words whose embeddings are more similar than `threshold` are considered
