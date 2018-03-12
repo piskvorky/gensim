@@ -10,14 +10,12 @@ Run this script only once, on the master node in your cluster.
 
 Notes
 -----
-The dispatches expects to find worker scripts already running. Make sure
-you run as many workers as you like on your machines **before** launching
-the dispatcher.
+The dispatches expects to find worker scripts already running. Make sure you run as many workers as you like on
+your  machines **before** launching the dispatcher.
 
 Warnings
 --------
 Requires installed `Pyro4 <https://pythonhosted.org/Pyro4/>`_.
-Distributed version works only in local network.
 
 
 How to use distributed :class:`~gensim.models.ldamodel.LdaModel`
@@ -47,24 +45,17 @@ How to use distributed :class:`~gensim.models.ldamodel.LdaModel`
 
 #. Run :class:`~gensim.models.ldamodel.LdaModel` in distributed mode ::
 
-    >>> from gensim.test.utils import common_corpus, common_dictionary
+    >>> from gensim.test.utils import common_corpus,common_dictionary
     >>> from gensim.models import LdaModel
     >>>
-    >>> model = LdaModel(common_corpus, id2word=common_dictionary,
-                         distributed=True)
-
-#. You can then infer topic distributions on new, unseen documents, with
-
-    >>> doc_lda = model[doc_bow]
-    The model can be updated (trained) with new documents via
-    >>> lda.update(other_corpus)
+    >>> model = LdaModel(common_corpus, id2word=common_dictionary, distributed=True)
 
 
 Command line arguments
 ----------------------
 
 .. program-output:: python -m gensim.models.lda_dispatcher --help
-   :ellipsis: 0, -5
+   :ellipsis: 0, -7
 
 """
 
@@ -107,18 +98,6 @@ LDA_DISPATCHER_PREFIX = 'gensim.lda_dispatcher'
 class Dispatcher(object):
     """Dispatcher object that communicates and coordinates individual workers.
 
-    Attributes
-    ----------
-    callback : :class: `~Pyro4.core.Proxy`
-        A proxy for some remote object.Intercepts method calls and \
-        dispatches them to the remote object.
-    jobs : :class: `~Queue.Queue`
-        Constructs a FIFO queue.
-    lock_update : :class: `~threading.Lock`
-        This class implements primitive lock objects. Once a thread has \
-        acquired a lock, subsequent attempts to acquire it block, until it is \
-        released; any thread may release it.
-
     Warnings
     --------
     There should never be more than one dispatcher running at any one time.
@@ -135,14 +114,10 @@ class Dispatcher(object):
         ----------
         maxsize : int, optional
                 Maximum number of jobs to be kept pre-fetched in the queue.
-        ns_conf : dict of {str:(str,optional),str:(int,optional), \
-                            str:(bool:optional),str:(str,optional)},optional
-            Sets up the name server configuration for the pyro daemon server \
-            of dispatcher.This also helps to keep track of your objects in \
-            your netword by using logical object names instead of exact \
-            object name(or id) and its location.
-        workers : dict of { int : :class: `~Pyro4.core.Proxy` }
-            Locates all available workers and store their proxies, for subsequent RMI calls.
+        ns_conf : dict of (str, object)
+            Sets up the name server configuration for the pyro daemon server of dispatcher.
+            This also helps to keep track of your objects in your network by using logical object names
+            instead of exact object name(or id) and its location.
 
         """
         self.maxsize = maxsize
@@ -156,13 +131,12 @@ class Dispatcher(object):
         Parameters
         ----------
         **model_params
-            Keyword parameters used to initialize individual workers,
-            see:class:`~gensim.models.ldamodel.LdaModel`.
+            Keyword parameters used to initialize individual workers, see :class:`~gensim.models.ldamodel.LdaModel`.
 
         Raises
         ------
         RuntimeError
-            No workers found.Need to have atleast one worker running.
+            When no workers are found (the :mod:`gensim.models.lda_worker` script must be ran beforehand).
 
         """
         self.jobs = Queue(maxsize=self.maxsize)
@@ -211,7 +185,7 @@ class Dispatcher(object):
 
         Returns
         -------
-        iterable of iterable of (int, float)
+        iterable of list of (int, float)
             The corpus in BoW format.
 
         """
@@ -226,7 +200,7 @@ class Dispatcher(object):
 
         Parameters
         ----------
-        job : iterable of iterable of (int, float)
+        job : iterable of list of (int, float)
             The corpus in BoW format.
 
         """
@@ -273,8 +247,7 @@ class Dispatcher(object):
         Parameters
         ----------
         state : :class:`~gensim.models.ldamodel.LdaState`
-            Encapsulates information for distributed computation
-            of LdaModel objects.
+            State of :class:`~gensim.models.lda.LdaModel`.
 
         """
         for workerid, worker in iteritems(self.workers):
@@ -288,13 +261,11 @@ class Dispatcher(object):
     @Pyro4.oneway
     @utils.synchronous('lock_update')
     def jobdone(self, workerid):
-        """Workers use callback to notify when their job is done.
+        """Callback used by workers to notify when their job is done.
 
-        The job done event is logged and then control is asynchronously
-        transfered back to the worker(who can then request another job).
-        In this way, control flow basically oscillates between
-        :meth:`gensim.models.lda_dispatcher.Dispatcher.jobdone` and
-        :meth:`gensim.models.lda_worker.Worker.requestjob`.
+        The job done event is logged and then control is asynchronously transfered back to the worker
+        (who can then request another job). In this way, control flow basically oscillates between
+        :meth:`gensim.models.lda_dispatcher.Dispatcher.jobdone` and :meth:`gensim.models.lda_worker.Worker.requestjob`.
 
         Parameters
         ----------
@@ -319,18 +290,17 @@ class Dispatcher(object):
 
     @Pyro4.oneway
     def exit(self):
-        """Terminate all registered workers and then the dispatcher."""
+        """Terminate all workers and then the dispatcher."""
         for workerid, worker in iteritems(self.workers):
             logger.info("terminating worker %s", workerid)
             worker.exit()
         logger.info("terminating dispatcher")
         os._exit(0)  # exit the whole process (not just this thread ala sys.exit())
-# endclass Dispatcher
 
 
 def main():
     """Set up argument parser,logger and launches pyro daemon."""
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__[:-135], formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument(
         "--maxsize",
         help="How many jobs (=chunks of N documents) to keep 'pre-fetched' in a queue (default: %(default)s)",

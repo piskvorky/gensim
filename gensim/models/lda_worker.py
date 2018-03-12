@@ -40,7 +40,7 @@ How to use distributed :class:`~gensim.models.ldamodel.LdaModel`
 
     python -m gensim.models.lda_dispatcher &
 
-#. Run :class:`~gensim.models.lsimodel.LdaModel` in distributed mode ::
+#. Run :class:`~gensim.models.ldamodel.LdaModel` in distributed mode ::
 
     >>> from gensim.test.utils import common_corpus,common_dictionary
     >>> from gensim.models import LdaModel
