@@ -57,6 +57,7 @@ def resolve_weights(smartirs):
     References
     ----------
     .. [1] https://en.wikipedia.org/wiki/SMART_Information_Retrieval_System
+    .. [2] http://singhal.info/pivoted-dln.pdf
 
     """
     if not isinstance(smartirs, str) or len(smartirs) != 3:
@@ -282,12 +283,16 @@ class TfidfModel(interfaces.TransformationABC):
                 * `c` - cosine.
 
             For more information visit [1]_.
+        pivot : float, optional
+            It is the point around which the regular normalization curve is `tilted` to get the new pivoted
+            normalization curve. In the paper[2] it is the point where the retrieval and relevance curves intersect.
+            This parameter along with slope is used for pivoted document length normalization[2].
+            Only when `pivot` is not None pivoted document length normalization will be applied else regular TfIdf
+            is used.
         slope : float, optional
             It is the parameter required by pivoted document length normalization which determines the slope to which
-            the `old normalization` can be tilted.
-        pivot : float, optional
-            It is the point around which the traditional normalization curve is `tilted` to get the new pivoted
-            normalization curve.
+            the `old normalization` can be tilted. This parameter only works when pivot is defined by user and is not
+            None.
         """
 
         self.id2word = id2word
@@ -341,6 +346,10 @@ class TfidfModel(interfaces.TransformationABC):
             logger.info('older version of %s loaded without pivot arg', cls.__name__)
             logger.info('Setting pivot to None.')
             model.pivot = None
+        if not hasattr(model, 'slope'):
+            logger.info('older version of %s loaded without slope arg', cls.__name__)
+            logger.info('Setting slope to 0.65.')
+            model.slope = 0.65
         return model
 
     def __str__(self):
@@ -426,6 +435,7 @@ class TfidfModel(interfaces.TransformationABC):
             norm_vector = self.normalize(vector)
             norm_vector = [(termid, weight) for termid, weight in norm_vector if abs(weight) > self.eps]
         else:
+            logger.info("Using pivoted normalization")
             _, old_norm = self.normalize(vector, return_norm=True)
             pivoted_norm = (1 - self.slope) * self.pivot + self.slope * old_norm
             norm_vector = [(termid, weight / float(pivoted_norm))
