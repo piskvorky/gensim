@@ -27,16 +27,20 @@ Examples
 
 #. Initialize a model with e.g.::
 
-    >>> model = Doc2Vec(documents, size=100, window=8, min_count=5, workers=4)
+    >>> from gensim.test.utils import common_texts
+    >>> from gensim.models.doc2vec import Doc2Vec, TaggedDocument
+    >>>
+    >>> documents = [TaggedDocument(word, [i]) for i, word in enumerate(common_texts)]
+    >>> model = Doc2Vec(documents, vector_size=5, window=2, min_count=1, workers=4)
 
 #. Persist a model to disk with::
 
-    >>> model.save(fname)
-    >>> model = Doc2Vec.load(fname)  # you can continue training with the loaded model!
+    >>> model.save('/tmp/model')
+    >>> model = Doc2Vec.load('/tmp/model')  # you can continue training with the loaded model!
 
 If you're finished training a model (=no more updates, only querying), you can do::
 
-    >>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True):
+    >>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True)
 
 to trim unneeded model memory = use (much) less RAM.
 
@@ -183,7 +187,7 @@ except ImportError:
             `learn_words` and `train_words` are set to True.
         learn_hidden : bool, optional
             Whether or not the weights of the hidden layer will be updated.
-        word_vectors : iterable of iterable of float, optional
+        word_vectors : iterable of list of float, optional
             Vector representations of each word in the model's vocabulary.
         word_locks : listf of float, optional
             Lock factors for each word in the vocabulary.
@@ -269,7 +273,7 @@ except ImportError:
             `learn_words` and `train_words` are set to True.
         learn_hidden : bool, optional
             Whether or not the weights of the hidden layer will be updated.
-        word_vectors : iterable of iterable of float, optional
+        word_vectors : iterable of list of float, optional
             Vector representations of each word in the model's vocabulary.
         word_locks : listf of float, optional
             Lock factors for each word in the vocabulary.
@@ -386,11 +390,11 @@ class Doc2Vec(BaseWordEmbeddingsModel):
     def __init__(self, documents=None, dm_mean=None, dm=1, dbow_words=0, dm_concat=0, dm_tag_count=1,
                  docvecs=None, docvecs_mapfile=None, comment=None, trim_rule=None, callbacks=(), **kwargs):
         """Initialize the model from an iterable of `documents`. Each document is a
-        TaggedDocument object that will be used for training.
+        :class:`~gensim.models.doc2vec.TaggedDocument` object that will be used for training.
 
         Parameters
         ----------
-        documents : iterable of iterables of :class:`~gensim.models.doc2vec.TaggedDocument`, optional
+        documents : iterable of list of :class:`~gensim.models.doc2vec.TaggedDocument`, optional
             Can be simply a list of elements, but for larger corpora,consider an iterable that streams
             the documents directly from disk/network. If you don't supply `documents`, the model is
             left uninitialized -- use if you plan to initialize it in some other way.
@@ -567,7 +571,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
         Parameters
         ----------
-        job : iterable of iterable of str
+        job : iterable of list of str
             The corpus chunk to be used for training this batch.
         alpha : float
             Learning rate to be used for training this batch.
@@ -622,7 +626,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
         Parameters
         ----------
-        documents : iterable of iterables of :class:`~gensim.models.doc2vec.TaggedDocument`
+        documents : iterable of list of :class:`~gensim.models.doc2vec.TaggedDocument`
             Can be simply a list of elements, but for larger corpora,consider an iterable that streams
             the documents directly from disk/network. If you don't supply `documents`, the model is
             left uninitialized -- use if you plan to initialize it in some other way.
@@ -656,7 +660,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
         Parameters
         ----------
-        job : iterable of iterable of str
+        job : iterable of list of str
             Corpus chunk.
 
         Returns
@@ -916,7 +920,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
         Parameters
         ----------
-        documents : iterable of iterables of str
+        documents : iterable of list of :class:`~gensim.models.doc2vec.TaggedDocument`
             Can be simply a list of :class:`~gensim.models.doc2vec.TaggedDocument` elements, but for larger corpora,
             consider an iterable that streams the documents directly from disk/network.
             See :class:`~gensim.models.doc2vec.TaggedBrownCorpus` or :class:`~gensim.models.doc2vec.TaggedLineDocument`
