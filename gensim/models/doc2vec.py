@@ -394,7 +394,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             Can be simply a list of elements, but for larger corpora,consider an iterable that streams
             the documents directly from disk/network. If you don't supply `documents`, the model is
             left uninitialized -- use if you plan to initialize it in some other way.
-        dm : int {1,0}, optional
+        dm : {1,0}, optional
             Defines the training algorithm. If `dm=1`, 'distributed memory' (PV-DM) is used.
             Otherwise, `distributed bag of words` (PV-DBOW) is employed.
         size : int, optional
@@ -424,17 +424,17 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             Use these many worker threads to train the model (=faster training with multicore machines).
         iter : int, optional
             Number of iterations (epochs) over the corpus.
-        hs : int {1,0}, optional
+        hs : {1,0}, optional
             If 1, hierarchical softmax will be used for model training.
             If set to 0, and `negative` is non-zero, negative sampling will be used.
         negative : int, optional
             If > 0, negative sampling will be used, the int for negative specifies how many "noise words"
             should be drawn (usually between 5-20).
             If set to 0, no negative sampling is used.
-        dm_mean : int {1,0}, optional
+        dm_mean : {1,0}, optional
             If 0 , use the sum of the context word vectors. If 1, use the mean.
             Only applies when `dm` is used in non-concatenative mode.
-        dm_concat : int {1,0}, optional
+        dm_concat : {1,0}, optional
             If 1, use concatenation of context vectors rather than sum/average;
             Note concatenation results in a much-larger model, as the input
             is no longer the size of one (sampled or arithmetically combined) word vector, but the
@@ -442,7 +442,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         dm_tag_count : int, optional
             Expected constant number of document tags per document, when using
             dm_concat mode.
-        dbow_words : int {1,0}, optional
+        dbow_words : {1,0}, optional
             If set to 1 trains word-vectors (in skip-gram fashion) simultaneous with DBOW
             doc-vector training; If 0, only trains doc-vectors (faster).
         trim_rule : function, optional
@@ -451,10 +451,10 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
             or a callable that accepts parameters (word, count, min_count) and returns either
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
-            The input parameters are of the following types
-                * word: str. The word we are examining
-                * count: int. The word's occurence count in the corpus
-                * min_count: int. The minimum count threshold.
+            The input parameters are of the following types:
+            - word: str. The word we are examining
+            - count: int. The word's occurence count in the corpus
+            - min_count: int. The minimum count threshold.
             Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
             of the model.
         callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`, optional
@@ -1033,7 +1033,7 @@ class Doc2VecVocab(Word2VecVocab):
             useful range is (0, 1e-5).
         sorted_vocab : bool
             If True, sort the vocabulary by descending frequency before assigning word indexes.
-        null_word : int {0, 1}
+        null_word : {0, 1}
             If True, a null pseudo-word will be created for padding when using concatenative L1 (run-of-words).
             This word is only ever input – never predicted – so count, huffman-point, etc doesn't matter.
 
