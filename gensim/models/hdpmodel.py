@@ -10,49 +10,38 @@
 #
 
 
-"""This module encapsulates functionality for the online Hierarchical Dirichlet Process algorithm.
+"""Module for `online Hierarchical Dirichlet Processing
+<http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_.
 
-It allows both model estimation from a training corpus and inference of topic
-distribution on new, unseen documents.
+The core estimation code is directly adapted from the `blei-lab/online-hdp <https://github.com/blei-lab/online-hdp>`_
+from `Wang, Paisley, Blei: Online Variational Inference for the Hierarchical Dirichlet Process,  JMLR (2011)
+<http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_.
 
-The core estimation code is directly adapted from the `onlinelhdp.py` script
-by C. Wang see
-**Wang, Paisley, Blei: Online Variational Inference for the Hierarchical Dirichlet
-Process, JMLR (2011).**
-
-http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf
-
-The algorithm:
-
-  * is **streamed**: training documents come in sequentially, no random access,
-  * runs in **constant memory** w.r.t. the number of documents: size of the
-    training corpus does not affect memory footprint
-
-How to use :class:`~gensim.models.hdpmodel.HdpModel`
-----------------------------------------------------------------
+Examples
+--------
 
 
-#. Run :class:`~gensim.models.hdpmodel.HdpModel` ::
+#. Train :class:`~gensim.models.hdpmodel.HdpModel`
 
-    >>> from gensim.test.utils import common_corpus,common_dictionary
-    >>> from gensim.models import hdpmodel
-    >>>
-    >>> hdp = HdpModel(common_corpus, common_dictionary)
+>>> from gensim.test.utils import common_corpus, common_dictionary
+>>> from gensim.models import HdpModel
+>>>
+>>> hdp = HdpModel(common_corpus, common_dictionary)
 
 #. You can then infer topic distributions on new, unseen documents, with
 
-    >>> doc_hdp = hdp[doc_bow]
+>>> unseen_document = [(1, 3.), (2, 4)]
+>>> doc_hdp = hdp[unseen_document]
 
 #. To print 20 topics with top 10 most probable words.
 
-    >>> hdp.print_topics(num_topics=20, num_words=10)
+>>> topic_info = hdp.print_topics(num_topics=20, num_words=10)
 
 #. The model can be updated (trained) with new documents via
 
-    >>> hdp.update(other_corpus)
+>>> hdp.update([[(1, 2)], [(1, 1), (4, 5)]])
 
 """
-
 from __future__ import with_statement
 
 import logging
@@ -74,7 +63,7 @@ rhot_bound = 0.0
 
 
 def expect_log_sticks(sticks):
-    """For stick-breaking hdp, return the E[log(sticks)].
+    """For stick-breaking hdp, get the :math:`\mathbb{E}[log(sticks)]`.
 
     Parameters
     ----------
@@ -84,7 +73,7 @@ def expect_log_sticks(sticks):
     Returns
     -------
     numpy.ndarray
-        Computed Elogsticks value.
+        Computed :math:`\mathbb{E}[log(sticks)]`.
 
     """
     dig_sum = psi(np.sum(sticks, 0))
@@ -117,7 +106,7 @@ def lda_e_step(doc_word_ids, doc_word_counts, alpha, beta, max_iter=100):
     Returns
     -------
     tuple of numpy.ndarrays
-        Returns a tuple of (likelihood,gamma).
+        Returns a tuple of (:math:`likelihood`, :math:`\\gamma`).
 
     """
     gamma = np.ones(len(alpha))
@@ -133,7 +122,7 @@ def lda_e_step(doc_word_ids, doc_word_counts, alpha, beta, max_iter=100):
         expElogtheta = np.exp(Elogtheta)
         phinorm = np.dot(expElogtheta, betad) + 1e-100
         meanchange = np.mean(abs(gamma - lastgamma))
-        if (meanchange < meanchangethresh):
+        if meanchange < meanchangethresh:
             break
 
     likelihood = np.sum(counts * np.log(phinorm))
@@ -141,13 +130,14 @@ def lda_e_step(doc_word_ids, doc_word_counts, alpha, beta, max_iter=100):
     likelihood += np.sum(gammaln(gamma) - gammaln(alpha))
     likelihood += gammaln(np.sum(alpha)) - gammaln(np.sum(gamma))
 
-    return (likelihood, gamma)
+    return likelihood, gamma
 
 
 class SuffStats(object):
     """Stores suff stats for document(s)."""
+
     def __init__(self, T, Wt, Dt):
-        """Initialises the suff stats for document(s) in the corpus.
+        """
 
         Parameters
         ----------
@@ -156,7 +146,7 @@ class SuffStats(object):
         Wt : int
             Length of words in the documents.
         Dt : int
-            chunk size.
+            Chunk size.
 
         """
         self.m_chunksize = Dt
@@ -170,64 +160,62 @@ class SuffStats(object):
 
 
 class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
-    """The constructor estimates Hierachical Dirichlet Process model parameters based on a training corpus.
+    """`Hierarchical Dirichlet Process model <http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_
 
     Attributes
     ----------
     lda_alpha : numpy.ndarray
-        Lda equivalent value of alpha.
+        Same as :math:`\\alpha` from :class:`gensim.models.ldamodel.LdaModel`.
     lda_beta : numpy.ndarray
-        Lda equivalent value of beta.
+        Same as :math:`\\beta` from from :class:`gensim.models.ldamodel.LdaModel`.
     m_D : int
         Number of documents in the corpus.
     m_Elogbeta : numpy.ndarray:
-        Stores value of dirchlet excpectation, i.e., Computed
-        :math:`E[log \\theta]` for a vector :math:`\\theta \sim Dir(\\alpha)`.
-    m_lambda : numpy.ndarray or scalar
+        Stores value of dirichlet expectationn, i.e., compute :math:`E[log \\theta]` for a vector
+        :math:`\\theta \sim Dir(\\alpha)`.
+    m_lambda : {numpy.ndarray, float}
         Drawn samples from the parameterized gamma distribution.
-    m_lambda_sum : numpy.ndarray or scalar
-        An array with the same shape as m_lambda, with the specified axis (1) removed.
+    m_lambda_sum : {numpy.ndarray, float}
+        An array with the same shape as `m_lambda`, with the specified axis (1) removed.
     m_num_docs_processed : int
         Number of documents finished processing.This is incremented in size of chunks.
     m_r : list
-        Acts as normaliser in lazy updation of lambda attribute.
+        Acts as normaliser in lazy updating of `m_lambda` attribute.
     m_rhot : float
         Assigns weight to the information obtained from the mini-chunk and its value it between 0 and 1.
     m_status_up_to_date : bool
-        Flag to indicate whether lambda and Elogbeta have been updated(T) or not(F).
+        Flag to indicate whether `lambda `and :math:`E[log \\theta]` have been updated if True, otherwise - not.
     m_timestamp : numpy.ndarray
         Helps to keep track and perform lazy updates on lambda.
     m_updatect : int
-        Keeps track of current time and is incremented everytime
-        :meth:`~gensim.models.hdpmodel.HdpModel.update_lambda()` is called.
+        Keeps track of current time and is incremented everytime :meth:`~gensim.models.hdpmodel.HdpModel.update_lambda`
+        is called.
     m_var_sticks : numpy.ndarray
         Array of values for stick.
     m_varphi_ss : numpy.ndarray
-        Used to Update top level sticks.
+        Used to update top level sticks.
     m_W : int
         Length of dictionary for the input corpus.
 
     """
-
     def __init__(self, corpus, id2word, max_chunks=None, max_time=None,
                  chunksize=256, kappa=1.0, tau=64.0, K=15, T=150, alpha=1,
                  gamma=1, eta=0.01, scale=1.0, var_converge=0.0001,
                  outputdir=None, random_state=None):
-        """Fully initialises the hdp model.
-
+        """
         Parameters
         ----------
-        corpus : list of list of tuple of ints; [ [ (int,int) ]]
-            Corpus of input dataset on which the model will be trained.
+        corpus : iterable of list of (int, float)
+            Corpus in BoW format.
         id2word : :class:`~gensim.corpora.dictionary.Dictionary`
             Dictionary for the input corpus.
-        max_chunks : None, optional
-            Upper bound on how many chunks to process.It wraps around corpus beginning in another corpus pass,
-            if there are not enough chunks in the corpus
-        max_time : None, optional
-            Upper bound on time(in seconds) for which model will be trained.
+        max_chunks : int, optional
+            Upper bound on how many chunks to process. It wraps around corpus beginning in another corpus pass,
+            if there are not enough chunks in the corpusю
+        max_time : int, optional
+            Upper bound on time (in seconds) for which model will be trained.
         chunksize : int, optional
-            Tells the number of documents to process at a time.
+            Number of documents in one chunck
         kappa : float, optional
             Learning rate
         tau : float, optional
@@ -306,22 +294,22 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             self.update(corpus)
 
     def inference(self, chunk):
-        """Infers the gamma value on a trained corpus.
+        """Infers the gamma value based for `chunk`.
 
         Parameters
         ----------
-        chunk : list of tuple of ints; [ [ (int,int) ]]
-            Bag of words representation for a corpus.
+        chunk : iterable of list of (int, float)
+            Corpus in BoW format.
 
         Returns
         -------
         numpy.ndarray
-            gamma value.
+            Gamma value.
 
         Raises
         ------
         RuntimeError
-            Need to train model first to do inference.
+            If model doesn't trained yet.
 
         """
         if self.lda_alpha is None or self.lda_beta is None:
