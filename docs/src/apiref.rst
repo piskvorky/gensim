@@ -11,6 +11,7 @@ Modules:
     interfaces
     utils
     matutils
+    _matutils
     downloader
     corpora/bleicorpus
     corpora/csvcorpus
@@ -20,6 +21,7 @@ Modules:
     corpora/lowcorpus
     corpora/malletcorpus
     corpora/mmcorpus
+    corpora/_mmreader
     corpora/sharded_corpus
     corpora/svmlightcorpus
     corpora/textcorpus
@@ -49,6 +51,8 @@ Modules:
     models/coherencemodel
     models/basemodel
     models/callbacks
+    models/utils_any2vec
+    models/_utils_any2vec
     models/wrappers/ldamallet
     models/wrappers/dtmmodel
     models/wrappers/ldavowpalwabbit.rst

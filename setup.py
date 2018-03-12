@@ -13,7 +13,6 @@ sudo python ./setup.py install
 import os
 import sys
 import warnings
-
 import ez_setup
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
@@ -240,12 +239,12 @@ win_testenv = [
 linux_testenv = win_testenv + [
     'annoy',
     'tensorflow <= 1.3.0',
-    'keras >= 2.0.4',
+    'keras >= 2.0.4, <= 2.1.4',
 ]
 
 setup(
     name='gensim',
-    version='3.3.0',
+    version='3.4.0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
@@ -256,9 +255,16 @@ setup(
         Extension('gensim.models.doc2vec_inner',
             sources=['./gensim/models/doc2vec_inner.c'],
             include_dirs=[model_dir]),
+        Extension('gensim.corpora._mmreader',
+            sources=['./gensim/corpora/_mmreader.c']),
         Extension('gensim.models.fasttext_inner',
             sources=['./gensim/models/fasttext_inner.c'],
-            include_dirs=[model_dir])
+            include_dirs=[model_dir]),
+        Extension('gensim.models._utils_any2vec',
+            sources=['./gensim/models/_utils_any2vec.c'],
+            include_dirs=[model_dir]),
+        Extension('gensim._matutils',
+            sources=['./gensim/_matutils.c']),
     ],
     cmdclass=cmdclass,
     packages=find_packages(),

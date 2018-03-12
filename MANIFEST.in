@@ -12,3 +12,9 @@ include gensim/models/doc2vec_inner.c
 include gensim/models/doc2vec_inner.pyx
 include gensim/models/fasttext_inner.c
 include gensim/models/fasttext_inner.pyx
+include gensim/models/_utils_any2vec.c
+include gensim/models/_utils_any2vec.pyx
+include gensim/corpora/_mmreader.c
+include gensim/corpora/_mmreader.pyx
+include gensim/_matutils.c
+include gensim/_matutils.pyx
