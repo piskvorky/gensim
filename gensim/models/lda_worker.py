@@ -4,17 +4,15 @@
 # Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-""":class:`~gensim.models.lda_worker.Worker` ("slave") process used in
-computing distributed :class:`~gensim.models.ldamodel.LdaModel`.
+""":class:`~gensim.models.lda_worker.Worker` ("slave") process used in computing
+distributed :class:`~gensim.models.ldamodel.LdaModel`.
 
-Run this script on every node in your cluster. If you wish, you may even
-run it multiple times on a single machine,to make better use of multiple
-cores (just beware that memory footprint increases accordingly).
+Run this script on every node in your cluster. If you wish, you may even run it multiple times on a single machine,
+to make better use of multiple cores (just beware that memory footprint increases accordingly).
 
 Warnings
 --------
 Requires installed `Pyro4 <https://pythonhosted.org/Pyro4/>`_.
-Distributed version works only in local network.
 
 
 How to use distributed :class:`~gensim.models.ldamodel.LdaModel`
@@ -42,26 +40,19 @@ How to use distributed :class:`~gensim.models.ldamodel.LdaModel`
 
     python -m gensim.models.lda_dispatcher &
 
-#. Run :class:`~gensim.models.lsimodel.LsiModel` in distributed mode ::
+#. Run :class:`~gensim.models.lsimodel.LdaModel` in distributed mode ::
 
     >>> from gensim.test.utils import common_corpus,common_dictionary
-    >>> from gensim.models import LsiModel
+    >>> from gensim.models import LdaModel
     >>>
-    >>> model = LdaModel(common_corpus, id2word=common_dictionary,
-                        distributed=True)
-
-#. You can then infer topic distributions on new, unseen documents, with
-
-    >>> doc_lda = model[doc_bow]
-    The model can be updated (trained) with new documents via
-    >>> lda.update(other_corpus)
+    >>> model = LdaModel(common_corpus, id2word=common_dictionary, distributed=True)
 
 
 Command line arguments
 ----------------------
 
 .. program-output:: python -m gensim.models.lda_worker --help
-   :ellipsis: 0, -3
+   :ellipsis: 0, -7
 
 """
 from __future__ import with_statement
@@ -90,13 +81,9 @@ LDA_WORKER_PREFIX = 'gensim.lda_worker'
 
 
 class Worker(object):
-    """Used as a Pyro class with exposed methods.
+    """Used as a Pyro4 class with exposed methods.
 
     Exposes every non-private method and property of the class automatically to be available for remote access.
-
-    Attributes
-    ----------
-    model : :class:`~gensim.models.ldamodel.LdaModel`
 
     """
 
@@ -130,12 +117,13 @@ class Worker(object):
     @Pyro4.expose
     @Pyro4.oneway
     def requestjob(self):
-        """Request jobs from the dispatcher, in a perpetual loop until `getstate()` is called.
+        """Request jobs from the dispatcher, in a perpetual loop until :meth:`~gensim.models.lda_worker.Worker.getstate`
+        is called.
 
         Raises
         ------
         RuntimeError
-            Worker has to be initialised before receiving jobs.
+            If `self.model` is None (i.e. worker non initialized).
 
         """
         if self.model is None:
@@ -161,9 +149,8 @@ class Worker(object):
 
         Parameters
         ----------
-        job : {iterable of list of (int, float), scipy.sparse.csc}
-            Stream of document vectors or sparse matrix of
-            shape (`num_terms`, `num_documents`).
+        job : iterable of list of (int, float)
+            Corpus in BoW format.
 
         """
         logger.debug("starting to process job #%i", self.jobsdone)
@@ -186,7 +173,7 @@ class Worker(object):
 
         Returns
         -------
-        result : `~gensim.models.ldamodel.LdaState`
+        result : :class:`~gensim.models.ldamodel.LdaState`
             The current state.
 
         """
@@ -223,8 +210,7 @@ class Worker(object):
 
 
 def main():
-    """Set up argument parser,logger and launches pyro daemon."""
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__[:-130], formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("--host", help="Nameserver hostname (default: %(default)s)", default=None)
     parser.add_argument("--port", help="Nameserver port (default: %(default)s)", default=None, type=int)
     parser.add_argument(
