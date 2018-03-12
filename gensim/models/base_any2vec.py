@@ -42,10 +42,25 @@ class BaseAny2VecModel(utils.SaveLoad):
     def __init__(self, workers=3, vector_size=100, epochs=5, callbacks=(), batch_words=10000):
         """Initialize model parameters.
 
+        Notes
+        -----
         A subclass should initialize the following attributes:
         - self.kv (instance of concrete implementation of `BaseKeyedVectors` interface)
         - self.vocabulary (instance of concrete implementation of `BaseVocabBuilder` abstract class)
         - self.trainables (instance of concrete implementation of `BaseTrainables` abstract class)
+
+        Parameters
+        ----------
+        workers : int
+            Number of working threads, used for multiprocessing.
+        vector_size : int
+            Dimensionality of the feature vectors.
+        epochs : int
+            Number of iterations (epochs) of training through the corpus.
+        callbacks : list of :class: `~gensim.models.callbacks.CallbackAny2Vec`, optional
+            List of callbacks that need to be executed/run at specific stages during training.
+        batch_words : int
+            Number of words to be processed by a single job.
 
         """
         self.vector_size = int(vector_size)
@@ -414,9 +429,45 @@ class BaseAny2VecModel(utils.SaveLoad):
 
     @classmethod
     def load(cls, fname_or_handle, **kwargs):
+        """Load a previously saved object (using :meth:`~gensim.base_any2vec.BaseAny2VecModel.save`) from file.
+
+        Parameters
+        ----------
+        fname_or_handle : {str, file-like object}
+            Path to file that contains needed object or handle to the opened file.
+        **kwargs
+            Key word arguments propagated to :meth:`~gensim.utils.SaveLoad.load`.
+
+        See Also
+        --------
+        :meth:`~gensim.base_any2vec.BaseAny2VecModel.save`
+
+        Returns
+        -------
+        object
+            Object loaded from `fname_or_handle`.
+
+        Raises
+        ------
+        IOError
+            When methods are called on instance (should be called from class).
+        """
         return super(BaseAny2VecModel, cls).load(fname_or_handle, **kwargs)
 
     def save(self, fname_or_handle, **kwargs):
+        """"Save the object to file.
+
+        Parameters
+        ----------
+        fname_or_handle : {str, file-like object}
+            Path to file where the model will be persisted.
+        **kwargs
+            Key word arguments propagated to :meth:`~gensim.utils.SaveLoad.save`.
+
+        See Also
+        --------
+        :meth:`~gensim.models.base_any2vec.BaseAny2VecModel.save`
+        """
         super(BaseAny2VecModel, self).save(fname_or_handle, **kwargs)
 
 
