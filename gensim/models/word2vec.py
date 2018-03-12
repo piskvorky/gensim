@@ -441,7 +441,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
             in some other way.
 
         sg : int {1, 0}
-            Defines the training algorithm. If 1, CBOW is used, otherwise, skip-gram is employed.
+            Defines the training algorithm. If 1, skip-gram is employed; otherwise, CBOW is used.
         size : int
             Dimensionality of the feature vectors.
         window : int

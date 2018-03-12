@@ -82,7 +82,7 @@ from six import string_types, integer_types
 from six.moves import xrange, zip
 from scipy import sparse, stats
 from gensim.utils import deprecated
-from gensim.models.utils_any2vec import _save_word2vec_format, _load_word2vec_format, _compute_ngrams
+from gensim.models.utils_any2vec import _save_word2vec_format, _load_word2vec_format, _compute_ngrams, _ft_hash
 
 logger = logging.getLogger(__name__)
 
@@ -450,7 +450,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             of the resulting term similarity matrix.
         tfidf : :class:`gensim.models.tfidfmodel.TfidfModel`, optional
             A model that specifies the relative importance of the terms in the dictionary. The rows
-            of the term similarity matrix will be build in an increasing order of importance of terms,
+            of the term similarity matrix will be build in a decreasing order of importance of terms,
             or in the order of term identifiers if None.
         threshold : float, optional
             Only pairs of words whose embeddings are more similar than `threshold` are considered
@@ -996,23 +996,27 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                         a, b, sim = [word for word in line.split(delimiter)]
                     sim = float(sim)
                 except (ValueError, TypeError):
-                    logger.info('skipping invalid line #%d in %s', line_no, pairs)
+                    logger.info('Skipping invalid line #%d in %s', line_no, pairs)
                     continue
                 if a not in ok_vocab or b not in ok_vocab:
                     oov += 1
                     if dummy4unknown:
+                        logger.debug('Zero similarity for line #%d with OOV words: %s', line_no, line.strip())
                         similarity_model.append(0.0)
                         similarity_gold.append(sim)
                         continue
                     else:
-                        logger.debug('skipping line #%d with OOV words: %s', line_no, line.strip())
+                        logger.debug('Skipping line #%d with OOV words: %s', line_no, line.strip())
                         continue
                 similarity_gold.append(sim)  # Similarity from the dataset
                 similarity_model.append(self.similarity(a, b))  # Similarity from the model
         self.vocab = original_vocab
         spearman = stats.spearmanr(similarity_gold, similarity_model)
         pearson = stats.pearsonr(similarity_gold, similarity_model)
-        oov_ratio = float(oov) / (len(similarity_gold) + oov) * 100
+        if dummy4unknown:
+            oov_ratio = float(oov) / len(similarity_gold) * 100
+        else:
+            oov_ratio = float(oov) / (len(similarity_gold) + oov) * 100
 
         logger.debug('Pearson correlation coefficient against %s: %f with p-value %f', pairs, pearson[0], pearson[1])
         logger.debug(
@@ -1111,7 +1115,7 @@ class Word2VecKeyedVectors(WordEmbeddingsKeyedVectors):
         """
         # from gensim.models.word2vec import load_word2vec_format
         return _load_word2vec_format(
-            Word2VecKeyedVectors, fname, fvocab=fvocab, binary=binary, encoding=encoding, unicode_errors=unicode_errors,
+            cls, fname, fvocab=fvocab, binary=binary, encoding=encoding, unicode_errors=unicode_errors,
             limit=limit, datatype=datatype)
 
     def get_keras_embedding(self, train_embeddings=False):
@@ -1535,9 +1539,8 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         self.vectors_vocab_norm = None
         self.vectors_ngrams = None
         self.vectors_ngrams_norm = None
-        self.ngrams = {}
+        self.buckets_word = None
         self.hash2index = {}
-        self.ngrams_word = {}
         self.min_n = min_n
         self.max_n = max_n
         self.num_ngram_vectors = 0
@@ -1570,9 +1573,8 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         if word in self.vocab:
             return True
         else:
-            # from gensim.models.fasttext import compute_ngrams
             char_ngrams = _compute_ngrams(word, self.min_n, self.max_n)
-            return any(ng in self.ngrams for ng in char_ngrams)
+            return any(_ft_hash(ng) % self.bucket in self.hash2index for ng in char_ngrams)
 
     def save(self, *args, **kwargs):
         """Saves the keyedvectors. This saved model can be loaded again using
@@ -1586,7 +1588,8 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
 
         """
         # don't bother storing the cached normalized vectors
-        kwargs['ignore'] = kwargs.get('ignore', ['vectors_norm', 'vectors_vocab_norm', 'vectors_ngrams_norm'])
+        kwargs['ignore'] = kwargs.get(
+            'ignore', ['vectors_norm', 'vectors_vocab_norm', 'vectors_ngrams_norm', 'buckets_word'])
         super(FastTextKeyedVectors, self).save(*args, **kwargs)
 
     def word_vec(self, word, use_norm=False):
@@ -1603,15 +1606,18 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
             # from gensim.models.fasttext import compute_ngrams
             word_vec = np.zeros(self.vectors_ngrams.shape[1], dtype=np.float32)
             ngrams = _compute_ngrams(word, self.min_n, self.max_n)
-            ngrams = [ng for ng in ngrams if ng in self.ngrams]
             if use_norm:
                 ngram_weights = self.vectors_ngrams_norm
             else:
                 ngram_weights = self.vectors_ngrams
+            ngrams_found = 0
             for ngram in ngrams:
-                word_vec += ngram_weights[self.ngrams[ngram]]
+                ngram_hash = _ft_hash(ngram) % self.bucket
+                if ngram_hash in self.hash2index:
+                    word_vec += ngram_weights[self.hash2index[ngram_hash]]
+                    ngrams_found += 1
             if word_vec.any():
-                return word_vec / len(ngrams)
+                return word_vec / max(1, ngrams_found)
             else:  # No ngrams of the word are present in self.ngrams
                 raise KeyError('all ngrams for word %s absent from model' % word)
 
