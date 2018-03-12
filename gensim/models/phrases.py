@@ -259,46 +259,38 @@ class PhrasesTransformation(interfaces.TransformationABC):
 
 class Phrases(SentenceAnalyzer, PhrasesTransformation):
     """Detect phrases, based on collected collocation counts. Adjacent words that appear together more frequently than
-    expected are joined together with the `_` character.
-
-    It can be used to generate phrases on the fly, using the `phrases[sentence]`
-    and `phrases[corpus]` syntax.
-
+    expected are joined together with the `_` character. It can be used to generate phrases on the fly,
+    using the `phrases[sentence]` and `phrases[corpus]` syntax.
     """
 
     def __init__(self, sentences=None, min_count=5, threshold=10.0,
                  max_vocab_size=40000000, delimiter=b'_', progress_per=10000,
                  scoring='default', common_terms=frozenset()):
-        """Initialize the model from an iterable of `sentences`. Each sentence must be
-        a list of words (unicode strings) that will be used for training.
-
-
-        sentences : list of str
-        The `sentences` iterable can be simply a list, but for larger corpora,
-        consider a generator that streams the sentences directly from disk/network,
-        without storing everything in RAM. See :class:`BrownCorpus`,
-        :class:`Text8Corpus` or :class:`LineSentence` in the :mod:`gensim.models.word2vec`
-        module for such examples.
-
-        `min_count` ignore all words and bigrams with total collected count lower
-        than this.
-
-        `threshold` represents a score threshold for forming the phrases (higher means
-        fewer phrases). A phrase of words `a` followed by `b` is accepted if the score of the
-        phrase is greater than threshold. see the `scoring` setting.
-
-        `max_vocab_size` is the maximum size of the vocabulary. Used to control
-        pruning of less common words, to keep memory under control. The default
-        of 40M needs about 3.6GB of RAM; increase/decrease `max_vocab_size` depending
-        on how much available memory you have.
-
-        `delimiter` is the glue character used to join collocation tokens, and
-        should be a byte string (e.g. b'_').
-
-        `scoring` specifies how potential phrases are scored for comparison to the `threshold`
-        setting. `scoring` can be set with either a string that refers to a built-in scoring function,
-        or with a function with the expected parameter names. Two built-in scoring functions are available
-        by setting `scoring` to a string:
+        """
+        sentences : list of str, optional
+            The `sentences` iterable can be simply a list, but for larger corpora,
+            consider a generator that streams the sentences directly from disk/network,
+            without storing everything in RAM. See :class:`~gensim.models.word2vec.BrownCorpus`,
+            :class:`~gensim.models.word2vec.Text8Corpus` or :class:`~gensim.models.word2vec.LineSentence`
+            in the :mod:`~gensim.models.word2vec` module for such examples.
+        min_count : int, optional
+            Ignore all words and bigrams with total collected count lower
+            than this.
+        threshold : int, optional
+            Represent a score threshold for forming the phrases (higher means fewer phrases).
+            A phrase of words `a` followed by `b` is accepted if the score of the
+            phrase is greater than threshold. See the `scoring` setting.
+        max_vocab_size : int, optional
+            Maximum size of the vocabulary. Used to control pruning of less common words, to keep memory under control.
+            The default of 40M needs about 3.6GB of RAM; increase/decrease `max_vocab_size` depending on how much
+            available memory you have.
+        delimiter : str, optional
+            Glue character used to join collocation tokens, should be a byte string (e.g. b'_').
+        scoring : {'default', 'npmi'}
+            Specify how potential phrases are scored for comparison to the `threshold` setting.
+            `scoring` can be set with either a string that refers to a built-in scoring function, or with a function
+            with the expected parameter names. Two built-in scoring functions are available by setting `scoring` to a
+            string:
 
         'default': from "Efficient Estimaton of Word Representations in Vector Space" by
                    Mikolov, et. al.:
@@ -327,8 +319,12 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         A scoring function without any of these parameters (even if the parameters are not used) will
         raise a ValueError on initialization of the Phrases class. The scoring function must be picklable.
 
-        `common_terms` is an optionnal list of "stop words" that won't affect frequency count
-        of expressions containing them.
+        common_terms : list of str, optional
+            List of "stop words" that won't affect frequency count of expressions containing them.
+
+        Initialize the model from an iterable of `sentences`. Each sentence must be
+        a list of words (unicode strings) that will be used for training.
+
         """
         if min_count <= 0:
             raise ValueError("min_count should be at least 1")
@@ -384,8 +380,16 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
 
     @classmethod
     def load(cls, *args, **kwargs):
-        """Load a previously saved Phrases class. Handles backwards compatibility from
-            older Phrases versions which did not support  pluggable scoring functions.
+        """Load a previously saved Phrases class. Handles backwards compatibility from older Phrases versions
+        which did not support pluggable scoring functions.
+
+        Parameters
+        ----------
+        args : object
+            Sequence of arguments, see :meth:`...` for more information.
+        kwargs : object
+            Sequence of arguments, see :meth:`...` for more information.
+
         """
         model = super(Phrases, cls).load(*args, **kwargs)
         if not hasattr(model, 'corpus_word_count'):
@@ -404,7 +408,17 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
     @staticmethod
     def learn_vocab(sentences, max_vocab_size, delimiter=b'_', progress_per=10000,
                     common_terms=frozenset()):
-        """Collect unigram/bigram counts from the `sentences` iterable."""
+        """Collect unigram/bigram counts from the `sentences` iterable.
+
+        Parameters
+        ----------
+        sentences : #TODO
+        max_vocab_size : int
+        delimiter : str
+        progress_per : int
+        common_terms : list of str
+
+        """
         sentence_no = -1
         total_words = 0
         logger.info("collecting all words and their counts")
@@ -444,6 +458,10 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
     def add_vocab(self, sentences):
         """Merge the collected counts `vocab` into this phrase detector.
 
+        Parameters
+        ----------
+        sentences : TODO: what is this
+
         """
         # uses a separate vocab to collect the token counts from `sentences`.
         # this consumes more RAM than merging new sentences into `self.vocab`
@@ -469,17 +487,22 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
             self.vocab = vocab
 
     def export_phrases(self, sentences, out_delimiter=b' ', as_tuples=False):
-        """
-        Generate an iterator that contains all phrases in given 'sentences'
+        """Generate an iterator that contains all phrases in given 'sentences'
 
-        Example::
+        Parameters
+        ----------
+        sentences : #TODO
+        out_delimiter : str, optional
+        as_tuples : bool, optional
 
-          >>> sentences = Text8Corpus(path_to_corpus)
-          >>> bigram = Phrases(sentences, min_count=5, threshold=100)
-          >>> for phrase, score in bigram.export_phrases(sentences):
-          ...     print(u'{0}\t{1}'.format(phrase, score))
-
+        Example
+        -------
+        >>> sentences = Text8Corpus(path_to_corpus)
+        >>> bigram = Phrases(sentences, min_count=5, threshold=100)
+        >>> for phrase, score in bigram.export_phrases(sentences):
+        ...     print(u'{0}\t{1}'.format(phrase, score))
             then you can debug the threshold with generated tsv
+
         """
         analyze_sentence = ft.partial(
             self.analyze_sentence,
