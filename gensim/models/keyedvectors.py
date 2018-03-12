@@ -178,11 +178,11 @@ class BaseKeyedVectors(utils.SaveLoad):
         ----------
         entities : list of str
             Entities specified by string tags.
-        weights: list of np.array or np.array
+        weights: {list of numpy.ndarray, numpy.ndarray}
             List of 1D np.array vectors or 2D np.array of vectors.
         replace: bool, optional
-            Boolean flag indicating whether to replace vectors for entities which are already in the vocabulary.
-            Default, False, means that old vectors for those entities are keeped.
+            Flag indicating whether to replace vectors for entities which are already in the vocabulary,
+            if True - replace vectors, otherwise - keep old vectors.
         """
         if isinstance(weights, list):
             weights = np.array(weights)
@@ -215,7 +215,16 @@ class BaseKeyedVectors(utils.SaveLoad):
             self.vectors[in_vocab_idxs] = weights[in_vocab_mask]
 
     def __setitem__(self, entities, weights):
-        """Idiomatic way to call `add_entities` with `replace=True`.
+        """Add entities and theirs vectors in a manual way.
+        If some entity is already in the vocabulary, old vector is replaced with the new one.
+        This method is alias for `add_entities` with `replace=True`.
+
+        Parameters
+        ----------
+        entities : {str, list of str}
+            Entities specified by string tags.
+        weights: {list of numpy.ndarray, numpy.ndarray}
+            List of 1D np.array vectors or 2D np.array of vectors.
         """
         if not isinstance(entities, list):
             entities = [entities]
