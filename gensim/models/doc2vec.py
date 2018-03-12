@@ -239,9 +239,9 @@ class TaggedDocument(namedtuple('TaggedDocument', 'words tags')):
     and `tags` (a list of tokens). Tags may be one or more unicode string
     tokens, but typical practice (which will also be most memory-efficient) is
     for the tags list to include a unique integer id as the only tag.
-    
+
     Replaces "sentence as a list of words" from Word2Vec.
-    
+
     """
 
     def __str__(self):
@@ -257,9 +257,9 @@ class LabeledSentence(TaggedDocument):
 class Doctag(namedtuple('Doctag', 'offset, word_count, doc_count')):
     """A string document tag discovered during the initial vocabulary
     scan. (The document-vector equivalent of a Vocab object.)
-    
+
     Will not be used if all presented document tags are ints.
-    
+
     The offset is only the true index into the doctags_syn0/doctags_syn0_lockf
     if-and-only-if no raw-int tags were used. If any raw-int tags were used,
     string Doctag vectors begin at index (max_rawint + 1), so the true index is
@@ -278,7 +278,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
                  docvecs=None, docvecs_mapfile=None, comment=None, trim_rule=None, callbacks=(), **kwargs):
         """Initialize the model from an iterable of `documents`. Each document is a
         TaggedDocument object that will be used for training.
-        
+
         Parameters
         ----------
         documents : iterable of iterables
@@ -286,11 +286,11 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             consider an iterable that streams the documents directly from disk/network.
             If you don't supply `documents`, the model is left uninitialized -- use if
             you plan to initialize it in some other way.
-        
+
         dm : int {1,0}
             Defines the training algorithm. If `dm=1`, 'distributed memory' (PV-DM) is used.
             Otherwise, `distributed bag of words` (PV-DBOW) is employed.
-        
+
         size : int
             Dimensionality of the feature vectors.
         window : int
@@ -349,9 +349,9 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             of the model.
         callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`
             List of callbacks that need to be executed/run at specific stages during training.
-        
+
         """
-        
+
         if 'sentences' in kwargs:
             raise DeprecationWarning(
                 "Parameter 'sentences' was renamed to 'documents', and will be removed in 4.0.0, "
@@ -467,18 +467,18 @@ class Doc2Vec(BaseWordEmbeddingsModel):
               word_count=0, queue_factor=2, report_delay=1.0, callbacks=()):
         """Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
         The `documents` iterable can be simply a list of TaggedDocument elements.
-        
+
         To support linear learning-rate decay from (initial) alpha to min_alpha, and accurate
         progress-percentage logging, either total_examples (count of sentences) or total_words (count of
         raw words in sentences) **MUST** be provided (if the corpus is the same as was provided to
         :meth:`~gensim.models.word2vec.Word2Vec.build_vocab()`, the count of examples in that corpus
         will be available in the model's :attr:`corpus_count` property).
-        
+
         To avoid common mistakes around the model's ability to do multiple training passes itself, an
         explicit `epochs` argument **MUST** be provided. In the common and recommended case,
         where :meth:`~gensim.models.word2vec.Word2Vec.train()` is only called once,
         the model's cached `iter` value should be supplied as `epochs` value.
-        
+
         Parameters
         ----------
         documents : iterable of iterables
@@ -522,7 +522,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
     def infer_vector(self, doc_words, alpha=0.1, min_alpha=0.0001, steps=5):
         """
         Infer a vector for given post-bulk training document.
-        
+
         Parameters
         ----------
         doc_words : :obj: `list` of :obj: `str`
@@ -533,12 +533,12 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             Learning rate will linearly drop to `min_alpha` as training progresses.
         steps : int
             Number of times to train the new document.
-        
+
         Returns
         -------
         :obj: `numpy.ndarray`
             Returns the inferred vector for the new document.
-        
+
         """
         doctag_vectors, doctag_locks = self.trainables.get_doctag_trainables(doc_words, self.docvecs.vector_size)
         doctag_indexes = [0]
@@ -609,7 +609,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
     def delete_temporary_training_data(self, keep_doctags_vectors=True, keep_inference=True):
         """Discard parameters that are used in training and score. Use if you're sure you're done training a model.
-        
+
         Parameters
         ----------
         keep_doctags_vectors : bool
@@ -617,8 +617,8 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             in this case you can't to use docvecs's most_similar, similarity etc. methods.
         keep_inference : bool
             Set `keep_inference` to False if you don't want to store parameters that is used for infer_vector method
-       
-       """
+
+        """
         if not keep_inference:
             if hasattr(self.trainables, 'syn1'):
                 del self.trainables.syn1
@@ -635,7 +635,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
     def save_word2vec_format(self, fname, doctag_vec=False, word_vec=True, prefix='*dt_', fvocab=None, binary=False):
         """Store the input-hidden weight matrix in the same format used by the original
         C word2vec-tool, for compatibility.
-       
+
         Parameters
         ----------
         fname : str
@@ -651,7 +651,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             Optional file path used to save the vocabulary
         binary : bool
             If True, the data wil be saved in binary word2vec format, else it will be saved in plain text.
-        
+
         """
         total_vec = len(self.wv.vocab) + len(self.docvecs)
         write_first_line = False
@@ -672,14 +672,14 @@ class Doc2Vec(BaseWordEmbeddingsModel):
     def init_sims(self, replace=False):
         """
         Precompute L2-normalized vectors.
-        
+
         If `replace` is set, forget the original vectors and only keep the normalized
         ones = saves lots of memory!
-        
+
         Note that you **cannot continue training or inference** after doing a replace.
         The model becomes effectively read-only = you can call `most_similar`, `similarity`
         etc., but not `train` or `infer_vector`.
-        
+
         """
         return self.docvecs.init_sims(replace=replace)
 
@@ -702,7 +702,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
     def build_vocab(self, documents, update=False, progress_per=10000, keep_raw_vocab=False, trim_rule=None, **kwargs):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence is a iterable of iterables (can simply be a list of unicode strings too).
-        
+
         Parameters
         ----------
         documents : iterable of iterables
@@ -741,7 +741,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         Build vocabulary from a dictionary of word frequencies.
         Build model vocabulary from a passed dictionary that contains (word,word count).
         Words must be of type unicode strings.
-        
+
         Parameters
         ----------
         word_freq : dict
@@ -760,7 +760,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             of the model.
         update : bool
             If true, the new provided words in `word_freq` dict will be added to model's vocab.
-        
+
         Examples
         --------
         >>> from gensim.models.word2vec import Word2Vec
@@ -940,23 +940,23 @@ class TaggedBrownCorpus(object):
 
 class TaggedLineDocument(object):
     """Simple format: one document = one line = one TaggedDocument object.
-   
-   Words are expected to be already preprocessed and separated by whitespace,
+
+    Words are expected to be already preprocessed and separated by whitespace,
     tags are constructed automatically from the document line number."""
 
     def __init__(self, source):
         """
         `source` can be either a string (filename) or a file object.
-        
+
         Example::
-            
+
             documents = TaggedLineDocument('myfile.txt')
-        
+
         Or for compressed files::
-            
+
             documents = TaggedLineDocument('compressed_text.txt.bz2')
             documents = TaggedLineDocument('compressed_text.txt.gz')
-        
+
         """
         self.source = source
 
