@@ -599,16 +599,17 @@ class CoherenceModel(interfaces.TransformationABC):
         return self.aggregate_measures(confirmed_measures)
 
     def compare_models(self, models):
-        """
+        """Compare topic models by coherence value.
+
         Parameters
         ----------
-        models : list of {:class:`~gensim.models.ldamodel.LdaModel`, :class:`~gensim.models.ldamulticore.LdaMulticore`}
-            List of models.
+        models : :class:`~gensim.models.basemodel.BaseTopicModel`
+            Sequence of topic models.
 
-        Return
-        ------
-        [int, int]
-            These are the coherence values per topic and the overall model coherence.
+        Returns
+        -------
+        list of (float, float)
+            Sequence of pairs of average topic coherence and average coherence.
 
         """
         model_topics = [self._get_topics_from_model(model, self.topn) for model in models]
@@ -622,19 +623,17 @@ class CoherenceModel(interfaces.TransformationABC):
         model_topics : list of list of str
             list of list of words for the model trained with that number of topics.
 
-        Return
-        ------
-        [int, int]
-            These are the coherence values per topic and the overall model coherence.
+        Returns
+        -------
+        list of (float, float)
+            Sequence of pairs of average topic coherence and average coherence.
 
         Notes
         -----
-        This first precomputes the probabilities once, then evaluates coherence for
-        each model.
+        This first precomputes the probabilities once, then evaluates coherence for each model.
 
-        Since we have already precomputed the probabilities, this simply
-        involves using the accumulated stats in the `CoherenceModel` to
-        perform the evaluations, which should be pretty quick.
+        Since we have already precomputed the probabilities, this simply involves using the accumulated stats in the
+        :class:`~gensim.models.coherencemodel.CoherenceModel` to perform the evaluations, which should be pretty quick.
 
         """
         orig_topics = self._topics
@@ -654,11 +653,11 @@ class CoherenceModel(interfaces.TransformationABC):
         Parameters
         ----------
         model_topics : list of list of str
-            Topics from the model trained with that number of topics.
+            Topics from the model.
 
-        Return
-        ------
-        list of (float, int)
+        Returns
+        -------
+        list of (float, float)
             Sequence of pairs of average topic coherence and average coherence.
 
         """
