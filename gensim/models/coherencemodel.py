@@ -463,7 +463,7 @@ class CoherenceModel(interfaces.TransformationABC):
 
         Parameters
         ----------
-        model : {:class:`~gensim.models.ldamodel.LdaModel`, :class:`~gensim.models.ldamulticore.LdaMulticore`}
+        model : :class:`~gensim.models.basemodel.BaseTopicModel`
             Pre-trained topic model.
         topn : int
             Integer corresponding to the number of top words.
@@ -471,7 +471,7 @@ class CoherenceModel(interfaces.TransformationABC):
         Return
         ------
         list of :class:`numpy.ndarray`
-            Topics.
+            Topics matrix
 
         """
         try:
@@ -485,25 +485,28 @@ class CoherenceModel(interfaces.TransformationABC):
                 " should implement the `get_topics` method.")
 
     def segment_topics(self):
-        """Topics' segmentation. #TODO: can't understand
+        """Segment topic, alias for `self.measure.seg(self.topics)`.
 
         Return
         ------
         list of list of pair
             Segmented topics.
 
-
         """
         return self.measure.seg(self.topics)
 
     def estimate_probabilities(self, segmented_topics=None):
-        """Accumulate word occurrences and co-occurrences from texts or corpus using
-        the optimal method for the chosen coherence metric. This operation may take
-        quite some time for the sliding window based coherence methods.
+        """Accumulate word occurrences and co-occurrences from texts or corpus using the optimal method for the chosen
+        coherence metric.
+
+        Notes
+        -----
+        This operation may take quite some time for the sliding window based coherence methods.
 
         Parameters
         ----------
-        segmented_topics : list of list of pair
+        segmented_topics : list of list of pair, optional
+            Segmented topics, typically produced by :meth:`~gensim.models.coherencemodel.CoherenceModel.segment_topics`.
 
         Return
         ------
@@ -529,19 +532,23 @@ class CoherenceModel(interfaces.TransformationABC):
         return self._accumulator
 
     def get_coherence_per_topic(self, segmented_topics=None, with_std=False, with_support=False):
-        """Return list of coherence values for each topic based on pipeline parameters.
+        """Get list of coherence values for each topic based on pipeline parameters.
 
         Parameters
         ----------
-        segmented_topics : list of list of pair
+        segmented_topics : list of list of (int, number)
             Topics.
         with_std : bool, optional
+            True to also include standard deviation across topic segment sets in addition to the mean coherence
+            for each topic.
         with_support : bool, optional
+            True to also include support across topic segments. The support is defined as the number of pairwise
+            similarity comparisons were used to compute the overall topic coherence.
 
         Return
         ------
-        [int, int]
-            Average topic coherences and average coherence. #TODO: please, check it
+        list of float
+            Sequence of similarity measure for each topic.
 
         """
         measure = self.measure
@@ -563,13 +570,31 @@ class CoherenceModel(interfaces.TransformationABC):
         return measure.conf(segmented_topics, self._accumulator, **kwargs)
 
     def aggregate_measures(self, topic_coherences):
-        """Aggregate the individual topic coherence measures using
-        the pipeline's aggregation function.
+        """Aggregate the individual topic coherence measures using the pipeline's aggregation function.
+        Use `self.measure.aggr(topic_coherences)`.
+
+        Parameters
+        ----------
+        topic_coherences : list of float
+            List of calculated confirmation measure on each set in the segmented topics.
+
+        Returns
+        -------
+        float
+            Arithmetic mean of all the values contained in confirmation measures.
+
         """
         return self.measure.aggr(topic_coherences)
 
     def get_coherence(self):
-        """Return coherence value based on pipeline parameters."""
+        """Get coherence value based on pipeline parameters.
+
+        Returns
+        -------
+        float
+            Value of coherence.
+
+        """
         confirmed_measures = self.get_coherence_per_topic()
         return self.aggregate_measures(confirmed_measures)
 
@@ -629,12 +654,13 @@ class CoherenceModel(interfaces.TransformationABC):
         Parameters
         ----------
         model_topics : list of list of str
-            list of list of words for the model trained with that number of topics.
+            Topics from the model trained with that number of topics.
 
         Return
         ------
-        [int, int]
-            Average topic coherences and average coherence.
+        list of (float, int)
+            Sequence of pairs of average topic coherence and average coherence.
+
         """
         coherences = []
         last_topn_value = min(self.topn - 1, 4)
