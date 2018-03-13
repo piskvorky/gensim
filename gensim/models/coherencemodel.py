@@ -4,18 +4,22 @@
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""Module for calculating topic coherence in python. This is the implementation of
-the four stage topic coherence pipeline from the paper `Michael Roeder, Andreas Both and Alexander Hinneburg.
-Exploring the space of topic coherence measures. <http://svn.aksw.org/papers/2015/WSDM_Topic_Evaluation/public.pdf>`_
+"""Calculate topic coherence for topic models. This is the implementation of the four stage topic coherence pipeline
+from the paper `Michael Roeder, Andreas Both and Alexander Hinneburg: "Exploring the space of topic coherence measures"
+<http://svn.aksw.org/papers/2015/WSDM_Topic_Evaluation/public.pdf>`_.
+Typically, :class:`gensim.models.coherencemodel.CoherenceModel` used for evaluation of topic models.
 
 The four stage pipeline is basically:
 
-    Segmentation -> Probability Estimation -> Confirmation Measure -> Aggregation.
+    * Segmentation
+    * Probability Estimation
+    * Confirmation Measure
+    * Aggregation
 
-Implementation of this pipeline allows for the user to in essence "make" a
-coherence measure of his/her choice by choosing a method in each of the pipelines.
+Implementation of this pipeline allows for the user to in essence "make" a coherence measure of his/her choice
+by choosing a method in each of the pipelines.
+
 """
-
 import logging
 import multiprocessing as mp
 from collections import namedtuple
@@ -79,72 +83,71 @@ SLIDING_WINDOW_SIZES = {
 
 class CoherenceModel(interfaces.TransformationABC):
     """Objects of this class allow for building and maintaining a model for topic coherence.
-    Model persistency is achieved via its load/save methods.
 
     Examples
     ---------
-    >>> # One way of using this feature is through providing a trained topic model. A dictionary has to be explicitly
-    >>> # provided if the model does not contain a dictionary already:
-    >>>
+    One way of using this feature is through providing a trained topic model. A dictionary has to be explicitly provided
+    if the model does not contain a dictionary already
+
     >>> from gensim.test.utils import common_corpus, common_dictionary
     >>> from gensim.models.ldamodel import LdaModel
     >>> from gensim.models.coherencemodel import CoherenceModel
-    >>> ldamod = LdaModel(common_corpus,100, common_dictionary)
-    >>> # ldamod is the trained topic model.
-    >>> cm = CoherenceModel(model=ldamod, corpus=common_corpus, coherence='u_mass')
-    >>> cm.get_coherence()
-    -14.576100452444123
-
-    >>> # Another way of using this feature is through providing tokenized topics such as:
     >>>
+    >>> model = LdaModel(common_corpus, 5, common_dictionary)
+    >>>
+    >>> cm = CoherenceModel(model=model, corpus=common_corpus, coherence='u_mass')
+    >>> coherence = cm.get_coherence()  # get coherence value
+
+    Another way of using this feature is through providing tokenized topics such as
+
     >>> from gensim.test.utils import common_corpus, common_dictionary
     >>> from gensim.models.coherencemodel import CoherenceModel
-    >>> topics = [['human', 'computer', 'system', 'interface'],
-    >>>          ['graph', 'minors', 'trees', 'eps']]
-    >>> # note that a dictionary has to be provided.
+    >>> topics = [
+    ...    ['human', 'computer', 'system', 'interface'],
+    ...    ['graph', 'minors', 'trees', 'eps']
+    ... ]
+    >>>
     >>> cm = CoherenceModel(topics=topics, corpus=common_corpus, dictionary=common_dictionary, coherence='u_mass')
-    >>> cm.get_coherence()
-    -7.105015580153772
+    >>> coherence = cm.get_coherence()  # get coherence value
 
     """
-
     def __init__(self, model=None, topics=None, texts=None, corpus=None, dictionary=None,
                  window_size=None, keyed_vectors=None, coherence='c_v', topn=20, processes=-1):
         """
 
         Parameters
         ----------
-        model : {:class:`~gensim.models.ldamodel.LdaModel`, :class:`~gensim.models.ldamulticore.LdaMulticore`}, optional
-            Pre-trained topic model. Should be provided if topics is not provided.
+        model : :class:`~gensim.models.basemodel.BaseTopicModel`, optional
+            Pre-trained topic model, should be provided if topics is not provided.
             Currently supports :class:`~gensim.models.ldamodel.LdaModel`,
-            :class:`~gensim.models.ldamulticore.LdaMulticore`,
-            :class:`~gensim.models.wrappers.ldamallet.LdaMallet` wrapper and
-            :class:`~gensim.models.wrappers.ldavowpalwabbit.LdaVowpalWabbit` wrapper.
-            Use 'topics' parameter to plug in an as yet unsupported model.
-        topics : list of list of unicode str, optional
-            List of tokenized topics. If this is preferred over model, dictionary should be provided.
-        texts : list of list of unicode str, optional
-            Tokenized texts. Needed for coherence models that use sliding window based probability estimator,
+            :class:`~gensim.models.ldamulticore.LdaMulticore`, :class:`~gensim.models.wrappers.ldamallet.LdaMallet` and
+            :class:`~gensim.models.wrappers.ldavowpalwabbit.LdaVowpalWabbit`.
+            Use `topics` parameter to plug in an as yet unsupported model.
+        topics : list of list of str, optional
+            List of tokenized topics, if this is preferred over model - dictionary should be provided.
+        texts : list of list of str, optional
+            Tokenized texts, needed for coherence models that use sliding window based (i.e. coherence=`c_something`)
+            probability estimator .
         corpus : iterable of list of (int, number), optional
-            Gensim document corpus.
+            Corpus in BoW format.
         dictionary : :class:`~gensim.corpora.dictionary.Dictionary`, optional
-            Gensim dictionary mapping of id word to create corpus. If model.id2word is present,
-            this is not needed. If both are provided, dictionary will be used.
+            Gensim dictionary mapping of id word to create corpus.
+            If `model.id2word` is present, this is not needed. If both are provided, passed `dictionary` will be used.
         window_size : int, optional
-            Is the size of the window to be used for coherence measures using boolean sliding window
-            as their probability estimator. For 'u_mass' this doesn't matter.
-            If left 'None' the default window sizes are used which are: 'c_v' : 110, 'c_uci' : 10, 'c_npmi' : 10.
+            Is the size of the window to be used for coherence measures using boolean sliding window as their
+            probability estimator. For 'u_mass' this doesn't matter.
+            If None - the default window sizes are used which are: 'c_v' - 110, 'c_uci' - 10, 'c_npmi' - 10.
         coherence : {'u_mass', 'c_v', 'c_uci', 'c_npmi'}, optional
-            Coherence measure to be used. Supported values are desccribed in type field. 'c_uci' also popularly
-            known as `c_pmi`. For 'u_mass' corpus should be provided. If texts is provided, it will be converted
-            to corpus using the dictionary. For 'c_v', 'c_uci' and 'c_npmi' texts should be provided.
-            Corpus is not needed.
+            Coherence measure to be used.
+            Fastest method - 'u_mass', 'c_uci' also known as `c_pmi`.
+            For 'u_mass' corpus should be provided, if texts is provided, it will be converted to corpus
+            using the dictionary. For 'c_v', 'c_uci' and 'c_npmi' `texts` should be provided (`corpus` isn't needed)
         topn : int, optional
             Integer corresponding to the number of top words to be extracted from each topic.
         processes : int, optional
-            Number of processes to use for probability estimation phase; any value
-            less than 1 will be interpreted to mean num_cpus - 1; default is -1.
-            
+            Number of processes to use for probability estimation phase, any value less than 1 will be interpreted as
+            num_cpus - 1.
+
         """
         if model is None and topics is None:
             raise ValueError("One of model or topics has to be provided.")
@@ -204,19 +207,19 @@ class CoherenceModel(interfaces.TransformationABC):
     @classmethod
     def for_models(cls, models, dictionary, topn=20, **kwargs):
         """Initialize a CoherenceModel with estimated probabilities for all of the given models.
+        Use :meth:`~gensim.models.coherencemodel.CoherenceModel.for_topics` method.
 
         Parameters
         ----------
-        models : list of {:class:`~gensim.models.ldamodel.LdaModel`, :class:`~gensim.models.ldamulticore.LdaMulticore`}
-            List of models to evaluate coherence of; the only requirement is that each has a
-            :meth:`~gensim.models.ldamodel.LdaModel.get_topics` method.
+        models : list of :class:`~gensim.models.basemodel.BaseTopicModel`
+            List of models to evaluate coherence of, each of it should implements
+            :meth:`~gensim.models.basemodel.BaseTopicModel.get_topics` method.
         dictionary : :class:`~gensim.corpora.dictionary.Dictionary`
             Gensim dictionary mapping of id word.
         topn : int, optional
             Integer corresponding to the number of top words to be extracted from each topic.
         kwargs : object
-            Sequence of arguments, see :class:`~gensim.models.coherencemodel.CoherenceModel` for more
-            information.
+            Sequence of arguments, see :meth:`~gensim.models.coherencemodel.CoherenceModel.for_topics`.
 
         Return
         ------
@@ -227,14 +230,12 @@ class CoherenceModel(interfaces.TransformationABC):
         -------
         >>> from gensim.test.utils import common_corpus, common_dictionary
         >>> from gensim.models.ldamodel import LdaModel
-        >>> from gensim.models.ldamulticore import LdaMulticore
         >>> from gensim.models.coherencemodel import CoherenceModel
-        >>> ldamod = LdaModel(common_corpus,100, common_dictionary)
-        >>> ldamul = LdaMulticore(common_corpus, 100 , common_dictionary)
-        >>> models_list = [ldamod, ldamul]
-        >>> # ldamod and ldamul are the trained topic models.
-        >>> cm = CoherenceModel.for_models(models_list, common_dictionary)
-        #TODO : don't see topics, fail even if we __init__ CoherenceModel and then .for_models it.
+        >>>
+        >>> m1 = LdaModel(common_corpus, 3, common_dictionary)
+        >>> m2 = LdaModel(common_corpus, 5, common_dictionary)
+        >>>
+        >>> cm = CoherenceModel.for_models([m1, m2], common_dictionary, corpus=common_corpus, coherence='u_mass')
         """
         topics = [cls.top_topics_as_word_lists(model, dictionary, topn) for model in models]
         kwargs['dictionary'] = dictionary
@@ -243,11 +244,11 @@ class CoherenceModel(interfaces.TransformationABC):
 
     @staticmethod
     def top_topics_as_word_lists(model, dictionary, topn=20):
-        """Return `topn` topics in list-of-list-of-words format.
+        """Get `topn` topics as list of words.
 
         Parameters
         ----------
-        model : {:class:`~gensim.models.ldamodel.LdaModel`, :class:`~gensim.models.ldamulticore.LdaMulticore`}
+        model : :class:`~gensim.models.basemodel.BaseTopicModel`
             Pre-trained topic model.
         dictionary : :class:`~gensim.corpora.dictionary.Dictionary`
             Gensim dictionary mapping of id word.
@@ -257,7 +258,7 @@ class CoherenceModel(interfaces.TransformationABC):
         Return
         ------
         list of list of str
-            Topics in list-of-list-of-words format.
+            Top topics in list-of-list-of-words format.
 
         """
         if not dictionary.id2token:
@@ -312,11 +313,11 @@ class CoherenceModel(interfaces.TransformationABC):
 
     @property
     def model(self):
-        """Get model.
+        """Get `self._model` field.
 
         Return
         ------
-        {:class:`~gensim.models.ldamodel.LdaModel`, :class:`~gensim.models.ldamulticore.LdaMulticore`}
+        :class:`~gensim.models.basemodel.BaseTopicModel`
             Used model.
 
         """
@@ -324,6 +325,14 @@ class CoherenceModel(interfaces.TransformationABC):
 
     @model.setter
     def model(self, model):
+        """Set `self._model` field.
+
+        Parameters
+        ----------
+        model : :class:`~gensim.models.basemodel.BaseTopicModel`
+            Input model.
+
+        """
         self._model = model
         if model is not None:
             new_topics = self._get_topics()
@@ -332,7 +341,7 @@ class CoherenceModel(interfaces.TransformationABC):
 
     @property
     def topn(self):
-        """Get number of top words.
+        """Get number of top words `self._topn`.
 
         Return
         ------
@@ -344,6 +353,14 @@ class CoherenceModel(interfaces.TransformationABC):
 
     @topn.setter
     def topn(self, topn):
+        """Set number of top words `self._topn`.
+
+        Parameters
+        ----------
+        topn : int
+            Number of top words.
+
+        """
         current_topic_length = len(self._topics[0])
         requires_expansion = current_topic_length < topn
 
@@ -362,19 +379,21 @@ class CoherenceModel(interfaces.TransformationABC):
 
         Return
         ------
-        Tuple with named fields
-            Pipeline.
+        namedtuple
+            Pipeline that contains needed functions/method for calculated coherence.
+
         """
         return COHERENCE_MEASURES[self.coherence]
 
     @property
     def topics(self):
-        """Get topics.
+        """Get topics `self._topics`.
 
         Return
         ------
-        list of :class:`numpy.ndarray`
-            Topics. #TODO : probably we can describe it better.
+        list of list of str
+            Topics as list of tokens.
+
         """
         if len(self._topics[0]) > self._topn:
             return [topic[:self._topn] for topic in self._topics]
@@ -383,6 +402,14 @@ class CoherenceModel(interfaces.TransformationABC):
 
     @topics.setter
     def topics(self, topics):
+        """Set topics `self._topics`.
+
+        Parameters
+        ----------
+        topics : list of list of str
+            Topics.
+
+        """
         if topics is not None:
             new_topics = []
             for topic in topics:
