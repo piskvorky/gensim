@@ -240,7 +240,7 @@ win_testenv = [
 linux_testenv = win_testenv + [
     'annoy',
     'tensorflow <= 1.3.0',
-    'keras >= 2.0.4',
+    'keras >= 2.0.4, <= 2.1.4',
 ]
 
 setup(
