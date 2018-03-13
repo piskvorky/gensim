@@ -7,7 +7,7 @@
 """Calculate topic coherence for topic models. This is the implementation of the four stage topic coherence pipeline
 from the paper `Michael Roeder, Andreas Both and Alexander Hinneburg: "Exploring the space of topic coherence measures"
 <http://svn.aksw.org/papers/2015/WSDM_Topic_Evaluation/public.pdf>`_.
-Typically, :class:`gensim.models.coherencemodel.CoherenceModel` used for evaluation of topic models.
+Typically, :class:`~gensim.models.coherencemodel.CoherenceModel` used for evaluation of topic models.
 
 The four stage pipeline is basically:
 
@@ -18,6 +18,11 @@ The four stage pipeline is basically:
 
 Implementation of this pipeline allows for the user to in essence "make" a coherence measure of his/her choice
 by choosing a method in each of the pipelines.
+
+See Also
+--------
+:mod:`gensim.topic_coherence`
+    Internal functions for pipelines.
 
 """
 import logging
