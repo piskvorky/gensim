@@ -39,9 +39,9 @@ from gensim import matutils
 class AuthorTopicTransformer(TransformerMixin, BaseEstimator):
     """Base Author Topic module, wraps :class:`~gensim.models.atmodel.AuthorTopicModel`.
 
-    For more information on the inner workings please take a look at the original class. The model's internal workings
-    are heavily based on `"The Author-Topic Model for Authors and Documents", Osen-Zvi et. al 2004
-    <https://mimno.infosci.cornell.edu/info6150/readings/398.pdf>`_.
+    For more information on the inner workings please take a look at the original class.
+    The model's internal workings are heavily based on  `"The Author-Topic Model for Authors and Documents",
+    Osen-Zvi et. al 2004 <https://mimno.infosci.cornell.edu/info6150/readings/398.pdf>`_.
 
     """
     def __init__(self, num_topics=100, id2word=None, author2doc=None, doc2author=None,
@@ -55,10 +55,10 @@ class AuthorTopicTransformer(TransformerMixin, BaseEstimator):
         ----------
         num_topics : int, optional
             Number of requested latent topics to be extracted from the training corpus.
-        id2word : dict of (int, str), optional
-            Mapping from a words' ID to the word itself. Used to determine the vocabulary size,
-            as well as for debugging and topic printing.
-        author2doc : dict(str, list of int), optional
+        id2word : :class:`~gensim.corpora.dictionary.Dictionary`, optional
+            Mapping from a words' ID to the word itself. Used to determine the vocabulary size, as well as for debugging
+            and topic printing.
+        author2doc : dict of (str, list of int), optional
             Maps an authors name to a list of document IDs where has has contributed.
             Either `author2doc` or `doc2author` **MUST** be supplied.
         doc2author : dict of (int, list of str)
@@ -79,14 +79,16 @@ class AuthorTopicTransformer(TransformerMixin, BaseEstimator):
             Hyper-parameter that controls how much we will slow down the first steps the first few iterations.
             Corresponds to Tau_0 from `"The Author-Topic Model for Authors and Documents", Osen-Zvi et. al 2004
             <https://mimno.infosci.cornell.edu/info6150/readings/398.pdf>`_.
-        alpha : {np.array, str}, optional
+        alpha : {np.ndarray, str}, optional
             Can be set to an 1D array of length equal to the number of expected topics that expresses
             our a-priori belief for the each topics' probability.
             Alternatively default prior selecting strategies can be employed by supplying a string:
-            'asymmetric': Uses a fixed normalized assymetric prior of `1.0 / topicno`.
-            'default': Learns an assymetric prior from the corpus.
+
+                * 'asymmetric': Uses a fixed normalized assymetric prior of `1.0 / topicno`.
+                * 'default': Learns an assymetric prior from the corpus.
         eta : {float, np.array, str}, optional
             A-priori belief on word probability, this can be:
+
                 * scalar for a symmetric prior over topic/word probability,
                 * vector : of length num_words to denote an asymmetric user defined probability for each word,
                 * matrix of shape (num_topics, num_words) to assign a probability for each word-topic combination,

@@ -67,7 +67,7 @@ class LdaSeqTransformer(TransformerMixin, BaseEstimator):
         obs_variance : float
             Observed variance used to approximate the true and forward variance as shown in
             `David M. Blei, John D. Lafferty: "Dynamic Topic Models"
-             <https://mimno.infosci.cornell.edu/info6150/readings/398.pdf>`_.
+            <https://mimno.infosci.cornell.edu/info6150/readings/398.pdf>`_.
         chain_variance : float
             Gaussian parameter defined in the beta distribution to dictate how the beta values evolve.
         passes : int
