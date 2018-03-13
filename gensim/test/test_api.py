@@ -7,6 +7,10 @@ import shutil
 import numpy as np
 
 
+@unittest.skipIf(
+    os.environ.get("SKIP_NETWORK_TESTS", False) == "1",
+    "Skip network-related tests (probably SSL problems on this CI/OS)"
+)
 class TestApi(unittest.TestCase):
     def test_base_dir_creation(self):
         if os.path.isdir(base_dir):
