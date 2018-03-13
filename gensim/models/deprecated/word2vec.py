@@ -183,8 +183,6 @@ def load_old_word2vec(*args, **kwargs):
         new_model.trainables.syn1neg = old_model.syn1neg
     if hasattr(old_model, 'syn0_lockf'):
         new_model.trainables.vectors_lockf = old_model.syn0_lockf
-    if not hasattr(old_model, 'max_final_vocab'):
-        new_model.max_final_vocab = None
 
     # set vocabulary attributes
     new_model.wv.vocab = old_model.wv.vocab
