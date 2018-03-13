@@ -260,7 +260,7 @@ class PhrasesTransformation(interfaces.TransformationABC):
 class Phrases(SentenceAnalyzer, PhrasesTransformation):
     """Detect phrases, based on collected collocation counts. Adjacent words that appear together more frequently than
     expected are joined together with the `_` character. It can be used to generate phrases on the fly,
-    using the `phrases[sentence]` and `phrases[corpus]` syntax.
+    using the `phrases[sentence]` and `phrases[corpus]` syntax. #TODO
     """
 
     def __init__(self, sentences=None, min_count=5, threshold=10.0,
@@ -286,7 +286,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
             available memory you have.
         delimiter : str, optional
             Glue character used to join collocation tokens, should be a byte string (e.g. b'_').
-        scoring : {'default', 'npmi'}
+        scoring : {'default', 'npmi'} http://www.sphinx-doc.org/en/master/rest.html
             Specify how potential phrases are scored for comparison to the `threshold` setting.
             `scoring` can be set with either a string that refers to a built-in scoring function, or with a function
             with the expected parameter names. Two built-in scoring functions are available by setting `scoring` to a
@@ -319,7 +319,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         A scoring function without any of these parameters (even if the parameters are not used) will
         raise a ValueError on initialization of the Phrases class. The scoring function must be picklable.
 
-        common_terms : list of str, optional
+        common_terms : set of str, optional
             List of "stop words" that won't affect frequency count of expressions containing them.
 
         Initialize the model from an iterable of `sentences`. Each sentence must be
@@ -408,11 +408,11 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
     @staticmethod
     def learn_vocab(sentences, max_vocab_size, delimiter=b'_', progress_per=10000,
                     common_terms=frozenset()):
-        """Collect unigram/bigram counts from the `sentences` iterable.
+        """Collect unigram/bigram counts from the `sentences` iterable. #TODO: Через пустой Phrasers
 
         Parameters
         ----------
-        sentences : #TODO
+        sentences : list of str
         max_vocab_size : int
         delimiter : str
         progress_per : int
@@ -460,7 +460,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
 
         Parameters
         ----------
-        sentences : TODO: what is this
+        sentences : list of str
 
         """
         # uses a separate vocab to collect the token counts from `sentences`.
@@ -491,7 +491,8 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
 
         Parameters
         ----------
-        sentences : #TODO
+        sentences : list of str
+            List of unicode strings.
         out_delimiter : str, optional
         as_tuples : bool, optional
 
@@ -526,13 +527,17 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
                     yield (out_delimiter.join(words), score)
 
     def __getitem__(self, sentence):
-        """
-        Convert the input tokens `sentence` (=list of unicode strings) into phrase
+        """Convert the input tokens `sentence` (=list of unicode strings) into phrase
         tokens (=list of unicode strings, where detected phrases are joined by u'_').
 
         If `sentence` is an entire corpus (iterable of sentences rather than a single
         sentence), return an iterable that converts each of the corpus' sentences
         into phrases on the fly, one after another.
+
+        Parameters
+        ----------
+        sentence : list of str
+            List of unicode strings.
 
         Example::
 
@@ -609,8 +614,7 @@ def pseudocorpus(source_vocab, sep, common_terms=frozenset()):
 
 
 class Phraser(SentenceAnalyzer, PhrasesTransformation):
-    """
-    Minimal state & functionality to apply results of a Phrases model to tokens.
+    """Minimal state & functionality to apply results of a Phrases model to tokens.
 
     After the one-time initialization, a Phraser will be much smaller and
     somewhat faster than using the full Phrases model.
@@ -645,22 +649,25 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
                             phrases_model.common_terms)
 
     def score_item(self, worda, wordb, components, scorer):
-        """score is retained from original dataset
-        """
+        """Score, retained from original dataset."""
         try:
             return self.phrasegrams[tuple(components)][1]
         except KeyError:
             return -1
 
     def __getitem__(self, sentence):
-        """
-        Convert the input tokens `sentence` (=list of unicode strings) into phrase
+        """Convert the input tokens `sentence` (=list of unicode strings) into phrase
         tokens (=list of unicode strings, where detected phrases are joined by u'_'
         (or other configured delimiter-character).
 
         If `sentence` is an entire corpus (iterable of sentences rather than a single
         sentence), return an iterable that converts each of the corpus' sentences
         into phrases on the fly, one after another.
+
+        Parameters
+        ----------
+        sentence : {list of str, iterable of list of str}
+            List of unicode strings.
 
         """
         is_single, sentence = _is_single(sentence)
