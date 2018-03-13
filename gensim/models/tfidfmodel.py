@@ -27,7 +27,8 @@ def resolve_weights(smartirs):
         Information Retrieval System, a mnemonic scheme for denoting tf-idf weighting
         variants in the vector space model. The mnemonic for representing a combination
         of weights takes the form ddd, where the letters represents the term weighting of the document vector.
-        for more information visit <https://en.wikipedia.org/wiki/SMART_Information_Retrieval_System>_.
+        for more information visit `SMART Information Retrieval System
+        <https://en.wikipedia.org/wiki/SMART_Information_Retrieval_System>`_.
 
     Returns
     -------
@@ -183,20 +184,19 @@ def updated_normalize(x, n_n, return_norm=False):
     n_n : {'n', 'c'}
         Parameter that decides the normalizing function to be used.
     return_norm : bool, optional
-        if set to true, it also returns the normalization factor along with the
-        normalized vector.
+        If True - returns the length of vector `x`.
 
     Returns
     -------
     numpy.ndarray
         Normalized array.
-    int
+    float
         Vector length.
 
     """
     if n_n == "n":
         if return_norm:
-            return x, 1
+            return x, 1.
         else:
             return x
     elif n_n == "c":
@@ -223,8 +223,7 @@ class TfidfModel(interfaces.TransformationABC):
     """
 
     def __init__(self, corpus=None, id2word=None, dictionary=None, wlocal=utils.identity,
-                 wglobal=df2idf, normalize=True, smartirs=None,
-                 pivot=None, slope=0.65):
+                 wglobal=df2idf, normalize=True, smartirs=None, pivot=None, slope=0.65):
         """Compute tf-idf by multiplying a local component (term frequency) with a global component
         (inverse document frequency), and normalizing the resulting documents to unit length.
         Formula for non-normalized weight of term :math:`i` in document :math:`j` in a corpus of :math:`D` documents
@@ -277,10 +276,12 @@ class TfidfModel(interfaces.TransformationABC):
                 * `n` - none,
                 * `c` - cosine.
 
-            For more information visit <https://en.wikipedia.org/wiki/SMART_Information_Retrieval_System>_.
+            For more information visit `SMART Information Retrieval System
+            <https://en.wikipedia.org/wiki/SMART_Information_Retrieval_System>`_.
         pivot : float, optional
             It is the point around which the regular normalization curve is `tilted` to get the new pivoted
-            normalization curve. In the paper <http://singhal.info/pivoted-dln.pdf>_ it is the point where the
+            normalization curve. In the paper `Amit Singhal, Chris Buckley, Mandar Mitra:
+            "Pivoted Document Length Normalization" <http://singhal.info/pivoted-dln.pdf>`_ it is the point where the
             retrieval and relevance curves intersect.
             This parameter along with slope is used for pivoted document length normalization.
             Only when `pivot` is not None pivoted document length normalization will be applied else regular TfIdf
@@ -431,10 +432,11 @@ class TfidfModel(interfaces.TransformationABC):
             norm_vector = self.normalize(vector)
             norm_vector = [(termid, weight) for termid, weight in norm_vector if abs(weight) > self.eps]
         else:
-            logger.info("Using pivoted normalization")
             _, old_norm = self.normalize(vector, return_norm=True)
             pivoted_norm = (1 - self.slope) * self.pivot + self.slope * old_norm
-            norm_vector = [(termid, weight / float(pivoted_norm))
-            for termid, weight in vector if abs(weight / float(pivoted_norm)) > self.eps
+            norm_vector = [
+                (termid, weight / float(pivoted_norm))
+                for termid, weight in vector
+                if abs(weight / float(pivoted_norm)) > self.eps
             ]
         return norm_vector

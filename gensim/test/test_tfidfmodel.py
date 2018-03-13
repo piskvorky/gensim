@@ -182,15 +182,10 @@ class TestTfidfModel(unittest.TestCase):
         # nnn
         model = tfidfmodel.TfidfModel(self.corpus, smartirs='nnn')
         transformed_docs = [model[docs[0]], model[docs[1]]]
-        expected_docs = [[(3, 2),
-                          (4, 2),
-                          (5, 3),
-                          (6, 2),
-                          (7, 3),
-                          (8, 2)],
-                         [(5, 6),
-                          (9, 3),
-                          (10, 3)]]
+        expected_docs = [
+            [(3, 2), (4, 2), (5, 3), (6, 2), (7, 3), (8, 2)],
+            [(5, 6), (9, 3), (10, 3)]
+        ]
 
         self.assertTrue(np.allclose(transformed_docs[0], expected_docs[0]))
         self.assertTrue(np.allclose(transformed_docs[1], expected_docs[1]))
@@ -198,15 +193,10 @@ class TestTfidfModel(unittest.TestCase):
         # lnn
         model = tfidfmodel.TfidfModel(self.corpus, smartirs='lnn')
         transformed_docs = [model[docs[0]], model[docs[1]]]
-        expected_docs = [[(3, 2.0),
-                          (4, 2.0),
-                          (5, 3.0),
-                          (6, 2.0),
-                          (7, 3.0),
-                          (8, 2.0)],
-                         [(5, 6.0),
-                          (9, 3.0),
-                          (10, 3.0)]]
+        expected_docs = [
+            [(3, 2.0), (4, 2.0), (5, 3.0), (6, 2.0), (7, 3.0), (8, 2.0)],
+            [(5, 6.0), (9, 3.0), (10, 3.0)]
+        ]
 
         self.assertTrue(np.allclose(transformed_docs[0], expected_docs[0]))
         self.assertTrue(np.allclose(transformed_docs[1], expected_docs[1]))
@@ -214,15 +204,10 @@ class TestTfidfModel(unittest.TestCase):
         # ann
         model = tfidfmodel.TfidfModel(self.corpus, smartirs='ann')
         transformed_docs = [model[docs[0]], model[docs[1]]]
-        expected_docs = [[(3, 2.0),
-                          (4, 2.0),
-                          (5, 3.0),
-                          (6, 2.0),
-                          (7, 3.0),
-                          (8, 2.0)],
-                         [(5, 3.0),
-                          (9, 2.25),
-                          (10, 2.25)]]
+        expected_docs = [
+            [(3, 2.0), (4, 2.0), (5, 3.0), (6, 2.0), (7, 3.0), (8, 2.0)],
+            [(5, 3.0), (9, 2.25), (10, 2.25)]
+        ]
 
         self.assertTrue(np.allclose(transformed_docs[0], expected_docs[0]))
         self.assertTrue(np.allclose(transformed_docs[1], expected_docs[1]))
@@ -230,15 +215,10 @@ class TestTfidfModel(unittest.TestCase):
         # bnn
         model = tfidfmodel.TfidfModel(self.corpus, smartirs='bnn')
         transformed_docs = [model[docs[0]], model[docs[1]]]
-        expected_docs = [[(3, 2),
-                          (4, 2),
-                          (5, 3),
-                          (6, 2),
-                          (7, 3),
-                          (8, 2)],
-                         [(5, 3),
-                          (9, 3),
-                          (10, 3)]]
+        expected_docs = [
+            [(3, 2), (4, 2), (5, 3), (6, 2), (7, 3), (8, 2)],
+            [(5, 3), (9, 3), (10, 3)]
+        ]
 
         self.assertTrue(np.allclose(transformed_docs[0], expected_docs[0]))
         self.assertTrue(np.allclose(transformed_docs[1], expected_docs[1]))
@@ -246,15 +226,15 @@ class TestTfidfModel(unittest.TestCase):
         # Lnn
         model = tfidfmodel.TfidfModel(self.corpus, smartirs='Lnn')
         transformed_docs = [model[docs[0]], model[docs[1]]]
-        expected_docs = [[(3, 1.4635792826230198),
-                          (4, 1.4635792826230198),
-                          (5, 2.19536892393453),
-                          (6, 1.4635792826230198),
-                          (7, 2.19536892393453),
-                          (8, 1.4635792826230198)],
-                         [(5, 3.627141918134611),
-                          (9, 1.8135709590673055),
-                          (10, 1.8135709590673055)]]
+        expected_docs = [
+            [
+                (3, 1.4635792826230198), (4, 1.4635792826230198), (5, 2.19536892393453), (6, 1.4635792826230198),
+                (7, 2.19536892393453), (8, 1.4635792826230198)
+            ],
+            [
+                (5, 3.627141918134611), (9, 1.8135709590673055), (10, 1.8135709590673055)
+            ]
+        ]
 
         self.assertTrue(np.allclose(transformed_docs[0], expected_docs[0]))
         self.assertTrue(np.allclose(transformed_docs[1], expected_docs[1]))
@@ -263,15 +243,15 @@ class TestTfidfModel(unittest.TestCase):
         # ntn
         model = tfidfmodel.TfidfModel(self.corpus, smartirs='ntn')
         transformed_docs = [model[docs[0]], model[docs[1]]]
-        expected_docs = [[(3, 2.1699250014423126),
-                          (4, 2.1699250014423126),
-                          (5, 1.5849625007211563),
-                          (6, 2.1699250014423126),
-                          (7, 1.5849625007211563),
-                          (8, 2.1699250014423126)],
-                         [(5, 3.1699250014423126),
-                          (9, 1.5849625007211563),
-                          (10, 1.5849625007211563)]]
+        expected_docs = [
+            [
+                (3, 2.1699250014423126), (4, 2.1699250014423126), (5, 1.5849625007211563), (6, 2.1699250014423126),
+                (7, 1.5849625007211563), (8, 2.1699250014423126)
+            ],
+            [
+                (5, 3.1699250014423126), (9, 1.5849625007211563), (10, 1.5849625007211563)
+            ]
+        ]
 
         self.assertTrue(np.allclose(transformed_docs[0], expected_docs[0]))
         self.assertTrue(np.allclose(transformed_docs[1], expected_docs[1]))
@@ -279,15 +259,15 @@ class TestTfidfModel(unittest.TestCase):
         # npn
         model = tfidfmodel.TfidfModel(self.corpus, smartirs='npn')
         transformed_docs = [model[docs[0]], model[docs[1]]]
-        expected_docs = [[(3, 1.8073549220576042),
-                          (4, 1.8073549220576042),
-                          (5, 1.0),
-                          (6, 1.8073549220576042),
-                          (7, 1.0),
-                          (8, 1.8073549220576042)],
-                         [(5, 2.0),
-                          (9, 1.0),
-                          (10, 1.0)]]
+        expected_docs = [
+            [
+                (3, 1.8073549220576042), (4, 1.8073549220576042), (5, 1.0), (6, 1.8073549220576042),
+                (7, 1.0), (8, 1.8073549220576042)
+            ],
+            [
+                (5, 2.0), (9, 1.0), (10, 1.0)
+            ]
+        ]
 
         self.assertTrue(np.allclose(transformed_docs[0], expected_docs[0]))
         self.assertTrue(np.allclose(transformed_docs[1], expected_docs[1]))
@@ -296,15 +276,15 @@ class TestTfidfModel(unittest.TestCase):
         # nnc
         model = tfidfmodel.TfidfModel(self.corpus, smartirs='nnc')
         transformed_docs = [model[docs[0]], model[docs[1]]]
-        expected_docs = [[(3, 0.34299717028501764),
-                          (4, 0.34299717028501764),
-                          (5, 0.51449575542752646),
-                          (6, 0.34299717028501764),
-                          (7, 0.51449575542752646),
-                          (8, 0.34299717028501764)],
-                         [(5, 0.81649658092772603),
-                          (9, 0.40824829046386302),
-                          (10, 0.40824829046386302)]]
+        expected_docs = [
+            [
+                (3, 0.34299717028501764), (4, 0.34299717028501764), (5, 0.51449575542752646), (6, 0.34299717028501764),
+                (7, 0.51449575542752646), (8, 0.34299717028501764)
+            ],
+            [
+                (5, 0.81649658092772603), (9, 0.40824829046386302), (10, 0.40824829046386302)
+            ]
+        ]
 
         self.assertTrue(np.allclose(transformed_docs[0], expected_docs[0]))
         self.assertTrue(np.allclose(transformed_docs[1], expected_docs[1]))
@@ -335,10 +315,15 @@ class TestTfidfModel(unittest.TestCase):
         # Test if pivoted model is consistent
         model = tfidfmodel.TfidfModel(self.corpus, pivot=0, slope=0.5)
         transformed_docs = [model[docs[0]], model[docs[1]]]
-        expected_docs = [[(8, 0.8884910505493495), (7, 0.648974041227711), (6, 0.8884910505493495),
-            (5, 0.648974041227711), (4, 0.8884910505493495), (3, 0.8884910505493495)],
-            [(10, 0.8164965809277263), (9, 0.8164965809277263), (5, 1.6329931618554525)]
+        expected_docs = [
+            [
+                (8, 0.8884910505493495), (7, 0.648974041227711), (6, 0.8884910505493495),
+                (5, 0.648974041227711), (4, 0.8884910505493495), (3, 0.8884910505493495)
+            ],
+            [
+                (10, 0.8164965809277263), (9, 0.8164965809277263), (5, 1.6329931618554525)
             ]
+        ]
 
         self.assertTrue(np.allclose(sorted(transformed_docs[0]), sorted(expected_docs[0])))
         self.assertTrue(np.allclose(sorted(transformed_docs[1]), sorted(expected_docs[1])))

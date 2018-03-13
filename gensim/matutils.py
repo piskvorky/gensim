@@ -676,15 +676,14 @@ def unitvec(vec, norm='l2', return_norm=False):
     norm : {'l1', 'l2'}, optional
         Normalization that will be used.
     return_norm : bool, optional
-        if set to true, it returns the normalization factor along with the
-        normalized vector.
+        If True - returns the length of vector `vec`.
 
     Returns
     -------
     numpy.ndarray, scipy.sparse, list of (int, float)}
         Normalized vector in same format as `vec`.
-    int
-        Vector length.
+    float
+        Length of `vec` before normalization.
 
     Notes
     -----
@@ -706,7 +705,7 @@ def unitvec(vec, norm='l2', return_norm=False):
                 return vec / veclen
         else:
             if return_norm:
-                return vec, 1
+                return vec, 1.
             else:
                 return vec
 
