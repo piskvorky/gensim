@@ -27,7 +27,7 @@ def resolve_weights(smartirs):
         Information Retrieval System, a mnemonic scheme for denoting tf-idf weighting
         variants in the vector space model. The mnemonic for representing a combination
         of weights takes the form ddd, where the letters represents the term weighting of the document vector.
-        for more information visit [1]_.
+        for more information visit <https://en.wikipedia.org/wiki/SMART_Information_Retrieval_System>_.
 
     Returns
     -------
@@ -53,11 +53,6 @@ def resolve_weights(smartirs):
     ValueError
         If `smartirs` is not a string of length 3 or one of the decomposed value
         doesn't fit the list of permissible values
-
-    References
-    ----------
-    .. [1] https://en.wikipedia.org/wiki/SMART_Information_Retrieval_System
-    .. [2] http://singhal.info/pivoted-dln.pdf
 
     """
     if not isinstance(smartirs, str) or len(smartirs) != 3:
@@ -196,7 +191,7 @@ def updated_normalize(x, n_n, return_norm=False):
     numpy.ndarray
         Normalized array.
     int
-        Normalizing factor.
+        Vector length.
 
     """
     if n_n == "n":
@@ -282,11 +277,12 @@ class TfidfModel(interfaces.TransformationABC):
                 * `n` - none,
                 * `c` - cosine.
 
-            For more information visit [1]_.
+            For more information visit <https://en.wikipedia.org/wiki/SMART_Information_Retrieval_System>_.
         pivot : float, optional
             It is the point around which the regular normalization curve is `tilted` to get the new pivoted
-            normalization curve. In the paper[2] it is the point where the retrieval and relevance curves intersect.
-            This parameter along with slope is used for pivoted document length normalization[2].
+            normalization curve. In the paper <http://singhal.info/pivoted-dln.pdf>_ it is the point where the
+            retrieval and relevance curves intersect.
+            This parameter along with slope is used for pivoted document length normalization.
             Only when `pivot` is not None pivoted document length normalization will be applied else regular TfIdf
             is used.
         slope : float, optional

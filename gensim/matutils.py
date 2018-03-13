@@ -684,7 +684,7 @@ def unitvec(vec, norm='l2', return_norm=False):
     numpy.ndarray, scipy.sparse, list of (int, float)}
         Normalized vector in same format as `vec`.
     int
-        Normalizing factor.
+        Vector length.
 
     Notes
     -----
