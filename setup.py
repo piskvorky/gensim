@@ -239,12 +239,12 @@ win_testenv = [
 linux_testenv = win_testenv + [
     'annoy',
     'tensorflow <= 1.3.0',
-    'keras >= 2.0.4',
+    'keras >= 2.0.4, <= 2.1.4',
 ]
 
 setup(
     name='gensim',
-    version='3.3.0',
+    version='3.4.0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
@@ -259,6 +259,9 @@ setup(
             sources=['./gensim/corpora/_mmreader.c']),
         Extension('gensim.models.fasttext_inner',
             sources=['./gensim/models/fasttext_inner.c'],
+            include_dirs=[model_dir]),
+        Extension('gensim.models._utils_any2vec',
+            sources=['./gensim/models/_utils_any2vec.c'],
             include_dirs=[model_dir]),
         Extension('gensim._matutils',
             sources=['./gensim/_matutils.c']),
