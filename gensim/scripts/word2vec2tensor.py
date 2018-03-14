@@ -77,6 +77,7 @@ def word2vec2tensor(word2vec_model_path, tensor_filename, binary=False):
     logger.info("2D tensor file saved to %s", outfiletsv)
     logger.info("Tensor metadata file saved to %s", outfiletsvmeta)
 
+
 if __name__ == "__main__":
     logging.basicConfig(format='%(asctime)s - %(module)s - %(levelname)s - %(message)s', level=logging.INFO)
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description=__doc__[:-138])
