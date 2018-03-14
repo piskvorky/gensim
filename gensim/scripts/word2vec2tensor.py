@@ -70,13 +70,12 @@ def word2vec2tensor(word2vec_model_path, tensor_filename, binary=False):
     with open(outfiletsv, 'w+') as file_vector:
         with open(outfiletsvmeta, 'w+') as file_metadata:
             for word in model.index2word:
-                file_metadata.write(gensim.utils.to_utf8(word) + gensim.utils.to_utf8('\n'))
+                file_metadata.write(word + '\n')
                 vector_row = '\t'.join(str(x) for x in model[word])
                 file_vector.write(vector_row + '\n')
 
     logger.info("2D tensor file saved to %s", outfiletsv)
     logger.info("Tensor metadata file saved to %s", outfiletsvmeta)
-
 
 if __name__ == "__main__":
     logging.basicConfig(format='%(asctime)s - %(module)s - %(levelname)s - %(message)s', level=logging.INFO)
