@@ -5,7 +5,21 @@
 # Copyright (C) 2018 RaRe Technologies s.r.o.
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""Contains base classes required for implementing any2vec algorithms."""
+"""This module contains base classes required for implementing any2vec algorithms.
+
+The class hierarchy is designed to facilitate adding more concrete implementations for creating embeddings.
+In the most general case, the purpose of this class is to transform an arbitrary representation to a numerical vector
+(embedding). This is represented by the base :class:`~gensim.models.base_any2vec.BaseAny2VecModel`. The input space in
+most cases (in the NLP field at least) is plain text. For this reason, we enrich the class hierarchy with the abstract
+:class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel` to be used as a base for models where the input
+space is text.
+
+Notes
+-----
+Even though this is the usual case, not all embeddings transform text.
+For example :class:`~gensim.models.poincare.PoincareModel` operates on graph representations.
+
+"""
 from gensim import utils
 import logging
 from timeit import default_timer
@@ -51,15 +65,15 @@ class BaseAny2VecModel(utils.SaveLoad):
 
         Parameters
         ----------
-        workers : int
-            Number of working threads, used for multiprocessing.
-        vector_size : int
+        workers : int, optional
+            Number of working threads, used for multithreading.
+        vector_size : int, optional
             Dimensionality of the feature vectors.
-        epochs : int
+        epochs : int, optional
             Number of iterations (epochs) of training through the corpus.
-        callbacks : list of :class: `~gensim.models.callbacks.CallbackAny2Vec`, optional
+        callbacks : list of :class:`~gensim.models.callbacks.CallbackAny2Vec`, optional
             List of callbacks that need to be executed/run at specific stages during training.
-        batch_words : int
+        batch_words : int, optional
             Number of words to be processed by a single job.
 
         """
@@ -112,7 +126,7 @@ class BaseAny2VecModel(utils.SaveLoad):
 
         Parameters
         ----------
-        job_queue : Queue of (list of object, dict)
+        job_queue : Queue of (list of object, (str, int))
             A queue of jobs still to be processed. The worker will take up jobs from this queue.
             Each job is represented by a tuple where the first element is the corpus chunk to be processed and
             the second is the dictionary of parameters.
@@ -153,8 +167,8 @@ class BaseAny2VecModel(utils.SaveLoad):
         Parameters
         ----------
         data_iterator : iterable of list of object
-            The input corpus. This will be split in chunks and these chunks will be pushed to the queue.
-        job_queue : Queue of (list of object, dict)
+            The input dataset. This will be split in chunks and these chunks will be pushed to the queue.
+        job_queue : Queue of (list of object, dict of (str, int))
             A queue of jobs still to be processed. The worker will take up jobs from this queue.
             Each job is represented by a tuple where the first element is the corpus chunk to be processed and
             the second is the dictionary of parameters.
@@ -237,7 +251,7 @@ class BaseAny2VecModel(utils.SaveLoad):
                 * size of data chunk processed, for example number of sentences in the corpus chunk.
                 * Effective word count used in training (after ignoring unknown words and trimming the sentence length).
                 * Total word count used in training.
-        job_queue : Queue of (list of object, dict)
+        job_queue : Queue of (list of object, dict of (str, int))
             A queue of jobs still to be processed. The worker will take up jobs from this queue.
             Each job is represented by a tuple where the first element is the corpus chunk to be processed and
             the second is the dictionary of parameters.
@@ -372,7 +386,7 @@ class BaseAny2VecModel(utils.SaveLoad):
             Multiplier for size of queue -> size = number of workers * queue_factor.
         report_delay : float, optional
             Number of seconds between two consecutive progress report messages in the logger.
-        callbacks : list of :class: `~gensim.models.callbacks.CallbackAny2Vec`, optional
+        callbacks : list of :class:`~gensim.models.callbacks.CallbackAny2Vec`, optional
             List of callbacks that need to be executed/run at specific stages during training.
         **kwargs
             Additional key word parameters for the specific model inheriting from this class.
@@ -507,7 +521,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             Dimensionality of the feature vectors.
         epochs : int, optional
             Number of iterations (epochs) of training through the corpus.
-        callbacks : list of :class: `~gensim.models.callbacks.CallbackAny2Vec`, optional
+        callbacks : list of :class:`~gensim.models.callbacks.CallbackAny2Vec`, optional
             List of callbacks that need to be executed/run at specific stages during training.
         batch_words : int, optional
             Number of words to be processed by a single job.
@@ -806,7 +820,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             len(raw_vocab), sum(itervalues(raw_vocab))
         )
 
-        # Since no sentences are provided, this is to control the `corpus_count`
+        # Since no sentences are provided, this is to control the corpus_count.
         self.corpus_count = corpus_count or 0
         self.vocabulary.raw_vocab = raw_vocab
 
@@ -879,7 +893,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         compute_loss : bool, optional
             If True, loss will be computed while training the Word2Vec model and stored in
             :attr:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel.running_training_loss`.
-        callbacks : list of :class: `~gensim.models.callbacks.CallbackAny2Vec`, optional
+        callbacks : list of :class:`~gensim.models.callbacks.CallbackAny2Vec`, optional
             List of callbacks that need to be executed/run at specific stages during training.
 
         Returns
