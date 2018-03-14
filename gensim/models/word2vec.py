@@ -11,7 +11,7 @@ hierarchical softmax or negative sampling: `Efficient Estimation of Word Represe
 <https://arxiv.org/abs/1310.4546>`_.
 
 NOTE: There are more ways to get word vectors in Gensim than just Word2Vec.
-See FastText and wrappers for VarEmbed and WordRank.
+See :class:`~gensim.models.fasttext.FastText` and wrappers for VarEmbed and WordRank.
 
 The training algorithms were originally ported from the C package https://code.google.com/p/word2vec/
 and extended with additional functionality.
@@ -27,19 +27,19 @@ Examples
 --------
 
 #. Initialize a model with e.g.::
-
-    >>> model = Word2Vec(sentences, size=100, window=5, min_count=5, workers=4)
+    >>> from gensim.test.utils import common_texts
+    >>>
+    >>> model = Word2Vec(size=4, window=2, min_count=1, workers=4)
+    >>> model.build_vocab(common_texts)
 
 #. Persist a model to disk with::
-
-    >>> model.save(fname)
-    >>> model = Word2Vec.load(fname)  # you can continue training with the loaded model!
+    >>> model.save("temp_model.w2v")
+    >>> model = Word2Vec.load("temp_model.w2v")  # you can continue training with the loaded model!
 
     The word vectors are stored in a KeyedVectors instance in `model.wv`.
     This separates the read-only word vector lookup operations in KeyedVectors from the training code in Word2Vec::
 
-    >>> model.wv['computer']  # numpy vector of a word
-    array([-0.00449447, -0.00310097,  0.02421786, ...], dtype=float32)
+    >>> computer_vec = model.wv['computer']  # numpy vector of a word
 
 The word vectors can also be instantiated from an existing file on disk in the word2vec C format
 as a KeyedVectors instance.
@@ -48,38 +48,43 @@ as a KeyedVectors instance.
 vocabulary frequency and the binary tree is missing::
 
     >>> from gensim.models import KeyedVectors
-    >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
-    >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.bin', binary=True)  # C binary format
-
+    >>>
+    >>> # Save and load key word vectors in C text format.
+    >>> model.wv.save_word2vec_format('vectors.txt', binary=False)
+    >>> word_vectors = KeyedVectors.load_word2vec_format('vectors.txt', binary=False)
+    >>>
+    >>> # Save and load key word vectors in C binary format.
+    >>> model.wv.save_word2vec_format('vectors.bin', binary=True)
+    >>> word_vectors = KeyedVectors.load_word2vec_format('vectors.bin', binary=True)
 
 #. You can perform various NLP word tasks with the model. Some of them are already built-in::
 
-    >>> model.wv.most_similar(positive=['woman', 'king'], negative=['man'])
-    [('queen', 0.50882536), ...]
+    >>> similarities = model.wv.most_similar(positive=['computer', 'human'], negative=['interface'])
+    >>> most_similar = similarities[0]
 
-    >>> model.wv.most_similar_cosmul(positive=['woman', 'king'], negative=['man'])
-    [('queen', 0.71382287), ...]
+    >>> similarities = model.wv.most_similar_cosmul(positive=['computer', 'human'], negative=['interface'])
+    >>> most_similar = similarities[0]
 
+    >>> not_matching = model.wv.doesnt_match("human computer interface tree".split())
 
-    >>> model.wv.doesnt_match("breakfast cereal dinner lunch".split())
-    'cereal'
+    >>> sim_score = model.wv.similarity('computer', 'human')
 
-    >>> model.wv.similarity('woman', 'man')
-    0.73723527
+#. Probability of a (possibly unseen) text under the model::
 
-#. Probability of a text under the model::
-
-    >>> model.score(["The fox jumped over a lazy dog".split()])
-    0.2158356
+    >>> # Note that score is only implemented for the hierarchical softmax scheme.
+    >>> model = Word2Vec(size=4, window=2, min_count=1, workers=4, hs=1, negative=0)
+    >>> model.build_vocab(common_texts)
+    >>> proba = model.score(["The fox jumped over a lazy dog".split()])
 
 #. Correlation with human opinion on word similarity::
 
-    >>> model.wv.evaluate_word_pairs(os.path.join(module_path, 'test_data','wordsim353.tsv'))
-    0.51, 0.62, 0.13
+    >>> from gensim.test.utils import datapath
+    >>>
+    >>> similarities = model.wv.evaluate_word_pairs(datapath('wordsim353.tsv'))
 
 #. And on analogies::
 
-    >>> model.wv.accuracy(os.path.join(module_path, 'test_data', 'questions-words.txt'))
+    >>> analogies = model.wv.accuracy(datapath('questions-words.txt'))
 
 and so on.
 
@@ -94,9 +99,11 @@ to trim unneeded model memory = use much less RAM.
 Note that there is a :mod:`gensim.models.phrases` module which lets you automatically
 detect phrases longer than one word. Using phrases, you can learn a word2vec model
 where "words" are actually multiword expressions, such as `new_york_times` or `financial_crisis`:
-
-    >>> bigram_transformer = gensim.models.Phrases(sentences)
-    >>> model = Word2Vec(bigram_transformer[sentences], size=100, ...)
+    >>> from gensim.models import Phrases
+    >>>
+    >>> bigram_transformer = Phrases(common_texts)
+    >>> model = Word2Vec(size=5)
+    >>> model.build_vocab(bigram_transformer[common_texts])
 
 """
 from __future__ import division  # py3 "true division"
@@ -158,7 +165,7 @@ except ImportError:
         ----------
         model : :class:`~gensim.models.word2Vec.Word2Vec`
             The Word2Vec model instance to train.
-        sentences : iterable of iterable of str
+        sentences : iterable of list of str
             The corpus used to train the model.
         alpha : float
             The learning rate
@@ -205,9 +212,9 @@ except ImportError:
 
         Parameters
         ----------
-        model : :class:`~gensim.models.word2Vec.Word2Vec`
+        model : :class:`~gensim.models.word2vec.Word2Vec`
             The Word2Vec model instance to train.
-        sentences : iterable of iterable of str
+        sentences : iterable of list of str
             The corpus used to train the model.
         alpha : float
             The learning rate
@@ -223,6 +230,7 @@ except ImportError:
         int
             Number of words in the vocabulary actually used for training (They already existed in the vocabulary
             and were not discarded by negative sampling).
+
         """
         result = 0
         for sentence in sentences:
@@ -553,6 +561,7 @@ def score_sg_pair(model, word, word2):
     -------
     float
         Logarithm of the sum of exponentiations of input words.
+
     """
     l1 = model.wv.syn0[word2.index]
     l2a = deepcopy(model.syn1[word.point])  # 2d matrix, codelen x layer1_size
@@ -577,6 +586,7 @@ def score_cbow_pair(model, word, l1):
     -------
     float
         Logarithm of the sum of exponentiations of input words.
+
     """
     l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
     sgn = (-1.0) ** word.code  # ch function, 0-> 1, 1 -> -1
@@ -607,14 +617,13 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
         Parameters
         ----------
-        sentences : iterable of iterables
+        sentences : iterable of list of str
             The `sentences` iterable can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
             If you don't supply `sentences`, the model is left uninitialized -- use if you plan to initialize it
             in some other way.
-
         sg : int {1, 0}
             Defines the training algorithm. If 1, CBOW is used, otherwise, skip-gram is employed.
         size : int
@@ -710,7 +719,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
         Parameters
         ----------
-        sentences : iterable of iterable of str
+        sentences : iterable of list of str
             Corpus chunk to be used in this training batch.
         alpha : float
             The learning rate used in this batch.
@@ -737,6 +746,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
         Notes
         -----
         You will have to recompute them using :meth:`~gensim.models.word2vec.Word2Vec.init_sims`.
+
         """
         self.wv.vectors_norm = None
 
@@ -772,7 +782,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
         Parameters
         ----------
-        sentences : iterable of iterables
+        sentences : iterable of list of str
             The `sentences` iterable can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
@@ -807,6 +817,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
         >>> model = Word2Vec(min_count=1)
         >>> model.build_vocab(sentences)
         >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)
+        (1, 30)
 
         """
 
@@ -833,7 +844,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
         Parameters
         ----------
-        sentences : iterable of iterables
+        sentences : iterable of list of str
             The `sentences` iterable can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
@@ -957,6 +968,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
         Notes
         -----
         You will have to recompute them using :meth:`~gensim.models.word2vec.Word2Vec.init_sims`.
+
         """
         self.wv.vectors_norm = None
 
@@ -1027,6 +1039,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
         """
         Deprecated. Use self.wv.__getitem__() instead.
         Refer to the documentation for `gensim.models.keyedvectors.Word2VecKeyedVectors.__getitem__`
+
         """
         return self.wv.__getitem__(words)
 
@@ -1035,6 +1048,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
         """
         Deprecated. Use self.wv.__contains__() instead.
         Refer to the documentation for `gensim.models.keyedvectors.Word2VecKeyedVectors.__contains__`
+
         """
         return self.wv.__contains__(word)
 
@@ -1132,7 +1146,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
         Parameters
         ----------
-        section : iterable of iterable of str
+        section : iterable of list of str
             Chunk of sentences use to score the models accuracy.
 
         """
@@ -1165,6 +1179,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
         ----------
         replace_word_vectors_with_normalized : bool, optional
             If True, forget the original vectors and only keep the normalizedto save RAM.
+
         """
         if replace_word_vectors_with_normalized:
             self.init_sims(replace=True)
@@ -1234,6 +1249,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
         -------
         :class:`~gensim.models.word2vec.Word2Vec`
             Loaded model.
+
         """
         try:
             return super(Word2Vec, cls).load(*args, **kwargs)
@@ -1296,8 +1312,7 @@ class Text8Corpus(object):
 
 
 class LineSentence(object):
-    """Simple format: one sentence = one line; words already preprocessed and separated by whitespace.
-    """
+    """Simple format: one sentence = one line; words already preprocessed and separated by whitespace."""
 
     def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None):
         """
