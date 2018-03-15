@@ -978,7 +978,14 @@ class Word2Vec(BaseWordEmbeddingsModel):
             Returns the loaded model as an instance of :class: `~gensim.models.word2vec.Word2Vec`.
         """
         try:
-            return super(Word2Vec, cls).load(*args, **kwargs)
+            model = super(Word2Vec, cls).load(*args, **kwargs)
+
+            # for backward compatibility for `max_final_vocab` feature
+            if not hasattr(model, 'max_final_vocab'):
+                model.max_final_vocab = None
+                model.vocabulary.max_final_vocab = None
+
+            return model
         except AttributeError:
             logger.info('Model saved using code from earlier Gensim Version. Re-loading old model in a compatible way.')
             from gensim.models.deprecated.word2vec import load_old_word2vec
