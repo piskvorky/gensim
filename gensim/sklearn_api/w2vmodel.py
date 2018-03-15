@@ -167,7 +167,7 @@ class W2VTransformer(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        np.ndarray of shape (num_words, size)
+        np.ndarray of shape [`len(words)`, `size`]
             A 2D array where each row is the vector of one word.
 
         """

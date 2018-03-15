@@ -80,7 +80,7 @@ class RpTransformer(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        np.ndarray of shape (`len(docs)`, num_topics)
+        numpy.ndarray of shape [`len(docs)`, `num_topics`]
             RP representation for each input document.
 
         """

@@ -134,7 +134,7 @@ class LdaSeqTransformer(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        np.ndarray of shape (`len(docs)`, `num_topics`)
+        numpy.ndarray of shape [`len(docs)`, `num_topics`]
             The topic representation of each document.
 
         """

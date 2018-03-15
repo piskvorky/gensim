@@ -118,8 +118,8 @@ class LsiTransformer(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        list of (int, int)
-            Topic distribution matrix of shape [num_docs, num_topics]
+        numpy.ndarray of shape [`len(docs)`, `num_topics`]
+            Topic distribution matrix.
 
         """
         if self.gensim_model is None:
