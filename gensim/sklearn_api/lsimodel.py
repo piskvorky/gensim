@@ -5,7 +5,7 @@
 # Copyright (C) 2017 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""Scikit learn interface for `gensim.models.lsimodel`.
+"""Scikit learn interface for :class:`gensim.models.lsimodel.LsiModel`.
 
 Follows scikit-learn API conventions to facilitate using gensim along with scikit-learn.
 
@@ -30,7 +30,6 @@ Integrate with sklearn Pipelines:
 >>> score = pipe.fit(common_corpus, labels).score(common_corpus, labels)
 
 """
-
 import numpy as np
 from scipy import sparse
 from sklearn.base import TransformerMixin, BaseEstimator
@@ -43,31 +42,30 @@ from gensim import matutils
 class LsiTransformer(TransformerMixin, BaseEstimator):
     """Base LSI module, wraps :class:`~gensim.model.lsimodel.LsiModel`.
 
-    For more information on the inner working please take a look at
-    the original class.
+    For more information on the inner working please take a look at the original class.
 
     """
 
     def __init__(self, num_topics=200, id2word=None, chunksize=20000,
                  decay=1.0, onepass=True, power_iters=2, extra_samples=100):
-        """Sklearn wrapper for LSI model.
+        """
 
         Parameters
         ----------
         num_topics : int, optional
-            Number of requested factors (latent dimensions)
-        id2word : dict of {int: str}, optional
+            Number of requested factors (latent dimensions).
+        id2word : :class:`~gensim.corpora.dictionary.Dictionary`, optional
             ID to word mapping, optional.
         chunksize :  int, optional
             Number of documents to be used in each training chunk.
         decay : float, optional
             Weight of existing observations relatively to new ones.
         onepass : bool, optional
-            Whether the one-pass algorithm should be used for training.
-            Pass `False` to force a multi-pass stochastic algorithm.
+            Whether the one-pass algorithm should be used for training, pass `False` to force a
+            multi-pass stochastic algorithm.
         power_iters: int, optional
             Number of power iteration steps to be used.
-            Increasing the number of power iterations improves accuracy, but lowers performance
+            Increasing the number of power iterations improves accuracy, but lowers performance.
         extra_samples : int, optional
             Extra samples to be used besides the rank `k`. Can improve accuracy.
 
@@ -82,14 +80,12 @@ class LsiTransformer(TransformerMixin, BaseEstimator):
         self.power_iters = power_iters
 
     def fit(self, X, y=None):
-        """
-        Fit the model according to the given training data.
-        Calls :meth:`~gensim.models.lsimodel.LsiModel`
+        """Fit the model according to the given training data.
 
         Parameters
         ----------
-        X : iterable of iterable of (int, float)
-            Stream of document vectors or sparse matrix of shape: [num_terms, num_documents].
+        X : {iterable of list of (int, number), scipy.sparse matrix}
+            A collection of documents in BOW format to be transformed.
 
         Returns
         -------
@@ -109,12 +105,12 @@ class LsiTransformer(TransformerMixin, BaseEstimator):
         return self
 
     def transform(self, docs):
-        """Computes the topic distribution matrix
+        """Computes the latent factors for `docs`.
 
         Parameters
         ----------
-        docs : iterable of iterable of (int, float)
-            Stream of document vectors or sparse matrix of shape: [`num_terms`, num_documents].
+        docs : {iterable of list of (int, number), list of (int, number), scipy.sparse matrix}
+            Document or collection of documents in BOW format to be transformed.
 
         Returns
         -------
@@ -144,8 +140,8 @@ class LsiTransformer(TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : iterable of iterable of (int, float)
-            Stream of document vectors or sparse matrix of shape: [num_terms, num_documents].
+        X : {iterable of list of (int, number), scipy.sparse matrix}
+            Stream of document vectors or sparse matrix of shape: [`num_terms`, `num_documents`].
 
         Returns
         -------
