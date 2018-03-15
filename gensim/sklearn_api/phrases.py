@@ -4,7 +4,7 @@
 # Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""Scikit learn interface for `gensim.models.phrases`.
+"""Scikit learn interface for `gensim.models.phrases.Phrases`.
 
 Follows scikit-learn API conventions to facilitate using gensim along with scikit-learn.
 
@@ -22,11 +22,9 @@ Examples
 >>>
 >>> # Use sklearn fit_transform to see the transformation.
 >>> # Since computer and science were seen together 3+ times they are considered a phrase.
->>> m.fit_transform(texts)[0]
-['I', 'love', 'computer_science']
+>>> assert ['I', 'love', 'computer_science'] == m.fit_transform(texts)[0]
 
 """
-
 from six import string_types
 from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
@@ -35,59 +33,56 @@ from gensim import models
 
 
 class PhrasesTransformer(TransformerMixin, BaseEstimator):
-    """Base Phrases module
+    """Base Phrases module, wraps :class:`~gensim.models.phrases.Phrases`.
 
-    Wraps :class:`~gensim.models.phrases.Phrases`.
-    For more information on the inner workings please take a look at
-    the original class.
+    For more information on the inner workings please take a look at the original class.
 
     """
 
     def __init__(self, min_count=5, threshold=10.0, max_vocab_size=40000000,
                  delimiter=b'_', progress_per=10000, scoring='default'):
-        """Sklearn wrapper for Phrases model.
+        """
 
         Parameters
         ----------
-        min_count : int
+        min_count : int, optional
             Terms with a count lower than this will be ignored
-        threshold : float
+        threshold : float, optional
             Only phrases scoring above this will be accepted, see `scoring` below.
-        max_vocab_size : int
-            Maximum size of the vocabulary.
-            Used to control pruning of less common words, to keep memory under control.
-            The default of 40M needs about 3.6GB of RAM;
-        delimiter : str
-            Character used to join collocation tokens. Should be a byte string (e.g. b'_').
-        progress_per : int
+        max_vocab_size : int, optional
+            Maximum size of the vocabulary. Used to control pruning of less common words, to keep memory under control.
+            The default of 40M needs about 3.6GB of RAM.
+        delimiter : str, optional
+            Character used to join collocation tokens, should be a byte string (e.g. b'_').
+        progress_per : int, optional
             Training will report to the logger every that many phrases are learned.
-        scoring : str or callable
+        scoring : str or function, optional
             Specifies how potential phrases are scored for comparison to the `threshold`
             setting. `scoring` can be set with either a string that refers to a built-in scoring function,
             or with a function with the expected parameter names. Two built-in scoring functions are available
             by setting `scoring` to a string:
 
-            'default': Explained in `Mikolov, et. al: "Efficient Estimation of Word Representations in Vector Space"
-            <https://arxiv.org/pdf/1301.3781.pdf>`_.
-            'npmi': Explained in `Gerlof Bouma: "Normalized (Pointwise) Mutual Information in Collocation Extraction"
-            <https://svn.spraakdata.gu.se/repos/gerlof/pub/www/Docs/npmi-pfd.pdf>`_.
+                * 'default': Explained in `Mikolov, et. al: "Efficient Estimation of Word Representations
+                  in Vector Space" <https://arxiv.org/pdf/1301.3781.pdf>`_.
+                * 'npmi': Explained in `Gerlof Bouma: "Normalized (Pointwise) Mutual Information in Collocation
+                  Extraction" <https://svn.spraakdata.gu.se/repos/gerlof/pub/www/Docs/npmi-pfd.pdf>`_.
 
             'npmi' is more robust when dealing with common words that form part of common bigrams, and
             ranges from -1 to 1, but is slower to calculate than the default.
 
             To use a custom scoring function, create a function with the following parameters and set the `scoring`
-            parameter to the custom function. You must use all the parameters in your function call, even if the
-            function does not require all the parameters.
+            parameter to the custom function, see :func:`~gensim.models.phrases.original_scorer` as example.
+            You must define all the parameters (but can use only part of it):
 
-                worda_count: number of occurrances in `sentences` of the first token in the phrase being scored
-                wordb_count: number of occurrances in `sentences` of the second token in the phrase being scored
-                bigram_count: number of occurrances in `sentences` of the phrase being scored
-                len_vocab: the number of unique tokens in `sentences`
-                min_count: the `min_count` setting of the Phrases class
-                corpus_word_count: the total number of (non-unique) tokens in `sentences`
+                * worda_count: number of occurrences in `sentences` of the first token in the phrase being scored
+                * wordb_count: number of occurrences in `sentences` of the second token in the phrase being scored
+                * bigram_count: number of occurrences in `sentences` of the phrase being scored
+                * len_vocab: the number of unique tokens in `sentences`
+                * min_count: the `min_count` setting of the Phrases class
+                * corpus_word_count: the total number of (non-unique) tokens in `sentences`
 
             A scoring function without any of these parameters (even if the parameters are not used) will
-            raise a ValueError on initialization of the Phrases class. The scoring function must be pic
+            raise a ValueError on initialization of the Phrases class. The scoring function must be pickleable.
 
         """
         self.gensim_model = None
@@ -122,12 +117,12 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
     def transform(self, docs):
         """Transform the input documents into phrase tokens.
 
-        Words in the sentence will be joined by u`_`.
+        Words in the sentence will be joined by `self.delimiter`.
 
         Parameters
         ----------
-        docs : iterable of list of str
-            Sequence of sentences to be used transformed.
+        docs : {iterable of list of str, list of str}
+            Sequence of documents to be used transformed.
 
         Returns
         -------
@@ -135,7 +130,6 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
             Phrase representation for each of the input sentences.
 
         """
-
         if self.gensim_model is None:
             raise NotFittedError(
                 "This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method."
@@ -164,7 +158,6 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
             The trained model.
 
         """
-
         if self.gensim_model is None:
             self.gensim_model = models.Phrases(
                 sentences=X, min_count=self.min_count, threshold=self.threshold,
