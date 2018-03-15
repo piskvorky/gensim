@@ -40,7 +40,7 @@ from gensim import matutils
 
 
 class LsiTransformer(TransformerMixin, BaseEstimator):
-    """Base LSI module, wraps :class:`~gensim.model.lsimodel.LsiModel`.
+    """Base LSI module, wraps :class:`~gensim.models.lsimodel.LsiModel`.
 
     For more information please have a look to `Latent semantic analysis
     <https://en.wikipedia.org/wiki/Latent_semantic_analysis>`_.

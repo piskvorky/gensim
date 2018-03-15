@@ -36,8 +36,8 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
     """Base Phrases module, wraps :class:`~gensim.models.phrases.Phrases`.
 
     For more information, please have a look to `Mikolov, et. al: "Efficient Estimation of Word Representations in
-    Vector Space" <https://arxiv.org/pdf/1301.3781.pdf>`_ and "Normalized (Pointwise) Mutual Information in Collocation
-    Extraction" <https://svn.spraakdata.gu.se/repos/gerlof/pub/www/Docs/npmi-pfd.pdf>`_.
+    Vector Space" <https://arxiv.org/pdf/1301.3781.pdf>`_ and `Gerlof Bouma: "Normalized (Pointwise) Mutual Information
+    in Collocation Extraction" <https://svn.spraakdata.gu.se/repos/gerlof/pub/www/Docs/npmi-pfd.pdf>`_.
 
     """
     def __init__(self, min_count=5, threshold=10.0, max_vocab_size=40000000,

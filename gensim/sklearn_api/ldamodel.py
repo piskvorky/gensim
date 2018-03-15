@@ -31,7 +31,6 @@ from gensim import matutils
 class LdaTransformer(TransformerMixin, BaseEstimator):
     """Base LDA module, wraps :class:`~gensim.models.ldamodel.LdaModel`.
 
-    For more information on the inner workings please take a look at the original class.
     The inner workings of this class depends heavily on `Matthew D. Hoffman, David M. Blei, Francis Bach:
     "Online Learning for Latent Dirichlet Allocation NIPS'10" <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_ and
     `David M. Blei, Andrew Y. Ng, Michael I. Jordan: "Latent Dirichlet Allocation"
