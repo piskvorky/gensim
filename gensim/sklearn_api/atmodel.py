@@ -60,17 +60,16 @@ class AuthorTopicTransformer(TransformerMixin, BaseEstimator):
             and topic printing.
         author2doc : dict of (str, list of int), optional
             Maps an authors name to a list of document IDs where has has contributed.
-            Either `author2doc` or `doc2author` **MUST** be supplied.
+            Either `author2doc` or `doc2author` **must be supplied**.
         doc2author : dict of (int, list of str)
             Maps a document (using its ID) to a list of author names that contributed to it.
-            Either `author2doc` or `doc2author` **MUST** be supplied.
+            Either `author2doc` or `doc2author` **must be supplied**.
         chunksize : int, optional
             Number of documents to be processed by the model in each mini-batch.
         passes : int, optional
             Number of times the model can make a pass over the corpus during training.
         iterations : int, optional
-            Maximum number of times the model before convergence during the M step
-            of the EM algorithm.
+            Maximum number of times the model before convergence during the M step of the EM algorithm.
         decay : float, optional
             A number between (0.5, 1] to weight what percentage of the previous lambda value is forgotten
             when each new document is examined. Corresponds to Kappa from `"The Author-Topic Model for Authors
@@ -90,7 +89,7 @@ class AuthorTopicTransformer(TransformerMixin, BaseEstimator):
             A-priori belief on word probability, this can be:
 
                 * scalar for a symmetric prior over topic/word probability,
-                * vector : of length num_words to denote an asymmetric user defined probability for each word,
+                * vector of length num_words to denote an asymmetric user defined probability for each word,
                 * matrix of shape (num_topics, num_words) to assign a probability for each word-topic combination,
                 * the string 'auto' to learn the asymmetric prior from the data.
         update_every : int, optional
@@ -105,8 +104,8 @@ class AuthorTopicTransformer(TransformerMixin, BaseEstimator):
             or saved to the hard-drive (`serialized = True`). Note that this behaviour is quite different from
             other Gensim models. If your data is too large to fit in to memory, use this functionality.
         serialization_path : str, optional
-            Filepath to be used for storing the serialized object. **Must** be supplied if `serialized = True`.
-            An existing file *cannot* be overwritten; either delete the old file or choose a different name
+            Path to file that used for storing the serialized object, **must be supplied if `serialized = True`**.
+            An existing file *cannot* be overwritten, either delete the old file or choose a different name.
         minimum_probability : float, optional
             Topics with a probability lower than this threshold will be filtered out.
         random_state : {np.random.RandomState, int}, optional
@@ -138,8 +137,8 @@ class AuthorTopicTransformer(TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : {iterable of iterable of (int, int), :class:`~gensim.corpora.mmcorpus.MmCorpus`}
-            A collection of documents in BOW format used for training the model.
+        X : iterable of list of (int, number)
+            Sequence of documents in BoW format.
 
         Returns
         -------
@@ -167,8 +166,8 @@ class AuthorTopicTransformer(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        iterable of (int, float)
-            Topic distribution for each input author as a tuple of (topic_id, topic_probability).
+        numpy.ndarray
+            Topic distribution for each input author.
 
         """
         if self.gensim_model is None:
@@ -194,14 +193,14 @@ class AuthorTopicTransformer(TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : {iterable of iterable of (int, int), :class:`~gensim.corpora.mmcorpus.MmCorpus`}
-            A collection of documents in BOW format used for training the model.
-        author2doc : dict(str, list of int), optional
-            Maps an authors name to a list of document IDs corresponding to indexes in input corpus.
-            Either `author2doc` or `doc2author` **MUST** be supplied.
-        doc2author : dict of (int, list of str), optional
-            Maps a document (using its ID) to a list of author names corresponding to indexes in input corpus.
-            Either `author2doc` or `doc2author` **MUST** be supplied.
+        X : iterable of list of (int, number)
+            Sequence of documents in BoW format.
+        author2doc : dict of (str, list of int), optional
+            Maps an authors name to a list of document IDs where has has contributed.
+            Either `author2doc` or `doc2author` **must be supplied**.
+        doc2author : dict of (int, list of str)
+            Maps a document (using its ID) to a list of author names that contributed to it.
+            Either `author2doc` or `doc2author` **must be supplied**.
 
         Returns
         -------
