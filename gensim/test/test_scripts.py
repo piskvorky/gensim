@@ -15,7 +15,11 @@ import logging
 import os.path
 import unittest
 
+import numpy as np
+
+import gensim
 from gensim.scripts.segment_wiki import segment_all_articles, segment_and_write_all_articles
+from scripts.word2vec2tensor import word2vec2tensor
 from smart_open import smart_open
 from gensim.test.utils import datapath, get_tmpfile
 
@@ -103,6 +107,75 @@ class TestSegmentWiki(unittest.TestCase):
         self.assertTrue(interlinks['Pierre-Joseph Proudhon'] == 'Proudhon')
 
 
+class TestWord2Vec2Tensor(unittest.TestCase):
+    def setUp(self):
+        self.datapath = datapath('word2vec_pre_kv_c')
+        self.output_folder = get_tmpfile('')
+        self.metadata_file = self.output_folder + '_metadata.tsv'
+        self.tensor_file = self.output_folder + '_tensor.tsv'
+        self.vector_file = self.output_folder + '_vector.tsv'
+
+    def testConversion(self):
+        word2vec2tensor(word2vec_model_path=self.datapath, tensor_filename=self.output_folder)
+
+        try:
+            with smart_open(self.metadata_file, 'rb') as f:
+                metadata = f.readlines()
+        except FileNotFoundError:
+            self.fail(
+                'Metadata file %s creation failed. \
+                Check the parameters and input file format.' % self.metadata_file
+                )
+        try:
+            with smart_open(self.tensor_file, 'rb') as f:
+                vectors = f.readlines()
+        except FileNotFoundError:
+            self.fail(
+                'Tensor file %s creation failed. \
+                Check the parameters and input file format.' % self.tensor_file
+                )
+
+        # check if number of words and vector size in tensor file line up with word2vec
+        with smart_open(self.datapath, 'rb') as f:
+            first_line = f.readline().strip()
+
+        number_words, vector_size = map(int, first_line.split(b' '))
+        if not len(metadata) == len(vectors) == number_words:
+            self.fail(
+                'Metadata file %s and tensor file %s \
+                imply different number of rows.' % (self.metadata_file, self.tensor_file)
+                )
+
+        # write word2vec to file
+        metadata = [word.strip() for word in metadata]
+        vectors = [vector.replace(b'\t', b' ') for vector in vectors]
+        word2veclines = [metadata[i] + b' ' + vectors[i] for i in range(len(metadata))]
+        with smart_open(self.vector_file, 'wb') as f:
+            # write header
+            f.write(gensim.utils.any2utf8(str(number_words) + ' ' + str(vector_size) + '\n'))
+            f.writelines(word2veclines)
+
+        # test that the converted model loads successfully
+        test_model = gensim.models.KeyedVectors.load_word2vec_format(self.vector_file, binary=False)
+
+        # test vocabularies are the same
+        orig_model = gensim.models.KeyedVectors.load_word2vec_format(self.datapath, binary=False)
+
+        if not orig_model.vocab.keys() == test_model.vocab.keys():
+            self.fail(
+                'Original word2vec model %s and tensor model %s have \
+                different vocabularies.' % (self.datapath, self.vector_file)
+                )
+
+        # test vectors for each word are the same
+        for word in orig_model.vocab.keys():
+            if not np.array_equal(orig_model[word], test_model[word]):
+                self.fail(
+                'Original word2vec model %s and tensor model %s store different \
+                vectors for word %s.' % (self.datapath, self.vector_file, word)
+                )
+
+
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     unittest.main()
