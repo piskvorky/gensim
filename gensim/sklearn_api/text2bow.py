@@ -18,12 +18,11 @@ Examples
 >>> # Create a transformer..
 >>> model = Text2BowTransformer()
 >>>
->>> # Use sklearn style `fit_transform` to get the BOW representation of each document.
+>>> # Use sklearn-style `fit_transform` to get the BOW representation of each document.
 >>> model.fit_transform(texts)
 [[(0, 1), (1, 1), (2, 1)], [(1, 1), (2, 1), (3, 1)]]
 
 """
-
 from six import string_types
 from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
@@ -35,20 +34,17 @@ from gensim.utils import tokenize
 class Text2BowTransformer(TransformerMixin, BaseEstimator):
     """Base Text2Bow module , wraps :class:`~gensim.corpora.dictionary.Dictionary`.
 
-    For more information on the inner workings please take a look at
-    the original class.
+    For more information on the inner workings please take a look at the original class.
 
     """
-
     def __init__(self, prune_at=2000000, tokenizer=tokenize):
-        """Sklearn wrapper for Text2Bow model.
-
+        """
         Parameters
         ----------
         prune_at : int, optional
             Total number of unique words. Dictionary will keep not more than `prune_at` words.
         tokenizer : callable (str -> list of str), optional
-            A callable to split a document into a list of each terms
+            A callable to split a document into a list of each terms, default is :func:`gensim.utils.tokenize`.
 
         """
         self.gensim_model = None
@@ -74,11 +70,11 @@ class Text2BowTransformer(TransformerMixin, BaseEstimator):
         return self
 
     def transform(self, docs):
-        """Return the BOW format for the input documents.
+        """Get the BOW format for the `docs`.
 
         Parameters
         ----------
-        docs : iterable of str
+        docs : {iterable of str, str}
             A collection of documents to be transformed.
 
         Returns
