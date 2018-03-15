@@ -238,9 +238,7 @@ cdef unsigned long long fast_sentence_cbow_neg(
 
     cdef unsigned long long sen_sample[MAX_SENTENCE_LEN]
     cdef int already_sampled
-    cdef REAL_t corruption_constant     # w in doc2vecC
-
-    corruption_constant = <REAL_t> 1.0 / rp_sample / idx_end - idx_start
+    cdef REAL_t corruption_constant =  1.0 / rp_sample / (idx_end - idx_start)     # w in doc2vecC
 
     word_index = indexes[i]
 
@@ -255,19 +253,20 @@ cdef unsigned long long fast_sentence_cbow_neg(
 
     # handle the sentence using Doc2VecC
     memset(sen_sample, -1, size * cython.sizeof(REAL_t))
-    already_sampled = 0;
+    already_sampled = 0
     for t in range(idx_start,idx_end):
-        // randomly sample rp_sample ((0, 1]) of the words in the sentence to represent one sentence
+        # randomly sample rp_sample ((0, 1]) of the words in the sentence to represent one sentence
         next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
 
         if (next_random & 0xFFFF) / <REAL_t>65536 > rp_sample:
             continue
 
-        sen_sample[already_sampled] = t;
-        already_sampled ++;
-        if (already_sampled >= MAX_SENTENCE_LEN) break;
+        sen_sample[already_sampled] = t
+        already_sampled += 1
+        if (already_sampled >= MAX_SENTENCE_LEN):
+            break
 
-        our_saxpy(&size, w, &syn0[indexes[t] * size], &ONE, neu1, &ONE)
+        our_saxpy(&size, &corruption_constant, &syn0[indexes[t] * size], &ONE, neu1, &ONE)
     count += ONEF
 
     if count > (<REAL_t>0.5):
@@ -315,7 +314,9 @@ cdef unsigned long long fast_sentence_cbow_neg(
             our_saxpy(&size, &word_locks[indexes[m]], work, &ONE, &syn0[indexes[m]*size], &ONE)
 
     for m in range(already_sampled):
-        our_saxpy(&size, &word_locks[indexes[m]], work, &ONE, &syn0[indexes[sen_sample[m]]*size], &ONE)
+        # syn0[c + l1] += neu1e[c] * w / cw;
+        sscal(&size, &corruption_constant, neu1, &ONE)
+        our_saxpy(&size, &word_locks[indexes[sen_sample[m]]], work, &ONE, &syn0[indexes[sen_sample[m]]*size], &ONE)
 
     return next_random
 
@@ -427,7 +428,7 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
     return effective_words
 
 
-def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss, rp_sample = 0.1):
+def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss, _rp_sample = 0.1):
     cdef int hs = model.hs
     cdef int negative = model.negative
     cdef int sample = (model.vocabulary.sample != 0)
@@ -463,6 +464,9 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss, rp_sam
     cdef unsigned long long cum_table_len
     # for sampling (negative and frequent-word downsampling)
     cdef unsigned long long next_random
+
+    # for doc2vecC Corruption
+    cdef REAL_t rp_sample = _rp_sample
 
     if hs:
         syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
