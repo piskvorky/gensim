@@ -36,16 +36,13 @@ from gensim import models
 class W2VTransformer(TransformerMixin, BaseEstimator):
     """Base Word2Vec module, wraps :class:`~gensim.models.word2vec.Word2Vec`.
 
-    For more information on the inner workings please take a look at
-    the original class.
+    For more information on the inner workings please take a look at the original class.
 
     """
     def __init__(self, size=100, alpha=0.025, window=5, min_count=5, max_vocab_size=None, sample=1e-3, seed=1,
                  workers=3, min_alpha=0.0001, sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
                  trim_rule=None, sorted_vocab=1, batch_words=10000):
         """
-        Initialize the model from an iterable of `sentences`. Each sentence is a
-        list of words (unicode strings) that will be used for training.
 
         Parameters
         ----------
@@ -107,7 +104,6 @@ class W2VTransformer(TransformerMixin, BaseEstimator):
             texts are longer than 10000 words, but the standard cython code truncates to that maximum.)
 
         """
-
         self.gensim_model = None
         self.size = size
         self.alpha = alpha
@@ -157,12 +153,12 @@ class W2VTransformer(TransformerMixin, BaseEstimator):
         return self
 
     def transform(self, words):
-        """Return the word vectors the input words.
+        """Get the word vectors the input words.
 
         Parameters
         ----------
-        words : iterable of str
-            A collection of words to be transformed.
+        words : {iterable of str, str}
+            Word or a collection of words to be transformed.
 
         Returns
         -------
