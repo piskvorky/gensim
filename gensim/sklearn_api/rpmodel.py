@@ -11,7 +11,6 @@ Follows scikit-learn API conventions to facilitate using gensim along with sciki
 
 Examples
 --------
-
 >>> from gensim.sklearn_api.rpmodel import RpTransformer
 >>> from gensim.test.utils import common_dictionary, common_corpus
 >>>

@@ -10,7 +10,6 @@ Follows scikit-learn API conventions to facilitate using gensim along with sciki
 
 Examples
 --------
-
 >>> from gensim.test.utils import common_corpus, common_dictionary
 >>> from gensim.sklearn_api import TfIdfTransformer
 >>>

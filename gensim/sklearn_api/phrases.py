@@ -10,7 +10,6 @@ Follows scikit-learn API conventions to facilitate using gensim along with sciki
 
 Examples
 --------
-
 >>> from gensim.sklearn_api.phrases import PhrasesTransformer
 >>>
 >>> # Create the model. Make sure no term is ignored and combinations seen 3+ times are captured.
