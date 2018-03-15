@@ -38,12 +38,13 @@ Command line arguments
 
 """
 
-import os
+import os, pdb
 import sys
 import logging
 import argparse
 
 import gensim
+from gensim import utils
 
 logger = logging.getLogger(__name__)
 
@@ -63,22 +64,25 @@ def word2vec2tensor(word2vec_model_path, tensor_filename, binary=False):
         True if input file in binary format.
 
     """
+
     model = gensim.models.KeyedVectors.load_word2vec_format(word2vec_model_path, binary=binary)
     outfiletsv = tensor_filename + '_tensor.tsv'
     outfiletsvmeta = tensor_filename + '_metadata.tsv'
 
-    with open(outfiletsv, 'w+') as file_vector:
-        with open(outfiletsvmeta, 'w+') as file_metadata:
+    with utils.smart_open(outfiletsv, 'wb') as file_vector:
+        with utils.smart_open(outfiletsvmeta, 'wb') as file_metadata:
             for word in model.index2word:
-                file_metadata.write(word + '\n')
+                write = gensim.utils.any2utf8(word) + gensim.utils.any2utf8('\n')
+                file_metadata.write(write)
                 vector_row = '\t'.join(str(x) for x in model[word])
-                file_vector.write(vector_row + '\n')
+                file_vector.write(gensim.utils.any2utf8(vector_row) + gensim.utils.any2utf8('\n'))
 
     logger.info("2D tensor file saved to %s", outfiletsv)
     logger.info("Tensor metadata file saved to %s", outfiletsvmeta)
 
 
 if __name__ == "__main__":
+    print('hi')
     logging.basicConfig(format='%(asctime)s - %(module)s - %(levelname)s - %(message)s', level=logging.INFO)
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description=__doc__[:-138])
     parser.add_argument("-i", "--input", required=True, help="Path to input file in word2vec format")
