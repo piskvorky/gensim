@@ -161,8 +161,8 @@ class AuthorTopicTransformer(TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        author_names : iterable of str
-            A collection of authors whose topics will be identified.
+        author_names : {iterable of str, str}
+            Author name or sequence of author names whose topics will be identified.
 
         Returns
         -------
