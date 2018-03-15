@@ -39,7 +39,7 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
                  docvecs_mapfile=None, comment=None, trim_rule=None, size=100, alpha=0.025, window=5, min_count=5,
                  max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001, hs=0, negative=5, cbow_mean=1,
                  hashfxn=hash, iter=5, sorted_vocab=1, batch_words=10000):
-        """Sklearn api for Doc2Vec model.
+        """
 
         Parameters
         ----------
@@ -176,7 +176,7 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
         return self
 
     def transform(self, docs):
-        """Get the vector representations for the input documents.
+        """Infer the vector representations for the input documents.
 
         Parameters
         ----------

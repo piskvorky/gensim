@@ -157,7 +157,7 @@ class AuthorTopicTransformer(TransformerMixin, BaseEstimator):
         return self
 
     def transform(self, author_names):
-        """Find the topic probabilities for each author.
+        """Infer the topic probabilities for each author.
 
         Parameters
         ----------

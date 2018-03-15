@@ -20,7 +20,6 @@ Examples
 >>> distr = model.fit_transform(common_corpus)
 
 """
-
 import numpy as np
 from scipy import sparse
 from sklearn.base import TransformerMixin, BaseEstimator
@@ -42,15 +41,15 @@ class HdpTransformer(TransformerMixin, BaseEstimator):
 
     def __init__(self, id2word, max_chunks=None, max_time=None, chunksize=256, kappa=1.0, tau=64.0, K=15, T=150,
                  alpha=1, gamma=1, eta=0.01, scale=1.0, var_converge=0.0001, outputdir=None, random_state=None):
-        """Sklearn api for HDP model.
+        """
 
         Parameters
         ----------
-        id2word : {dict of (int, str), :class:`~gensim.corpora.dictionary.Dictionary`}
+        id2word : :class:`~gensim.corpora.dictionary.Dictionary`, optional
             Mapping between a words ID and the word itself in the vocabulary.
         max_chunks : int, optional
             Upper bound on how many chunks to process.It wraps around corpus beginning in another corpus pass,
-            if there are not enough chunks in the corpus
+            if there are not enough chunks in the corpus.
         max_time : int, optional
             Upper bound on time in seconds for which model will be trained.
         chunksize : int, optional
@@ -59,7 +58,8 @@ class HdpTransformer(TransformerMixin, BaseEstimator):
             Learning rate, see `Wang, Paisley, Blei: "Online Variational Inference for the Hierarchical Dirichlet
             Process, JMLR (2011)" <http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_.
         tau : float, optional
-            Slow down parameter.
+            Slow down parameter, see `Wang, Paisley, Blei: "Online Variational Inference for the Hierarchical
+            Dirichlet Process, JMLR (2011)" <http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_.
         K : int, optional
             Second level truncation level, see `Wang, Paisley, Blei: "Online Variational Inference for the Hierarchical
             Dirichlet Process, JMLR (2011)" <http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_.
@@ -78,12 +78,13 @@ class HdpTransformer(TransformerMixin, BaseEstimator):
         scale : float, optional
             Weights information from the mini-chunk of corpus to calculate rhot.
         var_converge : float, optional
-            Lower bound on the right side of convergence. Used when updating variational parameters for a
-            single document.
+            Lower bound on the right side of convergence. Used when updating variational parameters
+            for a single document.
         outputdir : str, optional
             Path to a directory where topic and options information will be stored.
         random_state : int, optional
             Seed used to create a :class:`~np.random.RandomState`. Useful for obtaining reproducible results.
+
         """
         self.gensim_model = None
         self.id2word = id2word
@@ -130,18 +131,18 @@ class HdpTransformer(TransformerMixin, BaseEstimator):
         return self
 
     def transform(self, docs):
-        """Returns a matrix of topic distribution for the given document bow, where a_ij
+        """Infer a matrix of topic distribution for the given document bow, where a_ij
         indicates (topic_i, topic_probability_j).
 
         Parameters
         ----------
-        docs : iterable of iterable of (int, int)
-            A list of documents in BOW format to be transformed.
+        docs : {iterable of list of (int, number), list of (int, number)}
+            Document or sequence of documents in BOW format.
 
         Returns
         -------
         np.ndarray of shape (`len(docs), num_topics`)
-            Topic distribution for each input document.
+            Topic distribution for `docs`.
 
         """
         if self.gensim_model is None:
