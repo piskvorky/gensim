@@ -38,7 +38,7 @@ Command line arguments
 
 """
 
-import os, pdb
+import os
 import sys
 import logging
 import argparse
