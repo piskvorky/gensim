@@ -39,7 +39,6 @@ from gensim import matutils
 class AuthorTopicTransformer(TransformerMixin, BaseEstimator):
     """Base Author Topic module, wraps :class:`~gensim.models.atmodel.AuthorTopicModel`.
 
-    For more information on the inner workings please take a look at the original class.
     The model's internal workings are heavily based on  `"The Author-Topic Model for Authors and Documents",
     Osen-Zvi et. al 2004 <https://mimno.infosci.cornell.edu/info6150/readings/398.pdf>`_.
 

@@ -31,13 +31,11 @@ from gensim import matutils
 class HdpTransformer(TransformerMixin, BaseEstimator):
     """Base HDP module, wraps :class:`~gensim.models.hdpmodel.HdpModel`.
 
-    For more information on the inner workings please take a look at
-    the original class. The inner workings of this class heavily depends on `Wang, Paisley, Blei: "Online Variational
+    The inner workings of this class heavily depends on `Wang, Paisley, Blei: "Online Variational
     Inference for the Hierarchical Dirichlet Process, JMLR (2011)"
     <http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_.
 
     """
-
     def __init__(self, id2word, max_chunks=None, max_time=None, chunksize=256, kappa=1.0, tau=64.0, K=15, T=150,
                  alpha=1, gamma=1, eta=0.01, scale=1.0, var_converge=0.0001, outputdir=None, random_state=None):
         """
@@ -107,7 +105,7 @@ class HdpTransformer(TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : {iterable of iterable of (int, int), scipy.sparse matrix}
+        X : {iterable of list of (int, number), scipy.sparse matrix}
             A collection of documents in BOW format used for training the model.
 
         Returns
@@ -174,7 +172,7 @@ class HdpTransformer(TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : {iterable of iterable of (int, int), scipy.sparse matrix}
+        X : {iterable of list of (int, number), scipy.sparse matrix}
             A collection of documents in BOW format used for training the model.
 
         Returns

@@ -33,7 +33,7 @@ from gensim import matutils
 class RpTransformer(TransformerMixin, BaseEstimator):
     """Base Word2Vec module, wraps :class:`~gensim.models.rpmodel.RpModel`.
 
-    For more information on the inner workings please take a look at the original class.
+    For more information please have a look to `Random projection <https://en.wikipedia.org/wiki/Random_projection>`_.
 
     """
     def __init__(self, id2word=None, num_topics=300):
@@ -74,7 +74,7 @@ class RpTransformer(TransformerMixin, BaseEstimator):
         Parameters
         ----------
         docs : {iterable of iterable of (int, int), list of (int, number)}
-            Documents to be transformed in BOW format.
+            Document or documents to be transformed in BOW format.
 
         Returns
         -------

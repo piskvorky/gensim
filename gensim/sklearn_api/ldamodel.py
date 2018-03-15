@@ -19,7 +19,6 @@ Examples
 >>> docvecs = model.fit_transform(common_corpus)
 
 """
-
 import numpy as np
 from scipy import sparse
 from sklearn.base import TransformerMixin, BaseEstimator
@@ -34,11 +33,11 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
 
     For more information on the inner workings please take a look at the original class.
     The inner workings of this class depends heavily on `Matthew D. Hoffman, David M. Blei, Francis Bach:
-    "Online Learning for Latent Dirichlet Allocation NIPS'10"
-    <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
+    "Online Learning for Latent Dirichlet Allocation NIPS'10" <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_ and
+    `David M. Blei, Andrew Y. Ng, Michael I. Jordan: "Latent Dirichlet Allocation"
+    <http://www.jmlr.org/papers/volume3/blei03a/blei03a.pdf>`_.
 
     """
-
     def __init__(self, num_topics=100, id2word=None, chunksize=2000, passes=1, update_every=1, alpha='symmetric',
                  eta=None, decay=0.5, offset=1.0, eval_every=10, iterations=50, gamma_threshold=0.001,
                  minimum_probability=0.01, random_state=None, scorer='perplexity', dtype=np.float32):

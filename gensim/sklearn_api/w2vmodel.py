@@ -23,8 +23,6 @@ Examples
 >>> assert wordvecs.shape == (2, 10)
 
 """
-
-
 import numpy as np
 import six
 from sklearn.base import TransformerMixin, BaseEstimator
@@ -36,7 +34,8 @@ from gensim import models
 class W2VTransformer(TransformerMixin, BaseEstimator):
     """Base Word2Vec module, wraps :class:`~gensim.models.word2vec.Word2Vec`.
 
-    For more information on the inner workings please take a look at the original class.
+    For more information please have a look to `Tomas Mikolov, Kai Chen, Greg Corrado, Jeffrey Dean: "Efficient
+    Estimation of Word Representations in Vector Space" <https://arxiv.org/abs/1301.3781>`_.
 
     """
     def __init__(self, size=100, alpha=0.025, window=5, min_count=5, max_vocab_size=None, sample=1e-3, seed=1,

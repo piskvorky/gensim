@@ -42,10 +42,10 @@ from gensim import matutils
 class LsiTransformer(TransformerMixin, BaseEstimator):
     """Base LSI module, wraps :class:`~gensim.model.lsimodel.LsiModel`.
 
-    For more information on the inner working please take a look at the original class.
+    For more information please have a look to `Latent semantic analysis
+    <https://en.wikipedia.org/wiki/Latent_semantic_analysis>`_.
 
     """
-
     def __init__(self, num_topics=200, id2word=None, chunksize=20000,
                  decay=1.0, onepass=True, power_iters=2, extra_samples=100):
         """

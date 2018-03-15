@@ -28,7 +28,7 @@ import gensim
 class TfIdfTransformer(TransformerMixin, BaseEstimator):
     """Base TfIdf module, wraps :class:`~gensim.models.tfidfmodel.TfidfModel`.
 
-    For more information on the inner workings please take a look at the original class.
+    For more information please have a look to `tf-idf <https://en.wikipedia.org/wiki/Tf%E2%80%93idf>`_.
 
     """
     def __init__(self, id2word=None, dictionary=None, wlocal=gensim.utils.identity,

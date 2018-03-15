@@ -36,7 +36,6 @@ class LdaSeqTransformer(TransformerMixin, BaseEstimator):
     <https://www.cs.princeton.edu/~blei/papers/BleiLafferty2006a.pdf>`_.
 
     """
-
     def __init__(self, time_slice=None, id2word=None, alphas=0.01, num_topics=10, initialize='gensim', sstats=None,
                  lda_model=None, obs_variance=0.5, chain_variance=0.005, passes=10, random_state=None,
                  lda_inference_max_iter=25, em_min_iter=6, em_max_iter=20, chunksize=100):
@@ -103,7 +102,7 @@ class LdaSeqTransformer(TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : {iterable of iterable of (int, int), scipy.sparse matrix}
+        X : {iterable of list of (int, number), scipy.sparse matrix}
             A collection of documents in BOW format used for training the model.
 
         Returns
@@ -126,7 +125,7 @@ class LdaSeqTransformer(TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        docs : {iterable of iterable of (int, int), scipy.sparse matrix}
+        docs : {iterable of list of (int, number), scipy.sparse matrix}
             A collection of documents in BOW format to be transformed.
 
         Returns

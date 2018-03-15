@@ -34,7 +34,7 @@ from gensim.utils import tokenize
 class Text2BowTransformer(TransformerMixin, BaseEstimator):
     """Base Text2Bow module , wraps :class:`~gensim.corpora.dictionary.Dictionary`.
 
-    For more information on the inner workings please take a look at the original class.
+    For more information please have a look to `Bag-of-words model <https://en.wikipedia.org/wiki/Bag-of-words_model>`_.
 
     """
     def __init__(self, prune_at=2000000, tokenizer=tokenize):

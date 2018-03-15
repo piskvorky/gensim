@@ -27,13 +27,12 @@ from gensim.models import doc2vec
 
 
 class D2VTransformer(TransformerMixin, BaseEstimator):
-    """Base Dov2Vec module, wraps :class:`~gensim.models.doc2vec.Doc2Vec`.
+    """Base Doc2Vec module, wraps :class:`~gensim.models.doc2vec.Doc2Vec`.
 
-    For more information on the inner workings please take a look at
-    the original class.
+    This model based on `Quoc Le, Tomas Mikolov: "Distributed Representations of Sentences and Documents"
+    <https://cs.stanford.edu/~quocle/paragraph_vector.pdf>`_.
 
     """
-
     def __init__(self, dm_mean=None, dm=1, dbow_words=0, dm_concat=0, dm_tag_count=1, docvecs=None,
                  docvecs_mapfile=None, comment=None, trim_rule=None, size=100, alpha=0.025, window=5, min_count=5,
                  max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001, hs=0, negative=5, cbow_mean=1,
