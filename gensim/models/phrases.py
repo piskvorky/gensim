@@ -141,10 +141,12 @@ class SentenceAnalyzer(object):
         Parameters
         ----------
         worda : str
+            First word for comparison.
         wordb : str
+            Second word for comparison.
         components : TODO
         scorer : {'default', 'npmi'}
-            Scorer function, as given to Phrases.
+            Scorer function, as given to :class:`~gensim.models.phrases.Phrases`.
 
         Return
         ------
@@ -174,7 +176,7 @@ class SentenceAnalyzer(object):
         common_terms : list of object
             List of common terms, they have a special treatment.
         scorer : {'default', 'npmi'}
-            Scorer function, as given to Phrases.
+            Scorer function, as given to :class:`~gensim.models.phrases.Phrases`.
 
         """
         s = [utils.any2utf8(w) for w in sentence]
@@ -217,15 +219,17 @@ class PhrasesTransformation(interfaces.TransformationABC):
 
     @classmethod
     def load(cls, *args, **kwargs):
-        """Load a previously saved Phrases/Phraser class. Handles backwards compatibility from older Phrases/Phraser
+        """Load a previously saved :class:`~gensim.models.phrases.Phrases` /
+        :class:`~gensim.models.phrases.Phraser` class. Handles backwards compatibility from older
+        :class:`~gensim.models.phrases.Phrases` / :class:`~gensim.models.phrases.Phraser`
         versions which did not support pluggable scoring functions. Otherwise, relies on utils.load.
 
         Parameters
         ----------
         args : object
-            Sequence of arguments, see :meth:`...` for more information.
+            Sequence of arguments, see :class:`~gensim.models.phrases.Phrases` for more information.
         kwargs : object
-            Sequence of arguments, see :meth:`...` for more information.
+            Sequence of arguments, see :class:`~gensim.models.phrases.Phrases` for more information.
 
         """
         model = super(PhrasesTransformation, cls).load(*args, **kwargs)
