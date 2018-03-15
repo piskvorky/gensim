@@ -11,7 +11,6 @@ Follows scikit-learn API conventions to facilitate using gensim along with sciki
 
 Examples
 --------
-
 >>> from gensim.test.utils import common_corpus, common_dictionary
 >>> from gensim.sklearn_api.ldaseqmodel import LdaSeqTransformer
 >>>
@@ -31,56 +30,54 @@ from gensim import models
 
 
 class LdaSeqTransformer(TransformerMixin, BaseEstimator):
-    """Base Sequential LDA module.
+    """Base Sequential LDA module, wraps :class:`~gensim.models.ldaseqmodel.LdaSeqModel` model.
 
-    Wraps :class:`~gensim.models.ldaseqmodel.LdaSeqModel`.
-    For more information on the inner workings please take a look at
-    the original class.
-
+    For more information take a look at `David M. Blei, John D. Lafferty: "Dynamic Topic Models"
+    <https://www.cs.princeton.edu/~blei/papers/BleiLafferty2006a.pdf>`_.
 
     """
 
     def __init__(self, time_slice=None, id2word=None, alphas=0.01, num_topics=10, initialize='gensim', sstats=None,
                  lda_model=None, obs_variance=0.5, chain_variance=0.005, passes=10, random_state=None,
                  lda_inference_max_iter=25, em_min_iter=6, em_max_iter=20, chunksize=100):
-        """Sklearn wrapper for  :class:`~gensim.models.ldaseqmodel.LdaSeqModel` model.
+        """
 
         Parameters
         ----------
         time_slice : list of int, optional
-            Contains the number of documents in each time-slice.
-        id2word : dict of (int, str)
+            Number of documents in each time-slice.
+        id2word : :class:`~gensim.corpora.dictionary.Dictionary`, optional
             Mapping from an ID to the word it represents in the vocabulary.
-        alphas : float
+        alphas : float, optional
             The prior probability of each topic.
-        num_topics : int
+        num_topics : int, optional
             Number of latent topics to be discovered in the corpus.
-        initialize : str {'gensim', 'own', 'ldamodel'}
+        initialize : {'gensim', 'own', 'ldamodel'}, optional
             Controls the initialization of the DTM model. Supports three different modes:
-                * 'gensim', default: Uses gensim's own LDA initialization.
+                * 'gensim': Uses gensim's own LDA initialization.
                 * 'own': Uses your own initialization matrix of an LDA model that has been previously trained.
                 * 'lda_model': Use a previously used LDA model, passing it through the `lda_model` argument.
-        sstats : np.ndarray of shape (vocab_len, `num_topics`)
+        sstats : np.ndarray of shape [vocab_len, `num_topics`], optional
             If `initialize` is set to 'own' this will be used to initialize the DTM model.
-        lda_model : :class:`~gensim.models.ldamodel.LdaModel`
+        lda_model : :class:`~gensim.models.ldamodel.LdaModel`, optional
             If `initialize` is set to 'lda_model' this object will be used to create the `sstats` initialization matrix.
-        obs_variance : float
+        obs_variance : float, optional
             Observed variance used to approximate the true and forward variance as shown in
             `David M. Blei, John D. Lafferty: "Dynamic Topic Models"
-            <https://mimno.infosci.cornell.edu/info6150/readings/398.pdf>`_.
-        chain_variance : float
+            <https://www.cs.princeton.edu/~blei/papers/BleiLafferty2006a.pdf>`_.
+        chain_variance : float, optional
             Gaussian parameter defined in the beta distribution to dictate how the beta values evolve.
-        passes : int
+        passes : int, optional
             Number of passes over the corpus for the initial :class:`~gensim.models.ldamodel.LdaModel`
-        random_state : {np.random.RandomState, int}
+        random_state : {numpy.random.RandomState, int}, optional
             Can be a np.random.RandomState object, or the seed to generate one. Used for reproducibility of results.
-        lda_inference_max_iter : int
+        lda_inference_max_iter : int, optional
             Maximum number of iterations in the inference step of the LDA training.
-        en_min_iter : int
+        em_min_iter : int, optional
             Minimum number of iterations until converge of the Expectation-Maximization algorithm
-        en_max_iter : int
+        em_max_iter : int, optional
             Maximum number of iterations until converge of the Expectation-Maximization algorithm
-        chunksize : int
+        chunksize : int, optional
             Number of documents in the corpus do be processed in in a chunk.
 
         """
@@ -125,7 +122,7 @@ class LdaSeqTransformer(TransformerMixin, BaseEstimator):
         return self
 
     def transform(self, docs):
-        """
+        """Infer the topic distribution for `docs`.
 
         Parameters
         ----------
