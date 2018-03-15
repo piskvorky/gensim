@@ -185,7 +185,7 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        np.ndarray of shape (`len(docs)`, `size`)
+        numpy.ndarray of shape [`len(docs)`, `size`]
             The vector representation of the `docs`.
 
         """

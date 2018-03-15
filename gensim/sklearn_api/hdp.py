@@ -141,7 +141,7 @@ class HdpTransformer(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        np.ndarray of shape (`len(docs), num_topics`)
+        numpy.ndarray of shape [`len(docs), num_topics`]
             Topic distribution for `docs`.
 
         """

@@ -18,7 +18,6 @@ Examples
 >>> # Reduce each document to 2 dimensions (topics) using the sklearn interface.
 >>> model = LdaTransformer(num_topics=2, id2word=common_dictionary, iterations=20, random_state=1)
 >>> docvecs = model.fit_transform(common_corpus)
->>> assert docvecs.shape == (len(common_corpus), 2)
 
 """
 
@@ -44,41 +43,33 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
     def __init__(self, num_topics=100, id2word=None, chunksize=2000, passes=1, update_every=1, alpha='symmetric',
                  eta=None, decay=0.5, offset=1.0, eval_every=10, iterations=50, gamma_threshold=0.001,
                  minimum_probability=0.01, random_state=None, scorer='perplexity', dtype=np.float32):
-
-        """Sklearn wrapper for LDA model.
-
-        Notes
-        -----
-        Configure `passes` and `update_every` params to choose the mode among:
-        * online (single-pass): update_every != None and passes == 1
-        * online (multi-pass): update_every != None and passes > 1
-        * batch: update_every == None
-
-        By default, 'online (single-pass)' mode is used for training the LDA model.
+        """
 
         Parameters
         ----------
         num_topics : int, optional
             The number of requested latent topics to be extracted from the training corpus.
-        id2word : dict of (int, str), optional
+        id2word : :class:`~gensim.corpora.dictionary.Dictionary`, optional
             Mapping from integer ID to words in the corpus. Used to determine vocabulary size and logging.
         chunksize : int, optional
-            If `distributed` is True, this is the number of documents to be handled in each worker job.
+            Number of documents in batch.
         passes : int, optional
-            Number of passes through the corpus during online training.
+            Number of passes through the corpus during training.
         update_every : int, optional
             Number of documents to be iterated through for each update.
             Set to 0 for batch learning, > 1 for online iterative learning.
-        alpha : {np.array, str}, optional
+        alpha : {np.ndarray, str}, optional
             Can be set to an 1D array of length equal to the number of expected topics that expresses
             our a-priori belief for the each topics' probability.
             Alternatively default prior selecting strategies can be employed by supplying a string:
-            'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / topicno`.
-            'default': Learns an asymmetric prior from the corpus.
+
+                * 'asymmetric': Uses a fixed normalized assymetric prior of `1.0 / topicno`.
+                * 'default': Learns an assymetric prior from the corpus.
         eta : {float, np.array, str}, optional
             A-priori belief on word probability, this can be:
+
                 * scalar for a symmetric prior over topic/word probability,
-                * vector : of length num_words to denote an asymmetric user defined probability for each word,
+                * vector of length num_words to denote an asymmetric user defined probability for each word,
                 * matrix of shape (num_topics, num_words) to assign a probability for each word-topic combination,
                 * the string 'auto' to learn the asymmetric prior from the data.
         decay : float, optional
@@ -93,7 +84,7 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
         eval_every : int, optional
             Log perplexity is estimated every that many updates. Setting this to one slows down training by ~2x.
         iterations : int, optional
-            Maximum number of iterations through the corpus when infering the topic distribution of a corpus.
+            Maximum number of iterations through the corpus when inferring the topic distribution of a corpus.
         gamma_threshold : float, optional
             Minimum change in the value of the gamma parameters to continue iterating.
         minimum_probability : float, optional
@@ -102,14 +93,21 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
             Either a randomState object or a seed to generate one. Useful for reproducibility.
         scorer : str, optional
             Method to compute a score reflecting how well the model has fit the input corpus, allowed values are:
-            * 'perplexity': Minimize the model's perplexity.
-            * 'mass_u': Use :class:`~gensim.models.coherencemodel.CoherenceModel` to compute a topics coherence.
-        dtype : type, optional
+                * 'perplexity': Perplexity of language model
+                * 'mass_u': Use :class:`~gensim.models.coherencemodel.CoherenceModel` to compute a topics coherence.
+        dtype : {numpy.float16, numpy.float32, numpy.float64}, optional
             Data-type to use during calculations inside model. All inputs are also converted.
-            Available types: `numpy.float16`, `numpy.float32`, `numpy.float64`.
+
+        Notes
+        -----
+        Configure `passes` and `update_every` params to choose the mode among:
+            * online (single-pass): update_every != None and passes == 1
+            * online (multi-pass): update_every != None and passes > 1
+            * batch: update_every == None
+
+        By default, 'online (single-pass)' mode is used for training the LDA model.
 
         """
-
         self.gensim_model = None
         self.num_topics = num_topics
         self.id2word = id2word
@@ -158,16 +156,16 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
         return self
 
     def transform(self, docs):
-        """Return the BOW format for the input documents.
+        """Infer the topic distribution for `docs`.
 
         Parameters
         ----------
-        docs : iterable of iterable of (int, int)
-            A collection of documents in BOW format to be transformed.
+        docs : {iterable of list of (int, number), list of (int, number)}
+            Document or sequence of documents in BoW format.
 
         Returns
         -------
-        np.array of shape (`len(docs)`, `num_topics`)
+        numpy.ndarray of shape [`len(docs)`, `num_topics`]
             The topic distribution for each input document.
 
         """
@@ -227,8 +225,8 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : iterable of iterable of (int, int)
-            Input corpus in BOW format.
+        X : iterable of list of (int, number)
+            Sequence of documents in BOW format.
 
         Returns
         -------
