@@ -15,13 +15,9 @@ Examples
 >>>
 >>> # Transform the word counts inversely to their global frequency using the sklearn interface.
 >>> model = TfIdfTransformer(dictionary=common_dictionary)
->>> weighted_corpus = model.fit_transform(common_corpus)
->>> weighted_corpus[0]
-[(0, 0.57735026918962573), (1, 0.57735026918962573), (2, 0.57735026918962573)]
+>>> tfidf_corpus = model.fit_transform(common_corpus)
 
 """
-
-
 from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
 
@@ -32,15 +28,13 @@ import gensim
 class TfIdfTransformer(TransformerMixin, BaseEstimator):
     """Base TfIdf module, wraps :class:`~gensim.models.tfidfmodel.TfidfModel`.
 
-    For more information on the inner workings please take a look at
-    the original class.
+    For more information on the inner workings please take a look at the original class.
 
     """
-
     def __init__(self, id2word=None, dictionary=None, wlocal=gensim.utils.identity,
                  wglobal=gensim.models.tfidfmodel.df2idf, normalize=True, smartirs="ntc",
                  pivot=None, slope=0.65):
-        """Sklearn wrapper for TfIdf model.
+        """
 
         Parameters
         ----------
@@ -81,6 +75,18 @@ class TfIdfTransformer(TransformerMixin, BaseEstimator):
                 * `c` - cosine.
 
             For more info, visit `"Wikipedia" <https://en.wikipedia.org/wiki/SMART_Information_Retrieval_System>`_.
+        pivot : float, optional
+            It is the point around which the regular normalization curve is `tilted` to get the new pivoted
+            normalization curve. In the paper `Amit Singhal, Chris Buckley, Mandar Mitra:
+            "Pivoted Document Length Normalization" <http://singhal.info/pivoted-dln.pdf>`_ it is the point where the
+            retrieval and relevance curves intersect.
+            This parameter along with slope is used for pivoted document length normalization.
+            Only when `pivot` is not None pivoted document length normalization will be applied else regular TfIdf
+            is used.
+        slope : float, optional
+            It is the parameter required by pivoted document length normalization which determines the slope to which
+            the `old normalization` can be tilted. This parameter only works when pivot is defined by user and is not
+            None.
 
         """
         self.gensim_model = None
@@ -115,12 +121,12 @@ class TfIdfTransformer(TransformerMixin, BaseEstimator):
         return self
 
     def transform(self, docs):
-        """Get the transformed documents after multiplication with the tf-idf matrix.
+        """Get the tf-idf scores in BoW representation for `docs`
 
         Parameters
         ----------
-        docs: iterable of iterable of (int, int)
-            Input corpus in BoW format.
+        docs: {iterable of list of (int, number), list of (int, number)}
+            Document or corpus in BoW format.
 
         Returns
         -------
