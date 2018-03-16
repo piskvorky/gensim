@@ -121,7 +121,7 @@ cdef inline unsigned long long random_int32(unsigned long long *next_random) nog
 cdef unsigned long long fast_sentence_sg_neg(
     const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len, REAL_t *neu1,
     REAL_t *syn0, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
-    const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work,
+    const np.uint32_t word2_index, const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
     unsigned long long next_random, REAL_t *word_locks,
     const int _compute_loss, const REAL_t rp_sample, int idx_start, int idx_end, REAL_t *_running_training_loss_param) nogil:
 
@@ -458,7 +458,7 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss, rp_sample = 0.1
                     if hs:
                         fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work, word_locks, _compute_loss, &_running_training_loss)
                     if negative:
-                        next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, neu1, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random, word_locks, _compute_loss,  rp_sample, idx_start, idx_end, &_running_training_loss)
+                        next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, neu1, syn0, syn1neg, size, indexes[i], indexes[j], indexes, _alpha, work, next_random, word_locks, _compute_loss,  rp_sample, idx_start, idx_end, &_running_training_loss)
 
     model.running_training_loss = _running_training_loss
     return effective_words
