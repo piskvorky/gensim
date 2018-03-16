@@ -167,10 +167,11 @@ class BaseKeyedVectors(utils.SaveLoad):
         replace: bool, optional
             Flag indicating whether to replace vectors for entities which are already in the vocabulary,
             if True - replace vectors, otherwise - keep old vectors.
+
         """
         if isinstance(entities, string_types):
             entities = [entities]
-            weights = weights.reshape(1, -1)
+            weights = np.array(weights).reshape(1, -1)
         elif isinstance(weights, list):
             weights = np.array(weights)
 
@@ -207,6 +208,7 @@ class BaseKeyedVectors(utils.SaveLoad):
             Entities specified by string tags.
         weights: {list of numpy.ndarray, numpy.ndarray}
             List of 1D np.array vectors or 2D np.array of vectors.
+
         """
         if not isinstance(entities, list):
             entities = [entities]
@@ -223,6 +225,7 @@ class BaseKeyedVectors(utils.SaveLoad):
 
         If a list, return designated tags' vector representations as a
         2D numpy array: #tags x #vector_size.
+
         """
         if isinstance(entities, string_types):
             # allow calls like trained_model['office'], as a shorthand for trained_model[['office']]
