@@ -154,23 +154,7 @@ class BaseKeyedVectors(utils.SaveLoad):
         else:
             raise KeyError("'%s' not in vocabulary" % entity)
 
-    def add_entity(self, entity, weights, replace=False):
-        """Add entity vector in a manual way.
-        If `entity` is already in the vocabulary, old vector is keeped unless `replace` flag is True.
-
-        Parameters
-        ----------
-        entity : str
-            Entity specified by string tag.
-        weights : np.array
-            1D numpy array with shape (`vector_size`,)
-        replace: bool, optional
-            Boolean flag indicating whether to replace old vector if entity is already in the vocabulary.
-            Default, False, means that old vector is keeped.
-        """
-        self.add_entities([entity], weights.reshape(1, -1), replace=replace)
-
-    def add_entities(self, entities, weights, replace=False):
+    def add(self, entities, weights, replace=False):
         """Add entities and theirs vectors in a manual way.
         If some entity is already in the vocabulary, old vector is keeped unless `replace` flag is True.
 
@@ -184,24 +168,21 @@ class BaseKeyedVectors(utils.SaveLoad):
             Flag indicating whether to replace vectors for entities which are already in the vocabulary,
             if True - replace vectors, otherwise - keep old vectors.
         """
-        if isinstance(weights, list):
+        if isinstance(entities, string_types):
+            entities = [entities]
+            weights = weights.reshape(1, -1)
+        elif isinstance(weights, list):
             weights = np.array(weights)
 
         in_vocab_mask = np.zeros(len(entities), dtype=np.bool)
-        in_vocab_idxs = []
-        out_vocab_entities = []
-
-        for idx, entity in zip(range(len(entities)), entities):
+        for idx, entity in enumerate(entities):
             if entity in self.vocab:
                 in_vocab_mask[idx] = True
-                in_vocab_idxs.append(self.vocab[entity].index)
-            else:
-                out_vocab_entities.append(entity)
 
         # add new entities to the vocab
-        for entity in out_vocab_entities:
-            entity_id = len(self.vocab)
-            self.vocab[entity] = Vocab(index=entity_id, count=1)
+        for idx in np.nonzero(~in_vocab_mask)[0]:
+            entity = entities[idx]
+            self.vocab[entity] = Vocab(index=len(self.vocab), count=1)
             self.index2entity.append(entity)
 
         # add vectors for new entities
@@ -212,12 +193,13 @@ class BaseKeyedVectors(utils.SaveLoad):
 
         # change vectors for in_vocab entities if `replace` flag is specified
         if replace:
+            in_vocab_idxs = [self.vocab[entities[idx]].index for idx in np.nonzero(in_vocab_mask)[0]]
             self.vectors[in_vocab_idxs] = weights[in_vocab_mask]
 
     def __setitem__(self, entities, weights):
         """Add entities and theirs vectors in a manual way.
         If some entity is already in the vocabulary, old vector is replaced with the new one.
-        This method is alias for `add_entities` with `replace=True`.
+        This method is alias for `add` with `replace=True`.
 
         Parameters
         ----------
@@ -230,7 +212,7 @@ class BaseKeyedVectors(utils.SaveLoad):
             entities = [entities]
             weights = weights.reshape(1, -1)
 
-        self.add_entities(entities, weights, replace=True)
+        self.add(entities, weights, replace=True)
 
     def __getitem__(self, entities):
         """

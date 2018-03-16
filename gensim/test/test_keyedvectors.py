@@ -153,40 +153,40 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
         """Test that the deprecated `wv` property returns `self`. To be removed in v4.0.0."""
         self.assertTrue(self.vectors is self.vectors.wv)
 
-    def test_add_entity(self):
+    def test_add_single(self):
         """Test that adding entity in a manual way works correctly."""
         entities = ['___some_entity{}_not_present_in_keyed_vectors___'.format(i) for i in range(5)]
         vectors = [np.random.randn(self.vectors.vector_size) for _ in range(5)]
 
-        # Test `add_entity` on already filled kv.
+        # Test `add` on already filled kv.
         for ent, vector in zip(entities, vectors):
-            self.vectors.add_entity(ent, vector)
+            self.vectors.add(ent, vector)
 
         for ent, vector in zip(entities, vectors):
             self.assertTrue(np.allclose(self.vectors[ent], vector))
 
-        # Test `add_entity` on empty kv.
+        # Test `add` on empty kv.
         kv = EuclideanKeyedVectors(self.vectors.vector_size)
         for ent, vector in zip(entities, vectors):
-            kv.add_entity(ent, vector)
+            kv.add(ent, vector)
 
         for ent, vector in zip(entities, vectors):
             self.assertTrue(np.allclose(kv[ent], vector))
 
-    def test_add_entities(self):
+    def test_add_multiple(self):
         """Test that adding a bulk of entities in a manual way works correctly."""
         entities = ['___some_entity{}_not_present_in_keyed_vectors___'.format(i) for i in range(5)]
         vectors = [np.random.randn(self.vectors.vector_size) for _ in range(5)]
 
-        # Test `add_entities` on already filled kv.
+        # Test `add` on already filled kv.
         vocab_size = len(self.vectors.vocab)
-        self.vectors.add_entities(entities, vectors, replace=False)
+        self.vectors.add(entities, vectors, replace=False)
         self.assertEqual(vocab_size + len(entities), len(self.vectors.vocab))
 
         for ent, vector in zip(entities, vectors):
             self.assertTrue(np.allclose(self.vectors[ent], vector))
 
-        # Test `add_entities` on empty kv.
+        # Test `add` on empty kv.
         kv = EuclideanKeyedVectors(self.vectors.vector_size)
         kv[entities] = vectors
         self.assertEqual(len(kv.vocab), len(entities))
