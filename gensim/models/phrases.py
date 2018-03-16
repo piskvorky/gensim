@@ -264,7 +264,7 @@ class PhrasesTransformation(interfaces.TransformationABC):
 class Phrases(SentenceAnalyzer, PhrasesTransformation):
     """Detect phrases, based on collected collocation counts. Adjacent words that appear together more frequently than
     expected are joined together with the `_` character. It can be used to generate phrases on the fly,
-    using the `phrases[sentence]` and `phrases[corpus]` syntax. #TODO
+    using the `phrases[sentence]` and `phrases[corpus]` syntax.
     """
 
     def __init__(self, sentences=None, min_count=5, threshold=10.0,
@@ -418,9 +418,13 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         ----------
         sentences : list of str
         max_vocab_size : int
+            Maximal vocabulary size.
         delimiter : str
+            Define, what will be used for string split.
         progress_per : int
-        common_terms : list of str
+            Write logs every `progress_per` milliseconds.
+        common_terms : set of str
+            Set of common words.
 
         """
         sentence_no = -1
@@ -465,6 +469,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         Parameters
         ----------
         sentences : list of str
+            List of unicode strings.
 
         """
         # uses a separate vocab to collect the token counts from `sentences`.
@@ -498,7 +503,10 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         sentences : list of str
             List of unicode strings.
         out_delimiter : str, optional
+            Define, what will be used for string split.
         as_tuples : bool, optional
+            If true, yield (tuple(words), score), otherwise - (out_delimiter.join(words), score).
+
 
         Example
         -------
@@ -543,14 +551,15 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         sentence : list of str
             List of unicode strings.
 
-        Example::
-
-          >>> sentences = Text8Corpus(path_to_corpus)
-          >>> bigram = Phrases(sentences, min_count=5, threshold=100)
-          >>> for sentence in phrases[sentences]:
-          ...     print(u' '.join(s))
-            he refuted nechaev other anarchists sometimes identified as pacifist anarchists advocated complete
-            nonviolence leo_tolstoy
+        Example
+        ----------
+        >>> from gensim.test.utils import datapath
+        >>> from gensim.models.word2vec import Text8Corpus
+        >>> from gensim.models.phrases import Phrases
+        >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
+        >>> bigram = Phrases(sentences, min_count=5, threshold=100)
+        >>> bigram["trees"]
+        [u't', u'r', u'e', u'e', u's']
 
         """
         warnings.warn("For a faster implementation, use the gensim.models.phrases.Phraser class")
@@ -589,6 +598,16 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
 
 # calculation of score based on original mikolov word2vec paper
 def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
+    """
+
+    :param worda_count:
+    :param wordb_count:
+    :param bigram_count:
+    :param len_vocab:
+    :param min_count:
+    :param corpus_word_count:
+    :return:
+    """
     return (bigram_count - min_count) / worda_count / wordb_count * len_vocab
 
 
@@ -630,6 +649,13 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
     """
 
     def __init__(self, phrases_model):
+        """
+        Parameters
+        ----------
+        phrases_model : :class:`~gensim.models.phrases.Phrases`
+            Phrases class object.
+
+        """
         self.threshold = phrases_model.threshold
         self.min_count = phrases_model.min_count
         self.delimiter = phrases_model.delimiter
@@ -649,6 +675,14 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
         logger.info('Phraser built with %i %i phrasegrams', count, len(self.phrasegrams))
 
     def pseudocorpus(self, phrases_model):
+        """
+
+        Parameters
+        ----------
+        phrases_model : :class:`~gensim.models.phrases.Phrases`
+            Phrases class object.
+
+        """
         return pseudocorpus(phrases_model.vocab, phrases_model.delimiter,
                             phrases_model.common_terms)
 
