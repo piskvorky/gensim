@@ -354,7 +354,7 @@ cdef unsigned long long fast_sentence_cbow_neg(
     return next_random
 
 
-def train_batch_sg(model, sentences, alpha, _work, compute_loss, rp_sample = 0.1):
+def train_batch_sg(model, sentences, alpha, _work, compute_loss, _rp_sample = 0.1):
     cdef int hs = model.hs
     cdef int negative = model.negative
     cdef int sample = (model.vocabulary.sample != 0)
@@ -390,6 +390,8 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss, rp_sample = 0.1
     # for sampling (negative and frequent-word downsampling)
     cdef unsigned long long next_random
 
+    # for doc2vecC Corruption
+    cdef REAL_t rp_sample = _rp_sample
     cdef REAL_t *neu1
 
     if hs:
@@ -458,7 +460,9 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss, rp_sample = 0.1
                     if hs:
                         fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work, word_locks, _compute_loss, &_running_training_loss)
                     if negative:
-                        next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, neu1, syn0, syn1neg, size, indexes[i], indexes[j], indexes, _alpha, work, next_random, word_locks, _compute_loss,  rp_sample, idx_start, idx_end, &_running_training_loss)
+                        next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, neu1, syn0,
+                        syn1neg, size, indexes[i], indexes[j], indexes, _alpha, work, next_random,
+                        word_locks, _compute_loss,  rp_sample, idx_start, idx_end, &_running_training_loss)
 
     model.running_training_loss = _running_training_loss
     return effective_words
@@ -567,7 +571,9 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss, _rp_sa
                 if hs:
                     fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, j, k, cbow_mean, word_locks, _compute_loss, &_running_training_loss)
                 if negative:
-                    next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random, word_locks, _compute_loss, rp_sample, idx_start, idx_end, &_running_training_loss)
+                    next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1,
+                    syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random,
+                     word_locks, _compute_loss, rp_sample, idx_start, idx_end, &_running_training_loss)
 
     model.running_training_loss = _running_training_loss
     return effective_words
