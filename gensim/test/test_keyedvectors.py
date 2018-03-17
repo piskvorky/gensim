@@ -47,7 +47,7 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
 
         # checking that exponent works as expected
         similarity_matrix = self.vectors.similarity_matrix(dictionary, exponent=1.0).todense()
-        self.assertAlmostEqual(9.5788956, np.sum(similarity_matrix))
+        self.assertAlmostEqual(9.5788956, np.sum(similarity_matrix), places=5)
 
         # checking that nonzero_limit works as expected
         similarity_matrix = self.vectors.similarity_matrix(dictionary, nonzero_limit=4).todense()
