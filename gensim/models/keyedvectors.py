@@ -497,7 +497,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         else:
             assert max(tfidf.idfs) < matrix_order
             word_indices = [
-                index for index, _ in sorted(tfidf.idfs.items(), key=lambda x: x[1], reverse=True)
+                index for index, _
+                in sorted(tfidf.idfs.items(), key=lambda x: (x[1], -x[0]), reverse=True)
             ]
 
         # Traverse rows.
