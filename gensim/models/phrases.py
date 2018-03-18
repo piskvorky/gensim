@@ -290,22 +290,20 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
             available memory you have.
         delimiter : str, optional
             Glue character used to join collocation tokens, should be a byte string (e.g. b'_').
-        scoring : {'default', 'npmi'} http://www.sphinx-doc.org/en/master/rest.html
+        scoring : {'default', 'npmi'}, optional
             Specify how potential phrases are scored for comparison to the `threshold` setting.
             `scoring` can be set with either a string that refers to a built-in scoring function, or with a function
             with the expected parameter names. Two built-in scoring functions are available by setting `scoring` to a
             string:
 
-        'default': from "Efficient Estimaton of Word Representations in Vector Space" by
-                   Mikolov, et. al.:
-                   (count(worda followed by wordb) - min_count) * N /
-                   (count(worda) * count(wordb)) > threshold`, where `N` is the total vocabulary size.
-        'npmi': normalized pointwise mutual information, from "Normalized (Pointwise) Mutual
-                Information in Colocation Extraction" by Gerlof Bouma:
-                ln(prop(worda followed by wordb) / (prop(worda)*prop(wordb))) /
-                - ln(prop(worda followed by wordb)
-                where prop(n) is the count of n / the count of everything in the entire corpus.
+            1. `default` - :meth:`~gensim.models.phrases.original_scorer`.
+            2. `npmi` - :meth:`~gensim.models.phrases.npmi_scorer`.
 
+        common_terms : set of str, optional
+            List of "stop words" that won't affect frequency count of expressions containing them.
+
+        Notes
+        -----
         'npmi' is more robust when dealing with common words that form part of common bigrams, and
         ranges from -1 to 1, but is slower to calculate than the default.
 
@@ -323,8 +321,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         A scoring function without any of these parameters (even if the parameters are not used) will
         raise a ValueError on initialization of the Phrases class. The scoring function must be picklable.
 
-        common_terms : set of str, optional
-            List of "stop words" that won't affect frequency count of expressions containing them.
+
 
         Initialize the model from an iterable of `sentences`. Each sentence must be
         a list of words (unicode strings) that will be used for training.
@@ -599,20 +596,48 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
 # calculation of score based on original mikolov word2vec paper
 def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
     """
+    Parameters
+    ----------
+    worda_count : int
+        First word for comparison.
+    wordb : str
+        Second word for comparison.
+    components : TODO
+    scorer : {'default', 'npmi'}
+        Scorer function, as given to :class:`~gensim.models.phrases.Phrases`.
 
-    :param worda_count:
-    :param wordb_count:
-    :param bigram_count:
-    :param len_vocab:
-    :param min_count:
-    :param corpus_word_count:
-    :return:
+    Notes
+    -----
+    from "Efficient Estimaton of Word Representations in Vector Space" by
+    Mikolov, et. al.:
+    (count(worda followed by wordb) - min_count) * N /
+    (count(worda) * count(wordb)) > threshold`, where `N` is the total vocabulary size.
+
     """
     return (bigram_count - min_count) / worda_count / wordb_count * len_vocab
 
 
 # normalized PMI, requires corpus size
 def npmi_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
+    """
+    Notes
+    -----
+    normalized pointwise mutual information, from "Normalized (Pointwise) Mutual
+    Information in Colocation Extraction" by Gerlof Bouma:
+    ln(prop(worda followed by wordb) / (prop(worda)*prop(wordb))) /
+    - ln(prop(worda followed by wordb)
+    where prop(n) is the count of n / the count of everything in the entire corpus.
+
+    Parameters
+    ----------
+    worda_count: int
+    wordb_count: int
+    bigram_count: int
+    len_vocab: int
+    min_count: int
+    corpus_word_count: int
+
+    """
     pa = worda_count / corpus_word_count
     pb = wordb_count / corpus_word_count
     pab = bigram_count / corpus_word_count
@@ -687,25 +712,47 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
                             phrases_model.common_terms)
 
     def score_item(self, worda, wordb, components, scorer):
-        """Score, retained from original dataset."""
+        """Score, retained from original dataset.
+
+        Parameters
+        ----------
+        worda : str
+            First word for comparison.
+        wordb : str
+            Second word for comparison.
+        components : TODO
+        scorer : {'default', 'npmi'}
+            Scorer function, as given to :class:`~gensim.models.phrases.Phrases`.
+
+        Return
+        ------
+        dict
+            Phrasegrams.
+        """
         try:
             return self.phrasegrams[tuple(components)][1]
         except KeyError:
             return -1
 
     def __getitem__(self, sentence):
-        """Convert the input tokens `sentence` (=list of unicode strings) into phrase
-        tokens (=list of unicode strings, where detected phrases are joined by u'_'
-        (or other configured delimiter-character).
-
-        If `sentence` is an entire corpus (iterable of sentences rather than a single
-        sentence), return an iterable that converts each of the corpus' sentences
-        into phrases on the fly, one after another.
+        """Convert the input tokens `sentence` into phrase
+        tokens .
 
         Parameters
         ----------
         sentence : {list of str, iterable of list of str}
-            List of unicode strings.
+            Sentence tokens - list of unicode strings.
+
+        Return
+        ------
+        {list of str, iterable of list of str}
+            Phrase tokens, where joined by delimiter-character.
+
+        Notes
+        -----
+        If `sentence` is an entire corpus (iterable of sentences rather than a single
+        sentence), return an iterable that converts each of the corpus' sentences
+        into phrases on the fly, one after another.
 
         """
         is_single, sentence = _is_single(sentence)
