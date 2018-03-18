@@ -497,7 +497,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         else:
             assert max(tfidf.idfs) < matrix_order
             word_indices = [
-                index for index, _ in sorted(tfidf.idfs.items(), key=lambda x: x[1], reverse=True)
+                index for index, _
+                in sorted(tfidf.idfs.items(), key=lambda x: (x[1], -x[0]), reverse=True)
             ]
 
         # Traverse rows.
@@ -511,6 +512,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             if w1 not in self.vocab:
                 num_skipped += 1
                 continue  # A word from the dictionary is not present in the word2vec model.
+
             # Traverse upper triangle columns.
             if matrix_order <= nonzero_limit + 1:  # Traverse all columns.
                 columns = (
