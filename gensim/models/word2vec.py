@@ -169,7 +169,6 @@ except ImportError:
                     if pos2 != pos:
                         # handle the sentence using Doc2VecC
                         sampled_indices = [w.index for w in random.choice(word_vocabs, int(len(word_vocabs) * rp_sample), replace=True)]
-                        l1 = np_sum(corruption_constant * model.wv.syn0[sampled_indices], axis=0)  # 1 x vector_size
 
                         train_sg_pair(
                             model, model.wv.index2word[word.index], word2.index, alpha, corruption_constant, sampled_indices, compute_loss=compute_loss
