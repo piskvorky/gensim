@@ -833,9 +833,15 @@ class PoincareKeyedVectors(BaseKeyedVectors):
         Returns the word's representations in vector space, as a 1D numpy array.
 
         Example::
-
-          >>> trained_model.word_vec('office')
-          array([ -1.40128313e-02, ...])
+          >>> from gensim.test.utils import datapath
+          >>>
+          >>> # Read the sample relations file and train the model
+          >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
+          >>> model = PoincareModel(train_data=relations)
+          >>> model.train(epochs=50)
+          >>>
+          >>> # Query the trained model.
+          >>> wv = model.kv.word_vec('kangaroo.n.01')
 
         """
         return super(PoincareKeyedVectors, self).get_vector(word)
@@ -858,9 +864,16 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Examples
         --------
-
-        >>> model.words_closer_than('carnivore.n.01', 'mammal.n.01')
-        ['dog.n.01', 'canine.n.02']
+        >>> from gensim.test.utils import datapath
+        >>>
+        >>> # Read the sample relations file and train the model
+        >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
+        >>> model = PoincareModel(train_data=relations)
+        >>> model.train(epochs=50)
+        >>>
+        >>> # Which term is closer to 'kangaroo' than 'metatherian' is to 'kangaroo'?
+        >>> model.kv.words_closer_than('kangaroo.n.01', 'metatherian.n.01')
+        [u'marsupial.n.01', u'phalanger.n.01']
 
         """
         return super(PoincareKeyedVectors, self).closer_than(w1, w2)
@@ -1084,9 +1097,16 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Examples
         --------
-
-        >>> model.distance('mammal.n.01', 'carnivore.n.01')
-        2.13
+        >>> from gensim.test.utils import datapath
+        >>>
+        >>> # Read the sample relations file and train the model
+        >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
+        >>> model = PoincareModel(train_data=relations)
+        >>> model.train(epochs=50)
+        >>>
+        >>> # What is the distance between the words 'mammal' and 'carnivore'?
+        >>> model.kv.distance('mammal.n.01', 'carnivore.n.01')
+        2.9742298803339304
 
         Notes
         -----
@@ -1115,9 +1135,16 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Examples
         --------
-
-        >>> model.similarity('mammal.n.01', 'carnivore.n.01')
-        0.73
+        >>> from gensim.test.utils import datapath
+        >>>
+        >>> # Read the sample relations file and train the model
+        >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
+        >>> model = PoincareModel(train_data=relations)
+        >>> model.train(epochs=50)
+        >>>
+        >>> # What is the similarity between the words 'mammal' and 'carnivore'?
+        >>> model.kv.similarity('mammal.n.01', 'carnivore.n.01')
+        0.25162107631176484
 
         Notes
         -----
@@ -1150,8 +1177,16 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Examples
         --------
-        >>> vectors.most_similar('lion.n.01')
-        [('lion_cub.n.01', 0.4484), ('lionet.n.01', 0.6552), ...]
+        >>> from gensim.test.utils import datapath
+        >>>
+        >>> # Read the sample relations file and train the model
+        >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
+        >>> model = PoincareModel(train_data=relations)
+        >>> model.train(epochs=50)
+        >>>
+        >>> # Which words are most similar to 'kangaroo'?
+        >>> model.kv.most_similar('kangaroo.n.01', topn=2)
+        [(u'kangaroo.n.01', 0.0), (u'marsupial.n.01', 0.26524229460827725)]
 
         """
         if not restrict_vocab:
@@ -1198,12 +1233,19 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Examples
         --------
+        >>> from gensim.test.utils import datapath
+        >>>
+        >>> # Read the sample relations file and train the model
+        >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
+        >>> model = PoincareModel(train_data=relations)
+        >>> model.train(epochs=50)
+        >>>
+        >>> # Check the distances between a word and a list of other words.
+        >>> model.kv.distances('mammal.n.01', ['carnivore.n.01', 'dog.n.01'])
+        array([2.97422988, 2.83007402])
 
-        >>> model.distances('mammal.n.01', ['carnivore.n.01', 'dog.n.01'])
-        np.array([2.1199, 2.0710]
-
-        >>> model.distances('mammal.n.01')
-        np.array([0.43753847, 3.67973852, ..., 6.66172886])
+        >>> # Check the distances between a word and every other word in the vocab.
+        >>> all_distances = model.kv.distances('mammal.n.01')
 
         Notes
         -----
@@ -1238,9 +1280,16 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Examples
         --------
-
-        >>> model.norm('mammal.n.01')
-        0.9
+        >>> from gensim.test.utils import datapath
+        >>>
+        >>> # Read the sample relations file and train the model
+        >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
+        >>> model = PoincareModel(train_data=relations)
+        >>> model.train(epochs=50)
+        >>>
+        >>> # Get the norm of the embedding of the word `mammal`.
+        >>> model.kv.norm('mammal.n.01')
+        0.6423008703542398
 
         Notes
         -----
@@ -1273,12 +1322,18 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Examples
         --------
+        >>> from gensim.test.utils import datapath
+        >>>
+        >>> # Read the sample relations file and train the model
+        >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
+        >>> model = PoincareModel(train_data=relations)
+        >>> model.train(epochs=50)
+        >>>
+        >>> model.kv.difference_in_hierarchy('mammal.n.01', 'dog.n.01')
+        0.05382517902410999
 
-        >>> model.difference_in_hierarchy('mammal.n.01', 'dog.n.01')
-        0.51
-
-        >>> model.difference_in_hierarchy('dog.n.01', 'mammal.n.01')
-        -0.51
+        >>> model.kv.difference_in_hierarchy('dog.n.01', 'mammal.n.01')
+        -0.05382517902410999
 
         Notes
         -----
