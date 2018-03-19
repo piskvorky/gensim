@@ -937,7 +937,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
             or a callable that accepts parameters (word, count, min_count) and returns either
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
-            The input parameters are of the following types
+            The input parameters are of the following types:
                 * word: str. The word we are examining
                 * count: int. The word's occurence count in the corpus
                 * min_count: int. The minimum count threshold.

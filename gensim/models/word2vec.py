@@ -10,7 +10,9 @@ hierarchical softmax or negative sampling: `Efficient Estimation of Word Represe
 <https://arxiv.org/pdf/1301.3781.pdf>`_, `Distributed Representations of Words and Phrases and their Compositionality
 <https://arxiv.org/abs/1310.4546>`_.
 
-NOTE: There are more ways to get word vectors in Gensim than just Word2Vec.
+Notes
+-----
+There are more ways to get word vectors in Gensim than just Word2Vec.
 See :class:`~gensim.models.fasttext.FastText` and wrappers for VarEmbed and WordRank.
 
 The training algorithms were originally ported from the C package https://code.google.com/p/word2vec/
@@ -44,8 +46,10 @@ Examples
 The word vectors can also be instantiated from an existing file on disk in the word2vec C format
 as a KeyedVectors instance.
 
-**NOTE**: It is impossible to continue training the vectors loaded from the C format because hidden weights,
-vocabulary frequency and the binary tree is missing::
+Notes
+-----
+It is impossible to continue training the vectors loaded from the C format because hidden weights,
+vocabulary frequency and the binary tree are missing::
 
     >>> from gensim.models import KeyedVectors
     >>>
@@ -99,6 +103,7 @@ to trim unneeded model memory = use much less RAM.
 Note that there is a :mod:`gensim.models.phrases` module which lets you automatically
 detect phrases longer than one word. Using phrases, you can learn a word2vec model
 where "words" are actually multiword expressions, such as `new_york_times` or `financial_crisis`:
+
     >>> from gensim.models import Phrases
     >>>
     >>> bigram_transformer = Phrases(common_texts)
