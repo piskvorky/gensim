@@ -348,8 +348,9 @@ def train_sg_pair(model, word, context_index, alpha, corruption_constant, sample
             for i in context_index[1:]:
                 model.wv.syn0_ngrams[i] += neu1e * context_locks_ngrams[i]
         else:
-            context_vectors[context_index] += neu1e * lock_factor  # learn input -> hidden
-                                                                   # (mutates model.wv.syn0[word2.index], if that is l1)
+
+            context_vectors[context_index] += neu1e * lock_factor   # learn input -> hidden (mutates
+                                                                    # model.wv.syn0[word2.index], if that is l1)
 
         # doc2vecC: backprop to the words selected to represent the sentence
         for i in sampled_indices:
