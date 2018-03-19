@@ -144,7 +144,7 @@ except ImportError:
     FAST_VERSION = -1
     MAX_WORDS_IN_BATCH = 10000
 
-    def train_batch_sg(model, sentences, alpha, rp_sample = 0.1, work=None, compute_loss=False):
+    def train_batch_sg(model, sentences, alpha, rp_sample=0.1, work=None, compute_loss=False):
         """
         Update skip-gram model by training on a sequence of sentences.
         Each sentence is a list of string tokens, which are looked up in the model's
@@ -168,16 +168,19 @@ except ImportError:
                     # don't train on the `word` itself
                     if pos2 != pos:
                         # handle the sentence using Doc2VecC
-                        sampled_indices = [w.index for w in random.choice(word_vocabs, int(len(word_vocabs) * rp_sample), replace=True)]
+                        sampled_indices = [
+                            w.index for w in random.choice(word_vocabs, int(len(word_vocabs) * rp_sample), replace=True)
+                        ]
 
                         train_sg_pair(
-                            model, model.wv.index2word[word.index], word2.index, alpha, corruption_constant, sampled_indices, compute_loss=compute_loss
+                            model, model.wv.index2word[word.index], word2.index, alpha,
+                            corruption_constant, sampled_indices, compute_loss=compute_loss
                         )
 
             result += len(word_vocabs)
         return result
 
-    def train_batch_cbow(model, sentences, alpha, rp_sample = 0.1, work=None, neu1=None, compute_loss=False):
+    def train_batch_cbow(model, sentences, alpha, rp_sample=0.1, work=None, neu1=None, compute_loss=False):
         """
         Update CBOW model by training on a sequence of sentences.
         Each sentence is a list of string tokens, which are looked up in the model's
@@ -200,14 +203,17 @@ except ImportError:
                 l1 = np_sum(model.wv.syn0[word2_indices], axis=0)  # 1 x vector_size
 
                 # handle the sentence using Doc2VecC
-                sampled_sentence = random.choice(word_vocabs, int(len(word_vocabs) * rp_sample), replace=True)
-                sampled_indices  = [word2.index for pos2, word2 in sampled_sentence]
+                sampled_indices = [
+                    w.index for w in random.choice(word_vocabs, int(len(word_vocabs) * rp_sample), replace=True)
+                    ]
+
                 l1 += np_sum(corruption_constant * model.wv.syn0[sampled_indices], axis=0)
 
                 if word2_indices and model.cbow_mean:
                     l1 /= (len(word2_indices) + 1)
 
-                train_cbow_pair(model, word, word2_indices, l1, alpha, corruption_constant, sampled_indices, compute_loss=compute_loss)
+                train_cbow_pair(model, word, word2_indices, l1, alpha, corruption_constant,
+                                sampled_indices, compute_loss=compute_loss)
             result += len(word_vocabs)
         return result
 
@@ -266,7 +272,7 @@ except ImportError:
 
 
 def train_sg_pair(model, word, context_index, alpha, corruption_constant, sampled_indices,
-                  learn_vectors=True, learn_hidden=True,context_vectors=None, context_locks=None,
+                  learn_vectors=True, learn_hidden=True, context_vectors=None, context_locks=None,
                   compute_loss=False, is_ft=False):
     if context_vectors is None:
         if is_ft:
@@ -342,17 +348,19 @@ def train_sg_pair(model, word, context_index, alpha, corruption_constant, sample
             for i in context_index[1:]:
                 model.wv.syn0_ngrams[i] += neu1e * context_locks_ngrams[i]
         else:
-            context_vectors[context_index] += neu1e * lock_factor  # learn input -> hidden (mutates model.wv.syn0[word2.index], if that is l1)
+            context_vectors[context_index] += neu1e * lock_factor  # learn input -> hidden
+                                                                   # (mutates model.wv.syn0[word2.index], if that is l1)
 
         # doc2vecC: backprop to the words selected to represent the sentence
         for i in sampled_indices:
-            context_vectors[i] += neu1e * corruption_constant/2 * context_locks[i]
+            context_vectors[i] += neu1e * corruption_constant / 2 * context_locks[i]
 
     return neu1e
 
 
-def train_cbow_pair(model, word, input_word_indices, l1, alpha, corruption_constant, sampled_indices, learn_vectors=True, learn_hidden=True,
-                    compute_loss=False, context_vectors=None, context_locks=None, is_ft=False):
+def train_cbow_pair(model, word, input_word_indices, l1, alpha, corruption_constant, sampled_indices,
+                    learn_vectors=True, learn_hidden=True, compute_loss=False, context_vectors=None,
+                    context_locks=None, is_ft=False):
     if context_vectors is None:
         if is_ft:
             context_vectors_vocab = model.wv.syn0_vocab
