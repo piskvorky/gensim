@@ -774,6 +774,12 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(model.trainables.vectors_lockf.shape == (12,))
         self.assertTrue(model.vocabulary.cum_table.shape == (12,))
 
+        # test for max_final_vocab for model saved in 3.3
+        model_file = 'word2vec_3.3'
+        model = word2vec.Word2Vec.load(datapath(model_file))
+        self.assertEqual(model.max_final_vocab, None)
+        self.assertEqual(model.vocabulary.max_final_vocab, None)
+
     @log_capture()
     def testBuildVocabWarning(self, l):
         """Test if warning is raised on non-ideal input to a word2vec model"""
