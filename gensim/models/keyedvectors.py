@@ -73,7 +73,7 @@ except ImportError:
     PYEMD_EXT = False
 
 from numpy import dot, zeros, float32 as REAL, empty, memmap as np_memmap, \
-    double, array, vstack, sqrt, newaxis, integer, \
+    double, array, zeros, vstack, sqrt, newaxis, integer, \
     ndarray, sum as np_sum, prod, argmax, divide as np_divide
 import numpy as np
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
@@ -109,7 +109,7 @@ class Vocab(object):
 class BaseKeyedVectors(utils.SaveLoad):
 
     def __init__(self, vector_size):
-        self.vectors = []
+        self.vectors = zeros((0, vector_size))
         self.vocab = {}
         self.vector_size = vector_size
         self.index2entity = []
@@ -187,10 +187,7 @@ class BaseKeyedVectors(utils.SaveLoad):
             self.index2entity.append(entity)
 
         # add vectors for new entities
-        if len(self.vectors) == 0:
-            self.vectors = weights[~in_vocab_mask]
-        else:
-            self.vectors = vstack((self.vectors, weights[~in_vocab_mask]))
+        self.vectors = vstack((self.vectors, weights[~in_vocab_mask]))
 
         # change vectors for in_vocab entities if `replace` flag is specified
         if replace:
