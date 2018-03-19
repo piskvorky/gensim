@@ -72,7 +72,7 @@ try:
 except ImportError:
     PYEMD_EXT = False
 
-from numpy import dot, zeros, float32 as REAL, empty, memmap as np_memmap, \
+from numpy import dot, float32 as REAL, empty, memmap as np_memmap, \
     double, array, zeros, vstack, sqrt, newaxis, integer, \
     ndarray, sum as np_sum, prod, argmax, divide as np_divide
 import numpy as np
