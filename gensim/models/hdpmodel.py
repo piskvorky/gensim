@@ -164,6 +164,90 @@ class SuffStats(object):
 class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     """`Hierarchical Dirichlet Process model <http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_
 
+    ** HIERARCHICAL DIRICHLET PROCESS **
+    
+    Topic models promise to help summarize and organize large archives of texts that cannot be easily analyzed by hand.
+    Hierarchical Dirichlet process (HDP) is a powerful mixed-membership model for the unsupervised analysis of grouped
+    data. Unlike its finite counterpart, latent Dirichlet allocation, the HDP topic model infers the number of topics
+    from the data. Here we have used Online HDP, which provides the speed of online variational Bayes with the modeling
+    flexibility of the HDP. The idea behind Online variational Bayes in general is to optimize the variational
+    objective function  with stochastic optimization.The challenge we face is that the existing coordinate ascent
+    variational Bayes algorithms for the HDP require complicated approximation methods or numerical optimization. This
+    model utilises stick breaking construction of Hdp which enables it to allow for coordinate-ascent variational Bayes
+    without numerical approximation.
+
+    ** STICK BREAKING CONSTRUCTION **
+ 
+    To understand the HDP model we need to understand how it is modelled using the stick breaking construction. A very
+    good analogy to understand the stick breaking construction is chinese restaurant franchise.
+
+    .. _Chinese restaurant franchise image:
+
+    https://drive.google.com/file/d/1ci9xKyclN0xrhXqO4H8TsonPLiZFvANS/view?usp=sharing
+
+    For this assume that there is a restaurant franchise(corpus) which has a large number of restaurants(documents,j)
+    under it. They have a global menu of dishes(topics, .. mat::\Phi_{k}) which they serve. Also, a single dish
+    (topic, .. mat::\Phi_{k} ) is only served at a single table t for all the customers(words,.. math::\theta _{j,i} )
+    who sit at that table. So, when a customer enters the restaurant he/she has the choice to make where he/she wants
+    to sit. He/she can choose to sit at a table where some customers are already sitting , or he/she can choose to sit
+    at a new table. Here the probability of choosing each option is not same.
+
+    Now, in this the global menu of dishes correspond to the global atoms  .. mat::\Phi_{k} , and each restaurant
+    correspond to a single document j. So the number of dishes served in a particular restaurant correspond to the
+    number of topics in a particular document. And the number of people sitting at each table correspond to the number
+    of words belonging to each topic inside the document j.
+
+    Now, coming on to the stick breaking construction, the concept understood from the chinese restaurant franchise is
+    easily carried over to the stick breaking construction for hdp.
+
+    .. _Stick breaking construction of two level Hdp image:
+    
+    https://drive.google.com/file/d/1j1_OQohRX93Bi9Ashrb3hQFTUIXstU5b/view?usp=sharing
+
+    A two level hierarchical dirichlet process is a collection of dirichlet processes .. math::G_{j} , one for each
+    group, which share a base distribution .. math::G_{0} , which is also a dirichlet process. Also, all .. math::G_{j}
+    ’s  share the same set of atoms,  .. mat::\Phi_{k} s, and only the atom weights( .. math::\pi _{jt} ) differs.
+    There will be multiple document-level atoms .. math::\psi_{jt} which map to the same corpus-level atom
+    .. mat::\Phi_{k} . Here, the .. math::\beta  signify the weights given to each of the topics globally. Also, each
+    factor .. math::\theta _{j,i} is distributed according to .. math::G_{j}, i.e., it takes on the value of
+    .. mat::\Phi_{k} with probability .. math::\pi _{jt} .
+    .. math::C_{j,t} is an indicator variable whose value k signifies the index of  .. mat::\Phi. This helps to map
+    .. math::\psi_{jt}  to  .. mat::\Phi_{k}.
+    The top level(corpus level) stick proportions correspond the values of .. math::\beta s, bottom level (document
+    level) stick proportions correspond to the values of .. math::\pi s. The truncation level for the corpus(K) and
+    document(T) corresponds to the number of .. math::\beta  and .. math::\pi s which are in existence.
+
+    Now, whenever coordinate ascent updates are to be performed, they happen at two level. The document level as well
+    as corpus level.
+
+    At document level, we update the following:
+        1. The parameters to the document level sticks, i.e, a and b parameters of .. math::\beta distribution of the
+        variable .. math::\pi _{jt} .
+        2. The parameters to per word topic indicators, .. math::Z_{j,n}. Here .. math::Z_{j,n} selects topic
+        parameter .. math::\psi_{jt}.
+        3. The parameters to per document topic indices( .. mat::\Phi_{jtk} ).
+
+    At corpus level, we update the following:
+        1. The parameters to the top level sticks, i.e., the parameters of the .. math::\beta distribution for the
+        corpus level .. math::\beta s, which signify the topic distribution at corpus level.
+        2. The parameters to the topics .. mat::\Phi_{k} .
+
+    Now coming on to the steps involved, procedure for online variational inference for the Hdp model is as follows:
+        1. We initialise the corpus level parameters, topic parameters randomly and set current time to 1.
+        2. Fetch a random document j from the corpus.
+        3. Compute all the parameters required for document level updates.
+        4. Compute natural gradients of corpus level parameters.
+        5. Initialise the learning rate as a function of kappa, tau and current time. Also,
+           increment current time by 1 each time it reaches this step.
+        6. Update corpus level parameters.
+
+    Repeat 2 to 6 until stopping condition is not met.
+
+    Here the stopping condition corresponds to
+     * time limit expired
+     * chunk limit reached
+     * whole corpus processed
+
     Attributes
     ----------
     lda_alpha : numpy.ndarray
