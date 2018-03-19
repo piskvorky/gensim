@@ -138,7 +138,6 @@ cdef unsigned long long fast_sentence_sg_neg(
     cdef REAL_t inv_count = 0.5
 
     memset(work, 0, size * cython.sizeof(REAL_t))
-
     memset(neu1, 0, size * cython.sizeof(REAL_t))
 
     our_saxpy(&size, &ONEF, &syn0[row1], &ONE, neu1, &ONE)
@@ -192,9 +191,11 @@ cdef unsigned long long fast_sentence_sg_neg(
 
     our_saxpy(&size, &word_locks[word2_index], work, &ONE, &syn0[row1], &ONE)
 
+    # doc2vecC script error is also divided by 2: syn0[l1] += neu1e * w/2;
+    sscal(&size, &inv_count, work, &ONE)
+    sscal(&size, &corruption_constant, work, &ONE)
+
     for m in range(already_sampled):
-        # TODO in doc2vecC script error is divided by 2: syn0[l1] += neu1e * w/2;
-        sscal(&size, &corruption_constant, neu1, &ONE)
         our_saxpy(&size, &word_locks[indexes[sen_sample[m]]], work, &ONE, &syn0[indexes[sen_sample[m]]*size], &ONE)
 
     return next_random
@@ -306,6 +307,7 @@ cdef unsigned long long fast_sentence_cbow_neg(
         inv_count = ONEF/count
     if cbow_mean:
         sscal(&size, &inv_count, neu1, &ONE)  # (does this need BLAS-variants like saxpy?)
+                                              # doc2vecC assumes it's cbow_mean
 
     memset(work, 0, size * cython.sizeof(REAL_t))
 
@@ -339,6 +341,7 @@ cdef unsigned long long fast_sentence_cbow_neg(
 
     if not cbow_mean:  # divide error over summed window vectors
         sscal(&size, &inv_count, work, &ONE)  # (does this need BLAS-variants like saxpy?)
+                                              # doc2vecC assumes it's cbow_mean
 
     for m in range(j,k):
         if m == i:
@@ -346,9 +349,11 @@ cdef unsigned long long fast_sentence_cbow_neg(
         else:
             our_saxpy(&size, &word_locks[indexes[m]], work, &ONE, &syn0[indexes[m]*size], &ONE)
 
+    # doc2vecC script error is also divided by wordCount: syn0[c + l1] += neu1e[c] * w / cw;
+    # we already know that neu1e = neu1e / cw
+    sscal(&size, &corruption_constant, work, &ONE) # neu1e *= w
+
     for m in range(already_sampled):
-        # TODO in doc2vecC script error is divided by wordCount: syn0[c + l1] += neu1e[c] * w / cw;
-        sscal(&size, &corruption_constant, neu1, &ONE)
         our_saxpy(&size, &word_locks[indexes[sen_sample[m]]], work, &ONE, &syn0[indexes[sen_sample[m]]*size], &ONE)
 
     return next_random
