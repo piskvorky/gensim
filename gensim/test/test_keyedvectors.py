@@ -15,7 +15,7 @@ import unittest
 import numpy as np
 
 from gensim.corpora import Dictionary
-from gensim.models import KeyedVectors as EuclideanKeyedVectors
+from gensim.models import KeyedVectors as EuclideanKeyedVectors, TfidfModel
 from gensim.test.utils import datapath
 
 
@@ -27,32 +27,63 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
         self.vectors = EuclideanKeyedVectors.load_word2vec_format(
             datapath('euclidean_vectors.bin'), binary=True, datatype=np.float64)
 
-    def similarity_matrix(self):
+    def test_similarity_matrix(self):
         """Test similarity_matrix returns expected results."""
 
-        corpus = [["government", "denied", "holiday"], ["holiday", "slowing", "hollingworth"]]
-        dictionary = Dictionary(corpus)
-        corpus = [dictionary.doc2bow(document) for document in corpus]
+        documents = [["government", "denied", "holiday"],
+                  ["holiday", "slowing", "hollingworth"]]
+        dictionary = Dictionary(documents)
 
         # checking symmetry and the existence of ones on the diagonal
-        similarity_matrix = self.similarity_matrix(corpus, dictionary).todense()
+        similarity_matrix = self.vectors.similarity_matrix(dictionary).todense()
         self.assertTrue((similarity_matrix.T == similarity_matrix).all())
-        self.assertTrue((np.diag(similarity_matrix) == similarity_matrix).all())
+        self.assertTrue(
+            (np.diag(similarity_matrix) ==
+             np.ones(similarity_matrix.shape[0])).all())
 
         # checking that thresholding works as expected
-        similarity_matrix = self.similarity_matrix(corpus, dictionary, threshold=0.45).todense()
+        similarity_matrix = self.vectors.similarity_matrix(dictionary, threshold=0.45).todense()
         self.assertEquals(18, np.sum(similarity_matrix == 0))
 
         # checking that exponent works as expected
-        similarity_matrix = self.similarity_matrix(corpus, dictionary, exponent=1.0).todense()
-        self.assertAlmostEqual(9.5788956, np.sum(similarity_matrix))
+        similarity_matrix = self.vectors.similarity_matrix(dictionary, exponent=1.0).todense()
+        self.assertAlmostEqual(9.5788956, np.sum(similarity_matrix), places=5)
 
         # checking that nonzero_limit works as expected
-        similarity_matrix = self.similarity_matrix(corpus, dictionary, nonzero_limit=4).todense()
+        similarity_matrix = self.vectors.similarity_matrix(dictionary, nonzero_limit=4).todense()
         self.assertEquals(4, np.sum(similarity_matrix == 0))
 
-        similarity_matrix = self.similarity_matrix(corpus, dictionary, nonzero_limit=3).todense()
+        similarity_matrix = self.vectors.similarity_matrix(dictionary, nonzero_limit=3).todense()
         self.assertEquals(20, np.sum(similarity_matrix == 0))
+
+        # check that processing rows in the order given by IDF has desired effect
+
+        # The complete similarity matrix we would obtain with nonzero_limit would look as follows:
+        documents = [["honour", "understanding"], ["understanding", "mean", "knop"]]
+        dictionary = Dictionary(documents)
+        tfidf = TfidfModel(dictionary=dictionary)
+
+        # All terms except for "understanding" have IDF of log2(2 / 1) = log2(2) = 1.
+        # The term "understanding" has IDF of log2(2 / 2) = log2(1) = 0.
+        #
+        # If we do not pass the tfidf parameter to the similarity_matrix
+        # method, then we process rows in the order from 1 to 4. If we do pass
+        # the tfidf parameter to the similarity_matrix method, then we first
+        # process the rows 1, 3, 4 that correspond to terms with IDF of 1.0 and
+        # then the row 2 that corresponds to the term "understanding" with IDF
+        # of 0. Since the method is greedy, we will end up with two different
+        # similarity matrices.
+
+        similarity_matrix = self.vectors.similarity_matrix(
+            dictionary, nonzero_limit=2).todense()
+        self.assertTrue(np.all(np.isclose(similarity_matrix, np.array([
+            [1, 0.9348248, 0, 0], [0.9348248, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]))))
+
+        similarity_matrix = self.vectors.similarity_matrix(
+            dictionary, tfidf, nonzero_limit=2).todense()
+        self.assertTrue(np.all(np.isclose(similarity_matrix, np.array([
+            [1, 0.9348248, 0, 0.9112908], [0.9348248, 1, 0.90007025, 0], [0, 0.90007025, 1, 0],
+            [0.9112908, 0, 0, 1]]))))
 
     def test_most_similar(self):
         """Test most_similar returns expected results."""

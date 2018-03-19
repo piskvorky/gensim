@@ -103,6 +103,8 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertTrue(model.docvecs.max_rawint == 299)
         self.assertTrue(model.docvecs.count == 300)
 
+        self.model_sanity(model)
+
         # Model stored in multiple files
         model_file = 'doc2vec_old_sep'
         model = doc2vec.Doc2Vec.load(datapath(model_file))
@@ -117,6 +119,8 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertTrue(model.trainables.vectors_docs_lockf.shape == (300, ))
         self.assertTrue(model.docvecs.max_rawint == 299)
         self.assertTrue(model.docvecs.count == 300)
+
+        self.model_sanity(model)
 
     def test_unicode_in_doctag(self):
         """Test storing document vectors of a model with unicode titles."""
