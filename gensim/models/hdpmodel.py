@@ -165,7 +165,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     """`Hierarchical Dirichlet Process model <http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_
 
     ** HIERARCHICAL DIRICHLET PROCESS **
-    
+
     Topic models promise to help summarize and organize large archives of texts that cannot be easily analyzed by hand.
     Hierarchical Dirichlet process (HDP) is a powerful mixed-membership model for the unsupervised analysis of grouped
     data. Unlike its finite counterpart, latent Dirichlet allocation, the HDP topic model infers the number of topics
@@ -177,7 +177,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     without numerical approximation.
 
     ** STICK BREAKING CONSTRUCTION **
- 
+
     To understand the HDP model we need to understand how it is modelled using the stick breaking construction. A very
     good analogy to understand the stick breaking construction is chinese restaurant franchise.
 
@@ -201,7 +201,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     easily carried over to the stick breaking construction for hdp.
 
     .. _Stick breaking construction of two level Hdp image:
-    
+
     https://drive.google.com/file/d/1j1_OQohRX93Bi9Ashrb3hQFTUIXstU5b/view?usp=sharing
 
     A two level hierarchical dirichlet process is a collection of dirichlet processes .. math::G_{j} , one for each
