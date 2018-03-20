@@ -924,7 +924,6 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             Can be simply a list of :class:`~gensim.models.doc2vec.TaggedDocument` elements, but for larger corpora,
             consider an iterable that streams the documents directly from disk/network.
             See :class:`~gensim.models.doc2vec.TaggedBrownCorpus` or :class:`~gensim.models.doc2vec.TaggedLineDocument`
-            in :mod:`~gensim.models.doc2vec` module for such examples.
         update : bool
             If true, the new words in `sentences` will be added to model's vocab.
         progress_per : int
@@ -938,9 +937,9 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             or a callable that accepts parameters (word, count, min_count) and returns either
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
             The input parameters are of the following types:
-                * word: str. The word we are examining
-                * count: int. The word's occurence count in the corpus
-                * min_count: int. The minimum count threshold.
+            * word: str. The word we are examining.
+            * count: int. The word's occurence count in the corpus.
+            * min_count: int. The minimum count threshold.
             Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
             of the model.
         **kwargs
