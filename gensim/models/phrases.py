@@ -70,8 +70,6 @@ The phraser will of course inherit the common_terms from Phrases.
 >>> print(bigram[sent])
 [u'the', u'mayor', u'shows', u'his', u'lack_of_interest']
 
-
-
 """
 
 import sys
@@ -141,9 +139,9 @@ class SentenceAnalyzer(object):
         Parameters
         ----------
         worda : str
-            First word for comparison.
+            First word for comparison. Should be unicode string.
         wordb : str
-            Second word for comparison.
+            Second word for comparison. Should be unicode string.
         components : TODO
         scorer : {'default', 'npmi'}
             Scorer function, as given to :class:`~gensim.models.phrases.Phrases`.
@@ -262,10 +260,7 @@ class PhrasesTransformation(interfaces.TransformationABC):
 
 
 class Phrases(SentenceAnalyzer, PhrasesTransformation):
-    """Detect phrases, based on collected collocation counts. Adjacent words that appear together more frequently than
-    expected are joined together with the `_` character. It can be used to generate phrases on the fly,
-    using the `phrases[sentence]` and `phrases[corpus]` syntax.
-    """
+    """Detect phrases, based on collected collocation counts. """
 
     def __init__(self, sentences=None, min_count=5, threshold=10.0,
                  max_vocab_size=40000000, delimiter=b'_', progress_per=10000,
@@ -321,10 +316,22 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         A scoring function without any of these parameters (even if the parameters are not used) will
         raise a ValueError on initialization of the Phrases class. The scoring function must be picklable.
 
-
-
         Initialize the model from an iterable of `sentences`. Each sentence must be
         a list of words (unicode strings) that will be used for training.
+
+        Adjacent words that appear together more frequently than
+        expected are joined together with the `_` character. It can be used to generate phrases on the fly,
+        using the `phrases[sentence]` and `phrases[corpus]` syntax.
+
+        Example
+        ----------
+        >>> from gensim.test.utils import datapath
+        >>> from gensim.models.word2vec import Text8Corpus
+        >>> from gensim.models.phrases import Phrases
+        >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
+        >>> bigram = Phrases(sentences, min_count=5, threshold=100)
+        >>> print bigram
+        Phrases<37 vocab, min_count=5, threshold=100, max_vocab_size=40000000>
 
         """
         if min_count <= 0:
@@ -387,9 +394,9 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         Parameters
         ----------
         args : object
-            Sequence of arguments, see :meth:`...` for more information.
+            Sequence of arguments, see :class:`~gensim.models.phrases.Phrases` for more information.
         kwargs : object
-            Sequence of arguments, see :meth:`...` for more information.
+            Sequence of arguments, see :class:`~gensim.models.phrases.Phrases` for more information.
 
         """
         model = super(Phrases, cls).load(*args, **kwargs)
@@ -409,11 +416,11 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
     @staticmethod
     def learn_vocab(sentences, max_vocab_size, delimiter=b'_', progress_per=10000,
                     common_terms=frozenset()):
-        """Collect unigram/bigram counts from the `sentences` iterable. #TODO: Через пустой Phrasers
+        """Collect unigram/bigram counts from the `sentences` iterable.
 
         Parameters
         ----------
-        sentences : list of str
+        sentences : iterable of list of str
         max_vocab_size : int
             Maximal vocabulary size.
         delimiter : str
@@ -422,6 +429,22 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
             Write logs every `progress_per` milliseconds.
         common_terms : set of str
             Set of common words.
+
+        Return
+        ------
+        int, dict, int
+            Minimal frequency threshold for tokens in vocabulary of word types, vocabulary of word types,
+            total number of words.
+
+        Example
+        ----------
+        >>> from gensim.test.utils import datapath
+        >>> from gensim.models.word2vec import Text8Corpus
+        >>> from gensim.models.phrases import Phrases
+        >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
+        >>> learned = Phrases.learn_vocab(sentences,40000)
+        >>> print learned
+        (1, defaultdict(<type 'int'>, {...}), 29)
 
         """
         sentence_no = -1
@@ -468,6 +491,14 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         sentences : list of str
             List of unicode strings.
 
+        Example
+        -------
+        >>> from gensim.test.utils import datapath
+        >>> from gensim.models.word2vec import Text8Corpus
+        >>> from gensim.models.phrases import Phrases
+        >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
+        >>> bigram = Phrases(sentences, min_count=5, threshold=100)
+
         """
         # uses a separate vocab to collect the token counts from `sentences`.
         # this consumes more RAM than merging new sentences into `self.vocab`
@@ -507,7 +538,10 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
 
         Example
         -------
-        >>> sentences = Text8Corpus(path_to_corpus)
+        >>> from gensim.test.utils import datapath
+        >>> from gensim.models.word2vec import Text8Corpus
+        >>> from gensim.models.phrases import Phrases
+        >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
         >>> bigram = Phrases(sentences, min_count=5, threshold=100)
         >>> for phrase, score in bigram.export_phrases(sentences):
         ...     print(u'{0}\t{1}'.format(phrase, score))
@@ -555,8 +589,8 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         >>> from gensim.models.phrases import Phrases
         >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
         >>> bigram = Phrases(sentences, min_count=5, threshold=100)
-        >>> bigram["trees"]
-        [u't', u'r', u'e', u'e', u's']
+        >>> bigram["trees","grass"]
+        [u'trees', u'grass']
 
         """
         warnings.warn("For a faster implementation, use the gensim.models.phrases.Phraser class")
@@ -610,7 +644,7 @@ def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count
     -----
     from "Efficient Estimaton of Word Representations in Vector Space" by
     Mikolov, et. al.:
-    (count(worda followed by wordb) - min_count) * N /
+    :math:`(count(worda, wordb) - min_count) * N /
     (count(worda) * count(wordb)) > threshold`, where `N` is the total vocabulary size.
 
     """
@@ -620,13 +654,6 @@ def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count
 # normalized PMI, requires corpus size
 def npmi_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
     """
-    Notes
-    -----
-    normalized pointwise mutual information, from "Normalized (Pointwise) Mutual
-    Information in Colocation Extraction" by Gerlof Bouma:
-    ln(prop(worda followed by wordb) / (prop(worda)*prop(wordb))) /
-    - ln(prop(worda followed by wordb)
-    where prop(n) is the count of n / the count of everything in the entire corpus.
 
     Parameters
     ----------
@@ -637,6 +664,13 @@ def npmi_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, co
     min_count: int
     corpus_word_count: int
 
+    Notes
+    -----
+    Normalized pointwise mutual information, from "Normalized (Pointwise) Mutual
+    Information in Colocation Extraction" by Gerlof Bouma:
+    :math:`ln(prop(worda, wordb) / (prop(worda)*prop(wordb))) / - ln(prop(worda, wordb)`
+    where prop(n) is the count of n / the count of everything in the entire corpus.
+
     """
     pa = worda_count / corpus_word_count
     pb = wordb_count / corpus_word_count
@@ -645,7 +679,23 @@ def npmi_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, co
 
 
 def pseudocorpus(source_vocab, sep, common_terms=frozenset()):
-    """Feeds source_vocab's compound keys back to it, to discover phrases"""
+    """Feeds source_vocab's compound keys back to it, to discover phrases.
+
+    Parameters
+    ----------
+    source_vocab : iterable of list of str
+        Vocabulary.
+    sep : str
+        Separator.
+    common_terms : set, optional
+        Stopwords.
+
+    Yields
+    ------
+    generator
+        Generator with phrases.
+
+    """
     for k in source_vocab:
         if sep not in k:
             continue
@@ -664,6 +714,8 @@ def pseudocorpus(source_vocab, sep, common_terms=frozenset()):
 class Phraser(SentenceAnalyzer, PhrasesTransformation):
     """Minimal state & functionality to apply results of a Phrases model to tokens.
 
+    Notes
+    -----
     After the one-time initialization, a Phraser will be much smaller and
     somewhat faster than using the full Phrases model.
 
@@ -679,6 +731,15 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
         ----------
         phrases_model : :class:`~gensim.models.phrases.Phrases`
             Phrases class object.
+
+        Example
+        -------
+        >>> from gensim.test.utils import datapath
+        >>> from gensim.models.word2vec import Text8Corpus
+        >>> from gensim.models.phrases import Phrases, Phraser
+        >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
+        >>> phrases_model = Phrases(sentences, min_count=5, threshold=100)
+        >>> phraser_model = Phraser(phrases_model)
 
         """
         self.threshold = phrases_model.threshold
@@ -700,12 +761,28 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
         logger.info('Phraser built with %i %i phrasegrams', count, len(self.phrasegrams))
 
     def pseudocorpus(self, phrases_model):
-        """
+        """Phrase searcher. #TODO: please check it
 
         Parameters
         ----------
         phrases_model : :class:`~gensim.models.phrases.Phrases`
             Phrases class object.
+
+        Return
+        ------
+        generator
+            Generator with phrases.
+
+
+        Example
+        -------
+        >>> from gensim.test.utils import datapath
+        >>> from gensim.models.word2vec import Text8Corpus
+        >>> from gensim.models.phrases import Phrases, Phraser
+        >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
+        >>> phrases_model = Phrases(sentences, min_count=5, threshold=100)
+        >>> phraser_model = Phraser(phrases_model)
+        >>> pseudo = phraser_model.pseudocorpus(phrases_model)
 
         """
         return pseudocorpus(phrases_model.vocab, phrases_model.delimiter,
@@ -717,10 +794,10 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
         Parameters
         ----------
         worda : str
-            First word for comparison.
+            First word for comparison. Should be unicode string.
         wordb : str
-            Second word for comparison.
-        components : TODO
+            Second word for comparison. Should be unicode string.
+        components : generator
         scorer : {'default', 'npmi'}
             Scorer function, as given to :class:`~gensim.models.phrases.Phrases`.
 
@@ -728,6 +805,20 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
         ------
         dict
             Phrasegrams.
+
+        Example
+        -------
+        >>> from gensim.test.utils import datapath
+        >>> from gensim.models.word2vec import Text8Corpus
+        >>> from gensim.models.phrases import Phrases, Phraser
+        >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
+        >>> phrases_model = Phrases(sentences, min_count=5, threshold=100)
+        >>> phraser_model = Phraser(phrases_model)
+        >>> pseudo = phraser_model.pseudocorpus(phrases_model)
+        //>>> phraser_model.score_item("tree","human",pseudo,'default')
+        >>> phraser_model.score_item(u"tree",u"human",pseudo,'default')
+        -1
+
         """
         try:
             return self.phrasegrams[tuple(components)][1]
@@ -753,6 +844,19 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
         If `sentence` is an entire corpus (iterable of sentences rather than a single
         sentence), return an iterable that converts each of the corpus' sentences
         into phrases on the fly, one after another.
+
+        Example
+        -------
+        >>> from gensim.test.utils import datapath
+        >>> from gensim.models.word2vec import Text8Corpus
+        >>> from gensim.models.phrases import Phrases, Phraser
+        >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
+        >>> phrases_model = Phrases(sentences, min_count=5, threshold=100)
+        >>> phraser_model = Phraser(phrases_model)
+        >>> pseudo = phraser_model.pseudocorpus(phrases_model)
+        >>> phraser_model["tree", "human"]
+        [u'tree', u'human']
+
 
         """
         is_single, sentence = _is_single(sentence)
