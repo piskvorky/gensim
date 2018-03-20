@@ -134,7 +134,7 @@ cdef unsigned long long fast_sentence_sg_neg(
 
     cdef unsigned long long sen_sample[MAX_SENTENCE_LEN]
     cdef int already_sampled
-    cdef REAL_t corruption_constant =  (1.0 / doc2vecC / (idx_end - idx_start) if doc2vecC else 0.0)    # w in doc2vecC
+    cdef REAL_t corruption_constant =  (1.0 / doc2vecC / (idx_end - idx_start) if doc2vecC > 0 else 0.0)
     cdef REAL_t inv_count = 0.5
 
     memset(work, 0, size * cython.sizeof(REAL_t))
@@ -143,7 +143,7 @@ cdef unsigned long long fast_sentence_sg_neg(
     our_saxpy(&size, &ONEF, &syn0[row1], &ONE, neu1, &ONE)
 
     # handle the sentence using Doc2VecC
-    if doc2vecC:
+    if doc2vecC > 0:
         memset(sen_sample, -1, size * cython.sizeof(REAL_t))
         already_sampled = 0
 
@@ -193,7 +193,7 @@ cdef unsigned long long fast_sentence_sg_neg(
 
     our_saxpy(&size, &word_locks[word2_index], work, &ONE, &syn0[row1], &ONE)
 
-    if doc2vecC:
+    if doc2vecC > 0:
         # doc2vecC script error is also divided by 2: syn0[l1] += neu1e * w/2;
         sscal(&size, &inv_count, work, &ONE)
         sscal(&size, &corruption_constant, work, &ONE)
@@ -275,7 +275,7 @@ cdef unsigned long long fast_sentence_cbow_neg(
 
     cdef unsigned long long sen_sample[MAX_SENTENCE_LEN]
     cdef int already_sampled
-    cdef REAL_t corruption_constant =  1.0 / doc2vecC / (idx_end - idx_start)     # w in doc2vecC
+    cdef REAL_t corruption_constant =  (1.0 / doc2vecC / (idx_end - idx_start) if doc2vecC > 0 else 0.0)
 
     word_index = indexes[i]
 
@@ -289,7 +289,7 @@ cdef unsigned long long fast_sentence_cbow_neg(
             our_saxpy(&size, &ONEF, &syn0[indexes[m] * size], &ONE, neu1, &ONE)
 
     # handle the sentence using Doc2VecC
-    if doc2vecC:
+    if doc2vecC > 0:
         memset(sen_sample, -1, size * cython.sizeof(REAL_t))
         already_sampled = 0
         for t in range(idx_start,idx_end):
@@ -351,7 +351,7 @@ cdef unsigned long long fast_sentence_cbow_neg(
         else:
             our_saxpy(&size, &word_locks[indexes[m]], work, &ONE, &syn0[indexes[m]*size], &ONE)
 
-    if doc2vecC:
+    if doc2vecC > 0:
         # doc2vecC script error is also divided by wordCount: syn0[c + l1] += neu1e[c] * w / cw;
         sscal(&size, &corruption_constant, work, &ONE) # neu1e *= w
 
@@ -398,7 +398,7 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss, _doc2vecC=None)
     cdef unsigned long long next_random
 
     # for doc2vecC Corruption
-    cdef REAL_t doc2vecC = _doc2vecC
+    cdef REAL_t doc2vecC = (_doc2vecC if _doc2vecC > 0 else 0.0)
     cdef REAL_t *neu1
 
     if hs:
@@ -513,7 +513,7 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss, _doc2v
     cdef unsigned long long next_random
 
     # for doc2vecC Corruption
-    cdef REAL_t doc2vecC = _doc2vecC
+    cdef REAL_t doc2vecC = (_doc2vecC if _doc2vecC > 0 else 0.0)
 
     if hs:
         syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
