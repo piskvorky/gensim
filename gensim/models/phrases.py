@@ -118,7 +118,7 @@ def _is_single(obj):
     if isinstance(peek, string_types):
         # It's a document, return the iterator
         return True, obj_iter
-    if temp_iter == obj:
+    if temp_iter is obj:
         # Checking for iterator to the object
         return False, obj_iter
     else:
