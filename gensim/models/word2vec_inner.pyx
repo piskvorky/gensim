@@ -123,7 +123,7 @@ cdef unsigned long long fast_sentence_sg_neg(
     REAL_t *syn0, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
     const np.uint32_t word2_index, const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
     unsigned long long next_random, REAL_t *word_locks,
-    const int _compute_loss, const REAL_t rp_sample, int idx_start, int idx_end, REAL_t *_running_training_loss_param) nogil:
+    const int _compute_loss, const REAL_t doc2vecC, int idx_start, int idx_end, REAL_t *_running_training_loss_param) nogil:
 
     cdef long long a
     cdef long long row1 = word2_index * size, row2
@@ -134,7 +134,7 @@ cdef unsigned long long fast_sentence_sg_neg(
 
     cdef unsigned long long sen_sample[MAX_SENTENCE_LEN]
     cdef int already_sampled
-    cdef REAL_t corruption_constant =  1.0 / rp_sample / (idx_end - idx_start)     # w in doc2vecC
+    cdef REAL_t corruption_constant =  (1.0 / doc2vecC / (idx_end - idx_start) if doc2vecC else 0.0)    # w in doc2vecC
     cdef REAL_t inv_count = 0.5
 
     memset(work, 0, size * cython.sizeof(REAL_t))
@@ -143,23 +143,25 @@ cdef unsigned long long fast_sentence_sg_neg(
     our_saxpy(&size, &ONEF, &syn0[row1], &ONE, neu1, &ONE)
 
     # handle the sentence using Doc2VecC
-    memset(sen_sample, -1, size * cython.sizeof(REAL_t))
-    already_sampled = 0
-    for t in range(idx_start,idx_end):
-        # randomly sample rp_sample ((0, 1]) of the words in the sentence to represent one sentence
-        next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
+    if doc2vecC:
+        memset(sen_sample, -1, size * cython.sizeof(REAL_t))
+        already_sampled = 0
 
-        if (next_random & 0xFFFF) / <REAL_t>65536 > rp_sample:
-            continue
+        for t in range(idx_start,idx_end):
+            # randomly sample rp_sample ((0, 1]) of the words in the sentence to represent one sentence
+            next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
 
-        sen_sample[already_sampled] = t
-        already_sampled += 1
-        if (already_sampled >= MAX_SENTENCE_LEN):
-            break
+            if (next_random & 0xFFFF) / <REAL_t>65536 > doc2vecC:
+                continue
 
-        our_saxpy(&size, &corruption_constant, &syn0[indexes[t] * size], &ONE, neu1, &ONE)
+            sen_sample[already_sampled] = t
+            already_sampled += 1
+            if (already_sampled >= MAX_SENTENCE_LEN):
+                break
 
-    sscal(&size, &inv_count, neu1, &ONE) #In original: neu1 /= 2
+            our_saxpy(&size, &corruption_constant, &syn0[indexes[t] * size], &ONE, neu1, &ONE)
+
+            sscal(&size, &inv_count, neu1, &ONE) #In original: neu1 /= 2
 
     for d in range(negative+1):
         if d == 0:
@@ -191,14 +193,15 @@ cdef unsigned long long fast_sentence_sg_neg(
 
     our_saxpy(&size, &word_locks[word2_index], work, &ONE, &syn0[row1], &ONE)
 
-    # doc2vecC script error is also divided by 2: syn0[l1] += neu1e * w/2;
-    sscal(&size, &inv_count, work, &ONE)
-    sscal(&size, &corruption_constant, work, &ONE)
+    if doc2vecC:
+        # doc2vecC script error is also divided by 2: syn0[l1] += neu1e * w/2;
+        sscal(&size, &inv_count, work, &ONE)
+        sscal(&size, &corruption_constant, work, &ONE)
 
-    for m in range(already_sampled):
-        our_saxpy(&size, &word_locks[indexes[sen_sample[m]]], work, &ONE, &syn0[indexes[sen_sample[m]]*size], &ONE)
+        for m in range(already_sampled):
+            our_saxpy(&size, &word_locks[indexes[sen_sample[m]]], work, &ONE, &syn0[indexes[sen_sample[m]]*size], &ONE)
 
-    return next_random
+        return next_random
 
 
 cdef void fast_sentence_cbow_hs(
@@ -261,7 +264,7 @@ cdef unsigned long long fast_sentence_cbow_neg(
     REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
     int i, int j, int k, int cbow_mean, unsigned long long next_random, REAL_t *word_locks,
-    const int _compute_loss, const REAL_t rp_sample, int idx_start, int idx_end, REAL_t *_running_training_loss_param) nogil:
+    const int _compute_loss, const REAL_t doc2vecC, int idx_start, int idx_end, REAL_t *_running_training_loss_param) nogil:
 
     cdef long long a
     cdef long long row2
@@ -272,7 +275,7 @@ cdef unsigned long long fast_sentence_cbow_neg(
 
     cdef unsigned long long sen_sample[MAX_SENTENCE_LEN]
     cdef int already_sampled
-    cdef REAL_t corruption_constant =  1.0 / rp_sample / (idx_end - idx_start)     # w in doc2vecC
+    cdef REAL_t corruption_constant =  1.0 / doc2vecC / (idx_end - idx_start)     # w in doc2vecC
 
     word_index = indexes[i]
 
@@ -286,28 +289,28 @@ cdef unsigned long long fast_sentence_cbow_neg(
             our_saxpy(&size, &ONEF, &syn0[indexes[m] * size], &ONE, neu1, &ONE)
 
     # handle the sentence using Doc2VecC
-    memset(sen_sample, -1, size * cython.sizeof(REAL_t))
-    already_sampled = 0
-    for t in range(idx_start,idx_end):
-        # randomly sample rp_sample ((0, 1]) of the words in the sentence to represent one sentence
-        next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
+    if doc2vecC:
+        memset(sen_sample, -1, size * cython.sizeof(REAL_t))
+        already_sampled = 0
+        for t in range(idx_start,idx_end):
+            # randomly sample rp_sample ((0, 1]) of the words in the sentence to represent one sentence
+            next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
 
-        if (next_random & 0xFFFF) / <REAL_t>65536 > rp_sample:
-            continue
+            if (next_random & 0xFFFF) / <REAL_t>65536 > doc2vecC:
+                continue
 
-        sen_sample[already_sampled] = t
-        already_sampled += 1
-        if (already_sampled >= MAX_SENTENCE_LEN):
-            break
+            sen_sample[already_sampled] = t
+            already_sampled += 1
+            if (already_sampled >= MAX_SENTENCE_LEN):
+                break
 
-        our_saxpy(&size, &corruption_constant, &syn0[indexes[t] * size], &ONE, neu1, &ONE)
-    count += ONEF
+            our_saxpy(&size, &corruption_constant, &syn0[indexes[t] * size], &ONE, neu1, &ONE)
+        count += ONEF
 
     if count > (<REAL_t>0.5):
         inv_count = ONEF/count
     if cbow_mean:
         sscal(&size, &inv_count, neu1, &ONE)  # (does this need BLAS-variants like saxpy?)
-                                              # doc2vecC assumes it's cbow_mean
 
     memset(work, 0, size * cython.sizeof(REAL_t))
 
@@ -341,7 +344,6 @@ cdef unsigned long long fast_sentence_cbow_neg(
 
     if not cbow_mean:  # divide error over summed window vectors
         sscal(&size, &inv_count, work, &ONE)  # (does this need BLAS-variants like saxpy?)
-                                              # doc2vecC assumes it's cbow_mean
 
     for m in range(j,k):
         if m == i:
@@ -349,17 +351,17 @@ cdef unsigned long long fast_sentence_cbow_neg(
         else:
             our_saxpy(&size, &word_locks[indexes[m]], work, &ONE, &syn0[indexes[m]*size], &ONE)
 
-    # doc2vecC script error is also divided by wordCount: syn0[c + l1] += neu1e[c] * w / cw;
-    # we already know that neu1e = neu1e / cw
-    sscal(&size, &corruption_constant, work, &ONE) # neu1e *= w
+    if doc2vecC:
+        # doc2vecC script error is also divided by wordCount: syn0[c + l1] += neu1e[c] * w / cw;
+        sscal(&size, &corruption_constant, work, &ONE) # neu1e *= w
 
-    for m in range(already_sampled):
-        our_saxpy(&size, &word_locks[indexes[sen_sample[m]]], work, &ONE, &syn0[indexes[sen_sample[m]]*size], &ONE)
+        for m in range(already_sampled):
+            our_saxpy(&size, &word_locks[indexes[sen_sample[m]]], work, &ONE, &syn0[indexes[sen_sample[m]]*size], &ONE)
 
     return next_random
 
 
-def train_batch_sg(model, sentences, alpha, _work, compute_loss, _rp_sample = 0.1):
+def train_batch_sg(model, sentences, alpha, _work, compute_loss, _doc2vecC=None):
     cdef int hs = model.hs
     cdef int negative = model.negative
     cdef int sample = (model.vocabulary.sample != 0)
@@ -396,7 +398,7 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss, _rp_sample = 0.
     cdef unsigned long long next_random
 
     # for doc2vecC Corruption
-    cdef REAL_t rp_sample = _rp_sample
+    cdef REAL_t doc2vecC = _doc2vecC
     cdef REAL_t *neu1
 
     if hs:
@@ -467,13 +469,13 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss, _rp_sample = 0.
                     if negative:
                         next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, neu1, syn0,
                         syn1neg, size, indexes[i], indexes[j], indexes, _alpha, work, next_random,
-                        word_locks, _compute_loss,  rp_sample, idx_start, idx_end, &_running_training_loss)
+                        word_locks, _compute_loss, doc2vecC, idx_start, idx_end, &_running_training_loss)
 
     model.running_training_loss = _running_training_loss
     return effective_words
 
 
-def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss, _rp_sample = 0.1):
+def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss, _doc2vecC=None):
     cdef int hs = model.hs
     cdef int negative = model.negative
     cdef int sample = (model.vocabulary.sample != 0)
@@ -511,7 +513,7 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss, _rp_sa
     cdef unsigned long long next_random
 
     # for doc2vecC Corruption
-    cdef REAL_t rp_sample = _rp_sample
+    cdef REAL_t doc2vecC = _doc2vecC
 
     if hs:
         syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
@@ -578,7 +580,7 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss, _rp_sa
                 if negative:
                     next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1,
                     syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random,
-                     word_locks, _compute_loss, rp_sample, idx_start, idx_end, &_running_training_loss)
+                     word_locks, _compute_loss, doc2vecC, idx_start, idx_end, &_running_training_loss)
 
     model.running_training_loss = _running_training_loss
     return effective_words

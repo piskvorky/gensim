@@ -144,7 +144,7 @@ except ImportError:
     FAST_VERSION = -1
     MAX_WORDS_IN_BATCH = 10000
 
-    def train_batch_sg(model, sentences, alpha, doc2vecC=None, work=None, compute_loss=False):
+    def train_batch_sg(model, sentences, alpha, work=None, compute_loss=False, doc2vecC=None):
         """
         Update skip-gram model by training on a sequence of sentences.
         Each sentence is a list of string tokens, which are looked up in the model's
@@ -186,7 +186,7 @@ except ImportError:
             result += len(word_vocabs)
         return result
 
-    def train_batch_cbow(model, sentences, alpha, doc2vecC=None, work=None, neu1=None, compute_loss=False):
+    def train_batch_cbow(model, sentences, alpha, work=None, neu1=None, compute_loss=False, doc2vecC=None):
         """
         Update CBOW model by training on a sequence of sentences.
         Each sentence is a list of string tokens, which are looked up in the model's
