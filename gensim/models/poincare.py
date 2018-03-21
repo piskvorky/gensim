@@ -80,6 +80,14 @@ class PoincareModel(utils.SaveLoad):
     use :meth:`~gensim.models.poincare.PoincareModel.save` and :meth:`~gensim.models.poincare.PoincareModel.load`
     methods instead.
 
+    An important attribute (that provides a lot of additional functionality when directly accessed) are the \
+    keyed vectors:
+
+    self.kv : :class:`~gensim.models.poincare.PoincareKeyedVectors`
+        This object essentially contains the mapping between nodes and embeddings, as well the vocabulary of the model
+        (set of unique nodes seen by the model). After training, it can be used to perform operations on the vectors \
+        such as vector lookup, distance etc. See the documentation of its class for many usage examples.
+
     """
     def __init__(self, train_data, size=50, alpha=0.1, negative=10, workers=1, epsilon=1e-5, regularization_coeff=1.0,
                  burn_in=10, burn_in_alpha=0.01, init_range=(-0.001, 0.001), dtype=np.float64, seed=0):

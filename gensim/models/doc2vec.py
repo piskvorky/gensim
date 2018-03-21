@@ -385,7 +385,40 @@ class Doctag(namedtuple('Doctag', 'offset, word_count, doc_count')):
 
 
 class Doc2Vec(BaseWordEmbeddingsModel):
-    """Class for training, using and evaluating neural networks described in http://arxiv.org/pdf/1405.4053v2.pdf"""
+    """Class for training, using and evaluating neural networks described in
+    `Distributed Representations of Sentences and Documents <http://arxiv.org/pdf/1405.4053v2.pdf>`_.
+
+    Some important attributes are the following:
+
+    self.wv : :class:`~gensim.models.keyedvectors.Word2VecKeyedVectors`
+        This object essentially contains the mapping between words and embeddings. After training, it can be used
+        directly to query those embeddings in various ways. See the module level docstring for examples.
+
+    self.docvecs : :class:`~gensim.models.keyedvectors.Doc2VecKeyedVectors`
+        This object contains the paragraph vectors. Remember that the only difference between this model and
+        Word2Vec is that besides the word vectors we also include paragraph embeddings to capture the paragraph.
+        In this way we can capture the difference between the same word used in a different wide context.
+        For example we now have a different representation of the word "leaves" in the following two sentences::
+
+            1. Manos leaves the office every day at 18:00 to catch his train
+            2. This season is called Fall, because leaves fall from the trees.
+
+        In a plain Word2Vec model the word would have exactly the same representation in both sentences, in Doc2Vec it
+        will not.
+
+    self.vocabulary : :class:'~gensim.models.doc2vec.Doc2VecVocab'
+        This object represents the vocabulary (sometimes called Dictionary in gensim) of the model.
+        Besides keeping track of all unique words, this object provides extra functionality, such as
+        sorting words by frequency, or discarding extremely rare words.
+
+    self.trainables : :class:`~gensim.models.doc2vec.Doc2VecTrainables`
+        This object represents the inner shallow neural network used to train the embeddings. The semantics of the
+        network differ slightly in the two available training modes (CBOW or SG) but you can think of it as a NN with
+        a single projection and hidden layer which we train on the corpus. The weights are then used as our embeddings
+        The only addition to the underlying NN used in Word2Vec is that the input includes not only the word vectors
+        of each word in the context, but also the paragraph vector.
+
+    """
 
     def __init__(self, documents=None, dm_mean=None, dm=1, dbow_words=0, dm_concat=0, dm_tag_count=1,
                  docvecs=None, docvecs_mapfile=None, comment=None, trim_rule=None, callbacks=(), **kwargs):

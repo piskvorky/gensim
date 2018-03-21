@@ -610,6 +610,24 @@ class Word2Vec(BaseWordEmbeddingsModel):
     compatible with the original word2vec implementation via `wv.save_word2vec_format()`
     and `Word2VecKeyedVectors.load_word2vec_format()`.
 
+
+    Some important attributes are the following:
+
+    self.wv : :class:`~gensim.models.keyedvectors.Word2VecKeyedVectors`
+        This object essentially contains the mapping between words and embeddings. After training, it can be used
+        directly to query those embeddings in various ways. See the module level docstring for examples.
+
+    self.vocabulary : :class:'~gensim.models.word2vec.Word2VecVocab'
+        This object represents the vocabulary (sometimes called Dictionary in gensim) of the model.
+        Besides keeping track of all unique words, this object provides extra functionality, such as
+        constructing a huffman tree (frequent words are closer to the root), or discarding extremely rare words.
+
+    self.trainables : :class:`~gensim.models.word2vec.Word2VecTrainables`
+        This object represents the inner shallow neural network used to train the embeddings. The semantics of the
+        network differ slightly in the two available training modes (CBOW or SG) but you can think of it as a NN with
+        a single projection and hidden layer which we train on the corpus. The weights are then used as our embeddings
+        (which means that the size of the hidden layer is equal to the number of features `self.size`).
+
     """
 
     def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,

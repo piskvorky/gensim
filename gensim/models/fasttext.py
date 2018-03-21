@@ -81,6 +81,7 @@ from gensim import utils
 logger = logging.getLogger(__name__)
 
 try:
+    raise ImportError
     from gensim.models.fasttext_inner import train_batch_sg, train_batch_cbow
     from gensim.models.fasttext_inner import FAST_VERSION, MAX_WORDS_IN_BATCH
 
@@ -205,6 +206,29 @@ class FastText(BaseWordEmbeddingsModel):
     The model can be stored/loaded via its :meth:`~gensim.models.fasttext.FastText.save()` and
     :meth:`~gensim.models.fasttext.FastText.load()` methods, or loaded in a format compatible with the original
     fasttext implementation via :meth:`~gensim.models.fasttext.FastText.load_fasttext_format()`.
+
+    Some important attributes are the following:
+
+    self.wv : :class:`~gensim.models.keyedvectors.FastTextKeyedVectors`
+        This object essentially contains the mapping between words and embeddings. These are similar to the embeddings
+        computed in the Word2Vec model, however here we also include vectors for n-grams. This allows the model to
+        compute embeddings even for **unseen** words (that do not exist in the vocabulary), as the aggregate of the
+        n-grams included in the word. After training the model, this attribute can be used directly to query those
+        embeddings in various ways. Check the module level docstring from some examples.
+
+    self.vocabulary : :class:'~gensim.models.fasttext.FastTextVocab'
+        This object represents the vocabulary (sometimes called Dictionary in gensim) of the model.
+        Besides keeping track of all unique words, this object provides extra functionality, such as
+        constructing a huffman tree (frequent words are closer to the root), or discarding extremely rare words.
+
+    self.trainables : :class:`~gensim.models.fasttext.FastTextTrainables`
+        This object represents the inner shallow neural network used to train the embeddings. This is very
+        similar to the network of the Word2Vec model, but it also trains weights for the N-Grams (sequences of more
+        than 1 words). The semantics of the network are almost the same as the one used for the Word2Vec model:
+        You can think of it as a NN with a single projection and hidden layer which we train on the corpus.
+        The weights are then used as our embeddings. An important difference however between the two models, is the
+        scoring function used to compute the loss. In the case of FastText, this is modified in word to also account
+        for the internal structure of words, besides their cooccurence counts.
 
     """
     def __init__(self, sentences=None, sg=0, hs=0, size=100, alpha=0.025, window=5, min_count=5,
