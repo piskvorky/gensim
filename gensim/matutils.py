@@ -685,7 +685,6 @@ def unitvec(vec, norm='l2'):
         raise ValueError("'%s' is not a supported norm. Currently supported norms are 'l1' and 'l2'." % norm)
     
     if scipy.sparse.issparse(vec):
-        print("INSIDE SPARSE HANDLING")
         vec = vec.tocsr()
         if norm == 'l1':
             veclen = np.sum(np.abs(vec.data))
@@ -702,7 +701,6 @@ def unitvec(vec, norm='l2'):
             return vec
 
     if isinstance(vec, np.ndarray):
-        print("INSIDE NORMAL VEC HANDLING")
         vec = np.asarray(vec, dtype=vec.dtype)
         if norm == 'l1':
             veclen = np.sum(np.abs(vec))
@@ -723,7 +721,6 @@ def unitvec(vec, norm='l2'):
         return vec
 
     if isinstance(first, (tuple, list)) and len(first) == 2:  # gensim sparse format
-        print("INSIDE GENSIM SPARSE FORMAT HANDLING")
         if norm == 'l1':
             length = float(sum(abs(val) for _, val in vec))
         if norm == 'l2':
