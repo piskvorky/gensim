@@ -667,38 +667,42 @@ blas_scal = blas('scal', np.array([], dtype=float))
 
 def unitvec(vec, norm='l2'):
     """Scale a vector to unit length.
-
     Parameters
     ----------
     vec : {numpy.ndarray, scipy.sparse, list of (int, float)}
         Input vector in any format
     norm : {'l1', 'l2'}, optional
         Normalization that will be used.
-
     Returns
     -------
     {numpy.ndarray, scipy.sparse, list of (int, float)}
         Normalized vector in same format as `vec`.
-
     Notes
     -----
     Zero-vector will be unchanged.
-
     """
     if norm not in ('l1', 'l2'):
         raise ValueError("'%s' is not a supported norm. Currently supported norms are 'l1' and 'l2'." % norm)
+    
     if scipy.sparse.issparse(vec):
+        print("INSIDE SPARSE HANDLING")
         vec = vec.tocsr()
         if norm == 'l1':
             veclen = np.sum(np.abs(vec.data))
         if norm == 'l2':
             veclen = np.sqrt(np.sum(vec.data ** 2))
         if veclen > 0.0:
-            return vec / veclen
+            if np.issubdtype(vec.dtype, np.int) == True:
+                vec = vec.astype(np.float)
+                return vec / veclen
+            else:
+                vec /= veclen
+                return vec.astype(vec.dtype)
         else:
             return vec
 
     if isinstance(vec, np.ndarray):
+        print("INSIDE NORMAL VEC HANDLING")
         vec = np.asarray(vec, dtype=vec.dtype)
         if norm == 'l1':
             veclen = np.sum(np.abs(vec))
@@ -719,6 +723,7 @@ def unitvec(vec, norm='l2'):
         return vec
 
     if isinstance(first, (tuple, list)) and len(first) == 2:  # gensim sparse format
+        print("INSIDE GENSIM SPARSE FORMAT HANDLING")
         if norm == 'l1':
             length = float(sum(abs(val) for _, val in vec))
         if norm == 'l2':
