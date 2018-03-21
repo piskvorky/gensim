@@ -225,9 +225,9 @@ class PhrasesTransformation(interfaces.TransformationABC):
         Parameters
         ----------
         args : object
-            Sequence of arguments, see :class:`~gensim.models.phrases.Phrases` for more information.
+            Sequence of arguments, see :class:`~gensim.utils.SaveLoad.load` for more information.
         kwargs : object
-            Sequence of arguments, see :class:`~gensim.models.phrases.Phrases` for more information.
+            Sequence of arguments, see :class:`~gensim.utils.SaveLoad.load` for more information.
 
         """
         model = super(PhrasesTransformation, cls).load(*args, **kwargs)
@@ -275,14 +275,14 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         min_count : int, optional
             Ignore all words and bigrams with total collected count lower
             than this.
-        threshold : int, optional
+        threshold : float, optional
             Represent a score threshold for forming the phrases (higher means fewer phrases).
             A phrase of words `a` followed by `b` is accepted if the score of the
             phrase is greater than threshold. See the `scoring` setting.
         max_vocab_size : int, optional
-            Maximum size of the vocabulary. Used to control pruning of less common words, to keep memory under control.
-            The default of 40M needs about 3.6GB of RAM; increase/decrease `max_vocab_size` depending on how much
-            available memory you have.
+            Maximum size (number of tokens) of the vocabulary. Used to control pruning of less common words,
+            to keep memory under control. The default of 40M needs about 3.6GB of RAM; increase/decrease
+            `max_vocab_size` depending on how much available memory you have.
         delimiter : str, optional
             Glue character used to join collocation tokens, should be a byte string (e.g. b'_').
         scoring : {'default', 'npmi'}, optional
@@ -291,8 +291,8 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
             with the expected parameter names. Two built-in scoring functions are available by setting `scoring` to a
             string:
 
-            1. `default` - :meth:`~gensim.models.phrases.original_scorer`.
-            2. `npmi` - :meth:`~gensim.models.phrases.npmi_scorer`.
+            1. `default` - :func:`~gensim.models.phrases.original_scorer`.
+            2. `npmi` - :func:`~gensim.models.phrases.npmi_scorer`.
 
         common_terms : set of str, optional
             List of "stop words" that won't affect frequency count of expressions containing them.
@@ -327,11 +327,14 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         ----------
         >>> from gensim.test.utils import datapath
         >>> from gensim.models.word2vec import Text8Corpus
-        >>> from gensim.models.phrases import Phrases
+        >>> from gensim.models.phrases import Phrases, Phraser
         >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-        >>> bigram = Phrases(sentences, min_count=5, threshold=100)
-        >>> print bigram
-        Phrases<37 vocab, min_count=5, threshold=100, max_vocab_size=40000000>
+        >>> phrases = Phrases(sentences)
+        >>> bigram = Phraser(phrases)
+        >>> sent = [u'trees', u'graph', u'minors']
+        >>> print(bigram[sent])
+        [u'trees', u'graph', u'minors']
+
 
         """
         if min_count <= 0:
@@ -394,9 +397,9 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         Parameters
         ----------
         args : object
-            Sequence of arguments, see :class:`~gensim.models.phrases.Phrases` for more information.
+            Sequence of arguments, see :class:`~gensim.utils.SaveLoad.load` for more information.
         kwargs : object
-            Sequence of arguments, see :class:`~gensim.models.phrases.Phrases` for more information.
+            Sequence of arguments, see :class:`~gensim.utils.SaveLoad.load` for more information.
 
         """
         model = super(Phrases, cls).load(*args, **kwargs)
@@ -570,7 +573,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
                     yield (out_delimiter.join(words), score)
 
     def __getitem__(self, sentence):
-        """Convert the input tokens `sentence` (=list of unicode strings) into phrase
+        """Convert the input tokens `sentence` into phrase
         tokens (=list of unicode strings, where detected phrases are joined by u'_').
 
         If `sentence` is an entire corpus (iterable of sentences rather than a single
@@ -581,6 +584,11 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         ----------
         sentence : list of str
             List of unicode strings.
+
+        Return
+        ------
+        list of str
+            List of unicode strings, where detected phrases are joined by u'_'.
 
         Example
         ----------
