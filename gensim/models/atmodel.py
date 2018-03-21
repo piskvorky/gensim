@@ -941,7 +941,6 @@ class AuthorTopicModel(LdaModel):
         def rho():
             return pow(self.offset + 1 + 1, -self.decay)
 
-        # Wrap in fuction to avoid code duplication.
         def rollback_new_author_chages():
             self.state.gamma = self.state.gamma[0:-1]
 
@@ -962,11 +961,14 @@ class AuthorTopicModel(LdaModel):
             raise ValueError("AuthorTopicModel.get_new_author_topics() called with an empty corpus")
 
         new_author_name = "placeholder_name"
+        # indexes representing the documents in the input corpus
         corpus_doc_idx = list(range(self.total_docs, self.total_docs + len_input_corpus))
 
         # Add the new placeholder author to author2id/id2author dictionaries.
         num_new_authors = 1
-        author_id = 0
+        author_id = self.num_authors
+        if new_author_name in self.author2id:
+            raise ValueError("self.author2id already has 'placeholder_name' author")
         self.author2id[new_author_name] = author_id + self.num_authors
         self.id2author[author_id + self.num_authors] = new_author_name
 
