@@ -969,8 +969,8 @@ class AuthorTopicModel(LdaModel):
         author_id = self.num_authors
         if new_author_name in self.author2id:
             raise ValueError("self.author2id already has 'placeholder_name' author")
-        self.author2id[new_author_name] = author_id + self.num_authors
-        self.id2author[author_id + self.num_authors] = new_author_name
+        self.author2id[new_author_name] = author_id
+        self.id2author[author_id] = new_author_name
 
         # Add new author in author2doc and doc into doc2author.
         self.author2doc[new_author_name] = corpus_doc_idx
