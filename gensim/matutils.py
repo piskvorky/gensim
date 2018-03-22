@@ -667,19 +667,23 @@ blas_scal = blas('scal', np.array([], dtype=float))
 
 def unitvec(vec, norm='l2'):
     """Scale a vector to unit length.
+    
     Parameters
     ----------
     vec : {numpy.ndarray, scipy.sparse, list of (int, float)}
         Input vector in any format
     norm : {'l1', 'l2'}, optional
         Normalization that will be used.
+        
     Returns
     -------
     {numpy.ndarray, scipy.sparse, list of (int, float)}
         Normalized vector in same format as `vec`.
+        
     Notes
     -----
     Zero-vector will be unchanged.
+    
     """
     if norm not in ('l1', 'l2'):
         raise ValueError("'%s' is not a supported norm. Currently supported norms are 'l1' and 'l2'." % norm)
@@ -691,7 +695,7 @@ def unitvec(vec, norm='l2'):
         if norm == 'l2':
             veclen = np.sqrt(np.sum(vec.data ** 2))
         if veclen > 0.0:
-            if np.issubdtype(vec.dtype, np.int) == True:
+            if np.issubdtype(vec.dtype, np.int):
                 vec = vec.astype(np.float)
                 return vec / veclen
             else:
@@ -701,13 +705,12 @@ def unitvec(vec, norm='l2'):
             return vec
 
     if isinstance(vec, np.ndarray):
-        vec = np.asarray(vec, dtype=vec.dtype)
         if norm == 'l1':
             veclen = np.sum(np.abs(vec))
         if norm == 'l2':
             veclen = blas_nrm2(vec)
         if veclen > 0.0:
-            if np.issubdtype(vec.dtype, np.int) == True:
+            if np.issubdtype(vec.dtype, np.int):
                 vec = vec.astype(np.float)
                 return blas_scal(1.0 / veclen, vec).astype(vec.dtype)
             else:
