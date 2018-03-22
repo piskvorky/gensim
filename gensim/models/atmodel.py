@@ -16,12 +16,13 @@ documents. The model is *not* constant in memory w.r.t. the number of authors.
 The model can be updated with additional documents after training has been completed. It is
 also possible to continue training on the existing data.
 
-The model is closely related to Latent Dirichlet Allocation. The AuthorTopicModel class
+The model is closely related to :class:`gensim.models.ldamodel.LdaModel`. The AuthorTopicModel class
 inherits the LdaModel class, and its usage is thus similar.
 
 The model was introduced by Rosen-Zvi and co-authors in 2004 and is described in 
-`The Author-Topic Model for Authors and Documents <https://arxiv.org/abs/1207.4169>`_
-and a tutorial for using Author-topic model can be found at <https://github.com/RaRe-Technologies/gensim/tree/develop/docs/notebooks/atmodel_tutorial.ipynb>_.
+`The Author-Topic Model for Authors and Documents <https://arxiv.org/abs/1207.4169>`_.The model correlates 
+the authorship information with the topics to give a better insight on the subject knowledge of an author.
+A tutorial for using Author-topic model can be found at <https://github.com/RaRe-Technologies/gensim/tree/develop/docs/notebooks/atmodel_tutorial.ipynb>_.
 
 Example
 -------
@@ -43,7 +44,8 @@ Example
 >>> model = AuthorTopicModel(corpus, author2doc=author2doc, id2word=dictionary, num_topics=4, passes=100)  # train model
 >>> model.update(corpus, author2doc)  # update the author-topic model with additional documents
 >>> author_vecs = [model.get_author_topics(author) for author in model.id2author.values()]
->>> print(author_vecs) #Prints top authors
+>>> print(author_vecs) #Prints all authors
+>>> print
 
 """
 
@@ -563,7 +565,7 @@ class AuthorTopicModel(LdaModel):
         ----------
         chunk : int
             The chunk numer of the sparse document vector on which inference needs to be done.
-        author2doc : dict of (strm list of ints)
+        author2doc : dict of (str, list of int)
             A dictionary where keys are the names of authors and values are lists of
             documents that the author contributes to.
         doc2author : dict of (intm list of str)
@@ -1076,7 +1078,7 @@ class AuthorTopicModel(LdaModel):
             
         Returns
         -------
-        list of (int, float) as a 2-tuple
+        list of (int, float)
             Topic distribution of an author as a list of topic ID and its probability.
             
         Example
@@ -1137,7 +1139,7 @@ class AuthorTopicModel(LdaModel):
         
         Returns
         -------
-        list of (int, float) as a 2-tuple
+        list of (int, float)
             Topic distribution for the author as a list.
         
         """
