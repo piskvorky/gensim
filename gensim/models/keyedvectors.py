@@ -72,8 +72,8 @@ try:
 except ImportError:
     PYEMD_EXT = False
 
-from numpy import dot, zeros, float32 as REAL, empty, memmap as np_memmap, \
-    double, array, vstack, sqrt, newaxis, integer, \
+from numpy import dot, float32 as REAL, empty, memmap as np_memmap, \
+    double, array, zeros, vstack, sqrt, newaxis, integer, \
     ndarray, sum as np_sum, prod, argmax, divide as np_divide
 import numpy as np
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
@@ -109,7 +109,7 @@ class Vocab(object):
 class BaseKeyedVectors(utils.SaveLoad):
 
     def __init__(self, vector_size):
-        self.vectors = []
+        self.vectors = zeros((0, vector_size))
         self.vocab = {}
         self.vector_size = vector_size
         self.index2entity = []
@@ -154,6 +154,65 @@ class BaseKeyedVectors(utils.SaveLoad):
         else:
             raise KeyError("'%s' not in vocabulary" % entity)
 
+    def add(self, entities, weights, replace=False):
+        """Add entities and theirs vectors in a manual way.
+        If some entity is already in the vocabulary, old vector is keeped unless `replace` flag is True.
+
+        Parameters
+        ----------
+        entities : list of str
+            Entities specified by string tags.
+        weights: {list of numpy.ndarray, numpy.ndarray}
+            List of 1D np.array vectors or 2D np.array of vectors.
+        replace: bool, optional
+            Flag indicating whether to replace vectors for entities which are already in the vocabulary,
+            if True - replace vectors, otherwise - keep old vectors.
+
+        """
+        if isinstance(entities, string_types):
+            entities = [entities]
+            weights = np.array(weights).reshape(1, -1)
+        elif isinstance(weights, list):
+            weights = np.array(weights)
+
+        in_vocab_mask = np.zeros(len(entities), dtype=np.bool)
+        for idx, entity in enumerate(entities):
+            if entity in self.vocab:
+                in_vocab_mask[idx] = True
+
+        # add new entities to the vocab
+        for idx in np.nonzero(~in_vocab_mask)[0]:
+            entity = entities[idx]
+            self.vocab[entity] = Vocab(index=len(self.vocab), count=1)
+            self.index2entity.append(entity)
+
+        # add vectors for new entities
+        self.vectors = vstack((self.vectors, weights[~in_vocab_mask]))
+
+        # change vectors for in_vocab entities if `replace` flag is specified
+        if replace:
+            in_vocab_idxs = [self.vocab[entities[idx]].index for idx in np.nonzero(in_vocab_mask)[0]]
+            self.vectors[in_vocab_idxs] = weights[in_vocab_mask]
+
+    def __setitem__(self, entities, weights):
+        """Add entities and theirs vectors in a manual way.
+        If some entity is already in the vocabulary, old vector is replaced with the new one.
+        This method is alias for `add` with `replace=True`.
+
+        Parameters
+        ----------
+        entities : {str, list of str}
+            Entities specified by string tags.
+        weights: {list of numpy.ndarray, numpy.ndarray}
+            List of 1D np.array vectors or 2D np.array of vectors.
+
+        """
+        if not isinstance(entities, list):
+            entities = [entities]
+            weights = weights.reshape(1, -1)
+
+        self.add(entities, weights, replace=True)
+
     def __getitem__(self, entities):
         """
         Accept a single entity (string tag) or list of entities as input.
@@ -163,6 +222,7 @@ class BaseKeyedVectors(utils.SaveLoad):
 
         If a list, return designated tags' vector representations as a
         2D numpy array: #tags x #vector_size.
+
         """
         if isinstance(entities, string_types):
             # allow calls like trained_model['office'], as a shorthand for trained_model[['office']]
@@ -497,7 +557,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         else:
             assert max(tfidf.idfs) < matrix_order
             word_indices = [
-                index for index, _ in sorted(tfidf.idfs.items(), key=lambda x: x[1], reverse=True)
+                index for index, _
+                in sorted(tfidf.idfs.items(), key=lambda x: (x[1], -x[0]), reverse=True)
             ]
 
         # Traverse rows.
@@ -511,6 +572,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             if w1 not in self.vocab:
                 num_skipped += 1
                 continue  # A word from the dictionary is not present in the word2vec model.
+
             # Traverse upper triangle columns.
             if matrix_order <= nonzero_limit + 1:  # Traverse all columns.
                 columns = (
