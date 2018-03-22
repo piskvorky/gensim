@@ -142,7 +142,7 @@ class SentenceAnalyzer(object):
             First word for comparison. Should be unicode string.
         wordb : str
             Second word for comparison. Should be unicode string.
-        components : TODO
+        components : generator
         scorer : {'default', 'npmi'}
             Scorer function, as given to :class:`~gensim.models.phrases.Phrases`.
 
@@ -272,9 +272,8 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
             without storing everything in RAM. See :class:`~gensim.models.word2vec.BrownCorpus`,
             :class:`~gensim.models.word2vec.Text8Corpus` or :class:`~gensim.models.word2vec.LineSentence`
             in the :mod:`~gensim.models.word2vec` module for such examples.
-        min_count : int, optional
-            Ignore all words and bigrams with total collected count lower
-            than this.
+        min_count : float, optional
+            Ignore all words and bigrams with total collected count lowerthan this.
         threshold : float, optional
             Represent a score threshold for forming the phrases (higher means fewer phrases).
             A phrase of words `a` followed by `b` is accepted if the score of the
@@ -328,13 +327,19 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         >>> from gensim.test.utils import datapath
         >>> from gensim.models.word2vec import Text8Corpus
         >>> from gensim.models.phrases import Phrases, Phraser
+        >>>
+        >>> #Create corpus
         >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-        >>> phrases = Phrases(sentences)
+        >>>
+        >>> #train the detector with:
+        >>> phrases = Phrases(sentences, min_count=1, threshold=1)
+        >>>
+        >>> #Create a Phraser object to transform any sentence and turn 2 suitable tokens into 1 phrase:
         >>> bigram = Phraser(phrases)
-        >>> sent = [u'trees', u'graph', u'minors']
+        >>> sent = [u'trees', u'graph']
+        >>> #Both of these tokens appear in corpus at least twice, and phrase score is higher, than treshold = 1:
         >>> print(bigram[sent])
-        [u'trees', u'graph', u'minors']
-
+        [u'trees_graph']
 
         """
         if min_count <= 0:
@@ -644,7 +649,8 @@ def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count
         First word for comparison.
     wordb : str
         Second word for comparison.
-    components : TODO
+    components : generator
+        Vocabulary.
     scorer : {'default', 'npmi'}
         Scorer function, as given to :class:`~gensim.models.phrases.Phrases`.
 
