@@ -140,6 +140,67 @@ class TestLdaModelInner(unittest.TestCase):
                 msg = "dirichlet_expectation_2d failed for dtype={}".format(dtype)
                 self.assertTrue(np.allclose(known_good, test_values), msg)
 
+class UnitvecTestCase(unittest.TestCase):
+
+	def manual_unitvec(self, vec):
+		self.vec = vec
+		self.vec = self.vec.astype(np.float)
+		if sparse.issparse(self.vec):
+			vec_sum_of_squares = self.vec.multiply(self.vec)
+			unit = 1. / np.sqrt(vec_sum_of_squares.sum())
+			return self.vec.multiply(unit)
+		elif not sparse.issparse(self.vec):
+			sum_vec_squared = np.sum(self.vec ** 2)
+			self.vec /= np.sqrt(sum_vec_squared)
+			return self.vec
+
+	def test_nonsparse_float32(self):
+		input_vector = np.random.uniform(size=(5,)).astype(np.float32)
+		unit_vector = unitvec_with_bug.unitvec(input_vector)
+		self.assertEqual(input_vector.dtype, unit_vector.dtype)
+		self.assertTrue(np.allclose(unit_vector, self.manual_unitvec(input_vector)))
+
+	def test_nonsparse_float64(self):
+		input_vector = np.random.uniform(size=(5,)).astype(np.float64)
+		unit_vector = unitvec_with_bug.unitvec(input_vector)
+		self.assertEqual(input_vector.dtype, unit_vector.dtype)
+		self.assertTrue(np.allclose(unit_vector, self.manual_unitvec(input_vector)))
+
+	def test_nonsparse_int32(self):
+		input_vector = np.random.randint(10, size=5).astype(np.int32)
+		unit_vector = unitvec_with_bug.unitvec(input_vector)
+		self.assertTrue(np.allclose(unit_vector, self.manual_unitvec(input_vector)))
+
+	def test_nonsparse_int64(self):
+		input_vector = np.random.randint(10, size=5).astype(np.int64)
+		unit_vector = unitvec_with_bug.unitvec(input_vector)
+		self.assertTrue(np.allclose(unit_vector, self.manual_unitvec(input_vector)))
+
+	def test_sparse_float32(self):
+		input_vector = sparse.csr_matrix(np.asarray([[1, 0, 0, 0, 0, 3, 0, 0], [0, 0, 4, 3, 0, 0, 0, 0]]).astype(np.float32))
+		unit_vector = unitvec_with_bug.unitvec(input_vector)
+		man_unit_vector = self.manual_unitvec(input_vector)
+		self.assertTrue(np.allclose(unit_vector.data, man_unit_vector.data, atol=1e-3))
+		self.assertEqual(input_vector.dtype, unit_vector.dtype)
+
+	def test_sparse_float64(self):
+		input_vector = sparse.csr_matrix(np.asarray([[1, 0, 0, 0, 0, 3, 0, 0], [0, 0, 4, 3, 0, 0, 0, 0]]).astype(np.float64))
+		unit_vector = unitvec_with_bug.unitvec(input_vector)
+		man_unit_vector = self.manual_unitvec(input_vector)
+		self.assertTrue(np.allclose(unit_vector.data, man_unit_vector.data, atol=1e-3))
+		self.assertEqual(input_vector.dtype, unit_vector.dtype)
+
+	def test_sparse_int32(self):
+		input_vector = sparse.csr_matrix(np.asarray([[1, 0, 0, 0, 0, 3, 0, 0], [0, 0, 4, 3, 0, 0, 0, 0]]).astype(np.int32))
+		unit_vector = unitvec_with_bug.unitvec(input_vector)
+		man_unit_vector = self.manual_unitvec(input_vector)
+		self.assertTrue(np.allclose(unit_vector.data, man_unit_vector.data, atol=1e-3))
+
+	def test_sparse_int64(self):
+		input_vector = sparse.csr_matrix(np.asarray([[1, 0, 0, 0, 0, 3, 0, 0], [0, 0, 4, 3, 0, 0, 0, 0]]).astype(np.int64))
+		unit_vector = unitvec_with_bug.unitvec(input_vector)
+		man_unit_vector = self.manual_unitvec(input_vector)
+		self.assertTrue(np.allclose(unit_vector.data, man_unit_vector.data, atol=1e-3))
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
