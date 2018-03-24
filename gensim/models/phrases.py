@@ -331,15 +331,19 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         >>> #Create corpus
         >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
         >>>
-        >>> #train the detector with:
+        >>> #Train the detector with:
         >>> phrases = Phrases(sentences, min_count=1, threshold=1)
-        >>>
-        >>> #Create a Phraser object to transform any sentence and turn 2 suitable tokens into 1 phrase:
-        >>> bigram = Phraser(phrases)
-        >>> sent = [u'trees', u'graph']
+        >>> sent = [u'trees', u'graph', u'minors']
         >>> #Both of these tokens appear in corpus at least twice, and phrase score is higher, than treshold = 1:
-        >>> print(bigram[sent])
-        [u'trees_graph']
+        >>> print(phrases[sent])
+        [u'trees_graph', u'minors']
+        >>>
+        >>> #But if we choose another 'sent':
+        >>> sent = [u'graph', u'minors']
+        >>> print(phrases[sent])
+        >>> #Then we got these linked tags:
+        [u'graph_minors']
+
 
         """
         if min_count <= 0:
@@ -406,6 +410,24 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         kwargs : object
             Sequence of arguments, see :class:`~gensim.utils.SaveLoad.load` for more information.
 
+        Example
+        -------
+        >>> #Create previosly saved class for example:
+        >>>
+        >>> from gensim.test.utils import datapath
+        >>> from gensim.models.word2vec import Text8Corpus
+        >>> from gensim.models.phrases import Phrases
+        >>> #Create corpus
+        >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
+        >>> #train the detector and save it:
+        >>> phrases = Phrases(sentences, min_count=1, threshold=1)
+        >>> phrases.save('example')
+        >>>
+        >>> #Then load it:
+        >>> newPhrases = Phrases.load('example')
+        >>> print newPhrases
+        Phrases<38 vocab, min_count=1, threshold=1, max_vocab_size=40000000>
+
         """
         model = super(Phrases, cls).load(*args, **kwargs)
         if not hasattr(model, 'corpus_word_count'):
@@ -449,10 +471,25 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         >>> from gensim.test.utils import datapath
         >>> from gensim.models.word2vec import Text8Corpus
         >>> from gensim.models.phrases import Phrases
+        >>> #Create corpus and use it for learning model.
         >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
         >>> learned = Phrases.learn_vocab(sentences,40000)
-        >>> print learned
-        (1, defaultdict(<type 'int'>, {...}), 29)
+        >>> #Minimal theshold
+        >>> print learned[0]
+        1
+        >>> #All tokens and phrases with its `score` #TODO: kick me if i'm wrong
+        >>> print learned[1]
+        defaultdict(<type 'int'>,
+        {'minors': 6, 'human_system': 3, 'trees_trees': 3, 'system_system': 3, 'trees_graph': 6, 'computer': 6,
+        'human': 6, 'computer_human': 3, 'time_user': 6, 'graph_minors': 6, 'system_user': 3, 'eps_human': 3,
+        'eps_response': 3, 'graph': 9, 'system': 12, 'response': 6, 'system_eps': 3, 'human_interface': 3,
+        'user_trees': 3, 'user_eps': 3, 'minors_computer': 2, 'trees': 9, 'interface_computer': 3,
+        'computer_response': 3, 'interface_system': 3, 'user': 9, 'interface': 6, 'response_survey': 3,
+        'response_time': 3, 'survey_graph': 3, 'graph_trees': 3, 'system_time': 3, 'user_interface': 3,
+        'eps': 6, 'survey': 6, 'time': 6, 'survey_system': 3, 'minors_survey': 3})
+        >>> #Number of tokens and phrases #TODO: why so many?
+        >>> print learned[2]
+        >>> 87
 
         """
         sentence_no = -1
@@ -504,8 +541,20 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         >>> from gensim.test.utils import datapath
         >>> from gensim.models.word2vec import Text8Corpus
         >>> from gensim.models.phrases import Phrases
+        >>> #Create corpus and use it for phrase detector
         >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-        >>> bigram = Phrases(sentences, min_count=5, threshold=100)
+        >>> phrases = Phrases(sentences, min_count=5, threshold=100)
+        >>> print phrases
+        >>> #38 vocab
+        Phrases<38 vocab, min_count=5, threshold=100, max_vocab_size=40000000>
+        >>> #Create another corpus
+        >>> addit_sent = [[u'the', u'mayor', u'of', u'new', u'york', u'was', u'there'],
+        >>> [u'machine', u'learning', u'can', u'be', u'new', u'york' , u'sometimes']]
+        >>> #Add it to our detector
+        >>> phrases.add_vocab(addit_sent)
+        >>> print phrases
+        >>> #Now we've got 61 vocab
+        Phrases<61 vocab, min_count=5, threshold=100, max_vocab_size=40000000>
 
         """
         # uses a separate vocab to collect the token counts from `sentences`.
@@ -549,12 +598,13 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         >>> from gensim.test.utils import datapath
         >>> from gensim.models.word2vec import Text8Corpus
         >>> from gensim.models.phrases import Phrases
+        >>> #Create corpus and use it for phrase detector
         >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-        >>> bigram = Phrases(sentences, min_count=5, threshold=100)
-        >>> for phrase, score in bigram.export_phrases(sentences):
+        >>> phrases = Phrases(sentences, min_count=5, threshold=100)
+        >>> for phrase, score in phrases.export_phrases(sentences):
         ...     print(u'{0}\t{1}'.format(phrase, score))
             then you can debug the threshold with generated tsv
-
+            #TODO: what else can i show?
         """
         analyze_sentence = ft.partial(
             self.analyze_sentence,
@@ -587,23 +637,48 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
 
         Parameters
         ----------
-        sentence : list of str
-            List of unicode strings.
+        sentence : {list of str, iterable of list of str}
+            List of unicode strings or bag-of-words corpus.
 
         Return
         ------
         list of str
             List of unicode strings, where detected phrases are joined by u'_'.
 
-        Example
+        Examples
         ----------
         >>> from gensim.test.utils import datapath
         >>> from gensim.models.word2vec import Text8Corpus
-        >>> from gensim.models.phrases import Phrases
+        >>> from gensim.models.phrases import Phrases, Phraser
+        >>>
+        >>> #Create corpus
         >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-        >>> bigram = Phrases(sentences, min_count=5, threshold=100)
-        >>> bigram["trees","grass"]
-        [u'trees', u'grass']
+        >>>
+        >>> #Train the detector with:
+        >>> phrases = Phrases(sentences, min_count=1, threshold=1)
+        >>> #Input is a list of unicode strings:
+        >>> sent = [u'trees', u'graph', u'minors']
+        >>> #Both of these tokens appear in corpus at least twice, and phrase score is higher, than treshold = 1:
+        >>> print(phrases[sent])
+        [u'trees_graph', u'minors']
+
+        >>> from gensim.test.utils import datapath
+        >>> from gensim.models.word2vec import Text8Corpus
+        >>> from gensim.models.phrases import Phrases, Phraser
+        >>>
+        >>> #Create corpus
+        >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
+        >>>
+        >>> #Train the detector with:
+        >>> phrases = Phrases(sentences, min_count=1, threshold=1)
+        >>> #Input is a corpus:
+        >>> sent = [[u'trees', u'graph', u'minors'],[u'graph', u'minors']]
+        >>> #So we get 2 phrases
+        >>> res = phrases[sent]
+        >>> for phrase in res:
+        >>>     print phrase
+        [u'trees_graph', u'minors']
+        [u'graph_minors']
 
         """
         warnings.warn("For a faster implementation, use the gensim.models.phrases.Phraser class")
@@ -747,13 +822,34 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
             Phrases class object.
 
         Example
-        -------
+        ----------
         >>> from gensim.test.utils import datapath
         >>> from gensim.models.word2vec import Text8Corpus
         >>> from gensim.models.phrases import Phrases, Phraser
+        >>>
+        >>> #Create corpus
         >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-        >>> phrases_model = Phrases(sentences, min_count=5, threshold=100)
-        >>> phraser_model = Phraser(phrases_model)
+        >>>
+        >>> #train the detector with:
+        >>> phrases = Phrases(sentences, min_count=1, threshold=1)
+        >>>
+        >>> #Create a Phraser object to transform any sentence and turn 2 suitable tokens into 1 phrase:
+        >>> bigram = Phraser(phrases)
+        >>> sent = [u'trees', u'graph', u'minors']
+        >>> #Both of these tokens appear in corpus at least twice, and phrase score is higher, than treshold = 1:
+        >>> print(bigram[sent])
+        [u'trees_graph', u'minors']
+        >>>
+        >>> #but if we choose another 'sent':
+        >>> sent = [u'graph', u'minors']
+        >>> print(bigram[sent])
+        >>> #then we got these linked tags:
+        [u'graph_minors']
+        >>>
+        >>> #TODO: doesn't work, see next todo-comment
+        >>> #The detection can also be **run repeatedly**, to get phrases longer than two tokens (`tree_graph_minors`):
+        >>> trigram = Phrases(bigram[sentences], min_count=1, threshold=1)
+        >>> print(trigram[bigram[sent]]) #TODO: if we want to show this example, we should choose another testcorpus
 
         """
         self.threshold = phrases_model.threshold
