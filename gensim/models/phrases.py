@@ -717,23 +717,27 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
 
 # calculation of score based on original mikolov word2vec paper
 def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
-    """
+    """Calculation of score, based on original `"Efficient Estimaton of Word Representations in Vector Space" by
+    Mikolov <https://arxiv.org/pdf/1301.3781.pdf>`_ word2vec paper.
+
     Parameters
     ----------
     worda_count : int
-        First word for comparison.
+        Number of occurences for first word.
     wordb : str
-        Second word for comparison.
-    components : generator
-        Vocabulary.
-    scorer : {'default', 'npmi'}
-        Scorer function, as given to :class:`~gensim.models.phrases.Phrases`.
+        Number of occurences for second word.
+    bigram_count : float
+        Score threshold for worda_wordb phrase.
+    len_vocab : int
+        Size of vocabulary.
+    min_count: float
+        Minimal score threshold.
+    corpus_word_count : int
+        Number of words in corpus.
 
     Notes
     -----
-    from "Efficient Estimaton of Word Representations in Vector Space" by
-    Mikolov, et. al.:
-    :math:`(count(worda, wordb) - min_count) * N /
+    From paper :math:`(count(worda, wordb) - min_count) * N /
     (count(worda) * count(wordb)) > threshold`, where `N` is the total vocabulary size.
 
     """
@@ -742,22 +746,29 @@ def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count
 
 # normalized PMI, requires corpus size
 def npmi_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
-    """
+    """Calculation of score, `Normalized (Pointwise) Mutual
+    Information in Colocation Extraction" by Gerlof Bouma
+    <https://svn.spraakdata.gu.se/repos/gerlof/pub/www/Docs/npmi-pfd.pdf>`_, requires corpus size.
 
     Parameters
     ----------
-    worda_count: int
-    wordb_count: int
-    bigram_count: int
-    len_vocab: int
-    min_count: int
-    corpus_word_count: int
+    worda_count : int
+        Number of occurences for first word.
+    wordb : str
+        Number of occurences for second word.
+    bigram_count : float
+        Score threshold for worda_wordb phrase.
+    len_vocab : int
+        Size of vocabulary.
+    min_count: float
+        Minimal score threshold.
+    corpus_word_count : int
+        Number of words in corpus.
+
 
     Notes
     -----
-    Normalized pointwise mutual information, from "Normalized (Pointwise) Mutual
-    Information in Colocation Extraction" by Gerlof Bouma:
-    :math:`ln(prop(worda, wordb) / (prop(worda)*prop(wordb))) / - ln(prop(worda, wordb)`
+    From paper :math:`ln(prop(worda, wordb) / (prop(worda)*prop(wordb))) / - ln(prop(worda, wordb)`
     where prop(n) is the count of n / the count of everything in the entire corpus.
 
     """
