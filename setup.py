@@ -309,6 +309,7 @@ setup(
         'scipy >= 0.18.1',
         'six >= 1.5.0',
         'smart_open >= 1.2.1',
+        'python-Levenshtein >= 0.10.2'
     ],
     tests_require=linux_testenv,
     extras_require={

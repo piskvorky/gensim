@@ -34,9 +34,11 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
                   ["holiday", "slowing", "hollingworth"]]
         dictionary = Dictionary(documents)
 
-        # checking symmetry and the existence of ones on the diagonal
+        # checking symmetry
         similarity_matrix = self.vectors.similarity_matrix(dictionary).todense()
         self.assertTrue((similarity_matrix.T == similarity_matrix).all())
+
+        # checking the existence of ones on the main diagonal
         self.assertTrue(
             (np.diag(similarity_matrix) ==
              np.ones(similarity_matrix.shape[0])).all())

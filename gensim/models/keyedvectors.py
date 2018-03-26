@@ -537,6 +537,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             The Soft Cosine Measure.
         :class:`gensim.similarities.docsim.SoftCosineSimilarity`
             A class for performing corpus-based similarity queries with Soft Cosine Measure.
+        :func:`gensim.models.levenshtein.similarity_matrix`
+            A term similarity matrix produced from Levenshtein distances.
 
 
         Notes
