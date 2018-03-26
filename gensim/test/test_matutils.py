@@ -155,7 +155,7 @@ class UnitvecTestCase(unittest.TestCase):
             return self.vec
 
     def test_inputs(self):
-        input_dtypes = [np.float32, np.float64, np.int32, np.int64]
+        input_dtypes = [np.float32, np.float64, np.int32, np.int64, float, int]
         input_arrtypes = ['sparse', 'normal']
         for dtype_ in input_dtypes:
             for arrtype in input_arrtypes:
