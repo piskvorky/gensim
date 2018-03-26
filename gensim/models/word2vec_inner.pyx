@@ -161,7 +161,7 @@ cdef unsigned long long fast_sentence_sg_neg(
 
             our_saxpy(&size, &corruption_constant, &syn0[indexes[t] * size], &ONE, neu1, &ONE)
 
-            sscal(&size, &inv_count, neu1, &ONE) #In original: neu1 /= 2
+        sscal(&size, &inv_count, neu1, &ONE) # In original: neu1 /= 2
 
     for d in range(negative+1):
         if d == 0:
