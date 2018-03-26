@@ -55,8 +55,12 @@ and so on.
 
 """
 from __future__ import division  # py3 "true division"
+from gensim.models import TfidfModel
+from gensim.corpora import Dictionary
+from scipy.sparse.linalg import svds
 
 import logging
+import numpy as np
 
 try:
     from queue import Queue, Empty
@@ -1063,6 +1067,134 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
         )
         return layer
 
+    def simple_average(self, sent):
+        """
+        Mixture of word-vectors to make sentence-vector.
+
+        Attains this by simple averaging of all word-vectors.
+
+        Examples
+        --------
+        >>> sent = iter([['sample', 'sentence', 'cat', 'dog'], ['time', 'computers', 'expensive']])
+        >>> trained_model.simple_average(sent)
+
+
+        Parameters
+        ------------
+        sent: iterator of list of tokens of sentences
+            Corpus of sentences.
+
+        Returns
+        --------
+        sents_emd: class: `gensim.models.keyedvectors.Word2VecKeyedVectors`
+            Sentence embeddings of each sentence in the same order as given.
+
+        """
+        sents_emd = []
+        for s in sent:
+            sent_emd = []
+            for w in s:
+                if w in self.vocab:
+                    sent_emd.append(self.vocab[w])
+            sent_emd_ar = np.array(sent_emd)
+            sum_ = sent_emd_ar.sum(axis=0)
+            result = sum_ / np.sqrt((sum_ ** 2).sum())
+            sents_emd.append(result)
+        return sents_emd
+
+    def smooth_inverse_frequency(self, sent, a=0.001):
+        """
+        Mixture of word - vectors to make sentence - vector.
+
+        Attains this by taking the average of word - vectors
+        with the weight of words from the sentences.And then subtracting the
+        projection of yielded vectors to their first principal component.
+
+        Examples
+        --------
+        >>> sent = iter([['sample', 'sentence', 'cat', 'dog'], ['time', 'computers', 'expensive']])
+        >>> trained_model.smooth_inverse_frequency(sent, a=0.001)
+
+        Parameters
+        ----------
+        sent: iterator of list of tokens of sentences
+            Corpus of sentences.
+        a: float
+            Weighting parameter for best performance a lies between[10 ^ -3, 10 ^ -4].
+
+        Returns
+        -------
+        new_sents_emd: class: `gensim.models.keyedvectors.Word2VecKeyedVectors`
+            Sentence embeddings of each sentence in the same order as given.
+
+        """
+        word_counter = {}
+        total_count = 0
+        for s in sent:
+            for w in s:
+                if w in word_counter:
+                    word_counter[w] = word_counter[w] + 1
+                else:
+                    word_counter[w] = 1
+            total_count = total_count + len(s)
+        no_of_sentences = len(sent)
+        sents_emd = []
+        for s in sent:
+            sent_emd = []
+            for word in s:
+                if word in self.vocab:
+                    emd = (a/(a + (word_counter[word]/total_count)))*self.vocab[word]
+                    sent_emd.append(emd)
+            sum_ = np.array(sent_emd).sum(axis=0)
+            sentence_emd = sum_/float(no_of_sentences)
+            sents_emd.append(sentence_emd)
+        u = np.array(svds(sents_emd, k=1))
+        u = u[2]
+        new_sents_emd = []
+        for s in sents_emd:
+            s = s - u.dot(u.transpose())*s
+            new_sents_emd.append(s)
+        return new_sents_emd
+
+    def tf_idf_sent(self, sent):
+        """
+        Mixture of word-vectors to make sentence-vector.
+        Attains this by averaging the word-vectors with their TFIDF weights.
+
+        Examples
+        --------
+        >>> sent = iter([['sample', 'sentence', 'cat', 'dog'], ['time', 'computers', 'expensive']])
+        >>> trained_model.tf_idf_sent(sent)
+
+        Parameters
+        ------------
+        sent: iterator of list of tokens of sentences
+            Corpus of sentences.
+
+        Returns
+        --------
+        sents_emd: class: `gensim.models.keyedvectors.Word2VecKeyedVectors`
+            Sentence embeddings of each sentence in the same order as given.
+
+        """
+        dct = Dictionary(sent)
+        corpus = [dct.doc2bow(line) for line in sent]
+        tf_idf_model = TfidfModel(corpus)
+        vector = tf_idf_model[corpus]
+        d = {dct.get(id): value for doc in vector for id, value in doc}
+        sents_emd = []
+        for i in xrange(len(sent)):
+            sent_emd = []
+            for j in xrange(len(sent[i])):
+                word = sent[i][j]
+                if word in self.vocab:
+                    emd = d[word] * self.vocab[word]
+                    sent_emd.append(emd)
+            sent_emd_np = np.array(sent_emd)
+            sum_ = sent_emd_np.sum(axis=0)
+            result = sum_ / np.sqrt((sum_ ** 2).sum())
+            sents_emd.append(result)
+        return sents_emd
 
 # For backward compatibility
 KeyedVectors = EuclideanKeyedVectors
