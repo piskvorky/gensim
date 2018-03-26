@@ -4,71 +4,13 @@
 
 """Automatically detect common phrases (multiword expressions) from a stream of sentences.
 
+Notes
+------
 The phrases are collocations (frequently co-occurring tokens). See `Tomas Mikolov, Ilya Sutskever, Kai Chen,
 Greg Corrado, and Jeffrey Dean. Distributed Representations of Words and Phrases and their Compositionality.
 In Proceedings of NIPS, 2013.
 <https://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf>`_
 for the exact formula.
-
-For example, if your input stream (=an iterable, with each value a list of token strings) looks like:
-
->>> print(list(sentence_stream))
-[[u'the', u'mayor', u'of', u'new', u'york', u'was', u'there'],
- [u'machine', u'learning', u'can', u'be', u'useful', u'sometimes'],
- ...,
-]
-
-you'd train the detector with:
-
->>> phrases = Phrases(sentence_stream)
-
-and then create a performant Phraser object to transform any sentence (list of token strings)
-using the standard gensim syntax:
-
->>> bigram = Phraser(phrases)
->>> sent = [u'the', u'mayor', u'of', u'new', u'york', u'was', u'there']
->>> print(bigram[sent])
-[u'the', u'mayor', u'of', u'new_york', u'was', u'there']
-
-(note `new_york` became a single token). As usual, you can also transform an entire
-sentence stream using:
-
->>> print(list(bigram[any_sentence_stream]))
-[[u'the', u'mayor', u'of', u'new_york', u'was', u'there'],
- [u'machine_learning', u'can', u'be', u'useful', u'sometimes'],
- ...,
-]
-
-You can also continue updating the collocation counts with new sentences, by:
-
->>> bigram.add_vocab(new_sentence_stream)
-
-These **phrase streams are meant to be used during text preprocessing, before
-converting the resulting tokens into vectors using `Dictionary`**. See the
-:mod:`gensim.models.word2vec` module for an example application of using phrase detection.
-
-The detection can also be **run repeatedly**, to get phrases longer than
-two tokens (e.g. `new_york_times`):
-
->>> trigram = Phrases(bigram[sentence_stream])
->>> sent = [u'the', u'new', u'york', u'times', u'is', u'a', u'newspaper']
->>> print(trigram[bigram[sent]])
-[u'the', u'new_york_times', u'is', u'a', u'newspaper']
-
-The common_terms parameter add a way to give special treatment to common terms (aka stop words)
-such that their presence between two words
-won't prevent bigram detection.
-It allows to detect expressions like "bank of america" or "eye of the beholder".
-
->>> common_terms = ["of", "with", "without", "and", "or", "the", "a"]
->>> ct_phrases = Phrases(sentence_stream, common_terms=common_terms)
-
-The phraser will of course inherit the common_terms from Phrases.
-
->>> ct_bigram = Phraser(ct_phrases)
->>> sent = [u'the', u'mayor', u'shows', u'his', u'lack', u'of', u'interest']
->>> print(bigram[sent])
-[u'the', u'mayor', u'shows', u'his', u'lack_of_interest']
 
 """
 
@@ -143,13 +85,30 @@ class SentenceAnalyzer(object):
         wordb : str
             Second word for comparison. Should be unicode string.
         components : generator
+            Contain all phrases.
         scorer : {'default', 'npmi'}
             Scorer function, as given to :class:`~gensim.models.phrases.Phrases`.
 
         Return
         ------
-        {'default', 'npmi'}
-            Scorer function with filled `worda`, `wordb` & `bigram` counters.
+        {'default', 'npmi', '-1'}
+            Scorer function with filled `worda`, `wordb` & `bigram` counters, if phrase is in vocab. Otherwise, -1.
+
+        Example
+        -------
+        >>> from gensim.test.utils import datapath
+        >>> from gensim.models.word2vec import Text8Corpus
+        >>> from gensim.models.phrases import Phrases, Phraser, SentenceAnalyzer
+        >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
+        >>> #train the detector with
+        >>> phrases_model = Phrases(sentences, min_count=5, threshold=100)
+        >>> #Create a Phraser object to transform any sentence and turn 2 suitable tokens into 1 phrase:
+        >>> phraser_model = Phraser(phrases_model)
+        >>> #Initialize pseudocorpus
+        >>> components = phraser_model.pseudocorpus(phrases_model)
+        >>> sentAn = SentenceAnalyzer()
+        >>> sentAnScore = sentAn.score_item(u"graph", u"minors",components,'default')
+        >>> #TODO: Useless for using without Phrases
 
         """
         vocab = self.vocab
@@ -175,6 +134,10 @@ class SentenceAnalyzer(object):
             List of common terms, they have a special treatment.
         scorer : {'default', 'npmi'}
             Scorer function, as given to :class:`~gensim.models.phrases.Phrases`.
+
+        Examples
+        --------
+        >>> #TODO: Useless for using without Phrases
 
         """
         s = [utils.any2utf8(w) for w in sentence]
@@ -295,6 +258,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
 
         common_terms : set of str, optional
             List of "stop words" that won't affect frequency count of expressions containing them.
+            Allow to detect expressions like "bank of america" or "eye of the beholder".
 
         Notes
         -----
@@ -738,8 +702,6 @@ def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count
     Formula from paper:
     :math:`\\frac{(count(word_a, word_b) - mincount) * N }{ (count(word_a) * count(word_b))} > threshold`,
     where `N` is the total vocabulary size.
-
-    #TODO: something really bad with LaTex
     """
     return (bigram_count - min_count) / worda_count / wordb_count * len_vocab
 
@@ -947,8 +909,8 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
 
         Return
         ------
-        dict
-            Phrasegrams.
+        {'default', 'npmi', '-1'}
+            Scorer function with filled `worda`, `wordb` & `bigram` counters, if phrase is in vocab. Otherwise, -1.
 
         Example
         -------
@@ -1016,18 +978,6 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
         If `sentence` is an entire corpus (iterable of sentences rather than a single
         sentence), return an iterable that converts each of the corpus' sentences
         into phrases on the fly, one after another.
-
-        Example
-        -------
-        >>> from gensim.test.utils import datapath
-        >>> from gensim.models.word2vec import Text8Corpus
-        >>> from gensim.models.phrases import Phrases, Phraser
-        >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-        >>> phrases_model = Phrases(sentences, min_count=5, threshold=100)
-        >>> phraser_model = Phraser(phrases_model)
-        >>> pseudo = phraser_model.pseudocorpus(phrases_model)
-        >>> phraser_model["tree", "human"]
-        [u'tree', u'human']
 
         Examples
         ----------
