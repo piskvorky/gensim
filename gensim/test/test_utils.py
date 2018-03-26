@@ -15,6 +15,7 @@ import numpy as np
 from six import iteritems
 
 from gensim import utils
+from gensim.test.utils import datapath
 
 
 class TestIsCorpus(unittest.TestCase):
@@ -83,6 +84,28 @@ class TestUtils(unittest.TestCase):
         body = u'It&#146;s the Year of the Horse. YES VIN DIESEL &#128588; &#128175;'
         expected = u'It\x92s the Year of the Horse. YES VIN DIESEL \U0001f64c \U0001f4af'
         self.assertEqual(utils.decode_htmlentities(body), expected)
+
+    def test_open_file_existent_file(self):
+        number_of_lines_in_file = 30
+        with utils.open_file(datapath('testcorpus.mm')) as infile:
+            self.assertEqual(sum(1 for _ in infile), number_of_lines_in_file)
+
+    def test_open_file_non_existent_file(self):
+        with self.assertRaises(Exception):
+            with utils.open_file('non_existent_file.txt'):
+                pass
+
+    def test_open_file_existent_file_object(self):
+        number_of_lines_in_file = 30
+        file_obj = open(datapath('testcorpus.mm'))
+        with utils.open_file(file_obj) as infile:
+            self.assertEqual(sum(1 for _ in infile), number_of_lines_in_file)
+
+    def test_open_file_non_existent_file_object(self):
+        file_obj = None
+        with self.assertRaises(Exception):
+            with utils.open_file(file_obj):
+                pass
 
 
 class TestSampleDict(unittest.TestCase):

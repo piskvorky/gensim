@@ -7,17 +7,20 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
+"""Construct a corpus from a Wikipedia (or other MediaWiki-based) database dump.
+
+Notes
+-----
+If you have the `pattern` package installed, this module will use a fancy lemmatization to get a lemma
+of each token (instead of plain alphabetic tokenizer). The package is available at [1]_ .
+
+See :mod:`~gensim.scripts.make_wiki` for a canned (example) script based on this module.
+
+References
+----------
+.. [1] https://github.com/clips/pattern
+
 """
-Construct a corpus from a Wikipedia (or other MediaWiki-based) database dump.
-
-If you have the `pattern` package installed, this module will use a fancy
-lemmatization to get a lemma of each token (instead of plain alphabetic
-tokenizer). The package is available at https://github.com/clips/pattern .
-
-See scripts/process_wiki.py for a canned (example) script based on this
-module.
-"""
-
 
 import bz2
 import logging
@@ -34,54 +37,138 @@ from gensim.corpora.textcorpus import TextCorpus
 
 logger = logging.getLogger(__name__)
 
-# ignore articles shorter than ARTICLE_MIN_WORDS characters (after full preprocessing)
 ARTICLE_MIN_WORDS = 50
+"""Ignore shorter articles (after full preprocessing)."""
 
 # default thresholds for lengths of individual tokens
 TOKEN_MIN_LEN = 2
 TOKEN_MAX_LEN = 15
 
-
-RE_P0 = re.compile(r'<!--.*?-->', re.DOTALL | re.UNICODE)  # comments
-RE_P1 = re.compile(r'<ref([> ].*?)(</ref>|/>)', re.DOTALL | re.UNICODE)  # footnotes
-RE_P2 = re.compile(r'(\n\[\[[a-z][a-z][\w-]*:[^:\]]+\]\])+$', re.UNICODE)  # links to languages
-RE_P3 = re.compile(r'{{([^}{]*)}}', re.DOTALL | re.UNICODE)  # template
-RE_P4 = re.compile(r'{{([^}]*)}}', re.DOTALL | re.UNICODE)  # template
-RE_P5 = re.compile(r'\[(\w+):\/\/(.*?)(( (.*?))|())\]', re.UNICODE)  # remove URL, keep description
-RE_P6 = re.compile(r'\[([^][]*)\|([^][]*)\]', re.DOTALL | re.UNICODE)  # simplify links, keep description
-RE_P7 = re.compile(r'\n\[\[[iI]mage(.*?)(\|.*?)*\|(.*?)\]\]', re.UNICODE)  # keep description of images
-RE_P8 = re.compile(r'\n\[\[[fF]ile(.*?)(\|.*?)*\|(.*?)\]\]', re.UNICODE)  # keep description of files
-RE_P9 = re.compile(r'<nowiki([> ].*?)(</nowiki>|/>)', re.DOTALL | re.UNICODE)  # outside links
-RE_P10 = re.compile(r'<math([> ].*?)(</math>|/>)', re.DOTALL | re.UNICODE)  # math content
-RE_P11 = re.compile(r'<(.*?)>', re.DOTALL | re.UNICODE)  # all other tags
-RE_P12 = re.compile(r'\n(({\|)|(\|-)|(\|}))(.*?)(?=\n)', re.UNICODE)  # table formatting
-RE_P13 = re.compile(r'\n(\||\!)(.*?\|)*([^|]*?)', re.UNICODE)  # table cell formatting
-RE_P14 = re.compile(r'\[\[Category:[^][]*\]\]', re.UNICODE)  # categories
-RE_P15 = re.compile(r'\[\[([fF]ile:|[iI]mage)[^]]*(\]\])', re.UNICODE)  # Remove File and Image template
-
-
-# MediaWiki namespaces (https://www.mediawiki.org/wiki/Manual:Namespace) that
-# ought to be ignored
+RE_P0 = re.compile(r'<!--.*?-->', re.DOTALL | re.UNICODE)
+"""Comments."""
+RE_P1 = re.compile(r'<ref([> ].*?)(</ref>|/>)', re.DOTALL | re.UNICODE)
+"""Footnotes."""
+RE_P2 = re.compile(r'(\n\[\[[a-z][a-z][\w-]*:[^:\]]+\]\])+$', re.UNICODE)
+"""Links to languages."""
+RE_P3 = re.compile(r'{{([^}{]*)}}', re.DOTALL | re.UNICODE)
+"""Template."""
+RE_P4 = re.compile(r'{{([^}]*)}}', re.DOTALL | re.UNICODE)
+"""Template."""
+RE_P5 = re.compile(r'\[(\w+):\/\/(.*?)(( (.*?))|())\]', re.UNICODE)
+"""Remove URL, keep description."""
+RE_P6 = re.compile(r'\[([^][]*)\|([^][]*)\]', re.DOTALL | re.UNICODE)
+"""Simplify links, keep description."""
+RE_P7 = re.compile(r'\n\[\[[iI]mage(.*?)(\|.*?)*\|(.*?)\]\]', re.UNICODE)
+"""Keep description of images."""
+RE_P8 = re.compile(r'\n\[\[[fF]ile(.*?)(\|.*?)*\|(.*?)\]\]', re.UNICODE)
+"""Keep description of files."""
+RE_P9 = re.compile(r'<nowiki([> ].*?)(</nowiki>|/>)', re.DOTALL | re.UNICODE)
+"""External links."""
+RE_P10 = re.compile(r'<math([> ].*?)(</math>|/>)', re.DOTALL | re.UNICODE)
+"""Math content."""
+RE_P11 = re.compile(r'<(.*?)>', re.DOTALL | re.UNICODE)
+"""All other tags."""
+RE_P12 = re.compile(r'(({\|)|(\|-(?!\d))|(\|}))(.*?)(?=\n)', re.UNICODE)
+"""Table formatting."""
+RE_P13 = re.compile(r'(?<=(\n[ ])|(\n\n)|([ ]{2})|(.\n)|(.\t))(\||\!)([^[\]\n]*?\|)*', re.UNICODE)
+"""Table cell formatting."""
+RE_P14 = re.compile(r'\[\[Category:[^][]*\]\]', re.UNICODE)
+"""Categories."""
+RE_P15 = re.compile(r'\[\[([fF]ile:|[iI]mage)[^]]*(\]\])', re.UNICODE)
+"""Remove File and Image templates."""
+RE_P16 = re.compile(r'\[{2}(.*?)\]{2}', re.UNICODE)
+"""Capture interlinks text and article linked"""
+RE_P17 = re.compile(
+    r'(\n.{0,4}((bgcolor)|(\d{0,1}[ ]?colspan)|(rowspan)|(style=)|(class=)|(align=)|(scope=))(.*))|'
+    '(^.{0,2}((bgcolor)|(\d{0,1}[ ]?colspan)|(rowspan)|(style=)|(class=)|(align=))(.*))',
+    re.UNICODE
+)
+"""Table markup"""
 IGNORED_NAMESPACES = [
     'Wikipedia', 'Category', 'File', 'Portal', 'Template',
     'MediaWiki', 'User', 'Help', 'Book', 'Draft', 'WikiProject',
     'Special', 'Talk'
 ]
+"""MediaWiki namespaces [2]_ that ought to be ignored.
+
+References
+----------
+.. [2] https://www.mediawiki.org/wiki/Manual:Namespace
+
+"""
 
 
-def filter_wiki(raw):
+def find_interlinks(raw):
+    """Find all interlinks to other articles in the dump.
+
+    Parameters
+    ----------
+    raw : str
+        Unicode or utf-8 encoded string.
+
+    Returns
+    -------
+    dict
+        Mapping from the linked article to the actual text found.
     """
-    Filter out wiki mark-up from `raw`, leaving only text. `raw` is either unicode
-    or utf-8 encoded string.
+    filtered = filter_wiki(raw, promote_remaining=False, simplify_links=False)
+    interlinks_raw = re.findall(RE_P16, filtered)
+
+    interlinks = {}
+    for parts in [i.split('|') for i in interlinks_raw]:
+        actual_title = parts[0]
+        try:
+            interlink_text = parts[1]
+            interlinks[actual_title] = interlink_text
+        except IndexError:
+            interlinks[actual_title] = actual_title
+
+    legit_interlinks = {i: j for i, j in interlinks.items() if '[' not in i and ']' not in i}
+    return legit_interlinks
+
+
+def filter_wiki(raw, promote_remaining=True, simplify_links=True):
+    """Filter out wiki markup from `raw`, leaving only text.
+
+    Parameters
+    ----------
+    raw : str
+        Unicode or utf-8 encoded string.
+    promote_remaining : bool
+        Whether uncaught markup should be promoted to plain text.
+    simplify_links : bool
+        Whether links should be simplified keeping only their description text.
+
+    Returns
+    -------
+    str
+        `raw` without markup.
     """
     # parsing of the wiki markup is not perfect, but sufficient for our purposes
     # contributions to improving this code are welcome :)
     text = utils.to_unicode(raw, 'utf8', errors='ignore')
     text = utils.decode_htmlentities(text)  # '&amp;nbsp;' --> '\xa0'
-    return remove_markup(text)
+    return remove_markup(text, promote_remaining, simplify_links)
 
 
-def remove_markup(text):
+def remove_markup(text, promote_remaining=True, simplify_links=True):
+    """Filter out wiki markup from `text`, leaving only text.
+
+    Parameters
+    ----------
+    text : str
+        String containing markup.
+    promote_remaining : bool
+        Whether uncaught markup should be promoted to plain text.
+    simplify_links : bool
+        Whether links should be simplified keeping only their description text.
+
+    Returns
+    -------
+    str
+        `text` without markup.
+
+    """
     text = re.sub(RE_P2, '', text)  # remove the last list (=languages)
     # the wiki markup is recursive (markup inside markup etc)
     # instead of writing a recursive grammar, here we deal with that by removing
@@ -99,32 +186,51 @@ def remove_markup(text):
         text = re.sub(RE_P11, '', text)  # remove all remaining tags
         text = re.sub(RE_P14, '', text)  # remove categories
         text = re.sub(RE_P5, '\\3', text)  # remove urls, keep description
-        text = re.sub(RE_P6, '\\2', text)  # simplify links, keep description only
+
+        if simplify_links:
+            text = re.sub(RE_P6, '\\2', text)  # simplify links, keep description only
         # remove table markup
-        text = text.replace('||', '\n|')  # each table cell on a separate line
+        text = text.replace("!!", "\n|")  # each table head cell on a separate line
+        text = text.replace("|-||", "\n|")  # for cases where a cell is filled with '-'
         text = re.sub(RE_P12, '\n', text)  # remove formatting lines
-        text = re.sub(RE_P13, '\n\\3', text)  # leave only cell content
+        text = text.replace('|||', '|\n|')  # each table cell on a separate line(where |{{a|b}}||cell-content)
+        text = text.replace('||', '\n|')  # each table cell on a separate line
+        text = re.sub(RE_P13, '\n', text)  # leave only cell content
+        text = re.sub(RE_P17, '\n', text)  # remove formatting lines
+
         # remove empty mark-up
         text = text.replace('[]', '')
         # stop if nothing changed between two iterations or after a fixed number of iterations
         if old == text or iters > 2:
             break
 
-    # the following is needed to make the tokenizer see '[[socialist]]s' as a single word 'socialists'
-    # TODO is this really desirable?
-    text = text.replace('[', '').replace(']', '')  # promote all remaining markup to plain text
+    if promote_remaining:
+        text = text.replace('[', '').replace(']', '')  # promote all remaining markup to plain text
+
     return text
 
 
 def remove_template(s):
     """Remove template wikimedia markup.
 
-    Return a copy of `s` with all the wikimedia markup template removed. See
-    http://meta.wikimedia.org/wiki/Help:Template for wikimedia templates
-    details.
+    Parameters
+    ----------
+    s : str
+        String containing markup template.
 
-    Note: Since template can be nested, it is difficult remove them using
-    regular expresssions.
+    Returns
+    -------
+    str
+        Сopy of `s` with all the wikimedia markup template removed. See [4]_ for wikimedia templates details.
+
+    Notes
+    -----
+    Since template can be nested, it is difficult remove them using regular expressions.
+
+    References
+    ----------
+    .. [4] http://meta.wikimedia.org/wiki/Help:Template
+
     """
 
     # Find the start and end position of each template by finding the opening
@@ -157,9 +263,20 @@ def remove_template(s):
 def remove_file(s):
     """Remove the 'File:' and 'Image:' markup, keeping the file caption.
 
-    Return a copy of `s` with all the 'File:' and 'Image:' markup replaced by
-    their corresponding captions. See http://www.mediawiki.org/wiki/Help:Images
-    for the markup details.
+    Parameters
+    ----------
+    s : str
+        String containing 'File:' and 'Image:' markup.
+
+    Returns
+    -------
+    str
+        Сopy of `s` with all the 'File:' and 'Image:' markup replaced by their corresponding captions. [3]_
+
+    References
+    ----------
+    .. [3] http://www.mediawiki.org/wiki/Help:Images
+
     """
     # The regex RE_P15 match a File: or Image: markup
     for match in re.finditer(RE_P15, s):
@@ -170,13 +287,26 @@ def remove_file(s):
 
 
 def tokenize(content, token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True):
-    """
-    Tokenize a piece of text from wikipedia. The input string `content` is assumed
-    to be mark-up free (see `filter_wiki()`).
+    """Tokenize a piece of text from wikipedia.
 
     Set `token_min_len`, `token_max_len` as character length (not bytes!) thresholds for individual tokens.
 
-    Return list of tokens as utf8 bytestrings.
+    Parameters
+    ----------
+    content : str
+        String without markup (see :func:`~gensim.corpora.wikicorpus.filter_wiki`).
+    token_min_len : int
+        Minimal token length.
+    token_max_len : int
+        Maximal token length.
+    lower : bool
+         If True - convert `content` to lower case.
+
+    Returns
+    -------
+    list of str
+        List of tokens from `content`.
+
     """
     # TODO maybe ignore tokens with non-latin characters? (no chinese, arabic, russian etc.)
     return [
@@ -186,7 +316,19 @@ def tokenize(content, token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, 
 
 
 def get_namespace(tag):
-    """Returns the namespace of tag."""
+    """Get the namespace of tag.
+
+    Parameters
+    ----------
+    tag : str
+        Namespace or tag.
+
+    Returns
+    -------
+    str
+        Matched namespace or tag.
+
+    """
     m = re.match("^{(.*?)}", tag)
     namespace = m.group(1) if m else ""
     if not namespace.startswith("http://www.mediawiki.org/xml/export-"):
@@ -198,10 +340,19 @@ _get_namespace = get_namespace
 
 
 def extract_pages(f, filter_namespaces=False):
-    """
-    Extract pages from a MediaWiki database dump = open file-like object `f`.
+    """Extract pages from a MediaWiki database dump.
 
-    Return an iterable over (str, str, str) which generates (title, content, pageid) triplets.
+    Parameters
+    ----------
+    f : file
+        File-like object.
+    filter_namespaces : list of str or bool
+         Namespaces that will be extracted.
+
+    Yields
+    ------
+    tuple of (str or None, str, str)
+        Title, text and page id.
 
     """
     elems = (elem for _, elem in iterparse(f, events=("end",)))
@@ -230,7 +381,7 @@ def extract_pages(f, filter_namespaces=False):
                     text = None
 
             pageid = elem.find(pageid_path).text
-            yield title, text or "", pageid     # empty page will yield None
+            yield title, text or "", pageid  # empty page will yield None
 
             # Prune the element tree, as per
             # http://www.ibm.com/developerworks/xml/library/x-hiperfparse/
@@ -247,12 +398,35 @@ _extract_pages = extract_pages  # for backward compatibility
 
 def process_article(args, tokenizer_func=tokenize, token_min_len=TOKEN_MIN_LEN,
                     token_max_len=TOKEN_MAX_LEN, lower=True):
-    """
-    Parse a wikipedia article, returning its content as a list of tokens
-    (utf8-encoded strings).
+    """Parse a wikipedia article, extract all tokens.
 
-    Set `tokenizer_func` (defaults to `tokenize`) parameter for languages like japanese or thai to perform better
-    tokenization. The `tokenizer_func` needs to take 4 parameters: (text, token_min_len, token_max_len, lower).
+    Notes
+    -----
+    Set `tokenizer_func` (defaults is :func:`~gensim.corpora.wikicorpus.tokenize`) parameter for languages
+    like japanese or thai to perform better tokenization.
+    The `tokenizer_func` needs to take 4 parameters: (text: str, token_min_len: int, token_max_len: int, lower: bool).
+
+    Parameters
+    ----------
+    args : (str, bool, str, int)
+        Article text, lemmatize flag (if True, :func:`~gensim.utils.lemmatize` will be used), article title,
+        page identificator.
+    tokenizer_func : function
+        Function for tokenization (defaults is :func:`~gensim.corpora.wikicorpus.tokenize`).
+        Needs to have interface:
+        tokenizer_func(text: str, token_min_len: int, token_max_len: int, lower: bool) -> list of str.
+    token_min_len : int
+        Minimal token length.
+    token_max_len : int
+        Maximal token length.
+    lower : bool
+         If True - convert article text to lower case.
+
+    Returns
+    -------
+    (list of str, str, int)
+        List of tokens from article, title and page id.
+
     """
     text, lemmatize, title, pageid = args
     text = filter_wiki(text)
@@ -264,13 +438,36 @@ def process_article(args, tokenizer_func=tokenize, token_min_len=TOKEN_MIN_LEN,
 
 
 def init_to_ignore_interrupt():
-    """Should only be used when master is prepared to handle termination of child processes."""
+    """Enables interruption ignoring.
+
+    Warnings
+    --------
+    Should only be used when master is prepared to handle termination of
+    child processes.
+
+    """
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
 def _process_article(args):
-    """Should not be called explicitly. Use `process_article` instead."""
+    """Same as :func:`~gensim.corpora.wikicorpus.process_article`, but with args in list format.
 
+    Parameters
+    ----------
+    args : [(str, bool, str, int), (function, int, int, bool)]
+        First element - same as `args` from :func:`~gensim.corpora.wikicorpus.process_article`,
+        second element is tokenizer function, token minimal length, token maximal length, lowercase flag.
+
+    Returns
+    -------
+    (list of str, str, int)
+        List of tokens from article, title and page id.
+
+    Warnings
+    --------
+    Should not be called explicitly. Use :func:`~gensim.corpora.wikicorpus.process_article` instead.
+
+    """
     tokenizer_func, token_min_len, token_max_len, lower = args[-1]
     args = args[:-1]
 
@@ -281,44 +478,72 @@ def _process_article(args):
 
 
 class WikiCorpus(TextCorpus):
-    """
-    Treat a wikipedia articles dump (<LANG>wiki-<YYYYMMDD>-pages-articles.xml.bz2
-    or <LANG>wiki-latest-pages-articles.xml.bz2) as a (read-only) corpus.
+    """Treat a wikipedia articles dump as a **read-only** corpus.
 
-    The documents are extracted on-the-fly, so that the whole (massive) dump
-    can stay compressed on disk.
+    Supported dump formats:
 
-    **Note:** "multistream" archives are *not* supported in Python 2 due to
-    `limitations in the core bz2 library
+    * <LANG>wiki-<YYYYMMDD>-pages-articles.xml.bz2
+    * <LANG>wiki-latest-pages-articles.xml.bz2
+
+    The documents are extracted on-the-fly, so that the whole (massive) dump can stay compressed on disk.
+
+    Notes
+    -----
+    Dumps for English wikipedia can be founded `here <https://dumps.wikimedia.org/enwiki/>`_.
+
+    Attributes
+    ----------
+    metadata : bool
+        Whether to write articles titles to serialized corpus.
+
+    Warnings
+    --------
+    "Multistream" archives are *not* supported in Python 2 due to `limitations in the core bz2 library
     <https://docs.python.org/2/library/bz2.html#de-compression-of-files>`_.
 
+    Examples
+    --------
+    >>> from gensim.corpora import WikiCorpus, MmCorpus
+    >>>
     >>> wiki = WikiCorpus('enwiki-20100622-pages-articles.xml.bz2') # create word->word_id mapping, takes almost 8h
     >>> MmCorpus.serialize('wiki_en_vocab200k.mm', wiki) # another 8h, creates a file in MatrixMarket format and mapping
 
     """
+
     def __init__(self, fname, processes=None, lemmatize=utils.has_pattern(), dictionary=None,
                  filter_namespaces=('0',), tokenizer_func=tokenize, article_min_tokens=ARTICLE_MIN_WORDS,
                  token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True):
-        """
-        Initialize the corpus. Unless a dictionary is provided, this scans the
-        corpus once, to determine its vocabulary.
+        """Initialize the corpus.
 
-        If `pattern` package is installed, use fancier shallow parsing to get
-        token lemmas. Otherwise, use simple regexp tokenization. You can override
-        this automatic logic by forcing the `lemmatize` parameter explicitly.
-        self.metadata if set to true will ensure that serialize will write out article titles to a pickle file.
+        Unless a dictionary is provided, this scans the corpus once,
+        to determine its vocabulary.
 
-        Set `article_min_tokens` as a min threshold for article token count (defaults to 50). Any article below this is
-        ignored.
-
-        Set `tokenizer_func` (defaults to `tokenize`) with a custom function reference to control tokenization else use
-        the default regexp tokenization. Set this parameter for languages like japanese or thai to perform better
-        tokenization. The `tokenizer_func` needs to take 4 parameters: (text, token_min_len, token_max_len, lower). The
-        parameter values are as configured on the class instance by default.
-
-        Set `lower` to control if everything should be converted to lowercase or not (default True).
-
-        Set `token_min_len`, `token_max_len` as thresholds for token lengths that are returned (default to 2 and 15).
+        Parameters
+        ----------
+        fname : str
+            Path to file with wikipedia dump.
+        processes : int, optional
+            Number of processes to run, defaults to **number of cpu - 1**.
+        lemmatize : bool
+            Whether to use lemmatization instead of simple regexp tokenization.
+            Defaults to `True` if *pattern* package installed.
+        dictionary : :class:`~gensim.corpora.dictionary.Dictionary`, optional
+            Dictionary, if not provided,  this scans the corpus once, to determine its vocabulary
+            (this needs **really long time**).
+        filter_namespaces : tuple of str
+            Namespaces to consider.
+        tokenizer_func : function, optional
+            Function that will be used for tokenization. By default, use :func:`~gensim.corpora.wikicorpus.tokenize`.
+            Need to support interface:
+            tokenizer_func(text: str, token_min_len: int, token_max_len: int, lower: bool) -> list of str.
+        article_min_tokens : int, optional
+            Minimum tokens in article. Article will be ignored if number of tokens is less.
+        token_min_len : int, optional
+            Minimal token length.
+        token_max_len : int, optional
+            Maximal token length.
+        lower : bool, optional
+             If True - convert all text to lower case.
 
         """
         self.fname = fname
@@ -336,18 +561,23 @@ class WikiCorpus(TextCorpus):
         self.dictionary = dictionary or Dictionary(self.get_texts())
 
     def get_texts(self):
-        """
-        Iterate over the dump, returning text version of each article as a list
-        of tokens.
+        """Iterate over the dump, yielding list of tokens for each article.
 
-        Only articles of sufficient length are returned (short articles & redirects
-        etc are ignored). This is controlled by `article_min_tokens` on the class instance.
-
-        Note that this iterates over the **texts**; if you want vectors, just use
-        the standard corpus interface instead of this function::
+        Notes
+        -----
+        This iterates over the **texts**. If you want vectors, just use the standard corpus interface
+        instead of this method:
 
         >>> for vec in wiki_corpus:
         >>>     print(vec)
+
+        Yields
+        ------
+        list of str
+            If `metadata` is False, yield only list of token extracted from the article.
+        (list of str, (int, str))
+            List of tokens (extracted from the article), page id and article title otherwise.
+
         """
 
         articles, articles_all = 0, 0

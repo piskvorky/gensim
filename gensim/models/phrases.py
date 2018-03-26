@@ -83,13 +83,17 @@ from collections import defaultdict
 import functools as ft
 import itertools as it
 from math import log
-from inspect import getargspec
 import pickle
 import six
 
-from six import iteritems, string_types, next
+from six import iteritems, string_types, PY2, next
 
 from gensim import utils, interfaces
+
+if PY2:
+    from inspect import getargspec
+else:
+    from inspect import getfullargspec as getargspec
 
 logger = logging.getLogger(__name__)
 
@@ -104,6 +108,7 @@ def _is_single(obj):
     is a corpus if it is an iterable of documents.
     """
     obj_iter = iter(obj)
+    temp_iter = obj_iter
     try:
         peek = next(obj_iter)
         obj_iter = it.chain([peek], obj_iter)
@@ -113,9 +118,12 @@ def _is_single(obj):
     if isinstance(peek, string_types):
         # It's a document, return the iterator
         return True, obj_iter
+    if temp_iter is obj:
+        # Checking for iterator to the object
+        return False, obj_iter
     else:
         # If the first item isn't a string, assume obj is a corpus
-        return False, obj_iter
+        return False, obj
 
 
 class SentenceAnalyzer(object):
