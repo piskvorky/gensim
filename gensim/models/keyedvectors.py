@@ -500,8 +500,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
     def similarity_matrix(self, dictionary, tfidf=None, threshold=0.0, exponent=2.0, nonzero_limit=100, dtype=REAL):
         """Constructs a term similarity matrix for computing Soft Cosine Measure.
 
-        Constructs a a sparse term similarity matrix in the :class:`scipy.sparse.csc_matrix` format for computing
-        Soft Cosine Measure between documents.
+        Constructs a sparse term similarity matrix in the :class:`scipy.sparse.csc_matrix` format
+        for computing Soft Cosine Measure between documents.
 
         Parameters
         ----------
@@ -516,7 +516,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             Only pairs of words whose embeddings are more similar than `threshold` are considered
             when building the sparse term similarity matrix.
         exponent : float, optional
-            The exponent applied to the similarity between two word embeddings when building the term similarity matrix.
+            The exponent applied to the similarity between two word embeddings when building the
+            term similarity matrix.
         nonzero_limit : int, optional
             The maximum number of non-zero elements outside the diagonal in a single row or column
             of the term similarity matrix. Setting `nonzero_limit` to a constant ensures that the
@@ -541,8 +542,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         Notes
         -----
         The constructed matrix corresponds to the matrix Mrel defined in section 2.1 of
-        `Delphine Charlet and Geraldine Damnati, "SimBow at SemEval-2017 Task 3: Soft-Cosine Semantic Similarity
-        between Questions for Community Question Answering", 2017
+        `Delphine Charlet and Geraldine Damnati, "SimBow at SemEval-2017 Task 3: Soft-Cosine
+        Semantic Similarity between Questions for Community Question Answering", 2017
         <http://www.aclweb.org/anthology/S/S17/S17-2051.pdf>`__.
 
         """
@@ -573,7 +574,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                 num_skipped += 1
                 continue  # A word from the dictionary is not present in the word2vec model.
 
-            # Traverse upper triangle columns.
+            # Traverse columns.
             if matrix_order <= nonzero_limit + 1:  # Traverse all columns.
                 columns = (
                     (w2_index, self.similarity(w1, dictionary[w2_index]))
