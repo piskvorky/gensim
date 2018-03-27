@@ -5,11 +5,20 @@
 # Copyright (C) 2017 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""
-Scikit learn interface for gensim for easy use of gensim with scikit-learn
-follows on scikit learn API conventions
-"""
+"""Scikit learn interface for :class:`~gensim.models.ldamodel.LdaModel`.
 
+Follows scikit-learn API conventions to facilitate using gensim along with scikit-learn.
+
+Examples
+--------
+>>> from gensim.test.utils import common_corpus, common_dictionary
+>>> from gensim.sklearn_api import LdaTransformer
+>>>
+>>> # Reduce each document to 2 dimensions (topics) using the sklearn interface.
+>>> model = LdaTransformer(num_topics=2, id2word=common_dictionary, iterations=20, random_state=1)
+>>> docvecs = model.fit_transform(common_corpus)
+
+"""
 import numpy as np
 from scipy import sparse
 from sklearn.base import TransformerMixin, BaseEstimator
@@ -20,19 +29,81 @@ from gensim import matutils
 
 
 class LdaTransformer(TransformerMixin, BaseEstimator):
-    """
-    Base LDA module
-    """
+    """Base LDA module, wraps :class:`~gensim.models.ldamodel.LdaModel`.
 
+    The inner workings of this class depends heavily on `Matthew D. Hoffman, David M. Blei, Francis Bach:
+    "Online Learning for Latent Dirichlet Allocation NIPS'10" <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_ and
+    `David M. Blei, Andrew Y. Ng, Michael I. Jordan: "Latent Dirichlet Allocation"
+    <http://www.jmlr.org/papers/volume3/blei03a/blei03a.pdf>`_.
+
+    """
     def __init__(self, num_topics=100, id2word=None, chunksize=2000, passes=1, update_every=1, alpha='symmetric',
                  eta=None, decay=0.5, offset=1.0, eval_every=10, iterations=50, gamma_threshold=0.001,
                  minimum_probability=0.01, random_state=None, scorer='perplexity', dtype=np.float32):
         """
-        Sklearn wrapper for LDA model. See gensim.model.LdaModel for parameter details.
 
-        `scorer` specifies the metric used in the `score` function.
+        Parameters
+        ----------
+        num_topics : int, optional
+            The number of requested latent topics to be extracted from the training corpus.
+        id2word : :class:`~gensim.corpora.dictionary.Dictionary`, optional
+            Mapping from integer ID to words in the corpus. Used to determine vocabulary size and logging.
+        chunksize : int, optional
+            Number of documents in batch.
+        passes : int, optional
+            Number of passes through the corpus during training.
+        update_every : int, optional
+            Number of documents to be iterated through for each update.
+            Set to 0 for batch learning, > 1 for online iterative learning.
+        alpha : {np.ndarray, str}, optional
+            Can be set to an 1D array of length equal to the number of expected topics that expresses
+            our a-priori belief for the each topics' probability.
+            Alternatively default prior selecting strategies can be employed by supplying a string:
 
-        See `gensim.models.LdaModel` class for description of the other parameters.
+                * 'asymmetric': Uses a fixed normalized assymetric prior of `1.0 / topicno`.
+                * 'default': Learns an assymetric prior from the corpus.
+        eta : {float, np.array, str}, optional
+            A-priori belief on word probability, this can be:
+
+                * scalar for a symmetric prior over topic/word probability,
+                * vector of length num_words to denote an asymmetric user defined probability for each word,
+                * matrix of shape (num_topics, num_words) to assign a probability for each word-topic combination,
+                * the string 'auto' to learn the asymmetric prior from the data.
+        decay : float, optional
+            A number between (0.5, 1] to weight what percentage of the previous lambda value is forgotten
+            when each new document is examined. Corresponds to Kappa from
+            `Matthew D. Hoffman, David M. Blei, Francis Bach:
+            "Online Learning for Latent Dirichlet Allocation NIPS'10" <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
+        offset : float, optional
+            Hyper-parameter that controls how much we will slow down the first steps the first few iterations.
+            Corresponds to Tau_0 from `Matthew D. Hoffman, David M. Blei, Francis Bach:
+            "Online Learning for Latent Dirichlet Allocation NIPS'10" <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
+        eval_every : int, optional
+            Log perplexity is estimated every that many updates. Setting this to one slows down training by ~2x.
+        iterations : int, optional
+            Maximum number of iterations through the corpus when inferring the topic distribution of a corpus.
+        gamma_threshold : float, optional
+            Minimum change in the value of the gamma parameters to continue iterating.
+        minimum_probability : float, optional
+            Topics with a probability lower than this threshold will be filtered out.
+        random_state : {np.random.RandomState, int}, optional
+            Either a randomState object or a seed to generate one. Useful for reproducibility.
+        scorer : str, optional
+            Method to compute a score reflecting how well the model has fit the input corpus, allowed values are:
+                * 'perplexity': Perplexity of language model
+                * 'mass_u': Use :class:`~gensim.models.coherencemodel.CoherenceModel` to compute a topics coherence.
+        dtype : {numpy.float16, numpy.float32, numpy.float64}, optional
+            Data-type to use during calculations inside model. All inputs are also converted.
+
+        Notes
+        -----
+        Configure `passes` and `update_every` params to choose the mode among:
+            * online (single-pass): update_every != None and passes == 1
+            * online (multi-pass): update_every != None and passes > 1
+            * batch: update_every == None
+
+        By default, 'online (single-pass)' mode is used for training the LDA model.
+
         """
         self.gensim_model = None
         self.num_topics = num_topics
@@ -53,9 +124,18 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
         self.dtype = dtype
 
     def fit(self, X, y=None):
-        """
-        Fit the model according to the given training data.
-        Calls gensim.models.LdaModel
+        """Fit the model according to the given training data.
+
+        Parameters
+        ----------
+        X : {iterable of iterable of (int, int), scipy.sparse matrix}
+            A collection of documents in BOW format used for training the model.
+
+        Returns
+        -------
+        :class:`~gensim.sklearn_api.ldamodel.LdaTransformer`
+            The trained model.
+
         """
         if sparse.issparse(X):
             corpus = matutils.Sparse2Corpus(sparse=X, documents_columns=False)
@@ -73,14 +153,18 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
         return self
 
     def transform(self, docs):
-        """
-        Takes a list of documents as input ('docs').
-        Returns a matrix of topic distribution for the given document bow, where a_ij
-        indicates (topic_i, topic_probability_j).
-        The input `docs` should be in BOW format and can be a list of documents like
-        [[(4, 1), (7, 1)],
-        [(9, 1), (13, 1)], [(2, 1), (6, 1)]]
-        or a single document like : [(4, 1), (7, 1)]
+        """Infer the topic distribution for `docs`.
+
+        Parameters
+        ----------
+        docs : {iterable of list of (int, number), list of (int, number)}
+            Document or sequence of documents in BoW format.
+
+        Returns
+        -------
+        numpy.ndarray of shape [`len(docs)`, `num_topics`]
+            The topic distribution for each input document.
+
         """
         if self.gensim_model is None:
             raise NotFittedError(
@@ -96,14 +180,22 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
         return np.reshape(np.array(distribution), (len(docs), self.num_topics))
 
     def partial_fit(self, X):
-        """
-        Train model over X.
-        By default, 'online (single-pass)' mode is used for training the LDA model.
-        Configure `passes` and `update_every` params at init to choose the mode among :
+        """Train model over a potentially incomplete set of documents.
 
-            - online (single-pass): update_every != None and passes == 1
-            - online (multi-pass): update_every != None and passes > 1
-            - batch: update_every == None
+        Uses the parameters set in the constructor.
+        This method can be used in two ways:
+        * On an unfitted model in which case the model is initialized and trained on `X`.
+        * On an already fitted model in which case the model is **updated** by `X`.
+
+        Parameters
+        ----------
+        X : {iterable of iterable of (int, int), scipy.sparse matrix}
+            A collection of documents in BOW format used for training the model.
+
+        Returns
+        -------
+        :class:`~gensim.sklearn_api.ldamodel.LdaTransformer`
+            The trained model.
 
         """
         if sparse.issparse(X):
@@ -123,8 +215,21 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
         return self
 
     def score(self, X, y=None):
-        """
-        Compute score reflecting how well the model has fit for the input data.
+        """Compute score reflecting how well the model has fitted for the input data.
+
+        The scoring method is set using the `scorer` argument in :meth:`~gensim.sklearn_api.ldamodel.LdaTransformer`.
+        Higher score is better.
+
+        Parameters
+        ----------
+        X : iterable of list of (int, number)
+            Sequence of documents in BOW format.
+
+        Returns
+        -------
+        float
+            The score computed based on the selected method.
+
         """
         if self.scorer == 'perplexity':
             corpus_words = sum(cnt for document in X for _, cnt in document)
@@ -136,4 +241,4 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
             goodcm = models.CoherenceModel(model=self.gensim_model, corpus=X, coherence=self.scorer, topn=3)
             return goodcm.get_coherence()
         else:
-            raise ValueError("Invalid value of `scorer` param supplied")
+            raise ValueError("Invalid value {} supplied for `scorer` param".format(self.scorer))
