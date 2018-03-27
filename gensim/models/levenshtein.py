@@ -13,6 +13,7 @@ import logging
 from multiprocessing import Pool
 
 from Levenshtein import distance
+import numpy as np
 from numpy import float32 as REAL
 from scipy import sparse
 
@@ -122,9 +123,15 @@ def similarity_matrix(dictionary, tfidf=None, threshold=0.0, alpha=1.8, beta=5.0
     for column_number, w1_index in enumerate(word_indices):
         if column_number % 1000 == 0:
             logger.info(
-                "PROGRESS: at %.02f%% columns (%d / %d, %.06f%% density)",
+                "PROGRESS: at %.02f%% columns (%d / %d, %.06f%% density, " \
+                "%.06f%% projected density)",
                 100.0 * (column_number + 1) / matrix_order, column_number + 1, matrix_order,
-                100.0 * matrix.getnnz() / matrix_order**2)
+                100.0 * matrix.getnnz() / matrix_order**2,
+                100.0 * np.clip(
+                    (1.0 * (matrix.getnnz() - matrix_order) / matrix_order**2)
+                    * (1.0 * matrix_order / (column_number + 1))
+                    + (1.0 / matrix_order),  # add density correspoding to the main diagonal
+                    0.0, 1.0))
         w1 = dictionary[w1_index]
 
         # Traverse rows.

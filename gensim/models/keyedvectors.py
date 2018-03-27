@@ -565,12 +565,18 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             ]
 
         # Traverse rows.
-        for row_number, w1_index in enumerate(word_indices):
-            if row_number % 1000 == 0:
+        for column_number, w1_index in enumerate(word_indices):
+            if column_number % 1000 == 0:
                 logger.info(
-                    "PROGRESS: at %.02f%% rows (%d / %d, %d skipped, %.06f%% density)",
-                    100.0 * (row_number + 1) / matrix_order, row_number + 1, matrix_order,
-                    num_skipped, 100.0 * matrix.getnnz() / matrix_order**2)
+                    "PROGRESS: at %.02f%% columns (%d / %d, %.06f%% density, " \
+                    "%.06f%% projected density)",
+                    100.0 * (column_number + 1) / matrix_order, column_number + 1, matrix_order,
+                    100.0 * matrix.getnnz() / matrix_order**2,
+                    100.0 * np.clip(
+                        (1.0 * (matrix.getnnz() - matrix_order) / matrix_order**2)
+                        * (1.0 * matrix_order / (column_number + 1))
+                        + (1.0 / matrix_order),  # add density correspoding to the main diagonal
+                        0.0, 1.0))
             w1 = dictionary[w1_index]
             if w1 not in self.vocab:
                 num_skipped += 1
