@@ -668,7 +668,7 @@ blas_scal = blas('scal', np.array([], dtype=float))
 
 def unitvec(vec, norm='l2', return_norm=False):
     """Scale a vector to unit length.
-    
+
     Parameters
     ----------
     vec : {numpy.ndarray, scipy.sparse, list of (int, float)}
@@ -677,18 +677,18 @@ def unitvec(vec, norm='l2', return_norm=False):
         Normalization that will be used.
     return_norm : bool, optional
         If True - returns the length of vector `vec`.
-        
+
     Returns
     -------
     numpy.ndarray, scipy.sparse, list of (int, float)}
         Normalized vector in same format as `vec`.
     float
         Length of `vec` before normalization.
-        
+
     Notes
     -----
     Zero-vector will be unchanged.
-    
+
     """
     if norm not in ('l1', 'l2'):
         raise ValueError("'%s' is not a supported norm. Currently supported norms are 'l1' and 'l2'." % norm)
@@ -702,10 +702,16 @@ def unitvec(vec, norm='l2', return_norm=False):
         if veclen > 0.0:
             if np.issubdtype(vec.dtype, np.int):
                 vec = vec.astype(np.float)
-                return vec / veclen
+                if return_norm:
+                    return vec / veclen, veclen 
+                else:
+                    return vec / veclen
             else:
                 vec /= veclen
-                return vec.astype(vec.dtype)
+                if return_norm:
+                    return vec.astype(vec.dtype), veclen
+                else:
+                    return vec.astype(vec.dtype)
         else:
             if return_norm:
                 return vec, 1.
