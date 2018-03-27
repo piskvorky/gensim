@@ -40,7 +40,7 @@ cdef class MmReader(object):
     """
     cdef public input
     cdef public bint transposed
-    cdef public int num_docs, num_terms, num_nnz
+    cdef public long long num_docs, num_terms, num_nnz
 
     def __init__(self, input, transposed=True):
         """
@@ -119,7 +119,7 @@ cdef class MmReader(object):
             Document id and Document in BoW format
 
         """
-        cdef int docid, termid, previd
+        cdef long long docid, termid, previd
         cdef double val = 0
 
         with utils.file_or_filename(self.input) as lines:
@@ -128,7 +128,7 @@ cdef class MmReader(object):
             previd = -1
             for line in lines:
 
-                if (sscanf(line, "%d %d %lg", &docid, &termid, &val) != 3):
+                if (sscanf(line, "%lld %lld %lg", &docid, &termid, &val) != 3):
                     raise ValueError("unable to parse line: {}".format(line))
 
                 if not self.transposed:
@@ -180,7 +180,7 @@ cdef class MmReader(object):
         """
         # empty documents are not stored explicitly in MM format, so the index marks
         # them with a special offset, -1.
-        cdef int docid, termid, previd
+        cdef long long docid, termid, previd
         cdef double val
 
         if offset == -1:
@@ -193,7 +193,7 @@ cdef class MmReader(object):
         fin.seek(offset)  # works for gzip/bz2 input, too
         previd, document = -1, []
         for line in fin:
-            if (sscanf(line, "%d %d %lg", &docid, &termid, &val) != 3):
+            if (sscanf(line, "%lld %lld %lg", &docid, &termid, &val) != 3):
                 raise ValueError("unable to parse line: {}".format(line))
 
             if not self.transposed:
