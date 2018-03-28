@@ -338,6 +338,45 @@ class TestMmCorpusCorrupt(CorpusTestCase):
         self.assertRaises(ValueError, lambda: [doc for doc in self.corpus])
 
 
+class TestMmCorpusOverflow(CorpusTestCase):
+    """
+    Test to make sure cython mmreader doesn't overflow on large number of docs or terms
+
+    """
+    def setUp(self):
+        self.corpus_class = mmcorpus.MmCorpus
+        self.corpus = self.corpus_class(datapath('test_mmcorpus_overflow.mm'))
+        self.file_extension = '.mm'
+
+    def test_serialize_compressed(self):
+        # MmCorpus needs file write with seek => doesn't support compressed output (only input)
+        pass
+
+    def test_load(self):
+        self.assertEqual(self.corpus.num_docs, 44270060)
+        self.assertEqual(self.corpus.num_terms, 500)
+        self.assertEqual(self.corpus.num_nnz, 22134988630)
+
+        # confirm we can iterate and that document values match expected for first three docs
+        it = iter(self.corpus)
+        self.assertEqual(next(it)[:3], [(0, 0.3913027376444812),
+                                        (1, -0.07658791716226626),
+                                        (2, -0.020870794080588395)])
+        self.assertEqual(next(it), [])
+        self.assertEqual(next(it), [])
+
+        # confirm count of terms
+        count = 0
+        for doc in self.corpus:
+            for term in doc:
+                count += 1
+
+        self.assertEqual(count, 12)
+
+        # confirm that accessing document by index fails
+        self.assertRaises(RuntimeError, lambda: self.corpus[3])
+
+
 class TestSvmLightCorpus(CorpusTestCase):
     def setUp(self):
         self.corpus_class = svmlightcorpus.SvmLightCorpus
