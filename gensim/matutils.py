@@ -703,7 +703,7 @@ def unitvec(vec, norm='l2', return_norm=False):
             if np.issubdtype(vec.dtype, np.int):
                 vec = vec.astype(np.float)
                 if return_norm:
-                    return vec / veclen, veclen 
+                    return vec / veclen, veclen
                 else:
                     return vec / veclen
             else:
