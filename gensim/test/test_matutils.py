@@ -141,11 +141,11 @@ class TestLdaModelInner(unittest.TestCase):
                 msg = "dirichlet_expectation_2d failed for dtype={}".format(dtype)
                 self.assertTrue(np.allclose(known_good, test_values), msg)
 
-		
+
 class UnitvecTestCase(unittest.TestCase):
     # test unitvec
     def manual_unitvec(self, vec):
-        self.vec = vec 
+        self.vec = vec
         self.vec = self.vec.astype(np.float)
         if sparse.issparse(self.vec):
             vec_sum_of_squares = self.vec.multiply(self.vec)
