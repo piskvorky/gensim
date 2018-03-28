@@ -692,7 +692,7 @@ def unitvec(vec, norm='l2', return_norm=False):
     """
     if norm not in ('l1', 'l2'):
         raise ValueError("'%s' is not a supported norm. Currently supported norms are 'l1' and 'l2'." % norm)
-    
+
     if scipy.sparse.issparse(vec):
         vec = vec.tocsr()
         if norm == 'l1':
