@@ -7,6 +7,7 @@
 import logging
 import unittest
 import numpy as np
+from scipy import sparse
 from scipy.special import psi  # gamma function utils
 
 import gensim.matutils as matutils
@@ -140,48 +141,48 @@ class TestLdaModelInner(unittest.TestCase):
                 msg = "dirichlet_expectation_2d failed for dtype={}".format(dtype)
                 self.assertTrue(np.allclose(known_good, test_values), msg)
 
+		
 class UnitvecTestCase(unittest.TestCase):
     # test unitvec
-    rs = self.random_state
-
     def manual_unitvec(self, vec):
-	self.vec = vec
-	self.vec = self.vec.astype(np.float)
-	if sparse.issparse(self.vec):
-	    vec_sum_of_squares = self.vec.multiply(self.vec)
-	    unit = 1. / np.sqrt(vec_sum_of_squares.sum())
-	    return self.vec.multiply(unit)
+        self.vec = vec 
+        self.vec = self.vec.astype(np.float)
+        if sparse.issparse(self.vec):
+            vec_sum_of_squares = self.vec.multiply(self.vec)
+            unit = 1. / np.sqrt(vec_sum_of_squares.sum())
+            return self.vec.multiply(unit)
         elif not sparse.issparse(self.vec):
-	    sum_vec_squared = np.sum(self.vec ** 2)
+            sum_vec_squared = np.sum(self.vec ** 2)
             self.vec /= np.sqrt(sum_vec_squared)
-	    return self.vec
+            return self.vec
 
     def test_inputs(self):
-	input_dtypes = [np.float32, np.float64, np.int32, np.int64, float, int]
-	input_arrtypes = ['sparse', 'normal']
-	for dtype_ in input_dtypes:
-	    for arrtype in input_arrtypes:
-		if arrtype == 'normal':
-		    if dtype_ == np.float32 or dtype_ == np.float64:
-			input_vector = np.random.uniform(size=(5,)).astype(dtype_)
-			unit_vector = matutils.unitvec(input_vector)
-			man_unit_vector = self.manual_unitvec(input_vector)
-			self.assertEqual(input_vector.dtype, unit_vector.dtype)
-			self.assertTrue(np.allclose(unit_vector, man_unit_vector))
-		    else:
-			input_vector = np.random.randint(10, size=5).astype(dtype_)
-			unit_vector = matutils.unitvec(input_vector)
-			man_unit_vector = self.manual_unitvec(input_vector)
-			self.assertTrue(np.allclose(unit_vector, man_unit_vector))
-		else:
-		    input_vector = sparse.csr_matrix(np.asarray([[1, 0, 0, 0, 0], [0, 0, 4, 3, 0]]).astype(dtype_))
-		    unit_vector = matutils.unitvec(input_vector)
-		    man_unit_vector = self.manual_unitvec(input_vector)
-		    if dtype_ == np.float32 or dtype_ == np.float64:
-			self.assertEqual(input_vector.dtype, unit_vector.dtype)
-			self.assertTrue(np.allclose(unit_vector.data, man_unit_vector.data, atol=1e-3))
-		    else:
-			self.assertTrue(np.allclose(unit_vector.data, man_unit_vector.data, atol=1e-3))
+        input_dtypes = [np.float32, np.float64, np.int32, np.int64, float, int]
+        input_arrtypes = ['sparse', 'normal']
+        for dtype_ in input_dtypes:
+            for arrtype in input_arrtypes:
+                if arrtype == 'normal':
+                    if dtype_ == np.float32 or dtype_ == np.float64:
+                        input_vector = np.random.uniform(size=(5,)).astype(dtype_)
+                        unit_vector = matutils.unitvec(input_vector)
+                        man_unit_vector = self.manual_unitvec(input_vector)
+                        self.assertEqual(input_vector.dtype, unit_vector.dtype)
+                        self.assertTrue(np.allclose(unit_vector, man_unit_vector))
+                    else:
+                        input_vector = np.random.randint(10, size=5).astype(dtype_)
+                        unit_vector = matutils.unitvec(input_vector)
+                        man_unit_vector = self.manual_unitvec(input_vector)
+                        self.assertTrue(np.allclose(unit_vector, man_unit_vector))
+                else:
+                    input_vector = sparse.csr_matrix(np.asarray([[1, 0, 0, 0, 0], [0, 0, 4, 3, 0]]).astype(dtype_))
+                    unit_vector = matutils.unitvec(input_vector)
+                    man_unit_vector = self.manual_unitvec(input_vector)
+                    if dtype_ == np.float32 or dtype_ == np.float64:
+                        self.assertEqual(input_vector.dtype, unit_vector.dtype)
+                        self.assertTrue(np.allclose(unit_vector.data, man_unit_vector.data, atol=1e-3))
+                    else:
+                        self.assertTrue(np.allclose(unit_vector.data, man_unit_vector.data, atol=1e-3))
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
