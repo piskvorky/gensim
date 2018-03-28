@@ -719,7 +719,6 @@ def unitvec(vec, norm='l2', return_norm=False):
                 return vec
 
     if isinstance(vec, np.ndarray):
-        vec = np.asarray(vec, dtype=vec.dtype)
         if norm == 'l1':
             veclen = np.sum(np.abs(vec))
         if norm == 'l2':
