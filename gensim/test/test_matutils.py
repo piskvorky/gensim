@@ -168,7 +168,7 @@ class UnitvecTestCase(unittest.TestCase):
                     input_vector = np.random.randint(10, size=5).astype(dtype_)
                 else:
                     input_vector = sparse.csr_matrix(np.asarray([[1, 0, 0, 0, 3], [0, 0, 4, 3, 0]])).astype(dtype_)
-                unit_vector = unitvec_with_bug.unitvec(input_vector)
+                unit_vector = matutils.unitvec(input_vector)
                 man_unit_vector = self.manual_unitvec(input_vector)
                 if arrtype == 'dense':
                     self.assertTrue(np.allclose(unit_vector, man_unit_vector))
