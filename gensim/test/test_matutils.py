@@ -156,7 +156,6 @@ class UnitvecTestCase(unittest.TestCase):
             self.vec /= np.sqrt(sum_vec_squared)
             return self.vec
 
-
     def test_inputs(self):
         input_dtypes = [np.float32, np.float64, np.int32, np.int64, float, int]
         input_arrtypes = ['sparse', 'dense']
