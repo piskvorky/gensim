@@ -158,10 +158,10 @@ class UnitvecTestCase(unittest.TestCase):
 
     def test_inputs(self):
         input_dtypes = [np.float32, np.float64, np.int32, np.int64, float, int]
-        input_arrtypes = ['sparse', 'normal']
+        input_arrtypes = ['sparse', 'dense']
         for dtype_ in input_dtypes:
             for arrtype in input_arrtypes:
-                if arrtype == 'normal':
+                if arrtype == 'dense':
                     if dtype_ == np.float32 or dtype_ == np.float64:
                         input_vector = np.random.uniform(size=(5,)).astype(dtype_)
                         unit_vector = matutils.unitvec(input_vector)
