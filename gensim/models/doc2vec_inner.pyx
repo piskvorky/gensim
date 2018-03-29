@@ -227,6 +227,51 @@ cdef unsigned long long fast_document_dmc_neg(
 def train_document_dbow(model, doc_words, doctag_indexes, alpha, work=None,
                         train_words=False, learn_doctags=True, learn_words=True, learn_hidden=True,
                         word_vectors=None, word_locks=None, doctag_vectors=None, doctag_locks=None):
+    ""Update distributed bag of words model ("PV-DBOW") by training on a single document.
+
+    Called internally from :meth:`~gensim.models.doc2vec.Doc2Vec.train` and
+    :meth:`~gensim.models.doc2vec.Doc2Vec.infer_vector()`.
+
+    Parameters
+    ----------
+    model : :class:`~gensim.models.doc2vec.Doc2Vec`
+        The model to train.
+    doc_words : list of str
+        The input document as a list of words to be used for training. Each word will be looked up in
+        the model's vocabulary.
+    doctag_indexes : list of int
+        Indices into `doctag_vectors` used to obtain the tags of the document.
+    alpha : float
+        Learning rate.
+    work : list of float, optional
+        Updates to be performed on each neuron in the hidden layer of the underlying network.
+    train_words : bool, optional
+        Word vectors will be updated exactly as per Word2Vec skip-gram training only if **both**
+        `learn_words` and `train_words` are set to True.
+    learn_doctags : bool, optional
+        Whether the tag vectors should be updated.
+    learn_words : bool, optional
+        Word vectors will be updated exactly as per Word2Vec skip-gram training only if **both**
+        `learn_words` and `train_words` are set to True.
+    learn_hidden : bool, optional
+        Whether or not the weights of the hidden layer will be updated.
+    word_vectors : list of list of float, optional
+        The vector representation for each word in the vocabulary. If None, these will be retrieved from
+        the model.
+    word_locks : list of float, optional
+        A learning lock factor for each weight in the hidden layer. A value of 0 completely
+        blocks updates, a value of 1 allows full speed learning.
+    doctag_vectors : list of list of float, optional
+        Vector representations of the tags. If None, these will be retrieved from the model.
+    doctag_locks : list of float, optional
+        The lock factors for each tag.
+
+    Returns
+    -------
+    int
+        Number of words in the input document.
+
+    """
     cdef int hs = model.hs
     cdef int negative = model.negative
     cdef int sample = (model.vocabulary.sample != 0)
@@ -363,6 +408,51 @@ def train_document_dbow(model, doc_words, doctag_indexes, alpha, work=None,
 def train_document_dm(model, doc_words, doctag_indexes, alpha, work=None, neu1=None,
                       learn_doctags=True, learn_words=True, learn_hidden=True,
                       word_vectors=None, word_locks=None, doctag_vectors=None, doctag_locks=None):
+    """Update distributed memory model ("PV-DM") by training on a single document.
+
+    Called internally from :meth:`~gensim.models.doc2vec.Doc2Vec.train` and
+    :meth:`~gensim.models.doc2vec.Doc2Vec.infer_vector()`. This method implements
+    the DM model with a projection (input) layer that is either the sum or mean of
+    the context vectors, depending on the model's `dm_mean` configuration field.
+
+    Parameters
+    ----------
+    model : :class:`~gensim.models.doc2vec.Doc2Vec`
+        The model to train.
+    doc_words : list of str
+        The input document as a list of words to be used for training. Each word will be looked up in
+        the model's vocabulary.
+    doctag_indexes : list of int
+        Indices into `doctag_vectors` used to obtain the tags of the document.
+    alpha : float
+        Learning rate.
+    work : np.ndarray, optional
+        Private working memory for each worker.
+    neu1 : np.ndarray, optional
+        Private working memory for each worker.
+    learn_doctags : bool, optional
+        Whether the tag vectors should be updated.
+    learn_words : bool, optional
+        Word vectors will be updated exactly as per Word2Vec skip-gram training only if **both**
+        `learn_words` and `train_words` are set to True.
+    learn_hidden : bool, optional
+        Whether or not the weights of the hidden layer will be updated.
+    word_vectors : iterable of list of float
+        Vector representations of each word in the model's vocabulary.
+    word_locks : listf of float, optional
+        Lock factors for each word in the vocabulary. 0 blocks training, 1 fully allows it.
+    doctag_vectors : list of list of float, optional
+        Vector representations of the tags. If None, these will be retrieved from the model.
+    doctag_locks : list of float, optional
+        The lock factors for each tag. 0 blocks training, 1 fully allows it.
+
+    Returns
+    -------
+    int
+        Number of words in the input document that were actually used for training (they were found in the
+        vocavulary and they were not discarded by negative sampling).
+
+    """
     cdef int hs = model.hs
     cdef int negative = model.negative
     cdef int sample = (model.vocabulary.sample != 0)
@@ -521,6 +611,50 @@ def train_document_dm(model, doc_words, doctag_indexes, alpha, work=None, neu1=N
 def train_document_dm_concat(model, doc_words, doctag_indexes, alpha, work=None, neu1=None,
                              learn_doctags=True, learn_words=True, learn_hidden=True,
                              word_vectors=None, word_locks=None, doctag_vectors=None, doctag_locks=None):
+    """Update distributed memory model ("PV-DM") by training on a single document, using a
+    concatenation of the context window word vectors (rather than a sum or average). This
+    might be slower since the input at each batch will be significantly larger.
+
+    Called internally from `Doc2Vec.train()` and `Doc2Vec.infer_vector()`.
+
+    Parameters
+    ----------
+    model : :class:`~gensim.models.doc2vec.Doc2Vec`
+        The model to train.
+    doc_words : list of str
+        The input document as a list of words to be used for training. Each word will be looked up in
+        the model's vocabulary.
+    doctag_indexes : list of int
+        Indices into `doctag_vectors` used to obtain the tags of the document.
+    alpha : float, optional
+        Learning rate.
+    work : np.ndarray, optional
+        Private working memory for each worker.
+    neu1 : np.ndarray, optional
+        Private working memory for each worker.
+    learn_doctags : bool, optional
+        Whether the tag vectors should be updated.
+    learn_words : bool, optional
+        Word vectors will be updated exactly as per Word2Vec skip-gram training only if **both**
+        `learn_words` and `train_words` are set to True.
+    learn_hidden : bool, optional
+        Whether or not the weights of the hidden layer will be updated.
+    word_vectors : iterable of list of float, optional
+        Vector representations of each word in the model's vocabulary.
+    word_locks : listf of float, optional
+        Lock factors for each word in the vocabulary.
+    doctag_vectors : list of list of float, optional
+        Vector representations of the tags. If None, these will be retrieved from the model.
+    doctag_locks : list of float, optional
+        The lock factors for each tag.
+
+    Returns
+    -------
+    int
+        Number of words in the input document that were actually used for training (they were found in the
+        vocavulary and they were not discarded by negative sampling).
+
+    """
     cdef int hs = model.hs
     cdef int negative = model.negative
     cdef int sample = (model.vocabulary.sample != 0)
