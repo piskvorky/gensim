@@ -294,6 +294,30 @@ cdef unsigned long long fast_sentence_cbow_neg(
 
 
 def train_batch_sg(model, sentences, alpha, _work, compute_loss):
+    """Update skip-gram model by training on a batch of sentences.
+
+    Called internally from :meth:`~gensim.models.word2vec.Word2Vec.train`.
+
+    Parameters
+    ----------
+    model : :class:`~gensim.models.word2Vec.Word2Vec`
+        The Word2Vec model instance to train.
+    sentences : iterable of list of str
+        The corpus used to train the model.
+    alpha : float
+        The learning rate
+    _work : np.ndarray
+            Private working memory for each worker.
+    compute_loss : bool
+        Whether or not the training loss should be computed in this batch.
+
+    Returns
+    -------
+    int
+        Number of words in the vocabulary actually used for training (They already existed in the vocabulary
+        and were not discarded by negative sampling).
+
+    """
     cdef int hs = model.hs
     cdef int negative = model.negative
     cdef int sample = (model.vocabulary.sample != 0)
@@ -401,6 +425,31 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
 
 
 def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
+    """Update CBOW model by training on a batch of sentences.
+
+    Called internally from :meth:`~gensim.models.word2vec.Word2Vec.train`.
+
+    Parameters
+    ----------
+    model : :class:`~gensim.models.word2vec.Word2Vec`
+        The Word2Vec model instance to train.
+    sentences : iterable of list of str
+        The corpus used to train the model.
+    alpha : float
+        The learning rate.
+    _work : np.ndarray
+        Private working memory for each worker.
+    _neu1 : np.ndarray
+        Private working memory for each worker.
+    compute_loss : bool
+        Whether or not the training loss should be computed in this batch.
+
+    Returns
+    -------
+    int
+        Number of words in the vocabulary actually used for training (They already existed in the vocabulary
+        and were not discarded by negative sampling).
+    """
     cdef int hs = model.hs
     cdef int negative = model.negative
     cdef int sample = (model.vocabulary.sample != 0)
@@ -506,8 +555,29 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
     return effective_words
 
 
-# Score is only implemented for hierarchical softmax
 def score_sentence_sg(model, sentence, _work):
+    """Obtain likelihood score for a single sentence in a fitted skip-gram representation.
+
+    Notes
+    -----
+    This scoring function is only implemented for hierarchical softmax (`model.hs == 1`).
+    The model should have been trained using the skip-gram model (`model.sg` == 1`).
+
+    Parameters
+    ----------
+    model : :class:`~gensim.models.word2vec.Word2Vec`
+        The trained model. It **MUST** have been trained using hierarchical softmax and the skip-gram algorithm.
+    sentence : list of str
+        The words comprising the sentence to be scored.
+    _work : np.ndarray
+        Private working memory for each worker.
+
+    Returns
+    -------
+    float
+        The probability assigned to this sentence by the Skip-Gram model.
+
+    """
 
     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
     cdef REAL_t *work
@@ -586,7 +656,30 @@ cdef void score_pair_sg_hs(
         work[0] += f
 
 def score_sentence_cbow(model, sentence, _work, _neu1):
+    """Obtain likelihood score for a single sentence in a fitted CBOW representation.
 
+    Notes
+    -----
+    This scoring function is only implemented for hierarchical softmax (`model.hs == 1`).
+    The model should have been trained using the skip-gram model (`model.cbow` == 1`).
+
+    Parameters
+    ----------
+    model : :class:`~gensim.models.word2vec.Word2Vec`
+        The trained model. It **MUST** have been trained using hierarchical softmax and the CBOW algorithm.
+    sentence : list of str
+        The words comprising the sentence to be scored.
+    _work : np.ndarray
+        Private working memory for each worker.
+    _neu1 : np.ndarray
+        Private working memory for each worker.
+
+    Returns
+    -------
+    float
+        The probability assigned to this sentence by the Skip-Gram model.
+
+    """
     cdef int cbow_mean = model.cbow_mean
 
     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
@@ -684,6 +777,13 @@ def init():
     """
     Precompute function `sigmoid(x) = 1 / (1 + exp(-x))`, for x values discretized
     into table EXP_TABLE.  Also calculate log(sigmoid(x)) into LOG_TABLE.
+
+    Returns
+    -------
+    {0, 1, 2}
+        Enumeration to signify underlying data type returned by the BLAS dot product calculation.
+        0 signifies double, 1 signifies double, and 2 signifies that custom cython loops were used
+        instead of BLAS.
 
     """
     global our_dot
