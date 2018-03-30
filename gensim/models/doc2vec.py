@@ -27,20 +27,21 @@ Examples
 
 #. Initialize a model with e.g.::
 
-    >>> from gensim.test.utils import common_texts
-    >>> from gensim.models.doc2vec import Doc2Vec, TaggedDocument
-    >>>
-    >>> documents = [TaggedDocument(word, [i]) for i, word in enumerate(common_texts)]
-    >>> model = Doc2Vec(documents, vector_size=5, window=2, min_count=1, workers=4)
+>>> from gensim.test.utils import common_texts, get_tmpfile
+>>> from gensim.models.doc2vec import Doc2Vec, TaggedDocument
+>>>
+>>> documents = [TaggedDocument(word, [i]) for i, word in enumerate(common_texts)]
+>>> model = Doc2Vec(documents, vector_size=5, window=2, min_count=1, workers=4)
 
 #. Persist a model to disk with::
 
-    >>> model.save('/tmp/model')
-    >>> model = Doc2Vec.load('/tmp/model')  # you can continue training with the loaded model!
+>>> tmp_f = get_tmpfile("model")
+>>> model.save(tmp_f)
+>>> model = Doc2Vec.load(tmp_f)  # you can continue training with the loaded model!
 
 If you're finished training a model (=no more updates, only querying), you can do::
 
-    >>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True)
+>>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True)
 
 to trim unneeded model memory = use (much) less RAM.
 
@@ -107,7 +108,8 @@ except ImportError:
             Indices into `doctag_vectors` used to obtain the tags of the document.
         alpha : float
             Learning rate.
-        work :
+        work : np.ndarray
+            Private working memory for each worker.
         train_words : bool, optional
             Word vectors will be updated exactly as per Word2Vec skip-gram training only if **both**
             `learn_words` and `train_words` are set to True.
@@ -717,16 +719,23 @@ class Doc2Vec(BaseWordEmbeddingsModel):
     def infer_vector(self, doc_words, alpha=0.1, min_alpha=0.0001, steps=5):
         """Infer a vector for given post-bulk training document.
 
+        Notes
+        -----
+        Subsequent calls to this function may infer different representations for the same document.
+        For a more stable representation, increase the number of steps to assert a stricket convergence.
+
         Parameters
         ----------
         doc_words : list of str
-            A (potentially unseen) document.
+            A document for which the vector representation will be inferred. Note this does not have to
+            be already used in training; it can be an completely new document.
         alpha : float, optional
             The initial learning rate.
         min_alpha : float, optional
             Learning rate will linearly drop to `min_alpha` as training progresses.
         steps : int, optional
-            Number of times to train the new document.
+            Number of times to train the new document. A higher value may slow down training, but
+            it will result in more stable representations.
 
         Returns
         -------

@@ -16,8 +16,15 @@ space is text.
 
 Notes
 -----
-Even though this is the usual case, not all embeddings transform text.
-For example :class:`~gensim.models.poincare.PoincareModel` operates on graph representations.
+Even though this is the usual case, not all embeddings transform text. Check the next section for
+concrete examples.
+
+See Also
+--------
+:class:`~gensim.models.word2vec.Word2Vec`.
+:class:`~gensim.models.fasttext.FastText`.
+:class:`~gensim.models.doc2vec.Doc2Vec`.
+:class:`~gensim.models.poincare.PoincareModel`
 
 """
 from gensim import utils
@@ -51,17 +58,17 @@ class BaseAny2VecModel(utils.SaveLoad):
     In the special but usual case where the input space consists of words, a more specialized layer
     is provided, consider inheriting from :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
 
+    Notes
+    -----
+    A subclass should initialize the following attributes:
+    - self.kv (instance of concrete implementation of `BaseKeyedVectors` interface)
+    - self.vocabulary (instance of concrete implementation of `BaseVocabBuilder` abstract class)
+    - self.trainables (instance of concrete implementation of `BaseTrainables` abstract class)
+
     """
 
     def __init__(self, workers=3, vector_size=100, epochs=5, callbacks=(), batch_words=10000):
         """Initialize model parameters.
-
-        Notes
-        -----
-        A subclass should initialize the following attributes:
-        - self.kv (instance of concrete implementation of `BaseKeyedVectors` interface)
-        - self.vocabulary (instance of concrete implementation of `BaseVocabBuilder` abstract class)
-        - self.trainables (instance of concrete implementation of `BaseTrainables` abstract class)
 
         Parameters
         ----------
@@ -91,7 +98,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         raise NotImplementedError()
 
     def _set_train_params(self, **kwargs):
-        """Set model parameters required for training"""
+        """Set model parameters required for training."""
         raise NotImplementedError()
 
     def _update_job_params(self, job_params, epoch_progress, cur_epoch):
@@ -465,6 +472,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         ------
         IOError
             When methods are called on instance (should be called from class).
+
         """
         return super(BaseAny2VecModel, cls).load(fname_or_handle, **kwargs)
 
@@ -481,6 +489,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         See Also
         --------
         :meth:`~gensim.models.base_any2vec.BaseAny2VecModel.save`
+
         """
         super(BaseAny2VecModel, self).save(fname_or_handle, **kwargs)
 
@@ -488,9 +497,10 @@ class BaseAny2VecModel(utils.SaveLoad):
 class BaseWordEmbeddingsModel(BaseAny2VecModel):
     """Base class containing common methods for training, using & evaluating word embeddings learning models.
 
-    Example implementations are
-        * :class:`~gensim.models.word2vec.Word2Vec`
-        * :class:`~gensim.models.word2vec.FastText`, etc.
+    See Also
+    --------
+    :class:`~gensim.models.word2vec.Word2Vec`
+    :class:`~gensim.models.word2vec.FastText`, etc.
 
     """
 
@@ -567,6 +577,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             Whether or not the fast cython implementation of the internal training methods is available. 1 means it is.
         **kwargs
             Key word arguments needed to allow children classes to accept more arguments.
+
         """
         self.sg = int(sg)
         if vector_size % 4 != 0:
@@ -730,6 +741,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         str
             A human readable string containing the class name, as well as the id to word mapping, number of
             features and starting learning rate used by the object.
+
         """
         return "%s(vocab=%s, size=%s, alpha=%s)" % (
             self.__class__.__name__, len(self.wv.index2word), self.vector_size, self.alpha
@@ -765,7 +777,6 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             of the model.
         **kwargs
             Key word arguments propagated to `self.vocabulary.prepare_vocab`
-
 
         """
         total_words, corpus_count = self.vocabulary.scan_vocab(
@@ -846,6 +857,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         -------
         dict of (str, int)
             A dictionary from string representations of the model's memory consuming members to their size in bytes.
+
         """
         vocab_size = vocab_size or len(self.wv.vocab)
         report = report or {}
@@ -900,6 +912,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         -------
         (int, int)
             Tuple of (effective word count after ignoring unknown words and sentence length trimming, total word count).
+
         """
 
         self.alpha = start_alpha or self.alpha
@@ -923,6 +936,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         -------
         float
             The learning rate for this epoch (it is linearly reduced with epochs from `self.alpha` to `self.min_alpha`).
+
         """
         alpha = self.alpha - ((self.alpha - self.min_alpha) * float(cur_epoch) / self.epochs)
         return alpha
@@ -933,7 +947,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         Parameters
         ----------
         job_params : dict of (str, obj)
-            Unused. TODO: Delete this.
+            Unused
         epoch_progress : float
             Ratio of finished work in the current epoch.
         cur_epoch : int
@@ -960,6 +974,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         -------
         (np.ndarray, np.ndarray)
             Each worker threads private work memory.
+
         """
         work = matutils.zeros_aligned(self.trainables.layer1_size, dtype=REAL)  # per-thread private work memory
         neu1 = matutils.zeros_aligned(self.trainables.layer1_size, dtype=REAL)
@@ -977,6 +992,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         -------
         int
             Number of raw words in the corpus chunk.
+
         """
         return sum(len(sentence) for sentence in job)
 
@@ -1066,6 +1082,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         ------
         IOError
             When methods are called on instance (should be called from class).
+
         """
 
         model = super(BaseWordEmbeddingsModel, cls).load(*args, **kwargs)

@@ -348,7 +348,9 @@ class PoincareModel(utils.SaveLoad):
     def save(self, *args, **kwargs):
         """Save complete model to disk, inherited from :class:`~gensim.utils.SaveLoad`.
 
-        See also :meth:`~gensim.models.poincare.PoincareModel.load`
+        See also
+        --------
+        :meth:`~gensim.models.poincare.PoincareModel.load`
 
         Parameters
         ----------
@@ -367,7 +369,9 @@ class PoincareModel(utils.SaveLoad):
     def load(cls, *args, **kwargs):
         """Load model from disk, inherited from :class:`~gensim.utils.SaveLoad`.
 
-        See also :meth:`~gensim.models.poincare.PoincareModel.save`
+        See also
+        --------
+        :meth:`~gensim.models.poincare.PoincareModel.save`
 
         Parameters
         ----------
@@ -840,16 +844,18 @@ class PoincareKeyedVectors(BaseKeyedVectors):
         Accept a single word as input.
         Returns the word's representations in vector space, as a 1D numpy array.
 
-        Example::
-          >>> from gensim.test.utils import datapath
-          >>>
-          >>> # Read the sample relations file and train the model
-          >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
-          >>> model = PoincareModel(train_data=relations)
-          >>> model.train(epochs=50)
-          >>>
-          >>> # Query the trained model.
-          >>> wv = model.kv.word_vec('kangaroo.n.01')
+        Examples
+        --------
+
+        >>> from gensim.test.utils import datapath
+        >>>
+        >>> # Read the sample relations file and train the model
+        >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
+        >>> model = PoincareModel(train_data=relations)
+        >>> model.train(epochs=50)
+        >>>
+        >>> # Query the trained model.
+        >>> wv = model.kv.word_vec('kangaroo.n.01')
 
         """
         return super(PoincareKeyedVectors, self).get_vector(word)

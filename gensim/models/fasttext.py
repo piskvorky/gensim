@@ -81,7 +81,6 @@ from gensim import utils
 logger = logging.getLogger(__name__)
 
 try:
-    raise ImportError
     from gensim.models.fasttext_inner import train_batch_sg, train_batch_cbow
     from gensim.models.fasttext_inner import FAST_VERSION, MAX_WORDS_IN_BATCH
 
@@ -601,7 +600,7 @@ class FastText(BaseWordEmbeddingsModel):
         self.trainables.get_vocab_word_vecs(self.wv)
 
     def init_sims(self, replace=False):
-        """Deletes the keyed vector syn1 structure.
+        """Precompute L2-normalized vectors.
 
         Notes
         -----
