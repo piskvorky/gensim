@@ -4,11 +4,11 @@ import numpy as np
 from scipy.stats import halfnorm
 
 
-def _thresh(X, lambda1, vmax):
-    res = np.abs(X) - lambda1
+def _thresh(X, lambda_, v_max):
+    res = np.abs(X) - lambda_
     np.maximum(res, 0.0, out=res)
     res *= np.sign(X)
-    np.clip(res, -vmax, vmax, out=res)
+    np.clip(res, -v_max, v_max, out=res)
     return res
 
 
@@ -29,7 +29,7 @@ def _transform(W):
     return _mrdivide(newW, np.diag(sumsq))
 
 
-def _solveproj(v, W, lambda1, kappa=1, h=None, r=None, v_max=None, max_iter=1e9):
+def _solveproj(v, W, lambda_, kappa=1, h=None, r=None, v_max=None, max_iter=1e9):
     m, n = W.shape
     v = v.T
     if v_max is None:
@@ -60,7 +60,7 @@ def _solveproj(v, W, lambda1, kappa=1, h=None, r=None, v_max=None, max_iter=1e9)
 
         # Solve for r
         rtmp = r
-        r = _thresh(v - np.dot(W, h), lambda1, v_max)
+        r = _thresh(v - np.dot(W, h), lambda_, v_max)
 
         # Stop conditions
         stoph = np.linalg.norm(h - htmp, 2)
