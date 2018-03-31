@@ -192,7 +192,7 @@ class TestWord2VecModel(unittest.TestCase):
         model_neg.train(new_sentences, total_examples=model_neg.corpus_count, epochs=model_neg.iter)
         self.assertEqual(len(model_neg.wv.vocab), 14)
 
-    def onlineSanity(self, model):
+    def onlineSanity(self, model, trained_model=False):
         terro, others = [], []
         for l in list_corpus:
             if 'terrorism' in l:
@@ -200,7 +200,7 @@ class TestWord2VecModel(unittest.TestCase):
             else:
                 others.append(l)
         self.assertTrue(all(['terrorism' not in l for l in others]))
-        model.build_vocab(others)
+        model.build_vocab(others, update=trained_model)
         model.train(others, total_examples=model.corpus_count, epochs=model.iter)
         self.assertFalse('terrorism' in model.wv.vocab)
         model.build_vocab(terro, update=True)
@@ -764,6 +764,8 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(model.trainables.vectors_lockf.shape == (12,))
         self.assertTrue(model.vocabulary.cum_table.shape == (12,))
 
+        self.onlineSanity(model, trained_model=True)
+
         # Model stored in multiple files
         model_file = 'word2vec_old_sep'
         model = word2vec.Word2Vec.load(datapath(model_file))
@@ -773,6 +775,12 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.wv.vector_size))
         self.assertTrue(model.trainables.vectors_lockf.shape == (12,))
         self.assertTrue(model.vocabulary.cum_table.shape == (12,))
+
+        self.onlineSanity(model, trained_model=True)
+
+        model_file = 'w2v-lee-v0.12.0'
+        model = word2vec.Word2Vec.load(datapath(model_file))
+        self.onlineSanity(model, trained_model=True)
 
         # test for max_final_vocab for model saved in 3.3
         model_file = 'word2vec_3.3'
