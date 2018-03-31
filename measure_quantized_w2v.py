@@ -5,9 +5,9 @@ import logging
 import numpy as np
 import sys
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-
 from gensim.models.word2vec import Text8Corpus, Word2Vec
+
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 
 def print_accuracy(model, questions_file, num_bits=0):
@@ -39,6 +39,7 @@ params = {
     'iter': 25,
     'sg': 0,
     'size': 400,
+    'workers': 16,
     'alpha': 0.05,
     'min_alpha': 0.0001,
     'window': 10,
