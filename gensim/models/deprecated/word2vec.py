@@ -187,13 +187,13 @@ def load_old_word2vec(*args, **kwargs):
     # set vocabulary attributes
     new_model.wv.vocab = old_model.wv.vocab
     new_model.wv.index2word = old_model.wv.index2word
-    new_model.vocabulary.cum_table = old_model.__dict__.get('cum_table', old_model.table)
+    new_model.vocabulary.cum_table = old_model.__dict__.get('cum_table', None)
 
-    new_model.train_count = old_model.train_count
-    new_model.corpus_count = old_model.corpus_count
+    new_model.train_count = old_model.__dict__.get('train_count', None)
+    new_model.corpus_count = old_model.__dict__.get('corpus_count', None)
     new_model.running_training_loss = old_model.__dict__.get('running_training_loss', None)
-    new_model.total_train_time = old_model.total_train_time
-    new_model.min_alpha_yet_reached = old_model.min_alpha_yet_reached
+    new_model.total_train_time = old_model.__dict__.get('total_train_time', None)
+    new_model.min_alpha_yet_reached = old_model.__dict__.get('min_alpha_yet_reached', None)
     new_model.model_trimmed_post_training = old_model.__dict__.get('model_trimmed_post_training', None)
 
     return new_model
