@@ -33,6 +33,7 @@ def print_accuracy(model, questions_file, num_bits=0):
 
 
 corpus = Text8Corpus(sys.argv[1])
+questions_path = './docs/notebooks/datasets/questions-words.txt'
 
 params = {
     'sentences': corpus,
@@ -55,11 +56,11 @@ model = Word2Vec(
 
 print("\t---No quantization during training, accuracies---\t")
 print("No quantization:")
-print_accuracy(model, './datasets/questions-words.txt', num_bits=0)
+print_accuracy(model, questions_path, num_bits=0)
 print("Quantized 1bit:")
-print_accuracy(model, './datasets/questions-words.txt', num_bits=1)
+print_accuracy(model, questions_path, num_bits=1)
 print("Quantized 2bits:")
-print_accuracy(model, './datasets/questions-words.txt', num_bits=2)
+print_accuracy(model, questions_path, num_bits=2)
 
 
 model = Word2Vec(
@@ -70,9 +71,9 @@ model = Word2Vec(
 
 print("\t---Quantization with 1 bit during training, accuracies---\t")
 print("No quantization:")
-print_accuracy(model, './datasets/questions-words.txt', num_bits=0)
+print_accuracy(model, questions_path, num_bits=0)
 print("Quantized 1bit:")
-print_accuracy(model, './datasets/questions-words.txt', num_bits=1)
+print_accuracy(model, questions_path, num_bits=1)
 
 
 model = Word2Vec(
@@ -82,6 +83,6 @@ model = Word2Vec(
 
 print("\t---Quantization with 2 bits during training, accuracies---\t")
 print("No quantization:")
-print_accuracy(model, './datasets/questions-words.txt', num_bits=0)
+print_accuracy(model, questions_path, num_bits=0)
 print("Quantized 2bits:")
-print_accuracy(model, './datasets/questions-words.txt', num_bits=2)
+print_accuracy(model, questions_path, num_bits=2)
