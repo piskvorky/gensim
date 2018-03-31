@@ -121,6 +121,18 @@ class BaseKeyedVectors(utils.SaveLoad):
     def load(cls, fname_or_handle, **kwargs):
         return super(BaseKeyedVectors, cls).load(fname_or_handle, **kwargs)
 
+    def quantize_vectors(self, num_bits=0):
+        if num_bits == 0:
+            return
+        if num_bits == 1:
+            self.vectors[self.vectors >= 0] = 1./3
+            self.vectors[self.vectors < 0] = -1./3
+        elif num_bits == 2:
+            signs = np.sign(self.vectors)
+            mask = ((0.0 <= np.abs(self.vectors)) & (np.abs(self.vectors) <= 0.5))
+            self.vectors[mask] = 0.25 * signs[mask]
+            self.vectors[~mask] = 0.75 * signs[~mask]
+
     def similarity(self, entity1, entity2):
         """Compute cosine similarity between entities, specified by string tag.
         """

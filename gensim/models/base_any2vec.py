@@ -298,7 +298,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         raise NotImplementedError()
 
     def __init__(self, sentences=None, workers=3, vector_size=100, epochs=5, callbacks=(), batch_words=10000,
-                 trim_rule=None, sg=0, alpha=0.025, window=5, seed=1, hs=0, negative=5, cbow_mean=1,
+                 trim_rule=None, sg=0, alpha=0.025, window=5, seed=1, hs=0, negative=5, num_bits=0, cbow_mean=1,
                  min_alpha=0.0001, compute_loss=False, fast_version=0, **kwargs):
         self.sg = int(sg)
         if vector_size % 4 != 0:
@@ -309,6 +309,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         self.min_alpha = float(min_alpha)
         self.hs = int(hs)
         self.negative = int(negative)
+        self.num_bits = int(num_bits)
         self.cbow_mean = int(cbow_mean)
         self.compute_loss = bool(compute_loss)
         self.running_training_loss = 0
@@ -583,9 +584,10 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         return next_alpha
 
     def _get_thread_working_mem(self):
-        work = matutils.zeros_aligned(self.trainables.layer1_size, dtype=REAL)  # per-thread private work memory
+        work1 = matutils.zeros_aligned(self.trainables.layer1_size, dtype=REAL)  # per-thread private work memory
+        work2 = matutils.zeros_aligned(self.trainables.layer1_size, dtype=REAL)
         neu1 = matutils.zeros_aligned(self.trainables.layer1_size, dtype=REAL)
-        return work, neu1
+        return work1, work2, neu1
 
     def _raw_word_count(self, job):
         """Get the number of words in a given job."""

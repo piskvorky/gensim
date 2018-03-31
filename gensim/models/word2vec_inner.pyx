@@ -42,6 +42,10 @@ cdef REAL_t[EXP_TABLE_SIZE] LOG_TABLE
 cdef int ONE = 1
 cdef REAL_t ONEF = <REAL_t>1.0
 
+cdef REAL_t ONE_THIRD = <REAL_t>(ONEF / 3.)
+cdef REAL_t ONE_FOURTH = <REAL_t>0.25
+cdef REAL_t THREE_FOURTH = <REAL_t>0.75
+
 # for when fblas.sdot returns a double
 cdef REAL_t our_dot_double(const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil:
     return <REAL_t>dsdot(N, X, incX, Y, incY)
@@ -222,10 +226,30 @@ cdef void fast_sentence_cbow_hs(
             our_saxpy(&size, &word_locks[indexes[m]], work, &ONE, &syn0[indexes[m] * size], &ONE)
 
 
+cdef void quantize_num(const int _num_bits, REAL_t *num) nogil:
+    if _num_bits == 0:
+        return
+    cdef REAL_t retval
+    cdef REAL_t sign = (ONEF if num[0] >= (<REAL_t>0.0) else -ONEF)
+    if _num_bits == 1:
+        num[0] = sign * ONE_THIRD
+    elif _num_bits == 2:
+        if <REAL_t>0.0 <= num[0]*sign <= <REAL_t>0.5:
+            retval = <REAL_t>0.25
+        else:
+            retval = <REAL_t>0.75
+        num[0] = sign * retval
+
+cdef void quantize_vector(const int _num_bits, REAL_t *vec, const int size) nogil:
+    cdef int i = 0
+    for i in range(size):
+        quantize_num(_num_bits, &vec[i])
+
+
 cdef unsigned long long fast_sentence_cbow_neg(
-    const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len, int codelens[MAX_SENTENCE_LEN],
-    REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
-    const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
+    const int _num_bits, const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len,
+    int codelens[MAX_SENTENCE_LEN], REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
+    const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work1, REAL_t *work2,
     int i, int j, int k, int cbow_mean, unsigned long long next_random, REAL_t *word_locks,
     const int _compute_loss, REAL_t *_running_training_loss_param) nogil:
 
@@ -245,13 +269,17 @@ cdef unsigned long long fast_sentence_cbow_neg(
             continue
         else:
             count += ONEF
-            our_saxpy(&size, &ONEF, &syn0[indexes[m] * size], &ONE, neu1, &ONE)
+            # Firstly, binarize vector and then add to the context.
+            scopy(&size, &syn0[indexes[m] * size], &ONE, work2, &ONE)
+            quantize_vector(_num_bits, work2, size)
+            # Add to the context vector.
+            our_saxpy(&size, &ONEF, work2, &ONE, neu1, &ONE)
     if count > (<REAL_t>0.5):
         inv_count = ONEF/count
     if cbow_mean:
         sscal(&size, &inv_count, neu1, &ONE)  # (does this need BLAS-variants like saxpy?)
 
-    memset(work, 0, size * cython.sizeof(REAL_t))
+    memset(work1, 0, size * cython.sizeof(REAL_t))
 
     for d in range(negative+1):
         if d == 0:
@@ -265,7 +293,13 @@ cdef unsigned long long fast_sentence_cbow_neg(
             label = <REAL_t>0.0
 
         row2 = target_index * size
-        f_dot = our_dot(&size, neu1, &ONE, &syn1neg[row2], &ONE)
+
+        # Copy &syn1neg[row2] into work and binarize.
+        scopy(&size, &syn1neg[row2], &ONE, work2, &ONE)
+        quantize_vector(_num_bits, work2, size)
+
+        # Compute dot product between binarized vections.
+        f_dot = our_dot(&size, neu1, &ONE, work2, &ONE)
         if f_dot <= -MAX_EXP or f_dot >= MAX_EXP:
             continue
         f = EXP_TABLE[<int>((f_dot + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
@@ -278,17 +312,17 @@ cdef unsigned long long fast_sentence_cbow_neg(
             log_e_f_dot = LOG_TABLE[<int>((f_dot + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
             _running_training_loss_param[0] = _running_training_loss_param[0] - log_e_f_dot
 
-        our_saxpy(&size, &g, &syn1neg[row2], &ONE, work, &ONE)
+        our_saxpy(&size, &g, work2, &ONE, work1, &ONE)
         our_saxpy(&size, &g, neu1, &ONE, &syn1neg[row2], &ONE)
 
     if not cbow_mean:  # divide error over summed window vectors
-        sscal(&size, &inv_count, work, &ONE)  # (does this need BLAS-variants like saxpy?)
+        sscal(&size, &inv_count, work1, &ONE)  # (does this need BLAS-variants like saxpy?)
 
     for m in range(j,k):
         if m == i:
             continue
         else:
-            our_saxpy(&size, &word_locks[indexes[m]], work, &ONE, &syn0[indexes[m]*size], &ONE)
+            our_saxpy(&size, &word_locks[indexes[m]], work1, &ONE, &syn0[indexes[m]*size], &ONE)
 
     return next_random
 
@@ -400,18 +434,20 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
     return effective_words
 
 
-def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
+def train_batch_cbow(model, sentences, alpha, _work1, _work2, _neu1, compute_loss, num_bits):
     cdef int hs = model.hs
     cdef int negative = model.negative
     cdef int sample = (model.vocabulary.sample != 0)
     cdef int cbow_mean = model.cbow_mean
 
     cdef int _compute_loss = (1 if compute_loss == True else 0)
+    cdef int _num_bits = num_bits
     cdef REAL_t _running_training_loss = model.running_training_loss
 
     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
     cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_lockf))
-    cdef REAL_t *work
+    cdef REAL_t *work1
+    cdef REAL_t *work2
     cdef REAL_t _alpha = alpha
     cdef int size = model.wv.vector_size
 
@@ -448,7 +484,8 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
         next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
     # convert Python structures to primitive types, so we can release the GIL
-    work = <REAL_t *>np.PyArray_DATA(_work)
+    work1 = <REAL_t *>np.PyArray_DATA(_work1)
+    work2 = <REAL_t *>np.PyArray_DATA(_work2)
     neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
 
     # prepare C structures so we can go "full C" and release the Python GIL
@@ -498,9 +535,9 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
                 if k > idx_end:
                     k = idx_end
                 if hs:
-                    fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, j, k, cbow_mean, word_locks, _compute_loss, &_running_training_loss)
+                    fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work1, i, j, k, cbow_mean, word_locks, _compute_loss, &_running_training_loss)
                 if negative:
-                    next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random, word_locks, _compute_loss, &_running_training_loss)
+                    next_random = fast_sentence_cbow_neg(_num_bits, negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work1, work2, i, j, k, cbow_mean, next_random, word_locks, _compute_loss, &_running_training_loss)
 
     model.running_training_loss = _running_training_loss
     return effective_words
