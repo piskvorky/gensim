@@ -145,6 +145,27 @@ class TestWord2VecModel(unittest.TestCase):
         total_words = model.vocabulary.scan_vocab(sentences)[0]
         self.assertEqual(total_words, 29)
 
+    def testMaxFinalVocab(self):
+        # Test for less restricting effect of max_final_vocab
+        # max_final_vocab is specified but has no effect
+        model = word2vec.Word2Vec(size=10, max_final_vocab=4, min_count=4, sample=0)
+        model.vocabulary.scan_vocab(sentences)
+        reported_values = model.vocabulary.prepare_vocab(wv=model.wv, hs=0, negative=0)
+        self.assertEqual(reported_values['drop_unique'], 11)
+        self.assertEqual(reported_values['retain_total'], 4)
+        self.assertEqual(reported_values['num_retained_words'], 1)
+        self.assertEqual(model.vocabulary.effective_min_count, 4)
+
+        # Test for more restricting effect of max_final_vocab
+        # results in setting a min_count more restricting than specified min_count
+        model = word2vec.Word2Vec(size=10, max_final_vocab=4, min_count=2, sample=0)
+        model.vocabulary.scan_vocab(sentences)
+        reported_values = model.vocabulary.prepare_vocab(wv=model.wv, hs=0, negative=0)
+        self.assertEqual(reported_values['drop_unique'], 8)
+        self.assertEqual(reported_values['retain_total'], 13)
+        self.assertEqual(reported_values['num_retained_words'], 4)
+        self.assertEqual(model.vocabulary.effective_min_count, 3)
+
     def testOnlineLearning(self):
         """Test that the algorithm is able to add new words to the
         vocabulary and to a trained model when using a sorted vocabulary"""
@@ -752,6 +773,12 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.wv.vector_size))
         self.assertTrue(model.trainables.vectors_lockf.shape == (12,))
         self.assertTrue(model.vocabulary.cum_table.shape == (12,))
+
+        # test for max_final_vocab for model saved in 3.3
+        model_file = 'word2vec_3.3'
+        model = word2vec.Word2Vec.load(datapath(model_file))
+        self.assertEqual(model.max_final_vocab, None)
+        self.assertEqual(model.vocabulary.max_final_vocab, None)
 
     @log_capture()
     def testBuildVocabWarning(self, l):
