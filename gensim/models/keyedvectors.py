@@ -51,8 +51,7 @@ Correlation with human opinion on word similarity::
 And on analogies::
 
   >>> word_vectors.evaluate_word_analogies(os.path.join(module_path, 'test_data', 'questions-words.txt'))[0]
-  0.58
-  
+  0.58  
 
 and so on.
 
@@ -994,8 +993,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         and question words. In case of multiple case variants of a single word, the vector for the first
         occurrence (also the most frequent if vocabulary is sorted) is taken.
 
-        This method corresponds to the `compute-accuracy` script of the original C word2vec.
-
+        This method corresponds to the `compute-accuracy` script of the original C word2vec.        
         """
         ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
         ok_vocab = {w.upper(): v for w, v in reversed(ok_vocab)} if case_insensitive else dict(ok_vocab)
