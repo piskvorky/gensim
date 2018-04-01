@@ -51,7 +51,7 @@ Correlation with human opinion on word similarity::
 And on analogies::
 
   >>> word_vectors.evaluate_word_analogies(os.path.join(module_path, 'test_data', 'questions-words.txt'))[0]
-  0.58  
+  0.58
 
 and so on.
 
@@ -886,14 +886,11 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         Otherwise (default False), these tuples are skipped entirely and not used in the evaluation.
 
         This method corresponds to the `compute-accuracy` script of the original C word2vec.
-
         """
         ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
         ok_vocab = {w.upper(): v for w, v in reversed(ok_vocab)} if case_insensitive else dict(ok_vocab)
         oov = 0
-
         logger.info("Evaluating word analogies for top %i most frequent words on %s", restrict_vocab, analogies)
-
         sections, section = [], None
         for line_no, line in enumerate(utils.smart_open(analogies)):
             line = utils.to_unicode(line)
@@ -922,7 +919,6 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                     else:
                         logger.debug("Skipping line #%i with OOV words: %s", line_no, line.strip())
                     continue
-
                 original_vocab = self.vocab
                 self.vocab = ok_vocab
                 ignore = {a, b, c}  # input words to be ignored
@@ -1022,7 +1018,6 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                 if a not in ok_vocab or b not in ok_vocab or c not in ok_vocab or expected not in ok_vocab:
                     logger.debug("Skipping line #%i with OOV words: %s", line_no, line.strip())
                     continue
-
                 original_vocab = self.vocab
                 self.vocab = ok_vocab
                 ignore = {a, b, c}  # input words to be ignored
