@@ -1075,18 +1075,19 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
 
         Examples
         --------
-        >>> sent = iter([['sample', 'sentence', 'cat', 'dog'], ['time', 'computers', 'expensive']])
+        >>> from gensim.models import KeyedVectors
+        >>> trained_model = KeyedVectors.load_word2vec_format("glove-wiki-gigaword-200.gz")
+        >>> sent = [['sample', 'sentence', 'cat', 'dog'], ['time', 'computers', 'expensive']]
         >>> trained_model.simple_average(sent)
 
-
         Parameters
-        ------------
-        sent: iterator of list of tokens of sentences
-            Corpus of sentences.
+        ----------
+         sent : list iterator
+            iterator of list which contains tokens of sentences.
 
         Returns
-        --------
-        sents_emd: class: `gensim.models.keyedvectors.Word2VecKeyedVectors`
+        -------
+        sents_emd : class : `gensim.models.keyedvectors.Word2VecKeyedVectors`
             Sentence embeddings of each sentence in the same order as given.
 
         """
@@ -1112,19 +1113,22 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
 
         Examples
         --------
-        >>> sent = iter([['sample', 'sentence', 'cat', 'dog'], ['time', 'computers', 'expensive']])
+        >>> from gensim.models import KeyedVectors
+        >>> trained_model = KeyedVectors.load_word2vec_format("glove-wiki-gigaword-200.gz")
+        >>> sent = [['sample', 'sentence', 'cat', 'dog'], ['time', 'computers', 'expensive']])
         >>> trained_model.smooth_inverse_frequency(sent, a=0.001)
 
         Parameters
         ----------
-        sent: iterator of list of tokens of sentences
-            Corpus of sentences.
-        a: float
+         sent : list iterator
+            iterator of list which contains tokens of sentences.
+
+        a : float
             Weighting parameter for best performance a lies between[10 ^ -3, 10 ^ -4].
 
         Returns
         -------
-        new_sents_emd: class: `gensim.models.keyedvectors.Word2VecKeyedVectors`
+        new_sents_emd : class : `gensim.models.keyedvectors.Word2VecKeyedVectors`
             Sentence embeddings of each sentence in the same order as given.
 
         """
@@ -1148,11 +1152,10 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
             sum_ = np.array(sent_emd).sum(axis=0)
             sentence_emd = sum_/float(no_of_sentences)
             sents_emd.append(sentence_emd)
-        u = np.array(svds(sents_emd, k=1))
-        u = u[2]
+        [_, _, u] = np.array(svds(sents_emd, k=1))
         new_sents_emd = []
         for s in sents_emd:
-            s = s - u.dot(u.transpose())*s
+            s = s - s.dot(u * u.transpose())
             new_sents_emd.append(s)
         return new_sents_emd
 
@@ -1163,17 +1166,19 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
 
         Examples
         --------
-        >>> sent = iter([['sample', 'sentence', 'cat', 'dog'], ['time', 'computers', 'expensive']])
+        >>> from gensim.models import KeyedVectors
+        >>> trained_model = KeyedVectors.load_word2vec_format("glove-wiki-gigaword-200.gz")
+        >>> sent = [['sample', 'sentence', 'cat', 'dog'], ['time', 'computers', 'expensive']]
         >>> trained_model.tf_idf_sent(sent)
 
         Parameters
-        ------------
-        sent: iterator of list of tokens of sentences
-            Corpus of sentences.
+        ----------
+        sent : list iterator
+            iterator of list which contains tokens of sentences.
 
         Returns
-        --------
-        sents_emd: class: `gensim.models.keyedvectors.Word2VecKeyedVectors`
+        -------
+        sents_emd : class : `gensim.models.keyedvectors.Word2VecKeyedVectors`
             Sentence embeddings of each sentence in the same order as given.
 
         """
