@@ -874,7 +874,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         Use `restrict_vocab` to ignore all 4-tuples containing a word not in the first `restrict_vocab`
         words (default 300,000). This may be meaningful if you've sorted the model vocabulary by descending frequency
         (which is standard in modern word embedding models).
-        
+
         If `case_insensitive` is True, the first `restrict_vocab` words are taken first, and then
         case normalization is performed.
         Use `case_insensitive` to convert all words in 4-tuples and vocabulary to their uppercase form before
@@ -957,7 +957,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         sections.append(total)
         # Return the overall score and the full lists of correct and incorrect analogies
         return analogies_score, sections
-    
+
     @staticmethod
     def log_accuracy(section):
         correct, incorrect = len(section['correct']), len(section['incorrect'])
@@ -989,7 +989,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         and question words. In case of multiple case variants of a single word, the vector for the first
         occurrence (also the most frequent if vocabulary is sorted) is taken.
 
-        This method corresponds to the `compute-accuracy` script of the original C word2vec.        
+        This method corresponds to the `compute-accuracy` script of the original C word2vec.
         """
         ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
         ok_vocab = {w.upper(): v for w, v in reversed(ok_vocab)} if case_insensitive else dict(ok_vocab)
