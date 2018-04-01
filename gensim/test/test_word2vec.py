@@ -778,6 +778,7 @@ class TestWord2VecModel(unittest.TestCase):
 
         self.onlineSanity(model, trained_model=True)
 
+        # load really old model
         model_file = 'w2v-lee-v0.12.0'
         model = word2vec.Word2Vec.load(datapath(model_file))
         self.onlineSanity(model, trained_model=True)

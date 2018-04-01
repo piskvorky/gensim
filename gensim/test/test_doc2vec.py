@@ -122,6 +122,11 @@ class TestDoc2VecModel(unittest.TestCase):
 
         self.model_sanity(model)
 
+        # load really old model
+        model_file = 'd2v-lee-v0.13.0'
+        model = doc2vec.Doc2Vec.load(datapath(model_file))
+        self.model_sanity(model)
+
     def test_unicode_in_doctag(self):
         """Test storing document vectors of a model with unicode titles."""
         model = doc2vec.Doc2Vec(DocsLeeCorpus(unicode_tags=True), min_count=1)
