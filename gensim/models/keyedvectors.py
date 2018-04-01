@@ -50,7 +50,9 @@ Correlation with human opinion on word similarity::
 
 And on analogies::
 
-  >>> word_vectors.accuracy(os.path.join(module_path, 'test_data', 'questions-words.txt'))
+  >>> word_vectors.evaluate_word_analogies(os.path.join(module_path, 'test_data', 'questions-words.txt'))[0]
+  0.58
+  
 
 and so on.
 
