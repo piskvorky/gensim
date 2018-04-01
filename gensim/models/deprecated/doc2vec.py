@@ -68,7 +68,8 @@ from numpy import zeros, sum as np_sum, add as np_add, concatenate, \
 
 from gensim import utils
 from gensim.utils import call_on_class_only, deprecated
-from gensim.models.deprecated.word2vec import Word2Vec, train_cbow_pair, train_sg_pair, train_batch_sg
+from gensim.models.deprecated.word2vec import Word2Vec, train_cbow_pair, train_sg_pair, train_batch_sg,\
+    MAX_WORDS_IN_BATCH
 from gensim.models.deprecated.keyedvectors import KeyedVectors
 from gensim.models.doc2vec import Doc2Vec as NewDoc2Vec
 from gensim.models.deprecated.old_saveload import SaveLoad
@@ -104,8 +105,8 @@ def load_old_doc2vec(*args, **kwargs):
         'cbow_mean': old_model.cbow_mean,
         'hashfxn': old_model.hashfxn,
         'iter': old_model.iter,
-        'sorted_vocab': old_model.sorted_vocab,
-        'batch_words': old_model.batch_words,
+        'sorted_vocab': old_model.__dict__.get('sorted_vocab', 1),
+        'batch_words': old_model.__dict__.get('batch_words', MAX_WORDS_IN_BATCH),
         'compute_loss': old_model.__dict__.get('compute_loss', None)
     }
     new_model = NewDoc2Vec(**params)
@@ -136,16 +137,16 @@ def load_old_doc2vec(*args, **kwargs):
 
     # set doc2vec vocabulary attributes
     new_model.docvecs.doctags = old_model.docvecs.doctags
-    new_model.docvecs.max_rawint = old_model.docvecs.max_rawint
-    new_model.docvecs.offset2doctag = old_model.docvecs.offset2doctag
+    new_model.docvecs.max_rawint = old_model.docvecs.__dict__.get('max_rawint', None)
+    new_model.docvecs.offset2doctag = old_model.docvecs.__dict__.get('offset2doctag', None)
     new_model.docvecs.count = old_model.docvecs.count
 
-    new_model.train_count = old_model.train_count
-    new_model.corpus_count = old_model.corpus_count
-    new_model.running_training_loss = old_model.running_training_loss
-    new_model.total_train_time = old_model.total_train_time
-    new_model.min_alpha_yet_reached = old_model.min_alpha_yet_reached
-    new_model.model_trimmed_post_training = old_model.model_trimmed_post_training
+    new_model.train_count = old_model.__dict__.get('train_count', None)
+    new_model.corpus_count = old_model.__dict__.get('corpus_count', None)
+    new_model.running_training_loss = old_model.__dict__.get('running_training_loss', 0)
+    new_model.total_train_time = old_model.__dict__.get('total_train_time', None)
+    new_model.min_alpha_yet_reached = old_model.__dict__.get('min_alpha_yet_reached', old_model.alpha)
+    new_model.model_trimmed_post_training = old_model.__dict__.get('model_trimmed_post_training', None)
 
     return new_model
 
