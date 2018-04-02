@@ -290,6 +290,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                  gamma=1, eta=0.01, scale=1.0, var_converge=0.0001,
                  outputdir=None, random_state=None):
         """
+
         Parameters
         ----------
         corpus : iterable of list of (int, float)
@@ -298,11 +299,11 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Dictionary for the input corpus.
         max_chunks : int, optional
             Upper bound on how many chunks to process. It wraps around corpus beginning in another corpus pass,
-            if there are not enough chunks in the corpusю
+            if there are not enough chunks in the corpus.
         max_time : int, optional
             Upper bound on time (in seconds) for which model will be trained.
         chunksize : int, optional
-            Number of documents in one chunck
+            Number of documents in one chuck.
         kappa: float,optional
             Learning parameter which acts as exponential decay factor to influence extent of learning from each batch.
         tau: float, optional
@@ -326,7 +327,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Stores topic and options information in the specified directory.
         random_state : {None, int, array_like, :class:`~np.random.RandomState`, optional}
             Adds a little random jitter to randomize results around same alpha when trying to fetch a closest
-            corrsponding lda model from :meth:`~gensim.models.hdpmodel.HdpModel.suggested_lda_model`
+            corresponding lda model from :meth:`~gensim.models.hdpmodel.HdpModel.suggested_lda_model`
 
         """
         self.corpus = corpus
@@ -419,15 +420,16 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        bow : iterable of list of (int, float)
-            Bag-of-words representation of the document to get topics for.
+        bow : {iterable of list of (int, float), list of (int, float)
+            BoW representation of the document/corpus to get topics for.
         eps : float, optional
             Ignore topics with probability below `eps`.
 
         Returns
         -------
-        list of (int, float)
-            topic distribution for the given document `bow`, as a list of `(topic_id, topic_probability)` 2-tuples.
+        list of (int, float) **or** :class:`gensim.interfaces.TransformedCorpus`
+            Topic distribution for the given document/corpus `bow`, as a list of `(topic_id, topic_probability)` or
+            transformed corpus
 
         """
         is_corpus, corpus = utils.is_corpus(bow)
@@ -439,16 +441,16 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist) if topicvalue >= eps]
 
     def update(self, corpus):
-        """Train the model with new documents, by EM-iterating over `corpus` until
-        any of the conditions is satisfied
+        """Train the model with new documents, by EM-iterating over `corpus` until any of the conditions is satisfied.
+
         * time limit expired
         * chunk limit reached
         * whole corpus processed
 
         Parameters
         ----------
-        corpus : list of list of tuple of ints; [ [ (int,int) ]]
-            The corpus on which Hdp model will be updated.
+        corpus : iterable of list of (int, float)
+            Corpus in BoW format.
 
         """
         save_freq = max(1, int(10000 / self.chunksize))  # save every 10k docs, roughly
@@ -478,14 +480,14 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     logger.info('PROGRESS: finished document %i of %i', self.m_num_docs_processed, self.m_D)
 
     def update_finished(self, start_time, chunks_processed, docs_processed):
-        """Flag to determine whether the Hdp model has been updated with the new corpus or not.
+        """Flag to determine whether the model has been updated with the new corpus or not.
 
         Parameters
         ----------
         start_time : float
-            Indicates the current processor time as a floating point number expressed in seconds. The resolution is
-            typically better on Windows than on Unix by one microsecond due to differing implementation of underlying
-            function calls.
+            Indicates the current processor time as a floating point number expressed in seconds.
+            The resolution is typically better on Windows than on Unix by one microsecond due to differing
+            implementation of underlying function calls.
         chunks_processed : int
             Indicates progress of the update in terms of the number of chunks processed.
         docs_processed : int
@@ -494,7 +496,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Returns
         -------
         bool
-            If True Hdp model is updated, False otherwise.
+            If True - model is updated, False otherwise.
 
         """
         return (
@@ -512,17 +514,17 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        chunk : list of list of tuple of ints; [ [ (int,int) ]]
-            The chunk of corpus on which Hdp model will be updated.
+        chunk : iterable of list of (int, float)
+            Corpus in BoW format.
         update : bool, optional
-            If True then update lambda, False don't update lambda.
+            If True - call :meth:`~gensim.models.hdpmodel.HdpModel.update_lambda`.
         opt_o : bool, optional
-            Passed as argument to :meth:`~gensim.models.hdpmodel.HdpModel.update_lambda`. If True then the topics will
-            be ordered, False otherwise.
+            Passed as argument to :meth:`~gensim.models.hdpmodel.HdpModel.update_lambda`.
+            If True then the topics will be ordered, False otherwise.
 
         Returns
         -------
-        tuple of (float,int)
+        (float, int)
             A tuple of likelihood and sum of all the word counts from each document in the corpus.
 
         """
@@ -568,23 +570,23 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return score, count
 
     def doc_e_step(self, ss, Elogsticks_1st, unique_words, doc_word_ids, doc_word_counts, var_converge):
-        """Performs e step for a single doc.
+        """Performs E step for a single doc.
 
         Parameters
         ----------
         ss : :class:`~gensim.models.hdpmodel.SuffStats`
-            Suffstats for all document(s) in the chunk.
+            Stats for all document(s) in the chunk.
         Elogsticks_1st : numpy.ndarray
             Computed Elogsticks value by stick-breaking process.
-        unique_words : int
+        unique_words : dict of (int, int)
             Number of unique words in the chunk.
-        doc_word_ids : tuple of int
+        doc_word_ids : iterable of int
             Word ids of for a single document.
-        doc_word_counts : tuple of int
+        doc_word_counts : iterable of int
             Word counts of all words in a single document.
-        var_converge : float, optional
-            Lower bound on the right side of convergence. Used when updating variational parameters for a
-            single document.
+        var_converge : float
+            Lower bound on the right side of convergence. Used when updating variational parameters for a single
+            document.
 
         Returns
         -------
@@ -674,17 +676,16 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return likelihood
 
     def update_lambda(self, sstats, word_list, opt_o):
-        """Updates appropriate columns of lambda and top level sticks based on documents.
+        """Update appropriate columns of lambda and top level sticks based on documents.
 
         Parameters
         ----------
         sstats : :class:`~gensim.models.hdpmodel.SuffStats`
-            Suffstats for all document(s) in the chunk.
+            Statistic for all document(s) in the chunk.
         word_list : list of int
             Contains word id of all the unique words in the chunk of documents on which update is being performed.
         opt_o : bool, optional
-            If True invokes a call to :meth:`~gensim.models.hdpmodel.HdpModel.optimal_ordering` to order the topics,
-            False otherwise.
+            If True - invokes a call to :meth:`~gensim.models.hdpmodel.HdpModel.optimal_ordering` to order the topics.
 
         """
         self.m_status_up_to_date = False
@@ -748,19 +749,19 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         topn : int, optional
             Number of most probable words to show from given `topic_id`.
         log : bool, optional
-            If True logs a message with level INFO on the logger object, False otherwise
+            If True - logs a message with level INFO on the logger object.
         formatted : bool, optional
-            If True return the topics as a list of strings, False return the topics as lists of (weight, word) pairs.
+            If True - get the topics as a list of strings, otherwise - get the topics as lists of (weight, word) pairs.
         num_words : int, optional
-            Number of most probable words to show from given `topic_id`.
+            DEPRECATED, USE `topn` INSTEAD.
 
-        Notes
-        -----
+        Warnings
+        --------
         The parameter `num_words` is deprecated, will be removed in 4.0.0, please use `topn` instead.
 
         Returns
         -------
-        list of tuple of (unicode,numpy.float64) or list of str
+        list of (str, numpy.float) **or** list of str
             Topic terms output displayed whose format depends on `formatted` parameter.
 
         """
@@ -790,23 +791,21 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def show_topics(self, num_topics=20, num_words=20, log=False, formatted=True):
         """Print the `num_words` most probable words for `num_topics` number of topics.
-        Set `num_topics=-1` to print all topics.Set `formatted=True` to return the topics as a list of strings, or
-        `False` as lists of (word, weight) pairs.
 
         Parameters
         ----------
         num_topics : int, optional
-            Number of topics for which most probable `num_words` words will be fetched.
+            Number of topics for which most probable `num_words` words will be fetched, if -1 - print all topics.
         num_words :  int, optional
             Number of most probable words to show from `num_topics` number of topics.
         log : bool, optional
-            If True logs a message with level INFO on the logger object, False otherwise.
+            If True - log a message with level INFO on the logger object.
         formatted : bool, optional
-            If True return the topics as a list of strings, False return the topics as lists of (word, weight) pairs.
+            If True - get the topics as a list of strings, otherwise - get the topics as lists of (weight, word) pairs.
 
         Returns
         -------
-        list of tuple of (unicode,numpy.float64) or list of str
+        list of (str, numpy.float) **or** list of str
             Output format for topic terms depends on the value of `formatted` parameter.
 
         """
@@ -817,11 +816,11 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return hdp_formatter.show_topics(num_topics, num_words, log, formatted)
 
     def save_topics(self, doc_count=None):
-        """Saves all the topics discovered.
+        """Save discovered topics.
 
-        Notes
-        -----
-        This is a legacy method; use `self.save()` instead.
+        Warnings
+        --------
+        This method is deprecated, use :meth:`~gensim.models.hdpmodel.HdpModel.save` instead.
 
         Parameters
         ----------
@@ -842,11 +841,11 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         np.savetxt(fname, betas)
 
     def save_options(self):
-        """Writes all the values of the attributes for the current model in options.dat file.
+        """Writes all the values of the attributes for the current model in "options.dat" file.
 
-        Notes
-        -----
-        This is a legacy method; use `self.save()` instead.
+        Warnings
+        --------
+        This method is deprecated, use :meth:`~gensim.models.hdpmodel.HdpModel.save` instead.
 
         """
         if not self.outputdir:
@@ -867,12 +866,12 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             fout.write('gamma: %s\n' % str(self.m_gamma))
 
     def hdp_to_lda(self):
-        """Only returns corresponding alpha, beta values of a LDA almost equivalent to current HDP.
+        """Get corresponding alpha and beta values of a LDA almost equivalent to current HDP.
 
         Returns
         -------
-        tuple of numpy.ndarray
-            Tuple of numpy arrays of alpha and beta.
+        (numpy.ndarray, numpy.ndarray)
+            Alpha and Beta arrays.
 
         """
         # alpha
@@ -891,8 +890,9 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return alpha, beta
 
     def suggested_lda_model(self):
-        """Returns a trained ldamodel object which is closest to the current hdp model.The num_topics is m_T
-        (default is 150) so as to preserve the matrice shapes when we assign alpha and beta.
+        """Get a trained ldamodel object which is closest to the current hdp model.
+
+        The `num_topics=m_T`, so as to preserve the matrices shapes when we assign alpha and beta.
 
         Returns
         -------
@@ -912,8 +912,8 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : list of list of tuple of ints; [ [ (int,int) ]]
-            The corpus on which Hdp model will be tested.
+        corpus : iterable of list of (int, float)
+            Test corpus in BoW format.
 
         Returns
         -------
