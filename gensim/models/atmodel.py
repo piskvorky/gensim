@@ -19,10 +19,11 @@ also possible to continue training on the existing data.
 The model is closely related to :class:`gensim.models.ldamodel.LdaModel`. The AuthorTopicModel class
 inherits the LdaModel class, and its usage is thus similar.
 
-The model was introduced by Rosen-Zvi and co-authors in 2004 and is described in 
-`The Author-Topic Model for Authors and Documents <https://arxiv.org/abs/1207.4169>`_.The model correlates 
+The model was introduced by Rosen-Zvi and co-authors in 2004 and is described in
+`The Author-Topic Model for Authors and Documents <https://arxiv.org/abs/1207.4169>`_.The model correlates
 the authorship information with the topics to give a better insight on the subject knowledge of an author.
-A tutorial for using Author-topic model can be found at <https://github.com/RaRe-Technologies/gensim/tree/develop/docs/notebooks/atmodel_tutorial.ipynb>_.
+A tutorial for using Author-topic model can be found at
+<https://github.com/RaRe-Technologies/gensim/tree/develop/docs/notebooks/atmodel_tutorial.ipynb>_.
 
 Example
 -------
@@ -94,7 +95,7 @@ class AuthorTopicState(LdaState):
             Initialize topic parameters.
         gamma_shape: int
             Initialize topic parameters.
-            
+
         Note
         ----
         Distributed mode not available yet in the author-topic model. This AuthorTopicState
@@ -117,7 +118,7 @@ def construct_doc2author(corpus, author2doc):
         Corpus of documents.
     author2doc: dict of (str, list of int)
         Mapping of authors to documents.
-    
+
     Returns
     -------
     dict of {int, list of str}
@@ -141,12 +142,12 @@ def construct_author2doc(doc2author):
     ----------
     doc2author: dict of {int, list of str)
         Mapping of documents to authors.
-        
+
     Returns
     -------
     dict of {str, list of int}
         Mapping of authors to documents.
-    
+
     Examples
     --------
     >>> from gensim.models.atmodel import construct_author2doc
@@ -232,7 +233,7 @@ class AuthorTopicModel(LdaModel):
         serialization_path : str
             Must be set to a filepath, if `serialized = True` is used.
 
-        
+
         """
         # NOTE: this doesn't call constructor of a base class, but duplicates most of this code
         # so we have to set dtype to float64 default here
@@ -334,7 +335,7 @@ class AuthorTopicModel(LdaModel):
 
     def __str__(self):
         """Return a string representation of AuthorTopicModel class.
-        
+
         Returns
         -------
         str
@@ -400,12 +401,12 @@ class AuthorTopicModel(LdaModel):
             Value of variational distribution :math: q(\theta|\gamma).
         expElogbetad: numpy.ndarray
             Value of variational distribution :math: q(\beta|\lambda).
-        
+
         Returns
         -------
         float
             Value of normalizing factor.
-            
+
         """
         expElogtheta_sum = expElogthetad.sum(axis=0)
         phinorm = expElogtheta_sum.dot(expElogbetad) + 1e-100
@@ -576,7 +577,7 @@ class AuthorTopicModel(LdaModel):
             Initializes the state for a new E-M iteration.
         chunk_doc_idx : numpy.ndarray
             Assigns the value for document index.
-            
+
         Returns
         -------
         float
@@ -608,12 +609,12 @@ class AuthorTopicModel(LdaModel):
             Assigns the value for document index.
         total_docs : int
             Initializes the value for total number of documents.
-            
+
         Returns
         -------
         float
             Value of per-word likelihood bound.
-        
+
         """
 
         # TODO: This method is very similar to the one in LdaModel. Refactor.
@@ -942,7 +943,7 @@ class AuthorTopicModel(LdaModel):
             Assigns the value for document index.
         subsample_ratio : float, optional
             Used for calculation of word score for estimation of variational bound.
-        
+
         Returns
         -------
         float
@@ -1148,12 +1149,12 @@ class AuthorTopicModel(LdaModel):
             Name of the author for which the topic distribution needs to be estimated.
         minimum_probability : float, optional
             Sets the minimum probability value for showing the topics of a given author.
-            
+
         Returns
         -------
         list of (int, float)
             Topic distribution of an author as a list of topic ID and its probability.
-            
+
         Example
         -------
         >>> import numpy as np
@@ -1171,10 +1172,10 @@ class AuthorTopicModel(LdaModel):
         ...     2: ['john', 'jane', 'jack']
         ... }
         >>> corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
-        >>> model = AuthorTopicModel(corpus, author2doc=author2doc, id2word=dictionary, num_topics=4, passes=100)  # train model
+        >>> model = AuthorTopicModel(corpus, author2doc=author2doc, id2word=dictionary, num_topics=4, passes=100)
         >>> author_vecs = [model.get_author_topics(author) for author in model.id2author.values()]
         >>> print(author_vecs)
-        
+
 
         """
 
@@ -1206,16 +1207,16 @@ class AuthorTopicModel(LdaModel):
             Name of the author for which the topic distribution needs to be estimated.
         eps : float, optional
             Sets the minimum probability value for showing the topics of a given author.
-        
+
         Warnings
         --------
         Ignores topics with probaility less than `eps`.
-        
+
         Returns
         -------
         list of (int, float)
             Topic distribution for the author as a list.
-        
+
         """
         if isinstance(author_names, list):
             items = []
