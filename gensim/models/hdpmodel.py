@@ -21,23 +21,23 @@ Examples
 --------
 
 
-#. Train :class:`~gensim.models.hdpmodel.HdpModel`
+Train :class:`~gensim.models.hdpmodel.HdpModel`
 
 >>> from gensim.test.utils import common_corpus, common_dictionary
 >>> from gensim.models import HdpModel
 >>>
 >>> hdp = HdpModel(common_corpus, common_dictionary)
 
-#. You can then infer topic distributions on new, unseen documents, with
+You can then infer topic distributions on new, unseen documents, with
 
 >>> unseen_document = [(1, 3.), (2, 4)]
 >>> doc_hdp = hdp[unseen_document]
 
-#. To print 20 topics with top 10 most probable words.
+To print 20 topics with top 10 most probable words.
 
 >>> topic_info = hdp.print_topics(num_topics=20, num_words=10)
 
-#. The model can be updated (trained) with new documents via
+The model can be updated (trained) with new documents via
 
 >>> hdp.update([[(1, 2)], [(1, 1), (4, 5)]])
 
@@ -944,9 +944,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
 
 class HdpTopicFormatter(object):
-    """Helper class for :class:`gensim.models.hdpmodel.HdpModel` to format the output of topics and most probable words
-    for display."""
-
+    """Helper class for :class:`gensim.models.hdpmodel.HdpModel` to format the output of topics."""
     (STYLE_GENSIM, STYLE_PRETTY) = (1, 2)
 
     def __init__(self, dictionary=None, topic_data=None, topic_file=None, style=None):
@@ -958,18 +956,16 @@ class HdpTopicFormatter(object):
             Dictionary for the input corpus.
         topic_data : numpy.ndarray, optional
             The term topic matrix.
-        topic_file : file, str, or pathlib.Path
+        topic_file : {file-like object, str, pathlib.Path}
             File, filename, or generator to read. If the filename extension is .gz or .bz2, the file is first
             decompressed. Note that generators should return byte strings for Python 3k.
         style : bool, optional
-            If True return the topics as a list of strings, False return the topics as lists of (word, weight) pairs.
-        data: numpy.ndarray
-            Sorted topic data in descending order of sum of probabilities for all words in corresponding topic.
+            If True - get the topics as a list of strings, otherwise - get the topics as lists of (word, weight) pairs.
 
         Raises
         ------
         ValueError
-            Either no dictionary or no topic data.
+            Either dictionary is None or both `topic_data` and `topic_file` is None.
 
         """
         if dictionary is None:
@@ -996,6 +992,7 @@ class HdpTopicFormatter(object):
 
     def print_topics(self, num_topics=10, num_words=10):
         """Give the most probable `num_words` words from `num_topics` topics.
+        Alias for :meth:`~gensim.models.hdpmodel.HdpTopicFormatter.show_topics`.
 
         Parameters
         ----------
@@ -1006,7 +1003,7 @@ class HdpTopicFormatter(object):
 
         Returns
         -------
-        list of tuple of (unicode,numpy.float64) or list of str
+        list of (str, numpy.float) **or** list of str
             Output format for `num_words` words from `num_topics` topics depends on the value of `self.style` attribute.
 
         """
@@ -1022,14 +1019,13 @@ class HdpTopicFormatter(object):
         num_words : int, optional
             Top `num_words` most probable words to be printed from each topic.
         log : bool, optional
-            If True logs a message with level INFO on the logger object, False otherwise.
+            If True - log a message with level INFO on the logger object.
         formatted : bool, optional
-            If True return the topics as a list of strings, False as lists of
-            (word, weight) pairs.
+            If True - get the topics as a list of strings, otherwise as lists of (word, weight) pairs.
 
         Returns
         -------
-        list of tuple of (int ,list of tuple of (unicode,numpy.float64) or list of str)
+        list of (int, list of (str, numpy.float) **or** list of str)
             Output format for terms from `num_topics` topics depends on the value of `self.style` attribute.
 
         """
@@ -1063,8 +1059,8 @@ class HdpTopicFormatter(object):
     def print_topic(self, topic_id, topn=None, num_words=None):
         """Print the `topn` most probable words from topic id `topic_id`.
 
-        Notes
-        -----
+        Warnings
+        --------
         The parameter `num_words` is deprecated, will be removed in 4.0.0, please use `topn` instead.
 
         Parameters
@@ -1074,11 +1070,11 @@ class HdpTopicFormatter(object):
         topn : int, optional
             Number of most probable words to show from given `topic_id`.
         num_words : int, optional
-            Number of most probable words to show from given `topic_id`.
+            DEPRECATED, USE `topn` INSTEAD.
 
         Returns
         -------
-        list of tuple of (unicode,numpy.float64) or list of str
+        list of (str, numpy.float) **or** list of str
             Output format for terms from a single topic depends on the value of `formatted` parameter.
 
         """
@@ -1093,8 +1089,8 @@ class HdpTopicFormatter(object):
     def show_topic(self, topic_id, topn=20, log=False, formatted=False, num_words=None,):
         """Give the most probable `num_words` words for the id `topic_id`.
 
-        Notes
-        -----
+        Warnings
+        --------
         The parameter `num_words` is deprecated, will be removed in 4.0.0, please use `topn` instead.
 
         Parameters
@@ -1109,11 +1105,11 @@ class HdpTopicFormatter(object):
             If True return the topics as a list of strings, False as lists of
             (word, weight) pairs.
         num_words : int, optional
-            Number of most probable words to show from given `topic_id`.
+            DEPRECATED, USE `topn` INSTEAD.
 
         Returns
         -------
-        list of tuple of (unicode,numpy.float64) or list of str
+        list of (str, numpy.float) **or** list of str
             Output format for terms from a single topic depends on the value of `self.style` attribute.
 
         """
@@ -1148,14 +1144,14 @@ class HdpTopicFormatter(object):
 
         Parameters
         ----------
-        topic_data : list of tuple of (unicode,numpy.float64)
+        topic_data : list of (str, numpy.float)
             Contains probabilities for each word id belonging to a single topic.
         num_words : int
             Number of words for which probabilities are to be extracted from the given single topic data.
 
         Returns
         -------
-        list of tuple of (unicode,numpy.float64)
+        list of (str, numpy.float)
             A sequence of topic terms and their probabilities.
 
         """
@@ -1168,12 +1164,12 @@ class HdpTopicFormatter(object):
         ----------
         topic_id : int
             Acts as a representative index for a particular topic.
-        topic_terms : list of tuple of (unicode,numpy.float64)
+        topic_terms : list of (str, numpy.float)
             Contains the most probable words from a single topic.
 
         Returns
         -------
-        list of tuple of (unicode,numpy.float64) or list of str
+        list of (str, numpy.float) **or** list of str
             Output format for topic terms depends on the value of `self.style` attribute.
 
         """
