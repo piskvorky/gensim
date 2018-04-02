@@ -873,8 +873,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         `analogies` is a filename where lines are 4-tuples of words,
         split into sections by ": SECTION NAME" lines.
         See questions-words.txt for an example:
-        `from gensim.test.utils import datapath
-        datapath("questions-words.txt")`
+        `from gensim.test.utils import datapath`
+        `datapath("questions-words.txt")`
 
         Use `restrict_vocab` to ignore all 4-tuples containing a word
         not in the first `restrict_vocab` words (default 300,000). This
