@@ -6,50 +6,49 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""
-Author-topic model in Python.
+"""Author-topic model.
 
-This module trains the author-topic model on documents and corresponding author-document
-dictionaries. The training is online and is constant in memory w.r.t. the number of
-documents. The model is *not* constant in memory w.r.t. the number of authors.
+This module trains the author-topic model on documents and corresponding author-document dictionaries.
+The training is online and is constant in memory w.r.t. the number of documents.
+The model is *not* constant in memory w.r.t. the number of authors.
 
 The model can be updated with additional documents after training has been completed. It is
 also possible to continue training on the existing data.
 
-The model is closely related to :class:`gensim.models.ldamodel.LdaModel`. The AuthorTopicModel class
-inherits the LdaModel class, and its usage is thus similar.
+The model is closely related to :class:`~gensim.models.ldamodel.LdaModel`.
+The :class:`~gensim.models.atmodel.AuthorTopicModel` class inherits  :class:`~gensim.models.ldamodel.LdaModel`,
+and its usage is thus similar.
 
-The model was introduced by Rosen-Zvi and co-authors in 2004 and is described in
-`The Author-Topic Model for Authors and Documents <https://arxiv.org/abs/1207.4169>`_.The model correlates
-the authorship information with the topics to give a better insight on the subject knowledge of an author.
-A tutorial for using Author-topic model can be found at
-<https://github.com/RaRe-Technologies/gensim/tree/develop/docs/notebooks/atmodel_tutorial.ipynb>_.
+The model was introduced by  `Rosen-Zvi and co-authors: "The Author-Topic Model for Authors and Documents"
+<https://arxiv.org/abs/1207.4169>`_. The model correlates the authorship information with the topics to give a better
+insight on the subject knowledge of an author.
 
 Example
 -------
->>> import numpy as np
 >>> from gensim.models import AuthorTopicModel
 >>> from gensim.corpora import mmcorpus
->>> from gensim.test.utils import (datapath, common_dictionary as dictionary, common_corpus as corpus)
+>>> from gensim.test.utils import common_dictionary, datapath, temporary_file
+
 >>> author2doc = {
 ...     'john': [0, 1, 2, 3, 4, 5, 6],
 ...     'jane': [2, 3, 4, 5, 6, 7, 8],
 ...     'jack': [0, 2, 4, 6, 8]
 ... }
->>> doc2author = {
-...     0: ['john', 'jack'],
-...     1: ['john', 'jill'],
-...     2: ['john', 'jane', 'jack']
-... }
+>>>
 >>> corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
->>> model = AuthorTopicModel(corpus, author2doc=author2doc, id2word=dictionary, num_topics=4, passes=100)  # train model
->>> model.update(corpus, author2doc)  # update the author-topic model with additional documents
+>>>
+>>> with temporary_file("serialized") as s_path:
+...     model = AuthorTopicModel(
+...          corpus, author2doc=author2doc, id2word=common_dictionary, num_topics=4,
+...          serialized=True, serialization_path=s_path
+...     )
+...
+...     model.update(corpus, author2doc)  # update the author-topic model with additional documents
+>>>
+>>> # construct vectors for authors
 >>> author_vecs = [model.get_author_topics(author) for author in model.id2author.values()]
->>> print(author_vecs) #Prints all authors
->>> print
 
 """
-
 # TODO: this class inherits LdaModel and overwrites some methods. There is some code
 # duplication still, and a refactor could be made to avoid this. Comments with "TODOs"
 # are included in the code where this is the case, for example in the log_perplexity
@@ -72,34 +71,23 @@ from scipy.special import gammaln  # gamma function utils
 from six.moves import xrange
 import six
 
-logger = logging.getLogger('gensim.models.atmodel')
+logger = logging.getLogger(__name__)
 
 
 class AuthorTopicState(LdaState):
-    """
-    Encapsulate information for computation of AuthorTopicModel objects.
-
-    Objects of this class are sent over the network, so try to keep them lean to
-    reduce traffic.
-
-    """
+    """Encapsulate information for computation of :class:`~gensim.models.atmodel.AuthorTopicModel`."""
 
     def __init__(self, eta, lambda_shape, gamma_shape):
-        """Ïnitializes parameters for the Author-Topic model.
+        """
 
         Parameters
         ----------
-        eta: float
+        eta: numpy.ndarray
             Dirichlet topic parameter for sparsity.
         lambda_shape: (int, int)
             Initialize topic parameters.
         gamma_shape: int
             Initialize topic parameters.
-
-        Note
-        ----
-        Distributed mode not available yet in the author-topic model. This AuthorTopicState
-        object is kept so that when the time comes to implement it, it will be easier.
 
         """
         self.eta = eta
@@ -110,18 +98,18 @@ class AuthorTopicState(LdaState):
 
 
 def construct_doc2author(corpus, author2doc):
-    """Make a mapping from document IDs to author IDs.
+    """Create a mapping from document IDs to author IDs.
 
     Parameters
     ----------
-    corpus: iterable of list of str
-        Corpus of documents.
+    corpus: iterable of list of (int, float)
+        Corpus in BoW format.
     author2doc: dict of (str, list of int)
         Mapping of authors to documents.
 
     Returns
     -------
-    dict of {int, list of str}
+    dict of (int, list of str)
         Document to Author mapping.
 
     """
@@ -140,26 +128,15 @@ def construct_author2doc(doc2author):
 
     Parameters
     ----------
-    doc2author: dict of {int, list of str)
-        Mapping of documents to authors.
+    doc2author: dict of (int, list of str)
+        Mapping of document id to authors.
 
     Returns
     -------
-    dict of {str, list of int}
-        Mapping of authors to documents.
-
-    Examples
-    --------
-    >>> from gensim.models.atmodel import construct_author2doc
-    >>> doc2author = {
-    ...     0: ['john', 'jack'],
-    ...     1: ['john', 'jill'],
-    ...     2: ['john', 'jane', 'jack']
-    ... }
-    >>> author2doc = construct_author2doc(doc2author)
+    dict of (str, list of int)
+        Mapping of authors to document ids.
 
     """
-
     # First get a set of all authors.
     authors_ids = set()
     for d, a_doc_ids in doc2author.items():
@@ -919,24 +896,27 @@ class AuthorTopicModel(LdaModel):
                 del other
 
     def bound(self, chunk, chunk_doc_idx=None, subsample_ratio=1.0, author2doc=None, doc2author=None):
-        """
-        Estimate the variational bound of documents from `corpus`:
-        :math: E_q[log p(corpus)] - E_q[log q(corpus)]
+        """Estimate the variational bound of documents from `corpus`.
 
+        :math:`\mathbb{E_{q}}[\log p(corpus)] - \mathbb{E_{q}}[\log q(corpus)]`
+
+        Notes
+        -----
         There are basically two use cases of this method:
-        1. `chunk` is a subset of the training corpus, and `chunk_doc_idx` is provided,
-        indicating the indexes of the documents in the training corpus.
-        2. `chunk` is a test set (held-out data), and author2doc and doc2author
-        corrsponding to this test set are provided. There must not be any new authors
-        passed to this method. `chunk_doc_idx` is not needed in this case.
+
+        #. `chunk` is a subset of the training corpus, and `chunk_doc_idx` is provided,
+           indicating the indexes of the documents in the training corpus.
+        #. `chunk` is a test set (held-out data), and `author2doc` and `doc2author` corresponding to this test set
+           are provided. There must not be any new authors passed to this method, `chunk_doc_idx` is not needed
+           in this case.
 
         Parameters
         ----------
-        chunk : int
-            The chunk numer of the sparse document vector on which inference needs to be done.
-        author2doc : dict of (str, list of ints)
-            A dictionary where keys are the names of authors and values are lists of
-            documents that the author contributes to.
+        chunk : iterable of list of (int, float)
+            Corpus in BoW format.
+        author2doc : dict of (str, list of int)
+            A dictionary where keys are the names of authors and values are lists of documents that the author
+            contributes to.
         doc2author : dict of (int, list of str)
             A dictionary where the keys are document IDs and the values are lists of author names.
         chunk_doc_idx : numpy.ndarray
@@ -949,13 +929,7 @@ class AuthorTopicModel(LdaModel):
         float
             Value of variational bound score.
 
-        Example
-        -------
-        >>> corpus_words = sum(cnt for document in corpus for _, cnt in document)
-        >>> model.bound(corpus, author2doc=author2doc, doc2author=doc2author) / corpus_words
-
         """
-
         # TODO: enable evaluation of documents with new authors. One could, for example, make it
         # possible to pass a list of documents to self.inference with no author dictionaries,
         # assuming all the documents correspond to one (unseen) author, learn the author's
@@ -1049,13 +1023,19 @@ class AuthorTopicModel(LdaModel):
         return total_score
 
     def get_document_topics(self, word_id, minimum_probability=None):
-        """
-        This method overwrites `LdaModel.get_document_topics` and simply raises an
-        exception. `get_document_topics` is not valid for the author-topic model,
-        use `get_author_topics` instead.
+        """Override :meth:`~gensim.models.ldamodel.LdaModel.get_document_topics` and simply raises an exception.
+
+        Warnings
+        --------
+        This method invalid for model, use :meth:`~gensim.models.atmodel.AuthorTopicModel.get_author_topics` or
+        :meth:`~gensim.models.atmodel.AuthorTopicModel.get_new_author_topics` instead.
+
+        Raises
+        ------
+        NotImplementedError
+            Always.
 
         """
-
         raise NotImplementedError(
             'Method "get_document_topics" is not valid for the author-topic model. '
             'Use the "get_author_topics" method.'
@@ -1069,7 +1049,7 @@ class AuthorTopicModel(LdaModel):
 
         Parameters
         ----------
-        corpus : iterable of iterable of (int, int)
+        corpus : iterable of list of (int, float)
             Corpus in BoW format.
         minimum_probability : float, optional
             Ignore topics with probability below this value, if None - 1e-8 is used.
@@ -1134,51 +1114,47 @@ class AuthorTopicModel(LdaModel):
         return new_author_topics
 
     def get_author_topics(self, author_name, minimum_probability=None):
-        """
-        Return topic distribution the given author.
-
-        Input as as a list of
-        (topic_id, topic_probability) 2-tuples.
-        Ignore topics with very low probability (below `minimum_probability`).
-        Obtaining topic probabilities of each word, as in LDA (via `per_word_topics`),
-        is not supported.
+        """Get topic distribution the given author.
 
         Parameters
         ----------
         author_name : str
             Name of the author for which the topic distribution needs to be estimated.
         minimum_probability : float, optional
-            Sets the minimum probability value for showing the topics of a given author.
+            Sets the minimum probability value for showing the topics of a given author, topics with probability <
+            `minimum_probability` will be ignored.
 
         Returns
         -------
         list of (int, float)
-            Topic distribution of an author as a list of topic ID and its probability.
+            Topic distribution of an author.
 
         Example
         -------
-        >>> import numpy as np
         >>> from gensim.models import AuthorTopicModel
         >>> from gensim.corpora import mmcorpus
-        >>> from gensim.test.utils import (datapath, common_dictionary as dictionary, common_corpus as corpus)
+        >>> from gensim.test.utils import common_dictionary, datapath, temporary_file
+
         >>> author2doc = {
         ...     'john': [0, 1, 2, 3, 4, 5, 6],
         ...     'jane': [2, 3, 4, 5, 6, 7, 8],
         ...     'jack': [0, 2, 4, 6, 8]
         ... }
-        >>> doc2author = {
-        ...     0: ['john', 'jack'],
-        ...     1: ['john', 'jill'],
-        ...     2: ['john', 'jane', 'jack']
-        ... }
+        >>>
         >>> corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
-        >>> model = AuthorTopicModel(corpus, author2doc=author2doc, id2word=dictionary, num_topics=4, passes=100)
+        >>>
+        >>> with temporary_file("serialized") as s_path:
+        ...     model = AuthorTopicModel(
+        ...          corpus, author2doc=author2doc, id2word=common_dictionary, num_topics=4,
+        ...          serialized=True, serialization_path=s_path
+        ...     )
+        ...
+        ...     model.update(corpus, author2doc)  # update the author-topic model with additional documents
+        >>>
+        >>> # construct vectors for authors
         >>> author_vecs = [model.get_author_topics(author) for author in model.id2author.values()]
-        >>> print(author_vecs)
-
 
         """
-
         author_id = self.author2id[author_name]
 
         if minimum_probability is None:
@@ -1195,27 +1171,20 @@ class AuthorTopicModel(LdaModel):
         return author_topics
 
     def __getitem__(self, author_names, eps=None):
-        """
-        Return topic distribution for input author as a list of
-        (topic_id, topic_probabiity) 2-tuples.
-
-        Do not call this method directly, instead use `model[author_names]`.
+        """Get topic distribution for input `author_names`.
 
         Parameters
         ----------
-        author_names : str
-            Name of the author for which the topic distribution needs to be estimated.
+        author_names : {str, list of str}
+            Name(s) of the author for which the topic distribution needs to be estimated.
         eps : float, optional
-            Sets the minimum probability value for showing the topics of a given author.
-
-        Warnings
-        --------
-        Ignores topics with probaility less than `eps`.
+            The minimum probability value for showing the topics of a given author, topics with probability < `eps`
+            will be ignored.
 
         Returns
         -------
-        list of (int, float)
-            Topic distribution for the author as a list.
+        list of (int, float) **or** list of list of (int, float)
+            Topic distribution for the author(s), type depends on type of `author_names`.
 
         """
         if isinstance(author_names, list):
