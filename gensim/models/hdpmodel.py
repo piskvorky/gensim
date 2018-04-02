@@ -14,12 +14,11 @@
 <http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_.
 
 The core estimation code is directly adapted from the `blei-lab/online-hdp <https://github.com/blei-lab/online-hdp>`_
-from `Wang, Paisley, Blei: Online Variational Inference for the Hierarchical Dirichlet Process,  JMLR (2011)
+from `Wang, Paisley, Blei: "Online Variational Inference for the Hierarchical Dirichlet Process",  JMLR (2011)
 <http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_.
 
 Examples
 --------
-
 
 Train :class:`~gensim.models.hdpmodel.HdpModel`
 
@@ -55,6 +54,8 @@ from six.moves import xrange
 from gensim import interfaces, utils, matutils
 from gensim.matutils import dirichlet_expectation
 from gensim.models import basemodel, ldamodel
+
+from gensim.utils import deprecated
 
 logger = logging.getLogger(__name__)
 
@@ -815,6 +816,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         hdp_formatter = HdpTopicFormatter(self.id2word, betas)
         return hdp_formatter.show_topics(num_topics, num_words, log, formatted)
 
+    @deprecated("This method will be removed in 4.0.0, use `save` instead.")
     def save_topics(self, doc_count=None):
         """Save discovered topics.
 
@@ -840,6 +842,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         betas = self.m_lambda + self.m_eta
         np.savetxt(fname, betas)
 
+    @deprecated("This method will be removed in 4.0.0, use `save` instead.")
     def save_options(self):
         """Writes all the values of the attributes for the current model in "options.dat" file.
 
