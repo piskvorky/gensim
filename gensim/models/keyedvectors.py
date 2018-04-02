@@ -860,38 +860,60 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             return score
 
     def evaluate_word_analogies(self, analogies, restrict_vocab=300000, case_insensitive=True, dummy4unknown=False):
-        """
-        Compute performance of the model on an analogy test set
-        (see https://aclweb.org/aclwiki/Analogy_(State_of_the_art)).
-        `analogies` is a filename where lines are 4-tuples of words, split into sections by ": SECTION NAME" lines.
-        See questions-words.txt in
-        https://storage.googleapis.com/google-code-archive-source/v2/code.google.com/word2vec/source-archive.zip
-        for an example.
+        """Compute performance of the model on an analogy test set.
 
-        The accuracy is reported (=printed to log and returned as a score) for each section separately,
-        plus there's one aggregate summary at the end.
+        The accuracy is reported (=printed to log and returned as a score)
+        for each section separately, plus there's one aggregate summary
+        at the end.
+        This method corresponds to the `compute-accuracy` script of the
+        original C word2vec.
 
-        Use `restrict_vocab` to ignore all 4-tuples containing a word not in the first `restrict_vocab`
-        words (default 300,000). This may be meaningful if you've sorted the model vocabulary by descending frequency
-        (which is standard in modern word embedding models).
+        Parameters
+        ----------
+        `analogies` is a filename where lines are 4-tuples of words,
+        split into sections by ": SECTION NAME" lines.
+        See questions-words.txt for an example:
+        `from gensim.test.utils import datapath
+        datapath("questions-words.txt")`
 
-        If `case_insensitive` is True, the first `restrict_vocab` words are taken first, and then
-        case normalization is performed.
-        Use `case_insensitive` to convert all words in 4-tuples and vocabulary to their uppercase form before
-        evaluating the performance (default True). Useful to handle case-mismatch between training tokens
-        and words in the test set. In case of multiple case variants of a single word, the vector for the first
-        occurrence (also the most frequent if vocabulary is sorted) is taken.
+        Use `restrict_vocab` to ignore all 4-tuples containing a word
+        not in the first `restrict_vocab` words (default 300,000). This
+        may be meaningful if you've sorted the model vocabulary by
+        descending frequency (which is standard in modern word embedding
+        models).
 
-        Use `dummy4unknown=True` to produce zero accuracies for 4-tuples with out-of-vocabulary words.
-        Otherwise (default False), these tuples are skipped entirely and not used in the evaluation.
+        Use `case_insensitive` to convert all words in 4-tuples and
+        vocabulary to their uppercase form before evaluating
+        the performance (default True). Useful to handle case-mismatch
+        between training tokens and words in the test set.
+        In case of multiple case variants of a single word, the vector
+        for the first occurrence (also the most frequent if vocabulary
+        is sorted) is taken. If `case_insensitive` is True, the first
+        `restrict_vocab` words are taken first, and then case normalization
+        is performed.
 
-        This method corresponds to the `compute-accuracy` script of the original C word2vec.
+        Use `dummy4unknown=True` to produce zero accuracies for 4-tuples
+        with out-of-vocabulary words. Otherwise (default False), these
+        tuples are skipped entirely and not used in the evaluation.
+
+        References
+        -------
+        See <https://aclweb.org/aclwiki/Analogy_(State_of_the_art)>.
+
+        Returns
+        -------
+        float
+            Overall evaluation score
+        list
+            Full lists of correct and incorrect predictions
+
         """
         ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
         ok_vocab = {w.upper(): v for w, v in reversed(ok_vocab)} if case_insensitive else dict(ok_vocab)
         oov = 0
         logger.info("Evaluating word analogies for top %i most frequent words on %s", restrict_vocab, analogies)
         sections, section = [], None
+        line_no = 1
         for line_no, line in enumerate(utils.smart_open(analogies)):
             line = utils.to_unicode(line)
             if line.startswith(': '):
@@ -951,8 +973,10 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         oov_ratio = float(oov) / line_no * 100
         logger.info('Quadruplets with out-of-vocabulary words: %.1f%%', oov_ratio)
         if not dummy4unknown:
-            logger.info('NB: analogies containing OOV words were skipped from evaluation! '
-                        'To change this behavior, use "dummy4unknown=True"')
+            logger.info(
+                'NB: analogies containing OOV words were skipped from evaluation! '
+                'To change this behavior, use "dummy4unknown=True"'
+            )
         analogies_score = self.log_evaluate_word_analogies(total)
         sections.append(total)
         # Return the overall score and the full lists of correct and incorrect analogies
