@@ -872,8 +872,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         Parameters
         ----------
         analogies : str
-            filename where lines are 4-tuples of words,
-            split into sections by ": SECTION NAME" lines.
+            filename where lines are 4-tuples of words, 
+	    split into sections by ": SECTION NAME" lines.
             See questions-words.txt for an example:
             `from gensim.test.utils import datapath`
             `datapath("questions-words.txt")`
@@ -910,7 +910,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
         ok_vocab = {w.upper(): v for w, v in reversed(ok_vocab)} if case_insensitive else dict(ok_vocab)
         oov = 0
-        logger.info("Evaluating word analogies for top %i most frequent words on %s", restrict_vocab, analogies)
+        logger.info("Evaluating word analogies for top %i words in the model on %s", restrict_vocab, analogies)
         sections, section = [], None
         quadruplets_no = 0
         for line_no, line in enumerate(utils.smart_open(analogies)):
