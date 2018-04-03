@@ -853,6 +853,20 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
     @staticmethod
     def _log_evaluate_word_analogies(section):
+        """Calculate score by section, helper for
+        :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.evaluate_word_analogies`.
+
+        Parameters
+        ----------
+        section : dict of (str, (str, str, str, str))
+            Section given from evaluation.
+
+        Returns
+        -------
+        float
+            Accuracy score.
+
+        """
         correct, incorrect = len(section['correct']), len(section['incorrect'])
         if correct + incorrect > 0:
             score = correct / (correct + incorrect)
@@ -862,49 +876,37 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
     def evaluate_word_analogies(self, analogies, restrict_vocab=300000, case_insensitive=True, dummy4unknown=False):
         """Compute performance of the model on an analogy test set.
 
-        The accuracy is reported (=printed to log and returned as a score)
-        for each section separately, plus there's one aggregate summary
-        at the end.
-        This method corresponds to the `compute-accuracy` script of the
-        original C word2vec.
-        See also `Analogy (State of the art) <https://aclweb.org/aclwiki/Analogy_(State_of_the_art)>`.
+        This is modern variant of :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.accuracy`, see
+        `discussion on GitHub #1935 <https://github.com/RaRe-Technologies/gensim/pull/1935>`_.
+
+        The accuracy is reported (printed to log and returned as a score) for each section separately,
+        plus there's one aggregate summary at the end.
+
+        This method corresponds to the `compute-accuracy` script of the original C word2vec.
+        See also `Analogy (State of the art) <https://aclweb.org/aclwiki/Analogy_(State_of_the_art)>`_.
 
         Parameters
         ----------
         analogies : str
-            filename where lines are 4-tuples of words,
-            split into sections by ": SECTION NAME" lines.
-            See questions-words.txt for an example:
-            `from gensim.test.utils import datapath`
-            `datapath("questions-words.txt")`
-
-        restrict_vocab : int
-            ignore all 4-tuples containing a word not in the first
-            `restrict_vocab` words (default 300,000). This may be
-            meaningful if you've sorted the model vocabulary by descending
-            frequency (which is standard in modern word embedding models).
-
-        case_insensitive : bool
-            convert all words in 4-tuples and vocabulary to their
-            uppercase form before evaluating the performance
-            (default True). Useful to handle case-mismatch
-            between training tokens and words in the test set.
-            In case of multiple case variants of a single word, the vector
-            for the first occurrence (also the most frequent if vocabulary
-            is sorted) is taken. If `case_insensitive` is True, the first
-            `restrict_vocab` words are taken first, and then case normalization
-            is performed.
-
-        dummy4unknown : bool
-            produce zero accuracies for 4-tuples with out-of-vocabulary words.
-            Otherwise (default False), these tuples are skipped entirely
-            and not used in the evaluation.
+            Path to file, where lines are 4-tuples of words, split into sections by ": SECTION NAME" lines.
+            See `gensim/test/test_data/questions-words.txt` as example.
+        restrict_vocab : int, optional
+            Ignore all 4-tuples containing a word not in the first `restrict_vocab` words.
+            This may be meaningful if you've sorted the model vocabulary by descending frequency (which is standard
+            in modern word embedding models).
+        case_insensitive : bool, optional
+            If True - convert all words to their uppercase form before evaluating the performance.
+            Useful to handle case-mismatch between training tokens and words in the test set.
+            In case of multiple case variants of a single word, the vector for the first occurrence
+            (also the most frequent if vocabulary is sorted) is taken.
+        dummy4unknown : bool, optional
+            If True - produce zero accuracies for 4-tuples with out-of-vocabulary words.
+            Otherwise, these tuples are skipped entirely and not used in the evaluation.
 
         Returns
         -------
-        (float, list)
-            Overall evaluation score and full lists of correct and
-            incorrect predictions
+        (float, list of dict of (str, (str, str, str))
+            Overall evaluation score and full lists of correct and incorrect predictions divided by sections.
 
         """
         ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
