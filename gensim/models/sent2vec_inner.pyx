@@ -7,6 +7,7 @@
 
 import cython
 import numpy as np
+import sys
 from numpy import zeros, float32 as REAL
 cimport numpy as np
 from libcpp.vector cimport vector
@@ -29,8 +30,8 @@ from word2vec import FAST_VERSION
 
 cdef int ONE = 1
 cdef REAL_t ONEF = <REAL_t>1.0
-DEF EXP_TABLE_SIZE = 1000
-DEF MAX_EXP = 6
+cdef int EXP_TABLE_SIZE = 1000
+cdef int MAX_EXP = 6
 
 cdef REAL_t negative_sampling(const int target, const REAL_t lr, REAL_t *grad, REAL_t *wo,
                               REAL_t *hidden, const int vector_size, const int neg, int *negatives,
@@ -53,9 +54,9 @@ cdef REAL_t negative_sampling(const int target, const REAL_t lr, REAL_t *grad, R
 cdef REAL_t sigmoid(const REAL_t val)nogil:
 
     cdef int temp = <int>((val + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))
-    if val <= -MAX_EXP or temp < 0:
+    if temp < 0:
         return 0.0
-    elif val >= MAX_EXP or temp >= EXP_TABLE_SIZE:
+    elif temp >= EXP_TABLE_SIZE:
         return 1.0
     else:
         return EXP_TABLE[temp]
@@ -73,11 +74,11 @@ cdef REAL_t binary_logistic(const int target, const int label, const REAL_t lr,
                             const int vector_size, REAL_t *wo, REAL_t *grad,
                             REAL_t *hidden)nogil:
 
-    cdef REAL_t temp = our_dot_noblas(&vector_size, &wo[target], &ONE, hidden, &ONE)
+    cdef REAL_t temp = <REAL_t>our_dot(&vector_size, &wo[target], &ONE, hidden, &ONE)
     cdef REAL_t score = sigmoid(temp)
     cdef REAL_t alpha = lr * (<REAL_t>label - score)
-    our_saxpy_noblas(&vector_size, &alpha, &wo[target], &ONE, grad, &ONE)
-    our_saxpy_noblas(&vector_size, &alpha, hidden, &ONE, &wo[target], &ONE)
+    our_saxpy(&vector_size, &alpha, &wo[target], &ONE, grad, &ONE)
+    our_saxpy(&vector_size, &alpha, hidden, &ONE, &wo[target], &ONE)
     if label == 1:
         return -log(score)
     else:
@@ -108,30 +109,13 @@ cdef REAL_t update(vector[int] &context, int target, REAL_t lr, REAL_t *hidden, 
     cdef int i
 
     for i from 0 <= i < context.size():
-        our_saxpy_noblas(&vector_size, &ONEF, &wi[context[i]], &ONE, hidden, &ONE)
+        our_saxpy(&vector_size, &ONEF, &wi[context[i]], &ONE, hidden, &ONE)
     sscal(&vector_size, &alpha, hidden, &ONE)
     loss = negative_sampling(target, lr, grad, wo, hidden, vector_size, neg, negatives, negpos, negatives_len)
     sscal(&vector_size, &alpha, grad, &ONE)
     for i from 0 <= i < context.size():
-        our_saxpy_noblas(&vector_size, &ONEF, grad, &ONE, &wi[context[i]], &ONE)
+        our_saxpy(&vector_size, &ONEF, grad, &ONE, &wi[context[i]], &ONE)
     return loss
-
-
-'''cdef extern from "<random>" namespace "std":
-
-    cdef cppclass minstd_rand nogil:
-        minstd_rand()
-        minstd_rand(int seed)
-
-    cdef cppclass uniform_real_distribution[T] nogil:
-        uniform_real_distribution()
-        uniform_real_distribution(T a, T b)
-        T operator()(minstd_rand gen)
-
-    cdef cppclass uniform_int_distribution[T] nogil:
-        uniform_int_distribution()
-        uniform_int_distribution(int, int)
-        T operator()(minstd_rand gen)'''
 
 
 cdef REAL_t random_uniform()nogil:
@@ -166,13 +150,11 @@ cdef void add_ngrams_train(vector[int] &line, int n, int k, int bucket, int size
     cdef int line_size = line.size()
     cdef int token_to_discard
     cdef unsigned int i, j, h
-    # cdef uniform_int_distribution[int] dist = uniform_int_distribution[int](0, line_size - 1)
 
     for i from 0 <= i < line.size():
         discard.push_back(0)
 
     while num_discarded < k and line_size - num_discarded > 2:
-        # token_to_discard = dist(gen)
         token_to_discard = random_range(0, line_size-1)
         if discard[token_to_discard] == 0:
             discard[token_to_discard] = 1
@@ -206,7 +188,6 @@ cdef (int, int, REAL_t) _do_train_job_util(vector[vector[int]] &word_ids, REAL_t
         words_size = words.size()
         if words_size > 0:
             for j from 0 <= j < words_size:
-                #if dist(gen) > pdiscard[words[j]]:
                 if random_uniform() > pdiscard[words[j]]:
                     continue
                 nexamples += 1
@@ -240,8 +221,6 @@ def _do_train_job_fast(model, sentences_, lr_, hidden_, grad_):
     cdef int word_ngrams = <int> (model.word_ngrams)
     cdef int dropout_k = <int> (model.dropout_k)
     srand(model.seed)
-    # cdef minstd_rand gen = minstd_rand(model.seed)
-    # cdef uniform_real_distribution[REAL_t] dist = uniform_real_distribution[REAL_t](0.0, 0.1)
 
     cdef vector[vector[int]] word_ids
     cdef vector[int] ids

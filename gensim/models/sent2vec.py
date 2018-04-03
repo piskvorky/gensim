@@ -330,7 +330,7 @@ class Sent2VecVocab(object):
 class Sent2Vec(BaseWordEmbeddingsModel):
     """Class for training and using neural networks described in [1]_"""
 
-    def __init__(self, sentences=None, size=100, alpha=0.2, epochs=5, min_count=5, negative=10,
+    def __init__(self, sentences=None, size=100, alpha=0.01, epochs=5, min_count=5, negative=10,
                  word_ngrams=2, bucket=2000000, sample=0.0001, minn=3, maxn=6, dropout_k=2, seed=42,
                  min_alpha=0.001, batch_words=10000, workers=3, max_vocab_size=30000000,
                  compute_loss=False, callbacks=()):
