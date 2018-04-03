@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""Automatically detect common phrases (multiword expressions) from a stream of sentences.
+"""Automatically detect common phrases (multiword expressions / bi-grams) from a stream of sentences.
 
 Notes
 ------
@@ -10,7 +10,7 @@ The phrases are collocations (frequently co-occurring tokens). See `Tomas Mikolo
 Greg Corrado, and Jeffrey Dean. Distributed Representations of Words and Phrases and their Compositionality.
 In Proceedings of NIPS, 2013.
 <https://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf>`_
-for the exact formula.
+for the one of used formula.
 
 """
 
@@ -674,56 +674,51 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         return [utils.to_unicode(w) for w in new_s]
 
 
-# these two built-in scoring methods don't cast everything to float because the casting is done in the call
-# to the scoring method in __getitem__ and export_phrases.
-
-# calculation of score based on original mikolov word2vec paper
 def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
-    """Calculation of score, based on original `"Efficient Estimaton of Word Representations in Vector Space" by
-    Mikolov <https://arxiv.org/pdf/1301.3781.pdf>`_ word2vec paper.
+    """Calculation score, based on original `"Efficient Estimaton of Word Representations in Vector Space" by
+    Mikolov <https://arxiv.org/pdf/1301.3781.pdf>`_.
 
     Parameters
     ----------
     worda_count : int
-        Number of occurences for first word.
-    wordb : str
-        Number of occurences for second word.
-    bigram_count : float
-        Score threshold for worda_wordb phrase.
+        Number of occurrences for first word.
+    wordb_count : str
+        Number of occurrences for second word.
+    bigram_count : int
+        Number of co-occurrences for phrase "worda_wordb".
     len_vocab : int
         Size of vocabulary.
-    min_count: float
+    min_count: int
         Minimal score threshold.
     corpus_word_count : int
-        Number of words in corpus.
+        NOT USED.
 
     Notes
     -----
     Formula from paper:
     :math:`\\frac{(count(word_a, word_b) - mincount) * N }{ (count(word_a) * count(word_b))} > threshold`,
     where `N` is the total vocabulary size.
+
     """
     return (bigram_count - min_count) / worda_count / wordb_count * len_vocab
 
 
-# normalized PMI, requires corpus size
 def npmi_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
-    """Calculation of score, `Normalized (Pointwise) Mutual
-    Information in Colocation Extraction" by Gerlof Bouma
-    <https://svn.spraakdata.gu.se/repos/gerlof/pub/www/Docs/npmi-pfd.pdf>`_, requires corpus size.
+    """Calculation NPMI score based on `"Normalized (Pointwise) Mutual Information in Colocation Extraction"
+    by Gerlof Bouma <https://svn.spraakdata.gu.se/repos/gerlof/pub/www/Docs/npmi-pfd.pdf>`_.
 
     Parameters
     ----------
     worda_count : int
-        Number of occurences for first word.
-    wordb : str
-        Number of occurences for second word.
-    bigram_count : float
-        Score threshold for worda_wordb phrase.
+        Number of occurrences for first word.
+    wordb_count : int
+        Number of occurrences for second word.
+    bigram_count : int
+        Number of co-occurrences for phrase "worda_wordb".
     len_vocab : int
-        Size of vocabulary.
-    min_count: float
-        Minimal score threshold.
+        NOT USED.
+    min_count: int
+        NOT USED.
     corpus_word_count : int
         Number of words in corpus.
 
@@ -754,23 +749,8 @@ def pseudocorpus(source_vocab, sep, common_terms=frozenset()):
 
     Yields
     ------
-    generator
-        Generator with phrases.
-
-    Examples
-    --------
-    >>> from gensim.test.utils import datapath
-    >>> from gensim.models.word2vec import Text8Corpus
-    >>> from gensim.models.phrases import Phrases,pseudocorpus
-    >>> #Create corpus
-    >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-    >>> #Train the detector with:
-    >>> phrases = Phrases(sentences, min_count=1, threshold=1)
-    >>> pseudo = pseudocorpus(sentences, " ")
-    >>> sent = [u'trees', u'graph', u'minors']
-    >>> for token in list(pseudo):
-    >>>     print token
-    >>> #TODO: doesn't work
+    list of str
+        Phrase.
 
     """
     for k in source_vocab:
@@ -789,23 +769,20 @@ def pseudocorpus(source_vocab, sep, common_terms=frozenset()):
 
 
 class Phraser(SentenceAnalyzer, PhrasesTransformation):
-    """Minimal state & functionality to apply results of a Phrases model to tokens."""
+    """Minimal state & functionality to apply results of a :class:`~gensim.models.phrases.Phrases`."""
 
     def __init__(self, phrases_model):
         """
+
         Parameters
         ----------
         phrases_model : :class:`~gensim.models.phrases.Phrases`
-            Phrases class object.
+            Trained phrases instance.
 
         Notes
         -----
-        After the one-time initialization, a Phraser will be much smaller and
-        somewhat faster than using the full Phrases model.
-
-        Reflects the results of the source model's `min_count`, `threshold`, and
-        `scoring` settings. (You can tamper with those & create a new Phraser to try
-        other values.)
+        After the one-time initialization, a :class:`~gensim.models.phrases.Phraser` will be much smaller and somewhat
+        faster than using the full :class:`~gensim.models.phrases.Phrases` model.
 
         Example
         ----------
@@ -813,29 +790,13 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
         >>> from gensim.models.word2vec import Text8Corpus
         >>> from gensim.models.phrases import Phrases, Phraser
         >>>
-        >>> #Create corpus
         >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-        >>>
-        >>> #train the detector with:
         >>> phrases = Phrases(sentences, min_count=1, threshold=1)
         >>>
-        >>> #Create a Phraser object to transform any sentence and turn 2 suitable tokens into 1 phrase:
         >>> bigram = Phraser(phrases)
         >>> sent = [u'trees', u'graph', u'minors']
-        >>> #Both of these tokens appear in corpus at least twice, and phrase score is higher, than treshold = 1:
         >>> print(bigram[sent])
         [u'trees_graph', u'minors']
-        >>>
-        >>> #but if we choose another 'sent':
-        >>> sent = [u'graph', u'minors']
-        >>> print(bigram[sent])
-        >>> #then we got these linked tags:
-        [u'graph_minors']
-        >>>
-        >>> #TODO: doesn't work, see next todo-comment
-        >>> #The detection can also be **run repeatedly**, to get phrases longer than two tokens (`tree_graph_minors`):
-        >>> trigram = Phrases(bigram[sentences], min_count=1, threshold=1)
-        >>> print(trigram[bigram[sent]]) #TODO: if we want to show this example, we should choose another testcorpus
 
         """
         self.threshold = phrases_model.threshold
@@ -857,101 +818,39 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
         logger.info('Phraser built with %i %i phrasegrams', count, len(self.phrasegrams))
 
     def pseudocorpus(self, phrases_model):
-        """Phrase searcher. #TODO: please check it
+        """Alias for :func:`gensim.models.phrases.pseudocorpus`.
 
         Parameters
         ----------
         phrases_model : :class:`~gensim.models.phrases.Phrases`
-            Phrases class object.
+            Phrases instance.
 
         Return
         ------
         generator
             Generator with phrases.
 
-        Example
-        -------
-        >>> from gensim.test.utils import datapath
-        >>> from gensim.models.word2vec import Text8Corpus
-        >>> from gensim.models.phrases import Phrases, Phraser
-        >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-        >>> #train the detector with:
-        >>> phrases_model = Phrases(sentences, min_count=5, threshold=100)
-        >>> #Create a Phraser object to transform any sentence and turn 2 suitable tokens into 1 phrase:
-        >>> phraser_model = Phraser(phrases_model)
-        >>> #Initialize pseudocorpus
-        >>> pseudo = phraser_model.pseudocorpus(phrases_model)
-        >>> #Get all phrases from it
-        >>> for phrase in pseudo:
-        >>>     print phrase
-        ['human', 'system']
-        ['trees', 'trees']
-        ['system', 'system']
-        ...
-
         """
-        return pseudocorpus(phrases_model.vocab, phrases_model.delimiter,
-                            phrases_model.common_terms)
+        return pseudocorpus(phrases_model.vocab, phrases_model.delimiter, phrases_model.common_terms)
 
     def score_item(self, worda, wordb, components, scorer):
-        """Score, retained from original dataset.
+        """Score bigram.
 
         Parameters
         ----------
         worda : str
-            First word for comparison. Should be unicode string.
+            First word for comparison.
         wordb : str
-            Second word for comparison. Should be unicode string.
+            Second word for comparison.
         components : generator
             Contain phrases.
         scorer : {'default', 'npmi'}
-            Scorer function, as given to :class:`~gensim.models.phrases.Phrases`.
+            NOT USED.
 
-        Return
-        ------
-        {'default', 'npmi', '-1'}
-            Scorer function with filled `worda`, `wordb` & `bigram` counters, if phrase is in vocab. Otherwise, -1.
-
-        Example
+        Returns
         -------
-        >>> from gensim.test.utils import datapath
-        >>> from gensim.models.word2vec import Text8Corpus
-        >>> from gensim.models.phrases import Phrases, Phraser
-        >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-        >>> #train the detector with
-        >>> phrases_model = Phrases(sentences, min_count=5, threshold=100)
-        >>> #Create a Phraser object to transform any sentence and turn 2 suitable tokens into 1 phrase:
-        >>> phraser_model = Phraser(phrases_model)
-        >>> #Initialize pseudocorpus
-        >>> pseudo = phraser_model.pseudocorpus(phrases_model)
-        >>> #Compare 2 words
-        >>> phraser_model.score_item(u'tree',u'human',pseudo,'default')
-        >>> # -1 means, that there is no suitable phrase among pseudocorpus elements. #TODO: look below for some
-        # interesting feature
-        -1
-        >>> from gensim.test.utils import datapath
-        >>> from gensim.models.word2vec import Text8Corpus
-        >>> from gensim.models.phrases import Phrases, Phraser
-        >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-        >>> # train the detector with:
-        >>> phrases_model = Phrases(sentences, min_count=1, threshold=1)
-        >>> # Create a Phraser object to transform any sentence and turn 2 suitable tokens into 1 phrase:
-        >>> phraser_model = Phraser(phrases_model)
-        >>> # Initialize pseudocorpus:
-        >>> pseudo = phraser_model.pseudocorpus(phrases_model)
-        >>> # Compare 2 words:
-        >>> phraser_model.score_item(u'tree',u'human',pseudo,'default') #TODO: there is a strange problem: first time
-        # it will rise an error:
-        Traceback (most recent call last):
-        File "<stdin>", line 1, in <module>
-        File "gensim/models/phrases.py", line 985, in score_item
-        phraser_model = Phraser(phrases_model)
-        TypeError: unhashable type: 'list'
-        #But if i launch it second time, it will return -1. Have no idea how does this work.
-
-
-        >>> # -1 means, that there is no suitable phrase among pseudocorpus elements.
-
+        float
+            Score for given bi-gram, if bi-gram not presented in dictionary - return -1.
 
         """
         try:
@@ -960,24 +859,17 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
             return -1
 
     def __getitem__(self, sentence):
-        """Convert the input tokens `sentence` into phrase
-        tokens .
+        """Convert the input tokens `sentence` into phrase tokens.
 
         Parameters
         ----------
         sentence : {list of str, iterable of list of str}
-            Sentence tokens - list of unicode strings.
+            Input sentence or sentences.
 
         Return
         ------
         {list of str, iterable of list of str}
-            Phrase tokens, where joined by delimiter-character.
-
-        Notes
-        -----
-        If `sentence` is an entire corpus (iterable of sentences rather than a single
-        sentence), return an iterable that converts each of the corpus' sentences
-        into phrases on the fly, one after another.
+            Sentence or sentences with phrase tokens that joined by delimiter-character.
 
         Examples
         ----------
@@ -985,36 +877,18 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
         >>> from gensim.models.word2vec import Text8Corpus
         >>> from gensim.models.phrases import Phrases, Phraser
         >>>
-        >>> #Create corpus
-        >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
+        >>> sentences = Text8Corpus(datapath('testcorpus.txt'))  # Read corpus
         >>>
-        >>> #Train the detector with:
-        >>> phrases = Phrases(sentences, min_count=1, threshold=1)
-        >>> # Create a Phraser object to transform any sentence and turn 2 suitable tokens into 1 phrase:
+        >>> phrases = Phrases(sentences, min_count=1, threshold=1) # Train model
+        >>> # Create a Phraser object to transform any sentence and turn 2 suitable tokens into 1 phrase
         >>> phraser_model = Phraser(phrases)
-        >>> #Input is a list of unicode strings:
+        >>>
         >>> sent = [u'trees', u'graph', u'minors']
-        >>> #Both of these tokens appear in corpus at least twice, and phrase score is higher, than treshold = 1:
         >>> print(phraser_model[sent])
         [u'trees_graph', u'minors']
-
-        >>> from gensim.test.utils import datapath
-        >>> from gensim.models.word2vec import Text8Corpus
-        >>> from gensim.models.phrases import Phrases, Phraser
-        >>>
-        >>> #Create corpus
-        >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-        >>>
-        >>> #Train the detector with:
-        >>> phrases = Phrases(sentences, min_count=1, threshold=1)
-        >>> # Create a Phraser object to transform any sentence and turn 2 suitable tokens into 1 phrase:
-        >>> phraser_model = Phraser(phrases)
-        >>> #Input is a corpus:
         >>> sent = [[u'trees', u'graph', u'minors'],[u'graph', u'minors']]
-        >>> #So we get 2 phrases
-        >>> res = phraser_model[sent]
-        >>> for phrase in res:
-        >>>     print phrase
+        >>> for phrase in phraser_model[sent]:
+        ...     print(phrase)
         [u'trees_graph', u'minors']
         [u'graph_minors']
 
