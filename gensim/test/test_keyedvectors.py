@@ -44,6 +44,9 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
              np.ones(similarity_matrix.shape[0])).all())
 
         # checking that thresholding works as expected
+        similarity_matrix = self.vectors.similarity_matrix(dictionary, threshold=-1.0).todense()
+        self.assertEquals(0, np.sum(similarity_matrix == 0))
+
         similarity_matrix = self.vectors.similarity_matrix(dictionary, threshold=0.45).todense()
         self.assertEquals(18, np.sum(similarity_matrix == 0))
 

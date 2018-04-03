@@ -45,7 +45,7 @@ def levsim(alpha, beta, w1, w2):
     float
         The Levenshtein similarity of `w1` and `w2`.
     """
-    return alpha * (1 - distance(w1, w2) / max(len(w1), len(w2)))**beta
+    return alpha * (1 - distance(w1, w2) * 1.0 / max(len(w1), len(w2)))**beta
 
 
 def similarity_matrix(dictionary, tfidf=None, threshold=0.0, alpha=1.8, beta=5.0,
@@ -149,7 +149,8 @@ def similarity_matrix(dictionary, tfidf=None, threshold=0.0, alpha=1.8, beta=5.0
 
         for w2_index, similarity in rows:
             # Ensure that we don't exceed `nonzero_limit` by mirroring the elements.
-            if similarity > threshold and matrix_nonzero[w2_index] <= nonzero_limit:
+            if similarity > threshold and matrix_nonzero[w2_index] <= nonzero_limit \
+                    and (w1_index, w2_index) not in matrix.keys():
                 matrix[w1_index, w2_index] = similarity
                 matrix_nonzero[w1_index] += 1
                 matrix[w2_index, w1_index] = similarity
