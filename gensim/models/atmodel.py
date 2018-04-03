@@ -403,7 +403,7 @@ class AuthorTopicModel(LdaModel):
 
         Avoids computing the `phi` variational parameter directly using the
         optimization presented in `Lee, Seung: "Algorithms for non-negative matrix factorization", NIPS 2001
-        <https://papers.nips.cc/paper/1861-algorithms-for-non-negative-matrix-factorization.pdf>_`.
+        <https://papers.nips.cc/paper/1861-algorithms-for-non-negative-matrix-factorization.pdf>`_.
 
         Parameters
         ----------
