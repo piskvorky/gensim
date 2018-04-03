@@ -492,29 +492,34 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
             self.vocab = vocab
 
     def export_phrases(self, sentences, out_delimiter=b' ', as_tuples=False):
-        """Generate an iterator that contains all phrases in given 'sentences'
+        """Get all phrases from given 'sentences'.
 
         Parameters
         ----------
-        sentences : list of str
-            List of unicode strings.
+        sentences : iterable of list of str
+            Text corpus.
         out_delimiter : str, optional
-            Define, what will be used for string split.
+            Delimiter that will be used for "glue" words to phrase.
         as_tuples : bool, optional
-            If true, yield (tuple(words), score), otherwise - (out_delimiter.join(words), score).
+            If True - yield (tuple(words), score), otherwise - (out_delimiter.join(words), score).
+
+        Yields
+        ------
+        ((str, str), float) **or** (str, float)
+            Phrases given from `sentences`, type depends on `as_tuples` parameter.
 
         Example
         -------
         >>> from gensim.test.utils import datapath
         >>> from gensim.models.word2vec import Text8Corpus
         >>> from gensim.models.phrases import Phrases
-        >>> #Create corpus and use it for phrase detector
+        >>>
         >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-        >>> phrases = Phrases(sentences, min_count=5, threshold=100)
+        >>> phrases = Phrases(sentences, min_count=1, threshold=0.1)
+        >>>
         >>> for phrase, score in phrases.export_phrases(sentences):
-        ...     print(u'{0}\t{1}'.format(phrase, score))
-            then you can debug the threshold with generated tsv
-            #TODO: what else can i show?
+        ...     pass
+
         """
         analyze_sentence = ft.partial(
             self.analyze_sentence,
@@ -538,8 +543,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
                     yield (out_delimiter.join(words), score)
 
     def __getitem__(self, sentence):
-        """Convert the input tokens `sentence` into phrase
-        tokens (=list of unicode strings, where detected phrases are joined by u'_').
+        """Convert the input tokens `sentence` into phrase tokens (where detected phrases are joined by delimiter).
 
         If `sentence` is an entire corpus (iterable of sentences rather than a single
         sentence), return an iterable that converts each of the corpus' sentences
@@ -548,12 +552,12 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         Parameters
         ----------
         sentence : {list of str, iterable of list of str}
-            List of unicode strings or bag-of-words corpus.
+            Sentence or text corpus.
 
-        Return
-        ------
-        list of str
-            List of unicode strings, where detected phrases are joined by u'_'.
+        Returns
+        -------
+        {list of str, :class:`gensim.iterfaces.TransformedCorpus`}
+            `sentences` with phrases, type depends on `sentence` type.
 
         Examples
         ----------
@@ -574,21 +578,14 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
 
         >>> from gensim.test.utils import datapath
         >>> from gensim.models.word2vec import Text8Corpus
-        >>> from gensim.models.phrases import Phrases, Phraser
+        >>> from gensim.models.phrases import Phrases
         >>>
-        >>> #Create corpus
         >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-        >>>
-        >>> #Train the detector with:
         >>> phrases = Phrases(sentences, min_count=1, threshold=1)
-        >>> #Input is a corpus:
+        >>>
         >>> sent = [[u'trees', u'graph', u'minors'],[u'graph', u'minors']]
-        >>> #So we get 2 phrases
-        >>> res = phrases[sent]
-        >>> for phrase in res:
-        >>>     print phrase
-        [u'trees_graph', u'minors']
-        [u'graph_minors']
+        >>> for phrase in phrases[sent]:
+        ...     pass
 
         """
         warnings.warn("For a faster implementation, use the gensim.models.phrases.Phraser class")
