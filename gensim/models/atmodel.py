@@ -162,7 +162,6 @@ class AuthorTopicModel(LdaModel):
                  gamma_threshold=0.001, serialized=False, serialization_path=None,
                  minimum_probability=0.01, random_state=None):
         """
-        API for Author-Topic model.
 
         Parameters
         ----------
@@ -573,18 +572,15 @@ class AuthorTopicModel(LdaModel):
         return gamma
 
     def log_perplexity(self, chunk, chunk_doc_idx=None, total_docs=None):
-        """
-        Calculate and return per-word likelihood bound, using the `chunk` of
-        documents as evaluation corpus. Also output the calculated statistics. incl.
-        perplexity=2^(-bound), to log at INFO level.
+        """Calculate per-word likelihood bound, using the `chunk` of documents as evaluation corpus.
 
         Parameters
         ----------
-        chunk : int
-            The chunk numer of the sparse document vector on which inference needs to be done.
-        chunk_doc_idx : numpy.ndarray
+        chunk : iterable of list of (int, float)
+            Corpus in BoW format.
+        chunk_doc_idx : numpy.ndarray, optional
             Assigns the value for document index.
-        total_docs : int
+        total_docs : int, optional
             Initializes the value for total number of documents.
 
         Returns
@@ -593,7 +589,6 @@ class AuthorTopicModel(LdaModel):
             Value of per-word likelihood bound.
 
         """
-
         # TODO: This method is very similar to the one in LdaModel. Refactor.
         if total_docs is None:
             total_docs = len(chunk)
@@ -610,73 +605,67 @@ class AuthorTopicModel(LdaModel):
     def update(self, corpus=None, author2doc=None, doc2author=None, chunksize=None, decay=None, offset=None,
                passes=None, update_every=None, eval_every=None, iterations=None,
                gamma_threshold=None, chunks_as_numpy=False):
-        """
-        Train the model with new documents, by EM-iterating over `corpus` until
-        the topics converge (or until the maximum number of allowed iterations
-        is reached). `corpus` must be an iterable (repeatable stream of documents),
+        """Train the model with new documents, by EM-iterating over `corpus` until the topics converge (or until the
+        maximum number of allowed iterations is reached).
 
-        This update also supports updating an already trained model (`self`)
-        with new documents from `corpus`; the two models are then merged in
-        proportion to the number of old vs. new documents. This feature is still
-        experimental for non-stationary input streams.
+        Notes
+        -----
+        This update also supports updating an already trained model (self)
+        with new documents from `corpus`: the two models are then merged in proportion to the number of old vs. new
+        documents. This feature is still experimental for non-stationary input streams.
 
-        For stationary input (no topic drift in new documents), on the other hand,
-        this equals the online update of Hoffman et al. and is guaranteed to
-        converge for any `decay` in (0.5, 1.0>. Additionally, for smaller
-        `corpus` sizes, an increasing `offset` may be beneficial (see
+        For stationary input (no topic drift in new documents), on the other hand, this equals the online update of
+        `Hoffman et al. Stochastic Variational Inference
+        <http://www.jmlr.org/papers/volume14/hoffman13a/hoffman13a.pdf>`_ and is guaranteed to converge for any `decay`
+        in (0.5, 1.0>. Additionally, for smaller `corpus` sizes, an increasing `offset` may be beneficial (see
         Table 1 in Hoffman et al.)
 
-        If update is called with authors that already exist in the model, it will
-        resume training on not only new documents for that author, but also the
-        previously seen documents. This is necessary for those authors' topic
+        If update is called with authors that already exist in the model, it will resume training on not only new
+        documents for that author, but also the previously seen documents. This is necessary for those authors' topic
         distributions to converge.
 
-        Every time `update(corpus, author2doc)` is called, the new documents are
-        to appended to all the previously seen documents, and author2doc is
-        combined with the previously seen authors.
+        Every time `update(corpus, author2doc)` is called, the new documents are to appended to all the previously seen
+        documents, and author2doc is combined with the previously seen authors.
 
         To resume training on all the data seen by the model, simply call
-        `update()`.
+        :meth:`~gensim.models.atmodel.AuthorTopicModel.update`.
 
-        It is not possible to add new authors to existing documents, as all
-        documents in `corpus` are assumed to be new documents.
+        It is not possible to add new authors to existing documents, as all documents in `corpus` are assumed to be
+        new documents.
 
         Parameters
         ----------
-        corpus : iterable of list of str
-            The corpus with which the author-topic model should be updated.
-        author2doc : dict of (str, list of ints)
-            A dictionary where keys are the names of authors and values are lists of
-            documents that the author contributes to.
-        doc2author : dict of (int, list of str)
+        corpus : iterable of list of (int, float)
+            The corpus in BoW format.
+        author2doc : dict of (str, list of int), optional
+            A dictionary where keys are the names of authors and values are lists of document IDs that the author
+            contributes to.
+        doc2author : dict of (int, list of str), optional
             A dictionary where the keys are document IDs and the values are lists of author names.
-        chunksize : int
+        chunksize : int, optional
             Controls the size of the mini-batches.
-        decay : float
+        decay : float, optional
             Controls how old documents are forgotten.
-        offset : float
+        offset : float, optional
             Controls down-weighting of iterations.
-        passes : int
+        passes : int, optional
             Number of times the model makes a pass over the entire training data.
-        update_every : int
-            Make updates in topic probaility for latest mini-batch.
-        eval_every : int
+        update_every : int, optional
+            Make updates in topic probability for latest mini-batch.
+        eval_every : int, optional
             Calculate and estimate log perplexity for latest mini-batch.
-        iterations : int
+        iterations : int, optional
             Maximum number of times the model loops over each document
-        gamma_threshold : float
+        gamma_threshold : float, optional
             Threshold value of gamma(topic difference between consecutive two topics)
             until which the iterations continue.
-        chunks_as_numpy : bool
-            Whether each chunk passed to `.inference` should be a np
-            array of not. np can in some settings turn the term IDs
-            into floats, these will be converted back into integers in
-            inference, which incurs a performance hit. For distributed
-            computing it may be desirable to keep the chunks as np
-            arrays.
+        chunks_as_numpy : bool, optional
+            Whether each chunk passed to :meth:`~gensim.models.atmodel.AuthorTopicModel.inference` should be a numpy
+            array of not. Numpy can in some settings turn the term IDs into floats, these will be converted back into
+            integers in inference, which incurs a performance hit. For distributed computing (not supported now)
+            it may be desirable to keep the chunks as numpy arrays.
 
         """
-
         # use parameters given in constructor, unless user explicitly overrode them
         if decay is None:
             decay = self.decay
@@ -914,15 +903,15 @@ class AuthorTopicModel(LdaModel):
         ----------
         chunk : iterable of list of (int, float)
             Corpus in BoW format.
-        author2doc : dict of (str, list of int)
-            A dictionary where keys are the names of authors and values are lists of documents that the author
-            contributes to.
-        doc2author : dict of (int, list of str)
-            A dictionary where the keys are document IDs and the values are lists of author names.
-        chunk_doc_idx : numpy.ndarray
+        chunk_doc_idx : numpy.ndarray, optional
             Assigns the value for document index.
         subsample_ratio : float, optional
             Used for calculation of word score for estimation of variational bound.
+        author2doc : dict of (str, list of int), optinal
+            A dictionary where keys are the names of authors and values are lists of documents that the author
+            contributes to.
+        doc2author : dict of (int, list of str), optional
+            A dictionary where the keys are document IDs and the values are lists of author names.
 
         Returns
         -------
