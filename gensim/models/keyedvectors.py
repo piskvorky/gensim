@@ -872,8 +872,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         Parameters
         ----------
         analogies : str
-            filename where lines are 4-tuples of words, 
-	    split into sections by ": SECTION NAME" lines.
+            filename where lines are 4-tuples of words,
+            split into sections by ": SECTION NAME" lines.
             See questions-words.txt for an example:
             `from gensim.test.utils import datapath`
             `datapath("questions-words.txt")`
