@@ -2,18 +2,26 @@
 # -*- coding: utf-8 -*-
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""Automatically detect common phrases (multiword expressions / bi-grams) from a stream of sentences.
+"""Automatically detect common phrases (multi-word expressions / bi-grams) from a stream of sentences.
 
-Notes
-------
-The phrases are collocations (frequently co-occurring tokens). See `Tomas Mikolov, Ilya Sutskever, Kai Chen,
-Greg Corrado, and Jeffrey Dean. Distributed Representations of Words and Phrases and their Compositionality.
-In Proceedings of NIPS, 2013.
-<https://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf>`_
-for the one of used formula.
+Examples
+--------
+>>> from gensim.test.utils import datapath
+>>> from gensim.models.word2vec import Text8Corpus
+>>> from gensim.models.phrases import Phrases, Phraser
+>>>
+>>> sentences = Text8Corpus(datapath('testcorpus.txt'))
+>>> phrases = Phrases(sentences, min_count=1, threshold=1)
+>>> phrases[[u'trees', u'graph', u'minors']]
+[u'trees_graph', u'minors']
+>>>
+>>> bigram = Phraser(phrases)  # construct faster model
+>>> bigram[[u'trees', u'graph', u'minors']]
+[u'trees_graph', u'minors']
+>>> for sent in bigram[sentences]:  # apply phrases to text corpus
+...     pass
 
 """
-
 import sys
 import os
 import logging
@@ -74,41 +82,27 @@ def _is_single(obj):
 
 
 class SentenceAnalyzer(object):
+    """Base util class for :class:`~gensim.models.phrases.Phrases` and :class:`~gensim.models.phrases.Phraser`."""
 
     def score_item(self, worda, wordb, components, scorer):
-        """Get sentence statistics.
+        """Get bi-gram score statistics.
 
         Parameters
         ----------
         worda : str
-            First word for comparison. Should be unicode string.
+            First word of bi-gram.
         wordb : str
-            Second word for comparison. Should be unicode string.
+            Second word of bi-gram.
         components : generator
             Contain all phrases.
-        scorer : {'default', 'npmi'}
+        scorer : function
             Scorer function, as given to :class:`~gensim.models.phrases.Phrases`.
+            See :func:`~gensim.models.phrases.npmi_scorer` and :func:`~gensim.models.phrases.original_scorer`.
 
-        Return
-        ------
-        {'default', 'npmi', '-1'}
-            Scorer function with filled `worda`, `wordb` & `bigram` counters, if phrase is in vocab. Otherwise, -1.
-
-        Example
+        Returns
         -------
-        >>> from gensim.test.utils import datapath
-        >>> from gensim.models.word2vec import Text8Corpus
-        >>> from gensim.models.phrases import Phrases, Phraser, SentenceAnalyzer
-        >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-        >>> #train the detector with
-        >>> phrases_model = Phrases(sentences, min_count=5, threshold=100)
-        >>> #Create a Phraser object to transform any sentence and turn 2 suitable tokens into 1 phrase:
-        >>> phraser_model = Phraser(phrases_model)
-        >>> #Initialize pseudocorpus
-        >>> components = phraser_model.pseudocorpus(phrases_model)
-        >>> sentAn = SentenceAnalyzer()
-        >>> sentAnScore = sentAn.score_item(u"graph", u"minors",components,'default')
-        >>> #TODO: Useless for using without Phrases
+        float
+            Score for given bi-gram, if bi-gram not presented in dictionary - return -1.
 
         """
         vocab = self.vocab
@@ -128,16 +122,19 @@ class SentenceAnalyzer(object):
         ----------
         sentence : list of str
             Token list representing the sentence to be analyzed.
-        threshold : int
+        threshold : float
             The minimum score for a bigram to be taken into account.
         common_terms : list of object
             List of common terms, they have a special treatment.
-        scorer : {'default', 'npmi'}
+        scorer : function
             Scorer function, as given to :class:`~gensim.models.phrases.Phrases`.
+            See :func:`~gensim.models.phrases.npmi_scorer` and :func:`~gensim.models.phrases.original_scorer`.
 
-        Examples
-        --------
-        >>> #TODO: Useless for using without Phrases
+        Yields
+        ------
+        (str, score)
+            Tuple where first element is bi-gram, second is score (if bi-gram detected),
+            otherwise - first element is word and second is None.
 
         """
         s = [utils.any2utf8(w) for w in sentence]
@@ -177,13 +174,14 @@ class SentenceAnalyzer(object):
 
 
 class PhrasesTransformation(interfaces.TransformationABC):
+    """Base util class for :class:`~gensim.models.phrases.Phrases` and :class:`~gensim.models.phrases.Phraser`."""
 
     @classmethod
     def load(cls, *args, **kwargs):
         """Load a previously saved :class:`~gensim.models.phrases.Phrases` /
         :class:`~gensim.models.phrases.Phraser` class. Handles backwards compatibility from older
         :class:`~gensim.models.phrases.Phrases` / :class:`~gensim.models.phrases.Phraser`
-        versions which did not support pluggable scoring functions. Otherwise, relies on utils.load.
+        versions which did not support pluggable scoring functions.
 
         Parameters
         ----------
@@ -682,7 +680,7 @@ def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count
     ----------
     worda_count : int
         Number of occurrences for first word.
-    wordb_count : str
+    wordb_count : int
         Number of occurrences for second word.
     bigram_count : int
         Number of co-occurrences for phrase "worda_wordb".
@@ -695,9 +693,7 @@ def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count
 
     Notes
     -----
-    Formula from paper:
-    :math:`\\frac{(count(word_a, word_b) - mincount) * N }{ (count(word_a) * count(word_b))} > threshold`,
-    where `N` is the total vocabulary size.
+    Formula: :math:`\\frac{(worda\_count - min\_count) * len\_vocab }{ (worda\_count * wordb\_count)}`.
 
     """
     return (bigram_count - min_count) / worda_count / wordb_count * len_vocab
@@ -724,9 +720,8 @@ def npmi_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, co
 
     Notes
     -----
-    Formula from paper:
-    :math:`\\frac{ln(prop(word_a, word_b) / (prop(word_a)*prop(word_b)))}{ -ln(prop(word_a, word_b)}`,
-    where :math:`prop(n)` is the count of n / the count of everything in the entire corpus.
+    Formula: :math:`\\frac{ln(prop(word_a, word_b) / (prop(word_a)*prop(word_b)))}{ -ln(prop(word_a, word_b)}`,
+    where :math:`prob(word) = \\frac{word\_count}{corpus\_word\_count}`
 
     """
     pa = worda_count / corpus_word_count
@@ -784,8 +779,8 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
         After the one-time initialization, a :class:`~gensim.models.phrases.Phraser` will be much smaller and somewhat
         faster than using the full :class:`~gensim.models.phrases.Phrases` model.
 
-        Example
-        ----------
+        Examples
+        --------
         >>> from gensim.test.utils import datapath
         >>> from gensim.models.word2vec import Text8Corpus
         >>> from gensim.models.phrases import Phrases, Phraser
