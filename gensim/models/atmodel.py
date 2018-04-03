@@ -165,50 +165,49 @@ class AuthorTopicModel(LdaModel):
 
         Parameters
         ----------
-        corpus : iterable of list of str
-            Corpus of documents in appropriate format(BoW, UCI etc).
+        corpus : iterable of list of (int, float), optional
+            Corpus in BoW format
         num_topics : int, optional
             Number of topics to be extracted from the training corpus.
-        id2word : dict of (int, str), optional
+        id2word : :class:`~gensim.corpora.dictionary.Dictionary`, optional
             A mapping from word ids (integers) to words (strings).
-        author2doc : dict of (str, list of int)
-            A dictionary where keys are the names of authors and values are lists of
-            documents that the author contributes to.
-        doc2author : dict of (int, list of str)
+        author2doc : dict of (str, list of int), optional
+            A dictionary where keys are the names of authors and values are lists of document IDs that the author
+            contributes to.
+        doc2author : dict of (int, list of str), optional
             A dictionary where the keys are document IDs and the values are lists of author names.
-        passes : int
-            Number of times the model makes a pass over the entire training data.
-        iterations : int
-            Maximum number of times the model loops over each document
-        chunksize : int
+        chunksize : int, optional
             Controls the size of the mini-batches.
-        alpha : float
+        passes : int, optional
+            Number of times the model makes a pass over the entire training data.
+        iterations : int, optional
+            Maximum number of times the model loops over each document.
+        decay : float, optional
+            Controls how old documents are forgotten.
+        offset : float, optional
+            Controls down-weighting of iterations.
+        alpha : float, optional
             Hyperparameters for author-topic model.Supports special values of 'asymmetric'
             and 'auto': the former uses a fixed normalized asymmetric 1.0/topicno prior,
             the latter learns an asymmetric prior directly from your data.
-        eta : float
+        eta : float, optional
             Hyperparameters for author-topic model.
-        update_every : int
-            Make updates in topic probaility for latest mini-batch.
-        eval_every : int
+        update_every : int, optional
+            Make updates in topic probability for latest mini-batch.
+        eval_every : int, optional
             Calculate and estimate log perplexity for latest mini-batch.
-        gamma_threshold : float
+        gamma_threshold : float, optional
             Threshold value of gamma(topic difference between consecutive two topics)
             until which the iterations continue.
-        decay : float
-            Controls how old documents are forgotten.
-        offset : float
-            Controls down-weighting of iterations.
-        minimum_probability : float
-            Controls filtering the topics returned for a document (bow).
-        random_state : int or a numpy.random.RandomState object.
-            Set the state of the random number generator inside the author-topic model.
-        serialized : bool
+        serialized : bool, optional
             Indicates whether the input corpora to the model are simple lists
             or saved to the hard-drive.
-        serialization_path : str
+        serialization_path : str, optional
             Must be set to a filepath, if `serialized = True` is used.
-
+        minimum_probability : float, optional
+            Controls filtering the topics returned for a document (bow).
+        random_state : {int, numpy.random.RandomState}, optional
+            Set the state of the random number generator inside the author-topic model.
 
         """
         # NOTE: this doesn't call constructor of a base class, but duplicates most of this code
@@ -310,21 +309,21 @@ class AuthorTopicModel(LdaModel):
             self.update(corpus, author2doc, doc2author, chunks_as_numpy=use_numpy)
 
     def __str__(self):
-        """Return a string representation of AuthorTopicModel class.
+        """Get a string representation of object.
 
         Returns
         -------
         str
-            String representation of Author-Topic model class.
+            String representation of current instance.
+
         """
         return "AuthorTopicModel(num_terms=%s, num_topics=%s, num_authors=%s, decay=%s, chunksize=%s)" % \
             (self.num_terms, self.num_topics, self.num_authors, self.decay, self.chunksize)
 
     def init_empty_corpus(self):
-        """
-        Initialize an empty corpus. If the corpora are to be treated as lists, simply
-        initialize an empty list. If serialization is used, initialize an empty corpus
-        of the class `gensim.corpora.MmCorpus`.
+        """Initialize an empty corpus.
+        If the corpora are to be treated as lists, simply initialize an empty list.
+        If serialization is used, initialize an empty corpus using :class:`~gensim.corpora.mmcorpus.MmCorpus`.
 
         """
         if self.serialized:
@@ -337,16 +336,21 @@ class AuthorTopicModel(LdaModel):
             self.corpus = []
 
     def extend_corpus(self, corpus):
-        """
-        Add new documents in `corpus` to `self.corpus`. If serialization is used,
-        then the entire corpus (`self.corpus`) is re-serialized and the new documents
-        are added in the process. If serialization is not used, the corpus, as a list
-        of documents, is simply extended.
+        """Add new documents from `corpus` to `self.corpus`.
+
+        If serialization is used, then the entire corpus (`self.corpus`) is re-serialized and the new documents
+        are added in the process. If serialization is not used, the corpus, as a list of documents, is simply extended.
 
         Parameters
         ----------
-        corpus : iterable of list of str
-            Corpus of documents.
+        corpus : iterable of list of (int, float)
+            Corpus in BoW format
+
+        Raises
+        ------
+        AssertionError
+            If serialized == False and corpus isn't list.
+
         """
         if self.serialized:
             # Re-serialize the entire corpus while appending the new documents.
@@ -374,9 +378,9 @@ class AuthorTopicModel(LdaModel):
         Parameters
         ----------
         expElogthetad: numpy.ndarray
-            Value of variational distribution :math: q(\theta|\gamma).
+            Value of variational distribution :math:`q(\theta|\gamma)`.
         expElogbetad: numpy.ndarray
-            Value of variational distribution :math: q(\beta|\lambda).
+            Value of variational distribution :math:`q(\\beta|\lambda)`.
 
         Returns
         -------
@@ -390,43 +394,40 @@ class AuthorTopicModel(LdaModel):
         return phinorm
 
     def inference(self, chunk, author2doc, doc2author, rhot, collect_sstats=False, chunk_doc_idx=None):
-        """
-        Given a chunk of sparse document vectors, update gamma (parameters
-        controlling the topic weights) for each author corresponding to the
-        documents in the chunk.
+        """Give a `chunk` of sparse document vectors, update gamma for each author corresponding to the `chuck`.
 
-        The whole input chunk of document is assumed to fit in RAM; chunking of
-        a large corpus must be done earlier in the pipeline.
-
-        If `collect_sstats` is True, also collect sufficient statistics needed
-        to update the model's topic-word distributions, and return a 2-tuple
-        `(gamma_chunk, sstats)`. Otherwise, return `(gamma_chunk, None)`.
-        `gamma_cunk` is of shape `len(chunk_authors) x self.num_topics`, where
-        `chunk_authors` is the number of authors in the documents in the
-        current chunk.
+        Warnings
+        --------
+        The whole input chunk of document is assumed to fit in RAM, chunking of a large corpus must be done earlier
+        in the pipeline.
 
         Avoids computing the `phi` variational parameter directly using the
-        optimization presented in **Lee, Seung: Algorithms for non-negative matrix factorization, NIPS 2001**.
+        optimization presented in `Lee, Seung: "Algorithms for non-negative matrix factorization", NIPS 2001
+        <https://papers.nips.cc/paper/1861-algorithms-for-non-negative-matrix-factorization.pdf>_`.
 
         Parameters
         ----------
-        chunk : int
-            The chunk numer of the sparse document vector on which inference needs to be done.
-        author2doc : dict of (str, list of int)
-            A dictionary where keys are the names of authors and values are lists of
-            documents that the author contributes to.
-        doc2author : dict of (int, list of str)
+        chunk : iterable of list of (int, float)
+            Corpus in BoW format.
+        author2doc : dict of (str, list of int), optional
+            A dictionary where keys are the names of authors and values are lists of document IDs that the author
+            contributes to.
+        doc2author : dict of (int, list of str), optional
             A dictionary where the keys are document IDs and the values are lists of author names.
         rhot : float
             Value of rho for conducting inference on documents.
         collect_sstats : boolean, optional
-            If True,  collect sufficient statistics needed to update the model's topic-word
-            distributions, and return a 2-tuple `(gamma_chunk, sstats)`.
-            Otherwise, returns `(gamma_chunk, None)`.`gamma_chunk` is of shape
-            `len(chunk_authors) x self.num_topics`,where `chunk_authors` is the
-            number of authors in the documents in the current chunk.
-        chunk_doc_idx : numpy.ndarray
+            If True - collect sufficient statistics needed to update the model's topic-word distributions, and return
+            `(gamma_chunk, sstats)`. Otherwise, return `(gamma_chunk, None)`. `gamma_chunk` is of shape
+            `len(chunk_authors) x self.num_topics`,where `chunk_authors` is the number of authors in the documents in
+            the current chunk.
+        chunk_doc_idx : numpy.ndarray, optional
             Assigns the value for document index.
+
+        Returns
+        -------
+        (numpy.ndarray, numpy.ndarray)
+            gamma_chunk and sstats (if `collect_sstats == True`, otherwise - None)
 
         """
         try:
@@ -534,32 +535,30 @@ class AuthorTopicModel(LdaModel):
         return gamma_chunk, sstats
 
     def do_estep(self, chunk, author2doc, doc2author, rhot, state=None, chunk_doc_idx=None):
-        """
-        Performs inference on a chunk of documents, and accumulate the collected
-        sufficient statistics in `state` (or `self.state` if None).
+        """Performs inference (E-step) on a chunk of documents, and accumulate the collected sufficient statistics.
 
         Parameters
         ----------
-        chunk : int
-            The chunk numer of the sparse document vector on which inference needs to be done.
-        author2doc : dict of (str, list of int)
-            A dictionary where keys are the names of authors and values are lists of
-            documents that the author contributes to.
-        doc2author : dict of (intm list of str)
+        chunk : iterable of list of (int, float)
+            Corpus in BoW format.
+        author2doc : dict of (str, list of int), optional
+            A dictionary where keys are the names of authors and values are lists of document IDs that the author
+            contributes to.
+        doc2author : dict of (int, list of str), optional
             A dictionary where the keys are document IDs and the values are lists of author names.
         rhot : float
             Value of rho for conducting inference on documents.
         state : int, optional
-            Initializes the state for a new E-M iteration.
-        chunk_doc_idx : numpy.ndarray
+            Initializes the state for a new E iteration.
+        chunk_doc_idx : numpy.ndarray, optional
             Assigns the value for document index.
 
         Returns
         -------
         float
             Value of gamma for training of model.
-        """
 
+        """
         # TODO: this method is somewhat similar to the one in LdaModel. Refactor if possible.
         if state is None:
             state = self.state
