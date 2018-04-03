@@ -66,12 +66,45 @@ cdef void our_saxpy_noblas(const int *N, const float *alpha, const float *X, con
     for i from 0 <= i < N[0] by 1:
         Y[i * (incY[0])] = (alpha[0]) * X[i * (incX[0])] + Y[i * (incY[0])]
 
-
 cdef void fast_sentence_sg_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
     REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work, REAL_t *word_locks,
     const int _compute_loss, REAL_t *_running_training_loss_param) nogil:
+    """Train on a single effective word from the current batch, using the Skip-Gram model.
+
+    In this model we are using a given word to predict a context word (a word that is
+    close to the one we are using as training). Hierarchical softmax is used to speed-up
+    training.
+
+    Parameters
+    ----------
+    word_point
+        Vector representation of the current word.
+    word_code
+        ASCII (char == uint8) representation of the current word.
+    codelen
+        Number of characters (length) in the current word.
+    syn0
+        Embeddings for the words in the vocabulary (`model.wv.vectors`)
+    syn1
+        Weights of the hidden layer in the model's trainable neural network.
+    size
+        Length of the embeddings.
+    word2_index
+        Index of the context word in the vocabulary.
+    alpha
+        Learning rate.
+    work
+        Private working memory for each worker.
+    word_locks
+        Lock factors for each word. A value of 0 will block training.
+    _compute_loss
+        Whether or not the loss should be computed at this step.
+    _running_training_loss_param
+        Running loss, used to debug or inspect how training progresses.
+
+    """
 
     cdef long long a, b
     cdef long long row1 = word2_index * size, row2, sgn
@@ -124,7 +157,49 @@ cdef unsigned long long fast_sentence_sg_neg(
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work,
     unsigned long long next_random, REAL_t *word_locks,
     const int _compute_loss, REAL_t *_running_training_loss_param) nogil:
+    """Train on a single effective word from the current batch, using the Skip-Gram model.
 
+    In this model we are using a given word to predict a context word (a word that is
+    close to the one we are using as training). Negative sampling is used to speed-up
+    training.
+
+    Parameters
+    ----------
+    negative
+        Number of negative words to be sampled.
+    cum_table
+        Cumulative-distribution table using stored vocabulary word counts for
+        drawing random words (with a negative label).
+    cum_table_len
+        Length of the `cum_table`
+    syn0
+        Embeddings for the words in the vocabulary (`model.wv.vectors`)
+    syn1neg
+        Weights of the hidden layer in the model's trainable neural network.
+    size
+        Length of the embeddings.
+    word_index
+        Index of the current training word in the vocabulary.
+    word2_index
+        Index of the context word in the vocabulary.
+    alpha
+        Learning rate.
+    work
+        Private working memory for each worker.
+    next_random
+        Seed to produce the index for the next word to be randomly sampled.
+    word_locks
+        Lock factors for each word. A value of 0 will block training.
+    _compute_loss
+        Whether or not the loss should be computed at this step.
+    _running_training_loss_param
+        Running loss, used to debug or inspect how training progresses.
+
+    Returns
+    -------
+    Seed to draw the training word for the next iteration of the same routine.
+
+    """
     cdef long long a
     cdef long long row1 = word2_index * size, row2
     cdef unsigned long long modulo = 281474976710655ULL
@@ -173,7 +248,50 @@ cdef void fast_sentence_cbow_hs(
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
     int i, int j, int k, int cbow_mean, REAL_t *word_locks,
     const int _compute_loss, REAL_t *_running_training_loss_param) nogil:
+    """Train on a single effective word from the current batch, using the CBOW method.
 
+    Using this method we train the trainable neural network by attempting to predict a
+    given word by its context (words surrounding the one we are trying to predict).
+    Hierarchical softmax method is used to speed-up training.
+
+    Parameters
+    ----------
+    word_point
+        Vector representation of the current word.
+    word_code
+        ASCII (char == uint8) representation of the current word.
+    codelens
+        Number of characters (length) for all words in the context.
+    neu1
+        Private working memory for every worker.
+    syn0
+        Embeddings for the words in the vocabulary (`model.wv.vectors`)
+    syn1
+        Weights of the hidden layer in the model's trainable neural network.
+    size
+        Length of the embeddings.
+    word2_index
+        Index of the context word in the vocabulary.
+    alpha
+        Learning rate.
+    work
+        Private working memory for each worker.
+    i
+        Index of the word to be predicted from the context.
+    j
+        Index of the word at the beginning of the context window.
+    k
+        Index of the word at the end of the context window.
+    cbow_mean
+        If 0, use the sum of the context word vectors as the prediction. If 1, use the mean.
+    word_locks
+        Lock factors for each word. A value of 0 will block training.
+    _compute_loss
+        Whether or not the loss should be computed at this step.
+    _running_training_loss_param
+        Running loss, used to debug or inspect how training progresses.
+
+    """
     cdef long long a, b
     cdef long long row2, sgn
     cdef REAL_t f, g, count, inv_count = 1.0, f_dot, lprob
@@ -228,7 +346,55 @@ cdef unsigned long long fast_sentence_cbow_neg(
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
     int i, int j, int k, int cbow_mean, unsigned long long next_random, REAL_t *word_locks,
     const int _compute_loss, REAL_t *_running_training_loss_param) nogil:
+    """Train on a single effective word from the current batch, using the CBOW method.
 
+    Using this method we train the trainable neural network by attempting to predict a
+    given word by its context (words surrounding the one we are trying to predict).
+    Negative sampling is used to speed-up training.
+
+    Parameters
+    ----------
+    negative
+        Number of negative words to be sampled.
+    cum_table
+        Cumulative-distribution table using stored vocabulary word counts for
+        drawing random words (with a negative label).
+    cum_table_len
+        Length of the `cum_table`
+    codelens
+        Number of characters (length) for all words in the context.
+    neu1
+        Private working memory for every worker.
+    syn0
+        Embeddings for the words in the vocabulary (`model.wv.vectors`)
+    syn1neg
+        Weights of the hidden layer in the model's trainable neural network.
+    size
+        Length of the embeddings.
+    indexes
+        Indexes of the context words in the vocabulary.
+    alpha
+        Learning rate.
+    work
+        Private working memory for each worker.
+    i
+        Index of the word to be predicted from the context.
+    j
+        Index of the word at the beginning of the context window.
+    k
+        Index of the word at the end of the context window.
+    cbow_mean
+        If 0, use the sum of the context word vectors as the prediction. If 1, use the mean.
+    next_random
+        Seed for the drawing the predicted word for the next iteration of the same routine.
+    word_locks
+        Lock factors for each word. A value of 0 will block training.
+    _compute_loss
+        Whether or not the loss should be computed at this step.
+    _running_training_loss_param
+        Running loss, used to debug or inspect how training progresses.
+
+    """
     cdef long long a
     cdef long long row2
     cdef unsigned long long modulo = 281474976710655ULL
@@ -307,7 +473,7 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
     alpha : float
         The learning rate
     _work : np.ndarray
-            Private working memory for each worker.
+        Private working memory for each worker.
     compute_loss : bool
         Whether or not the training loss should be computed in this batch.
 
@@ -322,7 +488,7 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
     cdef int negative = model.negative
     cdef int sample = (model.vocabulary.sample != 0)
 
-    cdef int _compute_loss = (1 if compute_loss == True else 0)
+    cdef int _compute_loss = (1 if compute_loss else 0)
     cdef REAL_t _running_training_loss = model.running_training_loss
 
     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
