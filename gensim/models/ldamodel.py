@@ -58,12 +58,27 @@ DTYPE_TO_EPS = {
 
 
 def update_dir_prior(prior, N, logphat, rho):
+    """Updates a given prior using Newton's method, described in
+    `J. Huang: "Maximum Likelihood Estimation of Dirichlet Distribution Parameters"
+    <http://jonathan-huang.org/research/dirichlet/dirichlet.pdf>`_.
+
+    Parameters
+    ----------
+    prior : list of float
+        The prior for each possible outcome at the previous iteration (to be updated).
+    N : int
+        Number of observations.
+    logphat : list of float
+        Log probabilities for the current estimation, also called "observed sufficient statistics".
+    rho : float
+        Learning rate.
+
+    Returns
+    -------
+    float
+        The updated prior.
+
     """
-    Updates a given prior using Newton's method, described in
-    **Huang: Maximum Likelihood Estimation of Dirichlet Distribution Parameters.**
-    http://jonathan-huang.org/research/dirichlet/dirichlet.pdf
-    """
-    dprior = np.copy(prior)  # TODO: unused var???
     gradf = N * (psi(np.sum(prior)) - psi(prior) + logphat)
 
     c = N * polygamma(1, np.sum(prior))
@@ -82,8 +97,7 @@ def update_dir_prior(prior, N, logphat, rho):
 
 
 class LdaState(utils.SaveLoad):
-    """
-    Encapsulate information for distributed computation of LdaModel objects.
+    """Encapsulate information for distributed computation of LdaModel objects.
 
     Objects of this class are sent over the network, so try to keep them lean to
     reduce traffic.
@@ -91,27 +105,39 @@ class LdaState(utils.SaveLoad):
     """
 
     def __init__(self, eta, shape, dtype=np.float32):
+        """Initialize the state.
+
+        Parameters
+        ----------
+        eta : list of float
+            The prior probabilities assigned to each term.
+        shape : tuple of (int, int)
+            Shape of the sufficient statistics: (number of topics to be found, number of terms in the vocabulary).
+        dtype : type
+            Overrides the numpy array default types.
+
+        """
         self.eta = eta.astype(dtype, copy=False)
         self.sstats = np.zeros(shape, dtype=dtype)
         self.numdocs = 0
         self.dtype = dtype
 
     def reset(self):
-        """
-        Prepare the state for a new EM iteration (reset sufficient stats).
-
-        """
+        """Prepare the state for a new EM iteration (reset sufficient stats). """
         self.sstats[:] = 0.0
         self.numdocs = 0
 
     def merge(self, other):
-        """
-        Merge the result of an E step from one node with that of another node
-        (summing up sufficient statistics).
+        """Merge the result of an E step from one node with that of another node (summing up sufficient statistics).
 
         The merging is trivial and after merging all cluster nodes, we have the
         exact same result as if the computation was run on a single node (no
         approximation).
+
+        Parameters
+        ----------
+        other : :class:`~gensim.models.ldamodel.LdaState`
+            The state object with which the current one will be merged.
 
         """
         assert other is not None
@@ -119,16 +145,22 @@ class LdaState(utils.SaveLoad):
         self.numdocs += other.numdocs
 
     def blend(self, rhot, other, targetsize=None):
-        """
-        Given LdaState `other`, merge it with the current state. Stretch both to
-        `targetsize` documents before merging, so that they are of comparable
-        magnitude.
+        """Merge the current state with another one using a weighted average for the sufficient statistics.
 
-        Merging is done by average weighting: in the extremes, `rhot=0.0` means
-        `other` is completely ignored; `rhot=1.0` means `self` is completely ignored.
+        The number of documents is strected in both state objects, so that they are of comparable magnitude.
+        This procedure corresponds to the stochastic gradient update from
+        `Hoffman et al. :"Online Learning for Latent Dirichlet Allocation"
+        <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
 
-        This procedure corresponds to the stochastic gradient update from Hoffman
-        et al., algorithm 2 (eq. 14).
+        Parameters
+        ----------
+        rhot : float
+            Weight of the `other` state in the computed average. A value of 0.0 means that `other`
+            is completely ignored. A value of 1.0 means `self` is completely ignored.
+        other : :class:`~gensim.models.ldamodel.LdaState`
+            The state object with which the current one will be merged.
+        targetsize : int
+            The number of documents to stretch both states to.
 
         """
         assert other is not None
@@ -153,8 +185,21 @@ class LdaState(utils.SaveLoad):
         self.numdocs = targetsize
 
     def blend2(self, rhot, other, targetsize=None):
-        """
-        Alternative, more simple blend.
+        """Merge the current state with another one using a weighted sum for the sufficient statistics.
+
+        In contrast to :meth:`~gensim.models.ldamodel.LdaState.blend`, the sufficient statistics are not scaled
+        prior to aggregation.
+
+        Parameters
+        ----------
+        rhot : float
+            Weight of the `other` state in the computed average. A value of 0.0 means that `other`
+            is completely ignored. A value of 1.0 means `self` is completely ignored.
+        other : :class:`~gensim.models.ldamodel.LdaState`
+            The state object with which the current one will be merged.
+        targetsize : int
+            The number of documents to stretch both states to.
+
         """
         assert other is not None
         if targetsize is None:
@@ -165,13 +210,46 @@ class LdaState(utils.SaveLoad):
         self.numdocs = targetsize
 
     def get_lambda(self):
+        """Get the parameters of the posterior over the topics, also reffered to as "the topics".
+
+        Returns
+        -------
+        list of float
+            Parameters of the posterior probability over topics.
+
+        """
         return self.eta + self.sstats
 
     def get_Elogbeta(self):
+        """Get the log (posterior) probabilities for each topic.
+
+        Returns
+        -------
+        list of float
+            Posterior probabilities for each topic.
+        """
         return dirichlet_expectation(self.get_lambda())
 
     @classmethod
     def load(cls, fname, *args, **kwargs):
+        """Overrides :class:`~gensim.utils.SaveLoad.load` by enforcing the `dtype` parameter
+        to ensure backwards compatibility.
+
+        Parameters
+        ----------
+        fname : str
+            Path to file that contains the needed object.
+        args
+            Positional parameters to be propagated to class:`~gensim.utils.SaveLoad.load`
+        kwargs
+            Key-word parameters to be propagated to class:`~gensim.utils.SaveLoad.load`
+
+        Returns
+        -------
+        :class:`~gensim.models.ldamodel.LdaState`
+            The model loaded from the given file.
+
+        """
         result = super(LdaState, cls).load(fname, *args, **kwargs)
 
         # dtype could be absent in old models
@@ -180,21 +258,25 @@ class LdaState(utils.SaveLoad):
             logging.info("dtype was not set in saved %s file %s, assuming np.float64", result.__class__.__name__, fname)
 
         return result
-# endclass LdaState
 
 
 class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
-    """
-    The constructor estimates Latent Dirichlet Allocation model parameters based
-    on a training corpus:
+    """This model implements online latent dirichlet allocation as presented in
+    `Hoffman et al. :"Online Learning for Latent Dirichlet Allocation" <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
 
+    Examples
+    -------
+    #. Initialize a model using a gensim corpus.
+
+    >>> from gensim.test.utils import common_corpus
+    >>>
     >>> lda = LdaModel(corpus, num_topics=10)
 
-    You can then infer topic distributions on new, unseen documents, with
+    #.You can then infer topic distributions on new, unseen documents.
 
     >>> doc_lda = lda[doc_bow]
 
-    The model can be updated (trained) with new documents via
+    The model can be updated (trained) with new documents.
 
     >>> lda.update(other_corpus)
 
@@ -207,56 +289,77 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                  iterations=50, gamma_threshold=0.001, minimum_probability=0.01,
                  random_state=None, ns_conf=None, minimum_phi_value=0.01,
                  per_word_topics=False, callbacks=None, dtype=np.float32):
-        """
-        If given, start training from the iterable `corpus` straight away. If not given,
-        the model is left untrained (presumably because you want to call `update()` manually).
+        """ The constructor estimates Latent Dirichlet Allocation model parameters based
+        on a training corpus.
 
-        `num_topics` is the number of requested latent topics to be extracted from
-        the training corpus.
+        Parameters
+        ----------
+        corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
+            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+            If not given, the model is left untrained (presumably because you want to call
+            :meth:`~gensim.models.ldamodel.LdaModel.update` manually).
+        num_topics : int, optional
+            The number of requested latent topics to be extracted from the training corpus.
+        id2word : dict of (int, str)
+            Mapping from word IDs to words. It is used to determine the vocabulary size, as well as for
+            debugging and topic printing.
+        distributed : bool, optional
+            Whether distributed computing should be used to accerelate training.
+        chunksize :  int, optional
+            Number of documents to be used in each training chunk.
+        passes : int, optional
+            Number of passes through the corpus during training.
+        update_every : int, optional
+            Number of documents to be iterated through for each update.
+            Set to 0 for batch learning, > 1 for online iterative learning.
+        alpha : {np.ndarray, str}, optional
+            Can be set to an 1D array of length equal to the number of expected topics that expresses
+            our a-priori belief for the each topics' probability.
+            Alternatively default prior selecting strategies can be employed by supplying a string:
 
-        `id2word` is a mapping from word ids (integers) to words (strings). It is
-        used to determine the vocabulary size, as well as for debugging and topic
-        printing.
+                * 'asymmetric': Uses a fixed normalized assymetric prior of `1.0 / topicno`.
+                * 'default': Learns an assymetric prior from the corpus.
+        eta : {float, np.array, str}, optional
+            A-priori belief on word probability, this can be:
 
-        `alpha` and `eta` are hyperparameters that affect sparsity of the document-topic
-        (theta) and topic-word (lambda) distributions. Both default to a symmetric
-        1.0/num_topics prior.
+                * scalar for a symmetric prior over topic/word probability,
+                * vector of length num_words to denote an asymmetric user defined probability for each word,
+                * matrix of shape (num_topics, num_words) to assign a probability for each word-topic combination,
+                * the string 'auto' to learn the asymmetric prior from the data.
+        decay : float, optional
+            A number between (0.5, 1] to weight what percentage of the previous lambda value is forgotten
+            when each new document is examined. Corresponds to Kappa from
+            `Matthew D. Hoffman, David M. Blei, Francis Bach:
+            "Online Learning for Latent Dirichlet Allocation NIPS'10" <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
+        offset : float, optional
+            Hyper-parameter that controls how much we will slow down the first steps the first few iterations.
+            Corresponds to Tau_0 from `Matthew D. Hoffman, David M. Blei, Francis Bach:
+            "Online Learning for Latent Dirichlet Allocation NIPS'10" <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
+        eval_every : int, optional
+            Log perplexity is estimated every that many updates. Setting this to one slows down training by ~2x.
+        iterations : int, optional
+            Maximum number of iterations through the corpus when inferring the topic distribution of a corpus.
+        gamma_threshold : float, optional
+            Minimum change in the value of the gamma parameters to continue iterating.
+        minimum_probability : float, optional
+            Topics with a probability lower than this threshold will be filtered out.
+        random_state : {np.random.RandomState, int}, optional
+            Either a randomState object or a seed to generate one. Useful for reproducibility.
+        ns_conf : dict of (str, object), optional
+            Key word parameters propagated to :func:`~gensim.utils.getNS` to get a Pyro4 Nameserved.
+            Only used if `distributed` is set to True.
+        minimum_phi_value : float, optional
+            if `per_word_topics` is True, this represents a lower bound on the term probabilities.
+        per_word_topics : bool
+            If True, the model also computes a list of topics, sorted in descending order of most likely topics for
+            each word, along with their phi values multiplied by the feature length (i.e. word count).
+        callbacks : list of :class:`~gensim.models.callbacks.Callback`
+            Metric callbacks to log and visualize evaluation metrics of the model during training.
+        dtype : {numpy.float16, numpy.float32, numpy.float64}, optional
+            Data-type to use during calculations inside model. All inputs are also converted.
 
-        `alpha` can be set to an explicit array = prior of your choice. It also
-        support special values of 'asymmetric' and 'auto': the former uses a fixed
-        normalized asymmetric 1.0/topicno prior, the latter learns an asymmetric
-        prior directly from your data.
-
-        `eta` can be a scalar for a symmetric prior over topic/word
-        distributions, or a vector of shape num_words, which can be used to
-        impose (user defined) asymmetric priors over the word distribution.
-        It also supports the special value 'auto', which learns an asymmetric
-        prior over words directly from your data. `eta` can also be a matrix
-        of shape num_topics x num_words, which can be used to impose
-        asymmetric priors over the word distribution on a per-topic basis
-        (can not be learned from data).
-
-        Turn on `distributed` to force distributed computing
-        (see the `web tutorial <http://radimrehurek.com/gensim/distributed.html>`_
-        on how to set up a cluster of machines for gensim).
-
-        Calculate and log perplexity estimate from the latest mini-batch every
-        `eval_every` model updates (setting this to 1 slows down training ~2x;
-        default is 10 for better performance). Set to None to disable perplexity estimation.
-
-        `decay` and `offset` parameters are the same as Kappa and Tau_0 in
-        Hoffman et al, respectively.
-
-        `minimum_probability` controls filtering the topics returned for a document (bow).
-
-        `random_state` can be a np.random.RandomState object or the seed for one.
-
-        `callbacks` a list of metric callbacks to log/visualize evaluation metrics of topic model during training.
-
-        `dtype` is data-type to use during calculations inside model. All inputs are also converted to this dtype.
-        Available types: `numpy.float16`, `numpy.float32`, `numpy.float64`.
-
-        Example:
+        Examples
+        --------
 
         >>> lda = LdaModel(corpus, num_topics=100)  # train model
         >>> print(lda[doc_bow]) # get topic probability distribution for a document
@@ -361,7 +464,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.state.sstats[...] = self.random_state.gamma(100., 1. / 100., (self.num_topics, self.num_terms))
         self.expElogbeta = np.exp(dirichlet_expectation(self.state.sstats))
 
-        # Check that we haven't accidentally fall back to np.float64
+        # Check that we haven't accidentally fallen back to np.float64
         assert self.eta.dtype == self.dtype
         assert self.expElogbeta.dtype == self.dtype
 
@@ -411,16 +514,25 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return init_prior, is_auto
 
     def __str__(self):
+        """Get a string representation of the current object.
+
+        Returns
+        -------
+        str
+            Human readable representation of the most important model parameters.
+
+        """
         return "LdaModel(num_terms=%s, num_topics=%s, decay=%s, chunksize=%s)" % (
             self.num_terms, self.num_topics, self.decay, self.chunksize
         )
 
     def sync_state(self):
+        """Propagate the states topic probabilities to the inner object's attribute. """
         self.expElogbeta = np.exp(self.state.get_Elogbeta())
         assert self.expElogbeta.dtype == self.dtype
 
     def clear(self):
-        """Clear model state (free up some memory). Used in the distributed algo."""
+        """Clear the model's state to free some memory. Used in the distributed implementation."""
         self.state = None
         self.Elogbeta = None
 
