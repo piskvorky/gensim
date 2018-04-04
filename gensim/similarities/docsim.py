@@ -67,6 +67,7 @@ import numpy
 import scipy.sparse
 
 from gensim import interfaces, utils, matutils
+from gensim.utils import deprecated
 from six.moves import map as imap, xrange, zip as izip
 
 
@@ -263,8 +264,6 @@ class Similarity(interfaces.SimilarityABC):
         Index similarity (dense with cosine distance).
     :class:`~gensim.similarities.docsim.SparseMatrixSimilarity`
         Index similarity (sparse with cosine distance).
-    :class:`~gensim.similarities.docsim.SoftCosineSimilarity`
-        Index similarity (with soft-cosine distance).
     :class:`~gensim.similarities.docsim.WmdSimilarity`
         Index similarity (with word-mover distance).
 
@@ -874,6 +873,7 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
     for more examples.
 
     """
+    @deprecated("Method will be removed in 4.0.0")
     def __init__(self, corpus, similarity_matrix, num_best=None, chunksize=256):
         """
 
@@ -912,9 +912,11 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
         # index is simply an array from 0 to size of corpus.
         self.index = numpy.arange(len(corpus))
 
+    @deprecated("Method will be removed in 4.0.0")
     def __len__(self):
         return len(self.corpus)
 
+    @deprecated("Method will be removed in 4.0.0")
     def get_similarities(self, query):
         """Get similarity between `query` and current index instance.
 
@@ -959,6 +961,7 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
 
         return result
 
+    @deprecated("Method will be removed in 4.0.0")
     def __str__(self):
         return "%s<%i docs, %i features>" % (self.__class__.__name__, len(self), self.similarity_matrix.shape[0])
 

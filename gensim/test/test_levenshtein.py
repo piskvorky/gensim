@@ -6,7 +6,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-Automated tests for checking the poincare module from the models package.
+Automated tests for checking the gensim.models.levenshtein module.
 """
 
 import logging
@@ -15,13 +15,60 @@ import unittest
 import numpy as np
 
 from gensim.corpora import Dictionary
-from gensim.models import levenshtein, TfidfModel
-
+from gensim.models import levenshtein, LevenshteinSimilarityIndex
+from gensim.utils import deprecated
 
 logger = logging.getLogger(__name__)
 
 
+class TestLevenshteinSimilarityIndex(unittest.TestCase):
+    def setUp(self):
+        self.documents = [["government", "denied", "holiday"], ["holiday", "slowing", "hollingworth"]]
+        self.dictionary = Dictionary(self.documents)
+
+    def test_most_similar(self):
+        """Test most_similar returns expected results."""
+
+        index = LevenshteinSimilarityIndex(self.dictionary)
+        results = list(index.most_similar("holiday", topn=1))
+        self.assertLess(0, len(results))
+        self.assertGreaterEqual(1, len(results))
+        results = list(index.most_similar("holiday", topn=4))
+        self.assertLess(1, len(results))
+        self.assertGreaterEqual(4, len(results))
+
+        # check that the term itself is not returned
+        index = LevenshteinSimilarityIndex(self.dictionary)
+        terms = [term for term, similarity in index.most_similar("holiday", topn=len(self.dictionary))]
+        self.assertFalse("holiday" in terms)
+
+        # check that the threshold works as expected
+        index = LevenshteinSimilarityIndex(self.dictionary, threshold=0.0)
+        results = list(index.most_similar("holiday", topn=10))
+        self.assertLess(0, len(results))
+        self.assertGreaterEqual(10, len(results))
+
+        index = LevenshteinSimilarityIndex(self.dictionary, threshold=1.0)
+        results = list(index.most_similar("holiday", topn=10))
+        self.assertEqual(0, len(results))
+
+        # check that the alpha works as expected
+        index = LevenshteinSimilarityIndex(self.dictionary, alpha=1.0)
+        first_similarities = np.array([similarity for term, similarity in index.most_similar("holiday", topn=10)])
+        index = LevenshteinSimilarityIndex(self.dictionary, alpha=2.0)
+        second_similarities = np.array([similarity for term, similarity in index.most_similar("holiday", topn=10)])
+        self.assertTrue(np.allclose(2.0 * first_similarities, second_similarities))
+
+        # check that the beta works as expected
+        index = LevenshteinSimilarityIndex(self.dictionary, alpha=1.0, beta=1.0)
+        first_similarities = np.array([similarity for term, similarity in index.most_similar("holiday", topn=10)])
+        index = LevenshteinSimilarityIndex(self.dictionary, alpha=1.0, beta=2.0)
+        second_similarities = np.array([similarity for term, similarity in index.most_similar("holiday", topn=10)])
+        self.assertTrue(np.allclose(first_similarities ** 2.0, second_similarities))
+
+
 class TestLevenshtein(unittest.TestCase):
+    @deprecated("Method will be removed in 4.0.0")
     def test_similarity_matrix(self):
         """Test similarity_matrix returns expected results."""
 
@@ -47,17 +94,17 @@ class TestLevenshtein(unittest.TestCase):
 
         # checking that alpha and beta work as expected
         distances = np.array([
-            [ 1,  7,  6, 11,  6],
-            [ 7,  1,  9,  9,  9],
-            [ 6,  9,  1,  8,  6],
-            [11,  9,  8,  1,  9],
-            [ 6,  9,  6,  9,  1]])
+            [1, 7, 6, 11, 6],
+            [7, 1, 9, 9, 9],
+            [6, 9, 1, 8, 6],
+            [11, 9, 8, 1, 9],
+            [6, 9, 6, 9, 1]])
         lengths = np.array([
-            [ 6, 10,  7, 12,  7],
+            [6, 10, 7, 12, 7],
             [10, 10, 10, 12, 10],
-            [ 7, 10,  7, 12,  7],
+            [7, 10, 7, 12, 7],
             [12, 12, 12, 12, 12],
-            [ 7, 10,  7, 12,  7]])
+            [7, 10, 7, 12, 7]])
         alpha = 1.2
         beta = 3.4
         expected_similarity_matrix = alpha * (1.0 - distances * 1.0 / lengths)**beta

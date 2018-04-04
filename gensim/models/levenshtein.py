@@ -13,79 +13,156 @@ import logging
 from multiprocessing import Pool
 
 from Levenshtein import distance
-import numpy as np
 from numpy import float32 as REAL
-from scipy import sparse
 
-logger = logging.getLogger('gensim.models.levenshtein')
+from gensim.models.term_similarity import TermSimilarityIndex, SparseTermSimilarityMatrix
+from gensim.utils import deprecated
 
-CHUNKSIZE = 500
-
-
-def levsim_worker(args):
-    alpha, beta, w1, w2, w2_index = args
-    return (w2_index, levsim(alpha, beta, w1, w2))
+logger = logging.getLogger(__name__)
 
 
-def levsim(alpha, beta, w1, w2):
-    """Get the Levenshtein similarity of two terms.
+def levsim(alpha, beta, t1, t2):
+    """Get the Levenshtein similarity between two terms.
 
-    Return the Levenshtein similarity of two terms. The similarity is a number between
-    <0.0, 1.0>, higher is more similar.
+    Return the Levenshtein similarity between two terms. The similarity is a
+    number between <0.0, 1.0>, higher is more similar.
 
     Parameters
     ----------
-    w1 : {string, unicode}
+    alpha : float
+        The multiplicative factor alpha defined by Charlet and Damnati (2017).
+    beta : float
+        The exponential factor beta defined by Charlet and Damnati (2017).
+    t1 : {string, unicode}
         The first compared term.
-    w2 : {string, unicode}
+    t2 : {string, unicode}
         The second compared term.
 
     Returns
     -------
     float
-        The Levenshtein similarity of `w1` and `w2`.
+        The Levenshtein similarity between `t1` and `t2`.
+
+    Notes
+    -----
+    This notion of Levenshtein similarity was first defined in section 2.2 of
+    `Delphine Charlet and Geraldine Damnati, "SimBow at SemEval-2017 Task 3:
+    Soft-Cosine Semantic Similarity between Questions for Community Question
+    Answering", 2017 <http://www.aclweb.org/anthology/S/S17/S17-2051.pdf>`__.
+
     """
-    return alpha * (1 - distance(w1, w2) * 1.0 / max(len(w1), len(w2)))**beta
+    t1 = t1.decode()  # make sure both strings are in unicode
+    t2 = t2.decode()
+    return alpha * (1 - distance(t1, t2) * 1.0 / max(len(t1), len(t2)))**beta
 
 
-def similarity_matrix(dictionary, tfidf=None, threshold=0.0, alpha=1.8, beta=5.0,
-                      nonzero_limit=100, workers=1, dtype=REAL):
-    """Constructs a term similarity matrix for computing Soft Cosine Measure.
+def _levsim_worker(args):
+    _, _, _, t2 = args
+    return (t2, levsim(*args))
 
-    Constructs a sparse term similarity matrix in the :class:`scipy.sparse.csc_matrix` format
-    for computing Soft Cosine Measure between documents.
+
+class LevenshteinSimilarityIndex(TermSimilarityIndex):
+    """
+    Computes Levenshtein similarities between terms and retrieves most similar
+    terms for a given term.
 
     Parameters
     ----------
     dictionary : :class:`~gensim.corpora.dictionary.Dictionary`
-        A dictionary that specifies a mapping between words and the indices of rows and columns
+        A dictionary that specifies the considered terms.
+    workers : int, optional
+        The number of workers to use when computing the Levenshtein similarities.
+    alpha : float, optional
+        The multiplicative factor alpha defined by Charlet and Damnati (2017).
+    beta : float, optional
+        The exponential factor beta defined by Charlet and Damnati (2017).
+    threshold : float, optional
+        Only terms more similar than `threshold` are considered when retrieving
+        the most similar terms for a given term.
+
+    See Also
+    --------
+    :func:`gensim.models.levenshtein.levsim`
+        The Levenshtein similarity.
+    :class:`~gensim.models.term_similarity.SparseTermSimilarityMatrix`
+        Build a term similarity matrix and compute the Soft Cosine Measure.
+
+    """
+    CHUNK_SIZE = 5000  # the number of similarities a single worker computes in one batch
+
+    def __init__(self, dictionary, workers=1, alpha=1.8, beta=5.0, threshold=0.0):
+        self.dictionary = dictionary
+        self.pool = Pool(workers)
+        self.alpha = alpha
+        self.beta = beta
+        self.threshold = threshold
+        super(LevenshteinSimilarityIndex, self).__init__()
+
+    def __del__(self):
+        self.pool.close()
+        self.pool.join()
+
+#    def similarity(self, t1, t2):
+#        similarity = levsim(self.alpha, self.beta, t1, t2)
+#        if similarity < self.threshold:
+#            return None
+#        else:
+#            return similarity
+
+    def most_similar(self, t1, topn=10):
+        heap = []
+        for t2, similarity in self.pool.imap_unordered(
+                _levsim_worker, (
+                    (self.alpha, self.beta, t1, self.dictionary[t2_index])
+                    for t2_index in range(len(self.dictionary))
+                    if t1 != self.dictionary[t2_index]),
+                self.CHUNK_SIZE):
+            heappush(heap, (-similarity, t2))
+        for _, (t2, similarity) in zip(
+                range(topn),
+                (
+                    (t2, -_similarity) for _similarity, t2 in (
+                        heappop(heap) for _ in range(len(heap)))
+                    if similarity > self.threshold)):
+            yield (t2, similarity)
+
+
+@deprecated(
+    "Function will be deprecated in 4.0.0, use " +
+    "gensim.models.levenshtein.LevenshteinSimilarityIndex instead")
+def similarity_matrix(dictionary, tfidf=None, threshold=0.0, alpha=1.8, beta=5.0,
+                      nonzero_limit=100, workers=1, dtype=REAL):
+    """Constructs a term similarity matrix for computing Soft Cosine Measure.
+    Constructs a sparse term similarity matrix in the :class:`scipy.sparse.csc_matrix` format
+    for computing Soft Cosine Measure between documents.
+    Parameters
+    ----------
+    dictionary : :class:`~gensim.corpora.dictionary.Dictionary`
+        A dictionary that specifies a mapping between terms and the indices of rows and columns
         of the resulting term similarity matrix.
-    tfidf : :class:`gensim.models.tfidfmodel.TfidfModel`, optional
+    tfidf : :class:`gensim.models.tfidfmodel.TfidfModel` or None, optional
         A model that specifies the relative importance of the terms in the dictionary. The columns
         of the term similarity matrix will be build in a decreasing order of importance of
         terms, or in the order of term identifiers if None.
     threshold : float, optional
-        Only pairs of words whose embeddings are more similar than `threshold` are considered
-        when building the sparse term similarity matrix.
+        Only terms more similar than `threshold` are considered when retrieving
+        the most similar terms for a given term.
     alpha : float, optional
-        The multiplicative factor alpha from the definition of the matrix Mlev.
+        The multiplicative factor alpha defined by Charlet and Damnati (2017).
     beta : float, optional
-        The exponent beta from the definition of the matrix Mlev.
+        The exponential factor beta defined by Charlet and Damnati (2017).
     nonzero_limit : int, optional
-        The maximum number of non-zero elements outside the diagonal in a single column of the term
-        similarity matrix. Setting `nonzero_limit` to a constant ensures that the time complexity of
-        computing the Soft Cosine Measure will be linear in the document length rather than
-        quadratic.
+        The maximum number of non-zero elements outside the diagonal in a single column of the
+        sparse term similarity matrix.
     workers : int, optional
         The number of workers to use when computing the Levenshtein similarities.
     dtype : numpy.dtype, optional
-        Data-type of the term similarity matrix.
+        Data-type of the sparse term similarity matrix.
 
     Returns
     -------
     :class:`scipy.sparse.csc_matrix`
         Term similarity matrix.
-
     See Also
     --------
     :func:`gensim.matutils.softcossim`
@@ -95,7 +172,6 @@ def similarity_matrix(dictionary, tfidf=None, threshold=0.0, alpha=1.8, beta=5.0
     :meth:`gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similarity_matrix`
         A term similarity matrix produced from term embeddings.
 
-
     Notes
     -----
     The constructed matrix corresponds to the matrix Mlev defined in section 2.2 of
@@ -104,61 +180,8 @@ def similarity_matrix(dictionary, tfidf=None, threshold=0.0, alpha=1.8, beta=5.0
     <http://www.aclweb.org/anthology/S/S17/S17-2051.pdf>`__.
 
     """
-    logger.info("constructing a term similarity matrix")
-    matrix_order = len(dictionary)
-    matrix_nonzero = [1] * matrix_order
-    matrix = sparse.identity(matrix_order, dtype=dtype, format="dok")
-    pool = Pool(workers)
-    # Decide the order of columns.
-    if tfidf is None:
-        word_indices = range(matrix_order)
-    else:
-        assert max(tfidf.idfs) < matrix_order
-        word_indices = [
-            index for index, _
-            in sorted(tfidf.idfs.items(), key=lambda x: (x[1], -x[0]), reverse=True)
-        ]
-
-    # Traverse columns.
-    for column_number, w1_index in enumerate(word_indices):
-        if column_number % 1000 == 0:
-            logger.info(
-                "PROGRESS: at %.02f%% columns (%d / %d, %.06f%% density, " \
-                "%.06f%% projected density)",
-                100.0 * (column_number + 1) / matrix_order, column_number + 1, matrix_order,
-                100.0 * matrix.getnnz() / matrix_order**2,
-                100.0 * np.clip(
-                    (1.0 * (matrix.getnnz() - matrix_order) / matrix_order**2)
-                    * (1.0 * matrix_order / (column_number + 1))
-                    + (1.0 / matrix_order),  # add density correspoding to the main diagonal
-                    0.0, 1.0))
-        w1 = dictionary[w1_index]
-
-        # Traverse rows.
-        heap = []
-        for w2_index, similarity in pool.imap_unordered(
-                levsim_worker, (
-                    (alpha, beta, w1, dictionary[w2_index], w2_index)
-                    for w2_index in range(matrix_order)
-                    if w1_index != w2_index), CHUNKSIZE):
-            heappush(heap, (-similarity, w2_index))
-        num_nonzero = matrix_nonzero[w1_index] - 1
-        rows = (
-            (w2_index, -similarity_) for similarity_, w2_index in (
-                heappop(heap) for _ in range(min(matrix_order - 1, nonzero_limit - num_nonzero))))
-
-        for w2_index, similarity in rows:
-            # Ensure that we don't exceed `nonzero_limit` by mirroring the elements.
-            if similarity > threshold and matrix_nonzero[w2_index] <= nonzero_limit \
-                    and (w1_index, w2_index) not in matrix.keys():
-                matrix[w1_index, w2_index] = similarity
-                matrix_nonzero[w1_index] += 1
-                matrix[w2_index, w1_index] = similarity
-                matrix_nonzero[w2_index] += 1
-
-    logger.info(
-        "constructed a term similarity matrix with %0.6f %% nonzero elements",
-        100.0 * matrix.getnnz() / matrix_order**2
-    )
-    pool.close()
-    return matrix.T.tocsc()
+    index = LevenshteinSimilarityIndex(
+        dictionary, workers=workers, alpha=alpha, beta=beta, threshold=threshold)
+    similarity_matrix = SparseTermSimilarityMatrix(
+        index, dictionary, tfidf=tfidf, nonzero_limit=nonzero_limit, dtype=dtype)
+    return similarity_matrix.matrix

@@ -25,6 +25,7 @@ from gensim import matutils, similarities
 from gensim.models import Word2Vec, FastText
 from gensim.test.utils import (datapath, get_tmpfile,
     common_texts as texts, common_dictionary as dictionary, common_corpus as corpus)
+from gensim.utils import deprecated
 
 try:
     from pyemd import emd  # noqa:F401
@@ -371,6 +372,7 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
 
 
 class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
+    @deprecated("Method will be removed in 4.0.0")
     def setUp(self):
         self.cls = similarities.SoftCosineSimilarity
         self.tfidf = TfidfModel(dictionary=dictionary)
@@ -379,10 +381,12 @@ class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
         similarity_matrix[dictionary.token2id["human"], dictionary.token2id["user"]] = 0.5
         self.similarity_matrix = similarity_matrix.tocsc()
 
+    @deprecated("Method will be removed in 4.0.0")
     def factoryMethod(self):
         # Override factoryMethod.
         return self.cls(corpus, self.similarity_matrix)
 
+    @deprecated("Method will be removed in 4.0.0")
     def testFull(self, num_best=None):
         # Override testFull.
 
@@ -422,6 +426,7 @@ class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
                     self.assertTrue(numpy.alltrue(result[i + 1:] >= 0.0))
                     self.assertTrue(numpy.alltrue(result[i + 1:] < 1.0))
 
+    @deprecated("Method will be removed in 4.0.0")
     def testNonIncreasing(self):
         """ Check that similarities are non-increasing when `num_best` is not `None`."""
         # NOTE: this could be implemented for other similarities as well (i.e. in _TestSimilarityABC).
@@ -435,6 +440,7 @@ class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
         cond = sum(numpy.diff(sims2) < 0) == len(sims2) - 1
         self.assertTrue(cond)
 
+    @deprecated("Method will be removed in 4.0.0")
     def testChunking(self):
         # Override testChunking.
 
@@ -454,6 +460,7 @@ class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
             expected = 1.0
             self.assertAlmostEquals(expected, chunk[0][1], places=2)
 
+    @deprecated("Method will be removed in 4.0.0")
     def testIter(self):
         # Override testIter.
 

@@ -14,6 +14,7 @@ import logging
 import math
 
 from gensim import utils
+from gensim.utils import deprecated
 
 import numpy as np
 import scipy.sparse
@@ -775,6 +776,9 @@ def cossim(vec1, vec2):
     return result
 
 
+@deprecated(
+    "Function will be removed in 4.0.0, use " +
+    "gensim.models.term_similarity.SparseTermSimilarityMatrix.softcossim instead")
 def softcossim(vec1, vec2, similarity_matrix):
     """Get Soft Cosine Measure between two vectors given a term similarity matrix.
 
@@ -789,8 +793,10 @@ def softcossim(vec1, vec2, similarity_matrix):
     vec2 : list of (int, float)
         A document vector in the BoW format.
     similarity_matrix : {:class:`scipy.sparse.csc_matrix`, :class:`scipy.sparse.csr_matrix`}
-        A term similarity matrix, typically produced by
-        :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similarity_matrix`.
+        A term similarity matrix. If the matrix is :class:`scipy.sparse.csr_matrix`, it is going
+        to be transposed. If you rely on the fact that there is at most a constant number of
+        non-zero elements in a single column, it is your responsibility to ensure that the matrix
+        is symmetric.
 
     Returns
     -------
