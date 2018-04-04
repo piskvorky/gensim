@@ -15,6 +15,7 @@ from math import sqrt
 import numpy as np
 from scipy import sparse
 
+from gensim.matutils import corpus2csc
 from gensim.utils import SaveLoad, is_corpus
 
 logger = logging.getLogger(__name__)
@@ -182,28 +183,28 @@ class SparseTermSimilarityMatrix(SaveLoad):
         assert sparse.issparse(matrix)
         self.__init__(matrix)
 
-    def inner_product(self, vec1, vec2, normalized=False):
-        """Get the inner product between real vectors vec1 and vec2.
+    def inner_product(self, X, Y, normalized=False):
+        """Get the inner product(s) between real vectors / corpora X and Y.
 
-        Return the inner product between real vectors vec1 and vec2 expressed in a non-orthogonal
-        normalized basis, where the dot product between the basis vectors is given by the sparse
-        term similarity matrix.
+        Return the inner product(s) between real vectors / corpora vec1 and vec2 expressed in a
+        non-orthogonal normalized basis, where the dot product between the basis vectors is given by
+        the sparse term similarity matrix.
 
         Parameters
         ----------
-        vec1 : list of (int, float)
-            A query vector in the BoW format.
-        vec2 : list of (int, float)
-            A document vector in the BoW format.
+        vec1 : list of (int, float) or iterable of list of (int, float)
+            A query vector / corpus in the sparse bag-of-words format.
+        vec2 : list of (int, float) or iterable of list of (int, float)
+            A document vector / corpus in the sparse bag-of-words format.
         normalized : bool, optional
             Whether the inner product should be L2-normalized. The normalized inner product
             corresponds to the Soft Cosine Measure (SCM). SCM is a number between <-1.0, 1.0>,
-            higher is more similar.
+            where higher is more similar.
 
         Returns
         -------
-        `self.matrix.dtype`
-            The inner product between `vec1` and `vec2`.
+        `self.matrix.dtype` or `scipy.sparse.csr_matrix`
+            The inner product(s) between `X` and `Y`.
 
         References
         ----------
@@ -213,28 +214,58 @@ class SparseTermSimilarityMatrix(SaveLoad):
            of Features in Vector Space Model", 2014, http://www.cys.cic.ipn.mx/ojs/index.php/CyS/article/view/2043/1921.
 
         """
-        if not vec1 or not vec2:
+        if not X or not Y:
             return 0.0
 
-        vec1 = dict(vec1)
-        vec2 = dict(vec2)
-        word_indices = sorted(set(chain(vec1, vec2)))
-        dtype = self.matrix.dtype
-        vec1 = np.array([vec1[i] if i in vec1 else 0 for i in word_indices], dtype=dtype)
-        vec2 = np.array([vec2[i] if i in vec2 else 0 for i in word_indices], dtype=dtype)
-        dense_matrix = self.matrix[[[i] for i in word_indices], word_indices].todense()
-        result = vec1.T.dot(dense_matrix).dot(vec2)[0, 0]
+        is_corpus_X, X = is_corpus(X)
+        is_corpus_Y, Y = is_corpus(Y)
 
-        if normalized:
-            vec1len = vec1.T.dot(dense_matrix).dot(vec1)[0, 0]
-            vec2len = vec2.T.dot(dense_matrix).dot(vec2)[0, 0]
+        if not is_corpus_X and not is_corpus_Y:
+            X = dict(X)
+            Y = dict(Y)
+            word_indices = sorted(set(chain(X, Y)))
+            dtype = self.matrix.dtype
+            X = np.array([X[i] if i in X else 0 for i in word_indices], dtype=dtype)
+            Y = np.array([Y[i] if i in Y else 0 for i in word_indices], dtype=dtype)
+            matrix = self.matrix[[[i] for i in word_indices], word_indices].todense()
 
-            assert \
-                vec1len > 0.0 and vec2len > 0.0, \
-                u"sparse documents must not contain any explicit zero entries and the similarity matrix S " \
-                u"must satisfy x^T * S * x > 0 for any nonzero bag-of-words vector x."
+            result = X.T.dot(matrix).dot(Y)
 
-            result /= sqrt(vec1len) * sqrt(vec2len)
-            result = np.clip(result, -1.0, 1.0)
+            if normalized:
+                X_norm = X.T.dot(matrix).dot(X)[0, 0]
+                Y_norm = Y.T.dot(matrix).dot(Y)[0, 0]
 
-        return result
+                assert \
+                    X_norm > 0.0 and Y_norm > 0.0, \
+                    u"sparse documents must not contain any explicit zero entries and the similarity matrix S " \
+                    u"must satisfy x^T * S * x > 0 for any nonzero bag-of-words vector x."
+
+                result /= sqrt(X_norm) * sqrt(Y_norm)
+                result = np.clip(result, -1.0, 1.0)
+
+            return result[0, 0]
+        else:
+            dtype = self.matrix.dtype
+            X = corpus2csc(X if is_corpus_X else [X], num_terms=self.matrix.shape[0], dtype=dtype)
+            Y = corpus2csc(Y if is_corpus_Y else [Y], num_terms=self.matrix.shape[0], dtype=dtype)
+            matrix = self.matrix
+
+            if normalized:
+                # use the following equality: np.diag(A.T.dot(B).dot(A)) == A.T.dot(B).multiply(A.T).sum(axis=1).T
+                X_norm = X.T.dot(matrix).multiply(X.T).sum(axis=1).T
+                Y_norm = Y.T.dot(matrix).multiply(Y.T).sum(axis=1).T
+
+                assert \
+                    X_norm.min() >= 0.0 and Y_norm.min() >= 0.0, \
+                    u"sparse documents must not contain any explicit zero entries and the similarity matrix S " \
+                    u"must satisfy x^T * S * x > 0 for any nonzero bag-of-words vector x."
+
+                X = X.multiply(sparse.csr_matrix(1 / np.sqrt(X_norm)))
+                Y = Y.multiply(sparse.csr_matrix(1 / np.sqrt(Y_norm)))
+
+            result = X.T.dot(matrix).dot(Y)
+
+            if normalized:
+                result.data = np.clip(result.data, -1.0, 1.0)
+
+            return result
