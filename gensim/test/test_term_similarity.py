@@ -101,6 +101,27 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         self.assertEqual(1, np.max(np.sum(matrix != 0, axis=0)))
         self.assertTrue(np.all(matrix == np.eye(matrix.shape[0])))
 
+        # check that symmetric works as expected
+        matrix = SparseTermSimilarityMatrix(
+            self.index, self.dictionary, nonzero_limit=1).matrix.todense()
+        expected_matrix = np.array([
+            [1.0, 0.5, 0.0, 0.0, 0.0],
+            [0.5, 1.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 1.0]])
+        self.assertTrue(np.all(expected_matrix == matrix))
+
+        matrix = SparseTermSimilarityMatrix(
+            self.index, self.dictionary, nonzero_limit=1, symmetric=False).matrix.todense()
+        expected_matrix = np.array([
+            [1.0, 0.5, 0.5, 0.5, 0.5],
+            [0.0, 1.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 1.0]])
+        self.assertTrue(np.all(expected_matrix == matrix))
+
         # check that tfidf works as expected
         matrix = SparseTermSimilarityMatrix(
             self.index, self.dictionary, nonzero_limit=1).matrix.todense()

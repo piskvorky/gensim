@@ -104,6 +104,9 @@ class SparseTermSimilarityMatrix(SaveLoad):
         A model that specifies the relative importance of the terms in the dictionary. The columns
         of the term similarity matrix will be build in a decreasing order of importance of
         terms, or in the order of term identifiers if None.
+    symmetric : bool, optional
+        Whether the symmetry of the term similarity matrix will be enforced. This parameter only has
+        an effect when `source` is a :class:`scipy.sparse.spmatrix`.
     nonzero_limit : int, optional
         The maximum number of non-zero elements outside the diagonal in a single column of the
         sparse term similarity matrix.
@@ -117,7 +120,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
     """
     PROGRESS_MESSAGE_PERIOD = 1000  # how many columns are processed between progress messages
 
-    def __init__(self, source, dictionary=None, tfidf=None, nonzero_limit=100, dtype=np.float32):
+    def __init__(self, source, dictionary=None, tfidf=None, symmetric=True, nonzero_limit=100, dtype=np.float32):
         if sparse.issparse(source):
             self.matrix = source.tocsc()  # encapsulate the passed sparse matrix
             return
@@ -163,12 +166,13 @@ class SparseTermSimilarityMatrix(SaveLoad):
                     logger.debug('an out-of-dictionary term "%s"', t2)
                     continue
                 t2_index = dictionary.token2id[t2]
-                if matrix_nonzero[t2_index] <= nonzero_limit \
-                        and not matrix.has_key((t1_index, t2_index)):
-                    matrix[t1_index, t2_index] = similarity
-                    matrix[t2_index, t1_index] = similarity
-                    matrix_nonzero[t1_index] += 1
-                    matrix_nonzero[t2_index] += 1
+                if (not symmetric or matrix_nonzero[t2_index] <= nonzero_limit):
+                    if not matrix.has_key((t1_index, t2_index)):
+                        matrix[t1_index, t2_index] = similarity
+                        matrix_nonzero[t1_index] += 1
+                        if symmetric:
+                            matrix[t2_index, t1_index] = similarity
+                            matrix_nonzero[t2_index] += 1
 
         logger.info(
             "constructed a sparse term similarity matrix with %0.06f%% density",
