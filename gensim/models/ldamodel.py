@@ -50,6 +50,7 @@ from gensim.models.callbacks import Callback
 
 logger = logging.getLogger('gensim.models.ldamodel')
 
+# Epsilon (very small) values used by each expected data type instead of 0, to avoid Arithmetic Errors.
 DTYPE_TO_EPS = {
     np.float16: 1e-5,
     np.float32: 1e-35,
@@ -75,7 +76,7 @@ def update_dir_prior(prior, N, logphat, rho):
 
     Returns
     -------
-    float
+    list of float
         The updated prior.
 
     """
@@ -365,7 +366,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         >>> print(lda[doc_bow]) # get topic probability distribution for a document
         >>> lda.update(corpus2) # update the LDA model with additional documents
         >>> print(lda[doc_bow])
-
+        >>>
         >>> lda = LdaModel(corpus, num_topics=50, alpha='auto', eval_every=5)  # train asymmetric alpha from data
 
         """
@@ -474,6 +475,27 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             self.update(corpus, chunks_as_numpy=use_numpy)
 
     def init_dir_prior(self, prior, name):
+        """Initialize our prio belief for the Dirichlet distribution.
+
+        Parameters
+        ----------
+        prior : {str, list of float, np.ndarray of float, float}
+            A-priori belief on word probability. If `name` == 'eta' then the prior can be:
+
+                * scalar for a symmetric prior over topic/word probability,
+                * vector of length num_words to denote an asymmetric user defined probability for each word,
+                * matrix of shape (num_topics, num_words) to assign a probability for each word-topic combination,
+                * the string 'auto' to learn the asymmetric prior from the data.
+
+            If `name` == 'alpha', then the prior can be:
+
+                * an 1D array of length equal to the number of expected topics,
+                * 'asymmetric': Uses a fixed normalized assymetric prior of `1.0 / topicno`.
+                * 'default': Learns an assymetric prior from the corpus.
+        name : {'alpha', 'eta'}
+            Whether the `prior` is parameterized by the alpha vector (1 parameter per topic)
+            or by the eta (1 parameter per unique term in the vocabulary).
+        """
         if prior is None:
             prior = 'symmetric'
 
@@ -537,21 +559,28 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.Elogbeta = None
 
     def inference(self, chunk, collect_sstats=False):
-        """
-        Given a chunk of sparse document vectors, estimate gamma (parameters
-        controlling the topic weights) for each document in the chunk.
+        """Given a chunk of sparse document vectors, estimate gamma (parameters controlling the topic weights)
+        for each document in the chunk.
 
-        This function does not modify the model (=is read-only aka const). The
-        whole input chunk of document is assumed to fit in RAM; chunking of a
-        large corpus must be done earlier in the pipeline.
+        This function does not modify the model The whole input chunk of document is assumed to fit in RAM;
+        chunking of a large corpus must be done earlier in the pipeline. Avoids computing the `phi` variational
+        parameter directly using the optimization presented in
+        `Lee, Seung: Algorithms for non-negative matrix factorization"
+        <https://papers.nips.cc/paper/1861-algorithms-for-non-negative-matrix-factorization.pdf>`_.
 
-        If `collect_sstats` is True, also collect sufficient statistics needed
-        to update the model's topic-word distributions, and return a 2-tuple
-        `(gamma, sstats)`. Otherwise, return `(gamma, None)`. `gamma` is of shape
-        `len(chunk) x self.num_topics`.
+        Parameters
+        ----------
+        chunk : {list of list of (int, float), scipy.sparse.csc}
+            The corpus chunk on which the inference step will be performed.
+        collect_sstats : bool
+            If set to True, also collect (and return) sufficient statistics needed to update the model's topic-word
+            distributions.
 
-        Avoids computing the `phi` variational parameter directly using the
-        optimization presented in **Lee, Seung: Algorithms for non-negative matrix factorization, NIPS 2001**.
+        Returns
+        -------
+        tuple of (np.ndarray, {np.ndarray of float, None})
+            The first element is always returned and it corresponds to the states gamma matrix. The second element is
+            only returned if `collect_sstats` == True and corresponds to the sufficient statistics for the M step.
 
         """
         try:
@@ -635,9 +664,20 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return gamma, sstats
 
     def do_estep(self, chunk, state=None):
-        """
-        Perform inference on a chunk of documents, and accumulate the collected
-        sufficient statistics in `state` (or `self.state` if None).
+        """Perform inference on a chunk of documents, and accumulate the collected sufficient statistics.
+
+        Parameters
+        ----------
+        chunk : {list of list of (int, float), scipy.sparse.csc}
+            The corpus chunk on which the inference step will be performed.
+        state : :class:`~gensim.models.ldamodel.LdaState`, optional
+            The state to be updated with the newly accumulated sufficient statistics. If none, the models
+            `self.state` is updated.
+
+        Returns
+        -------
+        np.ndarray of shape (`len(chunk)`, `self.num_topics`)
+            Gamma parameters controlling the topic weights.
 
         """
         if state is None:
@@ -649,9 +689,20 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return gamma
 
     def update_alpha(self, gammat, rho):
-        """
-        Update parameters for the Dirichlet prior on the per-document
-        topic weights `alpha` given the last `gammat`.
+        """Update parameters for the Dirichlet prior on the per-document topic weights.
+
+        Parameters
+        ----------
+        gammat : numpy.ndarray
+            Previous topic weight parameters.
+        rho : float
+            Learning rate.
+
+        Returns
+        -------
+        list of float
+            Updated alpha parameters.
+
         """
         N = float(len(gammat))
         logphat = sum(dirichlet_expectation(gamma) for gamma in gammat) / N
@@ -664,9 +715,20 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return self.alpha
 
     def update_eta(self, lambdat, rho):
-        """
-        Update parameters for the Dirichlet prior on the per-topic
-        word weights `eta` given the last `lambdat`.
+        """Update parameters for the Dirichlet prior on the per-topic word weights.
+
+        Parameters
+        ----------
+        lambdat : np.ndarray
+            Previous lambda parameters.
+        rho : float
+            Learning rate.
+
+        Returns
+        -------
+        list of float
+            The updated eta parameters.
+
         """
         N = float(lambdat.shape[0])
         logphat = (sum(dirichlet_expectation(lambda_) for lambda_ in lambdat) / N).reshape((self.num_terms,))
@@ -678,10 +740,21 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return self.eta
 
     def log_perplexity(self, chunk, total_docs=None):
-        """
-        Calculate and return per-word likelihood bound, using the `chunk` of
-        documents as evaluation corpus. Also output the calculated statistics. incl.
-        perplexity=2^(-bound), to log at INFO level.
+        """Calculate and return per-word likelihood bound, using a chunk of documents as evaluation corpus.
+
+        Also output the calculated statistics, including the perplexity=2^(-bound), to log at INFO level.
+
+        Parameters
+        ----------
+        chunk : {list of list of (int, float), scipy.sparse.csc}
+            The corpus chunk on which the inference step will be performed.
+        total_docs : int
+            Number of docs used for evaluation of the perplexity.
+
+        Returns
+        -------
+        list of float
+            The variational bound score calculated for each word.
 
         """
         if total_docs is None:
@@ -698,35 +771,61 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     def update(self, corpus, chunksize=None, decay=None, offset=None,
                passes=None, update_every=None, eval_every=None, iterations=None,
                gamma_threshold=None, chunks_as_numpy=False):
-        """
-        Train the model with new documents, by EM-iterating over `corpus` until
-        the topics converge (or until the maximum number of allowed iterations
-        is reached). `corpus` must be an iterable (repeatable stream of documents),
+        """Train the model with new documents, by EM-iterating over the corpus until the topics converge, or until
+        the maximum number of allowed iterations is reached. `corpus` must be an iterable.
 
         In distributed mode, the E step is distributed over a cluster of machines.
 
-        This update also supports updating an already trained model (`self`)
-        with new documents from `corpus`; the two models are then merged in
-        proportion to the number of old vs. new documents. This feature is still
-        experimental for non-stationary input streams.
+        Notes
+        -----
+        This update also supports updating an already trained model with new documents; the two models are then merged
+        in proportion to the number of old vs. new documents. This feature is still experimental for non-stationary
+        input streams. For stationary input (no topic drift in new documents), on the other hand, this equals the
+        online update of `Matthew D. Hoffman, David M. Blei, Francis Bach:
+        "Online Learning for Latent Dirichlet Allocation NIPS'10" <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
+        and is guaranteed to converge for any `decay` in (0.5, 1.0). Additionally, for smaller corpus sizes, an
+        increasing `offset` may be beneficial (see Table 1 in the same paper).
 
-        For stationary input (no topic drift in new documents), on the other hand,
-        this equals the online update of Hoffman et al. and is guaranteed to
-        converge for any `decay` in (0.5, 1.0>. Additionally, for smaller
-        `corpus` sizes, an increasing `offset` may be beneficial (see
-        Table 1 in Hoffman et al.)
 
-        Args:
-            corpus (gensim corpus): The corpus with which the LDA model should be updated.
 
+
+        Parameters
+        ----------
+        corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
+            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`) used to update the
+            model.
+        chunksize :  int, optional
+            Number of documents to be used in each training chunk.
+        decay : float, optional
+            A number between (0.5, 1] to weight what percentage of the previous lambda value is forgotten
+            when each new document is examined. Corresponds to Kappa from
+            `Matthew D. Hoffman, David M. Blei, Francis Bach:
+            "Online Learning for Latent Dirichlet Allocation NIPS'10" <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
+        offset : float, optional
+            Hyper-parameter that controls how much we will slow down the first steps the first few iterations.
+            Corresponds to Tau_0 from `Matthew D. Hoffman, David M. Blei, Francis Bach:
+            "Online Learning for Latent Dirichlet Allocation NIPS'10" <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
             chunks_as_numpy (bool): Whether each chunk passed to `.inference` should be a np
                 array of not. np can in some settings turn the term IDs
                 into floats, these will be converted back into integers in
                 inference, which incurs a performance hit. For distributed
                 computing it may be desirable to keep the chunks as np
                 arrays.
-
-        For other parameter settings, see :class:`LdaModel` constructor.
+        passes : int, optional
+            Number of passes through the corpus during training.
+        update_every : int, optional
+            Number of documents to be iterated through for each update.
+            Set to 0 for batch learning, > 1 for online iterative learning.
+        eval_every : int, optional
+            Log perplexity is estimated every that many updates. Setting this to one slows down training by ~2x.
+        iterations : int, optional
+            Maximum number of iterations through the corpus when inferring the topic distribution of a corpus.
+        gamma_threshold : float, optional
+            Minimum change in the value of the gamma parameters to continue iterating.
+        chunks_as_numpy : bool
+            Whether each chunk passed to the inference step should be a np.ndarray or not. Numpy can in some settings
+            turn the term IDs into floats, these will be converted back into integers in inference, which incurs a
+            performance hit. For distributed computing it may be desirable to keep the chunks as np.ndarrays.
 
         """
         # use parameters given in constructor, unless user explicitly overrode them
@@ -876,9 +975,17 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # endfor entire corpus update
 
     def do_mstep(self, rho, other, extra_pass=False):
-        """
-        M step: use linear interpolation between the existing topics and
+        """Maximization step: use linear interpolation between the existing topics and
         collected sufficient statistics in `other` to update the topics.
+
+        Parameters
+        ----------
+        rho : float
+            Learning rate.
+        other : :class:`~gensim.models.ldamodel.LdaModel`
+            The model whose sufficient statistics will be used to update the topics.
+        extra_pass : bool
+            Whether this step required an additional pass over the corpus.
 
         """
         logger.debug("updating topics")
@@ -901,22 +1008,25 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             self.num_updates += other.numdocs
 
     def bound(self, corpus, gamma=None, subsample_ratio=1.0):
-        """
-        Estimate the variational bound of documents from `corpus`:
-        E_q[log p(corpus)] - E_q[log q(corpus)]
+        """Estimate the variational bound of documents from the corpus as E_q[log p(corpus)] - E_q[log q(corpus)].
 
-        Args:
-            corpus: documents to infer variational bounds from.
-            gamma: the variational parameters on topic weights for each `corpus`
-                document (=2d matrix=what comes out of `inference()`).
-                If not supplied, will be inferred from the model.
-            subsample_ratio (float): If `corpus` is a sample of the whole corpus,
-                pass this to inform on what proportion of the corpus it represents.
-                This is used as a multiplicative factor to scale the likelihood
-                appropriately.
+        Parameters
+        ----------
+        corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
+            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`) used to estimate the
+            variational bounds.
+        gamma : np.ndarray
+            Topic weight variational parameters for each document. If not supplied, it will be inferred from the model.
+        subsample_ratio : float
+            Percentage of the whole corpus represented by the passed `corpus` argument (in case this was a sample).
+            Set to 1.0 if the whole corpus was passed.This is used as a multiplicative factor to scale the likelihood
+            appropriately.
 
-        Returns:
-            The variational bound score calculated.
+        Returns
+        -------
+        list of float
+            The variational bound score calculated for each document.
+
         """
         score = 0.0
         _lambda = self.state.get_lambda()
@@ -960,19 +1070,29 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return score
 
     def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True):
-        """
-        Args:
-            num_topics (int): show results for first `num_topics` topics.
-                Unlike LSA, there is no natural ordering between the topics in LDA.
-                The returned `num_topics <= self.num_topics` subset of all topics is
-                therefore arbitrary and may change between two LDA training runs.
-            num_words (int): include top `num_words` with highest probabilities in topic.
-            log (bool): If True, log output in addition to returning it.
-            formatted (bool): If True, format topics as strings, otherwise return them as
-                `(word, probability)` 2-tuples.
-        Returns:
-            list: `num_words` most significant words for `num_topics` number of topics
-            (10 words for top 10 topics, by default).
+        """Get a representation for some topics.
+
+        Parameters
+        ----------
+        num_topics : int, optional
+            Number of topics to be returned. Unlike LSA, there is no natural ordering between the topics in LDA.
+            The returned topics subset of all topics is therefore arbitrary and may change between two LDA
+            training runs.
+        num_words : int, optional
+            Number of words to be presented for each topic. These will be the most relevant words (assigned the highest
+            probability for each topic).
+        log : bool, optional
+            Whether the output is also logged, besides being returned.
+        formatted : bool, optional
+            Whether the topic representations should be formatted as strings. If False, they are returned as
+            2 tuples of (word, probability).
+
+        Returns
+        -------
+        list of {str, tuple of (str, float)}
+            a list of topics, each represented either as a string (when `formatted` == True) or word-probability
+            pairs.
+
         """
         if num_topics < 0 or num_topics >= self.num_topics:
             num_topics = self.num_topics
@@ -1005,35 +1125,53 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return shown
 
     def show_topic(self, topicid, topn=10):
-        """
-        Args:
-            topn (int): Only return 2-tuples for the topn most probable words
-                (ignore the rest).
+        """Get the representation for a single topic. Words here are the actual strings, in constrast to
+        :meth:`~gensim.models.ldamodel.LdaModel.get_topic_terms` that represents words by their vocabulary ID.
 
-        Returns:
-            list: of `(word, probability)` 2-tuples for the most probable
-            words in topic `topicid`.
+        Parameters
+        ----------
+        topicid : int
+            The ID of the topic to be returned
+        topn : int
+            Number of the most significant words that are associated with the topic.
+
+        Returns
+        -------
+        list of (str, float)
+            Word - probability pairs for the most relevant words generated by the topic.
+
         """
         return [(self.id2word[id], value) for id, value in self.get_topic_terms(topicid, topn)]
 
     def get_topics(self):
-        """
-        Returns:
-            np.ndarray: `num_topics` x `vocabulary_size` array of floats (self.dtype) which represents
-            the term topic matrix learned during inference.
+        """Get the term-topic matrix learned during inference.
+
+
+        Returns
+        -------
+        np.ndarray of float of shape (`num_topics`, `vocabulary_size`)
+            The probability for each word in each topic.
+
         """
         topics = self.state.get_lambda()
         return topics / topics.sum(axis=1)[:, None]
 
     def get_topic_terms(self, topicid, topn=10):
-        """
-        Args:
-            topn (int): Only return 2-tuples for the topn most probable words
-                (ignore the rest).
+        """Get the representation for a single topic. Words the integer IDs, in constrast to
+        :meth:`~gensim.models.ldamodel.LdaModel.show_topic` that represents words by the actual strings.
 
-        Returns:
-            list: `(word_id, probability)` 2-tuples for the most probable words
-            in topic with id `topicid`.
+        Parameters
+        ----------
+        topicid : int
+            The ID of the topic to be returned
+        topn : int
+            Number of the most significant words that are associated with the topic.
+
+        Returns
+        -------
+        list of (int, float)
+            Word ID - probability pairs for the most relevant words generated by the topic.
+
         """
         topic = self.get_topics()[topicid]
         topic = topic / topic.sum()  # normalize to probability distribution
@@ -1042,16 +1180,39 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def top_topics(self, corpus=None, texts=None, dictionary=None, window_size=None,
                    coherence='u_mass', topn=20, processes=-1):
-        """
-        Calculate the coherence for each topic; default is Umass coherence.
+        """Get the topics with the highest coherence score the coherence for each topic.
 
-        See the :class:`gensim.models.CoherenceModel` constructor for more info on the
-        parameters and the different coherence metrics.
+        Parameters
+        ----------
+        corpus : iterable of list of (int, float), optional
+            Corpus in BoW format.
+        texts : list of list of str, optional
+            Tokenized texts, needed for coherence models that use sliding window based (i.e. coherence=`c_something`)
+            probability estimator .
+        dictionary : :class:`~gensim.corpora.dictionary.Dictionary`, optional
+            Gensim dictionary mapping of id word to create corpus.
+            If `model.id2word` is present, this is not needed. If both are provided, passed `dictionary` will be used.
+        window_size : int, optional
+            Is the size of the window to be used for coherence measures using boolean sliding window as their
+            probability estimator. For 'u_mass' this doesn't matter.
+            If None - the default window sizes are used which are: 'c_v' - 110, 'c_uci' - 10, 'c_npmi' - 10.
+        coherence : {'u_mass', 'c_v', 'c_uci', 'c_npmi'}, optional
+            Coherence measure to be used.
+            Fastest method - 'u_mass', 'c_uci' also known as `c_pmi`.
+            For 'u_mass' corpus should be provided, if texts is provided, it will be converted to corpus
+            using the dictionary. For 'c_v', 'c_uci' and 'c_npmi' `texts` should be provided (`corpus` isn't needed)
+        topn : int, optional
+            Integer corresponding to the number of top words to be extracted from each topic.
+        processes : int, optional
+            Number of processes to use for probability estimation phase, any value less than 1 will be interpreted as
+            num_cpus - 1.
 
-        Returns:
-            list: tuples with `(topic_repr, coherence_score)`, where `topic_repr` is a list
-            of representations of the `topn` terms for the topic. The terms are represented
-            as tuples of `(membership_in_topic, token)`. The `coherence_score` is a float.
+        Returns
+        -------
+        list of (list of (int, str), float)
+            Each element in the list is a pair of a topic representation and its coherence score. Topic representations
+            are distributions of words, represented as a list of pairs of word IDs and their probabilities.
+
         """
         cm = CoherenceModel(
             model=self, corpus=corpus, texts=texts, dictionary=dictionary,
