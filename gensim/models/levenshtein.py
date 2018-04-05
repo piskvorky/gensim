@@ -100,13 +100,6 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
         self.pool.close()
         self.pool.join()
 
-#    def similarity(self, t1, t2):
-#        similarity = levsim(self.alpha, self.beta, t1, t2)
-#        if similarity < self.threshold:
-#            return None
-#        else:
-#            return similarity
-
     def most_similar(self, t1, topn=10):
         heap = []
         for t2, similarity in self.pool.imap_unordered(
