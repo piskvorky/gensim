@@ -127,6 +127,22 @@ class TestDoc2VecModel(unittest.TestCase):
         model = doc2vec.Doc2Vec.load(datapath(model_file))
         self.model_sanity(model)
 
+        # Test loading doc2vec models from all previous versions
+        old_versions = [
+            '0.12.0', '0.12.1', '0.12.2', '0.12.3', '0.12.4',
+            '0.13.0', '0.13.1', '0.13.2', '0.13.3', '0.13.4',
+            '1.0.0', '1.0.1', '2.0.0', '2.1.0', '2.2.0', '2.3.0',
+            '3.0.0', '3.1.0', '3.2.0', '3.3.0', '3.4.0'
+        ]
+
+        saved_models_dir = datapath('old_d2v_models')
+        for old_version in old_versions:
+            model = doc2vec.Doc2Vec.load(os.path.join(saved_models_dir, 'd2v_{}.mdl'.format(old_version)))
+            self.assertTrue(len(model.wv.vocab) == 3)
+            self.assertTrue(model.wv.vectors.shape == (3, 4))
+            self.assertTrue(model.docvecs.vectors_docs.shape == (2, 4))
+            self.assertTrue(model.docvecs.count == 2)
+
     def test_unicode_in_doctag(self):
         """Test storing document vectors of a model with unicode titles."""
         model = doc2vec.Doc2Vec(DocsLeeCorpus(unicode_tags=True), min_count=1)

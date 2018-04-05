@@ -789,6 +789,20 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertEqual(model.max_final_vocab, None)
         self.assertEqual(model.vocabulary.max_final_vocab, None)
 
+        # Test loading word2vec models from all previous versions
+        old_versions = [
+            '0.12.0', '0.12.1', '0.12.2', '0.12.3', '0.12.4',
+            '0.13.0', '0.13.1', '0.13.2', '0.13.3', '0.13.4',
+            '1.0.0', '1.0.1', '2.0.0', '2.1.0', '2.2.0', '2.3.0',
+            '3.0.0', '3.1.0', '3.2.0', '3.3.0', '3.4.0'
+        ]
+
+        saved_models_dir = datapath('old_w2v_models')
+        for old_version in old_versions:
+            model = word2vec.Word2Vec.load(os.path.join(saved_models_dir, 'w2v_{}.mdl'.format(old_version)))
+            self.assertTrue(len(model.wv.vocab) == 3)
+            self.assertTrue(model.wv.vectors.shape == (3, 4))
+
     @log_capture()
     def testBuildVocabWarning(self, l):
         """Test if warning is raised on non-ideal input to a word2vec model"""
