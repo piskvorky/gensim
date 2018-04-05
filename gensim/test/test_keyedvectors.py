@@ -33,38 +33,38 @@ class TestWordEmbeddingSimilarityIndex(unittest.TestCase):
 
         # check the handling of out-of-dictionary terms
         index = WordEmbeddingSimilarityIndex(self.vectors)
-        self.assertLess(0, len(list(index.most_similar("holiday", topn=10))))
-        self.assertEqual(0, len(list(index.most_similar("out-of-dictionary term", topn=10))))
+        self.assertLess(0, len(list(index.most_similar(u"holiday", topn=10))))
+        self.assertEqual(0, len(list(index.most_similar(u"out-of-dictionary term", topn=10))))
 
         # check that the topn works as expected
         index = WordEmbeddingSimilarityIndex(self.vectors)
-        results = list(index.most_similar("holiday", topn=10))
+        results = list(index.most_similar(u"holiday", topn=10))
         self.assertLess(0, len(results))
         self.assertGreaterEqual(10, len(results))
-        results = list(index.most_similar("holiday", topn=20))
+        results = list(index.most_similar(u"holiday", topn=20))
         self.assertLess(10, len(results))
         self.assertGreaterEqual(20, len(results))
 
         # check that the term itself is not returned
         index = WordEmbeddingSimilarityIndex(self.vectors)
-        terms = [term for term, similarity in index.most_similar("holiday", topn=len(self.vectors.vocab))]
-        self.assertFalse("holiday" in terms)
+        terms = [term for term, similarity in index.most_similar(u"holiday", topn=len(self.vectors.vocab))]
+        self.assertFalse(u"holiday" in terms)
 
         # check that the threshold works as expected
         index = WordEmbeddingSimilarityIndex(self.vectors, threshold=0.0)
-        results = list(index.most_similar("holiday", topn=10))
+        results = list(index.most_similar(u"holiday", topn=10))
         self.assertLess(0, len(results))
         self.assertGreaterEqual(10, len(results))
 
         index = WordEmbeddingSimilarityIndex(self.vectors, threshold=1.0)
-        results = list(index.most_similar("holiday", topn=10))
+        results = list(index.most_similar(u"holiday", topn=10))
         self.assertEqual(0, len(results))
 
         # check that the exponent works as expected
         index = WordEmbeddingSimilarityIndex(self.vectors, exponent=1.0)
-        first_similarities = np.array([similarity for term, similarity in index.most_similar("holiday", topn=10)])
+        first_similarities = np.array([similarity for term, similarity in index.most_similar(u"holiday", topn=10)])
         index = WordEmbeddingSimilarityIndex(self.vectors, exponent=2.0)
-        second_similarities = np.array([similarity for term, similarity in index.most_similar("holiday", topn=10)])
+        second_similarities = np.array([similarity for term, similarity in index.most_similar(u"holiday", topn=10)])
         self.assertTrue(np.allclose(first_similarities**2.0, second_similarities))
 
 
@@ -77,8 +77,7 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
     def test_similarity_matrix(self):
         """Test similarity_matrix returns expected results."""
 
-        documents = [["government", "denied", "holiday"],
-                  ["holiday", "slowing", "hollingworth"]]
+        documents = [[u"government", u"denied", u"holiday"], [u"holiday", u"slowing", u"hollingworth"]]
         dictionary = Dictionary(documents)
 
         # checking symmetry

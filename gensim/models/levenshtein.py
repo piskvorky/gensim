@@ -33,9 +33,9 @@ def levsim(alpha, beta, t1, t2):
         The multiplicative factor alpha defined by Charlet and Damnati (2017).
     beta : float
         The exponential factor beta defined by Charlet and Damnati (2017).
-    t1 : {string, unicode}
+    t1 : {bytes, str, unicode}
         The first compared term.
-    t2 : {string, unicode}
+    t2 : {bytes, str, unicode}
         The second compared term.
 
     Returns
@@ -51,8 +51,6 @@ def levsim(alpha, beta, t1, t2):
     Answering", 2017 <http://www.aclweb.org/anthology/S/S17/S17-2051.pdf>`__.
 
     """
-    t1 = t1.decode()  # make sure both strings are in unicode
-    t2 = t2.decode()
     return alpha * (1 - distance(t1, t2) * 1.0 / max(len(t1), len(t2)))**beta
 
 

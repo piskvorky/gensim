@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 class TestUniformTermSimilarityIndex(unittest.TestCase):
     def setUp(self):
-        self.documents = [["government", "denied", "holiday"], ["holiday", "slowing", "hollingworth"]]
+        self.documents = [[u"government", u"denied", u"holiday"], [u"holiday", u"slowing", u"hollingworth"]]
         self.dictionary = Dictionary(self.documents)
 
     def test_most_similar(self):
@@ -32,30 +32,30 @@ class TestUniformTermSimilarityIndex(unittest.TestCase):
 
         # check that the topn works as expected
         index = UniformTermSimilarityIndex(self.dictionary)
-        results = list(index.most_similar("holiday", topn=1))
+        results = list(index.most_similar(u"holiday", topn=1))
         self.assertLess(0, len(results))
         self.assertGreaterEqual(1, len(results))
-        results = list(index.most_similar("holiday", topn=4))
+        results = list(index.most_similar(u"holiday", topn=4))
         self.assertLess(1, len(results))
         self.assertGreaterEqual(4, len(results))
 
         # check that the term itself is not returned
         index = UniformTermSimilarityIndex(self.dictionary)
-        terms = [term for term, similarity in index.most_similar("holiday", topn=len(self.dictionary))]
-        self.assertFalse("holiday" in terms)
+        terms = [term for term, similarity in index.most_similar(u"holiday", topn=len(self.dictionary))]
+        self.assertFalse(u"holiday" in terms)
 
         # check that the term_similarity works as expected
         index = UniformTermSimilarityIndex(self.dictionary, term_similarity=0.2)
         similarities = np.array([
-            similarity for term, similarity in index.most_similar("holiday", topn=len(self.dictionary))])
+            similarity for term, similarity in index.most_similar(u"holiday", topn=len(self.dictionary))])
         self.assertTrue(np.all(similarities == 0.2))
 
 
 class TestSparseTermSimilarityMatrix(unittest.TestCase):
     def setUp(self):
         self.documents = [
-            ["government", "denied", "holiday"],
-            ["government", "denied", "holiday", "slowing", "hollingworth"]]
+            [u"government", u"denied", u"holiday"],
+            [u"government", u"denied", u"holiday", u"slowing", u"hollingworth"]]
         self.dictionary = Dictionary(self.documents)
         self.tfidf = TfidfModel(dictionary=self.dictionary)
         self.index = UniformTermSimilarityIndex(self.dictionary, term_similarity=0.5)
@@ -167,8 +167,8 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
             UniformTermSimilarityIndex(self.dictionary, term_similarity=0.5), self.dictionary)
 
         # check zero vectors work as expected
-        vec1 = self.dictionary.doc2bow(["government", "government", "denied"])
-        vec2 = self.dictionary.doc2bow(["government", "holiday"])
+        vec1 = self.dictionary.doc2bow([u"government", u"government", u"denied"])
+        vec2 = self.dictionary.doc2bow([u"government", u"holiday"])
 
         self.assertEqual(0.0, matrix.inner_product([], vec2))
         self.assertEqual(0.0, matrix.inner_product(vec1, []))
@@ -179,8 +179,8 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         self.assertEqual(0.0, matrix.inner_product([], [], normalized=True))
 
         # check that real-world vectors work as expected
-        vec1 = self.dictionary.doc2bow(["government", "government", "denied"])
-        vec2 = self.dictionary.doc2bow(["government", "holiday"])
+        vec1 = self.dictionary.doc2bow([u"government", u"government", u"denied"])
+        vec2 = self.dictionary.doc2bow([u"government", u"holiday"])
         expected_result = 0.0
         expected_result += 2 * 1.0 * 1  # government * s_{ij} * government
         expected_result += 2 * 0.5 * 1  # government * s_{ij} * holiday
@@ -189,8 +189,8 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         result = matrix.inner_product(vec1, vec2)
         self.assertAlmostEqual(expected_result, result, places=5)
 
-        vec1 = self.dictionary.doc2bow(["government", "government", "denied"])
-        vec2 = self.dictionary.doc2bow(["government", "holiday"])
+        vec1 = self.dictionary.doc2bow([u"government", u"government", u"denied"])
+        vec2 = self.dictionary.doc2bow([u"government", u"holiday"])
         expected_result = matrix.inner_product(vec1, vec2)
         expected_result /= sqrt(matrix.inner_product(vec1, vec1))
         expected_result /= sqrt(matrix.inner_product(vec2, vec2))
@@ -198,8 +198,8 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         self.assertAlmostEqual(expected_result, result, places=5)
 
         # check that real-world corpora work as expected
-        vec1 = self.dictionary.doc2bow(["government", "government", "denied"])
-        vec2 = self.dictionary.doc2bow(["government", "holiday"])
+        vec1 = self.dictionary.doc2bow([u"government", u"government", u"denied"])
+        vec2 = self.dictionary.doc2bow([u"government", u"holiday"])
         expected_result = 0.0
         expected_result += 2 * 1.0 * 1  # government * s_{ij} * government
         expected_result += 2 * 0.5 * 1  # government * s_{ij} * holiday
@@ -210,8 +210,8 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         self.assertTrue(isinstance(result, csr_matrix))
         self.assertTrue(np.allclose(expected_result, result.todense()))
 
-        vec1 = self.dictionary.doc2bow(["government", "government", "denied"])
-        vec2 = self.dictionary.doc2bow(["government", "holiday"])
+        vec1 = self.dictionary.doc2bow([u"government", u"government", u"denied"])
+        vec2 = self.dictionary.doc2bow([u"government", u"holiday"])
         expected_result = matrix.inner_product(vec1, vec2)
         expected_result /= sqrt(matrix.inner_product(vec1, vec1))
         expected_result /= sqrt(matrix.inner_product(vec2, vec2))
