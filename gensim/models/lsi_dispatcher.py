@@ -4,13 +4,60 @@
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""
-USAGE: %(program)s SIZE_OF_JOBS_QUEUE
+""":class:`~gensim.models.lsi_dispatcher.Dispatcher` process which orchestrates
+distributed :class:`~gensim.models.lsimodel.LsiModel` computations.
+Run this script only once, on the master node in your cluster.
 
-    Dispatcher process which orchestrates distributed LSI computations. Run this \
-script only once, on any node in your cluster.
+Notes
+-----
+The dispatches expects to find worker scripts already running. Make sure you run as many workers as you like on
+your machines **before** launching the dispatcher.
 
-Example: python -m gensim.models.lsi_dispatcher
+Warnings
+--------
+Requires installed `Pyro4 <https://pythonhosted.org/Pyro4/>`_.
+Distributed version works only in local network.
+
+
+How to use distributed :class:`~gensim.models.lsimodel.LsiModel`
+----------------------------------------------------------------
+
+
+#. Install needed dependencies (Pyro4) ::
+
+    pip install gensim[distributed]
+
+#. Setup serialization (on each machine) ::
+
+    export PYRO_SERIALIZERS_ACCEPTED=pickle
+    export PYRO_SERIALIZER=pickle
+
+#. Run nameserver ::
+
+    python -m Pyro4.naming -n 0.0.0.0 &
+
+#. Run workers (on each machine) ::
+
+    python -m gensim.models.lsi_worker &
+
+#. Run dispatcher ::
+
+    python -m gensim.models.lsi_dispatcher &
+
+#. Run :class:`~gensim.models.lsimodel.LsiModel` in distributed mode ::
+
+    >>> from gensim.test.utils import common_corpus, common_dictionary
+    >>> from gensim.models import LsiModel
+    >>>
+    >>> model = LsiModel(common_corpus, id2word=common_dictionary, distributed=True)
+
+
+Command line arguments
+----------------------
+
+.. program-output:: python -m gensim.models.lsi_dispatcher --help
+   :ellipsis: 0, -5
+
 """
 
 
@@ -18,9 +65,11 @@ from __future__ import with_statement
 import os
 import sys
 import logging
+import argparse
 import threading
 import time
 from six import iteritems, itervalues
+
 try:
     from Queue import Queue
 except ImportError:
@@ -28,9 +77,7 @@ except ImportError:
 import Pyro4
 from gensim import utils
 
-
-logger = logging.getLogger("gensim.models.lsi_dispatcher")
-
+logger = logging.getLogger(__name__)
 
 # How many jobs (=chunks of N documents) to keep "pre-fetched" in a queue?
 # A small number is usually enough, unless iteration over the corpus is very very
@@ -45,16 +92,24 @@ HUGE_TIMEOUT = 365 * 24 * 60 * 60  # one year
 
 
 class Dispatcher(object):
-    """
-    Dispatcher object that communicates and coordinates individual workers.
+    """Dispatcher object that communicates and coordinates individual workers.
 
+    Warnings
+    --------
     There should never be more than one dispatcher running at any one time.
-    """
 
+    """
     def __init__(self, maxsize=0):
-        """
-        Note that the constructor does not fully initialize the dispatcher;
-        use the `initialize()` function to populate it with workers etc.
+        """Partly initializes the dispatcher.
+
+        A full initialization (including initialization of the workers) requires a call to
+        :meth:`~gensim.models.lsi_dispatcher.Dispatcher.initialize`
+
+        Parameters
+        ----------
+        maxsize : int, optional
+            Maximum number of jobs to be kept pre-fetched in the queue.
+
         """
         self.maxsize = maxsize
         self.workers = {}
@@ -62,9 +117,18 @@ class Dispatcher(object):
 
     @Pyro4.expose
     def initialize(self, **model_params):
-        """
-        `model_params` are parameters used to initialize individual workers (gets
-        handed all the way down to worker.initialize()).
+        """Fully initializes the dispatcher and all its workers.
+
+        Parameters
+        ----------
+        **model_params
+            Keyword parameters used to initialize individual workers, see :class:`~gensim.models.lsimodel.LsiModel`.
+
+        Raises
+        ------
+        RuntimeError
+            When no workers are found (the :mod:`gensim.model.lsi_worker` script must be ran beforehand).
+
         """
         self.jobs = Queue(maxsize=self.maxsize)
         self.lock_update = threading.Lock()
@@ -92,13 +156,31 @@ class Dispatcher(object):
 
     @Pyro4.expose
     def getworkers(self):
-        """
-        Return pyro URIs of all registered workers.
+        """Get pyro URIs of all registered workers.
+
+        Returns
+        -------
+        list of URIs
+            The pyro URIs for each worker.
+
         """
         return [worker._pyroUri for worker in itervalues(self.workers)]
 
     @Pyro4.expose
     def getjob(self, worker_id):
+        """Atomically pops a job from the queue.
+
+        Parameters
+        ----------
+        worker_id : int
+            The worker that requested the job.
+
+        Returns
+        -------
+        iterable of iterable of (int, float)
+            The corpus in BoW format.
+
+        """
         logger.info("worker #%i requesting a new job", worker_id)
         job = self.jobs.get(block=True, timeout=1)
         logger.info("worker #%i got a new job (%i left)", worker_id, self.jobs.qsize())
@@ -106,14 +188,27 @@ class Dispatcher(object):
 
     @Pyro4.expose
     def putjob(self, job):
+        """Atomically add a job to the queue.
+
+        Parameters
+        ----------
+        job : iterable of list of (int, float)
+            The corpus in BoW format.
+
+        """
         self._jobsreceived += 1
         self.jobs.put(job, block=True, timeout=HUGE_TIMEOUT)
         logger.info("added a new job (len(queue)=%i items)", self.jobs.qsize())
 
     @Pyro4.expose
     def getstate(self):
-        """
-        Merge projections from across all workers and return the final projection.
+        """Merge projections from across all workers and get the final projection.
+
+        Returns
+        -------
+        :class:`~gensim.models.lsimodel.Projection`
+            The current projection of the total model.
+
         """
         logger.info("end of input, assigning all remaining jobs")
         logger.debug("jobs done: %s, jobs received: %s", self._jobsdone, self._jobsreceived)
@@ -135,9 +230,7 @@ class Dispatcher(object):
 
     @Pyro4.expose
     def reset(self):
-        """
-        Initialize all workers for a new decomposition.
-        """
+        """Re-initialize all workers for a new decomposition."""
         for workerid, worker in iteritems(self.workers):
             logger.info("resetting worker %s", workerid)
             worker.reset()
@@ -149,12 +242,17 @@ class Dispatcher(object):
     @Pyro4.oneway
     @utils.synchronous('lock_update')
     def jobdone(self, workerid):
-        """
-        A worker has finished its job. Log this event and then asynchronously
-        transfer control back to the worker.
+        """Callback used by workers to notify when their job is done.
 
-        In this way, control flow basically oscillates between dispatcher.jobdone()
-        worker.requestjob().
+        The job done event is logged and then control is asynchronously transfered back to the worker
+        (who can then request another job). In this way, control flow basically oscillates between
+        :meth:`gensim.models.lsi_dispatcher.Dispatcher.jobdone` and :meth:`gensim.models.lsi_worker.Worker.requestjob`.
+
+        Parameters
+        ----------
+        workerid : int
+            The ID of the worker that finished the job (used for logging).
+
         """
         self._jobsdone += 1
         logger.info("worker #%s finished job #%i", workerid, self._jobsdone)
@@ -162,14 +260,19 @@ class Dispatcher(object):
         worker.requestjob()  # tell the worker to ask for another job, asynchronously (one-way)
 
     def jobsdone(self):
-        """Wrap self._jobsdone, needed for remote access through proxies"""
+        """Wrap :attr:`~gensim.models.lsi_dispatcher.Dispatcher._jobsdone`, needed for remote access through proxies.
+
+        Returns
+        -------
+        int
+            Number of jobs already completed.
+
+        """
         return self._jobsdone
 
     @Pyro4.oneway
     def exit(self):
-        """
-        Terminate all registered workers and then the dispatcher.
-        """
+        """Terminate all workers and then the dispatcher."""
         for workerid, worker in iteritems(self.workers):
             logger.info("terminating worker %s", workerid)
             worker.exit()
@@ -177,24 +280,14 @@ class Dispatcher(object):
         os._exit(0)  # exit the whole process (not just this thread ala sys.exit())
 
 
-def main():
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-    logger.info("running %s", " ".join(sys.argv))
-
-    program = os.path.basename(sys.argv[0])
-    # make sure we have enough cmd line parameters
-    if len(sys.argv) < 1:
-        print(globals()["__doc__"] % locals())
-        sys.exit(1)
-
-    if len(sys.argv) < 2:
-        maxsize = MAX_JOBS_QUEUE
-    else:
-        maxsize = int(sys.argv[1])
-    utils.pyro_daemon('gensim.lsi_dispatcher', Dispatcher(maxsize=maxsize))
-
-    logger.info("finished running %s", program)
-
-
 if __name__ == '__main__':
-    main()
+    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
+    parser = argparse.ArgumentParser(description=__doc__[:-135], formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument(
+        'maxsize', type=int, help='Maximum number of jobs to be kept pre-fetched in the queue.', default=MAX_JOBS_QUEUE
+    )
+    args = parser.parse_args()
+
+    logger.info("running %s", " ".join(sys.argv))
+    utils.pyro_daemon('gensim.lsi_dispatcher', Dispatcher(maxsize=args.maxsize))
+    logger.info("finished running %s", parser.prog)

@@ -28,8 +28,6 @@ The algorithm:
 .. [1] http://www.cs.princeton.edu/~mdhoffma
 
 """
-
-
 import logging
 import numbers
 import os
@@ -42,8 +40,10 @@ from six.moves import xrange
 from collections import defaultdict
 
 from gensim import interfaces, utils, matutils
-from gensim.matutils import dirichlet_expectation
-from gensim.matutils import kullback_leibler, hellinger, jaccard_distance, jensen_shannon
+from gensim.matutils import (
+    kullback_leibler, hellinger, jaccard_distance, jensen_shannon,
+    dirichlet_expectation, logsumexp, mean_absolute_difference
+)
 from gensim.models import basemodel, CoherenceModel
 from gensim.models.callbacks import Callback
 
@@ -55,33 +55,6 @@ DTYPE_TO_EPS = {
     np.float32: 1e-35,
     np.float64: 1e-100,
 }
-
-
-def logsumexp(x):
-    """Log of sum of exponentials
-
-    Parameters
-    ----------
-    x : array_like
-        Input data
-
-    Returns
-    -------
-    float
-        log of sum of exponentials of elements in `x`
-
-    Notes
-    -----
-        for performance, does not support NaNs or > 1d arrays like
-        scipy.special.logsumexp()
-
-    """
-
-    x_max = np.max(x)
-    x = np.log(np.sum(np.exp(x - x_max)))
-    x += x_max
-
-    return x
 
 
 def update_dir_prior(prior, N, logphat, rho):
@@ -524,7 +497,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 expElogthetad = np.exp(Elogthetad)
                 phinorm = np.dot(expElogthetad, expElogbetad) + eps
                 # If gamma hasn't changed much, we're done.
-                meanchange = np.mean(abs(gammad - lastgamma))
+                meanchange = mean_absolute_difference(gammad, lastgamma)
                 if meanchange < self.gamma_threshold:
                     converged += 1
                     break

@@ -3,52 +3,68 @@
 #
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
+"""This module allows simple Bag of Words (BoW) represented corpus to be transformed into log entropy space.
+It implements Log Entropy Model that produces entropy-weighted logarithmic term frequency representation.
+
+Empirical study by Lee et al. 2015 [1]_ suggests log entropy-weighted model yields better results among other forms of
+representation.
+
+References
+----------
+.. [1] Lee et al. 2005. An Empirical Evaluation of Models of Text Document Similarity.
+       https://escholarship.org/uc/item/48g155nq
+
+"""
+
 import logging
 import math
+
 from gensim import interfaces, matutils, utils
 
-
-logger = logging.getLogger('gensim.models.logentropy_model')
+logger = logging.getLogger(__name__)
 
 
 class LogEntropyModel(interfaces.TransformationABC):
-    """
-    Objects of this class realize the transformation between word-document
-    co-occurence matrix (integers) into a locally/globally weighted matrix
-    (positive floats).
+    """Objects of this class realize the transformation between word-document co-occurrence matrix (int)
+    into a locally/globally weighted matrix (positive floats).
 
-    This is done by a log entropy normalization, optionally normalizing the
-    resulting documents to unit length. The following formulas explain how
-    to compute the log entropy weight for term `i` in document `j`::
+    This is done by a log entropy normalization, optionally normalizing the resulting documents to unit length.
+    The following formulas explain how o compute the log entropy weight for term :math:`i` in document :math:`j`:
 
-      local_weight_{i,j} = log(frequency_{i,j} + 1)
+    .. math::
 
-      P_{i,j} = frequency_{i,j} / sum_j frequency_{i,j}
+        local\_weight_{i,j} = log(frequency_{i,j} + 1)
 
-                            sum_j P_{i,j} * log(P_{i,j})
-      global_weight_i = 1 + ----------------------------
-                            log(number_of_documents + 1)
+        P_{i,j} = \\frac{frequency_{i,j}}{\sum_j frequency_{i,j}}
 
-      final_weight_{i,j} = local_weight_{i,j} * global_weight_i
+        global\_weight_i = 1 + \\frac{\sum_j P_{i,j} * log(P_{i,j})}{log(number\_of\_documents + 1)}
 
-    The main methods are:
+        final\_weight_{i,j} = local\_weight_{i,j} * global\_weight_i
 
-    1. constructor, which calculates the global weighting for all terms in
-        a corpus.
-    2. the [] method, which transforms a simple count representation into the
-        log entropy normalized space.
+    Examples
+    --------
+    >>> from gensim.models import LogEntropyModel
+    >>> from gensim.test.utils import common_texts
+    >>> from gensim.corpora import Dictionary
+    >>>
+    >>> dct = Dictionary(common_texts)  # fit dictionary
+    >>> corpus = [dct.doc2bow(row) for row in common_texts]  # convert to BoW format
+    >>> model = LogEntropyModel(corpus)  # fit model
+    >>> vector = model[corpus[1]]  # apply model to document
 
-    >>> log_ent = LogEntropyModel(corpus)
-    >>> print(log_ent[some_doc])
-    >>> log_ent.save('/tmp/foo.log_ent_model')
-
-    Model persistency is achieved via its load/save methods.
     """
 
     def __init__(self, corpus, normalize=True):
         """
-        `normalize` dictates whether the resulting vectors will be
-        set to unit length.
+
+        Parameters
+        ----------
+        corpus : iterable of iterable of (int, int)
+            Input corpus in BoW format.
+        normalize : bool, optional
+            If True, the resulted log entropy weighted vector will be normalized to length of 1,
+            If False - do nothing.
+
         """
         self.normalize = normalize
         self.n_docs = 0
@@ -61,9 +77,14 @@ class LogEntropyModel(interfaces.TransformationABC):
         return "LogEntropyModel(n_docs=%s, n_words=%s)" % (self.n_docs, self.n_words)
 
     def initialize(self, corpus):
-        """
-        Initialize internal statistics based on a training corpus. Called
-        automatically from the constructor.
+        """Calculates the global weighting for all terms in a given corpus and transforms the simple
+        count representation into the log entropy normalized space.
+
+        Parameters
+        ----------
+        corpus : iterable of iterable of (int, int)
+            Corpus is BoW format
+
         """
         logger.info("calculating counts")
         glob_freq = {}
@@ -97,8 +118,18 @@ class LogEntropyModel(interfaces.TransformationABC):
             self.entr[key] = 1 + self.entr[key] / math.log(self.n_docs + 1)
 
     def __getitem__(self, bow):
-        """
-        Return log entropy representation of the input vector and/or corpus.
+        """Get log entropy representation of the input vector and/or corpus.
+
+        Parameters
+        ----------
+        bow : list of (int, int)
+            Document in BoW format.
+
+        Returns
+        -------
+        list of (int, float)
+            Log-entropy vector for passed `bow`.
+
         """
         # if the input vector is in fact a corpus, return a transformed corpus
         is_corpus, bow = utils.is_corpus(bow)

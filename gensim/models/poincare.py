@@ -52,7 +52,9 @@ from six import string_types
 from smart_open import smart_open
 
 from gensim import utils, matutils
-from gensim.models.keyedvectors import KeyedVectorsBase, Vocab
+from gensim.models.keyedvectors import Vocab, BaseKeyedVectors
+from gensim.models.utils_any2vec import _save_word2vec_format, _load_word2vec_format
+from numpy import float32 as REAL
 
 try:
     from autograd import grad  # Only required for optionally verifying gradients while training
@@ -130,7 +132,7 @@ class PoincareModel(utils.SaveLoad):
 
         """
         self.train_data = train_data
-        self.kv = PoincareKeyedVectors()
+        self.kv = PoincareKeyedVectors(size)
         self.size = size
         self.train_alpha = alpha  # Learning rate for training
         self.burn_in_alpha = burn_in_alpha  # Learning rate for burn-in
@@ -176,11 +178,9 @@ class PoincareModel(utils.SaveLoad):
         self.kv.index2word = index2word
         self.indices_set = set((range(len(index2word))))  # Set of all node indices
         self.indices_array = np.array(range(len(index2word)))  # Numpy array of all node indices
-        counts = np.array([self.kv.vocab[index2word[i]].count for i in range(len(index2word))], dtype=np.float64)
-        self._node_probabilities = counts / counts.sum()
-        self._node_probabilities_cumsum = np.cumsum(self._node_probabilities)
         self.all_relations = all_relations
         self.node_relations = node_relations
+        self._init_node_probabilities()
         self._negatives_buffer = NegativesBuffer([])  # Buffer for negative samples, to reduce calls to sampling method
         self._negatives_buffer_size = 2000
 
@@ -188,6 +188,15 @@ class PoincareModel(utils.SaveLoad):
         """Randomly initialize vectors for the items in the vocab."""
         shape = (len(self.kv.index2word), self.size)
         self.kv.syn0 = self._np_random.uniform(self.init_range[0], self.init_range[1], shape).astype(self.dtype)
+
+    def _init_node_probabilities(self):
+        counts = np.array([
+                self.kv.vocab[self.kv.index2word[i]].count
+                for i in range(len(self.kv.index2word))
+            ],
+            dtype=np.float64)
+        self._node_counts_cumsum = np.cumsum(counts)
+        self._node_probabilities = counts / counts.sum()
 
     def _get_candidate_negatives(self):
         """Returns candidate negatives of size `self.negative` from the negative examples buffer.
@@ -200,9 +209,12 @@ class PoincareModel(utils.SaveLoad):
         """
 
         if self._negatives_buffer.num_items() < self.negative:
-            # Note: np.random.choice much slower than random.sample for large populations, possible bottleneck
-            uniform_numbers = self._np_random.random_sample(self._negatives_buffer_size)
-            cumsum_table_indices = np.searchsorted(self._node_probabilities_cumsum, uniform_numbers)
+            # cumsum table of counts used instead of the standard approach of a probability cumsum table
+            # this is to avoid floating point errors that result when the number of nodes is very high
+            # for reference: https://github.com/RaRe-Technologies/gensim/issues/1917
+            max_cumsum_value = self._node_counts_cumsum[-1]
+            uniform_numbers = self._np_random.randint(1, max_cumsum_value + 1, self._negatives_buffer_size)
+            cumsum_table_indices = np.searchsorted(self._node_counts_cumsum, uniform_numbers)
             self._negatives_buffer = NegativesBuffer(cumsum_table_indices)
         return self._negatives_buffer.get_items(self.negative)
 
@@ -324,12 +336,15 @@ class PoincareModel(utils.SaveLoad):
     def save(self, *args, **kwargs):
         """Save complete model to disk, inherited from :class:`gensim.utils.SaveLoad`."""
         self._loss_grad = None  # Can't pickle autograd fn to disk
+        attrs_to_ignore = ['_node_probabilities', '_node_counts_cumsum']
+        kwargs['ignore'] = set(list(kwargs.get('ignore', [])) + attrs_to_ignore)
         super(PoincareModel, self).save(*args, **kwargs)
 
     @classmethod
     def load(cls, *args, **kwargs):
         """Load model from disk, inherited from :class:`~gensim.utils.SaveLoad`."""
         model = super(PoincareModel, cls).load(*args, **kwargs)
+        model._init_node_probabilities()
         return model
 
     def _prepare_training_batch(self, relations, all_negatives, check_gradients=False):
@@ -754,16 +769,121 @@ class PoincareBatch(object):
         self._loss_computed = True
 
 
-class PoincareKeyedVectors(KeyedVectorsBase):
+class PoincareKeyedVectors(BaseKeyedVectors):
     """Class to contain vectors and vocab for the :class:`~gensim.models.poincare.PoincareModel` training class.
 
     Used to perform operations on the vectors such as vector lookup, distance etc.
 
     """
 
-    def __init__(self):
-        super(PoincareKeyedVectors, self).__init__()
+    def __init__(self, vector_size):
+        super(PoincareKeyedVectors, self).__init__(vector_size)
         self.max_distance = 0
+        self.index2word = []
+
+    @property
+    def vectors(self):
+        return self.syn0
+
+    @vectors.setter
+    def vectors(self, value):
+        self.syn0 = value
+
+    @property
+    def index2entity(self):
+        return self.index2word
+
+    @index2entity.setter
+    def index2entity(self, value):
+        self.index2word = value
+
+    def word_vec(self, word):
+        """
+        Accept a single word as input.
+        Returns the word's representations in vector space, as a 1D numpy array.
+
+        Example::
+
+          >>> trained_model.word_vec('office')
+          array([ -1.40128313e-02, ...])
+
+        """
+        return super(PoincareKeyedVectors, self).get_vector(word)
+
+    def words_closer_than(self, w1, w2):
+        """
+        Returns all words that are closer to `w1` than `w2` is to `w1`.
+
+        Parameters
+        ----------
+        w1 : str
+            Input word.
+        w2 : str
+            Input word.
+
+        Returns
+        -------
+        list (str)
+            List of words that are closer to `w1` than `w2` is to `w1`.
+
+        Examples
+        --------
+
+        >>> model.words_closer_than('carnivore.n.01', 'mammal.n.01')
+        ['dog.n.01', 'canine.n.02']
+
+        """
+        return super(PoincareKeyedVectors, self).closer_than(w1, w2)
+
+    def save_word2vec_format(self, fname, fvocab=None, binary=False, total_vec=None):
+        """
+        Store the input-hidden weight matrix in the same format used by the original
+        C word2vec-tool, for compatibility.
+
+         `fname` is the file used to save the vectors in
+         `fvocab` is an optional file used to save the vocabulary
+         `binary` is an optional boolean indicating whether the data is to be saved
+         in binary word2vec format (default: False)
+         `total_vec` is an optional parameter to explicitly specify total no. of vectors
+         (in case word vectors are appended with document vectors afterwards)
+
+        """
+        _save_word2vec_format(fname, self.vocab, self.syn0, fvocab=fvocab, binary=binary, total_vec=total_vec)
+
+    @classmethod
+    def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
+                             limit=None, datatype=REAL):
+        """
+        Load the input-hidden weight matrix from the original C word2vec-tool format.
+
+        Note that the information stored in the file is incomplete (the binary tree is missing),
+        so while you can query for word similarity etc., you cannot continue training
+        with a model loaded this way.
+
+        `binary` is a boolean indicating whether the data is in binary word2vec format.
+        `norm_only` is a boolean indicating whether to only store normalised word2vec vectors in memory.
+        Word counts are read from `fvocab` filename, if set (this is the file generated
+        by `-save-vocab` flag of the original C tool).
+
+        If you trained the C model using non-utf8 encoding for words, specify that
+        encoding in `encoding`.
+
+        `unicode_errors`, default 'strict', is a string suitable to be passed as the `errors`
+        argument to the unicode() (Python 2.x) or str() (Python 3.x) function. If your source
+        file may include word tokens truncated in the middle of a multibyte unicode character
+        (as is common from the original word2vec.c tool), 'ignore' or 'replace' may help.
+
+        `limit` sets a maximum number of word-vectors to read from the file. The default,
+        None, means read all.
+
+        `datatype` (experimental) can coerce dimensions to a non-default float type (such
+        as np.float16) to save memory. (Such types may result in much slower bulk operations
+        or incompatibility with optimized routines.)
+
+        """
+        return _load_word2vec_format(
+            cls, fname, fvocab=fvocab, binary=binary, encoding=encoding, unicode_errors=unicode_errors,
+            limit=limit, datatype=datatype)
 
     @staticmethod
     def vector_distance(vector_1, vector_2):
@@ -1519,7 +1639,7 @@ class LexicalEntailmentEvaluation(object):
         assert min_term_1 is not None and min_term_2 is not None
         vector_1, vector_2 = embedding.word_vec(min_term_1), embedding.word_vec(min_term_2)
         norm_1, norm_2 = np.linalg.norm(vector_1), np.linalg.norm(vector_2)
-        return -1 * (1 + self.alpha * (norm_2 - norm_1)) * distance
+        return -1 * (1 + self.alpha * (norm_2 - norm_1)) * min_distance
 
     @staticmethod
     def find_matching_terms(trie, word):
