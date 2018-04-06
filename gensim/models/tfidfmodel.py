@@ -167,7 +167,7 @@ def updated_wglobal(docfreq, totaldocs, n_df):
 
     """
     if n_df == "n":
-        return utils.identity(docfreq)
+        return 1
     elif n_df == "t":
         return np.log(1.0 * totaldocs / docfreq) / np.log(2)
     elif n_df == "p":
