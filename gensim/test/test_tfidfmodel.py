@@ -20,6 +20,7 @@ from gensim.test.utils import datapath, get_tmpfile, common_dictionary, common_c
 
 from gensim.corpora import Dictionary
 
+
 texts = [
     ['complier', 'system', 'computer'],
     ['eulerian', 'node', 'cycle', 'graph', 'tree', 'path'],
@@ -38,6 +39,7 @@ corpus = [dictionary.doc2bow(text) for text in texts]
 class TestTfidfModel(unittest.TestCase):
     def setUp(self):
         self.corpus = MmCorpus(datapath('testcorpus.mm'))
+
 
     def test_transform(self):
         # create the transformation model
@@ -169,10 +171,10 @@ class TestTfidfModel(unittest.TestCase):
         docs = [corpus[1], corpus[2]]
 
         # Test if `ntc` yields the default docs.
-        model = tfidfmodel.TfidfModel(self.corpus, smartirs='ntc')
+        model = tfidfmodel.TfidfModel(corpus, smartirs='ntc')
         transformed_docs = [model[docs[0]], model[docs[1]]]
 
-        model = tfidfmodel.TfidfModel(self.corpus)
+        model = tfidfmodel.TfidfModel(corpus)
         expected_docs = [model[docs[0]], model[docs[1]]]
 
         self.assertTrue(np.allclose(transformed_docs[0], expected_docs[0]))
@@ -180,7 +182,7 @@ class TestTfidfModel(unittest.TestCase):
 
         # Testing all the variations of `wlocal`
         # nnn
-        model = tfidfmodel.TfidfModel(self.corpus, smartirs='nnn')
+        model = tfidfmodel.TfidfModel(corpus, smartirs='nnn')
         transformed_docs = [model[docs[0]], model[docs[1]]]
         expected_docs = docs[:]
 
@@ -188,7 +190,7 @@ class TestTfidfModel(unittest.TestCase):
         self.assertTrue(np.allclose(transformed_docs[1], expected_docs[1]))
 
         # lnn
-        model = tfidfmodel.TfidfModel(self.corpus, smartirs='lnn')
+        model = tfidfmodel.TfidfModel(corpus, smartirs='lnn')
         transformed_docs = [model[docs[0]], model[docs[1]]]
         expected_docs = [
             [(3, 1.0), (4, 1.0), (5, 1.0), (6, 1.0), (7, 1.0), (8, 1.0)],
@@ -199,7 +201,7 @@ class TestTfidfModel(unittest.TestCase):
         self.assertTrue(np.allclose(transformed_docs[1], expected_docs[1]))
 
         # ann
-        model = tfidfmodel.TfidfModel(self.corpus, smartirs='ann')
+        model = tfidfmodel.TfidfModel(corpus, smartirs='ann')
         transformed_docs = [model[docs[0]], model[docs[1]]]
         expected_docs = [
             [(3, 1.0), (4, 1.0), (5, 1.0), (6, 1.0), (7, 1.0), (8, 1.0)],
@@ -210,7 +212,7 @@ class TestTfidfModel(unittest.TestCase):
         self.assertTrue(np.allclose(transformed_docs[1], expected_docs[1]))
 
         # bnn
-        model = tfidfmodel.TfidfModel(self.corpus, smartirs='bnn')
+        model = tfidfmodel.TfidfModel(corpus, smartirs='bnn')
         transformed_docs = [model[docs[0]], model[docs[1]]]
         expected_docs = [
             [(3, 1), (4, 1), (5, 1), (6, 1), (7, 1), (8, 1)],
@@ -221,7 +223,7 @@ class TestTfidfModel(unittest.TestCase):
         self.assertTrue(np.allclose(transformed_docs[1], expected_docs[1]))
 
         # Lnn
-        model = tfidfmodel.TfidfModel(self.corpus, smartirs='Lnn')
+        model = tfidfmodel.TfidfModel(corpus, smartirs='Lnn')
         transformed_docs = [model[docs[0]], model[docs[1]]]
         expected_docs = [
             [
@@ -232,21 +234,21 @@ class TestTfidfModel(unittest.TestCase):
                 (5, 1.4133901052), (9, 0.7066950526), (10, 0.7066950526)
             ]
         ]
-
+        
         self.assertTrue(np.allclose(transformed_docs[0], expected_docs[0]))
         self.assertTrue(np.allclose(transformed_docs[1], expected_docs[1]))
 
         # Testing all the variations of `glocal`
         # ntn
-        model = tfidfmodel.TfidfModel(self.corpus, smartirs='ntn')
+        model = tfidfmodel.TfidfModel(corpus, smartirs='ntn')
         transformed_docs = [model[docs[0]], model[docs[1]]]
         expected_docs = [
             [
-                (3, 2.1699250014423126), (4, 2.1699250014423126), (5, 1.5849625007211563), (6, 2.1699250014423126),
-                (7, 1.5849625007211563), (8, 2.1699250014423126)
+                (3, 3.169925001442312), (4, 3.169925001442312), (5, 1.584962500721156), (6, 3.169925001442312),
+                (7, 3.169925001442312), (8, 2.169925001442312)
             ],
             [
-                (5, 1.4133901052), (9, 0.7066950526), (10, 0.7066950526)
+                (5, 3.169925001442312), (9, 3.169925001442312), (10, 3.169925001442312)
             ]
         ]
 
@@ -254,15 +256,15 @@ class TestTfidfModel(unittest.TestCase):
         self.assertTrue(np.allclose(transformed_docs[1], expected_docs[1]))
 
         # npn
-        model = tfidfmodel.TfidfModel(self.corpus, smartirs='npn')
+        model = tfidfmodel.TfidfModel(corpus, smartirs='npn')
         transformed_docs = [model[docs[0]], model[docs[1]]]
         expected_docs = [
             [
-                (3, 1.8073549220576042), (4, 1.8073549220576042), (5, 1.0), (6, 1.8073549220576042),
-                (7, 1.0), (8, 1.8073549220576042)
+                (3, 3.0), (4, 3.0), (5, 1.0), (6, 3.0),
+                (7, 3.0), (8, 1.8073549220576042)
             ],
             [
-                (5, 2.0), (9, 1.0), (10, 1.0)
+                (5, 2.0), (9, 3.0), (10, 3.0)
             ]
         ]
 
@@ -271,7 +273,7 @@ class TestTfidfModel(unittest.TestCase):
 
         # Testing all the variations of `normalize`
         # nnc
-        model = tfidfmodel.TfidfModel(self.corpus, smartirs='nnc')
+        model = tfidfmodel.TfidfModel(corpus, smartirs='nnc')
         transformed_docs = [model[docs[0]], model[docs[1]]]
         expected_docs = [
             [
@@ -286,11 +288,11 @@ class TestTfidfModel(unittest.TestCase):
         self.assertTrue(np.allclose(transformed_docs[0], expected_docs[0]))
         self.assertTrue(np.allclose(transformed_docs[1], expected_docs[1]))
 
-        model = tfidfmodel.TfidfModel(self.corpus, wlocal=lambda x: x, wglobal=lambda x, y: x * x, smartirs='nnc')
+        model = tfidfmodel.TfidfModel(corpus, wlocal=lambda x: x, wglobal=lambda x, y: x * x, smartirs='nnc')
 
         transformed_docs = [model[docs[0]], model[docs[1]]]
 
-        model = tfidfmodel.TfidfModel(self.corpus, wlocal=lambda x: x * x, wglobal=lambda x, y: x, smartirs='nnc')
+        model = tfidfmodel.TfidfModel(corpus, wlocal=lambda x: x * x, wglobal=lambda x, y: x, smartirs='nnc')
         expected_docs = [model[docs[0]], model[docs[1]]]
 
         self.assertTrue(np.allclose(transformed_docs[0], expected_docs[0]))

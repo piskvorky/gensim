@@ -118,6 +118,7 @@ def precompute_idfs(wglobal, dfs, total_docs):
     # not strictly necessary and could be computed on the fly in TfidfModel__getitem__.
     # this method is here just to speed things up a little.
     return {termid: wglobal(df, total_docs) for termid, df in iteritems(dfs)}
+    
 
 
 def updated_wlocal(tf, n_tf):
@@ -139,13 +140,13 @@ def updated_wlocal(tf, n_tf):
     if n_tf == "n":
         return tf
     elif n_tf == "l":
-        return 1 + np.log(tf) / np.log(2)
+        return 1 + np.log2(tf)
     elif n_tf == "a":
         return 0.5 + (0.5 * tf / tf.max(axis=0))
     elif n_tf == "b":
         return tf.astype('bool').astype('int')
     elif n_tf == "L":
-        return (1 + np.log(tf) / np.log(2)) / (1 + np.log(tf.mean(axis=0) / np.log(2)))
+        return (1 + np.log2(tf)) / (1 + np.log2(tf.mean(axis=0)))
 
 
 def updated_wglobal(docfreq, totaldocs, n_df):
@@ -166,12 +167,13 @@ def updated_wglobal(docfreq, totaldocs, n_df):
         Calculated wglobal.
 
     """
+
     if n_df == "n":
         return 1.
     elif n_df == "t":
-        return np.log(1.0 * totaldocs / docfreq) / np.log(2)
+        return np.log2(1.0 * totaldocs / docfreq)
     elif n_df == "p":
-        return np.log((1.0 * totaldocs - docfreq) / docfreq) / np.log(2)
+        return max(0,np.log2((1.0 * totaldocs - docfreq) / docfreq))
 
 
 def updated_normalize(x, n_n, return_norm=False):
@@ -295,6 +297,7 @@ class TfidfModel(interfaces.TransformationABC):
         self.id2word = id2word
         self.wlocal, self.wglobal, self.normalize = wlocal, wglobal, normalize
         self.num_docs, self.num_nnz, self.idfs = None, None, None
+        
         self.smartirs = smartirs
         self.slope = slope
         self.pivot = pivot
@@ -371,6 +374,7 @@ class TfidfModel(interfaces.TransformationABC):
             numnnz += len(bow)
             for termid, _ in bow:
                 dfs[termid] = dfs.get(termid, 0) + 1
+            
 
         # keep some stats about the training corpus
         self.num_docs = docno + 1
