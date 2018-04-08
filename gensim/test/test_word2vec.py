@@ -802,6 +802,10 @@ class TestWord2VecModel(unittest.TestCase):
             model = word2vec.Word2Vec.load(os.path.join(saved_models_dir, 'w2v_{}.mdl'.format(old_version)))
             self.assertTrue(len(model.wv.vocab) == 3)
             self.assertTrue(model.wv.vectors.shape == (3, 4))
+            # check if similarity search and online training works.
+            self.assertTrue(len(model.wv.most_similar('sentence')) == 2)
+            model.build_vocab(list_corpus, update=True)
+            model.train(list_corpus, total_examples=model.corpus_count, epochs=model.iter)
 
     @log_capture()
     def testBuildVocabWarning(self, l):

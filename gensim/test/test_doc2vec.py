@@ -142,6 +142,10 @@ class TestDoc2VecModel(unittest.TestCase):
             self.assertTrue(model.wv.vectors.shape == (3, 4))
             self.assertTrue(model.docvecs.vectors_docs.shape == (2, 4))
             self.assertTrue(model.docvecs.count == 2)
+            # check if inferring vectors for new documents and similarity search works.
+            doc0_inferred = model.infer_vector(list(DocsLeeCorpus())[0].words)
+            sims_to_infer = model.docvecs.most_similar([doc0_inferred], topn=len(model.docvecs))
+            self.assertTrue(sims_to_infer)
 
     def test_unicode_in_doctag(self):
         """Test storing document vectors of a model with unicode titles."""
