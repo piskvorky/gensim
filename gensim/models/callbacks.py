@@ -18,12 +18,23 @@ except ImportError:
 
 
 class Metric(object):
-    """
-    Base Metric class for topic model evaluation metrics
+    """Base Metric class for topic model evaluation metrics.
+
+    Concrete implementations include:
+
+        * :class:`~gensim.models.callbacks.CoherenceMetric`
+        * :class:`~gensim.models.callbacks.PerplexityMetric`
+        * :class:`~gensim.models.callbacks.DiffMetric`
+        * :class:`~gensim.models.callbacks.ConvergenceMetric`
     """
     def __str__(self):
-        """
-        Return a string representation of Metric class
+        """Get a string representation of Metric class.
+
+        Returns
+        -------
+        str
+            Human readable representation of the metric's type.
+
         """
         if self.title is not None:
             return self.title
@@ -31,50 +42,60 @@ class Metric(object):
             return type(self).__name__[:-6]
 
     def set_parameters(self, **parameters):
-        """
-        Set the parameters
+        """Set the metric's parameters.
+
+        Parameters
+        ----------
+        **parameters
+            Key word arguments to override the object's internal attributes.
+
         """
         for parameter, value in parameters.items():
             setattr(self, parameter, value)
 
     def get_value(self):
+        """TODO: According to my understanding this method MUST be override. I propose to make ti abstract, or at
+        least make it raise NotImplemented."""
         pass
 
 
 class CoherenceMetric(Metric):
-    """
-    Metric class for coherence evaluation
-    """
+    """Metric class for coherence evaluation.s """
     def __init__(self, corpus=None, texts=None, dictionary=None, coherence=None,
                  window_size=None, topn=10, logger=None, viz_env=None, title=None):
-        """
-        Args:
-            corpus : Gensim document corpus.
-            texts : Tokenized texts. Needed for coherence models that use sliding window based probability estimator,
-            dictionary : Gensim dictionary mapping of id word to create corpus. If model.id2word is present,
-                this is not needed. If both are provided, dictionary will be used.
-            window_size : Is the size of the window to be used for coherence measures using boolean
-                sliding window as their probability estimator. For 'u_mass' this doesn't matter.
-                If left 'None' the default window sizes are used which are:
+        """Initialize the metric object.
 
-                    'c_v' : 110
-                    'c_uci' : 10
-                    'c_npmi' : 10
-
-            coherence : Coherence measure to be used. Supported values are:
-                'u_mass'
-                'c_v'
-                'c_uci' also popularly known as c_pmi
-                'c_npmi'
-                For 'u_mass' corpus should be provided. If texts is provided, it will be converted
-                to corpus using the dictionary. For 'c_v', 'c_uci' and 'c_npmi' texts should be provided.
-                Corpus is not needed.
-            topn : Integer corresponding to the number of top words to be extracted from each topic.
-            logger : Monitor training process using:
-                        "shell" : print coherence value in shell
-                        "visdom" : visualize coherence value with increasing epochs in Visdom visualization framework
-            viz_env : Visdom environment to use for plotting the graph
-            title : title of the graph plot
+        Parameters
+        ----------
+        corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
+            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+        texts : list of char (str of length 1), optional
+            Tokenized texts needed for coherence models that use sliding window based probability estimator.
+        dictionary : :class:`~gensim.corpora.dictionary.Dictionary`, optional
+            Gensim dictionary mapping from integer IDs to words, needed to create corpus. If `model.id2word` is present,
+            this is not needed. If both are provided, `dictionary` will be used.
+        coherence : {'u_mass', 'c_v', 'c_uci', 'c_npmi'}, optional
+            Coherence measure to be used. 'c_uci' is also known as 'c_pmi' in the literature.
+            For 'u_mass', the corpus **MUST** be provided. If `texts` is provided, it will be converted
+            to corpus using the dictionary. For 'c_v', 'c_uci' and 'c_npmi', `texts` **MUST** be provided.
+            Corpus is not needed.
+        window_size : int, optional
+            Size of the window to be used for coherence measures using boolean
+            sliding window as their probability estimator. For 'u_mass' this doesn't matter.
+            If 'None', the default window sizes are used which are:
+                * 'c_v' : 110
+                * 'c_uci' : 10
+                * 'c_npmi' : 10
+        topn : int, optional
+            Number of top words to be extracted from each topic.
+        logger : {'shell', 'visdom'}, optional
+           Monitor training process using one of the available methods. 'shell' will print the coherence value in
+           the active shell, while 'visdom' will visualize the coherence value with increasing epochs using the Visdom
+           visualization framework.
+        viz_env : object, optional
+            Visdom environment to use for plotting the graph. Unused.
+        title : str, optional
+            Title of the graph plot in case `logger == 'visdom'`. Unused.
         """
         self.corpus = corpus
         self.dictionary = dictionary
@@ -87,12 +108,23 @@ class CoherenceMetric(Metric):
         self.title = title
 
     def get_value(self, **kwargs):
-        """
-        Args:
-            model : Pre-trained topic model. Should be provided if topics is not provided.
-                    Currently supports LdaModel, LdaMallet wrapper and LdaVowpalWabbit wrapper. Use 'topics'
-                    parameter to plug in an as yet unsupported model.
-            topics : List of tokenized topics.
+        """Get the coherence score.
+
+        Parameters
+        ----------
+        **kwargs
+            Key word arguments to override the object's internal attributes.
+            One of the following parameters are expected:
+                'model': Pre-trained topic model of type :class:`~gensim.models.ldamodelLdaModel`, or one
+                of its wrappers, such as :class:`~gensim.models.wrappers.ldamallet.LdaMallet` or
+                :class:`~gensim.models.wrapper.ldavowpalwabbit.LdaVowpalWabbit`.
+                'topics' : List of tokenized topics.
+
+        Returns
+        -------
+        float
+            The coherence score.
+
         """
         # only one of the model or topic would be defined
         self.model = None
@@ -109,18 +141,23 @@ class CoherenceMetric(Metric):
 
 
 class PerplexityMetric(Metric):
-    """
-    Metric class for perplexity evaluation
-    """
+    """Metric class for perplexity evaluation. """
     def __init__(self, corpus=None, logger=None, viz_env=None, title=None):
-        """
-        Args:
-            corpus : Gensim document corpus
-            logger : Monitor training process using:
-                        "shell" : print coherence value in shell
-                        "visdom" : visualize coherence value with increasing epochs in Visdom visualization framework
-            viz_env : Visdom environment to use for plotting the graph
-            title : title of the graph plot
+        """Initialize the metric object.
+
+        Parameters
+        ----------
+        corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
+            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+        logger : {'shell', 'visdom'}, optional
+           Monitor training process using one of the available methods. 'shell' will print the coherence value in
+           the active shell, while 'visdom' will visualize the coherence value with increasing epochs using the Visdom
+           visualization framework.
+        viz_env : object, optional
+            Visdom environment to use for plotting the graph. Unused.
+        title : str, optional
+            Title of the graph plot in case `logger == 'visdom'`. Unused.
+
         """
         self.corpus = corpus
         self.logger = logger
@@ -128,9 +165,22 @@ class PerplexityMetric(Metric):
         self.title = title
 
     def get_value(self, **kwargs):
-        """
-        Args:
-            model : Trained topic model
+        """""Get the coherence score.
+
+        Parameters
+        ----------
+        **kwargs
+            Key word arguments to override the object's internal attributes.
+            A trained topic model is expected using the 'model' key. This can be of type
+            :class:`~gensim.models.ldamodelLdaModel`, or one of its wrappers, such as
+            :class:`~gensim.models.wrappers.ldamallet.LdaMallet` or
+             :class:`~gensim.models.wrapper.ldavowpalwabbit.LdaVowpalWabbit`.
+
+        Returns
+        -------
+        float
+            The perplexity score.
+
         """
         super(PerplexityMetric, self).set_parameters(**kwargs)
         corpus_words = sum(cnt for document in self.corpus for _, cnt in document)
