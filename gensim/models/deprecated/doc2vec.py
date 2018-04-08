@@ -138,11 +138,12 @@ def load_old_doc2vec(*args, **kwargs):
     # set doc2vec vocabulary attributes
     new_model.docvecs.doctags = old_model.docvecs.doctags
     new_model.docvecs.count = old_model.docvecs.count
-    if hasattr(old_model.docvecs, 'max_rawint'): # `doc2vec` models before `0.12.3` do not have these 2 attributes
+    if hasattr(old_model.docvecs, 'max_rawint'):  # `doc2vec` models before `0.12.3` do not have these 2 attributes
         new_model.docvecs.max_rawint = old_model.docvecs.__dict__.get('max_rawint')
         new_model.docvecs.offset2doctag = old_model.docvecs.__dict__.get('offset2doctag')
     else:
-        new_model.docvecs.max_rawint = len(old_model.docvecs.index2doctag) if old_model.docvecs.index2doctag else old_model.docvecs.count
+        new_model.docvecs.max_rawint = \
+            len(old_model.docvecs.index2doctag) - 1 if old_model.docvecs.index2doctag else old_model.docvecs.count - 1
         new_model.docvecs.offset2doctag = old_model.docvecs.index2doctag
 
     new_model.train_count = old_model.__dict__.get('train_count', None)
