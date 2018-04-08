@@ -96,7 +96,6 @@ def df2idf(docfreq, totaldocs, log_base=2.0, add=0.0):
     """
     return add + np.log(float(totaldocs) / docfreq) / np.log(log_base)
 
-
 def precompute_idfs(wglobal, dfs, total_docs):
     """Pre-compute the inverse document frequency mapping for all terms.
 
@@ -118,8 +117,6 @@ def precompute_idfs(wglobal, dfs, total_docs):
     # not strictly necessary and could be computed on the fly in TfidfModel__getitem__.
     # this method is here just to speed things up a little.
     return {termid: wglobal(df, total_docs) for termid, df in iteritems(dfs)}
-    
-
 
 def updated_wlocal(tf, n_tf):
     """A scheme to transform `tf` or term frequency based on the value of `n_tf`.
@@ -173,7 +170,7 @@ def updated_wglobal(docfreq, totaldocs, n_df):
     elif n_df == "t":
         return np.log2(1.0 * totaldocs / docfreq)
     elif n_df == "p":
-        return max(0,np.log2((1.0 * totaldocs - docfreq) / docfreq))
+        return max(0, np.log2((1.0 * totaldocs - docfreq) / docfreq))
 
 
 def updated_normalize(x, n_n, return_norm=False):
@@ -296,8 +293,7 @@ class TfidfModel(interfaces.TransformationABC):
 
         self.id2word = id2word
         self.wlocal, self.wglobal, self.normalize = wlocal, wglobal, normalize
-        self.num_docs, self.num_nnz, self.idfs = None, None, None
-        
+        self.num_docs, self.num_nnz, self.idfs = None, None, None        
         self.smartirs = smartirs
         self.slope = slope
         self.pivot = pivot
@@ -306,7 +302,6 @@ class TfidfModel(interfaces.TransformationABC):
         # If smartirs is not None, override wlocal, wglobal and normalize
         if smartirs is not None:
             n_tf, n_df, n_n = resolve_weights(smartirs)
-
             self.wlocal = partial(updated_wlocal, n_tf=n_tf)
             self.wglobal = partial(updated_wglobal, n_df=n_df)
             # also return norm factor if pivot is not none
@@ -374,8 +369,6 @@ class TfidfModel(interfaces.TransformationABC):
             numnnz += len(bow)
             for termid, _ in bow:
                 dfs[termid] = dfs.get(termid, 0) + 1
-            
-
         # keep some stats about the training corpus
         self.num_docs = docno + 1
         self.num_nnz = numnnz

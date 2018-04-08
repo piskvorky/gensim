@@ -40,7 +40,6 @@ class TestTfidfModel(unittest.TestCase):
     def setUp(self):
         self.corpus = MmCorpus(datapath('testcorpus.mm'))
 
-
     def test_transform(self):
         # create the transformation model
         model = tfidfmodel.TfidfModel(self.corpus, normalize=True)
@@ -93,7 +92,9 @@ class TestTfidfModel(unittest.TestCase):
         # Test persistence between Gensim v3.2.0 and current model.
         model3 = tfidfmodel.TfidfModel(self.corpus, smartirs="ntc")
         model4 = tfidfmodel.TfidfModel.load(datapath('tfidf_model.tst'))
-        self.assertTrue(model3.idfs == model4.idfs)
+        idfs3=[model3.idfs[key] for key in sorted(model3.idfs.keys())]
+        idfs4=[model4.idfs[key] for key in sorted(model4.idfs.keys())]
+        self.assertTrue(np.allclose(idfs3, idfs4))
         tstvec = [corpus[1], corpus[2]]
         self.assertTrue(np.allclose(model3[tstvec[0]], model4[tstvec[0]]))
         self.assertTrue(np.allclose(model3[tstvec[1]], model4[tstvec[1]]))
@@ -112,7 +113,9 @@ class TestTfidfModel(unittest.TestCase):
         # Test persistence between Gensim v3.2.0 and pivoted normalization compressed model.
         model3 = tfidfmodel.TfidfModel(self.corpus, pivot=0, slope=1)
         model4 = tfidfmodel.TfidfModel.load(datapath('tfidf_model.tst'))
-        self.assertTrue(model3.idfs == model4.idfs)
+        idfs3=[model3.idfs[key] for key in sorted(model3.idfs.keys())]
+        idfs4=[model4.idfs[key] for key in sorted(model4.idfs.keys())]
+        self.assertTrue(np.allclose(idfs3, idfs4))
         tstvec = [corpus[1], corpus[2]]
         self.assertTrue(np.allclose(model3[tstvec[0]], model4[tstvec[0]]))
         self.assertTrue(np.allclose(model3[tstvec[1]], model4[tstvec[1]]))
@@ -143,7 +146,9 @@ class TestTfidfModel(unittest.TestCase):
         # Test persistence between Gensim v3.2.0 and current compressed model.
         model3 = tfidfmodel.TfidfModel(self.corpus, smartirs="ntc")
         model4 = tfidfmodel.TfidfModel.load(datapath('tfidf_model.tst.bz2'))
-        self.assertTrue(model3.idfs == model4.idfs)
+        idfs3=[model3.idfs[key] for key in sorted(model3.idfs.keys())]
+        idfs4=[model4.idfs[key] for key in sorted(model4.idfs.keys())]
+        self.assertTrue(np.allclose(idfs3, idfs4))
         tstvec = [corpus[1], corpus[2]]
         self.assertTrue(np.allclose(model3[tstvec[0]], model4[tstvec[0]]))
         self.assertTrue(np.allclose(model3[tstvec[1]], model4[tstvec[1]]))
@@ -162,7 +167,9 @@ class TestTfidfModel(unittest.TestCase):
         # Test persistence between Gensim v3.2.0 and pivoted normalization compressed model.
         model3 = tfidfmodel.TfidfModel(self.corpus, pivot=0, slope=1)
         model4 = tfidfmodel.TfidfModel.load(datapath('tfidf_model.tst.bz2'))
-        self.assertTrue(model3.idfs == model4.idfs)
+        idfs3=[model3.idfs[key] for key in sorted(model3.idfs.keys())]
+        idfs4=[model4.idfs[key] for key in sorted(model4.idfs.keys())]
+        self.assertTrue(np.allclose(idfs3, idfs4))
         tstvec = [corpus[1], corpus[2]]
         self.assertTrue(np.allclose(model3[tstvec[0]], model4[tstvec[0]]))
         self.assertTrue(np.allclose(model3[tstvec[1]], model4[tstvec[1]]))
