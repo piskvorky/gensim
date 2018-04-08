@@ -96,6 +96,7 @@ def df2idf(docfreq, totaldocs, log_base=2.0, add=0.0):
     """
     return add + np.log(float(totaldocs) / docfreq) / np.log(log_base)
 
+
 def precompute_idfs(wglobal, dfs, total_docs):
     """Pre-compute the inverse document frequency mapping for all terms.
 
@@ -117,6 +118,7 @@ def precompute_idfs(wglobal, dfs, total_docs):
     # not strictly necessary and could be computed on the fly in TfidfModel__getitem__.
     # this method is here just to speed things up a little.
     return {termid: wglobal(df, total_docs) for termid, df in iteritems(dfs)}
+
 
 def updated_wlocal(tf, n_tf):
     """A scheme to transform `tf` or term frequency based on the value of `n_tf`.
@@ -293,7 +295,7 @@ class TfidfModel(interfaces.TransformationABC):
 
         self.id2word = id2word
         self.wlocal, self.wglobal, self.normalize = wlocal, wglobal, normalize
-        self.num_docs, self.num_nnz, self.idfs = None, None, None        
+        self.num_docs, self.num_nnz, self.idfs = None, None, None
         self.smartirs = smartirs
         self.slope = slope
         self.pivot = pivot
