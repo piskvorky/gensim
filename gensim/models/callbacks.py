@@ -189,28 +189,35 @@ class PerplexityMetric(Metric):
 
 
 class DiffMetric(Metric):
-    """
-    Metric class for topic difference evaluation
-    """
+    """Metric class for topic difference evaluation. """
     def __init__(self, distance="jaccard", num_words=100, n_ann_terms=10, diagonal=True,
                  annotation=False, normed=True, logger=None, viz_env=None, title=None):
-        """
-        Args:
-            distance : measure used to calculate difference between any topic pair. Available values:
-                `kullback_leibler`
-                `hellinger`
-                `jaccard`
-            num_words : is quantity of most relevant words that used if distance == `jaccard` (also used for annotation)
-            n_ann_terms : max quantity of words in intersection/symmetric difference
-                          between topics (used for annotation)
-            diagonal : difference between  identical topic no.s
-            annotation : intersection or difference of words between topics
-            normed (bool) : If `true`, matrix/array Z will be normalized
-            logger : Monitor training process using:
-                        "shell" : print coherence value in shell
-                        "visdom" : visualize coherence value with increasing epochs in Visdom visualization framework
-            viz_env : Visdom environment to use for plotting the graph
-            title : title of the graph plot
+
+        """Initialize the metric score.
+
+        Parameters
+        ----------
+        distance : {'kullback_leibler', 'hellinger', 'jaccard'}, optional
+            Measure used to calculate difference between any topic pair.
+        num_words : int, optional
+            The number of most relevant words used if `distance == 'jaccard'`. Also used for annotating topics.
+        n_ann_terms : int, optional
+            Max number of words in intersection/symmetric difference between topics. Used for annotation.
+        diagonal : bool, optional
+            Whether we need the difference between identical topics (the diagonal of the difference matrix).
+        annotation : bool, optional
+            Whether the intersection or difference of words between two topics should be returned.
+        normed : bool, optional
+            Whether the matrix should be normalized or not.
+        logger : {'shell', 'visdom'}, optional
+           Monitor training process using one of the available methods. 'shell' will print the coherence value in
+           the active shell, while 'visdom' will visualize the coherence value with increasing epochs using the Visdom
+           visualization framework.
+        viz_env : object, optional
+            Visdom environment to use for plotting the graph. Unused.
+        title : str, optional
+            Title of the graph plot in case `logger == 'visdom'`. Unused.
+
         """
         self.distance = distance
         self.num_words = num_words
@@ -223,10 +230,23 @@ class DiffMetric(Metric):
         self.title = title
 
     def get_value(self, **kwargs):
-        """
-        Args:
-            model : Trained topic model
-            other_model : second topic model instance to calculate the difference from
+        """Get the difference between each pair of topics in two topic models.
+
+        Parameters
+        ----------
+        **kwargs
+            Key word arguments to override the object's internal attributes.
+            Two models of type :class:`~gensim.models.ldamodelLdaModel` or its wrappers are expected using the keys
+            `model` and `other_model`.
+
+        Returns
+        -------
+        np.ndarray of shape (`model.num_topics`, `other_model.num_topics`)
+            Matrix of differences between each pair of topics.
+        np.ndarray of shape (`model.num_topics`, `other_model.num_topics`, 2), optional
+            Annotation matrix where for each pair we include the word from the intersection of the two topics,
+            and the word from the symmetric difference of the two topics. Only include if `annotation == True`.
+
         """
         super(DiffMetric, self).set_parameters(**kwargs)
         diff_diagonal, _ = self.model.diff(
@@ -237,29 +257,35 @@ class DiffMetric(Metric):
 
 
 class ConvergenceMetric(Metric):
-    """
-    Metric class for convergence evaluation
-    """
+    """Metric class for convergence evaluation. """
     def __init__(self, distance="jaccard", num_words=100, n_ann_terms=10, diagonal=True,
                  annotation=False, normed=True, logger=None, viz_env=None, title=None):
-        """
-        Args:
-            distance : measure used to calculate difference between any topic pair. Available values:
-                `kullback_leibler`
-                `hellinger`
-                `jaccard`
-            num_words : is quantity of most relevant words that used if distance == `jaccard` (also used for annotation)
-            n_ann_terms : max quantity of words in intersection/symmetric difference
-                          between topics (used for annotation)
-            diagonal : difference between  identical topic no.s
-            annotation : intersection or difference of words between topics
-            normed (bool) : If `true`, matrix/array Z will be normalized
-            logger : Monitor training process using:
-                        "shell" : print coherence value in shell
-                        "visdom" : visualize coherence value with increasing epochs in Visdom visualization framework
-            viz_env : Visdom environment to use for plotting the graph
-            title : title of the graph plot
-        """
+        """Initialize the convergence metric.
+
+        Parameters
+        ----------
+        distance : {'kullback_leibler', 'hellinger', 'jaccard'}, optional
+            Measure used to calculate difference between any topic pair.
+        num_words : int, optional
+            The number of most relevant words used if `distance == 'jaccard'`. Also used for annotating topics.
+        n_ann_terms : int, optional
+            Max number of words in intersection/symmetric difference between topics. Used for annotation.
+        diagonal : bool, optional
+            Whether we need the difference between identical topics (the diagonal of the difference matrix).
+        annotation : bool, optional
+            Whether the intersection or difference of words between two topics should be returned.
+        normed : bool, optional
+            Whether the matrix should be normalized or not.
+        logger : {'shell', 'visdom'}, optional
+           Monitor training process using one of the available methods. 'shell' will print the coherence value in
+           the active shell, while 'visdom' will visualize the coherence value with increasing epochs using the Visdom
+           visualization framework.
+        viz_env : object, optional
+            Visdom environment to use for plotting the graph. Unused.
+        title : str, optional
+            Title of the graph plot in case `logger == 'visdom'`. Unused.
+
+       """
         self.distance = distance
         self.num_words = num_words
         self.n_ann_terms = n_ann_terms
@@ -271,10 +297,24 @@ class ConvergenceMetric(Metric):
         self.title = title
 
     def get_value(self, **kwargs):
-        """
-        Args:
-            model : Trained topic model
-            other_model : second topic model instance to calculate the difference from
+        """Get the sum of each element in the difference matrix between each pair of topics in two topic models.
+
+        A small difference between the partially trained models produced by subsequent training iterations can indicate
+        that the model has stopped significantly improving and has therefore converged to a local or global optimum.
+
+        Parameters
+        ----------
+        **kwargs
+            Key word arguments to override the object's internal attributes.
+            Two models of type :class:`~gensim.models.ldamodelLdaModel` or its wrappers are expected using the keys
+            `model` and `other_model`.
+
+        Returns
+        -------
+        float
+            The sum of the difference matrix between two trained topic models (usually the same model after two
+            subsequent training iterations).
+
         """
         super(ConvergenceMetric, self).set_parameters(**kwargs)
         diff_diagonal, _ = self.model.diff(
@@ -285,24 +325,36 @@ class ConvergenceMetric(Metric):
 
 
 class Callback(object):
-    """
-    Used to log/visualize the evaluation metrics during training. The values are stored at the end of each epoch.
+    """A class representing routines called reactively at specific phases during trained.
+
+    These can be used to log or visualize the training progress using any of the metric scores developed before.
+    The values are stored at the end of each training epoch. The following metric scores are currently available:
+
+        * :class:`~gensim.models.callbacks.CoherenceMetric`
+        * :class:`~gensim.models.callbacks.PerplexityMetric`
+        * :class:`~gensim.models.callbacks.DiffMetric`
+        * :class:`~gensim.models.callbacks.ConvergenceMetric`
+
     """
     def __init__(self, metrics):
+        """Initialize the callback.
+
+        Parameters
+        ----------
+        metrics : list of :class:`~gensim.models.callbacks.Metric`
+            The list of metrics to be reported by the callback.
+
         """
-        Args:
-            metrics : a list of callbacks. Possible values:
-                "CoherenceMetric"
-                "PerplexityMetric"
-                "DiffMetric"
-                "ConvergenceMetric"
-        """
-        # list of metrics to be plot
         self.metrics = metrics
 
     def set_model(self, model):
-        """
-        Save the model instance and initialize any required variables which would be updated throughout training
+        """Save the model instance and initialize any required variables which would be updated throughout training.
+
+        Parameters
+        ----------
+        model : :class:`~gensim.models.basemodel.BaseTopicModel`
+            The model for which the training will be reported (logged or visualized) by the callback.
+
         """
         self.model = model
         self.previous = None
@@ -322,13 +374,26 @@ class Callback(object):
             self.log_type = logging.getLogger('gensim.models.ldamodel')
 
     def on_epoch_end(self, epoch, topics=None):
-        """
-        Log or visualize current epoch's metric value
+        """Report the current epoch's metric value.
 
-        Args:
-            epoch : current epoch no.
-            topics : topic distribution from current epoch (required for coherence of unsupported topic models)
+        Called at the end of each training iteration.
+
+        Parameters
+        ----------
+        epoch : int
+            The epoch that just ended.
+        topics : list of list of str, optional
+            List of tokenized topics. This is required for the coherence metric.
+
+        Returns
+        -------
+        dict of (str, object)
+            Mapping from metric names to their values. The type of each value depends on the metric type,
+            for example :class:`~gensim.models.callbacks.DiffMetric` computes a matrix while
+            :class:`~gensim.models.callbacks.ConvergenceMetric` computes a float.
+
         """
+
         # stores current epoch's metric values
         current_metrics = {}
 
@@ -383,10 +448,18 @@ class Callback(object):
 
 
 class CallbackAny2Vec(object):
-    """Base class to build callbacks. Callbacks are used to apply custom functions over the model at specific points
-    during training (epoch start, batch end etc.). To implement a Callback, subclass
-    :class:`~gensim.models.callbacks.CallbackAny2Vec`, look at the example below
-    which creates a callback to save a training model after each epoch:
+    """Base class to build callbacks for :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`.
+
+    Callbacks are used to apply custom functions over the model at specific points
+    during training (epoch start, batch end etc.). This is a base class and its purpose is to be inherited by
+    custom Callbacks that implement one or more of its methods (depending on the point during training where they
+    want some action to be taken).
+
+    Examples
+    --------
+    To implement a Callback, inherit from this base class and override one or more of its methods.
+
+    #. Create a callback to save the training model after each epoch:
 
     >>> from gensim.test.utils import common_texts as sentences
     >>> from gensim.models.callbacks import CallbackAny2Vec
@@ -404,7 +477,9 @@ class CallbackAny2Vec(object):
     ...         model.save(output_path)
     ...         self.epoch += 1
     ...
-    >>>
+
+    #. Create a callback to print logging information to the console:
+
     >>> class EpochLogger(CallbackAny2Vec):
     ...     "Callback to log information about training"
     ...     def __init__(self):
@@ -417,12 +492,15 @@ class CallbackAny2Vec(object):
     ...
     >>> epoch_saver = EpochSaver(get_tmpfile("temporary_model"))
     >>> epoch_logger = EpochLogger()
+
+    #. Bind the callbacks to a model before training it:
+
     >>> w2v_model = Word2Vec(sentences, iter=5, size=10, min_count=0, seed=42, callbacks=[epoch_saver, epoch_logger])
 
     """
 
     def on_epoch_begin(self, model):
-        """Method called on the start of epoch.
+        """Method called at the start of each epoch.
 
         Parameters
         ----------
@@ -433,20 +511,18 @@ class CallbackAny2Vec(object):
         pass
 
     def on_epoch_end(self, model):
-        """Method called on the end of epoch.
+        """Method called at the end of each epoch.
 
         Parameters
         ----------
-        model
-
-        Returns
-        -------
+        model : class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
+            Current model.
 
         """
         pass
 
     def on_batch_begin(self, model):
-        """Method called on the start of batch.
+        """Method called at the start of each batch.
 
         Parameters
         ----------
@@ -457,7 +533,7 @@ class CallbackAny2Vec(object):
         pass
 
     def on_batch_end(self, model):
-        """Method called on the end of batch.
+        """Method called at the end of each batch.
 
         Parameters
         ----------
@@ -468,7 +544,7 @@ class CallbackAny2Vec(object):
         pass
 
     def on_train_begin(self, model):
-        """Method called on the start of training process.
+        """Method called at the start of the training process.
 
         Parameters
         ----------
@@ -479,7 +555,7 @@ class CallbackAny2Vec(object):
         pass
 
     def on_train_end(self, model):
-        """Method called on the end of training process.
+        """Method called at the end of the training process.
 
         Parameters
         ----------
