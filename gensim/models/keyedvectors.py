@@ -1087,7 +1087,7 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
 
         Returns
         -------
-        sents_emd : class : `gensim.models.keyedvectors.Word2VecKeyedVectors`
+        sents_emd : list
             Sentence embeddings of each sentence in the same order as given.
 
         """
@@ -1128,7 +1128,7 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
 
         Returns
         -------
-        new_sents_emd : class : `gensim.models.keyedvectors.Word2VecKeyedVectors`
+        new_sents_emd : list
             Sentence embeddings of each sentence in the same order as given.
 
         """
@@ -1178,7 +1178,7 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
 
         Returns
         -------
-        sents_emd : class : `gensim.models.keyedvectors.Word2VecKeyedVectors`
+        sents_emd : list
             Sentence embeddings of each sentence in the same order as given.
 
         """
