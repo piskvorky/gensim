@@ -135,9 +135,9 @@ class TestDoc2VecModel(unittest.TestCase):
             '3.0.0', '3.1.0', '3.2.0', '3.3.0', '3.4.0'
         ]
 
-        saved_models_dir = datapath('old_d2v_models')
+        saved_models_dir = datapath('old_d2v_models/d2v_{}.mdl')
         for old_version in old_versions:
-            model = doc2vec.Doc2Vec.load(os.path.join(saved_models_dir, 'd2v_{}.mdl'.format(old_version)))
+            model = doc2vec.Doc2Vec.load(saved_models_dir.format(old_version))
             self.assertTrue(len(model.wv.vocab) == 3)
             self.assertTrue(model.wv.vectors.shape == (3, 4))
             self.assertTrue(model.docvecs.vectors_docs.shape == (2, 4))
@@ -146,6 +146,14 @@ class TestDoc2VecModel(unittest.TestCase):
             doc0_inferred = model.infer_vector(list(DocsLeeCorpus())[0].words)
             sims_to_infer = model.docvecs.most_similar([doc0_inferred], topn=len(model.docvecs))
             self.assertTrue(sims_to_infer)
+            # check if inferring vectors and similarity search works after saving and loading back the model
+            tmpf = get_tmpfile('gensim_doc2vec.tst')
+            model.save(tmpf)
+            loaded_model = doc2vec.Doc2Vec.load(tmpf)
+            doc0_inferred = loaded_model.infer_vector(list(DocsLeeCorpus())[0].words)
+            sims_to_infer = loaded_model.docvecs.most_similar([doc0_inferred], topn=len(loaded_model.docvecs))
+            self.assertTrue(sims_to_infer)
+
 
     def test_unicode_in_doctag(self):
         """Test storing document vectors of a model with unicode titles."""
