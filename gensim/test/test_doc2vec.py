@@ -154,7 +154,6 @@ class TestDoc2VecModel(unittest.TestCase):
             sims_to_infer = loaded_model.docvecs.most_similar([doc0_inferred], topn=len(loaded_model.docvecs))
             self.assertTrue(sims_to_infer)
 
-
     def test_unicode_in_doctag(self):
         """Test storing document vectors of a model with unicode titles."""
         model = doc2vec.Doc2Vec(DocsLeeCorpus(unicode_tags=True), min_count=1)
