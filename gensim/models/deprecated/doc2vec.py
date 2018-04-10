@@ -142,8 +142,13 @@ def load_old_doc2vec(*args, **kwargs):
         new_model.docvecs.max_rawint = old_model.docvecs.__dict__.get('max_rawint')
         new_model.docvecs.offset2doctag = old_model.docvecs.__dict__.get('offset2doctag')
     else:
-        new_model.docvecs.max_rawint = \
-            len(old_model.docvecs.index2doctag) - 1 if old_model.docvecs.index2doctag else old_model.docvecs.count - 1
+        # Doc2Vec models before Gensim version 0.12.3 did not have `max_rawint` and `offset2doctag` as they did not
+        # mixing of string and int tags. This implies the new attribute `offset2doctag` equals the old `index2doctag`
+        # (which was only filled if the documents had string tags).
+        # This also implies that the new attribute, `max_rawint`(highest rawint-indexed doctag) would either be equal
+        # to the initial value -1, in case only string tags are used or would be equal to `count` if only int indexing
+        # was used.
+        new_model.docvecs.max_rawint = -1 if old_model.docvecs.index2doctag else old_model.docvecs.count - 1
         new_model.docvecs.offset2doctag = old_model.docvecs.index2doctag
 
     new_model.train_count = old_model.__dict__.get('train_count', None)
