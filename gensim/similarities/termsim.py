@@ -161,8 +161,9 @@ class SparseTermSimilarityMatrix(SaveLoad):
 
             t1 = dictionary[t1_index]
             num_nonzero = matrix_nonzero[t1_index] - 1
-            rows = index.most_similar(t1, nonzero_limit - num_nonzero)
-            for t2, similarity in rows:
+            num_rows = nonzero_limit - num_nonzero
+            rows = index.most_similar(t1, num_rows)
+            for row_number, (t2, similarity) in zip(range(num_rows), rows):
                 if t2 not in dictionary.token2id:
                     logger.debug('an out-of-dictionary term "%s"', t2)
                     continue
