@@ -16,7 +16,6 @@ import numpy as np
 
 from gensim.corpora import Dictionary
 from gensim.similarities import levenshtein, LevenshteinSimilarityIndex
-from gensim.utils import deprecated
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +67,6 @@ class TestLevenshteinSimilarityIndex(unittest.TestCase):
 
 
 class TestLevenshtein(unittest.TestCase):
-    @deprecated("Method will be removed in 4.0.0")
     def test_similarity_matrix(self):
         """Test similarity_matrix returns expected results."""
 

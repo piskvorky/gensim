@@ -17,7 +17,6 @@ import numpy as np
 from gensim.corpora import Dictionary
 from gensim.models import KeyedVectors as EuclideanKeyedVectors, WordEmbeddingSimilarityIndex
 from gensim.test.utils import datapath
-from gensim.utils import deprecated
 
 
 logger = logging.getLogger(__name__)
@@ -73,7 +72,6 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
         self.vectors = EuclideanKeyedVectors.load_word2vec_format(
             datapath('euclidean_vectors.bin'), binary=True, datatype=np.float64)
 
-    @deprecated("Method will be removed in 4.0.0")
     def test_similarity_matrix(self):
         """Test similarity_matrix returns expected results."""
 
