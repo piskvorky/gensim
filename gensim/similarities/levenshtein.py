@@ -28,7 +28,7 @@ from gensim.utils import deprecated
 logger = logging.getLogger(__name__)
 
 
-def levsim(alpha, beta, t1, t2):
+def levsim(t1, t2, alpha=1.8, beta=5.0):
     """Get the Levenshtein similarity between two terms.
 
     Return the Levenshtein similarity between two terms. The similarity is a
@@ -36,14 +36,14 @@ def levsim(alpha, beta, t1, t2):
 
     Parameters
     ----------
-    alpha : float
-        The multiplicative factor alpha defined by Charlet and Damnati (2017).
-    beta : float
-        The exponential factor beta defined by Charlet and Damnati (2017).
     t1 : {bytes, str, unicode}
         The first compared term.
     t2 : {bytes, str, unicode}
         The second compared term.
+    alpha : float
+        The multiplicative factor alpha defined by Charlet and Damnati (2017).
+    beta : float
+        The exponential factor beta defined by Charlet and Damnati (2017).
 
     Returns
     -------
@@ -64,7 +64,7 @@ def levsim(alpha, beta, t1, t2):
 
 
 def _levsim_worker(args):
-    _, _, _, t2 = args
+    _, t2, _, _ = args
     return (t2, levsim(*args))
 
 
@@ -113,7 +113,7 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
         heap = []
         for t2, similarity in self.pool.imap_unordered(
                 _levsim_worker, (
-                    (self.alpha, self.beta, t1, self.dictionary[t2_index])
+                    (t1, self.dictionary[t2_index], self.alpha, self.beta)
                     for t2_index in range(len(self.dictionary))
                     if t1 != self.dictionary[t2_index]),
                 self.CHUNK_SIZE):
