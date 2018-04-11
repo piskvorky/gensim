@@ -25,13 +25,13 @@ For a tutorial on gensim's native fasttext, refer to the `noteboook
 Examples
 --------
 
-#. Initialize a model with e.g.::
+#. Initialize a model with e.g. ::
     >>> from gensim.test.utils import common_texts
     >>>
     >>> model = FastText(size=4, window=3, min_count=1)
     >>> model.build_vocab(common_texts)
 
-#. Persist a model to disk with::
+#. Persist a model to disk with ::
     >>> model.save("temp_model.w2v")
     >>> model = FastText.load("temp_model.w2v")  # you can continue training with the loaded model!
 
@@ -40,7 +40,7 @@ Examples
 
     >>> computer_vec = model.wv['computer']  # numpy vector of a word
 
-#. You can perform various NLP word tasks with the model. Some of them are already built-in::
+#. You can perform various NLP word tasks with the model. Some of them are already built-in ::
 
     >>> similarities = model.wv.most_similar(positive=['computer', 'human'], negative=['interface'])
     >>> most_similar = similarities[0]
@@ -52,7 +52,7 @@ Examples
 
     >>> sim_score = model.wv.similarity('computer', 'human')
 
-#. Correlation with human opinion on word similarity::
+#. Correlation with human opinion on word similarity ::
 
     >>> from gensim.test.utils import datapath
     >>>
@@ -63,7 +63,6 @@ Examples
     >>> analogies = model.wv.accuracy(datapath('questions-words.txt'))
 
 """
-
 import logging
 import struct
 
@@ -214,12 +213,10 @@ class FastText(BaseWordEmbeddingsModel):
         compute embeddings even for **unseen** words (that do not exist in the vocabulary), as the aggregate of the
         n-grams included in the word. After training the model, this attribute can be used directly to query those
         embeddings in various ways. Check the module level docstring from some examples.
-
     self.vocabulary : :class:'~gensim.models.fasttext.FastTextVocab'
         This object represents the vocabulary (sometimes called Dictionary in gensim) of the model.
         Besides keeping track of all unique words, this object provides extra functionality, such as
         constructing a huffman tree (frequent words are closer to the root), or discarding extremely rare words.
-
     self.trainables : :class:`~gensim.models.fasttext.FastTextTrainables`
         This object represents the inner shallow neural network used to train the embeddings. This is very
         similar to the network of the Word2Vec model, but it also trains weights for the N-Grams (sequences of more
@@ -292,12 +289,14 @@ class FastText(BaseWordEmbeddingsModel):
             Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
             or a callable that accepts parameters (word, count, min_count) and returns either
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
-            The input parameters are of the following types
-                * word: str. The word we are examining
-                * count: int. The word's occurence count in the corpus
-                * min_count: int. The minimum count threshold.
-            Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
-            of the model.
+            The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part of the
+            model.
+
+            The input parameters are of the following types:
+                * `word` (str) - the word we are examining
+                * `count` (int) - the word's frequency count in the corpus
+                * `min_count` (int) - the minimum count threshold.
+
         sorted_vocab : {1,0}, optional
             If 1, sort the vocabulary by descending frequency before assigning word indices.
         batch_words : int, optional
@@ -423,12 +422,14 @@ class FastText(BaseWordEmbeddingsModel):
             Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
             or a callable that accepts parameters (word, count, min_count) and returns either
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
-            The input parameters are of the following types
-                * word: str. The word we are examining
-                * count: int. The word's occurence count in the corpus
-                * min_count: int. The minimum count threshold.
-            Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
-            of the model.
+            The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part of the
+            model.
+
+            The input parameters are of the following types:
+                * `word` (str) - the word we are examining
+                * `count` (int) - the word's frequency count in the corpus
+                * `min_count` (int) - the minimum count threshold.
+
         **kwargs
             Additional key word parameters passed to
             :meth:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel.build_vocab`.

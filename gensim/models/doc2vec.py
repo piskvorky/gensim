@@ -20,33 +20,34 @@ For a real world usage scenario, see the `Doc2vec in gensim tutorial
 <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/doc2vec-lee.ipynb>`_.
 
 **Make sure you have a C compiler before installing gensim, to use optimized (compiled)
-doc2vec training** (70x speedup [blog]_).
+doc2vec training** (70x speedup `blog <https://rare-technologies.com/parallelizing-word2vec-in-python/>`_).
 
 Examples
 --------
 
-#. Initialize a model with e.g.::
+#. Initialize a model with e.g. ::
 
->>> from gensim.test.utils import common_texts, get_tmpfile
->>> from gensim.models.doc2vec import Doc2Vec, TaggedDocument
->>>
->>> documents = [TaggedDocument(word, [i]) for i, word in enumerate(common_texts)]
->>> model = Doc2Vec(documents, vector_size=5, window=2, min_count=1, workers=4)
+    >>> from gensim.test.utils import common_texts, get_tmpfile
+    >>> from gensim.models.doc2vec import Doc2Vec, TaggedDocument
+    >>>
+    >>> documents = [TaggedDocument(word, [i]) for i, word in enumerate(common_texts)]
+    >>> model = Doc2Vec(documents, vector_size=5, window=2, min_count=1, workers=4)
 
-#. Persist a model to disk with::
+#. Persist a model to disk with ::
 
->>> tmp_f = get_tmpfile("model")
->>> model.save(tmp_f)
->>> model = Doc2Vec.load(tmp_f)  # you can continue training with the loaded model!
+    >>> tmp_f = get_tmpfile("model")
+    >>> model.save(tmp_f)
+    >>> model = Doc2Vec.load(tmp_f)  # you can continue training with the loaded model!
 
-If you're finished training a model (=no more updates, only querying), you can do::
+#. If you're finished training a model (=no more updates, only querying, reduce memory usage), you can do ::
 
->>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True)
+    >>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True)
 
-to trim unneeded model memory = use (much) less RAM.
+#. Infer vector for new document
+
+    >>> vector = model.infer_vector(["system", "response"])
 
 """
-
 import logging
 import os
 import warnings
@@ -1018,12 +1019,14 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
             or a callable that accepts parameters (word, count, min_count) and returns either
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
-            The input parameters are of the following types
-                * word: str. The word we are examining
-                * count: int. The word's occurence count in the corpus
-                * min_count: int. The minimum count threshold.
-            Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
-            of the model.
+            The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part of the
+            model.
+
+            The input parameters are of the following types:
+                * `word` (str) - the word we are examining
+                * `count` (int) - the word's frequency count in the corpus
+                * `min_count` (int) - the minimum count threshold.
+
         update : bool, optional
             If true, the new provided words in `word_freq` dict will be added to model's vocab.
 
@@ -1104,12 +1107,13 @@ class Doc2VecVocab(Word2VecVocab):
             Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
             or a callable that accepts parameters (word, count, min_count) and returns either
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
-            The input parameters are of the following types
-                * word: str. The word we are examining
-                * count: int. The word's occurence count in the corpus
-                * min_count: int. The minimum count threshold.
-            Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
-            of the model.
+            The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part of the
+            model.
+
+            The input parameters are of the following types:
+                * `word` (str) - the word we are examining
+                * `count` (int) - the word's frequency count in the corpus
+                * `min_count` (int) - the minimum count threshold.
 
         Returns
         -------

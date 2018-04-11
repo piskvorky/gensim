@@ -541,12 +541,14 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
             or a callable that accepts parameters (word, count, min_count) and returns either
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
-            The input parameters are of the following types
-                * word: str. The word we are examining
-                * count: int. The word's occurence count in the corpus
-                * min_count: int. The minimum count threshold.
-            Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
-            of the model.
+            The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part of the
+            model.
+
+            The input parameters are of the following types:
+                * `word` (str) - the word we are examining
+                * `count` (int) - the word's frequency count in the corpus
+                * `min_count` (int) - the minimum count threshold.
+
         sg : {1, 0}, optional
             Defines the training algorithm. If 1, skip-gram is used, otherwise, CBOW is employed.
         alpha : float, optional
@@ -769,12 +771,14 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
             or a callable that accepts parameters (word, count, min_count) and returns either
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
-            The input parameters are of the following types
-                * word: str. The word we are examining
-                * count: int. The word's occurence count in the corpus
-                * min_count: int. The minimum count threshold.
-            Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
-            of the model.
+            The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part of the
+            model.
+
+            The input parameters are of the following types:
+                * `word` (str) - the word we are examining
+                * `count` (int) - the word's frequency count in the corpus
+                * `min_count` (int) - the minimum count threshold.
+
         **kwargs
             Key word arguments propagated to `self.vocabulary.prepare_vocab`
 
@@ -805,12 +809,14 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
             or a callable that accepts parameters (word, count, min_count) and returns either
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
-            The input parameters are of the following types
-                * word: str. The word we are examining
-                * count: int. The word's occurence count in the corpus
-                * min_count: int. The minimum count threshold.
-            Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
-            of the model.
+            The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part of the
+            model.
+
+            The input parameters are of the following types:
+                * `word` (str) - the word we are examining
+                * `count` (int) - the word's frequency count in the corpus
+                * `min_count` (int) - the minimum count threshold.
+
         update : bool, optional
             If true, the new provided words in `word_freq` dict will be added to model's vocab.
 
