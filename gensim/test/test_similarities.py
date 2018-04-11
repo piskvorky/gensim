@@ -11,12 +11,14 @@ Automated tests for similarity algorithms (the similarities package).
 
 import logging
 import unittest
+import math
 import os
 
 import numpy
 import scipy
 
 from smart_open import smart_open
+from gensim.corpora import Dictionary
 from gensim.models import word2vec
 from gensim.models import doc2vec
 from gensim.models import KeyedVectors
@@ -25,6 +27,10 @@ from gensim import matutils, similarities
 from gensim.models import Word2Vec, FastText
 from gensim.test.utils import (datapath, get_tmpfile,
     common_texts as texts, common_dictionary as dictionary, common_corpus as corpus)
+from gensim.similarities import UniformTermSimilarityIndex
+from gensim.similarities import SparseTermSimilarityMatrix
+from gensim.similarities import levenshtein
+from gensim.similarities import LevenshteinSimilarityIndex
 
 try:
     from pyemd import emd  # noqa:F401
@@ -688,6 +694,308 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
         self.assertEqual(self.index.index.f, self.index2.index.f)
         self.assertEqual(self.index.labels, self.index2.labels)
         self.assertEqual(self.index.num_trees, self.index2.num_trees)
+
+
+class TestUniformTermSimilarityIndex(unittest.TestCase):
+    def setUp(self):
+        self.documents = [[u"government", u"denied", u"holiday"], [u"holiday", u"slowing", u"hollingworth"]]
+        self.dictionary = Dictionary(self.documents)
+
+    def test_most_similar(self):
+        """Test most_similar returns expected results."""
+
+        # check that the topn works as expected
+        index = UniformTermSimilarityIndex(self.dictionary)
+        results = list(index.most_similar(u"holiday", topn=1))
+        self.assertLess(0, len(results))
+        self.assertGreaterEqual(1, len(results))
+        results = list(index.most_similar(u"holiday", topn=4))
+        self.assertLess(1, len(results))
+        self.assertGreaterEqual(4, len(results))
+
+        # check that the term itself is not returned
+        index = UniformTermSimilarityIndex(self.dictionary)
+        terms = [term for term, similarity in index.most_similar(u"holiday", topn=len(self.dictionary))]
+        self.assertFalse(u"holiday" in terms)
+
+        # check that the term_similarity works as expected
+        index = UniformTermSimilarityIndex(self.dictionary, term_similarity=0.2)
+        similarities = numpy.array([
+            similarity for term, similarity in index.most_similar(u"holiday", topn=len(self.dictionary))])
+        self.assertTrue(numpy.all(similarities == 0.2))
+
+
+class TestSparseTermSimilarityMatrix(unittest.TestCase):
+    def setUp(self):
+        self.documents = [
+            [u"government", u"denied", u"holiday"],
+            [u"government", u"denied", u"holiday", u"slowing", u"hollingworth"]]
+        self.dictionary = Dictionary(self.documents)
+        self.tfidf = TfidfModel(dictionary=self.dictionary)
+        self.index = UniformTermSimilarityIndex(self.dictionary, term_similarity=0.5)
+
+    def test_building(self):
+        """Test the matrix building algorithm."""
+
+        # check matrix type
+        matrix = SparseTermSimilarityMatrix(self.index, self.dictionary).matrix
+        self.assertTrue(isinstance(matrix, scipy.sparse.csc_matrix))
+
+        # check symmetry
+        matrix = SparseTermSimilarityMatrix(self.index, self.dictionary).matrix.todense()
+        self.assertTrue(numpy.all(matrix == matrix.T))
+
+        # check the existence of ones on the main diagonal
+        matrix = SparseTermSimilarityMatrix(self.index, self.dictionary).matrix.todense()
+        self.assertTrue(numpy.all(numpy.diag(matrix) == numpy.ones(matrix.shape[0])))
+
+        # check the matrix order
+        matrix = SparseTermSimilarityMatrix(self.index, self.dictionary).matrix.todense()
+        self.assertEqual(matrix.shape[0], len(self.dictionary))
+        self.assertEqual(matrix.shape[1], len(self.dictionary))
+
+        # check that the dtype works as expected
+        matrix = SparseTermSimilarityMatrix(self.index, self.dictionary, dtype=numpy.float32).matrix.todense()
+        self.assertEqual(numpy.float32, matrix.dtype)
+
+        matrix = SparseTermSimilarityMatrix(self.index, self.dictionary, dtype=numpy.float64).matrix.todense()
+        self.assertEqual(numpy.float64, matrix.dtype)
+
+        # check that the nonzero_limit works as expected
+        matrix = SparseTermSimilarityMatrix(self.index, self.dictionary, nonzero_limit=100).matrix.todense()
+        self.assertGreaterEqual(101, numpy.max(numpy.sum(matrix != 0, axis=0)))
+
+        matrix = SparseTermSimilarityMatrix(self.index, self.dictionary, nonzero_limit=4).matrix.todense()
+        self.assertGreaterEqual(5, numpy.max(numpy.sum(matrix != 0, axis=0)))
+
+        matrix = SparseTermSimilarityMatrix(self.index, self.dictionary, nonzero_limit=1).matrix.todense()
+        self.assertGreaterEqual(2, numpy.max(numpy.sum(matrix != 0, axis=0)))
+
+        matrix = SparseTermSimilarityMatrix(self.index, self.dictionary, nonzero_limit=0).matrix.todense()
+        self.assertEqual(1, numpy.max(numpy.sum(matrix != 0, axis=0)))
+        self.assertTrue(numpy.all(matrix == numpy.eye(matrix.shape[0])))
+
+        # check that symmetric works as expected
+        matrix = SparseTermSimilarityMatrix(
+            self.index, self.dictionary, nonzero_limit=1).matrix.todense()
+        expected_matrix = numpy.array([
+            [1.0, 0.5, 0.0, 0.0, 0.0],
+            [0.5, 1.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 1.0]])
+        self.assertTrue(numpy.all(expected_matrix == matrix))
+
+        matrix = SparseTermSimilarityMatrix(
+            self.index, self.dictionary, nonzero_limit=1, symmetric=False).matrix.todense()
+        expected_matrix = numpy.array([
+            [1.0, 0.5, 0.5, 0.5, 0.5],
+            [0.0, 1.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 1.0]])
+        self.assertTrue(numpy.all(expected_matrix == matrix))
+
+        # check that tfidf works as expected
+        matrix = SparseTermSimilarityMatrix(
+            self.index, self.dictionary, nonzero_limit=1).matrix.todense()
+        expected_matrix = numpy.array([
+            [1.0, 0.5, 0.0, 0.0, 0.0],
+            [0.5, 1.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 1.0]])
+        self.assertTrue(numpy.all(expected_matrix == matrix))
+
+        matrix = SparseTermSimilarityMatrix(
+            self.index, self.dictionary, nonzero_limit=1, tfidf=self.tfidf).matrix.todense()
+        expected_matrix = numpy.array([
+            [1.0, 0.0, 0.0, 0.5, 0.0],
+            [0.0, 1.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0, 0.0],
+            [0.5, 0.0, 0.0, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 1.0]])
+        self.assertTrue(numpy.all(expected_matrix == matrix))
+
+    def test_encapsulation(self):
+        """Test the matrix encapsulation."""
+
+        # check that a sparse matrix will be converted to a CSC format
+        expected_matrix = numpy.array([
+            [1.0, 2.0, 3.0],
+            [0.0, 1.0, 4.0],
+            [0.0, 0.0, 1.0]])
+
+        matrix = SparseTermSimilarityMatrix(scipy.sparse.csc_matrix(expected_matrix)).matrix
+        self.assertTrue(isinstance(matrix, scipy.sparse.csc_matrix))
+        self.assertTrue(numpy.all(matrix.todense() == expected_matrix))
+
+        matrix = SparseTermSimilarityMatrix(scipy.sparse.csr_matrix(expected_matrix)).matrix
+        self.assertTrue(isinstance(matrix, scipy.sparse.csc_matrix))
+        self.assertTrue(numpy.all(matrix.todense() == expected_matrix))
+
+    def test_inner_product(self):
+        """Test the inner product."""
+
+        matrix = SparseTermSimilarityMatrix(
+            UniformTermSimilarityIndex(self.dictionary, term_similarity=0.5), self.dictionary)
+
+        # check zero vectors work as expected
+        vec1 = self.dictionary.doc2bow([u"government", u"government", u"denied"])
+        vec2 = self.dictionary.doc2bow([u"government", u"holiday"])
+
+        self.assertEqual(0.0, matrix.inner_product([], vec2))
+        self.assertEqual(0.0, matrix.inner_product(vec1, []))
+        self.assertEqual(0.0, matrix.inner_product([], []))
+
+        self.assertEqual(0.0, matrix.inner_product([], vec2, normalized=True))
+        self.assertEqual(0.0, matrix.inner_product(vec1, [], normalized=True))
+        self.assertEqual(0.0, matrix.inner_product([], [], normalized=True))
+
+        # check that real-world vectors work as expected
+        vec1 = self.dictionary.doc2bow([u"government", u"government", u"denied"])
+        vec2 = self.dictionary.doc2bow([u"government", u"holiday"])
+        expected_result = 0.0
+        expected_result += 2 * 1.0 * 1  # government * s_{ij} * government
+        expected_result += 2 * 0.5 * 1  # government * s_{ij} * holiday
+        expected_result += 1 * 0.5 * 1  # denied * s_{ij} * government
+        expected_result += 1 * 0.5 * 1  # denied * s_{ij} * holiday
+        result = matrix.inner_product(vec1, vec2)
+        self.assertAlmostEqual(expected_result, result, places=5)
+
+        vec1 = self.dictionary.doc2bow([u"government", u"government", u"denied"])
+        vec2 = self.dictionary.doc2bow([u"government", u"holiday"])
+        expected_result = matrix.inner_product(vec1, vec2)
+        expected_result /= math.sqrt(matrix.inner_product(vec1, vec1))
+        expected_result /= math.sqrt(matrix.inner_product(vec2, vec2))
+        result = matrix.inner_product(vec1, vec2, normalized=True)
+        self.assertAlmostEqual(expected_result, result, places=5)
+
+        # check that real-world corpora work as expected
+        vec1 = self.dictionary.doc2bow([u"government", u"government", u"denied"])
+        vec2 = self.dictionary.doc2bow([u"government", u"holiday"])
+        expected_result = 0.0
+        expected_result += 2 * 1.0 * 1  # government * s_{ij} * government
+        expected_result += 2 * 0.5 * 1  # government * s_{ij} * holiday
+        expected_result += 1 * 0.5 * 1  # denied * s_{ij} * government
+        expected_result += 1 * 0.5 * 1  # denied * s_{ij} * holiday
+        expected_result = numpy.full((3, 2), expected_result)
+        result = matrix.inner_product([vec1] * 3, [vec2] * 2)
+        self.assertTrue(isinstance(result, scipy.sparse.csr_matrix))
+        self.assertTrue(numpy.allclose(expected_result, result.todense()))
+
+        vec1 = self.dictionary.doc2bow([u"government", u"government", u"denied"])
+        vec2 = self.dictionary.doc2bow([u"government", u"holiday"])
+        expected_result = matrix.inner_product(vec1, vec2)
+        expected_result /= math.sqrt(matrix.inner_product(vec1, vec1))
+        expected_result /= math.sqrt(matrix.inner_product(vec2, vec2))
+        expected_result = numpy.full((3, 2), expected_result)
+        result = matrix.inner_product([vec1] * 3, [vec2] * 2, normalized=True)
+        self.assertTrue(isinstance(result, scipy.sparse.csr_matrix))
+        self.assertTrue(numpy.allclose(expected_result, result.todense()))
+
+
+class TestLevenshteinSimilarityIndex(unittest.TestCase):
+    def setUp(self):
+        self.documents = [[u"government", u"denied", u"holiday"], [u"holiday", u"slowing", u"hollingworth"]]
+        self.dictionary = Dictionary(self.documents)
+
+    def test_most_similar(self):
+        """Test most_similar returns expected results."""
+
+        index = LevenshteinSimilarityIndex(self.dictionary)
+        results = list(index.most_similar(u"holiday", topn=1))
+        self.assertLess(0, len(results))
+        self.assertGreaterEqual(1, len(results))
+        results = list(index.most_similar(u"holiday", topn=4))
+        self.assertLess(1, len(results))
+        self.assertGreaterEqual(4, len(results))
+
+        # check that the term itself is not returned
+        index = LevenshteinSimilarityIndex(self.dictionary)
+        terms = [term for term, similarity in index.most_similar(u"holiday", topn=len(self.dictionary))]
+        self.assertFalse(u"holiday" in terms)
+
+        # check that the threshold works as expected
+        index = LevenshteinSimilarityIndex(self.dictionary, threshold=0.0)
+        results = list(index.most_similar(u"holiday", topn=10))
+        self.assertLess(0, len(results))
+        self.assertGreaterEqual(10, len(results))
+
+        index = LevenshteinSimilarityIndex(self.dictionary, threshold=1.0)
+        results = list(index.most_similar(u"holiday", topn=10))
+        self.assertEqual(0, len(results))
+
+        # check that the alpha works as expected
+        index = LevenshteinSimilarityIndex(self.dictionary, alpha=1.0)
+        first_similarities = numpy.array([similarity for term, similarity in index.most_similar(u"holiday", topn=10)])
+        index = LevenshteinSimilarityIndex(self.dictionary, alpha=2.0)
+        second_similarities = numpy.array([similarity for term, similarity in index.most_similar(u"holiday", topn=10)])
+        self.assertTrue(numpy.allclose(2.0 * first_similarities, second_similarities))
+
+        # check that the beta works as expected
+        index = LevenshteinSimilarityIndex(self.dictionary, alpha=1.0, beta=1.0)
+        first_similarities = numpy.array([similarity for term, similarity in index.most_similar(u"holiday", topn=10)])
+        index = LevenshteinSimilarityIndex(self.dictionary, alpha=1.0, beta=2.0)
+        second_similarities = numpy.array([similarity for term, similarity in index.most_similar(u"holiday", topn=10)])
+        self.assertTrue(numpy.allclose(first_similarities ** 2.0, second_similarities))
+
+
+class TestLevenshtein(unittest.TestCase):
+    def test_similarity_matrix(self):
+        """Test similarity_matrix returns expected results."""
+
+        documents = [[u"government", u"denied", u"holiday"], [u"holiday", u"slowing", u"hollingworth"]]
+        dictionary = Dictionary(documents)
+
+        # checking symmetry
+        similarity_matrix = levenshtein.similarity_matrix(dictionary).todense()
+        self.assertTrue((similarity_matrix.T == similarity_matrix).all())
+
+        # checking the existence of ones on the main diagonal
+        self.assertTrue(
+            (numpy.diag(similarity_matrix) ==
+             numpy.ones(similarity_matrix.shape[0])).all())
+
+        # checking that thresholding works as expected
+        similarity_matrix = levenshtein.similarity_matrix(dictionary).todense()
+        self.assertEquals(0, numpy.sum(similarity_matrix == 0))
+
+        similarity_matrix = levenshtein.similarity_matrix(dictionary, threshold=0.1).todense()
+        self.assertEquals(20, numpy.sum(similarity_matrix == 0))
+
+        # checking that alpha and beta work as expected
+        distances = numpy.array([
+            [1, 7, 6, 11, 6],
+            [7, 1, 9, 9, 9],
+            [6, 9, 1, 8, 6],
+            [11, 9, 8, 1, 9],
+            [6, 9, 6, 9, 1]])
+        lengths = numpy.array([
+            [6, 10, 7, 12, 7],
+            [10, 10, 10, 12, 10],
+            [7, 10, 7, 12, 7],
+            [12, 12, 12, 12, 12],
+            [7, 10, 7, 12, 7]])
+        alpha = 1.2
+        beta = 3.4
+        expected_similarity_matrix = alpha * (1.0 - distances * 1.0 / lengths)**beta
+        numpy.fill_diagonal(expected_similarity_matrix, 1)
+        similarity_matrix = levenshtein.similarity_matrix(dictionary, alpha=alpha, beta=beta).todense()
+        self.assertTrue(numpy.allclose(expected_similarity_matrix, similarity_matrix))
+
+        # checking that nonzero_limit works as expected
+        similarity_matrix = levenshtein.similarity_matrix(dictionary).todense()
+        self.assertEquals(0, numpy.sum(similarity_matrix == 0))
+
+        zeros = numpy.array([
+            [0, 0, 0, 1, 1],
+            [0, 0, 1, 1, 1],
+            [0, 1, 0, 0, 1],
+            [1, 1, 0, 0, 0],
+            [1, 1, 1, 0, 0]])
+        similarity_matrix = levenshtein.similarity_matrix(dictionary, nonzero_limit=2).todense()
+        self.assertTrue(numpy.all(zeros == (similarity_matrix == 0)))
 
 
 if __name__ == '__main__':
