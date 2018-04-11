@@ -12,8 +12,15 @@ from heapq import heappush, heappop
 import logging
 from multiprocessing import Pool
 
-from Levenshtein import distance
 from numpy import float32 as REAL
+
+# If python-Levenshtein is available, import it.
+# If python-Levenshtein is unavailable, ImportError will be raised in levsim.
+try:
+    from Levenshtein import distance
+    LEVENSHTEIN_EXT = True
+except ImportError:
+    LEVENSHTEIN_EXT = False
 
 from gensim.similarities.termsim import TermSimilarityIndex, SparseTermSimilarityMatrix
 from gensim.utils import deprecated
@@ -51,6 +58,8 @@ def levsim(alpha, beta, t1, t2):
     Answering", 2017 <http://www.aclweb.org/anthology/S/S17/S17-2051.pdf>`__.
 
     """
+    if not LEVENSHTEIN_EXT:
+        raise ImportError("Please install python-Levenshtein Python package to compute the Levenshtein distance.")
     return alpha * (1 - distance(t1, t2) * 1.0 / max(len(t1), len(t2)))**beta
 
 
