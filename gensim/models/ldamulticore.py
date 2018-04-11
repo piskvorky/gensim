@@ -85,54 +85,79 @@ class LdaMulticore(LdaModel):
                  eta=None, decay=0.5, offset=1.0, eval_every=10, iterations=50,
                  gamma_threshold=0.001, random_state=None, minimum_probability=0.01,
                  minimum_phi_value=0.01, per_word_topics=False, dtype=np.float32):
-        """
-        If given, start training from the iterable `corpus` straight away. If not given,
-        the model is left untrained (presumably because you want to call `update()` manually).
+        """The constructor estimates Latent Dirichlet Allocation model parameters based on a training corpus.
 
-        `num_topics` is the number of requested latent topics to be extracted from
-        the training corpus.
+        Parameters
+        ----------
+        corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
+            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+            If not given, the model is left untrained (presumably because you want to call
+            :meth:`~gensim.models.ldamodel.LdaModel.update` manually).
+        num_topics : int, optional
+            The number of requested latent topics to be extracted from the training corpus.
+        id2word : dict of (int, str)
+            Mapping from word IDs to words. It is used to determine the vocabulary size, as well as for
+            debugging and topic printing.
+        workers : int, optional
+            Number of workers processes to be used for parallelization. If None all available cores
+            (as estimated by `workers=cpu_count()-1` will be used. **Note** however that for
+            hyper-threaded CPUs, this estimation returns a too high number -- set `workers`
+            directly to the number of your **real** cores (not hyperthreads) minus one, for optimal performance.
+        chunksize :  int, optional
+            Number of documents to be used in each training chunk.
+        passes : int, optional
+            Number of passes through the corpus during training.
+        update_every : int, optional
+            Number of documents to be iterated through for each update.
+            Set to 0 for batch learning, > 1 for online iterative learning.
+        alpha : {np.ndarray, str}, optional
+            Can be set to an 1D array of length equal to the number of expected topics that expresses
+            our a-priori belief for the each topics' probability.
+            Alternatively default prior selecting strategies can be employed by supplying a string:
 
-        `id2word` is a mapping from word ids (integers) to words (strings). It is
-        used to determine the vocabulary size, as well as for debugging and topic
-        printing.
+                * 'asymmetric': Uses a fixed normalized assymetric prior of `1.0 / topicno`.
+                * 'default': Learns an assymetric prior from the corpus.
+        eta : {float, np.array, str}, optional
+            A-priori belief on word probability, this can be:
 
-        `workers` is the number of extra processes to use for parallelization. Uses
-        all available cores by default: `workers=cpu_count()-1`. **Note**: for
-        hyper-threaded CPUs, `cpu_count()` returns a useless number -- set `workers`
-        directly to the number of your **real** cores (not hyperthreads) minus one,
-        for optimal performance.
+                * scalar for a symmetric prior over topic/word probability,
+                * vector of length num_words to denote an asymmetric user defined probability for each word,
+                * matrix of shape (num_topics, num_words) to assign a probability for each word-topic combination,
+                * the string 'auto' to learn the asymmetric prior from the data.
+        decay : float, optional
+            A number between (0.5, 1] to weight what percentage of the previous lambda value is forgotten
+            when each new document is examined. Corresponds to Kappa from
+            `Matthew D. Hoffman, David M. Blei, Francis Bach:
+            "Online Learning for Latent Dirichlet Allocation NIPS'10" <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
+        offset : float, optional
+            Hyper-parameter that controls how much we will slow down the first steps the first few iterations.
+            Corresponds to Tau_0 from `Matthew D. Hoffman, David M. Blei, Francis Bach:
+            "Online Learning for Latent Dirichlet Allocation NIPS'10" <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
+        eval_every : int, optional
+            Log perplexity is estimated every that many updates. Setting this to one slows down training by ~2x.
+        iterations : int, optional
+            Maximum number of iterations through the corpus when inferring the topic distribution of a corpus.
+        gamma_threshold : float, optional
+            Minimum change in the value of the gamma parameters to continue iterating.
+        minimum_probability : float, optional
+            Topics with a probability lower than this threshold will be filtered out.
+        random_state : {np.random.RandomState, int}, optional
+            Either a randomState object or a seed to generate one. Useful for reproducibility.
+        ns_conf : dict of (str, object), optional
+            Key word parameters propagated to :func:`~gensim.utils.getNS` to get a Pyro4 Nameserved.
+            Only used if `distributed` is set to True.
+        minimum_phi_value : float, optional
+            if `per_word_topics` is True, this represents a lower bound on the term probabilities.
+        per_word_topics : bool
+            If True, the model also computes a list of topics, sorted in descending order of most likely topics for
+            each word, along with their phi values multiplied by the feature length (i.e. word count).
+        callbacks : list of :class:`~gensim.models.callbacks.Callback`
+            Metric callbacks to log and visualize evaluation metrics of the model during training.
+        dtype : {numpy.float16, numpy.float32, numpy.float64}, optional
+            Data-type to use during calculations inside model. All inputs are also converted.
 
-        If `batch` is not set, perform online training by updating the model once
-        every `workers * chunksize` documents (online training). Otherwise,
-        run batch LDA, updating model only once at the end of each full corpus pass.
-
-        `alpha` and `eta` are hyperparameters that affect sparsity of the document-topic
-        (theta) and topic-word (lambda) distributions. Both default to a symmetric
-        1.0/num_topics prior.
-
-        `alpha` can be set to an explicit array = prior of your choice. It also
-        support special values of 'asymmetric' and 'auto': the former uses a fixed
-        normalized asymmetric 1.0/topicno prior, the latter learns an asymmetric
-        prior directly from your data.
-
-        `eta` can be a scalar for a symmetric prior over topic/word
-        distributions, or a matrix of shape num_topics x num_words,
-        which can be used to impose asymmetric priors over the word
-        distribution on a per-topic basis. This may be useful if you
-        want to seed certain topics with particular words by boosting
-        the priors for those words.
-
-        Calculate and log perplexity estimate from the latest mini-batch once every
-        `eval_every` documents. Set to `None` to disable perplexity estimation (faster),
-        or to `0` to only evaluate perplexity once, at the end of each corpus pass.
-
-        `decay` and `offset` parameters are the same as Kappa and Tau_0 in
-        Hoffman et al, respectively.
-
-        `random_state` can be a numpy.random.RandomState object or the seed for one
-
-        Example:
-
+        Examples
+        --------
         >>> lda = LdaMulticore(corpus, id2word=id2word, num_topics=100)  # train model
         >>> print(lda[doc_bow]) # get topic probability distribution for a document
         >>> lda.update(corpus2) # update the LDA model with additional documents
@@ -154,13 +179,15 @@ class LdaMulticore(LdaModel):
         )
 
     def update(self, corpus, chunks_as_numpy=False):
-        """
-        Train the model with new documents, by EM-iterating over `corpus` until
-        the topics converge (or until the maximum number of allowed iterations
-        is reached). `corpus` must be an iterable (repeatable stream of documents),
+        """Train the model with new documents, by EM-iterating over `corpus` until the topics converge
+        (or until the maximum number of allowed iterations is reached).
 
-        The E-step is distributed into the several processes.
+        Train the model with new documents, by EM-iterating over the corpus until the topics converge, or until
+        the maximum number of allowed iterations is reached. `corpus` must be an iterable. The E step is distributed
+        into the several processes.
 
+        Notes
+        -----
         This update also supports updating an already trained model (`self`)
         with new documents from `corpus`; the two models are then merged in
         proportion to the number of old vs. new documents. This feature is still
@@ -169,6 +196,16 @@ class LdaMulticore(LdaModel):
         For stationary input (no topic drift in new documents), on the other hand,
         this equals the online update of Hoffman et al. and is guaranteed to
         converge for any `decay` in (0.5, 1.0>.
+
+        Parameters
+        ----------
+        corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
+            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`) used to update the
+            model.
+        chunks_as_numpy : bool
+            Whether each chunk passed to the inference step should be a np.ndarray or not. Numpy can in some settings
+            turn the term IDs into floats, these will be converted back into integers in inference, which incurs a
+            performance hit. For distributed computing it may be desirable to keep the chunks as np.ndarrays.
 
         """
         try:
@@ -275,9 +312,15 @@ class LdaMulticore(LdaModel):
 
 
 def worker_e_step(input_queue, result_queue):
-    """
-    Perform E-step for each (chunk_no, chunk, model) 3-tuple from the
-    input queue, placing the resulting state into the result queue.
+    """Perform E-step for each job.
+
+    Parameters
+    ----------
+    input_queue : queue of (int, list of (int, float), :class:`~gensim.models.lda_worker.Worker`)
+        Each element is a job characterized by its ID, the corpus chunk to be processed in BOW format and the worker
+        responsible for processing it.
+    result_queue : queue of :class:`~gensim.models.ldamodel.LdaState`
+        After the worker finished the job, the state of the resulting (trained) worker model is appended to this queue.
 
     """
     logger.debug("worker process entering E-step loop")
