@@ -778,7 +778,7 @@ def cossim(vec1, vec2):
 
 @deprecated(
     "Function will be removed in 4.0.0, use " +
-    "gensim.models.term_similarity.SparseTermSimilarityMatrix.inner_product instead")
+    "gensim.similarities.termsim.SparseTermSimilarityMatrix.inner_product instead")
 def softcossim(vec1, vec2, similarity_matrix):
     """Get Soft Cosine Measure between two vectors given a term similarity matrix.
 
@@ -812,7 +812,7 @@ def softcossim(vec1, vec2, similarity_matrix):
     --------
     :meth:`gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similarity_matrix`
         A term similarity matrix produced from term embeddings.
-    :func:`gensim.models.levenshtein.similarity_matrix`
+    :func:`gensim.similarities.levenshtein.similarity_matrix`
         A term similarity matrix produced from Levenshtein distances.
     :class:`gensim.similarities.docsim.SoftCosineSimilarity`
         A class for performing corpus-based similarity queries with Soft Cosine Measure.

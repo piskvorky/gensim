@@ -6,7 +6,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-Automated tests for checking the gensim.models.levenshtein module.
+Automated tests for checking the gensim.similarities.levenshtein module.
 """
 
 import logging
@@ -15,7 +15,7 @@ import unittest
 import numpy as np
 
 from gensim.corpora import Dictionary
-from gensim.models import levenshtein, LevenshteinSimilarityIndex
+from gensim.similarities import levenshtein, LevenshteinSimilarityIndex
 from gensim.utils import deprecated
 
 logger = logging.getLogger(__name__)

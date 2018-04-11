@@ -84,7 +84,7 @@ from six.moves import xrange, zip
 from scipy import stats
 from gensim.utils import deprecated
 from gensim.models.utils_any2vec import _save_word2vec_format, _load_word2vec_format, _compute_ngrams, _ft_hash
-from gensim.models.term_similarity import TermSimilarityIndex, SparseTermSimilarityMatrix
+from gensim.similarities.termsim import TermSimilarityIndex, SparseTermSimilarityMatrix
 
 logger = logging.getLogger(__name__)
 
@@ -538,7 +538,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             The Soft Cosine Measure.
         :class:`gensim.similarities.docsim.SoftCosineSimilarity`
             A class for performing corpus-based similarity queries with Soft Cosine Measure.
-        :func:`gensim.models.levenshtein.similarity_matrix`
+        :func:`gensim.similarities.levenshtein.similarity_matrix`
             A term similarity matrix produced from Levenshtein distances.
 
 
@@ -1079,7 +1079,7 @@ class WordEmbeddingSimilarityIndex(TermSimilarityIndex):
 
     See Also
     --------
-    :class:`~gensim.models.term_similarity.SparseTermSimilarityMatrix`
+    :class:`~gensim.similarities.termsim.SparseTermSimilarityMatrix`
         Build a term similarity matrix and compute the Soft Cosine Measure.
 
     """

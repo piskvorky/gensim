@@ -27,7 +27,7 @@ class TermSimilarityIndex(SaveLoad):
 
     See Also
     --------
-    :class:`~gensim.models.term_similarity.SparseTermSimilarityMatrix`
+    :class:`~gensim.similarities.termsim.SparseTermSimilarityMatrix`
         Build a term similarity matrix and compute the Soft Cosine Measure.
 
     """
@@ -67,7 +67,7 @@ class UniformTermSimilarityIndex(TermSimilarityIndex):
 
     See Also
     --------
-    :class:`~gensim.models.term_similarity.SparseTermSimilarityMatrix`
+    :class:`~gensim.similarities.termsim.SparseTermSimilarityMatrix`
         Build a term similarity matrix and compute the Soft Cosine Measure.
 
     Notes
@@ -93,7 +93,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
 
     Parameters
     ----------
-    source : :class:`~gensim.models.term_similarity.TermSimilarityIndex` or :class:`scipy.sparse.spmatrix`
+    source : :class:`~gensim.similarities.termsim.TermSimilarityIndex` or :class:`scipy.sparse.spmatrix`
         The source of the term similarity. Either a term similarity index that will be used for
         building the term similarity matrix, or an existing sparse term similarity matrix that will
         be encapsulated and stored in the matrix attribute.

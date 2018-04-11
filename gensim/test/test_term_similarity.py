@@ -6,7 +6,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-Automated tests for checking the gensim.models.term_similarity module.
+Automated tests for checking the gensim.similarities.termsim module.
 """
 
 import logging
@@ -14,7 +14,8 @@ from math import sqrt
 import unittest
 
 from gensim.corpora import Dictionary
-from gensim.models import UniformTermSimilarityIndex, SparseTermSimilarityMatrix, TfidfModel
+from gensim.models import TfidfModel
+from gensim.similarities import UniformTermSimilarityIndex, SparseTermSimilarityMatrix
 
 import numpy as np
 from scipy.sparse import csc_matrix, csr_matrix

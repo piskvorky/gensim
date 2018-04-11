@@ -15,7 +15,7 @@ from multiprocessing import Pool
 from Levenshtein import distance
 from numpy import float32 as REAL
 
-from gensim.models.term_similarity import TermSimilarityIndex, SparseTermSimilarityMatrix
+from gensim.similarities.termsim import TermSimilarityIndex, SparseTermSimilarityMatrix
 from gensim.utils import deprecated
 
 logger = logging.getLogger(__name__)
@@ -80,9 +80,9 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
 
     See Also
     --------
-    :func:`gensim.models.levenshtein.levsim`
+    :func:`gensim.similarities.levenshtein.levsim`
         The Levenshtein similarity.
-    :class:`~gensim.models.term_similarity.SparseTermSimilarityMatrix`
+    :class:`~gensim.similarities.termsim.SparseTermSimilarityMatrix`
         Build a term similarity matrix and compute the Soft Cosine Measure.
 
     """
@@ -120,7 +120,7 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
 
 @deprecated(
     "Function will be deprecated in 4.0.0, use " +
-    "gensim.models.levenshtein.LevenshteinSimilarityIndex instead")
+    "gensim.similarities.levenshtein.LevenshteinSimilarityIndex instead")
 def similarity_matrix(dictionary, tfidf=None, threshold=0.0, alpha=1.8, beta=5.0,
                       nonzero_limit=100, workers=1, dtype=REAL):
     """Constructs a term similarity matrix for computing Soft Cosine Measure.

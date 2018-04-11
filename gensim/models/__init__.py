@@ -21,10 +21,7 @@ from .atmodel import AuthorTopicModel  # noqa:F401
 from .ldaseqmodel import LdaSeqModel  # noqa:F401
 from .fasttext import FastText  # noqa:F401
 from .translation_matrix import TranslationMatrix, BackMappingTranslationMatrix  # noqa:F401
-from .term_similarity import TermSimilarityIndex, UniformTermSimilarityIndex, SparseTermSimilarityMatrix  # noqa:F401
-from .levenshtein import LevenshteinSimilarityIndex  # noqa:F401
 
-from . import levenshtein  # noqa:F401
 from . import wrappers  # noqa:F401
 from . import deprecated  # noqa:F401
 
