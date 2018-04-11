@@ -46,8 +46,8 @@ class TermSimilarityIndex(SaveLoad):
         Returns
         -------
         iterable of (str, float)
-            Most similar terms along with their similarities to `term`. Only terms distinct `term`
-            must be returned.
+            Most similar terms along with their similarities to `term`. Only terms distinct from
+            `term` must be returned.
 
         """
         raise NotImplementedError
