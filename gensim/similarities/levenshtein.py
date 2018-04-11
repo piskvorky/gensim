@@ -128,7 +128,7 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
 
 
 @deprecated(
-    "Function will be deprecated in 4.0.0, use " +
+    "Function will be deprecated in 4.0.0, use "
     "gensim.similarities.levenshtein.LevenshteinSimilarityIndex instead")
 def similarity_matrix(dictionary, tfidf=None, threshold=0.0, alpha=1.8, beta=5.0,
                       nonzero_limit=100, workers=1, dtype=REAL):

@@ -777,7 +777,7 @@ def cossim(vec1, vec2):
 
 
 @deprecated(
-    "Function will be removed in 4.0.0, use " +
+    "Function will be removed in 4.0.0, use "
     "gensim.similarities.termsim.SparseTermSimilarityMatrix.inner_product instead")
 def softcossim(vec1, vec2, similarity_matrix):
     """Get Soft Cosine Measure between two vectors given a term similarity matrix.

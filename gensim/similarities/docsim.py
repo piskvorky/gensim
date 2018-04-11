@@ -874,7 +874,7 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
 
     """
     @deprecated(
-        "Method will be removed in 4.0.0, use " +
+        "Method will be removed in 4.0.0, use "
         "gensim.similarities.termsim.SparseTermSimilarityMatrix.inner_product instead")
     def __init__(self, corpus, similarity_matrix, num_best=None, chunksize=256):
         """
@@ -915,13 +915,13 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
         self.index = numpy.arange(len(corpus))
 
     @deprecated(
-        "Method will be removed in 4.0.0, use " +
+        "Method will be removed in 4.0.0, use "
         "gensim.similarities.termsim.SparseTermSimilarityMatrix.inner_product instead")
     def __len__(self):
         return len(self.corpus)
 
     @deprecated(
-        "Method will be removed in 4.0.0, use " +
+        "Method will be removed in 4.0.0, use "
         "gensim.similarities.termsim.SparseTermSimilarityMatrix.inner_product instead")
     def get_similarities(self, query):
         """Get similarity between `query` and current index instance.
@@ -968,7 +968,7 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
         return result
 
     @deprecated(
-        "Method will be removed in 4.0.0, use " +
+        "Method will be removed in 4.0.0, use "
         "gensim.similarities.termsim.SparseTermSimilarityMatrix.inner_product instead")
     def __str__(self):
         return "%s<%i docs, %i features>" % (self.__class__.__name__, len(self), self.similarity_matrix.shape[0])

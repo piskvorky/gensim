@@ -500,7 +500,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         return self.most_similar(positive=[vector], topn=topn, restrict_vocab=restrict_vocab)
 
     @deprecated(
-        "Method will be removed in 4.0.0, use " +
+        "Method will be removed in 4.0.0, use "
         "gensim.models.keyedvectors.WordEmbeddingSimilarityIndex instead")
     def similarity_matrix(self, dictionary, tfidf=None, threshold=0.0, exponent=2.0, nonzero_limit=100, dtype=REAL):
         """Constructs a term similarity matrix for computing Soft Cosine Measure.
