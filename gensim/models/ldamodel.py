@@ -1232,22 +1232,33 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def get_document_topics(self, bow, minimum_probability=None, minimum_phi_value=None,
                             per_word_topics=False):
-        """
-        Args:
-            bow (list): Bag-of-words representation of the document to get topics for.
-            minimum_probability (float): Ignore topics with probability below this value
-                (None by default). If set to None, a value of 1e-8 is used to prevent 0s.
-            per_word_topics (bool): If True, also returns a list of topics, sorted in
-                descending order of most likely topics for that word. It also returns a list
-                of word_ids and each words corresponding topics' phi_values, multiplied by
-                feature length (i.e, word count).
-            minimum_phi_value (float): if `per_word_topics` is True, this represents a lower
-                bound on the term probabilities that are included (None by default). If set
-                to None, a value of 1e-8 is used to prevent 0s.
+        """Get the topic distribution for the given document.
 
-        Returns:
-            topic distribution for the given document `bow`, as a list of
-            `(topic_id, topic_probability)` 2-tuples.
+        Parameters
+        ----------
+        bow : corpus : list of (int, float)
+            The document in BOW format.
+        minimum_probability : float
+            Topics with an assigned probability lower than this threshold will be discarded.
+        minimum_phi_value : float
+            f `per_word_topics` is True, this represents a lower bound on the term probabilities that are included.
+             If set to None, a value of 1e-8 is used to prevent 0s.
+        per_word_topics : bool
+            If True, this function will also return two extra lists as explained in the "Returns" section.
+
+        Returns
+        -------
+        list of (int, float)
+            Topic distribution for the whole document. Each element in the list is a pair of a topic's id, and
+            the probability that was assigned to it.
+        list of (int, list of (int, float), optional
+            Most probable topics per word. Each element in the list is a pair of a word's id, and a list of
+            topics sorted by their relevance to this word. Only returned if `per_word_topics` was set to True.
+        list of (int, list of float), optional
+            Phi relevance values, multipled by the feature length, for each word-topic combination.
+            Each element in the list is a pair of a word's id and a list of the phi values between this word and
+            each topic. Only returned if `per_word_topics` was set to True.
+
         """
         if minimum_probability is None:
             minimum_probability = self.minimum_probability
@@ -1301,14 +1312,21 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return document_topics, word_topic, word_phi  # returns 2-tuple
 
     def get_term_topics(self, word_id, minimum_probability=None):
-        """
-        Args:
-            word_id (int): ID of the word to get topic probabilities for.
-            minimum_probability (float): Only include topic probabilities above this
-                value (None by default). If set to None, use 1e-8 to prevent including 0s.
-        Returns:
-            list: The most likely topics for the given word. Each topic is represented
-            as a tuple of `(topic_id, term_probability)`.
+        """Get the most relevant topics to the given word.
+
+        Parameters
+        ----------
+        word_id : int
+            The word for which the topic distribution will be computed.
+        minimum_probability : float
+            Topics with an assigned probability below this threshold will be discarded.
+
+        Returns
+        -------
+        list of (int, float)
+            The relevant topics represented as pairs of their ID and their assigned probability, sorted
+            by relevance to the given word.
+
         """
         if minimum_probability is None:
             minimum_probability = self.minimum_probability
@@ -1327,34 +1345,45 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def diff(self, other, distance="kullback_leibler", num_words=100,
              n_ann_terms=10, diagonal=False, annotation=True, normed=True):
-        """
-        Calculate difference topic2topic between two Lda models
-        `other` instances of `LdaMulticore` or `LdaModel`
-        `distance` is function that will be applied to calculate difference between any topic pair.
-        Available values: `kullback_leibler`, `hellinger`, `jaccard` and `jensen_shannon`
-        `num_words` is quantity of most relevant words that used if distance == `jaccard` (also used for annotation)
-        `n_ann_terms` is max quantity of words in intersection/symmetric difference between topics (used for annotation)
-        `diagonal` set to True if the difference is required only between the identical topic no.s
-        (returns diagonal of diff matrix)
-        `annotation` whether the intersection or difference of words between two topics should be returned
-        Returns a matrix Z with shape (m1.num_topics, m2.num_topics),
-        where Z[i][j] - difference between topic_i and topic_j
-        and matrix annotation (if True) with shape (m1.num_topics, m2.num_topics, 2, None),
-        where::
+        """Calculate the difference in topic distributions extracted between two trained models (one of them is `self`).
 
-            annotation[i][j] = [[`int_1`, `int_2`, ...], [`diff_1`, `diff_2`, ...]] and
-            `int_k` is word from intersection of `topic_i` and `topic_j` and
-            `diff_l` is word from symmetric difference of `topic_i` and `topic_j`
-            `normed` is a flag. If `true`, matrix Z will be normalized
 
-        Example:
+        Notes
+        -----
+        The difference calculation does not take into account the underlying `dtype`s used in the models.
 
+        Parameters
+        ----------
+        other : :class:`~gensim.models.ldamodel.LdaModel`
+            The model which will be compared against the current object.
+        distance : {'kullback_leibler', 'hellinger', 'jaccard', 'jensen_shannon'}
+            The distance metric to calculate the difference with.
+        num_words : int, optional
+            The number of most relevant words used if `distance == 'jaccard'`. Also used for annotating topics.
+        n_ann_terms : int, optional
+            Max number of words in intersection/symmetric difference between topics. Used for annotation.
+        diagonal : bool, optional
+            Whether we need the difference between identical topics (the diagonal of the difference matrix).
+        annotation : bool, optional
+            Whether the intersection or difference of words between two topics should be returned.
+        normed : bool, optional
+            Whether the matrix should be normalized or not.
+
+        Returns
+        -------
+        np.ndarray of shape (`self.num_topics`, `other.num_topics`)
+            A difference matrix . Each element corresponds to the difference between the two topics.
+        np.ndarray of shape (`self.num_topics`, `other_model.num_topics`, 2), optional
+            Annotation matrix where for each pair we include the word from the intersection of the two topics,
+            and the word from the symmetric difference of the two topics. Only included if `annotation == True`.
+
+        Examples
+        --------
         >>> m1, m2 = LdaMulticore.load(path_1), LdaMulticore.load(path_2)
         >>> mdiff, annotation = m1.diff(m2)
         >>> print(mdiff) # get matrix with difference for each topic pair from `m1` and `m2`
         >>> print(annotation) # get array with positive/negative words for each topic pair from `m1` and `m2`
 
-        Note: this ignores difference in model dtypes
         """
 
         distances = {
@@ -1421,34 +1450,38 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return z, annotation_terms
 
     def __getitem__(self, bow, eps=None):
-        """
-        Args:
-            bow (list): Bag-of-words representation of a document.
-            eps (float): Ignore topics with probability below `eps`.
+        """Get the topic distribution for the given document.
 
-        Returns:
-            topic distribution for the given document `bow`, as a list of
-            `(topic_id, topic_probability)` 2-tuples.
+        Wraps :meth:`~gensim.models.ldamodel.LdaModel.get_document_topics` to support an operator style call.
+        Uses the model's current state (set using constructor arguments) for the additional arguments of the
+        wrapper method.
+
+        Parameters
+        ---------
+        bow : corpus : list of (int, float)
+            The document in BOW format.
+        eps : float
+            Topics with an assigned probability lower than this threshold will be discarded.
+
+        Returns
+        -------
+        list of (int, float)
+            Topic distribution for the given document. Each topic is represented as a pair of its ID and the probability
+            assigned to it.
+
         """
         return self.get_document_topics(bow, eps, self.minimum_phi_value, self.per_word_topics)
 
     def save(self, fname, ignore=('state', 'dispatcher'), separately=None, *args, **kwargs):
-        """
-        Save the model to file.
+        """Save the model to file.
 
         Large internal arrays may be stored into separate files, with `fname` as prefix.
 
-        `separately` can be used to define which arrays should be stored in separate files.
+        Notes
+        -----
+        Do not save as a compressed file if you intend to load the file back with `mmap`.
 
-        `ignore` parameter can be used to define which variables should be ignored, i.e. left
-        out from the pickled lda model. By default the internal `state` is ignored as it uses
-        its own serialisation not the one provided by `LdaModel`. The `state` and `dispatcher`
-        will be added to any ignore parameter defined.
-
-
-        Note: do not save as a compressed file if you intend to load the file back with `mmap`.
-
-        Note: If you intend to use models across Python 2/3 versions there are a few things to
+        If you intend to use models across Python 2/3 versions there are a few things to
         keep in mind:
 
           1. The pickled Python dictionaries will not work across Python versions
@@ -1456,8 +1489,30 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
              those ones that exceed `sep_limit` set in `gensim.utils.SaveLoad.save`. The main
              concern here is the `alpha` array if for instance using `alpha='auto'`.
 
-        Please refer to the wiki recipes section (goo.gl/qoje24)
-        for an example on how to work around these issues.
+        Please refer to the wiki recipes section (goo.gl/qoje24) for an example on how to work around these issues.
+
+        See Also
+        --------
+        :meth:`~gensim.models.ldamodel.LdaModel.load`
+
+        Parameters
+        ----------
+        fname : str
+            Path to the system file where the model will be persisted.
+        ignore : tuple of str, optional
+            The named attributes in the tuple will be left out of the pickled model. The reason why
+            the internal `state` is ignored by default is that it uses its own serialisation rather than the one
+            provided by this method.
+        separately : {list of str, None}, optional
+            If None -  automatically detect large numpy/scipy.sparse arrays in the object being stored, and store
+            them into separate files. This avoids pickle memory errors and allows `mmap`'ing large arrays
+            back on load efficiently. If list of str - this attributes will be stored in separate files,
+            the automatic check is not performed in this case.
+        *args
+            Positional arguments propagated to :meth:`~gensim.utils.SaveLoad.save`.
+        **kwargs
+            Key word arguments propagated to :meth:`~gensim.utils.SaveLoad.save`.
+
         """
         if self.state is not None:
             self.state.save(utils.smart_extension(fname, '.state'), *args, **kwargs)
@@ -1498,12 +1553,26 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     @classmethod
     def load(cls, fname, *args, **kwargs):
-        """
-        Load a previously saved object from file (also see `save`).
+        """Load a previously saved object from file.
 
-        Large arrays can be memmap'ed back as read-only (shared memory) by setting `mmap='r'`:
+        See Also
+        --------
+        :meth:`~gensim.models.ldamodel.LdaModel.save`
 
-            >>> LdaModel.load(fname, mmap='r')
+        Parameters
+        ----------
+        fname : str
+            Path to the file where the model is stored.
+        *args
+            Positional arguments propagated to :meth:`~gensim.utils.SaveLoad.load`.
+        **kwargs
+            Key word arguments propagated to :meth:`~gensim.utils.SaveLoad.load`.
+
+        Examples
+        --------
+        #. Large arrays can be memmap'ed back as read-only (shared memory) by setting `mmap='r'`:
+
+        >>> LdaModel.load(fname, mmap='r')
 
         """
         kwargs['mmap'] = kwargs.get('mmap', None)
