@@ -87,6 +87,16 @@ class UniformTermSimilarityIndex(TermSimilarityIndex):
                 yield (t2, self.term_similarity)
 
 
+def _shortest_uint_dtype(max_value):
+    if max_value < 2**8:
+        return np.uint8
+    elif max_value < 2**16:
+        return np.uint16
+    elif max_value < 2**32:
+        return np.uint32
+    return np.uint64
+
+
 class SparseTermSimilarityMatrix(SaveLoad):
     """
     Builds a sparse term similarity matrix using a term similarity index.
@@ -143,7 +153,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
                 term_index for term_index, _
                 in sorted(tfidf.idfs.items(), key=lambda x: (x[1], -x[0]), reverse=True)]
 
-        matrix_nonzero = [1] * matrix_order
+        matrix_nonzero = np.array([1] * matrix_order, dtype=_shortest_uint_dtype(nonzero_limit))
         matrix = sparse.identity(matrix_order, dtype=dtype, format="dok")
 
         for column_number, t1_index in enumerate(columns):
@@ -168,7 +178,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
                     logger.debug('an out-of-dictionary term "%s"', t2)
                     continue
                 t2_index = dictionary.token2id[t2]
-                if (not symmetric or matrix_nonzero[t2_index] <= nonzero_limit):
+                if not symmetric or matrix_nonzero[t2_index] <= nonzero_limit:
                     if not (t1_index, t2_index) in matrix:
                         matrix[t1_index, t2_index] = similarity
                         matrix_nonzero[t1_index] += 1
