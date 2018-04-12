@@ -169,7 +169,7 @@ class UnitvecTestCase(unittest.TestCase):
         unit_vector = matutils.unitvec(input_vector)
         man_unit_vector = manual_unitvec(input_vector)
         self.assertTrue(np.allclose(unit_vector.data, man_unit_vector.data, atol=1e-3))
-        self.assertEqual(input_vector.dtype, unit_vector.dtype)    	
+        self.assertEqual(input_vector.dtype, unit_vector.dtype)
 
     def test_sparse_npint32(self):
         input_vector = sparse.csr_matrix(np.asarray([[1, 0, 0, 0, 3], [0, 0, 4, 3, 0]])).astype(np.int32)
