@@ -142,41 +142,104 @@ class TestLdaModelInner(unittest.TestCase):
                 self.assertTrue(np.allclose(known_good, test_values), msg)
 
 
+def manual_unitvec(vec):
+    # manual unit vector calculation for UnitvecTestCase
+    vec = vec.astype(np.float)
+    if sparse.issparse(vec):
+        vec_sum_of_squares = vec.multiply(vec)
+        unit = 1. / np.sqrt(vec_sum_of_squares.sum())
+        return vec.multiply(unit)
+    elif not sparse.issparse(vec):
+        sum_vec_squared = np.sum(vec ** 2)
+        vec /= np.sqrt(sum_vec_squared)
+        return vec
+
+
 class UnitvecTestCase(unittest.TestCase):
     # test unitvec
-    def manual_unitvec(self, vec):
-        self.vec = vec
-        self.vec = self.vec.astype(np.float)
-        if sparse.issparse(self.vec):
-            vec_sum_of_squares = self.vec.multiply(self.vec)
-            unit = 1. / np.sqrt(vec_sum_of_squares.sum())
-            return self.vec.multiply(unit)
-        elif not sparse.issparse(self.vec):
-            sum_vec_squared = np.sum(self.vec ** 2)
-            self.vec /= np.sqrt(sum_vec_squared)
-            return self.vec
+    def test_sparse_npfloat32(self):
+        input_vector = sparse.csr_matrix(np.asarray([[1, 0, 0, 0, 3], [0, 0, 4, 3, 0]])).astype(np.float32)
+        unit_vector = unitvec_with_bug.unitvec(input_vector)
+        man_unit_vector = manual_unitvec(input_vector)
+        self.assertTrue(np.allclose(unit_vector.data, man_unit_vector.data, atol=1e-3))
+        self.assertEqual(input_vector.dtype, unit_vector.dtype)
 
-    def test_inputs(self):
-        input_dtypes = [np.float32, np.float64, np.int32, np.int64, float, int]
-        input_arrtypes = ['sparse', 'dense']
-        for dtype_ in input_dtypes:
-            for arrtype in input_arrtypes:
-                if np.issubdtype(dtype_, float) and arrtype == 'dense':
-                    input_vector = np.random.uniform(size=(5,)).astype(dtype_)
-                elif np.issubdtype(dtype_, int) and arrtype == 'dense':
-                    input_vector = np.random.randint(10, size=5).astype(dtype_)
-                else:
-                    input_vector = sparse.csr_matrix(np.asarray([[1, 0, 0, 0, 3], [0, 0, 4, 3, 0]])).astype(dtype_)
-                unit_vector = matutils.unitvec(input_vector)
-                man_unit_vector = self.manual_unitvec(input_vector)
-                if arrtype == 'dense':
-                    self.assertTrue(np.allclose(unit_vector, man_unit_vector))
-                elif arrtype == 'sparse':
-                    self.assertTrue(np.allclose(unit_vector.data, man_unit_vector.data, atol=1e-3))
-                if np.issubdtype(dtype_, float):
-                    self.assertEqual(input_vector.dtype, unit_vector.dtype)
-                elif np.issubdtype(dtype_, int):
-                    self.assertTrue(np.issubdtype(unit_vector.dtype, float))
+    def test_sparse_npfloat64(self):
+        input_vector = sparse.csr_matrix(np.asarray([[1, 0, 0, 0, 3], [0, 0, 4, 3, 0]])).astype(np.float64)
+        unit_vector = unitvec_with_bug.unitvec(input_vector)
+        man_unit_vector = manual_unitvec(input_vector)
+        self.assertTrue(np.allclose(unit_vector.data, man_unit_vector.data, atol=1e-3))
+        self.assertEqual(input_vector.dtype, unit_vector.dtype)    	
+
+    def test_sparse_npint32(self):
+        input_vector = sparse.csr_matrix(np.asarray([[1, 0, 0, 0, 3], [0, 0, 4, 3, 0]])).astype(np.int32)
+        unit_vector = unitvec_with_bug.unitvec(input_vector)
+        man_unit_vector = manual_unitvec(input_vector)
+        self.assertTrue(np.allclose(unit_vector.data, man_unit_vector.data, atol=1e-3))
+        self.assertTrue(np.issubdtype(unit_vector.dtype, float))
+
+    def test_sparse_npint64(self):
+        input_vector = sparse.csr_matrix(np.asarray([[1, 0, 0, 0, 3], [0, 0, 4, 3, 0]])).astype(np.int64)
+        unit_vector = unitvec_with_bug.unitvec(input_vector)
+        man_unit_vector = manual_unitvec(input_vector)
+        self.assertTrue(np.allclose(unit_vector.data, man_unit_vector.data, atol=1e-3))
+        self.assertTrue(np.issubdtype(unit_vector.dtype, float))
+
+    def test_dense_npfloat32(self):
+        input_vector = np.random.uniform(size=(5,)).astype(np.float32)
+        unit_vector = unitvec_with_bug.unitvec(input_vector)
+        man_unit_vector = manual_unitvec(input_vector)
+        self.assertTrue(np.allclose(unit_vector, man_unit_vector))
+        self.assertEqual(input_vector.dtype, unit_vector.dtype)
+
+    def test_dense_npfloat64(self):
+        input_vector = np.random.uniform(size=(5,)).astype(np.float64)
+        unit_vector = unitvec_with_bug.unitvec(input_vector)
+        man_unit_vector = manual_unitvec(input_vector)
+        self.assertTrue(np.allclose(unit_vector, man_unit_vector))
+        self.assertEqual(input_vector.dtype, unit_vector.dtype)
+
+    def test_dense_npint32(self):
+        input_vector = np.random.randint(10, size=5).astype(np.int32)
+        unit_vector = unitvec_with_bug.unitvec(input_vector)
+        man_unit_vector = manual_unitvec(input_vector)
+        self.assertTrue(np.allclose(unit_vector, man_unit_vector))
+        self.assertTrue(np.issubdtype(unit_vector.dtype, float))
+
+    def test_dense_npint64(self):
+        input_vector = np.random.randint(10, size=5).astype(np.int32)
+        unit_vector = unitvec_with_bug.unitvec(input_vector)
+        man_unit_vector = manual_unitvec(input_vector)
+        self.assertTrue(np.allclose(unit_vector, man_unit_vector))
+        self.assertTrue(np.issubdtype(unit_vector.dtype, float))
+
+    def test_sparse_python_float(self):
+        input_vector = sparse.csr_matrix(np.asarray([[1, 0, 0, 0, 3], [0, 0, 4, 3, 0]])).astype(float)
+        unit_vector = unitvec_with_bug.unitvec(input_vector)
+        man_unit_vector = manual_unitvec(input_vector)
+        self.assertTrue(np.allclose(unit_vector.data, man_unit_vector.data, atol=1e-3))
+        self.assertEqual(input_vector.dtype, unit_vector.dtype)
+
+    def test_sparse_python_int(self):
+        input_vector = sparse.csr_matrix(np.asarray([[1, 0, 0, 0, 3], [0, 0, 4, 3, 0]])).astype(int)
+        unit_vector = unitvec_with_bug.unitvec(input_vector)
+        man_unit_vector = manual_unitvec(input_vector)
+        self.assertTrue(np.allclose(unit_vector.data, man_unit_vector.data, atol=1e-3))
+        self.assertTrue(np.issubdtype(unit_vector.dtype, float))
+
+    def test_dense_python_float(self):
+        input_vector = np.random.uniform(size=(5,)).astype(float)
+        unit_vector = unitvec_with_bug.unitvec(input_vector)
+        man_unit_vector = manual_unitvec(input_vector)
+        self.assertTrue(np.allclose(unit_vector, man_unit_vector))
+        self.assertEqual(input_vector.dtype, unit_vector.dtype)
+
+    def test_dense_python_int(self):
+        input_vector = np.random.randint(10, size=5).astype(int)
+        unit_vector = unitvec_with_bug.unitvec(input_vector)
+        man_unit_vector = manual_unitvec(input_vector)
+        self.assertTrue(np.allclose(unit_vector, man_unit_vector))
+        self.assertTrue(np.issubdtype(unit_vector.dtype, float))
 
 
 if __name__ == '__main__':
