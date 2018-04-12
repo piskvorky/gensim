@@ -1148,7 +1148,7 @@ def chunkize_serial(iterable, chunksize, as_numpy=False,dtype=np.float32):
         if as_numpy:
             # convert each document to a 2d numpy array (~6x faster when transmitting
             # chunk data over the wire, in Pyro)
-            wrapped_chunk = [[np.asarray(doc,dtype=dtype) for doc in itertools.islice(it, int(chunksize))]]
+            wrapped_chunk = [[np.asarray(doc, dtype=dtype) for doc in itertools.islice(it, int(chunksize))]]
         else:
             wrapped_chunk = [list(itertools.islice(it, int(chunksize)))]
         if not wrapped_chunk[0]:
