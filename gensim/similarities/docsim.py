@@ -6,7 +6,7 @@
 
 """Computing similarities across a collection of documents in the Vector Space Model.
 
-The main class is :class:`~gensim.similarity.docsim.Similarity`, which builds an index for a given set of documents.
+The main class is :class:`~gensim.similarities.docsim.Similarity`, which builds an index for a given set of documents.
 Once the index is built, you can perform efficient queries like "Tell me how similar is this query document to each
 document in the index?". The result is a vector of numbers as large as the size of the initial set of documents,
 that is, one float for each index document. Alternatively, you can also request only the top-N most
@@ -15,13 +15,16 @@ similar index documents to the query.
 
 How It Works
 ------------
-The :class:`~gensim.similarity.docsim.Similarity` class splits the index into several smaller sub-indexes ("shards"),
+The :class:`~gensim.similarities.docsim.Similarity` class splits the index into several smaller sub-indexes ("shards"),
 which are disk-based. If your entire index fits in memory (~hundreds of thousands documents for 1GB of RAM),
-you can also use the :class:`~gensim.similarity.docsim.MatrixSimilarity`
-or :class:`~gensim.similarity.docsim.SparseMatrixSimilarity` classes directly.
+you can also use the :class:`~gensim.similarities.docsim.MatrixSimilarity`
+or :class:`~gensim.similarities.docsim.SparseMatrixSimilarity` classes directly.
 These are more simple but do not scale as well (they keep the entire index in RAM, no sharding).
 
 Once the index has been initialized, you can query for document similarity simply by:
+
+Example 1
+---------
 >>> from gensim.test.utils import common_corpus, common_dictionary, get_tmpfile
 >>>
 >>> index_tmpfile = get_tmpfile("index")
@@ -32,6 +35,8 @@ Once the index has been initialized, you can query for document similarity simpl
 
 If you have more query documents, you can submit them all at once, in a batch:
 
+Example 2
+---------
 >>> from gensim.test.utils import common_corpus, common_dictionary, get_tmpfile
 >>>
 >>> index_tmpfile = get_tmpfile("index")
@@ -171,7 +176,6 @@ class Shard(utils.SaveLoad):
         The vector is of the same type as the underlying index (ie., dense for
         :class:`~gensim.similarities.docsim.MatrixSimilarity`
         and scipy.sparse for :class:`~gensim.similarities.docsim.SparseMatrixSimilarity`.
-        TODO: Can dense be scipy.sparse?
 
         """
         assert 0 <= pos < len(self), "requested position out of range"
