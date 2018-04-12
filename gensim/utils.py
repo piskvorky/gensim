@@ -1119,7 +1119,7 @@ def decode_htmlentities(text):
     return RE_HTML_ENTITY.sub(substitute_entity, text)
 
 
-def chunkize_serial(iterable, chunksize, as_numpy=False,dtype=np.float32):
+def chunkize_serial(iterable, chunksize, as_numpy=False, dtype=np.float32):
     """Give elements from the iterable in `chunksize`-ed lists.
     The last returned element may be smaller (if length of collection is not divisible by `chunksize`).
 
