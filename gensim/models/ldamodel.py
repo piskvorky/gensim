@@ -98,7 +98,7 @@ def update_dir_prior(prior, N, logphat, rho):
 
 
 class LdaState(utils.SaveLoad):
-    """Encapsulate information for distributed computation of LdaModel objects.
+    """Encapsulate information for distributed computation of :class:`~gensim.models.ldamodel.LdaModel` objects.
 
     Objects of this class are sent over the network, so try to keep them lean to
     reduce traffic.
@@ -106,7 +106,7 @@ class LdaState(utils.SaveLoad):
     """
 
     def __init__(self, eta, shape, dtype=np.float32):
-        """Initialize the state.
+        """
 
         Parameters
         ----------

@@ -1,3 +1,57 @@
+"""Callbacks can be used to observe the training process.
+
+Since training in huge corpuses can be a very time consuming process, we want to offer the users some insight
+into the process, in real time. In this way convergence issues or other potential problems can be identified
+early in the process, saving precious time and resources for our users.
+
+The metrics exposed through this module can be used to construct Callbacks, which will be reactively called
+at specific points in the training process. These metrics can be used to assert a model's convergence or
+correctness in real time, to save or visualize intermediate results, or anything else.
+
+Examples
+--------
+To implement a Callback, inherit from this base class and override one or more of its methods.
+
+#. Create a callback to save the training model after each epoch:
+
+>>> from gensim.test.utils import common_texts as sentences
+>>> from gensim.models.callbacks import CallbackAny2Vec
+>>> from gensim.models import Word2Vec
+>>> from gensim.test.utils import get_tmpfile
+>>>
+>>> class EpochSaver(CallbackAny2Vec):
+...     "Callback to save model after every epoch"
+...     def __init__(self, path_prefix):
+...         self.path_prefix = path_prefix
+...         self.epoch = 0
+...     def on_epoch_end(self, model):
+...         output_path = '{}_epoch{}.model'.format(self.path_prefix, self.epoch)
+...         print("Save model to {}".format(output_path))
+...         model.save(output_path)
+...         self.epoch += 1
+...
+
+#. Create a callback to print logging information to the console:
+
+>>> class EpochLogger(CallbackAny2Vec):
+...     "Callback to log information about training"
+...     def __init__(self):
+...         self.epoch = 0
+...     def on_epoch_begin(self, model):
+...         print("Epoch #{} start".format(self.epoch))
+...     def on_epoch_end(self, model):
+...         print("Epoch #{} end".format(self.epoch))
+...         self.epoch += 1
+...
+>>> epoch_saver = EpochSaver(get_tmpfile("temporary_model"))
+>>> epoch_logger = EpochLogger()
+
+#. Bind the callbacks to a model before training it:
+
+>>> w2v_model = Word2Vec(sentences, iter=5, size=10, min_count=0, seed=42, callbacks=[epoch_saver, epoch_logger])
+
+"""
+
 import gensim
 import logging
 import copy
@@ -63,7 +117,7 @@ class CoherenceMetric(Metric):
     """Metric class for coherence evaluation.s """
     def __init__(self, corpus=None, texts=None, dictionary=None, coherence=None,
                  window_size=None, topn=10, logger=None, viz_env=None, title=None):
-        """Initialize the metric object.
+        """
 
         Parameters
         ----------
@@ -96,6 +150,7 @@ class CoherenceMetric(Metric):
             Visdom environment to use for plotting the graph. Unused.
         title : str, optional
             Title of the graph plot in case `logger == 'visdom'`. Unused.
+
         """
         self.corpus = corpus
         self.dictionary = dictionary
@@ -143,7 +198,7 @@ class CoherenceMetric(Metric):
 class PerplexityMetric(Metric):
     """Metric class for perplexity evaluation. """
     def __init__(self, corpus=None, logger=None, viz_env=None, title=None):
-        """Initialize the metric object.
+        """
 
         Parameters
         ----------
@@ -165,7 +220,7 @@ class PerplexityMetric(Metric):
         self.title = title
 
     def get_value(self, **kwargs):
-        """""Get the coherence score.
+        """Get the coherence score.
 
         Parameters
         ----------
@@ -193,7 +248,7 @@ class DiffMetric(Metric):
     def __init__(self, distance="jaccard", num_words=100, n_ann_terms=10, diagonal=True,
                  annotation=False, normed=True, logger=None, viz_env=None, title=None):
 
-        """Initialize the metric score.
+        """
 
         Parameters
         ----------
@@ -245,7 +300,7 @@ class DiffMetric(Metric):
             Matrix of differences between each pair of topics.
         np.ndarray of shape (`model.num_topics`, `other_model.num_topics`, 2), optional
             Annotation matrix where for each pair we include the word from the intersection of the two topics,
-            and the word from the symmetric difference of the two topics. Only include if `annotation == True`.
+            and the word from the symmetric difference of the two topics. Only included if `annotation == True`.
 
         """
         super(DiffMetric, self).set_parameters(**kwargs)
@@ -260,7 +315,7 @@ class ConvergenceMetric(Metric):
     """Metric class for convergence evaluation. """
     def __init__(self, distance="jaccard", num_words=100, n_ann_terms=10, diagonal=True,
                  annotation=False, normed=True, logger=None, viz_env=None, title=None):
-        """Initialize the convergence metric.
+        """
 
         Parameters
         ----------
@@ -337,7 +392,7 @@ class Callback(object):
 
     """
     def __init__(self, metrics):
-        """Initialize the callback.
+        """
 
         Parameters
         ----------
@@ -455,47 +510,7 @@ class CallbackAny2Vec(object):
     custom Callbacks that implement one or more of its methods (depending on the point during training where they
     want some action to be taken).
 
-    Examples
-    --------
-    To implement a Callback, inherit from this base class and override one or more of its methods.
-
-    #. Create a callback to save the training model after each epoch:
-
-    >>> from gensim.test.utils import common_texts as sentences
-    >>> from gensim.models.callbacks import CallbackAny2Vec
-    >>> from gensim.models import Word2Vec
-    >>> from gensim.test.utils import get_tmpfile
-    >>>
-    >>> class EpochSaver(CallbackAny2Vec):
-    ...     "Callback to save model after every epoch"
-    ...     def __init__(self, path_prefix):
-    ...         self.path_prefix = path_prefix
-    ...         self.epoch = 0
-    ...     def on_epoch_end(self, model):
-    ...         output_path = '{}_epoch{}.model'.format(self.path_prefix, self.epoch)
-    ...         print("Save model to {}".format(output_path))
-    ...         model.save(output_path)
-    ...         self.epoch += 1
-    ...
-
-    #. Create a callback to print logging information to the console:
-
-    >>> class EpochLogger(CallbackAny2Vec):
-    ...     "Callback to log information about training"
-    ...     def __init__(self):
-    ...         self.epoch = 0
-    ...     def on_epoch_begin(self, model):
-    ...         print("Epoch #{} start".format(self.epoch))
-    ...     def on_epoch_end(self, model):
-    ...         print("Epoch #{} end".format(self.epoch))
-    ...         self.epoch += 1
-    ...
-    >>> epoch_saver = EpochSaver(get_tmpfile("temporary_model"))
-    >>> epoch_logger = EpochLogger()
-
-    #. Bind the callbacks to a model before training it:
-
-    >>> w2v_model = Word2Vec(sentences, iter=5, size=10, min_count=0, seed=42, callbacks=[epoch_saver, epoch_logger])
+    See examples at the module level docstring for how to define your own callbacks by inheriting  from this class.
 
     """
 
