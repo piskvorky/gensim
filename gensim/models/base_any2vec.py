@@ -22,9 +22,13 @@ concrete examples.
 See Also
 --------
 :class:`~gensim.models.word2vec.Word2Vec`.
+    Word2Vec model - embeddings for words.
 :class:`~gensim.models.fasttext.FastText`.
+    FastText model - embeddings for words (ngram-based).
 :class:`~gensim.models.doc2vec.Doc2Vec`.
+    Doc2Vec model - embeddings for documents.
 :class:`~gensim.models.poincare.PoincareModel`
+    Poincare model - embeddings for graphs.
 
 """
 from gensim import utils
@@ -61,14 +65,14 @@ class BaseAny2VecModel(utils.SaveLoad):
     Notes
     -----
     A subclass should initialize the following attributes:
-    - self.kv (instance of concrete implementation of `BaseKeyedVectors` interface)
-    - self.vocabulary (instance of concrete implementation of `BaseVocabBuilder` abstract class)
-    - self.trainables (instance of concrete implementation of `BaseTrainables` abstract class)
+
+    * self.kv - keyed vectors in model (see :class:`~gensim.models.keyedvectors.Word2VecKeyedVectors` as example)
+    * self.vocabulary - vocabulary (see :class:`~gensim.models.word2vec.Word2VecVocab` as example)
+    * self.trainables - internal matrices (see :class:`~gensim.models.word2vec.Word2VecTrainables` as example)
 
     """
-
     def __init__(self, workers=3, vector_size=100, epochs=5, callbacks=(), batch_words=10000):
-        """Initialize model parameters.
+        """
 
         Parameters
         ----------
@@ -128,7 +132,7 @@ class BaseAny2VecModel(utils.SaveLoad):
     def _worker_loop(self, job_queue, progress_queue):
         """Train the model, lifting lists of data from the queue.
 
-        This function will be called in paralle by multiple workers (threads or processes) to make
+        This function will be called in parallel by multiple workers (threads or processes) to make
         optimal use of multicore machines.
 
         Parameters
@@ -330,10 +334,10 @@ class BaseAny2VecModel(utils.SaveLoad):
             For example in many implementations the learning rate would be dropping with the number of epochs.
         total_examples : int, optional
             Count of objects in the `data_iterator`. In the usual case this would correspond to the number of sentences
-            in a corpus. Used to log progress.
+            in a corpus, used to log progress.
         total_words : int, optional
             Count of total objects in `data_iterator`. In the usual case this would correspond to the number of raw
-            words in a corpus. Used to log progress.
+            words in a corpus, used to log progress.
         queue_factor : int, optional
             Multiplier for size of queue -> size = number of workers * queue_factor.
         report_delay : float, optional
@@ -343,7 +347,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         -------
         (int, int, int)
             The training report for this epoch consisting of three elements:
-                * size of data chunk processed, for example number of sentences in the corpus chunk.
+                * Size of data chunk processed, for example number of sentences in the corpus chunk.
                 * Effective word count used in training (after ignoring unknown words and trimming the sentence length).
                 * Total word count used in training.
 
@@ -385,17 +389,17 @@ class BaseAny2VecModel(utils.SaveLoad):
             Number of epochs (training iterations over the whole input) of training.
         total_examples : int, optional
             Count of objects in the `data_iterator`. In the usual case this would correspond to the number of sentences
-            in a corpus. Used to log progress.
+            in a corpus, used to log progress.
         total_words : int, optional
             Count of total objects in `data_iterator`. In the usual case this would correspond to the number of raw
-            words in a corpus. Used to log progress.
+            words in a corpus, used to log progress.
         queue_factor : int, optional
             Multiplier for size of queue -> size = number of workers * queue_factor.
         report_delay : float, optional
             Number of seconds between two consecutive progress report messages in the logger.
         callbacks : list of :class:`~gensim.models.callbacks.CallbackAny2Vec`, optional
             List of callbacks that need to be executed/run at specific stages during training.
-        **kwargs
+        **kwargs : object
             Additional key word parameters for the specific model inheriting from this class.
 
         Returns
@@ -450,18 +454,19 @@ class BaseAny2VecModel(utils.SaveLoad):
 
     @classmethod
     def load(cls, fname_or_handle, **kwargs):
-        """Load a previously saved object (using :meth:`~gensim.base_any2vec.BaseAny2VecModel.save`) from file.
+        """Load a previously saved object (using :meth:`gensim.models.base_any2vec.BaseAny2VecModel.save`) from file.
 
         Parameters
         ----------
         fname_or_handle : {str, file-like object}
             Path to file that contains needed object or handle to the opened file.
-        **kwargs
+        **kwargs : object
             Key word arguments propagated to :meth:`~gensim.utils.SaveLoad.load`.
 
         See Also
         --------
-        :meth:`~gensim.base_any2vec.BaseAny2VecModel.save`
+        :meth:`gensim.base_any2vec.BaseAny2VecModel.save`
+            Method for save a model.
 
         Returns
         -------
@@ -483,12 +488,13 @@ class BaseAny2VecModel(utils.SaveLoad):
         ----------
         fname_or_handle : {str, file-like object}
             Path to file where the model will be persisted.
-        **kwargs
+        **kwargs : object
             Key word arguments propagated to :meth:`~gensim.utils.SaveLoad.save`.
 
         See Also
         --------
-        :meth:`~gensim.models.base_any2vec.BaseAny2VecModel.save`
+        :meth:`gensim.models.base_any2vec.BaseAny2VecModel.save`
+            Method for load model after current method.
 
         """
         super(BaseAny2VecModel, self).save(fname_or_handle, **kwargs)
@@ -499,11 +505,16 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
     See Also
     --------
-    :class:`~gensim.models.word2vec.Word2Vec`
-    :class:`~gensim.models.word2vec.FastText`, etc.
+    :class:`~gensim.models.word2vec.Word2Vec`.
+        Word2Vec model - embeddings for words.
+    :class:`~gensim.models.fasttext.FastText`.
+        FastText model - embeddings for words (ngram-based).
+    :class:`~gensim.models.doc2vec.Doc2Vec`.
+        Doc2Vec model - embeddings for documents.
+    :class:`~gensim.models.poincare.PoincareModel`
+        Poincare model - embeddings for graphs.
 
     """
-
     def _clear_post_train(self):
         raise NotImplementedError()
 
@@ -516,7 +527,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
     def __init__(self, sentences=None, workers=3, vector_size=100, epochs=5, callbacks=(), batch_words=10000,
                  trim_rule=None, sg=0, alpha=0.025, window=5, seed=1, hs=0, negative=5, cbow_mean=1,
                  min_alpha=0.0001, compute_loss=False, fast_version=0, **kwargs):
-        """Construct a base word embeddings model.
+        """
 
         Parameters
         ----------
@@ -541,8 +552,8 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
             or a callable that accepts parameters (word, count, min_count) and returns either
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
-            The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part of the
-            model.
+            The rule, if given, is only used to prune vocabulary during current method call and is not stored as part
+            of the model.
 
             The input parameters are of the following types:
                 * `word` (str) - the word we are examining
@@ -557,10 +568,11 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             The maximum distance between the current and predicted word within a sentence.
         seed : int, optional
             Seed for the random number generator. Initial vectors for each word are seeded with a hash of
-            the concatenation of word + `str(seed)`. Note that for a fully deterministically-reproducible run,
-            you must also limit the model to a single worker thread (`workers=1`), to eliminate ordering jitter
-            from OS thread scheduling. (In Python 3, reproducibility between interpreter launches also requires
-            use of the `PYTHONHASHSEED` environment variable to control hash randomization).
+            the concatenation of word + `str(seed)`.
+            Note that for a fully deterministically-reproducible run, you must also limit the model to a single worker
+            thread (`workers=1`), to eliminate ordering jitter from OS thread scheduling.
+            In Python 3, reproducibility between interpreter launches also requires use of the `PYTHONHASHSEED`
+            environment variable to control hash randomization.
         hs : {1,0}, optional
             If 1, hierarchical softmax will be used for model training.
             If set to 0, and `negative` is non-zero, negative sampling will be used.
@@ -574,10 +586,10 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             Final learning rate. Drops linearly with the number of iterations from `alpha`.
         compute_loss : bool, optional
             If True, loss will be computed while training the Word2Vec model and stored in
-            :attr:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel.running_training_loss`.
+            :attr:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel.running_training_loss` attribute.
         fast_version : {-1, 1}, optional
             Whether or not the fast cython implementation of the internal training methods is available. 1 means it is.
-        **kwargs
+        **kwargs : object
             Key word arguments needed to allow children classes to accept more arguments.
 
         """
@@ -741,7 +753,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         Returns
         -------
         str
-            A human readable string containing the class name, as well as the id to word mapping, number of
+            A human readable string containing the class name, as well as the size of dictionary, number of
             features and starting learning rate used by the object.
 
         """
@@ -771,15 +783,15 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
             or a callable that accepts parameters (word, count, min_count) and returns either
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
-            The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part of the
-            model.
+            The rule, if given, is only used to prune vocabulary during current method call and is not stored as part
+            of the model.
 
             The input parameters are of the following types:
                 * `word` (str) - the word we are examining
                 * `count` (int) - the word's frequency count in the corpus
                 * `min_count` (int) - the minimum count threshold.
 
-        **kwargs
+        **kwargs : object
             Key word arguments propagated to `self.vocabulary.prepare_vocab`
 
         """
@@ -809,8 +821,8 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
             or a callable that accepts parameters (word, count, min_count) and returns either
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
-            The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part of the
-            model.
+            The rule, if given, is only used to prune vocabulary during current method call and is not stored as part
+            of the model.
 
             The input parameters are of the following types:
                 * `word` (str) - the word we are examining
@@ -819,13 +831,6 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
         update : bool, optional
             If true, the new provided words in `word_freq` dict will be added to model's vocab.
-
-        Examples
-        --------
-        >>> from gensim.models import Word2Vec
-        >>>
-        >>> model= Word2Vec()
-        >>> model.build_vocab_from_freq({"Word1": 15, "Word2": 20})
 
         """
         logger.info("Processing provided word frequencies")
@@ -953,7 +958,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         Parameters
         ----------
         job_params : dict of (str, obj)
-            Unused
+            NOT USED.
         epoch_progress : float
             Ratio of finished work in the current epoch.
         cur_epoch : int
@@ -1017,7 +1022,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             Number of documents in the corpus. Either `total_examples` or `total_words` **must** be supplied.
         total_words : int, optional
             Number of words in the corpus. Either `total_examples` or `total_words` **must** be supplied.
-        **kwargs
+        **kwargs : object
             Unused. Present to preserve signature among base and inherited implementations.
 
         Raises
@@ -1070,14 +1075,15 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
         Parameters
         ----------
-        *args
+        *args : object
             Positional arguments passed to :meth:`~gensim.utils.SaveLoad.load`.
-        **kwargs
+        **kwargs : object
             Key word arguments passed to :meth:`~gensim.utils.SaveLoad.load`.
 
         See Also
         --------
         :meth:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel.save`
+            Method for save a model.
 
         Returns
         -------
@@ -1090,7 +1096,6 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             When methods are called on instance (should be called from class).
 
         """
-
         model = super(BaseWordEmbeddingsModel, cls).load(*args, **kwargs)
         if model.negative and hasattr(model.wv, 'index2word'):
             model.vocabulary.make_cum_table(model.wv)  # rebuild cum_table from vocabulary
@@ -1153,7 +1158,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
     def _log_epoch_end(self, cur_epoch, example_count, total_examples, raw_word_count, total_words,
                        trained_word_count, elapsed):
-        """Callback used to log the end of a training epoch
+        """Callback used to log the end of a training epoch.
 
         Parameters
         ----------
@@ -1222,73 +1227,84 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
     # for backward compatibility
     @deprecated("Method will be removed in 4.0.0, use self.wv.most_similar() instead")
     def most_similar(self, positive=None, negative=None, topn=10, restrict_vocab=None, indexer=None):
-        """
-        Deprecated. Use self.wv.most_similar() instead.
-        Refer to the documentation for `gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.most_similar`
+        """Deprecated, use self.wv.most_similar() instead.
+
+        Refer to the documentation for :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.most_similar`.
+
         """
         return self.wv.most_similar(positive, negative, topn, restrict_vocab, indexer)
 
     @deprecated("Method will be removed in 4.0.0, use self.wv.wmdistance() instead")
     def wmdistance(self, document1, document2):
-        """
-        Deprecated. Use self.wv.wmdistance() instead.
-        Refer to the documentation for `gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.wmdistance`
+        """Deprecated, use self.wv.wmdistance() instead.
+
+        Refer to the documentation for :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.wmdistance`.
+
         """
         return self.wv.wmdistance(document1, document2)
 
     @deprecated("Method will be removed in 4.0.0, use self.wv.most_similar_cosmul() instead")
     def most_similar_cosmul(self, positive=None, negative=None, topn=10):
-        """
-        Deprecated. Use self.wv.most_similar_cosmul() instead.
-        Refer to the documentation for `gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.most_similar_cosmul`
+        """Deprecated, use self.wv.most_similar_cosmul() instead.
+
+        Refer to the documentation for
+        :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.most_similar_cosmul`.
+
         """
         return self.wv.most_similar_cosmul(positive, negative, topn)
 
     @deprecated("Method will be removed in 4.0.0, use self.wv.similar_by_word() instead")
     def similar_by_word(self, word, topn=10, restrict_vocab=None):
-        """
-        Deprecated. Use self.wv.similar_by_word() instead.
-        Refer to the documentation for `gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similar_by_word`
+        """Deprecated, use self.wv.similar_by_word() instead.
+
+        Refer to the documentation for :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similar_by_word`.
+
         """
         return self.wv.similar_by_word(word, topn, restrict_vocab)
 
     @deprecated("Method will be removed in 4.0.0, use self.wv.similar_by_vector() instead")
     def similar_by_vector(self, vector, topn=10, restrict_vocab=None):
-        """
-        Deprecated. Use self.wv.similar_by_vector() instead.
-        Refer to the documentation for `gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similar_by_vector`
+        """Deprecated, use self.wv.similar_by_vector() instead.
+
+        Refer to the documentation for :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similar_by_vector`.
+
         """
         return self.wv.similar_by_vector(vector, topn, restrict_vocab)
 
     @deprecated("Method will be removed in 4.0.0, use self.wv.doesnt_match() instead")
     def doesnt_match(self, words):
-        """
-        Deprecated. Use self.wv.doesnt_match() instead.
-        Refer to the documentation for `gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.doesnt_match`
+        """Deprecated, use self.wv.doesnt_match() instead.
+
+        Refer to the documentation for :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.doesnt_match`.
+
         """
         return self.wv.doesnt_match(words)
 
     @deprecated("Method will be removed in 4.0.0, use self.wv.similarity() instead")
     def similarity(self, w1, w2):
-        """
-        Deprecated. Use self.wv.similarity() instead.
-        Refer to the documentation for `gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similarity`
+        """Deprecated, use self.wv.similarity() instead.
+
+        Refer to the documentation for :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similarity`.
+
         """
         return self.wv.similarity(w1, w2)
 
     @deprecated("Method will be removed in 4.0.0, use self.wv.n_similarity() instead")
     def n_similarity(self, ws1, ws2):
-        """
-        Deprecated. Use self.wv.n_similarity() instead.
-        Refer to the documentation for `gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.n_similarity`
+        """Deprecated, use self.wv.n_similarity() instead.
+
+        Refer to the documentation for :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.n_similarity`.
+
         """
         return self.wv.n_similarity(ws1, ws2)
 
     @deprecated("Method will be removed in 4.0.0, use self.wv.evaluate_word_pairs() instead")
     def evaluate_word_pairs(self, pairs, delimiter='\t', restrict_vocab=300000,
                             case_insensitive=True, dummy4unknown=False):
-        """
-        Deprecated. Use self.wv.evaluate_word_pairs() instead.
-        Refer to the documentation for `gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.evaluate_word_pairs`
+        """Deprecated, use self.wv.evaluate_word_pairs() instead.
+
+        Refer to the documentation for
+        :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.evaluate_word_pairs`.
+
         """
         return self.wv.evaluate_word_pairs(pairs, delimiter, restrict_vocab, case_insensitive, dummy4unknown)
