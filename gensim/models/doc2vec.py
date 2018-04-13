@@ -6,8 +6,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""
-Deep learning via the distributed memory and distributed bag of words models from
+"""Deep learning via the distributed memory and distributed bag of words models from
 `Quoc Le and Tomas Mikolov: "Distributed Representations of Sentences and Documents"
 <http://arxiv.org/pdf/1405.4053v2.pdf>`_, using either hierarchical softmax or negative sampling, see
 `Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean: "Efficient Estimation of Word Representations in
@@ -25,7 +24,7 @@ doc2vec training** (70x speedup `blog <https://rare-technologies.com/parallelizi
 Examples
 --------
 
-#. Initialize a model with e.g. ::
+* Initialize a model with e.g. ::
 
     >>> from gensim.test.utils import common_texts, get_tmpfile
     >>> from gensim.models.doc2vec import Doc2Vec, TaggedDocument
@@ -33,17 +32,17 @@ Examples
     >>> documents = [TaggedDocument(word, [i]) for i, word in enumerate(common_texts)]
     >>> model = Doc2Vec(documents, vector_size=5, window=2, min_count=1, workers=4)
 
-#. Persist a model to disk with ::
+* Persist a model to disk with ::
 
     >>> tmp_f = get_tmpfile("model")
     >>> model.save(tmp_f)
     >>> model = Doc2Vec.load(tmp_f)  # you can continue training with the loaded model!
 
-#. If you're finished training a model (=no more updates, only querying, reduce memory usage), you can do ::
+* If you're finished training a model (=no more updates, only querying, reduce memory usage), you can do ::
 
     >>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True)
 
-#. Infer vector for new document
+* Infer vector for new document
 
     >>> vector = model.infer_vector(["system", "response"])
 
@@ -96,7 +95,7 @@ except ImportError:
         Notes
         -----
         This is the non-optimized, Python version. If you have cython installed, gensim
-        will use the optimized version from :mod:`~gensim.models.doc2vec_inner` instead.
+        will use the optimized version from :mod:`gensim.models.doc2vec_inner` instead.
 
         Parameters
         ----------
@@ -122,9 +121,9 @@ except ImportError:
         learn_hidden : bool, optional
             Whether or not the weights of the hidden layer will be updated.
         word_vectors : object, optional
-            Unused.
+            UNUSED.
         word_locks : object, optional
-            Unused.
+            UNUSED.
         doctag_vectors : list of list of float, optional
             Vector representations of the tags. If None, these will be retrieved from the model.
         doctag_locks : list of float, optional
@@ -155,7 +154,6 @@ except ImportError:
     def train_document_dm(model, doc_words, doctag_indexes, alpha, work=None, neu1=None,
                           learn_doctags=True, learn_words=True, learn_hidden=True,
                           word_vectors=None, word_locks=None, doctag_vectors=None, doctag_locks=None):
-
         """Update distributed memory model ("PV-DM") by training on a single document.
 
         Called internally from :meth:`~gensim.models.doc2vec.Doc2Vec.train` and
@@ -180,9 +178,9 @@ except ImportError:
         alpha : float
             Learning rate.
         work : object
-            Unused
+            UNUSED.
         neu1 : object
-            Unused.
+            UNUSED.
         learn_doctags : bool, optional
             Whether the tag vectors should be updated.
         learn_words : bool, optional
@@ -192,7 +190,7 @@ except ImportError:
             Whether or not the weights of the hidden layer will be updated.
         word_vectors : iterable of list of float, optional
             Vector representations of each word in the model's vocabulary.
-        word_locks : listf of float, optional
+        word_locks : list of float, optional
             Lock factors for each word in the vocabulary.
         doctag_vectors : list of list of float, optional
             Vector representations of the tags. If None, these will be retrieved from the model.
@@ -203,7 +201,7 @@ except ImportError:
         -------
         int
             Number of words in the input document that were actually used for training (they were found in the
-            vocavulary and they were not discarded by negative sampling).
+            vocabulary and they were not discarded by negative sampling).
 
         """
         if word_vectors is None:
@@ -266,9 +264,9 @@ except ImportError:
         alpha : float
             Learning rate.
         work : object
-            Unused.
+            UNUSED.
         neu1 : object
-            Unused.
+            UNUSED.
         learn_doctags : bool, optional
             Whether the tag vectors should be updated.
         learn_words : bool, optional
@@ -289,7 +287,7 @@ except ImportError:
         -------
         int
             Number of words in the input document that were actually used for training (they were found in the
-            vocavulary and they were not discarded by negative sampling).
+            vocabulary and they were not discarded by negative sampling).
 
         """
         if word_vectors is None:
@@ -343,22 +341,20 @@ except ImportError:
 class TaggedDocument(namedtuple('TaggedDocument', 'words tags')):
     """Represents a document along with a tag.
 
-    A single document, made up of `words` (a list of unicode string tokens)
-    and `tags` (a list of tokens). Tags may be one or more unicode string
-    tokens, but typical practice (which will also be most memory-efficient) is
-    for the tags list to include a unique integer id as the only tag.
+    A single document, made up of `words` (a list of unicode string tokens) and `tags` (a list of tokens).
+    Tags may be one or more unicode string tokens, but typical practice (which will also be most memory-efficient)
+    is for the tags list to include a unique integer id as the only tag.
 
-    Replaces "sentence as a list of words" from Word2Vec.
+    Replaces "sentence as a list of words" from :class:`gensim.models.word2vec.Word2Vec`.
 
     """
-
     def __str__(self):
         """Human readable representation of the object's state, used for debugging.
 
         Returns
         -------
         str
-           Human readable representation of the object's state.
+           Human readable representation of the object's state (words and tags).
 
         """
         return '%s(%s, %s)' % (self.__class__.__name__, self.words, self.tags)
@@ -367,12 +363,13 @@ class TaggedDocument(namedtuple('TaggedDocument', 'words tags')):
 # for compatibility
 @deprecated("Class will be removed in 4.0.0, use TaggedDocument instead")
 class LabeledSentence(TaggedDocument):
+    """Deprecated, use :class:`~gensim.models.doc2vec.TaggedDocument` instead."""
     pass
 
 
 class Doctag(namedtuple('Doctag', 'offset, word_count, doc_count')):
-    """A string document tag discovered during the initial vocabulary
-    scan. (The document-vector equivalent of a Vocab object.)
+    """A string document tag discovered during the initial vocabulary scan.
+    The document-vector equivalent of a Vocab object.
 
     Will not be used if all presented document tags are ints.
 
@@ -380,6 +377,7 @@ class Doctag(namedtuple('Doctag', 'offset, word_count, doc_count')):
     if-and-only-if no raw-int tags were used. If any raw-int tags were used,
     string Doctag vectors begin at index (max_rawint + 1), so the true index is
     (rawint_index + 1 + offset). See also _index_to_doctag().
+
     """
     __slots__ = ()
 
