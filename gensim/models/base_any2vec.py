@@ -958,7 +958,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         Parameters
         ----------
         job_params : dict of (str, obj)
-            NOT USED.
+            UNUSED.
         epoch_progress : float
             Ratio of finished work in the current epoch.
         cur_epoch : int

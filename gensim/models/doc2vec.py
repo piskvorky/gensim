@@ -390,45 +390,46 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
     Some important attributes are the following:
 
-    self.wv : :class:`~gensim.models.keyedvectors.Word2VecKeyedVectors`
+    Attributes
+    ----------
+    wv : :class:`~gensim.models.keyedvectors.Word2VecKeyedVectors`
         This object essentially contains the mapping between words and embeddings. After training, it can be used
         directly to query those embeddings in various ways. See the module level docstring for examples.
 
-    self.docvecs : :class:`~gensim.models.keyedvectors.Doc2VecKeyedVectors`
+    docvecs : :class:`~gensim.models.keyedvectors.Doc2VecKeyedVectors`
         This object contains the paragraph vectors. Remember that the only difference between this model and
-        Word2Vec is that besides the word vectors we also include paragraph embeddings to capture the paragraph.
+        :class:`~gensim.models.word2vec.Word2Vec` is that besides the word vectors we also include paragraph embeddings
+        to capture the paragraph.
         In this way we can capture the difference between the same word used in a different wide context.
-        For example we now have a different representation of the word "leaves" in the following two sentences::
+        For example we now have a different representation of the word "leaves" in the following two sentences ::
 
             1. Manos leaves the office every day at 18:00 to catch his train
             2. This season is called Fall, because leaves fall from the trees.
 
-        In a plain Word2Vec model the word would have exactly the same representation in both sentences, in Doc2Vec it
-        will not.
+        In a plain :class:`~gensim.models.word2vec.Word2Vec` model the word would have exactly the same representation
+        in both sentences, in :class:`~gensim.models.doc2vec.Doc2Vec` it will not.
 
-    self.vocabulary : :class:'~gensim.models.doc2vec.Doc2VecVocab'
+    vocabulary : :class:'~gensim.models.doc2vec.Doc2VecVocab'
         This object represents the vocabulary (sometimes called Dictionary in gensim) of the model.
         Besides keeping track of all unique words, this object provides extra functionality, such as
         sorting words by frequency, or discarding extremely rare words.
 
-    self.trainables : :class:`~gensim.models.doc2vec.Doc2VecTrainables`
+    trainables : :class:`~gensim.models.doc2vec.Doc2VecTrainables`
         This object represents the inner shallow neural network used to train the embeddings. The semantics of the
         network differ slightly in the two available training modes (CBOW or SG) but you can think of it as a NN with
         a single projection and hidden layer which we train on the corpus. The weights are then used as our embeddings
-        The only addition to the underlying NN used in Word2Vec is that the input includes not only the word vectors
-        of each word in the context, but also the paragraph vector.
+        The only addition to the underlying NN used in :class:`~gensim.models.word2vec.Word2Vec` is that the input
+        includes not only the word vectors of each word in the context, but also the paragraph vector.
 
     """
-
     def __init__(self, documents=None, dm_mean=None, dm=1, dbow_words=0, dm_concat=0, dm_tag_count=1,
                  docvecs=None, docvecs_mapfile=None, comment=None, trim_rule=None, callbacks=(), **kwargs):
-        """Initialize the model from an iterable of `documents`. Each document is a
-        :class:`~gensim.models.doc2vec.TaggedDocument` object that will be used for training.
+        """
 
         Parameters
         ----------
         documents : iterable of list of :class:`~gensim.models.doc2vec.TaggedDocument`, optional
-            Can be simply a list of elements, but for larger corpora,consider an iterable that streams
+            Input corpus, can be simply a list of elements, but for larger corpora,consider an iterable that streams
             the documents directly from disk/network. If you don't supply `documents`, the model is
             left uninitialized -- use if you plan to initialize it in some other way.
         dm : {1,0}, optional
@@ -446,8 +447,9 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             Seed for the random number generator. Initial vectors for each word are seeded with a hash of
             the concatenation of word + `str(seed)`. Note that for a fully deterministically-reproducible run,
             you must also limit the model to a single worker thread (`workers=1`), to eliminate ordering jitter
-            from OS thread scheduling. (In Python 3, reproducibility between interpreter launches also requires
-            use of the `PYTHONHASHSEED` environment variable to control hash randomization).
+            from OS thread scheduling.
+            In Python 3, reproducibility between interpreter launches also requires use of the `PYTHONHASHSEED`
+            environment variable to control hash randomization.
         min_count : int, optional
             Ignores all words with total frequency lower than this.
         max_vocab_size : int, optional
@@ -488,17 +490,18 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
             or a callable that accepts parameters (word, count, min_count) and returns either
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
-            The input parameters are of the following types:
-            - word: str. The word we are examining
-            - count: int. The word's occurence count in the corpus
-            - min_count: int. The minimum count threshold.
-            Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
+            The rule, if given, is only used to prune vocabulary during current method call and is not stored as part
             of the model.
+
+            The input parameters are of the following types:
+                * `word` (str) - the word we are examining
+                * `count` (int) - the word's frequency count in the corpus
+                * `min_count` (int) - the minimum count threshold.
+
         callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`, optional
             List of callbacks that need to be executed/run at specific stages during training.
 
         """
-
         if 'sentences' in kwargs:
             raise DeprecationWarning(
                 "Parameter 'sentences' was renamed to 'documents', and will be removed in 4.0.0, "
@@ -554,19 +557,17 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
     @property
     def dm(self):
-        """Indicates whether 'distributed memory' (PV-DM) will be used, else `distributed bag of words`
+        """Indicates whether 'distributed memory' (PV-DM) will be used, else 'distributed bag of words'
          (PV-DBOW) is used.
 
-        Either this or :meth:`~gensim.models.doc2vec.Doc2Vec.dbow` will return True.
         """
         return not self.sg  # opposite of SG
 
     @property
     def dbow(self):
-        """Indicates whether `distributed bag of words` (PV-DBOW) will be used, else 'distributed memory'
+        """Indicates whether 'distributed bag of words' (PV-DBOW) will be used, else 'distributed memory'
         (PV-DM) is used.
 
-        Either this or :meth:`~gensim.models.doc2vec.Doc2Vec.dm` will return True.
         """
         return self.sg  # same as SG
 
@@ -582,12 +583,12 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         self.wv.vectors_docs_norm = None
 
     def reset_from(self, other_model):
-        """Copy shareable data structures from another (possibly pretrained) model.
+        """Copy shareable data structures from another (possibly pre-trained) model.
 
         Parameters
         ----------
         other_model : :class:`~gensim.models.doc2vec.Doc2Vec`
-            Another model whose internal data structures will be copied over to the current object.
+            Other model whose internal data structures will be copied over to the current object.
 
         """
         self.wv.vocab = other_model.wv.vocab
@@ -1059,18 +1060,18 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 class Doc2VecVocab(Word2VecVocab):
     """Vocabulary used by :class:`~gensim.models.doc2vec.Doc2Vec`.
 
-    This includes a mapping from words found in the corpus to their total occurence count.
+    This includes a mapping from words found in the corpus to their total frequency count.
 
     """
     def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0):
-        """Initialize the vocabulary.
+        """
 
         Parameters
         ----------
         max_vocab_size : int, optional
             Maximum number of words in the Vocabulary. Used to limit the RAM during vocabulary building;
             if there are more unique words than this, then prune the infrequent ones.
-            Every 10 million word types need about 1GB of RAM. Set to `None` for no limit.
+            Every 10 million word types need about 1GB of RAM, set to `None` for no limit.
         min_count : int
             Words with frequency lower than this limit will be discarded form the vocabulary.
         sample : float, optional
@@ -1088,7 +1089,7 @@ class Doc2VecVocab(Word2VecVocab):
             sorted_vocab=sorted_vocab, null_word=null_word)
 
     def scan_vocab(self, documents, docvecs, progress_per=10000, trim_rule=None):
-        """Create the models Vocabulary: A mapping from unique words in the corpus to their occurence count.
+        """Create the models Vocabulary: A mapping from unique words in the corpus to their frequency count.
 
         Parameters
         ----------
@@ -1232,6 +1233,7 @@ class Doc2VecVocab(Word2VecVocab):
 
 
 class Doc2VecTrainables(Word2VecTrainables):
+    """Represents the inner shallow neural network used to train :class:`~gensim.models.doc2vec.Doc2Vec`."""
     def __init__(self, dm=1, dm_concat=0, dm_tag_count=1, vector_size=100, seed=1, hashfxn=hash, window=5):
         super(Doc2VecTrainables, self).__init__(
             vector_size=vector_size, seed=seed, hashfxn=hashfxn)
