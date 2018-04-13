@@ -245,7 +245,6 @@ class Dictionary(utils.SaveLoad, Mapping):
                     # new id = number of ids made so far;
                     # NOTE this assumes there are no gaps in the id sequence!
                     token2id[w] = len(token2id)
-
         result = {token2id[w]: freq for w, freq in iteritems(counter) if w in token2id}
 
         if allow_update:

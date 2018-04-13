@@ -145,6 +145,27 @@ class TestWord2VecModel(unittest.TestCase):
         total_words = model.vocabulary.scan_vocab(sentences)[0]
         self.assertEqual(total_words, 29)
 
+    def testMaxFinalVocab(self):
+        # Test for less restricting effect of max_final_vocab
+        # max_final_vocab is specified but has no effect
+        model = word2vec.Word2Vec(size=10, max_final_vocab=4, min_count=4, sample=0)
+        model.vocabulary.scan_vocab(sentences)
+        reported_values = model.vocabulary.prepare_vocab(wv=model.wv, hs=0, negative=0)
+        self.assertEqual(reported_values['drop_unique'], 11)
+        self.assertEqual(reported_values['retain_total'], 4)
+        self.assertEqual(reported_values['num_retained_words'], 1)
+        self.assertEqual(model.vocabulary.effective_min_count, 4)
+
+        # Test for more restricting effect of max_final_vocab
+        # results in setting a min_count more restricting than specified min_count
+        model = word2vec.Word2Vec(size=10, max_final_vocab=4, min_count=2, sample=0)
+        model.vocabulary.scan_vocab(sentences)
+        reported_values = model.vocabulary.prepare_vocab(wv=model.wv, hs=0, negative=0)
+        self.assertEqual(reported_values['drop_unique'], 8)
+        self.assertEqual(reported_values['retain_total'], 13)
+        self.assertEqual(reported_values['num_retained_words'], 4)
+        self.assertEqual(model.vocabulary.effective_min_count, 3)
+
     def testOnlineLearning(self):
         """Test that the algorithm is able to add new words to the
         vocabulary and to a trained model when using a sorted vocabulary"""
@@ -171,7 +192,7 @@ class TestWord2VecModel(unittest.TestCase):
         model_neg.train(new_sentences, total_examples=model_neg.corpus_count, epochs=model_neg.iter)
         self.assertEqual(len(model_neg.wv.vocab), 14)
 
-    def onlineSanity(self, model):
+    def onlineSanity(self, model, trained_model=False):
         terro, others = [], []
         for l in list_corpus:
             if 'terrorism' in l:
@@ -179,7 +200,7 @@ class TestWord2VecModel(unittest.TestCase):
             else:
                 others.append(l)
         self.assertTrue(all(['terrorism' not in l for l in others]))
-        model.build_vocab(others)
+        model.build_vocab(others, update=trained_model)
         model.train(others, total_examples=model.corpus_count, epochs=model.iter)
         self.assertFalse('terrorism' in model.wv.vocab)
         model.build_vocab(terro, update=True)
@@ -743,6 +764,8 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(model.trainables.vectors_lockf.shape == (12,))
         self.assertTrue(model.vocabulary.cum_table.shape == (12,))
 
+        self.onlineSanity(model, trained_model=True)
+
         # Model stored in multiple files
         model_file = 'word2vec_old_sep'
         model = word2vec.Word2Vec.load(datapath(model_file))
@@ -752,6 +775,43 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.wv.vector_size))
         self.assertTrue(model.trainables.vectors_lockf.shape == (12,))
         self.assertTrue(model.vocabulary.cum_table.shape == (12,))
+
+        self.onlineSanity(model, trained_model=True)
+
+        # load really old model
+        model_file = 'w2v-lee-v0.12.0'
+        model = word2vec.Word2Vec.load(datapath(model_file))
+        self.onlineSanity(model, trained_model=True)
+
+        # test for max_final_vocab for model saved in 3.3
+        model_file = 'word2vec_3.3'
+        model = word2vec.Word2Vec.load(datapath(model_file))
+        self.assertEqual(model.max_final_vocab, None)
+        self.assertEqual(model.vocabulary.max_final_vocab, None)
+
+        # Test loading word2vec models from all previous versions
+        old_versions = [
+            '0.12.0', '0.12.1', '0.12.2', '0.12.3', '0.12.4',
+            '0.13.0', '0.13.1', '0.13.2', '0.13.3', '0.13.4',
+            '1.0.0', '1.0.1', '2.0.0', '2.1.0', '2.2.0', '2.3.0',
+            '3.0.0', '3.1.0', '3.2.0', '3.3.0', '3.4.0'
+        ]
+
+        saved_models_dir = datapath('old_w2v_models/w2v_{}.mdl')
+        for old_version in old_versions:
+            model = word2vec.Word2Vec.load(saved_models_dir.format(old_version))
+            self.assertTrue(len(model.wv.vocab) == 3)
+            self.assertTrue(model.wv.vectors.shape == (3, 4))
+            # check if similarity search and online training works.
+            self.assertTrue(len(model.wv.most_similar('sentence')) == 2)
+            model.build_vocab(list_corpus, update=True)
+            model.train(list_corpus, total_examples=model.corpus_count, epochs=model.iter)
+            # check if similarity search and online training works after saving and loading back the model.
+            tmpf = get_tmpfile('gensim_word2vec.tst')
+            model.save(tmpf)
+            loaded_model = word2vec.Word2Vec.load(tmpf)
+            loaded_model.build_vocab(list_corpus, update=True)
+            loaded_model.train(list_corpus, total_examples=model.corpus_count, epochs=model.iter)
 
     @log_capture()
     def testBuildVocabWarning(self, l):

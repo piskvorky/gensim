@@ -184,6 +184,78 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
         """Test that the deprecated `wv` property returns `self`. To be removed in v4.0.0."""
         self.assertTrue(self.vectors is self.vectors.wv)
 
+    def test_add_single(self):
+        """Test that adding entity in a manual way works correctly."""
+        entities = ['___some_entity{}_not_present_in_keyed_vectors___'.format(i) for i in range(5)]
+        vectors = [np.random.randn(self.vectors.vector_size) for _ in range(5)]
+
+        # Test `add` on already filled kv.
+        for ent, vector in zip(entities, vectors):
+            self.vectors.add(ent, vector)
+
+        for ent, vector in zip(entities, vectors):
+            self.assertTrue(np.allclose(self.vectors[ent], vector))
+
+        # Test `add` on empty kv.
+        kv = EuclideanKeyedVectors(self.vectors.vector_size)
+        for ent, vector in zip(entities, vectors):
+            kv.add(ent, vector)
+
+        for ent, vector in zip(entities, vectors):
+            self.assertTrue(np.allclose(kv[ent], vector))
+
+    def test_add_multiple(self):
+        """Test that adding a bulk of entities in a manual way works correctly."""
+        entities = ['___some_entity{}_not_present_in_keyed_vectors___'.format(i) for i in range(5)]
+        vectors = [np.random.randn(self.vectors.vector_size) for _ in range(5)]
+
+        # Test `add` on already filled kv.
+        vocab_size = len(self.vectors.vocab)
+        self.vectors.add(entities, vectors, replace=False)
+        self.assertEqual(vocab_size + len(entities), len(self.vectors.vocab))
+
+        for ent, vector in zip(entities, vectors):
+            self.assertTrue(np.allclose(self.vectors[ent], vector))
+
+        # Test `add` on empty kv.
+        kv = EuclideanKeyedVectors(self.vectors.vector_size)
+        kv[entities] = vectors
+        self.assertEqual(len(kv.vocab), len(entities))
+
+        for ent, vector in zip(entities, vectors):
+            self.assertTrue(np.allclose(kv[ent], vector))
+
+    def test_set_item(self):
+        """Test that __setitem__ works correctly."""
+        vocab_size = len(self.vectors.vocab)
+
+        # Add new entity.
+        entity = '___some_new_entity___'
+        vector = np.random.randn(self.vectors.vector_size)
+        self.vectors[entity] = vector
+
+        self.assertEqual(len(self.vectors.vocab), vocab_size + 1)
+        self.assertTrue(np.allclose(self.vectors[entity], vector))
+
+        # Replace vector for entity in vocab.
+        vocab_size = len(self.vectors.vocab)
+        vector = np.random.randn(self.vectors.vector_size)
+        self.vectors['war'] = vector
+
+        self.assertEqual(len(self.vectors.vocab), vocab_size)
+        self.assertTrue(np.allclose(self.vectors['war'], vector))
+
+        # __setitem__ on several entities.
+        vocab_size = len(self.vectors.vocab)
+        entities = ['war', '___some_new_entity1___', '___some_new_entity2___', 'terrorism', 'conflict']
+        vectors = [np.random.randn(self.vectors.vector_size) for _ in range(len(entities))]
+
+        self.vectors[entities] = vectors
+
+        self.assertEqual(len(self.vectors.vocab), vocab_size + 2)
+        for ent, vector in zip(entities, vectors):
+            self.assertTrue(np.allclose(self.vectors[ent], vector))
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
