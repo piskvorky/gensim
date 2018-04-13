@@ -701,10 +701,8 @@ def unitvec(vec, norm='l2', return_norm=False):
             veclen = np.sqrt(np.sum(vec.data ** 2))
         if veclen > 0.0:
             if np.issubdtype(vec.dtype, np.int):
-                vec = vec.astype(np.float) / veclen
-            else:
-                vec /= veclen
-                vec = vec.astype(vec.dtype)
+                vec = vec.astype(np.float)
+            vec /= veclen
             if return_norm:
                 return vec, veclen
             else:
@@ -716,7 +714,6 @@ def unitvec(vec, norm='l2', return_norm=False):
                 return vec
 
     if isinstance(vec, np.ndarray):
-        vec = np.asarray(vec, dtype=vec.dtype)
         if norm == 'l1':
             veclen = np.sum(np.abs(vec))
         if norm == 'l2':
