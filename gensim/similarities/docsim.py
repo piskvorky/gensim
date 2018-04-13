@@ -23,8 +23,6 @@ These are more simple but do not scale as well (they keep the entire index in RA
 
 Once the index has been initialized, you can query for document similarity simply by:
 
-Example 1
----------
 >>> from gensim.test.utils import common_corpus, common_dictionary, get_tmpfile
 >>>
 >>> index_tmpfile = get_tmpfile("index")
@@ -35,8 +33,6 @@ Example 1
 
 If you have more query documents, you can submit them all at once, in a batch:
 
-Example 2
----------
 >>> from gensim.test.utils import common_corpus, common_dictionary, get_tmpfile
 >>>
 >>> index_tmpfile = get_tmpfile("index")
