@@ -339,7 +339,7 @@ except ImportError:
 
 
 class TaggedDocument(namedtuple('TaggedDocument', 'words tags')):
-    """Represents a document along with a tag.
+    """Represents a document along with a tag, input document format for :class:`~gensim.models.doc2vec.Doc2Vec`.
 
     A single document, made up of `words` (a list of unicode string tokens) and `tags` (a list of tokens).
     Tags may be one or more unicode string tokens, but typical practice (which will also be most memory-efficient)
@@ -373,10 +373,9 @@ class Doctag(namedtuple('Doctag', 'offset, word_count, doc_count')):
 
     Will not be used if all presented document tags are ints.
 
-    The offset is only the true index into the doctags_syn0/doctags_syn0_lockf
-    if-and-only-if no raw-int tags were used. If any raw-int tags were used,
-    string Doctag vectors begin at index (max_rawint + 1), so the true index is
-    (rawint_index + 1 + offset). See also _index_to_doctag().
+    The offset is only the true index into the doctags_syn0/doctags_syn0_lockf if-and-only-if no raw-int tags were used.
+    If any raw-int tags were used, string Doctag vectors begin at index (max_rawint + 1), so the true index is
+    (rawint_index + 1 + offset), see also :meth:`~gensim.models.keyedvectors.Doc2VecKeyedVectors._index_to_doctag`.
 
     """
     __slots__ = ()
@@ -1280,13 +1279,28 @@ class Doc2VecTrainables(Word2VecTrainables):
 
 
 class TaggedBrownCorpus(object):
-    """Iterate over documents from the Brown corpus (part of NLTK data), yielding
-    each document out as a TaggedDocument object."""
+    """Reader for the `Brown corpus (part of NLTK data) <http://www.nltk.org/book/ch02.html#tab-brown-sources>`_."""
 
     def __init__(self, dirname):
+        """
+
+        Parameters
+        ----------
+        dirname : str
+            Path to folder with Brown corpus.
+
+        """
         self.dirname = dirname
 
     def __iter__(self):
+        """Iterate through the corpus.
+
+        Yields
+        ------
+        :class:`~gensim.models.doc2vec.TaggedDocument`
+            Document from `source`.
+
+        """
         for fname in os.listdir(self.dirname):
             fname = os.path.join(self.dirname, fname)
             if not os.path.isfile(fname):
@@ -1304,29 +1318,40 @@ class TaggedBrownCorpus(object):
 
 
 class TaggedLineDocument(object):
-    """Simple format: one document = one line = one TaggedDocument object.
+    """Simple reader for format: one document = one line = one :class:`~gensim.models.doc2vec.TaggedDocument` object.
 
-    Words are expected to be already preprocessed and separated by whitespace,
-    tags are constructed automatically from the document line number."""
+    Words are expected to be already preprocessed and separated by whitespace, tags are constructed automatically
+    from the document line number.
 
+    """
     def __init__(self, source):
         """
-        `source` can be either a string (filename) or a file object.
 
-        Example::
+        Parameters
+        ----------
+        source : str
+            Path to source file.
 
-            documents = TaggedLineDocument('myfile.txt')
-
-        Or for compressed files::
-
-            documents = TaggedLineDocument('compressed_text.txt.bz2')
-            documents = TaggedLineDocument('compressed_text.txt.gz')
+        Examples
+        --------
+        >>> from gensim.test.utils import datapath
+        >>> from gensim.models.doc2vec import TaggedLineDocument
+        >>>
+        >>> for document in TaggedLineDocument(datapath("head500.noblanks.cor")):
+        ...     pass
 
         """
         self.source = source
 
     def __iter__(self):
-        """Iterate through the lines in the source."""
+        """Iterate through the lines in the source.
+
+        Yields
+        ------
+        :class:`~gensim.models.doc2vec.TaggedDocument`
+            Document from `source`.
+
+        """
         try:
             # Assume it is a file-like object and try treating it as such
             # Things that don't have seek will trigger an exception
