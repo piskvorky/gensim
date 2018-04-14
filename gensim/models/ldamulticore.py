@@ -62,21 +62,37 @@ logger = logging.getLogger(__name__)
 
 
 class LdaMulticore(LdaModel):
-    """
-    The constructor estimates Latent Dirichlet Allocation model parameters based
-    on a training corpus:
+    """An optimized implementation of the LDA algorithm, able to harness the power of multicore CPU's.
 
-    >>> lda = LdaMulticore(corpus, num_topics=10)
+    Follows the same API as the parent class :class:`~gensim.models.ldamodel.LdaModel`.
+    Model persistency is achieved through its :meth:`~gensim.models.ldamulticore.LdaMulticore.load` and
+    :meth:`~gensim.models.ldamulticore.LdaMulticore.save` methods.
 
-    You can then infer topic distributions on new, unseen documents, with
+    Examples
+    --------
 
-    >>> doc_lda = lda[doc_bow]
+    #. The constructor estimates Latent Dirichlet Allocation model parameters based on a training corpus:
+    >>> from gensim.test.utils import common_corpus
+    >>> from gensim.corpora.dictionary import Dictionary
+    >>>
+    >>> lda = LdaMulticore(common_corpus, num_topics=10)
 
-    The model can be updated (trained) with new documents via
 
-    >>> lda.update(other_corpus)
-
-    Model persistency is achieved through its `load`/`save` methods.
+    #. Query, or update the model using new, unseen documents:
+    >>> other_texts = [
+    ...     ['computer', 'time', 'graph'],
+    ...     ['survey', 'response', 'eps'],
+    ...     ['human', 'system', 'computer']
+    ... ]
+    >>> other_dictionary = Dictionary(other_texts)
+    >>> other_corpus = [other_dictionary.doc2bow(text) for text in other_texts]
+    >>>
+    >>> # Query the model on an unseen document
+    >>> unseen_doc = other_corpus[0]
+    >>> repr = lda[unseen_doc] # get topic probability distribution for a document
+    >>>
+    >>> # Update the model by incrementally training on the new corpus.
+    >>> lda.update(other_corpus) # update the LDA model with additional documents
 
     """
 
@@ -155,13 +171,6 @@ class LdaMulticore(LdaModel):
             Metric callbacks to log and visualize evaluation metrics of the model during training.
         dtype : {numpy.float16, numpy.float32, numpy.float64}, optional
             Data-type to use during calculations inside model. All inputs are also converted.
-
-        Examples
-        --------
-        >>> lda = LdaMulticore(corpus, id2word=id2word, num_topics=100)  # train model
-        >>> print(lda[doc_bow]) # get topic probability distribution for a document
-        >>> lda.update(corpus2) # update the LDA model with additional documents
-        >>> print(lda[doc_bow])
 
         """
         self.workers = max(1, cpu_count() - 1) if workers is None else workers
