@@ -17,7 +17,6 @@ To implement a Callback, inherit from this base class and override one or more o
 >>> from gensim.test.utils import common_texts as sentences
 >>> from gensim.models.callbacks import CallbackAny2Vec
 >>> from gensim.models import Word2Vec
->>> from gensim.test.utils import get_tmpfile
 >>>
 >>> class EpochSaver(CallbackAny2Vec):
 ...     "Callback to save model after every epoch"
@@ -43,12 +42,22 @@ To implement a Callback, inherit from this base class and override one or more o
 ...         print("Epoch #{} end".format(self.epoch))
 ...         self.epoch += 1
 ...
->>> epoch_saver = EpochSaver(get_tmpfile("temporary_model"))
+
 >>> epoch_logger = EpochLogger()
 
 #. Bind the callbacks to a model before training it:
 
->>> w2v_model = Word2Vec(sentences, iter=5, size=10, min_count=0, seed=42, callbacks=[epoch_saver, epoch_logger])
+>>> w2v_model = Word2Vec(sentences, iter=5, size=10, min_count=0, seed=42, callbacks=[epoch_logger])
+Epoch #0 start
+Epoch #0 end
+Epoch #1 start
+Epoch #1 end
+Epoch #2 start
+Epoch #2 end
+Epoch #3 start
+Epoch #3 end
+Epoch #4 start
+Epoch #4 end
 
 """
 
