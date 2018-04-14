@@ -34,48 +34,67 @@ logger = logging.getLogger('gensim.models.ldaseqmodel')
 
 
 class LdaSeqModel(utils.SaveLoad):
-    """
-    The constructor estimates Dynamic Topic Model parameters based
-    on a training corpus.
-    If we have 30 documents, with 5 in the first time-slice, 10 in the second, and 15 in the third, we would
-    set up our model like this:
+    """The model estimates Dynamic Topic Model parameters based on a training corpus.
 
-    >>> ldaseq = LdaSeqModel(corpus=corpus, time_slice= [5, 10, 15], num_topics=5)
+    Examples
+    --------
 
-    Model persistency is achieved through inheriting utils.SaveLoad.
+    #. Set up a model using have 30 documents, with 5 in the first time-slice, 10 in the second, and 15 in the third:
+    >>> ldaseq = LdaSeqModel(corpus=corpus, time_slice=[5, 10, 15], num_topics=5)
 
+    #. Persist model to disk:
     >>> ldaseq.save("ldaseq")
 
-    saves the model to disk.
     """
 
     def __init__(self, corpus=None, time_slice=None, id2word=None, alphas=0.01, num_topics=10,
                  initialize='gensim', sstats=None, lda_model=None, obs_variance=0.5, chain_variance=0.005, passes=10,
                  random_state=None, lda_inference_max_iter=25, em_min_iter=6, em_max_iter=20, chunksize=100):
-        """
-        `corpus` is any iterable gensim corpus
+        """The constructor originally sets all training parameters.
 
-        `time_slice` as described above is a list which contains the number of documents in each time-slice
+        Parameters
+        ----------
+        corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
+            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+            If not given, the model is left untrained (presumably because you want to call
+            :meth:`~gensim.models.ldamodel.LdaSeqModel.update` manually).
+        time_slice : list of int
+            Number of documents in each time-slice. It is asummed that `sum(time_slice) == num_topics`.
+        id2word : dict of (int, str)
+            Mapping from word IDs to words. It is used to determine the vocabulary size, as well as for
+            debugging and topic printing.
+        alphas : float
+            The prior probability for the model.
+        num_topics : int, optional
+            The number of requested latent topics to be extracted from the training corpus.
+        initialize : {'gensim', 'own', 'ldamodel'}, optional
+            Controls the initialization of the DTM model. Supports three different modes:
+                * 'gensim': Uses gensim's own LDA initialization.
+                * 'own': Uses your own initialization matrix of an LDA model that has been previously trained.
+                * 'lda_model': Use a previously used LDA model, passing it through the `lda_model` argument.
+        sstats : np.ndarray of shape (`self.vocab_len`, `num_topics`)
+            Sufficient statistics used for initializing the model if `initialize == 'own'`.
+        lda_model : :class:`~gensim.models.ldamodel.LdaModel`
+            Model whose sufficient statistics will be used to initialize the current object if `initialize == 'gensim'`.
+        obs_variance : float, optional
+            Observed variance used to approximate the true and forward variance as shown in
+            `David M. Blei, John D. Lafferty: "Dynamic Topic Models"
+            <https://www.cs.princeton.edu/~blei/papers/BleiLafferty2006a.pdf>`_.
+        chain_variance : float, optional
+            Gaussian parameter defined in the beta distribution to dictate how the beta values evolve.
+        passes : int, optional
+            Number of passes over the corpus for the initial :class:`~gensim.models.ldamodel.LdaModel`
+        random_state : {numpy.random.RandomState, int}, optional
+            Can be a np.random.RandomState object, or the seed to generate one. Used for reproducibility of results.
+        lda_inference_max_iter : int, optional
+            Maximum number of iterations in the inference step of the LDA training.
+        em_min_iter : int, optional
+            Minimum number of iterations until converge of the Expectation-Maximization algorithm
+        em_max_iter : int, optional
+            Maximum number of iterations until converge of the Expectation-Maximization algorithm.
+        chunksize : int, optional
+            Number of documents in the corpus do be processed in in a chunk.
 
-        `id2word` is a mapping from word ids (integers) to words (strings).
-        It is used to determine the vocabulary size and printing topics.
-
-        `alphas`  is a prior of your choice and should be a double or float value. default is 0.01
-
-        `num_topics` is the number of requested latent topics to be extracted from the training corpus.
-
-        `initalize` allows the user to decide how he wants to initialise the DTM model. Default is through gensim LDA.
-        You can use your own sstats of an LDA model previously trained as well by specifying 'own'
-        and passing a np matrix through sstats.
-        If you wish to just pass a previously used LDA model, pass it through `lda_model`
-        Shape of sstats is (vocab_len, num_topics)
-
-        `chain_variance` is a constant which dictates how the beta values evolve - it is a gaussian parameter
-        defined in the beta distribution.
-
-        `passes` is the number of passes of the initial LdaModel.
-
-        `random_state` can be a np.random.RandomState object or the seed for one, for the LdaModel.
         """
         self.id2word = id2word
         if corpus is None and self.id2word is None:
@@ -152,8 +171,21 @@ class LdaSeqModel(utils.SaveLoad):
             self.fit_lda_seq(corpus, lda_inference_max_iter, em_min_iter, em_max_iter, chunksize)
 
     def init_ldaseq_ss(self, topic_chain_variance, topic_obs_variance, alpha, init_suffstats):
-        """
-        Method to initialize State Space Language Model, topic wise.
+        """Method to initialize State Space Language Model, topic wise.
+
+        Parameters
+        ----------
+        topic_chain_variance : float, optional
+            Gaussian parameter defined in the beta distribution to dictate how the beta values evolve.
+        topic_obs_variance : float, optional
+            Observed variance used to approximate the true and forward variance as shown in
+            `David M. Blei, John D. Lafferty: "Dynamic Topic Models"
+            <https://www.cs.princeton.edu/~blei/papers/BleiLafferty2006a.pdf>`_.
+        alpha : float
+            The prior probability for the model.
+        init_suffstats : np.ndarray of shape (`self.vocab_len`, `num_topics`)
+            Sufficient statistics used for initializing the model.
+
         """
         self.alphas = alpha
         for k, chain in enumerate(self.topic_chains):
@@ -166,16 +198,26 @@ class LdaSeqModel(utils.SaveLoad):
             # ldaseq.topic_chains[k].w_phi_sq = np.zeros((ldaseq.vocab_len, ldaseq.num_time_slices))
 
     def fit_lda_seq(self, corpus, lda_inference_max_iter, em_min_iter, em_max_iter, chunksize):
-        """
-        fit an lda sequence model:
-            for each time period:
-                set up lda model with E[log p(w|z)] and \alpha
+        """Fit a LDA Sequence model.
 
-                for each document:
-                    perform posterior inference
-                    update sufficient statistics/likelihood
+        This method will iteratively setup LDA models and perform EM steps until the sufficient statistics convergence,
+        or until the maximum number of iterations is reached.
 
-            maximize topics
+        Parameters
+        ----------
+        corpus : {iterable of list of (int, float), scipy.sparse.csc}
+            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+        lda_inference_max_iter : int
+            Maximum number of iterations for the inference step of LDA.
+        em_min_iter : int
+            Minimum number of time slices to be inspected.
+        em_max_iter : int
+            Maximum number of time slices to be inspected.
+
+        Returns
+        -------
+        float
+            The LDA bound produced after all iterations.
 
        """
         LDASQE_EM_THRESHOLD = 1e-4
@@ -243,10 +285,28 @@ class LdaSeqModel(utils.SaveLoad):
 
     def lda_seq_infer(self, corpus, topic_suffstats, gammas, lhoods,
                       iter_, lda_inference_max_iter, chunksize):
-        """
-        Inference or E- Step.
+        """Inference or E- Step.
+
         This is used to set up the gensim LdaModel to be used for each time-slice.
         It also allows for Document Influence Model code to be written in.
+
+        Parameters
+        ----------
+        corpus : {iterable of list of (int, float), scipy.sparse.csc}
+            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+        topic_suffstats : np.ndarray of shape (`self.vocab_len`, `num_topics`)
+            Sufficient statistics used for initializing the model if `initialize == 'own'`.
+        gammas : np.ndarray
+            Topic weight variational parameters for each document. If not supplied, it will be inferred from the model
+        lhoods : float
+            The total log probability bound
+        iter_ : int
+            Current iteration.
+        lda_inference_max_iter : int
+            Maximum number of iterations for the inference step of LDA.
+        chunksize : int
+            Number of documents to be processed in each chunk.
+
         """
         num_topics = self.num_topics
         vocab_len = self.vocab_len
@@ -273,10 +333,30 @@ class LdaSeqModel(utils.SaveLoad):
 
     def inferDTMseq(self, corpus, topic_suffstats, gammas, lhoods, lda,
                     ldapost, iter_, bound, lda_inference_max_iter, chunksize):
-        """
-        Computes the likelihood of a sequential corpus under an LDA seq model, and return the likelihood bound.
-        Need to pass the LdaSeq model, corpus, sufficient stats, gammas and lhoods matrices previously created,
-        and LdaModel and LdaPost class objects.
+        """Computes the likelihood of a sequential corpus under an LDA seq model, and reports the likelihood bound.
+
+        Parameters
+        ----------
+        corpus : {iterable of list of (int, float), scipy.sparse.csc}
+            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+        topic_suffstats : np.ndarray of shape (`self.vocab_len`, `num_topics`)
+            Sufficient statistics of the current model.
+        gammas : np.ndarray
+            Topic weight variational parameters for each document. If not supplied, it will be inferred from the model
+        lhoods : float
+            The total log probability bound.
+        lda : :class:`~gensim.models.ldamodel.LdaModel`
+            The trained LDA model of the previous iteration.
+        iter_ : int
+            The current iteration.
+        bound : float
+            The LDA bound produced after all iterations.
+        lda_inference_max_iter : int
+            Maximum number of iterations for the inference step of LDA.
+        chunksize : int
+            Number of documents to be processed in each chunk.
+
+
         """
         doc_index = 0  # overall doc_index in corpus
         time = 0  # current time-slice
@@ -322,8 +402,21 @@ class LdaSeqModel(utils.SaveLoad):
         return bound, gammas
 
     def make_lda_seq_slice(self, lda, time):
-        """
-        set up the LDA model topic-word values with that of ldaseq.
+        """Update the LDA model topic-word values using time slices.
+
+        Parameters
+        ----------
+
+        lda : :class:`~gensim.models.ldamodel.LdaModel`
+            The stationary model to be updated
+        time : int
+            The time slice assigned to the stationary model.
+
+        Returns
+        -------
+        lda : :class:`~gensim.models.ldamodel.LdaModel`
+            The stationary model updated to reflect the passed time slice.
+
         """
         for k in range(0, self.num_topics):
             lda.topics[:, k] = np.copy(self.topic_chains[k].e_log_prob[:, time])
@@ -332,8 +425,14 @@ class LdaSeqModel(utils.SaveLoad):
         return lda
 
     def fit_lda_seq_topics(self, topic_suffstats):
-        """
-        Fit lda sequence topic wise.
+        """Fit the sequential model topic-wise.
+
+        Parameters
+        ----------
+        topic_suffstats : np.ndarray of shape (`self.vocab_len`, `num_topics`)
+            Sufficient statistics of the current model.
+
+        returns
         """
         lhood = 0
 
