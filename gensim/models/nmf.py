@@ -9,11 +9,15 @@ class NMF(object):
 
     Attributes
     ----------
-    _W : matrix
+    _W : dictionary matrix
+    _H : loadings matrix
+    _lambda: weight of outliers regularizer
+    _kappa: step size coefficient
 
     """
 
-    def __init__(self, n_components, lambda_=1., kappa=1.):
+    def __init__(self, corpus=None, n_components=100, lambda_=1.,
+                 kappa=1., store_r=False, v_max=None):
         """
 
         Parameters
@@ -25,24 +29,45 @@ class NMF(object):
         """
         self.n_features = None
         self.n_components = n_components
-        self.lambda_ = lambda_
-        self.kappa = kappa
+        self._lambda_ = lambda_
+        self._kappa = kappa
         self._H = []
-        self.R = None
-        self.is_fitted = False
+        self.v_max = v_max
+        if store_r:
+            self._R = []
+        else:
+            self._R = None
+
+    @property
+    def A(self):
+        return self._A / len(self._H)
+        # return self._A
+
+    @A.setter
+    def A(self, value):
+        self._A = value
+
+    @property
+    def B(self):
+        return self._B / len(self._H)
+        # return self._B
+
+    @B.setter
+    def B(self, value):
+        self._B = value
 
     def _setup(self, X):
         self.h, self.r = None, None
         X_ = iter(X)
         x = next(X_)
-        n_features = len(x)
-        avg = np.sqrt(x.mean() / n_features)
+        m = len(x)
+        avg = np.sqrt(x.mean() / m)
         X = chain([x], X_)
 
-        self.n_features = n_features
+        self.n_features = len(x)
 
         self._W = np.abs(avg * halfnorm.rvs(size=(self.n_features, self.n_components)) /
-                         np.sqrt(self.n_components))
+                        np.sqrt(self.n_components))
 
         self.A = np.zeros((self.n_components, self.n_components))
         self.B = np.zeros((self.n_features, self.n_components))
@@ -62,28 +87,39 @@ class NMF(object):
             X = self._setup(X)
 
         prod = np.outer
+
         if batch_size is not None:
+            from itertools import zip_longest
+
+            def grouper(iterable, n):
+                args = [iter(iterable)] * n
+                return zip_longest(*args)
+
             prod = np.dot
-            length = X.shape[0]
-            n_batches = max(length // batch_size, 1)
-            X = np.array_split(X, n_batches, axis=0)
+            X = (np.array([e for e in batch if e is not None]) for batch in grouper(X, batch_size))
+
         r, h = self.r, self.h
         for v in X:
-            h, r = self._solveproj(v, self._W, self.lambda_, self.kappa, r=r, h=h)
+            h, r = self._solveproj(v, self._W, r=r, h=h)
             self._H.append(h)
-            if self.R is not None:
-                self.R.append(r)
+            if self._R is not None:
+                self._R.append(r)
 
             self.A += prod(h, h.T)
             self.B += prod((v.T - r), h.T)
             self._solve_w()
+            print(
+                'Loss (no outliers): {}\tLoss (with outliers): {}'
+                .format(
+                    np.linalg.norm(v.T - self._W.dot(h)),
+                    np.linalg.norm(v.T - self._W.dot(h) - r)
+                )
+            )
         self.r = r
         self.h = h
 
-        self.is_fitted = True
-
     def _solve_w(self):
-        eta = self.kappa / np.linalg.norm(self.A, 'fro')
+        eta = self._kappa / np.linalg.norm(self.A, 'fro')
         n = 0
         lasttwo = np.zeros(2)
         while n <= 2 or (np.abs(
@@ -95,17 +131,15 @@ class NMF(object):
             lasttwo[1] = 0.5 * np.trace(self._W.T.dot(self._W).dot(self.A)) - \
                          np.trace(self._W.T.dot(self.B))
 
-    def transform(self, X, return_r=False):
+    def transform(self, X, return_r=False, max_iter=1e9):
         H = []
         if return_r:
             R = []
 
         num = None
         W = self._W
-        lambda_ = self.lambda_
-        kappa = self.kappa
         for v in X:
-            h, r = self._solveproj(v, W, lambda_, kappa, v_max=np.inf)
+            h, r = self._solveproj(v, W, v_max=np.inf, max_iter=max_iter)
             H.append(h.copy())
             if return_r:
                 R.append(r.copy())
@@ -122,39 +156,37 @@ class NMF(object):
                 H = np.stack(self._H, axis=-1)
             else:
                 H = np.concatenate(self._H, axis=1)
+
             return self._W, H
         else:
             return self._W, 0
 
     @staticmethod
-    def _thresh(X, lambda_, v_max):
-        res = np.abs(X) - lambda_
+    def _thresh(X, lambda1, vmax):
+        res = np.abs(X) - lambda1
         np.maximum(res, 0.0, out=res)
         res *= np.sign(X)
-        np.clip(res, -v_max, v_max, out=res)
+        np.clip(res, -vmax, vmax, out=res)
         return res
 
-    @staticmethod
-    def _mrdivide(B, A):
-        """Solve xB = A
-        """
-        if len(B.shape) == 2 and B.shape[0] == B.shape[1]:
-            return np.linalg.solve(B.T, A.T).T
-        else:
-            return np.linalg.lstsq(A.T, B.T, rcond=None)[0].T
+        return X
 
     def _transform(self, W):
-        newW = W.copy()
-        np.maximum(newW, 0, out=newW)
-        sumsq = np.sqrt(np.sum(W ** 2, axis=0))
+        W_ = W.copy()
+        np.clip(W_, 0, self.v_max, out=W_)
+        sumsq = np.linalg.norm(W_, axis=0)
         np.maximum(sumsq, 1, out=sumsq)
-        return self._mrdivide(newW, np.diag(sumsq))
+        return W_ / sumsq
 
-    def _solveproj(self, v, W, lambda_, kappa=1, h=None, r=None, v_max=None, max_iter=1e9):
+    def _solveproj(self, v, W, h=None, r=None, max_iter=1e9, v_max=None):
         m, n = W.shape
         v = v.T
-        if v_max is None:
-            v_max = v.max()
+        if v_max is not None:
+            self.v_max = v_max
+        elif self.v_max is None:
+            self.v_max = v.max()
+        # else:
+        #     self.v_max = np.max((self.v_max, v.max()))
         if len(v.shape) == 2:
             batch_size = v.shape[1]
             rshape = (m, batch_size)
@@ -168,26 +200,23 @@ class NMF(object):
         if r is None or r.shape != rshape:
             r = np.zeros(rshape)
 
-        eta = kappa / np.linalg.norm(W, 'fro') ** 2
+        eta = self._kappa / np.linalg.norm(W, 'fro') ** 2
 
-        iters = 0
-
-        while True:
-            iters += 1
+        for _ in range(int(max_iter)):
             # Solve for h
-            htmp = h
-            h = h - eta * np.dot(W.T, np.dot(W, h) + r - v)
+            h_ = h
+            h = h - eta * np.dot(-W.T, v - np.dot(W, h) - r)
             np.maximum(h, 0.0, out=h)
 
             # Solve for r
-            rtmp = r
-            r = self._thresh(v - np.dot(W, h), lambda_, v_max)
+            r_ = r
+            r = self._thresh(v - np.dot(W, h), self._lambda_, self.v_max)
 
             # Stop conditions
-            stoph = np.linalg.norm(h - htmp, 2)
-            stopr = np.linalg.norm(r - rtmp, 2)
+            stoph = np.linalg.norm(h - h_, 2)
+            stopr = np.linalg.norm(r - r_, 2)
             stop = max(stoph, stopr) / m
-            if stop < 1e-5 or iters > max_iter:
+            if stop < 1e-5:
                 break
 
         return h, r
