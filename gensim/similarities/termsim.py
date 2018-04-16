@@ -93,6 +93,23 @@ class UniformTermSimilarityIndex(TermSimilarityIndex):
 
 
 def _shortest_uint_dtype(max_value):
+    """Get the shortest unsingned integer data-type required for representing values up to a given
+    maximum value.
+
+    Returns the shortest unsingned integer data-type required for representing values up to a given
+    maximum value.
+
+    Parameters
+    ----------
+    max_value : int
+        The maximum value we wish to represent.
+
+    Returns
+    -------
+    data-type
+        The shortest unsigned integer data-type required for representing values up to a given
+        maximum value.
+    """
     if max_value < 2**8:
         return np.uint8
     elif max_value < 2**16:
@@ -183,13 +200,14 @@ class SparseTermSimilarityMatrix(SaveLoad):
                     logger.debug('an out-of-dictionary term "%s"', t2)
                     continue
                 t2_index = dictionary.token2id[t2]
-                if not symmetric or matrix_nonzero[t2_index] <= nonzero_limit:
-                    if not (t1_index, t2_index) in matrix:
+                if symmetric:
+                    if matrix_nonzero[t2_index] <= nonzero_limit and not (t1_index, t2_index) in matrix:
                         matrix[t1_index, t2_index] = similarity
-                        if symmetric:
-                            matrix_nonzero[t1_index] += 1
-                            matrix[t2_index, t1_index] = similarity
-                            matrix_nonzero[t2_index] += 1
+                        matrix_nonzero[t1_index] += 1
+                        matrix[t2_index, t1_index] = similarity
+                        matrix_nonzero[t2_index] += 1
+                else:
+                    matrix[t1_index, t2_index] = similarity
 
         logger.info(
             "constructed a sparse term similarity matrix with %0.06f%% density",
