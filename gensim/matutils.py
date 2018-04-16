@@ -692,6 +692,7 @@ def unitvec(vec, norm='l2', return_norm=False):
     """
     if norm not in ('l1', 'l2'):
         raise ValueError("'%s' is not a supported norm. Currently supported norms are 'l1' and 'l2'." % norm)
+
     if scipy.sparse.issparse(vec):
         vec = vec.tocsr()
         if norm == 'l1':
@@ -699,10 +700,13 @@ def unitvec(vec, norm='l2', return_norm=False):
         if norm == 'l2':
             veclen = np.sqrt(np.sum(vec.data ** 2))
         if veclen > 0.0:
+            if np.issubdtype(vec.dtype, np.int):
+                vec = vec.astype(np.float)
+            vec /= veclen
             if return_norm:
-                return vec / veclen, veclen
+                return vec, veclen
             else:
-                return vec / veclen
+                return vec
         else:
             if return_norm:
                 return vec, 1.
@@ -710,16 +714,17 @@ def unitvec(vec, norm='l2', return_norm=False):
                 return vec
 
     if isinstance(vec, np.ndarray):
-        vec = np.asarray(vec, dtype=float)
         if norm == 'l1':
             veclen = np.sum(np.abs(vec))
         if norm == 'l2':
             veclen = blas_nrm2(vec)
         if veclen > 0.0:
+            if np.issubdtype(vec.dtype, np.int):
+                vec = vec.astype(np.float)
             if return_norm:
-                return blas_scal(1.0 / veclen, vec), veclen
+                return blas_scal(1.0 / veclen, vec).astype(vec.dtype), veclen
             else:
-                return blas_scal(1.0 / veclen, vec)
+                return blas_scal(1.0 / veclen, vec).astype(vec.dtype)
         else:
             if return_norm:
                 return vec, 1
