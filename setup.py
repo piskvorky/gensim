@@ -315,7 +315,10 @@ setup(
         'distributed': distributed_env,
         'test-win': win_testenv,
         'test': linux_testenv,
-        'docs': linux_testenv + distributed_env + ['sphinx', 'sphinxcontrib-napoleon', 'plotly', 'pattern', 'sphinxcontrib.programoutput'],
+        'docs': linux_testenv + distributed_env + [
+            'sphinx', 'sphinxcontrib-napoleon', 'sphinxcontrib.programoutput', 'sphinx_bootstrap_theme == 0.6.4',
+            'plotly', 'pattern'
+        ],
     },
 
     include_package_data=True,
