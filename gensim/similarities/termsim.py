@@ -181,8 +181,8 @@ class SparseTermSimilarityMatrix(SaveLoad):
                 if not symmetric or matrix_nonzero[t2_index] <= nonzero_limit:
                     if not (t1_index, t2_index) in matrix:
                         matrix[t1_index, t2_index] = similarity
-                        matrix_nonzero[t1_index] += 1
                         if symmetric:
+                            matrix_nonzero[t1_index] += 1
                             matrix[t2_index, t1_index] = similarity
                             matrix_nonzero[t2_index] += 1
 
