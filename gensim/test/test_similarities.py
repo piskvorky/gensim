@@ -790,7 +790,7 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
             self.index, self.dictionary, nonzero_limit=1, symmetric=False).matrix.todense()
         expected_matrix = numpy.array([
             [1.0, 0.5, 0.5, 0.5, 0.5],
-            [0.0, 1.0, 0.0, 0.0, 0.0],
+            [0.5, 1.0, 0.0, 0.0, 0.0],
             [0.0, 0.0, 1.0, 0.0, 0.0],
             [0.0, 0.0, 0.0, 1.0, 0.0],
             [0.0, 0.0, 0.0, 0.0, 1.0]])
