@@ -1489,7 +1489,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ---------
-        bow : corpus : list of (int, float)
+        bow : list of (int, float)
             The document in BOW format.
         eps : float
             Topics with an assigned probability lower than this threshold will be discarded.
