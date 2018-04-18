@@ -23,45 +23,51 @@ Notes
 Examples
 --------
 
-* Initialize a model with e.g. ::
-    >>> from gensim.test.utils import common_texts
-    >>> from gensim.models import FastText
-    >>>
-    >>> model = FastText(size=4, window=3, min_count=1)
-    >>> model.build_vocab(common_texts)
+Initialize and train a model
 
-* Persist a model to disk with ::
-    >>> model.save("temp_model.w2v")
-    >>> model = FastText.load("temp_model.w2v")  # you can continue training with the loaded model!
+>>> from gensim.test.utils import common_texts, get_tmpfile
+>>> from gensim.models import FastText
+>>>
+>>> model = FastText(size=4, window=3, min_count=1)
+>>> model.build_vocab(common_texts)
+>>> model.train(common_texts, epochs=1, total_examples=model.corpus_count)
 
-* Retrieve word-vector for vocab and out-of-vocab word (this is main feature of current model)::
-    >>> existent_word = "computer"
-    >>> computer_vec = model.wv[existent_word]  # numpy vector of a word
-    >>>
-    >>> oov_word = "graph-out-of-vocab"
-    >>> oov_vec = model.wv[oov_word]  # numpy vector for OOV word
+Persist a model to disk with
 
-#. You can perform various NLP word tasks with the model. Some of them are already built-in ::
+>>> tmp_fname = get_tmpfile("temp_fasttext.model")
+>>>
+>>> model.save(tmp_fname)
+>>> model = FastText.load(tmp_fname)  # you can continue training with the loaded model!
 
-    >>> similarities = model.wv.most_similar(positive=['computer', 'human'], negative=['interface'])
-    >>> most_similar = similarities[0]
+Retrieve word-vector for vocab and out-of-vocab word (this is main feature of current model)
 
-    >>> similarities = model.wv.most_similar_cosmul(positive=['computer', 'human'], negative=['interface'])
-    >>> most_similar = similarities[0]
+>>> existent_word = "computer"
+>>> computer_vec = model.wv[existent_word]  # numpy vector of a word
+>>>
+>>> oov_word = "graph-out-of-vocab"
+>>> oov_vec = model.wv[oov_word]  # numpy vector for OOV word
 
-    >>> not_matching = model.wv.doesnt_match("human computer interface tree".split())
+You can perform various NLP word tasks with the model, some of them are already built-in
 
-    >>> sim_score = model.wv.similarity('computer', 'human')
+>>> similarities = model.wv.most_similar(positive=['computer', 'human'], negative=['interface'])
+>>> most_similar = similarities[0]
+>>>
+>>> similarities = model.wv.most_similar_cosmul(positive=['computer', 'human'], negative=['interface'])
+>>> most_similar = similarities[0]
+>>>
+>>> not_matching = model.wv.doesnt_match("human computer interface tree".split())
+>>>
+>>> sim_score = model.wv.similarity('computer', 'human')
 
-#. Correlation with human opinion on word similarity ::
+Correlation with human opinion on word similarity
 
-    >>> from gensim.test.utils import datapath
-    >>>
-    >>> similarities = model.wv.evaluate_word_pairs(datapath('wordsim353.tsv'))
+>>> from gensim.test.utils import datapath
+>>>
+>>> similarities = model.wv.evaluate_word_pairs(datapath('wordsim353.tsv'))
 
-#. And on analogies ::
+And on analogies
 
-    >>> analogies_result = model.wv.accuracy(datapath('questions-words.txt'))
+>>> analogies_result = model.wv.accuracy(datapath('questions-words.txt'))
 
 """
 import logging
@@ -202,9 +208,9 @@ class FastText(BaseWordEmbeddingsModel):
     """Class for training, using and evaluating word representations learned using method
     described in `Enriching Word Vectors with Subword Information <https://arxiv.org/abs/1607.04606>`_, aka FastText.
 
-    The model can be stored/loaded via its :meth:`~gensim.models.fasttext.FastText.save()` and
-    :meth:`~gensim.models.fasttext.FastText.load()` methods, or loaded in a format compatible with the original
-    fasttext implementation via :meth:`~gensim.models.fasttext.FastText.load_fasttext_format()`.
+    The model can be stored/loaded via its :meth:`~gensim.models.fasttext.FastText.save` and
+    :meth:`~gensim.models.fasttext.FastText.load` methods, or loaded in a format compatible with the original
+    fasttext implementation via :meth:`~gensim.models.fasttext.FastText.load_fasttext_format`.
 
     Some important attributes are the following:
 
@@ -214,7 +220,7 @@ class FastText(BaseWordEmbeddingsModel):
         compute embeddings even for **unseen** words (that do not exist in the vocabulary), as the aggregate of the
         n-grams included in the word. After training the model, this attribute can be used directly to query those
         embeddings in various ways. Check the module level docstring from some examples.
-    self.vocabulary : :class:'~gensim.models.fasttext.FastTextVocab'
+    self.vocabulary : :class:'~gensim.models.fasttext.FastTextVocab`
         This object represents the vocabulary (sometimes called Dictionary in gensim) of the model.
         Besides keeping track of all unique words, this object provides extra functionality, such as
         constructing a huffman tree (frequent words are closer to the root), or discarding extremely rare words.
@@ -225,7 +231,7 @@ class FastText(BaseWordEmbeddingsModel):
         You can think of it as a NN with a single projection and hidden layer which we train on the corpus.
         The weights are then used as our embeddings. An important difference however between the two models, is the
         scoring function used to compute the loss. In the case of FastText, this is modified in word to also account
-        for the internal structure of words, besides their cooccurence counts.
+        for the internal structure of words, besides their concurrence counts.
 
     """
     def __init__(self, sentences=None, sg=0, hs=0, size=100, alpha=0.025, window=5, min_count=5,

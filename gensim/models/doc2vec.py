@@ -24,27 +24,27 @@ doc2vec training** (70x speedup `blog <https://rare-technologies.com/parallelizi
 Examples
 --------
 
-* Initialize a model with e.g. ::
+Initialize & train a model
 
-    >>> from gensim.test.utils import common_texts, get_tmpfile
-    >>> from gensim.models.doc2vec import Doc2Vec, TaggedDocument
-    >>>
-    >>> documents = [TaggedDocument(word, [i]) for i, word in enumerate(common_texts)]
-    >>> model = Doc2Vec(documents, vector_size=5, window=2, min_count=1, workers=4)
+>>> from gensim.test.utils import common_texts, get_tmpfile
+>>> from gensim.models.doc2vec import Doc2Vec, TaggedDocument
+>>>
+>>> documents = [TaggedDocument(word, [i]) for i, word in enumerate(common_texts)]
+>>> model = Doc2Vec(documents, vector_size=5, window=2, min_count=1, workers=4)
 
-* Persist a model to disk with ::
+Persist a model to disk
 
-    >>> tmp_f = get_tmpfile("model")
-    >>> model.save(tmp_f)
-    >>> model = Doc2Vec.load(tmp_f)  # you can continue training with the loaded model!
+>>> tmp_f = get_tmpfile("model")
+>>> model.save(tmp_f)
+>>> model = Doc2Vec.load(tmp_f)  # you can continue training with the loaded model!
 
-* If you're finished training a model (=no more updates, only querying, reduce memory usage), you can do ::
+If you're finished training a model (=no more updates, only querying, reduce memory usage), you can do
 
-    >>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True)
+>>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True)
 
-* Infer vector for new document ::
+Infer vector for new document
 
-    >>> vector = model.infer_vector(["system", "response"])
+>>> vector = model.infer_vector(["system", "response"])
 
 """
 import logging
