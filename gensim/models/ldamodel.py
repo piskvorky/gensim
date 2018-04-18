@@ -27,6 +27,50 @@ The algorithm:
 
 .. [1] http://www.cs.princeton.edu/~mdhoffma
 
+
+Examples
+--------
+
+#. Train an LDA model using a gensim corpus:
+
+>>> from gensim.test.utils import common_corpus
+>>> from gensim.corpora.dictionary import Dictionary
+>>>
+>>> lda = LdaModel(common_corpus, num_topics=10)  # train model
+
+#. Save a model to disk, or reload a pretrained model.
+
+>>> from gensim.test.utils import datapath
+>>>
+>>> # Save model to disk.
+>>> temp_file = datapath("model")
+>>> lda.save(temp_file)
+>>>
+>>> # Load a potentially pretrained model from disk.
+>>> lda = LdaModel.load(temp_file)
+
+#. Query, the model using new, unseen documents:
+
+>>> other_texts = [
+...     ['computer', 'time', 'graph'],
+...     ['survey', 'response', 'eps'],
+...     ['human', 'system', 'computer']
+... ]
+>>> other_dictionary = Dictionary(other_texts)
+>>> other_corpus = [other_dictionary.doc2bow(text) for text in other_texts]
+>>>
+>>> unseen_doc = other_corpus[0]
+>>> repr = lda[unseen_doc] # get topic probability distribution for a document
+
+#. Update the model by incrementally training on the new corpus.
+
+>>> lda.update(other_corpus)
+>>> repr = lda[unseen_doc]
+
+#. A lot of parameters can be tuned to optimize training for your specific case:
+
+>>> lda = LdaModel(common_corpus, num_topics=50, alpha='auto', eval_every=5)  # train asymmetric alpha from data
+
 """
 import logging
 import numbers
@@ -151,7 +195,7 @@ class LdaState(utils.SaveLoad):
         The number of documents is strected in both state objects, so that they are of comparable magnitude.
         This procedure corresponds to the stochastic gradient update from
         `Hoffman et al. :"Online Learning for Latent Dirichlet Allocation"
-        <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
+        <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_, see equations (5) and (9).
 
         Parameters
         ----------
@@ -362,39 +406,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Metric callbacks to log and visualize evaluation metrics of the model during training.
         dtype : {numpy.float16, numpy.float32, numpy.float64}, optional
             Data-type to use during calculations inside model. All inputs are also converted.
-
-        Examples
-        --------
-
-        #. Train an LDA model using a gensim corpus:
-
-        >>> from gensim.test.utils import common_corpus
-        >>> from gensim.corpora.dictionary import Dictionary
-        >>>
-        >>> lda = LdaModel(common_corpus, num_topics=10)  # train model
-        >>>
-
-        #. Query, or update the model using new, unseen documents:
-
-        >>> other_texts = [
-        ...     ['computer', 'time', 'graph'],
-        ...     ['survey', 'response', 'eps'],
-        ...     ['human', 'system', 'computer']
-        ... ]
-        >>> other_dictionary = Dictionary(other_texts)
-        >>> other_corpus = [other_dictionary.doc2bow(text) for text in other_texts]
-
-        >>> # Query the model on an unseen document
-        >>> unseen_doc = other_corpus[0]
-        >>> repr = lda[unseen_doc] # get topic probability distribution for a document
-        >>>
-        >>> # Update the model by incrementally training on the new corpus.
-        >>> lda.update(other_corpus) # update the LDA model with additional documents
-        >>> repr = lda[unseen_doc]
-
-        #. A lot of parameters can be tuned to optimize training for your specific case:
-
-        >>> lda = LdaModel(common_corpus, num_topics=50, alpha='auto', eval_every=5)  # train asymmetric alpha from data
 
         """
         if dtype not in DTYPE_TO_EPS:

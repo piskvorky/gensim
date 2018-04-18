@@ -14,7 +14,7 @@ To implement a Callback, inherit from this base class and override one or more o
 
 #. Create a callback to save the training model after each epoch:
 
->>> from gensim.test.utils import common_texts as sentences
+>>> from gensim.test.utils import common_corpus, common_texts
 >>> from gensim.models.callbacks import CallbackAny2Vec
 >>> from gensim.models import Word2Vec
 >>>
@@ -47,7 +47,7 @@ To implement a Callback, inherit from this base class and override one or more o
 
 #. Bind the callbacks to a model before training it:
 
->>> w2v_model = Word2Vec(sentences, iter=5, size=10, min_count=0, seed=42, callbacks=[epoch_logger])
+>>> w2v_model = Word2Vec(common_texts, iter=5, size=10, min_count=0, seed=42, callbacks=[epoch_logger])
 Epoch #0 start
 Epoch #0 end
 Epoch #1 start
@@ -58,6 +58,14 @@ Epoch #3 start
 Epoch #3 end
 Epoch #4 start
 Epoch #4 end
+
+#. Create and bind a callback to a topic model. This callback will log the perplexity metric in real time:
+
+>>> from gensim.models.ldamodel import LdaModel
+>>>
+>>> # Log the perplexity score at the end of each epoch.
+>>> perplexity_logger = PerplexityMetric(corpus=common_corpus, logger='shell')
+>>> lda = LdaModel(common_corpus, num_topics=5, callbacks=[perplexity_logger])
 
 """
 
@@ -117,13 +125,40 @@ class Metric(object):
             setattr(self, parameter, value)
 
     def get_value(self):
-        """TODO: According to my understanding this method MUST be override. I propose to make ti abstract, or at
-        least make it raise NotImplemented."""
-        pass
+        """Get the metric's value at this point in time.
+
+        Warnings
+        --------
+        The user **must** provide a concrete implementation for this method for every subclass of
+        this class.
+
+        See Also
+        --------
+        Implementation of this method for various metric classes::
+            * :meth:`~gensim.models.callbacks.CoherenceMetric.get_value`
+            * :meth:`~gensim.models.callbacks.PerplexityMetric.get_value`
+            * :meth:`~gensim.models.callbacks.DiffMetric.get_value`
+            * :meth:`~gensim.models.callbacks.ConvergenceMetric.get_value`
+
+        Returns
+        -------
+        object
+            The metric's type depends on what exactly it measures. In the simplest case it might
+            be a real number corresponding to an error estimate. It could however be anything else
+            that is useful to report or visualize.
+
+        """
+        raise NotImplementedError("Please provide an implementation for `get_value` in your subclass.")
 
 
 class CoherenceMetric(Metric):
-    """Metric class for coherence evaluation.s """
+    """Metric class for coherence evaluation.
+
+     See Also
+     --------
+     :class:`~gensim.models.coherencemodel.CoherenceModel`
+
+     """
     def __init__(self, corpus=None, texts=None, dictionary=None, coherence=None,
                  window_size=None, topn=10, logger=None, viz_env=None, title=None):
         """
@@ -214,7 +249,7 @@ class PerplexityMetric(Metric):
         corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
             Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
         logger : {'shell', 'visdom'}, optional
-           Monitor training process using one of the available methods. 'shell' will print the coherence value in
+           Monitor training process using one of the available methods. 'shell' will print the perplexity value in
            the active shell, while 'visdom' will visualize the coherence value with increasing epochs using the Visdom
            visualization framework.
         viz_env : object, optional

@@ -45,6 +45,44 @@ The core estimation code is based on the `onlineldavb.py` script by M. Hoffman [
 **Hoffman, Blei, Bach: Online Learning for Latent Dirichlet Allocation, NIPS 2010.**
 
 .. [1] http://www.cs.princeton.edu/~mdhoffma
+
+Examples
+--------
+
+#. The constructor estimates Latent Dirichlet Allocation model parameters based on a training corpus:
+
+>>> from gensim.test.utils import common_corpus
+>>> from gensim.corpora.dictionary import Dictionary
+>>>
+>>> lda = LdaMulticore(common_corpus, num_topics=10)
+
+#. Save a model to disk, or reload a pretrained model.
+
+>>> from gensim.test.utils import datapath
+>>>
+>>> # Save model to disk.
+>>> temp_file = datapath("model")
+>>> lda.save(temp_file)
+>>>
+>>> # Load a potentially pretrained model from disk.
+>>> lda = LdaModel.load(temp_file)
+
+#. Query, or update the model using new, unseen documents:
+>>> other_texts = [
+...     ['computer', 'time', 'graph'],
+...     ['survey', 'response', 'eps'],
+...     ['human', 'system', 'computer']
+... ]
+>>> other_dictionary = Dictionary(other_texts)
+>>> other_corpus = [other_dictionary.doc2bow(text) for text in other_texts]
+>>>
+>>> # Query the model on an unseen document
+>>> unseen_doc = other_corpus[0]
+>>> repr = lda[unseen_doc] # get topic probability distribution for a document
+>>>
+>>> # Update the model by incrementally training on the new corpus.
+>>> lda.update(other_corpus) # update the LDA model with additional documents
+
 """
 
 import logging
@@ -67,32 +105,6 @@ class LdaMulticore(LdaModel):
     Follows the same API as the parent class :class:`~gensim.models.ldamodel.LdaModel`.
     Model persistency is achieved through its :meth:`~gensim.models.ldamulticore.LdaMulticore.load` and
     :meth:`~gensim.models.ldamulticore.LdaMulticore.save` methods.
-
-    Examples
-    --------
-
-    #. The constructor estimates Latent Dirichlet Allocation model parameters based on a training corpus:
-    >>> from gensim.test.utils import common_corpus
-    >>> from gensim.corpora.dictionary import Dictionary
-    >>>
-    >>> lda = LdaMulticore(common_corpus, num_topics=10)
-
-
-    #. Query, or update the model using new, unseen documents:
-    >>> other_texts = [
-    ...     ['computer', 'time', 'graph'],
-    ...     ['survey', 'response', 'eps'],
-    ...     ['human', 'system', 'computer']
-    ... ]
-    >>> other_dictionary = Dictionary(other_texts)
-    >>> other_corpus = [other_dictionary.doc2bow(text) for text in other_texts]
-    >>>
-    >>> # Query the model on an unseen document
-    >>> unseen_doc = other_corpus[0]
-    >>> repr = lda[unseen_doc] # get topic probability distribution for a document
-    >>>
-    >>> # Update the model by incrementally training on the new corpus.
-    >>> lda.update(other_corpus) # update the LDA model with additional documents
 
     """
 
