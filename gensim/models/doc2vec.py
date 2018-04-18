@@ -42,7 +42,7 @@ Examples
 
     >>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True)
 
-* Infer vector for new document
+* Infer vector for new document ::
 
     >>> vector = model.infer_vector(["system", "response"])
 
@@ -90,7 +90,7 @@ except ImportError:
         """Update distributed bag of words model ("PV-DBOW") by training on a single document.
 
         Called internally from :meth:`~gensim.models.doc2vec.Doc2Vec.train` and
-        :meth:`~gensim.models.doc2vec.Doc2Vec.infer_vector()`.
+        :meth:`~gensim.models.doc2vec.Doc2Vec.infer_vector`.
 
         Notes
         -----
@@ -157,14 +157,14 @@ except ImportError:
         """Update distributed memory model ("PV-DM") by training on a single document.
 
         Called internally from :meth:`~gensim.models.doc2vec.Doc2Vec.train` and
-        :meth:`~gensim.models.doc2vec.Doc2Vec.infer_vector()`. This method implements
+        :meth:`~gensim.models.doc2vec.Doc2Vec.infer_vector`. This method implements
         the DM model with a projection (input) layer that is either the sum or mean of
         the context vectors, depending on the model's `dm_mean` configuration field.
 
         Notes
         -----
         This is the non-optimized, Python version. If you have cython installed, gensim
-        will use the optimized version from :mod:`~gensim.models.doc2vec_inner` instead.
+        will use the optimized version from :mod:`gensim.models.doc2vec_inner` instead.
 
         Parameters
         ----------
@@ -245,12 +245,13 @@ except ImportError:
         concatenation of the context window word vectors (rather than a sum or average). This
         might be slower since the input at each batch will be significantly larger.
 
-        Called internally from `Doc2Vec.train()` and `Doc2Vec.infer_vector()`.
+        Called internally from :meth:`~gensim.models.doc2vec.Doc2Vec.train` and
+        :meth:`~gensim.models.doc2vec.Doc2Vec.infer_vector`.
 
         Notes
         -----
         This is the non-optimized, Python version. If you have cython installed, gensim
-        will use the optimized version from :mod:`~gensim.models.doc2vec_inner` instead.
+        will use the optimized version from :mod:`gensim.models.doc2vec_inner` instead.
 
         Parameters
         ----------
@@ -386,9 +387,9 @@ class Doctag(namedtuple('Doctag', 'offset, word_count, doc_count')):
 
 class Doc2Vec(BaseWordEmbeddingsModel):
     """Class for training, using and evaluating neural networks described in
-    `Distributed Representations of Sentences and Documents <http://arxiv.org/pdf/1405.4053v2.pdf>`_.
+    `Distributed Representations of Sentences and Documents <http://arxiv.org/abs/1405.4053v2>`_.
 
-    Some important attributes are the following:
+    Some important internal attributes are the following:
 
     Attributes
     ----------
@@ -409,7 +410,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         In a plain :class:`~gensim.models.word2vec.Word2Vec` model the word would have exactly the same representation
         in both sentences, in :class:`~gensim.models.doc2vec.Doc2Vec` it will not.
 
-    vocabulary : :class:'~gensim.models.doc2vec.Doc2VecVocab'
+    vocabulary : :class:`~gensim.models.doc2vec.Doc2VecVocab`
         This object represents the vocabulary (sometimes called Dictionary in gensim) of the model.
         Besides keeping track of all unique words, this object provides extra functionality, such as
         sorting words by frequency, or discarding extremely rare words.
@@ -558,7 +559,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
     @property
     def dm(self):
         """Indicates whether 'distributed memory' (PV-DM) will be used, else 'distributed bag of words'
-         (PV-DBOW) is used.
+        (PV-DBOW) is used.
 
         """
         return not self.sg  # opposite of SG
@@ -575,6 +576,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         pass
 
     def _clear_post_train(self):
+        """Alias for :meth:`~gensim.models.doc2vec.Doc2Vec.clear_sims`."""
         self.clear_sims()
 
     def clear_sims(self):
@@ -601,11 +603,11 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         self.trainables.reset_weights(self.hs, self.negative, self.wv, self.docvecs)
 
     def _do_train_job(self, job, alpha, inits):
-        """
+        """Train model using `job` data.
 
         Parameters
         ----------
-        job : iterable of list of str
+        job : iterable of list of :class:`~gensim.models.doc2vec.TaggedDocument`
             The corpus chunk to be used for training this batch.
         alpha : float
             Learning rate to be used for training this batch.
@@ -644,19 +646,18 @@ class Doc2Vec(BaseWordEmbeddingsModel):
     def train(self, documents, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None,
               word_count=0, queue_factor=2, report_delay=1.0, callbacks=()):
-        """Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
-        The `documents` iterable can be simply a list of TaggedDocument elements.
+        """Update the model's neural weights.
 
         To support linear learning-rate decay from (initial) alpha to min_alpha, and accurate
-        progress-percentage logging, either total_examples (count of sentences) or total_words (count of
-        raw words in sentences) **MUST** be provided (if the corpus is the same as was provided to
-        :meth:`~gensim.models.word2vec.Word2Vec.build_vocab()`, the count of examples in that corpus
-        will be available in the model's :attr:`corpus_count` property).
+        progress-percentage logging, either total_examples (count of sentences) or total_words (count of raw words
+        in sentences) **MUST** be provided (if the corpus is the same as was provided to
+        :meth:`~gensim.models.word2vec.Word2Vec.build_vocab`, the count of examples in that corpus will be available
+        in the model's :attr:`corpus_count` property).
 
-        To avoid common mistakes around the model's ability to do multiple training passes itself, an
-        explicit `epochs` argument **MUST** be provided. In the common and recommended case,
-        where :meth:`~gensim.models.word2vec.Word2Vec.train()` is only called once,
-        the model's cached `iter` value should be supplied as `epochs` value.
+        To avoid common mistakes around the model's ability to do multiple training passes itself, an explicit `epochs`
+        argument **MUST** be provided. In the common and recommended case,
+        where :meth:`~gensim.models.word2vec.Word2Vec.train` is only called once, the model's cached `iter` value
+        should be supplied as `epochs` value.
 
         Parameters
         ----------
@@ -683,6 +684,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             Seconds to wait before reporting progress.
         callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`, optional
             List of callbacks that need to be executed/run at specific stages during training.
+
         """
         super(Doc2Vec, self).train(
             documents, total_examples=total_examples, total_words=total_words,
@@ -694,7 +696,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
         Parameters
         ----------
-        job : iterable of list of str
+        job : iterable of list of :class:`~gensim.models.doc2vec.TaggedDocument`
             Corpus chunk.
 
         Returns
@@ -706,12 +708,13 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         return sum(len(sentence.words) for sentence in job)
 
     def estimated_lookup_memory(self):
-        """Estimated memory for tag lookup; 0 if using pure int tags.
+        """Get estimated memory for tag lookup, 0 if using pure int tags.
 
         Returns
         -------
         int
             The estimated RAM required to look up a tag in bytes.
+
         """
         return 60 * len(self.docvecs.offset2doctag) + 140 * len(self.docvecs.doctags)
 
@@ -726,15 +729,14 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         Parameters
         ----------
         doc_words : list of str
-            A document for which the vector representation will be inferred. Note this does not have to
-            be already used in training; it can be an completely new document.
+            A document for which the vector representation will be inferred.
         alpha : float, optional
             The initial learning rate.
         min_alpha : float, optional
             Learning rate will linearly drop to `min_alpha` as training progresses.
         steps : int, optional
-            Number of times to train the new document. A higher value may slow down training, but
-            it will result in more stable representations.
+            Number of times to train the new document. A higher value may slow down training, but it will result in more
+            stable representations.
 
         Returns
         -------
@@ -789,12 +791,13 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         return vstack([self[i] for i in tag])
 
     def __str__(self):
-        """Abbreviated name reflecting major configuration paramaters.
+        """Abbreviated name reflecting major configuration parameters.
 
         Returns
         -------
         str
             Human readable representation of the models internal state.
+
         """
         segments = []
         if self.comment:
@@ -834,9 +837,9 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         Parameters
         ----------
         keep_doctags_vectors : bool, optional
-            Set to False if you don't want to save doctags vectors. In this case you will not be able to
-             use :meth:`~gensim.models.keyedvectors.Doc2VecKeyedVectors.most_similar`,
-             :meth:`~gensim.models.keyedvectors.Doc2VecKeyedVectors.similarity` etc. methods.
+            Set to False if you don't want to save doctags vectors. In this case you will not be able to use
+            :meth:`~gensim.models.keyedvectors.Doc2VecKeyedVectors.most_similar`,
+            :meth:`~gensim.models.keyedvectors.Doc2VecKeyedVectors.similarity`, etc methods.
         keep_inference : bool, optional
             Set to False if you don't want to store parameters that are used for
             :meth:`~gensim.models.doc2vec.Doc2Vec.infer_vector` method.
@@ -856,8 +859,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             del self.trainables.vectors_docs_lockf
 
     def save_word2vec_format(self, fname, doctag_vec=False, word_vec=True, prefix='*dt_', fvocab=None, binary=False):
-        """Store the input-hidden weight matrix in the same format used by the original
-        C word2vec-tool, for compatibility.
+        """Store the input-hidden weight matrix in the same format used by the original C word2vec-tool.
 
         Parameters
         ----------
@@ -868,12 +870,12 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         word_vec : bool, optional
             Indicates whether to store word vectors.
         prefix : str, optional
-            Uniquely identifies doctags from word vocab, and avoids collision
-            in case of repeated string in doctag and word vocab.
+            Uniquely identifies doctags from word vocab, and avoids collision in case of repeated string in doctag
+            and word vocab.
         fvocab : str, optional
-            Optional file path used to save the vocabulary
+            Optional file path used to save the vocabulary.
         binary : bool, optional
-            If True, the data wil be saved in binary word2vec format, else it will be saved in plain text.
+            If True, the data wil be saved in binary word2vec format, otherwise - will be saved in plain text.
 
         """
         total_vec = len(self.wv.vocab) + len(self.docvecs)
@@ -893,20 +895,13 @@ class Doc2Vec(BaseWordEmbeddingsModel):
                 binary=binary, write_first_line=write_first_line)
 
     def init_sims(self, replace=False):
-        """Precompute L2-normalized vectors.
+        """Pre-compute L2-normalized vectors.
 
         Parameters
         ----------
         replace : bool
-            If set, forget the original vectors and only keep the normalized ones to saved RAM.
-
-        Notes
-        -----
-        You **cannot continue training or inference** after doing a replace.
-        The model becomes effectively read-only - you can call
-        :meth:`~gensim.models.keyedvectors.Doc2VecKeyedVectors.most_similar`,
-        :meth:`~gensim.models.keyedvectors.Doc2VecKeyedVectors.similarity` etc., but not
-        :meth:`~gensim.models.doc2vec.Doc2Vec.train` or :meth:`~gensim.models.doc2vec.Doc2Vec.infer_vector`.
+            If True - forget the original vectors and only keep the normalized ones to saved RAM (also you can't
+            continue training if call it with `replace=True`).
 
         """
         self.docvecs.init_sims(replace=replace)
@@ -914,17 +909,26 @@ class Doc2Vec(BaseWordEmbeddingsModel):
     @classmethod
     def load(cls, *args, **kwargs):
         """Loads a previously saved :class:`~gensim.models.doc2vec.Doc2Vec` model.
-        Also see :meth:`~gensim.models.doc2vec.Doc2Vec.save`.
 
         Parameters
         ----------
         fname : str
             Path to the saved file.
+        *args : object
+            Additional arguments, see `~gensim.models.base_any2vec.BaseWordEmbeddingsModel.load`.
+        **kwargs : object
+            Additional arguments, see `~gensim.models.base_any2vec.BaseWordEmbeddingsModel.load`.
+
+        See Also
+        --------
+        :meth:`~gensim.models.doc2vec.Doc2Vec.save`
+            Save :class:`~gensim.models.doc2vec.Doc2Vec` model.
 
         Returns
         -------
         :class:`~gensim.models.doc2vec.Doc2Vec`
             Loaded model.
+
         """
         try:
             return super(Doc2Vec, cls).load(*args, **kwargs)
@@ -938,7 +942,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
         Parameters
         ----------
-        vocab_size : int
+        vocab_size : int, optional
             Number of raw words in the vocabulary.
         report : dict of (str, int), optional
             A dictionary from string representations of the **specific** model's memory consuming members
@@ -977,14 +981,17 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
             or a callable that accepts parameters (word, count, min_count) and returns either
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
-            The input parameters are of the following types:
-            * word: str. The word we are examining.
-            * count: int. The word's occurence count in the corpus.
-            * min_count: int. The minimum count threshold.
-            Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
+            The rule, if given, is only used to prune vocabulary during current method call and is not stored as part
             of the model.
+
+            The input parameters are of the following types:
+                * `word` (str) - the word we are examining
+                * `count` (int) - the word's frequency count in the corpus
+                * `min_count` (int) - the minimum count threshold.
+
         **kwargs
             Additional key word arguments passed to the internal vocabulary construction.
+
         """
         total_words, corpus_count = self.vocabulary.scan_vocab(
             documents, self.docvecs, progress_per=progress_per, trim_rule=trim_rule)
@@ -1006,7 +1013,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         Parameters
         ----------
         word_freq : dict of (str, int)
-            Word count mapping.
+            Word <-> count mapping.
         keep_raw_vocab : bool, optional
             If not true, delete the raw vocabulary after the scaling is done and free up RAM.
         corpus_count : int, optional
@@ -1028,12 +1035,6 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         update : bool, optional
             If true, the new provided words in `word_freq` dict will be added to model's vocab.
 
-        Examples
-        --------
-        >>> from gensim.models.word2vec import Word2Vec
-        >>>
-        >>> model= Word2Vec()
-        >>> model.build_vocab_from_freq({"Word1": 15, "Word2": 20})
         """
         logger.info("Processing provided word frequencies")
         # Instead of scanning text, this will assign provided word frequencies dictionary(word_freq)
