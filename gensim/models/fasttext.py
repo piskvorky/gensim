@@ -9,36 +9,37 @@
 hierarchical softmax or negative sampling `Enriching Word Vectors with Subword Information
 <https://arxiv.org/abs/1607.04606>`_.
 
-Notes
------
-There are more ways to get word vectors in Gensim than just FastText.
-See wrappers for VarEmbed and WordRank or Word2Vec
 
-This module allows training a word embedding from a training corpus with the additional ability
-to obtain word vectors for out-of-vocabulary words.
+This module allows training a word embedding from a training corpus with the additional ability to obtain word vectors
+for out-of-vocabulary words.
 
 For a tutorial on gensim's native fasttext, refer to the `noteboook
 <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/FastText_Tutorial.ipynb>`_.
 
+Notes
+-----
 **Make sure you have a C compiler before installing gensim, to use optimized (compiled) fasttext training**
 
 Examples
 --------
 
-#. Initialize a model with e.g. ::
+* Initialize a model with e.g. ::
     >>> from gensim.test.utils import common_texts
+    >>> from gensim.models import FastText
     >>>
     >>> model = FastText(size=4, window=3, min_count=1)
     >>> model.build_vocab(common_texts)
 
-#. Persist a model to disk with ::
+* Persist a model to disk with ::
     >>> model.save("temp_model.w2v")
     >>> model = FastText.load("temp_model.w2v")  # you can continue training with the loaded model!
 
-    The word vectors are stored in a KeyedVectors instance in `model.wv`.
-    This separates the read-only word vector lookup operations in KeyedVectors from the training code in Word2Vec::
-
-    >>> computer_vec = model.wv['computer']  # numpy vector of a word
+* Retrieve word-vector for vocab and out-of-vocab word (this is main feature of current model)::
+    >>> existent_word = "computer"
+    >>> computer_vec = model.wv[existent_word]  # numpy vector of a word
+    >>>
+    >>> oov_word = "graph-out-of-vocab"
+    >>> oov_vec = model.wv[oov_word]  # numpy vector for OOV word
 
 #. You can perform various NLP word tasks with the model. Some of them are already built-in ::
 
@@ -58,9 +59,9 @@ Examples
     >>>
     >>> similarities = model.wv.evaluate_word_pairs(datapath('wordsim353.tsv'))
 
-#. And on analogies::
+#. And on analogies ::
 
-    >>> analogies = model.wv.accuracy(datapath('questions-words.txt'))
+    >>> analogies_result = model.wv.accuracy(datapath('questions-words.txt'))
 
 """
 import logging
@@ -90,26 +91,26 @@ except ImportError:
 
     def train_batch_cbow(model, sentences, alpha, work=None, neu1=None):
         """Update CBOW model by training on a sequence of sentences.
-        Each sentence is a list of string tokens, which are looked up in the model's
-        vocab dictionary. Called internally from :meth:`gensim.models.fasttext.FastText.train()`.
+
+        Called internally from :meth:`~gensim.models.fasttext.FastText.train`.
 
         Notes
         -----
-        This is the non-optimized, Python version. If you have cython installed, gensim
-        will use the optimized version from fasttext_inner instead.
+        This is the non-optimized, Python version. If you have cython installed, gensim will use the optimized version
+        from :mod:`gensim.models.fasttext_inner` instead.
 
         Parameters
         ----------
         model : :class:`~gensim.models.fasttext.FastText`
-            `FastText` instance.
+            Model instance.
         sentences : iterable of list of str
-            Iterable of the sentences directly from disk/network.
+            Iterable of the sentences.
         alpha : float
             Learning rate.
         work : :class:`numpy.ndarray`, optional
-            Private working memory for each worker.
+            UNUSED.
         neu1 : :class:`numpy.ndarray`, optional
-            Private working memory for each worker.
+            UNUSED.
         Returns
         -------
         int
@@ -148,13 +149,13 @@ except ImportError:
 
     def train_batch_sg(model, sentences, alpha, work=None, neu1=None):
         """Update skip-gram model by training on a sequence of sentences.
-        Each sentence is a list of string tokens, which are looked up in the model's
-        vocab dictionary. Called internally from :meth:`gensim.models.fasttext.FastText.train()`.
+
+        Called internally from :meth:`~gensim.models.fasttext.FastText.train`.
 
         Notes
         -----
-        This is the non-optimized, Python version. If you have cython installed, gensim
-        will use the optimized version from fasttext_inner instead.
+        This is the non-optimized, Python version. If you have cython installed, gensim will use the optimized version
+        from :mod:`gensim.models.fasttext_inner` instead.
 
         Parameters
         ----------
@@ -165,9 +166,9 @@ except ImportError:
         alpha : float
             Learning rate.
         work : :class:`numpy.ndarray`, optional
-            Private working memory for each worker.
+            UNUSED.
         neu1 : :class:`numpy.ndarray`, optional
-            Private working memory for each worker.
+            UNUSED.
 
         Returns
         -------
@@ -878,6 +879,7 @@ class FastText(BaseWordEmbeddingsModel):
 
 
 class FastTextVocab(Word2VecVocab):
+    """Vocabulary used by :class:`~gensim.models.fasttext.FastText`."""
     def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0):
         super(FastTextVocab, self).__init__(
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
@@ -892,6 +894,7 @@ class FastTextVocab(Word2VecVocab):
 
 
 class FastTextTrainables(Word2VecTrainables):
+    """Represents the inner shallow neural network used to train :class:`~gensim.models.fasttext.FastText`."""
     def __init__(self, vector_size=100, seed=1, hashfxn=hash, bucket=2000000):
         super(FastTextTrainables, self).__init__(
             vector_size=vector_size, seed=seed, hashfxn=hashfxn)
