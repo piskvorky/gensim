@@ -45,6 +45,7 @@ Modules:
     models/word2vec
     models/keyedvectors
     models/doc2vec
+    models/doc2vec_inner
     models/fasttext
     models/phrases
     models/poincare
