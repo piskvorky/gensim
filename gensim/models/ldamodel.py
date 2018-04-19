@@ -698,9 +698,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             dirty = False
 
             reallen = 0
-            for chunk_no, chunk in enumerate(utils.grouper(
-                                                       corpus, chunksize, as_numpy=chunks_as_numpy,
-                                                       dtype=self.dtype)):
+            for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize, as_numpy=chunks_as_numpy)):
                 reallen += len(chunk)  # keep track of how many documents we've processed so far
 
                 if eval_every and ((reallen == lencorpus) or ((chunk_no + 1) % (eval_every * self.numworkers) == 0)):
