@@ -291,7 +291,7 @@ index ecae36e..f85bf22 100644
 +                emb[neg[1]] = update(emb[neg[1]], -1*der_neg[1])
 +        print('Epoch #%d, time taken: %.2f seconds' % (epoch + 1, time.time() - last_time))
 +        last_time = time.time()
-+    pickle.dump(emb, open(output_file, 'wb'))
++    pickle.dump(emb, smart_open(output_file, 'wb'))
 +
 +
 +if __name__ == "__main__":
