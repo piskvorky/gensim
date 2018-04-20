@@ -105,7 +105,6 @@ import logging
 import sys
 import os
 import heapq
-from bounter import bounter
 from timeit import default_timer
 from copy import deepcopy
 from collections import defaultdict
@@ -1154,12 +1153,13 @@ class Word2VecVocab(utils.SaveLoad):
         sentence_no = -1
         total_words = 0
         min_reduce = 1
-        vocab = defaultdict(int)
         checked_string_types = 0
         bounter_size = self.bounter_size
 
         if bounter_size is not None:
-            word_counts = bounter(size_mb=bounter_size)
+            wrapped_dict = utils.BounterWrapper(self.bounter_size)
+        else:
+            wrapped_dict = utils.DictWrapper()
 
         for sentence_no, sentence in enumerate(sentences):
             if not checked_string_types:
@@ -1174,25 +1174,18 @@ class Word2VecVocab(utils.SaveLoad):
 
                 logger.info(
                     "PROGRESS: at sentence #%i, processed %i words, keeping %i word types",
-                    sentence_no, total_words, len(vocab) if bounter_size is None else word_counts.cardinality()
+                    sentence_no, total_words, len(wrapped_dict)
                 )
 
             total_words += len(sentence)
+            wrapped_dict.update(sentence)
 
-            if bounter_size is not None:
-                word_counts.update(sentence)
-            else:
-                for word in sentence:
-                    vocab[word] += 1
-
-            if self.max_vocab_size and len(vocab) > self.max_vocab_size:
-                if bounter_size is not None:
-                    vocab = dict(word_counts)
+            if self.max_vocab_size and len(wrapped_dict) > self.max_vocab_size:
+                vocab = wrapped_dict.get()
                 utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
                 min_reduce += 1
 
-        if bounter_size is not None:
-            vocab = dict(word_counts)
+        vocab = wrapped_dict.get()
 
         logger.info(
             "collected %i word types from a corpus of %i raw words and %i sentences",
