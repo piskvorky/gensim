@@ -1026,7 +1026,7 @@ class sslm(utils.SaveLoad):
         TODO:
         This is by far the slowest function in the whole algorithm.
         Replacing or improving the performance of this would greatly speed things up.
-        
+
         Parameters
         ----------
         sstats : np.ndarray of shape (`self.vocab_len`, `num_topics`)
@@ -1037,6 +1037,8 @@ class sslm(utils.SaveLoad):
 
         Returns
         -------
+        (np.ndarray of float, np.ndarray of float)
+            The updated optimized values for obs and the zeta variational parameter.
 
         """
 
@@ -1097,10 +1099,28 @@ class sslm(utils.SaveLoad):
         return self.obs, self.zeta
 
     def compute_mean_deriv(self, word, time, deriv):
-        """
-        Used in helping find the optimum function.
-        computes derivative of E[\beta_{t,w}]/d obs_{s,w} for t = 1:T.
-        put the result in deriv, allocated T+1 vector
+        """Helper functions for optimizing a function.
+
+        Computes derivative of:
+
+        :math::
+
+            E[\beta_{t,w}]/d obs_{s,w} for t = 1:T.
+
+        Parameters
+        ----------
+        word : int
+            The word's ID.
+        time : int
+            The time slice.
+        deriv : list of float
+            Derivative for each time slice.
+
+        Returns
+        -------
+        list of float
+            Mean derivative for each time slice.
+
         """
 
         T = self.num_time_slices
@@ -1129,8 +1149,26 @@ class sslm(utils.SaveLoad):
         return deriv
 
     def compute_obs_deriv(self, word, word_counts, totals, mean_deriv_mtx, deriv):
-        """
-        Derivation of obs which is used in derivative function [df_obs] while optimizing.
+        """Derivation of obs which is used in derivative function `df_obs` while optimizing.
+
+        Parameters
+        ----------
+        word : int
+            The word's ID.
+        word_counts : list of int
+            Total word counts for each time slice.
+        totals : list of int of length `len(self.time_slice)`
+            The totals for each time slice.
+        mean_deriv_mtx : list of float
+            Mean derivative for each time slice.
+        deriv : list of float
+            Mean derivative for each time slice.
+
+        Returns
+        -------
+        list of float
+            Mean derivative for each time slice.
+
         """
 
         # flag
@@ -1181,19 +1219,36 @@ class sslm(utils.SaveLoad):
             deriv[t] = term1 + term2 + term3 + term4
 
         return deriv
-# endclass sslm
 
 
 class LdaPost(utils.SaveLoad):
+    """Posterior values associated with each set of documents.
 
-    """
-    Posterior values associated with each set of documents.
     TODO: use **Hoffman, Blei, Bach: Online Learning for Latent Dirichlet Allocation, NIPS 2010.**
     to update phi, gamma. End game would be to somehow replace LdaPost entirely with LdaModel.
+
     """
 
     def __init__(self, doc=None, lda=None, max_doc_len=None, num_topics=None, gamma=None, lhood=None):
+        """Initialize the posterior value structure for the given LDA model.
 
+        Parameters
+        ----------
+        doc : list of (int, int)
+            A BOW representation of the document. Each element in the list is a pair of a word's ID and its number
+            of occurences in the document.
+        lda : :class:`~gensim.models.ldamodel.LdaModel`, optional
+            The underlying LDA model.
+        max_doc_len : int, optional
+            The maximum number of words in a document.
+        num_topics : int, optional
+            Number of topics discovered by the LDA model.
+        gamma : np.ndarray, optional
+            Topic weight variational parameters for each document. If not supplied, it will be inferred from the model.
+        lhood : float, optional
+            The log likelihood lower bound.
+
+        """
         self.doc = doc
         self.lda = lda
         self.gamma = gamma
@@ -1213,13 +1268,26 @@ class LdaPost(utils.SaveLoad):
         self.renormalized_doc_weight = None
 
     def update_phi(self, doc_number, time):
-        """
-        Update variational multinomial parameters, based on a document and a time-slice.
+        """Update variational multinomial parameters, based on a document and a time-slice.
+
         This is done based on the original Blei-LDA paper, where:
         log_phi := beta * exp(Ψ(gamma)), over every topic for every word.
 
         TODO: incorporate lee-sueng trick used in
         **Lee, Seung: Algorithms for non-negative matrix factorization, NIPS 2001**.
+
+        Parameters
+        ----------
+        doc_number : int
+            Document number. Unused.
+        time : int
+            Time slice. Unused.
+
+        Returns
+        -------
+        (list of float, list of float)
+            Multinomial parameters, and their logarithm, for each word in the document.
+
         """
         num_topics = self.lda.num_topics
         # digamma values
@@ -1251,9 +1319,17 @@ class LdaPost(utils.SaveLoad):
         return self.phi, self.log_phi
 
     def update_gamma(self):
-        """
-        update variational dirichlet parameters as described in the original Blei LDA paper:
+        """Update variational dirichlet parameters.
+
+        This operations is described in the original Blei LDA paper:
         gamma = alpha + sum(phi), over every topic for every word.
+
+        Returns
+        -------
+        list of float
+            The updated gamma parameters for each word in the document.
+            
+
         """
         self.gamma = np.copy(self.lda.alpha)
         n = 0  # keep track of number of iterations for phi, log_phi
@@ -1266,9 +1342,7 @@ class LdaPost(utils.SaveLoad):
         return self.gamma
 
     def init_lda_post(self):
-        """
-        Initialize variational posterior, does not return anything.
-        """
+        """Initialize variational posterior. """
         total = sum(count for word_id, count in self.doc)
         self.gamma.fill(self.lda.alpha[0] + float(total) / self.lda.num_topics)
         self.phi[:len(self.doc), :] = 1.0 / self.lda.num_topics
@@ -1276,8 +1350,13 @@ class LdaPost(utils.SaveLoad):
         # ldapost.doc_weight = None
 
     def compute_lda_lhood(self):
-        """
-        compute the likelihood bound
+        """Compute the log likelihood bound.
+
+        Returns
+        -------
+        float
+            The optimal lower bound for the true posterior using the approximate distribution.
+
         """
         num_topics = self.lda.num_topics
         gamma_sum = np.sum(self.gamma)
@@ -1320,9 +1399,33 @@ class LdaPost(utils.SaveLoad):
 
     def fit_lda_post(self, doc_number, time, ldaseq, LDA_INFERENCE_CONVERGED=1e-8,
                     lda_inference_max_iter=25, g=None, g3_matrix=None, g4_matrix=None, g5_matrix=None):
-        """
-        Posterior inference for lda.
-        g, g3, g4 and g5 are matrices used in Document Influence Model and not used currently.
+        """Posterior inference for lda.
+
+        Parameters
+        ----------
+        doc_number : int
+            The documents number.
+        time : int
+            Time slice.
+        ldaseq : object
+            Unused.
+        LDA_INFERENCE_CONVERGED : float
+            Epsilon value used to check whether the inference step has sufficiently converged.
+        lda_inference_max_iter : int
+            Maximum number of iterations in the inference step.
+        g : object
+            Unused. Will be useful when the DIM model is implemented.
+        g3_matrix: object
+            Unused. Will be useful when the DIM model is implemented.
+        g4_matrix: object
+            Unused. Will be useful when the DIM model is implemented.
+        g5_matrix: object
+            Unused. Will be useful when the DIM model is implemented.
+
+        Returns
+        -------
+        float
+            The optimal lower bound for the true posterior using the approximate distribution.
         """
 
         self.init_lda_post()
@@ -1372,9 +1475,26 @@ class LdaPost(utils.SaveLoad):
         return lhood
 
     def update_lda_seq_ss(self, time, doc, topic_suffstats):
-        """
-        Update lda sequence sufficient statistics from an lda posterior.
-        This is very similar to the update_gamma method and uses the same formula.
+        """Update lda sequence sufficient statistics from an lda posterior.
+
+        This is very similar to the :meth:`~gensim.models.ldaseqmodel.LdaPost.update_gamma` method and uses
+        the same formula.
+
+        Parameters
+        ----------
+        time : int
+            The time slice.
+        doc : list of (int, float)
+            Unused but kept here for backwards compatibility. The document set in the constructor (`self.doc`) is used
+            instead.
+        topic_suffstats : list of float
+            Sufficient statistics for each topic.
+
+        Returns
+        -------
+        list of float
+            The updated sufficient statistics for each topic.
+
         """
         num_topics = self.lda.num_topics
 
@@ -1389,10 +1509,32 @@ class LdaPost(utils.SaveLoad):
         return topic_suffstats
 
 
-# the following functions are used in update_obs as the function to optimize
+# the following functions are used in update_obs as the objective function.
 def f_obs(x, *args):
-    """
-    Function which we are optimising for minimizing obs.
+    """Function which we are optimising for minimizing obs.
+
+    Parameters
+    ----------
+    x : list of float
+        The obs values for this word.
+    sslm : :class:`~gensim.models.ldaseqmodel.sslm`
+        The State Space Language Model for DTM.
+    word_counts : list of int
+        Total word counts for each time slice.
+    totals : list of int of length `len(self.time_slice)`
+        The totals for each time slice.
+    mean_deriv_mtx : list of float
+        Mean derivative for each time slice.
+    word : int
+        The word's ID.
+    deriv : list of float
+        Mean derivative for each time slice.
+
+    Returns
+    -------
+    list of float
+        The value of the objective function evaluated at point `x`.
+
     """
     sslm, word_counts, totals, mean_deriv_mtx, word, deriv = args
     # flag
@@ -1443,8 +1585,30 @@ def f_obs(x, *args):
 
 
 def df_obs(x, *args):
-    """
-    Derivative of function which optimises obs.
+    """Derivative of the objective function which optimises obs.
+
+    Parameters
+    ----------
+    x : list of float
+        The obs values for this word.
+    sslm : :class:`~gensim.models.ldaseqmodel.sslm`
+        The State Space Language Model for DTM.
+    word_counts : list of int
+        Total word counts for each time slice.
+    totals : list of int of length `len(self.time_slice)`
+        The totals for each time slice.
+    mean_deriv_mtx : list of float
+        Mean derivative for each time slice.
+    word : int
+        The word's ID.
+    deriv : list of float
+        Mean derivative for each time slice.
+
+    Returns
+    -------
+    list of float
+        The derivative of the objective function evaluated at point `x`.
+
     """
     sslm, word_counts, totals, mean_deriv_mtx, word, deriv = args
 
