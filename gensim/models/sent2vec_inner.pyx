@@ -36,7 +36,35 @@ cdef int MAX_EXP = 6
 cdef REAL_t negative_sampling(const int target, const REAL_t lr, REAL_t *grad, REAL_t *wo,
                               REAL_t *hidden, const int vector_size, const int neg, int *negatives,
                               int *negpos, const int negatives_len)nogil:
-
+    """
+    Get loss using negative sampling.
+    Pararmeters
+    -----------
+    target : const int
+        Word id of target word.
+    lr : REAL_t
+        current learning rate.
+    grad : REAL_t *
+        pointer to gradient vector
+    wo : REAL_t *
+        pointer to output sentence vector
+    hidden : REAL_t *
+        pointer to hidden vector
+    vector_size : const int
+        size of the sentence embeddings
+    neg : const int
+        number of noise words to be drawn for negative sampling
+    negatives : int *
+        pointer to array containing noise words
+    negpos : int *
+        pointer to position of noise word to be drawn
+    negatives_len : const int
+        length of the array containing noise words
+    Returns
+    -------
+    loss : REAL_t
+        Negative sampling loss.
+    """
     cdef REAL_t loss = <REAL_t> 0.0
     cdef int label_true, label_false
     label_true = <int> 1
@@ -53,6 +81,17 @@ cdef REAL_t negative_sampling(const int target, const REAL_t lr, REAL_t *grad, R
 
 cdef REAL_t sigmoid(const REAL_t val)nogil:
 
+    """
+    Get value of sigmoid function for input
+    Parameters
+    ----------
+    val : const REAL_t
+        input value for which sigmoid function is to be computed
+    Returns
+    -------
+    REAL_t
+        value of sigmoid function for input value
+    """
     cdef int temp = <int>((val + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))
     if temp < 0:
         return 0.0
@@ -64,6 +103,17 @@ cdef REAL_t sigmoid(const REAL_t val)nogil:
 
 cdef REAL_t log(const REAL_t val)nogil:
 
+    """
+    Compute log value for given input
+    Parameters
+    ----------
+    val : const REAL_t
+        input value for which log function is to be calculated
+    Returns
+    -------
+    REAL_t
+        value of the log function for input value
+    """
     if val >= 1.0:
         return 0.0
     else:
@@ -74,6 +124,29 @@ cdef REAL_t binary_logistic(const int target, const int label, const REAL_t lr,
                             const int vector_size, REAL_t *wo, REAL_t *grad,
                             REAL_t *hidden)nogil:
 
+    """
+    Compute loss for given target, label and learning rate using binary logistic regression.
+    Pararmeters
+    -----------
+    target : const int
+        Word id of target word.
+    label : const int
+        1 if no negative is sampled, 0 otherwise
+    lr : REAL_t
+        current learning rate.
+    grad : REAL_t *
+        pointer to gradient vector
+    wo : REAL_t *
+        pointer to output sentence vector
+    hidden : REAL_t *
+        pointer to hidden vector
+    vector_size : const int
+        size of the sentence embeddings
+    Returns
+    -------
+    loss : REAL_t
+        Binary logistic regression loss.
+    """
     cdef REAL_t temp = <REAL_t>our_dot(&vector_size, &wo[target], &ONE, hidden, &ONE)
     cdef REAL_t score = sigmoid(temp)
     cdef REAL_t alpha = lr * (<REAL_t>label - score)
@@ -88,6 +161,23 @@ cdef REAL_t binary_logistic(const int target, const int label, const REAL_t lr,
 cdef int get_negative(const int target, int *negatives,
                               int *negpos, const int negatives_len)nogil:
 
+    """
+    Get a negative from the list of negatives for caluculating nagtive sampling loss.
+    Pararmeters
+    -----------
+    target : const int
+        Word id of target word.
+    negatives : int *
+        pointer to array containing noise words
+    negpos : int *
+        pointer to position of noise word to be drawn
+    negatives_len : const int
+        length of the array containing noise words
+    Returns
+    -------
+    int
+        Word id of negative sample
+    """
     cdef int negative
     while True:
         negative = negatives[negpos[0]]
@@ -101,6 +191,39 @@ cdef REAL_t update(vector[int] &context, int target, REAL_t lr, REAL_t *hidden, 
                   int vector_size, int *negpos, int neg, int negatives_len,
                   REAL_t *wi, REAL_t *wo, int *negatives)nogil:
 
+    """
+    Update model's neural weights for given context, target word and learning rate.
+    Pararmeters
+    -----------
+    context : vector[int]
+        vector of word ids of context words
+    target : const int
+        Word id of target word.
+    lr : REAL_t
+        current learning rate.
+    grad : REAL_t *
+        pointer to gradient vector
+    wo : REAL_t *
+        pointer to output sentence vector
+    wi : REAL_t *
+        pointer to input sentence vector
+    hidden : REAL_t *
+        pointer to hidden vector
+    vector_size : const int
+        size of the sentence embeddings
+    neg : const int
+        number of noise words to be drawn for negative sampling
+    negatives : int *
+        pointer to array containing noise words
+    negpos : int *
+        pointer to position of noise word to be drawn
+    negatives_len : const int
+        length of the array containing noise words
+    Returns
+    -------
+    loss : REAL_t
+        Model loss.
+    """
     if context.size() <= 0:
         return 0
 
@@ -120,16 +243,50 @@ cdef REAL_t update(vector[int] &context, int target, REAL_t lr, REAL_t *hidden, 
 
 cdef REAL_t random_uniform()nogil:
 
+    """
+    Returns
+    -------
+    REAT_t
+        Generate random real number between 0 and 1
+    """
     return rand() / (RAND_MAX + 1.0)
 
 
 cdef int random_range(int a, int b)nogil:
 
+    """
+    Generate random integer for given input range
+    Parameters
+    ----------
+    a : int
+        Lower limit of input range
+    b: int
+        Upper limit of input range
+    Returns
+    -------
+    int
+        Random integer in given input range [a,b]
+    """
     return a + <int>(rand() % ((b - a) + 1))
 
 
 cdef int get_line(vector[int] &wids, vector[int] &words, int max_line_size)nogil:
 
+    """
+    Converting sentence to a list of word ids inferred from the dictionary.
+    Parameters
+    ----------
+    wids : vector[int]
+        Vector of word ids for a sentence
+    words : vector[int] &
+        Reference to vector of valid word ids for a sentence
+    max_line_size : int
+        Maximum length of input sentence
+    Returns
+    -------
+    ntokens : int
+        Number of tokens processed in given sentence.
+    """
     cdef int ntokens = <int> 0
     cdef int i
 
@@ -145,6 +302,21 @@ cdef int get_line(vector[int] &wids, vector[int] &words, int max_line_size)nogil
 
 cdef void add_ngrams_train(vector[int] &line, int n, int k, int bucket, int size)nogil:
 
+    """
+    Training word ngrams for a given context and target word.
+    Parameters
+    ----------
+    line : vector[int] &
+        Reference to vector of word ids for input sentence
+    n : int
+        Number of word ngrams.
+    k : int
+        Number of word ngrams dropped while training a Sent2Vec model.
+    bucket : int
+        Number of hash buckets for vocabulary
+    size : int
+        Size of sentence embeddings
+    """
     cdef int num_discarded = 0
     cdef vector[int] discard
     cdef int line_size = line.size()
@@ -176,6 +348,9 @@ cdef (int, int, REAL_t) _do_train_job_util(vector[vector[int]] &word_ids, REAL_t
                              int vector_size, int *negpos, int neg, int negatives_len,
                              REAL_t *wi, REAL_t *wo, int *negatives, int bucket, int size)nogil:
 
+    """
+    Utility cython nogil function to train a batch of input sentences
+    """
     cdef int local_token_count = 0
     cdef int nexamples = 0
     cdef REAL_t loss = <REAL_t> 0.0
@@ -204,6 +379,29 @@ cdef (int, int, REAL_t) _do_train_job_util(vector[vector[int]] &word_ids, REAL_t
 
 def _do_train_job_fast(model, sentences_, lr_, hidden_, grad_):
 
+    """
+    Train a batch of input sentences using a nogil cython utility function
+    Parameters
+    ----------
+    model : Object
+        Sent2Vec python object
+    sentences_ : iterable of iterable of str
+        Input sentences
+    lr_ : float
+        Learning rate for given batch of input sentences
+    hidden_ : numpy.ndarray
+        Hidden vector for neural network computation.
+    grad_ : numpy.ndarray
+        Gradient vector for neural network computation.
+    Returns
+    -------
+    local_token_count : int
+        Number of tokens processed for given training batch.
+    nexamples : int
+        Number of examples processed in given training batch.
+    loss : REAL_t
+        Loss for given training batch.
+    """
     cdef REAL_t lr = <REAL_t> lr_
     cdef int vector_size = <int> model.vector_size
     cdef int *negatives = <int *> np.PyArray_DATA(model.negatives)

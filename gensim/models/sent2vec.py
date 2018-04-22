@@ -34,10 +34,11 @@ You can perform the NLP similarity task with the model
 
 References
 ----------
-.. [1] Matteo Pagliardini, Prakhar Gupta, Martin Jaggi.
-       Unsupervised Learning of Sentence Embeddings using Compositional n-Gram Features.
-       https://arxiv.org/abs/1703.02507
-.. [2] https://github.com/epfml/sent2vec
+.. Matteo Pagliardini, Prakhar Gupta, Martin Jaggi.
+   Unsupervised Learning of Sentence Embeddings using Compositional n-Gram Features.
+   https://arxiv.org/abs/1703.02507
+.. Sent2Vec C++ implementation.
+   https://github.com/epfml/sent2vec
 
 """
 from __future__ import division
