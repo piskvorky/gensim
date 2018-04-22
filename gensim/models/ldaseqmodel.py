@@ -20,6 +20,19 @@ The next steps to take this forward would be:
         - in particular, update_obs and the optimization takes a lot time.
     4) Try and make it distributed, especially around the E and M step.
     5) Remove all C/C++ coding style/syntax.
+
+Examples
+--------
+
+#. Set up a model using have 30 documents, with 5 in the first time-slice, 10 in the second, and 15 in the third:
+
+>>> from gensim.test.utils import common_corpus
+>>> ldaseq = LdaSeqModel(corpus=common_corpus, time_slice=[2, 4, 3], num_topics=2)
+
+#. Persist model to disk:
+
+>>> ldaseq.save("ldaseq")
+
 """
 
 from gensim import utils, matutils
@@ -33,20 +46,7 @@ logger = logging.getLogger('gensim.models.ldaseqmodel')
 
 
 class LdaSeqModel(utils.SaveLoad):
-    """The model estimates Dynamic Topic Model parameters based on a training corpus.
-
-    Examples
-    --------
-
-    #. Set up a model using have 30 documents, with 5 in the first time-slice, 10 in the second, and 15 in the third:
-
-    >>> from gensim.test.utils import common_corpus
-    >>> ldaseq = LdaSeqModel(corpus=common_corpus, time_slice=[2, 4, 3], num_topics=2)
-
-    #. Persist model to disk:
-    >>> ldaseq.save("ldaseq")
-
-    """
+    """The model estimates Dynamic Topic Model parameters based on a training corpus. """
 
     def __init__(self, corpus=None, time_slice=None, id2word=None, alphas=0.01, num_topics=10,
                  initialize='gensim', sstats=None, lda_model=None, obs_variance=0.5, chain_variance=0.005, passes=10,
@@ -665,14 +665,17 @@ class LdaSeqModel(utils.SaveLoad):
 
 
 class sslm(utils.SaveLoad):
-    """
-    The sslm class is the State Space Language Model for DTM and contains the following information:
-    `obs` values contain the doc - topic ratios
-    `e_log_prob` contains topic - word ratios
-    `mean`, `fwd_mean` contains the mean values to be used for inference for each word for a time_slice
-    `variance`, `fwd_variance` contains the variance values to be used for inference for each word in a time_slice
-    `fwd_mean`, `fwd_variance` are the forward posterior values.
-    `zeta` is an extra variational parameter with a value for each time-slice
+    """Encapsulates the inner State Space Language Model for DTM.
+
+    Some important attributes of this class are the following::
+
+        * `obs` is a matrix containing the document to topic ratios.
+        * `e_log_prob` is a matrix containing the topic to word ratios.
+        * `mean` contains the mean values to be used for inference for each word for a time slice.
+        * `variance` contains the variance values to be used for inference of word in a time slice.
+        * `fwd_mean` and`fwd_variance` are the forward posterior values for the mean and the variance.
+        * `zeta` is an extra variational parameter with a value for each time slice.
+
     """
 
     def __init__(self, vocab_len=None, num_time_slices=None, num_topics=None, obs_variance=0.5, chain_variance=0.005):
@@ -702,35 +705,56 @@ class sslm(utils.SaveLoad):
         self.m_update_coeff_g = None
 
     def update_zeta(self):
-        """
-        Updates the Zeta Variational Parameter.
-        Zeta is described in the appendix and is equal
-        to sum (exp(mean[word] + Variance[word] / 2)), over every time-slice.
-        It is the value of variational parameter zeta which maximizes the lower bound.
+        """Updates the Zeta Variational Parameter.
+
+        Zeta is described in the appendix and is equal to sum (exp(mean[word] + Variance[word] / 2)),
+        over every time-slice. It is the value of variational parameter zeta which maximizes the lower bound.
+
+        Returns
+        -------
+        list of float
+            The updated zeta values for each time slice.
+
         """
         for j, val in enumerate(self.zeta):
             self.zeta[j] = np.sum(np.exp(self.mean[:, j + 1] + self.variance[:, j + 1] / 2))
         return self.zeta
 
     def compute_post_variance(self, word, chain_variance):
-        """
-        Based on the  Variational Kalman Filtering approach for Approximate Inference
-        [https://www.cs.princeton.edu/~blei/papers/BleiLafferty2006a.pdf]
+        """Get the variance, based on the `Variational Kalman Filtering approach for Approximate Inference (section 3.1)
+        <https://mimno.infosci.cornell.edu/info6150/readings/dynamic_topic_models.pdf>`_.
+
         This function accepts the word to compute variance for, along with the associated sslm class object,
-        and returns variance and fwd_variance
-        Computes Var[\beta_{t,w}] for t = 1:T
+        and returns the `variance` and the posterior approximation `fwd_variance`.
+
+        Notes
+        -----
+        This function essentially computes Var[\beta_{t,w}] for t = 1:T
 
         :math::
 
             fwd\_variance[t] \equiv E((beta_{t,w}-mean_{t,w})^2 |beta_{t}\ for\ 1:t) =
-             (obs\_variance / fwd\_variance[t - 1] + chain\_variance + obs\_variance ) *
-             (fwd\_variance[t - 1] + obs\_variance)
+            (obs\_variance / fwd\_variance[t - 1] + chain\_variance + obs\_variance ) *
+            (fwd\_variance[t - 1] + obs\_variance)
 
         :math::
 
             variance[t] \equiv E((beta_{t,w}-mean\_cap_{t,w})^2 |beta\_cap_{t}\ for\ 1:t) =
             fwd\_variance[t - 1] + (fwd\_variance[t - 1] / fwd\_variance[t - 1] + obs\_variance)^2 *
             (variance[t - 1] - (fwd\_variance[t-1] + obs\_variance))
+
+        Parameters
+        ----------
+        word: int
+            The word's ID.
+        chain_variance : float
+            Gaussian parameter defined in the beta distribution to dictate how the beta values evolve over time.
+
+        Returns
+        -------
+        (np.ndarray, np.ndarray)
+            The first returned value is the variance of each word in each time slice, the second value is the
+            inferred posterior variance for the same pairs.
 
         """
         INIT_VARIANCE_CONST = 1000
@@ -759,20 +783,37 @@ class sslm(utils.SaveLoad):
         return variance, fwd_variance
 
     def compute_post_mean(self, word, chain_variance):
-        """
-        Based on the Variational Kalman Filtering approach for Approximate Inference
-        [https://www.cs.princeton.edu/~blei/papers/BleiLafferty2006a.pdf]
-        This function accepts the word to compute mean for, along with the associated sslm class object,
-        and returns mean and fwd_mean
-        Essentially a forward-backward to compute E[\beta_{t,w}] for t = 1:T.
+        """Get the mean, based on the `Variational Kalman Filtering approach for Approximate Inference (section 3.1)
+        <https://mimno.infosci.cornell.edu/info6150/readings/dynamic_topic_models.pdf>`_.
 
-        Fwd_Mean(t) ≡  E(beta_{t,w} | beta_ˆ 1:t )
-        = (obs_variance / fwd_variance[t - 1] + chain_variance + obs_variance ) * fwd_mean[t - 1] +
-        (1 - (obs_variance / fwd_variance[t - 1] + chain_variance + obs_variance)) * beta
+        Notes
+        -----
+        This function essentially computes E[\beta_{t,w}] for t = 1:T.
 
-        Mean(t) ≡ E(beta_{t,w} | beta_ˆ 1:T )
-        = fwd_mean[t - 1] + (obs_variance / fwd_variance[t - 1] + obs_variance) +
-        (1 - obs_variance / fwd_variance[t - 1] + obs_variance)) * mean[t]
+        :math::
+
+            Fwd_Mean(t) ≡  E(beta_{t,w} | beta_ˆ 1:t )
+            = (obs_variance / fwd_variance[t - 1] + chain_variance + obs_variance ) * fwd_mean[t - 1] +
+            (1 - (obs_variance / fwd_variance[t - 1] + chain_variance + obs_variance)) * beta
+
+        :math::
+
+            Mean(t) ≡ E(beta_{t,w} | beta_ˆ 1:T )
+            = fwd_mean[t - 1] + (obs_variance / fwd_variance[t - 1] + obs_variance) +
+            (1 - obs_variance / fwd_variance[t - 1] + obs_variance)) * mean[t]
+
+        Parameters
+        ----------
+        word: int
+            The word's ID.
+        chain_variance : float
+            Gaussian parameter defined in the beta distribution to dictate how the beta values evolve over time.
+
+        Returns
+        -------
+        (np.ndarray, np.ndarray)
+            The first returned value is the mean of each word in each time slice, the second value is the
+            inferred posterior mean for the same pairs.
 
         """
         T = self.num_time_slices
@@ -798,21 +839,37 @@ class sslm(utils.SaveLoad):
         return mean, fwd_mean
 
     def compute_expected_log_prob(self):
-        """
-        Compute the expected log probability given values of m.
+        """Compute the expected log probability given values of m.
+
         The appendix describes the Expectation of log-probabilities in equation 5 of the DTM paper;
-        The below implementation is the result of solving the equation and is as implemented
-        in the original Blei DTM code.
+        The below implementation is the result of solving the equation and is implemented as in the original
+        Blei DTM code.
+
+        Returns
+        -------
+        np.ndarray of float
+            The expected value for the log probabilities for each word and time slice.
+
         """
         for (w, t), val in np.ndenumerate(self.e_log_prob):
             self.e_log_prob[w][t] = self.mean[w][t + 1] - np.log(self.zeta[t])
         return self.e_log_prob
 
     def sslm_counts_init(self, obs_variance, chain_variance, sstats):
-        """
-        Initialize State Space Language Model with LDA sufficient statistics.
-        Called for each topic-chain and initializes intial mean, variance and Topic-Word probabilities
+        """Initialize the State Space Language Model with LDA sufficient statistics.
+
+        Called for each topic-chain and initializes initial mean, variance and Topic-Word probabilities
         for the first time-slice.
+
+        Parameters
+        ----------
+        obs_variance : float, optional
+            Observed variance used to approximate the true and forward variance.
+        chain_variance : float
+            Gaussian parameter defined in the beta distribution to dictate how the beta values evolve over time.
+        sstats : np.ndarray of shape (`self.vocab_len`, `num_topics`)
+            Sufficient statistics of the LDA model. Corresponds to matrix beta in the linked paper for time slice 0.
+
         """
         W = self.vocab_len
         T = self.num_time_slices
@@ -838,11 +895,24 @@ class sslm(utils.SaveLoad):
         self.e_log_prob = self.compute_expected_log_prob()
 
     def fit_sslm(self, sstats):
-        """
-        Fits variational distribution.
+        """Fits variational distribution.
+
         This is essentially the m-step.
-        Accepts the sstats for a particular topic for input and maximizes values for that topic.
-        Updates the values in the update_obs() and compute_expected_log_prob methods.
+        Maximizes the approximation of the true posterior for a particular topic using the provided sufficient
+        statistics. Updates the values using :meth:`~gensim.models.ldaseqmodel.sslm.update_obs` and
+        :meth:`~gensim.models.ldaseqmodel.sslm.compute_expected_log_prob`.
+
+        Parameters
+        ----------
+        sstats : np.ndarray of shape (`self.vocab_len`, `num_topics`)
+            Sufficient statistics for a particular topic. Corresponds to matrix beta in the linked paper for the
+            current time slice.
+
+        Returns
+        -------
+        float
+            The lower bound for the true posterior achieved using the fitted approximate distribution.
+
         """
         W = self.vocab_len
         bound = 0
@@ -884,9 +954,23 @@ class sslm(utils.SaveLoad):
         return bound
 
     def compute_bound(self, sstats, totals):
-        """
-        Compute log probability bound.
-        Forumula is as described in appendix of DTM by Blei. (formula no. 5)
+        """Computes the maximized lower bound achieved for the log probability of the true posterior.
+
+        Uses the formula presented in the appendix of the DTM paper (formula no. 5).
+
+        Parameters
+        ----------
+        sstats : np.ndarray of shape (`self.vocab_len`, `num_topics`)
+            Sufficient statistics for a particular topic. Corresponds to matrix beta in the linked paper for the first
+            time slice.
+        totals : list of int of length `len(self.time_slice)`
+            The totals for each time slice.
+
+        Returns
+        -------
+        float
+            The maximized lower bound.
+
         """
         w = self.vocab_len
         t = self.num_time_slices
@@ -920,7 +1004,7 @@ class sslm(utils.SaveLoad):
 
                 v = self.variance[w][t]
 
-                # w_phi_l is only used in Document Influence Model; the values are aleays zero in this case
+                # w_phi_l is only used in Document Influence Model; the values are always zero in this case
                 # w_phi_l = sslm.w_phi_l[w][t - 1]
                 # exp_i = np.exp(-prev_m)
                 # term_1 += (np.power(m - prev_m - (w_phi_l * exp_i), 2) / (2 * chain_variance)) -
@@ -937,12 +1021,23 @@ class sslm(utils.SaveLoad):
         return val
 
     def update_obs(self, sstats, totals):
-        """
-        Function to perform optimization of obs. Parameters are suff_stats set up in the fit_sslm method.
+        """Optimizes the bound with respect to the observed variables.
 
         TODO:
         This is by far the slowest function in the whole algorithm.
         Replacing or improving the performance of this would greatly speed things up.
+        
+        Parameters
+        ----------
+        sstats : np.ndarray of shape (`self.vocab_len`, `num_topics`)
+            Sufficient statistics for a particular topic. Corresponds to matrix beta in the linked paper for the first
+            time slice.
+        totals : list of int of length `len(self.time_slice)`
+            The totals for each time slice.
+
+        Returns
+        -------
+
         """
 
         OBS_NORM_CUTOFF = 2
