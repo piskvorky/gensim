@@ -1,10 +1,15 @@
-from itertools import chain
-
 import numpy as np
+import logging
 from scipy.stats import halfnorm
+from gensim import utils
+from gensim import matutils
+from gensim import interfaces
+from gensim.models import basemodel
+
+logger = logging.getLogger('gensim.models.nmf')
 
 
-class NMF(object):
+class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
     """Online Non-Negative Matrix Factorization.
 
     Attributes
@@ -16,32 +21,39 @@ class NMF(object):
 
     """
 
-    def __init__(self, corpus=None, n_components=100, lambda_=1.,
-                 kappa=1., store_r=False, v_max=None):
+    def __init__(self, corpus=None, num_topics=100, id2word=None,
+                 chunksize=2000, passes=1, lambda_=1.,
+                 kappa=1., store_r=False, max_iter=1e9):
         """
 
         Parameters
         ----------
-        n_components : int
+        num_topics : int
             Number of components in resulting matrices.
         lambda_ : float
         kappa : float
         """
         self.n_features = None
-        self.n_components = n_components
+        self.num_topics = num_topics
+        self.id2word = id2word
+        self.chunksize = chunksize
+        self.passes = passes
         self._lambda_ = lambda_
         self._kappa = kappa
         self._H = []
-        self.v_max = v_max
+        self.v_max = None
+        self.max_iter = max_iter
         if store_r:
             self._R = []
         else:
             self._R = None
 
+        if corpus is not None:
+            self.update(corpus, chunksize)
+
     @property
     def A(self):
         return self._A / len(self._H)
-        # return self._A
 
     @A.setter
     def A(self, value):
@@ -50,73 +62,68 @@ class NMF(object):
     @property
     def B(self):
         return self._B / len(self._H)
-        # return self._B
 
     @B.setter
     def B(self, value):
         self._B = value
 
+    def get_topics(self):
+        raise NotImplementedError
+
+    def __getitem__(self, vec):
+        raise NotImplementedError
+
     def _setup(self, X):
-        self.h, self.r = None, None
-        X_ = iter(X)
-        x = next(X_)
-        m = len(x)
-        avg = np.sqrt(x.mean() / m)
-        X = chain([x], X_)
+        self._h, self._r = None, None
+        x = next(iter(X))
+        x_asarray = matutils.corpus2dense([x], len(self.id2word), 1)[:, 0]
+        m = len(x_asarray)
+        avg = np.sqrt(x_asarray.mean() / m)
 
-        self.n_features = len(x)
+        self.n_features = len(x_asarray)
 
-        self._W = np.abs(avg * halfnorm.rvs(size=(self.n_features, self.n_components)) /
-                        np.sqrt(self.n_components))
+        self._W = np.abs(avg * halfnorm.rvs(size=(self.n_features, self.num_topics)) /
+                         np.sqrt(self.num_topics))
 
-        self.A = np.zeros((self.n_components, self.n_components))
-        self.B = np.zeros((self.n_features, self.n_components))
+        self.A = np.zeros((self.num_topics, self.num_topics))
+        self.B = np.zeros((self.n_features, self.num_topics))
         return X
 
-    def fit(self, X, batch_size=None):
+    def update(self, corpus, chunks_as_numpy=False):
         """
 
         Parameters
         ----------
-        X : matrix or iterator
+        corpus : matrix or iterator
             Matrix to factorize.
-        batch_size : int or None
-            If None than batch_size equals 1 sample.
         """
+
         if self.n_features is None:
-            X = self._setup(X)
+            corpus = self._setup(corpus)
 
-        prod = np.outer
+        r, h = self._r, self._h
 
-        if batch_size is not None:
-            from itertools import zip_longest
+        for _ in range(self.passes):
+            for chunk in utils.grouper(corpus, self.chunksize, as_numpy=chunks_as_numpy):
+                v = matutils.corpus2dense(chunk, len(self.id2word), len(chunk)).T
+                h, r = self._solveproj(v, self._W, r=r, h=h, v_max=self.v_max)
+                self._H.append(h)
+                if self._R is not None:
+                    self._R.append(r)
 
-            def grouper(iterable, n):
-                args = [iter(iterable)] * n
-                return zip_longest(*args)
-
-            prod = np.dot
-            X = (np.array([e for e in batch if e is not None]) for batch in grouper(X, batch_size))
-
-        r, h = self.r, self.h
-        for v in X:
-            h, r = self._solveproj(v, self._W, r=r, h=h)
-            self._H.append(h)
-            if self._R is not None:
-                self._R.append(r)
-
-            self.A += prod(h, h.T)
-            self.B += prod((v.T - r), h.T)
-            self._solve_w()
-            print(
-                'Loss (no outliers): {}\tLoss (with outliers): {}'
-                .format(
-                    np.linalg.norm(v.T - self._W.dot(h)),
-                    np.linalg.norm(v.T - self._W.dot(h) - r)
+                self.A += np.dot(h, h.T)
+                self.B += np.dot((v.T - r), h.T)
+                self._solve_w()
+                logger.info(
+                    'Loss (no outliers): {}\tLoss (with outliers): {}'
+                        .format(
+                        np.linalg.norm(v.T - self._W.dot(h)),
+                        np.linalg.norm(v.T - self._W.dot(h) - r)
+                    )
                 )
-            )
-        self.r = r
-        self.h = h
+
+        self._r = r
+        self._h = h
 
     def _solve_w(self):
         eta = self._kappa / np.linalg.norm(self.A, 'fro')
@@ -125,21 +132,21 @@ class NMF(object):
         while n <= 2 or (np.abs(
                 (lasttwo[1] - lasttwo[0]) / lasttwo[0]) > 1e-5 and n < 1e9):
             self._W -= eta * (np.dot(self._W, self.A) - self.B)
-            self._W = self._transform(self._W)
+            self._W = self.__transform(self._W)
             n += 1
             lasttwo[0] = lasttwo[1]
             lasttwo[1] = 0.5 * np.trace(self._W.T.dot(self._W).dot(self.A)) - \
                          np.trace(self._W.T.dot(self.B))
 
-    def transform(self, X, return_r=False, max_iter=1e9):
+    def transform(self, corpus, return_r=False):
         H = []
         if return_r:
             R = []
 
-        num = None
         W = self._W
-        for v in X:
-            h, r = self._solveproj(v, W, v_max=np.inf, max_iter=max_iter)
+        for chunk in corpus:
+            v = matutils.corpus2dense([chunk], len(self.id2word), 1).T[0]
+            h, r = self._solveproj(v, W, v_max=np.inf)
             H.append(h.copy())
             if return_r:
                 R.append(r.copy())
@@ -162,23 +169,21 @@ class NMF(object):
             return self._W, 0
 
     @staticmethod
-    def _thresh(X, lambda1, vmax):
+    def __thresh(X, lambda1, vmax):
         res = np.abs(X) - lambda1
         np.maximum(res, 0.0, out=res)
         res *= np.sign(X)
         np.clip(res, -vmax, vmax, out=res)
         return res
 
-        return X
-
-    def _transform(self, W):
+    def __transform(self, W):
         W_ = W.copy()
         np.clip(W_, 0, self.v_max, out=W_)
         sumsq = np.linalg.norm(W_, axis=0)
         np.maximum(sumsq, 1, out=sumsq)
         return W_ / sumsq
 
-    def _solveproj(self, v, W, h=None, r=None, max_iter=1e9, v_max=None):
+    def _solveproj(self, v, W, h=None, r=None, v_max=None):
         m, n = W.shape
         v = v.T
         if v_max is not None:
@@ -202,20 +207,23 @@ class NMF(object):
 
         eta = self._kappa / np.linalg.norm(W, 'fro') ** 2
 
-        for _ in range(int(max_iter)):
+        for _ in range(int(self.max_iter)):
+            error = v - np.dot(W, h)
+
             # Solve for h
             h_ = h
-            h = h - eta * np.dot(-W.T, v - np.dot(W, h) - r)
+            h = h - eta * np.dot(-W.T, error - r)
             np.maximum(h, 0.0, out=h)
 
             # Solve for r
             r_ = r
-            r = self._thresh(v - np.dot(W, h), self._lambda_, self.v_max)
+            r = self.__thresh(error, self._lambda_, self.v_max)
 
             # Stop conditions
             stoph = np.linalg.norm(h - h_, 2)
-            stopr = np.linalg.norm(r - r_, 2)
-            stop = max(stoph, stopr) / m
+            # stopr = np.linalg.norm(r - r_, 2)
+            # stop = max(stoph, stopr) / m
+            stop = stoph / m
             if stop < 1e-5:
                 break
 
