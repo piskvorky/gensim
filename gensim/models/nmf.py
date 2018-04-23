@@ -125,7 +125,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             shown.append((i, topic_))
             if log:
-                logger.info("topic #%i (%.3f): %s", i,sparsity[i], topic_)
+                logger.info("topic #%i (%.3f): %s", i, sparsity[i], topic_)
 
         return shown
 
@@ -239,7 +239,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 self._solve_w()
                 logger.info(
                     'Loss (no outliers): {}\tLoss (with outliers): {}'
-                        .format(
+                    .format(
                         np.linalg.norm(v.T - self._W.dot(h)),
                         np.linalg.norm(v.T - self._W.dot(h) - r)
                     )
