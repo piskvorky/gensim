@@ -26,12 +26,25 @@ Examples
 
 #. Set up a model using have 30 documents, with 5 in the first time-slice, 10 in the second, and 15 in the third:
 
->>> from gensim.test.utils import common_corpus
->>> ldaseq = LdaSeqModel(corpus=common_corpus, time_slice=[2, 4, 3], num_topics=2)
+>>> from gensim.test.utils import common_corpus, datapath
+>>>
+>>> ldaseq = LdaSeqModel(corpus=common_corpus, time_slice=[2, 4, 3], num_topics=2, chunksize=1)
 
-#. Persist model to disk:
+#. Persist a model to disk and reload it later:
 
->>> ldaseq.save("ldaseq")
+>>> temp_file = datapath("model")
+>>> ldaseq.save(temp_file)
+>>>
+>>> # Load a potentially pre-trained model from disk.
+>>> ldaseq = LdaSeqModel.load(temp_file)
+
+#. Access the document embeddings generated from the DTM:
+
+>>> doc = common_corpus[1]
+>>>
+>>> # Each element in the embedding is the probability assigned to a topic.
+>>> embedding = ldaseq[doc]
+>>> assert sum(embedding) == 1
 
 """
 
