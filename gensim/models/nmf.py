@@ -129,6 +129,60 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         return shown
 
+    def show_topic(self, topicid, topn=10):
+        """
+        Args:
+            topn (int): Only return 2-tuples for the topn most probable words
+                (ignore the rest).
+
+        Returns:
+            list: of `(word, probability)` 2-tuples for the most probable
+            words in topic `topicid`.
+        """
+        return [(self.id2word[id], value) for id, value in self.get_topic_terms(topicid, topn)]
+
+    def get_topic_terms(self, topicid, topn=10):
+        """
+        Args:
+            topn (int): Only return 2-tuples for the topn most probable words
+                (ignore the rest).
+
+        Returns:
+            list: `(word_id, probability)` 2-tuples for the most probable words
+            in topic with id `topicid`.
+        """
+        topic = self.get_topics()[topicid]
+        bestn = matutils.argsort(topic, topn, reverse=True)
+        return [(idx, topic[idx]) for idx in bestn]
+
+    def get_term_topics(self, word_id, minimum_probability=None):
+        """
+        Args:
+            word_id (int): ID of the word to get topic probabilities for.
+            minimum_probability (float): Only include topic probabilities above this
+                value (None by default). If set to None, use 1e-8 to prevent including 0s.
+        Returns:
+            list: The most likely topics for the given word. Each topic is represented
+            as a tuple of `(topic_id, term_probability)`.
+        """
+        if minimum_probability is None:
+            minimum_probability = 1e-8
+
+        # if user enters word instead of id in vocab, change to get id
+        if isinstance(word_id, str):
+            word_id = self.id2word.doc2bow([word_id])[0][0]
+
+        values = []
+        for topic_id in range(0, self.num_topics):
+            word_coef = self._W[word_id, topic_id]
+
+            if self.normalize:
+                word_coef /= np.sum(word_coef)
+            if word_coef >= minimum_probability:
+                values.append((topic_id, word_coef))
+
+        return values
+
     def get_document_topics(self, bow, minimum_probability=None):
         v = matutils.corpus2dense([bow], len(self.id2word), 1).T
         h, _ = self._solveproj(v, self._W, v_max=np.inf)
