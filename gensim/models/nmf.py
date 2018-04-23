@@ -261,17 +261,6 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             lasttwo[1] = 0.5 * np.trace(self._W.T.dot(self._W).dot(self.A)) - \
                          np.trace(self._W.T.dot(self.B))
 
-    def get_factor_matrices(self):
-        if len(self._H) > 0:
-            if len(self._H[0].shape) == 1:
-                H = np.stack(self._H, axis=-1)
-            else:
-                H = np.concatenate(self._H, axis=1)
-
-            return self._W, H
-        else:
-            return self._W, 0
-
     @staticmethod
     def __thresh(X, lambda1, vmax):
         res = np.abs(X) - lambda1
