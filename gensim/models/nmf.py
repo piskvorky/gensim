@@ -305,13 +305,10 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             np.maximum(h, 0.0, out=h)
 
             # Solve for r
-            r_ = r
             r = self.__thresh(error, self._lambda_, self.v_max)
 
             # Stop conditions
             stoph = np.linalg.norm(h - h_, 2)
-            # stopr = np.linalg.norm(r - r_, 2)
-            # stop = max(stoph, stopr) / m
             stop = stoph / m
             if stop < 1e-5:
                 break
