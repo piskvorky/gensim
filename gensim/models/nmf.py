@@ -6,7 +6,7 @@ from gensim import matutils
 from gensim import interfaces
 from gensim.models import basemodel
 
-logger = logging.getLogger('gensim.models.nmf')
+logger = logging.getLogger(__name__)
 
 
 class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
