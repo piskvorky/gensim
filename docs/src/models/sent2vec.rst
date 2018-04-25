@@ -1,4 +1,4 @@
-:mod:`models.fasttext` -- Sent2Vec model
+:mod:`models.sent2vec` -- Sent2Vec model
 ========================================
 
 .. automodule:: gensim.models.sent2vec
