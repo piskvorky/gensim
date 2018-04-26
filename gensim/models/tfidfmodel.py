@@ -27,7 +27,8 @@ def resolve_weights(smartirs):
         Information Retrieval System, a mnemonic scheme for denoting tf-idf weighting
         variants in the vector space model. The mnemonic for representing a combination
         of weights takes the form ddd, where the letters represents the term weighting of the document vector.
-        for more information visit [1]_.
+        for more information visit `SMART Information Retrieval System
+        <https://en.wikipedia.org/wiki/SMART_Information_Retrieval_System>`_.
 
     Returns
     -------
@@ -54,10 +55,6 @@ def resolve_weights(smartirs):
         If `smartirs` is not a string of length 3 or one of the decomposed value
         doesn't fit the list of permissible values
 
-    References
-    ----------
-    .. [1] https://en.wikipedia.org/wiki/SMART_Information_Retrieval_System
-
     """
     if not isinstance(smartirs, str) or len(smartirs) != 3:
         raise ValueError("Expected a string of length 3 except got " + smartirs)
@@ -70,7 +67,7 @@ def resolve_weights(smartirs):
     if w_df not in 'ntp':
         raise ValueError("Expected inverse document frequency weight to be one of 'ntp', except got {}".format(w_df))
 
-    if w_n not in 'ncb':
+    if w_n not in 'nc':
         raise ValueError("Expected normalization weight to be one of 'ncb', except got {}".format(w_n))
 
     return w_tf, w_df, w_n
@@ -142,13 +139,13 @@ def updated_wlocal(tf, n_tf):
     if n_tf == "n":
         return tf
     elif n_tf == "l":
-        return 1 + np.log(tf) / np.log(2)
+        return 1 + np.log2(tf)
     elif n_tf == "a":
         return 0.5 + (0.5 * tf / tf.max(axis=0))
     elif n_tf == "b":
         return tf.astype('bool').astype('int')
     elif n_tf == "L":
-        return (1 + np.log(tf) / np.log(2)) / (1 + np.log(tf.mean(axis=0) / np.log(2)))
+        return (1 + np.log2(tf)) / (1 + np.log2(tf.mean(axis=0)))
 
 
 def updated_wglobal(docfreq, totaldocs, n_df):
@@ -169,15 +166,16 @@ def updated_wglobal(docfreq, totaldocs, n_df):
         Calculated wglobal.
 
     """
+
     if n_df == "n":
-        return utils.identity(docfreq)
+        return 1.
     elif n_df == "t":
-        return np.log(1.0 * totaldocs / docfreq) / np.log(2)
+        return np.log2(1.0 * totaldocs / docfreq)
     elif n_df == "p":
-        return np.log((1.0 * totaldocs - docfreq) / docfreq) / np.log(2)
+        return max(0, np.log2((1.0 * totaldocs - docfreq) / docfreq))
 
 
-def updated_normalize(x, n_n):
+def updated_normalize(x, n_n, return_norm=False):
     """Normalizes the final tf-idf value according to the value of `n_n`.
 
     Parameters
@@ -186,17 +184,24 @@ def updated_normalize(x, n_n):
         Input array
     n_n : {'n', 'c'}
         Parameter that decides the normalizing function to be used.
+    return_norm : bool, optional
+        If True - returns the length of vector `x`.
 
     Returns
     -------
     numpy.ndarray
         Normalized array.
+    float
+        Vector length.
 
     """
     if n_n == "n":
-        return x
+        if return_norm:
+            return x, 1.
+        else:
+            return x
     elif n_n == "c":
-        return matutils.unitvec(x)
+        return matutils.unitvec(x, return_norm=return_norm)
 
 
 class TfidfModel(interfaces.TransformationABC):
@@ -219,7 +224,7 @@ class TfidfModel(interfaces.TransformationABC):
     """
 
     def __init__(self, corpus=None, id2word=None, dictionary=None, wlocal=utils.identity,
-                 wglobal=df2idf, normalize=True, smartirs=None):
+                 wglobal=df2idf, normalize=True, smartirs=None, pivot=None, slope=0.65):
         """Compute tf-idf by multiplying a local component (term frequency) with a global component
         (inverse document frequency), and normalizing the resulting documents to unit length.
         Formula for non-normalized weight of term :math:`i` in document :math:`j` in a corpus of :math:`D` documents
@@ -272,22 +277,40 @@ class TfidfModel(interfaces.TransformationABC):
                 * `n` - none,
                 * `c` - cosine.
 
-            For more information visit [1]_.
-
+            For more information visit `SMART Information Retrieval System
+            <https://en.wikipedia.org/wiki/SMART_Information_Retrieval_System>`_.
+        pivot : float, optional
+            It is the point around which the regular normalization curve is `tilted` to get the new pivoted
+            normalization curve. In the paper `Amit Singhal, Chris Buckley, Mandar Mitra:
+            "Pivoted Document Length Normalization" <http://singhal.info/pivoted-dln.pdf>`_ it is the point where the
+            retrieval and relevance curves intersect.
+            This parameter along with slope is used for pivoted document length normalization.
+            Only when `pivot` is not None pivoted document length normalization will be applied else regular TfIdf
+            is used.
+        slope : float, optional
+            It is the parameter required by pivoted document length normalization which determines the slope to which
+            the `old normalization` can be tilted. This parameter only works when pivot is defined by user and is not
+            None.
         """
 
         self.id2word = id2word
         self.wlocal, self.wglobal, self.normalize = wlocal, wglobal, normalize
         self.num_docs, self.num_nnz, self.idfs = None, None, None
         self.smartirs = smartirs
+        self.slope = slope
+        self.pivot = pivot
+        self.eps = 1e-12
 
         # If smartirs is not None, override wlocal, wglobal and normalize
         if smartirs is not None:
             n_tf, n_df, n_n = resolve_weights(smartirs)
-
             self.wlocal = partial(updated_wlocal, n_tf=n_tf)
             self.wglobal = partial(updated_wglobal, n_df=n_df)
-            self.normalize = partial(updated_normalize, n_n=n_n)
+            # also return norm factor if pivot is not none
+            if self.pivot is None:
+                self.normalize = partial(updated_normalize, n_n=n_n)
+            else:
+                self.normalize = partial(updated_normalize, n_n=n_n, return_norm=True)
 
         if dictionary is not None:
             # user supplied a Dictionary object, which already contains all the
@@ -308,6 +331,23 @@ class TfidfModel(interfaces.TransformationABC):
             # NOTE: everything is left uninitialized; presumably the model will
             # be initialized in some other way
             pass
+
+    @classmethod
+    def load(cls, *args, **kwargs):
+        """
+        Load a previously saved TfidfModel class. Handles backwards compatibility from
+            older TfidfModel versions which did not use pivoted document normalization.
+        """
+        model = super(TfidfModel, cls).load(*args, **kwargs)
+        if not hasattr(model, 'pivot'):
+            logger.info('older version of %s loaded without pivot arg', cls.__name__)
+            logger.info('Setting pivot to None.')
+            model.pivot = None
+        if not hasattr(model, 'slope'):
+            logger.info('older version of %s loaded without slope arg', cls.__name__)
+            logger.info('Setting slope to 0.65.')
+            model.slope = 0.65
+        return model
 
     def __str__(self):
         return "TfidfModel(num_docs=%s, num_nnz=%s)" % (self.num_docs, self.num_nnz)
@@ -331,7 +371,6 @@ class TfidfModel(interfaces.TransformationABC):
             numnnz += len(bow)
             for termid, _ in bow:
                 dfs[termid] = dfs.get(termid, 0) + 1
-
         # keep some stats about the training corpus
         self.num_docs = docno + 1
         self.num_nnz = numnnz
@@ -360,6 +399,7 @@ class TfidfModel(interfaces.TransformationABC):
             TfIdf corpus, if `bow` is corpus.
 
         """
+        self.eps = eps
         # if the input vector is in fact a corpus, return a transformed corpus as a result
         is_corpus, bow = utils.is_corpus(bow)
         if is_corpus:
@@ -377,7 +417,7 @@ class TfidfModel(interfaces.TransformationABC):
 
         vector = [
             (termid, tf * self.idfs.get(termid))
-            for termid, tf in zip(termid_array, tf_array) if abs(self.idfs.get(termid, 0.0)) > eps
+            for termid, tf in zip(termid_array, tf_array) if abs(self.idfs.get(termid, 0.0)) > self.eps
         ]
 
         if self.normalize is True:
@@ -387,8 +427,15 @@ class TfidfModel(interfaces.TransformationABC):
 
         # and finally, normalize the vector either to unit length, or use a
         # user-defined normalization function
-        vector = self.normalize(vector)
-
-        # make sure there are no explicit zeroes in the vector (must be sparse)
-        vector = [(termid, weight) for termid, weight in vector if abs(weight) > eps]
-        return vector
+        if self.pivot is None:
+            norm_vector = self.normalize(vector)
+            norm_vector = [(termid, weight) for termid, weight in norm_vector if abs(weight) > self.eps]
+        else:
+            _, old_norm = self.normalize(vector, return_norm=True)
+            pivoted_norm = (1 - self.slope) * self.pivot + self.slope * old_norm
+            norm_vector = [
+                (termid, weight / float(pivoted_norm))
+                for termid, weight in vector
+                if abs(weight / float(pivoted_norm)) > self.eps
+            ]
+        return norm_vector
