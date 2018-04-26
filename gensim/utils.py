@@ -13,7 +13,7 @@ import logging
 import warnings
 from bounter import bounter
 from collections import defaultdict
- 
+
 try:
     from html.entities import name2codepoint as n2cp
 except ImportError:
