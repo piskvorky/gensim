@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 
-"""Produce sentence vectors with deep learning via sent2vec model using negative sampling [1]_.
+"""Produce sentence vectors with deep learning via sent2vec model using negative sampling.
 
-The training algorithms were originally ported from the C package [2]_. and extended with additional functionality.
+The training algorithms were originally ported from the C package and extended with additional functionality.
 
 
 Examples
@@ -21,7 +21,6 @@ Or
 >>> model = Sent2Vec(size=100, min_count=1)
 >>> model.build_vocab(common_texts)
 >>> model.train(common_texts)
-145
 
 The sentence vectors are stored in a numpy array
 
