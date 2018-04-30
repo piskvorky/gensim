@@ -33,12 +33,17 @@ Examples
 
 #. Train an LDA model using a gensim corpus:
 
->>> from gensim.test.utils import common_corpus
+>>> from gensim.test.utils import common_texts
 >>> from gensim.corpora.dictionary import Dictionary
 >>>
->>> lda = LdaModel(common_corpus, num_topics=10)  # train model
+>>> # Create a corpus from a list of texts
+>>> common_dictionary = Dictionary(common_texts)
+>>> common_corpus = [common_dictionary.doc2bow(text) for text in common_texts]
+>>>
+>>> # Train the model on the corpus.
+>>> lda = LdaModel(common_corpus, num_topics=10)
 
-#. Save a model to disk, or reload a pretrained model.
+#. Save a model to disk, or reload a pre-trained model.
 
 >>> from gensim.test.utils import datapath
 >>>
@@ -51,13 +56,13 @@ Examples
 
 #. Query, the model using new, unseen documents:
 
+>>> # Create a new corpus, made of previously unseen documents.
 >>> other_texts = [
 ...     ['computer', 'time', 'graph'],
 ...     ['survey', 'response', 'eps'],
 ...     ['human', 'system', 'computer']
 ... ]
->>> other_dictionary = Dictionary(other_texts)
->>> other_corpus = [other_dictionary.doc2bow(text) for text in other_texts]
+>>> other_corpus = [common_dictionary.doc2bow(text) for text in other_texts]
 >>>
 >>> unseen_doc = other_corpus[0]
 >>> repr = lda[unseen_doc] # get topic probability distribution for a document
