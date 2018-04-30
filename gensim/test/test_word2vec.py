@@ -783,11 +783,14 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec.load(datapath(model_file))
         self.onlineSanity(model, trained_model=True)
 
-        # test for max_final_vocab for model saved in 3.3
+        # test for max_final_vocab and bounter_size
+        # for models saved in 3.3
         model_file = 'word2vec_3.3'
         model = word2vec.Word2Vec.load(datapath(model_file))
         self.assertEqual(model.max_final_vocab, None)
         self.assertEqual(model.vocabulary.max_final_vocab, None)
+        self.assertEqual(model.bounter_size, None)
+        self.assertEqual(model.vocabulary.bounter_size, None)
 
         # Test loading word2vec models from all previous versions
         old_versions = [

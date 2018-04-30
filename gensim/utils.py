@@ -384,6 +384,9 @@ def call_on_class_only(*args, **kwargs):
 
 
 class DictWrapper():
+    """Wrapper for allowing vocabulary counting to stay behind a clean dict-like
+    interface whether implemented by dict or bounter. This is a wrapper for dicts
+    """
     def __init__(self):
         self.vocab = defaultdict(int)
 
@@ -399,6 +402,9 @@ class DictWrapper():
 
 
 class BounterWrapper():
+    """Wrapper for allowing vocabulary counting to stay behind a clean dict-like
+    interface whether implemented by dict or bounter. This is a wrapper for bounter
+    """
     def __init__(self, bounter_size):
         self.word_counts = bounter(size_mb=bounter_size)
 

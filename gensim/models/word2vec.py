@@ -521,14 +521,15 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
         """
         self.max_final_vocab = max_final_vocab
-
+        self.bounter_size = bounter_size
         self.callbacks = callbacks
         self.load = call_on_class_only
 
         self.wv = Word2VecKeyedVectors(size)
         self.vocabulary = Word2VecVocab(
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
-            sorted_vocab=bool(sorted_vocab), null_word=null_word, bounter_size=bounter_size, max_final_vocab=max_final_vocab)
+            sorted_vocab=bool(sorted_vocab), null_word=null_word, bounter_size=bounter_size,
+            max_final_vocab=max_final_vocab)
         self.trainables = Word2VecTrainables(seed=seed, vector_size=size, hashfxn=hashfxn)
 
         super(Word2Vec, self).__init__(
@@ -985,10 +986,21 @@ class Word2Vec(BaseWordEmbeddingsModel):
         try:
             model = super(Word2Vec, cls).load(*args, **kwargs)
 
+            # Note:
+            # for models made in 3.1 and 3.2, the above line will lead to an exception which
+            # will subsequently lead to the creation of a new model with `max_final_vocab` and
+            # `bounter_size` The above line however won't raise an error for models made in 3.3
+            # Thus, the checks below are placed
+
             # for backward compatibility for `max_final_vocab` feature
             if not hasattr(model, 'max_final_vocab'):
                 model.max_final_vocab = None
                 model.vocabulary.max_final_vocab = None
+
+            # for backward compatibility for `bounter_size` feature
+            if not hasattr(model, 'bounter_size'):
+                model.bounter_size = None
+                model.vocabulary.bounter_size = None
 
             return model
         except AttributeError:
