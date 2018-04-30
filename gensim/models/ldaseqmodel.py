@@ -1341,7 +1341,6 @@ class LdaPost(utils.SaveLoad):
         -------
         list of float
             The updated gamma parameters for each word in the document.
-            
 
         """
         self.gamma = np.copy(self.lda.alpha)
