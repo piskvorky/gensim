@@ -383,7 +383,7 @@ def call_on_class_only(*args, **kwargs):
     raise AttributeError('This method should be called on a class object.')
 
 
-class DictWrapper():
+class DictCounter():
     """Wrapper for allowing vocabulary counting to stay behind a clean dict-like
     interface whether implemented by dict or bounter. This is a wrapper for dicts
     """
@@ -397,13 +397,18 @@ class DictWrapper():
         for word in sentence:
             self.vocab[word] += 1
 
-    def get(self):
+    def as_dict(self):
         return self.vocab
 
 
-class BounterWrapper():
+class BounterCounter():
     """Wrapper for allowing vocabulary counting to stay behind a clean dict-like
     interface whether implemented by dict or bounter. This is a wrapper for bounter
+
+    Parameters
+    ----------
+    bounter_size : int
+        size in MB for the bounter.
     """
     def __init__(self, bounter_size):
         self.word_counts = bounter(size_mb=bounter_size)
@@ -414,7 +419,7 @@ class BounterWrapper():
     def update(self, sentence):
         self.word_counts.update(sentence)
 
-    def get(self):
+    def as_dict(self):
         return dict(self.word_counts)
 
 

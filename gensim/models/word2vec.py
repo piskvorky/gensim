@@ -1183,9 +1183,9 @@ class Word2VecVocab(utils.SaveLoad):
         bounter_size = self.bounter_size
 
         if bounter_size is not None:
-            wrapped_dict = utils.BounterWrapper(self.bounter_size)
+            wrapped_dict = utils.BounterCounter(self.bounter_size)
         else:
-            wrapped_dict = utils.DictWrapper()
+            wrapped_dict = utils.DictCounter()
 
         for sentence_no, sentence in enumerate(sentences):
             if not checked_string_types:
@@ -1207,11 +1207,11 @@ class Word2VecVocab(utils.SaveLoad):
             wrapped_dict.update(sentence)
 
             if self.max_vocab_size and len(wrapped_dict) > self.max_vocab_size:
-                vocab = wrapped_dict.get()
+                vocab = wrapped_dict.as_dict()
                 utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
                 min_reduce += 1
 
-        vocab = wrapped_dict.get()
+        vocab = wrapped_dict.as_dict()
 
         logger.info(
             "collected %i word types from a corpus of %i raw words and %i sentences",
