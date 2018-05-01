@@ -1119,7 +1119,7 @@ def decode_htmlentities(text):
     return RE_HTML_ENTITY.sub(substitute_entity, text)
 
 
-def chunkize_serial(iterable, chunksize, as_numpy=False):
+def chunkize_serial(iterable, chunksize, as_numpy=False, dtype=np.float32):
     """Give elements from the iterable in `chunksize`-ed lists.
     The last returned element may be smaller (if length of collection is not divisible by `chunksize`).
 
@@ -1148,7 +1148,7 @@ def chunkize_serial(iterable, chunksize, as_numpy=False):
         if as_numpy:
             # convert each document to a 2d numpy array (~6x faster when transmitting
             # chunk data over the wire, in Pyro)
-            wrapped_chunk = [[np.array(doc) for doc in itertools.islice(it, int(chunksize))]]
+            wrapped_chunk = [[np.array(doc, dtype=dtype) for doc in itertools.islice(it, int(chunksize))]]
         else:
             wrapped_chunk = [list(itertools.islice(it, int(chunksize)))]
         if not wrapped_chunk[0]:
