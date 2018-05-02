@@ -5,6 +5,7 @@ from gensim import utils
 from gensim import matutils
 from gensim import interfaces
 from gensim.models import basemodel
+from gensim.models.nmf_pgd import solve_h, solve_r
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +31,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                  lambda_=1.,
                  kappa=1.,
                  store_r=False,
-                 max_iter=1e9,
+                 max_iter=int(1e9),
                  normalize=True
                  ):
         """
@@ -296,21 +297,20 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         eta = self._kappa / np.linalg.norm(W, 'fro') ** 2
 
-        for _ in range(int(self.max_iter)):
-            error = v - np.dot(W, h)
+        Wt = W.T
 
-            # Solve for h
-            h_ = h
-            h = h - eta * np.dot(-W.T, error - r)
-            np.maximum(h, 0.0, out=h)
+        for _ in range(self.max_iter):
+            violation = 0
+
+            r_actual = v - np.dot(W, h)
+
+            violation += solve_h(h, Wt, r - r_actual, eta)
 
             # Solve for r
-            r = self.__thresh(error, self._lambda_, self.v_max)
+            r = self.__thresh(r_actual, self._lambda_, self.v_max)
 
             # Stop conditions
-            stoph = np.linalg.norm(h - h_, 2)
-            stop = stoph / m
-            if stop < 1e-5:
+            if violation / m < 1e-5:
                 break
 
         return h, r

@@ -8,6 +8,7 @@ from .coherencemodel import CoherenceModel  # noqa:F401
 from .hdpmodel import HdpModel  # noqa:F401
 from .ldamodel import LdaModel  # noqa:F401
 from .lsimodel import LsiModel  # noqa:F401
+from .nmf import Nmf #noqa:F401
 from .tfidfmodel import TfidfModel  # noqa:F401
 from .rpmodel import RpModel  # noqa:F401
 from .logentropy_model import LogEntropyModel  # noqa:F401

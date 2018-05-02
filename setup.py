@@ -265,6 +265,9 @@ setup(
             include_dirs=[model_dir]),
         Extension('gensim._matutils',
             sources=['./gensim/_matutils.c']),
+        Extension('gensim.models.nmf_pgd',
+            sources=['./gensim/models/nmf_pgd.c'],
+            include_dirs=[model_dir])
     ],
     cmdclass=cmdclass,
     packages=find_packages(),
@@ -274,7 +277,7 @@ setup(
 
     url='http://radimrehurek.com/gensim',
     download_url='http://pypi.python.org/pypi/gensim',
-    
+
     license='LGPLv2.1',
 
     keywords='Singular Value Decomposition, SVD, Latent Semantic Indexing, '
