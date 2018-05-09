@@ -558,7 +558,11 @@ class WikiCorpus(TextCorpus):
         self.token_min_len = token_min_len
         self.token_max_len = token_max_len
         self.lower = lower
-        self.dictionary = dictionary or Dictionary(self.get_texts())
+
+        if dictionary is None:
+            self.dictionary = Dictionary(self.get_texts())
+        else:
+            self.dictionary = dictionary
 
     def get_texts(self):
         """Iterate over the dump, yielding list of tokens for each article.
