@@ -6,6 +6,7 @@ import numpy as np
 import sys
 
 from gensim.models.word2vec import Text8Corpus, Word2Vec
+from gensim.corpora import WikiCorpus
 from gensim.models.callbacks import CallbackAny2Vec
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
@@ -60,22 +61,37 @@ class EpochLogger(CallbackAny2Vec):
         self.epoch += 1
 
 
+class MyCorpus(object):
+    def __init__(self, *args, **kwargs):
+        self._corpus = WikiCorpus(*args, **kwargs)
+
+    def __iter__(self):
+        for text in self._corpus.get_texts():
+            yield text
+
+
+if 'wiki' in sys.argv[1]:
+    corpus = MyCorpus(sys.argv[1], lemmatize=False, lower=False)
+else:
+    corpus = Text8Corpus(sys.argv[1])
+questions_path = './docs/notebooks/datasets/questions-words.txt'
+
+
 corpus = Text8Corpus(sys.argv[1])
 questions_path = './docs/notebooks/datasets/questions-words.txt'
 
 params = {
     'sentences': corpus,
-    'iter': 8,
+    'iter': 5,
     'sg': 0,
     'size': 400,
-    'workers': 16,
+    'workers': 8,
     'alpha': 0.05,
     'min_alpha': 0.0001,
-    'window': 10,
+    'window': 5,
     'min_count': 5,
     'negative': 12,
     'sample': 1e-4,
-    'callbacks': [EpochSaver(), EpochLogger(questions_path)]
 }
 
 model = Word2Vec(
