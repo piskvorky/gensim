@@ -92,6 +92,7 @@ params = {
     'min_count': 5,
     'negative': 12,
     'sample': 1e-4,
+    'callbacks': [EpochSaver(), EpochLogger(questions_path)]
 }
 
 model = Word2Vec(
