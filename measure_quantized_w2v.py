@@ -6,6 +6,7 @@ import numpy as np
 import sys
 
 from gensim.models.word2vec import Text8Corpus, Word2Vec
+from gensim.models.callbacks import CallbackAny2Vec
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
@@ -32,12 +33,39 @@ def print_accuracy(model, questions_file, num_bits=0):
     model.init_sims(replace=True)
 
 
+class EpochSaver(CallbackAny2Vec):
+    def __init__(self):
+        self.epoch = 0
+
+    def on_epoch_end(self, model):
+        str_name = 'enwiki_w2v_{}_{}epoch_{}bit.w2v'.format(model.vector_size, self.epoch, model.num_bits)
+        model.save(str_name)
+        self.epoch += 1
+
+
+class EpochLogger(CallbackAny2Vec):
+    def __init__(self, questions_path):
+        self.epoch = 0
+        self.questions_path = questions_path
+
+    def on_epoch_end(self, model):
+        print("Epoch #{} end.".format(self.epoch))
+        print("\t---No quantization during training, accuracies---\t")
+        print("No quantization:")
+        print_accuracy(model, questions_path, num_bits=0)
+        print("Quantized 1bit:")
+        print_accuracy(model, questions_path, num_bits=1)
+        print("Quantized 2bits:")
+        print_accuracy(model, questions_path, num_bits=2)
+        self.epoch += 1
+
+
 corpus = Text8Corpus(sys.argv[1])
 questions_path = './docs/notebooks/datasets/questions-words.txt'
 
 params = {
     'sentences': corpus,
-    'iter': 25,
+    'iter': 8,
     'sg': 0,
     'size': 400,
     'workers': 16,
@@ -47,6 +75,7 @@ params = {
     'min_count': 5,
     'negative': 12,
     'sample': 1e-4,
+    'callbacks': [EpochSaver(), EpochLogger(questions_path)]
 }
 
 model = Word2Vec(
@@ -54,35 +83,12 @@ model = Word2Vec(
     **params
 )
 
-print("\t---No quantization during training, accuracies---\t")
-print("No quantization:")
-print_accuracy(model, questions_path, num_bits=0)
-print("Quantized 1bit:")
-print_accuracy(model, questions_path, num_bits=1)
-print("Quantized 2bits:")
-print_accuracy(model, questions_path, num_bits=2)
-
-
 model = Word2Vec(
     num_bits=1,
     **params
 )
 
-
-print("\t---Quantization with 1 bit during training, accuracies---\t")
-print("No quantization:")
-print_accuracy(model, questions_path, num_bits=0)
-print("Quantized 1bit:")
-print_accuracy(model, questions_path, num_bits=1)
-
-
 model = Word2Vec(
     num_bits=2,
     **params
 )
-
-print("\t---Quantization with 2 bits during training, accuracies---\t")
-print("No quantization:")
-print_accuracy(model, questions_path, num_bits=0)
-print("Quantized 2bits:")
-print_accuracy(model, questions_path, num_bits=2)
