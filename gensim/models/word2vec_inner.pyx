@@ -247,16 +247,16 @@ cdef void quantize_vector(const int _num_bits, REAL_t *vec, const int size) nogi
 
 
 cdef unsigned long long fast_sentence_cbow_neg(
-    const int _num_bits, const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len,
-    int codelens[MAX_SENTENCE_LEN], REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
-    const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work1, REAL_t *work2,
-    int i, int j, int k, int cbow_mean, unsigned long long next_random, REAL_t *word_locks,
-    const int _compute_loss, REAL_t *_running_training_loss_param) nogil:
+    const int _num_bits, const REAL_t _l2reg, const int negative, np.uint32_t *cum_table,
+    unsigned long long cum_table_len, int codelens[MAX_SENTENCE_LEN], REAL_t *neu1,  REAL_t *syn0,
+    REAL_t *syn1neg, const int size, const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha,
+    REAL_t *work1, REAL_t *work2, int i, int j, int k, int cbow_mean, unsigned long long next_random,
+    REAL_t *word_locks, const int _compute_loss, REAL_t *_running_training_loss_param) nogil:
 
     cdef long long a
     cdef long long row2
     cdef unsigned long long modulo = 281474976710655ULL
-    cdef REAL_t f, g, count, inv_count = 1.0, label, log_e_f_dot, f_dot
+    cdef REAL_t f, g, reg_coef, count, inv_count = 1.0, label, -((<REAL_t>2.0) * _l2reg), log_e_f_dot, f_dot
     cdef np.uint32_t target_index, word_index
     cdef int d, m
 
@@ -298,7 +298,7 @@ cdef unsigned long long fast_sentence_cbow_neg(
         scopy(&size, &syn1neg[row2], &ONE, work2, &ONE)
         quantize_vector(_num_bits, work2, size)
 
-        # Compute dot product between binarized vections.
+        # Compute dot product between binarized vectors.
         f_dot = our_dot(&size, neu1, &ONE, work2, &ONE)
         if f_dot <= -MAX_EXP or f_dot >= MAX_EXP:
             continue
@@ -314,6 +314,7 @@ cdef unsigned long long fast_sentence_cbow_neg(
 
         our_saxpy(&size, &g, work2, &ONE, work1, &ONE)
         our_saxpy(&size, &g, neu1, &ONE, &syn1neg[row2], &ONE)
+        our_saxpy(&size, &reg_coef, &syn1neg[row2], &ONE, &syn1neg[row2], &ONE)
 
     if not cbow_mean:  # divide error over summed window vectors
         sscal(&size, &inv_count, work1, &ONE)  # (does this need BLAS-variants like saxpy?)
@@ -323,6 +324,8 @@ cdef unsigned long long fast_sentence_cbow_neg(
             continue
         else:
             our_saxpy(&size, &word_locks[indexes[m]], work1, &ONE, &syn0[indexes[m]*size], &ONE)
+            cdef REAL_t coef = word_locks[indexes[m]] * reg_coef
+            our_saxpy(&size, &coef, &syn0[indexes[m]*size], &ONE, &syn0[indexes[m]*size], &ONE)
 
     return next_random
 
@@ -434,7 +437,7 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
     return effective_words
 
 
-def train_batch_cbow(model, sentences, alpha, _work1, _work2, _neu1, compute_loss, num_bits):
+def train_batch_cbow(model, sentences, alpha, _work1, _work2, _neu1, compute_loss, num_bits, l2reg):
     cdef int hs = model.hs
     cdef int negative = model.negative
     cdef int sample = (model.vocabulary.sample != 0)
@@ -443,6 +446,7 @@ def train_batch_cbow(model, sentences, alpha, _work1, _work2, _neu1, compute_los
     cdef int _compute_loss = (1 if compute_loss == True else 0)
     cdef int _num_bits = num_bits
     cdef REAL_t _running_training_loss = model.running_training_loss
+    cdef REAL_t _l2reg = l2reg
 
     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
     cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_lockf))
@@ -537,7 +541,7 @@ def train_batch_cbow(model, sentences, alpha, _work1, _work2, _neu1, compute_los
                 if hs:
                     fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work1, i, j, k, cbow_mean, word_locks, _compute_loss, &_running_training_loss)
                 if negative:
-                    next_random = fast_sentence_cbow_neg(_num_bits, negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work1, work2, i, j, k, cbow_mean, next_random, word_locks, _compute_loss, &_running_training_loss)
+                    next_random = fast_sentence_cbow_neg(_num_bits, _l2reg, negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work1, work2, i, j, k, cbow_mean, next_random, word_locks, _compute_loss, &_running_training_loss)
 
     model.running_training_loss = _running_training_loss
     return effective_words
