@@ -237,6 +237,8 @@ class BaseAny2VecModel(utils.SaveLoad):
     def _train_epoch(self, data_iterable, cur_epoch=0, total_examples=None,
                      total_words=None, queue_factor=2, report_delay=1.0):
         """Train one epoch."""
+        _reset_performance_metrics()
+
         job_queue = Queue(maxsize=queue_factor * self.workers)
         progress_queue = Queue(maxsize=(queue_factor + 1) * self.workers)
 
