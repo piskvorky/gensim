@@ -26,6 +26,40 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
+PERFORMANCE_METRICS = {
+    'total_time': 0.0,  # Total training time for 1 epoch in seconds.
+    'queue_size': 0.0,  # Average job queue size.
+    'words_sec': 0.0    # Average speed in words per second.
+}
+
+_QUEUE_SIZE_SUM = 0.0
+_QUEUE_SIZE_TIMES = 0.0
+
+
+def _reset_performance_metrics():
+    global PERFORMANCE_METRICS, _QUEUE_SIZE_TIMES, _QUEUE_SIZE_SUM
+    PERFORMANCE_METRICS = {
+        'total_time': 0.0,
+        'queue_size': 0.0,
+        'words_sec': 0.0
+    }
+
+    _QUEUE_SIZE_SUM = 0.0
+    _QUEUE_SIZE_TIMES = 0.0
+
+
+def _update_queue_stats(qsize):
+    global _QUEUE_SIZE_SUM, _QUEUE_SIZE_TIMES
+    _QUEUE_SIZE_SUM += qsize
+    _QUEUE_SIZE_TIMES += 1
+
+
+def _finalize_performance_metrics(elapsed, words_sec):
+    PERFORMANCE_METRICS['total_time'] = elapsed
+    PERFORMANCE_METRICS['words_sec'] = words_sec
+    PERFORMANCE_METRICS['queue_size'] = _QUEUE_SIZE_SUM / _QUEUE_SIZE_TIMES
+
+
 class BaseAny2VecModel(utils.SaveLoad):
     """Base class for training, using and evaluating any2vec model.
     Contains implementation for multi-threaded training.
@@ -644,11 +678,16 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
                       raw_word_count, total_words, trained_word_count, elapsed):
         if total_examples:
             # examples-based progress %
+
+            job_queue_size = utils.qsize(job_queue)
+
             logger.info(
                 "EPOCH %i - PROGRESS: at %.2f%% examples, %.0f words/s, in_qsize %i, out_qsize %i",
                 cur_epoch + 1, 100.0 * example_count / total_examples, trained_word_count / elapsed,
-                utils.qsize(job_queue), utils.qsize(progress_queue)
+                job_queue_size, utils.qsize(progress_queue)
             )
+
+            _update_queue_stats(job_queue_size)
         else:
             # words-based progress %
             logger.info(
@@ -663,6 +702,8 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             "EPOCH - %i : training on %i raw words (%i effective words) took %.1fs, %.0f effective words/s",
             cur_epoch + 1, raw_word_count, trained_word_count, elapsed, trained_word_count / elapsed
         )
+
+        _finalize_performance_metrics(elapsed, trained_word_count / elapsed)
 
         # check that the input corpus hasn't changed during iteration
         if total_examples and total_examples != example_count:
