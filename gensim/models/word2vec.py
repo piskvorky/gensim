@@ -74,7 +74,8 @@ Correlation with human opinion on word similarity::
 
 And on analogies::
 
-  >>> model.wv.accuracy(os.path.join(module_path, 'test_data', 'questions-words.txt'))
+  >>> model.wv.evaluate_word_analogies(os.path.join(module_path, 'test_data', 'questions-words.txt'))[0]
+  0.58
 
 and so on.
 
@@ -442,7 +443,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
             in some other way.
 
         sg : int {1, 0}
-            Defines the training algorithm. If 1, CBOW is used, otherwise, skip-gram is employed.
+            Defines the training algorithm. If 1, skip-gram is employed; otherwise, CBOW is used.
         size : int
             Dimensionality of the feature vectors.
         window : int
@@ -902,7 +903,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
     def log_accuracy(section):
         return Word2VecKeyedVectors.log_accuracy(section)
 
-    @deprecated("Method will be removed in 4.0.0, use self.wv.accuracy() instead")
+    @deprecated("Method will be removed in 4.0.0, use self.wv.evaluate_word_analogies() instead")
     def accuracy(self, questions, restrict_vocab=30000, most_similar=None, case_insensitive=True):
         most_similar = most_similar or Word2VecKeyedVectors.most_similar
         return self.wv.accuracy(questions, restrict_vocab, most_similar, case_insensitive)

@@ -7,7 +7,7 @@
 """This module contains various general utility functions."""
 
 from __future__ import with_statement
-
+from contextlib import contextmanager
 import collections
 import logging
 import warnings
@@ -137,6 +137,36 @@ def file_or_filename(input):
         # input already a file-like object; just reset to the beginning
         input.seek(0)
         return input
+
+
+@contextmanager
+def open_file(input):
+    """Provide "with-like" behaviour except closing the file object.
+
+    Parameters
+    ----------
+    input : str or file-like
+        Filename or file-like object.
+
+    Yields
+    -------
+    file
+        File-like object based on input (or input if this already file-like).
+
+    """
+    mgr = file_or_filename(input)
+    exc = False
+    try:
+        yield mgr
+    except Exception:
+        # Handling any unhandled exceptions from the code nested in 'with' statement.
+        exc = True
+        if not isinstance(input, string_types) or not mgr.__exit__(*sys.exc_info()):
+            raise
+        # Try to introspect and silence errors.
+    finally:
+        if not exc and isinstance(input, string_types):
+            mgr.__exit__(None, None, None)
 
 
 def deaccent(text):
@@ -1089,7 +1119,7 @@ def decode_htmlentities(text):
     return RE_HTML_ENTITY.sub(substitute_entity, text)
 
 
-def chunkize_serial(iterable, chunksize, as_numpy=False):
+def chunkize_serial(iterable, chunksize, as_numpy=False, dtype=np.float32):
     """Give elements from the iterable in `chunksize`-ed lists.
     The last returned element may be smaller (if length of collection is not divisible by `chunksize`).
 
@@ -1118,7 +1148,7 @@ def chunkize_serial(iterable, chunksize, as_numpy=False):
         if as_numpy:
             # convert each document to a 2d numpy array (~6x faster when transmitting
             # chunk data over the wire, in Pyro)
-            wrapped_chunk = [[np.array(doc) for doc in itertools.islice(it, int(chunksize))]]
+            wrapped_chunk = [[np.array(doc, dtype=dtype) for doc in itertools.islice(it, int(chunksize))]]
         else:
             wrapped_chunk = [list(itertools.islice(it, int(chunksize)))]
         if not wrapped_chunk[0]:
