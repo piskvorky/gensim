@@ -13,10 +13,11 @@ import threading
 from six.moves import xrange
 from six import itervalues
 from gensim import matutils
-from numpy import float32 as REAL, ones, random, dtype, zeros
+from numpy import float32 as REAL, ones, random, dtype, zeros, array
 from types import GeneratorType
 from gensim.utils import deprecated
 import warnings
+import psutil
 
 try:
     from queue import Queue
@@ -26,38 +27,38 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-PERFORMANCE_METRICS = {
-    'total_time': 0.0,  # Total training time for 1 epoch in seconds.
-    'queue_size': 0.0,  # Average job queue size.
-    'words_sec': 0.0    # Average speed in words per second.
-}
-
-_QUEUE_SIZE_SUM = 0.0
-_QUEUE_SIZE_TIMES = 0.0
+PERFORMANCE_METRICS = None
+_NUM_STATS_UPDATES = None
 
 
 def _reset_performance_metrics():
-    global PERFORMANCE_METRICS, _QUEUE_SIZE_TIMES, _QUEUE_SIZE_SUM
+    global PERFORMANCE_METRICS, _NUM_STATS_UPDATES, _QUEUE_SIZE_SUM
     PERFORMANCE_METRICS = {
-        'total_time': 0.0,
-        'queue_size': 0.0,
-        'words_sec': 0.0
+        'total_time': 0.0,   # Total training time for 1 epoch in seconds.
+        'queue_size': 0.0,   # Average job queue size.
+        'words_sec': 0.0,    # Average speed in words per second.
+        'cpu_load': zeros(psutil.cpu_count(), dtype=REAL)
     }
 
-    _QUEUE_SIZE_SUM = 0.0
-    _QUEUE_SIZE_TIMES = 0.0
+    _NUM_STATS_UPDATES = 0.0
+
+    # Stub call in order to obtain correct results for subsequent calls.
+    psutil.cpu_percent(interval=None, percpu=True)
 
 
-def _update_queue_stats(qsize):
-    global _QUEUE_SIZE_SUM, _QUEUE_SIZE_TIMES
-    _QUEUE_SIZE_SUM += qsize
-    _QUEUE_SIZE_TIMES += 1
+def _update_queue_and_cpu_stats(qsize):
+    global _NUM_STATS_UPDATES
+    PERFORMANCE_METRICS['queue_size'] += qsize
+    PERFORMANCE_METRICS['cpu_load'] += array(psutil.cpu_percent(interval=None, percpu=True), dtype=REAL)
+
+    _NUM_STATS_UPDATES += 1
 
 
 def _finalize_performance_metrics(elapsed, words_sec):
     PERFORMANCE_METRICS['total_time'] = elapsed
     PERFORMANCE_METRICS['words_sec'] = words_sec
-    PERFORMANCE_METRICS['queue_size'] = _QUEUE_SIZE_SUM / _QUEUE_SIZE_TIMES
+    PERFORMANCE_METRICS['queue_size'] = PERFORMANCE_METRICS['queue_size'] / _NUM_STATS_UPDATES
+    PERFORMANCE_METRICS['cpu_load'] = list(PERFORMANCE_METRICS['cpu_load'] / _NUM_STATS_UPDATES)
 
 
 class BaseAny2VecModel(utils.SaveLoad):
@@ -689,7 +690,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
                 job_queue_size, utils.qsize(progress_queue)
             )
 
-            _update_queue_stats(job_queue_size)
+            _update_queue_and_cpu_stats(job_queue_size)
         else:
             # words-based progress %
             logger.info(
