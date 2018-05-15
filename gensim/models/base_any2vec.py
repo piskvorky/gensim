@@ -57,8 +57,10 @@ def _update_queue_and_cpu_stats(qsize):
 def _finalize_performance_metrics(elapsed, words_sec):
     PERFORMANCE_METRICS['total_time'] = elapsed
     PERFORMANCE_METRICS['words_sec'] = words_sec
-    PERFORMANCE_METRICS['queue_size'] = PERFORMANCE_METRICS['queue_size'] / _NUM_STATS_UPDATES
-    PERFORMANCE_METRICS['cpu_load'] = list(PERFORMANCE_METRICS['cpu_load'] / _NUM_STATS_UPDATES)
+
+    if _NUM_STATS_UPDATES:
+        PERFORMANCE_METRICS['queue_size'] = PERFORMANCE_METRICS['queue_size'] / _NUM_STATS_UPDATES
+        PERFORMANCE_METRICS['cpu_load'] = list(PERFORMANCE_METRICS['cpu_load'] / _NUM_STATS_UPDATES)
 
 
 class BaseAny2VecModel(utils.SaveLoad):
