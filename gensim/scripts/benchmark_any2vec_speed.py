@@ -9,7 +9,7 @@ import copy
 from gensim.models import base_any2vec
 from gensim.models.fasttext import FastText
 from gensim.models.word2vec import Word2Vec
-from gensim.models.doc2vec import Doc2Vec
+from gensim.models.doc2vec import Doc2Vec, TaggedLineDocument
 from gensim.models.word2vec import LineSentence
 
 
@@ -25,10 +25,18 @@ SUPPORTED_MODELS = {
 }
 
 
+def print_results(model_str, results):
+    logger.info('----- MODEL {} RESULTS -----'.format(model_str).center(50))
+    logger.info('\t* Total time: {} sec.'.format(results['total_time']))
+    logger.info('\t* Avg queue size: {} elems.'.format(results['queue_size']))
+    logger.info('\t* Processing speed: {} words/sec'.format(results['words_sec']))
+    logger.info('\t* Avg CPU loads: {}'.format(results['cpu_load']))
+
+
 def benchmark_model(input, model, window, workers, vector_size):
     if model == 'doc2vec':
         kwargs = {
-            'documents': LineSentence(input)
+            'documents': TaggedLineDocument(input)
         }
     else:
         kwargs = {
@@ -59,13 +67,13 @@ def do_benchmarks(input, models_grid, vector_size, workers_grid, windows_grid, l
                 logger.info('Start benchmarking {}.'.format(model_str))
                 results = benchmark_model(input, model, window, workers, vector_size)
 
-                logger.info('----- MODEL {} RESULTS -----'.format(model_str).center(50))
-                logger.info('\t* Total time: {} sec.'.format(results['total_time']))
-                logger.info('\t* Avg queue size: {} elems.'.format(results['queue_size']))
-                logger.info('\t* Processing speed: {} words/sec'.format(results['words_sec']))
-                logger.info('\t* Avg CPU loads: {}'.format(results['cpu_load']))
+                print_results(model_str, results)
 
                 report[model_str] = results
+
+    logger.info('Benchmarking completed. Here are the results:')
+    for model_str, results in report.iteritems():
+        print_results(model_str, results)
 
     fout_name = '{}-results.json'.format(label)
     with open(fout_name, 'w') as fout:
