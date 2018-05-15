@@ -26,7 +26,7 @@ SUPPORTED_MODELS = {
 
 
 def print_results(model_str, results):
-    logger.info('----- MODEL {} RESULTS -----'.format(model_str).center(50))
+    logger.info('----- MODEL "{}" RESULTS -----'.format(model_str).center(50))
     logger.info('\t* Total time: {} sec.'.format(results['total_time']))
     logger.info('\t* Avg queue size: {} elems.'.format(results['queue_size']))
     logger.info('\t* Processing speed: {} words/sec'.format(results['words_sec']))
@@ -57,27 +57,27 @@ def benchmark_model(input, model, window, workers, vector_size):
 
 
 def do_benchmarks(input, models_grid, vector_size, workers_grid, windows_grid, label):
-    report = {}
+    full_report = {}
 
     for model in models_grid:
         for window in windows_grid:
             for workers in workers_grid:
-                model_str = '{}-{}-window{}-workers{}-size{}'.format(label, model, window, workers, vector_size)
+                model_str = '{}-{}-window-{:02d}-workers-{:02d}-size-{}'.format(label, model, window, workers, vector_size)
 
                 logger.info('Start benchmarking {}.'.format(model_str))
                 results = benchmark_model(input, model, window, workers, vector_size)
 
                 print_results(model_str, results)
 
-                report[model_str] = results
+                full_report[model_str] = results
 
     logger.info('Benchmarking completed. Here are the results:')
-    for model_str, results in report.iteritems():
-        print_results(model_str, results)
+    for model_str in sorted(full_report.keys()):
+        print_results(model_str, full_report[model_str])
 
-    fout_name = '{}-results.json'.format(label)
+    fout_name = '{}-report.json'.format(label)
     with open(fout_name, 'w') as fout:
-        json.dump(report, fout)
+        json.dump(full_report, fout)
 
     logger.info('Saved metrics report to {}.'.format(fout_name))
 
