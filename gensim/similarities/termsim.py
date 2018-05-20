@@ -311,7 +311,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
             result = X.T.dot(matrix).dot(Y)
 
             if normalized:
-                result = np.clip(result.data, -1.0, 1.0)
+                result = np.clip(result, -1.0, 1.0)
 
             if transposed:
                 result = result.T
