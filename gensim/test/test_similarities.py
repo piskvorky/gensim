@@ -871,6 +871,52 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         result = matrix.inner_product(vec1, vec2, normalized=True)
         self.assertAlmostEqual(expected_result, result, places=5)
 
+        # check that real-world (vector, corpus) pairs work as expected
+        vec1 = self.dictionary.doc2bow([u"government", u"government", u"denied"])
+        vec2 = self.dictionary.doc2bow([u"government", u"holiday"])
+        expected_result = 0.0
+        expected_result += 2 * 1.0 * 1  # government * s_{ij} * government
+        expected_result += 2 * 0.5 * 1  # government * s_{ij} * holiday
+        expected_result += 1 * 0.5 * 1  # denied * s_{ij} * government
+        expected_result += 1 * 0.5 * 1  # denied * s_{ij} * holiday
+        expected_result = numpy.full((1, 2), expected_result)
+        result = matrix.inner_product(vec1, [vec2] * 2)
+        self.assertTrue(isinstance(result, numpy.ndarray))
+        self.assertTrue(numpy.allclose(expected_result, result))
+
+        vec1 = self.dictionary.doc2bow([u"government", u"government", u"denied"])
+        vec2 = self.dictionary.doc2bow([u"government", u"holiday"])
+        expected_result = matrix.inner_product(vec1, vec2)
+        expected_result /= math.sqrt(matrix.inner_product(vec1, vec1))
+        expected_result /= math.sqrt(matrix.inner_product(vec2, vec2))
+        expected_result = numpy.full((1, 2), expected_result)
+        result = matrix.inner_product(vec1, [vec2] * 2, normalized=True)
+        self.assertTrue(isinstance(result, numpy.ndarray))
+        self.assertTrue(numpy.allclose(expected_result, result))
+
+        # check that real-world (corpus, vector) pairs work as expected
+        vec1 = self.dictionary.doc2bow([u"government", u"government", u"denied"])
+        vec2 = self.dictionary.doc2bow([u"government", u"holiday"])
+        expected_result = 0.0
+        expected_result += 2 * 1.0 * 1  # government * s_{ij} * government
+        expected_result += 2 * 0.5 * 1  # government * s_{ij} * holiday
+        expected_result += 1 * 0.5 * 1  # denied * s_{ij} * government
+        expected_result += 1 * 0.5 * 1  # denied * s_{ij} * holiday
+        expected_result = numpy.full((3, 1), expected_result)
+        result = matrix.inner_product([vec1] * 3, vec2)
+        self.assertTrue(isinstance(result, numpy.ndarray))
+        self.assertTrue(numpy.allclose(expected_result, result))
+
+        vec1 = self.dictionary.doc2bow([u"government", u"government", u"denied"])
+        vec2 = self.dictionary.doc2bow([u"government", u"holiday"])
+        expected_result = matrix.inner_product(vec1, vec2)
+        expected_result /= math.sqrt(matrix.inner_product(vec1, vec1))
+        expected_result /= math.sqrt(matrix.inner_product(vec2, vec2))
+        expected_result = numpy.full((3, 1), expected_result)
+        result = matrix.inner_product([vec1] * 3, vec2, normalized=True)
+        self.assertTrue(isinstance(result, numpy.ndarray))
+        self.assertTrue(numpy.allclose(expected_result, result))
+
         # check that real-world corpora work as expected
         vec1 = self.dictionary.doc2bow([u"government", u"government", u"denied"])
         vec2 = self.dictionary.doc2bow([u"government", u"holiday"])

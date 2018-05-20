@@ -278,7 +278,46 @@ class SparseTermSimilarityMatrix(SaveLoad):
                 result = np.clip(result, -1.0, 1.0)
 
             return result[0, 0]
-        else:
+        elif not is_corpus_X or not is_corpus_Y:
+            if is_corpus_X and not is_corpus_Y:
+                is_corpus_X, X, is_corpus_Y, Y = is_corpus_Y, Y, is_corpus_X, X  # make Y the corpus
+                transposed = True
+            else:
+                transposed = False
+
+            dtype = self.matrix.dtype
+            expanded_X = corpus2csc([X], num_terms=self.matrix.shape[0], dtype=dtype).T.dot(self.matrix)
+            word_indices = sorted(expanded_X.nonzero()[1])
+            del expanded_X
+
+            X = dict(X)
+            X = np.array([X[i] if i in X else 0 for i in word_indices], dtype=dtype)
+            Y = corpus2csc(Y, num_terms=self.matrix.shape[0], dtype=dtype)[word_indices, :].todense()
+            matrix = self.matrix[[[i] for i in word_indices], word_indices].todense()
+
+            if normalized:
+                # use the following equality: np.diag(A.T.dot(B).dot(A)) == A.T.dot(B).multiply(A.T).sum(axis=1).T
+                X_norm = np.multiply(X.T.dot(matrix), X.T).sum(axis=1).T
+                Y_norm = np.multiply(Y.T.dot(matrix), Y.T).sum(axis=1).T
+
+                assert \
+                    X_norm.min() >= 0.0 and Y_norm.min() >= 0.0, \
+                    u"sparse documents must not contain any explicit zero entries and the similarity matrix S " \
+                    u"must satisfy x^T * S * x > 0 for any nonzero bag-of-words vector x."
+
+                X = np.multiply(X, 1 / np.sqrt(X_norm)).T
+                Y = np.multiply(Y, 1 / np.sqrt(Y_norm))
+
+            result = X.T.dot(matrix).dot(Y)
+
+            if normalized:
+                result = np.clip(result.data, -1.0, 1.0)
+
+            if transposed:
+                result = result.T
+
+            return result
+        else:  # if is_corpus_X and is_corpus_Y:
             dtype = self.matrix.dtype
             X = corpus2csc(X if is_corpus_X else [X], num_terms=self.matrix.shape[0], dtype=dtype)
             Y = corpus2csc(Y if is_corpus_Y else [Y], num_terms=self.matrix.shape[0], dtype=dtype)
