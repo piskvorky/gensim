@@ -67,6 +67,7 @@ def _finalize_performance_metrics(elapsed, words_sec):
 
     # Explicitly format to string because floats are not serializable by json
     PERFORMANCE_METRICS['cpu_load'] = ', '.join('{:.2f}'.format(x) for x in PERFORMANCE_METRICS['cpu_load'])
+    PERFORMANCE_METRICS['cpu_load_sum'] = str(PERFORMANCE_METRICS['cpu_load_sum'])
 
 
 class BaseAny2VecModel(utils.SaveLoad):
