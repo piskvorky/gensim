@@ -49,6 +49,7 @@ def benchmark_model(input, model, window, workers, vector_size):
 
     if model != 'sent2vec':
         kwargs['window'] = window
+
     kwargs['workers'] = workers
     kwargs['epochs'] = 1
 

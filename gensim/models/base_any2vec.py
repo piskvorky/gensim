@@ -16,6 +16,7 @@ from gensim import matutils
 from numpy import float32 as REAL, ones, random, dtype, zeros, array
 from types import GeneratorType
 from gensim.utils import deprecated
+import itertools
 import warnings
 import psutil
 
@@ -242,7 +243,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         self.total_train_time += elapsed
         return trained_word_count, raw_word_count, job_tally
 
-    def _train_epoch(self, data_iterable, cur_epoch=0, total_examples=None,
+    def _train_epoch(self, data_iterables, cur_epoch=0, total_examples=None,
                      total_words=None, queue_factor=2, report_delay=1.0):
         """Train one epoch."""
         _reset_performance_metrics()
@@ -257,10 +258,13 @@ class BaseAny2VecModel(utils.SaveLoad):
             for _ in xrange(self.workers)
         ]
 
-        workers.append(threading.Thread(
-            target=self._job_producer,
-            args=(data_iterable, job_queue),
-            kwargs={'cur_epoch': cur_epoch, 'total_examples': total_examples, 'total_words': total_words}))
+        workers.extend(
+            threading.Thread(
+                target=self._job_producer,
+                args=(data_iterable, job_queue),
+                kwargs={'cur_epoch': cur_epoch, 'total_examples': total_examples, 'total_words': total_words}
+            ) for data_iterable in data_iterables
+        )
 
         for thread in workers:
             thread.daemon = True  # make interrupting the process with ctrl+c easier
@@ -272,7 +276,7 @@ class BaseAny2VecModel(utils.SaveLoad):
 
         return trained_word_count, raw_word_count, job_tally
 
-    def train(self, data_iterable, epochs=None, total_examples=None,
+    def train(self, data_iterables, epochs=None, total_examples=None,
               total_words=None, queue_factor=2, report_delay=1.0, callbacks=(), **kwargs):
         """Handle multi-worker training."""
         self._set_train_params(**kwargs)
@@ -297,7 +301,7 @@ class BaseAny2VecModel(utils.SaveLoad):
                 callback.on_epoch_begin(self)
 
             trained_word_count_epoch, raw_word_count_epoch, job_tally_epoch = self._train_epoch(
-                data_iterable, cur_epoch=cur_epoch, total_examples=total_examples, total_words=total_words,
+                data_iterables, cur_epoch=cur_epoch, total_examples=total_examples, total_words=total_words,
                 queue_factor=queue_factor, report_delay=report_delay)
             trained_word_count += trained_word_count_epoch
             raw_word_count += raw_word_count_epoch
@@ -341,8 +345,8 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
     def _set_train_params(self, **kwargs):
         raise NotImplementedError()
 
-    def __init__(self, sentences=None, workers=3, vector_size=100, epochs=5, callbacks=(), batch_words=10000,
-                 trim_rule=None, sg=0, alpha=0.025, window=5, seed=1, hs=0, negative=5, cbow_mean=1,
+    def __init__(self, sentences=None, input_streams=None, workers=3, vector_size=100, epochs=5, callbacks=(),
+                 batch_words=10000, trim_rule=None, sg=0, alpha=0.025, window=5, seed=1, hs=0, negative=5, cbow_mean=1,
                  min_alpha=0.0001, compute_loss=False, fast_version=0, **kwargs):
         self.sg = int(sg)
         if vector_size % 4 != 0:
@@ -374,12 +378,20 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
                 self.neg_labels[0] = 1.
 
         if sentences is not None:
+            assert input_streams is None, "You can't pass both `sententes` and `input_streams`."
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
+
             self.build_vocab(sentences, trim_rule=trim_rule)
             self.train(
-                sentences, total_examples=self.corpus_count, epochs=self.epochs, start_alpha=self.alpha,
+                [sentences], total_examples=self.corpus_count, epochs=self.epochs, start_alpha=self.alpha,
                 end_alpha=self.min_alpha, compute_loss=compute_loss)
+        elif input_streams is not None:
+            assert len(input_streams) > 0
+
+            self.build_vocab(itertools.chain(input_streams), trim_rule=trim_rule)
+            self.train(input_streams, total_examples=self.corpus_count, epochs=self.epochs, start_alpha=self.alpha,
+                       end_alpha=self.min_alpha, compute_loss=compute_loss)
         else:
             if trim_rule is not None:
                 logger.warning(
@@ -599,7 +611,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         )
         return report
 
-    def train(self, sentences, total_examples=None, total_words=None,
+    def train(self, input_streams, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None, word_count=0,
               queue_factor=2, report_delay=1.0, compute_loss=False, callbacks=()):
 
@@ -608,7 +620,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         self.compute_loss = compute_loss
         self.running_training_loss = 0.0
         return super(BaseWordEmbeddingsModel, self).train(
-            sentences, total_examples=total_examples, total_words=total_words,
+            input_streams, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
             queue_factor=queue_factor, report_delay=report_delay, compute_loss=compute_loss, callbacks=callbacks)
 
