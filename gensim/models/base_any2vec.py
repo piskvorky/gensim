@@ -389,7 +389,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         elif input_streams is not None:
             assert len(input_streams) > 0
 
-            self.build_vocab(itertools.chain(input_streams), trim_rule=trim_rule)
+            self.build_vocab(itertools.chain(*input_streams), trim_rule=trim_rule)
             self.train(input_streams, total_examples=self.corpus_count, epochs=self.epochs, start_alpha=self.alpha,
                        end_alpha=self.min_alpha, compute_loss=compute_loss)
         else:

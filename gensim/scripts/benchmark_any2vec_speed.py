@@ -6,6 +6,8 @@ import argparse
 import json
 import copy
 import yappi
+import os
+import glob
 
 from gensim.models import base_any2vec
 from gensim.models.fasttext import FastText
@@ -32,17 +34,17 @@ def print_results(model_str, results):
     logger.info('\t* Avg queue size: {} elems.'.format(results['queue_size']))
     logger.info('\t* Processing speed: {} words/sec'.format(results['words_sec']))
     logger.info('\t* Avg CPU loads: {}'.format(results['cpu_load']))
-    logger.info('\t* Sum CPU loads: {}'.format(results['cpu_load_sum']))
+    logger.info('\t* Sum CPU load: {}'.format(results['cpu_load_sum']))
 
 
-def benchmark_model(input, model, window, workers, vector_size):
+def benchmark_model(input_streams, model, window, workers, vector_size):
     if model == 'doc2vec':
         kwargs = {
-            'documents': TaggedLineDocument(input)
+            'input_streams': [TaggedLineDocument(inp) for inp in input_streams]
         }
     else:
         kwargs = {
-            'sentences': LineSentence(input)
+            'input_streams': [LineSentence(inp) for inp in input_streams]
         }
 
     kwargs['size'] = vector_size
@@ -51,7 +53,7 @@ def benchmark_model(input, model, window, workers, vector_size):
         kwargs['window'] = window
 
     kwargs['workers'] = workers
-    kwargs['epochs'] = 1
+    kwargs['iter'] = 1
 
     logger.info('Creating model with kwargs={}'.format(kwargs))
 
@@ -64,7 +66,7 @@ def benchmark_model(input, model, window, workers, vector_size):
     return copy.deepcopy(base_any2vec.PERFORMANCE_METRICS)
 
 
-def do_benchmarks(input, models_grid, vector_size, workers_grid, windows_grid, label):
+def do_benchmarks(input_streams, models_grid, vector_size, workers_grid, windows_grid, label):
     full_report = {}
 
     for model in models_grid:
@@ -73,7 +75,7 @@ def do_benchmarks(input, models_grid, vector_size, workers_grid, windows_grid, l
                 model_str = '{}-{}-window-{:02d}-workers-{:02d}-size-{}'.format(label, model, window, workers, vector_size)
 
                 logger.info('Start benchmarking {}.'.format(model_str))
-                results = benchmark_model(input, model, window, workers, vector_size)
+                results = benchmark_model(input_streams, model, window, workers, vector_size)
 
                 print_results(model_str, results)
 
@@ -93,7 +95,8 @@ def do_benchmarks(input, models_grid, vector_size, workers_grid, windows_grid, l
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='GSOC Multistream-API: evaluate performance '
                                                  'metrics for any2vec models')
-    parser.add_argument('--input', type=str)
+    parser.add_argument('--input', type=str, help='Input file or regexp if `multistream` mode is on.')
+    parser.add_argument('--multistream', action='store_true')
     parser.add_argument('--models-grid', nargs='+', type=str, default=SUPPORTED_MODELS.keys())
     parser.add_argument('--size', type=int, default=300)
     parser.add_argument('--workers-grid', nargs='+', type=int, default=[1, 4, 8, 10, 12, 14])
@@ -102,4 +105,11 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    do_benchmarks(args.input, args.models_grid, args.size, args.workers_grid, args.windows_grid, args.label)
+    input_ = os.path.expanduser(args.input)
+    if args.multistream:
+        input_streams = glob.glob(input_)
+        logger.info('Glob found {} input streams. List: {}'.format(len(input_streams), input_streams))
+    else:
+        input_streams = [input_]
+
+    do_benchmarks(input_streams, args.models_grid, args.size, args.workers_grid, args.windows_grid, args.label)
