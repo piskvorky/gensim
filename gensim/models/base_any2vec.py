@@ -37,7 +37,8 @@ def _reset_performance_metrics():
         'total_time': 0.0,   # Total training time for 1 epoch in seconds.
         'queue_size': 0.0,   # Average job queue size.
         'words_sec': 0.0,    # Average speed in words per second.
-        'cpu_load': zeros(psutil.cpu_count(), dtype=REAL)
+        'cpu_load': zeros(psutil.cpu_count(), dtype=REAL),
+        'cpu_load_sum': 0.0
     }
 
     _NUM_STATS_UPDATES = 0.0
@@ -61,6 +62,7 @@ def _finalize_performance_metrics(elapsed, words_sec):
     if _NUM_STATS_UPDATES:
         PERFORMANCE_METRICS['queue_size'] = PERFORMANCE_METRICS['queue_size'] / _NUM_STATS_UPDATES
         PERFORMANCE_METRICS['cpu_load'] = PERFORMANCE_METRICS['cpu_load'] / _NUM_STATS_UPDATES
+        PERFORMANCE_METRICS['cpu_load_sum'] = PERFORMANCE_METRICS['cpu_load'].sum()
 
     # Explicitly format to string because floats are not serializable by json
     PERFORMANCE_METRICS['cpu_load'] = ', '.join('{:.2f}'.format(x) for x in PERFORMANCE_METRICS['cpu_load'])

@@ -5,11 +5,13 @@ import logging
 import argparse
 import json
 import copy
+import yappi
 
 from gensim.models import base_any2vec
 from gensim.models.fasttext import FastText
 from gensim.models.word2vec import Word2Vec
 from gensim.models.doc2vec import Doc2Vec, TaggedLineDocument
+from gensim.models.sent2vec import Sent2Vec
 from gensim.models.word2vec import LineSentence
 
 
@@ -21,7 +23,8 @@ logger = logging.getLogger(__name__)
 SUPPORTED_MODELS = {
     'fasttext': FastText,
     'word2vec': Word2Vec,
-    'doc2vec': Doc2Vec
+    'doc2vec': Doc2Vec,
+    'sent2vec': Sent2Vec
 }
 
 
@@ -31,6 +34,7 @@ def print_results(model_str, results):
     logger.info('\t* Avg queue size: {} elems.'.format(results['queue_size']))
     logger.info('\t* Processing speed: {} words/sec'.format(results['words_sec']))
     logger.info('\t* Avg CPU loads: {}'.format(results['cpu_load']))
+    logger.info('\t* Sum CPU loads: {}'.format(results['cpu_load_sum']))
 
 
 def benchmark_model(input, model, window, workers, vector_size):
@@ -44,14 +48,19 @@ def benchmark_model(input, model, window, workers, vector_size):
         }
 
     kwargs['size'] = vector_size
-    kwargs['window'] = window
+
+    if model != 'sent2vec':
+        kwargs['window'] = window
     kwargs['workers'] = workers
-    kwargs['iter'] = 1
+    kwargs['epochs'] = 1
 
     logger.info('Creating model with kwargs={}'.format(kwargs))
 
     # Training model for 1 epoch.
+    yappi.start()
     SUPPORTED_MODELS[model](**kwargs)
+    yappi.get_func_stats().print_all()
+    yappi.get_thread_stats().print_all()
 
     return copy.deepcopy(base_any2vec.PERFORMANCE_METRICS)
 
