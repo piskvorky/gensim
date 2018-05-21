@@ -11,7 +11,6 @@ from gensim.models import base_any2vec
 from gensim.models.fasttext import FastText
 from gensim.models.word2vec import Word2Vec
 from gensim.models.doc2vec import Doc2Vec, TaggedLineDocument
-from gensim.models.sent2vec import Sent2Vec
 from gensim.models.word2vec import LineSentence
 
 
@@ -24,7 +23,6 @@ SUPPORTED_MODELS = {
     'fasttext': FastText,
     'word2vec': Word2Vec,
     'doc2vec': Doc2Vec,
-    'sent2vec': Sent2Vec
 }
 
 
