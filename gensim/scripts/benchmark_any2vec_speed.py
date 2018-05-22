@@ -5,7 +5,7 @@ import logging
 import argparse
 import json
 import copy
-import yappi
+# import yappi
 import os
 import glob
 
@@ -58,10 +58,10 @@ def benchmark_model(input_streams, model, window, workers, vector_size):
     logger.info('Creating model with kwargs={}'.format(kwargs))
 
     # Training model for 1 epoch.
-    yappi.start()
+    # yappi.start()
     SUPPORTED_MODELS[model](**kwargs)
-    yappi.get_func_stats().print_all()
-    yappi.get_thread_stats().print_all()
+    # yappi.get_func_stats().print_all()
+    # yappi.get_thread_stats().print_all()
 
     return copy.deepcopy(base_any2vec.PERFORMANCE_METRICS)
 
@@ -96,7 +96,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='GSOC Multistream-API: evaluate performance '
                                                  'metrics for any2vec models')
     parser.add_argument('--input', type=str, help='Input file or regexp if `multistream` mode is on.')
-    parser.add_argument('--multistream', action='store_true')
     parser.add_argument('--models-grid', nargs='+', type=str, default=SUPPORTED_MODELS.keys())
     parser.add_argument('--size', type=int, default=300)
     parser.add_argument('--workers-grid', nargs='+', type=int, default=[1, 4, 8, 10, 12, 14])
@@ -106,10 +105,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     input_ = os.path.expanduser(args.input)
-    if args.multistream:
-        input_streams = glob.glob(input_)
-        logger.info('Glob found {} input streams. List: {}'.format(len(input_streams), input_streams))
-    else:
-        input_streams = [input_]
+    input_streams = glob.glob(input_)
+    logger.info('Glob found {} input streams. List: {}'.format(len(input_streams), input_streams))
 
     do_benchmarks(input_streams, args.models_grid, args.size, args.workers_grid, args.windows_grid, args.label)
