@@ -9,6 +9,7 @@ from gensim.models.nmf_pgd import solve_h, solve_r
 
 logger = logging.getLogger(__name__)
 
+import time
 
 class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
     """Online Non-Negative Matrix Factorization.
@@ -32,7 +33,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                  kappa=1.,
                  store_r=False,
                  max_iter=int(1e9),
-                 normalize=True
+                 normalize=True,
+                 random_state=None
                  ):
         """
 
@@ -251,22 +253,25 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def _solve_w(self):
         eta = self._kappa / np.linalg.norm(self.A, 'fro')
-        n = 0
         lasttwo = np.zeros(2)
-        while n <= 2 or (np.abs(
-                (lasttwo[1] - lasttwo[0]) / lasttwo[0]) > 1e-5 and n < 1e9):
+
+        for n in range(int(1e9)):
+            if n >= 2 and np.abs((lasttwo[1] - lasttwo[0])) < 1e-5 * np.abs(lasttwo[0]):
+                break
+
             self._W -= eta * (np.dot(self._W, self.A) - self.B)
             self._W = self.__transform(self._W)
-            n += 1
             lasttwo[0] = lasttwo[1]
-            lasttwo[1] = 0.5 * np.trace(self._W.T.dot(self._W).dot(self.A)) - \
-                         np.trace(self._W.T.dot(self.B))
+            lasttwo[1] = (
+                    0.5 * np.trace(self._W.T.dot(self._W).dot(self.A))
+                    - np.trace(self._W.T.dot(self.B))
+            )
 
     @staticmethod
-    def __thresh(X, lambda1, vmax):
-        res = np.abs(X) - lambda1
+    def __solve_r(r_actual, lambda_, vmax):
+        res = np.abs(r_actual) - lambda_
         np.maximum(res, 0.0, out=res)
-        res *= np.sign(X)
+        res *= np.sign(r_actual)
         np.clip(res, -vmax, vmax, out=res)
         return res
 
@@ -295,19 +300,18 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if r is None or r.shape != rshape:
             r = np.zeros(rshape)
 
-        eta = self._kappa / np.linalg.norm(W, 'fro') ** 2
-
         Wt = W.T
+        WtW = Wt.dot(W)
 
-        for _ in range(self.max_iter):
+        for iter_number in range(self.max_iter):
             violation = 0
 
             r_actual = v - np.dot(W, h)
+            Wt_v_minus_r = Wt.dot(v - r)
 
-            violation += solve_h(h, Wt, r - r_actual, eta)
+            violation += solve_h(h, Wt_v_minus_r, WtW, self._kappa)
 
-            # Solve for r
-            r = self.__thresh(r_actual, self._lambda_, self.v_max)
+            violation += solve_r(r, r_actual, self._lambda_, self.v_max)
 
             # Stop conditions
             if violation / m < 1e-5:

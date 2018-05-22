@@ -1,38 +1,59 @@
+# Author: Timofey Yefimov
+
 # cython: cdivision=True
 # cython: boundscheck=False
 # cython: wraparound=False
-
-# Author: Timofey Yefimov
+# cython: linetrace=False
 
 cimport cython
-from libc.math cimport sqrt
+from libc.math cimport sqrt, fabs, fmin, fmax, copysign
 
-def solve_h(double[:, :] h, double[:, :] Wt, double[:, :] r_diff, double eta):
-    cdef Py_ssize_t n_components = Wt.shape[0]
-    cdef Py_ssize_t n_features = Wt.shape[1]
+def solve_h(double[:, ::1] h, double[:, :] Wt_v_minus_r, double[:, ::1] WtW, double kappa):
+    cdef Py_ssize_t n_components = h.shape[0]
     cdef Py_ssize_t n_samples = h.shape[1]
     cdef double violation = 0
-    cdef double grad, projected_grad
-    cdef Py_ssize_t sample_idx, component_idx, feature_idx
+    cdef double grad, projected_grad, hessian
+    cdef Py_ssize_t sample_idx, component_idx_1, component_idx_2
 
     with nogil:
-        for sample_idx in range(n_samples):
-            for component_idx in range(n_components):
+        for component_idx_1 in range(n_components):
+            for sample_idx in range(n_samples):
 
-                grad = 0
+                grad = -Wt_v_minus_r[component_idx_1, sample_idx]
 
-                for feature_idx in range(n_features):
-                    grad += Wt[component_idx, feature_idx] * r_diff[feature_idx, sample_idx]
+                for component_idx_2 in range(n_components):
+                    grad += WtW[component_idx_1, component_idx_2] * h[component_idx_2, sample_idx]
 
-                grad *= eta
-
-                projected_grad = min(0, grad) if h[component_idx, sample_idx] == 0 else grad
+                projected_grad = fmin(0, grad) if h[component_idx_1, sample_idx] == 0 else grad
 
                 violation += projected_grad ** 2
 
-                h[component_idx, sample_idx] = max(h[component_idx, sample_idx] - grad, 0)
+                hessian = WtW[component_idx_1, component_idx_1]
+
+                h[component_idx_1, sample_idx] = fmax(h[component_idx_1, sample_idx] - grad * kappa / hessian, 0.)
 
     return sqrt(violation)
 
-def solve_r():
-    pass
+def solve_r(double[:, ::1] r, double[:, ::1] r_actual, double lambda_, double v_max):
+    cdef Py_ssize_t n_features = r.shape[0]
+    cdef Py_ssize_t n_samples = r.shape[1]
+    cdef double violation = 0
+    cdef double r_new_element
+
+    with nogil:
+        for sample_idx in range(n_samples):
+            for feature_idx in range(n_features):
+                if r[feature_idx, sample_idx] == 0:
+                    continue
+
+                r_new_element = fabs(r_actual[feature_idx, sample_idx]) - lambda_
+                r_new_element = fmax(r_new_element, 0)
+                r_new_element = copysign(r_new_element, r_actual[feature_idx, sample_idx])
+                r_new_element = fmax(r_new_element, -v_max)
+                r_new_element = fmin(r_new_element, v_max)
+
+                violation += (r[feature_idx, sample_idx] - r_new_element)**2
+
+                r[feature_idx, sample_idx] = r_new_element
+
+    return sqrt(violation)
