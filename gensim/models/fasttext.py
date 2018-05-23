@@ -866,33 +866,30 @@ class FastTextTrainables(Word2VecTrainables):
         for w, vocab in wv.vocab.items():
             wv.vectors[vocab.index] += np.array(wv.vectors_ngrams[vocab.index])
 
-        ngram_indices = []
-        wv.num_ngram_vectors = 0
-        for word in wv.vocab.keys():
-            for ngram in _compute_ngrams(word, wv.min_n, wv.max_n):
-                ngram_hash = _ft_hash(ngram) % self.bucket
-                if ngram_hash in wv.hash2index:
-                    continue
-                wv.hash2index[ngram_hash] = len(ngram_indices)
-                ngram_indices.append(len(wv.vocab) + ngram_hash)
-        wv.num_ngram_vectors = len(ngram_indices)
-        wv.vectors_ngrams = wv.vectors_ngrams.take(ngram_indices, axis=0)
+        logger.info("loading weights for %s words for fastText model from %s",
+                    len(wv.vocab), file_name)
 
-        ngram_weights = wv.vectors_ngrams
+        if self.bucket != 0:
+            ngram_indices = []
+            wv.num_ngram_vectors = 0
+            for word in wv.vocab.keys():
+                for ngram in _compute_ngrams(word, wv.min_n, wv.max_n):
+                    ngram_hash = _ft_hash(ngram) % self.bucket
+                    if ngram_hash in wv.hash2index:
+                        continue
+                    wv.hash2index[ngram_hash] = len(ngram_indices)
+                    ngram_indices.append(len(wv.vocab) + ngram_hash)
+            wv.num_ngram_vectors = len(ngram_indices)
+            wv.vectors_ngrams = wv.vectors_ngrams.take(ngram_indices, axis=0)
 
-        logger.info(
-            "loading weights for %s words for fastText model from %s",
-            len(wv.vocab), file_name
-        )
+            ngram_weights = wv.vectors_ngrams
 
-        for w, vocab in wv.vocab.items():
-            word_ngrams = _compute_ngrams(w, wv.min_n, wv.max_n)
-            for word_ngram in word_ngrams:
-                vec_idx = wv.hash2index[_ft_hash(word_ngram) % self.bucket]
-                wv.vectors[vocab.index] += np.array(ngram_weights[vec_idx])
+            for w, vocab in wv.vocab.items():
+                word_ngrams = _compute_ngrams(w, wv.min_n, wv.max_n)
+                for word_ngram in word_ngrams:
+                    vec_idx = wv.hash2index[_ft_hash(word_ngram) % self.bucket]
+                    wv.vectors[vocab.index] += np.array(ngram_weights[vec_idx])
 
-            wv.vectors[vocab.index] /= (len(word_ngrams) + 1)
-        logger.info(
-            "loaded %s weight matrix for fastText model from %s",
-            wv.vectors.shape, file_name
-        )
+                wv.vectors[vocab.index] /= (len(word_ngrams) + 1)
+        logger.info("loaded %s weight matrix for fastText model from %s",
+                    wv.vectors.shape, file_name)
