@@ -8,6 +8,74 @@ import re
 
 logger = logging.getLogger(__name__)
 
+class QuoraQPExtractor:
+    def __init__(self, file_path, embedding_path=None):
+        if file_path is not None:
+            with open(file_path) as f:
+                self.df = pd.read_csv(f, sep='\t')
+                self.q1 = list(self.df.iloc[:, 3])
+                self.q2 = list(self.df.iloc[:, 4])
+                self.isDuplicate = list(self.df.iloc[:, 5])
+        else:
+            raise NotImplementedError()
+
+        self.wor = {}
+        self.index2word = {}
+
+        self.corpus = self.q1 + self.q2
+        self.word_counter = Counter()
+
+
+        logger.info("Starting Vocab Build")
+        self.build_vocab()
+        logger.info("Vocab Build Complete")
+
+
+    def preprocess(self, sentence):
+        # print(sentence)
+        try:
+            return re.sub("[^a-zA-Z0-9]"," ", sentence.lower())
+        except:
+            print(sentence, " HAS AN ERROR")
+
+    def build_vocab(self):
+        logger.info("Building vocab")
+
+        # print(self.corpus)
+
+        for sentence in self.corpus:
+            sentence = self.preprocess(sentence)
+            self.word_counter.update(sentence.split())
+
+        for i, word in enumerate(self.word_counter.keys()):
+            self.wor[word] = i
+            self.index2word[i] = word
+
+        self.vocab_size = len(self.wor)
+        logger.info("word vocab build complete")
+
+    def get_preprocessed_corpus(self):
+        preprocessed_corpus = []
+        for sent in self.corpus:
+            preprocessed_corpus.append(self.preprocess(sent))
+
+        return preprocessed_corpus
+
+
+    def get_data(self):
+
+        question_pairs = []
+        labels = []
+        
+        for Question1, Question2, label in zip(self.q1, self.q2, self.isDuplicate):
+
+            question_pairs.append([self.preprocess(Question1), self.preprocess(Question2)])
+            # print(Question1)
+            # print(label, type(label))
+            labels.append(int(label))
+        
+        return question_pairs, labels
+
 class WikiQAExtractor:
     def __init__(self, file_path, embedding_path=None):
         if file_path is not None:
@@ -36,7 +104,7 @@ class WikiQAExtractor:
         logger.info("Vocab Build Complete")
 
     def preprocess(self, sentence):
-        return re.sub("[^a-zA-Z0-9]"," ", sentence)
+        return re.sub("[^a-zA-Z0-9]"," ", sentence.lower())
 
     def build_vocab(self):
         logger.info("Building vocab")
@@ -151,11 +219,13 @@ class WikiQAExtractor:
 
         return indexed_triletter_corpus
 
-    def get_X_y(self):
+    def get_X_y(self, batch_size=32):
+
+        # TODO Implement batch sizing
 
         queries = []
         docs = []
-        y = []
+        labels = []
 
         for Question, Answer in self.df.groupby('QuestionID').apply(dict).items():
 
@@ -165,10 +235,29 @@ class WikiQAExtractor:
             for q, d, l in zip(Answer['Question'], Answer['Sentence'], Answer['Label']):
                 queries.append(self.get_term_vector(self.preprocess(q)))
                 docs.append(self.get_term_vector(self.preprocess(d)))
-                y.append(l)
+                labels.append(l)
         
         queries = np.array(queries)
         docs = np.array(docs)
-        y = np.array(y)
+        labels = np.array(labels)
 
-        return queries, docs, y
+        return queries, docs, labels
+
+    def get_data(self):
+
+        self.questions = []
+
+        for Question, Answer in self.df.groupby('QuestionID').apply(dict).items():
+
+            document_group = []
+
+            query = []
+            doc = []
+            label = []
+
+            for q, d, l in zip(Answer['Question'], Answer['Sentence'], Answer['Label']):
+                document_group.append([self.preprocess(q), self.preprocess(d), l])
+
+            self.questions.append(document_group)
+        
+        return self.questions
