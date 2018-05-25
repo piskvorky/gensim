@@ -15,7 +15,10 @@ import numbers
 
 import six
 import numpy as np
-from numpy.testing import assert_allclose
+try:
+    from cupy.testing import assert_allclose
+except ImportError:
+    from numpy.testing import assert_allclose
 
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import ldamodel, ldamulticore
@@ -26,18 +29,11 @@ from gensim.test.utils import datapath, get_tmpfile, common_texts
 dictionary = Dictionary(common_texts)
 corpus = [dictionary.doc2bow(text) for text in common_texts]
 
-
-def testRandomState():
-    testcases = [np.random.seed(0), None, np.random.RandomState(0), 0]
-    for testcase in testcases:
-        assert(isinstance(utils.get_random_state(testcase), np.random.RandomState))
-
-
-class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
+class TestLdaModelCuda(unittest.TestCase, basetmtests.TestBaseTopicModel):
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
         self.class_ = ldamodel.LdaModel
-        self.model = self.class_(corpus, id2word=dictionary, num_topics=2, passes=100)
+        self.model = self.class_(corpus, id2word=dictionary, num_topics=2, passes=100, cuda=True)
 
     def testTransform(self):
         passed = False
@@ -46,7 +42,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         # better random initialization
         for i in range(25):  # restart at most 5 times
             # create the transformation model
-            model = self.class_(id2word=dictionary, num_topics=2, passes=100)
+            model = self.class_(id2word=dictionary, num_topics=2, passes=100, cuda=True)
             model.update(self.corpus)
 
             # transform one document
@@ -65,17 +61,18 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.assertTrue(passed)
 
     def testAlphaAuto(self):
-        model1 = self.class_(corpus, id2word=dictionary, alpha='symmetric', passes=10)
-        modelauto = self.class_(corpus, id2word=dictionary, alpha='auto', passes=10)
+        model1 = self.class_(corpus, id2word=dictionary, alpha='symmetric', passes=10, cuda=True)
+        modelauto = self.class_(corpus, id2word=dictionary, alpha='auto', passes=10, cuda=True)
 
         # did we learn something?
-        self.assertFalse(all(np.equal(model1.alpha, modelauto.alpha)))
+        self.assertFalse(all(np.equal(matutils.asnumpy(model1.alpha), matutils.asnumpy(modelauto.alpha))))
 
     def testAlpha(self):
         kwargs = dict(
             id2word=dictionary,
             num_topics=2,
-            alpha=None
+            alpha=None,
+            cuda=True
         )
         expected_shape = (2,)
 
@@ -126,17 +123,18 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.assertRaises(ValueError, self.class_, **kwargs)
 
     def testEtaAuto(self):
-        model1 = self.class_(corpus, id2word=dictionary, eta='symmetric', passes=10)
-        modelauto = self.class_(corpus, id2word=dictionary, eta='auto', passes=10)
+        model1 = self.class_(corpus, id2word=dictionary, eta='symmetric', passes=10, cuda=True)
+        modelauto = self.class_(corpus, id2word=dictionary, eta='auto', passes=10, cuda=True)
 
         # did we learn something?
-        self.assertFalse(np.allclose(model1.eta, modelauto.eta))
+        self.assertFalse(np.allclose(matutils.asnumpy(model1.eta), matutils.asnumpy(modelauto.eta)))
 
     def testEta(self):
         kwargs = dict(
             id2word=dictionary,
             num_topics=2,
-            eta=None
+            eta=None,
+            cuda=True
         )
         num_terms = len(dictionary)
         expected_shape = (num_terms,)
@@ -213,7 +211,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
     def testGetDocumentTopics(self):
 
         model = self.class_(
-            self.corpus, id2word=dictionary, num_topics=2, passes=100, random_state=np.random.seed(0)
+            self.corpus, id2word=dictionary, num_topics=2, passes=100, random_state=np.random.seed(0), cuda=True
         )
 
         doc_topics = model.get_document_topics(self.corpus)
@@ -299,7 +297,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
     def testTermTopics(self):
 
         model = self.class_(
-            self.corpus, id2word=dictionary, num_topics=2, passes=100, random_state=np.random.seed(0)
+            self.corpus, id2word=dictionary, num_topics=2, passes=100, random_state=np.random.seed(0), cuda=True
         )
 
         # check with word_type
@@ -327,7 +325,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.longMessage = True
         # construct what we expect when passes aren't involved
         test_rhots = list()
-        model = self.class_(id2word=dictionary, chunksize=1, num_topics=2)
+        model = self.class_(id2word=dictionary, chunksize=1, num_topics=2, cuda=True)
 
         def final_rhot(model):
             return pow(model.offset + (1 * model.num_updates) / model.chunksize, -model.decay)
@@ -338,7 +336,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             test_rhots.append(final_rhot(model))
 
         for passes in [1, 5, 10, 50, 100]:
-            model = self.class_(id2word=dictionary, chunksize=1, num_topics=2, passes=passes)
+            model = self.class_(id2word=dictionary, chunksize=1, num_topics=2, passes=passes, cuda=True)
             self.assertEqual(final_rhot(model), 1.0)
             # make sure the rhot matches the test after each update
             for test_rhot in test_rhots:
@@ -389,7 +387,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         model.save(fname)
         model2 = self.class_.load(fname)
         self.assertEqual(model.num_topics, model2.num_topics)
-        self.assertTrue(np.allclose(model.expElogbeta, model2.expElogbeta))
+        self.assertTrue(np.allclose(matutils.asnumpy(model.expElogbeta), model2.expElogbeta))
         tstvec = []
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
 
@@ -399,9 +397,9 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         fname_model_3_5 = datapath('ldamodel_python_3_5')
         model_3_5 = self.class_.load(fname_model_3_5)
         self.assertEqual(model_2_7.num_topics, model_3_5.num_topics)
-        self.assertTrue(np.allclose(model_2_7.expElogbeta, model_3_5.expElogbeta))
+        self.assertTrue(np.allclose(matutils.asnumpy(model_2_7.expElogbeta), matutils.asnumpy(model_3_5.expElogbeta)))
         tstvec = []
-        self.assertTrue(np.allclose(model_2_7[tstvec], model_3_5[tstvec]))  # try projecting an empty vector
+        self.assertTrue(np.allclose(matutils.asnumpy(model_2_7[tstvec]), matutils.asnumpy(model_3_5[tstvec])))  # try projecting an empty vector
         id2word_2_7 = dict(model_2_7.id2word.iteritems())
         id2word_3_5 = dict(model_3_5.id2word.iteritems())
         self.assertEqual(set(id2word_2_7.keys()), set(id2word_3_5.keys()))
@@ -423,7 +421,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         model.save(fname)
         model2 = self.class_.load(fname, mmap=None)
         self.assertEqual(model.num_topics, model2.num_topics)
-        self.assertTrue(np.allclose(model.expElogbeta, model2.expElogbeta))
+        self.assertTrue(np.allclose(matutils.asnumpy(model.expElogbeta), model2.expElogbeta))
         tstvec = []
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
 
@@ -438,7 +436,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         model2 = self.class_.load(fname, mmap='r')
         self.assertEqual(model.num_topics, model2.num_topics)
         self.assertTrue(isinstance(model2.expElogbeta, np.memmap))
-        self.assertTrue(np.allclose(model.expElogbeta, model2.expElogbeta))
+        self.assertTrue(np.allclose(matutils.asnumpy(model.expElogbeta), model2.expElogbeta))
         tstvec = []
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
 
@@ -489,23 +487,9 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
 
         # and test it on a predefined document
         topics = model[test_doc]
-        self.assertTrue(np.allclose(expected_topics, topics))
+        self.assertTrue(np.allclose(matutils.asnumpy(expected_topics), matutils.asnumpy(topics)))
 
-# endclass TestLdaModel
-
-
-class TestLdaMulticore(TestLdaModel):
-    def setUp(self):
-        self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
-        self.class_ = ldamulticore.LdaMulticore
-        self.model = self.class_(corpus, id2word=dictionary, num_topics=2, passes=100)
-
-    # override LdaModel because multicore does not allow alpha=auto
-    def testAlphaAuto(self):
-        self.assertRaises(RuntimeError, self.class_, alpha='auto')
-
-
-# endclass TestLdaMulticore
+# endclass TestLdaModelCuda
 
 
 if __name__ == '__main__':

@@ -38,6 +38,8 @@ import numpy as np
 import numbers
 import scipy.sparse
 
+from gensim.cuda import is_cupy, asnumpy
+
 from six import iterkeys, iteritems, u, string_types, unichr
 from six.moves import xrange
 
@@ -619,6 +621,15 @@ class SaveLoad(object):
                     else:
                         np.save(subname(fname, attrib), np.ascontiguousarray(val))
 
+                elif is_cupy(val) and attrib not in ignore:
+                    numpys.append(attrib)
+                    logger.info("storing cp array '%s' to %s", attrib, subname(fname, attrib))
+
+                    if compress:
+                        np.savez_compressed(subname(fname, attrib), val=np.ascontiguousarray(asnumpy(val)))
+                    else:
+                        np.save(subname(fname, attrib), np.ascontiguousarray(asnumpy(val)))
+
                 elif isinstance(val, (scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)) and attrib not in ignore:
                     scipys.append(attrib)
                     logger.info("storing scipy.sparse array '%s' under %s", attrib, subname(fname, attrib))
@@ -685,6 +696,7 @@ class SaveLoad(object):
 
         """
         try:
+            # TODO: should convert cupy arrays to numpy
             _pickle.dump(self, fname_or_handle, protocol=pickle_protocol)
             logger.info("saved %s object", self.__class__.__name__)
         except TypeError:  # `fname_or_handle` does not have write attribute
@@ -1309,6 +1321,7 @@ def pickle(obj, fname, protocol=2):
 
     """
     with smart_open(fname, 'wb') as fout:  # 'b' for binary, needed on Windows
+        # TODO: should convert cupy arrays to numpy
         _pickle.dump(obj, fout, protocol=protocol)
 
 

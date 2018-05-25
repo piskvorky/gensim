@@ -21,13 +21,90 @@ from scipy.stats import entropy
 import scipy.linalg
 from scipy.linalg.lapack import get_lapack_funcs
 from scipy.linalg.special_matrices import triu
-from scipy.special import psi  # gamma function utils
+import scipy.special
 
 from six import iteritems, itervalues, string_types
 from six.moves import xrange, zip as izip
 
+from gensim.cuda import *
 
 logger = logging.getLogger(__name__)
+
+## Generic numpy/cupy functions
+
+def zeros_like(x, *args, **kwargs):
+    xp = get_array_module(x)
+    return xp.zeros_like(x, *args, **kwargs)
+
+def exp(x, *args, **kwargs):
+    xp = get_array_module(x)
+    return xp.exp(x, *args, **kwargs)
+
+def exp2(x, *args, **kwargs):
+    xp = get_array_module(x)
+    return xp.exp2(x, *args, **kwargs)
+
+def log(x, *args, **kwargs):
+    xp = get_array_module(x)
+    return xp.exp(x, *args, **kwargs)
+
+def sum(x, *args, **kwargs):
+    xp = get_array_module(x)
+    return xp.sum(x, *args, **kwargs)
+
+def abs(x, *args, **kwargs):
+    xp = get_array_module(x)
+    return xp.abs(x, *args, **kwargs)
+
+def mean(x, *args, **kwargs):
+    xp = get_array_module(x)
+    return xp.mean(x, *args, **kwargs)
+
+def max(x, *args, **kwargs):
+    xp = get_array_module(x)
+    return xp.max(x, *args, **kwargs)
+
+def dot(x, y, *args, **kwargs):
+    xp = get_array_module(x)
+    assert xp == get_array_module(y)
+    return xp.dot(x, y, *args, **kwargs)
+
+def matmul(x, y, *args, **kwargs):
+    xp = get_array_module(x)
+    assert xp == get_array_module(y)
+    return xp.matmul(x, y, *args, **kwargs)
+
+def psi(x):
+    if is_cupy(x):
+        return cupy_digamma(x)
+    else:
+        return scipy.special.psi(x)
+
+def dirichlet_expectation(alpha):
+    if is_cupy(alpha):
+        if len(alpha.shape) == 1:
+            result = cupy_digamma(alpha) - cupy_digamma(cp.sum(alpha))
+        else:
+            result = cupy_digamma(alpha) - cupy_digamma(cp.sum(alpha, 1))[:, cp.newaxis]
+        return result.astype(alpha.dtype, copy=False)  # keep the same precision as input
+    else:
+        z = _dirichlet_expectation(alpha)
+        return _dirichlet_expectation(alpha)
+
+def logsumexp(x):
+    if is_cupy(x):
+        x_max = cp.max(x)
+        x = cp.log(cp.sum(cp.exp(x - x_max)))
+        x += x_max
+        return x
+    else:
+        return _logsumexp(x)
+
+def gammaln(x):
+    if is_cupy(x):
+        return cupy_gammaln(x)
+    else:
+        return scipy.special.gammaln(x)
 
 
 def blas(name, ndarray):
@@ -68,7 +145,8 @@ def argsort(x, topn=None, reverse=False):
         Array of `topn` indices that.sort the array in the required order.
 
     """
-    x = np.asarray(x)  # unify code path for when `x` is not a np array (list, tuple...)
+    xp = get_array_module(x)
+    x = xp.asarray(x)  # unify code path for when `x` is not a cp/np array (list, tuple...)
     if topn is None:
         topn = x.size
     if topn <= 0:
@@ -76,10 +154,10 @@ def argsort(x, topn=None, reverse=False):
     if reverse:
         x = -x
     if topn >= x.size or not hasattr(np, 'argpartition'):
-        return np.argsort(x)[:topn]
+        return xp.argsort(x)[:topn]
     # np >= 1.8 has a fast partial argsort, use that!
-    most_extreme = np.argpartition(x, topn)[:topn]
-    return most_extreme.take(np.argsort(x.take(most_extreme)))  # resort topn into order
+    most_extreme = xp.argpartition(x, topn)[:topn]
+    return most_extreme.take(xp.argsort(x.take(most_extreme)))  # resort topn into order
 
 
 def corpus2csc(corpus, num_terms=None, dtype=np.float64, num_docs=None, num_nnz=None, printprogress=0):
@@ -1075,10 +1153,11 @@ def jaccard_distance(set1, set2):
 
 try:
     # try to load fast, cythonized code if possible
-    from gensim._matutils import logsumexp, mean_absolute_difference, dirichlet_expectation
+    from gensim._matutils import _logsumexp, mean_absolute_difference, digamma, _dirichlet_expectation
 
 except ImportError:
-    def logsumexp(x):
+
+    def _logsumexp(x):
         """Log of sum of exponentials.
 
         Parameters
@@ -1120,7 +1199,7 @@ except ImportError:
         """
         return np.mean(np.abs(a - b))
 
-    def dirichlet_expectation(alpha):
+    def _dirichlet_expectation(alpha):
         """Expected value of log(theta) where theta is drawn from a Dirichlet distribution.
 
         Parameters
