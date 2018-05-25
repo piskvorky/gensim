@@ -545,7 +545,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         work = zeros(self.trainables.layer1_size, dtype=REAL)
         if not self.sg:
             neu1 = matutils.zeros_aligned(self.trainables.layer1_size, dtype=REAL)
-        
+
         alpha_delta = (alpha - min_alpha) / (steps - 1)
 
         for i in range(steps):
