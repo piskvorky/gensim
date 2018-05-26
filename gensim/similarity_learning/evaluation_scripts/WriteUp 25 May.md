@@ -10,7 +10,7 @@ the cosine similarity of q1 and each doc is the similarity between the query and
 
 The word embeddings are taken from the Glove Embeddings provided by [Stanford](TODO)
 
-**File :** [w2v_avg_eval.py](TODO)
+**File :** [w2v_avg_eval.py](w2v_avg_eval.py)
 
 ```
 Accuracy :  0.2867264997638167
