@@ -8,7 +8,7 @@ Eg: `"I am a king" -> mean(vec("I") ,vec("am"), vec("a"), vec("king")) :: an n d
 For a given query q1, and a set of documents (d1, d2, ...),
 the cosine similarity of q1 and each doc is the similarity between the query and that doc.
 
-The word embeddings are taken from the Glove Embeddings provided by [Stanford](TODO)
+The word embeddings are taken from the Glove Embeddings provided by [Stanford](https://nlp.stanford.edu/projects/glove/)
 
 **File :** [w2v_avg_eval.py](w2v_avg_eval.py)
 
@@ -29,7 +29,7 @@ Then I go through the test set, making an infer vector for each query document p
 and choose the predicted answer as the highest cosine similarity.
 Similar to the w2v averaging, I calculate the metrics.
 
-**File :** [d2v_train_eval.py](TODO)
+**File :** [d2v_train_eval.py](d2v_train_eval.py)
 
 ```
 map : 0.3694044782081827
@@ -84,4 +84,4 @@ y_true = [
 Once we have their outputs and the ground truths, I run it through my function for map and ndcg_at_k
 and output the results.
 
-**File used :** [mz_eval.py]()
+**File used :** [mz_eval.py](mz_eval.py)
