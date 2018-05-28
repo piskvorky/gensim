@@ -144,7 +144,7 @@ class SentenceAnalyzer(object):
         last_uncommon = None
         in_between = []
         # adding None is a trick that helps getting an automatic happy ending
-        # has it won't be a common_word, nor score
+        # as it won't be a common_word, nor score
         for word in s + [None]:
             is_common = word in common_terms
             if not is_common and last_uncommon:
