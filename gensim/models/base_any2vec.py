@@ -91,6 +91,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         - self.trainables (instance of concrete implementation of `BaseTrainables` abstract class)
 
         """
+        _reset_performance_metrics()
         self.vector_size = int(vector_size)
         self.workers = int(workers)
         self.epochs = epochs
@@ -250,7 +251,6 @@ class BaseAny2VecModel(utils.SaveLoad):
     def _train_epoch(self, data_iterables, cur_epoch=0, total_examples=None,
                      total_words=None, queue_factor=2, report_delay=1.0):
         """Train one epoch."""
-        _reset_performance_metrics()
 
         job_queue = Queue(maxsize=queue_factor * self.workers)
         progress_queue = Queue(maxsize=(queue_factor + 1) * self.workers)
