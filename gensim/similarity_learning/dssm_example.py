@@ -18,7 +18,7 @@ if __name__ == '__main__':
 
     logger.info("There are a total of %d query, document pairs in the dataset" % len(queries))
 
-    dssm = DSSM(wiki_extractor.vocab_size)
+    dssm = DSSM(vocab_size=wiki_extractor.vocab_size)
     dssm.train(queries, docs, labels, epochs=2)
 
     term_vec1 = wiki_extractor.get_term_vector("how a water pump works".split())

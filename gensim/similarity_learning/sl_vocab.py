@@ -8,7 +8,23 @@ import re
 
 logger = logging.getLogger(__name__)
 
+
+"""
+This file contains the WikiQAExtractor and QuoraQPExtractor which are utility classes to
+extract data from the data files.
+"""
+
 class QuoraQPExtractor:
+    """[WIP]Class to extract data from the Quora Duplicate question pairs dataset
+    It provides data in a shapes which makes it easier to train neural networks
+
+    Usage:
+    =====
+    quoraqp = QuoraQPExtractor("path/to/file")
+    X_train, y_train = quoraqp.get_data()
+
+    X_train consists of the question pairs
+    """
     def __init__(self, file_path, embedding_path=None):
         if file_path is not None:
             with open(file_path) as f:
@@ -19,16 +35,13 @@ class QuoraQPExtractor:
         else:
             raise NotImplementedError()
 
-        self.wor = {}
+        self.word2index = {}
         self.index2word = {}
 
         self.corpus = self.q1 + self.q2
         self.word_counter = Counter()
 
-
-        logger.info("Starting Vocab Build")
         self.build_vocab()
-        logger.info("Vocab Build Complete")
 
 
     def preprocess(self, sentence):
@@ -39,20 +52,19 @@ class QuoraQPExtractor:
             print(sentence, " HAS AN ERROR")
 
     def build_vocab(self):
-        logger.info("Building vocab")
-
-        # print(self.corpus)
+        logger.info("Starting Vocab Build")
 
         for sentence in self.corpus:
             sentence = self.preprocess(sentence)
             self.word_counter.update(sentence.split())
 
         for i, word in enumerate(self.word_counter.keys()):
-            self.wor[word] = i
+            self.word2index[word] = i
             self.index2word[i] = word
 
-        self.vocab_size = len(self.wor)
-        logger.info("word vocab build complete")
+        self.vocab_size = len(self.word2index)
+
+        logger.info("Vocab Build Complete")
 
     def get_preprocessed_corpus(self):
         preprocessed_corpus = []
@@ -68,15 +80,41 @@ class QuoraQPExtractor:
         labels = []
         
         for Question1, Question2, label in zip(self.q1, self.q2, self.isDuplicate):
-
             question_pairs.append([self.preprocess(Question1), self.preprocess(Question2)])
-            # print(Question1)
-            # print(label, type(label))
             labels.append(int(label))
         
         return question_pairs, labels
 
 class WikiQAExtractor:
+    """[WIP]Class to extract data from the WikiQA dataset
+    It provides data in a shape which makes it easier to train neural networks
+
+    Usage:
+    =====
+    wiki_extractor = WikiQAExtractor("path/to/file")
+    train_data = wiki_extractor.get_data()
+
+    the format provided is : [ [
+                                [query1, doc1, label_1_1],
+                                [query1, doc2, label_1_2],
+                                .
+                                .
+                               ],
+                               [
+                                [query2, doc1, label_2_1],
+                                [query2, doc2, label_2_2],
+                                .
+                                .
+                                ],
+                                .
+                                .
+                                .
+                               [
+                                [query_n, doc1, label_n_1],
+                                [query_n, doc2, label_n_2],
+                               ]
+                             ]
+    """
     def __init__(self, file_path, embedding_path=None):
         if file_path is not None:
             with open(file_path) as f:
@@ -99,15 +137,14 @@ class WikiQAExtractor:
         self.corpus = self.queries +  self.documents
         self.triletter_corpus = []
 
-        logger.info("Starting Vocab Build")
         self.build_vocab()
-        logger.info("Vocab Build Complete")
 
     def preprocess(self, sentence):
         return re.sub("[^a-zA-Z0-9]"," ", sentence.lower())
 
     def build_vocab(self):
-        logger.info("Building vocab")
+        logger.info("Starting Vocab Build")
+
         for sentence in self.corpus:
             sentence = self.preprocess(sentence)
             self.word_counter.update(sentence.split())
@@ -136,7 +173,7 @@ class WikiQAExtractor:
             self.index2tri[i] = triletter       
 
         self.vocab_size = len(self.tri2index)
-        logger.info("word vocab build complete")
+        logger.info("Vocab Build Complete")
 
     def sent2triletter_indexed_sent(self, sentence):
         """Converts a sentence to a triletter sentence
@@ -202,6 +239,8 @@ class WikiQAExtractor:
 
 
     def make_indexed_corpus(self):
+        """Returns an indexed corpus instead of a word corpus
+        """
         logger.info('making indexed triletter corpus')
 
         self.indexed_triletter_corpus = []

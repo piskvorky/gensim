@@ -3,17 +3,47 @@ from keras.layers import Input, Dense, Dot, Dropout
 from keras import regularizers
 
 class DSSM(object):
-    def __init__(self, config, vocab_size):
+    """Class for the Deep Structured Semantic Model for Similarity Learning
+    described here 
+    https://www.microsoft.com/en-us/research/publication/learning-deep-structured-semantic-models-for-web-search-using-clickthrough-data/ #noqa
+    
+    Usage:
+    dssm = DSSM(...)
+    model = dssm.get_model()
+
+    Currently a WIP, so it doesn't work perfectly and needs a lot of tuning.
+    """
+
+    def __init__(self, vocab_size, hidden_sizes=[300, 128], regularizer_rate=0.0, dropout_rate=0.5, target_mode='ranking'):
+        """
+            
+        parameters:
+        ==========
+        vocab_size : int
+            the vocabulary size counted on all the character level trigrams
+
+        hidden_sizes : list of ints
+            the network architecture in terms of fully connected feed forward neural network layers
+
+        regularizer_rate : float (TODO check if it should be bounded between {0, 1})
+            the rate used by the regularizer while training
+
+        dropout_rate : float between {0, 1}
+            the rate of dropout used by the network while training
+
+        target_mode : string {'ranking', 'classification'}
+            train it either to rank or classify
+            TODO check working
+
+        """
         self.__name = 'DSSM'
-        self.config = config
+        self.vocab_size = vocab_size
+        self.hidden_sizes = hidden_sizes
+        self.regularizer_rate = regularizer_rate
+        self.dropout_rate = dropout_rate
+        self.target_mode = target_mode
 
-        self.vocab_size = vocab_size # config['vocab_size']
-        self.hidden_sizes = config['hidden_sizes']
-        self.regularizer_rate = config['reg_rate']
-        self.dropout_rate = config['dropout_rate']
-        self.target_mode = config['target_mode']
-
-    def get_model(self):
+    def build_model(self):
         # TODO check this show_layer business
 
         query = Input(name='query', shape=(self.vocab_size,))#, sparse=True)
@@ -41,7 +71,19 @@ class DSSM(object):
         out_ = Dot( axes= [1, 1], normalize=True)([rq, rd])
         if self.target_mode == 'classification':
             out_ = Dense(2, activation='softmax')(out_)
-            show_layer_info('Dense', out_)
 
-        model = Model(inputs=[query, doc], outputs=[out_])
-        return model
+        self.model = Model(inputs=[query, doc], outputs=[out_])
+
+    def train(self, queries, docs, labels, epochs=10, optimizer='rmsprop', loss='mse', metrics=['accuracy']):
+        # check these params
+        # TODO add batching in WikiQAExtractor and here
+        self.build_model()
+        self.model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
+        self.model.fit(x={'query' : queries, 'doc' : docs}, y=labels)
+
+    def get_model(self):
+        if self.model:
+            return model
+        else:
+            print('No model built!')
+            # TODO might have to raise an Exception here
