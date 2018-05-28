@@ -1,4 +1,3 @@
-from pathlib import Path
 from collections import Counter
 import pandas as pd
 import numpy as np
@@ -116,7 +115,6 @@ class WikiQAExtractor:
                              ]
     """
     def __init__(self, file_path, embedding_path=None):
-        print("BBBBBBBBBBBBBBAAAAAAAAAAAAAAAAAAAALLLLLLLLLLLLLLLLLLLEEEEEEEEEEEEEEEE")
         if file_path is not None:
             with open(file_path) as f:
                 self.df = pd.read_csv(f, sep='\t')
@@ -147,7 +145,9 @@ class WikiQAExtractor:
         preprocessed_corpus = []
         for sent in self.corpus:
             preprocessed_corpus.append(self.preprocess(sent))
+
         return preprocessed_corpus
+
 
     def build_vocab(self):
         logger.info("Starting Vocab Build")
@@ -251,23 +251,20 @@ class WikiQAExtractor:
         logger.info('making indexed triletter corpus')
 
         self.indexed_triletter_corpus = []
-
         for sentence in self.triletter_corpus:
             indexed_tri_sentence = []
             for word in sentence:
                 indexed_tri_word = []
                 for triletter in word:
-                    int_tri_word.append(self.tri2indexed[triletter])
-                indexed_tri_sentence.append(int_tri_word)
+                    indexed_tri_word.append(self.tri2indexed[triletter])
+                indexed_tri_sentence.append(indexed_tri_word)
             indexed_triletter_corpus.append(int_tri_sentence)
 
         logger.info('indexed triletter corpus made')
-
         return indexed_triletter_corpus
 
     def get_X_y(self, batch_size=32):
-        """Returns the data in a X_train, y_train format for Nerual Network training
-        """
+
         # TODO Implement batch sizing
 
         queries = []
@@ -290,7 +287,6 @@ class WikiQAExtractor:
 
         return queries, docs, labels
 
-
     def get_data(self):
 
         self.questions = []
@@ -298,11 +294,6 @@ class WikiQAExtractor:
         for Question, Answer in self.df.groupby('QuestionID').apply(dict).items():
 
             document_group = []
-
-            query = []
-            doc = []
-            label = []
-
             for q, d, l in zip(Answer['Question'], Answer['Sentence'], Answer['Label']):
                 document_group.append([self.preprocess(q), self.preprocess(d), l])
 

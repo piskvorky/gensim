@@ -2,11 +2,12 @@ from keras.models import Sequential, Model
 from keras.layers import Input, Dense, Dot, Dropout
 from keras import regularizers
 
+
 class DSSM(object):
     """Class for the Deep Structured Semantic Model for Similarity Learning
-    described here 
-    https://www.microsoft.com/en-us/research/publication/learning-deep-structured-semantic-models-for-web-search-using-clickthrough-data/ #noqa
-    
+    described here
+    https://www.microsoft.com/en-us/research/publication/learning-deep-structured-semantic-models-for-web-search-using-clickthrough-data/ # noqa
+
     Usage:
     dssm = DSSM(...)
     model = dssm.get_model()
@@ -14,9 +15,13 @@ class DSSM(object):
     Currently a WIP, so it doesn't work perfectly and needs a lot of tuning.
     """
 
-    def __init__(self, vocab_size, hidden_sizes=[300, 128], regularizer_rate=0.0, dropout_rate=0.5, target_mode='ranking'):
+    def __init__(self, vocab_size,
+                        hidden_sizes=[300, 128],
+                        regularizer_rate=0.0,
+                        dropout_rate=0.5,
+                        target_mode='ranking'):
         """
-            
+
         parameters:
         ==========
         vocab_size : int
@@ -46,21 +51,29 @@ class DSSM(object):
     def build_model(self):
         # TODO check this show_layer business
 
-        query = Input(name='query', shape=(self.vocab_size,))#, sparse=True)
-        doc = Input(name='doc', shape=(self.vocab_size,))#, sparse=True)
+        query = Input(name='query', shape=(self.vocab_size,))  # , sparse=True)
+        doc = Input(name='doc', shape=(self.vocab_size,))  # , sparse=True)
 
         def mlp_work(input_dim):
             seq = Sequential()
             num_hidden_layers = len(self.hidden_sizes)
 
             if num_hidden_layers == 1:
-                seq.add(Dense(self.hidden_sizes[0], input_shape=(input_dim,), activity_regularizer=regularizers.l2(self.regularizer_rate)))
+                seq.add(Dense(self.hidden_sizes[0],
+                              input_shape=(input_dim,),
+                              activity_regularizer=regularizers.l2(self.regularizer_rate)))
             else:
-                seq.add(Dense(self.hidden_sizes[0], activation='tanh', input_shape=(input_dim,), activity_regularizer=regularizers.l2(self.regularizer_rate)))
-                for i in range(num_hidden_layers-2):
-                    seq.add(Dense(self.config['hidden_sizes'][i+1], activation='tanh', activity_regularizer=regularizers.l2(self.regularizer_rate)))
+                seq.add(Dense(self.hidden_sizes[0],
+                              activation='tanh',
+                              input_shape=(input_dim,),
+                              activity_regularizer=regularizers.l2(self.regularizer_rate)))
+                for i in range(num_hidden_layers - 2):
+                    seq.add(Dense(self.config['hidden_sizes'][i + 1],
+                                    activation='tanh',
+                                    activity_regularizer=regularizers.l2(self.regularizer_rate)))
                     seq.add(Dropout(rate=self.dropout_rate))
-                seq.add(Dense(self.hidden_sizes[num_hidden_layers-1], activity_regularizer=regularizers.l2(self.regularizer_rate)))
+                seq.add(Dense(self.hidden_sizes[num_hidden_layers - 1],
+                              activity_regularizer=regularizers.l2(self.regularizer_rate)))
                 seq.add(Dropout(rate=self.dropout_rate))
             return seq
 
@@ -68,7 +81,7 @@ class DSSM(object):
         rq = mlp(query)
         rd = mlp(doc)
 
-        out_ = Dot( axes= [1, 1], normalize=True)([rq, rd])
+        out_ = Dot(axes=[1, 1], normalize=True)([rq, rd])
         if self.target_mode == 'classification':
             out_ = Dense(2, activation='softmax')(out_)
 
@@ -79,11 +92,11 @@ class DSSM(object):
         # TODO add batching in WikiQAExtractor and here
         self.build_model()
         self.model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
-        self.model.fit(x={'query' : queries, 'doc' : docs}, y=labels)
+        self.model.fit(x={'query': queries, 'doc': docs}, y=labels)
 
     def get_model(self):
         if self.model:
-            return model
+            return self.model
         else:
             print('No model built!')
             # TODO might have to raise an Exception here
