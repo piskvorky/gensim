@@ -19,6 +19,7 @@ from gensim.utils import deprecated
 import itertools
 import warnings
 import psutil
+import time
 
 try:
     from queue import Queue
@@ -39,7 +40,8 @@ def _reset_performance_metrics():
         'queue_size': 0.0,   # Average job queue size.
         'words_sec': 0.0,    # Average speed in words per second.
         'cpu_load': zeros(psutil.cpu_count(), dtype=REAL),
-        'cpu_load_sum': 0.0
+        'cpu_load_sum': 0.0,
+        'vocab_time': 0.0
     }
 
     _NUM_STATS_UPDATES = 0.0
@@ -54,6 +56,10 @@ def _update_queue_and_cpu_stats(qsize):
     PERFORMANCE_METRICS['cpu_load'] += array(psutil.cpu_percent(interval=None, percpu=True), dtype=REAL)
 
     _NUM_STATS_UPDATES += 1
+
+
+def _set_vocab_time(elapsed):
+    PERFORMANCE_METRICS['vocab_time'] = elapsed
 
 
 def _finalize_performance_metrics(elapsed, words_sec):
@@ -192,9 +198,6 @@ class BaseAny2VecModel(utils.SaveLoad):
                 "be sure to provide a corpus that offers restartable iteration = an iterable)."
             )
 
-        # give the workers heads up that they can finish -- no more work!
-        for _ in xrange(self.workers):
-            job_queue.put(None)
         logger.debug("job loop exiting, total %i jobs", job_no)
 
     def _log_progress(self, job_queue, progress_queue, cur_epoch, example_count, total_examples,
@@ -533,6 +536,8 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             Indicates how many words to process before showing/updating the progress.
 
         """
+        start_time = time.time()
+
         total_words, corpus_count = self.vocabulary.scan_vocab(
             sentences, progress_per=progress_per, trim_rule=trim_rule)
         self.corpus_count = corpus_count
@@ -541,6 +546,10 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             trim_rule=trim_rule, **kwargs)
         report_values['memory'] = self.estimate_memory(vocab_size=report_values['num_retained_words'])
         self.trainables.prepare_weights(self.hs, self.negative, self.wv, update=update, vocabulary=self.vocabulary)
+
+        end_time = time.time()
+        _set_vocab_time(end_time - start_time)
+        logger.info('Vocabulary was built in {:.2f} seconds.'.format(end_time - start_time))
 
     def build_vocab_from_freq(self, word_freq, keep_raw_vocab=False, corpus_count=None, trim_rule=None, update=False):
         """Build vocabulary from a dictionary of word frequencies.

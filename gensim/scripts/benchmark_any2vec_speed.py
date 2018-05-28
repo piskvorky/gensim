@@ -30,7 +30,8 @@ SUPPORTED_MODELS = {
 
 def print_results(model_str, results):
     logger.info('----- MODEL "{}" RESULTS -----'.format(model_str).center(50))
-    logger.info('\t* Total time: {} sec.'.format(results['total_time']))
+    logger.info('\t* Vocab time: {} sec.'.format(results['vocab_time']))
+    logger.info('\t* Total epoch time: {} sec.'.format(results['total_time']))
     logger.info('\t* Avg queue size: {} elems.'.format(results['queue_size']))
     logger.info('\t* Processing speed: {} words/sec'.format(results['words_sec']))
     logger.info('\t* Avg CPU loads: {}'.format(results['cpu_load']))
