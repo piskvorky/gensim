@@ -116,6 +116,7 @@ class WikiQAExtractor:
                              ]
     """
     def __init__(self, file_path, embedding_path=None):
+        print("BBBBBBBBBBBBBBAAAAAAAAAAAAAAAAAAAALLLLLLLLLLLLLLLLLLLEEEEEEEEEEEEEEEE")
         if file_path is not None:
             with open(file_path) as f:
                 self.df = pd.read_csv(f, sep='\t')
@@ -141,6 +142,12 @@ class WikiQAExtractor:
 
     def preprocess(self, sentence):
         return re.sub("[^a-zA-Z0-9]"," ", sentence.lower())
+
+    def get_preprocessed_corpus(self):
+        preprocessed_corpus = []
+        for sent in self.corpus:
+            preprocessed_corpus.append(self.preprocess(sent))
+        return preprocessed_corpus
 
     def build_vocab(self):
         logger.info("Starting Vocab Build")
@@ -259,7 +266,8 @@ class WikiQAExtractor:
         return indexed_triletter_corpus
 
     def get_X_y(self, batch_size=32):
-
+        """Returns the data in a X_train, y_train format for Nerual Network training
+        """
         # TODO Implement batch sizing
 
         queries = []
@@ -281,6 +289,7 @@ class WikiQAExtractor:
         labels = np.array(labels)
 
         return queries, docs, labels
+
 
     def get_data(self):
 
