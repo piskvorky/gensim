@@ -661,7 +661,7 @@ def npmi_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, co
     len_vocab : int
         NOT USED.
     min_count: int
-        NOT USED.
+        Take into account only bigrams with count above this value.
     corpus_word_count : int
         Number of words in corpus.
 
@@ -671,10 +671,15 @@ def npmi_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, co
     where :math:`prob(word) = \\frac{word\_count}{corpus\_word\_count}`
 
     """
-    pa = worda_count / corpus_word_count
-    pb = wordb_count / corpus_word_count
-    pab = bigram_count / corpus_word_count
-    return log(pab / (pa * pb)) / -log(pab)
+    if bigram_count > min_count:
+        pa = worda_count / corpus_word_count
+        pb = wordb_count / corpus_word_count
+        pab = bigram_count / corpus_word_count
+        return log(pab / (pa * pb)) / -log(pab)
+    else:
+        # Return the value below minimal npmi, to make sure that phrases
+        # will be created only out of bigrams more frequent than min_count
+        return -1.1
 
 
 def pseudocorpus(source_vocab, sep, common_terms=frozenset()):
