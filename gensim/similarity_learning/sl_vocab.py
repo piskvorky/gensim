@@ -1,7 +1,6 @@
 from collections import Counter
 import pandas as pd
 import numpy as np
-from pprint import pprint
 import logging
 import re
 
@@ -12,6 +11,7 @@ logger = logging.getLogger(__name__)
 This file contains the WikiQAExtractor and QuoraQPExtractor which are utility classes to
 extract data from the data files.
 """
+
 
 class QuoraQPExtractor:
     """[WIP]Class to extract data from the Quora Duplicate question pairs dataset
@@ -24,6 +24,7 @@ class QuoraQPExtractor:
 
     X_train consists of the question pairs
     """
+
     def __init__(self, file_path, embedding_path=None):
         if file_path is not None:
             with open(file_path) as f:
@@ -42,11 +43,10 @@ class QuoraQPExtractor:
 
         self.build_vocab()
 
-
     def preprocess(self, sentence):
         # print(sentence)
         try:
-            return re.sub("[^a-zA-Z0-9]"," ", sentence.lower())
+            return re.sub("[^a-zA-Z0-9]", " ", sentence.lower())
         except:
             print(sentence, " HAS AN ERROR")
 
@@ -72,17 +72,18 @@ class QuoraQPExtractor:
 
         return preprocessed_corpus
 
-
     def get_data(self):
 
         question_pairs = []
         labels = []
-        
+
         for Question1, Question2, label in zip(self.q1, self.q2, self.isDuplicate):
-            question_pairs.append([self.preprocess(Question1), self.preprocess(Question2)])
+            question_pairs.append(
+                [self.preprocess(Question1), self.preprocess(Question2)])
             labels.append(int(label))
-        
+
         return question_pairs, labels
+
 
 class WikiQAExtractor:
     """[WIP]Class to extract data from the WikiQA dataset
@@ -114,6 +115,7 @@ class WikiQAExtractor:
                                ]
                              ]
     """
+
     def __init__(self, file_path, embedding_path=None):
         if file_path is not None:
             with open(file_path) as f:
@@ -129,17 +131,17 @@ class WikiQAExtractor:
 
         self.word2int, self.int2word = {}, {}
         self.tri2index, self.index2tri = {}, {}
-        
+
         self.word_counter = Counter()
         self.triletter_counter = Counter()
 
-        self.corpus = self.queries +  self.documents
+        self.corpus = self.queries + self.documents
         self.triletter_corpus = []
 
         self.build_vocab()
 
     def preprocess(self, sentence):
-        return re.sub("[^a-zA-Z0-9]"," ", sentence.lower())
+        return re.sub("[^a-zA-Z0-9]", " ", sentence.lower())
 
     def get_preprocessed_corpus(self):
         preprocessed_corpus = []
@@ -147,7 +149,6 @@ class WikiQAExtractor:
             preprocessed_corpus.append(self.preprocess(sent))
 
         return preprocessed_corpus
-
 
     def build_vocab(self):
         logger.info("Starting Vocab Build")
@@ -177,14 +178,14 @@ class WikiQAExtractor:
 
         for i, triletter in enumerate(self.triletter_counter.keys()):
             self.tri2index[triletter] = i
-            self.index2tri[i] = triletter       
+            self.index2tri[i] = triletter
 
         self.vocab_size = len(self.tri2index)
         logger.info("Vocab Build Complete")
 
     def sent2triletter_indexed_sent(self, sentence):
         """Converts a sentence to a triletter sentence
-        
+
         Parameters
         ==========
         sentence:
@@ -198,7 +199,7 @@ class WikiQAExtractor:
             for offset in range(len(word))[:-2]:
                 try:
                     tri_word.append(self.tri2index[word[offset: offset + 3]])
-                except :
+                except:
                     pass
                     # TODO will this clobber some other exceptions ???
                     # maybe an if is in dict would be better but could lead to more
@@ -218,7 +219,7 @@ class WikiQAExtractor:
 
     def get_term_vector(self, sentence):
         """Converts a sentence into its term vector to be pushed into the neural network
-        
+
         Parameters
         ==========
         sentence:
@@ -238,12 +239,10 @@ class WikiQAExtractor:
         # this line has to be after the above line
         vector = np.zeros(self.vocab_size)
 
-
         for word in indexed_triletter_sentence:
             for triletter in word:
                 vector[triletter] += 1
         return vector.reshape(self.vocab_size,)
-
 
     def make_indexed_corpus(self):
         """Returns an indexed corpus instead of a word corpus
@@ -272,31 +271,24 @@ class WikiQAExtractor:
         labels = []
 
         for Question, Answer in self.df.groupby('QuestionID').apply(dict).items():
-
-            query_group = []
-            label_group = []
-
             for q, d, l in zip(Answer['Question'], Answer['Sentence'], Answer['Label']):
                 queries.append(self.get_term_vector(self.preprocess(q)))
                 docs.append(self.get_term_vector(self.preprocess(d)))
                 labels.append(l)
-        
+
         queries = np.array(queries)
         docs = np.array(docs)
         labels = np.array(labels)
-
         return queries, docs, labels
 
     def get_data(self):
-
         self.questions = []
-
         for Question, Answer in self.df.groupby('QuestionID').apply(dict).items():
 
             document_group = []
             for q, d, l in zip(Answer['Question'], Answer['Sentence'], Answer['Label']):
-                document_group.append([self.preprocess(q), self.preprocess(d), l])
+                document_group.append(
+                    [self.preprocess(q), self.preprocess(d), l])
 
             self.questions.append(document_group)
-        
         return self.questions
