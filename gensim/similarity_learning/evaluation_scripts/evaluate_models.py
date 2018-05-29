@@ -27,7 +27,8 @@ def mapk(Y_true, Y_pred):
     aps = []
 
     for y_true, y_pred in zip(Y_true, Y_pred):
-        pred_sorted = sorted(zip(y_true, y_pred), key=lambda x: x[1], reverse=True)
+        pred_sorted = sorted(zip(y_true, y_pred),
+                             key=lambda x: x[1], reverse=True)
         avg = 0
         n_relevant = 0
 
@@ -46,8 +47,10 @@ def mean_ndcg(Y_true, Y_pred, k=10):
     ndcgs = []
 
     for y_true, y_pred in zip(Y_true, Y_pred):
-        pred_sorted = sorted(zip(y_true, y_pred), key=lambda x: x[1], reverse=True)
-        true_sorted = sorted(zip(y_true, y_pred), key=lambda x: x[0], reverse=True)
+        pred_sorted = sorted(zip(y_true, y_pred),
+                             key=lambda x: x[1], reverse=True)
+        true_sorted = sorted(zip(y_true, y_pred),
+                             key=lambda x: x[0], reverse=True)
 
         pred_sorted = pred_sorted[:k]
         true_sorted = true_sorted[:k]
@@ -130,7 +133,8 @@ def doc2vec_eval(datapath, vec_size=20, alpha=0.025, file_to_write=None):
         y_true = []
         y_pred = []
         for query, d, label in doc:
-            y_pred.append(cos_sim(model.infer_vector(query), model.infer_vector(d)))
+            y_pred.append(cos_sim(model.infer_vector(
+                query), model.infer_vector(d)))
             y_true.append(label)
         Y_true.append(y_true)
         Y_pred.append(y_pred)
@@ -153,7 +157,8 @@ def word2vec_eval(datapath, word_embedding_path, file_to_write=None):
     If the word is out of vocabulary, we ignore it"""
 
     # load test data
-    # Note: here we are not using train data to keep results consistent with other models
+    # Note: here we are not using train data to keep results consistent with
+    # other models
     wikiqa_test = WikiQAExtractor(os.path.join(datapath, "WikiQA-test.tsv"))
     test_doc_data = wikiqa_test.get_data()
 
@@ -201,7 +206,8 @@ def word2vec_eval(datapath, word_embedding_path, file_to_write=None):
     # TODO add option to train on multiple w2v dimension files
     # Example: [50d, 100d, 200d, etc]
 
-    # TODO maybe replace w2v dict which is memory intensice with gensim KeyedVectors
+    # TODO maybe replace w2v dict which is memory intensice with gensim
+    # KeyedVectors
 
 
 def mz_eval(mz_output_file, file_to_write=None):
@@ -231,26 +237,28 @@ def mz_eval(mz_output_file, file_to_write=None):
     if file_to_write is not None:
         write_results_to_file(results, file_to_write)
 
+
 if __name__ == '__main__':
 
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+    logging.basicConfig(
+        format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--model',
-                         default='all',
-                         help='runs the evaluation of doc2vec')
+                        default='all',
+                        help='runs the evaluation of doc2vec')
 
     # Note: we currently only support WikiQA
     parser.add_argument('--datapath',
-                         help='path to the folder with WikiQACorpus. Path should include WikiQACorpus\
+                        help='path to the folder with WikiQACorpus. Path should include WikiQACorpus\
                          Make sure you have run get_data.py in gensim/similarity_learning/data/')
 
     # TODO include gensim-data path to word embeddings
     parser.add_argument('--word_embedding_path',
-                         help='path to the Glove word embedding file')
+                        help='path to the Glove word embedding file')
 
     parser.add_argument('--mz_output_file',
-                         help='path to the prediction output file made by mz')
+                        help='path to the prediction output file made by mz')
 
     args = parser.parse_args()
     if args.model == 'doc2vec':

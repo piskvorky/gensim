@@ -44,11 +44,7 @@ class QuoraQPExtractor:
         self.build_vocab()
 
     def preprocess(self, sentence):
-        # print(sentence)
-        try:
-            return re.sub("[^a-zA-Z0-9]", " ", sentence.lower())
-        except:
-            print(sentence, " HAS AN ERROR")
+        return re.sub("[^a-zA-Z0-9]", " ", sentence.lower())
 
     def build_vocab(self):
         logger.info("Starting Vocab Build")
@@ -197,21 +193,17 @@ class WikiQAExtractor:
             word = '#' + word + '#'
 
             for offset in range(len(word))[:-2]:
-                try:
-                    tri_word.append(self.tri2index[word[offset: offset + 3]])
-                except:
-                    pass
-                    # TODO will this clobber some other exceptions ???
-                    # maybe an if is in dict would be better but could lead to more
-                    # branch misses
-                    # logger.info("Found a tri not in dict: %s. Adding it now" % word[offset: offset + 3])
+                tri_word.append(self.tri2index[word[offset: offset + 3]])
+                # TODO The above code might cause issues for out of vocabulary words
+                # possible solution is try-except
+                # except portion of the code is commented below
 
-                    # self.tri2index[word[offset: offset + 3]] = self.vocab_size
-                    # self.index2tri[self.vocab_size] = word[offset: offset + 3]
-
-                    # self.vocab_size += 1
-
-                    # tri_word.append(self.tri2index[word[offset: offset + 3]])
+                # logger.info("Found a tri not in dict: %s. Adding it now" % word[offset: offset + 3])
+                # for adding unseen charaacter trigrams
+                # self.tri2index[word[offset: offset + 3]] = self.vocab_size
+                # self.index2tri[self.vocab_size] = word[offset: offset + 3]
+                # self.vocab_size += 1
+                # tri_word.append(self.tri2index[word[offset: offset + 3]])
 
             triletter_sentence.append(tri_word)
 
@@ -257,10 +249,10 @@ class WikiQAExtractor:
                 for triletter in word:
                     indexed_tri_word.append(self.tri2indexed[triletter])
                 indexed_tri_sentence.append(indexed_tri_word)
-            indexed_triletter_corpus.append(int_tri_sentence)
+            self.indexed_triletter_corpus.append(indexed_tri_sentence)
 
         logger.info('indexed triletter corpus made')
-        return indexed_triletter_corpus
+        return self.indexed_triletter_corpus
 
     def get_X_y(self, batch_size=32):
 
