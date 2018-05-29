@@ -41,7 +41,7 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
 
     """
     def __init__(self, min_count=5, threshold=10.0, max_vocab_size=40000000,
-                 delimiter=b'_', progress_per=10000, scoring='default'):
+                 delimiter=b'_', progress_per=10000, scoring='default', common_terms=frozenset()):
         """
 
         Parameters
@@ -84,6 +84,9 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
 
             A scoring function without any of these parameters (even if the parameters are not used) will
             raise a ValueError on initialization of the Phrases class. The scoring function must be pickleable.
+        common_terms : set of str, optional
+            List of "stop words" that won't affect frequency count of expressions containing them.
+            Allow to detect expressions like "bank_of_america" or "eye_of_the_beholder".
 
         """
         self.gensim_model = None
@@ -93,6 +96,7 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
         self.delimiter = delimiter
         self.progress_per = progress_per
         self.scoring = scoring
+        self.common_terms = common_terms
 
     def fit(self, X, y=None):
         """Fit the model according to the given training data.
@@ -111,7 +115,7 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
         self.gensim_model = models.Phrases(
             sentences=X, min_count=self.min_count, threshold=self.threshold,
             max_vocab_size=self.max_vocab_size, delimiter=self.delimiter,
-            progress_per=self.progress_per, scoring=self.scoring
+            progress_per=self.progress_per, scoring=self.scoring, common_terms=self.common_terms
         )
         return self
 
@@ -163,7 +167,7 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
             self.gensim_model = models.Phrases(
                 sentences=X, min_count=self.min_count, threshold=self.threshold,
                 max_vocab_size=self.max_vocab_size, delimiter=self.delimiter,
-                progress_per=self.progress_per, scoring=self.scoring
+                progress_per=self.progress_per, scoring=self.scoring, common_terms=self.common_terms
             )
 
         self.gensim_model.add_vocab(X)
