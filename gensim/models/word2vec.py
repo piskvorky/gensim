@@ -867,9 +867,8 @@ class Word2Vec(BaseWordEmbeddingsModel):
                 word_vectors.append(w)
             elif w in self.wv.vocab:
                 word_vectors.append(self.wv[w])
-
         if not word_vectors:
-            warnings.warn("All the input context words are not vector or out-of-vocabulary for the current model.")
+            warnings.warn("All the input context words are not vectors or out-of-vocabulary for the current model.")
             return None
 
         l1 = np_sum(word_vectors, axis=0)
