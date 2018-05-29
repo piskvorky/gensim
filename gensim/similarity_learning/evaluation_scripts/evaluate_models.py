@@ -41,6 +41,7 @@ class LabeledLineSentence(object):
         for uid, line in enumerate(self.corpus):
             yield TaggedDocument(words=line.split(), tags=['SENT_%s' % uid])
 
+
 # list to store results from all models to be saved later
 results_list = []
 
