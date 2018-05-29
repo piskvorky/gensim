@@ -9,11 +9,27 @@ import logging
 logger = logging.getLogger(__name__)
 
 """
-This script should be run to get a full evaluation
+This script should be run to get a model by model based or full evaluation
+Make sure you run gensim/similarity_learning/data/get_data.py to get the datasets
+
+Example usage:
+==============
+
+For evaluating doc2vec on the WikiQA corpus
+$ python evaluate_models.py --model doc2vec --datapath ../data/WikiQACorpus/
+
+For evaluating word2vec averaging on the WikiQA corpus
+$ python evaluate_models.py --model word2vec --datapath ../data/WikiQACorpus/ --word_embedding_path ../evaluation_scripts/glove.6B.50d.txt  # noqa:F401
+
+For evaluating the TREC format file produced by MatchZoo:
+$ python evaluate_models.py  --model mz --mz_output_file predict.test.wikiqa.txtDRMM
+Note: here "predict.test.wikiqa.txtDRMM" is the file output by MZ. It has been provided in this repo as an example.
 """
 
 
 class LabeledLineSentence(object):
+    """class to make sentences iterable
+    """
 
     def __init__(self, corpus):
         self.corpus = corpus
@@ -24,8 +40,28 @@ class LabeledLineSentence(object):
 
 
 def mapk(Y_true, Y_pred):
-    aps = []
+    """Function to get Mean Average Precision(MAP) for a given set of Y_true, Y_pred
+    TODO Currently doesn't support mapping at k. Couldn't use only map as it's a 
+    reserved word
 
+    parameters:
+    ===========
+    Y_true : numpy array of ints either 1 or 0
+        Contains the true, ground truth values of the queries
+        Example: [[0, 1, 0, 1],
+                  [0, 0, 0, 0, 1, 0],
+                  [0, 1, 0]
+                 ]
+
+    Y_pred : numpy array of floats between -1 and 1
+        Contains the predicted cosine similarity values of the queries
+        Example: [
+                  [0.1, , -0.01, 0.4],
+                  [0.12, -0.43, 0.2, 0.1, 0.99, 0.7],
+                  [0.5, 0.63, 0.92]
+                 ]
+    """
+    aps = []
     for y_true, y_pred in zip(Y_true, Y_pred):
         pred_sorted = sorted(zip(y_true, y_pred),
                              key=lambda x: x[1], reverse=True)
@@ -44,8 +80,27 @@ def mapk(Y_true, Y_pred):
 
 
 def mean_ndcg(Y_true, Y_pred, k=10):
-    ndcgs = []
+    """Calculates the mean discounted normalized cumulative gain over all
+    the entries limited to the integer k
 
+    parameters:
+    ===========
+    Y_true : numpy array of floats giving the rank of document for a given query
+        Contains the true, ground truth values of the queries
+        Example: [
+                  [0, 1, 0, 1],
+                  [0, 0, 0, 0, 1, 0],
+                  [0, 1, 0]
+                 ]
+
+    Y_pred : numpy array of floats between -1 and 1
+        Contains the predicted cosine similarity values of the queries
+        Example: [[0.1, , -0.01, 0.4],
+                  [0.12, -0.43, 0.2, 0.1, 0.99, 0.7],
+                  [0.5, 0.63, 0.92]
+                 ]
+    """
+    ndcgs = []
     for y_true, y_pred in zip(Y_true, Y_pred):
         pred_sorted = sorted(zip(y_true, y_pred),
                              key=lambda x: x[1], reverse=True)
@@ -71,6 +126,8 @@ def mean_ndcg(Y_true, Y_pred, k=10):
 
 
 def accuracy(Y_true, Y_pred):
+    """Calculates accuracy as (number of correct predictions / number of predictions)
+    """
     n_correct = 0
     for y_pred, y_true in zip(Y_pred, Y_true):
         if (np.argmax(y_true) == np.argmax(y_pred)):
@@ -80,6 +137,8 @@ def accuracy(Y_true, Y_pred):
 
 
 def cos_sim(vec1, vec2):
+    """Calculates the cosine similarity of 2 vectos
+    """
     return np.sum(vec1 * vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
 
 
@@ -107,6 +166,22 @@ def get_metric_results(Y_true, Y_pred, k_range=[1, 3, 5, 10, 20]):
 def doc2vec_eval(datapath, vec_size=20, alpha=0.025, file_to_write=None):
     """Trains the doc2vec model on training data of WikiQA and then
     evaluates on test data
+
+    parameters:
+    ==========
+
+    datapath : string
+        path to the WikiQA folder
+
+    vec_size : int
+        size of the hidden layer
+
+    alpha : float
+        The initial learning rate.
+
+    file_to_write : string
+        where the results of the evaluation should be stored
+        ignore if it is None
     """
     # load training data
     wikiqa_train = WikiQAExtractor(os.path.join(datapath, "WikiQA-train.tsv"))
@@ -154,8 +229,20 @@ def doc2vec_eval(datapath, vec_size=20, alpha=0.025, file_to_write=None):
 
 def word2vec_eval(datapath, word_embedding_path, file_to_write=None):
     """Averages words in a query to represent the sentence/doc
-    If the word is out of vocabulary, we ignore it"""
+    If the word is out of vocabulary, we ignore it
 
+    parameters:
+    ==========
+    datapath : string
+        path to the WikiQA folder
+
+    word_embedding_path : string
+        path to the the .txt which has the Glove word embeddings
+
+    file_to_write : string
+        where the results of the evaluation should be stored
+        ignore if it is None
+    """
     # load test data
     # Note: here we are not using train data to keep results consistent with
     # other models
@@ -211,14 +298,26 @@ def word2vec_eval(datapath, word_embedding_path, file_to_write=None):
 
 
 def mz_eval(mz_output_file, file_to_write=None):
+    """Evaluates the metrics on a TREC format file output by MatchZoo
+
+    parameters:
+    ==========
+    mz_output_file : string
+        path to MatchZoo output TREC format file
+
+    file_to_write : string
+        where the results of the evaluation should be stored
+        ignore if it is None
+    """
+
     with open(mz_output_file) as f:
         df = pd.read_csv(f, sep='\t')
 
     Y_true = []
     Y_pred = []
 
+    # Group the results based on QuestionID column
     for Question, Answer in df.groupby('QuestionID').apply(dict).items():
-
         this_y_true = []
         this_y_pred = []
 
@@ -271,9 +370,3 @@ if __name__ == '__main__':
         doc2vec_eval(args.datapath)
         word2vec_eval(args.datapath, args.word_embedding_path)
         mz_eval(args.mz_output_file)
-
-
-"""
-$ python evaluate_models.py --model doc2vec --datapath ../data/WikiQACorpus/
-$ python evaluate_models.py --model word2vec --datapath ../data/WikiQACorpus/ --word_embedding_path ../evaluation_scripts/glove.6B.50d.txt  # noqa:F401
-"""
