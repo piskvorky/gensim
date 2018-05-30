@@ -10,6 +10,7 @@ from gensim import utils
 import logging
 from timeit import default_timer
 import threading
+import multiprocessing as mp
 from six.moves import xrange
 from six import itervalues
 from gensim import matutils
@@ -199,6 +200,9 @@ class BaseAny2VecModel(utils.SaveLoad):
                 "be sure to provide a corpus that offers restartable iteration = an iterable)."
             )
 
+        # give the workers heads up that they can finish -- no more work!
+        for _ in xrange(self.workers):
+            job_queue.put(None)
         logger.debug("job loop exiting, total %i jobs", job_no)
 
     def _log_progress(self, job_queue, progress_queue, cur_epoch, example_count, total_examples,
@@ -252,7 +256,7 @@ class BaseAny2VecModel(utils.SaveLoad):
                      total_words=None, queue_factor=2, report_delay=1.0):
         """Train one epoch."""
 
-        job_queue = Queue(maxsize=queue_factor * self.workers)
+        job_queue = mp.Queue(maxsize=queue_factor * self.workers)
         progress_queue = Queue(maxsize=(queue_factor + 1) * self.workers)
 
         workers = [
@@ -262,13 +266,24 @@ class BaseAny2VecModel(utils.SaveLoad):
             for _ in xrange(self.workers)
         ]
 
-        workers.extend(
-            threading.Thread(
+        processes = [
+            mp.Process(
                 target=self._job_producer,
                 args=(data_iterable, job_queue),
                 kwargs={'cur_epoch': cur_epoch, 'total_examples': total_examples, 'total_words': total_words}
             ) for data_iterable in data_iterables
-        )
+        ]
+        # workers.extend(
+        #     threading.Thread(
+        #         target=self._job_producer,
+        #         args=(data_iterable, job_queue),
+        #         kwargs={'cur_epoch': cur_epoch, 'total_examples': total_examples, 'total_words': total_words}
+        #     ) for data_iterable in data_iterables
+        # )
+
+        for process in processes:
+            process.daemon = True
+            process.start()
 
         for thread in workers:
             thread.daemon = True  # make interrupting the process with ctrl+c easier
