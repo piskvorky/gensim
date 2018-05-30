@@ -30,6 +30,7 @@ from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
 
 from gensim import models
+from gensim.models.phrases import Phraser
 
 
 class PhrasesTransformer(TransformerMixin, BaseEstimator):
@@ -90,6 +91,7 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
 
         """
         self.gensim_model = None
+        self.phraser = None
         self.min_count = min_count
         self.threshold = threshold
         self.max_vocab_size = max_vocab_size
@@ -117,6 +119,7 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
             max_vocab_size=self.max_vocab_size, delimiter=self.delimiter,
             progress_per=self.progress_per, scoring=self.scoring, common_terms=self.common_terms
         )
+        self.phraser = Phraser(self.gensim_model)
         return self
 
     def transform(self, docs):
@@ -135,7 +138,7 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
             Phrase representation for each of the input sentences.
 
         """
-        if self.gensim_model is None:
+        if self.gensim_model is None or self.phraser is None:
             raise NotFittedError(
                 "This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method."
             )
@@ -143,7 +146,8 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
         # input as python lists
         if isinstance(docs[0], string_types):
             docs = [docs]
-        return [self.gensim_model[doc] for doc in docs]
+
+        return [self.phraser[doc] for doc in docs]
 
     def partial_fit(self, X):
         """Train model over a potentially incomplete set of sentences.
@@ -171,4 +175,5 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
             )
 
         self.gensim_model.add_vocab(X)
+        self.phraser = Phraser(self.gensim_model)
         return self
