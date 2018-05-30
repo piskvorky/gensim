@@ -1725,7 +1725,7 @@ def merge_dicts(dict1, dict2):
         Merged dictionary with sum of frequencies as values.
 
     """
-    for word, freq in dict2:
+    for word, freq in dict2.iteritems():
         if word in dict1:
             dict1[word] += freq
         else:

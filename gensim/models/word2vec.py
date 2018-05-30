@@ -1145,6 +1145,33 @@ class PathLineSentences(object):
                         i += self.max_sentence_length
 
 
+def _scan_vocab_worker(stream, progress_queue, max_vocab_size=None, trim_rule=None):
+    """Do an initial scan of all words appearing in stream."""
+    min_reduce = 1
+    vocab = defaultdict(int)
+    checked_string_types = 0
+    for sentence in stream:
+        if not checked_string_types:
+            if isinstance(sentence, string_types):
+                log_msg = "Each 'sentences' item should be a list of words (usually unicode strings). " \
+                          "First item here is instead plain %s." % type(sentence)
+                progress_queue.put(log_msg)
+
+            checked_string_types += 1
+
+        for word in sentence:
+            vocab[word] += 1
+
+        if max_vocab_size and len(vocab) > max_vocab_size:
+            utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
+            min_reduce += 1
+
+        progress_queue.put((len(sentence), 1))
+
+    progress_queue.put(None)
+    return vocab
+
+
 class Word2VecVocab(utils.SaveLoad):
     def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0,
         max_final_vocab=None):
@@ -1157,38 +1184,15 @@ class Word2VecVocab(utils.SaveLoad):
         self.raw_vocab = None
         self.max_final_vocab = max_final_vocab
 
-    def _scan_vocab_worker(self, stream, progress_queue, trim_rule=None):
-        """Do an initial scan of all words appearing in stream."""
-        min_reduce = 1
-        vocab = defaultdict(int)
-        checked_string_types = 0
-        for sentence in stream:
-            if not checked_string_types:
-                if isinstance(sentence, string_types):
-                    log_msg = "Each 'sentences' item should be a list of words (usually unicode strings). " \
-                              "First item here is instead plain %s." % type(sentence)
-                    progress_queue.put(log_msg)
-
-                checked_string_types += 1
-
-            for word in sentence:
-                vocab[word] += 1
-
-            if self.max_vocab_size and len(vocab) > self.max_vocab_size:
-                utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
-                min_reduce += 1
-
-            progress_queue.put((len(sentence), 1))
-
-        progress_queue.put(None)
-        return vocab
-
     def scan_vocab(self, input_streams, progress_per=10000, workers=1, trim_rule=None):
-        progress_queue = mp.Queue()
+        manager = mp.Manager()
+        progress_queue = manager.Queue()
         pool = mp.Pool(processes=min(workers, len(input_streams)))
 
         results = [
-            pool.apply_async(self._scan_vocab_worker, (stream, progress_queue, trim_rule)) for stream in input_streams
+            pool.apply_async(_scan_vocab_worker,
+                             (stream, progress_queue, self.max_vocab_size, trim_rule)
+                             ) for stream in input_streams
         ]
 
         logger.info("collecting all words and their counts")
