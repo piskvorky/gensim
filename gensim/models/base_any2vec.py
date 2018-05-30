@@ -408,7 +408,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         elif input_streams is not None:
             assert len(input_streams) > 0
 
-            self.build_vocab(itertools.chain(*input_streams), trim_rule=trim_rule)
+            self.build_vocab(input_streams, trim_rule=trim_rule)
             self.train(input_streams, total_examples=self.corpus_count, epochs=self.epochs, start_alpha=self.alpha,
                        end_alpha=self.min_alpha, compute_loss=compute_loss)
         else:
@@ -534,7 +534,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             self.__class__.__name__, len(self.wv.index2word), self.vector_size, self.alpha
         )
 
-    def build_vocab(self, sentences, update=False, progress_per=10000, keep_raw_vocab=False, trim_rule=None, **kwargs):
+    def build_vocab(self, input_streams, update=False, progress_per=10000, workers=1, keep_raw_vocab=False, trim_rule=None, **kwargs):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence is a iterable of iterables (can simply be a list of unicode strings too).
 
@@ -554,7 +554,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         start_time = time.time()
 
         total_words, corpus_count = self.vocabulary.scan_vocab(
-            sentences, progress_per=progress_per, trim_rule=trim_rule)
+            input_streams, progress_per=progress_per, workers=workers, trim_rule=trim_rule)
         self.corpus_count = corpus_count
         report_values = self.vocabulary.prepare_vocab(
             self.hs, self.negative, self.wv, update=update, keep_raw_vocab=keep_raw_vocab,
