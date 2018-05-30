@@ -5,6 +5,7 @@ import pandas as pd
 import argparse
 import os
 import logging
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -22,11 +23,14 @@ For evaluating word2vec averaging on the WikiQA corpus
 $ python evaluate_models.py --model word2vec --datapath ../data/WikiQACorpus/ --word_embedding_path ../evaluation_scripts/glove.6B.50d.txt  # noqa:F401
 
 For evaluating the TREC format file produced by MatchZoo:
-$ python evaluate_models.py  --model mz --mz_output_file predict.test.wikiqa.txtDRMM
+$ python evaluate_models.py  --model mz --mz_result_file predict.test.wikiqa.txtDRMM
 Note: here "predict.test.wikiqa.txtDRMM" is the file output by MZ. It has been provided in this repo as an example.
 
 For evaluating all models
-$ python evaluate_models.py --model all --mz_output_file predict.test.wikiqa.txtDRMM --result_save_path results --word_embedding_path ../evaluation_scripts/glove.6B.50d.txt --datapath ../data/WikiQACorpus/  # noqa:F401
+-with one mz output file
+$ python evaluate_models.py --model all --mz_result_file predict.test.wikiqa.txtDRMM --result_save_path results --word_embedding_path ../evaluation_scripts/glove.6B.50d.txt --datapath ../data/WikiQACorpus/  # noqa:F401
+-with a mz folder filled with result files
+$ python evaluate_models.py  --model all --mz_result_folder mz_results/ --result_save_path results_all --datapath ../data/WikiQACorpus/ --word_embedding_path ../evaluation_scripts/glove.6B.50d.txt  # noqa:F401
 """
 
 
@@ -69,7 +73,13 @@ def mapk(Y_true, Y_pred):
                  ]
     """
     aps = []
+    n_skipped = 0
     for y_true, y_pred in zip(Y_true, Y_pred):
+        # skip datapoints where there is no solution
+        if np.sum(y_true) < 1:
+            n_skipped += 1
+            continue
+
         pred_sorted = sorted(zip(y_true, y_pred),
                              key=lambda x: x[1], reverse=True)
         avg = 0
@@ -83,6 +93,8 @@ def mapk(Y_true, Y_pred):
         if n_relevant != 0:
             ap = avg / n_relevant
             aps.append(ap)
+
+    logger.info("Skipped %d out of %d data points" % (n_skipped, len(Y_true)))
     return np.mean(np.array(aps))
 
 
@@ -108,7 +120,12 @@ def mean_ndcg(Y_true, Y_pred, k=10):
                  ]
     """
     ndcgs = []
+    n_skipped = 0
     for y_true, y_pred in zip(Y_true, Y_pred):
+        if np.sum(y_true) < 1:
+            n_skipped += 1
+            continue
+
         pred_sorted = sorted(zip(y_true, y_pred),
                              key=lambda x: x[1], reverse=True)
         true_sorted = sorted(zip(y_true, y_pred),
@@ -129,6 +146,7 @@ def mean_ndcg(Y_true, Y_pred, k=10):
 
         if idcg != 0:
             ndcgs.append(dcg / idcg)
+    logger.info("Skipped %d out of %d data points" % (n_skipped, len(Y_true)))
     return np.mean(np.array(ndcgs))
 
 
@@ -177,22 +195,26 @@ def doc2vec_eval(datapath, vec_size=20, alpha=0.025):
     alpha : float
         The initial learning rate.
     """
-    # load training data
-    wikiqa_train = WikiQAExtractor(os.path.join(datapath, "WikiQA-train.tsv"))
+    # load testing data
+    wikiqa_train = WikiQAExtractor(os.path.join(datapath, "WikiQA-test.tsv"))
     train_data = wikiqa_train.get_preprocessed_corpus()
     lls = LabeledLineSentence(train_data)
 
+    initial_time = time.time()
     logger.info("Building and training doc2vec model")
     model = Doc2Vec(size=vec_size,
                     alpha=alpha,
                     min_alpha=0.025,
                     min_count=1,
-                    dm=1)
+                    dm=1,
+                    iter=50)
     model.build_vocab(lls)
     model.train(lls,
                 total_examples=model.corpus_count,
                 epochs=model.iter)
     logger.info("Building and training of doc2vec done")
+    logger.info("Time taken to train is %f" %
+                float(time.time() - initial_time))
 
     # load test data
     wikiqa_test = WikiQAExtractor(os.path.join(datapath, "WikiQA-test.tsv"))
@@ -301,22 +323,23 @@ def mz_eval(mz_output_file):
     """
 
     with open(mz_output_file) as f:
-        df = pd.read_csv(f, sep='\t')
+        df = pd.read_csv(f, sep='\t', names=[
+            "QuestionID", "Q0", "Doc ID", "Doc No", "predicted_score", "model name", "actual_score"])
 
     Y_true = []
     Y_pred = []
 
     # Group the results based on QuestionID column
     for Question, Answer in df.groupby('QuestionID').apply(dict).items():
-        this_y_true = []
-        this_y_pred = []
+        y_true = []
+        y_pred = []
 
-        for d, l in zip(Answer['e'], Answer['g']):
-            this_y_pred.append(d)
-            this_y_true.append(l)
+        for d, l in zip(Answer['predicted_score'], Answer['actual_score']):
+            y_pred.append(d)
+            y_true.append(l)
 
-        Y_pred.append(this_y_pred)
-        Y_true.append(this_y_true)
+        Y_pred.append(y_pred)
+        Y_true.append(y_true)
 
     results = get_metric_results(Y_true, Y_pred)
     results["method"] = "MZ"  # TODO add a way to specify the function
@@ -325,6 +348,44 @@ def mz_eval(mz_output_file):
     print(results)
 
     results_list.append(results)
+
+
+def mz_eval_multiple(mz_output_file_dir):
+    """Evaluates multiple TREC format file output by MatchZoo
+
+    parameters:
+    ==========
+    mz_output_file_dir : string
+        path to folder with MatchZoo output TREC format files
+    """
+
+    for mz_output_file in os.listdir(mz_output_file_dir):
+        with open(os.path.join(mz_output_file_dir, mz_output_file)) as f:
+            df = pd.read_csv(f, sep='\t', names=[
+                             "QuestionID", "Q0", "Doc ID", "Doc No", "predicted_score", "model name", "actual_score"])
+
+        Y_true = []
+        Y_pred = []
+
+        # Group the results based on QuestionID column
+        for Question, Answer in df.groupby('QuestionID').apply(dict).items():
+            y_true = []
+            y_pred = []
+
+            for d, l in zip(Answer['predicted_score'], Answer['actual_score']):
+                y_pred.append(d)
+                y_true.append(l)
+
+            Y_pred.append(y_pred)
+            Y_true.append(y_true)
+
+        results = get_metric_results(Y_true, Y_pred)
+        results["method"] = mz_output_file.split('.')[2]
+
+        print("Results of evaluating on mz_eval:")
+        print(results)
+
+        results_list.append(results)
 
 
 def write_results_to_file(results_list, file_to_write, k_range=[1, 3, 5, 10, 20]):
@@ -371,12 +432,16 @@ if __name__ == '__main__':
     parser.add_argument('--word_embedding_path',
                         help='path to the Glove word embedding file')
 
-    parser.add_argument('--mz_output_file',
+    parser.add_argument('--mz_result_file',
                         help='path to the prediction output file made by mz')
 
     parser.add_argument('--result_save_path',
                         default=None,
                         help='path to save the results to as a csv')
+
+    parser.add_argument('--mz_result_folder',
+                        default=None,
+                        help='path to mz folder with many test prediction outputs')
 
     args = parser.parse_args()
     if args.model == 'doc2vec':
@@ -384,11 +449,16 @@ if __name__ == '__main__':
     elif args.model == 'word2vec':
         word2vec_eval(args.datapath, args.word_embedding_path)
     elif args.model == 'mz':
-        mz_eval(args.mz_output_file, file_to_write=args.result_save_path)
+        mz_eval(args.mz_result_file)
+    elif args.model == 'mz_folder':
+        mz_eval_multiple(args.mz_result_folder)
     elif args.model == 'all':
         doc2vec_eval(args.datapath)
         word2vec_eval(args.datapath, args.word_embedding_path)
-        mz_eval(args.mz_output_file)
+        if args.mz_result_file is not None:
+            mz_eval(args.mz_result_file)
+        elif args.mz_result_folder is not None:
+            mz_eval_multiple(args.mz_result_folder)
 
     if args.result_save_path is not None:
         write_results_to_file(results_list, args.result_save_path)
