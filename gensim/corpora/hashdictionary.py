@@ -30,6 +30,7 @@ Disadvantages:
 
 References
 ----------
+
 .. [1] http://en.wikipedia.org/wiki/Hashing-Trick
 
 """
@@ -53,6 +54,7 @@ class HashDictionary(utils.SaveLoad, dict):
 
     Notes
     -----
+
     Unlike :class:`~gensim.corpora.dictionary.Dictionary`,
     building a :class:`~gensim.corpora.hashdictionary.HashDictionary` before using it **isn't a necessary step**.
 
@@ -60,6 +62,7 @@ class HashDictionary(utils.SaveLoad, dict):
 
     Examples
     --------
+
     >>> from gensim.corpora import HashDictionary
     >>>
     >>> dct = HashDictionary(debug=False)  # needs no training corpus!
@@ -74,6 +77,7 @@ class HashDictionary(utils.SaveLoad, dict):
 
         Parameters
         ----------
+
         documents : iterable of iterable of str
             Iterable of documents. If given, used to collect additional corpus statistics. HashDictionary can work without these statistics (optional parameter).
         id_range : int, optional
@@ -110,11 +114,13 @@ class HashDictionary(utils.SaveLoad, dict):
 
         Parameters
         ----------
+
         tokenid : int
             Token identifier (result of hashing).
 
         Return
         ------
+
         set of str
             Set of all words that have mapped to this id.
 
@@ -127,11 +133,13 @@ class HashDictionary(utils.SaveLoad, dict):
 
         Parameters
         ----------
+
         token : str
             Input token.
 
         Return
         ------
+
         int
             Hash value of `token`.
 
@@ -163,15 +171,18 @@ class HashDictionary(utils.SaveLoad, dict):
 
         Notes
         -----
+
         This is only a convenience wrapper for calling `doc2bow` on each document with `allow_update=True`.
 
         Parameters
         ----------
+
         documents : iterable of list of str
             Collection of documents.
 
         Examples
         --------
+
         >>> from gensim.corpora import HashDictionary
         >>>
         >>> dct = HashDictionary(debug=True)  # needs no training corpus!
@@ -266,6 +277,7 @@ class HashDictionary(utils.SaveLoad, dict):
 
         Parameters
         ----------
+
         no_below : int, optional
             Keep tokens which are contained in at least `no_below` documents.
         no_above : float, optional
@@ -276,6 +288,7 @@ class HashDictionary(utils.SaveLoad, dict):
 
         Notes
         -----
+
         For tokens that appear in:
 
         #. Less than `no_below` documents (absolute number) or \n
@@ -284,6 +297,7 @@ class HashDictionary(utils.SaveLoad, dict):
 
         Examples
         --------
+
         >>> from gensim.corpora import HashDictionary
         >>>
         >>> dct = HashDictionary(debug=True)
@@ -317,17 +331,20 @@ class HashDictionary(utils.SaveLoad, dict):
 
         Parameters
         ----------
+
         fname : str
             Path to output file.
 
         Notes
         -----
+
         The format is:
         `id[TAB]document frequency of this id[TAB]tab-separated set of words in UTF8 that map to this id[NEWLINE]`.
 
 
         Examples
         --------
+
         >>> from gensim.corpora import HashDictionary
         >>> from gensim.test.utils import get_tmpfile
         >>>
