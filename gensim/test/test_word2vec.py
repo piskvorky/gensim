@@ -731,11 +731,22 @@ class TestWord2VecModel(unittest.TestCase):
     def testPredictOutputWord(self):
         '''Test word2vec predict_output_word method handling for negative sampling scheme'''
         # under normal circumstances
+        context_words = ['system', 'human']
         model_with_neg = word2vec.Word2Vec(sentences, min_count=1)
-        predictions_with_neg = model_with_neg.predict_output_word(['system', 'human'], topn=5)
+        predictions_with_neg = model_with_neg.predict_output_word(context_words, topn=5)
         self.assertTrue(len(predictions_with_neg) == 5)
 
-        # out-of-vobaculary scenario
+        # test using vectors from words in vocabulary as input
+        context_vectors = [model.wv[t] for t in context_words]
+        predictions_from_vectors = model_with_neg.predict_output_word(context_vectors, topn=5)
+        self.assertTrue(predictions_from_vectors == predictions_with_neg)
+
+        # test using modified vectors as input
+        context_vectors = [model.wv[t] * 0.9 for t in context_words]
+        predictions_from_mod_vectors = model_with_neg.predict_output_word(context_vectors, topn=5)
+        self.assertTrue(len(predictions_from_mod_vectors) == 5)
+
+        # out-of-vocabulary scenario
         predictions_out_of_vocab = model_with_neg.predict_output_word(['some', 'random', 'words'], topn=5)
         self.assertEqual(predictions_out_of_vocab, None)
 
