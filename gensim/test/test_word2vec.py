@@ -737,12 +737,12 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(len(predictions_with_neg) == 5)
 
         # test using vectors from words in vocabulary as input
-        context_vectors = [model.wv[t] for t in context_words]
+        context_vectors = [model_with_neg.wv[t] for t in context_words]
         predictions_from_vectors = model_with_neg.predict_output_word(context_vectors, topn=5)
         self.assertTrue(predictions_from_vectors == predictions_with_neg)
 
         # test using modified vectors as input
-        context_vectors = [model.wv[t] * 0.9 for t in context_words]
+        context_vectors = [model_with_neg.wv[t] * 0.9 for t in context_words]
         predictions_from_mod_vectors = model_with_neg.predict_output_word(context_vectors, topn=5)
         self.assertTrue(len(predictions_from_mod_vectors) == 5)
 
