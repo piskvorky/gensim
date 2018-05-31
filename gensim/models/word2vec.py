@@ -1145,11 +1145,13 @@ class PathLineSentences(object):
                         i += self.max_sentence_length
 
 
-def _scan_vocab_worker(stream, progress_queue, max_vocab_size=None, trim_rule=None):
+def _scan_vocab_worker(stream, progress_queue, progress_per=10000, max_vocab_size=None, trim_rule=None):
     """Do an initial scan of all words appearing in stream."""
     min_reduce = 1
     vocab = defaultdict(int)
     checked_string_types = 0
+    sentence_no = -1
+    total_words = 0
     for sentence in stream:
         if not checked_string_types:
             if isinstance(sentence, string_types):
@@ -1166,8 +1168,15 @@ def _scan_vocab_worker(stream, progress_queue, max_vocab_size=None, trim_rule=No
             utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
             min_reduce += 1
 
-        progress_queue.put((len(sentence), 1))
+        total_words += len(sentence)
+        sentence_no += 1
 
+        # if sentence_no % progress_per == 0:
+        #     progress_queue.put((total_words, sentence_no + 1))
+        #     sentence_no = -1
+        #     total_words = 0
+
+    progress_queue.put((total_words, sentence_no + 1))
     progress_queue.put(None)
     return vocab
 
@@ -1191,9 +1200,10 @@ class Word2VecVocab(utils.SaveLoad):
 
         results = [
             pool.apply_async(_scan_vocab_worker,
-                             (stream, progress_queue, self.max_vocab_size, trim_rule)
+                             (stream, progress_queue, progress_per, self.max_vocab_size, trim_rule)
                              ) for stream in input_streams
         ]
+        pool.close()
 
         logger.info("collecting all words and their counts")
         unfinished_tasks = len(results)
@@ -1203,7 +1213,7 @@ class Word2VecVocab(utils.SaveLoad):
             report = progress_queue.get()
             if report is None:
                 unfinished_tasks -= 1
-                logger.info("scan vocab worker process finished; awaiting finish of %i more procs", unfinished_tasks)
+                logger.info("scan vocab task finished; awaiting finish of %i more tasks", unfinished_tasks)
             elif isinstance(report, string_types):
                 logger.warning(report)
             else:
