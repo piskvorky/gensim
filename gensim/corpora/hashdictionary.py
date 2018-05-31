@@ -5,13 +5,15 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""This module implements the "hashing trick" [1]_ -- a mapping between words and their integer ids
-using a fixed and static mapping.
+"""
+This module implements the "hashing trick" [1]_ -- a mapping between words and their integer ids
+using a fixed, static mapping (hash function).
 
 Notes
 -----
+
 The static mapping has a constant memory footprint, regardless of the number of word-types (features) in your corpus,
-so it's suitable for processing extremely large corpora. The ids are computed as `hash(word) % id_range`,
+so it's suitable for processing extremely large corpora. The ids are computed as `hash(word) %% id_range`,
 where `hash` is a user-configurable function (`zlib.adler32` by default).
 
 Advantages:
@@ -19,17 +21,16 @@ Advantages:
 * New words can be represented immediately, without an extra pass through the corpus
   to collect all the ids first.
 * Can be used with non-repeatable (once-only) streams of documents.
-* All tokens will be used (not only that you see in documents), typical problem
-  for :class:`~gensim.corpora.dictionary.Dictionary`.
-
+* Able to represent any token (not only those present in training documents)
 
 Disadvantages:
 
-* Words may map to the same id, causing hash collisions. The word <-> id mapping is no longer a bijection.
+* Multiple words may map to the same id, causing hash collisions. The word <-> id mapping is no longer a bijection.
 
 
 References
 ----------
+
 .. [1] http://en.wikipedia.org/wiki/Hashing-Trick
 
 """
@@ -48,21 +49,25 @@ logger = logging.getLogger(__name__)
 
 
 class HashDictionary(utils.SaveLoad, dict):
-    """Encapsulates the mapping between normalized words and their integer ids.
+    """
+    Mapping between words and their integer ids, using a hashing function.
 
     Notes
     -----
+
     Unlike :class:`~gensim.corpora.dictionary.Dictionary`,
     building a :class:`~gensim.corpora.hashdictionary.HashDictionary` before using it **isn't a necessary step**.
-    The documents can be computed immediately, from an uninitialized
-    :class:`~gensim.corpora.hashdictionary.HashDictionary` without seeing the rest of the corpus first.
+
+    You can start converting words to ids immediately, without training on a corpus.
 
     Examples
     --------
+
     >>> from gensim.corpora import HashDictionary
     >>>
+    >>> dct = HashDictionary(debug=False)  # needs no training corpus!
+    >>>
     >>> texts = [['human', 'interface', 'computer']]
-    >>> dct = HashDictionary(texts)
     >>> dct.doc2bow(texts[0])
     [(10608, 1), (12466, 1), (31002, 1)]
 
@@ -72,15 +77,16 @@ class HashDictionary(utils.SaveLoad, dict):
 
         Parameters
         ----------
+
         documents : iterable of iterable of str
-            Iterable of documents, if given - use them to initialization.
+            Iterable of documents. If given, used to collect additional corpus statistics. HashDictionary can work without these statistics (optional parameter).
         id_range : int, optional
-            Number of hash-values in table, used as `id = myhash(key) % id_range`.
+            Number of hash-values in table, used as `id = myhash(key) %% id_range`.
         myhash : function
-            Hash function, should support interface myhash(str) -> int, used `zlib.adler32` by default.
+            Hash function, should support interface `myhash(str) -> int`, uses `zlib.adler32` by default.
         debug : bool
-            If True - store raw tokens mapping (as str <-> id).
-            If you find yourself running out of memory (or not sure that you really need raw tokens), set `debug=False`.
+            If True - store which tokens have mapped to a given id. **Will use a lot of RAM**.
+            If you find yourself running out of memory (or not sure that you really need raw tokens), keep `debug=False`.
 
         """
         self.myhash = myhash  # hash fnc: string->integer
@@ -104,34 +110,36 @@ class HashDictionary(utils.SaveLoad, dict):
     def __getitem__(self, tokenid):
         """Get all words that have mapped to the given id so far, as a set.
 
-        Warnings
-        --------
-        Works only if `debug=True`.
+        Works only if you initialized your `HashDictionary` object with `debug=True`.
 
         Parameters
         ----------
+
         tokenid : int
             Token identifier (result of hashing).
 
         Return
         ------
+
         set of str
-            Set of all corresponding words.
+            Set of all words that have mapped to this id.
 
         """
         return self.id2token.get(tokenid, set())
 
     def restricted_hash(self, token):
         """Calculate id of the given token.
-        Also keep track of what words were mapped to what ids, for debugging reasons.
+        Also keep track of what words were mapped to what ids, if `debug=True` was set in the constructor.
 
         Parameters
         ----------
+
         token : str
             Input token.
 
         Return
         ------
+
         int
             Hash value of `token`.
 
@@ -158,26 +166,31 @@ class HashDictionary(utils.SaveLoad, dict):
         return HashDictionary(*args, **kwargs)
 
     def add_documents(self, documents):
-        """Build dictionary from a collection of documents.
+        """Collect corpus statistics from a corpus. Useful only if `debug=True`, to build
+        the reverse `id=>set(words)` mapping.
 
         Notes
         -----
+
         This is only a convenience wrapper for calling `doc2bow` on each document with `allow_update=True`.
 
         Parameters
         ----------
+
         documents : iterable of list of str
             Collection of documents.
 
         Examples
         --------
+
         >>> from gensim.corpora import HashDictionary
         >>>
+        >>> dct = HashDictionary(debug=True)  # needs no training corpus!
+        >>>
         >>> corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
-        >>> dct = HashDictionary(corpus)
         >>> "sparta" in dct.token2id
         False
-        >>> dct.add_documents([["this","is","sparta"],["just","joking"]])  # add more documents in dictionary
+        >>> dct.add_documents([["this", "is", "sparta"], ["just", "joking"]])
         >>> "sparta" in dct.token2id
         True
 
@@ -192,43 +205,39 @@ class HashDictionary(utils.SaveLoad, dict):
         )
 
     def doc2bow(self, document, allow_update=False, return_missing=False):
-        """Convert `document` into the bag-of-words format, like [(1, 4), (150, 1), (2005, 2)].
+        """Convert a sequence of words `document` into the bag-of-words format of
+        `[(word_id, word_count)]` (e.g. `[(1, 4), (150, 1), (2005, 2)]`).
 
         Notes
         -----
-        Each word is assumed to be a **tokenized and normalized** utf-8 encoded string. No further preprocessing
-        is done on the words in `document` (apply tokenization, stemming etc) before calling this method.
+        Each word is assumed to be a **tokenized and normalized** string. No further preprocessing
+        is done on the words in `document`: you have to apply tokenization, stemming etc before calling this method.
 
-        If `allow_update` or `self.allow_update` is set, then also update dictionary in the process: update overall
+        If `allow_update` or `self.allow_update` is set, then also update the dictionary in the process: update overall
         corpus statistics and document frequencies. For each id appearing in this document, increase its document
         frequency (`self.dfs`) by one.
 
         Parameters
         ----------
-        document : list of str
-            Is a list of tokens = **tokenized and normalized** strings (either utf8 or unicode).
+        document : sequence of str
+            A sequence of word tokens = **tokenized and normalized** strings.
         allow_update : bool, optional
-            If True - update dictionary in the process.
-        return_missing : bool, optional
-            Show token_count for missing words. HAVE NO SENSE FOR THIS CLASS, BECAUSE WE USING HASHING-TRICK.
+            If True - update corpus statistics and if `debug=True`, also the reverse id=>word mapping.
+        return_missing : bool
+            Not used. Only here for compatibility with the Dictionary class.
 
         Return
         ------
         list of (int, int)
             Document in Bag-of-words (BoW) format.
-        list of (int, int), dict
-            If `return_missing=True`, return document in Bag-of-words (BoW) format + empty dictionary.
 
         Examples
         --------
         >>> from gensim.corpora import HashDictionary
         >>>
-        >>> corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
-        >>> dct = HashDictionary(corpus)
-        >>> dct.doc2bow(["this","is","máma"])
+        >>> dct = HashDictionary()
+        >>> dct.doc2bow(["this", "is", "máma"])
         [(1721, 1), (5280, 1), (22493, 1)]
-        >>> dct.doc2bow(["this","is","máma"], return_missing=True)
-        ([(1721, 1), (5280, 1), (22493, 1)], {})
 
         """
         result = {}
@@ -260,10 +269,15 @@ class HashDictionary(utils.SaveLoad, dict):
             return result
 
     def filter_extremes(self, no_below=5, no_above=0.5, keep_n=100000):
-        """Filter tokens in dictionary by frequency.
+        """Filter tokens in the debug dictionary by their frequency. Only makes sense when `debug=True`.
+
+        Since :class:`~gensim.corpora.hashdictionary.HashDictionary` id range is fixed and doesn't depend on the number
+        of tokens seen, this doesn't really "remove" anything.
+        It only clears some supplementary statistics, for easier debugging and a smaller RAM footprint.
 
         Parameters
         ----------
+
         no_below : int, optional
             Keep tokens which are contained in at least `no_below` documents.
         no_above : float, optional
@@ -274,22 +288,21 @@ class HashDictionary(utils.SaveLoad, dict):
 
         Notes
         -----
+
         For tokens that appear in:
 
         #. Less than `no_below` documents (absolute number) or \n
         #. More than `no_above` documents (fraction of total corpus size, **not absolute number**).
         #. After (1) and (2), keep only the first `keep_n` most frequent tokens (or keep all if `None`).
 
-        Since :class:`~gensim.corpora.hashdictionary.HashDictionary` id range is fixed and doesn't depend on the number
-        of tokens seen, this doesn't really "remove" anything.
-        It only clears some supplementary statistics, for easier debugging and a smaller RAM footprint.
-
         Examples
         --------
+
         >>> from gensim.corpora import HashDictionary
         >>>
+        >>> dct = HashDictionary(debug=True)
+        >>>
         >>> corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
-        >>> dct = HashDictionary(corpus)
         >>> dct.filter_extremes(no_below=1, no_above=0.5, keep_n=1)
         >>> print dct.token2id
         {'maso': 15025}
@@ -314,21 +327,24 @@ class HashDictionary(utils.SaveLoad, dict):
         )
 
     def save_as_text(self, fname):
-        """Save this HashDictionary to a text file.
+        """Save the debug token=>id mapping to a text file. Only makes sense when `debug=True`, for debugging.
 
         Parameters
         ----------
+
         fname : str
             Path to output file.
 
         Notes
         -----
+
         The format is:
         `id[TAB]document frequency of this id[TAB]tab-separated set of words in UTF8 that map to this id[NEWLINE]`.
 
 
         Examples
         --------
+
         >>> from gensim.corpora import HashDictionary
         >>> from gensim.test.utils import get_tmpfile
         >>>
@@ -337,7 +353,7 @@ class HashDictionary(utils.SaveLoad, dict):
         >>> data.save_as_text(get_tmpfile("dictionary_in_text_format"))
 
         """
-        logger.info("saving HashDictionary mapping to %s" % fname)
+        logger.info("saving %s mapping to %s" % (self, fname))
         with utils.smart_open(fname, 'wb') as fout:
             for tokenid in self.keys():
                 words = sorted(self[tokenid])
