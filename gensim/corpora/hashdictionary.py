@@ -21,7 +21,7 @@ Advantages:
 * New words can be represented immediately, without an extra pass through the corpus
   to collect all the ids first.
 * Can be used with non-repeatable (once-only) streams of documents.
-* Able to represent all tokens (not only those present in training documents)
+* Able to represent any token (not only those present in training documents)
 
 Disadvantages:
 
