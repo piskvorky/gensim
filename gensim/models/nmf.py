@@ -11,39 +11,48 @@ logger = logging.getLogger(__name__)
 
 import time
 
+
 class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
     """Online Non-Negative Matrix Factorization.
-
-    Attributes
-    ----------
-    _W : dictionary matrix
-    _H : loadings matrix
-    _lambda: weight of outliers regularizer
-    _kappa: step size coefficient
-
     """
 
-    def __init__(self,
-                 corpus=None,
-                 num_topics=100,
-                 id2word=None,
-                 chunksize=2000,
-                 passes=1,
-                 lambda_=1.,
-                 kappa=1.,
-                 store_r=False,
-                 max_iter=int(1e9),
-                 normalize=True,
-                 random_state=None
-                 ):
+    def __init__(
+        self,
+        corpus=None,
+        num_topics=100,
+        id2word=None,
+        chunksize=2000,
+        passes=1,
+        lambda_=1.,
+        kappa=1.,
+        store_r=False,
+        w_max_iter=200,
+        w_stop_condition=1e-4,
+        h_r_max_iter=50,
+        h_r_stop_condition=1e-3,
+        normalize=True,
+    ):
         """
 
         Parameters
         ----------
+        corpus : Corpus
+            Training corpus
         num_topics : int
             Number of components in resulting matrices.
+        id2word: Dict[int, str]
+            Token id to word mapping
+        chunksize: int
+            Number of documents in a chunk
+        passes: int
+            Number of full passes over the training corpus
         lambda_ : float
+            Weight of the residuals regularizer
         kappa : float
+            Optimization step size
+        store_r : bool
+            Whether to save residuals during training
+        normalize
         """
         self.n_features = None
         self.num_topics = num_topics
@@ -52,9 +61,12 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.passes = passes
         self._lambda_ = lambda_
         self._kappa = kappa
+        self._w_max_iter = w_max_iter
+        self._w_stop_condition = w_stop_condition
+        self._h_r_max_iter = h_r_max_iter
+        self._h_r_stop_condition = h_r_stop_condition
         self._H = []
         self.v_max = None
-        self.max_iter = max_iter
         self.normalize = normalize
         if store_r:
             self._R = []
@@ -114,7 +126,9 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             num_topics = min(num_topics, self.num_topics)
 
             sorted_topics = list(matutils.argsort(sparsity))
-            chosen_topics = sorted_topics[:num_topics // 2] + sorted_topics[-num_topics // 2:]
+            chosen_topics = (
+                sorted_topics[: num_topics // 2] + sorted_topics[-num_topics // 2 :]
+            )
 
         shown = []
 
@@ -124,7 +138,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             bestn = matutils.argsort(topic_, num_words, reverse=True)
             topic_ = [(self.id2word[id], topic_[id]) for id in bestn]
             if formatted:
-                topic_ = ' + '.join(['%.3f*"%s"' % (v, k) for k, v in topic_])
+                topic_ = " + ".join(['%.3f*"%s"' % (v, k) for k, v in topic_])
 
             shown.append((i, topic_))
             if log:
@@ -142,7 +156,10 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             list: of `(word, probability)` 2-tuples for the most probable
             words in topic `topicid`.
         """
-        return [(self.id2word[id], value) for id, value in self.get_topic_terms(topicid, topn)]
+        return [
+            (self.id2word[id], value)
+            for id, value in self.get_topic_terms(topicid, topn)
+        ]
 
     def get_topic_terms(self, topicid, topn=10):
         """
@@ -207,8 +224,11 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         self.n_features = len(first_doc)
 
-        self._W = np.abs(avg * halfnorm.rvs(size=(self.n_features, self.num_topics)) /
-                         np.sqrt(self.num_topics))
+        self._W = np.abs(
+            avg
+            * halfnorm.rvs(size=(self.n_features, self.num_topics))
+            / np.sqrt(self.num_topics)
+        )
 
         self.A = np.zeros((self.num_topics, self.num_topics))
         self.B = np.zeros((self.n_features, self.num_topics))
@@ -230,7 +250,9 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         r, h = self._r, self._h
 
         for _ in range(self.passes):
-            for chunk in utils.grouper(corpus, self.chunksize, as_numpy=chunks_as_numpy):
+            for chunk in utils.grouper(
+                corpus, self.chunksize, as_numpy=chunks_as_numpy
+            ):
                 v = matutils.corpus2dense(chunk, len(self.id2word), len(chunk)).T
                 h, r = self._solveproj(v, self._W, r=r, h=h, v_max=self.v_max)
                 self._H.append(h)
@@ -239,40 +261,48 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
                 self.A += np.dot(h, h.T)
                 self.B += np.dot((v.T - r), h.T)
-                self._solve_w()
+                self._solve_w(v.T, h, r)
                 logger.info(
-                    'Loss (no outliers): {}\tLoss (with outliers): {}'
-                    .format(
+                    "Loss (no outliers): {}\tLoss (with outliers): {}".format(
                         np.linalg.norm(v.T - self._W.dot(h)),
-                        np.linalg.norm(v.T - self._W.dot(h) - r)
+                        np.linalg.norm(v.T - self._W.dot(h) - r),
                     )
                 )
 
         self._r = r
         self._h = h
 
-    def _solve_w(self):
-        eta = self._kappa / np.linalg.norm(self.A, 'fro')
-        lasttwo = np.zeros(2)
+    def _solve_w(self, v, h, r):
+        eta = self._kappa / np.linalg.norm(self.A, "fro")
+        error = None
 
-        for n in range(int(1e9)):
-            if n >= 2 and np.abs((lasttwo[1] - lasttwo[0])) < 1e-5 * np.abs(lasttwo[0]):
-                break
-
+        for n in range(self._w_max_iter):
             self._W -= eta * (np.dot(self._W, self.A) - self.B)
             self._W = self.__transform(self._W)
-            lasttwo[0] = lasttwo[1]
-            lasttwo[1] = (
-                    0.5 * np.trace(self._W.T.dot(self._W).dot(self.A))
-                    - np.trace(self._W.T.dot(self.B))
-            )
+
+            error_ = self.__w_error()
+
+            if error and np.abs(error_ - error) < np.abs(
+                error * self._w_stop_condition
+            ):
+                break
+
+            error = error_
+
+    def __w_error(self):
+        return 0.5 * np.trace(self._W.T.dot(self._W.dot(self.A) - self.B))
+
+    def __h_r_error(self, v, h, r):
+        return 0.5 * np.linalg.norm(
+            v - self._W.dot(h) - r, "fro"
+        ) ** 2 + self._lambda_ * np.linalg.norm(r, 1)
 
     @staticmethod
-    def __solve_r(r_actual, lambda_, vmax):
+    def __solve_r(r_actual, lambda_, v_max):
         res = np.abs(r_actual) - lambda_
         np.maximum(res, 0.0, out=res)
         res *= np.sign(r_actual)
-        np.clip(res, -vmax, vmax, out=res)
+        np.clip(res, -v_max, v_max, out=res)
         return res
 
     def __transform(self, W):
@@ -300,21 +330,28 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if r is None or r.shape != rshape:
             r = np.zeros(rshape)
 
-        Wt = W.T
-        WtW = Wt.dot(W)
+        WtW = W.T.dot(W)
 
-        for iter_number in range(self.max_iter):
-            violation = 0
+        # eta = self._kappa / np.linalg.norm(W, 'fro') ** 2
 
-            r_actual = v - np.dot(W, h)
-            Wt_v_minus_r = Wt.dot(v - r)
+        error = None
 
-            violation += solve_h(h, Wt_v_minus_r, WtW, self._kappa)
+        for iter_number in range(self._h_r_max_iter):
+            Wt_v_minus_r = W.T.dot(v - r)
 
-            violation += solve_r(r, r_actual, self._lambda_, self.v_max)
+            solve_h(h, Wt_v_minus_r, WtW, self._kappa)
 
-            # Stop conditions
-            if violation / m < 1e-5:
+            r_actual = v - W.dot(h)
+
+            solve_r(r, r_actual, self._lambda_, self.v_max)
+
+            error_ = self.__h_r_error(v, h, r)
+
+            if error and np.abs(error - error_) < np.abs(
+                error * self._h_r_stop_condition
+            ):
                 break
+
+            error = error_
 
         return h, r

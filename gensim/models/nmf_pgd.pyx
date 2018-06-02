@@ -24,15 +24,9 @@ def solve_h(double[:, ::1] h, double[:, :] Wt_v_minus_r, double[:, ::1] WtW, dou
                 for component_idx_2 in range(n_components):
                     grad += WtW[component_idx_1, component_idx_2] * h[component_idx_2, sample_idx]
 
-                projected_grad = fmin(0, grad) if h[component_idx_1, sample_idx] == 0 else grad
-
-                violation += projected_grad ** 2
-
                 hessian = WtW[component_idx_1, component_idx_1]
 
                 h[component_idx_1, sample_idx] = fmax(h[component_idx_1, sample_idx] - grad * kappa / hessian, 0.)
-
-    return sqrt(violation)
 
 def solve_r(double[:, ::1] r, double[:, ::1] r_actual, double lambda_, double v_max):
     cdef Py_ssize_t n_features = r.shape[0]
@@ -52,8 +46,4 @@ def solve_r(double[:, ::1] r, double[:, ::1] r_actual, double lambda_, double v_
                 r_new_element = fmax(r_new_element, -v_max)
                 r_new_element = fmin(r_new_element, v_max)
 
-                violation += (r[feature_idx, sample_idx] - r_new_element)**2
-
                 r[feature_idx, sample_idx] = r_new_element
-
-    return sqrt(violation)
