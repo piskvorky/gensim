@@ -512,7 +512,7 @@ class WikiCorpus(TextCorpus):
 
     def __init__(self, fname, processes=None, lemmatize=utils.has_pattern(), dictionary=None,
                  filter_namespaces=('0',), tokenizer_func=tokenize, article_min_tokens=ARTICLE_MIN_WORDS,
-                 token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True):
+                 token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True, metadata=True):
         """Initialize the corpus.
 
         Unless a dictionary is provided, this scans the corpus once,
@@ -548,7 +548,7 @@ class WikiCorpus(TextCorpus):
         """
         self.fname = fname
         self.filter_namespaces = filter_namespaces
-        self.metadata = False
+        self.metadata = metadata
         if processes is None:
             processes = max(1, multiprocessing.cpu_count() - 1)
         self.processes = processes
