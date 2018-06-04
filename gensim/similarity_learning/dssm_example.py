@@ -2,8 +2,16 @@ from gensim.similarity_learning import DSSM
 from gensim.similarity_learning import WikiQAExtractor
 import os
 import logging
+import argparse
 
 logger = logging.getLogger(__name__)
+
+"""Proof of Concept/Example script to demonstrate the trianing of DSSM model
+Note: This is just training currently. Validation and Testing currently missing
+
+Example Usage:
+$ python dssm_example.py --wikiqa_folder_path ./data/WikiQACorpus/
+"""
 
 if __name__ == '__main__':
 
@@ -12,7 +20,17 @@ if __name__ == '__main__':
             level=logging.INFO
         )
 
-    wiki_extractor = WikiQAExtractor(os.path.join("data", "WikiQACorpus", "WikiQA-train.tsv"))
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--wikiqa_folder_path',
+                        help='path to the the folder with WikiQACorpus')
+    args = parser.parse_args()
+
+    # Raise an error if params aren't passed
+    if not (args.wikiqa_folder_path):
+        parser.error('Please specify --wikiqa_folder_path')
+
+    wikiqa_path = os.path.join(args.wikiqa_folder_path, "WikiQA-train.tsv")
+    wiki_extractor = WikiQAExtractor(wikiqa_path)
 
     queries, docs, labels = wiki_extractor.get_X_y(batch_size=32)
 

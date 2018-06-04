@@ -4,6 +4,7 @@ import numpy as np
 import logging
 import re
 import random
+import six
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +40,7 @@ class WikiQA_DRMM_TKS_Extractor:
     a generator calls `get_batch` which provides the batch.
     """
 
-    def __init__(self, file_path, word_embedding_path=None, embedding_dim=None, maxlen=30):
+    def __init__(self, file_path, word_embedding_path=None, text_maxlen=100):
         """Initializes the extractor
 
         Parameters:
@@ -54,13 +55,13 @@ class WikiQA_DRMM_TKS_Extractor:
         embedding_dim: int
             The size of the vectors in the above Glove vectors
 
-        maxlen: int
+        text_maxlen: int
             The maximum possible length of a query or a document
             This is used for padding.
         """
 
         if file_path is not None:
-            with open(file_path) as f:
+            with open(file_path, encoding='utf8') as f:
                 self.df = pd.read_csv(f, sep='\t')
         else:
             raise NotImplementedError()
@@ -69,9 +70,7 @@ class WikiQA_DRMM_TKS_Extractor:
         self.documents = list(self.df['Sentence'])
         self.relations = list(self.df['Label'])
         self.relations = [int(r) for r in self.relations]
-
-        self.embedding_dim = embedding_dim
-        self.maxlen = maxlen
+        self.text_maxlen = text_maxlen
         self.word_embedding_path = word_embedding_path
         self.word2index, self.index2word = {}, {}
         self.word_counter = Counter()
@@ -109,8 +108,9 @@ class WikiQA_DRMM_TKS_Extractor:
                 coefs = np.asarray(values[1:], dtype='float32')
                 embeddings_index[word] = coefs
 
-        self.embedding_matrix = np.zeros(
-            (len(self.word2index) + 1, self.embedding_dim))
+        self.embedding_dim = six.next(six.itervalues(embeddings_index)).shape[0]
+        self.embedding_matrix = np.zeros((len(self.word2index) + 1, self.embedding_dim))
+
         for word, i in self.word2index.items():
             embedding_vector = embeddings_index.get(word)
             if embedding_vector is not None:
@@ -167,11 +167,8 @@ class WikiQA_DRMM_TKS_Extractor:
             document_group = []
             for q, d, l in zip(Answer['Question'], Answer['Sentence'], Answer['Label']):
                 document_group.append([self.make_indexed(self.preprocess(q)),
-                                       self.make_indexed(self.preprocess(d)),
-                                       l]
-                                      )
+                                        self.make_indexed(self.preprocess(d)), l])
                 n_relevant_docs += l
-
             if filter_queries:  # Only add the document group if it has relevant documents
                 if n_relevant_docs > 0:
                     self.data.append(document_group)
@@ -226,10 +223,10 @@ class WikiQA_DRMM_TKS_Extractor:
         self.pad_word = self.vocab_size
 
         # Initialize the query, doc and relevance arrays to zero
-        X1 = np.zeros((batch_size * 2, self.maxlen), dtype=np.int32)
+        X1 = np.zeros((batch_size * 2, self.text_maxlen), dtype=np.int32)
         X1_len = np.zeros((batch_size * 2,), dtype=np.int32)
 
-        X2 = np.zeros((batch_size * 2, self.maxlen), dtype=np.int32)
+        X2 = np.zeros((batch_size * 2, self.text_maxlen), dtype=np.int32)
         X2_len = np.zeros((batch_size * 2,), dtype=np.int32)
 
         Y = np.zeros((batch_size * 2,), dtype=np.int32)
@@ -244,17 +241,14 @@ class WikiQA_DRMM_TKS_Extractor:
         for i in range(batch_size):
             query, pos_doc, neg_doc = random.choice(self.pair_list)
 
-            query_len = min(self.maxlen, len(query))
-            pos_doc_len = min(self.maxlen, len(pos_doc))
-            neg_doc_len = min(self.maxlen, len(neg_doc))
+            query_len = min(self.text_maxlen, len(query))
+            pos_doc_len = min(self.text_maxlen, len(pos_doc))
+            neg_doc_len = min(self.text_maxlen, len(neg_doc))
 
             X1[i * 2, :query_len], X1_len[i * 2] = query[:query_len], query_len
-            X2[i * 2, :pos_doc_len], X2_len[i *
-                                            2] = pos_doc[:pos_doc_len], pos_doc_len
-            X1[i * 2 + 1, :query_len], X1_len[i *
-                                               2 + 1] = query[:query_len], query_len
-            X2[i * 2 + 1, :neg_doc_len], X2_len[i * 2 +
-                                                1] = neg_doc[:neg_doc_len], neg_doc_len
+            X2[i * 2, :pos_doc_len], X2_len[i * 2] = pos_doc[:pos_doc_len], pos_doc_len
+            X1[i * 2 + 1, :query_len], X1_len[i * 2 + 1] = query[:query_len], query_len
+            X2[i * 2 + 1, :neg_doc_len], X2_len[i * 2 + 1] = neg_doc[:neg_doc_len], neg_doc_len
 
         return X1, X1_len, X2, X2_len, Y
 
@@ -276,12 +270,10 @@ class WikiQA_DRMM_TKS_Extractor:
 class WikiQAExtractor:
     """[WIP]Class to extract data from the WikiQA dataset
     It provides data in a shape which makes it easier to train neural networks
-
     Usage:
     =====
     wiki_extractor = WikiQAExtractor("path/to/file")
     train_data = wiki_extractor.get_data()
-
     the format provided is : [ [
                                 [query1, doc1, label_1_1],
                                 [query1, doc2, label_1_2],
@@ -304,40 +296,28 @@ class WikiQAExtractor:
                              ]
     """
 
-    def __init__(self, file_path, word_embedding_path=None, embedding_dim=None, maxlen=30, triletter=False):
-        """
-        Parameters:
-        -----------
-        file_path: str
-            has to be a path to the tsv
-        """
+    def __init__(self, file_path, embedding_path=None):
         if file_path is not None:
             with open(file_path) as f:
                 self.df = pd.read_csv(f, sep='\t')
         else:
             raise NotImplementedError()
 
+        self.queries = list(self.df.iloc[:, 0])
+        self.documents = list(self.df.iloc[:, 1])
+        self.relations = list(self.df.iloc[:, 2])
+
         # TODO add 300k vector for all permutes
         # TODO add option for using word embeddings
 
-        self.queries = list(self.df['Question'])
-        self.documents = list(self.df['Sentence'])
-        self.relations = list(self.df['Label'])
-        self.relations = [int(r) for r in self.relations]
+        self.word2int, self.int2word = {}, {}
+        self.tri2index, self.index2tri = {}, {}
 
-        self.triletter = triletter
-        self.embedding_dim = embedding_dim
-        self.maxlen = maxlen
-        self.word_embedding_path = word_embedding_path
-
-        self.word2index, self.index2word = {}, {}
         self.word_counter = Counter()
-        self.corpus = self.queries + self.documents
+        self.triletter_counter = Counter()
 
-        if self.triletter:
-            self.tri2index, self.index2tri = {}, {}
-            self.triletter_counter = Counter()
-            self.triletter_corpus = []
+        self.corpus = self.queries + self.documents
+        self.triletter_corpus = []
 
         self.build_vocab()
 
@@ -348,49 +328,49 @@ class WikiQAExtractor:
         preprocessed_corpus = []
         for sent in self.corpus:
             preprocessed_corpus.append(self.preprocess(sent))
+
         return preprocessed_corpus
 
     def build_vocab(self):
         logger.info("Starting Vocab Build")
+
         for sentence in self.corpus:
             sentence = self.preprocess(sentence)
             self.word_counter.update(sentence.split())
+
             # update triletter scanning
-            if self.triletter:
-                tri_sentence = []
-                for word in sentence.split():
-                    tri_word = []
-                    word = '#' + word + '#'
-                    for offset in range(0, len(word))[:-2]:
-                        triletter = word[offset: offset + 3]
-                        tri_word.append(triletter)
-                        self.triletter_counter.update([triletter])
-                    tri_sentence.append(tri_word)
-                self.triletter_corpus.append(tri_sentence)
+            tri_sentence = []
+            for word in sentence.split():
+                tri_word = []
+                word = '#' + word + '#'
+
+                for offset in range(0, len(word))[:-2]:
+                    triletter = word[offset: offset + 3]
+                    tri_word.append(triletter)
+                    self.triletter_counter.update([triletter])
+
+                tri_sentence.append(tri_word)
+
+            self.triletter_corpus.append(tri_sentence)
 
         for i, word in enumerate(self.word_counter.keys()):
-            self.word2index[word] = i
-            self.index2word[i] = word
+            self.word2int[word] = i
+            self.int2word[i] = word
 
-        self.vocab_size = len(self.word2index)
+        for i, triletter in enumerate(self.triletter_counter.keys()):
+            self.tri2index[triletter] = i
+            self.index2tri[i] = triletter
 
-        if self.triletter:
-            for i, triletter in enumerate(self.triletter_counter.keys()):
-                self.tri2index[triletter] = i
-                self.index2tri[i] = triletter
-            self.vocab_size = len(self.tri2index)
-
+        self.vocab_size = len(self.tri2index)
         logger.info("Vocab Build Complete")
 
     def sent2triletter_indexed_sent(self, sentence):
         """Converts a sentence to a triletter sentence
-
         Parameters
         ==========
         sentence:
             A list of words
         """
-        assert self.triletter, "triletter proprty set to false. This function is only for triletter sentences"
         triletter_sentence = []
         for word in sentence:
             tri_word = []
@@ -399,26 +379,23 @@ class WikiQAExtractor:
             for offset in range(len(word))[:-2]:
                 tri_word.append(self.tri2index[word[offset: offset + 3]])
                 # TODO The above code might cause issues for out of vocabulary words
-                # possible solution is try-except
-                # except portion of the code is commented below
-
-                # logger.info("Found a tri not in dict: %s. Adding it now" % word[offset: offset + 3])
+                # This branch has an error and needs to be fixed
+                # logger.info("Found a tri not in dict: %s" % word[offset: offset + 3])
                 # for adding unseen charaacter trigrams
                 # self.tri2index[word[offset: offset + 3]] = self.vocab_size
                 # self.index2tri[self.vocab_size] = word[offset: offset + 3]
                 # self.vocab_size += 1
                 # tri_word.append(self.tri2index[word[offset: offset + 3]])
             triletter_sentence.append(tri_word)
+
         return triletter_sentence
 
     def get_term_vector(self, sentence):
         """Converts a sentence into its term vector to be pushed into the neural network
-
         Parameters
         ==========
         sentence:
             A list of words
-
         Example:
         ========
         >> get_term_vector("how are glaciers formed ?".split())
@@ -426,7 +403,6 @@ class WikiQAExtractor:
         """
         # TODO check if vocab has been built
 
-        assert self.triletter, "triletter proprty set to false. This function is only for triletter sentences"
         indexed_triletter_sentence = self.sent2triletter_indexed_sent(sentence)
 
         # TODO vocab size may change due to unseen tris
@@ -439,11 +415,11 @@ class WikiQAExtractor:
                 vector[triletter] += 1
         return vector.reshape(self.vocab_size,)
 
-    def make_triletter_indexed_corpus(self):
+    def make_indexed_corpus(self):
         """Returns an indexed corpus instead of a word corpus
         """
-        assert self.triletter, "triletter proprty set to false. This function is only for triletter sentences"
         logger.info('making indexed triletter corpus')
+
         self.indexed_triletter_corpus = []
         for sentence in self.triletter_corpus:
             indexed_tri_sentence = []
@@ -477,7 +453,7 @@ class WikiQAExtractor:
         return queries, docs, labels
 
     def get_data(self):
-        self.data = []
+        self.questions = []
         for Question, Answer in self.df.groupby('QuestionID').apply(dict).items():
 
             document_group = []
@@ -485,8 +461,8 @@ class WikiQAExtractor:
                 document_group.append(
                     [self.preprocess(q), self.preprocess(d), l])
 
-            self.data.append(document_group)
-        return self.data
+            self.questions.append(document_group)
+        return self.questions
 
 
 class QuoraQPExtractor:

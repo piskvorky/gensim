@@ -18,8 +18,8 @@ class DRMM_TKS:
         Score list between queries and documents.
     """
 
-    def __init__(self, embedding, embed_dim, vocab_size, embed_trainable=False, target_mode='ranking',
-                 topk=20, dropout_rate=0., text_maxlen=40, hidden_sizes=[5, 1]):
+    def __init__(self, embedding, vocab_size, embed_trainable=False, target_mode='ranking',
+                 topk=20, dropout_rate=0., text_maxlen=100, hidden_sizes=[5, 1]):
         """Initializes the model
         Parameters:
         ----------
@@ -27,9 +27,6 @@ class DRMM_TKS:
             A numpy array matrix which has the embeddings extracted from a pretrained
             word embedding like Stanford Glove
             This is fed to the Embedding Layer which then outputs the word embedding
-
-        embed_dim: int
-            The dimension of the above mentioned vectors
 
         vocab_size: int
             The number of unique words in the corpus
@@ -53,59 +50,59 @@ class DRMM_TKS:
             used for deiciding matrix dimensions
 
         hidden_sizes: list of ints
-            The list of hidden sizes for the fully connected layers connected
-            to the matching matrix
+            The list of hidden sizes for the fully connected layers connected to the matching matrix
+            For example
+                hidden_sizes = [10, 20, 30]
+            will add 3 fully connected layers of 10, 20 and 30 hidden neurons
         """
-        self.__name = 'DRMM_TKS'
         self.embedding = embedding
+        self.embed_dim = embedding.shape[1]
         self.embed_trainable = embed_trainable
         self.topk = topk
         self.dropout_rate = dropout_rate
         self.text_maxlen = text_maxlen
         self.vocab_size = vocab_size
-        self.embed_dim = embed_dim
         self.hidden_sizes = hidden_sizes
         self.num_layers = len(self.hidden_sizes)
         self.target_mode = target_mode
+        self.build()
 
     def build(self):
         """Builds the model based on parameters set during initialization"""
         query = Input(name='query', shape=(self.text_maxlen,))
         doc = Input(name='doc', shape=(self.text_maxlen,))
-        embedding = Embedding(self.vocab_size, self.embed_dim, weights=[
-                              self.embedding], trainable=self.embed_trainable)
+        embedding = Embedding(self.vocab_size, self.embed_dim, weights=[self.embedding],
+                                trainable=self.embed_trainable)
 
         q_embed = embedding(query)
         d_embed = embedding(doc)
 
-        mm = Dot(axes=[2, 2], normalize=True)([q_embed, d_embed])
+        mm = Dot(axes=[2, 2], normalize=True, name="mm_q_embed_DOT_d_embed")([q_embed, d_embed])
 
         # compute term gating
-        w_g = Dense(1)(q_embed)
+        w_g = Dense(1, name="w_g_Dense_1_q_embed")(q_embed)
 
-        g = Lambda(lambda x: softmax(x, axis=1),
-                   output_shape=(self.text_maxlen, ))(w_g)
-        g = Reshape((self.text_maxlen,))(g)
+        g = Lambda(lambda x: softmax(x, axis=1), output_shape=(self.text_maxlen, ), name="g_Softmax_w_g")(w_g)
+        g = Reshape((self.text_maxlen,), name="g_Reshape_maxlen_w_g")(g)
 
-        mm_k = Lambda(lambda x: K.tf.nn.top_k(
-            x, k=self.topk, sorted=True)[0])(mm)
+        mm_k = Lambda(lambda x: K.tf.nn.top_k(x, k=self.topk, sorted=True)[0], name="mm_k_topk_mm")(mm)
 
         for i in range(self.num_layers):
-            mm_k = Dense(self.hidden_sizes[i],
-                         activation='softplus',
-                         kernel_initializer='he_uniform',
-                         bias_initializer='zeros')(mm_k)
+            mm_k = Dense(self.hidden_sizes[i], activation='softplus', kernel_initializer='he_uniform',
+                         bias_initializer='zeros', name="mm_k_Dense_%d_mm_k" % self.hidden_sizes[i])(mm_k)
 
-        mm_k_dropout = Dropout(rate=self.dropout_rate)(mm_k)
+        mm_k_dropout = Dropout(rate=self.dropout_rate, name="mm_k_dropout_Dropout_mm_k")(mm_k)
 
-        mm_reshape = Reshape((self.text_maxlen,))(mm_k_dropout)
+        mm_reshape = Reshape((self.text_maxlen,), name="mm_reshape_Reshape_maxlen_mm_k_dropout")(mm_k_dropout)
 
-        mean = Dot(axes=[1, 1])([mm_reshape, g])
+        mean = Dot(axes=[1, 1], name="mean_mm_reshape_DOT_g")([mm_reshape, g])
 
         if self.target_mode == 'classification':
             out_ = Dense(2, activation='softmax')(mean)
         elif self.target_mode in ['regression', 'ranking']:
-            out_ = Reshape((1,))(mean)
+            out_ = Reshape((1,), name="out_Reshape_mean")(mean)
 
-        model = Model(inputs=[query, doc], outputs=out_)
-        return model
+        self.model = Model(inputs=[query, doc], outputs=out_)
+
+    def get_model(self):
+        return self.model

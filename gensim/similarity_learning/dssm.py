@@ -15,13 +15,9 @@ class DSSM(object):
     Currently a WIP, so it doesn't work perfectly and needs a lot of tuning.
     """
 
-    def __init__(self, vocab_size,
-                        hidden_sizes=[300, 128],
-                        regularizer_rate=0.0,
-                        dropout_rate=0.5,
-                        target_mode='ranking'):
+    def __init__(self, vocab_size, hidden_sizes=[300, 128], regularizer_rate=0.0, dropout_rate=0.5,
+                 target_mode='ranking'):
         """
-
         parameters:
         ==========
         vocab_size : int
@@ -41,7 +37,6 @@ class DSSM(object):
             TODO check working
 
         """
-        self.__name = 'DSSM'
         self.vocab_size = vocab_size
         self.hidden_sizes = hidden_sizes
         self.regularizer_rate = regularizer_rate
@@ -49,8 +44,6 @@ class DSSM(object):
         self.target_mode = target_mode
 
     def build_model(self):
-        # TODO check this show_layer business
-
         query = Input(name='query', shape=(self.vocab_size,))  # , sparse=True)
         doc = Input(name='doc', shape=(self.vocab_size,))  # , sparse=True)
 
@@ -59,18 +52,14 @@ class DSSM(object):
             num_hidden_layers = len(self.hidden_sizes)
 
             if num_hidden_layers == 1:
-                seq.add(Dense(self.hidden_sizes[0],
-                              input_shape=(input_dim,),
+                seq.add(Dense(self.hidden_sizes[0], input_shape=(input_dim,),
                               activity_regularizer=regularizers.l2(self.regularizer_rate)))
             else:
-                seq.add(Dense(self.hidden_sizes[0],
-                              activation='tanh',
-                              input_shape=(input_dim,),
+                seq.add(Dense(self.hidden_sizes[0], activation='tanh', input_shape=(input_dim,),
                               activity_regularizer=regularizers.l2(self.regularizer_rate)))
                 for i in range(num_hidden_layers - 2):
-                    seq.add(Dense(self.config['hidden_sizes'][i + 1],
-                                    activation='tanh',
-                                    activity_regularizer=regularizers.l2(self.regularizer_rate)))
+                    seq.add(Dense(self.config['hidden_sizes'][i + 1], activation='tanh',
+                                  activity_regularizer=regularizers.l2(self.regularizer_rate)))
                     seq.add(Dropout(rate=self.dropout_rate))
                 seq.add(Dense(self.hidden_sizes[num_hidden_layers - 1],
                               activity_regularizer=regularizers.l2(self.regularizer_rate)))
