@@ -48,6 +48,7 @@ to trim unneeded model memory = use (much) less RAM.
 import logging
 import os
 import warnings
+import multiprocessing
 
 try:
     from queue import Queue
@@ -699,7 +700,8 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         report['doctag_syn0'] = self.docvecs.count * self.vector_size * dtype(REAL).itemsize
         return super(Doc2Vec, self).estimate_memory(vocab_size, report=report)
 
-    def build_vocab(self, documents, update=False, progress_per=10000, keep_raw_vocab=False, trim_rule=None, **kwargs):
+    def build_vocab(self, documents, multistream=False, update=False,
+                    progress_per=10000, keep_raw_vocab=False, trim_rule=None, **kwargs):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence is a iterable of iterables (can simply be a list of unicode strings too).
 
@@ -710,6 +712,10 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             consider an iterable that streams the documents directly from disk/network.
             See :class:`~gensim.models.doc2vec.TaggedBrownCorpus` or :class:`~gensim.models.doc2vec.TaggedLineDocument`
             in :mod:`~gensim.models.doc2vec` module for such examples.
+        multistream : bool
+            If True, use `documents` as list of input streams and speed up vocab building by parallelization
+            with `min(len(documents), self.workers)` processes. This option can lead up to 2.5x reduction
+            in vocabulary building time.
         keep_raw_vocab : bool
             If not true, delete the raw vocabulary after the scaling is done and free up RAM.
         trim_rule : function
@@ -726,7 +732,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             If true, the new words in `sentences` will be added to model's vocab.
         """
         total_words, corpus_count = self.vocabulary.scan_vocab(
-            documents, self.docvecs, progress_per=progress_per, trim_rule=trim_rule)
+            documents, self.docvecs, multistream=multistream, progress_per=progress_per, trim_rule=trim_rule)
         self.corpus_count = corpus_count
         report_values = self.vocabulary.prepare_vocab(
             self.hs, self.negative, self.wv, update=update, keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule,
@@ -789,14 +795,96 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             self.hs, self.negative, self.wv, self.docvecs, update=update)
 
 
+def _note_doctag(key, document_no, document_length, docvecs):
+    """Note a document tag during initial corpus scan, for structure sizing."""
+    if isinstance(key, integer_types + (integer,)):
+        docvecs.max_rawint = max(docvecs.max_rawint, key)
+    else:
+        if key in docvecs.doctags:
+            docvecs.doctags[key] = docvecs.doctags[key].repeat(document_length)
+        else:
+            docvecs.doctags[key] = Doctag(len(docvecs.offset2doctag), document_length, 1)
+            docvecs.offset2doctag.append(key)
+    docvecs.count = docvecs.max_rawint + 1 + len(docvecs.offset2doctag)
+
+
+def _scan_vocab_worker(stream, docvecs, progress_queue, max_vocab_size, trim_rule):
+    min_reduce = 1
+    vocab = defaultdict(int)
+    checked_string_types = 0
+    document_no = -1
+    total_words = 0
+    for document_no, document in enumerate(stream):
+        if not checked_string_types:
+            if isinstance(document.words, string_types):
+                log_msg = "Each 'words' should be a list of words (usually unicode strings). " \
+                          "First 'words' here is instead plain %s." % type(document.words)
+                progress_queue.put(log_msg)
+
+            checked_string_types += 1
+
+        document_length = len(document.words)
+
+        for tag in document.tags:
+            _note_doctag(tag, document_no, document_length, docvecs)
+
+        for word in document.words:
+            vocab[word] += 1
+        total_words += len(document.words)
+
+        if max_vocab_size and len(vocab) > max_vocab_size:
+            utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
+            min_reduce += 1
+
+    progress_queue.put((total_words, document_no + 1))
+    progress_queue.put(None)
+    return vocab
+
+
 class Doc2VecVocab(Word2VecVocab):
     def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0):
         super(Doc2VecVocab, self).__init__(
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
             sorted_vocab=sorted_vocab, null_word=null_word)
 
-    def scan_vocab(self, documents, docvecs, progress_per=10000, trim_rule=None):
-        logger.info("collecting all words and their counts")
+    def _scan_vocab_multistream(self, input_streams, docvecs, progress_per, workers, trim_rule):
+        manager = multiprocessing.Manager()
+        progress_queue = manager.Queue()
+
+        logger.info("Scanning vocab in %i processes.", min(workers, len(input_streams)))
+        pool = multiprocessing.Pool(processes=min(workers, len(input_streams)))
+
+        results = [
+            pool.apply_async(_scan_vocab_worker,
+                             (stream, docvecs, progress_queue, self.max_vocab_size, trim_rule)
+                             ) for stream in input_streams
+        ]
+        pool.close()
+
+        unfinished_tasks = len(results)
+        total_words = 0
+        document_no = -1
+        while unfinished_tasks > 0:
+            report = progress_queue.get()
+            if report is None:
+                unfinished_tasks -= 1
+                logger.info("scan vocab task finished, processed %i documents and %i words;"
+                            " awaiting finish of %i more tasks", document_no + 1, total_words, unfinished_tasks)
+            elif isinstance(report, string_types):
+                logger.warning(report)
+            else:
+                num_words, num_documents = report
+                total_words += num_words
+                document_no += num_documents
+
+                if document_no % progress_per == 0:
+                    logger.info("PROGRESS: at sentence #%i, processed %i words", document_no, total_words)
+
+        corpus_count = document_no + 1
+        self.raw_vocab = reduce(utils.merge_dicts, [res.get() for res in results])
+        return total_words, corpus_count
+
+    def _scan_vocab_singlestream(self, documents, docvecs, progress_per, trim_rule):
         document_no = -1
         total_words = 0
         min_reduce = 1
@@ -824,7 +912,7 @@ class Doc2VecVocab(Word2VecVocab):
             document_length = len(document.words)
 
             for tag in document.tags:
-                self.note_doctag(tag, document_no, document_length, docvecs)
+                _note_doctag(tag, document_no, document_length, docvecs)
 
             for word in document.words:
                 vocab[word] += 1
@@ -834,25 +922,24 @@ class Doc2VecVocab(Word2VecVocab):
                 utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
                 min_reduce += 1
 
-        logger.info(
-            "collected %i word types and %i unique tags from a corpus of %i examples and %i words",
-            len(vocab), docvecs.count, document_no + 1, total_words
-        )
         corpus_count = document_no + 1
         self.raw_vocab = vocab
         return total_words, corpus_count
 
-    def note_doctag(self, key, document_no, document_length, docvecs):
-        """Note a document tag during initial corpus scan, for structure sizing."""
-        if isinstance(key, integer_types + (integer,)):
-            docvecs.max_rawint = max(docvecs.max_rawint, key)
+    def scan_vocab(self, documents, docvecs, multistream=False, progress_per=10000, workers=1, trim_rule=None):
+        logger.info("collecting all words and their counts")
+        if not multistream:
+            total_words, corpus_count = self._scan_vocab_singlestream(documents, docvecs, progress_per, trim_rule)
         else:
-            if key in docvecs.doctags:
-                docvecs.doctags[key] = docvecs.doctags[key].repeat(document_length)
-            else:
-                docvecs.doctags[key] = Doctag(len(docvecs.offset2doctag), document_length, 1)
-                docvecs.offset2doctag.append(key)
-        docvecs.count = docvecs.max_rawint + 1 + len(docvecs.offset2doctag)
+            total_words, corpus_count = self._scan_vocab_multistream(documents, docvecs, progress_per, workers,
+                                                                     trim_rule)
+
+        logger.info(
+            "collected %i word types and %i unique tags from a corpus of %i examples and %i words",
+            len(self.raw_vocab), docvecs.count, corpus_count, total_words
+        )
+
+        return total_words, corpus_count
 
     def indexed_doctags(self, doctag_tokens, docvecs):
         """Return indexes and backing-arrays used in training examples."""

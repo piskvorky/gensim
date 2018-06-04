@@ -17,6 +17,7 @@ from numpy import float32 as REAL, ones, random, dtype, zeros
 from types import GeneratorType
 from gensim.utils import deprecated
 import warnings
+import itertools
 
 try:
     from queue import Queue
@@ -200,7 +201,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         self.total_train_time += elapsed
         return trained_word_count, raw_word_count, job_tally
 
-    def _train_epoch(self, data_iterable, cur_epoch=0, total_examples=None,
+    def _train_epoch(self, data_iterable, multistream=False, cur_epoch=0, total_examples=None,
                      total_words=None, queue_factor=2, report_delay=1.0):
         """Train one epoch."""
         job_queue = Queue(maxsize=queue_factor * self.workers)
@@ -213,6 +214,9 @@ class BaseAny2VecModel(utils.SaveLoad):
             for _ in xrange(self.workers)
         ]
 
+        # Chain all input streams into one, because multistream training is not supported yet.
+        if multistream:
+            data_iterable = itertools.chain(*data_iterable)
         workers.append(threading.Thread(
             target=self._job_producer,
             args=(data_iterable, job_queue),
@@ -228,7 +232,7 @@ class BaseAny2VecModel(utils.SaveLoad):
 
         return trained_word_count, raw_word_count, job_tally
 
-    def train(self, data_iterable, epochs=None, total_examples=None,
+    def train(self, data_iterable, multistream=False, epochs=None, total_examples=None,
               total_words=None, queue_factor=2, report_delay=1.0, callbacks=(), **kwargs):
         """Handle multi-worker training."""
         self._set_train_params(**kwargs)
@@ -253,8 +257,8 @@ class BaseAny2VecModel(utils.SaveLoad):
                 callback.on_epoch_begin(self)
 
             trained_word_count_epoch, raw_word_count_epoch, job_tally_epoch = self._train_epoch(
-                data_iterable, cur_epoch=cur_epoch, total_examples=total_examples, total_words=total_words,
-                queue_factor=queue_factor, report_delay=report_delay)
+                data_iterable, multistream=multistream, cur_epoch=cur_epoch, total_examples=total_examples,
+                total_words=total_words, queue_factor=queue_factor, report_delay=report_delay)
             trained_word_count += trained_word_count_epoch
             raw_word_count += raw_word_count_epoch
             job_tally += job_tally_epoch
@@ -297,8 +301,8 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
     def _set_train_params(self, **kwargs):
         raise NotImplementedError()
 
-    def __init__(self, sentences=None, workers=3, vector_size=100, epochs=5, callbacks=(), batch_words=10000,
-                 trim_rule=None, sg=0, alpha=0.025, window=5, seed=1, hs=0, negative=5, cbow_mean=1,
+    def __init__(self, sentences=None, multistream=False, workers=3, vector_size=100, epochs=5, callbacks=(),
+                 batch_words=10000, trim_rule=None, sg=0, alpha=0.025, window=5, seed=1, hs=0, negative=5, cbow_mean=1,
                  min_alpha=0.0001, compute_loss=False, fast_version=0, **kwargs):
         self.sg = int(sg)
         if vector_size % 4 != 0:
@@ -330,12 +334,14 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
                 self.neg_labels[0] = 1.
 
         if sentences is not None:
-            if isinstance(sentences, GeneratorType):
+            if multistream and not isinstance(sentences, (tuple, list)):
+                raise TypeError("If multistream=True, you must pass tuple or list as the sentences argument.")
+            if not multistream and isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
-            self.build_vocab(sentences, trim_rule=trim_rule)
+            self.build_vocab(sentences, multistream=multistream, trim_rule=trim_rule)
             self.train(
-                sentences, total_examples=self.corpus_count, epochs=self.epochs, start_alpha=self.alpha,
-                end_alpha=self.min_alpha, compute_loss=compute_loss)
+                sentences, total_examples=self.corpus_count, epochs=self.epochs, multistream=multistream,
+                start_alpha=self.alpha, end_alpha=self.min_alpha, compute_loss=compute_loss)
         else:
             if trim_rule is not None:
                 logger.warning(
@@ -459,17 +465,23 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             self.__class__.__name__, len(self.wv.index2word), self.vector_size, self.alpha
         )
 
-    def build_vocab(self, sentences, update=False, progress_per=10000, keep_raw_vocab=False, trim_rule=None, **kwargs):
+    def build_vocab(self, sentences, multistream=False, update=False, progress_per=10000,
+                    keep_raw_vocab=False, trim_rule=None, **kwargs):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence is a iterable of iterables (can simply be a list of unicode strings too).
 
         Parameters
         ----------
-        sentences : iterable of iterables
+        sentences : {iterable of iterables, list or tuple of iterable of iterables}
             The `sentences` iterable can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
+            If `multistream=True`, `sentences` must be list or tuple of input streams described above.
+        multistream : bool
+            If True, use `sentences` as list of input streams and speed up vocab building by parallelization
+            with `min(len(sentences), self.workers)` processes. This option can lead up to 2.5x reduction
+            in vocabulary building time.
         update : bool
             If true, the new words in `sentences` will be added to model's vocab.
         progress_per : int
@@ -477,7 +489,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
         """
         total_words, corpus_count = self.vocabulary.scan_vocab(
-            sentences, progress_per=progress_per, trim_rule=trim_rule)
+            sentences, multistream=multistream, progress_per=progress_per, trim_rule=trim_rule)
         self.corpus_count = corpus_count
         report_values = self.vocabulary.prepare_vocab(
             self.hs, self.negative, self.wv, update=update, keep_raw_vocab=keep_raw_vocab,
@@ -555,7 +567,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         )
         return report
 
-    def train(self, sentences, total_examples=None, total_words=None,
+    def train(self, sentences, multistream=False, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None, word_count=0,
               queue_factor=2, report_delay=1.0, compute_loss=False, callbacks=()):
 
@@ -564,7 +576,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         self.compute_loss = compute_loss
         self.running_training_loss = 0.0
         return super(BaseWordEmbeddingsModel, self).train(
-            sentences, total_examples=total_examples, total_words=total_words,
+            sentences, multistream=multistream, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
             queue_factor=queue_factor, report_delay=report_delay, compute_loss=compute_loss, callbacks=callbacks)
 
