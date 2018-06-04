@@ -457,7 +457,7 @@ class FastText(BaseWordEmbeddingsModel):
 
         return tally, self._raw_word_count(sentences)
 
-    def train(self, sentences, total_examples=None, total_words=None,
+    def train(self, sentences, multistream=False, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None,
               word_count=0, queue_factor=2, report_delay=1.0, callbacks=(), **kwargs):
         """Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
@@ -513,7 +513,7 @@ class FastText(BaseWordEmbeddingsModel):
         """
 
         super(FastText, self).train(
-            sentences, total_examples=total_examples, total_words=total_words,
+            sentences, multistream=multistream, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
             queue_factor=queue_factor, report_delay=report_delay, callbacks=callbacks)
         self.trainables.get_vocab_word_vecs(self.wv)

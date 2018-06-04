@@ -463,7 +463,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
                 )
         return tally, self._raw_word_count(job)
 
-    def train(self, documents, total_examples=None, total_words=None,
+    def train(self, documents, multistream=False, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None,
               word_count=0, queue_factor=2, report_delay=1.0, callbacks=()):
         """Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
@@ -508,7 +508,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             List of callbacks that need to be executed/run at specific stages during training.
         """
         super(Doc2Vec, self).train(
-            documents, total_examples=total_examples, total_words=total_words,
+            documents, multistream=False, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
             queue_factor=queue_factor, report_delay=report_delay, callbacks=callbacks)
 
