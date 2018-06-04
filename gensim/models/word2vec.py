@@ -1223,7 +1223,7 @@ class Word2VecVocab(utils.SaveLoad):
         self.raw_vocab = vocab
         return total_words, corpus_count
 
-    def _scan_vocab_multistream(self, input_streams, progress_per, workers, trim_rule):
+    def _scan_vocab_multistream(self, input_streams, workers, trim_rule):
         manager = multiprocessing.Manager()
         progress_queue = manager.Queue()
 
@@ -1232,7 +1232,7 @@ class Word2VecVocab(utils.SaveLoad):
 
         results = [
             pool.apply_async(_scan_vocab_worker,
-                             (stream, progress_queue, progress_per, self.max_vocab_size, trim_rule)
+                             (stream, progress_queue, self.max_vocab_size, trim_rule)
                              ) for stream in input_streams
         ]
         pool.close()
@@ -1253,19 +1253,16 @@ class Word2VecVocab(utils.SaveLoad):
                 total_words += num_words
                 sentence_no += num_sentences
 
-                if sentence_no % progress_per == 0:
-                    logger.info("PROGRESS: at sentence #%i, processed %i words", sentence_no, total_words)
-
         corpus_count = sentence_no + 1
         self.raw_vocab = reduce(utils.merge_dicts, [res.get() for res in results])
         return total_words, corpus_count
 
-    def scan_vocab(self, sentences, multistream=False, progress_per=10000, workers=1, trim_rule=None):
+    def scan_vocab(self, sentences, multistream=False, progress_per=10000, workers=None, trim_rule=None):
         logger.info("collecting all words and their counts")
         if not multistream:
             total_words, corpus_count = self._scan_vocab_singlestream(sentences, progress_per, trim_rule)
         else:
-            total_words, corpus_count = self._scan_vocab_multistream(sentences, progress_per, workers, trim_rule)
+            total_words, corpus_count = self._scan_vocab_multistream(sentences, workers, trim_rule)
 
         logger.info(
             "collected %i word types from a corpus of %i raw words and %i sentences",
@@ -1283,7 +1280,7 @@ class Word2VecVocab(utils.SaveLoad):
             wv.vocab[word].index = i
 
     def prepare_vocab(self, hs, negative, wv, update=False, keep_raw_vocab=False, trim_rule=None,
-                      min_count=None, sample=None, dry_run=False):
+                      min_count=None, sample=None, dry_run=False, **kwargs):
         """Apply vocabulary settings for `min_count` (discarding less-frequent words)
         and `sample` (controlling the downsampling of more-frequent words).
 

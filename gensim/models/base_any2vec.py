@@ -465,7 +465,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             self.__class__.__name__, len(self.wv.index2word), self.vector_size, self.alpha
         )
 
-    def build_vocab(self, sentences, multistream=False, update=False, progress_per=10000,
+    def build_vocab(self, sentences, multistream=False, workers=None, update=False, progress_per=10000,
                     keep_raw_vocab=False, trim_rule=None, **kwargs):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence is a iterable of iterables (can simply be a list of unicode strings too).
@@ -482,14 +482,19 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             If True, use `sentences` as list of input streams and speed up vocab building by parallelization
             with `min(len(sentences), self.workers)` processes. This option can lead up to 2.5x reduction
             in vocabulary building time.
+        workers : int
+            Used if `multistream=True`. Determines how many processes to use for vocab building.
         update : bool
             If true, the new words in `sentences` will be added to model's vocab.
         progress_per : int
             Indicates how many words to process before showing/updating the progress.
 
         """
+        if workers is None:
+            workers = self.workers
+
         total_words, corpus_count = self.vocabulary.scan_vocab(
-            sentences, multistream=multistream, progress_per=progress_per, trim_rule=trim_rule)
+            sentences, multistream=multistream, progress_per=progress_per, trim_rule=trim_rule, workers=workers)
         self.corpus_count = corpus_count
         report_values = self.vocabulary.prepare_vocab(
             self.hs, self.negative, self.wv, update=update, keep_raw_vocab=keep_raw_vocab,

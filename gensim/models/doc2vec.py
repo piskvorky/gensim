@@ -700,7 +700,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         report['doctag_syn0'] = self.docvecs.count * self.vector_size * dtype(REAL).itemsize
         return super(Doc2Vec, self).estimate_memory(vocab_size, report=report)
 
-    def build_vocab(self, documents, multistream=False, update=False,
+    def build_vocab(self, documents, multistream=False, workers=None, update=False,
                     progress_per=10000, keep_raw_vocab=False, trim_rule=None, **kwargs):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence is a iterable of iterables (can simply be a list of unicode strings too).
@@ -716,6 +716,8 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             If True, use `documents` as list of input streams and speed up vocab building by parallelization
             with `min(len(documents), self.workers)` processes. This option can lead up to 2.5x reduction
             in vocabulary building time.
+        workers : int
+            Used if `multistream=True`. Determines how many processes to use for vocab building.
         keep_raw_vocab : bool
             If not true, delete the raw vocabulary after the scaling is done and free up RAM.
         trim_rule : function
@@ -732,7 +734,9 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             If true, the new words in `sentences` will be added to model's vocab.
         """
         total_words, corpus_count = self.vocabulary.scan_vocab(
-            documents, self.docvecs, multistream=multistream, progress_per=progress_per, trim_rule=trim_rule)
+            documents, self.docvecs, multistream=multistream,
+            progress_per=progress_per, trim_rule=trim_rule, workers=workers
+        )
         self.corpus_count = corpus_count
         report_values = self.vocabulary.prepare_vocab(
             self.hs, self.negative, self.wv, update=update, keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule,
@@ -847,7 +851,7 @@ class Doc2VecVocab(Word2VecVocab):
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
             sorted_vocab=sorted_vocab, null_word=null_word)
 
-    def _scan_vocab_multistream(self, input_streams, docvecs, progress_per, workers, trim_rule):
+    def _scan_vocab_multistream(self, input_streams, docvecs, workers, trim_rule):
         manager = multiprocessing.Manager()
         progress_queue = manager.Queue()
 
@@ -876,9 +880,6 @@ class Doc2VecVocab(Word2VecVocab):
                 num_words, num_documents = report
                 total_words += num_words
                 document_no += num_documents
-
-                if document_no % progress_per == 0:
-                    logger.info("PROGRESS: at sentence #%i, processed %i words", document_no, total_words)
 
         corpus_count = document_no + 1
         self.raw_vocab = reduce(utils.merge_dicts, [res.get() for res in results])
@@ -926,13 +927,12 @@ class Doc2VecVocab(Word2VecVocab):
         self.raw_vocab = vocab
         return total_words, corpus_count
 
-    def scan_vocab(self, documents, docvecs, multistream=False, progress_per=10000, workers=1, trim_rule=None):
+    def scan_vocab(self, documents, docvecs, multistream=False, progress_per=10000, workers=None, trim_rule=None):
         logger.info("collecting all words and their counts")
         if not multistream:
             total_words, corpus_count = self._scan_vocab_singlestream(documents, docvecs, progress_per, trim_rule)
         else:
-            total_words, corpus_count = self._scan_vocab_multistream(documents, docvecs, progress_per, workers,
-                                                                     trim_rule)
+            total_words, corpus_count = self._scan_vocab_multistream(documents, docvecs, workers, trim_rule)
 
         logger.info(
             "collected %i word types and %i unique tags from a corpus of %i examples and %i words",
