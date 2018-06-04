@@ -733,6 +733,9 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         update : bool
             If true, the new words in `sentences` will be added to model's vocab.
         """
+        if workers is None:
+            workers = self.workers
+
         total_words, corpus_count = self.vocabulary.scan_vocab(
             documents, self.docvecs, multistream=multistream,
             progress_per=progress_per, trim_rule=trim_rule, workers=workers
@@ -799,7 +802,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             self.hs, self.negative, self.wv, self.docvecs, update=update)
 
 
-def _note_doctag(key, document_no, document_length, docvecs):
+def _note_doctag(key, document_length, docvecs):
     """Note a document tag during initial corpus scan, for structure sizing."""
     if isinstance(key, integer_types + (integer,)):
         docvecs.max_rawint = max(docvecs.max_rawint, key)
@@ -812,9 +815,10 @@ def _note_doctag(key, document_no, document_length, docvecs):
     docvecs.count = docvecs.max_rawint + 1 + len(docvecs.offset2doctag)
 
 
-def _scan_vocab_worker(stream, docvecs, progress_queue, max_vocab_size, trim_rule):
+def _scan_vocab_worker(stream, progress_queue, max_vocab_size, trim_rule):
     min_reduce = 1
     vocab = defaultdict(int)
+    doclen2tags = defaultdict(list)
     checked_string_types = 0
     document_no = -1
     total_words = 0
@@ -830,7 +834,7 @@ def _scan_vocab_worker(stream, docvecs, progress_queue, max_vocab_size, trim_rul
         document_length = len(document.words)
 
         for tag in document.tags:
-            _note_doctag(tag, document_no, document_length, docvecs)
+            doclen2tags[document_length].append(tag)
 
         for word in document.words:
             vocab[word] += 1
@@ -842,7 +846,7 @@ def _scan_vocab_worker(stream, docvecs, progress_queue, max_vocab_size, trim_rul
 
     progress_queue.put((total_words, document_no + 1))
     progress_queue.put(None)
-    return vocab
+    return vocab, doclen2tags
 
 
 class Doc2VecVocab(Word2VecVocab):
@@ -860,7 +864,7 @@ class Doc2VecVocab(Word2VecVocab):
 
         results = [
             pool.apply_async(_scan_vocab_worker,
-                             (stream, docvecs, progress_queue, self.max_vocab_size, trim_rule)
+                             (stream, progress_queue, self.max_vocab_size, trim_rule)
                              ) for stream in input_streams
         ]
         pool.close()
@@ -882,7 +886,14 @@ class Doc2VecVocab(Word2VecVocab):
                 document_no += num_documents
 
         corpus_count = document_no + 1
-        self.raw_vocab = reduce(utils.merge_dicts, [res.get() for res in results])
+        results = [res.get() for res in results]  # pairs (vocab, doclen2tags)
+        self.raw_vocab = reduce(utils.merge_dicts, [r[0] for r in results])
+
+        for (_, doclen2tags) in results:
+            for document_length, tags in doclen2tags.iteritems():
+                for tag in tags:
+                    _note_doctag(tag, document_length, docvecs)
+
         return total_words, corpus_count
 
     def _scan_vocab_singlestream(self, documents, docvecs, progress_per, trim_rule):
@@ -913,7 +924,7 @@ class Doc2VecVocab(Word2VecVocab):
             document_length = len(document.words)
 
             for tag in document.tags:
-                _note_doctag(tag, document_no, document_length, docvecs)
+                _note_doctag(tag, document_length, docvecs)
 
             for word in document.words:
                 vocab[word] += 1
