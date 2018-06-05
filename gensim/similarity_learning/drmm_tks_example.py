@@ -24,7 +24,7 @@ if __name__ == '__main__':
         parser.error('Please specify --wikiqa_folder_path and --word_embedding_path')
 
     file_path = os.path.join(args.wikiqa_folder_path, 'WikiQA-train.tsv')
-    word_embedding_path = os.path.join('evaluation_scripts', 'glove.6B.50d.txt')
+    word_embedding_path = args.word_embedding_path
 
     wikiqa = WikiQA_DRMM_TKS_Extractor(file_path=file_path, word_embedding_path=word_embedding_path)
 
