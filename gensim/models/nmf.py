@@ -278,7 +278,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         for n in range(self._w_max_iter):
             self._W -= eta * (np.dot(self._W, self.A) - self.B)
-            self._W = self.__transform(self._W)
+            self.__transform()
 
             error_ = self.__w_error()
 
@@ -305,12 +305,11 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         np.clip(res, -v_max, v_max, out=res)
         return res
 
-    def __transform(self, W):
-        W_ = W.copy()
-        np.clip(W_, 0, self.v_max, out=W_)
-        sumsq = np.linalg.norm(W_, axis=0)
+    def __transform(self):
+        np.clip(self._W, 0, self.v_max, out=self._W)
+        sumsq = np.linalg.norm(self._W, axis=0)
         np.maximum(sumsq, 1, out=sumsq)
-        return W_ / sumsq
+        self._W /= sumsq
 
     def _solveproj(self, v, W, h=None, r=None, v_max=None):
         m, n = W.shape
