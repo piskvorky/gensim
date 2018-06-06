@@ -5,6 +5,7 @@ import logging
 import re
 import random
 import six
+from sklearn.utils import shuffle
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +41,7 @@ class WikiQA_DRMM_TKS_Extractor:
     a generator calls `get_batch` which provides the batch.
     """
 
-    def __init__(self, file_path, word_embedding_path=None, text_maxlen=100):
+    def __init__(self, file_path, word_embedding_path=None, text_maxlen=100, keep_full_embedding=False):
         """Initializes the extractor
 
         Parameters:
@@ -58,6 +59,10 @@ class WikiQA_DRMM_TKS_Extractor:
         text_maxlen: int
             The maximum possible length of a query or a document
             This is used for padding.
+
+        keep_full_embedding: boolean
+            Whether the full embedding should be built or only the words in the dataset's vocab
+            This becomes important for checking validation and test sets
         """
 
         if file_path is not None:
@@ -75,9 +80,10 @@ class WikiQA_DRMM_TKS_Extractor:
         self.word2index, self.index2word = {}, {}
         self.word_counter = Counter()
         self.corpus = self.queries + self.documents
-
+        self.keep_full_embedding = keep_full_embedding
+        self.additional_word2index = {}
         self.build_vocab()
-        self.pair_list = self.get_pair_list()
+        self.pair_list = shuffle(self.get_pair_list())
 
     def build_vocab(self):
         """Indexes all the words and makes an embedding_matrix which
@@ -92,12 +98,7 @@ class WikiQA_DRMM_TKS_Extractor:
             self.index2word[i] = word
         self.vocab_size = len(self.word2index)
         logger.info("Vocab Build Complete")
-
-        # Since the embedding layer will a different order, the indexes
-        # of the words might change. So, we'll make a revised word2index copy
-
-        revised_word2index = {}
-        revised_index2word = {}
+        logger.info("Vocab Size is %d" % self.vocab_size)
 
         logger.info("Building embedding index using pretrained word embeddings")
         embeddings_index = {}
@@ -107,23 +108,49 @@ class WikiQA_DRMM_TKS_Extractor:
                 word = values[0]
                 coefs = np.asarray(values[1:], dtype='float32')
                 embeddings_index[word] = coefs
-
         self.embedding_dim = six.next(six.itervalues(embeddings_index)).shape[0]
-        self.embedding_matrix = np.zeros((len(self.word2index) + 1, self.embedding_dim))
+        embedding_vocab_size = len(embeddings_index)
+
+        logger.info("The embeddings_index built from the given file has %d words of %d dimensions" %
+                    (embedding_vocab_size, self.embedding_dim))
+
+        if self.keep_full_embedding:
+            self.embedding_matrix = np.zeros((self.vocab_size, self.embedding_dim))
+        else:
+            self.embedding_matrix = np.zeros((self.vocab_size + 1, self.embedding_dim))
+
+        # We add 1 for the padding word
+        logger.info("Embedding Matrix for Embedding Layer has shape %s " % str(self.embedding_matrix.shape))
 
         for word, i in self.word2index.items():
             embedding_vector = embeddings_index.get(word)
             if embedding_vector is not None:
                 # words not found in embedding index will be all-zeros.
                 self.embedding_matrix[i] = embedding_vector
-                revised_word2index[word] = i
-                revised_index2word[i] = word
 
-        # TODO check below, throwing slight error
-        # revise the value of index2word and word2index
-        # self.word2index = revised_word2index
-        # self.index2word = revised_index2word
+        if self.keep_full_embedding:
+            logger.info("Adding additional dimensions from the embedding file to embedding matrix")
+            i = self.vocab_size
+            extra_embeddings = []
+            for word in embeddings_index.keys():
+                if word not in self.word2index:
+                    # Stack the new word's vector and index it
+                    extra_embeddings.append(embeddings_index.get(word))
+                    # We also need to keep an additional indexing of these words
+                    self.additional_word2index[word] = i
+                    i += 1
 
+            self.embedding_matrix = np.vstack([self.embedding_matrix, np.array(extra_embeddings)])
+
+            # Last word is kept as the pad word
+            # Here that is the last word in the embedding matrix
+            self.pad_word_index = i
+        else:
+            # If all embeddings aren't added, keep it 
+            self.pad_word_index = self.vocab_size
+
+        logger.info("Embedding Matrix now has shape %s" % str(self.embedding_matrix.shape))
+        logger.info("Pad word has been set to index %d" % self.pad_word_index)
         logger.info("Embedding index build complete")
 
     def preprocess(self, sentence):
@@ -168,7 +195,8 @@ class WikiQA_DRMM_TKS_Extractor:
             for q, d, l in zip(Answer['Question'], Answer['Sentence'], Answer['Label']):
                 document_group.append([self.make_indexed(self.preprocess(q)),
                                         self.make_indexed(self.preprocess(d)), l])
-                n_relevant_docs += l
+                n_relevant_docs += l  # CHECK
+
             if filter_queries:  # Only add the document group if it has relevant documents
                 if n_relevant_docs > 0:
                     self.data.append(document_group)
@@ -191,14 +219,63 @@ class WikiQA_DRMM_TKS_Extractor:
         self.get_data()
         pair_list = []
         for document_group in self.data:
-            document_group = sorted(
-                document_group, key=lambda x: x[2], reverse=True)
+            document_group = sorted(document_group, key=lambda x: x[2], reverse=True)
             for item in document_group:
                 if item[2] == 1:
                     for new_item in document_group:
                         if new_item[2] == 0:
                             pair_list.append((item[0], item[1], new_item[1]))
         return pair_list
+
+    def get_full_batch(self, batch_size=32):
+        """Generator to provide a batch of training sample of size batch_size
+        The batch provided is actually twice the size and will have alternate positive
+        and negative examples. CHECK does alternation even matter?
+
+        So, if batch_size is 16
+        the returned batch will be of size 32 like:
+        [positive_example, negative_example, positive_example, ...]
+
+        TOCHECK : maybe this behaviour shouldn't be like this
+
+        Parameters:
+        ----------
+        batch_size: int
+            provides of batches of that size
+        """
+
+        full_batch = []
+        num_samples = len(self.pair_list)
+        for offset in range(0, num_samples, batch_size):
+            # Initialize the query, doc and relevance arrays to zero
+            X1 = np.zeros((batch_size * 2, self.text_maxlen), dtype=np.int32)
+            X1_len = np.zeros((batch_size * 2,), dtype=np.int32)
+
+            X2 = np.zeros((batch_size * 2, self.text_maxlen), dtype=np.int32)
+            X2_len = np.zeros((batch_size * 2,), dtype=np.int32)
+
+            Y = np.zeros((batch_size * 2,), dtype=np.int32)
+
+            # set alternate relevances to 1, starting with 1
+            Y[::2] = 1
+
+            # set all the values to pad words
+            X1[:] = self.pad_word_index
+            X2[:] = self.pad_word_index
+
+            batch_sample = self.pair_list[offset: offset + batch_size]
+            for i, (query, pos_doc, neg_doc) in enumerate(batch_sample):
+                query_len = min(self.text_maxlen, len(query))
+                pos_doc_len = min(self.text_maxlen, len(pos_doc))
+                neg_doc_len = min(self.text_maxlen, len(neg_doc))
+
+                X1[i * 2, :query_len], X1_len[i * 2] = query[:query_len], query_len
+                X2[i * 2, :pos_doc_len], X2_len[i * 2] = pos_doc[:pos_doc_len], pos_doc_len
+                X1[i * 2 + 1, :query_len], X1_len[i * 2 + 1] = query[:query_len], query_len
+                X2[i * 2 + 1, :neg_doc_len], X2_len[i * 2 + 1] = neg_doc[:neg_doc_len], neg_doc_len
+            full_batch.append(({'query': X1, 'query_len': X1_len, 'doc': X2, 'doc_len': X2_len}, Y))
+        return full_batch
+
 
     def get_batch(self, batch_size=32):
         """Function to provide a batch of training sample of size batch_size
@@ -219,8 +296,6 @@ class WikiQA_DRMM_TKS_Extractor:
             provides of batches of that size
         """
 
-        # we need a word to fill the padding, which is the pad_word
-        self.pad_word = self.vocab_size
 
         # Initialize the query, doc and relevance arrays to zero
         X1 = np.zeros((batch_size * 2, self.text_maxlen), dtype=np.int32)
@@ -235,8 +310,8 @@ class WikiQA_DRMM_TKS_Extractor:
         Y[::2] = 1
 
         # set all the values to pad words
-        X1[:] = self.pad_word
-        X2[:] = self.pad_word
+        X1[:] = self.pad_word_index
+        X2[:] = self.pad_word_index
 
         for i in range(batch_size):
             query, pos_doc, neg_doc = random.choice(self.pair_list)
@@ -251,6 +326,57 @@ class WikiQA_DRMM_TKS_Extractor:
             X2[i * 2 + 1, :neg_doc_len], X2_len[i * 2 + 1] = neg_doc[:neg_doc_len], neg_doc_len
 
         return X1, X1_len, X2, X2_len, Y
+
+    def jbatch_gen(self, batch_size=32):
+        """Generator to provide a batch of training sample of size batch_size
+        The batch provided is actually twice the size and will have alternate positive
+        and negative examples. CHECK does alternation even matter?
+
+        So, if batch_size is 16
+        the returned batch will be of size 32 like:
+        [positive_example, negative_example, positive_example, ...]
+
+        TOCHECK : maybe this behaviour shouldn't be like this
+
+        Parameters:
+        ----------
+        batch_size: int
+            provides of batches of that size
+        """
+
+        while True:
+            # Initialize the query, doc and relevance arrays to zero
+            X1 = np.zeros((batch_size * 2, self.text_maxlen), dtype=np.int32)
+            X1_len = np.zeros((batch_size * 2,), dtype=np.int32)
+
+            X2 = np.zeros((batch_size * 2, self.text_maxlen), dtype=np.int32)
+            X2_len = np.zeros((batch_size * 2,), dtype=np.int32)
+
+            Y = np.zeros((batch_size * 2,), dtype=np.int32)
+
+            # set alternate relevances to 1, starting with 1
+            Y[::2] = 1
+
+            # set all the values to pad words
+            X1[:] = self.pad_word_index
+            X2[:] = self.pad_word_index
+
+            num_samples = len(self.pair_list)
+
+            for offset in range(0, num_samples, batch_size):
+                batch_sample = self.pair_list[offset: offset + batch_size]
+                for i, (query, pos_doc, neg_doc) in enumerate(batch_sample):
+                    query_len = min(self.text_maxlen, len(query))
+                    pos_doc_len = min(self.text_maxlen, len(pos_doc))
+                    neg_doc_len = min(self.text_maxlen, len(neg_doc))
+
+                    X1[i * 2, :query_len], X1_len[i * 2] = query[:query_len], query_len
+                    X2[i * 2, :pos_doc_len], X2_len[i * 2] = pos_doc[:pos_doc_len], pos_doc_len
+                    X1[i * 2 + 1, :query_len], X1_len[i * 2 + 1] = query[:query_len], query_len
+                    X2[i * 2 + 1, :neg_doc_len], X2_len[i * 2 + 1] = neg_doc[:neg_doc_len], neg_doc_len
+
+            yield ({'query': X1, 'query_len': X1_len, 'doc': X2, 'doc_len': X2_len}, Y)
+
 
     def get_batch_generator(self, batch_size):
         """Acts as a generator which provides a batch of batch_size
