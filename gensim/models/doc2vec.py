@@ -57,6 +57,7 @@ except ImportError:
 
 from collections import namedtuple, defaultdict
 from timeit import default_timer
+from functools import reduce
 
 from numpy import zeros, float32 as REAL, empty, ones, \
     memmap as np_memmap, vstack, integer, dtype, sum as np_sum, add as np_add, repeat as np_repeat, concatenate
@@ -733,9 +734,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         update : bool
             If true, the new words in `sentences` will be added to model's vocab.
         """
-        if workers is None:
-            workers = self.workers
-
+        workers = workers or self.workers
         total_words, corpus_count = self.vocabulary.scan_vocab(
             documents, self.docvecs, multistream=multistream,
             progress_per=progress_per, trim_rule=trim_rule, workers=workers
@@ -889,6 +888,7 @@ class Doc2VecVocab(Word2VecVocab):
         results = [res.get() for res in results]  # pairs (vocab, doclen2tags)
         self.raw_vocab = reduce(utils.merge_dicts, [r[0] for r in results])
 
+        # Update `docvecs` with document tags information.
         for (_, doclen2tags) in results:
             for document_length, tags in doclen2tags.iteritems():
                 for tag in tags:

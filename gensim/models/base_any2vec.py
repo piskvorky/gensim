@@ -334,10 +334,14 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
                 self.neg_labels[0] = 1.
 
         if sentences is not None:
-            if multistream and not isinstance(sentences, (tuple, list)):
-                raise TypeError("If multistream=True, you must pass tuple or list as the sentences argument.")
+            if multistream:
+                if not isinstance(sentences, (tuple, list)):
+                    raise TypeError("If multistream=True, you must pass tuple or list as the sentences argument.")
+                if any(isinstance(stream, GeneratorType) for stream in sentences):
+                    raise TypeError("You can't pass a generators as input streams. Try an iterator.")
             if not multistream and isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
+
             self.build_vocab(sentences, multistream=multistream, trim_rule=trim_rule)
             self.train(
                 sentences, total_examples=self.corpus_count, epochs=self.epochs, multistream=multistream,
@@ -490,9 +494,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             Indicates how many words to process before showing/updating the progress.
 
         """
-        if workers is None:
-            workers = self.workers
-
+        workers = workers or self.workers
         total_words, corpus_count = self.vocabulary.scan_vocab(
             sentences, multistream=multistream, progress_per=progress_per, trim_rule=trim_rule, workers=workers)
         self.corpus_count = corpus_count

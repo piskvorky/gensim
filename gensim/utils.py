@@ -1713,9 +1713,9 @@ def merge_dicts(dict1, dict2):
     """Merge `dict1` of (word, freq1) and `dict2` of (word, freq2) into `dict1` of (word, freq1+freq2).
     Parameters
     ----------
-    dict1 : dict
+    dict1 : dict of (str, int)
         First dictionary.
-    dict2 : dict
+    dict2 : dict of (str, int)
         Second dictionary.
     Returns
     -------
