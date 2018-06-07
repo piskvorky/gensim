@@ -481,7 +481,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
-            If `multistream=True`, `sentences` must be list or tuple of input streams described above.
+            If `multistream=True`, `sentences` must be a list or tuple of iterables described above.
         multistream : bool
             If True, use `sentences` as list of input streams and speed up vocab building by parallelization
             with `min(len(sentences), self.workers)` processes. This option can lead up to 2.5x reduction

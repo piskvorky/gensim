@@ -276,8 +276,8 @@ class Doctag(namedtuple('Doctag', 'offset, word_count, doc_count')):
 class Doc2Vec(BaseWordEmbeddingsModel):
     """Class for training, using and evaluating neural networks described in http://arxiv.org/pdf/1405.4053v2.pdf"""
 
-    def __init__(self, documents=None, dm_mean=None, dm=1, dbow_words=0, dm_concat=0, dm_tag_count=1,
-                 docvecs=None, docvecs_mapfile=None, comment=None, trim_rule=None, callbacks=(), **kwargs):
+    def __init__(self, documents=None, dm_mean=None, dm=1, dbow_words=0, dm_concat=0, dm_tag_count=1, docvecs=None,
+                 docvecs_mapfile=None, comment=None, trim_rule=None, callbacks=(), multistream=False, **kwargs):
         """Initialize the model from an iterable of `documents`. Each document is a
         TaggedDocument object that will be used for training.
 
@@ -351,6 +351,8 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             of the model.
         callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`
             List of callbacks that need to be executed/run at specific stages during training.
+        multistream : bool
+            If True, use `sentences` as list of input streams and speed up IO by parallelization.
 
         """
 
@@ -402,10 +404,10 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         if documents is not None:
             if isinstance(documents, GeneratorType):
                 raise TypeError("You can't pass a generator as the documents argument. Try an iterator.")
-            self.build_vocab(documents, trim_rule=trim_rule)
+            self.build_vocab(documents, trim_rule=trim_rule, multistream=multistream, workers=self.workers)
             self.train(
                 documents, total_examples=self.corpus_count, epochs=self.epochs,
-                start_alpha=self.alpha, end_alpha=self.min_alpha, callbacks=callbacks)
+                start_alpha=self.alpha, end_alpha=self.min_alpha, callbacks=callbacks, multistream=multistream)
 
     @property
     def dm(self):
@@ -464,9 +466,9 @@ class Doc2Vec(BaseWordEmbeddingsModel):
                 )
         return tally, self._raw_word_count(job)
 
-    def train(self, documents, multistream=False, total_examples=None, total_words=None,
+    def train(self, documents, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None,
-              word_count=0, queue_factor=2, report_delay=1.0, callbacks=()):
+              word_count=0, queue_factor=2, report_delay=1.0, multistream=False, callbacks=()):
         """Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
         The `documents` iterable can be simply a list of TaggedDocument elements.
 
@@ -483,9 +485,10 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
         Parameters
         ----------
-        documents : iterable of iterables
+        documents : {iterable of iterables, list or tuple of iterable of iterables}
             The `documents` iterable can be simply a list of TaggedDocument elements, but for larger corpora,
             consider an iterable that streams the documents directly from disk/network.
+            If `multistream=True`, `documents` must be a list or tuple of iterables described above.
             See :class:`~gensim.models.doc2vec.TaggedBrownCorpus` or :class:`~gensim.models.doc2vec.TaggedLineDocument`
             in :mod:`~gensim.models.doc2vec` module for such examples.
         total_examples : int
@@ -507,6 +510,8 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             Seconds to wait before reporting progress.
         callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`
             List of callbacks that need to be executed/run at specific stages during training.
+        multistream : bool
+            If True, use `documents` as list of input streams and speed up IO by parallelization.
         """
         super(Doc2Vec, self).train(
             documents, multistream=False, total_examples=total_examples, total_words=total_words,
@@ -701,8 +706,8 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         report['doctag_syn0'] = self.docvecs.count * self.vector_size * dtype(REAL).itemsize
         return super(Doc2Vec, self).estimate_memory(vocab_size, report=report)
 
-    def build_vocab(self, documents, multistream=False, workers=None, update=False,
-                    progress_per=10000, keep_raw_vocab=False, trim_rule=None, **kwargs):
+    def build_vocab(self, documents, update=False, progress_per=10000, keep_raw_vocab=False,
+                    trim_rule=None, multistream=False, workers=None, **kwargs):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence is a iterable of iterables (can simply be a list of unicode strings too).
 
@@ -712,13 +717,11 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             The `documents` iterable can be simply a list of TaggedDocument elements, but for larger corpora,
             consider an iterable that streams the documents directly from disk/network.
             See :class:`~gensim.models.doc2vec.TaggedBrownCorpus` or :class:`~gensim.models.doc2vec.TaggedLineDocument`
+        progress_per : int
+            Indicates how many words to process before showing/updating the progress.
+        update : bool
+            If true, the new words in `sentences` will be added to model's vocab.
             in :mod:`~gensim.models.doc2vec` module for such examples.
-        multistream : bool
-            If True, use `documents` as list of input streams and speed up vocab building by parallelization
-            with `min(len(documents), self.workers)` processes. This option can lead up to 2.5x reduction
-            in vocabulary building time.
-        workers : int
-            Used if `multistream=True`. Determines how many processes to use for vocab building.
         keep_raw_vocab : bool
             If not true, delete the raw vocabulary after the scaling is done and free up RAM.
         trim_rule : function
@@ -729,10 +732,12 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
             Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
             of the model.
-        progress_per : int
-            Indicates how many words to process before showing/updating the progress.
-        update : bool
-            If true, the new words in `sentences` will be added to model's vocab.
+        multistream : bool
+            If True, use `documents` as list of input streams and speed up vocab building by parallelization
+            with `min(len(documents), self.workers)` processes. This option can lead up to 2.5x reduction
+            in vocabulary building time.
+        workers : int
+            Used if `multistream=True`. Determines how many processes to use for vocab building.
         """
         workers = workers or self.workers
         total_words, corpus_count = self.vocabulary.scan_vocab(

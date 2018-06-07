@@ -428,18 +428,19 @@ class Word2Vec(BaseWordEmbeddingsModel):
                  max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
                  sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
                  trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False, callbacks=(),
-                 max_final_vocab=None):
+                 max_final_vocab=None, multistream=False):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
 
         Parameters
         ----------
-        sentences : iterable of iterables
+        sentences : {iterable of iterables, list or tuple of iterable of iterables}
             The `sentences` iterable can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
+            If `multistream=True`, `sentences` must be a list or tuple of iterables described above.
             If you don't supply `sentences`, the model is left uninitialized -- use if you plan to initialize it
             in some other way.
 
@@ -505,6 +506,8 @@ class Word2Vec(BaseWordEmbeddingsModel):
             If True, computes and stores loss value which can be retrieved using `model.get_latest_training_loss()`.
         callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`
             List of callbacks that need to be executed/run at specific stages during training.
+        multistream : bool
+            If True, use `sentences` as list of input streams and speed up IO by parallelization.
 
         Examples
         --------
@@ -529,9 +532,9 @@ class Word2Vec(BaseWordEmbeddingsModel):
         self.trainables = Word2VecTrainables(seed=seed, vector_size=size, hashfxn=hashfxn)
 
         super(Word2Vec, self).__init__(
-            sentences=sentences, workers=workers, vector_size=size, epochs=iter, callbacks=callbacks,
-            batch_words=batch_words, trim_rule=trim_rule, sg=sg, alpha=alpha, window=window, seed=seed,
-            hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, compute_loss=compute_loss,
+            sentences=sentences, multistream=multistream, workers=workers, vector_size=size, epochs=iter,
+            callbacks=callbacks, batch_words=batch_words, trim_rule=trim_rule, sg=sg, alpha=alpha, window=window,
+            seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, compute_loss=compute_loss,
             fast_version=FAST_VERSION)
 
     def _do_train_job(self, sentences, alpha, inits):
@@ -556,9 +559,9 @@ class Word2Vec(BaseWordEmbeddingsModel):
             self.compute_loss = kwargs['compute_loss']
         self.running_training_loss = 0
 
-    def train(self, sentences, multistream=False, total_examples=None, total_words=None,
+    def train(self, sentences, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None, word_count=0,
-              queue_factor=2, report_delay=1.0, compute_loss=False, callbacks=()):
+              queue_factor=2, report_delay=1.0, compute_loss=False, callbacks=(), multistream=False):
         """Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
         For Word2Vec, each sentence must be a list of unicode strings. (Subclasses may accept other examples.)
 
@@ -575,9 +578,10 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
         Parameters
         ----------
-        sentences : iterable of iterables
+        sentences : {iterable of iterables, list or tuple of iterable of iterables}
             The `sentences` iterable can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
+            If `multistream=True`, `sentences` must be a list or tuple of iterables described above.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
         total_examples : int
@@ -601,6 +605,8 @@ class Word2Vec(BaseWordEmbeddingsModel):
             If True, computes and stores loss value which can be retrieved using `model.get_latest_training_loss()`.
         callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`
             List of callbacks that need to be executed/run at specific stages during training.
+        multistream : bool
+            If True, use `sentences` as list of input streams and speed up IO by parallelization.
 
         Examples
         --------
