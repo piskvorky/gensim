@@ -402,7 +402,15 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
         self.comment = comment
         if documents is not None:
-            if isinstance(documents, GeneratorType):
+            if multistream:
+                if not isinstance(documents, (tuple, list)):
+                    raise TypeError("If multistream=True, you must pass tuple or list as the documents argument.")
+                if any(isinstance(stream, GeneratorType) for stream in documents):
+                    raise TypeError("You can't pass a generators as input streams. Try an iterator.")
+                if any(isinstance(stream, TaggedLineDocument) for stream in documents):
+                    warnings.warn("Using TaggedLineDocument in multistream mode can lead to incorrect results "
+                                  "because of tags collision.")
+            if not multistream and isinstance(documents, GeneratorType):
                 raise TypeError("You can't pass a generator as the documents argument. Try an iterator.")
             self.build_vocab(documents, trim_rule=trim_rule, multistream=multistream, workers=self.workers)
             self.train(
