@@ -68,7 +68,7 @@ from gensim import utils, matutils  # utility fnc for pickling, common scipy ope
 from gensim.models.word2vec import Word2VecKeyedVectors, Word2VecVocab, Word2VecTrainables, train_cbow_pair,\
     train_sg_pair, train_batch_sg
 from six.moves import xrange
-from six import string_types, integer_types, itervalues
+from six import string_types, integer_types, itervalues, iteritems
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 from gensim.models.keyedvectors import Doc2VecKeyedVectors
 from types import GeneratorType
@@ -906,7 +906,7 @@ class Doc2VecVocab(Word2VecVocab):
 
         # Update `docvecs` with document tags information.
         for (_, doclen2tags) in results:
-            for document_length, tags in doclen2tags.iteritems():
+            for document_length, tags in iteritems(doclen2tags):
                 for tag in tags:
                     _note_doctag(tag, document_length, docvecs)
 

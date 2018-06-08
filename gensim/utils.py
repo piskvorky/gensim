@@ -1722,7 +1722,7 @@ def merge_dicts(dict1, dict2):
     result : dict
         Merged dictionary with sum of frequencies as values.
     """
-    for word, freq in dict2.items():
+    for word, freq in iteritems(dict2):
         if word in dict1:
             dict1[word] += freq
         else:
