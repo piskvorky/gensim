@@ -1,5 +1,11 @@
 from gensim.similarity_learning import WikiQAExtractor
+from gensim.similarity_learning import WikiQA_DRMM_TKS_Extractor
+from gensim.similarity_learning.preprocessing import ListGenerator
+from gensim.similarity_learning.models import DRMM_TKS
+from gensim.similarity_learning import rank_hinge_loss
 from gensim.models.doc2vec import TaggedDocument, Doc2Vec
+from gensim.similarity_learning import ValidationCallback
+from gensim.similarity_learning import mapk, mean_ndcg
 import numpy as np
 import pandas as pd
 import argparse
@@ -13,22 +19,31 @@ logger = logging.getLogger(__name__)
 This script should be run to get a model by model based or full evaluation
 Make sure you run gensim/similarity_learning/data/get_data.py to get the datasets
 
+Currently supports
+- DRMM TKS
+- doc2vec
+- word2vec
+- MatchZoo models
+
 Example usage:
 ==============
 
+For evaluating drmm_tks on the WikiQA corpus
+$ python evaluate_models.py --model drmm_tks --datapath ../data/WikiQACorpus/ --word_embedding_path ../evaluation_scripts/glove.6B.50d.txt --result_save_path results_drmm_tks
+
 For evaluating doc2vec on the WikiQA corpus
-$ python evaluate_models.py --model doc2vec --datapath ../data/WikiQACorpus/
+$ python evaluate_models.py --model doc2vec --datapath ../data/WikiQACorpus/ --result_save_path results_d2v
 
 For evaluating word2vec averaging on the WikiQA corpus
-$ python evaluate_models.py --model word2vec --datapath ../data/WikiQACorpus/ --word_embedding_path ../evaluation_scripts/glove.6B.50d.txt  # noqa:F401
+$ python evaluate_models.py --model word2vec --datapath ../data/WikiQACorpus/ --word_embedding_path ../evaluation_scripts/glove.6B.50d.txt  --result_save_path results_w2v# noqa:F401
 
 For evaluating the TREC format file produced by MatchZoo:
-$ python evaluate_models.py  --model mz --mz_result_file predict.test.wikiqa.txtDRMM
-Note: here "predict.test.wikiqa.txtDRMM" is the file output by MZ. It has been provided in this repo as an example.
+$ python evaluate_models.py  --model mz --mz_result_file mz_results/predict.test.anmm.wikiqa.txt
+Note: here "predict.test.anmm.wikiqa.txt" is the file output by MZ. It has been provided in this repo as an example in mz_eval/
 
 For evaluating all models
 -with one mz output file
-$ python evaluate_models.py --model all --mz_result_file predict.test.wikiqa.txtDRMM --result_save_path results --word_embedding_path ../evaluation_scripts/glove.6B.50d.txt --datapath ../data/WikiQACorpus/  # noqa:F401
+$ python evaluate_models.py --model all --mz_result_file mz_results/predict.test.anmm.wikiqa.txt --result_save_path results_mz_file --word_embedding_path ../evaluation_scripts/glove.6B.50d.txt --datapath ../data/WikiQACorpus/  # noqa:F401
 -with a mz folder filled with result files
 $ python evaluate_models.py  --model all --mz_result_folder mz_results/ --result_save_path results_all --datapath ../data/WikiQACorpus/ --word_embedding_path ../evaluation_scripts/glove.6B.50d.txt  # noqa:F401
 """
@@ -48,117 +63,6 @@ class LabeledLineSentence(object):
 
 # list to store results from all models to be saved later
 results_list = []
-
-
-def mapk(Y_true, Y_pred):
-    """Function to get Mean Average Precision(MAP) for a given set of Y_true, Y_pred
-    TODO Currently doesn't support mapping at k. Couldn't use only map as it's a
-    reserved word
-
-    parameters:
-    ===========
-    Y_true : numpy array of ints either 1 or 0
-        Contains the true, ground truth values of the queries
-        Example: [[0, 1, 0, 1],
-                  [0, 0, 0, 0, 1, 0],
-                  [0, 1, 0]
-                 ]
-
-    Y_pred : numpy array of floats between -1 and 1
-        Contains the predicted cosine similarity values of the queries
-        Example: [
-                  [0.1, , -0.01, 0.4],
-                  [0.12, -0.43, 0.2, 0.1, 0.99, 0.7],
-                  [0.5, 0.63, 0.92]
-                 ]
-    """
-    aps = []
-    n_skipped = 0
-    for y_true, y_pred in zip(Y_true, Y_pred):
-        # skip datapoints where there is no solution
-        if np.sum(y_true) < 1:
-            n_skipped += 1
-            continue
-
-        pred_sorted = sorted(zip(y_true, y_pred),
-                             key=lambda x: x[1], reverse=True)
-        avg = 0
-        n_relevant = 0
-
-        for i, val in enumerate(pred_sorted):
-            if val[0] == 1:
-                avg += 1. / (i + 1.)
-                n_relevant += 1
-
-        if n_relevant != 0:
-            ap = avg / n_relevant
-            aps.append(ap)
-
-    logger.info("Skipped %d out of %d data points" % (n_skipped, len(Y_true)))
-    return np.mean(np.array(aps))
-
-
-def mean_ndcg(Y_true, Y_pred, k=10):
-    """Calculates the mean discounted normalized cumulative gain over all
-    the entries limited to the integer k
-
-    parameters:
-    ===========
-    Y_true : numpy array of floats giving the rank of document for a given query
-        Contains the true, ground truth values of the queries
-        Example: [
-                  [0, 1, 0, 1],
-                  [0, 0, 0, 0, 1, 0],
-                  [0, 1, 0]
-                 ]
-
-    Y_pred : numpy array of floats between -1 and 1
-        Contains the predicted cosine similarity values of the queries
-        Example: [[0.1, , -0.01, 0.4],
-                  [0.12, -0.43, 0.2, 0.1, 0.99, 0.7],
-                  [0.5, 0.63, 0.92]
-                 ]
-    """
-    ndcgs = []
-    n_skipped = 0
-    for y_true, y_pred in zip(Y_true, Y_pred):
-        if np.sum(y_true) < 1:
-            n_skipped += 1
-            continue
-
-        pred_sorted = sorted(zip(y_true, y_pred),
-                             key=lambda x: x[1], reverse=True)
-        true_sorted = sorted(zip(y_true, y_pred),
-                             key=lambda x: x[0], reverse=True)
-
-        pred_sorted = pred_sorted[:k]
-        true_sorted = true_sorted[:k]
-
-        dcg = 0
-        for i, val in enumerate(pred_sorted):
-            if val[0] == 1:
-                dcg += 1. / np.log2(i + 2)
-
-        idcg = 0
-        for i, val in enumerate(true_sorted):
-            if val[0] == 1:
-                idcg += 1. / np.log2(i + 2)
-
-        if idcg != 0:
-            ndcgs.append(dcg / idcg)
-    logger.info("Skipped %d out of %d data points" % (n_skipped, len(Y_true)))
-    return np.mean(np.array(ndcgs))
-
-
-def accuracy(Y_true, Y_pred):
-    """Calculates accuracy as (number of correct predictions / number of predictions)
-    WARNING: TODO this definition of accuracy doesn't allow for two correct answers
-    """
-    n_correct = 0
-    for y_pred, y_true in zip(Y_pred, Y_true):
-        if (np.argmax(y_true) == np.argmax(y_pred)):
-            n_correct += 1
-    return n_correct / len(Y_true)
 
 
 def cos_sim(vec1, vec2):
@@ -236,8 +140,8 @@ def doc2vec_eval(datapath, vec_size=20, alpha=0.025):
 
     results = get_metric_results(Y_true, Y_pred)
     results["method"] = "d2v"
-    print("Results of evaluating on doc2vec:")
-    print(results)
+    logger.info("Results of evaluating on doc2vec:")
+    logger.info(results)
 
     results_list.append(results)
 
@@ -298,8 +202,8 @@ def word2vec_eval(datapath, word_embedding_path):
     results = get_metric_results(Y_true, Y_pred)
     results["method"] = "w2v"
 
-    print("Results of evaluating on word2vec:")
-    print(results)
+    logger.info("Results of evaluating on word2vec:")
+    logger.info(results)
 
     results_list.append(results)
     # TODO we can do an evaluation on the whole dataset since this is unsupervised
@@ -344,8 +248,8 @@ def mz_eval(mz_output_file):
     results = get_metric_results(Y_true, Y_pred)
     results["method"] = "MZ"  # TODO add a way to specify the function
 
-    print("Results of evaluating on mz_eval:")
-    print(results)
+    logger.info("Results of evaluating on mz_eval:")
+    logger.info(results)
 
     results_list.append(results)
 
@@ -382,10 +286,71 @@ def mz_eval_multiple(mz_output_file_dir):
         results = get_metric_results(Y_true, Y_pred)
         results["method"] = mz_output_file.split('.')[2]
 
-        print("Results of evaluating on mz_eval:")
-        print(results)
+        logger.info("Results of evaluating on mz_eval:")
+        logger.info(results)
 
         results_list.append(results)
+
+
+def drmm_tks_eval(datapath, word_embedding_path):
+    # Here, we'll add the test file. You can also use the validation file if
+    # needed.
+    train_file_path = os.path.join(datapath, 'WikiQA-train.tsv')
+    test_file_path = os.path.join(datapath, 'WikiQA-test.tsv')
+    dev_file_path = os.path.join(datapath, 'WikiQA-dev.tsv')
+    word_embedding_path = word_embedding_path
+
+    wikiqa_train = WikiQA_DRMM_TKS_Extractor(file_path=train_file_path, word_embedding_path=word_embedding_path,
+                                             keep_full_embedding=True, text_maxlen=140)
+
+    dev_list_gen = ListGenerator(dev_file_path, text_maxlen=wikiqa_train.text_maxlen,
+                                 train_word2index=wikiqa_train.word2index, additional_word2index=wikiqa_train.additional_word2index,
+                                 oov_handle_method="ignore", zero_word_index=wikiqa_train.zero_word_index, train_pad_word_index=wikiqa_train.pad_word_index)
+
+    test_list_gen = ListGenerator(test_file_path, text_maxlen=wikiqa_train.text_maxlen,
+                                  train_word2index=wikiqa_train.word2index, additional_word2index=wikiqa_train.additional_word2index,
+                                  oov_handle_method="ignore", zero_word_index=wikiqa_train.zero_word_index, train_pad_word_index=wikiqa_train.pad_word_index)
+
+    X1_train, X2_train, y_train = wikiqa_train.get_full_batch()
+    drmm_tks = DRMM_TKS(embedding=wikiqa_train.embedding_matrix, vocab_size=wikiqa_train.embedding_matrix.shape[0],
+                        text_maxlen=wikiqa_train.text_maxlen)
+
+    model = drmm_tks.get_model()
+    model.summary()
+
+    optimizer = 'adadelta'
+    loss = 'mse'
+
+    validation_data = dev_list_gen.get_list_data()
+
+    model.compile(optimizer=optimizer, loss=loss, metrics=['accuracy'])
+    model.fit(x={"query": X1_train, "doc": X2_train}, y=y_train, batch_size=64,
+              verbose=1, epochs=10, shuffle=True, callbacks=[ValidationCallback(validation_data)])
+
+    data = test_list_gen.get_list_data()
+    X1 = data["X1"]
+    X2 = data["X2"]
+    y = data["y"]
+    doc_lengths = data["doc_lengths"]
+
+    predictions = model.predict(x={"query": X1, "doc": X2})
+
+    Y_pred = []
+    Y_true = []
+    offset = 0
+
+    for doc_size in doc_lengths:
+        Y_pred.append(predictions[offset: offset + doc_size])
+        Y_true.append(y[offset: offset + doc_size])
+        offset += doc_size
+
+    results = get_metric_results(Y_true, Y_pred)
+    results["method"] = "DRMM_TKS"  # TODO add a way to specify the function
+
+    logger.info("Results of evaluating on DRMM_TKS:")
+    logger.info(results)
+
+    results_list.append(results)
 
 
 def write_results_to_file(results_list, file_to_write, k_range=[1, 3, 5, 10, 20]):
@@ -410,7 +375,7 @@ def write_results_to_file(results_list, file_to_write, k_range=[1, 3, 5, 10, 20]
         f.write(header)
         f.write(to_write)
 
-    print("Results saved in %s" % file_to_write + ".csv")
+    logger.info("Results saved in %s" % file_to_write + ".csv")
 
 
 if __name__ == '__main__':
@@ -421,7 +386,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--model',
                         default='all',
-                        help='runs the evaluation of doc2vec')
+                        help='runs the evaluation on the given model type. Options are:\
+                        doc2vec, word2vec, mz_eval, mz_eval_multiple')
 
     # Note: we currently only support WikiQA
     parser.add_argument('--datapath',
@@ -452,6 +418,11 @@ if __name__ == '__main__':
         mz_eval(args.mz_result_file)
     elif args.model == 'mz_folder':
         mz_eval_multiple(args.mz_result_folder)
+    elif args.model == 'drmm_tks':
+        if not (args.datapath or args.word_embedding_path):
+            parser.error(
+                "You need to specify --datapath and --word_embedding_path")
+        drmm_tks_eval(args.datapath, args.word_embedding_path)
     elif args.model == 'all':
         doc2vec_eval(args.datapath)
         word2vec_eval(args.datapath, args.word_embedding_path)
@@ -460,5 +431,5 @@ if __name__ == '__main__':
         elif args.mz_result_folder is not None:
             mz_eval_multiple(args.mz_result_folder)
 
-    if args.result_save_path is not None:
+    if (args.result_save_path or results_list) is not None:
         write_results_to_file(results_list, args.result_save_path)

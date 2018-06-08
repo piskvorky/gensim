@@ -1,4 +1,4 @@
-from gensim.similarity_learning import DSSM
+from gensim.similarity_learning.models import DSSM
 from gensim.similarity_learning import WikiQAExtractor
 import os
 import logging

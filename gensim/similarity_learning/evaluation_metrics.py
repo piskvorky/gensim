@@ -2,8 +2,7 @@ import numpy as np
 import logging
 
 logger = logging.getLogger(__name__)
-
-"""This script will hold all the evaluation functions"""
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 def mapk(Y_true, Y_pred):
     """Function to get Mean Average Precision(MAP) for a given set of Y_true, Y_pred
@@ -49,7 +48,7 @@ def mapk(Y_true, Y_pred):
             ap = avg / n_relevant
             aps.append(ap)
 
-    logger.info("Skipped %d out of %d data points" % (n_skipped, len(Y_true)))
+    logger.info("Using %d out of %d data points. %d were skipped" % (len(Y_true) - n_skipped, len(Y_true), n_skipped))
     return np.mean(np.array(aps))
 
 
@@ -101,5 +100,16 @@ def mean_ndcg(Y_true, Y_pred, k=10):
 
         if idcg != 0:
             ndcgs.append(dcg / idcg)
-    logger.info("Skipped %d out of %d data points" % (n_skipped, len(Y_true)))
+    logger.info("Using %d out of %d data points. %d were skipped" % (len(Y_true) - n_skipped, len(Y_true), n_skipped))
     return np.mean(np.array(ndcgs))
+
+
+def accuracy(Y_true, Y_pred):
+    """Calculates accuracy as (number of correct predictions / number of predictions)
+    WARNING: TODO this definition of accuracy doesn't allow for two correct answers
+    """
+    n_correct = 0
+    for y_pred, y_true in zip(Y_pred, Y_true):
+        if (np.argmax(y_true) == np.argmax(y_pred)):
+            n_correct += 1
+    return n_correct / len(Y_true)

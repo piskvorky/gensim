@@ -1,0 +1,220 @@
+(gensim_env) aneeshj@BANLANEESHJ:/mnt/d/Projects/gensim/gensim/similarity_learning/evaluation_scripts$ python evaluate_models.py --model drmm_tks --datapath ../data/WikiQACorpus/ --word_embedding_path ../evaluation_scripts/glove.6B.50d.txt --result_save_path results_drmm_tks
+Using TensorFlow backend.
+2018-06-09 02:19:07,083 : INFO : Starting Vocab Build
+2018-06-09 02:19:07,595 : INFO : Vocab Build Complete
+2018-06-09 02:19:07,595 : INFO : Vocab Size is 30772
+2018-06-09 02:19:07,596 : INFO : Building embedding index using pretrained word embeddings
+2018-06-09 02:19:15,877 : INFO : The embeddings_index built from the given file has 400000 words of 50 dimensions
+2018-06-09 02:19:15,878 : INFO : Embedding Matrix for Embedding Layer has shape (30773, 50)
+2018-06-09 02:19:15,930 : INFO : There are 1685 words not in the embeddings. Setting them to zero
+2018-06-09 02:19:15,931 : INFO : Adding additional dimensions from the embedding file to embedding matrix
+2018-06-09 02:19:17,298 : INFO : Embedding Matrix now has shape (401688, 50)
+2018-06-09 02:19:17,298 : INFO : Pad word has been set to index 401685
+2018-06-09 02:19:17,299 : INFO : Embedding index build complete
+2018-06-09 02:19:19,595 : INFO : 0 queries were filtered
+2018-06-09 02:19:19,599 : INFO : There are a total of 872 queries
+2018-06-09 02:19:19,609 : INFO : There are 8990 pairs to train on. So, a total of 17980 datapoints
+2018-06-09 02:19:19,627 : INFO : Getting List Vocab from given vocab
+2018-06-09 02:19:19,764 : INFO : Vocab Transfer complete. Method used for OOV is ignore
+2018-06-09 02:19:19,815 : INFO : Getting List Vocab from given vocab
+2018-06-09 02:19:20,090 : INFO : Vocab Transfer complete. Method used for OOV is ignore
+2018-06-09 02:19:20.333585: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.1 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-09 02:19:20.334602: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-09 02:19:20.336802: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-09 02:19:20.337827: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX2 instructions, but these are available on your machine and could speed up CPU computations.
+2018-06-09 02:19:20.339495: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use FMA instructions, but these are available on your machine and could speed up CPU computations.
+__________________________________________________________________________________________________
+Layer (type)                    Output Shape         Param #     Connected to
+==================================================================================================
+query (InputLayer)              (None, 140)          0
+__________________________________________________________________________________________________
+doc (InputLayer)                (None, 140)          0
+__________________________________________________________________________________________________
+embedding_1 (Embedding)         (None, 140, 50)      20084400    query[0][0]
+                                                                 doc[0][0]
+__________________________________________________________________________________________________
+mm_q_embed_DOT_d_embed (Dot)    (None, 140, 140)     0           embedding_1[0][0]
+                                                                 embedding_1[1][0]
+__________________________________________________________________________________________________
+mm_k_topk_mm (Lambda)           (None, 140, 20)      0           mm_q_embed_DOT_d_embed[0][0]
+__________________________________________________________________________________________________
+mm_k_Dense_5_mm_k (Dense)       (None, 140, 5)       105         mm_k_topk_mm[0][0]
+__________________________________________________________________________________________________
+mm_k_Dense_1_mm_k (Dense)       (None, 140, 1)       6           mm_k_Dense_5_mm_k[0][0]
+__________________________________________________________________________________________________
+w_g_Dense_1_q_embed (Dense)     (None, 140, 1)       51          embedding_1[0][0]
+__________________________________________________________________________________________________
+mm_k_dropout_Dropout_mm_k (Drop (None, 140, 1)       0           mm_k_Dense_1_mm_k[0][0]
+__________________________________________________________________________________________________
+g_Softmax_w_g (Lambda)          (None, 140)          0           w_g_Dense_1_q_embed[0][0]
+__________________________________________________________________________________________________
+mm_reshape_Reshape_maxlen_mm_k_ (None, 140)          0           mm_k_dropout_Dropout_mm_k[0][0]
+__________________________________________________________________________________________________
+g_Reshape_maxlen_w_g (Reshape)  (None, 140)          0           g_Softmax_w_g[0][0]
+__________________________________________________________________________________________________
+mean_mm_reshape_DOT_g (Dot)     (None, 1)            0           mm_reshape_Reshape_maxlen_mm_k_dr
+                                                                 g_Reshape_maxlen_w_g[0][0]
+__________________________________________________________________________________________________
+out_Reshape_mean (Reshape)      (None, 1)            0           mean_mm_reshape_DOT_g[0][0]
+==================================================================================================
+Total params: 20,084,562
+Trainable params: 162
+Non-trainable params: 20,084,400
+__________________________________________________________________________________________________
+Epoch 1/10
+17980/17980 [==============================] - 11s 624us/step - loss: 1.0000 - acc: 0.5000
+2018-06-09 02:19:34,478 : INFO : Using 126 out of 296 data points. 170 were skipped
+MAP:  0.35065675293507803
+2018-06-09 02:19:34,484 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 1 :  0.15873015873015872
+2018-06-09 02:19:34,491 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 3 :  0.3064774583158335
+2018-06-09 02:19:34,497 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 5 :  0.39243468423389943
+2018-06-09 02:19:34,505 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 10 :  0.47498273120560586
+2018-06-09 02:19:34,512 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 20 :  0.5078603744298756
+Epoch 2/10
+17980/17980 [==============================] - 11s 591us/step - loss: 0.9999 - acc: 0.5000
+2018-06-09 02:19:46,600 : INFO : Using 126 out of 296 data points. 170 were skipped
+MAP:  0.3468617761380919
+2018-06-09 02:19:46,607 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 1 :  0.15873015873015872
+2018-06-09 02:19:46,613 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 3 :  0.29750182535098074
+2018-06-09 02:19:46,619 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 5 :  0.38975784066119873
+2018-06-09 02:19:46,627 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 10 :  0.4696199161800653
+2018-06-09 02:19:46,634 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 20 :  0.5046587158214199
+Epoch 3/10
+17980/17980 [==============================] - 11s 603us/step - loss: 1.0000 - acc: 0.5000
+2018-06-09 02:19:59,026 : INFO : Using 126 out of 296 data points. 170 were skipped
+MAP:  0.346628933236076
+2018-06-09 02:19:59,036 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 1 :  0.15873015873015872
+2018-06-09 02:19:59,047 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 3 :  0.29750182535098074
+2018-06-09 02:19:59,064 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 5 :  0.38975784066119873
+2018-06-09 02:19:59,075 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 10 :  0.4694585021457537
+2018-06-09 02:19:59,090 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 20 :  0.5026196878321143
+Epoch 4/10
+17980/17980 [==============================] - 12s 640us/step - loss: 1.0000 - acc: 0.5000
+2018-06-09 02:20:12,031 : INFO : Using 126 out of 296 data points. 170 were skipped
+MAP:  0.34667646066455593
+2018-06-09 02:20:12,037 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 1 :  0.15873015873015872
+2018-06-09 02:20:12,043 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 3 :  0.29750182535098074
+2018-06-09 02:20:12,050 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 5 :  0.38975784066119873
+2018-06-09 02:20:12,056 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 10 :  0.46942999285711146
+2018-06-09 02:20:12,063 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 20 :  0.5026602641881055
+Epoch 5/10
+17980/17980 [==============================] - 10s 581us/step - loss: 1.0001 - acc: 0.5000
+2018-06-09 02:20:23,951 : INFO : Using 126 out of 296 data points. 170 were skipped
+MAP:  0.34902221299055775
+2018-06-09 02:20:23,960 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 1 :  0.15873015873015872
+2018-06-09 02:20:23,966 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 3 :  0.30250920434757955
+2018-06-09 02:20:23,974 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 5 :  0.390012806210619
+2018-06-09 02:20:23,981 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 10 :  0.47134592287486143
+2018-06-09 02:20:23,988 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 20 :  0.5063434435862993
+Epoch 6/10
+17980/17980 [==============================] - 22s 1ms/step - loss: 1.0000 - acc: 0.5000
+2018-06-09 02:20:47,795 : INFO : Using 126 out of 296 data points. 170 were skipped
+MAP:  0.3491709331065264
+2018-06-09 02:20:47,801 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 1 :  0.15873015873015872
+2018-06-09 02:20:47,808 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 3 :  0.30543833328748865
+2018-06-09 02:20:47,816 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 5 :  0.3939284731301492
+2018-06-09 02:20:47,822 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 10 :  0.4716782973553603
+2018-06-09 02:20:47,830 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 20 :  0.5067377837974417
+Epoch 7/10
+17980/17980 [==============================] - 11s 597us/step - loss: 1.0001 - acc: 0.5000
+2018-06-09 02:21:00,032 : INFO : Using 126 out of 296 data points. 170 were skipped
+MAP:  0.3506721255694983
+2018-06-09 02:21:00,039 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 1 :  0.15079365079365079
+2018-06-09 02:21:00,045 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 3 :  0.3075165833441784
+2018-06-09 02:21:00,053 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 5 :  0.3941287801355399
+2018-06-09 02:21:00,060 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 10 :  0.4754446199224351
+2018-06-09 02:21:00,067 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 20 :  0.5098779426360542
+Epoch 8/10
+17980/17980 [==============================] - 11s 606us/step - loss: 1.0000 - acc: 0.5000
+2018-06-09 02:21:12,400 : INFO : Using 126 out of 296 data points. 170 were skipped
+MAP:  0.3511847082249381
+2018-06-09 02:21:12,406 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 1 :  0.15873015873015872
+2018-06-09 02:21:12,413 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 3 :  0.30543833328748865
+2018-06-09 02:21:12,420 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 5 :  0.3917433667518947
+2018-06-09 02:21:12,428 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 10 :  0.4776429459694792
+2018-06-09 02:21:12,435 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 20 :  0.5097972532541921
+Epoch 9/10
+17980/17980 [==============================] - 10s 576us/step - loss: 1.0000 - acc: 0.5000
+2018-06-09 02:21:24,219 : INFO : Using 126 out of 296 data points. 170 were skipped
+MAP:  0.35190669347073283
+2018-06-09 02:21:24,226 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 1 :  0.15873015873015872
+2018-06-09 02:21:24,232 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 3 :  0.3064774583158335
+2018-06-09 02:21:24,239 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 5 :  0.3946650133101547
+2018-06-09 02:21:24,246 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 10 :  0.4760321446925564
+2018-06-09 02:21:24,253 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 20 :  0.5091167075747096
+Epoch 10/10
+17980/17980 [==============================] - 10s 579us/step - loss: 1.0000 - acc: 0.5000
+2018-06-09 02:21:36,107 : INFO : Using 126 out of 296 data points. 170 were skipped
+MAP:  0.35298851508826873
+2018-06-09 02:21:36,113 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 1 :  0.15873015873015872
+2018-06-09 02:21:36,119 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 3 :  0.3104457122840875
+2018-06-09 02:21:36,126 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 5 :  0.3952151993571912
+2018-06-09 02:21:36,133 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 10 :  0.47694540778363564
+2018-06-09 02:21:36,140 : INFO : Using 126 out of 296 data points. 170 were skipped
+nDCG@ 20 :  0.5111803264733009
+2018-06-09 02:21:39,969 : INFO : Using 243 out of 632 data points. 389 were skipped
+2018-06-09 02:21:39,981 : INFO : Using 243 out of 632 data points. 389 were skipped
+2018-06-09 02:21:39,993 : INFO : Using 243 out of 632 data points. 389 were skipped
+2018-06-09 02:21:40,006 : INFO : Using 243 out of 632 data points. 389 were skipped
+2018-06-09 02:21:40,018 : INFO : Using 243 out of 632 data points. 389 were skipped
+2018-06-09 02:21:40,032 : INFO : Using 243 out of 632 data points. 389 were skipped
+2018-06-09 02:21:40,032 : INFO : Results of evaluating on DRMM_TKS:
+2018-06-09 02:21:40,033 : INFO : {
+'method': 'DRMM_TKS', 
+'map': 0.33500752600841466, 
+'ndcg@1': 0.13168724279835392, 
+'ndcg@3': 0.2960297201081754, 
+'ndcg@5': 0.3971856608098115
+'ndcg@10': 0.47665392201322443, 
+'ndcg@20': 0.5053849022140615, 
+}
+2018-06-09 02:21:40,138 : INFO : Results saved in results_drmm_tks.csv

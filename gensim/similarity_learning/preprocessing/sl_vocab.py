@@ -108,19 +108,24 @@ class WikiQA_DRMM_TKS_Extractor:
                 word = values[0]
                 coefs = np.asarray(values[1:], dtype='float32')
                 embeddings_index[word] = coefs
-        self.embedding_dim = six.next(six.itervalues(embeddings_index)).shape[0]
+        self.embedding_dim = six.next(
+            six.itervalues(embeddings_index)).shape[0]
         embedding_vocab_size = len(embeddings_index)
 
         logger.info("The embeddings_index built from the given file has %d words of %d dimensions" %
                     (embedding_vocab_size, self.embedding_dim))
 
         if self.keep_full_embedding:
-            self.embedding_matrix = np.zeros((self.vocab_size + 1, self.embedding_dim))  # one for ignore vec
+            self.embedding_matrix = np.zeros(
+                (self.vocab_size + 1, self.embedding_dim))  # one for ignore vec
         else:
-            self.embedding_matrix = np.zeros((self.vocab_size + 2, self.embedding_dim))  # one for pad, one for ignore vec
+            # one for pad, one for ignore vec
+            self.embedding_matrix = np.zeros(
+                (self.vocab_size + 2, self.embedding_dim))
 
         # We add 1 for the padding word
-        logger.info("Embedding Matrix for Embedding Layer has shape %s " % str(self.embedding_matrix.shape))
+        logger.info("Embedding Matrix for Embedding Layer has shape %s " %
+                    str(self.embedding_matrix.shape))
 
         n_non_embedding_words = 0
         for word, i in self.word2index.items():
@@ -131,33 +136,37 @@ class WikiQA_DRMM_TKS_Extractor:
             else:
                 n_non_embedding_words += 1
 
-        logger.info("There are %d words not in the embeddings. Setting them to zero" % n_non_embedding_words)
+        logger.info("There are %d words not in the embeddings. Setting them to zero" %
+                    n_non_embedding_words)
 
         if self.keep_full_embedding:
-            logger.info("Adding additional dimensions from the embedding file to embedding matrix")
+            logger.info(
+                "Adding additional dimensions from the embedding file to embedding matrix")
             i = self.vocab_size
             extra_embeddings = []
             for word in embeddings_index.keys():
                 if word not in self.word2index:
                     # Stack the new word's vector and index it
                     extra_embeddings.append(embeddings_index.get(word))
-                    # We also need to keep an additional indexing of these words
+                    # We also need to keep an additional indexing of these
+                    # words
                     self.additional_word2index[word] = i
                     i += 1
 
             self.embedding_matrix = np.vstack([self.embedding_matrix, np.array(extra_embeddings),
-                                    np.random.random((1, self.embedding_dim)), np.zeros((1, self.embedding_dim))])
+                                               np.random.random((1, self.embedding_dim)), np.zeros((1, self.embedding_dim))])
 
             # Last word is kept as the pad word
             # Here that is the last word in the embedding matrix
             self.pad_word_index = i
             self.zero_word_index = i + 1
-            
+
         else:
             self.pad_word_index = self.vocab_size
             self.zero_word_index = self.vocab_size + 1
 
-        logger.info("Embedding Matrix now has shape %s" % str(self.embedding_matrix.shape))
+        logger.info("Embedding Matrix now has shape %s" %
+                    str(self.embedding_matrix.shape))
         logger.info("Pad word has been set to index %d" % self.pad_word_index)
         logger.info("Embedding index build complete")
 
@@ -202,7 +211,7 @@ class WikiQA_DRMM_TKS_Extractor:
             document_group = []
             for q, d, l in zip(Answer['Question'], Answer['Sentence'], Answer['Label']):
                 document_group.append([self.make_indexed(self.preprocess(q)),
-                                        self.make_indexed(self.preprocess(d)), l])
+                                       self.make_indexed(self.preprocess(d)), l])
                 n_relevant_docs += l  # CHECK
 
             n_filtered = 0
@@ -232,14 +241,16 @@ class WikiQA_DRMM_TKS_Extractor:
         self.get_data()
         pair_list = []
         for document_group in self.data:
-            document_group = sorted(document_group, key=lambda x: x[2], reverse=True)
+            document_group = sorted(
+                document_group, key=lambda x: x[2], reverse=True)
             for item in document_group:
                 if item[2] == 1:
                     for new_item in document_group:
                         if new_item[2] == 0:
                             pair_list.append((item[0], item[1], new_item[1]))
 
-        logger.info("There are %d pairs to train on." % len(pair_list))
+        logger.info("There are %d pairs to train on. So, a total of %d datapoints" % (
+            len(pair_list), len(pair_list) * 2))
         return shuffle(pair_list)
 
     def get_full_batch(self):
@@ -258,7 +269,6 @@ class WikiQA_DRMM_TKS_Extractor:
         batch_size: int
             provides of batches of that size
         """
-
 
         num_samples = len(self.pair_list)
         X1 = np.zeros((num_samples * 2, self.text_maxlen))
@@ -281,7 +291,6 @@ class WikiQA_DRMM_TKS_Extractor:
 
         return X1, X2, y
 
-
     def get_batch(self, batch_size=32):
         """Function to provide a batch of training sample of size batch_size
         This function is called by the get_batch_generator function to provide
@@ -300,7 +309,6 @@ class WikiQA_DRMM_TKS_Extractor:
         batch_size: int
             provides of batches of that size
         """
-
 
         # Initialize the query, doc and relevance arrays to zero
         X1 = np.zeros((batch_size * 2, self.text_maxlen), dtype=np.int32)
@@ -326,9 +334,12 @@ class WikiQA_DRMM_TKS_Extractor:
             neg_doc_len = min(self.text_maxlen, len(neg_doc))
 
             X1[i * 2, :query_len], X1_len[i * 2] = query[:query_len], query_len
-            X2[i * 2, :pos_doc_len], X2_len[i * 2] = pos_doc[:pos_doc_len], pos_doc_len
-            X1[i * 2 + 1, :query_len], X1_len[i * 2 + 1] = query[:query_len], query_len
-            X2[i * 2 + 1, :neg_doc_len], X2_len[i * 2 + 1] = neg_doc[:neg_doc_len], neg_doc_len
+            X2[i * 2, :pos_doc_len], X2_len[i *
+                                            2] = pos_doc[:pos_doc_len], pos_doc_len
+            X1[i * 2 + 1, :query_len], X1_len[i *
+                                              2 + 1] = query[:query_len], query_len
+            X2[i * 2 + 1, :neg_doc_len], X2_len[i * 2 +
+                                                1] = neg_doc[:neg_doc_len], neg_doc_len
 
         return X1, X1_len, X2, X2_len, Y
 
@@ -375,13 +386,16 @@ class WikiQA_DRMM_TKS_Extractor:
                     pos_doc_len = min(self.text_maxlen, len(pos_doc))
                     neg_doc_len = min(self.text_maxlen, len(neg_doc))
 
-                    X1[i * 2, :query_len], X1_len[i * 2] = query[:query_len], query_len
-                    X2[i * 2, :pos_doc_len], X2_len[i * 2] = pos_doc[:pos_doc_len], pos_doc_len
-                    X1[i * 2 + 1, :query_len], X1_len[i * 2 + 1] = query[:query_len], query_len
-                    X2[i * 2 + 1, :neg_doc_len], X2_len[i * 2 + 1] = neg_doc[:neg_doc_len], neg_doc_len
+                    X1[i * 2, :query_len], X1_len[i *
+                                                  2] = query[:query_len], query_len
+                    X2[i * 2, :pos_doc_len], X2_len[i *
+                                                    2] = pos_doc[:pos_doc_len], pos_doc_len
+                    X1[i * 2 + 1, :query_len], X1_len[i *
+                                                      2 + 1] = query[:query_len], query_len
+                    X2[i * 2 + 1, :neg_doc_len], X2_len[i * 2 +
+                                                        1] = neg_doc[:neg_doc_len], neg_doc_len
 
             yield ({'query': X1, 'query_len': X1_len, 'doc': X2, 'doc_len': X2_len}, Y)
-
 
     def get_batch_generator(self, batch_size):
         """Acts as a generator which provides a batch of batch_size
