@@ -301,19 +301,15 @@ class TestDoc2VecModel(unittest.TestCase):
     def test_multistream_training(self):
         """Test doc2vec multistream training."""
 
-        print "----------- BEFORE TRAINING MODEL 1"
         model = doc2vec.Doc2Vec(size=100, min_count=2, iter=20, workers=1)
         model.build_vocab(list_corpus)
         self.assertEqual(model.docvecs.doctag_syn0.shape, (300, 100))
         model.train(list_corpus, total_examples=model.corpus_count, epochs=model.iter)
-        print "----------- AFTER TRAINING MODEL 1"
         self.model_sanity(model)
 
         # build vocab and train in one step; must be the same as above
-        print "----------- BEFORE TRAINING MODEL 2"
         input_streams = [list_corpus[:len(list_corpus) / 2], list_corpus[len(list_corpus) / 2:]]
         model2 = doc2vec.Doc2Vec(input_streams, multistream=True, size=100, min_count=2, iter=20, workers=1)
-        print "----------- AFTER TRAINING MODEL 2"
         self.models_equal(model, model2)
 
     def test_multistream_build_vocab(self):
