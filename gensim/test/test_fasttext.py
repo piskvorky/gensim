@@ -112,6 +112,20 @@ class TestFastTextModel(unittest.TestCase):
         oov_vec = model['minor']  # oov word
         self.assertEqual(len(oov_vec), 10)
 
+    def test_multistream_build_vocab(self):
+        # Expected vocab
+        model = FT_gensim(min_count=0)
+        model.build_vocab(list_corpus)
+        singlestream_vocab = model.vocabulary.raw_vocab
+
+        # Multistream vocab
+        model2 = FT_gensim(min_count=0)
+        input_streams = [list_corpus[:len(list_corpus) / 2], list_corpus[len(list_corpus) / 2:]]
+        model2.build_vocab(input_streams, multistream=True, workers=2)
+        multistream_vocab = model2.vocabulary.raw_vocab
+
+        self.assertEqual(singlestream_vocab, multistream_vocab)
+
     def models_equal(self, model, model2):
         self.assertEqual(len(model.wv.vocab), len(model2.wv.vocab))
         self.assertEqual(model.num_ngram_vectors, model2.num_ngram_vectors)
