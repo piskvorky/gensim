@@ -2,7 +2,9 @@ import numpy as np
 import logging
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+logging.basicConfig(
+    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
 
 def mapk(Y_true, Y_pred):
     """Function to get Mean Average Precision(MAP) for a given set of Y_true, Y_pred
@@ -48,7 +50,8 @@ def mapk(Y_true, Y_pred):
             ap = avg / n_relevant
             aps.append(ap)
 
-    logger.info("Using %d out of %d data points. %d were skipped" % (len(Y_true) - n_skipped, len(Y_true), n_skipped))
+    logger.info("Using %d out of %d data points. %d were skipped" %
+                (len(Y_true) - n_skipped, len(Y_true), n_skipped))
     return np.mean(np.array(aps))
 
 
@@ -100,7 +103,8 @@ def mean_ndcg(Y_true, Y_pred, k=10):
 
         if idcg != 0:
             ndcgs.append(dcg / idcg)
-    logger.info("Using %d out of %d data points. %d were skipped" % (len(Y_true) - n_skipped, len(Y_true), n_skipped))
+    logger.info("Using %d out of %d data points. %d were skipped" %
+                (len(Y_true) - n_skipped, len(Y_true), n_skipped))
     return np.mean(np.array(ndcgs))
 
 

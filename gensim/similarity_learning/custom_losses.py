@@ -1,6 +1,7 @@
 from keras import backend as K
 from keras.layers import Lambda
 
+
 def rank_hinge_loss(y_true, y_pred):
     margin = 1
     y_pos = Lambda(lambda a: a[::2, :], output_shape=(1,))(y_pred)

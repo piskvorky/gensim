@@ -1,0 +1,44 @@
+gensim/similarity_learning/evaluation_scripts/evaluate_models.py:5:1: F401 'gensim.similarity_learning.rank_hinge_loss' imported but unused
+from gensim.similarity_learning import rank_hinge_loss
+^
+gensim/similarity_learning/preprocessing/list_generator.py:35:83: W291 trailing whitespace
+        """
+        file_path: str
+        text_maxlen: int
+            The maximum size of a given sentence/query
+            If the sentence is smaller, `train_pad_word_index` is used to fill
+            the remaining words
+        train_word2index: dict
+            This dict holds the word2index of the train set. It can be used
+            to translate the validation/dev set to have the same vocabulary as the 
+            training word2index
+        additional_word2index: dict
+            This dict holds the word2index of the words in the embedding matrix of
+            the trained model which aren't there in the train set. It can be used
+            to translate the validation/dev set to have the same vocabulary as the
+            training word2index
+        zero_word_index: int
+            The index in the training set for words which should be ignored.
+            The embedding matrix has one row set aside for these words and has the
+            value of all zeros.
+            This is used if `oov_handle_method` is "ignore"
+        train_pad_word_index: int
+            The index of the pad word used while training.
+            It is used to fill the sentence vector if it is smaller than `text_maxlen`
+        oov_handle_method: str
+            The method to be used to handle out of vocabulary words.
+            Current options:
+            - ignore : Make all out-of-vocabulary words zero vectors, i.e., ignore them
+        """
+                                                                                  ^
+gensim/similarity_learning/preprocessing/list_generator.py:109:75: W291 trailing whitespace
+        """Building vocab from the train vocab dicts. This way, indexes from train 
+        set will be maintained and the Embedding Layer will get the same index
+        for the same word in train and valid/test set"""
+                                                                          ^
+gensim/similarity_learning/preprocessing/sl_vocab.py:157:121: E501 line too long (125 > 120 characters)
+                                               np.random.random((1, self.embedding_dim)), np.zeros((1, self.embedding_dim))])
+                                                                                                                        ^
+ERROR: InvocationError: '/mnt/d/Projects/gensim/.tox/flake8/bin/flake8 gensim/'
+___________________________________ summary ____________________________________
+ERROR:   flake8: commands failed

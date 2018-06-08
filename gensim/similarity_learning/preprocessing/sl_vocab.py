@@ -153,8 +153,9 @@ class WikiQA_DRMM_TKS_Extractor:
                     self.additional_word2index[word] = i
                     i += 1
 
-            self.embedding_matrix = np.vstack([self.embedding_matrix, np.array(extra_embeddings),
-                                               np.random.random((1, self.embedding_dim)), np.zeros((1, self.embedding_dim))])
+            self.embedding_matrix = np.vstack(
+                [self.embedding_matrix, np.array(extra_embeddings),
+                 np.random.random((1, self.embedding_dim)), np.zeros((1, self.embedding_dim))])
 
             # Last word is kept as the pad word
             # Here that is the last word in the embedding matrix

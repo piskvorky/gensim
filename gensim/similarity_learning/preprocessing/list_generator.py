@@ -3,8 +3,6 @@ import numpy as np
 from collections import Counter
 import logging
 import re
-import six
-from sklearn.utils import shuffle
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +13,7 @@ class ListGenerator:
 
     List format is given through the `get_list_data` funciton which returns a dict
     with the list format:
-    {"X1": X1, "X2": X2, "y": y, "doc_lengths": doc_lengths}    
+    {"X1": X1, "X2": X2, "y": y, "doc_lengths": doc_lengths}
 
     Example Usage:
     -------------
@@ -34,7 +32,7 @@ class ListGenerator:
             the remaining words
         train_word2index: dict
             This dict holds the word2index of the train set. It can be used
-            to translate the validation/dev set to have the same vocabulary as the 
+            to translate the validation/dev set to have the same vocabulary as the
             training word2index
         additional_word2index: dict
             This dict holds the word2index of the words in the embedding matrix of
@@ -108,7 +106,7 @@ class ListGenerator:
 
     def build_vocab_from_dict(self, train_word2index, additional_word2index,
                               oov_handle_method, zero_word_index):
-        """Building vocab from the train vocab dicts. This way, indexes from train 
+        """Building vocab from the train vocab dicts. This way, indexes from train
         set will be maintained and the Embedding Layer will get the same index
         for the same word in train and valid/test set"""
         logger.info("Getting List Vocab from given vocab")

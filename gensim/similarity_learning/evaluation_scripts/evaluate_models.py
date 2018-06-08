@@ -304,12 +304,16 @@ def drmm_tks_eval(datapath, word_embedding_path):
                                              keep_full_embedding=True, text_maxlen=140)
 
     dev_list_gen = ListGenerator(dev_file_path, text_maxlen=wikiqa_train.text_maxlen,
-                                 train_word2index=wikiqa_train.word2index, additional_word2index=wikiqa_train.additional_word2index,
-                                 oov_handle_method="ignore", zero_word_index=wikiqa_train.zero_word_index, train_pad_word_index=wikiqa_train.pad_word_index)
+                                 train_word2index=wikiqa_train.word2index,
+                                 additional_word2index=wikiqa_train.additional_word2index,
+                                 oov_handle_method="ignore", zero_word_index=wikiqa_train.zero_word_index,
+                                 train_pad_word_index=wikiqa_train.pad_word_index)
 
     test_list_gen = ListGenerator(test_file_path, text_maxlen=wikiqa_train.text_maxlen,
-                                  train_word2index=wikiqa_train.word2index, additional_word2index=wikiqa_train.additional_word2index,
-                                  oov_handle_method="ignore", zero_word_index=wikiqa_train.zero_word_index, train_pad_word_index=wikiqa_train.pad_word_index)
+                                  train_word2index=wikiqa_train.word2index,
+                                  additional_word2index=wikiqa_train.additional_word2index,
+                                  oov_handle_method="ignore", zero_word_index=wikiqa_train.zero_word_index,
+                                  train_pad_word_index=wikiqa_train.pad_word_index)
 
     X1_train, X2_train, y_train = wikiqa_train.get_full_batch()
     drmm_tks = DRMM_TKS(embedding=wikiqa_train.embedding_matrix, vocab_size=wikiqa_train.embedding_matrix.shape[0],
@@ -319,6 +323,9 @@ def drmm_tks_eval(datapath, word_embedding_path):
     model.summary()
 
     optimizer = 'adadelta'
+
+    # either one can be selected. Currently, the choice is manual.
+    loss = rank_hinge_loss
     loss = 'mse'
 
     validation_data = dev_list_gen.get_list_data()
