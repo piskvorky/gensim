@@ -498,7 +498,7 @@ class TestWord2VecModel(unittest.TestCase):
         """Test word2vec multistream training."""
         # build vocabulary, don't train yet
         input_streams = [sentences[:len(sentences) / 2], sentences[len(sentences) / 2:]]
-        model = word2vec.Word2Vec(size=2, min_count=1, hs=1, negative=0, workers=1)
+        model = word2vec.Word2Vec(size=2, min_count=1, hs=1, negative=0, workers=1, seed=42)
         model.build_vocab(input_streams, multistream=True)
 
         self.assertTrue(model.wv.syn0.shape == (len(model.wv.vocab), 2))
@@ -515,11 +515,12 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertEqual(sims, sims2)
 
         # build vocab and train in one step; must be the same as above
-        model2 = word2vec.Word2Vec(input_streams, size=2, min_count=1, hs=1, negative=0, multistream=True, workers=1)
+        model2 = word2vec.Word2Vec(input_streams, size=2, min_count=1, hs=1, negative=0,
+                                   multistream=True, workers=1, seed=42)
         self.models_equal(model, model2)
 
         # train singlestream model; must be the same as above
-        model3 = word2vec.Word2Vec(sentences, size=2, min_count=1, hs=1, negative=0, workers=1)
+        model3 = word2vec.Word2Vec(sentences, size=2, min_count=1, hs=1, negative=0, workers=1, seed=42)
         self.models_equal(model2, model3)
 
     def testScoring(self):

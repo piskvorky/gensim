@@ -80,7 +80,7 @@ class TestFastTextModel(unittest.TestCase):
         oov_vec = model['minor']  # oov word
         self.assertEqual(len(oov_vec), 10)
 
-    def test_multistream_tranining(self):
+    def test_multistream_training(self):
         input_streams = [sentences[:len(sentences) / 2], sentences[len(sentences) / 2:]]
         model = FT_gensim(size=10, min_count=1, hs=1, negative=0, seed=42, workers=1)
         model.build_vocab(input_streams, multistream=True, workers=2)
