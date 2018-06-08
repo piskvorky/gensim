@@ -519,10 +519,6 @@ class TestWord2VecModel(unittest.TestCase):
                                    multistream=True, workers=1, seed=42)
         self.models_equal(model, model2)
 
-        # train singlestream model; must be the same as above
-        model3 = word2vec.Word2Vec(sentences, size=2, min_count=1, hs=1, negative=0, workers=1, seed=42)
-        self.models_equal(model2, model3)
-
     def testScoring(self):
         """Test word2vec scoring."""
         model = word2vec.Word2Vec(sentences, size=2, min_count=1, hs=1, negative=0)
@@ -737,7 +733,8 @@ class TestWord2VecModel(unittest.TestCase):
 
     def models_equal(self, model, model2):
         self.assertEqual(len(model.wv.vocab), len(model2.wv.vocab))
-        self.assertTrue(np.allclose(model.wv.syn0, model2.wv.syn0))
+        print "word2vec models_equal, max diff {}".format(np.max(np.abs(model.wv.syn0 - model2.wv.syn0)))
+        self.assertTrue(np.allclose(model.wv.syn0, model2.wv.syn0), msg=np.max(np.abs(model.wv.syn0 - model2.wv.syn0)))
         if model.hs:
             self.assertTrue(np.allclose(model.syn1, model2.syn1))
         if model.negative:
