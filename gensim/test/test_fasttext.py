@@ -80,6 +80,38 @@ class TestFastTextModel(unittest.TestCase):
         oov_vec = model['minor']  # oov word
         self.assertEqual(len(oov_vec), 10)
 
+    def test_multistream_tranining(self):
+        input_streams = [sentences[:len(sentences) / 2], sentences[len(sentences) / 2:]]
+        model = FT_gensim(size=10, min_count=1, hs=1, negative=0, seed=42, workers=1)
+        model.build_vocab(input_streams, multistream=True, workers=2)
+        self.model_sanity(model)
+
+        model.train(input_streams, multistream=True, total_examples=model.corpus_count, epochs=model.iter)
+        sims = model.most_similar('graph', topn=10)
+
+        self.assertEqual(model.wv.syn0.shape, (12, 10))
+        self.assertEqual(len(model.wv.vocab), 12)
+        self.assertEqual(model.wv.syn0_vocab.shape[1], 10)
+        self.assertEqual(model.wv.syn0_ngrams.shape[1], 10)
+        self.model_sanity(model)
+
+        # test querying for "most similar" by vector
+        graph_vector = model.wv.syn0norm[model.wv.vocab['graph'].index]
+        sims2 = model.most_similar(positive=[graph_vector], topn=11)
+        sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
+        self.assertEqual(sims, sims2)
+
+        # build vocab and train in one step; must be the same as above
+        model2 = FT_gensim(input_streams, multistream=True, size=10, min_count=1, hs=1, negative=0, seed=42, workers=1)
+        self.models_equal(model, model2)
+
+        # verify oov-word vector retrieval
+        invocab_vec = model['minors']  # invocab word
+        self.assertEqual(len(invocab_vec), 10)
+
+        oov_vec = model['minor']  # oov word
+        self.assertEqual(len(oov_vec), 10)
+
     def models_equal(self, model, model2):
         self.assertEqual(len(model.wv.vocab), len(model2.wv.vocab))
         self.assertEqual(model.num_ngram_vectors, model2.num_ngram_vectors)

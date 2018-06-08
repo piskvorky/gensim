@@ -283,11 +283,12 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
         Parameters
         ----------
-        documents : iterable of iterables
+        documents : {iterable of iterables, list or tuple of iterable of iterables}
             The `documents` iterable can be simply a list of TaggedDocument elements, but for larger corpora,
             consider an iterable that streams the documents directly from disk/network.
             If you don't supply `documents`, the model is left uninitialized -- use if
             you plan to initialize it in some other way.
+            If `multistream=True`, `documents` must be a list or tuple of iterables described above.
 
         dm : int {1,0}
             Defines the training algorithm. If `dm=1`, 'distributed memory' (PV-DM) is used.
@@ -721,10 +722,11 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
         Parameters
         ----------
-        documents : iterable of iterables
+        documents : {iterable of iterables, list or tuple of iterable of iterables}
             The `documents` iterable can be simply a list of TaggedDocument elements, but for larger corpora,
             consider an iterable that streams the documents directly from disk/network.
             See :class:`~gensim.models.doc2vec.TaggedBrownCorpus` or :class:`~gensim.models.doc2vec.TaggedLineDocument`
+            If `multistream=True`, `documents` must be a list or tuple of iterables described above.
         progress_per : int
             Indicates how many words to process before showing/updating the progress.
         update : bool
@@ -746,6 +748,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             in vocabulary building time.
         workers : int
             Used if `multistream=True`. Determines how many processes to use for vocab building.
+
         """
         workers = workers or self.workers
         total_words, corpus_count = self.vocabulary.scan_vocab(

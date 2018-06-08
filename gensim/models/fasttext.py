@@ -163,17 +163,18 @@ class FastText(BaseWordEmbeddingsModel):
     def __init__(self, sentences=None, sg=0, hs=0, size=100, alpha=0.025, window=5, min_count=5,
                  max_vocab_size=None, word_ngrams=1, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
                  negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0, min_n=3, max_n=6, sorted_vocab=1,
-                 bucket=2000000, trim_rule=None, batch_words=MAX_WORDS_IN_BATCH, callbacks=()):
+                 bucket=2000000, trim_rule=None, batch_words=MAX_WORDS_IN_BATCH, callbacks=(), multistream=False):
         """Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
 
         Parameters
         ----------
-        sentences : iterable of iterables
+        sentences : {iterable of iterables, list or tuple of iterable of iterables}
             The `sentences` iterable can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
+            If `multistream=True`, `sentences` must be a list or tuple of iterables described above.
             If you don't supply `sentences`, the model is left uninitialized -- use if you plan to initialize it
             in some other way.
         sg : int {1, 0}
@@ -243,6 +244,8 @@ class FastText(BaseWordEmbeddingsModel):
             memory usage of the model. This option specifies the number of buckets used by the model.
         callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`
             List of callbacks that need to be executed/run at specific stages during training.
+        multistream : bool
+            If True, use `sentences` as list of input streams and speed up IO by parallelization.
 
         Examples
         --------
@@ -273,9 +276,9 @@ class FastText(BaseWordEmbeddingsModel):
         self.wv.bucket = self.bucket
 
         super(FastText, self).__init__(
-            sentences=sentences, workers=workers, vector_size=size, epochs=iter, callbacks=callbacks,
-            batch_words=batch_words, trim_rule=trim_rule, sg=sg, alpha=alpha, window=window, seed=seed,
-            hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, fast_version=FAST_VERSION)
+            sentences=sentences, multistream=multistream, workers=workers, vector_size=size, epochs=iter,
+            callbacks=callbacks, batch_words=batch_words, trim_rule=trim_rule, sg=sg, alpha=alpha, window=window,
+            seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, fast_version=FAST_VERSION)
 
     @property
     @deprecated("Attribute will be removed in 4.0.0, use wv.min_n instead")
@@ -327,17 +330,19 @@ class FastText(BaseWordEmbeddingsModel):
     def num_ngram_vectors(self):
         return self.wv.num_ngram_vectors
 
-    def build_vocab(self, sentences, update=False, progress_per=10000, keep_raw_vocab=False, trim_rule=None, **kwargs):
+    def build_vocab(self, sentences, update=False, progress_per=10000, keep_raw_vocab=False, trim_rule=None,
+                    multistream=False, workers=None, **kwargs):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
 
         Parameters
         ----------
-        sentences : iterable of iterables
+        sentences : {iterable of iterables, list or tuple of iterable of iterables}
             The `sentences` iterable can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
+            If `multistream=True`, `sentences` must be a list or tuple of iterables described above.
         keep_raw_vocab : bool
             If not true, delete the raw vocabulary after the scaling is done and free up RAM.
         trim_rule : function
@@ -352,6 +357,12 @@ class FastText(BaseWordEmbeddingsModel):
             Indicates how many words to process before showing/updating the progress.
         update : bool
             If true, the new words in `sentences` will be added to model's vocab.
+        multistream : bool
+            If True, use `sentences` as list of input streams and speed up vocab building by parallelization
+            with `min(len(sentences), self.workers)` processes. This option can lead up to 2.5x reduction
+            in vocabulary building time.
+        workers : int
+            Used if `multistream=True`. Determines how many processes to use for vocab building.
 
         Example
         -------
@@ -379,7 +390,7 @@ class FastText(BaseWordEmbeddingsModel):
 
         return super(FastText, self).build_vocab(
             sentences, update=update, progress_per=progress_per,
-            keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, **kwargs)
+            keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, multistream=multistream, workers=workers, **kwargs)
 
     def _set_train_params(self, **kwargs):
         pass
@@ -457,9 +468,9 @@ class FastText(BaseWordEmbeddingsModel):
 
         return tally, self._raw_word_count(sentences)
 
-    def train(self, sentences, multistream=False, total_examples=None, total_words=None,
+    def train(self, sentences, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None,
-              word_count=0, queue_factor=2, report_delay=1.0, callbacks=(), **kwargs):
+              word_count=0, queue_factor=2, report_delay=1.0, callbacks=(), multistream=False, **kwargs):
         """Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
         For FastText, each sentence must be a list of unicode strings.
 
@@ -476,9 +487,10 @@ class FastText(BaseWordEmbeddingsModel):
 
         Parameters
         ----------
-        sentences : iterable of iterables
+        sentences : {iterable of iterables, list or tuple of iterable of iterables}
             The `sentences` iterable can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
+            If `multistream=True`, `sentences` must be a list or tuple of iterables described above.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
         total_examples : int
@@ -500,6 +512,8 @@ class FastText(BaseWordEmbeddingsModel):
             Seconds to wait before reporting progress.
         callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`
             List of callbacks that need to be executed/run at specific stages during training.
+        multistream : bool
+            If True, use `sentences` as list of input streams and speed up IO by parallelization.
 
         Examples
         --------
