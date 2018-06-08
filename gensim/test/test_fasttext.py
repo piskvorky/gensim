@@ -114,12 +114,12 @@ class TestFastTextModel(unittest.TestCase):
 
     def test_multistream_build_vocab(self):
         # Expected vocab
-        model = FT_gensim(min_count=0)
+        model = FT_gensim(size=5, min_count=1, hs=1, negative=0, seed=42)
         model.build_vocab(list_corpus)
         singlestream_vocab = model.vocabulary.raw_vocab
 
         # Multistream vocab
-        model2 = FT_gensim(min_count=0)
+        model2 = FT_gensim(size=5, min_count=1, hs=1, negative=0, seed=42)
         input_streams = [list_corpus[:len(list_corpus) / 2], list_corpus[len(list_corpus) / 2:]]
         model2.build_vocab(input_streams, multistream=True, workers=2)
         multistream_vocab = model2.vocabulary.raw_vocab
