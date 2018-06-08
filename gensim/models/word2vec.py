@@ -133,6 +133,7 @@ from gensim import utils, matutils  # utility fnc for pickling, common scipy ope
 from gensim.utils import deprecated
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
+from functools import reduce
 
 logger = logging.getLogger(__name__)
 
