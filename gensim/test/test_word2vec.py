@@ -733,8 +733,7 @@ class TestWord2VecModel(unittest.TestCase):
 
     def models_equal(self, model, model2):
         self.assertEqual(len(model.wv.vocab), len(model2.wv.vocab))
-        print "word2vec models_equal, max diff {}".format(np.max(np.abs(model.wv.syn0 - model2.wv.syn0)))
-        self.assertTrue(np.allclose(model.wv.syn0, model2.wv.syn0), msg=np.max(np.abs(model.wv.syn0 - model2.wv.syn0)))
+        self.assertTrue(np.allclose(model.wv.syn0, model2.wv.syn0))
         if model.hs:
             self.assertTrue(np.allclose(model.syn1, model2.syn1))
         if model.negative:
