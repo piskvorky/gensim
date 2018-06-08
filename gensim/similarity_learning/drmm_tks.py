@@ -71,7 +71,7 @@ class DRMM_TKS:
         """Builds the model based on parameters set during initialization"""
         query = Input(name='query', shape=(self.text_maxlen,))
         doc = Input(name='doc', shape=(self.text_maxlen,))
-        embedding = Embedding(self.vocab_size, self.embed_dim, weights=[self.embedding],
+        embedding = Embedding(self.embedding.shape[0], self.embedding.shape[1], weights=[self.embedding],
                                 trainable=self.embed_trainable)
 
         q_embed = embedding(query)

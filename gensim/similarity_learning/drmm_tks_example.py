@@ -40,5 +40,9 @@ if __name__ == '__main__':
     model.compile(optimizer=optimizer, loss=rank_hinge_loss, metrics=['accuracy'])
 
     generator_function = wikiqa.get_batch_generator(batch_size=32)
-    history = model.fit_generator(generator_function, steps_per_epoch=display_interval, epochs=10,
+    history = model.fit_generator(generator_function, steps_per_epoch=display_interval, epochs=1,
                                   shuffle=False, verbose=1)
+
+    print(model)
+
+    model.save("drmm_tks.h5")

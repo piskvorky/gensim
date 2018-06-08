@@ -83,7 +83,7 @@ class WikiQA_DRMM_TKS_Extractor:
         self.keep_full_embedding = keep_full_embedding
         self.additional_word2index = {}
         self.build_vocab()
-        self.pair_list = shuffle(self.get_pair_list())
+        self.pair_list = self.get_pair_list()
 
     def build_vocab(self):
         """Indexes all the words and makes an embedding_matrix which
@@ -115,18 +115,23 @@ class WikiQA_DRMM_TKS_Extractor:
                     (embedding_vocab_size, self.embedding_dim))
 
         if self.keep_full_embedding:
-            self.embedding_matrix = np.zeros((self.vocab_size, self.embedding_dim))
+            self.embedding_matrix = np.zeros((self.vocab_size + 1, self.embedding_dim))  # one for ignore vec
         else:
-            self.embedding_matrix = np.zeros((self.vocab_size + 1, self.embedding_dim))
+            self.embedding_matrix = np.zeros((self.vocab_size + 2, self.embedding_dim))  # one for pad, one for ignore vec
 
         # We add 1 for the padding word
         logger.info("Embedding Matrix for Embedding Layer has shape %s " % str(self.embedding_matrix.shape))
 
+        n_non_embedding_words = 0
         for word, i in self.word2index.items():
             embedding_vector = embeddings_index.get(word)
             if embedding_vector is not None:
                 # words not found in embedding index will be all-zeros.
                 self.embedding_matrix[i] = embedding_vector
+            else:
+                n_non_embedding_words += 1
+
+        logger.info("There are %d words not in the embeddings. Setting them to zero" % n_non_embedding_words)
 
         if self.keep_full_embedding:
             logger.info("Adding additional dimensions from the embedding file to embedding matrix")
@@ -140,14 +145,17 @@ class WikiQA_DRMM_TKS_Extractor:
                     self.additional_word2index[word] = i
                     i += 1
 
-            self.embedding_matrix = np.vstack([self.embedding_matrix, np.array(extra_embeddings)])
+            self.embedding_matrix = np.vstack([self.embedding_matrix, np.array(extra_embeddings),
+                                    np.random.random((1, self.embedding_dim)), np.zeros((1, self.embedding_dim))])
 
             # Last word is kept as the pad word
             # Here that is the last word in the embedding matrix
             self.pad_word_index = i
+            self.zero_word_index = i + 1
+            
         else:
-            # If all embeddings aren't added, keep it 
             self.pad_word_index = self.vocab_size
+            self.zero_word_index = self.vocab_size + 1
 
         logger.info("Embedding Matrix now has shape %s" % str(self.embedding_matrix.shape))
         logger.info("Pad word has been set to index %d" % self.pad_word_index)
@@ -197,11 +205,16 @@ class WikiQA_DRMM_TKS_Extractor:
                                         self.make_indexed(self.preprocess(d)), l])
                 n_relevant_docs += l  # CHECK
 
+            n_filtered = 0
             if filter_queries:  # Only add the document group if it has relevant documents
                 if n_relevant_docs > 0:
                     self.data.append(document_group)
+                else:
+                    n_filtered += 1
             else:
                 self.data.append(document_group)
+        logger.info("%d queries were filtered" % n_filtered)
+        logger.info("There are a total of %d queries" % len(self.data))
         return self.data
 
     def get_pair_list(self):
@@ -225,9 +238,11 @@ class WikiQA_DRMM_TKS_Extractor:
                     for new_item in document_group:
                         if new_item[2] == 0:
                             pair_list.append((item[0], item[1], new_item[1]))
-        return pair_list
 
-    def get_full_batch(self, batch_size=32):
+        logger.info("There are %d pairs to train on." % len(pair_list))
+        return shuffle(pair_list)
+
+    def get_full_batch(self):
         """Generator to provide a batch of training sample of size batch_size
         The batch provided is actually twice the size and will have alternate positive
         and negative examples. CHECK does alternation even matter?
@@ -244,37 +259,27 @@ class WikiQA_DRMM_TKS_Extractor:
             provides of batches of that size
         """
 
-        full_batch = []
+
         num_samples = len(self.pair_list)
-        for offset in range(0, num_samples, batch_size):
-            # Initialize the query, doc and relevance arrays to zero
-            X1 = np.zeros((batch_size * 2, self.text_maxlen), dtype=np.int32)
-            X1_len = np.zeros((batch_size * 2,), dtype=np.int32)
+        X1 = np.zeros((num_samples * 2, self.text_maxlen))
+        X2 = np.zeros((num_samples * 2, self.text_maxlen))
+        y = np.zeros((num_samples * 2, 1))
 
-            X2 = np.zeros((batch_size * 2, self.text_maxlen), dtype=np.int32)
-            X2_len = np.zeros((batch_size * 2,), dtype=np.int32)
+        X1[:] = self.pad_word_index
+        X2[:] = self.pad_word_index
+        y[::2] = 1
 
-            Y = np.zeros((batch_size * 2,), dtype=np.int32)
+        for i, (query, pos_doc, neg_doc) in enumerate(self.pair_list):
+            query_len = min(self.text_maxlen, len(query))
+            pos_doc_len = min(self.text_maxlen, len(pos_doc))
+            neg_doc_len = min(self.text_maxlen, len(neg_doc))
 
-            # set alternate relevances to 1, starting with 1
-            Y[::2] = 1
+            X1[i * 2, :query_len] = query[:query_len]
+            X2[i * 2, :pos_doc_len] = pos_doc[:pos_doc_len]
+            X1[i * 2 + 1, :query_len] = query[:query_len]
+            X2[i * 2 + 1, :neg_doc_len] = neg_doc[:neg_doc_len]
 
-            # set all the values to pad words
-            X1[:] = self.pad_word_index
-            X2[:] = self.pad_word_index
-
-            batch_sample = self.pair_list[offset: offset + batch_size]
-            for i, (query, pos_doc, neg_doc) in enumerate(batch_sample):
-                query_len = min(self.text_maxlen, len(query))
-                pos_doc_len = min(self.text_maxlen, len(pos_doc))
-                neg_doc_len = min(self.text_maxlen, len(neg_doc))
-
-                X1[i * 2, :query_len], X1_len[i * 2] = query[:query_len], query_len
-                X2[i * 2, :pos_doc_len], X2_len[i * 2] = pos_doc[:pos_doc_len], pos_doc_len
-                X1[i * 2 + 1, :query_len], X1_len[i * 2 + 1] = query[:query_len], query_len
-                X2[i * 2 + 1, :neg_doc_len], X2_len[i * 2 + 1] = neg_doc[:neg_doc_len], neg_doc_len
-            full_batch.append(({'query': X1, 'query_len': X1_len, 'doc': X2, 'doc_len': X2_len}, Y))
-        return full_batch
+        return X1, X2, y
 
 
     def get_batch(self, batch_size=32):
