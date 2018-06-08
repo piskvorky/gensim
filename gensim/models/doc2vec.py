@@ -522,7 +522,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             If True, use `documents` as list of input streams and speed up IO by parallelization.
         """
         super(Doc2Vec, self).train(
-            documents, multistream=False, total_examples=total_examples, total_words=total_words,
+            documents, multistream=multistream, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
             queue_factor=queue_factor, report_delay=report_delay, callbacks=callbacks)
 
