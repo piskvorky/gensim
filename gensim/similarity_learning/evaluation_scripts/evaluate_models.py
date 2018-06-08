@@ -394,7 +394,7 @@ if __name__ == '__main__':
     parser.add_argument('--model',
                         default='all',
                         help='runs the evaluation on the given model type. Options are:\
-                        doc2vec, word2vec, mz_eval, mz_eval_multiple')
+                        drmm_tks, doc2vec, word2vec, mz_eval, mz_eval_multiple')
 
     # Note: we currently only support WikiQA
     parser.add_argument('--datapath',

@@ -3,9 +3,9 @@
 ## DRMM_TKS (Deep Relevance Matching Model Top k Solutions)
 Example usage:
 
-`$ python drmm_tks_example.py --wikiqa_folder_path ./data/WikiQACorpus/ --word_embedding_path evaluation_scripts/glove.6B.50d.txt`
+For evaluating drmm_tks on the WikiQA corpus
+$ python evaluate_models.py --model drmm_tks --datapath ../data/WikiQACorpus/ --word_embedding_path ../evaluation_scripts/glove.6B.50d.txt --result_save_path results_drmm_tks
 
-This script will make a WikiQA_DRMM_TKS_Extractor and DRMM_TKS object and train it.
 
 **Link to Paper:** [A Deep Relevance Matching Model for Ad-hoc Retrieval](http://www.bigdatalab.ac.cn/~gjf/papers/2016/CIKM2016a_guo.pdf)
 

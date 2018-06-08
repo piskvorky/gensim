@@ -29,11 +29,19 @@ So, you will have to install pandas first by running the command:
 
 ## Current Directory Structure in gensim/similarity_learning
 ```.
-├── sl_vocab.py
-├── drmm_tks.py
-├── drmm_tks_example.py
-├── dssm.py
+.
+├── HowToRunModels.md
+├── HowToReproduceBenchmarks.md
+├── __init__.py
+├── custom_callbacks.py
+├── custom_losses.py
+├── output_log_mse.txt
+├── output_log_rank_hing_loss.txt
 ├── dssm_example.py
+├── evaluation_metrics.py
+├── model.png
+├── data
+│   └── get_data.py
 ├── evaluation_scripts
 │   ├── evaluate_models.py
 │   ├── mz_results
@@ -48,10 +56,14 @@ So, you will have to install pandas first by running the command:
 │   │   ├── predict.test.knrm_ranking.wikiqa.txt
 │   │   ├── predict.test.matchpyramid.wikiqa.txt
 │   │   └── predict.test.mvlstm.wikiqa.txt
-├── HowToReproduceMyBenchmark.md
-├── README.md
-└── data
-    └── get_data.py
+├── models
+│   ├── __init__.py
+│   ├── drmm_tks.py
+│   ├── dssm.py
+└───├─── preprocessing
+    ├── __init__.py
+    ├── list_generator.py
+    └── sl_vocab.py
 ```
 
 For reproducing benchmarks only, we can ignore everything except the contents of folders "evaluation_scripts" and "data"
@@ -99,7 +111,9 @@ usage: evaluate_models.py [-h] [--model MODEL] [--datapath DATAPATH]
 
 optional arguments:
   -h, --help            show this help message and exit
-  --model MODEL         runs the evaluation of doc2vec
+  --model MODEL         runs the evaluation on the given model type. Options
+                        are: drmm_tks, doc2vec, word2vec, mz_eval,
+                        mz_eval_multiple
   --datapath DATAPATH   path to the folder with WikiQACorpus. Path should
                         include WikiQACorpus Make sure you have run
                         get_data.py in gensim/similarity_learning/data/
@@ -114,7 +128,12 @@ optional arguments:
 ```
 
 
+
 ### Example usage:
+
+For evaluating drmm_tks model on the WikiQA corpus
+$ python evaluate_models.py --model drmm_tks --datapath ../data/WikiQACorpus/ --word_embedding_path ../evaluation_scripts/glove.6B.50d.txt --result_save_path results_drmm_tks
+
 For evaluating doc2vec on the WikiQA corpus
 
 `$ python evaluate_models.py --model doc2vec --datapath ../data/WikiQACorpus/`
