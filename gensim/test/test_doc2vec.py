@@ -9,7 +9,7 @@ Automated tests for checking transformation algorithms (the models package).
 """
 
 
-from __future__ import with_statement
+from __future__ import with_statement, division
 
 import logging
 import unittest
@@ -300,7 +300,7 @@ class TestDoc2VecModel(unittest.TestCase):
 
     def test_multistream_training(self):
         """Test doc2vec multistream training."""
-        input_streams = [list_corpus[:len(list_corpus) / 2], list_corpus[len(list_corpus) / 2:]]
+        input_streams = [list_corpus[:len(list_corpus) // 2], list_corpus[len(list_corpus) // 2:]]
 
         model = doc2vec.Doc2Vec(inpsize=100, min_count=2, iter=20, workers=1, seed=42)
         model.build_vocab(input_streams, multistream=True, workers=1)
@@ -323,7 +323,7 @@ class TestDoc2VecModel(unittest.TestCase):
 
         # Multistream vocab
         model2 = doc2vec.Doc2Vec(min_count=0)
-        input_streams = [list_corpus[:len(list_corpus) / 2], list_corpus[len(list_corpus) / 2:]]
+        input_streams = [list_corpus[:len(list_corpus) // 2], list_corpus[len(list_corpus) // 2:]]
         model2.build_vocab(input_streams, multistream=True, workers=2)
         multistream_vocab = model2.vocabulary.raw_vocab
 

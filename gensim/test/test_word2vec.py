@@ -7,7 +7,7 @@
 """
 Automated tests for checking transformation algorithms (the models package).
 """
-
+from __future__ import division
 
 import logging
 import unittest
@@ -174,7 +174,7 @@ class TestWord2VecModel(unittest.TestCase):
 
         # Multistream vocab
         model = word2vec.Word2Vec(min_count=0)
-        input_streams = [sentences[:len(sentences) / 2], sentences[len(sentences) / 2:]]
+        input_streams = [sentences[:len(sentences) // 2], sentences[len(sentences) // 2:]]
         model.build_vocab(input_streams, multistream=True, workers=2)
         multistream_vocab = model.vocabulary.raw_vocab
 
@@ -497,7 +497,7 @@ class TestWord2VecModel(unittest.TestCase):
     def testMultistreamTraining(self):
         """Test word2vec multistream training."""
         # build vocabulary, don't train yet
-        input_streams = [sentences[:len(sentences) / 2], sentences[len(sentences) / 2:]]
+        input_streams = [sentences[:len(sentences) // 2], sentences[len(sentences) // 2:]]
         model = word2vec.Word2Vec(size=2, min_count=1, hs=1, negative=0, workers=1, seed=42)
         model.build_vocab(input_streams, multistream=True)
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import division
 
 import logging
 import unittest
@@ -81,7 +82,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(len(oov_vec), 10)
 
     def test_multistream_training(self):
-        input_streams = [sentences[:len(sentences) / 2], sentences[len(sentences) / 2:]]
+        input_streams = [sentences[:len(sentences) // 2], sentences[len(sentences) // 2:]]
         model = FT_gensim(size=5, min_count=1, hs=1, negative=0, seed=42, workers=1)
         model.build_vocab(input_streams, multistream=True, workers=2)
         self.model_sanity(model)
@@ -120,7 +121,7 @@ class TestFastTextModel(unittest.TestCase):
 
         # Multistream vocab
         model2 = FT_gensim(size=5, min_count=1, hs=1, negative=0, seed=42)
-        input_streams = [list_corpus[:len(list_corpus) / 2], list_corpus[len(list_corpus) / 2:]]
+        input_streams = [list_corpus[:len(list_corpus) // 2], list_corpus[len(list_corpus) // 2:]]
         model2.build_vocab(input_streams, multistream=True, workers=2)
         multistream_vocab = model2.vocabulary.raw_vocab
 
