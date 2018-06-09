@@ -16,7 +16,7 @@ See also :class:`~gensim.models.Doc2Vec`, :class:`~gensim.models.FastText` and
 wrappers for :class:`~gensim.models.wrappers.VarEmbed` and :class:`~gensim.models.wrappers.WordRank`.
 
 The training algorithms were originally ported from the C package https://code.google.com/p/word2vec/
-and extended with additional functionality over the years.
+and extended with additional functionality and optimizations over the years.
 
 For a tutorial on Gensim word2vec, with an interactive web app trained on GoogleNews,
 visit https://rare-technologies.com/word2vec-tutorial/.
@@ -169,8 +169,9 @@ except ImportError:
         Update skip-gram model by training on a sequence of sentences.
         Each sentence is a list of string tokens, which are looked up in the model's
         vocab dictionary. Called internally from `Word2Vec.train()`.
-        This is the non-optimized, Python version. If you have cython installed, gensim
-        will use the optimized version from word2vec_inner instead.
+
+        This is the non-optimized, pure Python version. If you have a C compiler, Gensim
+        will use an optimized code path from word2vec_inner instead.
         """
         result = 0
         for sentence in sentences:
@@ -196,13 +197,16 @@ except ImportError:
         Update CBOW model by training on a sequence of sentences.
         Each sentence is a list of string tokens, which are looked up in the model's
         vocab dictionary. Called internally from `Word2Vec.train()`.
-        This is the non-optimized, Python version. If you have cython installed, gensim
-        will use the optimized version from word2vec_inner instead.
+
+        This is the non-optimized, pure Python version. If you have a C compiler, Gensim
+        will use an optimized code path from word2vec_inner instead.
         """
         result = 0
         for sentence in sentences:
-            word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
-                           model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
+            word_vocabs = [
+                model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
+                model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32
+            ]
             for pos, word in enumerate(word_vocabs):
                 reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
                 start = max(0, pos - model.window + reduced_window)
@@ -220,8 +224,9 @@ except ImportError:
         Obtain likelihood score for a single sentence in a fitted skip-gram representaion.
         The sentence is a list of Vocab objects (or None, when the corresponding
         word is not in the vocabulary). Called internally from `Word2Vec.score()`.
-        This is the non-optimized, Python version. If you have cython installed, gensim
-        will use the optimized version from word2vec_inner instead.
+
+        This is the non-optimized, pure Python version. If you have a C compiler, Gensim
+        will use an optimized code path from word2vec_inner instead.
         """
         log_prob_sentence = 0.0
         if model.negative:
@@ -246,8 +251,9 @@ except ImportError:
         Obtain likelihood score for a single sentence in a fitted CBOW representaion.
         The sentence is a list of Vocab objects (or None, where the corresponding
         word is not in the vocabulary. Called internally from `Word2Vec.score()`.
-        This is the non-optimized, Python version. If you have cython installed, gensim
-        will use the optimized version from word2vec_inner instead.
+
+        This is the non-optimized, pure Python version. If you have a C compiler, Gensim
+        will use an optimized code path from word2vec_inner instead.
         """
         log_prob_sentence = 0.0
         if model.negative:
@@ -430,7 +436,8 @@ def score_cbow_pair(model, word, l1):
 
 
 class Word2Vec(BaseWordEmbeddingsModel):
-    """Train, use and evaluate neural networks described in https://code.google.com/p/word2vec/
+    """
+    Train, use and evaluate neural networks described in https://code.google.com/p/word2vec/
 
     If you're finished training a model (=no more updates, only querying)
     store and use only the :class:`~gensim.models.KeyedVectors` instance in `self.wv` to reduce memory.
@@ -663,6 +670,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
         Examples
         --------
+
         >>> from gensim.models import Word2Vec
         >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
         >>>
@@ -678,7 +686,8 @@ class Word2Vec(BaseWordEmbeddingsModel):
             queue_factor=queue_factor, report_delay=report_delay, compute_loss=compute_loss, callbacks=callbacks)
 
     def score(self, sentences, total_sentences=int(1e6), chunksize=100, queue_factor=2, report_delay=1):
-        """Score the log probability for a sequence of sentences (can be a once-only generator stream).
+        """
+        Score the log probability for a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
         This does not change the fitted model in any way (see :meth:`~gensim.models.Word2Vec.train()` for that).
 
@@ -697,6 +706,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
         Parameters
         ----------
+
         sentences : iterable of iterables
             The `sentences` iterable can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
@@ -829,19 +839,20 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
     def intersect_word2vec_format(self, fname, lockf=0.0, binary=False, encoding='utf8', unicode_errors='strict'):
         """
-        Merge the input-hidden weight matrix from the original C word2vec-tool format
-        given, where it intersects with the current vocabulary. No words are added to the
-        existing vocabulary, but intersecting words adopt the file's weights, and
+        Merge in an input-hidden weight matrix loaded from the original C word2vec-tool format,
+        where it intersects with the current vocabulary.
+
+        No words are added to the existing vocabulary, but intersecting words adopt the file's weights, and
         non-intersecting words are left alone.
 
         Parameters
         ----------
 
         fname : str
-            The file path used to save the vectors in
+            The file path to load the vectors from.
 
         binary : bool
-            If True, the data wil be saved in binary word2vec format, else it will be saved in plain text.
+            If True, `fname` is in the binary word2vec C format.
 
         lockf : float
             Lock-factor value to be set for any imported word-vectors; the
@@ -899,7 +910,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
     def __contains__(self, word):
         """
         Deprecated. Use self.wv.__contains__() instead.
-        Refer to the documentation for :meth:`~gensim.models.keyedvectors.Word2VecKeyedVectors.__contains__()`
+        Refer to the documentation for :meth:`~gensim.models.keyedvectors.Word2VecKeyedVectors.__contains__()`.
 
         """
         return self.wv.__contains__(word)
