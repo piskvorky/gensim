@@ -244,6 +244,30 @@ cdef void fast_sentence_cbow_hs(
 
 
 def train_batch_sg(model, sentences, alpha, _work, _l1):
+    """Update skip-gram model by training on a sequence of sentences.
+
+    Each sentence is a list of string tokens, which are looked up in the model's
+    vocab dictionary. Called internally from :meth:`gensim.models.fasttext.FastText.train()`.
+
+    Parameters
+    ----------
+    model : :class:`~gensim.models.fasttext.FastText`
+        Model to be trained.
+    sentences : iterable of list of str
+        Corpus streamed directly from disk/network.
+    alpha : float
+        Learning rate.
+    _work : np.ndarray, optional
+        Private working memory for each worker.
+    _l1 : np.ndarray, optional
+        Private working memory for each worker.
+
+    Returns
+    -------
+    int
+        Effective number of words trained.
+
+    """
     cdef int hs = model.hs
     cdef int negative = model.negative
     cdef int sample = (model.vocabulary.sample != 0)
@@ -374,6 +398,29 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
 
 
 def train_batch_cbow(model, sentences, alpha, _work, _neu1):
+    """Update the CBOW model by training on a sequence of sentences.
+
+    Each sentence is a list of string tokens, which are looked up in the model's
+    vocab dictionary. Called internally from :meth:`gensim.models.fasttext.FastText.train()`.
+
+    Parameters
+    ----------
+    model : :class:`~gensim.models.fasttext.FastText`
+        Model to be trained.
+    sentences : iterable of list of str
+        Corpus streamed directly from disk/network.
+    alpha : float
+        Learning rate.
+    _work : np.ndarray, optional
+        Private working memory for each worker.
+    _neu1 : np.ndarray, optional
+        Private working memory for each worker.
+    Returns
+    -------
+    int
+        Effective number of words trained.
+
+    """
     cdef int hs = model.hs
     cdef int negative = model.negative
     cdef int sample = (model.vocabulary.sample != 0)
