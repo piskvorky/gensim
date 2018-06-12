@@ -1287,7 +1287,7 @@ class Word2VecVocab(utils.SaveLoad):
             wv.vocab[word].index = i
 
     def prepare_vocab(self, hs, negative, wv, update=False, keep_raw_vocab=False, trim_rule=None,
-                      min_count=None, sample=None, dry_run=False, **kwargs):
+                      min_count=None, sample=None, dry_run=False):
         """Apply vocabulary settings for `min_count` (discarding less-frequent words)
         and `sample` (controlling the downsampling of more-frequent words).
 

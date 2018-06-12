@@ -506,7 +506,6 @@ class TestWord2VecModel(unittest.TestCase):
 
         model.train(input_streams, total_examples=model.corpus_count, epochs=model.iter, multistream=True)
         sims = model.most_similar('graph', topn=10)
-        # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
 
         # test querying for "most similar" by vector
         graph_vector = model.wv.syn0norm[model.wv.vocab['graph'].index]
