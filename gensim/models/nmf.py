@@ -276,9 +276,12 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         eta = self._kappa / np.linalg.norm(self.A, "fro")
         error = None
 
-        for n in range(self._w_max_iter):
+        for iter_number in range(self._w_max_iter):
             self._W -= eta * (np.dot(self._W, self.A) - self.B)
             self.__transform()
+
+            if iter_number == self._w_max_iter - 1:
+                break
 
             error_ = self.__w_error()
 
@@ -343,6 +346,9 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             r_actual = v - W.dot(h)
 
             solve_r(r, r_actual, self._lambda_, self.v_max)
+
+            if iter_number == self._h_r_max_iter - 1:
+                break
 
             error_ = self.__h_r_error(v, h, r)
 
