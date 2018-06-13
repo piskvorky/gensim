@@ -1709,7 +1709,7 @@ def prune_vocab(vocab, min_reduce, trim_rule=None):
     return result
 
 
-def merge_dicts(dict1, dict2):
+def merge_counts(dict1, dict2):
     """Merge `dict1` of (word, freq1) and `dict2` of (word, freq2) into `dict1` of (word, freq1+freq2).
     Parameters
     ----------

@@ -886,31 +886,29 @@ class Doc2VecVocab(Word2VecVocab):
 
         unfinished_tasks = len(results)
         total_words = 0
-        document_no = -1
+        total_documents = 0
         while unfinished_tasks > 0:
             report = progress_queue.get()
             if report is None:
                 unfinished_tasks -= 1
                 logger.info("scan vocab task finished, processed %i documents and %i words;"
-                            " awaiting finish of %i more tasks", document_no + 1, total_words, unfinished_tasks)
+                            " awaiting finish of %i more tasks", total_documents, total_words, unfinished_tasks)
             elif isinstance(report, string_types):
                 logger.warning(report)
             else:
                 num_words, num_documents = report
                 total_words += num_words
-                document_no += num_documents
+                total_documents += num_documents
 
-        corpus_count = document_no + 1
         results = [res.get() for res in results]  # pairs (vocab, doclen2tags)
-        self.raw_vocab = reduce(utils.merge_dicts, [r[0] for r in results])
+        self.raw_vocab = reduce(utils.merge_counts, [r[0] for r in results])
 
         # Update `docvecs` with document tags information.
         for (_, doclen2tags) in results:
             for document_length, tags in iteritems(doclen2tags):
                 for tag in tags:
                     _note_doctag(tag, document_length, docvecs)
-
-        return total_words, corpus_count
+        return total_words, total_documents
 
     def _scan_vocab_singlestream(self, documents, docvecs, progress_per, trim_rule):
         document_no = -1

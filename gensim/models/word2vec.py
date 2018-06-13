@@ -1246,23 +1246,22 @@ class Word2VecVocab(utils.SaveLoad):
 
         unfinished_tasks = len(results)
         total_words = 0
-        sentence_no = -1
+        total_sentences = 0
         while unfinished_tasks > 0:
             report = progress_queue.get()
             if report is None:
                 unfinished_tasks -= 1
                 logger.info("scan vocab task finished, processed %i sentences and %i words;"
-                            " awaiting finish of %i more tasks", sentence_no + 1, total_words, unfinished_tasks)
+                            " awaiting finish of %i more tasks", total_sentences, total_words, unfinished_tasks)
             elif isinstance(report, string_types):
                 logger.warning(report)
             else:
                 num_words, num_sentences = report
                 total_words += num_words
-                sentence_no += num_sentences
+                total_sentences += num_sentences
 
-        corpus_count = sentence_no + 1
-        self.raw_vocab = reduce(utils.merge_dicts, [res.get() for res in results])
-        return total_words, corpus_count
+        self.raw_vocab = reduce(utils.merge_counts, [res.get() for res in results])
+        return total_words, total_sentences
 
     def scan_vocab(self, sentences, multistream=False, progress_per=10000, workers=None, trim_rule=None):
         logger.info("collecting all words and their counts")
