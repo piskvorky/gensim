@@ -256,7 +256,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         r, h = self._r, self._h
 
-        chunk_idx = 0
+        chunk_idx = 1
 
         for _ in range(self.passes):
             for chunk in utils.grouper(
