@@ -30,6 +30,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         w_stop_condition=1e-4,
         h_r_max_iter=50,
         h_r_stop_condition=1e-3,
+        eval_every=10,
         normalize=True,
     ):
         """
@@ -67,6 +68,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self._h_r_stop_condition = h_r_stop_condition
         self._H = []
         self.v_max = None
+        self.eval_every = eval_every
         self.normalize = normalize
         if store_r:
             self._R = []
@@ -93,9 +95,6 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self._B = value
 
     def get_topics(self):
-        if self.normalize:
-            return (self._W / np.sum(self._W, axis=0)).T
-
         return self._W.T
 
     def __getitem__(self, bow, eps=None):
@@ -175,6 +174,11 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         bestn = matutils.argsort(topic, topn, reverse=True)
         return [(idx, topic[idx]) for idx in bestn]
 
+    @staticmethod
+    def __softmax(matrix, axis):
+        exp_matrix = np.exp(matrix)
+        return exp_matrix / exp_matrix.sum(axis=axis)
+
     def get_term_topics(self, word_id, minimum_probability=None):
         """
         Args:
@@ -193,11 +197,10 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             word_id = self.id2word.doc2bow([word_id])[0][0]
 
         values = []
+
         for topic_id in range(0, self.num_topics):
             word_coef = self._W[word_id, topic_id]
 
-            if self.normalize:
-                word_coef /= np.sum(word_coef)
             if word_coef >= minimum_probability:
                 values.append((topic_id, word_coef))
 
@@ -205,10 +208,9 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def get_document_topics(self, bow, minimum_probability=None):
         v = matutils.corpus2dense([bow], len(self.id2word), 1).T
-        h, _ = self._solveproj(v, self._W, v_max=np.inf)
-
         if self.normalize:
-            h = h / np.sum(h)
+            v = self.__softmax(v)
+        h, _ = self._solveproj(v, self._W, v_max=np.inf)
 
         if minimum_probability is not None:
             h[h < minimum_probability] = 0
@@ -249,11 +251,15 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         r, h = self._r, self._h
 
+        chunk_idx = 0
+
         for _ in range(self.passes):
             for chunk in utils.grouper(
                 corpus, self.chunksize, as_numpy=chunks_as_numpy
             ):
                 v = matutils.corpus2dense(chunk, len(self.id2word), len(chunk)).T
+                if self.normalize:
+                    v = self.__softmax(v)
                 h, r = self._solveproj(v, self._W, r=r, h=h, v_max=self.v_max)
                 self._H.append(h)
                 if self._R is not None:
@@ -262,12 +268,16 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 self.A += np.dot(h, h.T)
                 self.B += np.dot((v.T - r), h.T)
                 self._solve_w(v.T, h, r)
-                logger.info(
-                    "Loss (no outliers): {}\tLoss (with outliers): {}".format(
-                        np.linalg.norm(v.T - self._W.dot(h)),
-                        np.linalg.norm(v.T - self._W.dot(h) - r),
+
+                if chunk_idx % self.eval_every == 0:
+                    logger.info(
+                        "Loss (no outliers): {}\tLoss (with outliers): {}".format(
+                            np.linalg.norm(v.T - self._W.dot(h)),
+                            np.linalg.norm(v.T - self._W.dot(h) - r),
+                        )
                     )
-                )
+
+                chunk_idx += 1
 
         self._r = r
         self._h = h
@@ -291,6 +301,9 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 break
 
             error = error_
+
+        if self.normalize:
+            self._W = self.__softmax(self._W, axis=1)
 
     def __w_error(self):
         return 0.5 * np.trace(self._W.T.dot(self._W.dot(self.A) - self.B))
@@ -358,5 +371,9 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 break
 
             error = error_
+
+        if self.normalize:
+            h = self.__softmax(h, axis=0)
+            r = self.__softmax(r, axis=0)
 
         return h, r
