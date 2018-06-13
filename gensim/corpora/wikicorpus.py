@@ -330,7 +330,7 @@ def get_namespace(tag):
 _get_namespace = get_namespace
 
 
-def extract_pages(f, filter_namespaces=False):
+def extract_pages(f, filter_namespaces=False, filter_articles=None):
     """Extract pages from a MediaWiki database dump.
 
     Parameters
@@ -369,6 +369,13 @@ def extract_pages(f, filter_namespaces=False):
             if filter_namespaces:
                 ns = elem.find(ns_path).text
                 if ns not in filter_namespaces:
+                    text = None
+
+            if callable(filter_articles):
+                if filter_articles(elem, namespace=namespace, title=title,
+                                   text=text, page_tag=page_tag,
+                                   text_path=text_path, title_path=title_path,
+                                   ns_path=ns_path, pageid_path=pageid_path) is None:
                     text = None
 
             pageid = elem.find(pageid_path).text
@@ -503,7 +510,7 @@ class WikiCorpus(TextCorpus):
 
     def __init__(self, fname, processes=None, lemmatize=utils.has_pattern(), dictionary=None,
                  filter_namespaces=('0',), tokenizer_func=tokenize, article_min_tokens=ARTICLE_MIN_WORDS,
-                 token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True):
+                 token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True, filter_articles=None):
         """Initialize the corpus.
 
         Unless a dictionary is provided, this scans the corpus once,
@@ -535,6 +542,10 @@ class WikiCorpus(TextCorpus):
             Maximal token length.
         lower : bool, optional
              If True - convert all text to lower case.
+        filter_articles: callable, optional
+            If set each XML article element will be passed to this callable before being processed. Only articles
+            where the callable returns an XML element are processed, returning None allows filtering out
+            some articles based on customised rules.
 
         """
         self.fname = fname
@@ -550,6 +561,7 @@ class WikiCorpus(TextCorpus):
         self.token_max_len = token_max_len
         self.lower = lower
         self.dictionary = dictionary or Dictionary(self.get_texts())
+        self.filter_articles = filter_articles
 
     def get_texts(self):
         """Iterate over the dump, yielding list of tokens for each article.
@@ -578,7 +590,7 @@ class WikiCorpus(TextCorpus):
         texts = \
             ((text, self.lemmatize, title, pageid, tokenization_params)
              for title, text, pageid
-             in extract_pages(bz2.BZ2File(self.fname), self.filter_namespaces))
+             in extract_pages(bz2.BZ2File(self.fname), self.filter_namespaces, self.filter_articles))
         pool = multiprocessing.Pool(self.processes, init_to_ignore_interrupt)
 
         try:
