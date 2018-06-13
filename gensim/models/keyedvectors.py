@@ -50,7 +50,8 @@ Correlation with human opinion on word similarity::
 
 And on analogies::
 
-  >>> word_vectors.accuracy(os.path.join(module_path, 'test_data', 'questions-words.txt'))
+  >>> word_vectors.evaluate_word_analogies(os.path.join(module_path, 'test_data', 'questions-words.txt'))[0]
+  0.58
 
 and so on.
 
@@ -72,8 +73,8 @@ try:
 except ImportError:
     PYEMD_EXT = False
 
-from numpy import dot, zeros, float32 as REAL, empty, memmap as np_memmap, \
-    double, array, vstack, sqrt, newaxis, integer, \
+from numpy import dot, float32 as REAL, empty, memmap as np_memmap, \
+    double, array, zeros, vstack, sqrt, newaxis, integer, \
     ndarray, sum as np_sum, prod, argmax, divide as np_divide
 import numpy as np
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
@@ -109,7 +110,7 @@ class Vocab(object):
 class BaseKeyedVectors(utils.SaveLoad):
 
     def __init__(self, vector_size):
-        self.vectors = []
+        self.vectors = zeros((0, vector_size))
         self.vocab = {}
         self.vector_size = vector_size
         self.index2entity = []
@@ -154,6 +155,65 @@ class BaseKeyedVectors(utils.SaveLoad):
         else:
             raise KeyError("'%s' not in vocabulary" % entity)
 
+    def add(self, entities, weights, replace=False):
+        """Add entities and theirs vectors in a manual way.
+        If some entity is already in the vocabulary, old vector is keeped unless `replace` flag is True.
+
+        Parameters
+        ----------
+        entities : list of str
+            Entities specified by string tags.
+        weights: {list of numpy.ndarray, numpy.ndarray}
+            List of 1D np.array vectors or 2D np.array of vectors.
+        replace: bool, optional
+            Flag indicating whether to replace vectors for entities which are already in the vocabulary,
+            if True - replace vectors, otherwise - keep old vectors.
+
+        """
+        if isinstance(entities, string_types):
+            entities = [entities]
+            weights = np.array(weights).reshape(1, -1)
+        elif isinstance(weights, list):
+            weights = np.array(weights)
+
+        in_vocab_mask = np.zeros(len(entities), dtype=np.bool)
+        for idx, entity in enumerate(entities):
+            if entity in self.vocab:
+                in_vocab_mask[idx] = True
+
+        # add new entities to the vocab
+        for idx in np.nonzero(~in_vocab_mask)[0]:
+            entity = entities[idx]
+            self.vocab[entity] = Vocab(index=len(self.vocab), count=1)
+            self.index2entity.append(entity)
+
+        # add vectors for new entities
+        self.vectors = vstack((self.vectors, weights[~in_vocab_mask]))
+
+        # change vectors for in_vocab entities if `replace` flag is specified
+        if replace:
+            in_vocab_idxs = [self.vocab[entities[idx]].index for idx in np.nonzero(in_vocab_mask)[0]]
+            self.vectors[in_vocab_idxs] = weights[in_vocab_mask]
+
+    def __setitem__(self, entities, weights):
+        """Add entities and theirs vectors in a manual way.
+        If some entity is already in the vocabulary, old vector is replaced with the new one.
+        This method is alias for `add` with `replace=True`.
+
+        Parameters
+        ----------
+        entities : {str, list of str}
+            Entities specified by string tags.
+        weights: {list of numpy.ndarray, numpy.ndarray}
+            List of 1D np.array vectors or 2D np.array of vectors.
+
+        """
+        if not isinstance(entities, list):
+            entities = [entities]
+            weights = weights.reshape(1, -1)
+
+        self.add(entities, weights, replace=True)
+
     def __getitem__(self, entities):
         """
         Accept a single entity (string tag) or list of entities as input.
@@ -163,6 +223,7 @@ class BaseKeyedVectors(utils.SaveLoad):
 
         If a list, return designated tags' vector representations as a
         2D numpy array: #tags x #vector_size.
+
         """
         if isinstance(entities, string_types):
             # allow calls like trained_model['office'], as a shorthand for trained_model[['office']]
@@ -450,7 +511,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             of the resulting term similarity matrix.
         tfidf : :class:`gensim.models.tfidfmodel.TfidfModel`, optional
             A model that specifies the relative importance of the terms in the dictionary. The rows
-            of the term similarity matrix will be build in an increasing order of importance of terms,
+            of the term similarity matrix will be build in a decreasing order of importance of terms,
             or in the order of term identifiers if None.
         threshold : float, optional
             Only pairs of words whose embeddings are more similar than `threshold` are considered
@@ -497,7 +558,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         else:
             assert max(tfidf.idfs) < matrix_order
             word_indices = [
-                index for index, _ in sorted(tfidf.idfs.items(), key=lambda x: x[1], reverse=True)
+                index for index, _
+                in sorted(tfidf.idfs.items(), key=lambda x: (x[1], -x[0]), reverse=True)
             ]
 
         # Traverse rows.
@@ -511,6 +573,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             if w1 not in self.vocab:
                 num_skipped += 1
                 continue  # A word from the dictionary is not present in the word2vec model.
+
             # Traverse upper triangle columns.
             if matrix_order <= nonzero_limit + 1:  # Traverse all columns.
                 columns = (
@@ -851,6 +914,139 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         return dot(matutils.unitvec(array(v1).mean(axis=0)), matutils.unitvec(array(v2).mean(axis=0)))
 
     @staticmethod
+    def _log_evaluate_word_analogies(section):
+        """Calculate score by section, helper for
+        :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.evaluate_word_analogies`.
+
+        Parameters
+        ----------
+        section : dict of (str, (str, str, str, str))
+            Section given from evaluation.
+
+        Returns
+        -------
+        float
+            Accuracy score.
+
+        """
+        correct, incorrect = len(section['correct']), len(section['incorrect'])
+        if correct + incorrect > 0:
+            score = correct / (correct + incorrect)
+            logger.info("%s: %.1f%% (%i/%i)", section['section'], 100.0 * score, correct, correct + incorrect)
+            return score
+
+    def evaluate_word_analogies(self, analogies, restrict_vocab=300000, case_insensitive=True, dummy4unknown=False):
+        """Compute performance of the model on an analogy test set.
+
+        This is modern variant of :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.accuracy`, see
+        `discussion on GitHub #1935 <https://github.com/RaRe-Technologies/gensim/pull/1935>`_.
+
+        The accuracy is reported (printed to log and returned as a score) for each section separately,
+        plus there's one aggregate summary at the end.
+
+        This method corresponds to the `compute-accuracy` script of the original C word2vec.
+        See also `Analogy (State of the art) <https://aclweb.org/aclwiki/Analogy_(State_of_the_art)>`_.
+
+        Parameters
+        ----------
+        analogies : str
+            Path to file, where lines are 4-tuples of words, split into sections by ": SECTION NAME" lines.
+            See `gensim/test/test_data/questions-words.txt` as example.
+        restrict_vocab : int, optional
+            Ignore all 4-tuples containing a word not in the first `restrict_vocab` words.
+            This may be meaningful if you've sorted the model vocabulary by descending frequency (which is standard
+            in modern word embedding models).
+        case_insensitive : bool, optional
+            If True - convert all words to their uppercase form before evaluating the performance.
+            Useful to handle case-mismatch between training tokens and words in the test set.
+            In case of multiple case variants of a single word, the vector for the first occurrence
+            (also the most frequent if vocabulary is sorted) is taken.
+        dummy4unknown : bool, optional
+            If True - produce zero accuracies for 4-tuples with out-of-vocabulary words.
+            Otherwise, these tuples are skipped entirely and not used in the evaluation.
+
+        Returns
+        -------
+        (float, list of dict of (str, (str, str, str))
+            Overall evaluation score and full lists of correct and incorrect predictions divided by sections.
+
+        """
+        ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
+        ok_vocab = {w.upper(): v for w, v in reversed(ok_vocab)} if case_insensitive else dict(ok_vocab)
+        oov = 0
+        logger.info("Evaluating word analogies for top %i words in the model on %s", restrict_vocab, analogies)
+        sections, section = [], None
+        quadruplets_no = 0
+        for line_no, line in enumerate(utils.smart_open(analogies)):
+            line = utils.to_unicode(line)
+            if line.startswith(': '):
+                # a new section starts => store the old section
+                if section:
+                    sections.append(section)
+                    self._log_evaluate_word_analogies(section)
+                section = {'section': line.lstrip(': ').strip(), 'correct': [], 'incorrect': []}
+            else:
+                if not section:
+                    raise ValueError("Missing section header before line #%i in %s" % (line_no, analogies))
+                try:
+                    if case_insensitive:
+                        a, b, c, expected = [word.upper() for word in line.split()]
+                    else:
+                        a, b, c, expected = [word for word in line.split()]
+                except ValueError:
+                    logger.info("Skipping invalid line #%i in %s", line_no, analogies)
+                    continue
+                quadruplets_no += 1
+                if a not in ok_vocab or b not in ok_vocab or c not in ok_vocab or expected not in ok_vocab:
+                    oov += 1
+                    if dummy4unknown:
+                        logger.debug('Zero accuracy for line #%d with OOV words: %s', line_no, line.strip())
+                        section['incorrect'].append((a, b, c, expected))
+                    else:
+                        logger.debug("Skipping line #%i with OOV words: %s", line_no, line.strip())
+                    continue
+                original_vocab = self.vocab
+                self.vocab = ok_vocab
+                ignore = {a, b, c}  # input words to be ignored
+                predicted = None
+                # find the most likely prediction using 3CosAdd (vector offset) method
+                # TODO: implement 3CosMul and set-based methods for solving analogies
+                sims = self.most_similar(positive=[b, c], negative=[a], topn=5, restrict_vocab=restrict_vocab)
+                self.vocab = original_vocab
+                for element in sims:
+                    predicted = element[0].upper() if case_insensitive else element[0]
+                    if predicted in ok_vocab and predicted not in ignore:
+                        if predicted != expected:
+                            logger.debug("%s: expected %s, predicted %s", line.strip(), expected, predicted)
+                        break
+                if predicted == expected:
+                    section['correct'].append((a, b, c, expected))
+                else:
+                    section['incorrect'].append((a, b, c, expected))
+        if section:
+            # store the last section, too
+            sections.append(section)
+            self._log_evaluate_word_analogies(section)
+
+        total = {
+            'section': 'Total accuracy',
+            'correct': sum((s['correct'] for s in sections), []),
+            'incorrect': sum((s['incorrect'] for s in sections), []),
+        }
+
+        oov_ratio = float(oov) / quadruplets_no * 100
+        logger.info('Quadruplets with out-of-vocabulary words: %.1f%%', oov_ratio)
+        if not dummy4unknown:
+            logger.info(
+                'NB: analogies containing OOV words were skipped from evaluation! '
+                'To change this behavior, use "dummy4unknown=True"'
+            )
+        analogies_score = self._log_evaluate_word_analogies(total)
+        sections.append(total)
+        # Return the overall score and the full lists of correct and incorrect analogies
+        return analogies_score, sections
+
+    @staticmethod
     def log_accuracy(section):
         correct, incorrect = len(section['correct']), len(section['incorrect'])
         if correct + incorrect > 0:
@@ -859,6 +1055,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                 section['section'], 100.0 * correct / (correct + incorrect), correct, correct + incorrect
             )
 
+    @deprecated("Method will be removed in 4.0.0, use self.evaluate_word_analogies() instead")
     def accuracy(self, questions, restrict_vocab=30000, most_similar=most_similar, case_insensitive=True):
         """
         Compute accuracy of the model. `questions` is a filename where lines are
@@ -881,7 +1078,6 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         occurrence (also the most frequent if vocabulary is sorted) is taken.
 
         This method corresponds to the `compute-accuracy` script of the original C word2vec.
-
         """
         ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
         ok_vocab = {w.upper(): v for w, v in reversed(ok_vocab)} if case_insensitive else dict(ok_vocab)
@@ -898,19 +1094,18 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                 section = {'section': line.lstrip(': ').strip(), 'correct': [], 'incorrect': []}
             else:
                 if not section:
-                    raise ValueError("missing section header before line #%i in %s" % (line_no, questions))
+                    raise ValueError("Missing section header before line #%i in %s" % (line_no, questions))
                 try:
                     if case_insensitive:
                         a, b, c, expected = [word.upper() for word in line.split()]
                     else:
                         a, b, c, expected = [word for word in line.split()]
                 except ValueError:
-                    logger.info("skipping invalid line #%i in %s", line_no, questions)
+                    logger.info("Skipping invalid line #%i in %s", line_no, questions)
                     continue
                 if a not in ok_vocab or b not in ok_vocab or c not in ok_vocab or expected not in ok_vocab:
-                    logger.debug("skipping line #%i with OOV words: %s", line_no, line.strip())
+                    logger.debug("Skipping line #%i with OOV words: %s", line_no, line.strip())
                     continue
-
                 original_vocab = self.vocab
                 self.vocab = ok_vocab
                 ignore = {a, b, c}  # input words to be ignored
@@ -1115,7 +1310,7 @@ class Word2VecKeyedVectors(WordEmbeddingsKeyedVectors):
         """
         # from gensim.models.word2vec import load_word2vec_format
         return _load_word2vec_format(
-            Word2VecKeyedVectors, fname, fvocab=fvocab, binary=binary, encoding=encoding, unicode_errors=unicode_errors,
+            cls, fname, fvocab=fvocab, binary=binary, encoding=encoding, unicode_errors=unicode_errors,
             limit=limit, datatype=datatype)
 
     def get_keras_embedding(self, train_embeddings=False):
@@ -1514,7 +1709,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         """Return string key for given i_index, if available. Otherwise return raw int doctag (same int)."""
         candidate_offset = i_index - self.max_rawint - 1
         if 0 <= candidate_offset < len(self.offset2doctag):
-            return self.ffset2doctag[candidate_offset]
+            return self.offset2doctag[candidate_offset]
         else:
             return i_index
 

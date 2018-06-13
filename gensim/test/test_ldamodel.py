@@ -221,7 +221,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         for topic in doc_topics:
             self.assertTrue(isinstance(topic, list))
             for k, v in topic:
-                self.assertTrue(isinstance(k, int))
+                self.assertTrue(isinstance(k, numbers.Integral))
                 self.assertTrue(np.issubdtype(v, float))
 
         # Test case to use the get_document_topic function for the corpus
@@ -232,15 +232,15 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         for topic in all_topics:
             self.assertTrue(isinstance(topic, tuple))
             for k, v in topic[0]:  # list of doc_topics
-                self.assertTrue(isinstance(k, int))
+                self.assertTrue(isinstance(k, numbers.Integral))
                 self.assertTrue(np.issubdtype(v, float))
 
             for w, topic_list in topic[1]:  # list of word_topics
-                self.assertTrue(isinstance(w, int))
+                self.assertTrue(isinstance(w, numbers.Integral))
                 self.assertTrue(isinstance(topic_list, list))
 
             for w, phi_values in topic[2]:  # list of word_phis
-                self.assertTrue(isinstance(w, int))
+                self.assertTrue(isinstance(w, numbers.Integral))
                 self.assertTrue(isinstance(phi_values, list))
 
         # Test case to check the filtering effect of minimum_probability and minimum_phi_value
@@ -256,17 +256,17 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         for topic in all_topics:
             self.assertTrue(isinstance(topic, tuple))
             for k, v in topic[0]:  # list of doc_topics
-                self.assertTrue(isinstance(k, int))
+                self.assertTrue(isinstance(k, numbers.Integral))
                 self.assertTrue(np.issubdtype(v, float))
                 if len(topic[0]) != 0:
                     doc_topic_count_na += 1
 
             for w, topic_list in topic[1]:  # list of word_topics
-                self.assertTrue(isinstance(w, int))
+                self.assertTrue(isinstance(w, numbers.Integral))
                 self.assertTrue(isinstance(topic_list, list))
 
             for w, phi_values in topic[2]:  # list of word_phis
-                self.assertTrue(isinstance(w, int))
+                self.assertTrue(isinstance(w, numbers.Integral))
                 self.assertTrue(isinstance(phi_values, list))
                 if len(phi_values) != 0:
                     word_phi_count_na += 1
@@ -277,15 +277,15 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         doc_topics, word_topics, word_phis = model.get_document_topics(self.corpus[1], per_word_topics=True)
 
         for k, v in doc_topics:
-            self.assertTrue(isinstance(k, int))
+            self.assertTrue(isinstance(k, numbers.Integral))
             self.assertTrue(np.issubdtype(v, float))
 
         for w, topic_list in word_topics:
-            self.assertTrue(isinstance(w, int))
+            self.assertTrue(isinstance(w, numbers.Integral))
             self.assertTrue(isinstance(topic_list, list))
 
         for w, phi_values in word_phis:
-            self.assertTrue(isinstance(w, int))
+            self.assertTrue(isinstance(w, numbers.Integral))
             self.assertTrue(isinstance(phi_values, list))
 
         # word_topics looks like this: ({word_id => [topic_id_most_probable, topic_id_second_most_probable, ...]).

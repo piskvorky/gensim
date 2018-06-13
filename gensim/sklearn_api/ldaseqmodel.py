@@ -5,11 +5,23 @@
 # Copyright (C) 2017 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""
-Scikit learn interface for gensim for easy use of gensim with scikit-learn
-Follows scikit-learn API conventions
-"""
+"""Scikit learn interface for :class:`~gensim.models.ldaseqmodel.LdaSeqModel`.
 
+Follows scikit-learn API conventions to facilitate using gensim along with scikit-learn.
+
+Examples
+--------
+>>> from gensim.test.utils import common_corpus, common_dictionary
+>>> from gensim.sklearn_api.ldaseqmodel import LdaSeqTransformer
+>>>
+>>> # Create a sequential LDA transformer to extract 2 topics from the common corpus.
+>>> # Divide the work into 3 unequal time slices.
+>>> model = LdaSeqTransformer(id2word=common_dictionary, num_topics=2, time_slice=[3, 4, 2], initialize='gensim')
+>>>
+>>> # Each document almost entirely belongs to one of the two topics.
+>>> transformed_corpus = model.fit_transform(common_corpus)
+
+"""
 import numpy as np
 from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
@@ -18,15 +30,55 @@ from gensim import models
 
 
 class LdaSeqTransformer(TransformerMixin, BaseEstimator):
-    """
-    Base LdaSeq module
-    """
+    """Base Sequential LDA module, wraps :class:`~gensim.models.ldaseqmodel.LdaSeqModel` model.
 
+    For more information take a look at `David M. Blei, John D. Lafferty: "Dynamic Topic Models"
+    <https://www.cs.princeton.edu/~blei/papers/BleiLafferty2006a.pdf>`_.
+
+    """
     def __init__(self, time_slice=None, id2word=None, alphas=0.01, num_topics=10, initialize='gensim', sstats=None,
                  lda_model=None, obs_variance=0.5, chain_variance=0.005, passes=10, random_state=None,
                  lda_inference_max_iter=25, em_min_iter=6, em_max_iter=20, chunksize=100):
         """
-        Sklearn wrapper for LdaSeq model. See gensim.models.LdaSeqModel for parameter details.
+
+        Parameters
+        ----------
+        time_slice : list of int, optional
+            Number of documents in each time-slice.
+        id2word : :class:`~gensim.corpora.dictionary.Dictionary`, optional
+            Mapping from an ID to the word it represents in the vocabulary.
+        alphas : float, optional
+            The prior probability of each topic.
+        num_topics : int, optional
+            Number of latent topics to be discovered in the corpus.
+        initialize : {'gensim', 'own', 'ldamodel'}, optional
+            Controls the initialization of the DTM model. Supports three different modes:
+                * 'gensim': Uses gensim's own LDA initialization.
+                * 'own': Uses your own initialization matrix of an LDA model that has been previously trained.
+                * 'lda_model': Use a previously used LDA model, passing it through the `lda_model` argument.
+        sstats : np.ndarray of shape [vocab_len, `num_topics`], optional
+            If `initialize` is set to 'own' this will be used to initialize the DTM model.
+        lda_model : :class:`~gensim.models.ldamodel.LdaModel`, optional
+            If `initialize` is set to 'lda_model' this object will be used to create the `sstats` initialization matrix.
+        obs_variance : float, optional
+            Observed variance used to approximate the true and forward variance as shown in
+            `David M. Blei, John D. Lafferty: "Dynamic Topic Models"
+            <https://www.cs.princeton.edu/~blei/papers/BleiLafferty2006a.pdf>`_.
+        chain_variance : float, optional
+            Gaussian parameter defined in the beta distribution to dictate how the beta values evolve.
+        passes : int, optional
+            Number of passes over the corpus for the initial :class:`~gensim.models.ldamodel.LdaModel`
+        random_state : {numpy.random.RandomState, int}, optional
+            Can be a np.random.RandomState object, or the seed to generate one. Used for reproducibility of results.
+        lda_inference_max_iter : int, optional
+            Maximum number of iterations in the inference step of the LDA training.
+        em_min_iter : int, optional
+            Minimum number of iterations until converge of the Expectation-Maximization algorithm
+        em_max_iter : int, optional
+            Maximum number of iterations until converge of the Expectation-Maximization algorithm
+        chunksize : int, optional
+            Number of documents in the corpus do be processed in in a chunk.
+
         """
         self.gensim_model = None
         self.time_slice = time_slice
@@ -46,9 +98,18 @@ class LdaSeqTransformer(TransformerMixin, BaseEstimator):
         self.chunksize = chunksize
 
     def fit(self, X, y=None):
-        """
-        Fit the model according to the given training data.
-        Calls gensim.models.LdaSeqModel
+        """Fit the model according to the given training data.
+
+        Parameters
+        ----------
+        X : {iterable of list of (int, number), scipy.sparse matrix}
+            A collection of documents in BOW format used for training the model.
+
+        Returns
+        -------
+        :class:`~gensim.sklearn_api.ldaseqmodel.LdaSeqTransformer`
+            The trained model.
+
         """
         self.gensim_model = models.LdaSeqModel(
             corpus=X, time_slice=self.time_slice, id2word=self.id2word,
@@ -60,12 +121,18 @@ class LdaSeqTransformer(TransformerMixin, BaseEstimator):
         return self
 
     def transform(self, docs):
-        """
-        Return the topic proportions for the documents passed.
-        The input `docs` should be in BOW format and can be a list of documents like
-        [[(4, 1), (7, 1)],
-        [(9, 1), (13, 1)], [(2, 1), (6, 1)]]
-        or a single document like : [(4, 1), (7, 1)]
+        """Infer the topic distribution for `docs`.
+
+        Parameters
+        ----------
+        docs : {iterable of list of (int, number), scipy.sparse matrix}
+            A collection of documents in BOW format to be transformed.
+
+        Returns
+        -------
+        numpy.ndarray of shape [`len(docs)`, `num_topics`]
+            The topic representation of each document.
+
         """
         if self.gensim_model is None:
             raise NotFittedError(
