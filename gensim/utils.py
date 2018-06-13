@@ -1709,6 +1709,29 @@ def prune_vocab(vocab, min_reduce, trim_rule=None):
     return result
 
 
+def trim_vocab_by_freq(vocab, topk, trim_rule=None):
+    """Retain `topk` most frequent words in `vocab`.
+    If there are more words with the same frequency as `topk`-th one, they will be dropped.
+    Modifies `vocab` in place, returns nothing.
+
+    Parameters
+    ----------
+    vocab : dict
+        Input dictionary.
+    topk : int
+        Number of words with highest frequencies to keep.
+    trim_rule : function, optional
+        Function for trimming entities from vocab, default behaviour is `vocab[w] <= min_count`.
+
+    """
+    if topk >= len(vocab):
+        return
+
+    sorted_vocab = sorted(vocab.keys(), key=lambda word: vocab[word], reverse=True)
+    min_count = vocab[sorted_vocab[topk]] + 1
+    prune_vocab(vocab, min_count, trim_rule=trim_rule)
+
+
 def merge_counts(dict1, dict2):
     """Merge `dict1` of (word, freq1) and `dict2` of (word, freq2) into `dict1` of (word, freq1+freq2).
     Parameters

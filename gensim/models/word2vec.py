@@ -1261,6 +1261,8 @@ class Word2VecVocab(utils.SaveLoad):
                 total_sentences += num_sentences
 
         self.raw_vocab = reduce(utils.merge_counts, [res.get() for res in results])
+        if self.max_vocab_size:
+            utils.trim_vocab_by_freq(self.raw_vocab, self.max_vocab_size, trim_rule=trim_rule)
         return total_words, total_sentences
 
     def scan_vocab(self, sentences, multistream=False, progress_per=10000, workers=None, trim_rule=None):

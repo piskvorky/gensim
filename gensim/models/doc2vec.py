@@ -902,6 +902,8 @@ class Doc2VecVocab(Word2VecVocab):
 
         results = [res.get() for res in results]  # pairs (vocab, doclen2tags)
         self.raw_vocab = reduce(utils.merge_counts, [r[0] for r in results])
+        if self.max_vocab_size:
+            utils.trim_vocab_by_freq(self.raw_vocab, self.max_vocab_size, trim_rule=trim_rule)
 
         # Update `docvecs` with document tags information.
         for (_, doclen2tags) in results:
