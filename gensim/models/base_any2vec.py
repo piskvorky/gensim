@@ -338,7 +338,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
                 if not isinstance(sentences, (tuple, list)):
                     raise TypeError("If multistream=True, you must pass tuple or list as the sentences argument.")
                 if any(isinstance(stream, GeneratorType) for stream in sentences):
-                    raise TypeError("You can't pass a generators as input streams. Try an iterator.")
+                    raise TypeError("You can't pass a generator as input streams. Try an iterator.")
             if not multistream and isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
 
