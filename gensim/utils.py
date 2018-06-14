@@ -1727,7 +1727,7 @@ def trim_vocab_by_freq(vocab, topk, trim_rule=None):
     if topk >= len(vocab):
         return
 
-    sorted_vocab = sorted(vocab.keys(), key=lambda word: vocab[word], reverse=True)
+    sorted_vocab = sorted(iterkeys(vocab), key=lambda word: vocab[word], reverse=True)
     min_count = vocab[sorted_vocab[topk]] + 1
     prune_vocab(vocab, min_count, trim_rule=trim_rule)
 
