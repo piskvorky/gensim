@@ -5,49 +5,46 @@
 # Copyright (C) 2018 RaRe Technologies s.r.o.
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""Learn word representations via fasttext's "skip-gram and CBOW models", using either
-hierarchical softmax or negative sampling `Enriching Word Vectors with Subword Information
+"""Learn word representations via Fasttext: `Enriching Word Vectors with Subword Information
 <https://arxiv.org/abs/1607.04606>`_.
 
-
-This module allows training a word embedding from a training corpus with the additional ability to obtain word vectors
+This module allows training word embeddings from a training corpus with the additional ability to obtain word vectors
 for out-of-vocabulary words.
 
-For a tutorial on gensim's native fasttext, refer to the `noteboook
+This module contains a fast native C implementation of Fasttext with Python interfaces. It is **not** only a wrapper around Facebook's implementation.
+For a tutorial see `this noteboook
 <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/FastText_Tutorial.ipynb>`_.
 
 Notes
 -----
-**Make sure you have a C compiler before installing gensim, to use optimized (compiled) fasttext training**
+**Make sure you have a C compiler before installing Gensim, to use the optimized (compiled) Fasttext training routines.**
 
 Examples
 --------
 
-Initialize and train a model
+Initialize and train a model::
 
 >>> from gensim.test.utils import common_texts, get_tmpfile
 >>> from gensim.models import FastText
 >>>
->>> model = FastText(size=4, window=3, min_count=1)
->>> model.build_vocab(common_texts)
->>> model.train(common_texts, epochs=1, total_examples=model.corpus_count)
+>>> model = FastText(common_texts, size=4, window=3, min_count=1, epochs=10)
 
-Persist a model to disk with
+Persist a model to disk with::
 
->>> tmp_fname = get_tmpfile("temp_fasttext.model")
->>>
->>> model.save(tmp_fname)
->>> model = FastText.load(tmp_fname)  # you can continue training with the loaded model!
+>>> model.save(fname)
+>>> model = FastText.load(fname)  # you can continue training with the loaded model!
 
-Retrieve word-vector for vocab and out-of-vocab word (this is main feature of current model)
+Retrieve word-vector for vocab and out-of-vocab word::
 
 >>> existent_word = "computer"
+>>> print(existent_word in model)  # True
 >>> computer_vec = model.wv[existent_word]  # numpy vector of a word
 >>>
 >>> oov_word = "graph-out-of-vocab"
+>>> print(oov_word in model)  # False
 >>> oov_vec = model.wv[oov_word]  # numpy vector for OOV word
 
-You can perform various NLP word tasks with the model, some of them are already built-in
+You can perform various NLP word tasks with the model, some of them are already built-in::
 
 >>> similarities = model.wv.most_similar(positive=['computer', 'human'], negative=['interface'])
 >>> most_similar = similarities[0]
@@ -59,17 +56,18 @@ You can perform various NLP word tasks with the model, some of them are already 
 >>>
 >>> sim_score = model.wv.similarity('computer', 'human')
 
-Correlation with human opinion on word similarity
+Correlation with human opinion on word similarity::
 
 >>> from gensim.test.utils import datapath
 >>>
 >>> similarities = model.wv.evaluate_word_pairs(datapath('wordsim353.tsv'))
 
-And on analogies
+And on word analogies::
 
 >>> analogies_result = model.wv.accuracy(datapath('questions-words.txt'))
 
 """
+
 import logging
 import struct
 
@@ -205,12 +203,12 @@ FASTTEXT_FILEFORMAT_MAGIC = 793712314
 
 
 class FastText(BaseWordEmbeddingsModel):
-    """Class for training, using and evaluating word representations learned using method
+    """Train, use and evaluate word representations learned using the method
     described in `Enriching Word Vectors with Subword Information <https://arxiv.org/abs/1607.04606>`_, aka FastText.
 
     The model can be stored/loaded via its :meth:`~gensim.models.fasttext.FastText.save` and
-    :meth:`~gensim.models.fasttext.FastText.load` methods, or loaded in a format compatible with the original
-    fasttext implementation via :meth:`~gensim.models.fasttext.FastText.load_fasttext_format`.
+    :meth:`~gensim.models.fasttext.FastText.load` methods, or loaded from a format compatible with the original
+    Fasttext implementation via :meth:`~gensim.models.fasttext.FastText.load_fasttext_format`.
 
     Some important attributes are the following:
 
@@ -250,24 +248,29 @@ class FastText(BaseWordEmbeddingsModel):
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
             If you don't supply `sentences`, the model is left uninitialized -- use if you plan to initialize it
             in some other way.
-        sg : {1, 0}, optional
-            Defines the training algorithm. If 1, skip-gram is used, otherwise, CBOW is employed.
+        min_count : int, optional
+            The model ignores all words with total frequency lower than this.
         size : int, optional
-            Dimensionality of the feature vectors.
+            Dimensionality of the word vectors.
         window : int, optional
             The maximum distance between the current and predicted word within a sentence.
+        workers : int, optional
+            Use these many worker threads to train the model (=faster training with multicore machines).
         alpha : float, optional
             The initial learning rate.
         min_alpha : float, optional
             Learning rate will linearly drop to `min_alpha` as training progresses.
+        sg : {1, 0}, optional
+            Training algorithm: skip-gram if `sg=1`, otherwise CBOW.
+        hs : {1,0}, optional
+            If 1, hierarchical softmax will be used for model training.
+            If set to 0, and `negative` is non-zero, negative sampling will be used.
         seed : int, optional
             Seed for the random number generator. Initial vectors for each word are seeded with a hash of
             the concatenation of word + `str(seed)`. Note that for a fully deterministically-reproducible run,
             you must also limit the model to a single worker thread (`workers=1`), to eliminate ordering jitter
             from OS thread scheduling. (In Python 3, reproducibility between interpreter launches also requires
             use of the `PYTHONHASHSEED` environment variable to control hash randomization).
-        min_count : int, optional
-            The model ignores all words with total frequency lower than this.
         max_vocab_size : int, optional
             Limits the RAM during vocabulary building; if there are more unique
             words than this, then prune the infrequent ones. Every 10 million word types need about 1GB of RAM.
@@ -275,11 +278,6 @@ class FastText(BaseWordEmbeddingsModel):
         sample : float, optional
             The threshold for configuring which higher-frequency words are randomly downsampled,
             useful range is (0, 1e-5).
-        workers : int, optional
-            Use these many worker threads to train the model (=faster training with multicore machines).
-        hs : {1,0}, optional
-            If 1, hierarchical softmax will be used for model training.
-            If set to 0, and `negative` is non-zero, negative sampling will be used.
         negative : int, optional
             If > 0, negative sampling will be used, the int for negative specifies how many "noise words"
             should be drawn (usually between 5-20).
@@ -326,14 +324,14 @@ class FastText(BaseWordEmbeddingsModel):
 
         Examples
         --------
-        Initialize and train a `FastText` model
+        Initialize and train a `FastText` model::
 
         >>> from gensim.models import FastText
         >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
         >>>
         >>> model = FastText(sentences, min_count=1)
-        >>> say_vector = model['say']  # get vector for word
-        >>> of_vector = model['of']  # get vector for out-of-vocab word
+        >>> say_vector = model['say']  # get vector for a word
+        >>> of_vector = model['of']  # get vector for an out-of-vocab word
 
         """
         self.load = call_on_class_only
@@ -473,7 +471,7 @@ class FastText(BaseWordEmbeddingsModel):
         pass
 
     def _clear_post_train(self):
-        """Clears the model's internal structures after training has finished to free up RAM. """
+        """Clear the model's internal structures after training has finished to free up RAM. """
         self.wv.vectors_norm = None
         self.wv.vectors_vocab_norm = None
         self.wv.vectors_ngrams_norm = None
@@ -626,11 +624,10 @@ class FastText(BaseWordEmbeddingsModel):
         self.wv.init_sims(replace)
 
     def clear_sims(self):
-        """Removes all L2-normalized vectors for words from the model.
+        """
+        Remove all L2-normalized word vectors from the model, to free up memory.
 
-        Notes
-        -----
-        You will have to recompute them using init_sims method.
+        You can recompute them later again using the :meth:`~gensim.models.FastText.init_sims()` method.
 
         """
         self._clear_post_train()
@@ -653,12 +650,12 @@ class FastText(BaseWordEmbeddingsModel):
 
     @classmethod
     def load_fasttext_format(cls, model_file, encoding='utf8'):
-        """Load the input-hidden weight matrix from the fast text output files.
+        """Load the input-hidden weight matrix from Facebook's native fasttext `.bin` and `.vec` output files.
 
         Notes
         ------
         Due to limitations in the FastText API, you cannot continue training
-        with a model loaded this way, though you can query for word similarity etc.
+        with a model loaded this way.
 
         Parameters
         ----------
@@ -666,9 +663,9 @@ class FastText(BaseWordEmbeddingsModel):
             Path to the FastText output files.
             FastText outputs two model files - `/path/to/model.vec` and `/path/to/model.bin`
             Expected value for this example: `/path/to/model` or `/path/to/model.bin`,
-            as gensim requires only `.bin` file to the load entire fastText model.
+            as Gensim requires only `.bin` file to the load entire fastText model.
         encoding : str, optional
-            Specifies the encoding.
+            Specifies the file encoding.
 
         Returns
         -------
@@ -684,7 +681,7 @@ class FastText(BaseWordEmbeddingsModel):
         return model
 
     def load_binary_data(self, encoding='utf8'):
-        """Loads data from the output binary file created by FastText training.
+        """Load data from a binary file created by Facebook's native FastText.
 
         Parameters
         ----------
@@ -698,12 +695,12 @@ class FastText(BaseWordEmbeddingsModel):
             self._load_vectors(f)
 
     def _load_model_params(self, file_handle):
-        """Loads the models parameters from a file.
+        """Load model parameters from Facebook's native fasttext file.
 
         Parameters
         ----------
         file_handle : file-like object
-            Handle to an opened file.
+            Handle to an open file.
 
         """
         magic, version = self.struct_unpack(file_handle, '@2i')
@@ -732,9 +729,7 @@ class FastText(BaseWordEmbeddingsModel):
         self.vocabulary.sample = t
 
     def _load_dict(self, file_handle, encoding='utf8'):
-        """Loads a previously saved dictionary from disk.
-
-        The dictionary is used to initialize the word vectors.
+        """Load a previously saved dictionary from disk, stored in Facebook's native fasttext format.
 
         Parameters
         ----------
@@ -781,14 +776,14 @@ class FastText(BaseWordEmbeddingsModel):
                 self.struct_unpack(file_handle, '@2i')
 
     def _load_vectors(self, file_handle):
-        """Loads the word vectors from disk.
+        """Load word vectors stored in Facebook's native fasttext format from disk.
 
         Parameters
         ----------
         file_handle : file-like object
-            The opened file handle to the persisted dictionary.
+            Open file handle to persisted vectors.
         encoding : str
-            Specifies the encoding.
+            File encoding.
 
         """
         if self.new_format:
@@ -819,32 +814,33 @@ class FastText(BaseWordEmbeddingsModel):
         self._clear_post_train()
 
     def struct_unpack(self, file_handle, fmt):
-        """Get the word vectors from disk using the cc format.
+        """Read a single object from an open file.
 
         Parameters
         ----------
         file_handle : file_like object
             Handle to an open file
         fmt : str
-            Specified the format in which the C representation is saved.
+            Byte format in which the structure is saved.
 
         Returns
         -------
         Tuple of (str)
-            String representation of each byte string found in the C file.
+            Unpacked structure.
 
         """
         num_bytes = struct.calcsize(fmt)
         return struct.unpack(fmt, file_handle.read(num_bytes))
 
     def save(self, *args, **kwargs):
-        """Save the model. This saved model can be loaded again using :func:`~gensim.models.fasttext.FastText.load`,
-        which supports online training and getting vectors for out-of-vocabulary words.
+        """Save the Fasttext model. This saved model can be loaded again using
+        :func:`~gensim.models.fasttext.FastText.load`, which supports incremental training
+        and getting vectors for out-of-vocabulary words.
 
         Parameters
         ----------
         fname : str
-            Path to the file.
+            Store the model to this file.
 
         """
         kwargs['ignore'] = kwargs.get(
@@ -853,7 +849,7 @@ class FastText(BaseWordEmbeddingsModel):
 
     @classmethod
     def load(cls, *args, **kwargs):
-        """Loads a previously saved `FastText` model. Also see `save()`.
+        """Load a previously saved `FastText` model. Also see :func:`~gensim.models.fasttext.FastText.save`.
 
         Parameters
         ----------
@@ -863,7 +859,7 @@ class FastText(BaseWordEmbeddingsModel):
         Returns
         -------
         :class:`~gensim.models.fasttext.FastText`
-            The loaded model.
+            Loaded model.
 
         """
         try:
@@ -1011,8 +1007,8 @@ class FastTextTrainables(Word2VecTrainables):
             wv.vectors[v.index] = word_vec
 
     def init_ngrams_post_load(self, file_name, wv):
-        """
-        Computes ngrams of all words present in vocabulary and stores vectors for only those ngrams.
+        """Compute ngrams of all words present in vocabulary, and store vectors for only those ngrams.
+
         Vectors for other ngrams are initialized with a random uniform distribution in FastText. These
         vectors are discarded here to save space.
 
