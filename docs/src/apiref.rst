@@ -45,6 +45,7 @@ Modules:
     models/word2vec
     models/keyedvectors
     models/doc2vec
+    models/doc2vec_inner
     models/fasttext
     models/phrases
     models/poincare
@@ -64,6 +65,7 @@ Modules:
     models/deprecated/word2vec
     models/deprecated/keyedvectors
     models/deprecated/fasttext_wrapper
+    models/base_any2vec
     similarities/docsim
     similarities/index
     sklearn_api/atmodel
