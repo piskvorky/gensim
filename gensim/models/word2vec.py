@@ -28,7 +28,7 @@ For a tutorial on Gensim word2vec, with an interactive web app trained on Google
 visit https://rare-technologies.com/word2vec-tutorial/.
 
 **Make sure you have a C compiler before installing Gensim, to use the optimized word2vec routines**
-(70x speedup compared to plain NumPy implementation <http://radimrehurek.com/2013/09/word2vec-in-python-part-two-optimizing/>`_).
+(70x speedup compared to plain NumPy implementation <https://rare-technologies.com/parallelizing-word2vec-in-python/>`_).
 
 Examples
 --------
@@ -1369,7 +1369,7 @@ class LineSentence(object):
         """
         Parameters
         ----------
-        source : string or a file object
+        source : string or a file-like object
             Path to the file on disk, or an already-open file object (must support `seek(0)`).
         limit : int or None
             Clip the file to the first `limit` lines. Do no clipping if `limit is None` (the default).

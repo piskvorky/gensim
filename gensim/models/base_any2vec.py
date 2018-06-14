@@ -5,7 +5,7 @@
 # Copyright (C) 2018 RaRe Technologies s.r.o.
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""This module contains base classes required for implementing any2vec algorithms.
+"""This module contains base classes required for implementing *2vec algorithms.
 
 The class hierarchy is designed to facilitate adding more concrete implementations for creating embeddings.
 In the most general case, the purpose of this class is to transform an arbitrary representation to a numerical vector
@@ -16,8 +16,8 @@ space is text.
 
 Notes
 -----
-Even though this is the usual case, not all embeddings transform text. Check the next section for
-concrete examples.
+Even though this is the usual case, not all embeddings transform text, such as the :class:`~gensim.models.poincare.PoincareModel`
+that embeds graphs.
 
 See Also
 --------
@@ -52,7 +52,7 @@ logger = logging.getLogger(__name__)
 
 
 class BaseAny2VecModel(utils.SaveLoad):
-    """Base class for training, using and evaluating any2vec model.
+    """Base class for training, using and evaluating *2vec model.
 
     Contains implementation for multi-threaded training. The purpose of this class is to provide a
     reference interface for concrete embedding implementations, whether the input space is a corpus
@@ -130,20 +130,20 @@ class BaseAny2VecModel(utils.SaveLoad):
         raise NotImplementedError()
 
     def _worker_loop(self, job_queue, progress_queue):
-        """Train the model, lifting lists of data from the queue.
+        """Train the model, lifting batches of data from the queue.
 
         This function will be called in parallel by multiple workers (threads or processes) to make
         optimal use of multicore machines.
 
         Parameters
         ----------
-        job_queue : Queue of (list of object, (str, int))
+        job_queue : Queue of (list of objects, (str, int))
             A queue of jobs still to be processed. The worker will take up jobs from this queue.
             Each job is represented by a tuple where the first element is the corpus chunk to be processed and
             the second is the dictionary of parameters.
         progress_queue : Queue of (int, int, int)
             A queue of progress reports. Each report is represented as a tuple of these 3 elements:
-                * size of data chunk processed, for example number of sentences in the corpus chunk.
+                * Size of data chunk processed, for example number of sentences in the corpus chunk.
                 * Effective word count used in training (after ignoring unknown words and trimming the sentence length).
                 * Total word count used in training.
 
@@ -173,11 +173,11 @@ class BaseAny2VecModel(utils.SaveLoad):
         """Fill the jobs queue using the data found in the input stream.
 
         Each job is represented by a tuple where the first element is the corpus chunk to be processed and
-        the second is the dictionary of parameters.
+        the second is a dictionary of parameters.
 
         Parameters
         ----------
-        data_iterator : iterable of list of object
+        data_iterator : iterable of list of objects
             The input dataset. This will be split in chunks and these chunks will be pushed to the queue.
         job_queue : Queue of (list of object, dict of (str, int))
             A queue of jobs still to be processed. The worker will take up jobs from this queue.
@@ -379,7 +379,7 @@ class BaseAny2VecModel(utils.SaveLoad):
 
     def train(self, data_iterable, epochs=None, total_examples=None,
               total_words=None, queue_factor=2, report_delay=1.0, callbacks=(), **kwargs):
-        """Train the model for every epochs using multiple workers.
+        """Train the model for multiple epochs using multiple workers.
 
         Parameters
         ----------
@@ -398,7 +398,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         report_delay : float, optional
             Number of seconds between two consecutive progress report messages in the logger.
         callbacks : list of :class:`~gensim.models.callbacks.CallbackAny2Vec`, optional
-            List of callbacks that need to be executed/run at specific stages during training.
+            List of callbacks to execute at specific stages during training.
         **kwargs : object
             Additional key word parameters for the specific model inheriting from this class.
 
@@ -454,14 +454,14 @@ class BaseAny2VecModel(utils.SaveLoad):
 
     @classmethod
     def load(cls, fname_or_handle, **kwargs):
-        """Load a previously saved object (using :meth:`gensim.models.base_any2vec.BaseAny2VecModel.save`) from file.
+        """Load a previously saved object (using :meth:`gensim.models.base_any2vec.BaseAny2VecModel.save`) from a file.
 
         Parameters
         ----------
         fname_or_handle : {str, file-like object}
-            Path to file that contains needed object or handle to the opened file.
+            Path to file that contains needed object or handle to an open file.
         **kwargs : object
-            Key word arguments propagated to :meth:`~gensim.utils.SaveLoad.load`.
+            Keyword arguments propagated to :meth:`~gensim.utils.SaveLoad.load`.
 
         See Also
         --------
@@ -476,7 +476,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         Raises
         ------
         IOError
-            When methods are called on instance (should be called from class).
+            When methods are called on an instance (should be called on a class, this is a class method).
 
         """
         return super(BaseAny2VecModel, cls).load(fname_or_handle, **kwargs)

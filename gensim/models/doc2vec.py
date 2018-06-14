@@ -6,20 +6,23 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""Deep learning via the distributed memory and distributed bag of words models from
+"""Learn paragraph and document embeddings via the distributed memory and distributed bag of words models from
 `Quoc Le and Tomas Mikolov: "Distributed Representations of Sentences and Documents"
-<http://arxiv.org/pdf/1405.4053v2.pdf>`_, using either hierarchical softmax or negative sampling, see
+<http://arxiv.org/pdf/1405.4053v2.pdf>`_.
+
+The algorithms use either hierarchical softmax or negative sampling; see
 `Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean: "Efficient Estimation of Word Representations in
 Vector Space, in Proceedings of Workshop at ICLR, 2013" <https://arxiv.org/pdf/1301.3781.pdf>`_ and
 `Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg Corrado, and Jeffrey Dean: "Distributed Representations of Words
 and Phrases and their Compositionality. In Proceedings of NIPS, 2013"
 <https://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf>`_.
 
-For a real world usage scenario, see the `Doc2vec in gensim tutorial
+For a usage example, see the `Doc2vec tutorial
 <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/doc2vec-lee.ipynb>`_.
 
-**Make sure you have a C compiler before installing gensim, to use optimized (compiled)
-doc2vec training** (70x speedup `blog <https://rare-technologies.com/parallelizing-word2vec-in-python/>`_).
+**Make sure you have a C compiler before installing Gensim, to use the optimized doc2vec routines**
+(70x speedup compared to plain NumPy implementation <https://rare-technologies.com/parallelizing-word2vec-in-python/>`_).
+
 
 Examples
 --------
@@ -29,14 +32,14 @@ Initialize & train a model
 >>> from gensim.test.utils import common_texts, get_tmpfile
 >>> from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 >>>
->>> documents = [TaggedDocument(word, [i]) for i, word in enumerate(common_texts)]
+>>> documents = [TaggedDocument(doc, [i]) for i, doc in enumerate(common_texts)]
 >>> model = Doc2Vec(documents, vector_size=5, window=2, min_count=1, workers=4)
 
 Persist a model to disk
 
->>> tmp_f = get_tmpfile("model")
->>> model.save(tmp_f)
->>> model = Doc2Vec.load(tmp_f)  # you can continue training with the loaded model!
+>>> model.save(fname)
+
+>>> model = Doc2Vec.load(fname)  # you can continue training with the loaded model!
 
 If you're finished training a model (=no more updates, only querying, reduce memory usage), you can do
 
@@ -47,6 +50,7 @@ Infer vector for new document
 >>> vector = model.infer_vector(["system", "response"])
 
 """
+
 import logging
 import os
 import warnings
@@ -343,7 +347,7 @@ class TaggedDocument(namedtuple('TaggedDocument', 'words tags')):
     """Represents a document along with a tag, input document format for :class:`~gensim.models.doc2vec.Doc2Vec`.
 
     A single document, made up of `words` (a list of unicode string tokens) and `tags` (a list of tokens).
-    Tags may be one or more unicode string tokens, but typical practice (which will also be most memory-efficient)
+    Tags may be one or more unicode string tokens, but typical practice (which will also be the most memory-efficient)
     is for the tags list to include a unique integer id as the only tag.
 
     Replaces "sentence as a list of words" from :class:`gensim.models.word2vec.Word2Vec`.
@@ -401,7 +405,8 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         This object contains the paragraph vectors. Remember that the only difference between this model and
         :class:`~gensim.models.word2vec.Word2Vec` is that besides the word vectors we also include paragraph embeddings
         to capture the paragraph.
-        In this way we can capture the difference between the same word used in a different wide context.
+
+        In this way we can capture the difference between the same word used in a different context.
         For example we now have a different representation of the word "leaves" in the following two sentences ::
 
             1. Manos leaves the office every day at 18:00 to catch his train
@@ -908,7 +913,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
     @classmethod
     def load(cls, *args, **kwargs):
-        """Loads a previously saved :class:`~gensim.models.doc2vec.Doc2Vec` model.
+        """Load a previously saved :class:`~gensim.models.doc2vec.Doc2Vec` model.
 
         Parameters
         ----------
@@ -1321,26 +1326,26 @@ class TaggedBrownCorpus(object):
 
 
 class TaggedLineDocument(object):
-    """Simple reader for format: one document = one line = one :class:`~gensim.models.doc2vec.TaggedDocument` object.
+    """
+    Iterate over a file that contains sentences: one line = one :class:`~gensim.models.doc2vec.TaggedDocument` object.
 
-    Words are expected to be already preprocessed and separated by whitespace, tags are constructed automatically
-    from the document line number.
+    Words are expected to be already preprocessed and separated by whitespace. Document tags are constructed automatically
+    from the document line number (each document gets a unique integer tag).
 
     """
     def __init__(self, source):
         """
-
         Parameters
         ----------
-        source : str
-            Path to source file.
+        source : string or a file-like object
+            Path to the file on disk, or an already-open file object (must support `seek(0)`).
 
         Examples
         --------
         >>> from gensim.test.utils import datapath
         >>> from gensim.models.doc2vec import TaggedLineDocument
         >>>
-        >>> for document in TaggedLineDocument(datapath("head500.noblanks.cor")):
+        >>> for document in TaggedLineDocument('myfile.txt.gz'):
         ...     pass
 
         """
@@ -1352,7 +1357,7 @@ class TaggedLineDocument(object):
         Yields
         ------
         :class:`~gensim.models.doc2vec.TaggedDocument`
-            Document from `source`.
+            Document from `source` specified in the constructor.
 
         """
         try:
