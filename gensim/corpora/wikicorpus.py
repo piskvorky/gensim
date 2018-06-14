@@ -380,7 +380,7 @@ def extract_pages(f, filter_namespaces=False, filter_articles=None):
                 if ns not in filter_namespaces:
                     text = None
 
-            if callable(filter_articles):
+            if callable(filter_articles) and text:
                 if filter_articles(elem, namespace=namespace, title=title,
                                    text=text, page_tag=page_tag,
                                    text_path=text_path, title_path=title_path,
@@ -559,6 +559,7 @@ class WikiCorpus(TextCorpus):
         """
         self.fname = fname
         self.filter_namespaces = filter_namespaces
+        self.filter_articles = filter_articles
         self.metadata = False
         if processes is None:
             processes = max(1, multiprocessing.cpu_count() - 1)
@@ -570,7 +571,6 @@ class WikiCorpus(TextCorpus):
         self.token_max_len = token_max_len
         self.lower = lower
         self.dictionary = dictionary or Dictionary(self.get_texts())
-        self.filter_articles = filter_articles
 
     def get_texts(self):
         """Iterate over the dump, yielding list of tokens for each article.
