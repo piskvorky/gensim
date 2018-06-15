@@ -95,7 +95,7 @@ class PoincareModel(utils.SaveLoad):
 
         Parameters
         ----------
-        train_data : {iterable of (str, str), :class:`gensim.models.poincare.PoincareRelations`
+        train_data : {iterable of (str, str), :class:`gensim.models.poincare.PoincareRelations`}
             Iterable of relations, e.g. a list of tuples, or a :class:`gensim.models.poincare.PoincareRelations`
             instance streaming from a file. Note that the relations are treated as ordered pairs,
             i.e. a relation (a, b) does not imply the opposite relation (b, a). In case the relations are symmetric,

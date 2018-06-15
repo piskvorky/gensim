@@ -37,14 +37,14 @@ Initialize a model with e.g.::
 
     >>> from gensim.models import Word2Vec
     >>> model = Word2Vec(sentences, size=100, window=5, min_count=5, workers=4)
-    >>> model.save(fname)
+    >>> model.save("word2vec.model")
 
 The training is streamed, meaning `sentences` can be a generator, reading input data
 from disk on-the-fly, without loading the entire corpus into RAM.
 
 It also means you can continue training the model later::
 
-    >>> model = Word2Vec.load(fname)
+    >>> model = Word2Vec.load("word2vec.model")
     >>> model.train(new_sentences)
 
 The trained word vectors are stored in a :class:`~gensim.models.KeyedVectors` instance in `model.wv`:
@@ -771,7 +771,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
     def _do_train_job(self, sentences, alpha, inits):
         """
-        Train the model on a single batch of sentences. Return`.
+        Train the model on a single batch of sentences.
 
         Parameters
         ----------
@@ -781,6 +781,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
             The learning rate used in this batch.
         inits : (np.ndarray, np.ndarray)
             Each worker threads private work memory.
+
         Returns
         -------
         (int, int)
@@ -855,7 +856,6 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
         Examples
         --------
-
 
         >>> from gensim.models import Word2Vec
         >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
