@@ -10,13 +10,17 @@ from gensim import utils
 import logging
 from timeit import default_timer
 import threading
+import multiprocessing as mp
 from six.moves import xrange
 from six import itervalues
 from gensim import matutils
-from numpy import float32 as REAL, ones, random, dtype, zeros
+from numpy import float32 as REAL, ones, random, dtype, zeros, array
 from types import GeneratorType
 from gensim.utils import deprecated
+import itertools
 import warnings
+import psutil
+import time
 
 try:
     from queue import Queue
@@ -24,6 +28,53 @@ except ImportError:
     from Queue import Queue
 
 logger = logging.getLogger(__name__)
+
+
+PERFORMANCE_METRICS = None
+_NUM_STATS_UPDATES = None
+
+
+def _reset_performance_metrics():
+    global PERFORMANCE_METRICS, _NUM_STATS_UPDATES, _QUEUE_SIZE_SUM
+    PERFORMANCE_METRICS = {
+        'total_time': 0.0,   # Total training time for 1 epoch in seconds.
+        'queue_size': 0.0,   # Average job queue size.
+        'words_sec': 0.0,    # Average speed in words per second.
+        'cpu_load': zeros(psutil.cpu_count(), dtype=REAL),
+        'cpu_load_sum': 0.0,
+        'vocab_time': 0.0
+    }
+
+    _NUM_STATS_UPDATES = 0.0
+
+    # Stub call in order to obtain correct results for subsequent calls.
+    psutil.cpu_percent(interval=None, percpu=True)
+
+
+def _update_queue_and_cpu_stats(qsize):
+    global _NUM_STATS_UPDATES
+    PERFORMANCE_METRICS['queue_size'] += qsize
+    PERFORMANCE_METRICS['cpu_load'] += array(psutil.cpu_percent(interval=None, percpu=True), dtype=REAL)
+
+    _NUM_STATS_UPDATES += 1
+
+
+def _set_vocab_time(elapsed):
+    PERFORMANCE_METRICS['vocab_time'] = elapsed
+
+
+def _finalize_performance_metrics(elapsed, words_sec):
+    PERFORMANCE_METRICS['total_time'] = elapsed
+    PERFORMANCE_METRICS['words_sec'] = words_sec
+
+    if _NUM_STATS_UPDATES:
+        PERFORMANCE_METRICS['queue_size'] = PERFORMANCE_METRICS['queue_size'] / _NUM_STATS_UPDATES
+        PERFORMANCE_METRICS['cpu_load'] = PERFORMANCE_METRICS['cpu_load'] / _NUM_STATS_UPDATES
+        PERFORMANCE_METRICS['cpu_load_sum'] = PERFORMANCE_METRICS['cpu_load'].sum()
+
+    # Explicitly format to string because floats are not serializable by json
+    PERFORMANCE_METRICS['cpu_load'] = ', '.join('{:.2f}'.format(x) for x in PERFORMANCE_METRICS['cpu_load'])
+    PERFORMANCE_METRICS['cpu_load_sum'] = str(PERFORMANCE_METRICS['cpu_load_sum'])
 
 
 class BaseAny2VecModel(utils.SaveLoad):
@@ -41,6 +92,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         - self.trainables (instance of concrete implementation of `BaseTrainables` abstract class)
 
         """
+        _reset_performance_metrics()
         self.vector_size = int(vector_size)
         self.workers = int(workers)
         self.epochs = epochs
@@ -82,16 +134,12 @@ class BaseAny2VecModel(utils.SaveLoad):
         """Check that the training parameters provided make sense. e.g. raise error if `epochs` not provided."""
         raise NotImplementedError()
 
-    def _worker_loop(self, job_queue, progress_queue):
+    def _worker_loop(self, input_stream, progress_queue):
         """Train the model, lifting lists of data from the job_queue."""
         thread_private_mem = self._get_thread_working_mem()
         jobs_processed = 0
-        while True:
-            job = job_queue.get()
-            if job is None:
-                progress_queue.put(None)
-                break  # no more jobs => quit this worker
-            data_iterable, job_parameters = job
+        for batch in self._batch_iterator(input_stream):
+            data_iterable, job_parameters = batch
 
             for callback in self.callbacks:
                 callback.on_batch_begin(self)
@@ -103,16 +151,17 @@ class BaseAny2VecModel(utils.SaveLoad):
 
             progress_queue.put((len(data_iterable), tally, raw_tally))  # report back progress
             jobs_processed += 1
+
+        progress_queue.put(None)
         logger.debug("worker exiting, processed %i jobs", jobs_processed)
 
-    def _job_producer(self, data_iterator, job_queue, cur_epoch=0, total_examples=None, total_words=None):
-        """Fill jobs queue using the input `data_iterator`."""
+    def _batch_iterator(self, input_stream, cur_epoch=0, total_examples=None, total_words=None):
         job_batch, batch_size = [], 0
-        pushed_words, pushed_examples = 0, 0
+        # pushed_words, pushed_examples = 0, 0
         next_job_params = self._get_job_params(cur_epoch)
         job_no = 0
 
-        for data_idx, data in enumerate(data_iterator):
+        for data_idx, data in enumerate(input_stream):
             data_length = self._raw_word_count([data])
 
             # can we fit this sentence into the existing job batch?
@@ -122,25 +171,26 @@ class BaseAny2VecModel(utils.SaveLoad):
                 batch_size += data_length
             else:
                 job_no += 1
-                job_queue.put((job_batch, next_job_params))
+
+                yield job_batch, next_job_params
 
                 # update the learning rate for the next job
-                if total_examples:
+                # if total_examples:
                     # examples-based decay
-                    pushed_examples += len(job_batch)
-                    epoch_progress = 1.0 * pushed_examples / total_examples
-                else:
+                    # pushed_examples += len(job_batch)
+                    # epoch_progress = 1.0 * pushed_examples / total_examples
+                # else:
                     # words-based decay
-                    pushed_words += self._raw_word_count(job_batch)
-                    epoch_progress = 1.0 * pushed_words / total_words
-                next_job_params = self._update_job_params(next_job_params, epoch_progress, cur_epoch)
+                    # pushed_words += self._raw_word_count(job_batch)
+                    # epoch_progress = 1.0 * pushed_words / total_words
+                # next_job_params = self._update_job_params(next_job_params, epoch_progress, cur_epoch)
 
                 # add the sentence that didn't fit as the first item of a new job
                 job_batch, batch_size = [data], data_length
         # add the last job too (may be significantly smaller than batch_words)
         if job_batch:
             job_no += 1
-            job_queue.put((job_batch, next_job_params))
+            yield job_batch, next_job_params
 
         if job_no == 0 and self.train_count == 0:
             logger.warning(
@@ -148,12 +198,9 @@ class BaseAny2VecModel(utils.SaveLoad):
                 "be sure to provide a corpus that offers restartable iteration = an iterable)."
             )
 
-        # give the workers heads up that they can finish -- no more work!
-        for _ in xrange(self.workers):
-            job_queue.put(None)
-        logger.debug("job loop exiting, total %i jobs", job_no)
+        logger.debug("batch iterator loop exiting, total %i jobs", job_no)
 
-    def _log_progress(self, job_queue, progress_queue, cur_epoch, example_count, total_examples,
+    def _log_progress(self, progress_queue, cur_epoch, example_count, total_examples,
                       raw_word_count, total_words, trained_word_count, elapsed):
         raise NotImplementedError()
 
@@ -164,7 +211,7 @@ class BaseAny2VecModel(utils.SaveLoad):
     def _log_train_end(self, raw_word_count, trained_word_count, total_elapsed, job_tally):
         raise NotImplementedError()
 
-    def _log_epoch_progress(self, progress_queue, job_queue, cur_epoch=0, total_examples=None, total_words=None,
+    def _log_epoch_progress(self, progress_queue, cur_epoch=0, total_examples=None, total_words=None,
                             report_delay=1.0):
         example_count, trained_word_count, raw_word_count = 0, 0, 0
         start, next_report = default_timer() - 0.00001, 1.0
@@ -189,7 +236,7 @@ class BaseAny2VecModel(utils.SaveLoad):
             elapsed = default_timer() - start
             if elapsed >= next_report:
                 self._log_progress(
-                    job_queue, progress_queue, cur_epoch, example_count, total_examples,
+                    progress_queue, cur_epoch, example_count, total_examples,
                     raw_word_count, total_words, trained_word_count, elapsed)
                 next_report = elapsed + report_delay
         # all done; report the final stats
@@ -200,35 +247,31 @@ class BaseAny2VecModel(utils.SaveLoad):
         self.total_train_time += elapsed
         return trained_word_count, raw_word_count, job_tally
 
-    def _train_epoch(self, data_iterable, cur_epoch=0, total_examples=None,
+    def _train_epoch(self, data_iterables, cur_epoch=0, total_examples=None,
                      total_words=None, queue_factor=2, report_delay=1.0):
         """Train one epoch."""
-        job_queue = Queue(maxsize=queue_factor * self.workers)
+        assert len(data_iterables) == self.workers
+
         progress_queue = Queue(maxsize=(queue_factor + 1) * self.workers)
 
         workers = [
             threading.Thread(
                 target=self._worker_loop,
-                args=(job_queue, progress_queue,))
-            for _ in xrange(self.workers)
+                args=(input_stream, progress_queue,))
+            for input_stream in data_iterables
         ]
-
-        workers.append(threading.Thread(
-            target=self._job_producer,
-            args=(data_iterable, job_queue),
-            kwargs={'cur_epoch': cur_epoch, 'total_examples': total_examples, 'total_words': total_words}))
 
         for thread in workers:
             thread.daemon = True  # make interrupting the process with ctrl+c easier
             thread.start()
 
         trained_word_count, raw_word_count, job_tally = self._log_epoch_progress(
-            progress_queue, job_queue, cur_epoch=cur_epoch, total_examples=total_examples, total_words=total_words,
+            progress_queue, cur_epoch=cur_epoch, total_examples=total_examples, total_words=total_words,
             report_delay=report_delay)
 
         return trained_word_count, raw_word_count, job_tally
 
-    def train(self, data_iterable, epochs=None, total_examples=None,
+    def train(self, data_iterables, epochs=None, total_examples=None,
               total_words=None, queue_factor=2, report_delay=1.0, callbacks=(), **kwargs):
         """Handle multi-worker training."""
         self._set_train_params(**kwargs)
@@ -253,7 +296,7 @@ class BaseAny2VecModel(utils.SaveLoad):
                 callback.on_epoch_begin(self)
 
             trained_word_count_epoch, raw_word_count_epoch, job_tally_epoch = self._train_epoch(
-                data_iterable, cur_epoch=cur_epoch, total_examples=total_examples, total_words=total_words,
+                data_iterables, cur_epoch=cur_epoch, total_examples=total_examples, total_words=total_words,
                 queue_factor=queue_factor, report_delay=report_delay)
             trained_word_count += trained_word_count_epoch
             raw_word_count += raw_word_count_epoch
@@ -297,8 +340,8 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
     def _set_train_params(self, **kwargs):
         raise NotImplementedError()
 
-    def __init__(self, sentences=None, workers=3, vector_size=100, epochs=5, callbacks=(), batch_words=10000,
-                 trim_rule=None, sg=0, alpha=0.025, window=5, seed=1, hs=0, negative=5, cbow_mean=1,
+    def __init__(self, sentences=None, input_streams=None, workers=3, vector_size=100, epochs=5, callbacks=(),
+                 batch_words=10000, trim_rule=None, sg=0, alpha=0.025, window=5, seed=1, hs=0, negative=5, cbow_mean=1,
                  min_alpha=0.0001, compute_loss=False, fast_version=0, **kwargs):
         self.sg = int(sg)
         if vector_size % 4 != 0:
@@ -330,12 +373,20 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
                 self.neg_labels[0] = 1.
 
         if sentences is not None:
+            assert input_streams is None, "You can't pass both `sententes` and `input_streams`."
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
+
             self.build_vocab(sentences, trim_rule=trim_rule)
             self.train(
-                sentences, total_examples=self.corpus_count, epochs=self.epochs, start_alpha=self.alpha,
+                [sentences], total_examples=self.corpus_count, epochs=self.epochs, start_alpha=self.alpha,
                 end_alpha=self.min_alpha, compute_loss=compute_loss)
+        elif input_streams is not None:
+            assert len(input_streams) > 0
+
+            self.build_vocab(input_streams, trim_rule=trim_rule)
+            self.train(input_streams, total_examples=self.corpus_count, epochs=self.epochs, start_alpha=self.alpha,
+                       end_alpha=self.min_alpha, compute_loss=compute_loss)
         else:
             if trim_rule is not None:
                 logger.warning(
@@ -459,7 +510,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             self.__class__.__name__, len(self.wv.index2word), self.vector_size, self.alpha
         )
 
-    def build_vocab(self, sentences, update=False, progress_per=10000, keep_raw_vocab=False, trim_rule=None, **kwargs):
+    def build_vocab(self, input_streams, update=False, progress_per=10000, workers=1, keep_raw_vocab=False, trim_rule=None, **kwargs):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence is a iterable of iterables (can simply be a list of unicode strings too).
 
@@ -476,14 +527,20 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             Indicates how many words to process before showing/updating the progress.
 
         """
+        start_time = time.time()
+
         total_words, corpus_count = self.vocabulary.scan_vocab(
-            sentences, progress_per=progress_per, trim_rule=trim_rule)
+            input_streams, progress_per=progress_per, workers=workers, trim_rule=trim_rule)
         self.corpus_count = corpus_count
         report_values = self.vocabulary.prepare_vocab(
             self.hs, self.negative, self.wv, update=update, keep_raw_vocab=keep_raw_vocab,
             trim_rule=trim_rule, **kwargs)
         report_values['memory'] = self.estimate_memory(vocab_size=report_values['num_retained_words'])
         self.trainables.prepare_weights(self.hs, self.negative, self.wv, update=update, vocabulary=self.vocabulary)
+
+        end_time = time.time()
+        _set_vocab_time(end_time - start_time)
+        logger.info('Vocabulary was built in {:.2f} seconds.'.format(end_time - start_time))
 
     def build_vocab_from_freq(self, word_freq, keep_raw_vocab=False, corpus_count=None, trim_rule=None, update=False):
         """Build vocabulary from a dictionary of word frequencies.
@@ -555,7 +612,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         )
         return report
 
-    def train(self, sentences, total_examples=None, total_words=None,
+    def train(self, input_streams, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None, word_count=0,
               queue_factor=2, report_delay=1.0, compute_loss=False, callbacks=()):
 
@@ -564,7 +621,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         self.compute_loss = compute_loss
         self.running_training_loss = 0.0
         return super(BaseWordEmbeddingsModel, self).train(
-            sentences, total_examples=total_examples, total_words=total_words,
+            input_streams, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
             queue_factor=queue_factor, report_delay=report_delay, compute_loss=compute_loss, callbacks=callbacks)
 
@@ -640,21 +697,24 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             model.total_train_time = 0
         return model
 
-    def _log_progress(self, job_queue, progress_queue, cur_epoch, example_count, total_examples,
+    def _log_progress(self, progress_queue, cur_epoch, example_count, total_examples,
                       raw_word_count, total_words, trained_word_count, elapsed):
         if total_examples:
             # examples-based progress %
+
             logger.info(
-                "EPOCH %i - PROGRESS: at %.2f%% examples, %.0f words/s, in_qsize %i, out_qsize %i",
+                "EPOCH %i - PROGRESS: at %.2f%% examples, %.0f words/s, out_qsize %i",
                 cur_epoch + 1, 100.0 * example_count / total_examples, trained_word_count / elapsed,
-                utils.qsize(job_queue), utils.qsize(progress_queue)
+                utils.qsize(progress_queue)
             )
+
+            _update_queue_and_cpu_stats(0)
         else:
             # words-based progress %
             logger.info(
-                "EPOCH %i - PROGRESS: at %.2f%% words, %.0f words/s, in_qsize %i, out_qsize %i",
+                "EPOCH %i - PROGRESS: at %.2f%% words, %.0f words/s, out_qsize %i",
                 cur_epoch + 1, 100.0 * raw_word_count / total_words, trained_word_count / elapsed,
-                utils.qsize(job_queue), utils.qsize(progress_queue)
+                utils.qsize(progress_queue)
             )
 
     def _log_epoch_end(self, cur_epoch, example_count, total_examples, raw_word_count, total_words,
@@ -663,6 +723,8 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             "EPOCH - %i : training on %i raw words (%i effective words) took %.1fs, %.0f effective words/s",
             cur_epoch + 1, raw_word_count, trained_word_count, elapsed, trained_word_count / elapsed
         )
+
+        _finalize_performance_metrics(elapsed, trained_word_count / elapsed)
 
         # check that the input corpus hasn't changed during iteration
         if total_examples and total_examples != example_count:
