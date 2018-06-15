@@ -298,7 +298,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         raise NotImplementedError()
 
     def __init__(self, sentences=None, workers=3, vector_size=100, epochs=5, callbacks=(), batch_words=10000,
-                 trim_rule=None, sg=0, alpha=0.025, window=5, seed=1, hs=0, negative=5, cbow_mean=1,
+                 trim_rule=None, sg=0, alpha=0.025, window=5, seed=1, hs=0, negative=5, ns_exponent=0.75, cbow_mean=1,
                  min_alpha=0.0001, compute_loss=False, fast_version=0, **kwargs):
         self.sg = int(sg)
         if vector_size % 4 != 0:
@@ -309,6 +309,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         self.min_alpha = float(min_alpha)
         self.hs = int(hs)
         self.negative = int(negative)
+        self.ns_exponent = ns_exponent
         self.cbow_mean = int(cbow_mean)
         self.compute_loss = bool(compute_loss)
         self.running_training_loss = 0
@@ -627,6 +628,10 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
     @classmethod
     def load(cls, *args, **kwargs):
         model = super(BaseWordEmbeddingsModel, cls).load(*args, **kwargs)
+        if not hasattr(model, 'ns_exponent'):
+            model.ns_exponent = 0.75
+        if not hasattr(model.vocabulary, 'ns_exponent'):
+            model.vocabulary.ns_exponent = 0.75
         if model.negative and hasattr(model.wv, 'index2word'):
             model.vocabulary.make_cum_table(model.wv)  # rebuild cum_table from vocabulary
         if not hasattr(model, 'corpus_count'):

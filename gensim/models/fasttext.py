@@ -162,7 +162,7 @@ class FastText(BaseWordEmbeddingsModel):
     """
     def __init__(self, sentences=None, sg=0, hs=0, size=100, alpha=0.025, window=5, min_count=5,
                  max_vocab_size=None, word_ngrams=1, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
-                 negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0, min_n=3, max_n=6, sorted_vocab=1,
+                 negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, iter=5, null_word=0, min_n=3, max_n=6, sorted_vocab=1,
                  bucket=2000000, trim_rule=None, batch_words=MAX_WORDS_IN_BATCH, callbacks=()):
         """Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -210,6 +210,11 @@ class FastText(BaseWordEmbeddingsModel):
             If > 0, negative sampling will be used, the int for negative specifies how many "noise words"
             should be drawn (usually between 5-20).
             If set to 0, no negative sampling is used.
+        ns_exponent : float
+            The exponent used to smooth the cumulative distribution used for negative sampling.
+            1.0 leads to a sampling based on the frequency distribution, 0.0 makes items beings sampled equally,
+            while a negative value makes unpopular items being sampled more often than popular onces. The default value
+            is empirically set to 0.75 following the original paper of Word2Vec.
         cbow_mean : int {1,0}
             If 0, use the sum of the context word vectors. If 1, use the mean, only applies when cbow is used.
         hashfxn : function
@@ -267,7 +272,7 @@ class FastText(BaseWordEmbeddingsModel):
         self.wv = FastTextKeyedVectors(size, min_n, max_n)
         self.vocabulary = FastTextVocab(
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
-            sorted_vocab=bool(sorted_vocab), null_word=null_word)
+            sorted_vocab=bool(sorted_vocab), null_word=null_word, ns_exponent=ns_exponent)
         self.trainables = FastTextTrainables(
             vector_size=size, seed=seed, bucket=bucket, hashfxn=hashfxn)
         self.wv.bucket = self.bucket
@@ -731,10 +736,10 @@ class FastText(BaseWordEmbeddingsModel):
 
 
 class FastTextVocab(Word2VecVocab):
-    def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0):
+    def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0, ns_exponent=0.75):
         super(FastTextVocab, self).__init__(
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
-            sorted_vocab=sorted_vocab, null_word=null_word)
+            sorted_vocab=sorted_vocab, null_word=null_word, ns_exponent=ns_exponent)
 
     def prepare_vocab(self, hs, negative, wv, update=False, keep_raw_vocab=False, trim_rule=None,
                       min_count=None, sample=None, dry_run=False):

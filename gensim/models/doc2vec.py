@@ -325,6 +325,11 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             If > 0, negative sampling will be used, the int for negative specifies how many "noise words"
             should be drawn (usually between 5-20).
             If set to 0, no negative sampling is used.
+        ns_exponent : float
+            The exponent used to smooth the cumulative distribution used for negative sampling.
+            1.0 leads to a sampling based on the frequency distribution, 0.0 makes items beings sampled equally,
+            while a negative value makes unpopular items being sampled more often than popular onces. The default value
+            is empirically set to 0.75 following the original paper of Word2Vec.
         dm_mean : int {1,0}
             If 0 , use the sum of the context word vectors. If 1, use the mean.
             Only applies when `dm` is used in non-concatenative mode.
@@ -383,7 +388,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         self.dm_tag_count = int(dm_tag_count)
 
         kwargs['null_word'] = dm_concat
-        vocabulary_keys = ['max_vocab_size', 'min_count', 'sample', 'sorted_vocab', 'null_word']
+        vocabulary_keys = ['max_vocab_size', 'min_count', 'sample', 'sorted_vocab', 'null_word', 'ns_exponent']
         vocabulary_kwargs = dict((k, kwargs[k]) for k in vocabulary_keys if k in kwargs)
         self.vocabulary = Doc2VecVocab(**vocabulary_kwargs)
 
@@ -790,10 +795,10 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
 
 class Doc2VecVocab(Word2VecVocab):
-    def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0):
+    def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0, ns_exponent=0.75):
         super(Doc2VecVocab, self).__init__(
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
-            sorted_vocab=sorted_vocab, null_word=null_word)
+            sorted_vocab=sorted_vocab, null_word=null_word, ns_exponent=ns_exponent)
 
     def scan_vocab(self, documents, docvecs, progress_per=10000, trim_rule=None):
         logger.info("collecting all words and their counts")

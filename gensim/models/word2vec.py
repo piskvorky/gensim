@@ -425,7 +425,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
     def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
                  max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
-                 sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
+                 sg=0, hs=0, negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
                  trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False, callbacks=(),
                  max_final_vocab=None):
         """
@@ -480,6 +480,11 @@ class Word2Vec(BaseWordEmbeddingsModel):
             If > 0, negative sampling will be used, the int for negative specifies how many "noise words"
             should be drawn (usually between 5-20).
             If set to 0, no negative sampling is used.
+        ns_exponent : float
+            The exponent used to smooth the cumulative distribution used for negative sampling.
+            1.0 leads to a sampling based on the frequency distribution, 0.0 makes items beings sampled equally,
+            while a negative value makes unpopular items being sampled more often than popular onces. The default value
+            is empirically set to 0.75 following the original paper of Word2Vec.
         cbow_mean : int {1,0}
             If 0, use the sum of the context word vectors. If 1, use the mean, only applies when cbow is used.
         hashfxn : function
@@ -523,8 +528,8 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
         self.wv = Word2VecKeyedVectors(size)
         self.vocabulary = Word2VecVocab(
-            max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
-            sorted_vocab=bool(sorted_vocab), null_word=null_word, max_final_vocab=max_final_vocab)
+            max_vocab_size=max_vocab_size, min_count=min_count, sample=sample, sorted_vocab=bool(sorted_vocab),
+            null_word=null_word, max_final_vocab=max_final_vocab, ns_exponent=ns_exponent)
         self.trainables = Word2VecTrainables(seed=seed, vector_size=size, hashfxn=hashfxn)
 
         super(Word2Vec, self).__init__(
@@ -1146,7 +1151,7 @@ class PathLineSentences(object):
 
 class Word2VecVocab(utils.SaveLoad):
     def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0,
-        max_final_vocab=None):
+        max_final_vocab=None, ns_exponent=0.75):
         self.max_vocab_size = max_vocab_size
         self.min_count = min_count
         self.sample = sample
@@ -1155,6 +1160,7 @@ class Word2VecVocab(utils.SaveLoad):
         self.cum_table = None  # for negative sampling
         self.raw_vocab = None
         self.max_final_vocab = max_final_vocab
+        self.ns_exponent = ns_exponent
 
     def scan_vocab(self, sentences, progress_per=10000, trim_rule=None):
         """Do an initial scan of all words appearing in sentences."""
@@ -1397,7 +1403,7 @@ class Word2VecVocab(utils.SaveLoad):
 
             logger.info("built huffman tree with maximum node depth %i", max_depth)
 
-    def make_cum_table(self, wv, power=0.75, domain=2**31 - 1):
+    def make_cum_table(self, wv, domain=2**31 - 1):
         """Create a cumulative-distribution table using stored vocabulary word counts for
         drawing random words in the negative-sampling training routines.
 
@@ -1413,10 +1419,10 @@ class Word2VecVocab(utils.SaveLoad):
         # compute sum of all power (Z in paper)
         train_words_pow = 0.0
         for word_index in xrange(vocab_size):
-            train_words_pow += wv.vocab[wv.index2word[word_index]].count**power
+            train_words_pow += wv.vocab[wv.index2word[word_index]].count**self.ns_exponent
         cumulative = 0.0
         for word_index in xrange(vocab_size):
-            cumulative += wv.vocab[wv.index2word[word_index]].count**power
+            cumulative += wv.vocab[wv.index2word[word_index]].count**self.ns_exponent
             self.cum_table[word_index] = round(cumulative / train_words_pow * domain)
         if len(self.cum_table) > 0:
             assert self.cum_table[-1] == domain
