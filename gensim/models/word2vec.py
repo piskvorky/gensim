@@ -839,9 +839,12 @@ class Word2Vec(BaseWordEmbeddingsModel):
         epochs : int, optional
             Number of iterations (epochs) over the corpus.
         start_alpha : float, optional
-            Initial learning rate.
+            Initial learning rate. If supplied, replaces the starting `alpha` from the constructor, for this one call to `train()`.
+            Use only if making multiple calls to `train()`, when you want to manage the alpha learning-rate yourself (not recommended).
         end_alpha : float, optional
             Final learning rate. Drops linearly from `start_alpha`.
+            If supplied, this replaces the final `min_alpha` from the constructor, for this one call to `train()`.
+            Use only if making multiple calls to `train()`, when you want to manage the alpha learning-rate yourself (not recommended).
         word_count : int, optional
             Count of words already trained. Set this to 0 for the usual
             case of training on all words in sentences.
