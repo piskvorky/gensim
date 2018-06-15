@@ -1712,7 +1712,7 @@ def prune_vocab(vocab, min_reduce, trim_rule=None):
 
 def trim_vocab_by_freq(vocab, topk, trim_rule=None):
     """Retain `topk` most frequent words in `vocab`.
-    If there are more words with the same frequency as `topk`-th one, they will be dropped.
+    If there are more words with the same frequency as `topk`-th one, they will be keeped.
     Modifies `vocab` in place, returns nothing.
 
     Parameters
@@ -1728,7 +1728,7 @@ def trim_vocab_by_freq(vocab, topk, trim_rule=None):
     if topk >= len(vocab):
         return
 
-    min_count = heapq.nlargest(topk, itervalues(vocab))[-1] + 1
+    min_count = heapq.nlargest(topk, itervalues(vocab))[-1]
     prune_vocab(vocab, min_count, trim_rule=trim_rule)
 
 
