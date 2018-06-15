@@ -427,7 +427,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
                  max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
                  sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
                  trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False, callbacks=(),
-                 max_final_vocab=None):
+                 bounter_size=None, max_final_vocab=None):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -504,6 +504,10 @@ class Word2Vec(BaseWordEmbeddingsModel):
             If True, computes and stores loss value which can be retrieved using `model.get_latest_training_loss()`.
         callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`
             List of callbacks that need to be executed/run at specific stages during training.
+        bounter_size: int
+            If set, allocates `bounter_size` MB for the Bounded Counter(bounter) which allows fast probabilistic
+            counting of item frequencies in massive datasets, using a small fixed memory footprint of `bounter_size`
+            Set to `None` if not needed.
 
         Examples
         --------
@@ -517,14 +521,15 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
         """
         self.max_final_vocab = max_final_vocab
-
+        self.bounter_size = bounter_size
         self.callbacks = callbacks
         self.load = call_on_class_only
 
         self.wv = Word2VecKeyedVectors(size)
         self.vocabulary = Word2VecVocab(
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
-            sorted_vocab=bool(sorted_vocab), null_word=null_word, max_final_vocab=max_final_vocab)
+            sorted_vocab=bool(sorted_vocab), null_word=null_word, bounter_size=bounter_size,
+            max_final_vocab=max_final_vocab)
         self.trainables = Word2VecTrainables(seed=seed, vector_size=size, hashfxn=hashfxn)
 
         super(Word2Vec, self).__init__(
@@ -981,10 +986,21 @@ class Word2Vec(BaseWordEmbeddingsModel):
         try:
             model = super(Word2Vec, cls).load(*args, **kwargs)
 
+            # Note:
+            # for models made in 3.1 and 3.2, the above line will lead to an exception which
+            # will subsequently lead to the creation of a new model with `max_final_vocab` and
+            # `bounter_size` The above line however won't raise an error for models made in 3.3
+            # Thus, the checks below are placed
+
             # for backward compatibility for `max_final_vocab` feature
             if not hasattr(model, 'max_final_vocab'):
                 model.max_final_vocab = None
                 model.vocabulary.max_final_vocab = None
+
+            # for backward compatibility for `bounter_size` feature
+            if not hasattr(model, 'bounter_size'):
+                model.bounter_size = None
+                model.vocabulary.bounter_size = None
 
             return model
         except AttributeError:
@@ -1146,12 +1162,13 @@ class PathLineSentences(object):
 
 class Word2VecVocab(utils.SaveLoad):
     def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0,
-        max_final_vocab=None):
+                 bounter_size=None, max_final_vocab=None):
         self.max_vocab_size = max_vocab_size
         self.min_count = min_count
         self.sample = sample
         self.sorted_vocab = sorted_vocab
         self.null_word = null_word
+        self.bounter_size = bounter_size
         self.cum_table = None  # for negative sampling
         self.raw_vocab = None
         self.max_final_vocab = max_final_vocab
@@ -1162,8 +1179,14 @@ class Word2VecVocab(utils.SaveLoad):
         sentence_no = -1
         total_words = 0
         min_reduce = 1
-        vocab = defaultdict(int)
         checked_string_types = 0
+        bounter_size = self.bounter_size
+
+        if bounter_size is not None:
+            wrapped_dict = utils.BounterCounter(self.bounter_size)
+        else:
+            wrapped_dict = utils.DictCounter()
+
         for sentence_no, sentence in enumerate(sentences):
             if not checked_string_types:
                 if isinstance(sentence, string_types):
@@ -1174,17 +1197,29 @@ class Word2VecVocab(utils.SaveLoad):
                     )
                 checked_string_types += 1
             if sentence_no % progress_per == 0:
+
                 logger.info(
                     "PROGRESS: at sentence #%i, processed %i words, keeping %i word types",
-                    sentence_no, total_words, len(vocab)
+                    sentence_no, total_words, len(wrapped_dict)
                 )
-            for word in sentence:
-                vocab[word] += 1
-            total_words += len(sentence)
 
-            if self.max_vocab_size and len(vocab) > self.max_vocab_size:
+            total_words += len(sentence)
+            wrapped_dict.update(sentence)
+
+            if self.max_vocab_size and len(wrapped_dict) > self.max_vocab_size:
+                vocab = wrapped_dict.as_dict()
                 utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
                 min_reduce += 1
+
+        vocab = wrapped_dict.as_dict()
+
+        logger.info(
+            "collected %i word types from a corpus of %i raw words and %i sentences",
+            len(vocab), total_words, sentence_no + 1
+        )
+        corpus_count = sentence_no + 1
+        self.raw_vocab = vocab
+        return total_words, corpus_count
 
         logger.info(
             "collected %i word types from a corpus of %i raw words and %i sentences",

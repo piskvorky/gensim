@@ -11,6 +11,8 @@ from contextlib import contextmanager
 import collections
 import logging
 import warnings
+from bounter import bounter
+from collections import defaultdict
 
 try:
     from html.entities import name2codepoint as n2cp
@@ -379,6 +381,46 @@ def call_on_class_only(*args, **kwargs):
 
     """
     raise AttributeError('This method should be called on a class object.')
+
+
+class DictCounter():
+    """Wrapper for allowing vocabulary counting to stay behind a clean dict-like
+    interface whether implemented by dict or bounter. This is a wrapper for dicts
+    """
+    def __init__(self):
+        self.vocab = defaultdict(int)
+
+    def __len__(self):
+        return len(self.vocab)
+
+    def update(self, sentence):
+        for word in sentence:
+            self.vocab[word] += 1
+
+    def as_dict(self):
+        return self.vocab
+
+
+class BounterCounter():
+    """Wrapper for allowing vocabulary counting to stay behind a clean dict-like
+    interface whether implemented by dict or bounter. This is a wrapper for bounter
+
+    Parameters
+    ----------
+    bounter_size : int
+        size in MB for the bounter.
+    """
+    def __init__(self, bounter_size):
+        self.word_counts = bounter(size_mb=bounter_size)
+
+    def __len__(self):
+        return self.word_counts.cardinality()
+
+    def update(self, sentence):
+        self.word_counts.update(sentence)
+
+    def as_dict(self):
+        return dict(self.word_counts)
 
 
 class SaveLoad(object):

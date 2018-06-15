@@ -234,6 +234,7 @@ win_testenv = [
     'testfixtures',
     'scikit-learn',
     'Morfessor==2.0.2a4',
+    'bounter'
 ]
 
 linux_testenv = win_testenv + [
