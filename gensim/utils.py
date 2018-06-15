@@ -33,12 +33,13 @@ import shutil
 import sys
 import subprocess
 import inspect
+import heapq
 
 import numpy as np
 import numbers
 import scipy.sparse
 
-from six import iterkeys, iteritems, u, string_types, unichr
+from six import iterkeys, iteritems, itervalues, u, string_types, unichr
 from six.moves import xrange
 
 from smart_open import smart_open
@@ -1727,8 +1728,7 @@ def trim_vocab_by_freq(vocab, topk, trim_rule=None):
     if topk >= len(vocab):
         return
 
-    sorted_vocab = sorted(iterkeys(vocab), key=lambda word: vocab[word], reverse=True)
-    min_count = vocab[sorted_vocab[topk]] + 1
+    min_count = heapq.nlargest(topk, itervalues(vocab))[-1] + 1
     prune_vocab(vocab, min_count, trim_rule=trim_rule)
 
 
