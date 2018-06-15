@@ -1709,6 +1709,31 @@ def prune_vocab(vocab, min_reduce, trim_rule=None):
     return result
 
 
+def merge_dicts(dict1, dict2):
+    """Merge `dict1` of (word, freq1) and `dict2` of (word, freq2) into `dict1` of (word, freq1+freq2).
+
+    Parameters
+    ----------
+    dict1 : dict
+        First dictionary.
+    dict2 : dict
+        Second dictionary.
+
+    Returns
+    -------
+    result : dict
+        Merged dictionary with sum of frequencies as values.
+
+    """
+    for word, freq in dict2.iteritems():
+        if word in dict1:
+            dict1[word] += freq
+        else:
+            dict1[word] = freq
+
+    return dict1
+
+
 def qsize(queue):
     """Get the (approximate) queue size where available.
 

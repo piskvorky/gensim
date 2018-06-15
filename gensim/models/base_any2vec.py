@@ -10,6 +10,7 @@ from gensim import utils
 import logging
 from timeit import default_timer
 import threading
+import multiprocessing as mp
 from six.moves import xrange
 from six import itervalues
 from gensim import matutils
@@ -199,6 +200,9 @@ class BaseAny2VecModel(utils.SaveLoad):
                 "be sure to provide a corpus that offers restartable iteration = an iterable)."
             )
 
+        # give the workers heads up that they can finish -- no more work!
+        for _ in xrange(self.workers):
+            job_queue.put(None)
         logger.debug("job loop exiting, total %i jobs", job_no)
 
     def _log_progress(self, job_queue, progress_queue, cur_epoch, example_count, total_examples,
@@ -252,7 +256,7 @@ class BaseAny2VecModel(utils.SaveLoad):
                      total_words=None, queue_factor=2, report_delay=1.0):
         """Train one epoch."""
 
-        job_queue = Queue(maxsize=queue_factor * self.workers)
+        job_queue = mp.Queue(maxsize=queue_factor * self.workers)
         progress_queue = Queue(maxsize=(queue_factor + 1) * self.workers)
 
         workers = [
@@ -262,13 +266,24 @@ class BaseAny2VecModel(utils.SaveLoad):
             for _ in xrange(self.workers)
         ]
 
-        workers.extend(
-            threading.Thread(
+        processes = [
+            mp.Process(
                 target=self._job_producer,
                 args=(data_iterable, job_queue),
                 kwargs={'cur_epoch': cur_epoch, 'total_examples': total_examples, 'total_words': total_words}
             ) for data_iterable in data_iterables
-        )
+        ]
+        # workers.extend(
+        #     threading.Thread(
+        #         target=self._job_producer,
+        #         args=(data_iterable, job_queue),
+        #         kwargs={'cur_epoch': cur_epoch, 'total_examples': total_examples, 'total_words': total_words}
+        #     ) for data_iterable in data_iterables
+        # )
+
+        for process in processes:
+            process.daemon = True
+            process.start()
 
         for thread in workers:
             thread.daemon = True  # make interrupting the process with ctrl+c easier
@@ -393,7 +408,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         elif input_streams is not None:
             assert len(input_streams) > 0
 
-            self.build_vocab(itertools.chain(*input_streams), trim_rule=trim_rule)
+            self.build_vocab(input_streams, trim_rule=trim_rule)
             self.train(input_streams, total_examples=self.corpus_count, epochs=self.epochs, start_alpha=self.alpha,
                        end_alpha=self.min_alpha, compute_loss=compute_loss)
         else:
@@ -519,7 +534,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             self.__class__.__name__, len(self.wv.index2word), self.vector_size, self.alpha
         )
 
-    def build_vocab(self, sentences, update=False, progress_per=10000, keep_raw_vocab=False, trim_rule=None, **kwargs):
+    def build_vocab(self, input_streams, update=False, progress_per=10000, workers=1, keep_raw_vocab=False, trim_rule=None, **kwargs):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence is a iterable of iterables (can simply be a list of unicode strings too).
 
@@ -539,7 +554,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         start_time = time.time()
 
         total_words, corpus_count = self.vocabulary.scan_vocab(
-            sentences, progress_per=progress_per, trim_rule=trim_rule)
+            input_streams, progress_per=progress_per, workers=workers, trim_rule=trim_rule)
         self.corpus_count = corpus_count
         report_values = self.vocabulary.prepare_vocab(
             self.hs, self.negative, self.wv, update=update, keep_raw_vocab=keep_raw_vocab,
