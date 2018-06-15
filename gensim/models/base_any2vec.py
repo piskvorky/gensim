@@ -708,7 +708,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
                 utils.qsize(progress_queue)
             )
 
-            # _update_queue_and_cpu_stats(job_queue_size)
+            _update_queue_and_cpu_stats(0)
         else:
             # words-based progress %
             logger.info(
