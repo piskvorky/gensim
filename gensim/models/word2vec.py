@@ -815,14 +815,14 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
         To support linear learning-rate decay from (initial) `alpha` to `min_alpha`, and accurate
         progress-percentage logging, either `total_examples` (count of sentences) or `total_words` (count of
-        raw words in sentences) **MUST** be provided (if the corpus is the same as was provided to
-        :meth:`~gensim.models.word2vec.Word2Vec.build_vocab()`, the count of examples in that corpus
-        will be available in the model's :attr:`corpus_count` property).
+        raw words in sentences) **MUST** be provided. If `sentences` is the same corpus
+        that was provided to :meth:`~gensim.models.word2vec.Word2Vec.build_vocab()` earlier,
+        you can simply use `total_examples=self.corpus_count`.
 
         To avoid common mistakes around the model's ability to do multiple training passes itself, an
-        explicit `epochs` argument **MUST** be provided. In the common and recommended case,
+        explicit `epochs` argument **MUST** be provided. In the common and recommended case
         where :meth:`~gensim.models.word2vec.Word2Vec.train()` is only called once,
-        the model's cached `iter` value should be supplied as `epochs` value.
+        you can set `epochs=self.iter`.
 
         Parameters
         ----------
