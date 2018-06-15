@@ -157,7 +157,7 @@ class BaseAny2VecModel(utils.SaveLoad):
 
     def _batch_iterator(self, input_stream, cur_epoch=0, total_examples=None, total_words=None):
         job_batch, batch_size = [], 0
-        pushed_words, pushed_examples = 0, 0
+        # pushed_words, pushed_examples = 0, 0
         next_job_params = self._get_job_params(cur_epoch)
         job_no = 0
 
@@ -175,15 +175,15 @@ class BaseAny2VecModel(utils.SaveLoad):
                 yield job_batch, next_job_params
 
                 # update the learning rate for the next job
-                if total_examples:
+                # if total_examples:
                     # examples-based decay
-                    pushed_examples += len(job_batch)
-                    epoch_progress = 1.0 * pushed_examples / total_examples
-                else:
+                    # pushed_examples += len(job_batch)
+                    # epoch_progress = 1.0 * pushed_examples / total_examples
+                # else:
                     # words-based decay
-                    pushed_words += self._raw_word_count(job_batch)
-                    epoch_progress = 1.0 * pushed_words / total_words
-                next_job_params = self._update_job_params(next_job_params, epoch_progress, cur_epoch)
+                    # pushed_words += self._raw_word_count(job_batch)
+                    # epoch_progress = 1.0 * pushed_words / total_words
+                # next_job_params = self._update_job_params(next_job_params, epoch_progress, cur_epoch)
 
                 # add the sentence that didn't fit as the first item of a new job
                 job_batch, batch_size = [data], data_length
