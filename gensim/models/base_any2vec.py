@@ -134,16 +134,12 @@ class BaseAny2VecModel(utils.SaveLoad):
         """Check that the training parameters provided make sense. e.g. raise error if `epochs` not provided."""
         raise NotImplementedError()
 
-    def _worker_loop(self, job_queue, progress_queue):
+    def _worker_loop(self, input_stream, progress_queue):
         """Train the model, lifting lists of data from the job_queue."""
         thread_private_mem = self._get_thread_working_mem()
         jobs_processed = 0
-        while True:
-            job = job_queue.get()
-            if job is None:
-                progress_queue.put(None)
-                break  # no more jobs => quit this worker
-            data_iterable, job_parameters = job
+        for batch in self._batch_iterator(input_stream):
+            data_iterable, job_parameters = batch
 
             for callback in self.callbacks:
                 callback.on_batch_begin(self)
@@ -155,16 +151,17 @@ class BaseAny2VecModel(utils.SaveLoad):
 
             progress_queue.put((len(data_iterable), tally, raw_tally))  # report back progress
             jobs_processed += 1
+
+        progress_queue.put(None)
         logger.debug("worker exiting, processed %i jobs", jobs_processed)
 
-    def _job_producer(self, data_iterator, job_queue, cur_epoch=0, total_examples=None, total_words=None):
-        """Fill jobs queue using the input `data_iterator`."""
+    def _batch_iterator(self, input_stream, cur_epoch=0, total_examples=None, total_words=None):
         job_batch, batch_size = [], 0
         pushed_words, pushed_examples = 0, 0
         next_job_params = self._get_job_params(cur_epoch)
         job_no = 0
 
-        for data_idx, data in enumerate(data_iterator):
+        for data_idx, data in enumerate(input_stream):
             data_length = self._raw_word_count([data])
 
             # can we fit this sentence into the existing job batch?
@@ -174,7 +171,8 @@ class BaseAny2VecModel(utils.SaveLoad):
                 batch_size += data_length
             else:
                 job_no += 1
-                job_queue.put((job_batch, next_job_params))
+
+                yield job_batch, next_job_params
 
                 # update the learning rate for the next job
                 if total_examples:
@@ -192,7 +190,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         # add the last job too (may be significantly smaller than batch_words)
         if job_batch:
             job_no += 1
-            job_queue.put((job_batch, next_job_params))
+            yield job_batch, next_job_params
 
         if job_no == 0 and self.train_count == 0:
             logger.warning(
@@ -200,12 +198,9 @@ class BaseAny2VecModel(utils.SaveLoad):
                 "be sure to provide a corpus that offers restartable iteration = an iterable)."
             )
 
-        # give the workers heads up that they can finish -- no more work!
-        for _ in xrange(self.workers):
-            job_queue.put(None)
-        logger.debug("job loop exiting, total %i jobs", job_no)
+        logger.debug("batch iterator loop exiting, total %i jobs", job_no)
 
-    def _log_progress(self, job_queue, progress_queue, cur_epoch, example_count, total_examples,
+    def _log_progress(self, progress_queue, cur_epoch, example_count, total_examples,
                       raw_word_count, total_words, trained_word_count, elapsed):
         raise NotImplementedError()
 
@@ -216,7 +211,7 @@ class BaseAny2VecModel(utils.SaveLoad):
     def _log_train_end(self, raw_word_count, trained_word_count, total_elapsed, job_tally):
         raise NotImplementedError()
 
-    def _log_epoch_progress(self, progress_queue, job_queue, cur_epoch=0, total_examples=None, total_words=None,
+    def _log_epoch_progress(self, progress_queue, cur_epoch=0, total_examples=None, total_words=None,
                             report_delay=1.0):
         example_count, trained_word_count, raw_word_count = 0, 0, 0
         start, next_report = default_timer() - 0.00001, 1.0
@@ -241,7 +236,7 @@ class BaseAny2VecModel(utils.SaveLoad):
             elapsed = default_timer() - start
             if elapsed >= next_report:
                 self._log_progress(
-                    job_queue, progress_queue, cur_epoch, example_count, total_examples,
+                    progress_queue, cur_epoch, example_count, total_examples,
                     raw_word_count, total_words, trained_word_count, elapsed)
                 next_report = elapsed + report_delay
         # all done; report the final stats
@@ -255,42 +250,23 @@ class BaseAny2VecModel(utils.SaveLoad):
     def _train_epoch(self, data_iterables, cur_epoch=0, total_examples=None,
                      total_words=None, queue_factor=2, report_delay=1.0):
         """Train one epoch."""
+        assert len(data_iterables) == self.workers
 
-        job_queue = mp.Queue(maxsize=queue_factor * self.workers)
         progress_queue = Queue(maxsize=(queue_factor + 1) * self.workers)
 
         workers = [
             threading.Thread(
                 target=self._worker_loop,
-                args=(job_queue, progress_queue,))
-            for _ in xrange(self.workers)
+                args=(input_stream, progress_queue,))
+            for input_stream in data_iterables
         ]
-
-        processes = [
-            mp.Process(
-                target=self._job_producer,
-                args=(data_iterable, job_queue),
-                kwargs={'cur_epoch': cur_epoch, 'total_examples': total_examples, 'total_words': total_words}
-            ) for data_iterable in data_iterables
-        ]
-        # workers.extend(
-        #     threading.Thread(
-        #         target=self._job_producer,
-        #         args=(data_iterable, job_queue),
-        #         kwargs={'cur_epoch': cur_epoch, 'total_examples': total_examples, 'total_words': total_words}
-        #     ) for data_iterable in data_iterables
-        # )
-
-        for process in processes:
-            process.daemon = True
-            process.start()
 
         for thread in workers:
             thread.daemon = True  # make interrupting the process with ctrl+c easier
             thread.start()
 
         trained_word_count, raw_word_count, job_tally = self._log_epoch_progress(
-            progress_queue, job_queue, cur_epoch=cur_epoch, total_examples=total_examples, total_words=total_words,
+            progress_queue, cur_epoch=cur_epoch, total_examples=total_examples, total_words=total_words,
             report_delay=report_delay)
 
         return trained_word_count, raw_word_count, job_tally
@@ -721,26 +697,24 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             model.total_train_time = 0
         return model
 
-    def _log_progress(self, job_queue, progress_queue, cur_epoch, example_count, total_examples,
+    def _log_progress(self, progress_queue, cur_epoch, example_count, total_examples,
                       raw_word_count, total_words, trained_word_count, elapsed):
         if total_examples:
             # examples-based progress %
 
-            job_queue_size = utils.qsize(job_queue)
-
             logger.info(
-                "EPOCH %i - PROGRESS: at %.2f%% examples, %.0f words/s, in_qsize %i, out_qsize %i",
+                "EPOCH %i - PROGRESS: at %.2f%% examples, %.0f words/s, out_qsize %i",
                 cur_epoch + 1, 100.0 * example_count / total_examples, trained_word_count / elapsed,
-                job_queue_size, utils.qsize(progress_queue)
+                utils.qsize(progress_queue)
             )
 
-            _update_queue_and_cpu_stats(job_queue_size)
+            # _update_queue_and_cpu_stats(job_queue_size)
         else:
             # words-based progress %
             logger.info(
-                "EPOCH %i - PROGRESS: at %.2f%% words, %.0f words/s, in_qsize %i, out_qsize %i",
+                "EPOCH %i - PROGRESS: at %.2f%% words, %.0f words/s, out_qsize %i",
                 cur_epoch + 1, 100.0 * raw_word_count / total_words, trained_word_count / elapsed,
-                utils.qsize(job_queue), utils.qsize(progress_queue)
+                utils.qsize(progress_queue)
             )
 
     def _log_epoch_end(self, cur_epoch, example_count, total_examples, raw_word_count, total_words,
