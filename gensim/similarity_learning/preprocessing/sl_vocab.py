@@ -6,6 +6,7 @@ import re
 import random
 import six
 from sklearn.utils import shuffle
+from sklearn.preprocessing import normalize
 
 logger = logging.getLogger(__name__)
 
@@ -38,10 +39,11 @@ class WikiQA_DRMM_TKS_Extractor:
                     (query, positive document, negative document)
 
     When the `get_batch_generator` function is called by the user to get the iterable generator, it provides
-    a generator calls `get_batch` which provides the batch.
+        a generator calls `get_batch` which provides the batch.
     """
 
-    def __init__(self, file_path, word_embedding_path=None, text_maxlen=100, keep_full_embedding=False):
+    def __init__(self, file_path, word_embedding_path=None, text_maxlen=100, keep_full_embedding=False,
+                hist_size=None, normalize_embeddings=False):
         """Initializes the extractor
 
         Parameters:
@@ -76,12 +78,14 @@ class WikiQA_DRMM_TKS_Extractor:
         self.relations = list(self.df['Label'])
         self.relations = [int(r) for r in self.relations]
         self.text_maxlen = text_maxlen
+        self.hist_size = hist_size
         self.word_embedding_path = word_embedding_path
         self.word2index, self.index2word = {}, {}
         self.word_counter = Counter()
         self.corpus = self.queries + self.documents
         self.keep_full_embedding = keep_full_embedding
         self.additional_word2index = {}
+        self.normalize_embeddings = normalize_embeddings
         self.build_vocab()
         self.pair_list = self.get_pair_list()
 
@@ -116,11 +120,11 @@ class WikiQA_DRMM_TKS_Extractor:
                     (embedding_vocab_size, self.embedding_dim))
 
         if self.keep_full_embedding:
-            self.embedding_matrix = np.zeros(
+            self.embedding_matrix = np.random.uniform(-0.2, 0.2,
                 (self.vocab_size + 1, self.embedding_dim))  # one for ignore vec
         else:
             # one for pad, one for ignore vec
-            self.embedding_matrix = np.zeros(
+            self.embedding_matrix = np.random.uniform(-0.2, 0.2,
                 (self.vocab_size + 2, self.embedding_dim))
 
         # We add 1 for the padding word
@@ -155,7 +159,7 @@ class WikiQA_DRMM_TKS_Extractor:
 
             self.embedding_matrix = np.vstack(
                 [self.embedding_matrix, np.array(extra_embeddings),
-                 np.random.random((1, self.embedding_dim)), np.zeros((1, self.embedding_dim))])
+                 np.random.random((1, self.embedding_dim)), np.random.uniform(-0.2, 0.2, (1, self.embedding_dim))])
 
             # Last word is kept as the pad word
             # Here that is the last word in the embedding matrix
@@ -166,10 +170,32 @@ class WikiQA_DRMM_TKS_Extractor:
             self.pad_word_index = self.vocab_size
             self.zero_word_index = self.vocab_size + 1
 
+        if self.normalize_embeddings:
+            logger.info("Normalizing the word embeddings")
+            self.embedding_matrix = normalize(self.embedding_matrix)
+
         logger.info("Embedding Matrix now has shape %s" %
                     str(self.embedding_matrix.shape))
         logger.info("Pad word has been set to index %d" % self.pad_word_index)
         logger.info("Embedding index build complete")
+
+    def calc_hist(self, t1, t2):
+        """Calculates the histogram using the interaction between the """
+        mhist = np.zeros((self.text_maxlen, self.hist_size), dtype=np.float32)
+
+        t1_rep = self.embedding_matrix[t1]
+        t2_rep = self.embedding_matrix[t2]
+
+        mm = t1_rep.dot(np.transpose(t2_rep))
+
+        for (i,j), v in np.ndenumerate(mm):
+            if i >= self.text_maxlen:
+                break
+            vid = int((v + 1.) / 2. * ( self.hist_size - 1.))
+            mhist[i][vid] += 1.
+        mhist += 1.
+        mhist = np.log10(mhist)
+        return mhist
 
     def preprocess(self, sentence):
         """Preprocess an input string to allow only alphabets and numbers
@@ -211,8 +237,15 @@ class WikiQA_DRMM_TKS_Extractor:
             n_relevant_docs = 0
             document_group = []
             for q, d, l in zip(Answer['Question'], Answer['Sentence'], Answer['Label']):
-                document_group.append([self.make_indexed(self.preprocess(q)),
-                                       self.make_indexed(self.preprocess(d)), l])
+                q_indexed = self.make_indexed(self.preprocess(q))
+                d_indexed = self.make_indexed(self.preprocess(d))
+
+                if self.hist_size is not None:
+                    d_indexed = self.calc_hist(q_indexed, d_indexed)
+            
+                document_group.append([q_indexed, d_indexed, l])
+                
+
                 n_relevant_docs += l  # CHECK
 
             n_filtered = 0
@@ -274,6 +307,10 @@ class WikiQA_DRMM_TKS_Extractor:
         num_samples = len(self.pair_list)
         X1 = np.zeros((num_samples * 2, self.text_maxlen))
         X2 = np.zeros((num_samples * 2, self.text_maxlen))
+
+        if self.hist_size is not None:
+            X2 = np.zeros((num_samples * 2, self.text_maxlen, self.hist_size))
+
         y = np.zeros((num_samples * 2, 1))
 
         X1[:] = self.pad_word_index
@@ -335,16 +372,13 @@ class WikiQA_DRMM_TKS_Extractor:
             neg_doc_len = min(self.text_maxlen, len(neg_doc))
 
             X1[i * 2, :query_len], X1_len[i * 2] = query[:query_len], query_len
-            X2[i * 2, :pos_doc_len], X2_len[i *
-                                            2] = pos_doc[:pos_doc_len], pos_doc_len
-            X1[i * 2 + 1, :query_len], X1_len[i *
-                                              2 + 1] = query[:query_len], query_len
-            X2[i * 2 + 1, :neg_doc_len], X2_len[i * 2 +
-                                                1] = neg_doc[:neg_doc_len], neg_doc_len
+            X2[i * 2, :pos_doc_len], X2_len[i * 2] = pos_doc[:pos_doc_len], pos_doc_len
+            X1[i * 2 + 1, :query_len], X1_len[i * 2 + 1] = query[:query_len], query_len
+            X2[i * 2 + 1, :neg_doc_len], X2_len[i * 2 + 1] = neg_doc[:neg_doc_len], neg_doc_len
 
         return X1, X1_len, X2, X2_len, Y
 
-    def jbatch_gen(self, batch_size=32):
+    def jbatch_gen(self, batch_size=32): # JError
         """Generator to provide a batch of training sample of size batch_size
         The batch provided is actually twice the size and will have alternate positive
         and negative examples. CHECK does alternation even matter?
@@ -387,14 +421,10 @@ class WikiQA_DRMM_TKS_Extractor:
                     pos_doc_len = min(self.text_maxlen, len(pos_doc))
                     neg_doc_len = min(self.text_maxlen, len(neg_doc))
 
-                    X1[i * 2, :query_len], X1_len[i *
-                                                  2] = query[:query_len], query_len
-                    X2[i * 2, :pos_doc_len], X2_len[i *
-                                                    2] = pos_doc[:pos_doc_len], pos_doc_len
-                    X1[i * 2 + 1, :query_len], X1_len[i *
-                                                      2 + 1] = query[:query_len], query_len
-                    X2[i * 2 + 1, :neg_doc_len], X2_len[i * 2 +
-                                                        1] = neg_doc[:neg_doc_len], neg_doc_len
+                    X1[i * 2, :query_len], X1_len[i * 2] = query[:query_len], query_len
+                    X2[i * 2, :pos_doc_len], X2_len[i * 2] = pos_doc[:pos_doc_len], pos_doc_len
+                    X1[i * 2 + 1, :query_len], X1_len[i * 2 + 1] = query[:query_len], query_len
+                    X2[i * 2 + 1, :neg_doc_len], X2_len[i * 2 + 1] = neg_doc[:neg_doc_len], neg_doc_len
 
             yield ({'query': X1, 'query_len': X1_len, 'doc': X2, 'doc_len': X2_len}, Y)
 

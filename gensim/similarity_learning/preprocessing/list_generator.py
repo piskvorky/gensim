@@ -17,13 +17,14 @@ class ListGenerator:
 
     Example Usage:
     -------------
-    list_generator = JListGenerator(test_file_path, text_maxlen=200)
-    list_data = list_generator.get_list_data
+    list_generator = ListGenerator(test_file_path, text_maxlen=200)
+    list_data = list_generator.get_list_data()
     predictions = model.predict(x={"query": list_data["X1"], "doc": list_data["X2"]})
     """
 
     def __init__(self, file_path, text_maxlen, train_word2index, additional_word2index,
-                 zero_word_index, train_pad_word_index, oov_handle_method="ignore"):
+                 zero_word_index, train_pad_word_index, oov_handle_method="ignore", hist_size=None,
+                 embedding_matrix=None):
         """
         file_path: str
         text_maxlen: int
@@ -58,6 +59,7 @@ class ListGenerator:
         else:
             raise ValueError("file path cannot be None")
 
+        self.embedding_matrix = embedding_matrix
         self.queries = list(self.df['Question'])
         self.documents = list(self.df['Sentence'])
         self.relations = list(self.df['Label'])
@@ -66,6 +68,7 @@ class ListGenerator:
         self.word2index, self.index2word = {}, {}
         self.word_counter = Counter()
         self.corpus = self.queries + self.documents
+        self.hist_size = hist_size
 
         self.pad_word_index = train_pad_word_index
         self.build_vocab_from_dict(train_word2index=train_word2index,
@@ -111,6 +114,7 @@ class ListGenerator:
         for the same word in train and valid/test set"""
         logger.info("Getting List Vocab from given vocab")
         train_word2index = dict(train_word2index, **additional_word2index)
+        n_ignored_words = 0
         for sentence in self.corpus:
             sentence = self.preprocess(sentence)
             for word in sentence.split():
@@ -121,11 +125,46 @@ class ListGenerator:
                     if oov_handle_method == "ignore":
                         # Map the word to a zero
                         self.word2index[word] = zero_word_index
+                        n_ignored_words += 1
                     else:
                         raise ValueError(
                             "Unknown OOV Handling method %s" % oov_handle_method)
-        logger.info("Vocab Transfer complete. Method used for OOV is %s" %
+        logger.info("Vocab Transfer complete. Method used for OOV is %s." %
                     oov_handle_method)
+        logger.info("There are a total of %d unkown words" % n_ignored_words)
+
+    def calc_hist(self, t1, t2):
+        """Calculates the histogram using the interaction between the """
+        mhist = np.zeros((self.text_maxlen, self.hist_size), dtype=np.float32)
+        # print("mhist.shape: ", mhist.shape)
+
+        # # t1 = t1 + [self.pad_word_index] * (self.text_maxlen - len(t1))
+        # # t2 = t2 + [self.pad_word_index] * (self.text_maxlen - len(t2))
+
+        # print(t1)
+        # print(t2)
+
+        t1_rep = self.embedding_matrix[t1]
+        t2_rep = self.embedding_matrix[t2]
+
+        # print("t1 rep shape", t1_rep.shape)
+        # print("t2 rep shape", t2_rep.shape)
+
+        mm = t1_rep.dot(np.transpose(t2_rep))
+        # print("mm: ", mm)
+        # print("mm.shape: ", mm.shape)
+
+        for (i,j), v in np.ndenumerate(mm):
+            # print("i ", i)
+            # print("j ", j)
+            if i >= self.text_maxlen:
+                break
+            # print("v :   ", v)
+            vid = int((v + 1.) / 2. * ( self.hist_size - 1.))
+            mhist[i][vid] += 1.
+        mhist += 1.
+        mhist = np.log10(mhist)
+        return mhist
 
     def get_list_data(self):
         """Provides the data in the form a dict which has the following Key Value Pairs:
@@ -168,8 +207,14 @@ class ListGenerator:
         for Question, Answer in self.df.groupby('QuestionID').apply(dict).items():
             n_docs = 0
             for q, d, l in zip(Answer['Question'], Answer['Sentence'], Answer['Label']):
-                X1.append(self.make_indexed(self.preprocess(q)))
-                X2.append(self.make_indexed(self.preprocess(d)))
+                x1 = self.make_indexed(self.preprocess(q))
+                x2 = self.make_indexed(self.preprocess(d))
+                X1.append(x1)
+
+                if self.hist_size is not None:
+                    x2 = self.calc_hist(x1, x2)
+                X2.append(x2)
+
                 y.append(int(l))
                 n_docs += 1
             doc_lengths.append(n_docs)
