@@ -37,9 +37,6 @@ def solve_r(double[:, ::1] r, double[:, ::1] r_actual, double lambda_, double v_
     with nogil:
         for sample_idx in range(n_samples):
             for feature_idx in range(n_features):
-                if r[feature_idx, sample_idx] == 0:
-                    continue
-
                 r_new_element = fabs(r_actual[feature_idx, sample_idx]) - lambda_
                 r_new_element = fmax(r_new_element, 0)
                 r_new_element = copysign(r_new_element, r_actual[feature_idx, sample_idx])
