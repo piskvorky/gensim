@@ -1,5 +1,4 @@
 from collections import Counter
-import pandas as pd
 import numpy as np
 import logging
 import re
@@ -16,6 +15,11 @@ This file contains the WikiQAExtractor, WikiQA_DRMM_TKS_Extractor and QuoraQPExt
 extract data from the data files.
 """
 
+# Defining some consants for .tsv reading
+QUESTION_ID_INDEX = 0
+QUESTION_INDEX = 1
+ANSWER_INDEX = 5
+LABEL_INDEX = 6
 
 class WikiQA_DRMM_TKS_Extractor:
     """Class to extract data from the WikiQA dataset and provide it in a streamable format for training
@@ -67,16 +71,27 @@ class WikiQA_DRMM_TKS_Extractor:
             This becomes important for checking validation and test sets
         """
 
+        self.queries = []
+        self.documents = []
+        self.relations = []
+        self.data_lines = []
+
         if file_path is not None:
             with open(file_path, encoding='utf8') as f:
-                self.df = pd.read_csv(f, sep='\t')
+                for i, line in enumerate(f):
+                    line = line.split('\t')
+                    self.data_lines.append(line)
+                    if i != 0:
+                        self.queries.append(line[QUESTION_INDEX])
+                        self.documents.append(line[ANSWER_INDEX])
+                        self.relations.append(int(line[LABEL_INDEX]))
         else:
             raise NotImplementedError()
 
-        self.queries = list(self.df['Question'])
-        self.documents = list(self.df['Sentence'])
-        self.relations = list(self.df['Label'])
-        self.relations = [int(r) for r in self.relations]
+        # The above errors may trigger due to problems in the .tsv
+        assert len(self.queries) == len(self.documents), "Number of documents isn't equal to number of queries"
+        assert len(self.documents) == len(self.relations), "Number of documents isn't equal to number of relations"
+
         self.text_maxlen = text_maxlen
         self.hist_size = hist_size
         self.word_embedding_path = word_embedding_path
@@ -233,30 +248,48 @@ class WikiQA_DRMM_TKS_Extractor:
         """
 
         self.data = []
-        for Question, Answer in self.df.groupby('QuestionID').apply(dict).items():
-            n_relevant_docs = 0
-            document_group = []
-            for q, d, l in zip(Answer['Question'], Answer['Sentence'], Answer['Label']):
-                q_indexed = self.make_indexed(self.preprocess(q))
-                d_indexed = self.make_indexed(self.preprocess(d))
+        document_group = []
+        n_relevant_docs = 0
+        n_filtered_docs = 0
 
-                if self.hist_size is not None:
-                    d_indexed = self.calc_hist(q_indexed, d_indexed)
-            
-                document_group.append([q_indexed, d_indexed, l])
-                
+        for i, line in enumerate(self.data_lines[1:], start=1):
+            if i < len(self.data_lines) - 1:  # check if out of bounds might occur
+                if self.data_lines[i][QUESTION_ID_INDEX] == self.data_lines[i + 1][QUESTION_ID_INDEX]:
+                    document_group.append([
+                        self.make_indexed(self.preprocess(self.data_lines[i][QUESTION_INDEX])),
+                        self.make_indexed(self.preprocess(self.data_lines[i][ANSWER_INDEX])),
+                        int(self.data_lines[i][LABEL_INDEX])])
+                    n_relevant_docs += int(self.data_lines[i][LABEL_INDEX])
+                else:
+                    document_group.append([
+                        self.make_indexed(self.preprocess(self.data_lines[i][QUESTION_INDEX])),
+                        self.make_indexed(self.preprocess(self.data_lines[i][ANSWER_INDEX])),
+                        int(self.data_lines[i][LABEL_INDEX])])
+                    n_relevant_docs += int(self.data_lines[i][LABEL_INDEX])
 
-                n_relevant_docs += l  # CHECK
+                    if n_relevant_docs > 0:
+                        self.data.append(document_group)
+                    else:
+                        n_filtered_docs += 1
 
-            n_filtered = 0
-            if filter_queries:  # Only add the document group if it has relevant documents
+                    n_relevant_docs = 0
+                    document_group = []
+            else:
+                # If we are on the last line
+                document_group.append([
+                        self.make_indexed(self.preprocess(self.data_lines[i][QUESTION_INDEX])),
+                        self.make_indexed(self.preprocess(self.data_lines[i][ANSWER_INDEX])),
+                        int(self.data_lines[i][LABEL_INDEX])])
+                n_relevant_docs += int(self.data_lines[i][LABEL_INDEX])
+
                 if n_relevant_docs > 0:
                     self.data.append(document_group)
                 else:
-                    n_filtered += 1
-            else:
-                self.data.append(document_group)
-        logger.info("%d queries were filtered" % n_filtered)
+                    n_filtered_docs += 1
+                    n_relevant_docs = 0
+
+        logger.info("%d of %d Question-Answer sets were filtered, i.e., %.2f%% were filtered" %
+                     (n_filtered_docs, len(self.queries), n_filtered_docs/len(self.queries)*100))
         logger.info("There are a total of %d queries" % len(self.data))
         return self.data
 
@@ -473,16 +506,26 @@ class WikiQAExtractor:
     """
 
     def __init__(self, file_path, embedding_path=None):
+        self.queries = []
+        self.documents = []
+        self.relations = []
+        self.data_lines = []
+
         if file_path is not None:
-            with open(file_path) as f:
-                self.df = pd.read_csv(f, sep='\t')
+            with open(file_path, encoding='utf8') as f:
+                for i, line in enumerate(f):
+                    line = line.split('\t')
+                    self.data_lines.append(line)
+                    if i != 0:
+                        self.queries.append(line[QUESTION_INDEX])
+                        self.documents.append(line[ANSWER_INDEX])
+                        self.relations.append(int(line[LABEL_INDEX]))
         else:
             raise NotImplementedError()
 
-        self.queries = list(self.df.iloc[:, 0])
-        self.documents = list(self.df.iloc[:, 1])
-        self.relations = list(self.df.iloc[:, 2])
-
+        # The above errors may trigger due to problems in the .tsv
+        assert len(self.queries) == len(self.documents), "Number of documents isn't equal to number of queries"
+        assert len(self.documents) == len(self.relations), "Number of documents isn't equal to number of relations"
         # TODO add 300k vector for all permutes
         # TODO add option for using word embeddings
 
@@ -617,11 +660,11 @@ class WikiQAExtractor:
         docs = []
         labels = []
 
-        for Question, Answer in self.df.groupby('QuestionID').apply(dict).items():
-            for q, d, l in zip(Answer['Question'], Answer['Sentence'], Answer['Label']):
-                queries.append(self.get_term_vector(self.preprocess(q)))
-                docs.append(self.get_term_vector(self.preprocess(d)))
-                labels.append(l)
+        
+        for q, d, l in zip(self.queries, self.documents, self.relations):
+            queries.append(self.get_term_vector(self.preprocess(q)))
+            docs.append(self.get_term_vector(self.preprocess(d)))
+            labels.append(int(l))
 
         queries = np.array(queries)
         docs = np.array(docs)
@@ -630,80 +673,53 @@ class WikiQAExtractor:
 
     def get_data(self):
         self.questions = []
-        for Question, Answer in self.df.groupby('QuestionID').apply(dict).items():
+        self.data = []
+        document_group = []
+        n_relevant_docs = 0
+        n_filtered_docs = 0
 
-            document_group = []
-            for q, d, l in zip(Answer['Question'], Answer['Sentence'], Answer['Label']):
-                document_group.append(
-                    [self.preprocess(q), self.preprocess(d), l])
+        for i, line in enumerate(self.data_lines[1:], start=1):
+            if i < len(self.data_lines) - 1:  # check if out of bounds might occur
+                if self.data_lines[i][QUESTION_ID_INDEX] == self.data_lines[i + 1][QUESTION_ID_INDEX]:
+                    document_group.append([
+                        self.make_indexed(self.preprocess(self.data_lines[i][QUESTION_INDEX])),
+                        self.make_indexed(self.preprocess(self.data_lines[i][ANSWER_INDEX])),
+                        int(self.data_lines[i][LABEL_INDEX])])
+                    n_relevant_docs += int(self.data_lines[i][LABEL_INDEX])
+                else:
+                    document_group.append([
+                        self.make_indexed(self.preprocess(self.data_lines[i][QUESTION_INDEX])),
+                        self.make_indexed(self.preprocess(self.data_lines[i][ANSWER_INDEX])),
+                        int(self.data_lines[i][LABEL_INDEX])])
+                    n_relevant_docs += int(self.data_lines[i][LABEL_INDEX])
 
-            self.questions.append(document_group)
-        return self.questions
+                    if n_relevant_docs > 0:
+                        self.data.append(document_group)
+                    else:
+                        n_filtered_docs += 1
 
+                    n_relevant_docs = 0
+                    document_group = []
+            else:
+                # If we are on the last line
+                document_group.append([
+                        self.make_indexed(self.preprocess(self.data_lines[i][QUESTION_INDEX])),
+                        self.make_indexed(self.preprocess(self.data_lines[i][ANSWER_INDEX])),
+                        int(self.data_lines[i][LABEL_INDEX])])
+                n_relevant_docs += int(self.data_lines[i][LABEL_INDEX])
 
-class QuoraQPExtractor:
-    """[WIP]Class to extract data from the Quora Duplicate question pairs dataset
-    It provides data in a shapes which makes it easier to train neural networks
+                if n_relevant_docs > 0:
+                    self.data.append(document_group)
+                else:
+                    n_filtered_docs += 1
+                    n_relevant_docs = 0
 
-    Usage:
-    =====
-    quoraqp = QuoraQPExtractor("path/to/file")
-    X_train, y_train = quoraqp.get_data()
+        logger.info("%d of %d Question-Answer sets were filtered, i.e., %.2f%% were filtered" %
+                     (n_filtered_docs, len(self.queries), n_filtered_docs/len(self.queries)*100))
+        logger.info("There are a total of %d queries" % len(self.data))
 
-    X_train consists of the question pairs
-    """
+        # Here as a temperory naming fix
+        # Should get sorted once proper class refactoring takes place
+        self.questions = self.data
+        return self.data
 
-    def __init__(self, file_path, embedding_path=None):
-        if file_path is not None:
-            with open(file_path) as f:
-                self.df = pd.read_csv(f, sep='\t')
-                self.q1 = list(self.df.iloc[:, 3])
-                self.q2 = list(self.df.iloc[:, 4])
-                self.isDuplicate = list(self.df.iloc[:, 5])
-        else:
-            raise NotImplementedError()
-
-        self.word2index = {}
-        self.index2word = {}
-
-        self.corpus = self.q1 + self.q2
-        self.word_counter = Counter()
-
-        self.build_vocab()
-
-    def preprocess(self, sentence):
-        return re.sub("[^a-zA-Z0-9]", " ", sentence.lower())
-
-    def build_vocab(self):
-        logger.info("Starting Vocab Build")
-
-        for sentence in self.corpus:
-            sentence = self.preprocess(sentence)
-            self.word_counter.update(sentence.split())
-
-        for i, word in enumerate(self.word_counter.keys()):
-            self.word2index[word] = i
-            self.index2word[i] = word
-
-        self.vocab_size = len(self.word2index)
-
-        logger.info("Vocab Build Complete")
-
-    def get_preprocessed_corpus(self):
-        preprocessed_corpus = []
-        for sent in self.corpus:
-            preprocessed_corpus.append(self.preprocess(sent))
-
-        return preprocessed_corpus
-
-    def get_data(self):
-
-        question_pairs = []
-        labels = []
-
-        for Question1, Question2, label in zip(self.q1, self.q2, self.isDuplicate):
-            question_pairs.append(
-                [self.preprocess(Question1), self.preprocess(Question2)])
-            labels.append(int(label))
-
-        return question_pairs, labels

@@ -1,5 +1,5 @@
-from gensim.similarity_learning.models import DSSM
-from gensim.similarity_learning import WikiQAExtractor
+from gensim.models.experimental import DSSM
+from gensim.similarity_learning.preprocessing import WikiQAExtractor
 import os
 import logging
 import argparse

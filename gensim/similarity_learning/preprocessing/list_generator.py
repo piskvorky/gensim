@@ -1,10 +1,16 @@
-import pandas as pd
 import numpy as np
 from collections import Counter
 import logging
 import re
 
 logger = logging.getLogger(__name__)
+
+
+# Defining some consants for .tsv reading
+QUESTION_ID_INDEX = 0
+QUESTION_INDEX = 1
+ANSWER_INDEX = 5
+LABEL_INDEX = 6
 
 
 class ListGenerator:
@@ -53,17 +59,25 @@ class ListGenerator:
             Current options:
             - ignore : Make all out-of-vocabulary words zero vectors, i.e., ignore them
         """
+
+        self.queries = []
+        self.documents = []
+        self.relations = []
+        self.data_lines = []
+
         if file_path is not None:
-            with open(file_path, mode='rU', encoding='utf8') as f:
-                self.df = pd.read_csv(f, sep='\t')
+            with open(file_path, encoding='utf8') as f:
+                for i, line in enumerate(f):
+                    line = line.split('\t')
+                    self.data_lines.append(line)
+                    if i != 0:
+                        self.queries.append(line[QUESTION_INDEX])
+                        self.documents.append(line[ANSWER_INDEX])
+                        self.relations.append(int(line[LABEL_INDEX]))
         else:
             raise ValueError("file path cannot be None")
 
         self.embedding_matrix = embedding_matrix
-        self.queries = list(self.df['Question'])
-        self.documents = list(self.df['Sentence'])
-        self.relations = list(self.df['Label'])
-        self.relations = [int(r) for r in self.relations]
         self.text_maxlen = text_maxlen
         self.word2index, self.index2word = {}, {}
         self.word_counter = Counter()
@@ -200,15 +214,17 @@ class ListGenerator:
             ""
 
         """
+        doc_grouped_data = self.get_doc_grouped_data()
+
         X1 = []
         X2 = []
         y = []
         doc_lengths = []
-        for Question, Answer in self.df.groupby('QuestionID').apply(dict).items():
+
+        for doc_group in doc_grouped_data:
             n_docs = 0
-            for q, d, l in zip(Answer['Question'], Answer['Sentence'], Answer['Label']):
-                x1 = self.make_indexed(self.preprocess(q))
-                x2 = self.make_indexed(self.preprocess(d))
+
+            for x1, x2, l in doc_group:
                 X1.append(x1)
 
                 if self.hist_size is not None:
@@ -219,3 +235,50 @@ class ListGenerator:
                 n_docs += 1
             doc_lengths.append(n_docs)
         return {"X1": np.array(X1), "X2": np.array(X2), "y": np.array(y), "doc_lengths": doc_lengths}
+
+    def get_doc_grouped_data(self):
+        doc_grouped_data = []
+        document_group = []
+        n_relevant_docs = 0
+        n_filtered_docs = 0
+
+        for i, line in enumerate(self.data_lines[1:], start=1):
+            if i < len(self.data_lines) - 1:  # check if out of bounds might occur
+                if self.data_lines[i][QUESTION_ID_INDEX] == self.data_lines[i + 1][QUESTION_ID_INDEX]:
+                    document_group.append([
+                        self.make_indexed(self.preprocess(self.data_lines[i][QUESTION_INDEX])),
+                        self.make_indexed(self.preprocess(self.data_lines[i][ANSWER_INDEX])),
+                        int(self.data_lines[i][LABEL_INDEX])])
+                    n_relevant_docs += int(self.data_lines[i][LABEL_INDEX])
+                else:
+                    document_group.append([
+                        self.make_indexed(self.preprocess(self.data_lines[i][QUESTION_INDEX])),
+                        self.make_indexed(self.preprocess(self.data_lines[i][ANSWER_INDEX])),
+                        int(self.data_lines[i][LABEL_INDEX])])
+                    n_relevant_docs += int(self.data_lines[i][LABEL_INDEX])
+
+                    if n_relevant_docs > 0:
+                        doc_grouped_data.append(document_group)
+                    else:
+                        n_filtered_docs += 1
+
+                    n_relevant_docs = 0
+                    document_group = []
+            else:
+                # If we are on the last line
+                document_group.append([
+                        self.make_indexed(self.preprocess(self.data_lines[i][QUESTION_INDEX])),
+                        self.make_indexed(self.preprocess(self.data_lines[i][ANSWER_INDEX])),
+                        int(self.data_lines[i][LABEL_INDEX])])
+                n_relevant_docs += int(self.data_lines[i][LABEL_INDEX])
+
+                if n_relevant_docs > 0:
+                    doc_grouped_data.append(document_group)
+                else:
+                    n_filtered_docs += 1
+                    n_relevant_docs = 0
+
+        logger.info("%d of %d Question-Answer sets were filtered, i.e., %.2f%% were filtered" %
+                     (n_filtered_docs, len(self.queries), n_filtered_docs/len(self.queries)*100))
+        logger.info("There are a total of %d queries" % len(doc_grouped_data))
+        return doc_grouped_data
