@@ -1,8 +1,8 @@
-:mod:`models.doc2vec_inner` -- Cython job for training Doc2Vec model
-====================================================================
+:mod:`models.doc2vec_inner` -- Cython routines for training Doc2Vec models
+==========================================================================
 
 .. automodule:: gensim.models.doc2vec_inner
-    :synopsis: Cython job for training Doc2Vec model
+    :synopsis: Optimized Cython routines for training Doc2Vec models
     :members:
     :inherited-members:
     :undoc-members:

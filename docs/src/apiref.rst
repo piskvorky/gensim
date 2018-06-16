@@ -43,10 +43,12 @@ Modules:
     models/lda_worker
     models/atmodel
     models/word2vec
+    models/word2vec_inner
     models/keyedvectors
     models/doc2vec
     models/doc2vec_inner
     models/fasttext
+    models/fasttext_inner
     models/phrases
     models/poincare
     models/coherencemodel
