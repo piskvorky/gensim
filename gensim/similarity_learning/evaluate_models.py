@@ -16,6 +16,13 @@ import os
 import logging
 import time
 import six
+import random
+random.seed(101010)
+import numpy
+numpy.random.seed(101010)
+import tensorflow
+tensorflow.set_random_seed(101010)
+
 
 
 logger = logging.getLogger(__name__)
@@ -379,7 +386,7 @@ def drmm_tks_eval(datapath, word_embedding_path):
 
     model.compile(optimizer=optimizer, loss=loss, metrics=['accuracy'])
     model.fit(x={"query": X1_train, "doc": X2_train}, y=y_train, batch_size=5,
-              verbose=1, epochs=1, shuffle=True,
+              verbose=1, epochs=2, shuffle=True,
               callbacks=[ValidationCallback(validation_data)])
 
     data = test_list_gen.get_list_data()

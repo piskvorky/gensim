@@ -9,7 +9,6 @@ from sklearn.preprocessing import normalize
 
 logger = logging.getLogger(__name__)
 
-
 """
 This file contains the WikiQAExtractor, WikiQA_DRMM_TKS_Extractor and QuoraQPExtractor which are utility classes to
 extract data from the data files.
@@ -411,7 +410,7 @@ class WikiQA_DRMM_TKS_Extractor:
 
         return X1, X1_len, X2, X2_len, Y
 
-    def jbatch_gen(self, batch_size=32): # JError
+    def batch_gen(self, batch_size=32):
         """Generator to provide a batch of training sample of size batch_size
         The batch provided is actually twice the size and will have alternate positive
         and negative examples. CHECK does alternation even matter?

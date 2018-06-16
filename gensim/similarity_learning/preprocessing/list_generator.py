@@ -2,6 +2,12 @@ import numpy as np
 from collections import Counter
 import logging
 import re
+import random
+random.seed(101010)
+import numpy
+numpy.random.seed(101010)
+import tensorflow
+tensorflow.set_random_seed(101010)
 
 logger = logging.getLogger(__name__)
 
