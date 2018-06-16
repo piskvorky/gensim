@@ -111,7 +111,7 @@ you can switch to the :class:`~gensim.models.KeyedVectors` instance::
   >>> word_vectors = model.wv
   >>> del model
 
-to trim unneeded model state = use much less RAM.
+to trim unneeded model state = use much less RAM and allow fast loading and memory sharing (mmap).
 
 Note that there is a :mod:`gensim.models.phrases` module which lets you automatically
 detect phrases longer than one word. Using phrases, you can learn a word2vec model

@@ -609,12 +609,8 @@ class FastText(BaseWordEmbeddingsModel):
         self.trainables.get_vocab_word_vecs(self.wv)
 
     def init_sims(self, replace=False):
-        """Precompute L2-normalized vectors.
-
-        Notes
-        -----
-        init_sims() resides in KeyedVectors because it deals with syn0 mainly, but because syn1 is not an attribute
-        of KeyedVectors, it has to be deleted in this class, and the normalizing of syn0 happens inside of KeyedVectors.
+        """
+        Precompute L2-normalized vectors.
 
         Parameters
         ----------
@@ -622,6 +618,9 @@ class FastText(BaseWordEmbeddingsModel):
             If True, forget the original vectors and only keep the normalized ones to save RAM.
 
         """
+        # init_sims() resides in KeyedVectors because it deals with input layer mainly, but because the
+        # hidden layer is not an attribute of KeyedVectors, it has to be deleted in this class.
+        # The normalizing of input layer happens inside of KeyedVectors.
         if replace and hasattr(self.trainables, 'syn1'):
             del self.trainables.syn1
         self.wv.init_sims(replace)
