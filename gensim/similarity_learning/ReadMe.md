@@ -1,5 +1,6 @@
-To run Benchmarks, check [HowToReproduceBenchmarks.md](HowToReproduceBenchmarks.md)
-To run models, check [HowToRunModels.md](HowToRunModels.md)
+# Similarity Learning Develop
+This is the folder where most of the Similarity Learning related files can be found.
+Some of the SL models have been placed in `gensim.models.deprecated`
 
-Check [output_log_mse.txt](output_log_mse.txt), to get the logs of training drmm_tks with mean squared error
-Check [output_log_rank_hing_loss.txt](output_log_rank_hing_loss.txt), to get the logs of training drmm_tks with rank hinge loss
+Evaluation Scripts have been moved to a new [repo](https://github.com/aneesh-joshi/Similarity-Learning-Evaluation-Scripts)
+To run models, check [HowToRunModels.md](HowToRunModels.md)
