@@ -79,14 +79,17 @@ class HashDictionary(utils.SaveLoad, dict):
         ----------
 
         documents : iterable of iterable of str
-            Iterable of documents. If given, used to collect additional corpus statistics. HashDictionary can work without these statistics (optional parameter).
+            Iterable of documents. If given, used to collect additional corpus statistics.
+            :class:`~gensim.corpora.hashdictionary.HashDictionary` can work
+            without these statistics (optional parameter).
         id_range : int, optional
             Number of hash-values in table, used as `id = myhash(key) %% id_range`.
         myhash : function
             Hash function, should support interface `myhash(str) -> int`, uses `zlib.adler32` by default.
         debug : bool
             If True - store which tokens have mapped to a given id. **Will use a lot of RAM**.
-            If you find yourself running out of memory (or not sure that you really need raw tokens), keep `debug=False`.
+            If you find yourself running out of memory (or not sure that you really need raw tokens),
+            keep `debug=False`.
 
         """
         self.myhash = myhash  # hash fnc: string->integer
