@@ -5,11 +5,12 @@
 # Copyright (C) 2018 RaRe Technologies s.r.o.
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""
+r"""
 This module implements word vectors and their similarity look-ups.
 
-Since trained word vectors are independent from the way they were trained (Word2Vec,
-FastText, WordRank, VarEmbed etc), they can be represented by a standalone structure,
+Since trained word vectors are independent from the way they were trained (:class:`~gensim.models.word2vec.Word2Vec`,
+:class:`~gensim.models.fasttext.FastText`, :class:`~gensim.models.wrappers.wordrank.WordRank`,
+:class:`~gensim.models.wrappers.varembed.VarEmbed` etc), they can be represented by a standalone structure,
 as implemented in this module.
 
 The structure is called "KeyedVectors" and is essentially a mapping between *entities*
@@ -23,23 +24,29 @@ always represented by its string id, no matter whether the entity is a word, a d
 Why use KeyedVectors instead of a full model?
 =============================================
 
-+------------|--------------|------------|------------------------------+
-+ capability | KeyedVectors | full model | note                         +
-+------------|--------------|------------|------------------------------+
-| continue training vectors + ❌ | ✅ | You need the full model to train or update vectors. |
-+-----------|--------------|------------|------------------------------+
-| smaller objects | ✅ | ❌ | KeyedVectors are smaller and need less RAM, because they don't need to store the model state that enables training. |
-+-----------|--------------|------------|------------------------------+
-| save/load from native fasttext/word2vec format | ✅ | ❌ | Vectors exported by the Facebook and Google tools do not support further training, but you can still load them into KeyedVectors. |
-+-----------|--------------|------------|------------------------------+
-| append new vectors | ✅ | ✅ | Add new entity-vector entries to the mapping dynamically. |
-+-----------|--------------|------------|------------------------------+
-| concurrency | ✅ | ✅ | Thread-safe, allows concurrent vector queries. |
-+-----------|--------------|------------|------------------------------+
-| shared RAM | ✅ | ✅ | Multiple processes can re-use the same data, keeping only a single copy in RAM using `mmap <https://en.wikipedia.org/wiki/Mmap>`_. |
-+-----------|--------------|------------|------------------------------+
-| fast load | ✅ | ✅| Supports `mmap <https://en.wikipedia.org/wiki/Mmap>`_ to load data from disk instantaneously. |
-+-----------|--------------|------------|------------------------------+
++---------------------------+--------------+------------+-------------------------------------------------------------+
+|        capability         | KeyedVectors | full model |                               note                          |
++---------------------------+--------------+------------+-------------------------------------------------------------+
+| continue training vectors | no           | yes        | You need the full model to train or update vectors.         |
++---------------------------+--------------+------------+-------------------------------------------------------------+
+| smaller objects           | yes          | no         | KeyedVectors are smaller and need less RAM, because they    |
+|                           |              |            | don't need to store the model state that enables training.  |
++---------------------------+--------------+------------+-------------------------------------------------------------+
+| save/load from native     |              |            | Vectors exported by the Facebook and Google tools           |
+| fasttext/word2vec format  | yes          | no         | do not support further training, but you can still load     |
+|                           |              |            | them into KeyedVectors.                                     |
++---------------------------+--------------+------------+-------------------------------------------------------------+
+| append new vectors        | yes          | yes        | Add new entity-vector entries to the mapping dynamically.   |
++---------------------------+--------------+------------+-------------------------------------------------------------+
+| concurrency               | yes          | yes        | Thread-safe, allows concurrent vector queries.              |
++---------------------------+--------------+------------+-------------------------------------------------------------+
+| shared RAM                | yes          | yes        | Multiple processes can re-use the same data, keeping only   |
+|                           |              |            | a single copy in RAM using                                  |
+|                           |              |            | `mmap <https://en.wikipedia.org/wiki/Mmap>`_.               |
++---------------------------+--------------+------------+-------------------------------------------------------------+
+| fast load                 | yes          | yes        | Supports `mmap <https://en.wikipedia.org/wiki/Mmap>`_       |
+|                           |              |            | to load data from disk instantaneously.                     |
++---------------------------+--------------+------------+-------------------------------------------------------------+
 
 TL;DR: the main difference is that KeyedVectors do not support further training.
 On the other hand, by shedding the internal data structures necessary for training, KeyedVectors offer a smaller RAM
