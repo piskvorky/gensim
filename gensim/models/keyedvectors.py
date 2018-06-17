@@ -23,14 +23,23 @@ always represented by its string id, no matter whether the entity is a word, a d
 Why use KeyedVectors instead of a full model?
 =============================================
 
-capability | KeyedVectors | full model | note
-continue training vectors | ❌ | ✅ | You need the full model to train or update vectors.
-smaller objects | ✅ | ❌ | KeyedVectors are smaller and need less RAM, because they don't need to store the model state that enables training.
-save/load from native fasttext/word2vec format | ✅ | ❌ | Vectors exported by the Facebook and Google tools do not support further training, but you can still load them into KeyedVectors.
-append new vectors | ✅ | ✅ | Add new entity-vector entries to the mapping dynamically.
-concurrency | ✅ | ✅ | Thread-safe, allows concurrent vector queries.
-shared RAM | ✅ | ✅ | Multiple processes can re-use the same data, keeping only a single copy in RAM using `mmap <https://en.wikipedia.org/wiki/Mmap>`_.
-fast load | ✅ | ✅| Supports `mmap <https://en.wikipedia.org/wiki/Mmap>`_ to load data from disk instantaneously.
++------------|--------------|------------|------------------------------+
++ capability | KeyedVectors | full model | note                         +
++------------|--------------|------------|------------------------------+
+| continue training vectors + ❌ | ✅ | You need the full model to train or update vectors. |
++-----------|--------------|------------|------------------------------+
+| smaller objects | ✅ | ❌ | KeyedVectors are smaller and need less RAM, because they don't need to store the model state that enables training. |
++-----------|--------------|------------|------------------------------+
+| save/load from native fasttext/word2vec format | ✅ | ❌ | Vectors exported by the Facebook and Google tools do not support further training, but you can still load them into KeyedVectors. |
++-----------|--------------|------------|------------------------------+
+| append new vectors | ✅ | ✅ | Add new entity-vector entries to the mapping dynamically. |
++-----------|--------------|------------|------------------------------+
+| concurrency | ✅ | ✅ | Thread-safe, allows concurrent vector queries. |
++-----------|--------------|------------|------------------------------+
+| shared RAM | ✅ | ✅ | Multiple processes can re-use the same data, keeping only a single copy in RAM using `mmap <https://en.wikipedia.org/wiki/Mmap>`_. |
++-----------|--------------|------------|------------------------------+
+| fast load | ✅ | ✅| Supports `mmap <https://en.wikipedia.org/wiki/Mmap>`_ to load data from disk instantaneously. |
++-----------|--------------|------------|------------------------------+
 
 TL;DR: the main difference is that KeyedVectors do not support further training.
 On the other hand, by shedding the internal data structures necessary for training, KeyedVectors offer a smaller RAM

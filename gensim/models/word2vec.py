@@ -14,11 +14,11 @@ hierarchical softmax or negative sampling: `Tomas Mikolov et al: Efficient Estim
 <https://arxiv.org/pdf/1301.3781.pdf>`_, `Tomas Mikolov et al: Distributed Representations of Words and Phrases and their Compositionality
 <https://arxiv.org/abs/1310.4546>`_.
 
-Notes
------
+Other embeddings
+================
 
 There are more ways to train word vectors in Gensim than just Word2Vec.
-See also :class:`~gensim.models.Doc2Vec`, :class:`~gensim.models.FastText` and
+See also :class:`~gensim.models.doc2vec.Doc2Vec`, :class:`~gensim.models.fasttext.FastText` and
 wrappers for :class:`~gensim.models.wrappers.VarEmbed` and :class:`~gensim.models.wrappers.WordRank`.
 
 The training algorithms were originally ported from the C package https://code.google.com/p/word2vec/
@@ -28,10 +28,10 @@ For a tutorial on Gensim word2vec, with an interactive web app trained on Google
 visit https://rare-technologies.com/word2vec-tutorial/.
 
 **Make sure you have a C compiler before installing Gensim, to use the optimized word2vec routines**
-(70x speedup compared to plain NumPy implementation <https://rare-technologies.com/parallelizing-word2vec-in-python/>`_).
+(70x speedup compared to plain NumPy implementation, https://rare-technologies.com/parallelizing-word2vec-in-python/.
 
-Examples
---------
+Usage examples
+==============
 
 Initialize a model with e.g.::
 
@@ -62,7 +62,7 @@ fast loading and sharing the vectors in RAM between processes::
   >>> wv['computer']  # numpy vector of a word
   array([-0.00449447, -0.00310097,  0.02421786, ...], dtype=float32)
 
-Gensim can also load word vectors in the "word2vec C format", as this `KeyedVectors` instance::
+Gensim can also load word vectors in the "word2vec C format", as this :class:`~gensim.models.KeyedVectors` instance::
 
     >>> from gensim.models import KeyedVectors
     >>> # load from C text format
@@ -626,14 +626,14 @@ class Word2Vec(BaseWordEmbeddingsModel):
     Train, use and evaluate neural networks described in https://code.google.com/p/word2vec/
 
     Once you're finished training a model (=no more updates, only querying)
-    store and use only the :class:`~gensim.models.KeyedVectors` instance in `self.wv` to reduce memory.
+    store and use only the :class:`~gensim.models.keyedvectors.KeyedVectors` instance in `self.wv` to reduce memory.
 
     The model can be stored/loaded via its :meth:`~gensim.models.word2vec.Word2Vec.save()` and
     :meth:`~gensim.models.word2vec.Word2Vec.load()` methods.
 
     The trained word vectors can also be stored/loaded from a format compatible with the
     original word2vec implementation via `self.wv.save_word2vec_format()`
-    and :meth:`~gensim.models.KeyedVectors.load_word2vec_format()`.
+    and :meth:`~gensim.models.keyedvectors.KeyedVectors.load_word2vec_format()`.
 
     Some important attributes are the following:
 
@@ -732,13 +732,13 @@ class Word2Vec(BaseWordEmbeddingsModel):
                 * `min_count` (int) - the minimum count threshold.
 
         sorted_vocab : int {1,0}
-            If 1, sort the vocabulary by descending frequency before assigning word indexes. See :meth:`~gensim.models.Word2VecVocab.sort_vocab()`.
+            If 1, sort the vocabulary by descending frequency before assigning word indexes. See :meth:`~gensim.models.word2vec.Word2VecVocab.sort_vocab()`.
         batch_words : int
             Target size (in words) for batches of examples passed to worker threads (and
             thus cython routines).(Larger batches will be passed if individual
             texts are longer than 10000 words, but the standard cython code truncates to that maximum.)
         compute_loss: bool
-            If True, computes and stores loss value which can be retrieved using :meth:`~gensim.models.Word2Vec.get_latest_training_loss()`.
+            If True, computes and stores loss value which can be retrieved using :meth:`~gensim.models.word2vec.Word2Vec.get_latest_training_loss()`.
         callbacks : `list` of :class:`~gensim.models.callbacks.CallbackAny2Vec` objects
             List of callbacks to be executed at specific stages during training.
 

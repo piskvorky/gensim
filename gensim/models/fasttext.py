@@ -5,7 +5,8 @@
 # Copyright (C) 2018 RaRe Technologies s.r.o.
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""Learn word representations via Fasttext: `Enriching Word Vectors with Subword Information
+"""
+Learn word representations via Fasttext: `Enriching Word Vectors with Subword Information
 <https://arxiv.org/abs/1607.04606>`_.
 
 This module allows training word embeddings from a training corpus with the additional ability to obtain word vectors
@@ -15,12 +16,10 @@ This module contains a fast native C implementation of Fasttext with Python inte
 For a tutorial see `this noteboook
 <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/FastText_Tutorial.ipynb>`_.
 
-Notes
------
 **Make sure you have a C compiler before installing Gensim, to use the optimized (compiled) Fasttext training routines.**
 
-Examples
---------
+Usage examples
+--------------
 
 Initialize and train a model::
 
@@ -31,8 +30,8 @@ Initialize and train a model::
 
 Persist a model to disk with::
 
->>> model.save(fname)
->>> model = FastText.load(fname)  # you can continue training with the loaded model!
+>>> model.save("fasttext.model")
+>>> model = FastText.load("fasttext.model")  # you can continue training with the loaded model!
 
 Retrieve word-vector for vocab and out-of-vocab word::
 
@@ -218,8 +217,8 @@ class FastText(BaseWordEmbeddingsModel):
         compute embeddings even for **unseen** words (that do not exist in the vocabulary), as the aggregate of the
         n-grams included in the word. After training the model, this attribute can be used directly to query those
         embeddings in various ways. Check the module level docstring from some examples.
-    self.vocabulary : :class:'~gensim.models.fasttext.FastTextVocab`
-        This object represents the vocabulary (sometimes called Dictionary in gensim) of the model.
+    self.vocabulary : :class:`~gensim.models.fasttext.FastTextVocab`
+        This object represents the vocabulary of the model.
         Besides keeping track of all unique words, this object provides extra functionality, such as
         constructing a huffman tree (frequent words are closer to the root), or discarding extremely rare words.
     self.trainables : :class:`~gensim.models.fasttext.FastTextTrainables`
