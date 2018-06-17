@@ -20,8 +20,8 @@ and Phrases and their Compositionality. In Proceedings of NIPS, 2013"
 For a usage example, see the `Doc2vec tutorial
 <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/doc2vec-lee.ipynb>`_.
 
-**Make sure you have a C compiler before installing Gensim, to use the optimized doc2vec routines**
-(70x speedup compared to plain NumPy implementation <https://rare-technologies.com/parallelizing-word2vec-in-python/>`_).
+**Make sure you have a C compiler before installing Gensim, to use the optimized doc2vec routines** (70x speedup
+compared to plain NumPy implementation <https://rare-technologies.com/parallelizing-word2vec-in-python/>`_).
 
 
 Examples
@@ -677,12 +677,15 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         epochs : int, optional
             Number of iterations (epochs) over the corpus.
         start_alpha : float, optional
-            Initial learning rate. If supplied, replaces the starting `alpha` from the constructor, for this one call to `train()`.
-            Use only if making multiple calls to `train()`, when you want to manage the alpha learning-rate yourself (not recommended).
+            Initial learning rate. If supplied, replaces the starting `alpha` from the constructor,
+            for this one call to `train()`.
+            Use only if making multiple calls to `train()`, when you want to manage the alpha learning-rate yourself
+            (not recommended).
         end_alpha : float, optional
             Final learning rate. Drops linearly from `start_alpha`.
             If supplied, this replaces the final `min_alpha` from the constructor, for this one call to `train()`.
-            Use only if making multiple calls to `train()`, when you want to manage the alpha learning-rate yourself (not recommended).
+            Use only if making multiple calls to `train()`, when you want to manage the alpha learning-rate yourself
+            (not recommended).
         word_count : int, optional
             Count of words already trained. Set this to 0 for the usual
             case of training on all words in sentences.
@@ -1332,8 +1335,8 @@ class TaggedLineDocument(object):
     """
     Iterate over a file that contains sentences: one line = one :class:`~gensim.models.doc2vec.TaggedDocument` object.
 
-    Words are expected to be already preprocessed and separated by whitespace. Document tags are constructed automatically
-    from the document line number (each document gets a unique integer tag).
+    Words are expected to be already preprocessed and separated by whitespace. Document tags are constructed
+    automatically from the document line number (each document gets a unique integer tag).
 
     """
     def __init__(self, source):

@@ -10,9 +10,9 @@ This module implements the word2vec family of algorithms, using highly optimized
 data streaming and Pythonic interfaces.
 
 The word2vec algorithms include skip-gram and CBOW models, using either
-hierarchical softmax or negative sampling: `Tomas Mikolov et al: Efficient Estimation of Word Representations in Vector Space
-<https://arxiv.org/pdf/1301.3781.pdf>`_, `Tomas Mikolov et al: Distributed Representations of Words and Phrases and their Compositionality
-<https://arxiv.org/abs/1310.4546>`_.
+hierarchical softmax or negative sampling: `Tomas Mikolov et al: Efficient Estimation of Word Representations
+in Vector Space <https://arxiv.org/pdf/1301.3781.pdf>`_, `Tomas Mikolov et al: Distributed Representations of Words
+and Phrases and their Compositionality <https://arxiv.org/abs/1310.4546>`_.
 
 Other embeddings
 ================
@@ -670,7 +670,8 @@ class Word2Vec(BaseWordEmbeddingsModel):
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
-            See also the `tutorial on data streaming in Python <https://rare-technologies.com/data-streaming-in-python-generators-iterators-iterables/>`_.
+            See also the `tutorial on data streaming in Python
+            <https://rare-technologies.com/data-streaming-in-python-generators-iterators-iterables/>`_.
             If you don't supply `sentences`, the model is left uninitialized -- use if you plan to initialize it
             in some other way.
         size : int
@@ -732,13 +733,15 @@ class Word2Vec(BaseWordEmbeddingsModel):
                 * `min_count` (int) - the minimum count threshold.
 
         sorted_vocab : int {1,0}
-            If 1, sort the vocabulary by descending frequency before assigning word indexes. See :meth:`~gensim.models.word2vec.Word2VecVocab.sort_vocab()`.
+            If 1, sort the vocabulary by descending frequency before assigning word indexes.
+            See :meth:`~gensim.models.word2vec.Word2VecVocab.sort_vocab()`.
         batch_words : int
             Target size (in words) for batches of examples passed to worker threads (and
             thus cython routines).(Larger batches will be passed if individual
             texts are longer than 10000 words, but the standard cython code truncates to that maximum.)
         compute_loss: bool
-            If True, computes and stores loss value which can be retrieved using :meth:`~gensim.models.word2vec.Word2Vec.get_latest_training_loss()`.
+            If True, computes and stores loss value which can be retrieved using
+            :meth:`~gensim.models.word2vec.Word2Vec.get_latest_training_loss()`.
         callbacks : `list` of :class:`~gensim.models.callbacks.CallbackAny2Vec` objects
             List of callbacks to be executed at specific stages during training.
 
@@ -831,7 +834,8 @@ class Word2Vec(BaseWordEmbeddingsModel):
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
-            See also the `tutorial on data streaming in Python <https://rare-technologies.com/data-streaming-in-python-generators-iterators-iterables/>`_.
+            See also the `tutorial on data streaming in Python
+            <https://rare-technologies.com/data-streaming-in-python-generators-iterators-iterables/>`_.
         total_examples : int, optional
             Count of sentences. Used to decay the `alpha` learning rate.
         total_words : int, optional
@@ -839,12 +843,15 @@ class Word2Vec(BaseWordEmbeddingsModel):
         epochs : int, optional
             Number of iterations (epochs) over the corpus.
         start_alpha : float, optional
-            Initial learning rate. If supplied, replaces the starting `alpha` from the constructor, for this one call to `train()`.
-            Use only if making multiple calls to `train()`, when you want to manage the alpha learning-rate yourself (not recommended).
+            Initial learning rate. If supplied, replaces the starting `alpha` from the constructor,
+            for this one call to`train()`.
+            Use only if making multiple calls to `train()`, when you want to manage the alpha learning-rate yourself
+            (not recommended).
         end_alpha : float, optional
             Final learning rate. Drops linearly from `start_alpha`.
             If supplied, this replaces the final `min_alpha` from the constructor, for this one call to `train()`.
-            Use only if making multiple calls to `train()`, when you want to manage the alpha learning-rate yourself (not recommended).
+            Use only if making multiple calls to `train()`, when you want to manage the alpha learning-rate yourself
+            (not recommended).
         word_count : int, optional
             Count of words already trained. Set this to 0 for the usual
             case of training on all words in sentences.
@@ -1201,7 +1208,8 @@ class Word2Vec(BaseWordEmbeddingsModel):
         Returns
         -------
         str
-            Human readable representation of the model's state, including the vocabulary size, vector size and learning rate.
+            Human readable representation of the model's state, including the vocabulary size, vector size
+            and learning rate.
 
         """
         return "%s(vocab=%s, size=%s, alpha=%s)" % (
