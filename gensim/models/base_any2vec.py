@@ -465,7 +465,7 @@ class BaseAny2VecModel(utils.SaveLoad):
 
         See Also
         --------
-        :meth:`gensim.base_any2vec.BaseAny2VecModel.save`
+        :meth:`~gensim.models.base_any2vec.BaseAny2VecModel.save`
             Method for save a model.
 
         Returns
@@ -493,7 +493,7 @@ class BaseAny2VecModel(utils.SaveLoad):
 
         See Also
         --------
-        :meth:`gensim.models.base_any2vec.BaseAny2VecModel.save`
+        :meth:`~gensim.models.base_any2vec.BaseAny2VecModel.load`
             Method for load model after current method.
 
         """
