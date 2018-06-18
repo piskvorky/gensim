@@ -631,7 +631,7 @@ class WikiCorpus(TextCorpus):
                 articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS
             )
         except PicklingError as exc:
-            raise_from(PicklingError('Can not send filtering function {} to multiprocessing, '\
+            raise_from(PicklingError('Can not send filtering function {} to multiprocessing, '
                 'make sure the function can be pickled.'.format(self.filter_articles)), exc)
         else:
             logger.info(
