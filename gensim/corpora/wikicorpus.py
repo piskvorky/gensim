@@ -380,7 +380,7 @@ def extract_pages(f, filter_namespaces=False, filter_articles=None):
                 if ns not in filter_namespaces:
                     text = None
 
-            if callable(filter_articles) and text:
+            if filter_articles is not None:
                 if filter_articles(elem, namespace=namespace, title=title,
                                    text=text, page_tag=page_tag,
                                    text_path=text_path, title_path=title_path,
@@ -551,8 +551,8 @@ class WikiCorpus(TextCorpus):
             Maximal token length.
         lower : bool, optional
              If True - convert all text to lower case.
-        filter_articles: callable, optional
-            If set each XML article element will be passed to this callable before being processed. Only articles
+        filter_articles: callable or None, optional
+            If set, each XML article element will be passed to this callable before being processed. Only articles
             where the callable returns an XML element are processed, returning None allows filtering out
             some articles based on customised rules.
 
@@ -626,6 +626,9 @@ class WikiCorpus(TextCorpus):
                 "(total %i articles, %i positions before pruning articles shorter than %i words)",
                 articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS
             )
+        except PicklingError as exc:
+            raise PicklingError('Can not send filtering function {} to multiprocessing, '\
+                'make sure the function can be pickled.'.format(self.filter_articles)) from exc
         else:
             logger.info(
                 "finished iterating over Wikipedia corpus of %i documents with %i positions "
