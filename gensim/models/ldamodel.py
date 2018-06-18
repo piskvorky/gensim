@@ -6,9 +6,9 @@
 
 
 """
-**For a faster implementation of LDA (parallelized for multicore machines), see** :mod:`gensim.models.ldamulticore`.
+Optimized `Latent Dirichlet Allocation (LDA) <https://en.wikipedia.org/wiki/Latent_Dirichlet_allocation>` in Python.
 
-Latent Dirichlet Allocation (LDA) in Python.
+For a faster implementation of LDA (parallelized for multicore machines), see also :mod:`gensim.models.ldamulticore`.
 
 This module allows both LDA model estimation from a training corpus and inference of topic
 distribution on new, unseen documents. The model can also be updated with new documents
@@ -19,19 +19,19 @@ The core estimation code is based on the `onlineldavb.py` script by M. Hoffman [
 
 The algorithm:
 
-* is **streamed**: training documents may come in sequentially, no random access required,
-* runs in **constant memory** w.r.t. the number of documents: size of the
-  training corpus does not affect memory footprint, can process corpora larger than RAM, and
-* is **distributed**: makes use of a cluster of machines, if available, to
+1. Is **streamed**: training documents may come in sequentially, no random access required.
+2. Runs in **constant memory** w.r.t. the number of documents: size of the
+  training corpus does not affect memory footprint, can process corpora larger than RAM.
+3. Is **distributed**: makes use of a cluster of machines, if available, to
   speed up model estimation.
 
 .. [1] http://www.cs.princeton.edu/~mdhoffma
 
 
-Examples
---------
+Usage examples
+--------------
 
-#. Train an LDA model using a gensim corpus:
+#. Train an LDA model using a Gensim corpus:
 
 >>> from gensim.test.utils import common_texts
 >>> from gensim.corpora.dictionary import Dictionary
@@ -74,9 +74,10 @@ Examples
 
 #. A lot of parameters can be tuned to optimize training for your specific case:
 
->>> lda = LdaModel(common_corpus, num_topics=50, alpha='auto', eval_every=5)  # train asymmetric alpha from data
+>>> lda = LdaModel(common_corpus, num_topics=50, alpha='auto', eval_every=5)  # learn asymmetric alpha from data
 
 """
+
 import logging
 import numbers
 import os
@@ -97,7 +98,7 @@ from gensim.models import basemodel, CoherenceModel
 from gensim.models.callbacks import Callback
 
 
-logger = logging.getLogger('gensim.models.ldamodel')
+logger = logging.getLogger(__name__)
 
 # Epsilon (very small) values used by each expected data type instead of 0, to avoid Arithmetic Errors.
 DTYPE_TO_EPS = {
@@ -108,7 +109,7 @@ DTYPE_TO_EPS = {
 
 
 def update_dir_prior(prior, N, logphat, rho):
-    """Updates a given prior using Newton's method, described in
+    """Update a given prior using Newton's method, described in
     `J. Huang: "Maximum Likelihood Estimation of Dirichlet Distribution Parameters"
     <http://jonathan-huang.org/research/dirichlet/dirichlet.pdf>`_.
 
@@ -282,7 +283,9 @@ class LdaState(utils.SaveLoad):
 
     @classmethod
     def load(cls, fname, *args, **kwargs):
-        """Overrides :class:`~gensim.utils.SaveLoad.load` by enforcing the `dtype` parameter
+        """Load a previously stored model from disk.
+
+        Overrides :class:`~gensim.utils.SaveLoad.load` by enforcing the `dtype` parameter
         to ensure backwards compatibility.
 
         Parameters
@@ -304,19 +307,19 @@ class LdaState(utils.SaveLoad):
 
         # dtype could be absent in old models
         if not hasattr(result, 'dtype'):
-            result.dtype = np.float64  # float64 was implicitly used before (cause it's default in numpy)
+            result.dtype = np.float64  # float64 was implicitly used before (because it's the default in numpy)
             logging.info("dtype was not set in saved %s file %s, assuming np.float64", result.__class__.__name__, fname)
 
         return result
 
 
 class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
-    """This model implements online latent dirichlet allocation as presented in
+    """Train and use Online Latent Dirichlet Allocation (OLDA) models as presented in
     `Hoffman et al. :"Online Learning for Latent Dirichlet Allocation" <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
 
     Examples
     -------
-    #. Initialize a model using a gensim corpus.
+    #. Initialize a model using a Gensim corpus.
 
     >>> from gensim.test.utils import common_corpus
     >>>
@@ -334,7 +337,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     >>>
     >>> lda.update(other_corpus)
 
-    Model persistency is achieved through its `load`/`save` methods.
+    Model persistency is achieved through its :meth:`~gensim.models.ldamodel.LdaModel.load` / :meth:`~gensim.models.ldamodel.LdaModel.save` methods.
+
     """
 
     def __init__(self, corpus=None, num_topics=100, id2word=None,
@@ -343,8 +347,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                  iterations=50, gamma_threshold=0.001, minimum_probability=0.01,
                  random_state=None, ns_conf=None, minimum_phi_value=0.01,
                  per_word_topics=False, callbacks=None, dtype=np.float32):
-        """ The constructor estimates Latent Dirichlet Allocation model parameters based
-        on a training corpus.
+        """Initialize model parameters and, if `corpus` is given, train the model immediately.
 
         Parameters
         ----------
@@ -518,7 +521,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             self.update(corpus, chunks_as_numpy=use_numpy)
 
     def init_dir_prior(self, prior, name):
-        """Initialize our prio belief for the Dirichlet distribution.
+        """Initialize priors for the Dirichlet distribution.
 
         Parameters
         ----------
@@ -829,9 +832,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         and is guaranteed to converge for any `decay` in (0.5, 1.0). Additionally, for smaller corpus sizes, an
         increasing `offset` may be beneficial (see Table 1 in the same paper).
 
-
-
-
         Parameters
         ----------
         corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
@@ -1113,7 +1113,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return score
 
     def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True):
-        """Get a representation for some topics.
+        """Get a representation for selected topics.
 
         Parameters
         ----------
@@ -1388,12 +1388,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def diff(self, other, distance="kullback_leibler", num_words=100,
              n_ann_terms=10, diagonal=False, annotation=True, normed=True):
-        """Calculate the difference in topic distributions extracted between two trained models (one of them is `self`).
-
-
-        Notes
-        -----
-        The difference calculation does not take into account the underlying `dtype`s used in the models.
+        """Calculate the difference in topic distributions between two models: `self` and `other`.
 
         Parameters
         ----------
@@ -1415,7 +1410,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Returns
         -------
         np.ndarray of shape (`self.num_topics`, `other.num_topics`)
-            A difference matrix . Each element corresponds to the difference between the two topics.
+            A difference matrix. Each element corresponds to the difference between the two topics.
         np.ndarray of shape (`self.num_topics`, `other_model.num_topics`, 2), optional
             Annotation matrix where for each pair we include the word from the intersection of the two topics,
             and the word from the symmetric difference of the two topics. Only included if `annotation == True`.
@@ -1500,7 +1495,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """Get the topic distribution for the given document.
 
         Wraps :meth:`~gensim.models.ldamodel.LdaModel.get_document_topics` to support an operator style call.
-        Uses the model's current state (set using constructor arguments) for the additional arguments of the
+        Uses the model's current state (set using constructor arguments) to fill in the additional arguments of the
         wrapper method.
 
         Parameters
@@ -1520,23 +1515,22 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return self.get_document_topics(bow, eps, self.minimum_phi_value, self.per_word_topics)
 
     def save(self, fname, ignore=('state', 'dispatcher'), separately=None, *args, **kwargs):
-        """Save the model to file.
+        """Save the model to a file.
 
         Large internal arrays may be stored into separate files, with `fname` as prefix.
 
         Notes
         -----
-        Do not save as a compressed file if you intend to load the file back with `mmap`.
-
         If you intend to use models across Python 2/3 versions there are a few things to
         keep in mind:
 
           1. The pickled Python dictionaries will not work across Python versions
-          2. The `save` method does not automatically save all np arrays using np, only
-             those ones that exceed `sep_limit` set in `gensim.utils.SaveLoad.save`. The main
+          2. The `save` method does not automatically save all numpy arrays separately, only
+             those ones that exceed `sep_limit` set in :meth:`~gensim.utils.SaveLoad.save`. The main
              concern here is the `alpha` array if for instance using `alpha='auto'`.
 
-        Please refer to the wiki recipes section (goo.gl/qoje24) for an example on how to work around these issues.
+        Please refer to the `wiki recipes section <https://github.com/RaRe-Technologies/gensim/wiki/Recipes-&-FAQ#q9-how-do-i-load-a-model-in-python-3-that-was-trained-and-saved-using-python-2>`_
+        for an example on how to work around these issues.
 
         See Also
         --------
@@ -1600,7 +1594,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     @classmethod
     def load(cls, fname, *args, **kwargs):
-        """Load a previously saved object from file.
+        """Load a previously saved LdaModel object from file.
 
         See Also
         --------

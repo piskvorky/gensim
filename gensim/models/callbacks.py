@@ -1,15 +1,26 @@
-"""Callbacks can be used to observe the training process.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# Copyright (C) 2018 RARE Technologies <info@rare-technologies.com>
+# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-Since training in huge corpuses can be a very time consuming process, we want to offer the users some insight
-into the process, in real time. In this way convergence issues or other potential problems can be identified
-early in the process, saving precious time and resources for our users.
 
-The metrics exposed through this module can be used to construct Callbacks, which will be reactively called
-at specific points in the training process. These metrics can be used to assert a model's convergence or
-correctness in real time, to save or visualize intermediate results, or anything else.
+"""
+Callbacks can be used to observe the training process.
 
-Examples
---------
+Since training in huge corpora can be time consuming, we want to offer the users some insight
+into the process, in real time. In this way, convergence issues
+or other potential problems can be identified early in the process,
+saving precious time and resources.
+
+The metrics exposed through this module can be used to construct Callbacks, which will be called
+at specific points in the training process, such as "epoch starts" or "epoch finished".
+These metrics can be used to assess mod's convergence or correctness, for example
+to save the model, visualize intermediate results, or anything else.
+
+Usage examples
+--------------
+
 To implement a Callback, inherit from this base class and override one or more of its methods.
 
 #. Create a callback to save the training model after each epoch:
@@ -19,25 +30,30 @@ To implement a Callback, inherit from this base class and override one or more o
 >>> from gensim.models import Word2Vec
 >>>
 >>> class EpochSaver(CallbackAny2Vec):
-...     "Callback to save model after every epoch"
+...     '''Callback to save model after each epoch.'''
+...
 ...     def __init__(self, path_prefix):
 ...         self.path_prefix = path_prefix
 ...         self.epoch = 0
+...
 ...     def on_epoch_end(self, model):
 ...         output_path = '{}_epoch{}.model'.format(self.path_prefix, self.epoch)
-...         print("Save model to {}".format(output_path))
+...         print("Saving model to {}".format(output_path))
 ...         model.save(output_path)
 ...         self.epoch += 1
 ...
 
-#. Create a callback to print logging information to the console:
+#. Create a callback to print progress information to the console:
 
 >>> class EpochLogger(CallbackAny2Vec):
-...     "Callback to log information about training"
+...     '''Callback to log information about training'''
+...
 ...     def __init__(self):
 ...         self.epoch = 0
+...
 ...     def on_epoch_begin(self, model):
 ...         print("Epoch #{} start".format(self.epoch))
+...
 ...     def on_epoch_end(self, model):
 ...         print("Epoch #{} end".format(self.epoch))
 ...         self.epoch += 1
@@ -61,11 +77,13 @@ Epoch #4 end
 
 #. Create and bind a callback to a topic model. This callback will log the perplexity metric in real time:
 
+>>> from gensim.models.callbacks import PerplexityMetric
 >>> from gensim.models.ldamodel import LdaModel
+>>> from gensim.test.utils import common_texts
 >>>
 >>> # Log the perplexity score at the end of each epoch.
->>> perplexity_logger = PerplexityMetric(corpus=common_corpus, logger='shell')
->>> lda = LdaModel(common_corpus, num_topics=5, callbacks=[perplexity_logger])
+>>> perplexity_logger = PerplexityMetric(corpus=common_texts, logger='shell')
+>>> lda = LdaModel(common_texts, num_topics=5, callbacks=[perplexity_logger])
 
 """
 
@@ -104,7 +122,7 @@ class Metric(object):
         Returns
         -------
         str
-            Human readable representation of the metric's type.
+            Human readable representation of the metric.
 
         """
         if self.title is not None:
@@ -113,12 +131,12 @@ class Metric(object):
             return type(self).__name__[:-6]
 
     def set_parameters(self, **parameters):
-        """Set the metric's parameters.
+        """Set the metric parameters.
 
         Parameters
         ----------
         **parameters
-            Key word arguments to override the object's internal attributes.
+            Keyword arguments to override the object's internal attributes.
 
         """
         for parameter, value in parameters.items():
@@ -154,11 +172,12 @@ class Metric(object):
 class CoherenceMetric(Metric):
     """Metric class for coherence evaluation.
 
-     See Also
-     --------
-     :class:`~gensim.models.coherencemodel.CoherenceModel`
+    See Also
+    --------
+    :class:`~gensim.models.coherencemodel.CoherenceModel`
 
-     """
+    """
+
     def __init__(self, corpus=None, texts=None, dictionary=None, coherence=None,
                  window_size=None, topn=10, logger=None, viz_env=None, title=None):
         """
@@ -240,7 +259,8 @@ class CoherenceMetric(Metric):
 
 
 class PerplexityMetric(Metric):
-    """Metric class for perplexity evaluation. """
+    """Metric class for perplexity evaluation."""
+
     def __init__(self, corpus=None, logger=None, viz_env=None, title=None):
         """
 
@@ -288,10 +308,10 @@ class PerplexityMetric(Metric):
 
 
 class DiffMetric(Metric):
-    """Metric class for topic difference evaluation. """
+    """Metric class for topic difference evaluation."""
+
     def __init__(self, distance="jaccard", num_words=100, n_ann_terms=10, diagonal=True,
                  annotation=False, normed=True, logger=None, viz_env=None, title=None):
-
         """
 
         Parameters

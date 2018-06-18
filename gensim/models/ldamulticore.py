@@ -46,8 +46,8 @@ The core estimation code is based on the `onlineldavb.py` script by M. Hoffman [
 
 .. [1] http://www.cs.princeton.edu/~mdhoffma
 
-Examples
---------
+Usage examples
+--------------
 
 #. The constructor estimates Latent Dirichlet Allocation model parameters based on a training corpus:
 
@@ -100,7 +100,7 @@ logger = logging.getLogger(__name__)
 
 
 class LdaMulticore(LdaModel):
-    """An optimized implementation of the LDA algorithm, able to harness the power of multicore CPU's.
+    """An optimized implementation of the LDA algorithm, able to harness the power of multicore CPUs.
 
     Follows the same API as the parent class :class:`~gensim.models.ldamodel.LdaModel`.
     Model persistency is achieved through its :meth:`~gensim.models.ldamulticore.LdaMulticore.load` and
