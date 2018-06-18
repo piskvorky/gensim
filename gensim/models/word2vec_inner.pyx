@@ -2,11 +2,12 @@
 # cython: boundscheck=False
 # cython: wraparound=False
 # cython: cdivision=True
+# cython: embedsignature=True
 # coding: utf-8
 #
 # Copyright (C) 2013 Radim Rehurek <me@radimrehurek.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
-
+"""Optimized cython functions for training :class:`~gensim.models.word2vec.Word2Vec` model."""
 import cython
 import numpy as np
 cimport numpy as np

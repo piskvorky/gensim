@@ -2,8 +2,9 @@
 # cython: boundscheck=False
 # cython: wraparound=False
 # cython: cdivision=True
+# cython: embedsignature=True
 # coding: utf-8
-
+"""Optimized cython functions for training :class:`~gensim.models.fasttext.FastText` model."""
 import cython
 import numpy as np
 cimport numpy as np
