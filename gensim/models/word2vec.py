@@ -481,10 +481,11 @@ class Word2Vec(BaseWordEmbeddingsModel):
             should be drawn (usually between 5-20).
             If set to 0, no negative sampling is used.
         ns_exponent : float
-            The exponent used to smooth the cumulative distribution used for negative sampling.
-            1.0 leads to a sampling based on the frequency distribution, 0.0 makes items beings sampled equally,
-            while a negative value makes unpopular items being sampled more often than popular onces. The default value
-            is empirically set to 0.75 following the original paper of Word2Vec.
+            The exponent used to shape the negative sampling distribution. A value of 1.0 samples exactly in proportion
+            to the frequencies, 0.0 samples all words equally, while a negative value samples low-frequency words more
+            than high-frequency words. The popular default value of 0.75 was chosen by the original Word2Vec paper.
+            More recently, in https://arxiv.org/abs/1804.04212, Caselles-Dupré, Lesaint, & Royo-Letelier suggest that
+            other values may perform better for recommendation applications.
         cbow_mean : int {1,0}
             If 0, use the sum of the context word vectors. If 1, use the mean, only applies when cbow is used.
         hashfxn : function
