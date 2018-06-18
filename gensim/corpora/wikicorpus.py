@@ -35,6 +35,9 @@ from gensim import utils
 from gensim.corpora.dictionary import Dictionary
 from gensim.corpora.textcorpus import TextCorpus
 
+from six import raise_from
+
+
 logger = logging.getLogger(__name__)
 
 ARTICLE_MIN_WORDS = 50
@@ -627,8 +630,8 @@ class WikiCorpus(TextCorpus):
                 articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS
             )
         except PicklingError as exc:
-            raise PicklingError('Can not send filtering function {} to multiprocessing, '\
-                'make sure the function can be pickled.'.format(self.filter_articles)) from exc
+            raise_from(PicklingError('Can not send filtering function {} to multiprocessing, '\
+                'make sure the function can be pickled.'.format(self.filter_articles)), exc)
         else:
             logger.info(
                 "finished iterating over Wikipedia corpus of %i documents with %i positions "
