@@ -27,24 +27,24 @@ Why use KeyedVectors instead of a full model?
 +---------------------------+--------------+------------+-------------------------------------------------------------+
 |        capability         | KeyedVectors | full model |                               note                          |
 +---------------------------+--------------+------------+-------------------------------------------------------------+
-| continue training vectors | no           | yes        | You need the full model to train or update vectors.         |
+| continue training vectors | ❌           | ✅         | You need the full model to train or update vectors.         |
 +---------------------------+--------------+------------+-------------------------------------------------------------+
-| smaller objects           | yes          | no         | KeyedVectors are smaller and need less RAM, because they    |
+| smaller objects           | ✅           | ❌         | KeyedVectors are smaller and need less RAM, because they    |
 |                           |              |            | don't need to store the model state that enables training.  |
 +---------------------------+--------------+------------+-------------------------------------------------------------+
 | save/load from native     |              |            | Vectors exported by the Facebook and Google tools           |
-| fasttext/word2vec format  | yes          | no         | do not support further training, but you can still load     |
+| fasttext/word2vec format  | ✅           | ❌         | do not support further training, but you can still load     |
 |                           |              |            | them into KeyedVectors.                                     |
 +---------------------------+--------------+------------+-------------------------------------------------------------+
-| append new vectors        | yes          | yes        | Add new entity-vector entries to the mapping dynamically.   |
+| append new vectors        | ✅           | ✅         | Add new entity-vector entries to the mapping dynamically.   |
 +---------------------------+--------------+------------+-------------------------------------------------------------+
-| concurrency               | yes          | yes        | Thread-safe, allows concurrent vector queries.              |
+| concurrency               | ✅           | ✅         | Thread-safe, allows concurrent vector queries.              |
 +---------------------------+--------------+------------+-------------------------------------------------------------+
-| shared RAM                | yes          | yes        | Multiple processes can re-use the same data, keeping only   |
+| shared RAM                | ✅           | ✅         | Multiple processes can re-use the same data, keeping only   |
 |                           |              |            | a single copy in RAM using                                  |
 |                           |              |            | `mmap <https://en.wikipedia.org/wiki/Mmap>`_.               |
 +---------------------------+--------------+------------+-------------------------------------------------------------+
-| fast load                 | yes          | yes        | Supports `mmap <https://en.wikipedia.org/wiki/Mmap>`_       |
+| fast load                 | ✅           | ✅         | Supports `mmap <https://en.wikipedia.org/wiki/Mmap>`_       |
 |                           |              |            | to load data from disk instantaneously.                     |
 +---------------------------+--------------+------------+-------------------------------------------------------------+
 
