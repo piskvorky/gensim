@@ -27,6 +27,7 @@ import logging
 import multiprocessing
 import re
 import signal
+from pickle import PicklingError
 from xml.etree.cElementTree import \
     iterparse  # LXML isn't faster, so let's go with the built-in solution
 
