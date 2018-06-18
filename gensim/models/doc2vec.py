@@ -37,6 +37,7 @@ Initialize & train a model
 
 Persist a model to disk
 
+>>> fname = get_tmpfile("my_doc2vec_model")
 >>> model.save(fname)
 
 >>> model = Doc2Vec.load(fname)  # you can continue training with the loaded model!
@@ -50,7 +51,6 @@ Infer vector for new document
 >>> vector = model.infer_vector(["system", "response"])
 
 """
-
 import logging
 import os
 import warnings
@@ -378,9 +378,14 @@ class Doctag(namedtuple('Doctag', 'offset, word_count, doc_count')):
 
     Will not be used if all presented document tags are ints.
 
-    The offset is only the true index into the doctags_syn0/doctags_syn0_lockf if-and-only-if no raw-int tags were used.
-    If any raw-int tags were used, string Doctag vectors begin at index (max_rawint + 1), so the true index is
-    (rawint_index + 1 + offset), see also :meth:`~gensim.models.keyedvectors.Doc2VecKeyedVectors._index_to_doctag`.
+    The offset is only the true index into the `doctags_syn0`/`doctags_syn0_lockf`
+    if-and-only-if no raw-int tags were used.
+    If any raw-int tags were used, string :class:`~gensim.models.doc2vec.Doctag` vectors begin at index
+    `(max_rawint + 1)`, so the true index is `(rawint_index + 1 + offset)`.
+
+    See Also
+    --------
+    :meth:`~gensim.models.keyedvectors.Doc2VecKeyedVectors._index_to_doctag`
 
     """
     __slots__ = ()
@@ -656,12 +661,12 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         To support linear learning-rate decay from (initial) `alpha` to `min_alpha`, and accurate
         progress-percentage logging, either `total_examples` (count of sentences) or `total_words` (count of
         raw words in sentences) **MUST** be provided. If `sentences` is the same corpus
-        that was provided to :meth:`~gensim.models.word2vec.Word2Vec.build_vocab()` earlier,
+        that was provided to :meth:`~gensim.models.word2vec.Word2Vec.build_vocab` earlier,
         you can simply use `total_examples=self.corpus_count`.
 
         To avoid common mistakes around the model's ability to do multiple training passes itself, an
         explicit `epochs` argument **MUST** be provided. In the common and recommended case
-        where :meth:`~gensim.models.word2vec.Word2Vec.train()` is only called once,
+        where :meth:`~gensim.models.word2vec.Word2Vec.train` is only called once,
         you can set `epochs=self.iter`.
 
         Parameters
@@ -678,14 +683,15 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             Number of iterations (epochs) over the corpus.
         start_alpha : float, optional
             Initial learning rate. If supplied, replaces the starting `alpha` from the constructor,
-            for this one call to `train()`.
-            Use only if making multiple calls to `train()`, when you want to manage the alpha learning-rate yourself
+            for this one call to `train`.
+            Use only if making multiple calls to `train`, when you want to manage the alpha learning-rate yourself
             (not recommended).
         end_alpha : float, optional
             Final learning rate. Drops linearly from `start_alpha`.
-            If supplied, this replaces the final `min_alpha` from the constructor, for this one call to `train()`.
-            Use only if making multiple calls to `train()`, when you want to manage the alpha learning-rate yourself
-            (not recommended).
+            If supplied, this replaces the final `min_alpha` from the constructor, for this one call to
+            :meth:`~gensim.models.doc2vec.Doc2Vec.train`.
+            Use only if making multiple calls to :meth:`~gensim.models.doc2vec.Doc2Vec.train`, when you want to manage
+            the alpha learning-rate yourself (not recommended).
         word_count : int, optional
             Count of words already trained. Set this to 0 for the usual
             case of training on all words in sentences.
@@ -965,6 +971,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             A dictionary from string representations of the model's memory consuming members to their size in bytes.
             Includes members from the base classes as well as weights and tag lookup memory estimation specific to the
             class.
+
         """
         report = report or {}
         report['doctag_lookup'] = self.estimated_lookup_memory()
@@ -1035,8 +1042,8 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
             or a callable that accepts parameters (word, count, min_count) and returns either
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
-            The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part of the
-            model.
+            The rule, if given, is only used to prune vocabulary during
+            :meth:`~gensim.models.doc2vec.Doc2Vec.build_vocab` and is not stored as part of the model.
 
             The input parameters are of the following types:
                 * `word` (str) - the word we are examining
@@ -1117,8 +1124,8 @@ class Doc2VecVocab(Word2VecVocab):
             Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
             or a callable that accepts parameters (word, count, min_count) and returns either
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
-            The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part of the
-            model.
+            The rule, if given, is only used to prune vocabulary during
+            :meth:`~gensim.models.doc2vec.Doc2Vec.build_vocab` and is not stored as part of the model.
 
             The input parameters are of the following types:
                 * `word` (str) - the word we are examining
@@ -1332,8 +1339,7 @@ class TaggedBrownCorpus(object):
 
 
 class TaggedLineDocument(object):
-    """
-    Iterate over a file that contains sentences: one line = one :class:`~gensim.models.doc2vec.TaggedDocument` object.
+    """Iterate over a file that contains sentences: one line = :class:`~gensim.models.doc2vec.TaggedDocument` object.
 
     Words are expected to be already preprocessed and separated by whitespace. Document tags are constructed
     automatically from the document line number (each document gets a unique integer tag).
@@ -1341,6 +1347,7 @@ class TaggedLineDocument(object):
     """
     def __init__(self, source):
         """
+
         Parameters
         ----------
         source : string or a file-like object
@@ -1351,7 +1358,7 @@ class TaggedLineDocument(object):
         >>> from gensim.test.utils import datapath
         >>> from gensim.models.doc2vec import TaggedLineDocument
         >>>
-        >>> for document in TaggedLineDocument('myfile.txt.gz'):
+        >>> for document in TaggedLineDocument(datapath("head500.noblanks.cor")):
         ...     pass
 
         """
