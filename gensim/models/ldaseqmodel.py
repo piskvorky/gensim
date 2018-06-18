@@ -16,7 +16,7 @@ The next steps to take this forward would be:
 
     1) Include DIM mode. Most of the infrastructure for this is in place.
     2) See if LdaPost can be replaced by LdaModel completely without breaking anything.
-    3) Heavy lifting going on in the sslm class - efforts can be made to cythonise mathematical methods.
+    3) Heavy lifting going on in the Sslm class - efforts can be made to cythonise mathematical methods.
         - in particular, update_obs and the optimization takes a lot time.
     4) Try and make it distributed, especially around the E and M step.
     5) Remove all C/C++ coding style/syntax.
@@ -59,12 +59,12 @@ logger = logging.getLogger('gensim.models.ldaseqmodel')
 
 
 class LdaSeqModel(utils.SaveLoad):
-    """The model estimates Dynamic Topic Model parameters based on a training corpus. """
+    """Estimate Dynamic Topic Model parameters based on a training corpus."""
 
     def __init__(self, corpus=None, time_slice=None, id2word=None, alphas=0.01, num_topics=10,
                  initialize='gensim', sstats=None, lda_model=None, obs_variance=0.5, chain_variance=0.005, passes=10,
                  random_state=None, lda_inference_max_iter=25, em_min_iter=6, em_max_iter=20, chunksize=100):
-        """The constructor originally sets all training parameters.
+        """The constructor sets all training parameters, and optionally trains the model if `corpus` is provided.
 
         Parameters
         ----------
@@ -151,15 +151,15 @@ class LdaSeqModel(utils.SaveLoad):
 
         # topic_chains contains for each topic a 'state space language model' object
         # which in turn has information about each topic
-        # the sslm class is described below and contains information
+        # the Sslm class is described below and contains information
         # on topic-word probabilities and doc-topic probabilities.
         self.topic_chains = []
         for topic in range(0, num_topics):
-            sslm_ = sslm(
+            sslm = Sslm(
                 num_time_slices=self.num_time_slices, vocab_len=self.vocab_len, num_topics=self.num_topics,
                 chain_variance=chain_variance, obs_variance=obs_variance
             )
-            self.topic_chains.append(sslm_)
+            self.topic_chains.append(sslm)
 
         # the following are class variables which are to be integrated during Document Influence Model
         self.top_doc_phis = None
@@ -188,7 +188,7 @@ class LdaSeqModel(utils.SaveLoad):
             self.fit_lda_seq(corpus, lda_inference_max_iter, em_min_iter, em_max_iter, chunksize)
 
     def init_ldaseq_ss(self, topic_chain_variance, topic_obs_variance, alpha, init_suffstats):
-        """Method to initialize State Space Language Model, topic wise.
+        """Initialize State Space Language Model, topic-wise.
 
         Parameters
         ----------
@@ -207,7 +207,7 @@ class LdaSeqModel(utils.SaveLoad):
         self.alphas = alpha
         for k, chain in enumerate(self.topic_chains):
             sstats = init_suffstats[:, k]
-            sslm.sslm_counts_init(chain, topic_obs_variance, topic_chain_variance, sstats)
+            Sslm.sslm_counts_init(chain, topic_obs_variance, topic_chain_variance, sstats)
 
             # initialize the below matrices only if running DIM
             # ldaseq.topic_chains[k].w_phi_l = np.zeros((ldaseq.vocab_len, ldaseq.num_time_slices))
@@ -304,7 +304,7 @@ class LdaSeqModel(utils.SaveLoad):
 
     def lda_seq_infer(self, corpus, topic_suffstats, gammas, lhoods,
                       iter_, lda_inference_max_iter, chunksize):
-        """Inference or E- Step for the lower bound EM optimization.
+        """Inference (or E-step) for the lower bound EM optimization.
 
         This is used to set up the gensim :class:`~gensim.models.ldamodel.LdaModel` to be used for each time-slice.
         It also allows for Document Influence Model code to be written in.
@@ -360,7 +360,7 @@ class LdaSeqModel(utils.SaveLoad):
 
     def inferDTMseq(self, corpus, topic_suffstats, gammas, lhoods, lda,
                     ldapost, iter_, bound, lda_inference_max_iter, chunksize):
-        """Computes the likelihood of a sequential corpus under an LDA seq model, and reports the likelihood bound.
+        """Compute the likelihood of a sequential corpus under an LDA seq model, and reports the likelihood bound.
 
         Parameters
         ----------
@@ -478,7 +478,7 @@ class LdaSeqModel(utils.SaveLoad):
 
         for k, chain in enumerate(self.topic_chains):
             logger.info("Fitting topic number %i", k)
-            lhood_term = sslm.fit_sslm(chain, topic_suffstats[k])
+            lhood_term = Sslm.fit_sslm(chain, topic_suffstats[k])
             lhood += lhood_term
 
         return lhood
@@ -677,10 +677,10 @@ class LdaSeqModel(utils.SaveLoad):
         return doc_topic
 
 
-class sslm(utils.SaveLoad):
-    """Encapsulates the inner State Space Language Model for DTM.
+class Sslm(utils.SaveLoad):
+    """Encapsulate the inner State Space Language Model for DTM.
 
-    Some important attributes of this class are the following::
+    Some important attributes of this class:
 
         * `obs` is a matrix containing the document to topic ratios.
         * `e_log_prob` is a matrix containing the topic to word ratios.
@@ -718,7 +718,7 @@ class sslm(utils.SaveLoad):
         self.m_update_coeff_g = None
 
     def update_zeta(self):
-        """Updates the Zeta Variational Parameter.
+        """Update the Zeta variational parameter.
 
         Zeta is described in the appendix and is equal to sum (exp(mean[word] + Variance[word] / 2)),
         over every time-slice. It is the value of variational parameter zeta which maximizes the lower bound.
@@ -967,7 +967,7 @@ class sslm(utils.SaveLoad):
         return bound
 
     def compute_bound(self, sstats, totals):
-        """Computes the maximized lower bound achieved for the log probability of the true posterior.
+        """Compute the maximized lower bound achieved for the log probability of the true posterior.
 
         Uses the formula presented in the appendix of the DTM paper (formula no. 5).
 
@@ -1034,7 +1034,7 @@ class sslm(utils.SaveLoad):
         return val
 
     def update_obs(self, sstats, totals):
-        """Optimizes the bound with respect to the observed variables.
+        """Optimize the bound with respect to the observed variables.
 
         TODO:
         This is by far the slowest function in the whole algorithm.
@@ -1114,7 +1114,7 @@ class sslm(utils.SaveLoad):
     def compute_mean_deriv(self, word, time, deriv):
         """Helper functions for optimizing a function.
 
-        Computes derivative of:
+        Compute the derivative of:
 
         :math::
 
