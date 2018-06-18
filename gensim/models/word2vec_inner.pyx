@@ -941,9 +941,8 @@ cdef void score_pair_cbow_hs(
 
 
 def init():
-    """
-    Precompute function `sigmoid(x) = 1 / (1 + exp(-x))`, for x values discretized
-    into table EXP_TABLE.  Also calculate log(sigmoid(x)) into LOG_TABLE.
+    """Precompute function `sigmoid(x) = 1 / (1 + exp(-x))`, for x values discretized into table EXP_TABLE.
+     Also calculate log(sigmoid(x)) into LOG_TABLE.
 
     Returns
     -------
@@ -973,11 +972,11 @@ def init():
     # check whether sdot returns double or float
     d_res = dsdot(&size, x, &ONE, y, &ONE)
     p_res = <float *>&d_res
-    if (abs(d_res - expected) < 0.0001):
+    if abs(d_res - expected) < 0.0001:
         our_dot = our_dot_double
         our_saxpy = saxpy
         return 0  # double
-    elif (abs(p_res[0] - expected) < 0.0001):
+    elif abs(p_res[0] - expected) < 0.0001:
         our_dot = our_dot_float
         our_saxpy = saxpy
         return 1  # float

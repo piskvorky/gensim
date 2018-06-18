@@ -17,10 +17,10 @@ from libc.string cimport memset, memcpy
 
 # scipy <= 0.15
 try:
-     from scipy.linalg.blas import fblas
+    from scipy.linalg.blas import fblas
 except ImportError:
-     # in scipy > 0.15, fblas function has been removed
-     import scipy.linalg.blas as fblas
+    # in scipy > 0.15, fblas function has been removed
+    import scipy.linalg.blas as fblas
 
 from word2vec_inner cimport bisect_left, random_int32, sscal, REAL_t, EXP_TABLE, our_dot, our_saxpy
 

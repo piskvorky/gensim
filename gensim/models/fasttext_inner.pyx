@@ -20,10 +20,7 @@ except ImportError:
     # in scipy > 0.15, fblas function has been removed
     import scipy.linalg.blas as fblas
 
-from word2vec_inner cimport bisect_left, random_int32, \
-     scopy, saxpy, sdot, dsdot, snrm2, sscal, \
-     REAL_t, EXP_TABLE, \
-     our_dot, our_saxpy, \
+from word2vec_inner cimport bisect_left, random_int32, scopy, saxpy, dsdot, sscal, REAL_t, EXP_TABLE, \
      our_dot_double, our_dot_float, our_dot_noblas, our_saxpy_noblas
 
 REAL = np.float32
@@ -248,7 +245,7 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
     """Update skip-gram model by training on a sequence of sentences.
 
     Each sentence is a list of string tokens, which are looked up in the model's
-    vocab dictionary. Called internally from :meth:`gensim.models.fasttext.FastText.train()`.
+    vocab dictionary. Called internally from :meth:`gensim.models.fasttext.FastText.train`.
 
     Parameters
     ----------
@@ -258,9 +255,9 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
         Corpus streamed directly from disk/network.
     alpha : float
         Learning rate.
-    _work : np.ndarray, optional
+    _work : np.ndarray
         Private working memory for each worker.
-    _l1 : np.ndarray, optional
+    _l1 : np.ndarray
         Private working memory for each worker.
 
     Returns
@@ -402,7 +399,7 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1):
     """Update the CBOW model by training on a sequence of sentences.
 
     Each sentence is a list of string tokens, which are looked up in the model's
-    vocab dictionary. Called internally from :meth:`gensim.models.fasttext.FastText.train()`.
+    vocab dictionary. Called internally from :meth:`gensim.models.fasttext.FastText.train`.
 
     Parameters
     ----------
@@ -412,9 +409,9 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1):
         Corpus streamed directly from disk/network.
     alpha : float
         Learning rate.
-    _work : np.ndarray, optional
+    _work : np.ndarray
         Private working memory for each worker.
-    _neu1 : np.ndarray, optional
+    _neu1 : np.ndarray
         Private working memory for each worker.
     Returns
     -------
@@ -549,9 +546,16 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1):
 
 
 def init():
-    """
-    Precompute function `sigmoid(x) = 1 / (1 + exp(-x))`, for x values discretized
-    into table EXP_TABLE.  Also calculate log(sigmoid(x)) into LOG_TABLE.
+    """Precompute function `sigmoid(x) = 1 / (1 + exp(-x))`, for x values discretized into table EXP_TABLE.
+    Also calculate log(sigmoid(x)) into LOG_TABLE.
+
+    Returns
+    -------
+    {0, 1, 2}
+        Enumeration to signify underlying data type returned by the BLAS dot product calculation.
+        0 signifies double, 1 signifies double, and 2 signifies that custom cython loops were used
+        instead of BLAS.
+
     """
     global our_dot
     global our_saxpy
@@ -573,11 +577,11 @@ def init():
     # check whether sdot returns double or float
     d_res = dsdot(&size, x, &ONE, y, &ONE)
     p_res = <float *>&d_res
-    if (abs(d_res - expected) < 0.0001):
+    if abs(d_res - expected) < 0.0001:
         our_dot = our_dot_double
         our_saxpy = saxpy
         return 0  # double
-    elif (abs(p_res[0] - expected) < 0.0001):
+    elif abs(p_res[0] - expected) < 0.0001:
         our_dot = our_dot_float
         our_saxpy = saxpy
         return 1  # float
@@ -590,4 +594,3 @@ def init():
 
 FAST_VERSION = init()  # initialize the module
 MAX_WORDS_IN_BATCH = MAX_SENTENCE_LEN
-
