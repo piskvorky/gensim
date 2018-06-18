@@ -4,9 +4,7 @@
 # Authors: Shiva Manne <manneshiva@gmail.com>, Chinmaya Pancholi <chinmayapancholi13@gmail.com>
 # Copyright (C) 2018 RaRe Technologies s.r.o.
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
-
-"""
-Learn word representations via Fasttext: `Enriching Word Vectors with Subword Information
+"""Learn word representations via Fasttext: `Enriching Word Vectors with Subword Information
 <https://arxiv.org/abs/1607.04606>`_.
 
 This module allows training word embeddings from a training corpus with the additional ability to obtain word vectors
@@ -23,29 +21,35 @@ training routines.**
 Usage examples
 --------------
 
-Initialize and train a model::
+Initialize and train a model
 
->>> from gensim.test.utils import common_texts, get_tmpfile
+>>> from gensim.test.utils import common_texts
 >>> from gensim.models import FastText
 >>>
->>> model = FastText(common_texts, size=4, window=3, min_count=1, epochs=10)
+>>> model = FastText(common_texts, size=4, window=3, min_count=1, iter=10)
 
-Persist a model to disk with::
+Persist a model to disk with
 
->>> model.save("fasttext.model")
->>> model = FastText.load("fasttext.model")  # you can continue training with the loaded model!
+>>> from gensim.test.utils import get_tmpfile
+>>>
+>>> fname = get_tmpfile("fasttext.model")
+>>>
+>>> model.save(fname)
+>>> model = FastText.load(fname)  # you can continue training with the loaded model!
 
-Retrieve word-vector for vocab and out-of-vocab word::
+Retrieve word-vector for vocab and out-of-vocab word
 
 >>> existent_word = "computer"
->>> print(existent_word in model)  # True
+>>> existent_word in model.wv.vocab
+True
 >>> computer_vec = model.wv[existent_word]  # numpy vector of a word
 >>>
 >>> oov_word = "graph-out-of-vocab"
->>> print(oov_word in model)  # False
+>>> oov_word in model.wv.vocab
+False
 >>> oov_vec = model.wv[oov_word]  # numpy vector for OOV word
 
-You can perform various NLP word tasks with the model, some of them are already built-in::
+You can perform various NLP word tasks with the model, some of them are already built-in
 
 >>> similarities = model.wv.most_similar(positive=['computer', 'human'], negative=['interface'])
 >>> most_similar = similarities[0]
@@ -57,18 +61,17 @@ You can perform various NLP word tasks with the model, some of them are already 
 >>>
 >>> sim_score = model.wv.similarity('computer', 'human')
 
-Correlation with human opinion on word similarity::
+Correlation with human opinion on word similarity
 
 >>> from gensim.test.utils import datapath
 >>>
 >>> similarities = model.wv.evaluate_word_pairs(datapath('wordsim353.tsv'))
 
-And on word analogies::
+And on word analogies
 
 >>> analogies_result = model.wv.accuracy(datapath('questions-words.txt'))
 
 """
-
 import logging
 import struct
 
@@ -211,22 +214,25 @@ class FastText(BaseWordEmbeddingsModel):
     :meth:`~gensim.models.fasttext.FastText.load` methods, or loaded from a format compatible with the original
     Fasttext implementation via :meth:`~gensim.models.fasttext.FastText.load_fasttext_format`.
 
-    Some important attributes are the following:
+    Some important internal attributes are the following:
 
-    self.wv : :class:`~gensim.models.keyedvectors.FastTextKeyedVectors`
+    Attributes
+    ----------
+    wv : :class:`~gensim.models.keyedvectors.FastTextKeyedVectors`
         This object essentially contains the mapping between words and embeddings. These are similar to the embeddings
-        computed in the Word2Vec model, however here we also include vectors for n-grams. This allows the model to
-        compute embeddings even for **unseen** words (that do not exist in the vocabulary), as the aggregate of the
-        n-grams included in the word. After training the model, this attribute can be used directly to query those
-        embeddings in various ways. Check the module level docstring from some examples.
-    self.vocabulary : :class:`~gensim.models.fasttext.FastTextVocab`
+        computed in the :class:`~gensim.models.word2vec.Word2Vec`, however here we also include vectors for n-grams.
+        This allows the model to compute embeddings even for **unseen** words (that do not exist in the vocabulary),
+        as the aggregate of the n-grams included in the word. After training the model, this attribute can be used
+        directly to query those embeddings in various ways. Check the module level docstring from some examples.
+    vocabulary : :class:`~gensim.models.fasttext.FastTextVocab`
         This object represents the vocabulary of the model.
         Besides keeping track of all unique words, this object provides extra functionality, such as
         constructing a huffman tree (frequent words are closer to the root), or discarding extremely rare words.
-    self.trainables : :class:`~gensim.models.fasttext.FastTextTrainables`
+    trainables : :class:`~gensim.models.fasttext.FastTextTrainables`
         This object represents the inner shallow neural network used to train the embeddings. This is very
-        similar to the network of the Word2Vec model, but it also trains weights for the N-Grams (sequences of more
-        than 1 words). The semantics of the network are almost the same as the one used for the Word2Vec model:
+        similar to the network of the :class:`~gensim.models.word2vec.Word2Vec` model, but it also trains weights
+        for the N-Grams (sequences of more than 1 words). The semantics of the network are almost the same as
+        the one used for the :class:`~gensim.models.word2vec.Word2Vec` model.
         You can think of it as a NN with a single projection and hidden layer which we train on the corpus.
         The weights are then used as our embeddings. An important difference however between the two models, is the
         scoring function used to compute the loss. In the case of FastText, this is modified in word to also account
@@ -237,8 +243,7 @@ class FastText(BaseWordEmbeddingsModel):
                  max_vocab_size=None, word_ngrams=1, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
                  negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0, min_n=3, max_n=6, sorted_vocab=1,
                  bucket=2000000, trim_rule=None, batch_words=MAX_WORDS_IN_BATCH, callbacks=()):
-        """Initialize the model from an iterable of `sentences`. Each sentence is a
-        list of words (unicode strings) that will be used for training.
+        """
 
         Parameters
         ----------
@@ -295,8 +300,8 @@ class FastText(BaseWordEmbeddingsModel):
             Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
             or a callable that accepts parameters (word, count, min_count) and returns either
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
-            The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part of the
-            model.
+            The rule, if given, is only used to prune vocabulary during
+            :meth:`~gensim.models.fasttext.FastText.build_vocab` and is not stored as part of themodel.
 
             The input parameters are of the following types:
                 * `word` (str) - the word we are examining
@@ -316,7 +321,7 @@ class FastText(BaseWordEmbeddingsModel):
             lesser than `min_n` to avoid char ngrams being used.
         word_ngrams : {1,0}, optional
             If 1, uses enriches word vectors with subword(n-grams) information.
-            If 0, this is equivalent to word2vec.
+            If 0, this is equivalent to :class:`~gensim.models.word2vec.Word2Vec`.
         bucket : int, optional
             Character ngrams are hashed into a fixed number of buckets, in order to limit the
             memory usage of the model. This option specifies the number of buckets used by the model.
@@ -428,8 +433,8 @@ class FastText(BaseWordEmbeddingsModel):
             Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
             or a callable that accepts parameters (word, count, min_count) and returns either
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
-            The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part of the
-            model.
+            The rule, if given, is only used to prune vocabulary during
+            :meth:`~gensim.models.fasttext.FastText.build_vocab` and is not stored as part of the model.
 
             The input parameters are of the following types:
                 * `word` (str) - the word we are examining
@@ -451,6 +456,7 @@ class FastText(BaseWordEmbeddingsModel):
         >>> model = FastText(min_count=1)
         >>> model.build_vocab(sentences_1)
         >>> model.train(sentences_1, total_examples=model.corpus_count, epochs=model.iter)
+        >>>
         >>> model.build_vocab(sentences_2, update=True)
         >>> model.train(sentences_2, total_examples=model.corpus_count, epochs=model.iter)
 
@@ -472,7 +478,7 @@ class FastText(BaseWordEmbeddingsModel):
         pass
 
     def _clear_post_train(self):
-        """Clear the model's internal structures after training has finished to free up RAM. """
+        """Clear the model's internal structures after training has finished to free up RAM."""
         self.wv.vectors_norm = None
         self.wv.vectors_vocab_norm = None
         self.wv.vectors_ngrams_norm = None
@@ -554,13 +560,12 @@ class FastText(BaseWordEmbeddingsModel):
         To support linear learning-rate decay from (initial) `alpha` to `min_alpha`, and accurate
         progress-percentage logging, either `total_examples` (count of sentences) or `total_words` (count of
         raw words in sentences) **MUST** be provided. If `sentences` is the same corpus
-        that was provided to :meth:`~gensim.models.word2vec.Word2Vec.build_vocab()` earlier,
+        that was provided to :meth:`~gensim.models.fasttext.FastText.build_vocab` earlier,
         you can simply use `total_examples=self.corpus_count`.
 
         To avoid common mistakes around the model's ability to do multiple training passes itself, an
         explicit `epochs` argument **MUST** be provided. In the common and recommended case
-        where :meth:`~gensim.models.word2vec.Word2Vec.train()` is only called once,
-        you can set `epochs=self.iter`.
+        where :meth:`~gensim.models.fasttext.FastText.train` is only called once, you can set `epochs=self.iter`.
 
         Parameters
         ----------
@@ -577,14 +582,15 @@ class FastText(BaseWordEmbeddingsModel):
             Number of iterations (epochs) over the corpus.
         start_alpha : float, optional
             Initial learning rate. If supplied, replaces the starting `alpha` from the constructor,
-            for this one call to `train()`.
-            Use only if making multiple calls to `train()`, when you want to manage the alpha learning-rate yourself
-            (not recommended).
+            for this one call to :meth:`~gensim.models.fasttext.FastText.train`.
+            Use only if making multiple calls to :meth:`~gensim.models.fasttext.FastText.train`, when you want to manage
+            the alpha learning-rate yourself (not recommended).
         end_alpha : float, optional
             Final learning rate. Drops linearly from `start_alpha`.
-            If supplied, this replaces the final `min_alpha` from the constructor, for this one call to `train()`.
-            Use only if making multiple calls to `train()`, when you want to manage the alpha learning-rate yourself
-            (not recommended).
+            If supplied, this replaces the final `min_alpha` from the constructor, for this one call to
+            :meth:`~gensim.models.fasttext.FastText.train`.
+            Use only if making multiple calls to :meth:`~gensim.models.fasttext.FastText.train`, when you want to manage
+            the alpha learning-rate yourself (not recommended).
         word_count : int
             Count of words already trained. Set this to 0 for the usual
             case of training on all words in sentences.
@@ -605,7 +611,6 @@ class FastText(BaseWordEmbeddingsModel):
         >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)
 
         """
-
         super(FastText, self).train(
             sentences, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
@@ -630,27 +635,28 @@ class FastText(BaseWordEmbeddingsModel):
         self.wv.init_sims(replace)
 
     def clear_sims(self):
-        """
-        Remove all L2-normalized word vectors from the model, to free up memory.
+        """Remove all L2-normalized word vectors from the model, to free up memory.
 
-        You can recompute them later again using the :meth:`~gensim.models.FastText.init_sims()` method.
+        You can recompute them later again using the :meth:`~gensim.models.fasttext.FastText.init_sims` method.
 
         """
         self._clear_post_train()
 
     @deprecated("Method will be removed in 4.0.0, use self.wv.__getitem__() instead")
     def __getitem__(self, words):
-        """
-        Deprecated. Use self.wv.__getitem__() instead.
-        Refer to the documentation for `gensim.models.KeyedVectors.__getitem__`
+        """Deprecated. Use self.wv.__getitem__() instead.
+
+        Refer to the documentation for :meth:`gensim.models.keyedvectors.KeyedVectors.__getitem__`
+
         """
         return self.wv.__getitem__(words)
 
     @deprecated("Method will be removed in 4.0.0, use self.wv.__contains__() instead")
     def __contains__(self, word):
-        """
-        Deprecated. Use self.wv.__contains__() instead.
-        Refer to the documentation for `gensim.models.KeyedVectors.__contains__`
+        """Deprecated. Use self.wv.__contains__() instead.
+
+        Refer to the documentation for :meth:`gensim.models.keyedvectors.KeyedVectors.__contains__`
+
         """
         return self.wv.__contains__(word)
 
@@ -660,8 +666,7 @@ class FastText(BaseWordEmbeddingsModel):
 
         Notes
         ------
-        Due to limitations in the FastText API, you cannot continue training
-        with a model loaded this way.
+        Due to limitations in the FastText API, you cannot continue training with a model loaded this way.
 
         Parameters
         ----------
@@ -788,8 +793,6 @@ class FastText(BaseWordEmbeddingsModel):
         ----------
         file_handle : file-like object
             Open file handle to persisted vectors.
-        encoding : str
-            File encoding.
 
         """
         if self.new_format:
@@ -840,13 +843,18 @@ class FastText(BaseWordEmbeddingsModel):
 
     def save(self, *args, **kwargs):
         """Save the Fasttext model. This saved model can be loaded again using
-        :func:`~gensim.models.fasttext.FastText.load`, which supports incremental training
+        :meth:`~gensim.models.fasttext.FastText.load`, which supports incremental training
         and getting vectors for out-of-vocabulary words.
 
         Parameters
         ----------
         fname : str
             Store the model to this file.
+
+        See Also
+        --------
+        :meth:`~gensim.models.fasttext.FastText.load`
+            Load :class:`~gensim.models.fasttext.FastText` model.
 
         """
         kwargs['ignore'] = kwargs.get(
@@ -855,7 +863,7 @@ class FastText(BaseWordEmbeddingsModel):
 
     @classmethod
     def load(cls, *args, **kwargs):
-        """Load a previously saved `FastText` model. Also see :func:`~gensim.models.fasttext.FastText.save`.
+        """Load a previously saved `FastText` model.
 
         Parameters
         ----------
@@ -866,6 +874,11 @@ class FastText(BaseWordEmbeddingsModel):
         -------
         :class:`~gensim.models.fasttext.FastText`
             Loaded model.
+
+        See Also
+        --------
+        :meth:`~gensim.models.fasttext.FastText.save`
+            Save :class:`~gensim.models.fasttext.FastText` model.
 
         """
         try:
