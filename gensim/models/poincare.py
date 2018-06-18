@@ -22,14 +22,15 @@ csv-like format, or from a Python iterable of relations.
 
 Examples
 --------
-Initialize and train a model from a list:
+
+Initialize and train a model from a list
 
 >>> from gensim.models.poincare import PoincareModel
 >>> relations = [('kangaroo', 'marsupial'), ('kangaroo', 'mammal'), ('gib', 'cat')]
 >>> model = PoincareModel(relations, negative=2)
 >>> model.train(epochs=50)
 
-Initialize and train a model from a file containing one relation per line:
+Initialize and train a model from a file containing one relation per line
 
 >>> from gensim.models.poincare import PoincareModel, PoincareRelations
 >>> from gensim.test.utils import datapath
@@ -38,8 +39,6 @@ Initialize and train a model from a file containing one relation per line:
 >>> model.train(epochs=50)
 
 """
-
-
 import csv
 import logging
 import sys
@@ -202,7 +201,7 @@ class PoincareModel(utils.SaveLoad):
         self.kv.syn0 = self._np_random.uniform(self.init_range[0], self.init_range[1], shape).astype(self.dtype)
 
     def _init_node_probabilities(self):
-        """Initialize a-priori probabilities. """
+        """Initialize a-priori probabilities."""
         counts = np.array([
                 self.kv.vocab[self.kv.index2word[i]].count
                 for i in range(len(self.kv.index2word))
@@ -212,7 +211,7 @@ class PoincareModel(utils.SaveLoad):
         self._node_probabilities = counts / counts.sum()
 
     def _get_candidate_negatives(self):
-        """Return candidate negatives of size `self.negative` from the negative examples buffer.
+        """Get candidate negatives of size `self.negative` from the negative examples buffer.
 
         Returns
         -------
@@ -220,7 +219,6 @@ class PoincareModel(utils.SaveLoad):
             Array of shape (`self.negative`,) containing indices of negative nodes.
 
         """
-
         if self._negatives_buffer.num_items() < self.negative:
             # cumsum table of counts used instead of the standard approach of a probability cumsum table
             # this is to avoid floating point errors that result when the number of nodes is very high
@@ -232,7 +230,7 @@ class PoincareModel(utils.SaveLoad):
         return self._negatives_buffer.get_items(self.negative)
 
     def _sample_negatives(self, node_index):
-        """Return a sample of negatives for the given node.
+        """Get a sample of negatives for the given node.
 
         Parameters
         ----------
@@ -278,7 +276,7 @@ class PoincareModel(utils.SaveLoad):
 
     @staticmethod
     def _loss_fn(matrix, regularization_coeff=1.0):
-        """Given a numpy array with vectors for u, v and negative samples, computes loss value.
+        """Computes loss value.
 
         Parameters
         ----------
@@ -406,7 +404,7 @@ class PoincareModel(utils.SaveLoad):
         Returns
         -------
         :class:`~gensim.models.poincare.PoincareBatch`
-            Contains node indices, computed gradients and loss for the batch.
+            Node indices, computed gradients and loss for the batch.
 
         """
         batch_size = len(relations)
@@ -466,7 +464,7 @@ class PoincareModel(utils.SaveLoad):
             'greater than tolerance %.10f' % (max_diff, tol))
 
     def _sample_negatives_batch(self, nodes):
-        """Return negative examples for each node.
+        """Get negative examples for each node.
 
         Parameters
         ----------
@@ -659,7 +657,7 @@ class PoincareModel(utils.SaveLoad):
 class PoincareBatch(object):
     """Compute Poincare distances, gradients and loss for a training batch.
 
-    Storie intermediate state to avoid recomputing multiple times.
+    Store intermediate state to avoid recomputing multiple times.
 
     """
     def __init__(self, vectors_u, vectors_v, indices_u, indices_v, regularization_coeff=1.0):
@@ -817,7 +815,6 @@ class PoincareKeyedVectors(BaseKeyedVectors):
     Used to perform operations on the vectors such as vector lookup, distance calculations etc.
 
     """
-
     def __init__(self, vector_size):
         super(PoincareKeyedVectors, self).__init__(vector_size)
         self.max_distance = 0
@@ -840,7 +837,7 @@ class PoincareKeyedVectors(BaseKeyedVectors):
         self.index2word = value
 
     def word_vec(self, word):
-        """Return the word's representations in vector space, as a 1D numpy array.
+        """Get the word's representations in vector space, as a 1D numpy array.
 
         Examples
         --------
@@ -859,7 +856,7 @@ class PoincareKeyedVectors(BaseKeyedVectors):
         return super(PoincareKeyedVectors, self).get_vector(word)
 
     def words_closer_than(self, w1, w2):
-        """Return all words that are closer to `w1` than `w2` is to `w1`.
+        """Get all words that are closer to `w1` than `w2` is to `w1`.
 
         Parameters
         ----------
@@ -890,16 +887,20 @@ class PoincareKeyedVectors(BaseKeyedVectors):
         return super(PoincareKeyedVectors, self).closer_than(w1, w2)
 
     def save_word2vec_format(self, fname, fvocab=None, binary=False, total_vec=None):
-        """
-        Store the input-hidden weight matrix in the same format used by the original
-        C word2vec-tool, for compatibility.
+        """Store the input-hidden weight matrix in the same format used by the original
+        C word2vec-tool, for compatibility, using :func:`~gensim.models.utils_any2vec._save_word2vec_format`.
 
-         `fname` is the file used to save the vectors in
-         `fvocab` is an optional file used to save the vocabulary
-         `binary` is an optional boolean indicating whether the data is to be saved
-         in binary word2vec format (default: False)
-         `total_vec` is an optional parameter to explicitly specify total no. of vectors
-         (in case word vectors are appended with document vectors afterwards)
+        Parameters
+        ----------
+        fname : str
+            Path to file that will be used for storing.
+        fvocab : str, optional
+            File path used to save the vocabulary.
+        binary : bool, optional
+            If True, the data wil be saved in binary word2vec format, else it will be saved in plain text.
+        total_vec : int, optional
+            Explicitly specify total number of vectors
+            (in case word vectors are appended with document vectors afterwards).
 
         """
         _save_word2vec_format(fname, self.vocab, self.syn0, fvocab=fvocab, binary=binary, total_vec=total_vec)
@@ -907,32 +908,40 @@ class PoincareKeyedVectors(BaseKeyedVectors):
     @classmethod
     def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
                              limit=None, datatype=REAL):
-        """
-        Load the input-hidden weight matrix from the original C word2vec-tool format.
+        """Load the input-hidden weight matrix from the original C word2vec-tool format.
+        Use :func:`~gensim.models.utils_any2vec._load_word2vec_format`.
 
         Note that the information stored in the file is incomplete (the binary tree is missing),
         so while you can query for word similarity etc., you cannot continue training
         with a model loaded this way.
 
-        `binary` is a boolean indicating whether the data is in binary word2vec format.
-        `norm_only` is a boolean indicating whether to only store normalised word2vec vectors in memory.
-        Word counts are read from `fvocab` filename, if set (this is the file generated
-        by `-save-vocab` flag of the original C tool).
+        Parameters
+        ----------
+        fname : str
+            The file path to the saved word2vec-format file.
+        fvocab : str, optional
+            File path to the vocabulary.Word counts are read from `fvocab` filename, if set
+            (this is the file generated by `-save-vocab` flag of the original C tool).
+        binary : bool, optional
+            If True, indicates whether the data is in binary word2vec format.
+        encoding : str, optional
+            If you trained the C model using non-utf8 encoding for words, specify that encoding in `encoding`.
+        unicode_errors : str, optional
+            default 'strict', is a string suitable to be passed as the `errors`
+            argument to the unicode() (Python 2.x) or str() (Python 3.x) function. If your source
+            file may include word tokens truncated in the middle of a multibyte unicode character
+            (as is common from the original word2vec.c tool), 'ignore' or 'replace' may help.
+        limit : int, optional
+            Sets a maximum number of word-vectors to read from the file. The default,
+            None, means read all.
+        datatype : type, optional
+            (Experimental) Can coerce dimensions to a non-default float type (such as `np.float16`) to save memory.
+            Such types may result in much slower bulk operations or incompatibility with optimized routines.)
 
-        If you trained the C model using non-utf8 encoding for words, specify that
-        encoding in `encoding`.
-
-        `unicode_errors`, default 'strict', is a string suitable to be passed as the `errors`
-        argument to the unicode() (Python 2.x) or str() (Python 3.x) function. If your source
-        file may include word tokens truncated in the middle of a multibyte unicode character
-        (as is common from the original word2vec.c tool), 'ignore' or 'replace' may help.
-
-        `limit` sets a maximum number of word-vectors to read from the file. The default,
-        None, means read all.
-
-        `datatype` (experimental) can coerce dimensions to a non-default float type (such
-        as np.float16) to save memory. (Such types may result in much slower bulk operations
-        or incompatibility with optimized routines.)
+        Returns
+        -------
+        :class:`~gensim.models.poincare.PoincareModel`
+            Loaded Poincare model.
 
         """
         return _load_word2vec_format(
@@ -941,15 +950,14 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
     @staticmethod
     def vector_distance(vector_1, vector_2):
-        """
-        Return poincare distance between two input vectors. Convenience method over `vector_distance_batch`.
+        """Compute poincare distance between two input vectors. Convenience method over `vector_distance_batch`.
 
         Parameters
         ----------
         vector_1 : numpy.array
-            input vector
+            Input vector.
         vector_2 : numpy.array
-            input vector
+            Input vector.
 
         Returns
         -------
@@ -961,23 +969,19 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
     @staticmethod
     def vector_distance_batch(vector_1, vectors_all):
-        """
-        Return poincare distances between one vector and a set of other vectors.
+        """Compute poincare distances between one vector and a set of other vectors.
 
         Parameters
         ----------
         vector_1 : numpy.array
-            vector from which Poincare distances are to be computed.
-            expected shape (dim,)
+            vector from which Poincare distances are to be computed, expected shape (dim,).
         vectors_all : numpy.array
-            for each row in vectors_all, distance from vector_1 is computed.
-            expected shape (num_vectors, dim)
+            for each row in vectors_all, distance from vector_1 is computed, expected shape (num_vectors, dim).
 
         Returns
         -------
         numpy.array
-            Contains Poincare distance between vector_1 and each row in vectors_all.
-            shape (num_vectors,)
+            Poincare distance between `vector_1` and each row in `vectors_all`, shape (num_vectors,).
 
         """
         euclidean_dists = np.linalg.norm(vector_1 - vectors_all, axis=1)
@@ -990,17 +994,16 @@ class PoincareKeyedVectors(BaseKeyedVectors):
         )
 
     def closest_child(self, node):
-        """
-        Return the node closest to `node` that is lower in the hierarchy than `node`.
+        """Get the node closest to `node` that is lower in the hierarchy than `node`.
 
         Parameters
         ----------
-        node : str or int
+        node : {str, int}
             Key for node for which closest child is to be found.
 
         Returns
         -------
-        str or None
+        {str, None}
             Node closest to `node` that is lower in the hierarchy than `node`.
             If there are no nodes lower in the hierarchy, None is returned.
 
@@ -1016,17 +1019,16 @@ class PoincareKeyedVectors(BaseKeyedVectors):
         return self.index2word[closest_child_index]
 
     def closest_parent(self, node):
-        """
-        Return the node closest to `node` that is higher in the hierarchy than `node`.
+        """Get the node closest to `node` that is higher in the hierarchy than `node`.
 
         Parameters
         ----------
-        node : str or int
+        node : {str, int}
             Key for node for which closest parent is to be found.
 
         Returns
         -------
-        str or None
+        {str, None}
             Node closest to `node` that is higher in the hierarchy than `node`.
             If there are no nodes higher in the hierarchy, None is returned.
 
@@ -1042,19 +1044,18 @@ class PoincareKeyedVectors(BaseKeyedVectors):
         return self.index2word[closest_child_index]
 
     def descendants(self, node, max_depth=5):
-        """
-        Return the list of recursively closest children from the given node, upto a max depth of `max_depth`.
+        """Get the list of recursively closest children from the given node, up to a max depth of `max_depth`.
 
         Parameters
         ----------
-        node : str or int
+        node : {str, int}
             Key for node for which descendants are to be found.
         max_depth : int
             Maximum number of descendants to return.
 
         Returns
         -------
-        list (str)
+        list of str
             Descendant nodes from the node `node`.
 
         """
@@ -1068,17 +1069,16 @@ class PoincareKeyedVectors(BaseKeyedVectors):
         return descendants
 
     def ancestors(self, node):
-        """
-        Return the list of recursively closest parents from the given node.
+        """Get the list of recursively closest parents from the given node.
 
         Parameters
         ----------
-        node : str or int
+        node : {str, int}
             Key for node for which ancestors are to be found.
 
         Returns
         -------
-        list (str)
+        list of str
             Ancestor nodes of the node `node`.
 
         """
@@ -1091,14 +1091,13 @@ class PoincareKeyedVectors(BaseKeyedVectors):
         return ancestors
 
     def distance(self, w1, w2):
-        """
-        Return Poincare distance between vectors for nodes `w1` and `w2`.
+        """Calculate Poincare distance between vectors for nodes `w1` and `w2`.
 
         Parameters
         ----------
-        w1 : str or int
+        w1 : {str, int}
             Key for first node.
-        w2 : str or int
+        w2 : {str, int}
             Key for second node.
 
         Returns
@@ -1119,9 +1118,10 @@ class PoincareKeyedVectors(BaseKeyedVectors):
         >>> model.kv.distance('mammal.n.01', 'carnivore.n.01')
         2.9742298803339304
 
-        Notes
-        -----
-        Raises KeyError if either of `w1` and `w2` is absent from vocab.
+        Raises
+        ------
+        KeyError
+            If either of `w1` and `w2` is absent from vocab.
 
         """
         vector_1 = self.word_vec(w1)
@@ -1129,14 +1129,13 @@ class PoincareKeyedVectors(BaseKeyedVectors):
         return self.vector_distance(vector_1, vector_2)
 
     def similarity(self, w1, w2):
-        """
-        Return similarity based on Poincare distance between vectors for nodes `w1` and `w2`.
+        """Compute similarity based on Poincare distance between vectors for nodes `w1` and `w2`.
 
         Parameters
         ----------
-        w1 : str or int
+        w1 : {str, int}
             Key for first node.
-        w2 : str or int
+        w2 : {str, int}
             Key for second node.
 
         Returns
@@ -1157,22 +1156,20 @@ class PoincareKeyedVectors(BaseKeyedVectors):
         >>> model.kv.similarity('mammal.n.01', 'carnivore.n.01')
         0.25162107631176484
 
-        Notes
-        -----
-        Raises KeyError if either of `w1` and `w2` is absent from vocab.
-        Similarity lies between 0 and 1.
+        Raises
+        ------
+        KeyError
+            If either of `w1` and `w2` is absent from vocab.
 
         """
         return 1 / (1 + self.distance(w1, w2))
 
     def most_similar(self, node_or_vector, topn=10, restrict_vocab=None):
-        """
-        Find the top-N most similar nodes to the given node or vector, sorted in increasing order of distance.
+        """Find the top-N most similar nodes to the given node or vector, sorted in increasing order of distance.
 
         Parameters
         ----------
-
-        node_or_vector : str/int or numpy.array
+        node_or_vector : {str, int, numpy.array}
             node key or vector for which similar nodes are to be found.
         topn : int or None, optional
             number of similar nodes to return, if `None`, returns all.
@@ -1183,7 +1180,7 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Returns
         --------
-        list of tuples (str, float)
+        list of (str, float)
             List of tuples containing (node, distance) pairs in increasing order of distance.
 
         Examples
@@ -1223,15 +1220,13 @@ class PoincareKeyedVectors(BaseKeyedVectors):
         return result
 
     def distances(self, node_or_vector, other_nodes=()):
-        """
-        Compute Poincare distances from given node or vector to all nodes in `other_nodes`.
+        """Compute Poincare distances from given `node_or_vector` to all nodes in `other_nodes`.
         If `other_nodes` is empty, return distance between `node_or_vector` and all nodes in vocab.
 
         Parameters
         ----------
         node_or_vector : {str, int, numpy.array}
             Node key or vector from which distances are to be computed.
-
         other_nodes : {iterable of str, iterable of int, None}, optional
             For each node in `other_nodes` distance from `node_or_vector` is computed.
             If None or empty, distance of `node_or_vector` from all nodes in vocab is computed (including itself).
@@ -1258,9 +1253,10 @@ class PoincareKeyedVectors(BaseKeyedVectors):
         >>> # Check the distances between a word and every other word in the vocab.
         >>> all_distances = model.kv.distances('mammal.n.01')
 
-        Notes
-        -----
-        Raises KeyError if either `node_or_vector` or any node in `other_nodes` is absent from vocab.
+        Raises
+        ------
+        KeyError
+            If either `node_or_vector` or any node in `other_nodes` is absent from vocab.
 
         """
         if isinstance(node_or_vector, string_types):
@@ -1275,8 +1271,7 @@ class PoincareKeyedVectors(BaseKeyedVectors):
         return self.vector_distance_batch(input_vector, other_vectors)
 
     def norm(self, node_or_vector):
-        """
-        Return absolute position in hierarchy of input node or vector.
+        """Compute absolute position in hierarchy of input node or vector.
         Values range between 0 and 1. A lower value indicates the input node or vector is higher in the hierarchy.
 
         Parameters
@@ -1314,15 +1309,13 @@ class PoincareKeyedVectors(BaseKeyedVectors):
         return np.linalg.norm(input_vector)
 
     def difference_in_hierarchy(self, node_or_vector_1, node_or_vector_2):
-        """
-        Relative position in hierarchy of `node_or_vector_1` relative to `node_or_vector_2`.
+        """Compute relative position in hierarchy of `node_or_vector_1` relative to `node_or_vector_2`.
         A positive value indicates `node_or_vector_1` is higher in the hierarchy than `node_or_vector_2`.
 
         Parameters
         ----------
         node_or_vector_1 : {str, int, numpy.array}
             Input node key or vector.
-
         node_or_vector_2 : {str, int, numpy.array}
             Input node key or vector.
 
@@ -1381,7 +1374,7 @@ class PoincareRelations(object):
 
         Yields
         -------
-        2-tuple (unicode, unicode)
+        (unicode, unicode)
             Relation from input file.
 
         """
@@ -1410,12 +1403,11 @@ class NegativesBuffer(object):
             List or array containing negative samples.
 
         """
-
         self._items = items
         self._current_index = 0
 
     def num_items(self):
-        """Return the number of items remaining in the buffer.
+        """Get the number of items remaining in the buffer.
 
         Returns
         -------
@@ -1426,7 +1418,7 @@ class NegativesBuffer(object):
         return len(self._items) - self._current_index
 
     def get_items(self, num_items):
-        """Return the next `num_items` from buffer.
+        """Get the next `num_items` from buffer.
 
         Parameters
         ----------
@@ -1481,9 +1473,7 @@ class ReconstructionEvaluation(object):
 
     @staticmethod
     def get_positive_relation_ranks_and_avg_prec(all_distances, positive_relations):
-        """
-        Given a numpy array of all distances from an item and indices of its positive relations,
-        compute ranks and Average Precision of positive relations.
+        """Compute ranks and Average Precision of positive relations.
 
         Parameters
         ----------
@@ -1494,10 +1484,9 @@ class ReconstructionEvaluation(object):
 
         Returns
         -------
-        tuple (list of int, float)
+        (list of int, float)
             The list contains ranks of positive relations in the same order as `positive_relations`.
-            The float is the Average Precision of the ranking.
-            e.g. ([1, 2, 3, 20], 0.610).
+            The float is the Average Precision of the ranking, e.g. ([1, 2, 3, 20], 0.610).
 
         """
         positive_relation_distances = all_distances[positive_relations]
@@ -1520,8 +1509,7 @@ class ReconstructionEvaluation(object):
         Returns
         -------
         dict of (str, float)
-            Contains (metric_name, metric_value) pairs.
-            e.g. {'mean_rank': 50.3, 'MAP': 0.31}.
+            (metric_name, metric_value) pairs, e.g. {'mean_rank': 50.3, 'MAP': 0.31}.
 
         """
         mean_rank, map_ = self.evaluate_mean_rank_and_map(max_n)
@@ -1537,9 +1525,8 @@ class ReconstructionEvaluation(object):
 
         Returns
         -------
-        tuple of (float, float)
-            Contains (mean_rank, MAP).
-            e.g (50.3, 0.31)
+        (float, float)
+            (mean_rank, MAP), e.g (50.3, 0.31).
 
         """
         ranks = []
@@ -1594,9 +1581,7 @@ class LinkPredictionEvaluation(object):
 
     @staticmethod
     def get_unknown_relation_ranks_and_avg_prec(all_distances, unknown_relations, known_relations):
-        """
-        Given a numpy array of distances and indices of known and unknown positive relations,
-        compute ranks and Average Precision of unknown positive relations.
+        """Compute ranks and Average Precision of unknown positive relations.
 
         Parameters
         ----------
@@ -1611,8 +1596,7 @@ class LinkPredictionEvaluation(object):
         -------
         tuple (list of int, float)
             The list contains ranks of positive relations in the same order as `positive_relations`.
-            The float is the Average Precision of the ranking.
-            e.g. ([1, 2, 3, 20], 0.610).
+            The float is the Average Precision of the ranking, e.g. ([1, 2, 3, 20], 0.610).
 
         """
         unknown_relation_distances = all_distances[unknown_relations]
@@ -1636,8 +1620,7 @@ class LinkPredictionEvaluation(object):
         Returns
         -------
         dict of (str, float)
-            Contains (metric_name, metric_value) pairs.
-            e.g. {'mean_rank': 50.3, 'MAP': 0.31}.
+            (metric_name, metric_value) pairs, e.g. {'mean_rank': 50.3, 'MAP': 0.31}.
 
         """
         mean_rank, map_ = self.evaluate_mean_rank_and_map(max_n)
@@ -1654,8 +1637,7 @@ class LinkPredictionEvaluation(object):
         Returns
         -------
         tuple (float, float)
-            Contains (mean_rank, MAP).
-            e.g (50.3, 0.31).
+            (mean_rank, MAP), e.g (50.3, 0.31).
 
         """
         ranks = []
@@ -1698,15 +1680,13 @@ class LexicalEntailmentEvaluation(object):
         self.alpha = 1000
 
     def score_function(self, embedding, trie, term_1, term_2):
-        """
-        Given an embedding and two terms, return the predicted score for them -
-        extent to which `term_1` is a type of `term_2`.
+        """Compute predicted score - extent to which `term_1` is a type of `term_2`.
 
         Parameters
         ----------
         embedding : :class:`~gensim.models.poincare.PoincareKeyedVectors`
             Embedding to use for computing predicted score.
-        trie : pygtrie.Trie instance
+        trie : :class:`pygtrie.Trie`
             Trie to use for finding matching vocab terms for input terms.
         term_1 : str
             Input term.
@@ -1739,12 +1719,11 @@ class LexicalEntailmentEvaluation(object):
 
     @staticmethod
     def find_matching_terms(trie, word):
-        """
-        Given a trie and a word, find terms in the trie beginning with the word.
+        """Find terms in the `trie` beginning with the `word`.
 
         Parameters
         ----------
-        trie : pygtrie.Trie instance
+        trie : :class:`pygtrie.Trie`
             Trie to use for finding matching terms.
         word : str
             Input word to use for prefix search.
@@ -1770,7 +1749,7 @@ class LexicalEntailmentEvaluation(object):
 
         Returns
         -------
-        pygtrie.Trie instance
+        :class:`pygtrie.Trie`
             Trie containing vocab terms of the input embedding.
 
         """
