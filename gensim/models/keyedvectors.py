@@ -4,9 +4,7 @@
 # Author: Shiva Manne <manneshiva@gmail.com>
 # Copyright (C) 2018 RaRe Technologies s.r.o.
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
-
-r"""
-This module implements word vectors and their similarity look-ups.
+"""This module implements word vectors and their similarity look-ups.
 
 Since trained word vectors are independent from the way they were trained (:class:`~gensim.models.word2vec.Word2Vec`,
 :class:`~gensim.models.fasttext.FastText`, :class:`~gensim.models.wrappers.wordrank.WordRank`,
@@ -56,57 +54,96 @@ How to obtain word vectors?
 ===========================
 
 Train a full model, then access its `model.wv` property, which holds the standalone keyed vectors.
-For example, using the Word2Vec algorithm to train the vectors::
+For example, using the Word2Vec algorithm to train the vectors
 
->>> from gensim.models import Word2Vec, KeyedVectors
->>> model = Word2Vec(sentences, size=100, window=5, min_count=5, workers=4)
+>>> from gensim.test.utils import common_texts
+>>> from gensim.models import Word2Vec
+>>>
+>>> model = Word2Vec(common_texts, size=100, window=5, min_count=1, workers=4)
 >>> word_vectors = model.wv
 
-Persist the word vectors to disk with::
+Persist the word vectors to disk with
 
+>>> from gensim.test.utils import get_tmpfile
+>>> from gensim.models import KeyedVectors
+>>>
+>>> fname = get_tmpfile("vectors.kv")
 >>> word_vectors.save(fname)
 >>> word_vectors = KeyedVectors.load(fname, mmap='r')
 
 The vectors can also be instantiated from an existing file on disk
-in the original Google's word2vec C format as a KeyedVectors instance::
+in the original Google's word2vec C format as a KeyedVectors instance
 
-  >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
-  >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.bin', binary=True)  # C binary format
+>>> from gensim.test.utils import datapath
+>>>
+>>> wv_from_text = KeyedVectors.load_word2vec_format(datapath('word2vec_pre_kv_c'), binary=False)  # C text format
+>>> wv_from_bin = KeyedVectors.load_word2vec_format(datapath("euclidean_vectors.bin"), binary=True)  # C binary format
 
 What can I do with word vectors?
 ================================
 
 You can perform various syntactic/semantic NLP word tasks with the trained vectors.
-Some of them are already built-in::
+Some of them are already built-in
 
-  >>> word_vectors.most_similar(positive=['woman', 'king'], negative=['man'])
-  [('queen', 0.50882536), ...]
+>>> import gensim.downloader as api
+>>>
+>>> word_vectors = api.load("glove-wiki-gigaword-100")  # load pre-trained word-vectors from gensim-data
+>>>
+>>> result = word_vectors.most_similar(positive=['woman', 'king'], negative=['man'])
+>>> print("{}: {:.4f}".format(*result[0]))
+queen: 0.7699
+>>>
+>>> result = word_vectors.most_similar_cosmul(positive=['woman', 'king'], negative=['man'])
+>>> print("{}: {:.4f}".format(*result[0]))
+queen: 0.8965
+>>>
+>>> print(word_vectors.doesnt_match("breakfast cereal dinner lunch".split()))
+cereal
+>>>
+>>> similarity = word_vectors.similarity('woman', 'man')
+>>> similarity > 0.8
+True
+>>>
+>>> result = word_vectors.similar_by_word("cat")
+>>> print("{}: {:.4f}".format(*result[0]))
+dog: 0.8798
+>>>
+>>> sentence_obama = 'Obama speaks to the media in Illinois'.lower().split()
+>>> sentence_president = 'The president greets the press in Chicago'.lower().split()
+>>>
+>>> similarity = word_vectors.wmdistance(sentence_obama, sentence_president)
+>>> print("{:.4f}".format(similarity))
+3.4893
+>>>
+>>> distance = word_vectors.distance("media", "media")
+>>> print("{:.1f}".format(distance))
+0.0
+>>>
+>>> sim = word_vectors.n_similarity(['sushi', 'shop'], ['japanese', 'restaurant'])
+>>> print("{:.4f}".format(sim))
+0.7067
+>>>
+>>> vector = word_vectors['computer']  # numpy vector of a word
+>>> vector.shape
+(100,)
+>>>
+>>> vector = word_vectors.wv.word_vec('office', use_norm=True)
+>>> vector.shape
+(100,)
 
-  >>> word_vectors.most_similar_cosmul(positive=['woman', 'king'], negative=['man'])
-  [('queen', 0.71382287), ...]
+Correlation with human opinion on word similarity
 
-  >>> word_vectors.doesnt_match("breakfast cereal dinner lunch".split())
-  'cereal'
+>>> from gensim.test.utils import datapath
+>>>
+>>> similarities = model.wv.evaluate_word_pairs(datapath('wordsim353.tsv'))
 
-  >>> word_vectors.similarity('woman', 'man')
-  0.73723527
+And on word analogies
 
-  >>> word_vectors['computer']  # numpy vector of a word
-  array([-0.00449447, -0.00310097,  0.02421786, ...], dtype=float32)
-
-Correlation with human opinion on word similarity::
-
-  >>> from gensim.test.utils import datapath
-  >>> similarities = model.wv.evaluate_word_pairs(datapath('wordsim353.tsv'))
-
-And on word analogies::
-
-  >>> analogy_scores = model.wv.accuracy(datapath('questions-words.txt'))
+>>> analogy_scores = model.wv.accuracy(datapath('questions-words.txt'))
 
 and so on.
 
 """
-
 from __future__ import division  # py3 "true division"
 
 import logging
@@ -140,12 +177,10 @@ logger = logging.getLogger(__name__)
 
 
 class Vocab(object):
-    """
-    A single vocabulary item, used internally for collecting per-word frequency/sampling info,
+    """A single vocabulary item, used internally for collecting per-word frequency/sampling info,
     and for constructing binary trees (incl. both word leaves and inner nodes).
 
     """
-
     def __init__(self, **kwargs):
         self.count = 0
         self.__dict__.update(kwargs)
@@ -160,7 +195,6 @@ class Vocab(object):
 
 class BaseKeyedVectors(utils.SaveLoad):
     """Abstract base class / interface for various types of word vectors."""
-
     def __init__(self, vector_size):
         self.vectors = zeros((0, vector_size))
         self.vocab = {}
@@ -179,8 +213,7 @@ class BaseKeyedVectors(utils.SaveLoad):
         raise NotImplementedError()
 
     def most_similar(self, **kwargs):
-        """
-        Find the top-N most similar entities.
+        """Find the top-N most similar entities.
         Possibly have `positive` and `negative` list of entities in `**kwargs`.
 
         """
@@ -191,32 +224,29 @@ class BaseKeyedVectors(utils.SaveLoad):
         raise NotImplementedError()
 
     def distances(self, entity1, other_entities=()):
-        """
-        Compute distances from a given entity (its string id) to all entities in `other_entity`.
-
+        """Compute distances from a given entity (its string id) to all entities in `other_entity`.
         If `other_entities` is empty, return the distance between `entity1` and all entities in vocab.
 
         """
         raise NotImplementedError()
 
     def get_vector(self, entity):
-        """
-        Return the entity's representations in vector space, as a 1D numpy array.
+        """Get the entity's representations in vector space, as a 1D numpy array.
 
         Parameters
         ----------
-
         entity : str
             Identifier of the entity to return the vector for.
 
         Returns
         -------
-        numpy array
+        numpy.ndarray
             Vector for the specified entity.
 
         Raises
         ------
-        KeyError : if the given entity identifier doesn't exist
+        KeyError
+            If the given entity identifier doesn't exist.
 
         """
         if entity in self.vocab:
@@ -227,9 +257,7 @@ class BaseKeyedVectors(utils.SaveLoad):
             raise KeyError("'%s' not in vocabulary" % entity)
 
     def add(self, entities, weights, replace=False):
-        """
-        Append entities and theirs vectors in a manual way.
-
+        """Append entities and theirs vectors in a manual way.
         If some entity is already in the vocabulary, the old vector is kept unless `replace` flag is True.
 
         Parameters
@@ -269,11 +297,9 @@ class BaseKeyedVectors(utils.SaveLoad):
             self.vectors[in_vocab_idxs] = weights[in_vocab_mask]
 
     def __setitem__(self, entities, weights):
-        """
-        Add entities and theirs vectors in a manual way.
-
+        """Add entities and theirs vectors in a manual way.
         If some entity is already in the vocabulary, old vector is replaced with the new one.
-        This method is alias for :meth:`~add()` with `replace=True`.
+        This method is alias for :meth:`~gensim.models.keyedvectors.BaseKeyedVectors.add` with `replace=True`.
 
         Parameters
         ----------
@@ -290,14 +316,17 @@ class BaseKeyedVectors(utils.SaveLoad):
         self.add(entities, weights, replace=True)
 
     def __getitem__(self, entities):
-        """
-        Accept a single entity (string id) or list of entities as input.
+        """Get vector representation of `entities`.
 
-        If a single string or int, return designated tag's vector
-        representation, as a 1D numpy array.
+        Parameters
+        ----------
+        entities : {str, list of str}
+            Input entity/entities.
 
-        If a list, return designated tags' vector representations as a
-        2D numpy array: #tags x #vector_size.
+        Returns
+        -------
+        numpy.ndarray
+            Vector representation for `entities` (1D if `entities` is string, otherwise - 2D).
 
         """
         if isinstance(entities, string_types):
@@ -310,11 +339,11 @@ class BaseKeyedVectors(utils.SaveLoad):
         return entity in self.vocab
 
     def most_similar_to_given(self, entity1, entities_list):
-        """Return the entity from entities_list most similar to entity1."""
+        """Get the `entity` from `entities_list` most similar to `entity1`."""
         return entities_list[argmax([self.similarity(entity1, entity) for entity in entities_list])]
 
     def closer_than(self, entity1, entity2):
-        """Returns all entities that are closer to `entity1` than `entity2` is to `entity1`."""
+        """Get all entities that are closer to `entity1` than `entity2` is to `entity1`."""
         all_distances = self.distances(entity1)
         e1_index = self.vocab[entity1].index
         e2_index = self.vocab[entity2].index
@@ -328,7 +357,6 @@ class BaseKeyedVectors(utils.SaveLoad):
 
 class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
     """Class containing common methods for operations over word vectors."""
-
     def __init__(self, vector_size):
         super(WordEmbeddingsKeyedVectors, self).__init__(vector_size=vector_size)
         self.vectors_norm = None
@@ -371,14 +399,17 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         return word in self.vocab
 
     def save(self, *args, **kwargs):
-        """
-        Save the keyed vectors. This saved model can be later loaded again using
-        `load()`.
+        """Save KeyedVectors.
 
         Parameters
         ----------
         fname : str
-            Path to the file.
+            Path to the output file.
+
+        See Also
+        --------
+        :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.load`
+            Load saved model.
 
         """
         # don't bother storing the cached normalized vectors
@@ -386,15 +417,24 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         super(WordEmbeddingsKeyedVectors, self).save(*args, **kwargs)
 
     def word_vec(self, word, use_norm=False):
-        """
-        Return the word's representations in vector space, as a 1D numpy array.
+        """Get `word` representations in vector space, as a 1D numpy array.
 
-        If `use_norm` is True, returns the word vector L2-normalized (unit euclidean length).
+        Parameters
+        ----------
+        word : str
+            Input word
+        use_norm : bool, optional
+            If True - resulting vector will be L2-normalized (unit euclidean length).
 
-        Examples
-        --------
-        >>> trained_model.word_vec('office', use_norm=True)
-        array([ -1.40128313e-02, ...])
+        Returns
+        -------
+        numpy.ndarray
+            Vector representation of `word`.
+
+        Raises
+        ------
+        KeyError
+            If word not in vocabulary.
 
         """
         if word in self.vocab:
@@ -412,8 +452,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         return self.word_vec(word)
 
     def words_closer_than(self, w1, w2):
-        """
-        Return all words that are closer to `w1` than `w2` is to `w1`.
+        """Get all words that are closer to `w1` than `w2` is to `w1`.
 
         Parameters
         ----------
@@ -427,18 +466,12 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         list (str)
             List of words that are closer to `w1` than `w2` is to `w1`.
 
-        Examples
-        --------
-        >>> model.words_closer_than('carnivore', 'mammal')
-        ['dog', 'canine']
-
         """
         return super(WordEmbeddingsKeyedVectors, self).closer_than(w1, w2)
 
     def most_similar(self, positive=None, negative=None, topn=10, restrict_vocab=None, indexer=None):
-        """
-        Find the top-N most similar words. Positive words contribute positively towards the
-        similarity, negative words negatively.
+        """Find the top-N most similar words.
+        Positive words contribute positively towards the similarity, negative words negatively.
 
         This method computes cosine similarity between a simple mean of the projection
         weight vectors of the given words and the vectors for each word in the model.
@@ -447,13 +480,13 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         Parameters
         ----------
-        positive : :obj: `list` of :obj: `str`
+        positive : list of str, optional
             List of words that contribute positively.
-        negative : :obj: `list` of :obj: `str`
+        negative : list of str, optional
             List of words that contribute negatively.
-        topn : int
+        topn : int, optional
             Number of top-N similar words to return.
-        restrict_vocab : int
+        restrict_vocab : int, optional
             Optional integer which limits the range of vectors which
             are searched for most-similar values. For example, restrict_vocab=10000 would
             only check the first 10000 word vectors in the vocabulary order. (This may be
@@ -461,13 +494,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         Returns
         -------
-        :obj: `list` of :obj: `tuple`
-            Returns a list of tuples (word, similarity)
-
-        Examples
-        --------
-        >>> trained_model.most_similar(positive=['woman', 'king'], negative=['man'])
-        [('queen', 0.50882536), ...]
+        list of (str, float)
+            Sequence of (word, similarity).
 
         """
         if positive is None:
@@ -517,17 +545,16 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         return result[:topn]
 
     def similar_by_word(self, word, topn=10, restrict_vocab=None):
-        """
-        Find the top-N most similar words.
+        """Find the top-N most similar words.
 
         Parameters
         ----------
         word : str
             Word
-        topn : int
+        topn : {int, False}, optional
             Number of top-N similar words to return. If topn is False, similar_by_word returns
             the vector of similarity scores.
-        restrict_vocab : int
+        restrict_vocab : int, optional
             Optional integer which limits the range of vectors which
             are searched for most-similar values. For example, restrict_vocab=10000 would
             only check the first 10000 word vectors in the vocabulary order. (This may be
@@ -535,30 +562,23 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         Returns
         -------
-        :obj: `list` of :obj: `tuple`
-            Returns a list of tuples (word, similarity)
-
-        Example::
-
-          >>> trained_model.similar_by_word('graph')
-          [('user', 0.9999163150787354), ...]
+        list of (str, float)
+            Sequence of (word, similarity).
 
         """
         return self.most_similar(positive=[word], topn=topn, restrict_vocab=restrict_vocab)
 
     def similar_by_vector(self, vector, topn=10, restrict_vocab=None):
-        """
-        Find the top-N most similar words by vector.
+        """Find the top-N most similar words by vector.
 
         Parameters
         ----------
         vector : numpy.array
-            vector from which similarities are to be computed.
-            expected shape (dim,)
-        topn : int
+            Vector from which similarities are to be computed.
+        topn : {int, False}, optional
             Number of top-N similar words to return. If topn is False, similar_by_vector returns
             the vector of similarity scores.
-        restrict_vocab : int
+        restrict_vocab : int, optional
             Optional integer which limits the range of vectors which
             are searched for most-similar values. For example, restrict_vocab=10000 would
             only check the first 10000 word vectors in the vocabulary order. (This may be
@@ -566,15 +586,14 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         Returns
         -------
-        :obj: `list` of :obj: `tuple`
-            Returns a list of tuples (word, similarity)
+        list of (str, float)
+            Sequence of (word, similarity).
 
         """
         return self.most_similar(positive=[vector], topn=topn, restrict_vocab=restrict_vocab)
 
     def similarity_matrix(self, dictionary, tfidf=None, threshold=0.0, exponent=2.0, nonzero_limit=100, dtype=REAL):
-        """
-        Construct a term similarity matrix for computing Soft Cosine Measure.
+        """Construct a term similarity matrix for computing Soft Cosine Measure.
 
         This creates a sparse term similarity matrix in the :class:`scipy.sparse.csc_matrix` format for computing
         Soft Cosine Measure between documents.
@@ -610,16 +629,15 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         --------
         :func:`gensim.matutils.softcossim`
             The Soft Cosine Measure.
-        :class:`gensim.similarities.docsim.SoftCosineSimilarity`
+        :class:`~gensim.similarities.docsim.SoftCosineSimilarity`
             A class for performing corpus-based similarity queries with Soft Cosine Measure.
-
 
         Notes
         -----
         The constructed matrix corresponds to the matrix Mrel defined in section 2.1 of
         `Delphine Charlet and Geraldine Damnati, "SimBow at SemEval-2017 Task 3: Soft-Cosine Semantic Similarity
         between Questions for Community Question Answering", 2017
-        <http://www.aclweb.org/anthology/S/S17/S17-2051.pdf>`__.
+        <http://www.aclweb.org/anthology/S/S17/S17-2051.pdf>`_.
 
         """
         logger.info("constructing a term similarity matrix")
@@ -683,37 +701,42 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         return matrix.tocsc()
 
     def wmdistance(self, document1, document2):
+        """Compute the Word Mover's Distance between two documents.
+
+        When using this code, please consider citing the following papers:
+
+        * `Ofir Pele and Michael Werman "A linear time histogram metric for improved SIFT matching"
+          <http://www.cs.huji.ac.il/~werman/Papers/ECCV2008.pdf>`_
+        * `Ofir Pele and Michael Werman "Fast and robust earth mover's distances"
+          <https://ieeexplore.ieee.org/document/5459199/>`_
+        * `Matt Kusner et al. "From Word Embeddings To Document Distances"
+          <http://proceedings.mlr.press/v37/kusnerb15.pdf>`_.
+
+        Parameters
+        ----------
+        document1 : list of str
+            Input document.
+        document2 : list of str
+            Input document.
+
+        Returns
+        -------
+        float
+            Word Mover's distance between `document1` and `document2`.
+
+        Warnings
+        --------
+        This method only works if `pyemd <https://pypi.org/project/pyemd/>`_ is installed.
+
+        If one of the documents have no words that exist in the vocab, `float('inf')` (i.e. infinity)
+        will be returned.
+
+        Raises
+        ------
+        ImportError
+            If `pyemd <https://pypi.org/project/pyemd/>`_  isn't installed.
+
         """
-        Compute the Word Mover's Distance between two documents. When using this
-        code, please consider citing the following papers:
-
-        .. Ofir Pele and Michael Werman, "A linear time histogram metric for improved SIFT matching".
-        .. Ofir Pele and Michael Werman, "Fast and robust earth mover's distances".
-        .. Matt Kusner et al. "From Word Embeddings To Document Distances".
-
-        Note that if one of the documents have no words that exist in the
-        Word2Vec vocab, `float('inf')` (i.e. infinity) will be returned.
-
-        This method only works if `pyemd` is installed (can be installed via pip, but requires a C compiler).
-
-        Example:
-            >>> # Train word2vec model.
-            >>> model = Word2Vec(sentences)
-
-            >>> # Some sentences to test.
-            >>> sentence_obama = 'Obama speaks to the media in Illinois'.lower().split()
-            >>> sentence_president = 'The president greets the press in Chicago'.lower().split()
-
-            >>> # Remove their stopwords.
-            >>> from nltk.corpus import stopwords
-            >>> stopwords = nltk.corpus.stopwords.words('english')
-            >>> sentence_obama = [w for w in sentence_obama if w not in stopwords]
-            >>> sentence_president = [w for w in sentence_president if w not in stopwords]
-
-            >>> # Compute WMD.
-            >>> distance = model.wmdistance(sentence_obama, sentence_president)
-        """
-
         if not PYEMD_EXT:
             raise ImportError("Please install pyemd Python package to compute WMD.")
 
@@ -775,25 +798,31 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         return emd(d1, d2, distance_matrix)
 
     def most_similar_cosmul(self, positive=None, negative=None, topn=10):
-        """
-        Find the top-N most similar words, using the multiplicative combination objective
-        proposed by Omer Levy and Yoav Goldberg. Positive words still contribute
-        positively towards the similarity, negative words negatively, but with less
-        susceptibility to one large distance dominating the calculation.
-
+        """Find the top-N most similar words, using the multiplicative combination objective,
+        proposed by `Omer Levy and Yoav Goldberg "Linguistic Regularities in Sparse and Explicit Word Representations"
+        <http://www.aclweb.org/anthology/W14-1618>`_. Positive words still contribute positively towards the similarity,
+        negative words negatively, but with less susceptibility to one large distance dominating the calculation.
         In the common analogy-solving case, of two positive and one negative examples,
         this method is equivalent to the "3CosMul" objective (equation (4)) of Levy and Goldberg.
 
         Additional positive or negative examples contribute to the numerator or denominator,
-        respectively – a potentially sensible but untested extension of the method. (With
-        a single positive example, rankings will be the same as in the default most_similar.)
+        respectively - a potentially sensible but untested extension of the method.
+        With a single positive example, rankings will be the same as in the default
+        :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.most_similar`.
 
-        Example::
+        Parameters
+        ----------
+        positive : list of str, optional
+            List of words that contribute positively.
+        negative : list of str, optional
+            List of words that contribute negatively.
+        topn : int, optional
+            Number of top-N similar words to return.
 
-          >>> trained_model.most_similar_cosmul(positive=['baghdad', 'england'], negative=['london'])
-          [(u'iraq', 0.8488819003105164), ...]
-
-        .. Omer Levy and Yoav Goldberg. Linguistic Regularities in Sparse and Explicit Word Representations, 2014.
+        Returns
+        -------
+        list of (str, float)
+            Sequence of (word, similarity).
 
         """
         if positive is None:
@@ -838,23 +867,17 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         return result[:topn]
 
     def doesnt_match(self, words):
-        """
-        Which word from the given list doesn't go with the others?
+        """Which word from the given list doesn't go with the others?
 
         Parameters
         ----------
-        words : :obj: `list` of :obj: `str`
-            List of words
+        words : list of str
+            List of words.
 
         Returns
         -------
         str
             The word further away from the mean of all words.
-
-        Example
-        -------
-        >>> trained_model.doesnt_match("breakfast cereal dinner lunch".split())
-        'cereal'
 
         """
         self.init_sims()
@@ -872,23 +895,19 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
     @staticmethod
     def cosine_similarities(vector_1, vectors_all):
-        """
-        Return cosine similarities between one vector and a set of other vectors.
+        """Compute cosine similarities between one vector and a set of other vectors.
 
         Parameters
         ----------
-        vector_1 : numpy.array
-            vector from which similarities are to be computed.
-            expected shape (dim,)
-        vectors_all : numpy.array
-            for each row in vectors_all, distance from vector_1 is computed.
-            expected shape (num_vectors, dim)
+        vector_1 : numpy.ndarray
+            Vector from which similarities are to be computed, expected shape (dim,).
+        vectors_all : numpy.ndarray
+            For each row in vectors_all, distance from vector_1 is computed, expected shape (num_vectors, dim).
 
         Returns
         -------
-        :obj: `numpy.array`
-            Contains cosine distance between vector_1 and each row in vectors_all.
-            shape (num_vectors,)
+        numpy.ndarray
+            Contains cosine distance between `vector_1` and each row in `vectors_all`, shape (num_vectors,).
 
         """
         norm = np.linalg.norm(vector_1)
@@ -898,28 +917,26 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         return similarities
 
     def distances(self, word_or_vector, other_words=()):
-        """
-        Compute cosine distances from given word or vector to all words in `other_words`.
+        """Compute cosine distances from given word or vector to all words in `other_words`.
         If `other_words` is empty, return distance between `word_or_vectors` and all words in vocab.
 
         Parameters
         ----------
-        word_or_vector : str or numpy.array
+        word_or_vector : {str, numpy.ndarray}
             Word or vector from which distances are to be computed.
-
-        other_words : iterable(str) or None
+        other_words : iterable of str
             For each word in `other_words` distance from `word_or_vector` is computed.
             If None or empty, distance of `word_or_vector` from all words in vocab is computed (including itself).
 
         Returns
         -------
         numpy.array
-            Array containing distances to all words in `other_words` from input `word_or_vector`,
-            in the same order as `other_words`.
+            Array containing distances to all words in `other_words` from input `word_or_vector`.
 
-        Notes
+        Raises
         -----
-        Raises KeyError if either `word_or_vector` or any word in `other_words` is absent from vocab.
+        KeyError
+            If either `word_or_vector` or any word in `other_words` is absent from vocab.
 
         """
         if isinstance(word_or_vector, string_types):
@@ -934,52 +951,56 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         return 1 - self.cosine_similarities(input_vector, other_vectors)
 
     def distance(self, w1, w2):
-        """
-        Compute cosine distance between two words.
+        """Compute cosine distance between two words.
+        Calculate 1 - :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similarity`.
 
-        Examples
-        --------
+        Parameters
+        ----------
+        w1 : str
+            Input word.
+        w2 : str
+            Input word.
 
-        >>> trained_model.distance('woman', 'man')
-        0.34
-
-        >>> trained_model.distance('woman', 'woman')
-        0.0
+        Returns
+        -------
+        float
+            Distance between `w1` and `w2`.
 
         """
         return 1 - self.similarity(w1, w2)
 
     def similarity(self, w1, w2):
-        """
-        Compute cosine similarity between two words.
+        """Compute cosine similarity between two words.
 
-        Examples
-        --------
+        Parameters
+        ----------
+        w1 : str
+            Input word.
+        w2 : str
+            Input word.
 
-        >>> trained_model.similarity('woman', 'man')
-        0.73723527
-
-        >>> trained_model.similarity('woman', 'woman')
-        1.0
+        Returns
+        -------
+        float
+            Cosine similarity between `w1` and `w2`.
 
         """
         return dot(matutils.unitvec(self[w1]), matutils.unitvec(self[w2]))
 
     def n_similarity(self, ws1, ws2):
-        """
-        Compute cosine similarity between two sets of words.
+        """Compute cosine similarity between two sets of words.
 
-        Examples
-        --------
+        Parameters
+        ----------
+        ws1 : list of str
+            Sequence of words.
+        ws2: list of str
+            Sequence of words.
 
-        >>> trained_model.n_similarity(['sushi', 'shop'], ['japanese', 'restaurant'])
-        0.61540466561049689
-
-        >>> trained_model.n_similarity(['restaurant', 'japanese'], ['japanese', 'restaurant'])
-        1.0000000000000004
-
-        >>> trained_model.n_similarity(['sushi'], ['restaurant']) == trained_model.similarity('sushi', 'restaurant')
-        True
+        Returns
+        -------
+        numpy.ndarray
+            Similarities between `ws1` and `ws2`.
 
         """
         if not(len(ws1) and len(ws2)):
@@ -990,8 +1011,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
     @staticmethod
     def _log_evaluate_word_analogies(section):
-        """
-        Calculate score by section, helper for
+        """Calculate score by section, helper for
         :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.evaluate_word_analogies`.
 
         Parameters
@@ -1133,27 +1153,32 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
     @deprecated("Method will be removed in 4.0.0, use self.evaluate_word_analogies() instead")
     def accuracy(self, questions, restrict_vocab=30000, most_similar=most_similar, case_insensitive=True):
-        """
-        Compute accuracy of the model. `questions` is a filename where lines are
-        4-tuples of words, split into sections by ": SECTION NAME" lines.
-        See questions-words.txt in
-        https://storage.googleapis.com/google-code-archive-source/v2/code.google.com/word2vec/source-archive.zip
-        for an example.
+        """Compute accuracy of the model.
 
         The accuracy is reported (=printed to log and returned as a list) for each
         section separately, plus there's one aggregate summary at the end.
 
-        Use `restrict_vocab` to ignore all questions containing a word not in the first `restrict_vocab`
-        words (default 30,000). This may be meaningful if you've sorted the vocabulary by descending frequency.
-        In case `case_insensitive` is True, the first `restrict_vocab` words are taken first, and then
-        case normalization is performed.
+        Parameters
+        ----------
+        questions : str
+            Path to file, where lines are 4-tuples of words, split into sections by ": SECTION NAME" lines.
+            See `gensim/test/test_data/questions-words.txt` as example.
+        restrict_vocab : int, optional
+            Ignore all 4-tuples containing a word not in the first `restrict_vocab` words.
+            This may be meaningful if you've sorted the model vocabulary by descending frequency (which is standard
+            in modern word embedding models).
+        most_similar : function, optional
+            Function used for similarity calculation.
+        case_insensitive : bool, optional
+            If True - convert all words to their uppercase form before evaluating the performance.
+            Useful to handle case-mismatch between training tokens and words in the test set.
+            In case of multiple case variants of a single word, the vector for the first occurrence
+            (also the most frequent if vocabulary is sorted) is taken.
 
-        Use `case_insensitive` to convert all words in questions and vocab to their uppercase form before
-        evaluating the accuracy (default True). Useful in case of case-mismatch between training tokens
-        and question words. In case of multiple case variants of a single word, the vector for the first
-        occurrence (also the most frequent if vocabulary is sorted) is taken.
-
-        This method corresponds to the `compute-accuracy` script of the original C word2vec.
+        Returns
+        -------
+        list of dict of (str, (str, str, str)
+            Full lists of correct and incorrect predictions divided by sections.
 
         """
         ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
@@ -1222,28 +1247,40 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
     def evaluate_word_pairs(self, pairs, delimiter='\t', restrict_vocab=300000,
                             case_insensitive=True, dummy4unknown=False):
-        """
-        Compute correlation of the model with human similarity judgments. `pairs` is a filename of a dataset where
-        lines are 3-tuples, each consisting of a word pair and a similarity value, separated by `delimiter`.
-        An example dataset is included in Gensim (test/test_data/wordsim353.tsv). More datasets can be found at
-        http://technion.ac.il/~ira.leviant/MultilingualVSMdata.html or https://www.cl.cam.ac.uk/~fh295/simlex.html.
+        """Compute correlation of the model with human similarity judgments.
 
-        The model is evaluated using Pearson correlation coefficient and Spearman rank-order correlation coefficient
-        between the similarities from the dataset and the similarities produced by the model itself.
-        The results are printed to log and returned as a triple (pearson, spearman, ratio of pairs with unknown words).
+        Notes
+        -----
+        More datasets can be found at
+        * http://technion.ac.il/~ira.leviant/MultilingualVSMdata.html
+        * https://www.cl.cam.ac.uk/~fh295/simlex.html.
 
-        Use `restrict_vocab` to ignore all word pairs containing a word not in the first `restrict_vocab`
-        words (default 300,000). This may be meaningful if you've sorted the vocabulary by descending frequency.
-        If `case_insensitive` is True, the first `restrict_vocab` words are taken, and then case normalization
-        is performed.
+        Parameters
+        ----------
+        pairs : str
+            Path to file, where lines are 3-tuples, each consisting of a word pair and a similarity value.
+            See `test/test_data/wordsim353.tsv` as example.
+        delimiter : str, optional
+            Separator in `pairs` file.
+        restrict_vocab : int, optional
+            Ignore all 4-tuples containing a word not in the first `restrict_vocab` words.
+            This may be meaningful if you've sorted the model vocabulary by descending frequency (which is standard
+            in modern word embedding models).
+        case_insensitive : bool, optional
+            If True - convert all words to their uppercase form before evaluating the performance.
+            Useful to handle case-mismatch between training tokens and words in the test set.
+            In case of multiple case variants of a single word, the vector for the first occurrence
+            (also the most frequent if vocabulary is sorted) is taken.
+        dummy4unknown : bool, optional
+            If True - produce zero accuracies for 4-tuples with out-of-vocabulary words.
+            Otherwise, these tuples are skipped entirely and not used in the evaluation.
 
-        Use `case_insensitive` to convert all words in the pairs and vocab to their uppercase form before
-        evaluating the model (default True). Useful when you expect case-mismatch between training tokens
-        and words pairs in the dataset. If there are multiple case variants of a single word, the vector for the first
-        occurrence (also the most frequent if vocabulary is sorted) is taken.
+        Returns
+        -------
+        (float, float, float)
+            Pearson correlation coefficient, Spearman rank-order correlation coefficient between the similarities
+            from the dataset and the similarities produced by the model itself, ratio of pairs with unknown words.
 
-        Use `dummy4unknown=True` to produce zero-valued similarities for pairs with out-of-vocabulary words.
-        Otherwise (default False), these pairs are skipped entirely.
         """
         ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
         ok_vocab = {w.upper(): v for w, v in reversed(ok_vocab)} if case_insensitive else dict(ok_vocab)
@@ -1300,14 +1337,19 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         return pearson, spearman, oov_ratio
 
     def init_sims(self, replace=False):
-        """
-        Precompute L2-normalized vectors.
+        """Precompute L2-normalized vectors.
 
-        If `replace` is set, forget the original vectors and only keep the normalized
-        ones = saves lots of memory!
+        Parameters
+        ----------
+        replace : bool, optional
+            If True - forget the original vectors and only keep the normalized ones = saves lots of memory!
 
-        Note that you **cannot continue training** after doing a replace. The model becomes
-        effectively read-only = you can call `most_similar`, `similarity` etc., but not `train`.
+        Warnings
+        --------
+        You **cannot continue training** after doing a replace.
+        The model becomes effectively read-only: you can call
+        :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.most_similar`,
+        :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similarity`, etc., but not train.
 
         """
         if getattr(self, 'vectors_norm', None) is None or replace:
@@ -1321,27 +1363,25 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
 
 class Word2VecKeyedVectors(WordEmbeddingsKeyedVectors):
-    """
-    Mapping between words and vectors for the :class:`~gensim.models.Word2Vec` model.
-
+    """Mapping between words and vectors for the :class:`~gensim.models.Word2Vec` model.
     Used to perform operations on the vectors such as vector lookup, distance, similarity etc.
+
     """
     def save_word2vec_format(self, fname, fvocab=None, binary=False, total_vec=None):
-        """
-        Store the input-hidden weight matrix in the same format used by the original
+        """Store the input-hidden weight matrix in the same format used by the original
         C word2vec-tool, for compatibility.
 
         Parameters
         ----------
         fname : str
             The file path used to save the vectors in
-        fvocab : str
+        fvocab : str, optional
             Optional file path used to save the vocabulary
-        binary : bool
+        binary : bool, optional
             If True, the data wil be saved in binary word2vec format, else it will be saved in plain text.
-        total_vec :  int
+        total_vec : int, optional
             Optional parameter to explicitly specify total no. of vectors
-            (in case word vectors are appended with document vectors afterwards)
+            (in case word vectors are appended with document vectors afterwards).
 
         """
         # from gensim.models.word2vec import save_word2vec_format
@@ -1351,10 +1391,11 @@ class Word2VecKeyedVectors(WordEmbeddingsKeyedVectors):
     @classmethod
     def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
                              limit=None, datatype=REAL):
-        """
-        Load the input-hidden weight matrix from the original C word2vec-tool format.
+        """Load the input-hidden weight matrix from the original C word2vec-tool format.
 
-        Note that the information stored in the file is incomplete (the binary tree is missing),
+        Warnings
+        --------
+        The information stored in the file is incomplete (the binary tree is missing),
         so while you can query for word similarity etc., you cannot continue training
         with a model loaded this way.
 
@@ -1362,31 +1403,29 @@ class Word2VecKeyedVectors(WordEmbeddingsKeyedVectors):
         ----------
         fname : str
             The file path to the saved word2vec-format file.
-        fvocab : str
-            Optional file path to the vocabulary. Word counts are read from `fvocab` (this
-            is the file generated by `-save-vocab` flag of the original C tool).
-        binary : bool
+        fvocab : str, optional
+            File path to the vocabulary.Word counts are read from `fvocab` filename, if set
+            (this is the file generated by `-save-vocab` flag of the original C tool).
+        binary : bool, optional
             If True, indicates whether the data is in binary word2vec format.
-        encoding : str
-            If you trained the C model using non-utf8 encoding for words, specify that
-            encoding in `encoding`.
-        unicode_errors : str
+        encoding : str, optional
+            If you trained the C model using non-utf8 encoding for words, specify that encoding in `encoding`.
+        unicode_errors : str, optional
             default 'strict', is a string suitable to be passed as the `errors`
             argument to the unicode() (Python 2.x) or str() (Python 3.x) function. If your source
             file may include word tokens truncated in the middle of a multibyte unicode character
             (as is common from the original word2vec.c tool), 'ignore' or 'replace' may help.
-        limit : int
+        limit : int, optional
             Sets a maximum number of word-vectors to read from the file. The default,
             None, means read all.
-        datatype : :class: `numpy.float*`
-            (Experimental) Can coerce dimensions to a non-default float type (such
-            as np.float16) to save memory. (Such types may result in much slower bulk operations
-            or incompatibility with optimized routines.)
+        datatype : type, optional
+            (Experimental) Can coerce dimensions to a non-default float type (such as `np.float16`) to save memory.
+            Such types may result in much slower bulk operations or incompatibility with optimized routines.)
 
         Returns
         -------
-        gensim.models.word2vec.Word2Vec
-            Returns the loaded model as an instance of :class:`~gensim.models.word2vec.Word2Vec`.
+        :class:`~gensim.models.keyedvectors.Word2VecKeyedVectors`
+            Loaded model.
 
         """
         # from gensim.models.word2vec import load_word2vec_format
@@ -1395,8 +1434,7 @@ class Word2VecKeyedVectors(WordEmbeddingsKeyedVectors):
             limit=limit, datatype=datatype)
 
     def get_keras_embedding(self, train_embeddings=False):
-        """
-        Return a Keras 'Embedding' layer with weights set as the Word2Vec model's learned word embeddings
+        """Get a Keras 'Embedding' layer with weights set as the Word2Vec model's learned word embeddings.
 
         Parameters
         ----------
@@ -1406,8 +1444,17 @@ class Word2VecKeyedVectors(WordEmbeddingsKeyedVectors):
 
         Returns
         -------
-        keras.layers.Embedding
-            Embedding layer
+        `keras.layers.Embedding`
+            Embedding layer.
+
+        Raises
+        ------
+        ImportError
+            If `Keras <https://pypi.org/project/Keras/>`_ not installed.
+
+        Warnings
+        --------
+        Current method work only if `Keras <https://pypi.org/project/Keras/>`_ installed.
 
         """
         try:
@@ -1460,14 +1507,18 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         return self.vectors_docs_norm
 
     def __getitem__(self, index):
-        """
-        Accept a single key (int or string tag) or list of keys as input.
+        """Get vector representation of `index`.
 
-        If a single string or int, return designated tag's vector
-        representation, as a 1D numpy array.
+        Parameters
+        ----------
+        index : {str, list of str}
+            Doctag or sequence of doctags.
 
-        If a list, return designated tags' vector representations as a
-        2D numpy array: #tags x #vector_size.
+        Returns
+        -------
+        numpy.ndarray
+            Vector representation for `index` (1D if `index` is string, otherwise - 2D).
+
         """
         if index in self:
             if isinstance(index, string_types + integer_types + (integer,)):
@@ -1485,14 +1536,17 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         return self.count
 
     def save(self, *args, **kwargs):
-        """Saves the keyedvectors. This saved model can be loaded again using
-        :func:`~gensim.models.doc2vec.Doc2VecKeyedVectors.load` which supports
-        operations on trained document vectors like `most_similar`.
+        """Save object.
 
         Parameters
         ----------
         fname : str
-            Path to the file.
+            Path to the output file.
+
+        See Also
+        --------
+        :meth:`~gensim.models.keyedvectors.Doc2VecKeyedVectors.load`
+            Load object.
 
         """
         # don't bother storing the cached normalized vectors
@@ -1500,15 +1554,19 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         super(Doc2VecKeyedVectors, self).save(*args, **kwargs)
 
     def init_sims(self, replace=False):
-        """
-        Precompute L2-normalized vectors.
+        """Precompute L2-normalized vectors.
 
-        If `replace` is set, forget the original vectors and only keep the normalized
-        ones = saves lots of memory!
+        Parameters
+        ----------
+        replace : bool, optional
+            If True - forget the original vectors and only keep the normalized ones = saves lots of memory!
 
-        Note that you **cannot continue training or inference** after doing a replace.
-        The model becomes effectively read-only = you can call `most_similar`, `similarity`
-        etc., but not `train` or `infer_vector`.
+        Warnings
+        --------
+        You **cannot continue training** after doing a replace.
+        The model becomes effectively read-only: you can call
+        :meth:`~gensim.models.keyedvectors.Doc2VecKeyedVectors.most_similar`,
+        :meth:`~gensim.models.keyedvectors.Doc2VecKeyedVectors.similarity`, etc., but not train and infer_vector.
 
         """
         if getattr(self, 'vectors_docs_norm', None) is None or replace:
@@ -1528,28 +1586,23 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
                     self.vectors_docs, sqrt((self.vectors_docs ** 2).sum(-1))[..., newaxis], self.vectors_docs_norm)
 
     def most_similar(self, positive=None, negative=None, topn=10, clip_start=0, clip_end=None, indexer=None):
-        """
-        Find the top-N most similar docvecs known from training. Positive docs contribute
-        positively towards the similarity, negative docs negatively.
+        """Find the top-N most similar docvecs from the training set.
+        Positive docvecs contribute positively towards the similarity, negative docvecs negatively.
 
         This method computes cosine similarity between a simple mean of the projection
         weight vectors of the given docs. Docs may be specified as vectors, integer indexes
         of trained docvecs, or if the documents were originally presented with string tags,
         by the corresponding tags.
 
-        The `clip_start` and `clip_end` allow limiting results to a particular contiguous
-        range of the underlying `vectors_docs_norm` vectors. (This may be useful if the ordering
-        there was chosen to be significant, such as more popular tag IDs in lower indexes.)
+        TODO: Accept vectors of out-of-training-set docs, as if from inference.
 
         Parameters
         ----------
-        positive : list
-            List of Docs specifed as vectors, integer indexes of trained docvecs or string tags
-            that contribute positively.
-        negative : list
-            List of Docs specifed as vectors, integer indexes of trained docvecs or string tags
-            that contribute negatively.
-        topn : int
+        positive : list of {str, int}, optional
+            List of doctags/indexes that contribute positively.
+        negative : list of {str, int}, optional
+            List of doctags/indexes that contribute negatively.
+        topn : int, optional
             Number of top-N similar docvecs to return.
         clip_start : int
             Start clipping index.
@@ -1558,8 +1611,8 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
 
         Returns
         -------
-        list of tuple
-            Returns a list of 2-tuples (doc, similarity)
+        list of ({str, int}, float)
+            Sequence of (doctag/index, similarity).
 
         """
         if positive is None:
@@ -1614,20 +1667,19 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         return result[:topn]
 
     def doesnt_match(self, docs):
-        """
-        Which doc from the given list doesn't go with the others?
+        """Which document from the given list doesn't go with the others from the training set?
 
-        (TODO: Accept vectors of out-of-training-set docs, as if from inference.)
+        TODO: Accept vectors of out-of-training-set docs, as if from inference.
 
         Parameters
         ----------
-        docs : list of (str or int)
-            List of seen documents specified by their corresponding string tags or integer indices.
+        docs : list of {str, int}
+            Sequence of doctags/indexes.
 
         Returns
         -------
-        str or int
-            ID of the document farthest away from the mean of all the documents.
+        {str, int}
+            Doctag/index of the document farthest away from the mean of all the documents.
 
         """
         self.init_sims()
@@ -1643,16 +1695,16 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         return sorted(zip(dists, docs))[0][1]
 
     def similarity(self, d1, d2):
-        """
-        Compute cosine similarity between two docvecs in the trained set, specified by int index or
-        string tag. (TODO: Accept vectors of out-of-training-set docs, as if from inference.)
+        """Compute cosine similarity between two docvecs from the training set.
+
+        TODO: Accept vectors of out-of-training-set docs, as if from inference.
 
         Parameters
         ----------
-        d1 : int or str
-            Indicate the first document by its string tag or integer index.
-        d2 : int or str
-            Indicate the second document by its string tag or integer index.
+        d1 : {int, str}
+            Doctag/index of document.
+        d2 : {int, str}
+            Doctag/index of document.
 
         Returns
         -------
@@ -1663,16 +1715,16 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         return dot(matutils.unitvec(self[d1]), matutils.unitvec(self[d2]))
 
     def n_similarity(self, ds1, ds2):
-        """
-        Compute cosine similarity between two sets of docvecs from the trained set, specified by int
-        index or string tag. (TODO: Accept vectors of out-of-training-set docs, as if from inference.)
+        """Compute cosine similarity between two sets of docvecs from the trained set.
+
+        TODO: Accept vectors of out-of-training-set docs, as if from inference.
 
         Parameters
         ----------
-        ds1 : list of (str or int)
-            Specify the first set of documents as a list of their integer indices or string tags.
-        ds2 : list of (str or int)
-            Specify the second set of documents as a list of their integer indices or string tags.
+        ds1 : list of {str, int}
+            Set of document as sequence of doctags/indexes.
+        ds2 : list of {str, int}
+            Set of document as sequence of doctags/indexes.
 
         Returns
         -------
@@ -1693,8 +1745,23 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
 
     # required by base keyed vectors class
     def distances(self, d1, other_docs=()):
-        """Compute distances from given document (string tag or int index) to all documents in `other_docs`.
-        If `other_docs` is empty, return distance between `d1` and all documents seen during training.
+        """Compute cosine distances from given `d1` to all documents in `other_docs`.
+
+        TODO: Accept vectors of out-of-training-set docs, as if from inference.
+
+        Parameters
+        ----------
+        d1 : {str, numpy.ndarray}
+            Doctag/index of document.
+        other_docs : iterable of {str, int}
+            Sequence of doctags/indexes.
+            If None or empty, distance of `d1` from all doctags in vocab is computed (including itself).
+
+        Returns
+        -------
+        numpy.array
+            Array containing distances to all documents in `other_docs` from input `d1`.
+
         """
         input_vector = self[d1]
         if not other_docs:
@@ -1704,28 +1771,27 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         return 1 - WordEmbeddingsKeyedVectors.cosine_similarities(input_vector, other_vectors)
 
     def similarity_unseen_docs(self, model, doc_words1, doc_words2, alpha=0.1, min_alpha=0.0001, steps=5):
-        """
-        Compute cosine similarity between two post-bulk out of training documents.
+        """Compute cosine similarity between two post-bulk out of training documents.
 
         Parameters
         ----------
         model : :class:`~gensim.models.doc2vec.Doc2Vec`
             An instance of a trained `Doc2Vec` model.
         doc_words1 : list of str
-            The first document. Document should be a list of (word) tokens.
+            Input document.
         doc_words2 : list of str
-            The second document. Document should be a list of (word) tokens.
-        alpha : float
+            Input document.
+        alpha : float, optional
             The initial learning rate.
-        min_alpha : float
+        min_alpha : float, optional
             Learning rate will linearly drop to `min_alpha` as training progresses.
-        steps : int
-            Number of times to train the new document.
+        steps : int, optional
+            Number of epoch to train the new document.
 
         Returns
         -------
         float
-            The cosine similarity between the unseen documents.
+            The cosine similarity between `doc_words1` and `doc_words2`.
 
         """
         d1 = model.infer_vector(doc_words=doc_words1, alpha=alpha, min_alpha=min_alpha, steps=steps)
@@ -1734,25 +1800,24 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
 
     def save_word2vec_format(self, fname, prefix='*dt_', fvocab=None,
                              total_vec=None, binary=False, write_first_line=True):
-        """
-        Store the input-hidden weight matrix in the same format used by the original
+        """Store the input-hidden weight matrix in the same format used by the original
         C word2vec-tool, for compatibility.
 
         Parameters
         ----------
         fname : str
             The file path used to save the vectors in.
-        prefix : str
+        prefix : str, optional
             Uniquely identifies doctags from word vocab, and avoids collision
             in case of repeated string in doctag and word vocab.
-        fvocab : str
-            Optional file path used to save the vocabulary
-        binary : bool
-            If True, the data wil be saved in binary word2vec format, else it will be saved in plain text.
-        total_vec :  int
-            Optional parameter to explicitly specify total no. of vectors
+        fvocab : str, optional
+            UNUSED.
+        total_vec : int, optional
+            Explicitly specify total no. of vectors
             (in case word vectors are appended with document vectors afterwards)
-        write_first_line : bool
+        binary : bool, optional
+            If True, the data wil be saved in binary word2vec format, else it will be saved in plain text.
+        write_first_line : bool, optional
             Whether to print the first line in the file. Useful when saving doc-vectors after word-vectors.
 
         """
@@ -1772,7 +1837,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
 
     @staticmethod
     def _int_index(index, doctags, max_rawint):
-        """Return int index for either string or int index."""
+        """Get int index for either string or int index."""
         if isinstance(index, integer_types + (integer,)):
             return index
         else:
@@ -1780,7 +1845,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
 
     @staticmethod
     def _index_to_doctag(i_index, offset2doctag, max_rawint):
-        """Return string key for given `i_index`, if available. Otherwise return raw int doctag (same int)."""
+        """Get string key for given `i_index`, if available. Otherwise return raw int doctag (same int)."""
         candidate_offset = i_index - max_rawint - 1
         if 0 <= candidate_offset < len(offset2doctag):
             return offset2doctag[candidate_offset]
@@ -1789,7 +1854,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
 
     # for backward compatibility
     def index_to_doctag(self, i_index):
-        """Return string key for given `i_index`, if available. Otherwise return raw int doctag (same int)."""
+        """Get string key for given `i_index`, if available. Otherwise return raw int doctag (same int)."""
         candidate_offset = i_index - self.max_rawint - 1
         if 0 <= candidate_offset < len(self.offset2doctag):
             return self.offset2doctag[candidate_offset]
@@ -1798,7 +1863,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
 
     # for backward compatibility
     def int_index(self, index, doctags, max_rawint):
-        """Return int index for either string or int index"""
+        """Get int index for either string or int index"""
         if isinstance(index, integer_types + (integer,)):
             return index
         else:
@@ -1806,10 +1871,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
 
 
 class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
-    """
-    Vectors and vocab for FastText.
-    """
-
+    """Vectors and vocab for :class:`~gensim.models.fasttext.FastText`."""
     def __init__(self, vector_size, min_n, max_n):
         super(FastTextKeyedVectors, self).__init__(vector_size=vector_size)
         self.vectors_vocab = None
@@ -1843,10 +1905,19 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         return self.vectors_ngrams_norm
 
     def __contains__(self, word):
-        """
-        Check if `word` or any character ngrams in `word` are present in the vocabulary.
+        """Check if `word` or any character ngrams in `word` are present in the vocabulary.
+        A vector for the word is guaranteed to exist if current method returns True.
 
-        A vector for the word is guaranteed to exist if `__contains__` returns True.
+        Parameters
+        ----------
+        word : str
+            Input word.
+
+        Returns
+        -------
+        bool
+            True if `word` or any character ngrams in `word` are present in the vocabulary, False otherwise.
+
         """
         if word in self.vocab:
             return True
@@ -1855,15 +1926,17 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
             return any(_ft_hash(ng) % self.bucket in self.hash2index for ng in char_ngrams)
 
     def save(self, *args, **kwargs):
-        """
-        Save the keyed vectors. This saved structure can be loaded again using
-        :func:`~gensim.models.fasttext.FastTextKeyedVectors.load` which supports
-        getting vectors for out-of-vocabulary words.
+        """Save object.
 
         Parameters
         ----------
         fname : str
-            Path to the file.
+            Path to the output file.
+
+        See Also
+        --------
+        :meth:`~gensim.models.keyedvectors.FastTextKeyedVectors.load`
+            Load object.
 
         """
         # don't bother storing the cached normalized vectors
@@ -1872,10 +1945,24 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         super(FastTextKeyedVectors, self).save(*args, **kwargs)
 
     def word_vec(self, word, use_norm=False):
-        """
-        Return the word's representations in vector space, as a 1D numpy array.
+        """Get `word` representations in vector space, as a 1D numpy array.
 
-        If `use_norm` is True, return the word vector L2-normalized (unit euclidean length).
+        Parameters
+        ----------
+        word : str
+            Input word
+        use_norm : bool, optional
+            If True - resulting vector will be L2-normalized (unit euclidean length).
+
+        Returns
+        -------
+        numpy.ndarray
+            Vector representation of `word`.
+
+        Raises
+        ------
+        KeyError
+            If word and all ngrams not in vocabulary.
 
         """
         if word in self.vocab:
@@ -1900,14 +1987,19 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
                 raise KeyError('all ngrams for word %s absent from model' % word)
 
     def init_sims(self, replace=False):
-        """
-        Precompute L2-normalized vectors.
+        """Precompute L2-normalized vectors.
 
-        If `replace` is set, forget the original vectors and only keep the normalized
-        ones = saves lots of memory!
+        Parameters
+        ----------
+        replace : bool, optional
+            If True - forget the original vectors and only keep the normalized ones = saves lots of memory!
 
-        Note that you **cannot continue training** after doing a replace. The model becomes
-        effectively read-only = you can only call `most_similar`, `similarity` etc.
+        Warnings
+        --------
+        You **cannot continue training** after doing a replace.
+        The model becomes effectively read-only: you can call
+        :meth:`~gensim.models.keyedvectors.FastTextKeyedVectors.most_similar`,
+        :meth:`~gensim.models.keyedvectors.FastTextKeyedVectors.similarity`, etc., but not train.
 
         """
         super(FastTextKeyedVectors, self).init_sims(replace)
@@ -1922,19 +2014,18 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
                     (self.vectors_ngrams / sqrt((self.vectors_ngrams ** 2).sum(-1))[..., newaxis]).astype(REAL)
 
     def save_word2vec_format(self, fname, fvocab=None, binary=False, total_vec=None):
-        """
-        Store the input-hidden weight matrix in the same format used by the original
+        """Store the input-hidden weight matrix in the same format used by the original
         C word2vec-tool, for compatibility.
 
         Parameters
         ----------
         fname : str
-            The file path used to save the vectors in.
-        fvocab : str
-            Optional file path used to save the vocabulary.
-        binary : bool
+            The file path used to save the vectors in
+        fvocab : str, optional
+            Optional file path used to save the vocabulary
+        binary : bool, optional
             If True, the data wil be saved in binary word2vec format, else it will be saved in plain text.
-        total_vec :  int
+        total_vec : int, optional
             Optional parameter to explicitly specify total no. of vectors
             (in case word vectors are appended with document vectors afterwards).
 
