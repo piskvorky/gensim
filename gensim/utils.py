@@ -1712,7 +1712,7 @@ def prune_vocab(vocab, min_reduce, trim_rule=None):
 
 def trim_vocab_by_freq(vocab, topk, trim_rule=None):
     """Retain `topk` most frequent words in `vocab`.
-    If there are more words with the same frequency as `topk`-th one, they will be keeped.
+    If there are more words with the same frequency as `topk`-th one, they will be kept.
     Modifies `vocab` in place, returns nothing.
 
     Parameters
