@@ -954,7 +954,8 @@ class Doc2VecVocab(Word2VecVocab):
         self.raw_vocab = vocab
         return total_words, corpus_count
 
-    def scan_vocab(self, documents=None, input_streams=None, docvecs=None, progress_per=10000, workers=None, trim_rule=None):
+    def scan_vocab(self, documents=None, input_streams=None, docvecs=None, progress_per=10000, workers=None,
+                   trim_rule=None):
         logger.info("collecting all words and their counts")
         if input_streams is None:
             total_words, corpus_count = self._scan_vocab_singlestream(documents, docvecs, progress_per, trim_rule)
