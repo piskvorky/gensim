@@ -524,7 +524,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             List of callbacks that need to be executed/run at specific stages during training.
         """
         super(Doc2Vec, self).train(
-            documents=documents, input_streams=input_streams, total_examples=total_examples, total_words=total_words,
+            sentences=documents, input_streams=input_streams, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
             queue_factor=queue_factor, report_delay=report_delay, callbacks=callbacks)
 
@@ -961,7 +961,7 @@ class Doc2VecVocab(Word2VecVocab):
         if input_streams is None:
             total_words, corpus_count = self._scan_vocab_singlestream(documents, docvecs, progress_per, trim_rule)
         else:
-            total_words, corpus_count = self._scan_vocab_multistream(documents, docvecs, workers, trim_rule)
+            total_words, corpus_count = self._scan_vocab_multistream(input_streams, docvecs, workers, trim_rule)
 
         logger.info(
             "collected %i word types and %i unique tags from a corpus of %i examples and %i words",
