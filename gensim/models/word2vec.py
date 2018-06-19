@@ -1237,9 +1237,10 @@ class Word2VecVocab(utils.SaveLoad):
         workers = min(workers, input_streams)
         pool = multiprocessing.Pool(processes=workers)
 
+        worker_max_vocab_size = self.max_vocab_size / workers if self.max_vocab_size else None
         results = [
             pool.apply_async(_scan_vocab_worker,
-                             (stream, progress_queue, self.max_vocab_size / workers, trim_rule)
+                             (stream, progress_queue, worker_max_vocab_size, trim_rule)
                              ) for stream in input_streams
         ]
         pool.close()
