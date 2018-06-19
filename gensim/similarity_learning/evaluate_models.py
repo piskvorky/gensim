@@ -372,8 +372,6 @@ def drmm_tks_eval(datapath, word_embedding_path):
     model = drmm_tks.get_model()
     model.summary()
 
-    optimizer = 'adadelta'
-
     optimizer = 'adam'
     optimizer = optimizers.get(optimizer)
     K.set_value(optimizer.lr, 0.0001)
