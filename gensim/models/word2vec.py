@@ -1234,7 +1234,7 @@ class Word2VecVocab(utils.SaveLoad):
 
         logger.info("Scanning vocab in %i processes.", min(workers, len(input_streams)))
 
-        workers = min(workers, input_streams)
+        workers = min(workers, len(input_streams))
         pool = multiprocessing.Pool(processes=workers)
 
         worker_max_vocab_size = self.max_vocab_size // workers if self.max_vocab_size else None
