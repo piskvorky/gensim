@@ -879,7 +879,7 @@ class Doc2VecVocab(Word2VecVocab):
         logger.info("Scanning vocab in %i processes.", workers)
         pool = multiprocessing.Pool(processes=workers)
 
-        worker_max_vocab_size = self.max_vocab_size / workers if self.max_vocab_size else None
+        worker_max_vocab_size = self.max_vocab_size // workers if self.max_vocab_size else None
         results = [
             pool.apply_async(_scan_vocab_worker,
                              (stream, progress_queue, worker_max_vocab_size, trim_rule)
