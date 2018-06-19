@@ -222,7 +222,7 @@ class BaseAny2VecModel(utils.SaveLoad):
 
         # Chain all input streams into one, because multistream training is not supported yet.
         if data_iterables is not None:
-            data_iterable = itertools.chain(*data_iterable)
+            data_iterable = itertools.chain(*data_iterables)
         workers.append(threading.Thread(
             target=self._job_producer,
             args=(data_iterable, job_queue),
