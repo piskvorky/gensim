@@ -726,7 +726,8 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         documents : {iterable of iterables, list or tuple of iterable of iterables}
             The `documents` iterable can be simply a list of TaggedDocument elements, but for larger corpora,
             consider an iterable that streams the documents directly from disk/network.
-            See :class:`~gensim.models.doc2vec.TaggedBrownCorpus` or :class:`~gensim.models.doc2vec.TaggedLineDocument
+            See :class:`~gensim.models.doc2vec.TaggedBrownCorpus` or :class:`~gensim.models.doc2vec.TaggedLineDocument`
+            in :mod:`~gensim.models.doc2vec` module for such examples.
         input_streams : list or tuple of iterable of iterables
             The tuple or list of `documents`-like arguments. Use it if you have multiple input streams. It is possible
             to process streams in parallel, using `workers` parameter.
