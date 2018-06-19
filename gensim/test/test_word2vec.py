@@ -175,7 +175,7 @@ class TestWord2VecModel(unittest.TestCase):
         # Multistream vocab
         model = word2vec.Word2Vec(min_count=0)
         input_streams = [sentences[:len(sentences) // 2], sentences[len(sentences) // 2:]]
-        model.build_vocab(input_streams, multistream=True, workers=2)
+        model.build_vocab(input_streams=input_streams, workers=2)
         multistream_vocab = model.vocabulary.raw_vocab
 
         self.assertEqual(singlestream_vocab, multistream_vocab)
@@ -499,12 +499,12 @@ class TestWord2VecModel(unittest.TestCase):
         # build vocabulary, don't train yet
         input_streams = [sentences[:len(sentences) // 2], sentences[len(sentences) // 2:]]
         model = word2vec.Word2Vec(size=2, min_count=1, hs=1, negative=0, workers=1, seed=42)
-        model.build_vocab(input_streams, multistream=True)
+        model.build_vocab(input_streams=input_streams)
 
         self.assertTrue(model.wv.syn0.shape == (len(model.wv.vocab), 2))
         self.assertTrue(model.syn1.shape == (len(model.wv.vocab), 2))
 
-        model.train(input_streams, total_examples=model.corpus_count, epochs=model.iter, multistream=True)
+        model.train(input_streams=input_streams, total_examples=model.corpus_count, epochs=model.iter)
         sims = model.most_similar('graph', topn=10)
 
         # test querying for "most similar" by vector
@@ -514,8 +514,8 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertEqual(sims, sims2)
 
         # build vocab and train in one step; must be the same as above
-        model2 = word2vec.Word2Vec(input_streams, size=2, min_count=1, hs=1, negative=0,
-                                   multistream=True, workers=1, seed=42)
+        model2 = word2vec.Word2Vec(input_streams=input_streams, size=2, min_count=1, hs=1, negative=0,
+                                   workers=1, seed=42)
         self.models_equal(model, model2)
 
     def testScoring(self):

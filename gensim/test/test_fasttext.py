@@ -84,10 +84,10 @@ class TestFastTextModel(unittest.TestCase):
     def test_multistream_training(self):
         input_streams = [sentences[:len(sentences) // 2], sentences[len(sentences) // 2:]]
         model = FT_gensim(size=5, min_count=1, hs=1, negative=0, seed=42, workers=1)
-        model.build_vocab(input_streams, multistream=True, workers=2)
+        model.build_vocab(input_streams=input_streams, workers=2)
         self.model_sanity(model)
 
-        model.train(input_streams, multistream=True, total_examples=model.corpus_count, epochs=model.iter)
+        model.train(input_streams=input_streams, total_examples=model.corpus_count, epochs=model.iter)
         sims = model.most_similar('graph', topn=10)
 
         self.assertEqual(model.wv.syn0.shape, (12, 5))
@@ -103,7 +103,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(sims, sims2)
 
         # build vocab and train in one step; must be the same as above
-        model2 = FT_gensim(input_streams, multistream=True, size=5, min_count=1, hs=1, negative=0, seed=42, workers=1)
+        model2 = FT_gensim(input_streams=input_streams, size=5, min_count=1, hs=1, negative=0, seed=42, workers=1)
         self.models_equal(model, model2)
 
         # verify oov-word vector retrieval
@@ -122,7 +122,7 @@ class TestFastTextModel(unittest.TestCase):
         # Multistream vocab
         model2 = FT_gensim(size=5, min_count=1, hs=1, negative=0, seed=42)
         input_streams = [list_corpus[:len(list_corpus) // 2], list_corpus[len(list_corpus) // 2:]]
-        model2.build_vocab(input_streams, multistream=True, workers=2)
+        model2.build_vocab(input_streams=input_streams, workers=2)
         multistream_vocab = model2.vocabulary.raw_vocab
 
         self.assertEqual(singlestream_vocab, multistream_vocab)

@@ -618,7 +618,6 @@ class Word2Vec(BaseWordEmbeddingsModel):
         >>> model.train(input_streams=input_streams, total_examples=model.corpus_count, epochs=model.iter)
 
         """
-
         return super(Word2Vec, self).train(
             sentences=sentences, input_streams=input_streams, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,

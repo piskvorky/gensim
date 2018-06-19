@@ -86,7 +86,7 @@ class BaseAny2VecModel(utils.SaveLoad):
     def _check_input_data_sanity(self, data_iterable=None, data_iterables=None):
         """Check that only one argument is not None."""
         if not ((data_iterable is not None) ^ (data_iterables is not None)):
-            raise ValueError("You can't provide both singlestream and multistream arguments.")
+            raise ValueError("You must provide only one of singlestream or multistream arguments.")
 
     def _worker_loop(self, job_queue, progress_queue):
         """Train the model, lifting lists of data from the job_queue."""
@@ -591,8 +591,8 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         self.compute_loss = compute_loss
         self.running_training_loss = 0.0
         return super(BaseWordEmbeddingsModel, self).train(
-            sentences=sentences, input_streams=input_streams, total_examples=total_examples, total_words=total_words,
-            epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
+            data_iterable=sentences, data_iterables=input_streams, total_examples=total_examples,
+            total_words=total_words, epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
             queue_factor=queue_factor, report_delay=report_delay, compute_loss=compute_loss, callbacks=callbacks)
 
     def _get_job_params(self, cur_epoch):
