@@ -1233,11 +1233,13 @@ class Word2VecVocab(utils.SaveLoad):
         progress_queue = manager.Queue()
 
         logger.info("Scanning vocab in %i processes.", min(workers, len(input_streams)))
-        pool = multiprocessing.Pool(processes=min(workers, len(input_streams)))
+
+        workers = min(workers, input_streams)
+        pool = multiprocessing.Pool(processes=workers)
 
         results = [
             pool.apply_async(_scan_vocab_worker,
-                             (stream, progress_queue, self.max_vocab_size, trim_rule)
+                             (stream, progress_queue, self.max_vocab_size / workers, trim_rule)
                              ) for stream in input_streams
         ]
         pool.close()
