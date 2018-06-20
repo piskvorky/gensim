@@ -4,8 +4,7 @@
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""
-Basic interfaces used across the whole Gensim package.
+"""Basic interfaces used across the whole Gensim package.
 
 These interfaces are used for building corpora, model transformation and similarity queries.
 
@@ -71,7 +70,6 @@ class CorpusABC(utils.SaveLoad):
         Corpuses in different formats
 
     """
-
     def __iter__(self):
         """Iterate all over corpus."""
         raise NotImplementedError('cannot instantiate abstract base class')
@@ -84,7 +82,7 @@ class CorpusABC(utils.SaveLoad):
         This save only the "state" of a corpus class, not the corpus data!
 
         For saving data use the `serialize` method of the output format you'd like to use
-        (e.g. :meth:`~gensim.corpora.mmcorpus.MmCorpus.serialize()`).
+        (e.g. :meth:`gensim.corpora.mmcorpus.MmCorpus.serialize`).
 
         """
         import warnings
@@ -95,7 +93,7 @@ class CorpusABC(utils.SaveLoad):
         super(CorpusABC, self).save(*args, **kwargs)
 
     def __len__(self):
-        """Return the corpus size = the total number of documents in it."""
+        """Get the corpus size = the total number of documents in it."""
         raise NotImplementedError("must override __len__() before calling len(corpus)")
 
     @staticmethod
@@ -114,7 +112,7 @@ class CorpusABC(utils.SaveLoad):
         :func:`serialize`, which does :meth:`~gensim.interfaces.CorpusABC.save_corpus` plus saves the index
         at the same time.
 
-        Calling :func:`serialize() is preferred to calling :meth:`~gensim.interfaces.CorpusABC.save_corpus`.
+        Calling :func:`serialize() is preferred to calling :meth:`gensim.interfaces.CorpusABC.save_corpus`.
 
         Parameters
         ----------
@@ -196,7 +194,7 @@ class TransformedCorpus(CorpusABC):
         Raises
         ------
         RuntimeError
-            If corpus doesn't support index slicing (:meth`__getitem__` doesn't exists).
+            If corpus doesn't support index slicing (`__getitem__` doesn't exists).
 
         """
         if hasattr(self.corpus, '__getitem__'):
@@ -219,7 +217,6 @@ class TransformationABC(utils.SaveLoad):
     >>> bow_corpus = model[common_corpus]  # also, we can apply model on the full corpus
 
     """
-
     def __getitem__(self, vec):
         """Transform a single document, or a whole corpus, from one vector space into another.
 
@@ -276,7 +273,6 @@ class SimilarityABC(utils.SaveLoad):
         Different index implementations of this interface.
 
     """
-
     def __init__(self, corpus):
         """
 
