@@ -233,7 +233,7 @@ win_testenv = [
     'pyemd',
     'testfixtures',
     'scikit-learn',
-    'Morfessor==2.0.2a4'
+    'Morfessor==2.0.2a4',
 ]
 
 linux_testenv = win_testenv + [
