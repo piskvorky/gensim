@@ -236,8 +236,8 @@ class Similarity(interfaces.SimilarityABC):
     Scalability is achieved by sharding the index into smaller pieces, each of which fits into core memory
     The shards themselves are simply stored as files to disk and mmap'ed back as needed.
 
-    Usage examples
-    --------------
+    Examples
+    --------
     >>> from gensim.corpora.textcorpus import TextCorpus
     >>> from gensim.test.utils import datapath, get_tmpfile
     >>> from gensim.similarities import Similarity

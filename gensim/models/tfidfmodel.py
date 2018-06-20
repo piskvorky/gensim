@@ -115,13 +115,13 @@ def precompute_idfs(wglobal, dfs, total_docs):
         Custom function for calculating the "global" weighting function.
         See for example "universal" :func:`~gensim.models.tfidfmodel.updated_wglobal`.
     dfs : dict
-        Dictionary mapping `term_id`s into how many documents did that term appear in.
+        Dictionary mapping `term_id` into how many documents did that term appear in.
     total_docs : int
         Total number of documents.
 
     Returns
     -------
-    dict
+    dict of (int, float)
         Inverse document frequencies in the format `{term_id_1: idfs_1, term_id_2: idfs_2, ...}`.
 
     """

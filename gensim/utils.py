@@ -1128,7 +1128,7 @@ def decode_htmlentities(text):
 
 
 def chunkize_serial(iterable, chunksize, as_numpy=False, dtype=np.float32):
-    """Yield elements from `iterable` in `chunksize`-ed groups.
+    """Yield elements from `iterable` in "chunksize"-ed groups.
 
     The last returned element may be smaller if the length of collection is not divisible by `chunksize`.
 
@@ -1139,12 +1139,12 @@ def chunkize_serial(iterable, chunksize, as_numpy=False, dtype=np.float32):
     chunksize : int
         Split iterable into chunks of this size.
     as_numpy : bool, optional
-        Yield chunks as `np.ndarray`s instead of lists?
+        Yield chunks as `np.ndarray` instead of lists.
 
     Yields
     ------
     list OR np.ndarray
-        `chunksize`-ed chunks of elements from `iterable`.
+        "chunksize"-ed chunks of elements from `iterable`.
 
     Examples
     --------
@@ -1183,11 +1183,11 @@ class InputQueue(multiprocessing.Process):
         q : multiprocessing.Queue
             Enqueue chunks into this queue.
         corpus : iterable of iterable of (int, numeric)
-            Corpus to read and split into `chunksize`-ed groups
+            Corpus to read and split into "chunksize"-ed groups
         chunksize : int
             Split `corpus` into chunks of this size.
         as_numpy : bool, optional
-            Enqueue chunks as `np.ndarray`s instead of lists?
+            Enqueue chunks as `numpy.ndarray` instead of lists.
 
         """
         super(InputQueue, self).__init__()
@@ -1241,7 +1241,7 @@ if os.name == 'nt':
         Yields
         ------
         list OR np.ndarray
-            `chunksize`-ed chunks of elements from `corpus`.
+            "chunksize"-ed chunks of elements from `corpus`.
 
         """
         for chunk in chunkize_serial(corpus, chunksize, as_numpy=as_numpy):
@@ -1259,12 +1259,12 @@ else:
         maxsize : int, optional
             If > 0, prepare chunks in a background process, filling a chunk queue of size at most `maxsize`.
         as_numpy : bool, optional
-            Yield chunks as `np.ndarray`s instead of lists?
+            Yield chunks as `np.ndarray` instead of lists?
 
         Yields
         ------
         list OR np.ndarray
-            `chunksize`-ed chunks of elements from `corpus`.
+            "chunksize"-ed chunks of elements from `corpus`.
 
         Notes
         -----

@@ -30,8 +30,10 @@ logger = logging.getLogger(__name__)
 class Dictionary(utils.SaveLoad, Mapping):
     """Dictionary encapsulates the mapping between normalized words and their integer ids.
 
-    Notable instance attributes
-    ---------------------------
+    Notable instance attributes:
+
+    Attributes
+    ----------
     token2id : dict of (str, int)
         token -> tokenId.
     id2token : dict of (int, str)
@@ -270,10 +272,7 @@ class Dictionary(utils.SaveLoad, Mapping):
             return result
 
     def doc2idx(self, document, unknown_word_index=-1):
-        """Convert `document` (a list of words) into a list of indexes = list of `token_id`s.
-
-        Notes
-        -----
+        """Convert `document` (a list of words) into a list of indexes = list of `token_id`.
         Replace all unknown words i.e, words not in the dictionary with the index as set via `unknown_word_index`.
 
         Parameters
