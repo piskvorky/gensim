@@ -4,8 +4,7 @@
 # Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""
-Optimized `Latent Dirichlet Allocation (LDA) <https://en.wikipedia.org/wiki/Latent_Dirichlet_allocation>` in Python.
+"""Optimized `Latent Dirichlet Allocation (LDA) <https://en.wikipedia.org/wiki/Latent_Dirichlet_allocation>` in Python.
 
 For a faster implementation of LDA (parallelized for multicore machines), see also :mod:`gensim.models.ldamulticore`.
 
@@ -61,12 +60,12 @@ Query, the model using new, unseen documents
 >>> other_corpus = [common_dictionary.doc2bow(text) for text in other_texts]
 >>>
 >>> unseen_doc = other_corpus[0]
->>> repr = lda[unseen_doc] # get topic probability distribution for a document
+>>> vector = lda[unseen_doc] # get topic probability distribution for a document
 
 Update the model by incrementally training on the new corpus
 
 >>> lda.update(other_corpus)
->>> repr = lda[unseen_doc]
+>>> vector = lda[unseen_doc]
 
 A lot of parameters can be tuned to optimize training for your specific case
 
@@ -150,13 +149,12 @@ class LdaState(utils.SaveLoad):
     reduce traffic.
 
     """
-
     def __init__(self, eta, shape, dtype=np.float32):
         """
 
         Parameters
         ----------
-        eta : list of float
+        eta : numpy.ndarray
             The prior probabilities assigned to each term.
         shape : tuple of (int, int)
             Shape of the sufficient statistics: (number of topics to be found, number of terms in the vocabulary).
@@ -170,7 +168,7 @@ class LdaState(utils.SaveLoad):
         self.dtype = dtype
 
     def reset(self):
-        """Prepare the state for a new EM iteration (reset sufficient stats). """
+        """Prepare the state for a new EM iteration (reset sufficient stats)."""
         self.sstats[:] = 0.0
         self.numdocs = 0
 
@@ -194,7 +192,7 @@ class LdaState(utils.SaveLoad):
     def blend(self, rhot, other, targetsize=None):
         """Merge the current state with another one using a weighted average for the sufficient statistics.
 
-        The number of documents is strected in both state objects, so that they are of comparable magnitude.
+        The number of documents is stretched in both state objects, so that they are of comparable magnitude.
         This procedure corresponds to the stochastic gradient update from
         `Hoffman et al. :"Online Learning for Latent Dirichlet Allocation"
         <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_, see equations (5) and (9).
@@ -206,7 +204,7 @@ class LdaState(utils.SaveLoad):
             is completely ignored. A value of 1.0 means `self` is completely ignored.
         other : :class:`~gensim.models.ldamodel.LdaState`
             The state object with which the current one will be merged.
-        targetsize : int
+        targetsize : int, optional
             The number of documents to stretch both states to.
 
         """
@@ -240,11 +238,10 @@ class LdaState(utils.SaveLoad):
         Parameters
         ----------
         rhot : float
-            Weight of the `other` state in the computed average. A value of 0.0 means that `other`
-            is completely ignored. A value of 1.0 means `self` is completely ignored.
+            Unused.
         other : :class:`~gensim.models.ldamodel.LdaState`
             The state object with which the current one will be merged.
-        targetsize : int
+        targetsize : int, optional
             The number of documents to stretch both states to.
 
         """
@@ -257,11 +254,11 @@ class LdaState(utils.SaveLoad):
         self.numdocs = targetsize
 
     def get_lambda(self):
-        """Get the parameters of the posterior over the topics, also reffered to as "the topics".
+        """Get the parameters of the posterior over the topics, also referred to as "the topics".
 
         Returns
         -------
-        list of float
+        numpy.ndarray
             Parameters of the posterior probability over topics.
 
         """
@@ -272,14 +269,14 @@ class LdaState(utils.SaveLoad):
 
         Returns
         -------
-        list of float
+        numpy.ndarray
             Posterior probabilities for each topic.
         """
         return dirichlet_expectation(self.get_lambda())
 
     @classmethod
     def load(cls, fname, *args, **kwargs):
-        """Load a previously stored model from disk.
+        """Load a previously stored state from disk.
 
         Overrides :class:`~gensim.utils.SaveLoad.load` by enforcing the `dtype` parameter
         to ensure backwards compatibility.
@@ -288,15 +285,15 @@ class LdaState(utils.SaveLoad):
         ----------
         fname : str
             Path to file that contains the needed object.
-        args
+        args : object
             Positional parameters to be propagated to class:`~gensim.utils.SaveLoad.load`
-        kwargs
+        kwargs : object
             Key-word parameters to be propagated to class:`~gensim.utils.SaveLoad.load`
 
         Returns
         -------
         :class:`~gensim.models.ldamodel.LdaState`
-            The model loaded from the given file.
+            The state loaded from the given file.
 
         """
         result = super(LdaState, cls).load(fname, *args, **kwargs)
@@ -315,7 +312,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     Examples
     -------
-    Initialize a model using a Gensim corpus.
+    Initialize a model using a Gensim corpus
 
     >>> from gensim.test.utils import common_corpus
     >>>
@@ -337,14 +334,13 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     :meth:`~gensim.models.ldamodel.LdaModel.save` methods.
 
     """
-
     def __init__(self, corpus=None, num_topics=100, id2word=None,
                  distributed=False, chunksize=2000, passes=1, update_every=1,
                  alpha='symmetric', eta=None, decay=0.5, offset=1.0, eval_every=10,
                  iterations=50, gamma_threshold=0.001, minimum_probability=0.01,
                  random_state=None, ns_conf=None, minimum_phi_value=0.01,
                  per_word_topics=False, callbacks=None, dtype=np.float32):
-        """Initialize model parameters and, if `corpus` is given, train the model immediately.
+        """
 
         Parameters
         ----------
@@ -354,7 +350,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             :meth:`~gensim.models.ldamodel.LdaModel.update` manually).
         num_topics : int, optional
             The number of requested latent topics to be extracted from the training corpus.
-        id2word : dict of (int, str)
+        id2word : {dict of (int, str), :class:`gensim.corpora.dictionary.Dictionary`}
             Mapping from word IDs to words. It is used to determine the vocabulary size, as well as for
             debugging and topic printing.
         distributed : bool, optional
@@ -366,13 +362,13 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         update_every : int, optional
             Number of documents to be iterated through for each update.
             Set to 0 for batch learning, > 1 for online iterative learning.
-        alpha : {np.ndarray, str}, optional
+        alpha : {numpy.ndarray, str}, optional
             Can be set to an 1D array of length equal to the number of expected topics that expresses
             our a-priori belief for the each topics' probability.
             Alternatively default prior selecting strategies can be employed by supplying a string:
 
-                * 'asymmetric': Uses a fixed normalized assymetric prior of `1.0 / topicno`.
-                * 'default': Learns an assymetric prior from the corpus.
+                * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / topicno`.
+                * 'default': Learns an asymmetric prior from the corpus.
         eta : {float, np.array, str}, optional
             A-priori belief on word probability, this can be:
 
@@ -400,7 +396,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         random_state : {np.random.RandomState, int}, optional
             Either a randomState object or a seed to generate one. Useful for reproducibility.
         ns_conf : dict of (str, object), optional
-            Key word parameters propagated to :func:`~gensim.utils.getNS` to get a Pyro4 Nameserved.
+            Key word parameters propagated to :func:`gensim.utils.getNS` to get a Pyro4 Nameserved.
             Only used if `distributed` is set to True.
         minimum_phi_value : float, optional
             if `per_word_topics` is True, this represents a lower bound on the term probabilities.
@@ -522,7 +518,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        prior : {str, list of float, np.ndarray of float, float}
+        prior : {str, list of float, numpy.ndarray of float, float}
             A-priori belief on word probability. If `name` == 'eta' then the prior can be:
 
                 * scalar for a symmetric prior over topic/word probability,
@@ -592,7 +588,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         )
 
     def sync_state(self):
-        """Propagate the states topic probabilities to the inner object's attribute. """
+        """Propagate the states topic probabilities to the inner object's attribute."""
         self.expElogbeta = np.exp(self.state.get_Elogbeta())
         assert self.expElogbeta.dtype == self.dtype
 
@@ -615,13 +611,13 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         ----------
         chunk : {list of list of (int, float), scipy.sparse.csc}
             The corpus chunk on which the inference step will be performed.
-        collect_sstats : bool
+        collect_sstats : bool, optional
             If set to True, also collect (and return) sufficient statistics needed to update the model's topic-word
             distributions.
 
         Returns
         -------
-        tuple of (np.ndarray, {np.ndarray of float, None})
+        (numpy.ndarray, {numpy.ndarray, None})
             The first element is always returned and it corresponds to the states gamma matrix. The second element is
             only returned if `collect_sstats` == True and corresponds to the sufficient statistics for the M step.
 
@@ -719,8 +715,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Returns
         -------
-        np.ndarray of shape (`len(chunk)`, `self.num_topics`)
-            Gamma parameters controlling the topic weights.
+        numpy.ndarray
+            Gamma parameters controlling the topic weights, shape (`len(chunk)`, `self.num_topics`).
 
         """
         if state is None:
@@ -743,8 +739,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Returns
         -------
-        list of float
-            Updated alpha parameters.
+        numpy.ndarray
+            Sequence of alpha parameters.
 
         """
         N = float(len(gammat))
@@ -762,14 +758,14 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        lambdat : np.ndarray
+        lambdat : numpy.ndarray
             Previous lambda parameters.
         rho : float
             Learning rate.
 
         Returns
         -------
-        list of float
+        numpy.ndarray
             The updated eta parameters.
 
         """
@@ -791,12 +787,12 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         ----------
         chunk : {list of list of (int, float), scipy.sparse.csc}
             The corpus chunk on which the inference step will be performed.
-        total_docs : int
+        total_docs : int, optional
             Number of docs used for evaluation of the perplexity.
 
         Returns
         -------
-        list of float
+        numpy.ndarray
             The variational bound score calculated for each word.
 
         """
@@ -856,10 +852,10 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Maximum number of iterations through the corpus when inferring the topic distribution of a corpus.
         gamma_threshold : float, optional
             Minimum change in the value of the gamma parameters to continue iterating.
-        chunks_as_numpy : bool
-            Whether each chunk passed to the inference step should be a np.ndarray or not. Numpy can in some settings
+        chunks_as_numpy : bool, optional
+            Whether each chunk passed to the inference step should be a numpy.ndarray or not. Numpy can in some settings
             turn the term IDs into floats, these will be converted back into integers in inference, which incurs a
-            performance hit. For distributed computing it may be desirable to keep the chunks as `np.ndarray`.
+            performance hit. For distributed computing it may be desirable to keep the chunks as `numpy.ndarray`.
 
         """
         # use parameters given in constructor, unless user explicitly overrode them
@@ -985,7 +981,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     else:
                         other = LdaState(self.eta, self.state.sstats.shape, self.dtype)
                     dirty = False
-            # endfor single corpus iteration
 
             if reallen != lencorpus:
                 raise RuntimeError("input corpus size changed during training (don't use generators as input)")
@@ -1006,8 +1001,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 del other
                 dirty = False
 
-        # endfor entire corpus update
-
     def do_mstep(self, rho, other, extra_pass=False):
         """Maximization step: use linear interpolation between the existing topics and
         collected sufficient statistics in `other` to update the topics.
@@ -1018,7 +1011,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Learning rate.
         other : :class:`~gensim.models.ldamodel.LdaModel`
             The model whose sufficient statistics will be used to update the topics.
-        extra_pass : bool
+        extra_pass : bool, optional
             Whether this step required an additional pass over the corpus.
 
         """
@@ -1049,16 +1042,16 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
             Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`) used to estimate the
             variational bounds.
-        gamma : np.ndarray
+        gamma : numpy.ndarray, optional
             Topic weight variational parameters for each document. If not supplied, it will be inferred from the model.
-        subsample_ratio : float
+        subsample_ratio : float, optional
             Percentage of the whole corpus represented by the passed `corpus` argument (in case this was a sample).
             Set to 1.0 if the whole corpus was passed.This is used as a multiplicative factor to scale the likelihood
             appropriately.
 
         Returns
         -------
-        list of float
+        numpy.ndarray
             The variational bound score calculated for each document.
 
         """
@@ -1166,7 +1159,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         ----------
         topicid : int
             The ID of the topic to be returned
-        topn : int
+        topn : int, optional
             Number of the most significant words that are associated with the topic.
 
         Returns
@@ -1183,8 +1176,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Returns
         -------
-        np.ndarray of float of shape (`num_topics`, `vocabulary_size`)
-            The probability for each word in each topic.
+        numpy.ndarray
+            The probability for each word in each topic, shape (`num_topics`, `vocabulary_size`).
 
         """
         topics = self.state.get_lambda()
@@ -1198,7 +1191,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         ----------
         topicid : int
             The ID of the topic to be returned
-        topn : int
+        topn : int, optional
             Number of the most significant words that are associated with the topic.
 
         Returns
@@ -1352,7 +1345,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         ----------
         word_id : int
             The word for which the topic distribution will be computed.
-        minimum_probability : float
+        minimum_probability : float, optional
             Topics with an assigned probability below this threshold will be discarded.
 
         Returns
@@ -1400,16 +1393,18 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Returns
         -------
-        np.ndarray of shape (`self.num_topics`, `other.num_topics`)
-            A difference matrix. Each element corresponds to the difference between the two topics.
-        np.ndarray of shape (`self.num_topics`, `other_model.num_topics`, 2), optional
+        numpy.ndarray
+            A difference matrix. Each element corresponds to the difference between the two topics,
+            shape (`self.num_topics`, `other.num_topics`)
+        numpy.ndarray, optional
             Annotation matrix where for each pair we include the word from the intersection of the two topics,
             and the word from the symmetric difference of the two topics. Only included if `annotation == True`.
+            Shape (`self.num_topics`, `other_model.num_topics`, 2).
 
         Examples
         --------
+        Get the differences between each pair of topics inferred by two models
 
-        #. Get the differences between each pair of topics inferred by two models.
         >>> from gensim.models.ldamulticore import LdaMulticore
         >>> from gensim.test.utils import datapath
         >>>
@@ -1418,7 +1413,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         >>> topic_diff = mdiff # get matrix with difference for each topic pair from `m1` and `m2`
 
         """
-
         distances = {
             "kullback_leibler": kullback_leibler,
             "hellinger": hellinger,
@@ -1493,7 +1487,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         ---------
         bow : list of (int, float)
             The document in BOW format.
-        eps : float
+        eps : float, optional
             Topics with an assigned probability lower than this threshold will be discarded.
 
         Returns
@@ -1528,6 +1522,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         See Also
         --------
         :meth:`~gensim.models.ldamodel.LdaModel.load`
+            Load model.
 
         Parameters
         ----------
@@ -1587,11 +1582,12 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     @classmethod
     def load(cls, fname, *args, **kwargs):
-        """Load a previously saved LdaModel object from file.
+        """Load a previously saved :class:`gensim.models.ldamodel.LdaModel` from file.
 
         See Also
         --------
         :meth:`~gensim.models.ldamodel.LdaModel.save`
+            Save model.
 
         Parameters
         ----------
@@ -1604,7 +1600,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Examples
         --------
-        #. Large arrays can be memmap'ed back as read-only (shared memory) by setting `mmap='r'`:
+        Large arrays can be memmap'ed back as read-only (shared memory) by setting `mmap='r'`:
+
         >>> from gensim.test.utils import datapath
         >>>
         >>> fname = datapath("lda_3_0_1_model")
