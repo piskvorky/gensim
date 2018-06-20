@@ -4,10 +4,8 @@
 # Copyright (C) 2012 Homer Strong, Radim Rehurek
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-
-"""
-This module implements the "hashing trick" [1]_ -- a mapping between words and their integer ids
-using a fixed, static mapping (hash function).
+"""Implements the `"hashing trick" <http://en.wikipedia.org/wiki/Hashing-Trick>`_ -- a mapping between words
+and their integer ids using a fixed, static mapping (hash function).
 
 Notes
 -----
@@ -27,11 +25,6 @@ Disadvantages:
 
 * Multiple words may map to the same id, causing hash collisions. The word <-> id mapping is no longer a bijection.
 
-References
-----------
-
-.. [1] http://en.wikipedia.org/wiki/Hashing-Trick
-
 """
 
 from __future__ import with_statement
@@ -50,9 +43,6 @@ logger = logging.getLogger(__name__)
 class HashDictionary(utils.SaveLoad, dict):
     """Mapping between words and their integer ids, using a hashing function.
 
-    Notes
-    -----
-
     Unlike :class:`~gensim.corpora.dictionary.Dictionary`,
     building a :class:`~gensim.corpora.hashdictionary.HashDictionary` before using it **isn't a necessary step**.
 
@@ -60,7 +50,6 @@ class HashDictionary(utils.SaveLoad, dict):
 
     Examples
     --------
-
     >>> from gensim.corpora import HashDictionary
     >>>
     >>> dct = HashDictionary(debug=False)  # needs no training corpus!
@@ -75,15 +64,15 @@ class HashDictionary(utils.SaveLoad, dict):
 
         Parameters
         ----------
-        documents : iterable of iterable of str
+        documents : iterable of iterable of str, optional
             Iterable of documents. If given, used to collect additional corpus statistics.
             :class:`~gensim.corpora.hashdictionary.HashDictionary` can work
             without these statistics (optional parameter).
         id_range : int, optional
             Number of hash-values in table, used as `id = myhash(key) %% id_range`.
-        myhash : function
+        myhash : function, optional
             Hash function, should support interface `myhash(str) -> int`, uses `zlib.adler32` by default.
-        debug : bool
+        debug : bool, optional
             If True - store which tokens have mapped to a given id. **Will use a lot of RAM**.
             If you find yourself running out of memory (or not sure that you really need raw tokens),
             keep `debug=False`.
@@ -110,7 +99,10 @@ class HashDictionary(utils.SaveLoad, dict):
     def __getitem__(self, tokenid):
         """Get all words that have mapped to the given id so far, as a set.
 
-        Works only if you initialized your `HashDictionary` object with `debug=True`.
+        Warnings
+        --------
+        Works only if you initialized your :class:`~gensim.corpora.hashdictionary.HashDictionary` object
+        with `debug=True`.
 
         Parameters
         ----------
@@ -162,8 +154,11 @@ class HashDictionary(utils.SaveLoad, dict):
         return HashDictionary(*args, **kwargs)
 
     def add_documents(self, documents):
-        """Collect corpus statistics from a corpus. Useful only if `debug=True`, to build
-        the reverse `id=>set(words)` mapping.
+        """Collect corpus statistics from a corpus.
+
+        Warnings
+        --------
+        Useful only if `debug=True`, to build the reverse `id=>set(words)` mapping.
 
         Notes
         -----
@@ -199,8 +194,8 @@ class HashDictionary(utils.SaveLoad, dict):
         )
 
     def doc2bow(self, document, allow_update=False, return_missing=False):
-        """Convert a sequence of words `document` into the bag-of-words format of
-        `[(word_id, word_count)]` (e.g. `[(1, 4), (150, 1), (2005, 2)]`).
+        """Convert a sequence of words `document` into the bag-of-words format of `[(word_id, word_count)]`
+        (e.g. `[(1, 4), (150, 1), (2005, 2)]`).
 
         Notes
         -----
@@ -217,7 +212,7 @@ class HashDictionary(utils.SaveLoad, dict):
             A sequence of word tokens = **tokenized and normalized** strings.
         allow_update : bool, optional
             If True - update corpus statistics and if `debug=True`, also the reverse id=>word mapping.
-        return_missing : bool
+        return_missing : bool, optional
             Not used. Only here for compatibility with the Dictionary class.
 
         Return
@@ -263,11 +258,15 @@ class HashDictionary(utils.SaveLoad, dict):
             return result
 
     def filter_extremes(self, no_below=5, no_above=0.5, keep_n=100000):
-        """Filter tokens in the debug dictionary by their frequency. Only makes sense when `debug=True`.
+        """Filter tokens in the debug dictionary by their frequency.
 
         Since :class:`~gensim.corpora.hashdictionary.HashDictionary` id range is fixed and doesn't depend on the number
         of tokens seen, this doesn't really "remove" anything. It only clears some
         internal corpus statistics, for easier debugging and a smaller RAM footprint.
+
+        Warnings
+        --------
+        Only makes sense when `debug=True`.
 
         Parameters
         ----------
@@ -286,18 +285,6 @@ class HashDictionary(utils.SaveLoad, dict):
         #. Less than `no_below` documents (absolute number) or \n
         #. More than `no_above` documents (fraction of total corpus size, **not absolute number**).
         #. After (1) and (2), keep only the first `keep_n` most frequent tokens (or keep all if `None`).
-
-        Examples
-        --------
-
-        >>> from gensim.corpora import HashDictionary
-        >>>
-        >>> dct = HashDictionary(debug=True)
-        >>>
-        >>> corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
-        >>> dct.filter_extremes(no_below=1, no_above=0.5, keep_n=1)
-        >>> print dct.token2id
-        {'maso': 15025}
 
         """
         no_above_abs = int(no_above * self.num_docs)  # convert fractional threshold to absolute threshold
@@ -319,7 +306,11 @@ class HashDictionary(utils.SaveLoad, dict):
         )
 
     def save_as_text(self, fname):
-        """Save the debug token=>id mapping to a text file. Only makes sense when `debug=True`, for debugging.
+        """Save the debug token=>id mapping to a text file.
+
+        Warnings
+        --------
+        Only makes sense when `debug=True`, for debugging.
 
         Parameters
         ----------
