@@ -1,12 +1,11 @@
+import tensorflow
 import numpy as np
 from collections import Counter
 import logging
 import re
 import random
 random.seed(101010)
-import numpy
-numpy.random.seed(101010)
-import tensorflow
+np.random.seed(101010)
 tensorflow.set_random_seed(101010)
 
 logger = logging.getLogger(__name__)
@@ -174,13 +173,13 @@ class ListGenerator:
         # print("mm: ", mm)
         # print("mm.shape: ", mm.shape)
 
-        for (i,j), v in np.ndenumerate(mm):
+        for (i, j), v in np.ndenumerate(mm):
             # print("i ", i)
             # print("j ", j)
             if i >= self.text_maxlen:
                 break
             # print("v :   ", v)
-            vid = int((v + 1.) / 2. * ( self.hist_size - 1.))
+            vid = int((v + 1.) / 2. * (self.hist_size - 1.))
             mhist[i][vid] += 1.
         mhist += 1.
         mhist = np.log10(mhist)
@@ -252,14 +251,18 @@ class ListGenerator:
             if i < len(self.data_lines) - 1:  # check if out of bounds might occur
                 if self.data_lines[i][QUESTION_ID_INDEX] == self.data_lines[i + 1][QUESTION_ID_INDEX]:
                     document_group.append([
-                        self.make_indexed(self.preprocess(self.data_lines[i][QUESTION_INDEX])),
-                        self.make_indexed(self.preprocess(self.data_lines[i][ANSWER_INDEX])),
+                        self.make_indexed(self.preprocess(
+                            self.data_lines[i][QUESTION_INDEX])),
+                        self.make_indexed(self.preprocess(
+                            self.data_lines[i][ANSWER_INDEX])),
                         int(self.data_lines[i][LABEL_INDEX])])
                     n_relevant_docs += int(self.data_lines[i][LABEL_INDEX])
                 else:
                     document_group.append([
-                        self.make_indexed(self.preprocess(self.data_lines[i][QUESTION_INDEX])),
-                        self.make_indexed(self.preprocess(self.data_lines[i][ANSWER_INDEX])),
+                        self.make_indexed(self.preprocess(
+                            self.data_lines[i][QUESTION_INDEX])),
+                        self.make_indexed(self.preprocess(
+                            self.data_lines[i][ANSWER_INDEX])),
                         int(self.data_lines[i][LABEL_INDEX])])
                     n_relevant_docs += int(self.data_lines[i][LABEL_INDEX])
 
@@ -273,9 +276,11 @@ class ListGenerator:
             else:
                 # If we are on the last line
                 document_group.append([
-                        self.make_indexed(self.preprocess(self.data_lines[i][QUESTION_INDEX])),
-                        self.make_indexed(self.preprocess(self.data_lines[i][ANSWER_INDEX])),
-                        int(self.data_lines[i][LABEL_INDEX])])
+                    self.make_indexed(self.preprocess(
+                        self.data_lines[i][QUESTION_INDEX])),
+                    self.make_indexed(self.preprocess(
+                        self.data_lines[i][ANSWER_INDEX])),
+                    int(self.data_lines[i][LABEL_INDEX])])
                 n_relevant_docs += int(self.data_lines[i][LABEL_INDEX])
 
                 if n_relevant_docs > 0:
@@ -285,6 +290,6 @@ class ListGenerator:
                     n_relevant_docs = 0
 
         logger.info("%d of %d Question-Answer sets were filtered, i.e., %.2f%% were filtered" %
-                     (n_filtered_docs, len(self.queries), n_filtered_docs/len(self.queries)*100))
+                    (n_filtered_docs, len(self.queries), n_filtered_docs / len(self.queries) * 100))
         logger.info("There are a total of %d queries" % len(doc_grouped_data))
         return doc_grouped_data

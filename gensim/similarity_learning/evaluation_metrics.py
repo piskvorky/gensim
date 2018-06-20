@@ -36,7 +36,8 @@ def mapk(Y_true, Y_pred):
             n_skipped += 1
             continue
 
-        pred_sorted = sorted(zip(y_true, y_pred), key=lambda x: x[1], reverse=True)
+        pred_sorted = sorted(zip(y_true, y_pred),
+                             key=lambda x: x[1], reverse=True)
         avg = 0
         n_relevant = 0
 
@@ -50,7 +51,7 @@ def mapk(Y_true, Y_pred):
             aps.append(ap)
 
     logger.info("Using %d out of %d data points which is %.2f%%. %d were skipped" %
-                (len(Y_true) - n_skipped, len(Y_true), (float(n_skipped) / len(Y_true))*100, n_skipped))
+                (len(Y_true) - n_skipped, len(Y_true), (float(n_skipped) / len(Y_true)) * 100, n_skipped))
     return np.mean(np.array(aps))
 
 
@@ -82,8 +83,10 @@ def mean_ndcg(Y_true, Y_pred, k=10):
             n_skipped += 1
             continue
 
-        pred_sorted = sorted(zip(y_true, y_pred), key=lambda x: x[1], reverse=True)
-        true_sorted = sorted(zip(y_true, y_pred), key=lambda x: x[0], reverse=True)
+        pred_sorted = sorted(zip(y_true, y_pred),
+                             key=lambda x: x[1], reverse=True)
+        true_sorted = sorted(zip(y_true, y_pred),
+                             key=lambda x: x[0], reverse=True)
 
         pred_sorted = pred_sorted[:k]
         true_sorted = true_sorted[:k]
@@ -101,7 +104,8 @@ def mean_ndcg(Y_true, Y_pred, k=10):
         if idcg != 0:
             ndcgs.append(dcg / idcg)
     logger.info("Using %d out of %d data points which is %.2f%%. %d were skipped" %
-                (len(Y_true) - n_skipped, len(Y_true), (float(n_skipped) / len(Y_true))*100, n_skipped))
+                (len(Y_true) - n_skipped, len(Y_true),
+                (float(n_skipped) / len(Y_true)) * 100, n_skipped))
     return np.mean(np.array(ndcgs))
 
 

@@ -20,6 +20,7 @@ QUESTION_INDEX = 1
 ANSWER_INDEX = 5
 LABEL_INDEX = 6
 
+
 class WikiQA_DRMM_TKS_Extractor:
     """Class to extract data from the WikiQA dataset and provide it in a streamable format for training
     It will provide a generator for training which will have int-indexed data in the form of:
@@ -46,7 +47,7 @@ class WikiQA_DRMM_TKS_Extractor:
     """
 
     def __init__(self, file_path, word_embedding_path=None, text_maxlen=100, keep_full_embedding=False,
-                hist_size=None, normalize_embeddings=False):
+                 hist_size=None, normalize_embeddings=False):
         """Initializes the extractor
 
         Parameters:
@@ -88,8 +89,10 @@ class WikiQA_DRMM_TKS_Extractor:
             raise NotImplementedError()
 
         # The above errors may trigger due to problems in the .tsv
-        assert len(self.queries) == len(self.documents), "Number of documents isn't equal to number of queries"
-        assert len(self.documents) == len(self.relations), "Number of documents isn't equal to number of relations"
+        assert len(self.queries) == len(
+            self.documents), "Number of documents isn't equal to number of queries"
+        assert len(self.documents) == len(
+            self.relations), "Number of documents isn't equal to number of relations"
 
         self.text_maxlen = text_maxlen
         self.hist_size = hist_size
@@ -135,11 +138,11 @@ class WikiQA_DRMM_TKS_Extractor:
 
         if self.keep_full_embedding:
             self.embedding_matrix = np.random.uniform(-0.2, 0.2,
-                (self.vocab_size + 1, self.embedding_dim))  # one for ignore vec
+                                                      (self.vocab_size + 1, self.embedding_dim))  # one for ignore vec
         else:
             # one for pad, one for ignore vec
             self.embedding_matrix = np.random.uniform(-0.2, 0.2,
-                (self.vocab_size + 2, self.embedding_dim))
+                                                      (self.vocab_size + 2, self.embedding_dim))
 
         # We add 1 for the padding word
         logger.info("Embedding Matrix for Embedding Layer has shape %s " %
@@ -202,10 +205,10 @@ class WikiQA_DRMM_TKS_Extractor:
 
         mm = t1_rep.dot(np.transpose(t2_rep))
 
-        for (i,j), v in np.ndenumerate(mm):
+        for (i, j), v in np.ndenumerate(mm):
             if i >= self.text_maxlen:
                 break
-            vid = int((v + 1.) / 2. * ( self.hist_size - 1.))
+            vid = int((v + 1.) / 2. * (self.hist_size - 1.))
             mhist[i][vid] += 1.
         mhist += 1.
         mhist = np.log10(mhist)
@@ -255,14 +258,18 @@ class WikiQA_DRMM_TKS_Extractor:
             if i < len(self.data_lines) - 1:  # check if out of bounds might occur
                 if self.data_lines[i][QUESTION_ID_INDEX] == self.data_lines[i + 1][QUESTION_ID_INDEX]:
                     document_group.append([
-                        self.make_indexed(self.preprocess(self.data_lines[i][QUESTION_INDEX])),
-                        self.make_indexed(self.preprocess(self.data_lines[i][ANSWER_INDEX])),
+                        self.make_indexed(self.preprocess(
+                            self.data_lines[i][QUESTION_INDEX])),
+                        self.make_indexed(self.preprocess(
+                            self.data_lines[i][ANSWER_INDEX])),
                         int(self.data_lines[i][LABEL_INDEX])])
                     n_relevant_docs += int(self.data_lines[i][LABEL_INDEX])
                 else:
                     document_group.append([
-                        self.make_indexed(self.preprocess(self.data_lines[i][QUESTION_INDEX])),
-                        self.make_indexed(self.preprocess(self.data_lines[i][ANSWER_INDEX])),
+                        self.make_indexed(self.preprocess(
+                            self.data_lines[i][QUESTION_INDEX])),
+                        self.make_indexed(self.preprocess(
+                            self.data_lines[i][ANSWER_INDEX])),
                         int(self.data_lines[i][LABEL_INDEX])])
                     n_relevant_docs += int(self.data_lines[i][LABEL_INDEX])
 
@@ -276,9 +283,11 @@ class WikiQA_DRMM_TKS_Extractor:
             else:
                 # If we are on the last line
                 document_group.append([
-                        self.make_indexed(self.preprocess(self.data_lines[i][QUESTION_INDEX])),
-                        self.make_indexed(self.preprocess(self.data_lines[i][ANSWER_INDEX])),
-                        int(self.data_lines[i][LABEL_INDEX])])
+                    self.make_indexed(self.preprocess(
+                        self.data_lines[i][QUESTION_INDEX])),
+                    self.make_indexed(self.preprocess(
+                        self.data_lines[i][ANSWER_INDEX])),
+                    int(self.data_lines[i][LABEL_INDEX])])
                 n_relevant_docs += int(self.data_lines[i][LABEL_INDEX])
 
                 if n_relevant_docs > 0:
@@ -288,7 +297,7 @@ class WikiQA_DRMM_TKS_Extractor:
                     n_relevant_docs = 0
 
         logger.info("%d of %d Question-Answer sets were filtered, i.e., %.2f%% were filtered" %
-                     (n_filtered_docs, len(self.queries), n_filtered_docs/len(self.queries)*100))
+                    (n_filtered_docs, len(self.queries), n_filtered_docs / len(self.queries) * 100))
         logger.info("There are a total of %d queries" % len(self.data))
         return self.data
 
@@ -404,9 +413,12 @@ class WikiQA_DRMM_TKS_Extractor:
             neg_doc_len = min(self.text_maxlen, len(neg_doc))
 
             X1[i * 2, :query_len], X1_len[i * 2] = query[:query_len], query_len
-            X2[i * 2, :pos_doc_len], X2_len[i * 2] = pos_doc[:pos_doc_len], pos_doc_len
-            X1[i * 2 + 1, :query_len], X1_len[i * 2 + 1] = query[:query_len], query_len
-            X2[i * 2 + 1, :neg_doc_len], X2_len[i * 2 + 1] = neg_doc[:neg_doc_len], neg_doc_len
+            X2[i * 2, :pos_doc_len], X2_len[i *
+                                            2] = pos_doc[:pos_doc_len], pos_doc_len
+            X1[i * 2 + 1, :query_len], X1_len[i *
+                                              2 + 1] = query[:query_len], query_len
+            X2[i * 2 + 1, :neg_doc_len], X2_len[i * 2 +
+                                                1] = neg_doc[:neg_doc_len], neg_doc_len
 
         return X1, X1_len, X2, X2_len, Y
 
@@ -453,10 +465,14 @@ class WikiQA_DRMM_TKS_Extractor:
                     pos_doc_len = min(self.text_maxlen, len(pos_doc))
                     neg_doc_len = min(self.text_maxlen, len(neg_doc))
 
-                    X1[i * 2, :query_len], X1_len[i * 2] = query[:query_len], query_len
-                    X2[i * 2, :pos_doc_len], X2_len[i * 2] = pos_doc[:pos_doc_len], pos_doc_len
-                    X1[i * 2 + 1, :query_len], X1_len[i * 2 + 1] = query[:query_len], query_len
-                    X2[i * 2 + 1, :neg_doc_len], X2_len[i * 2 + 1] = neg_doc[:neg_doc_len], neg_doc_len
+                    X1[i * 2, :query_len], X1_len[i *
+                                                  2] = query[:query_len], query_len
+                    X2[i * 2, :pos_doc_len], X2_len[i *
+                                                    2] = pos_doc[:pos_doc_len], pos_doc_len
+                    X1[i * 2 + 1, :query_len], X1_len[i *
+                                                      2 + 1] = query[:query_len], query_len
+                    X2[i * 2 + 1, :neg_doc_len], X2_len[i * 2 +
+                                                        1] = neg_doc[:neg_doc_len], neg_doc_len
 
             yield ({'query': X1, 'query_len': X1_len, 'doc': X2, 'doc_len': X2_len}, Y)
 
@@ -523,8 +539,10 @@ class WikiQAExtractor:
             raise NotImplementedError()
 
         # The above errors may trigger due to problems in the .tsv
-        assert len(self.queries) == len(self.documents), "Number of documents isn't equal to number of queries"
-        assert len(self.documents) == len(self.relations), "Number of documents isn't equal to number of relations"
+        assert len(self.queries) == len(
+            self.documents), "Number of documents isn't equal to number of queries"
+        assert len(self.documents) == len(
+            self.relations), "Number of documents isn't equal to number of relations"
         # TODO add 300k vector for all permutes
         # TODO add option for using word embeddings
 
@@ -659,7 +677,6 @@ class WikiQAExtractor:
         docs = []
         labels = []
 
-        
         for q, d, l in zip(self.queries, self.documents, self.relations):
             queries.append(self.get_term_vector(self.preprocess(q)))
             docs.append(self.get_term_vector(self.preprocess(d)))
@@ -681,14 +698,18 @@ class WikiQAExtractor:
             if i < len(self.data_lines) - 1:  # check if out of bounds might occur
                 if self.data_lines[i][QUESTION_ID_INDEX] == self.data_lines[i + 1][QUESTION_ID_INDEX]:
                     document_group.append([
-                        self.make_indexed(self.preprocess(self.data_lines[i][QUESTION_INDEX])),
-                        self.make_indexed(self.preprocess(self.data_lines[i][ANSWER_INDEX])),
+                        self.make_indexed(self.preprocess(
+                            self.data_lines[i][QUESTION_INDEX])),
+                        self.make_indexed(self.preprocess(
+                            self.data_lines[i][ANSWER_INDEX])),
                         int(self.data_lines[i][LABEL_INDEX])])
                     n_relevant_docs += int(self.data_lines[i][LABEL_INDEX])
                 else:
                     document_group.append([
-                        self.make_indexed(self.preprocess(self.data_lines[i][QUESTION_INDEX])),
-                        self.make_indexed(self.preprocess(self.data_lines[i][ANSWER_INDEX])),
+                        self.make_indexed(self.preprocess(
+                            self.data_lines[i][QUESTION_INDEX])),
+                        self.make_indexed(self.preprocess(
+                            self.data_lines[i][ANSWER_INDEX])),
                         int(self.data_lines[i][LABEL_INDEX])])
                     n_relevant_docs += int(self.data_lines[i][LABEL_INDEX])
 
@@ -702,9 +723,11 @@ class WikiQAExtractor:
             else:
                 # If we are on the last line
                 document_group.append([
-                        self.make_indexed(self.preprocess(self.data_lines[i][QUESTION_INDEX])),
-                        self.make_indexed(self.preprocess(self.data_lines[i][ANSWER_INDEX])),
-                        int(self.data_lines[i][LABEL_INDEX])])
+                    self.make_indexed(self.preprocess(
+                        self.data_lines[i][QUESTION_INDEX])),
+                    self.make_indexed(self.preprocess(
+                        self.data_lines[i][ANSWER_INDEX])),
+                    int(self.data_lines[i][LABEL_INDEX])])
                 n_relevant_docs += int(self.data_lines[i][LABEL_INDEX])
 
                 if n_relevant_docs > 0:
@@ -714,11 +737,10 @@ class WikiQAExtractor:
                     n_relevant_docs = 0
 
         logger.info("%d of %d Question-Answer sets were filtered, i.e., %.2f%% were filtered" %
-                     (n_filtered_docs, len(self.queries), n_filtered_docs/len(self.queries)*100))
+                    (n_filtered_docs, len(self.queries), n_filtered_docs / len(self.queries) * 100))
         logger.info("There are a total of %d queries" % len(self.data))
 
         # Here as a temperory naming fix
         # Should get sorted once proper class refactoring takes place
         self.questions = self.data
         return self.data
-

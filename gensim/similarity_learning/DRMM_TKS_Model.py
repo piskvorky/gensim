@@ -1,26 +1,27 @@
-from gensim.models.experimental import DRMM_TKS
-from collections import Counter
-from pprint import pprint
-import numpy as np
-import six
 import logging
+import six
+import random
+import numpy
+import tensorflow
+
+import numpy as np
+import keras.backend as K
+
+from collections import Counter
+from gensim.models.experimental import DRMM_TKS
 from keras import optimizers
 from keras.losses import hinge
-import keras.backend as K
 from gensim.similarity_learning import rank_hinge_loss
 from sklearn.preprocessing import normalize
 from gensim.similarity_learning import ValidationCallback
-import random
-random.seed(101010)
-import numpy
-numpy.random.seed(101010)
-import tensorflow
-tensorflow.set_random_seed(101010)
 
+random.seed(101010)
+numpy.random.seed(101010)
+tensorflow.set_random_seed(101010)
 logger = logging.getLogger(__name__)
 
 
-class DRMM_TKS_Model: 
+class DRMM_TKS_Model:
     """User friendly model for training on similarity learning data.
     You only have to provide sentences in the data as a list of words.
 
@@ -46,15 +47,14 @@ class DRMM_TKS_Model:
     """
 
     def __init__(self, queries, docs, labels, word_embedding_path=None,
-        text_maxlen=200, keep_full_embedding=True, normalize_embeddings=True,
-        epochs=10, unk_handle_method='zero', validation_data=None):
+                 text_maxlen=200, keep_full_embedding=True, normalize_embeddings=True,
+                 epochs=10, unk_handle_method='zero', validation_data=None):
         """Initializes the model and trains it
 
         Parameters:
         -----------
         queries: list of list of string words
             The questions for the similarity learning model
-            
             Example:
             queries=["When was World Wat 1 fought ?".split(),
                      "When was Gandhi born ?".split()],
@@ -124,7 +124,8 @@ class DRMM_TKS_Model:
         self.validation_data = validation_data
 
         if unk_handle_method not in ['random', 'zero']:
-            raise ValueError("Unkown token handling method %s" % str(unk_handle_method))
+            raise ValueError("Unkown token handling method %s" %
+                             str(unk_handle_method))
         self.unk_handle_method = unk_handle_method
 
         self.build_vocab()
@@ -141,7 +142,7 @@ class DRMM_TKS_Model:
         for q in self.queries:
             self.word_counter.update(q)
         for doc in self.docs:
-            for d in doc: 
+            for d in doc:
                 self.word_counter.update(d)
         for i, word in enumerate(self.word_counter.keys()):
             self.word2index[word] = i
@@ -169,22 +170,22 @@ class DRMM_TKS_Model:
         if self.keep_full_embedding:
             if self.unk_handle_method == 'random':
                 self.embedding_matrix = np.random.uniform(-0.2, 0.2,
+                                        (self.vocab_size + 1, self.embedding_dim))  # one for ignore vec
+            elif self.unk_handle_method == 'zero':
+                self.embedding_matrix = np.zeros(
                     (self.vocab_size + 1, self.embedding_dim))  # one for ignore vec
-            elif  self.unk_handle_method == 'zero':
-                self.embedding_matrix = np.zeros((self.vocab_size + 1, self.embedding_dim))  # one for ignore vec
         else:
             # one for pad, one for ignore vec
             if self.unk_handle_method == 'random':
                 self.embedding_matrix = np.random.uniform(-0.2, 0.2,
+                                                          (self.vocab_size + 2, self.embedding_dim))
+            elif self.unk_handle_method == 'zero':
+                self.embedding_matrix = np.zeros(
                     (self.vocab_size + 2, self.embedding_dim))
-            elif  self.unk_handle_method == 'zero':
-                self.embedding_matrix = np.zeros((self.vocab_size + 2, self.embedding_dim))
-
 
         # We add 1 for the padding word
         logger.info("Embedding Matrix for Embedding Layer has shape %s " %
                     str(self.embedding_matrix.shape))
-
         n_non_embedding_words = 0
         for word, i in self.word2index.items():
             embedding_vector = embeddings_index.get(word)
@@ -193,13 +194,12 @@ class DRMM_TKS_Model:
                 self.embedding_matrix[i] = embedding_vector
             else:
                 n_non_embedding_words += 1
-
         logger.info("There are %d words not in the embeddings. Setting them to zero" %
                     n_non_embedding_words)
 
         if self.keep_full_embedding:
             logger.info(
-                       "Adding additional dimensions from the embedding file to embedding matrix")
+                "Adding additional dimensions from the embedding file to embedding matrix")
             i = self.vocab_size
             extra_embeddings = []
             for word in embeddings_index.keys():
@@ -212,11 +212,13 @@ class DRMM_TKS_Model:
                     i += 1
 
             if self.unk_handle_method == 'random':
-                unk_embedding_row = np.random.uniform(-0.2, 0.2, (1, self.embedding_dim))
+                unk_embedding_row = np.random.uniform(
+                    -0.2, 0.2, (1, self.embedding_dim))
             elif self.unk_handle_method == 'zero':
                 unk_embedding_row = np.zeros((1, self.embedding_dim))
 
-            pad_embedding_row = np.random.uniform(-0.2, 0.2, (1, self.embedding_dim))
+            pad_embedding_row = np.random.uniform(-0.2,
+                                                  0.2, (1, self.embedding_dim))
 
             self.embedding_matrix = np.vstack(
                 [self.embedding_matrix, np.array(extra_embeddings),
@@ -240,16 +242,6 @@ class DRMM_TKS_Model:
         logger.info("Pad word has been set to index %d" % self.pad_word_index)
         logger.info("Embedding index build complete")
 
-    def preprocess(self, sentence):
-        """Preprocess an input string to allow only alphabets and numbers
-
-        Parameters:
-        ----------
-        sentence: str
-            The sentence to preprocess
-        """
-        return re.sub("[^a-zA-Z0-9]", " ", sentence.lower())
-
     def make_indexed(self, sentence):
         """Returns the indexed version of the sentence based on self.word2index
         in the form of a list
@@ -264,11 +256,12 @@ class DRMM_TKS_Model:
         ValueError: If the sentence has a lenght more than text_maxlen
         """
         indexed_sent = [self.word2index[word] for word in sentence]
-        if len(indexed_sent)  > self.text_maxlen:
-            raise ValueError("text_maxlen: %d isn't big enough. Error at sentence of length %d. Sentence is %s" % 
-            (self.text_maxlen, len(sentence), sentence))
+        if len(indexed_sent) > self.text_maxlen:
+            raise ValueError("text_maxlen: %d isn't big enough. Error at sentence of length %d. Sentence is %s" %
+                             (self.text_maxlen, len(sentence), sentence))
 
-        indexed_sent = indexed_sent + [self.pad_word_index]*(self.text_maxlen - len(indexed_sent))
+        indexed_sent = indexed_sent + \
+            [self.pad_word_index] * (self.text_maxlen - len(indexed_sent))
         return indexed_sent
 
     def get_full_batch(self):
@@ -288,28 +281,22 @@ class DRMM_TKS_Model:
         num_samples = len(self.indexed_pair_list)
         X1 = np.zeros((num_samples * 2, self.text_maxlen))
         X2 = np.zeros((num_samples * 2, self.text_maxlen))
-
         # To be uncommented when histogram support is included
         # if self.hist_size is not None:
         #     X2 = np.zeros((num_samples * 2, self.text_maxlen, self.hist_size))
-
         y = np.zeros((num_samples * 2, 1))
-
         X1[:] = self.pad_word_index
         X2[:] = self.pad_word_index
         y[::2] = 1
-
         for i, (query, pos_doc, neg_doc) in enumerate(self.indexed_pair_list):
             query_len = min(self.text_maxlen, len(query))
             pos_doc_len = min(self.text_maxlen, len(pos_doc))
             neg_doc_len = min(self.text_maxlen, len(neg_doc))
 
-
             X1[i * 2, :query_len] = query[:query_len]
             X2[i * 2, :pos_doc_len] = pos_doc[:pos_doc_len]
             X1[i * 2 + 1, :query_len] = query[:query_len]
             X2[i * 2 + 1, :neg_doc_len] = neg_doc[:neg_doc_len]
-
         return X1, X2, y
 
     def get_pair_list(self):
@@ -321,7 +308,7 @@ class DRMM_TKS_Model:
         [(q1, d+, d-), (q2, d+, d-), (q3, d+, d-), ..., (qn, d+, d-)]
 
              where each query or document is a list of ints
-    
+
         Example:
         -------
         [(['When', 'was', 'Abraham', 'Lincoln', 'born', '?'],
@@ -341,7 +328,8 @@ class DRMM_TKS_Model:
         """
         pair_list = []
         for q, doc, label in zip(self.queries, self.docs, self.labels):
-            doc, label = (list(t) for t in zip(*sorted(zip(doc, label), reverse=True)))
+            doc, label = (list(t)
+                          for t in zip(*sorted(zip(doc, label), reverse=True)))
             for item in zip(doc, label):
                 if item[1] == 1:
                     for new_item in zip(doc, label):
@@ -349,22 +337,22 @@ class DRMM_TKS_Model:
                             pair_list.append((q, item[0], new_item[0]))
         return pair_list
 
-    def make_indexed_pair_list(self): 
+    def make_indexed_pair_list(self):
         """Converts the existing word based pair list into an indexed format
 
         Note: pair_list needs to be first created using get_pair_list"""
         indexed_pair_list = []
         for q, d_pos, d_neg in self.pair_list:
             indexed_pair_list.append([self.make_indexed(q),
-                self.make_indexed(d_pos), self.make_indexed(d_neg)])
+                                      self.make_indexed(d_pos), self.make_indexed(d_neg)])
         return indexed_pair_list
 
     def train_model(self):
         """Trains a DRMM_TKS model using specified parameters"""
         X1_train, X2_train, y_train = self.get_full_batch()
         drmm_tks = DRMM_TKS(
-                    embedding=self.embedding_matrix, vocab_size=self.embedding_matrix.shape[0],
-                    text_maxlen=self.text_maxlen)
+            embedding=self.embedding_matrix, vocab_size=self.embedding_matrix.shape[0],
+            text_maxlen=self.text_maxlen)
 
         self.model = drmm_tks.get_model()
         self.model.summary()
@@ -395,18 +383,17 @@ class DRMM_TKS_Model:
             for doc_len, q in zip(doc_lens, test_queries):
                 for i in range(doc_len):
                     long_queries.append(q)
-            
 
             indexed_long_queries = self.translate_user_data(long_queries)
-            indexed_long_doc_list = self.translate_user_data(long_doc_list)   
+            indexed_long_doc_list = self.translate_user_data(long_doc_list)
 
             val_callback = ValidationCallback({"X1": indexed_long_queries,
-                "X2": indexed_long_doc_list, "doc_lengths": doc_lens, "y": long_test_labels})
+                            "X2": indexed_long_doc_list, "doc_lengths": doc_lens, "y": long_test_labels})
 
-
-        self.model.compile(optimizer=optimizer, loss=loss, metrics=['accuracy'])
+        self.model.compile(optimizer=optimizer, loss=loss,
+                           metrics=['accuracy'])
         self.model.fit(x={"query": X1_train, "doc": X2_train}, y=y_train, batch_size=5,
-                  verbose=1, epochs=self.epochs, shuffle=True, callbacks=[val_callback])
+                       verbose=1, epochs=self.epochs, shuffle=True, callbacks=[val_callback])
 
     def translate_user_data(self, data):
         """Translates given user data (as a list of words) into an indexed
@@ -433,8 +420,10 @@ class DRMM_TKS_Model:
                     # If the key isn't there give it the zero word index
                     translated_sentence.append(self.unk_word_index)
             if len(sentence) > self.text_maxlen:
-                logger.info("text_maxlen: %d isn't big enough. Error at sentence of length %d. Sentence is %s" % (self.text_maxlen, len(sentence), str(sentence)))
-            translated_sentence = translated_sentence + (self.text_maxlen - len(sentence))*[self.pad_word_index]
+                logger.info("text_maxlen: %d isn't big enough. Error at sentence of length %d. Sentence is %s" % (
+                    self.text_maxlen, len(sentence), str(sentence)))
+            translated_sentence = translated_sentence + \
+                (self.text_maxlen - len(sentence)) * [self.pad_word_index]
             translated_data.append(np.array(translated_sentence))
         return np.array(translated_data)
 
@@ -445,7 +434,7 @@ class DRMM_TKS_Model:
         -----------
         queries: list of list of string words
             The questions for the similarity learning model
-            
+
             Example:
             queries=["When was World Wat 1 fought ?".split(),
                      "When was Gandhi born ?".split()],
@@ -475,4 +464,5 @@ class DRMM_TKS_Model:
 
         indexed_long_queries = self.translate_user_data(long_queries)
         indexed_long_doc_list = self.translate_user_data(long_doc_list)
-        print(self.model.predict(x={'query': indexed_long_queries, 'doc': indexed_long_doc_list}))
+        print(self.model.predict(
+            x={'query': indexed_long_queries, 'doc': indexed_long_doc_list}))
