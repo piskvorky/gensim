@@ -41,20 +41,22 @@ def resolve_weights(smartirs):
 
     Returns
     -------
-    w_tf : str
-        Term frequency weighing:
+    3-tuple (local_letter, global_letter, normalization_letter)
+
+    local_letter : str
+        Term frequency weighing, one of:
             * `n` - natural,
             * `l` - logarithm,
             * `a` - augmented,
             * `b` - boolean,
             * `L` - log average.
-    w_df : str
-        Document frequency weighting:
+    global_letter : str
+        Document frequency weighting, one of:
             * `n` - none,
             * `t` - idf,
             * `p` - prob idf.
-    w_n : str
-        Document normalization:
+    normalization_letter : str
+        Document normalization, one of:
             * `n` - none,
             * `c` - cosine.
 
@@ -62,7 +64,7 @@ def resolve_weights(smartirs):
     ------
     ValueError
         If `smartirs` is not a string of length 3 or one of the decomposed value
-        doesn't fit the list of permissible values
+        doesn't fit the list of permissible values.
 
     """
     if not isinstance(smartirs, str) or len(smartirs) != 3:
@@ -113,7 +115,7 @@ def precompute_idfs(wglobal, dfs, total_docs):
     ----------
     wglobal : function
         Custom function for calculating the "global" weighting function.
-        See for example "universal" :func:`~gensim.models.tfidfmodel.updated_wglobal`.
+        See for example the SMART alternatives under :func:`~gensim.models.tfidfmodel.smartirs_wglobal`.
     dfs : dict
         Dictionary mapping `term_id` into how many documents did that term appear in.
     total_docs : int
@@ -130,7 +132,7 @@ def precompute_idfs(wglobal, dfs, total_docs):
     return {termid: wglobal(df, total_docs) for termid, df in iteritems(dfs)}
 
 
-def updated_wlocal(tf, local_scheme):
+def smartirs_wlocal(tf, local_scheme):
     """Calculate local term weight for a term using the weighting scheme specified in `local_scheme`.
 
     Parameters
@@ -158,7 +160,7 @@ def updated_wlocal(tf, local_scheme):
         return (1 + np.log2(tf)) / (1 + np.log2(tf.mean(axis=0)))
 
 
-def updated_wglobal(docfreq, totaldocs, global_scheme):
+def smartirs_wglobal(docfreq, totaldocs, global_scheme):
     """Calculate global document weight based on the weighting scheme specified in `global_scheme`.
 
     Parameters
@@ -185,7 +187,7 @@ def updated_wglobal(docfreq, totaldocs, global_scheme):
         return max(0, np.log2((1.0 * totaldocs - docfreq) / docfreq))
 
 
-def updated_normalize(x, norm_scheme, return_norm=False):
+def smartirs_normalize(x, norm_scheme, return_norm=False):
     """Normalize a vector using the normalization scheme specified in `norm_scheme`.
 
     Parameters
@@ -321,13 +323,13 @@ class TfidfModel(interfaces.TransformationABC):
         # If smartirs is not None, override wlocal, wglobal and normalize
         if smartirs is not None:
             n_tf, n_df, n_n = resolve_weights(smartirs)
-            self.wlocal = partial(updated_wlocal, n_tf=n_tf)
-            self.wglobal = partial(updated_wglobal, n_df=n_df)
+            self.wlocal = partial(smartirs_wlocal, local_scheme=n_tf)
+            self.wglobal = partial(smartirs_wglobal, global_scheme=n_df)
             # also return norm factor if pivot is not none
             if self.pivot is None:
-                self.normalize = partial(updated_normalize, n_n=n_n)
+                self.normalize = partial(smartirs_normalize, norm_scheme=n_n)
             else:
-                self.normalize = partial(updated_normalize, n_n=n_n, return_norm=True)
+                self.normalize = partial(smartirs_normalize, norm_scheme=n_n, return_norm=True)
 
         if dictionary is not None:
             # user supplied a Dictionary object, which already contains all the
