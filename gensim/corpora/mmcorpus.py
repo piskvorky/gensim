@@ -4,8 +4,7 @@
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-
-"""Corpus in the Matrix Market format, https://math.nist.gov/MatrixMarket/formats.html."""
+"""Corpus in the `Matrix Market format <https://math.nist.gov/MatrixMarket/formats.html>`_."""
 
 import logging
 
@@ -51,7 +50,6 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
     ...     pass
 
     """
-
     def __init__(self, fname):
         """
 
@@ -96,16 +94,16 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
             Corpus in Bow format.
         id2word : dict of (int, str), optional
             Mapping between word_id -> word. Used to retrieve the total vocabulary size if provided.
-            Otherwise, the total vacabulary size is estimated based on the highest feature id encountered in `corpus`.
+            Otherwise, the total vocabulary size is estimated based on the highest feature id encountered in `corpus`.
         progress_cnt : int, optional
             How often to report (log) progress.
         metadata : bool, optional
             If true, writes out additional metadata.
 
-        Notes
-        -----
-        This function is automatically called by :class:`~gensim.corpora.mmcorpus.MmCorpus.serialize()`; don't
-        call it directly, call `serialize` instead.
+        Warnings
+        --------
+        This function is automatically called by :class:`~gensim.corpora.mmcorpus.MmCorpus.serialize`, don't
+        call it directly, call :class:`~gensim.corpora.mmcorpus.MmCorpus.serialize` instead.
 
         Example
         -------
