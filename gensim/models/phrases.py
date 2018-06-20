@@ -141,11 +141,12 @@ class SentenceAnalyzer(object):
 
         """
         s = [utils.any2utf8(w) for w in sentence]
+        # adding None is a trick that helps getting an automatic happy ending
+        # as it won't be a common_word, nor score
+        s.append(None)
         last_uncommon = None
         in_between = []
-        # adding None is a trick that helps getting an automatic happy ending
-        # has it won't be a common_word, nor score
-        for word in s + [None]:
+        for word in s:
             is_common = word in common_terms
             if not is_common and last_uncommon:
                 chain = [last_uncommon] + in_between + [word]
