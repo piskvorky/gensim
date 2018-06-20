@@ -12,14 +12,10 @@ Uses multiprocessing internally to parallelize the work and process the dump mor
 
 Notes
 -----
-If you have the `pattern` package installed, this module will use a fancy lemmatization to get a lemma
-of each token (instead of plain alphabetic tokenizer). The package is available at [1]_ .
+If you have the `pattern <https://github.com/clips/pattern>`_ package installed,
+this module will use a fancy lemmatization to get a lemma of each token (instead of plain alphabetic tokenizer).
 
-See :mod:`~gensim.scripts.make_wiki` for a canned (example) command-line script based on this module.
-
-References
-----------
-.. [1] https://github.com/clips/pattern
+See :mod:`gensim.scripts.make_wiki` for a canned (example) command-line script based on this module.
 
 """
 
@@ -90,13 +86,7 @@ IGNORED_NAMESPACES = [
     'MediaWiki', 'User', 'Help', 'Book', 'Draft', 'WikiProject',
     'Special', 'Talk'
 ]
-"""MediaWiki namespaces [2]_ that ought to be ignored.
-
-References
-----------
-.. [2] https://www.mediawiki.org/wiki/Manual:Namespace
-
-"""
+"""`MediaWiki namespaces <https://www.mediawiki.org/wiki/Manual:Namespace>`_ that ought to be ignored."""
 
 
 def find_interlinks(raw):
@@ -111,6 +101,7 @@ def find_interlinks(raw):
     -------
     dict
         Mapping from the linked article to the actual text found.
+
     """
     filtered = filter_wiki(raw, promote_remaining=False, simplify_links=False)
     interlinks_raw = re.findall(RE_P16, filtered)
@@ -144,6 +135,7 @@ def filter_wiki(raw, promote_remaining=True, simplify_links=True):
     -------
     str
         `raw` without markup.
+
     """
     # parsing of the wiki markup is not perfect, but sufficient for our purposes
     # contributions to improving this code are welcome :)
@@ -222,18 +214,13 @@ def remove_template(s):
     Returns
     -------
     str
-        Сopy of `s` with all the wikimedia markup template removed. See [4]_ for wikimedia templates details.
+        Сopy of `s` with all the `wikimedia markup template <http://meta.wikimedia.org/wiki/Help:Template>`_ removed.
 
     Notes
     -----
     Since template can be nested, it is difficult remove them using regular expressions.
 
-    References
-    ----------
-    .. [4] http://meta.wikimedia.org/wiki/Help:Template
-
     """
-
     # Find the start and end position of each template by finding the opening
     # '{{' and closing '}}'
     n_open, n_close = 0, 0
@@ -272,11 +259,8 @@ def remove_file(s):
     Returns
     -------
     str
-        Сopy of `s` with all the 'File:' and 'Image:' markup replaced by their corresponding captions. [3]_
-
-    References
-    ----------
-    .. [3] http://www.mediawiki.org/wiki/Help:Images
+        Сopy of `s` with all the 'File:' and 'Image:' markup replaced by their `corresponding captions
+        <http://www.mediawiki.org/wiki/Help:Images>`_.
 
     """
     # The regex RE_P15 match a File: or Image: markup
@@ -504,20 +488,20 @@ class WikiCorpus(TextCorpus):
 
     Examples
     --------
+    >>> from gensim.test.utils import datapath, get_tmpfile
     >>> from gensim.corpora import WikiCorpus, MmCorpus
     >>>
-    >>> wiki = WikiCorpus('enwiki-20100622-pages-articles.xml.bz2') # create word->word_id mapping, takes almost 8h
-    >>> MmCorpus.serialize('wiki_en_vocab200k.mm', wiki) # another 8h, creates a file in MatrixMarket format and mapping
+    >>> path_to_wiki_dump = datapath("enwiki-latest-pages-articles1.xml-p000000010p000030302-shortened.bz2")
+    >>> corpus_path = get_tmpfile("wiki-corpus.mm")
+    >>>
+    >>> wiki = WikiCorpus(path_to_wiki_dump) # create word->word_id mapping, ~8h on full wiki
+    >>> MmCorpus.serialize(corpus_path, wiki) # another 8h, creates a file in MatrixMarket format and mapping
 
     """
-
     def __init__(self, fname, processes=None, lemmatize=utils.has_pattern(), dictionary=None,
                  filter_namespaces=('0',), tokenizer_func=tokenize, article_min_tokens=ARTICLE_MIN_WORDS,
                  token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True):
-        """Initialize the corpus.
-
-        Unless a dictionary is provided, this scans the corpus once,
-        to determine its vocabulary.
+        """
 
         Parameters
         ----------
@@ -526,17 +510,15 @@ class WikiCorpus(TextCorpus):
         processes : int, optional
             Number of processes to run, defaults to `max(1, number of cpu - 1)`.
         lemmatize : bool
-            Use lemmatization instead of simple regexp tokenization?
-
-            Defaults to `True` if you have the `pattern package <https://github.com/clips/pattern>`_ installed.
+            Use lemmatization instead of simple regexp tokenization.
+            Defaults to `True` if you have the `pattern <https://github.com/clips/pattern>`_ package installed.
         dictionary : :class:`~gensim.corpora.dictionary.Dictionary`, optional
             Dictionary, if not provided,  this scans the corpus once, to determine its vocabulary
-            (this needs **really long time**).
+            (**IMPORTANT: this needs really long time**).
         filter_namespaces : tuple of str, optional
             Namespaces to consider.
         tokenizer_func : function, optional
             Function that will be used for tokenization. By default, use :func:`~gensim.corpora.wikicorpus.tokenize`.
-
             If you inject your own tokenizer, it must conform to this interface:
             `tokenizer_func(text: str, token_min_len: int, token_max_len: int, lower: bool) -> list of str`
         article_min_tokens : int, optional
@@ -546,7 +528,11 @@ class WikiCorpus(TextCorpus):
         token_max_len : int, optional
             Maximal token length.
         lower : bool, optional
-             Convert all text to lower case?
+             Convert all text to lower case.
+
+        Warnings
+        --------
+        Unless a dictionary is provided, this scans the corpus once, to determine its vocabulary.
 
         """
         self.fname = fname
@@ -574,8 +560,15 @@ class WikiCorpus(TextCorpus):
         This iterates over the **texts**. If you want vectors, just use the standard corpus interface
         instead of this method:
 
-        >>> for vec in wiki_corpus:
-        >>>     print(vec)
+        Examples
+        --------
+        >>> from gensim.test.utils import datapath
+        >>> from gensim.corpora import WikiCorpus
+        >>>
+        >>> path_to_wiki_dump = datapath("enwiki-latest-pages-articles1.xml-p000000010p000030302-shortened.bz2")
+        >>>
+        >>> for vec in WikiCorpus(path_to_wiki_dump):
+        ...     pass
 
         Yields
         ------
@@ -585,7 +578,6 @@ class WikiCorpus(TextCorpus):
             List of tokens (extracted from the article), page id and article title otherwise.
 
         """
-
         articles, articles_all = 0, 0
         positions, positions_all = 0, 0
 
