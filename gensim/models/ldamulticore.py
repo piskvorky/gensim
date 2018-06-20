@@ -5,13 +5,11 @@
 # Copyright (C) 2014 Radim Rehurek <me@radimrehurek.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""
-Latent Dirichlet Allocation (LDA) in Python, using all CPU cores to parallelize and
-speed up model training.
+"""Online Latent Dirichlet Allocation (LDA) in Python, using all CPU cores to parallelize and speed up model training.
 
-The parallelization uses multiprocessing; in case this doesn't work for you for
-some reason, try the :class:`gensim.models.ldamodel.LdaModel` class which is an
-equivalent, but more straightforward and single-core implementation.
+The parallelization uses multiprocessing; in case this doesn't work for you for some reason,
+try the :class:`gensim.models.ldamodel.LdaModel` class which is an equivalent, but more straightforward and single-core
+implementation.
 
 The training algorithm:
 
@@ -19,9 +17,8 @@ The training algorithm:
 * runs in **constant memory** w.r.t. the number of documents: size of the
   training corpus does not affect memory footprint, can process corpora larger than RAM
 
-Wall-clock `performance on the English Wikipedia <http://radimrehurek.com/gensim/wiki.html>`_
-(2G corpus positions, 3.5M documents, 100K features, 0.54G non-zero entries in the final
-bag-of-words matrix), requesting 100 topics:
+Wall-clock `performance on the English Wikipedia <http://radimrehurek.com/gensim/wiki.html>`_ (2G corpus positions,
+3.5M documents, 100K features, 0.54G non-zero entries in the final bag-of-words matrix), requesting 100 topics:
 
 
 ====================================================== ==============
@@ -37,26 +34,22 @@ bag-of-words matrix), requesting 100 topics:
 (Measured on `this i7 server <http://www.hetzner.de/en/hosting/produkte_rootserver/ex40ssd>`_
 with 4 physical cores, so that optimal `workers=3`, one less than the number of cores.)
 
-This module allows both LDA model estimation from a training corpus and inference of topic
-distribution on new, unseen documents. The model can also be updated with new documents
-for online training.
+This module allows both LDA model estimation from a training corpus and inference of topic distribution on new,
+unseen documents. The model can also be updated with new documents for online training.
 
-The core estimation code is based on the `onlineldavb.py` script by M. Hoffman [1]_, see
-**Hoffman, Blei, Bach: Online Learning for Latent Dirichlet Allocation, NIPS 2010.**
-
-.. [1] http://www.cs.princeton.edu/~mdhoffma
+The core estimation code is based on the `onlineldavb.py script
+<https://github.com/blei-lab/onlineldavb/blob/master/onlineldavb.py>`_, by `Hoffman, Blei, Bach:
+Online Learning for Latent Dirichlet Allocation, NIPS 2010 <http://www.cs.princeton.edu/~mdhoffma>`_.
 
 Usage examples
 --------------
+The constructor estimates Latent Dirichlet Allocation model parameters based on a training corpus
 
-#. The constructor estimates Latent Dirichlet Allocation model parameters based on a training corpus:
-
->>> from gensim.test.utils import common_corpus
->>> from gensim.corpora.dictionary import Dictionary
+>>> from gensim.test.utils import common_corpus, common_dictionary
 >>>
->>> lda = LdaMulticore(common_corpus, num_topics=10)
+>>> lda = LdaMulticore(common_corpus, id2word=common_dictionary, num_topics=10)
 
-#. Save a model to disk, or reload a pretrained model.
+Save a model to disk, or reload a pre-trained model
 
 >>> from gensim.test.utils import datapath
 >>>
@@ -67,18 +60,17 @@ Usage examples
 >>> # Load a potentially pretrained model from disk.
 >>> lda = LdaModel.load(temp_file)
 
-#. Query, or update the model using new, unseen documents:
+Query, or update the model using new, unseen documents
+
 >>> other_texts = [
 ...     ['computer', 'time', 'graph'],
 ...     ['survey', 'response', 'eps'],
 ...     ['human', 'system', 'computer']
 ... ]
->>> other_dictionary = Dictionary(other_texts)
->>> other_corpus = [other_dictionary.doc2bow(text) for text in other_texts]
+>>> other_corpus = [common_dictionary.doc2bow(text) for text in other_texts]
 >>>
->>> # Query the model on an unseen document
 >>> unseen_doc = other_corpus[0]
->>> repr = lda[unseen_doc] # get topic probability distribution for a document
+>>> vector = lda[unseen_doc] # get topic probability distribution for a document
 >>>
 >>> # Update the model by incrementally training on the new corpus.
 >>> lda.update(other_corpus) # update the LDA model with additional documents
@@ -101,19 +93,15 @@ logger = logging.getLogger(__name__)
 
 class LdaMulticore(LdaModel):
     """An optimized implementation of the LDA algorithm, able to harness the power of multicore CPUs.
-
-    Follows the same API as the parent class :class:`~gensim.models.ldamodel.LdaModel`.
-    Model persistency is achieved through its :meth:`~gensim.models.ldamulticore.LdaMulticore.load` and
-    :meth:`~gensim.models.ldamulticore.LdaMulticore.save` methods.
+    Follows the similar API as the parent class :class:`~gensim.models.ldamodel.LdaModel`.
 
     """
-
     def __init__(self, corpus=None, num_topics=100, id2word=None, workers=None,
                  chunksize=2000, passes=1, batch=False, alpha='symmetric',
                  eta=None, decay=0.5, offset=1.0, eval_every=10, iterations=50,
                  gamma_threshold=0.001, random_state=None, minimum_probability=0.01,
                  minimum_phi_value=0.01, per_word_topics=False, dtype=np.float32):
-        """The constructor estimates Latent Dirichlet Allocation model parameters based on a training corpus.
+        """
 
         Parameters
         ----------
@@ -123,7 +111,7 @@ class LdaMulticore(LdaModel):
             :meth:`~gensim.models.ldamodel.LdaModel.update` manually).
         num_topics : int, optional
             The number of requested latent topics to be extracted from the training corpus.
-        id2word : dict of (int, str)
+        id2word : {dict of (int, str),  :class:`gensim.corpora.dictionary.Dictionary`}
             Mapping from word IDs to words. It is used to determine the vocabulary size, as well as for
             debugging and topic printing.
         workers : int, optional
@@ -135,9 +123,6 @@ class LdaMulticore(LdaModel):
             Number of documents to be used in each training chunk.
         passes : int, optional
             Number of passes through the corpus during training.
-        update_every : int, optional
-            Number of documents to be iterated through for each update.
-            Set to 0 for batch learning, > 1 for online iterative learning.
         alpha : {np.ndarray, str}, optional
             Can be set to an 1D array of length equal to the number of expected topics that expresses
             our a-priori belief for the each topics' probability.
@@ -171,16 +156,11 @@ class LdaMulticore(LdaModel):
             Topics with a probability lower than this threshold will be filtered out.
         random_state : {np.random.RandomState, int}, optional
             Either a randomState object or a seed to generate one. Useful for reproducibility.
-        ns_conf : dict of (str, object), optional
-            Key word parameters propagated to :func:`~gensim.utils.getNS` to get a Pyro4 Nameserved.
-            Only used if `distributed` is set to True.
         minimum_phi_value : float, optional
             if `per_word_topics` is True, this represents a lower bound on the term probabilities.
         per_word_topics : bool
             If True, the model also computes a list of topics, sorted in descending order of most likely topics for
             each word, along with their phi values multiplied by the feature length (i.e. word count).
-        callbacks : list of :class:`~gensim.models.callbacks.Callback`
-            Metric callbacks to log and visualize evaluation metrics of the model during training.
         dtype : {numpy.float16, numpy.float32, numpy.float64}, optional
             Data-type to use during calculations inside model. All inputs are also converted.
 
@@ -226,7 +206,7 @@ class LdaMulticore(LdaModel):
         chunks_as_numpy : bool
             Whether each chunk passed to the inference step should be a np.ndarray or not. Numpy can in some settings
             turn the term IDs into floats, these will be converted back into integers in inference, which incurs a
-            performance hit. For distributed computing it may be desirable to keep the chunks as np.ndarrays.
+            performance hit. For distributed computing it may be desirable to keep the chunks as `numpy.ndarray`.
 
         """
         try:

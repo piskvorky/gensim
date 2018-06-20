@@ -12,8 +12,9 @@ This module allows both LDA model estimation from a training corpus and inferenc
 distribution on new, unseen documents. The model can also be updated with new documents
 for online training.
 
-The core estimation code is based on the `onlineldavb.py` script by `Hoffman, Blei, Bach: Online Learning for Latent
-Dirichlet Allocation, NIPS 2010 <http://www.cs.princeton.edu/~mdhoffma>`_.
+The core estimation code is based on the `onlineldavb.py script
+<https://github.com/blei-lab/onlineldavb/blob/master/onlineldavb.py>`_, by `Hoffman, Blei, Bach:
+Online Learning for Latent Dirichlet Allocation, NIPS 2010 <http://www.cs.princeton.edu/~mdhoffma>`_.
 
 The algorithm:
 
