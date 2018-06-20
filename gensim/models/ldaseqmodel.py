@@ -151,15 +151,15 @@ class LdaSeqModel(utils.SaveLoad):
 
         # topic_chains contains for each topic a 'state space language model' object
         # which in turn has information about each topic
-        # the Sslm class is described below and contains information
+        # the sslm class is described below and contains information
         # on topic-word probabilities and doc-topic probabilities.
         self.topic_chains = []
         for topic in range(0, num_topics):
-            sslm = Sslm(
+            sslm_ = sslm(
                 num_time_slices=self.num_time_slices, vocab_len=self.vocab_len, num_topics=self.num_topics,
                 chain_variance=chain_variance, obs_variance=obs_variance
             )
-            self.topic_chains.append(sslm)
+            self.topic_chains.append(sslm_)
 
         # the following are class variables which are to be integrated during Document Influence Model
         self.top_doc_phis = None
@@ -207,7 +207,7 @@ class LdaSeqModel(utils.SaveLoad):
         self.alphas = alpha
         for k, chain in enumerate(self.topic_chains):
             sstats = init_suffstats[:, k]
-            Sslm.sslm_counts_init(chain, topic_obs_variance, topic_chain_variance, sstats)
+            sslm.sslm_counts_init(chain, topic_obs_variance, topic_chain_variance, sstats)
 
             # initialize the below matrices only if running DIM
             # ldaseq.topic_chains[k].w_phi_l = np.zeros((ldaseq.vocab_len, ldaseq.num_time_slices))
@@ -478,7 +478,7 @@ class LdaSeqModel(utils.SaveLoad):
 
         for k, chain in enumerate(self.topic_chains):
             logger.info("Fitting topic number %i", k)
-            lhood_term = Sslm.fit_sslm(chain, topic_suffstats[k])
+            lhood_term = sslm.fit_sslm(chain, topic_suffstats[k])
             lhood += lhood_term
 
         return lhood
@@ -677,7 +677,7 @@ class LdaSeqModel(utils.SaveLoad):
         return doc_topic
 
 
-class Sslm(utils.SaveLoad):
+class sslm(utils.SaveLoad):
     """Encapsulate the inner State Space Language Model for DTM.
 
     Some important attributes of this class:
