@@ -5,8 +5,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""
-Callbacks can be used to observe the training process.
+"""Callbacks can be used to observe the training process.
 
 Since training in huge corpora can be time consuming, we want to offer the users some insight
 into the process, in real time. In this way, convergence issues
@@ -20,12 +19,11 @@ to save the model, visualize intermediate results, or anything else.
 
 Usage examples
 --------------
-
 To implement a Callback, inherit from this base class and override one or more of its methods.
 
-#. Create a callback to save the training model after each epoch:
+Create a callback to save the training model after each epoch
 
->>> from gensim.test.utils import common_corpus, common_texts
+>>> from gensim.test.utils import common_corpus, common_texts, get_tmpfile
 >>> from gensim.models.callbacks import CallbackAny2Vec
 >>> from gensim.models import Word2Vec
 >>>
@@ -37,13 +35,12 @@ To implement a Callback, inherit from this base class and override one or more o
 ...         self.epoch = 0
 ...
 ...     def on_epoch_end(self, model):
-...         output_path = '{}_epoch{}.model'.format(self.path_prefix, self.epoch)
-...         print("Saving model to {}".format(output_path))
+...         output_path = get_tmpfile('{}_epoch{}.model'.format(self.path_prefix, self.epoch))
 ...         model.save(output_path)
 ...         self.epoch += 1
 ...
 
-#. Create a callback to print progress information to the console:
+Create a callback to print progress information to the console
 
 >>> class EpochLogger(CallbackAny2Vec):
 ...     '''Callback to log information about training'''
@@ -58,11 +55,9 @@ To implement a Callback, inherit from this base class and override one or more o
 ...         print("Epoch #{} end".format(self.epoch))
 ...         self.epoch += 1
 ...
-
+>>>
 >>> epoch_logger = EpochLogger()
-
-#. Bind the callbacks to a model before training it:
-
+>>>
 >>> w2v_model = Word2Vec(common_texts, iter=5, size=10, min_count=0, seed=42, callbacks=[epoch_logger])
 Epoch #0 start
 Epoch #0 end
@@ -75,15 +70,15 @@ Epoch #3 end
 Epoch #4 start
 Epoch #4 end
 
-#. Create and bind a callback to a topic model. This callback will log the perplexity metric in real time:
+Create and bind a callback to a topic model. This callback will log the perplexity metric in real time
 
 >>> from gensim.models.callbacks import PerplexityMetric
 >>> from gensim.models.ldamodel import LdaModel
->>> from gensim.test.utils import common_texts
+>>> from gensim.test.utils import common_corpus, common_dictionary
 >>>
 >>> # Log the perplexity score at the end of each epoch.
->>> perplexity_logger = PerplexityMetric(corpus=common_texts, logger='shell')
->>> lda = LdaModel(common_texts, num_topics=5, callbacks=[perplexity_logger])
+>>> perplexity_logger = PerplexityMetric(corpus=common_corpus, logger='shell')
+>>> lda = LdaModel(common_corpus, id2word=common_dictionary, num_topics=5, callbacks=[perplexity_logger])
 
 """
 
@@ -115,6 +110,7 @@ class Metric(object):
         * :class:`~gensim.models.callbacks.PerplexityMetric`
         * :class:`~gensim.models.callbacks.DiffMetric`
         * :class:`~gensim.models.callbacks.ConvergenceMetric`
+
     """
     def __str__(self):
         """Get a string representation of Metric class.
@@ -176,7 +172,6 @@ class CoherenceMetric(Metric):
     :class:`~gensim.models.coherencemodel.CoherenceModel`
 
     """
-
     def __init__(self, corpus=None, texts=None, dictionary=None, coherence=None,
                  window_size=None, topn=10, logger=None, viz_env=None, title=None):
         """
@@ -261,7 +256,6 @@ class CoherenceMetric(Metric):
 
 class PerplexityMetric(Metric):
     """Metric class for perplexity evaluation."""
-
     def __init__(self, corpus=None, logger=None, viz_env=None, title=None):
         """
 
@@ -310,7 +304,6 @@ class PerplexityMetric(Metric):
 
 class DiffMetric(Metric):
     """Metric class for topic difference evaluation."""
-
     def __init__(self, distance="jaccard", num_words=100, n_ann_terms=10, diagonal=True,
                  annotation=False, normed=True, logger=None, viz_env=None, title=None):
         """
@@ -426,7 +419,7 @@ class ConvergenceMetric(Metric):
         ----------
         **kwargs
             Key word arguments to override the object's internal attributes.
-            Two models of type :class:`~gensim.models.ldamodelLdaModel` or its wrappers are expected using the keys
+            Two models of type :class:`~gensim.models.ldamodel.LdaModel` or its wrappers are expected using the keys
             `model` and `other_model`.
 
         Returns
@@ -513,7 +506,6 @@ class Callback(object):
             :class:`~gensim.models.callbacks.ConvergenceMetric` computes a float.
 
         """
-
         # stores current epoch's metric values
         current_metrics = {}
 
@@ -578,13 +570,12 @@ class CallbackAny2Vec(object):
     See examples at the module level docstring for how to define your own callbacks by inheriting  from this class.
 
     """
-
     def on_epoch_begin(self, model):
         """Method called at the start of each epoch.
 
         Parameters
         ----------
-        model : class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
+        model : :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
             Current model.
 
         """
@@ -595,7 +586,7 @@ class CallbackAny2Vec(object):
 
         Parameters
         ----------
-        model : class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
+        model : :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
             Current model.
 
         """
@@ -606,7 +597,7 @@ class CallbackAny2Vec(object):
 
         Parameters
         ----------
-        model : class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
+        model : :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
             Current model.
 
         """
@@ -617,7 +608,7 @@ class CallbackAny2Vec(object):
 
         Parameters
         ----------
-        model : class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
+        model : :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
             Current model.
 
         """
@@ -628,7 +619,7 @@ class CallbackAny2Vec(object):
 
         Parameters
         ----------
-        model : class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
+        model : :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
             Current model.
 
         """
@@ -639,7 +630,7 @@ class CallbackAny2Vec(object):
 
         Parameters
         ----------
-        model : class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
+        model : :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
             Current model.
 
         """
