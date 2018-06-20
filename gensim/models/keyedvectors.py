@@ -4,6 +4,7 @@
 # Author: Shiva Manne <manneshiva@gmail.com>
 # Copyright (C) 2018 RaRe Technologies s.r.o.
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+
 """This module implements word vectors and their similarity look-ups.
 
 Since trained word vectors are independent from the way they were trained (:class:`~gensim.models.word2vec.Word2Vec`,
@@ -144,6 +145,7 @@ And on word analogies
 and so on.
 
 """
+
 from __future__ import division  # py3 "true division"
 
 import logging

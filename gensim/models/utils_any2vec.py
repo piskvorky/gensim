@@ -3,6 +3,7 @@
 #
 # Author: Shiva Manne <s.manne@rare-technologies.com>
 # Copyright (C) 2018 RaRe Technologies s.r.o.
+
 """General functions used for any2vec models."""
 
 import logging

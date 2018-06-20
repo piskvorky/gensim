@@ -4,6 +4,7 @@
 # Authors: Shiva Manne <manneshiva@gmail.com>, Chinmaya Pancholi <chinmayapancholi13@gmail.com>
 # Copyright (C) 2018 RaRe Technologies s.r.o.
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+
 """Learn word representations via Fasttext: `Enriching Word Vectors with Subword Information
 <https://arxiv.org/abs/1607.04606>`_.
 
@@ -72,6 +73,7 @@ And on word analogies
 >>> analogies_result = model.wv.accuracy(datapath('questions-words.txt'))
 
 """
+
 import logging
 import struct
 

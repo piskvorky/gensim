@@ -5,7 +5,6 @@
 # Copyright (C) 2017 Radim Rehurek <me@radimrehurek.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-
 """Python implementation of Poincaré Embeddings.
 
 These embeddings are better at capturing latent hierarchical information than traditional Euclidean embeddings.
@@ -39,6 +38,7 @@ Initialize and train a model from a file containing one relation per line
 >>> model.train(epochs=50)
 
 """
+
 import csv
 import logging
 import sys

@@ -4,7 +4,9 @@
 # cython: cdivision=True
 # cython: embedsignature=True
 # coding: utf-8
+
 """Optimized cython functions for training :class:`~gensim.models.fasttext.FastText` model."""
+
 import cython
 import numpy as np
 cimport numpy as np
@@ -20,8 +22,8 @@ except ImportError:
     # in scipy > 0.15, fblas function has been removed
     import scipy.linalg.blas as fblas
 
-from word2vec_inner cimport bisect_left, random_int32, scopy, saxpy, dsdot, sscal, REAL_t, EXP_TABLE, \
-     our_dot_double, our_dot_float, our_dot_noblas, our_saxpy_noblas
+from word2vec_inner cimport bisect_left, random_int32, scopy, saxpy, dsdot, sscal, \
+     REAL_t, EXP_TABLE, our_dot, our_saxpy, our_dot_double, our_dot_float, our_dot_noblas, our_saxpy_noblas
 
 REAL = np.float32
 

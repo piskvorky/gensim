@@ -7,7 +7,9 @@
 #
 # Copyright (C) 2013 Radim Rehurek <me@radimrehurek.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+
 """Optimized cython functions for training :class:`~gensim.models.doc2vec.Doc2Vec` model."""
+
 import cython
 import numpy as np
 from numpy import zeros, float32 as REAL

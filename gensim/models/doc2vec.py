@@ -5,7 +5,6 @@
 # Copyright (C) 2018 RaRe Technologies s.r.o.
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-
 """Learn paragraph and document embeddings via the distributed memory and distributed bag of words models from
 `Quoc Le and Tomas Mikolov: "Distributed Representations of Sentences and Documents"
 <http://arxiv.org/pdf/1405.4053v2.pdf>`_.
@@ -53,6 +52,7 @@ Infer vector for new document
 >>> vector = model.infer_vector(["system", "response"])
 
 """
+
 import logging
 import os
 import warnings

@@ -31,6 +31,7 @@ See Also
     Poincare model - embeddings for graphs.
 
 """
+
 from gensim import utils
 import logging
 from timeit import default_timer

@@ -102,6 +102,7 @@ where "words" are actually multiword expressions, such as `new_york_times` or `f
 >>> model = Word2Vec(bigram_transformer[common_texts], min_count=1)
 
 """
+
 from __future__ import division  # py3 "true division"
 
 import logging
