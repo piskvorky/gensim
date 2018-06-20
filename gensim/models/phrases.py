@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""Automatically detect common phrases (multi-word expressions / bi-grams) from a stream of sentences.
+"""Automatically detect common phrases -- multi-word expressions / word n-grams -- from a stream of sentences.
 
 Examples
 --------
@@ -119,16 +119,16 @@ class SentenceAnalyzer(object):
         return -1
 
     def analyze_sentence(self, sentence, threshold, common_terms, scorer):
-        """Analyze a sentence.
+        """Analyze a sentence, detecting any bigrams that should be concatenated.
 
         Parameters
         ----------
-        sentence : list of str
+        sentence : Iterable of str
             Token list representing the sentence to be analyzed.
         threshold : float
             The minimum score for a bigram to be taken into account.
         common_terms : list of object
-            List of common terms, they have a special treatment.
+            List of common terms, they have special treatment.
         scorer : function
             Scorer function, as given to :class:`~gensim.models.phrases.Phrases`.
             See :func:`~gensim.models.phrases.npmi_scorer` and :func:`~gensim.models.phrases.original_scorer`.
@@ -136,8 +136,8 @@ class SentenceAnalyzer(object):
         Yields
         ------
         (str, score)
-            Tuple where first element is bi-gram, second is score (if bi-gram detected),
-            otherwise - first element is word and second is None.
+            If bi-gram detected, a tuple where the first element is a detect bigram, second its score.
+            Otherwise, the first tuple element is a single word and second is None.
 
         """
         s = [utils.any2utf8(w) for w in sentence]
@@ -265,21 +265,21 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         Notes
         -----
         'npmi' is more robust when dealing with common words that form part of common bigrams, and
-        ranges from -1 to 1, but is slower to calculate than the default.
+        ranges from -1 to 1, but is slower to calculate than the default. The default is the PMI-like scoring
+        as described by Mikoliv et al in `Distributed Representations of Words
+        and Phrases and their Compositionality <https://arxiv.org/abs/1310.4546>`_.
 
-        To use a custom scoring function, create a function with the following parameters and set the `scoring`
-        parameter to the custom function. You must use all the parameters in your function call, even if the
-        function does not require all the parameters.
+        To use a custom scoring function, pass in a function with the following signature:
 
-        * worda_count - number of occurrences in `sentences` of the first token in the phrase being scored
-        * wordb_count - number of occurrences in `sentences` of the second token in the phrase being scored
-        * bigram_count - number of occurrences in `sentences` of the phrase being scored
+        * worda_count - number of corpus occurrences in `sentences` of the first token in the bigram being scored
+        * wordb_count - number of corpus occurrences in `sentences` of the second token in the bigram being scored
+        * bigram_count - number of occurrences in `sentences` of the whole bigram
         * len_vocab - the number of unique tokens in `sentences`
         * min_count - the `min_count` setting of the Phrases class
         * corpus_word_count - the total number of tokens (non-unique) in `sentences`
 
-        A scoring function without any of these parameters (even if the parameters are not used) will
-        raise a ValueError on initialization of the Phrases class. The scoring function must be picklable.
+        The scoring function must accept all these parameters, even if it doesn't use them in its scoring.
+        The scoring function must be pickleable.
 
         """
         if min_count <= 0:
@@ -493,21 +493,21 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
             self.vocab = vocab
 
     def export_phrases(self, sentences, out_delimiter=b' ', as_tuples=False):
-        """Get all phrases from given 'sentences'.
+        """Get all phrases that appear in 'sentences' that pass the bigram threshold.
 
         Parameters
         ----------
         sentences : iterable of list of str
             Text corpus.
         out_delimiter : str, optional
-            Delimiter that will be used for "glue" words to phrase.
+            Delimiter used to "glue" together words that form a bigram phrase.
         as_tuples : bool, optional
-            If True - yield (tuple(words), score), otherwise - (out_delimiter.join(words), score).
+            Yield `(tuple(words), score)` instead of `(out_delimiter.join(words), score)`?
 
         Yields
         ------
         ((str, str), float) **or** (str, float)
-            Phrases given from `sentences`, type depends on `as_tuples` parameter.
+            Phrases detected in `sentences`. Return type depends on the `as_tuples` parameter.
 
         Example
         -------
@@ -544,7 +544,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
                     yield (out_delimiter.join(words), score)
 
     def __getitem__(self, sentence):
-        """Convert the input tokens `sentence` into phrase tokens (where detected phrases are joined by delimiter).
+        """Convert the input tokens `sentence` into tokens where detected bigrams are joined by a selected delimiter.
 
         If `sentence` is an entire corpus (iterable of sentences rather than a single
         sentence), return an iterable that converts each of the corpus' sentences
@@ -558,7 +558,8 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         Returns
         -------
         {list of str, :class:`gensim.iterfaces.TransformedCorpus`}
-            `sentences` with phrases, type depends on `sentence` type.
+            `sentence` with detected phrase bigrams merged together, or a streamed corpus of such sentences
+            if the input was a corpus.
 
         Examples
         ----------
@@ -621,7 +622,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
 
 
 def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
-    """Calculation score, based on original `"Efficient Estimaton of Word Representations in Vector Space" by
+    """Bigram scoring function, based on the original `"Efficient Estimaton of Word Representations in Vector Space" by
     Mikolov <https://arxiv.org/pdf/1301.3781.pdf>`_.
 
     Parameters
@@ -635,9 +636,9 @@ def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count
     len_vocab : int
         Size of vocabulary.
     min_count: int
-        Minimal score threshold.
+        Minimum score threshold.
     corpus_word_count : int
-        NOT USED.
+        Not used in this particular scoring technique.
 
     Notes
     -----
@@ -660,11 +661,11 @@ def npmi_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, co
     bigram_count : int
         Number of co-occurrences for phrase "worda_wordb".
     len_vocab : int
-        NOT USED.
+        Not used.
     min_count: int
-        NOT USED.
+        Not used.
     corpus_word_count : int
-        Number of words in corpus.
+        Total number of words in the corpus.
 
     Notes
     -----
@@ -679,7 +680,7 @@ def npmi_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, co
 
 
 def pseudocorpus(source_vocab, sep, common_terms=frozenset()):
-    """Feeds source_vocab's compound keys back to it, to discover phrases.
+    """Feeds `source_vocab`'s compound keys back to it, to discover phrases.
 
     Parameters
     ----------
@@ -712,7 +713,14 @@ def pseudocorpus(source_vocab, sep, common_terms=frozenset()):
 
 
 class Phraser(SentenceAnalyzer, PhrasesTransformation):
-    """Minimal state & functionality to apply results of a :class:`~gensim.models.phrases.Phrases`."""
+    """Minimal state & functionality exported from :class:`~gensim.models.phrases.Phrases`.
+
+    The goal of this class is to cut down memory consumption of `Phrases`, by discarding model state
+    not strictly needed for the bigram detection task.
+
+    Use this instead of `Phrases` if you do not need to update the bigram statistics with new documents any more.
+
+    """
 
     def __init__(self, phrases_model):
         """
@@ -777,7 +785,7 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
         return pseudocorpus(phrases_model.vocab, phrases_model.delimiter, phrases_model.common_terms)
 
     def score_item(self, worda, wordb, components, scorer):
-        """Score bigram.
+        """Score a bigram.
 
         Parameters
         ----------
@@ -802,17 +810,18 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
             return -1
 
     def __getitem__(self, sentence):
-        """Convert the input tokens `sentence` into phrase tokens.
+        """Convert the input sequence of tokens `sentence` into a sequence of tokens where adjacent
+        tokens are replaced by a single token if they form a bigram collocation.
 
         Parameters
         ----------
         sentence : {list of str, iterable of list of str}
-            Input sentence or sentences.
+            Input sentence or a stream of sentences.
 
         Return
         ------
         {list of str, iterable of list of str}
-            Sentence or sentences with phrase tokens that joined by delimiter-character.
+            Sentence or sentences with phrase tokens joined by `self.delimiter` character.
 
         Examples
         ----------
