@@ -35,9 +35,9 @@ from gensim import models
 class PhrasesTransformer(TransformerMixin, BaseEstimator):
     """Base Phrases module, wraps :class:`~gensim.models.phrases.Phrases`.
 
-    For more information, please have a look to `Mikolov, et. al: "Efficient Estimation of Word Representations in
-    Vector Space" <https://arxiv.org/pdf/1301.3781.pdf>`_ and `Gerlof Bouma: "Normalized (Pointwise) Mutual Information
-    in Collocation Extraction" <https://svn.spraakdata.gu.se/repos/gerlof/pub/www/Docs/npmi-pfd.pdf>`_.
+    For more information, please have a look to `Mikolov, et. al: "Distributed Representations of Words and Phrases and
+    their Compositionality" <https://arxiv.org/pdf/1310.4546.pdf>`_ and `Gerlof Bouma: "Normalized (Pointwise) Mutual
+    Information in Collocation Extraction" <https://svn.spraakdata.gu.se/repos/gerlof/pub/www/Docs/npmi-pfd.pdf>`_.
 
     """
     def __init__(self, min_count=5, threshold=10.0, max_vocab_size=40000000,
@@ -63,8 +63,8 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
             or with a function with the expected parameter names. Two built-in scoring functions are available
             by setting `scoring` to a string:
 
-                * 'default': Explained in `Mikolov, et. al: "Efficient Estimation of Word Representations
-                  in Vector Space" <https://arxiv.org/pdf/1301.3781.pdf>`_.
+                * 'default': Explained in `Mikolov, et. al: "Distributed Representations of Words and Phrases
+                  and their Compositionality" <https://arxiv.org/pdf/1310.4546.pdf>`_.
                 * 'npmi': Explained in `Gerlof Bouma: "Normalized (Pointwise) Mutual Information in Collocation
                   Extraction" <https://svn.spraakdata.gu.se/repos/gerlof/pub/www/Docs/npmi-pfd.pdf>`_.
 
