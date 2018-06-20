@@ -4,7 +4,6 @@
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-
 """This module implements the concept of a Dictionary -- a mapping between words and their integer ids."""
 
 from __future__ import with_statement
@@ -62,13 +61,10 @@ class Dictionary(utils.SaveLoad, Mapping):
         Examples
         --------
         >>> from gensim.corpora import Dictionary
+        >>>
         >>> texts = [['human', 'interface', 'computer']]
-
-        >>> # initialize a Dictionary
-        >>> dct = Dictionary(texts)
-
-        >>> # add more document (extend the vocabulary)
-        >>> dct.add_documents([["cat", "say", "meow"], ["dog"]])
+        >>> dct = Dictionary(texts)  # initialize a Dictionary
+        >>> dct.add_documents([["cat", "say", "meow"], ["dog"]])  # add more document (extend the vocabulary)
         >>> dct.doc2bow(["dog", "computer", "non_existent_word"])
         [(0, 1), (6, 1)]
 
@@ -183,7 +179,6 @@ class Dictionary(utils.SaveLoad, Mapping):
         >>> from gensim.corpora import Dictionary
         >>>
         >>> corpus = ["máma mele maso".split(), "ema má máma".split()]
-
         >>> dct = Dictionary(corpus)
         >>> len(dct)
         5
@@ -215,9 +210,9 @@ class Dictionary(utils.SaveLoad, Mapping):
         document : list of str
             Input document.
         allow_update : bool, optional
-            Update self, by adding new tokens from `document` and updating internal corpus statistics?
+            Update self, by adding new tokens from `document` and updating internal corpus statistics.
         return_missing : bool, optional
-            Return missing tokens? Missing tokens are tokens present in `document` but not in self.
+            If True - return missing tokens (tokens present in `document` but not in self) with frequencies.
 
         Return
         ------
@@ -463,7 +458,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         fname : str
             Path to output file.
         sort_by_word : bool, optional
-            Sort words in lexicographical order before writing them out?
+            Sort words in lexicographical order before writing them out.
 
         Notes
         -----
@@ -483,6 +478,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         See Also
         --------
         :meth:`~gensim.corpora.dictionary.Dictionary.load_from_text`
+            Load :class:`~gensim.corpora.dictionary.Dictionary` from text file.
 
         Examples
         --------
@@ -495,7 +491,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         >>> dct = Dictionary(corpus)
         >>> dct.save_as_text(tmp_fname)
         >>>
-        >>> loaded_dct = Dictionary.load_from_text("testdata")
+        >>> loaded_dct = Dictionary.load_from_text(tmp_fname)
         >>> assert dct.token2id == loaded_dct.token2id
 
         """
@@ -513,7 +509,8 @@ class Dictionary(utils.SaveLoad, Mapping):
                     fout.write(utils.to_utf8(line))
 
     def merge_with(self, other):
-        """Merge another dictionary into this dictionary, mapping the same tokens to the same ids and new tokens to new ids.
+        """Merge another dictionary into this dictionary, mapping the same tokens to the same ids
+        and new tokens to new ids.
 
         Notes
         -----
@@ -525,7 +522,7 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Parameters
         ----------
-        other : any Mapping, e.g. `dict`, :class:`~gensim.corpora.dictionary.Dictionary`, …
+        other : {dict, :class:`~gensim.corpora.dictionary.Dictionary`}
             Other dictionary.
 
         Return
@@ -584,6 +581,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         See Also
         --------
         :meth:`~gensim.corpora.dictionary.Dictionary.save_as_text`
+            Save :class:`~gensim.corpora.dictionary.Dictionary` to text file.
 
         Examples
         --------
@@ -596,7 +594,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         >>> dct = Dictionary(corpus)
         >>> dct.save_as_text(tmp_fname)
         >>>
-        >>> loaded_dct = Dictionary.load_from_text("testdata")
+        >>> loaded_dct = Dictionary.load_from_text(tmp_fname)
         >>> assert dct.token2id == loaded_dct.token2id
 
         """
