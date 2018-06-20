@@ -546,6 +546,8 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         if not self.sg:
             neu1 = matutils.zeros_aligned(self.trainables.layer1_size, dtype=REAL)
 
+        alpha_delta = (alpha - min_alpha) / (steps - 1)
+
         for i in range(steps):
             if self.sg:
                 train_document_dbow(
@@ -562,7 +564,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
                     self, doc_words, doctag_indexes, alpha, work, neu1,
                     learn_words=False, learn_hidden=False, doctag_vectors=doctag_vectors, doctag_locks=doctag_locks
                 )
-            alpha = ((alpha - min_alpha) / (steps - i)) + min_alpha
+            alpha -= alpha_delta
 
         return doctag_vectors[0]
 
