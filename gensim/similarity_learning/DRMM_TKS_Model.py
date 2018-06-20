@@ -113,7 +113,7 @@ class DRMM_TKS_Model:
         self.labels = labels
         self.word_counter = Counter()
         self.text_maxlen = text_maxlen
-        self.hist_size = hist_size
+        # self.hist_size = hist_size
         self.word_embedding_path = word_embedding_path
         self.word2index, self.index2word = {}, {}
         self.keep_full_embedding = keep_full_embedding
