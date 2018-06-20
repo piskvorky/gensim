@@ -17,7 +17,8 @@ logger = logging.getLogger(__name__)
 
 
 class MmCorpus(matutils.MmReader, IndexedCorpus):
-    """Corpus serialized using the `sparse coordinate Matrix Market format <https://math.nist.gov/MatrixMarket/formats.html>`_.
+    """Corpus serialized using the `sparse coordinate Matrix Market format
+    <https://math.nist.gov/MatrixMarket/formats.html>`_.
 
     Wrap a term-document matrix on disk (in matrix-market format), and present it
     as an object which supports iteration over the matrix rows (~documents).
@@ -69,7 +70,7 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
         Yields
         ------
         list of (int, numeric)
-            Document in the `sparse Gensim bag-of-words format <https://radimrehurek.com/gensim/intro.html#core-concepts>`_.
+            Document in the `sparse Gensim bag-of-words format <intro.rst#core-concepts>`__.
 
         Notes
         ------

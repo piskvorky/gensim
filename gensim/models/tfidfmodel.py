@@ -303,8 +303,8 @@ class TfidfModel(interfaces.TransformationABC):
             retrieval and relevance curves intersect.
 
             This parameter along with `slope` is used for pivoted document length normalization.
-            Only when `pivot` is not None will pivoted document length normalization be applied. Otherwise, regular TfIdf
-            is used.
+            Only when `pivot` is not None will pivoted document length normalization be applied.
+            Otherwise, regular TfIdf is used.
         slope : float, optional
             Parameter required by pivoted document length normalization which determines the slope to which
             the `old normalization` can be tilted. This parameter only works when pivot is defined.

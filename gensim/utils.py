@@ -436,7 +436,8 @@ class SaveLoad(object):
         fname : str
             Input file path.
         mmap :  {None, ‘r+’, ‘r’, ‘w+’, ‘c’}
-            Memory-map options. See `numpy.load(mmap_mode) <https://docs.scipy.org/doc/numpy-1.14.0/reference/generated/numpy.load.html>`_.
+            Memory-map options. See `numpy.load(mmap_mode)
+            <https://docs.scipy.org/doc/numpy-1.14.0/reference/generated/numpy.load.html>`_.
         compress : bool
             Is the input file compressed?
         subname : str
@@ -1080,6 +1081,8 @@ def safe_unichr(intval):
 
 def decode_htmlentities(text):
     """Decode all HTML entities in text that are encoded as hex, decimal or named entities.
+    Adapted from `python-twitter-ircbot/html_decode.py
+    <http://github.com/sku/python-twitter-ircbot/blob/321d94e0e40d0acc92f5bf57d126b57369da70de/html_decode.py>`_.
 
     Parameters
     ----------
@@ -1097,10 +1100,6 @@ def decode_htmlentities(text):
     l'eau
     >>> print(decode_htmlentities("foo &lt; bar"))
     foo < bar
-
-    Notes
-    -----
-    Adapted from http://github.com/sku/python-twitter-ircbot/blob/321d94e0e40d0acc92f5bf57d126b57369da70de/html_decode.py
 
     """
     def substitute_entity(match):

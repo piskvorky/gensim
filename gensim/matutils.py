@@ -471,7 +471,8 @@ def corpus2dense(corpus, num_terms, num_docs=None, dtype=np.float32):
     num_terms : int
         Number of terms in the dictionary. X-axis of the resulting matrix.
     num_docs : int, optional
-        Number of documents in the corpus. If provided, a slightly more memory-efficient code path is taken. Y-axis of the resulting matrix.
+        Number of documents in the corpus. If provided, a slightly more memory-efficient code path is taken.
+        Y-axis of the resulting matrix.
     dtype : data-type, optional
         Data type of the output matrix.
 

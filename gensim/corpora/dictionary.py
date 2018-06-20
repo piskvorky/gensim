@@ -328,7 +328,8 @@ class Dictionary(utils.SaveLoad, Mapping):
         #. After (1) and (2), keep only the first `keep_n` most frequent tokens (or keep all if `keep_n=None`).
 
         After the pruning, resulting gaps in word ids are shrunk.
-        Due to this gap shrinking, **the same word may have a different word id before and after the call to this function!**
+        Due to this gap shrinking, **the same word may have a different word id before and after the call
+        to this function!**
 
         Examples
         --------

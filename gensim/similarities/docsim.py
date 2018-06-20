@@ -303,8 +303,8 @@ class Similarity(interfaces.SimilarityABC):
         If your entire index fits in memory (~1 million documents per 1GB of RAM), you can also use the
         :class:`~gensim.similarities.docsim.MatrixSimilarity` or
         :class:`~gensim.similarities.docsim.SparseMatrixSimilarity` classes directly.
-        These are more simple but do not scale as well (they keep the entire index in RAM, no sharding). They also do not
-        support adding new document dynamically.
+        These are more simple but do not scale as well (they keep the entire index in RAM, no sharding).
+        They also do not support adding new document dynamically.
 
         """
         if output_prefix is None:
