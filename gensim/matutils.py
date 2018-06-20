@@ -1398,14 +1398,14 @@ except ImportError:
         Attributes
         ----------
         num_docs : int
-            number of documents in market matrix file
+            Number of documents in market matrix file.
         num_terms : int
-            number of terms
+            Number of terms.
         num_nnz : int
-            number of non-zero terms
+            Number of non-zero terms.
 
         Notes
-        ----------
+        -----
         Note that the file is read into memory one document at a time, not the whole matrix at once
         (unlike e.g. `scipy.io.mmread` and other implementations).
         This allows us to process corpora which are larger than the available RAM.
