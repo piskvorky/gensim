@@ -1390,7 +1390,7 @@ except ImportError:
     FAST_VERSION = -1
 
     class MmReader(object):
-        """Matrix market file reader, used for :class:`~gensim.corpora.mmcorpus.MmCorpus`.
+        """Matrix market file reader, used internally in :class:`~gensim.corpora.mmcorpus.MmCorpus`.
 
         Wrap a term-document matrix on disk (in matrix-market format), and present it
         as an object which supports iteration over the rows (~documents).
@@ -1407,7 +1407,8 @@ except ImportError:
         Notes
         ----------
         Note that the file is read into memory one document at a time, not the whole matrix at once
-        (unlike :meth:`~scipy.io.mmread`). This allows us to process corpora which are larger than the available RAM.
+        (unlike e.g. `scipy.io.mmread` and other implementations).
+        This allows us to process corpora which are larger than the available RAM.
 
         """
 
@@ -1421,7 +1422,7 @@ except ImportError:
                 (e.g. smart_open objects).
 
             transposed : bool, optional
-                Do lines represent doc_id, term_id, value, instead of term_id, doc_id, value?
+                Do lines represent `doc_id, term_id, value`, instead of `term_id, doc_id, value`?
 
             """
             logger.info("initializing corpus reader from %s", input)
@@ -1474,7 +1475,7 @@ except ImportError:
                 break
 
         def __iter__(self):
-            """Iterate through the corpus.
+            """Iterate through all documents in the corpus.
 
             Notes
             ------
@@ -1485,7 +1486,7 @@ except ImportError:
             Yields
             ------
             (int, list of (int, number))
-                Document id and document in sparse bag-of-words format
+                Document id and document in sparse bag-of-words format.
 
             """
             with utils.file_or_filename(self.input) as lines:
