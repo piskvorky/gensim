@@ -27,7 +27,6 @@ Disadvantages:
 
 * Multiple words may map to the same id, causing hash collisions. The word <-> id mapping is no longer a bijection.
 
-
 References
 ----------
 
@@ -49,8 +48,7 @@ logger = logging.getLogger(__name__)
 
 
 class HashDictionary(utils.SaveLoad, dict):
-    """
-    Mapping between words and their integer ids, using a hashing function.
+    """Mapping between words and their integer ids, using a hashing function.
 
     Notes
     -----
@@ -77,7 +75,6 @@ class HashDictionary(utils.SaveLoad, dict):
 
         Parameters
         ----------
-
         documents : iterable of iterable of str
             Iterable of documents. If given, used to collect additional corpus statistics.
             :class:`~gensim.corpora.hashdictionary.HashDictionary` can work
@@ -117,13 +114,11 @@ class HashDictionary(utils.SaveLoad, dict):
 
         Parameters
         ----------
-
         tokenid : int
             Token identifier (result of hashing).
 
         Return
         ------
-
         set of str
             Set of all words that have mapped to this id.
 
@@ -136,13 +131,11 @@ class HashDictionary(utils.SaveLoad, dict):
 
         Parameters
         ----------
-
         token : str
             Input token.
 
         Return
         ------
-
         int
             Hash value of `token`.
 
@@ -174,12 +167,10 @@ class HashDictionary(utils.SaveLoad, dict):
 
         Notes
         -----
-
         This is only a convenience wrapper for calling `doc2bow` on each document with `allow_update=True`.
 
         Parameters
         ----------
-
         documents : iterable of list of str
             Collection of documents.
 
@@ -275,12 +266,11 @@ class HashDictionary(utils.SaveLoad, dict):
         """Filter tokens in the debug dictionary by their frequency. Only makes sense when `debug=True`.
 
         Since :class:`~gensim.corpora.hashdictionary.HashDictionary` id range is fixed and doesn't depend on the number
-        of tokens seen, this doesn't really "remove" anything.
-        It only clears some supplementary statistics, for easier debugging and a smaller RAM footprint.
+        of tokens seen, this doesn't really "remove" anything. It only clears some
+        internal corpus statistics, for easier debugging and a smaller RAM footprint.
 
         Parameters
         ----------
-
         no_below : int, optional
             Keep tokens which are contained in at least `no_below` documents.
         no_above : float, optional
@@ -291,7 +281,6 @@ class HashDictionary(utils.SaveLoad, dict):
 
         Notes
         -----
-
         For tokens that appear in:
 
         #. Less than `no_below` documents (absolute number) or \n
@@ -334,20 +323,17 @@ class HashDictionary(utils.SaveLoad, dict):
 
         Parameters
         ----------
-
         fname : str
             Path to output file.
 
         Notes
         -----
-
         The format is:
         `id[TAB]document frequency of this id[TAB]tab-separated set of words in UTF8 that map to this id[NEWLINE]`.
 
 
         Examples
         --------
-
         >>> from gensim.corpora import HashDictionary
         >>> from gensim.test.utils import get_tmpfile
         >>>
