@@ -22,6 +22,8 @@ import warnings
 import psutil
 import time
 
+from gensim.models.word2vec_inner import CythonLineSentence
+
 try:
     from queue import Queue
 except ImportError:
@@ -134,16 +136,43 @@ class BaseAny2VecModel(utils.SaveLoad):
         """Check that the training parameters provided make sense. e.g. raise error if `epochs` not provided."""
         raise NotImplementedError()
 
-    def _worker_loop(self, input_stream, progress_queue):
-        """Train the model, lifting lists of data from the job_queue."""
+    # def _worker_loop(self, input_stream, progress_queue):
+    #     """Train the model, lifting lists of data from the job_queue."""
+    #     thread_private_mem = self._get_thread_working_mem()
+    #     jobs_processed = 0
+    #     for batch in self._batch_iterator(input_stream):
+    #         data_iterable, job_parameters = batch
+    #
+    #         for callback in self.callbacks:
+    #             callback.on_batch_begin(self)
+    #
+    #         tally, raw_tally = self._do_train_job(data_iterable, job_parameters, thread_private_mem)
+    #
+    #         for callback in self.callbacks:
+    #             callback.on_batch_end(self)
+    #
+    #         progress_queue.put((len(data_iterable), tally, raw_tally))  # report back progress
+    #         jobs_processed += 1
+    #
+    #     progress_queue.put(None)
+    #     logger.debug("worker exiting, processed %i jobs", jobs_processed)
+
+    def _worker_loop(self, fname, progress_queue):
         thread_private_mem = self._get_thread_working_mem()
         jobs_processed = 0
-        for batch in self._batch_iterator(input_stream):
-            data_iterable, job_parameters = batch
+        job_parameters = self._get_job_params(0)
+        input_stream = CythonLineSentence(fname)
+        while True:
+            try:
+                # Prepare batch with NO GIL
+                data_iterable = input_stream.next_batch()
+            except:
+                break
 
             for callback in self.callbacks:
                 callback.on_batch_begin(self)
 
+            # No GIL
             tally, raw_tally = self._do_train_job(data_iterable, job_parameters, thread_private_mem)
 
             for callback in self.callbacks:
@@ -157,8 +186,6 @@ class BaseAny2VecModel(utils.SaveLoad):
 
     def _batch_iterator(self, input_stream, cur_epoch=0, total_examples=None, total_words=None):
         job_batch, batch_size = [], 0
-        # pushed_words, pushed_examples = 0, 0
-        next_job_params = self._get_job_params(cur_epoch)
         job_no = 0
 
         for data_idx, data in enumerate(input_stream):
@@ -172,25 +199,14 @@ class BaseAny2VecModel(utils.SaveLoad):
             else:
                 job_no += 1
 
-                yield job_batch, next_job_params
-
-                # update the learning rate for the next job
-                # if total_examples:
-                    # examples-based decay
-                    # pushed_examples += len(job_batch)
-                    # epoch_progress = 1.0 * pushed_examples / total_examples
-                # else:
-                    # words-based decay
-                    # pushed_words += self._raw_word_count(job_batch)
-                    # epoch_progress = 1.0 * pushed_words / total_words
-                # next_job_params = self._update_job_params(next_job_params, epoch_progress, cur_epoch)
+                yield job_batch
 
                 # add the sentence that didn't fit as the first item of a new job
                 job_batch, batch_size = [data], data_length
         # add the last job too (may be significantly smaller than batch_words)
         if job_batch:
             job_no += 1
-            yield job_batch, next_job_params
+            yield job_batch
 
         if job_no == 0 and self.train_count == 0:
             logger.warning(

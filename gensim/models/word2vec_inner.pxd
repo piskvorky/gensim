@@ -5,6 +5,9 @@
 # Copyright (C) 2013 Radim Rehurek <me@radimrehurek.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.htmlcimport numpy as np
 
+from libcpp.string cimport string
+from libcpp.vector cimport vector
+
 cdef extern from "voidptr.h":
     void* PyCObject_AsVoidPtr(object obj)
 
@@ -52,3 +55,29 @@ cdef void our_saxpy_noblas(const int *N, const float *alpha, const float *X, con
 cdef unsigned long long bisect_left(np.uint32_t *a, unsigned long long x, unsigned long long lo, unsigned long long hi) nogil
 
 cdef unsigned long long random_int32(unsigned long long *next_random) nogil
+
+
+cdef extern from "<iostream>" namespace "std":
+    cdef cppclass istream:
+        istream& read(const char*, int) except+
+
+cdef extern from "<iostream>" namespace "std::ios_base":
+    cdef cppclass open_mode:
+        pass
+    cdef open_mode binary
+    # you can define other constants as needed
+
+cdef extern from "<fstream>" namespace "std":
+    cdef cppclass ifstream(istream):
+        # constructors
+        ifstream(const char*) except +
+        ifstream(const char*, open_mode) except+
+
+cdef class CythonLineSentence:
+    """Simple format: one sentence = one line; words already preprocessed and separated by whitespace.
+    """
+    cdef public char* source
+    cdef public int max_sentence_length
+
+    cdef string read_line(self, ifstream*) nogil
+    cdef vector[string] next_batch(self) nogil

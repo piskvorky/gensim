@@ -1,4 +1,5 @@
 #!/usr/bin/env cython
+# distutils: language = c++
 # cython: boundscheck=False
 # cython: wraparound=False
 # cython: cdivision=True
@@ -13,7 +14,11 @@ cimport numpy as np
 
 from libc.math cimport exp
 from libc.math cimport log
-from libc.string cimport memset
+from libc.string cimport memset, strtok
+# from libc.stdio cimport FILE, fopen, fscanf, fclose
+from libcpp.string cimport string#, getline
+from libcpp.vector cimport vector
+# from libcpp.sstream cimport istringstream
 
 # scipy <= 0.15
 try:
@@ -41,6 +46,36 @@ cdef REAL_t[EXP_TABLE_SIZE] LOG_TABLE
 
 cdef int ONE = 1
 cdef REAL_t ONEF = <REAL_t>1.0
+
+@cython.final
+cdef class CythonLineSentence:
+    """Simple format: one sentence = one line; words already preprocessed and separated by whitespace.
+    """
+    def __init__(self, source, max_sentence_length=MAX_SENTENCE_LEN):
+        """
+        `source` can be either a string or a file object. Clip the file to the first
+        `limit` lines (or not clipped if limit is None, the default).
+
+        Example::
+
+            sentences = LineSentence('myfile.txt')
+
+        Or for compressed files::
+
+            sentences = LineSentence('compressed_text.txt.bz2')
+            sentences = LineSentence('compressed_text.txt.gz')
+
+        """
+        self.source = source
+        self.max_sentence_length = max_sentence_length
+
+    cdef string read_line(self, ifstream* fd) nogil:
+
+        return string()
+
+    cdef vector[string] next_batch(self) nogil:
+        return vector[string]()
+
 
 # for when fblas.sdot returns a double
 cdef REAL_t our_dot_double(const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil:
