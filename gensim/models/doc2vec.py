@@ -1028,6 +1028,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
             The rule, if given, is only used to prune vocabulary during current method call and is not stored as part
             of the model.
+
             The input parameters are of the following types:
                 * `word` (str) - the word we are examining
                 * `count` (int) - the word's frequency count in the corpus
@@ -1036,6 +1037,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         workers : int
             Used if `input_streams` is passed. Determines how many processes to use for vocab building.
             Actual number of workers is determined by `min(len(input_streams), workers)`.
+
         **kwargs
             Additional key word arguments passed to the internal vocabulary construction.
 
