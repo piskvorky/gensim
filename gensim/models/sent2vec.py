@@ -78,11 +78,11 @@ class Entry(object):
 
 class Sent2VecVocab(object):
     """Class for maintaining Sent2Vec vocbulary. Provides functionality for storing and training
-    word and character ngrams.
+    word ngrams.
 
     """
 
-    def __init__(self, sample, bucket, minn, maxn, max_vocab_size, min_count=5, max_line_size=1024):
+    def __init__(self, sample, bucket, max_vocab_size, min_count=5, max_line_size=1024):
         """
 
         Parameters
@@ -91,10 +91,6 @@ class Sent2VecVocab(object):
             Threshold for configuring which higher-frequency words are randomly downsampled.
         bucket : int
             Number of hash buckets for vocabulary.
-        minn : int
-            Min length of char ngrams.
-        maxn : int
-            Max length of char ngrams.
         max_vocab_size : int
             Limit RAM during vocabulary building; if there are more unique words than this,
             then prune the infrequent ones.
@@ -111,8 +107,6 @@ class Sent2VecVocab(object):
         self.size = 0
         self.sample = sample
         self.bucket = bucket
-        self.maxn = maxn
-        self.minn = minn
         self.min_count = min_count
 
     @staticmethod
@@ -176,8 +170,7 @@ class Sent2VecVocab(object):
     def read(self, sentences, min_count):
         """Process all words present in sentences.
         Initialize discard table to downsampled higher frequency words according to given sampling threshold.
-        Also initialize character ngrams for all words and threshold lower frequency words if their count
-        is less than a given value `min_count`.
+        Threshold lower frequency words if their count is less than a given value `min_count`.
 
         Parameters
         ----------
@@ -213,7 +206,7 @@ class Sent2VecVocab(object):
             Value for thresholding lower frequency words.
 
         """
-        self.words = [entry for entry in self.words if entry.count > t]
+        self.words = [entry for entry in self.words if entry.count >= t]
         self.size = 0
         self.word2int = [-1] * self.max_vocab_size
         for entry in self.words:
@@ -329,7 +322,7 @@ class Sent2Vec(BaseWordEmbeddingsModel):
     """Class for training and using neural networks described in [1]_"""
 
     def __init__(self, sentences=None, size=100, alpha=0.01, epochs=5, min_count=5, negative=10,
-                 word_ngrams=2, bucket=2000000, sample=0.0001, minn=3, maxn=6, dropout_k=2, seed=42,
+                 word_ngrams=2, bucket=2000000, sample=0.0001, dropout_k=2, seed=42,
                  min_alpha=0.001, batch_words=10000, workers=3, max_vocab_size=30000000,
                  compute_loss=False, callbacks=()):
         """
@@ -354,10 +347,6 @@ class Sent2Vec(BaseWordEmbeddingsModel):
             Number of hash buckets for vocabulary.
         sample : float, optional
             Threshold for configuring which higher-frequency words are randomly downsampled, useful range is (0, 1e-5).
-        minn : int, optional
-            Min length of char ngrams.
-        maxn : int, optional
-            Max length of char ngrams.
         dropout_k : int, optional
             Number of ngrams dropped when training a model.
         seed : int, optional
@@ -385,14 +374,11 @@ class Sent2Vec(BaseWordEmbeddingsModel):
         self.loss = 0.0
         self.negative_table_size = 10000000
         self.negatives = []
-        self.vocabulary = Sent2VecVocab(sample=sample, bucket=bucket, maxn=maxn,
-                                        minn=minn, max_vocab_size=max_vocab_size)
+        self.vocabulary = Sent2VecVocab(sample=sample, bucket=bucket, max_vocab_size=max_vocab_size)
         self.min_count = min_count
         self.word_ngrams = word_ngrams
         self.bucket = bucket
         self.sample = sample
-        self.minn = minn
-        self.maxn = maxn
         self.dropout_k = dropout_k
         self.max_vocab_size = max_vocab_size
         self.corpus_count = 0
