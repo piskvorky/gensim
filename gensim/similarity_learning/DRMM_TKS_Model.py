@@ -10,7 +10,6 @@ import keras.backend as K
 from gensim.similarity_learning import rank_hinge_loss
 from sklearn.preprocessing import normalize
 from gensim.similarity_learning import ValidationCallback
-
 import random
 random.seed(101010)
 import numpy
@@ -21,48 +20,69 @@ tensorflow.set_random_seed(101010)
 logger = logging.getLogger(__name__)
 
 
-class DRMM_TKS_Model:
-    """Class to extract data from the WikiQA dataset and provide it in a streamable format for training
-    It will provide a generator for training which will have int-indexed data in the form of:
-    query, positive document, negative document
-
-    The generator can be directly used with a keras model like:
-    model.fit_generator(DRRM_TKS_generator)
+class DRMM_TKS_Model: 
+    """User friendly model for training on similarity learning data.
+    You only have to provide sentences in the data as a list of words.
 
     Example Usage:
     -------------
-    wikiqa = WikiQAExtractor('data/WikiQACorpus/WikiQA-train.tsv')
-    gen  = wikiqa.get_batch_generator(32)
+    drmm_tks_model = DRMM_TKS_Model(queries, docs, labels, word_embedding_path)
+    drmm_tks_model.predict(test_queries, test_docs)
 
-    How it works:
-    ------------
-    The __init__ function will call:
-    1. build_vocab: which will index all the words and set up and embedding matrix from the pretrained
-                    Glove vectors whose path is provided in `word_embedding_path`
-    2. get_pair_list: which will for a list of all the queries and documents in the format of
-                    (query, positive document, negative document)
+    The data should have the format:
+    queries = ["When was World Wat 1 fought ?".split(),
+             "When was Gandhi born ?".split()]
 
-    When the `get_batch_generator` function is called by the user to get the iterable generator, it provides
-        a generator calls `get_batch` which provides the batch.
+    docs = [
+            ["The world war was bad".split(),
+            "It was fought in 1996".split()],
+            ["Gandhi was born in the 18th century".split(),
+             "He fought for the Indian freedom movement".split(),
+             "Gandhi was assasinated".split()]
+           ]
+
+    labels = [[0, 1],
+              [1, 0, 0]]
     """
 
     def __init__(self, queries, docs, labels, word_embedding_path=None,
-        text_maxlen=200, keep_full_embedding=True, hist_size=None,
-        normalize_embeddings=True, epochs=10, unk_handle_method='zero',
-        validation_data=None):
-        """Initializes the extractor
+        text_maxlen=200, keep_full_embedding=True, normalize_embeddings=True,
+        epochs=10, unk_handle_method='zero', validation_data=None):
+        """Initializes the model and trains it
 
         Parameters:
         -----------
-        file_path: str
-            path to the WikiQA-xxxx.tsv
-            where xxxx could be train, test or valid
+        queries: list of list of string words
+            The questions for the similarity learning model
+            
+            Example:
+            queries=["When was World Wat 1 fought ?".split(),
+                     "When was Gandhi born ?".split()],
+
+        docs: list of list of list of string words
+            The candidate answers for the similarity learning model
+
+            Example:
+            docs = [
+                    ["The world war was bad".split(),
+                    "It was fought in 1996".split()],
+                    ["Gandhi was born in the 18th century".split(),
+                     "He fought for the Indian freedom movement".split(),
+                     "Gandhi was assasinated".split()]
+                   ]
+
+        labels: list of list of ints
+            Indicates when a candidate document is relevant to a query
+            1 : relevant
+            0 : irrelevant
+
+            Example:
+            labels = [[0, 1],
+                      [1, 0, 0]]
 
         word_embedding_path: str
             path to the Glove vectors which have the embeddings in a .txt format
-
-        embedding_dim: int
-            The size of the vectors in the above Glove vectors
+            If unset, random word embeddings will be used
 
         text_maxlen: int
             The maximum possible length of a query or a document
@@ -71,6 +91,22 @@ class DRMM_TKS_Model:
         keep_full_embedding: boolean
             Whether the full embedding should be built or only the words in the dataset's vocab
             This becomes important for checking validation and test sets
+
+        normalize_embeddings: boolean
+            Whether the word embeddings provided should be normalized
+
+        epochs: int
+            The number of epochs for which the model should train on the data
+
+        unk_handle_method: string {'zero', 'random'}
+            The method for handling unkown words
+            'zero': unknown words are given a zero vector
+            'random': unknown words are given a uniformly random vector
+
+        validation_data: list of the form [test_queries, test_docs, test_labels]
+            where test_queries, test_docs  and test_labels are of the same form as
+            their counter parts stated above
+
         """
         self.queries = queries
         self.docs = docs
@@ -204,13 +240,6 @@ class DRMM_TKS_Model:
         logger.info("Pad word has been set to index %d" % self.pad_word_index)
         logger.info("Embedding index build complete")
 
-    def make_indexed_pair_list(self):
-        indexed_pair_list = []
-        for q, d_pos, d_neg in self.pair_list:
-            indexed_pair_list.append([self.make_indexed(q),
-                self.make_indexed(d_pos), self.make_indexed(d_neg)])
-        return indexed_pair_list
-
     def preprocess(self, sentence):
         """Preprocess an input string to allow only alphabets and numbers
 
@@ -227,8 +256,12 @@ class DRMM_TKS_Model:
 
         Parameters:
         -----------
-        sentenceL str
+        sentence str
             The sentence to be indexed
+
+        Raises:
+        -------
+        ValueError: If the sentence has a lenght more than text_maxlen
         """
         indexed_sent = [self.word2index[word] for word in sentence]
         if len(indexed_sent)  > self.text_maxlen:
@@ -237,74 +270,28 @@ class DRMM_TKS_Model:
 
         indexed_sent = indexed_sent + [self.pad_word_index]*(self.text_maxlen - len(indexed_sent))
         return indexed_sent
-        
-
-    def get_pair_list(self):
-        """Returns a list with query document pairs in the format
-        (query, positive_doc, negative_doc)
-
-        Example output:
-        -------------
-        [(q1, d+, d-), (q2, d+, d-), (q3, d+, d-), ..., (qn, d+, d-)]
-
-             where each query or document is a list of ints
-    
-        Example:
-        -------
-        [(['When', 'was', 'Abraham', 'Lincoln', 'born', '?'],
-          ['He', 'was', 'born', 'in', '1809'],
-          ['Abraham',
-           'Lincoln',
-           'was',
-           'the',
-           'president',
-           'of',
-           'the',
-           'United',
-           'States',
-           'of',
-           'America']),
-         (['When', 'was', 'the', 'first', 'World', 'War', '?'],
-          ['It', 'was', 'fought', 'in', '1914'],
-          ['There', 'were', 'over', 'a', 'million', 'deaths']),
-         (['When', 'was', 'the', 'first', 'World', 'War', '?'],
-          ['It', 'was', 'fought', 'in', '1914'],
-          ['The', 'first', 'world', 'war', 'was', 'bad'])]"""
-        pair_list = []
-        for q, doc, label in zip(self.queries, self.docs, self.labels):
-            doc, label = (list(t) for t in zip(*sorted(zip(doc, label), reverse=True)))
-            for item in zip(doc, label):
-                if item[1] == 1:
-                    for new_item in zip(doc, label):
-                        if new_item[1] == 0:
-                            pair_list.append((q, item[0], new_item[0]))
-        return pair_list
-
-
 
     def get_full_batch(self):
-        """Generator to provide a batch of training sample of size batch_size
-        The batch provided is actually twice the size and will have alternate positive
-        and negative examples. CHECK does alternation even matter?
+        """Provides all the data points int the format: X1, X2, y with
+        alternate positive and negative examples
 
-        So, if batch_size is 16
-        the returned batch will be of size 32 like:
-        [positive_example, negative_example, positive_example, ...]
-
-        TOCHECK : maybe this behaviour shouldn't be like this
-
-        Parameters:
-        ----------
-        batch_size: int
-            provides of batches of that size
+        X1: the queries
+            shape : (num_samples, text_maxlen)
+        X2: the docs
+            shape : (num_samples, text_maxlen)
+        y: int {0, 1}
+            The relation between X1[i] and X2[j]
+            1 : X2[i] is relevant to X1[i]
+            0 : X2[i] is not relevant to X1[i]
         """
 
         num_samples = len(self.indexed_pair_list)
         X1 = np.zeros((num_samples * 2, self.text_maxlen))
         X2 = np.zeros((num_samples * 2, self.text_maxlen))
 
-        if self.hist_size is not None:
-            X2 = np.zeros((num_samples * 2, self.text_maxlen, self.hist_size))
+        # To be uncommented when histogram support is included
+        # if self.hist_size is not None:
+        #     X2 = np.zeros((num_samples * 2, self.text_maxlen, self.hist_size))
 
         y = np.zeros((num_samples * 2, 1))
 
@@ -325,12 +312,58 @@ class DRMM_TKS_Model:
 
         return X1, X2, y
 
+    def get_pair_list(self):
+        """Returns a list with query document pairs in the format
+        (query, positive_doc, negative_doc)
+
+        Example output:
+        -------------
+        [(q1, d+, d-), (q2, d+, d-), (q3, d+, d-), ..., (qn, d+, d-)]
+
+             where each query or document is a list of ints
+    
+        Example:
+        -------
+        [(['When', 'was', 'Abraham', 'Lincoln', 'born', '?'],
+          ['He', 'was', 'born', 'in', '1809'],
+          ['Abraham', 'Lincoln', 'was', 'the', 'president',
+           'of', 'the', 'United', 'States', 'of', 'America']),
+
+         (['When', 'was', 'the', 'first', 'World', 'War', '?'],
+          ['It', 'was', 'fought', 'in', '1914'],
+          ['There', 'were', 'over', 'a', 'million', 'deaths']),
+
+         (['When', 'was', 'the', 'first', 'World', 'War', '?'],
+          ['It', 'was', 'fought', 'in', '1914'],
+          ['The', 'first', 'world', 'war', 'was', 'bad'])
+        ]
+
+        """
+        pair_list = []
+        for q, doc, label in zip(self.queries, self.docs, self.labels):
+            doc, label = (list(t) for t in zip(*sorted(zip(doc, label), reverse=True)))
+            for item in zip(doc, label):
+                if item[1] == 1:
+                    for new_item in zip(doc, label):
+                        if new_item[1] == 0:
+                            pair_list.append((q, item[0], new_item[0]))
+        return pair_list
+
+    def make_indexed_pair_list(self): 
+        """Converts the existing word based pair list into an indexed format
+
+        Note: pair_list needs to be first created using get_pair_list"""
+        indexed_pair_list = []
+        for q, d_pos, d_neg in self.pair_list:
+            indexed_pair_list.append([self.make_indexed(q),
+                self.make_indexed(d_pos), self.make_indexed(d_neg)])
+        return indexed_pair_list
 
     def train_model(self):
+        """Trains a DRMM_TKS model using specified parameters"""
         X1_train, X2_train, y_train = self.get_full_batch()
         drmm_tks = DRMM_TKS(
-                    embedding=self.embedding_matrix,
-                    vocab_size=self.embedding_matrix.shape[0],
+                    embedding=self.embedding_matrix, vocab_size=self.embedding_matrix.shape[0],
                     text_maxlen=self.text_maxlen)
 
         self.model = drmm_tks.get_model()
@@ -367,7 +400,8 @@ class DRMM_TKS_Model:
             indexed_long_queries = self.translate_user_data(long_queries)
             indexed_long_doc_list = self.translate_user_data(long_doc_list)   
 
-            val_callback = ValidationCallback({"X1": indexed_long_queries, "X2": indexed_long_doc_list, "doc_lengths": doc_lens, "y": long_test_labels})
+            val_callback = ValidationCallback({"X1": indexed_long_queries,
+                "X2": indexed_long_doc_list, "doc_lengths": doc_lens, "y": long_test_labels})
 
 
         self.model.compile(optimizer=optimizer, loss=loss, metrics=['accuracy'])
@@ -375,6 +409,20 @@ class DRMM_TKS_Model:
                   verbose=1, epochs=self.epochs, shuffle=True, callbacks=[val_callback])
 
     def translate_user_data(self, data):
+        """Translates given user data (as a list of words) into an indexed
+        format which the model understands
+
+        Parameters:
+        ----------
+        data: list of list of string words
+            The data to be tranlsated
+            Example:
+                data = [["Hello World".split(),
+                        "Translate this sentence".split()]
+                       ]
+                should return something like:
+                [[12, 54],
+                 [65, 23, 21]"""
         translated_data = []
         for sentence in data:
             translated_sentence = []
@@ -390,8 +438,30 @@ class DRMM_TKS_Model:
             translated_data.append(np.array(translated_sentence))
         return np.array(translated_data)
 
-
     def predict(self, queries, docs):
+        """Predcits on the input paramters using the trained model
+
+        Parameters:
+        -----------
+        queries: list of list of string words
+            The questions for the similarity learning model
+            
+            Example:
+            queries=["When was World Wat 1 fought ?".split(),
+                     "When was Gandhi born ?".split()],
+
+        docs: list of list of list of string words
+            The candidate answers for the similarity learning model
+
+            Example:
+            docs = [
+                    ["The world war was bad".split(),
+                    "It was fought in 1996".split()],
+                    ["Gandhi was born in the 18th century".split(),
+                     "He fought for the Indian freedom movement".split(),
+                     "Gandhi was assasinated".split()]
+                   ]
+        """
         doc_lens = []
         long_doc_list = []
         for doc in docs:
