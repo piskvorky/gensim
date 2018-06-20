@@ -6,18 +6,19 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""Python implementation of Poincaré Embeddings [1]_, an embedding that is better at capturing latent hierarchical
-information than traditional Euclidean embeddings. The method is described in more detail in [1]_.
+"""Python implementation of Poincaré Embeddings.
+
+These embeddings are better at capturing latent hierarchical information than traditional Euclidean embeddings.
+The method is described in detail in `Maximilian Nickel, Douwe Kiela -
+"Poincaré Embeddings for Learning Hierarchical Representations" <https://arxiv.org/abs/1705.08039>`_.
 
 The main use-case is to automatically learn hierarchical representations of nodes from a tree-like structure,
-such as a Directed Acyclic Graph, using a transitive closure of the relations. Representations of nodes in a
-symmetric graph can also be learned, using an iterable of the direct relations in the graph.
+such as a Directed Acyclic Graph (DAG), using a transitive closure of the relations. Representations of nodes in a
+symmetric graph can also be learned.
 
-This module allows training a Poincaré Embedding from a training file containing relations of graph in a
-csv-like format, or a Python iterable of relations.
+This module allows training Poincaré Embeddings from a training file containing relations of graph in a
+csv-like format, or from a Python iterable of relations.
 
-.. [1] Maximilian Nickel, Douwe Kiela - "Poincaré Embeddings for Learning Hierarchical Representations"
-    https://arxiv.org/abs/1705.08039
 
 Examples
 --------
@@ -67,15 +68,25 @@ logger = logging.getLogger(__name__)
 
 
 class PoincareModel(utils.SaveLoad):
-    """Class for training, using and evaluating Poincare Embeddings.
+    """Train, use and evaluate Poincare Embeddings.
 
     The model can be stored/loaded via its :meth:`~gensim.models.poincare.PoincareModel.save`
     and :meth:`~gensim.models.poincare.PoincareModel.load` methods, or stored/loaded in the word2vec format
     via `model.kv.save_word2vec_format` and :meth:`~gensim.models.poincare.PoincareKeyedVectors.load_word2vec_format`.
 
-    Note that training cannot be resumed from a model loaded via `load_word2vec_format`, if you wish to train further,
+    Notes
+    -----
+    Training cannot be resumed from a model loaded via `load_word2vec_format`, if you wish to train further,
     use :meth:`~gensim.models.poincare.PoincareModel.save` and :meth:`~gensim.models.poincare.PoincareModel.load`
     methods instead.
+
+    An important attribute (that provides a lot of additional functionality when directly accessed) are the \
+    keyed vectors:
+
+    self.kv : :class:`~gensim.models.poincare.PoincareKeyedVectors`
+        This object essentially contains the mapping between nodes and embeddings, as well the vocabulary of the model
+        (set of unique nodes seen by the model). After training, it can be used to perform operations on the vectors \
+        such as vector lookup, distance and similarity calculations etc. See the documentation of its class for usage examples.
 
     """
     def __init__(self, train_data, size=50, alpha=0.1, negative=10, workers=1, epsilon=1e-5, regularization_coeff=1.0,
@@ -84,11 +95,11 @@ class PoincareModel(utils.SaveLoad):
 
         Parameters
         ----------
-        train_data : iterable of (str, str)
-            Iterable of relations, e.g. a list of tuples, or a PoincareRelations instance streaming from a file.
-            Note that the relations are treated as ordered pairs, i.e. a relation (a, b) does not imply the
-            opposite relation (b, a). In case the relations are symmetric, the data should contain both relations
-            (a, b) and (b, a).
+        train_data : {iterable of (str, str), :class:`gensim.models.poincare.PoincareRelations`}
+            Iterable of relations, e.g. a list of tuples, or a :class:`gensim.models.poincare.PoincareRelations`
+            instance streaming from a file. Note that the relations are treated as ordered pairs,
+            i.e. a relation (a, b) does not imply the opposite relation (b, a). In case the relations are symmetric,
+            the data should contain both relations (a, b) and (b, a).
         size : int, optional
             Number of dimensions of the trained model.
         alpha : float, optional
@@ -158,7 +169,7 @@ class PoincareModel(utils.SaveLoad):
         all_relations = []  # List of all relation pairs
         node_relations = defaultdict(set)  # Mapping from node index to its related node indices
 
-        logger.info("Loading relations from train data..")
+        logger.info("loading relations from train data..")
         for relation in self.train_data:
             if len(relation) != 2:
                 raise ValueError('Relation pair "%s" should have exactly two items' % repr(relation))
@@ -173,7 +184,7 @@ class PoincareModel(utils.SaveLoad):
             node_relations[node_1_index].add(node_2_index)
             relation = (node_1_index, node_2_index)
             all_relations.append(relation)
-        logger.info("Loaded %d relations from train data, %d nodes", len(all_relations), len(vocab))
+        logger.info("loaded %d relations from train data, %d nodes", len(all_relations), len(vocab))
         self.kv.vocab = vocab
         self.kv.index2word = index2word
         self.indices_set = set((range(len(index2word))))  # Set of all node indices
@@ -190,6 +201,7 @@ class PoincareModel(utils.SaveLoad):
         self.kv.syn0 = self._np_random.uniform(self.init_range[0], self.init_range[1], shape).astype(self.dtype)
 
     def _init_node_probabilities(self):
+        """Initialize a-priori probabilities. """
         counts = np.array([
                 self.kv.vocab[self.kv.index2word[i]].count
                 for i in range(len(self.kv.index2word))
@@ -199,7 +211,7 @@ class PoincareModel(utils.SaveLoad):
         self._node_probabilities = counts / counts.sum()
 
     def _get_candidate_negatives(self):
-        """Returns candidate negatives of size `self.negative` from the negative examples buffer.
+        """Return candidate negatives of size `self.negative` from the negative examples buffer.
 
         Returns
         -------
@@ -252,7 +264,7 @@ class PoincareModel(utils.SaveLoad):
                 indices = self._get_candidate_negatives()
                 unique_indices = set(indices)
             if times_sampled > 1:
-                logger.debug('Sampled %d times, positive fraction %.5f', times_sampled, positive_fraction)
+                logger.debug('sampled %d times, positive fraction %.5f', times_sampled, positive_fraction)
         else:
             # If number of positive relations is a significant fraction of total nodes
             # subtract positively connected nodes from set of choices and sample from the remaining
@@ -271,7 +283,7 @@ class PoincareModel(utils.SaveLoad):
         ----------
         matrix : numpy.array
             Array containing vectors for u, v and negative samples, of shape (2 + negative_size, dim).
-        regularization_coeff : float
+        regularization_coeff : float, optional
             Coefficient to use for l2-regularization
 
         Returns
@@ -305,7 +317,7 @@ class PoincareModel(utils.SaveLoad):
         Parameters
         ----------
         vectors : numpy.array
-            Can be 1-D,or 2-D (in which case the norm for each row is checked).
+            Can be 1-D, or 2-D (in which case the norm for each row is checked).
         epsilon : float
             Parameter for numerical stability, each dimension of the vector is reduced by `epsilon`
             if the norm of the vector is greater than or equal to 1.
@@ -334,7 +346,20 @@ class PoincareModel(utils.SaveLoad):
                 return vectors
 
     def save(self, *args, **kwargs):
-        """Save complete model to disk, inherited from :class:`gensim.utils.SaveLoad`."""
+        """Save complete model to disk, inherited from :class:`~gensim.utils.SaveLoad`.
+
+        See also
+        --------
+        :meth:`~gensim.models.poincare.PoincareModel.load`
+
+        Parameters
+        ----------
+        *args
+            Positional arguments passed to :meth:`~gensim.utils.SaveLoad.save`.
+        **kwargs
+            Keyword arguments passed to :meth:`~gensim.utils.SaveLoad.save`.
+
+        """
         self._loss_grad = None  # Can't pickle autograd fn to disk
         attrs_to_ignore = ['_node_probabilities', '_node_counts_cumsum']
         kwargs['ignore'] = set(list(kwargs.get('ignore', [])) + attrs_to_ignore)
@@ -342,17 +367,34 @@ class PoincareModel(utils.SaveLoad):
 
     @classmethod
     def load(cls, *args, **kwargs):
-        """Load model from disk, inherited from :class:`~gensim.utils.SaveLoad`."""
+        """Load model from disk, inherited from :class:`~gensim.utils.SaveLoad`.
+
+        See also
+        --------
+        :meth:`~gensim.models.poincare.PoincareModel.save`
+
+        Parameters
+        ----------
+        *args
+            Positional arguments passed to :meth:`~gensim.utils.SaveLoad.load`.
+        **kwargs
+            Keyword arguments passed to :meth:`~gensim.utils.SaveLoad.load`.
+
+        Returns
+        -------
+        :class:`~gensim.models.poincare.PoincareModel`
+            The loaded model.
+
+        """
         model = super(PoincareModel, cls).load(*args, **kwargs)
         model._init_node_probabilities()
         return model
 
     def _prepare_training_batch(self, relations, all_negatives, check_gradients=False):
-        """Creates training batch and computes gradients and loss for the batch.
+        """Create a training batch and compute gradients and loss for the batch.
 
         Parameters
         ----------
-
         relations : list of tuples
             List of tuples of positive examples of the form (node_1_index, node_2_index).
         all_negatives : list of lists
@@ -390,12 +432,14 @@ class PoincareModel(utils.SaveLoad):
 
         Parameters
         ----------
-        batch : PoincareBatch instance
-            Batch for which computed gradients are to checked.
         relations : list of tuples
             List of tuples of positive examples of the form (node_1_index, node_2_index).
         all_negatives : list of lists
             List of lists of negative samples for each node_1 in the positive examples.
+        batch : :class:`~gensim.models.poincare.PoincareBatch`
+            Batch for which computed gradients are to be checked.
+        tol : float, optional
+            The maximum error between our computed gradients and the reference ones from autograd.
 
         """
         if not AUTOGRAD_PRESENT:
@@ -415,34 +459,34 @@ class PoincareModel(utils.SaveLoad):
             diff = np.abs(auto_gradients - computed_gradients).max()
             if diff > max_diff:
                 max_diff = diff
-        logger.info('Max difference between computed gradients and autograd gradients: %.10f', max_diff)
+        logger.info('max difference between computed gradients and autograd gradients: %.10f', max_diff)
         assert max_diff < tol, (
-                'Max difference between computed gradients and autograd gradients %.10f, '
-                'greater than tolerance %.10f' % (max_diff, tol))
+            'Max difference between computed gradients and autograd gradients %.10f, '
+            'greater than tolerance %.10f' % (max_diff, tol))
 
     def _sample_negatives_batch(self, nodes):
-        """Return negative examples for each node in the given nodes.
+        """Return negative examples for each node.
 
         Parameters
         ----------
-        nodes : list
+        nodes : list of int
             List of node indices for which negative samples are to be returned.
 
         Returns
         -------
         list of lists
-            Each inner list is a list of negative sample for a single node in the input list.
+            Each inner list is a list of negative samples for a single node in the input list.
 
         """
         all_indices = [self._sample_negatives(node) for node in nodes]
         return all_indices
 
     def _train_on_batch(self, relations, check_gradients=False):
-        """Performs training for a single training batch.
+        """Perform training for a single training batch.
 
         Parameters
         ----------
-        relations : list of tuples
+        relations : list of tuples of (int, int)
             List of tuples of positive examples of the form (node_1_index, node_2_index).
         check_gradients : bool, optional
             Whether to compare the computed gradients to autograd gradients for this batch.
@@ -460,13 +504,13 @@ class PoincareModel(utils.SaveLoad):
 
     @staticmethod
     def _handle_duplicates(vector_updates, node_indices):
-        """Handles occurrences of multiple updates to the same node in a batch of vector updates.
+        """Handle occurrences of multiple updates to the same node in a batch of vector updates.
 
         Parameters
         ----------
         vector_updates : numpy.array
             Array with each row containing updates to be performed on a certain node.
-        node_indices : list
+        node_indices : list of int
             Node indices on which the above updates are to be performed on.
 
         Notes
@@ -487,7 +531,7 @@ class PoincareModel(utils.SaveLoad):
             vector_updates[positions[:-1]] = 0
 
     def _update_vectors_batch(self, batch):
-        """Updates vectors for nodes in the given batch.
+        """Update vectors for nodes in the given batch.
 
         Parameters
         ----------
@@ -514,15 +558,15 @@ class PoincareModel(utils.SaveLoad):
         self.kv.syn0[indices_v] = self._clip_vectors(self.kv.syn0[indices_v], self.epsilon)
 
     def train(self, epochs, batch_size=10, print_every=1000, check_gradients_every=None):
-        """Trains Poincare embeddings using loaded data and model parameters.
+        """Train Poincare embeddings using loaded data and model parameters.
 
         Parameters
         ----------
-
-        batch_size : int, optional
-            Number of examples to train on in a single batch.
         epochs : int
             Number of iterations (epochs) over the corpus.
+        batch_size : int, optional
+            Number of examples to train on in a single batch.
+
         print_every : int, optional
             Prints progress and average loss after every `print_every` batches.
         check_gradients_every : int or None, optional
@@ -550,25 +594,25 @@ class PoincareModel(utils.SaveLoad):
         )
 
         if self.burn_in > 0 and not self._burn_in_done:
-            logger.info("Starting burn-in (%d epochs)----------------------------------------", self.burn_in)
+            logger.info("starting burn-in (%d epochs)----------------------------------------", self.burn_in)
             self.alpha = self.burn_in_alpha
             self._train_batchwise(
                 epochs=self.burn_in, batch_size=batch_size, print_every=print_every,
                 check_gradients_every=check_gradients_every)
             self._burn_in_done = True
-            logger.info("Burn-in finished")
+            logger.info("burn-in finished")
 
         self.alpha = self.train_alpha
-        logger.info("Starting training (%d epochs)----------------------------------------", epochs)
+        logger.info("starting training (%d epochs)----------------------------------------", epochs)
         self._train_batchwise(
             epochs=epochs, batch_size=batch_size, print_every=print_every,
             check_gradients_every=check_gradients_every)
-        logger.info("Training finished")
+        logger.info("training finished")
 
         np.seterr(**old_settings)
 
     def _train_batchwise(self, epochs, batch_size=10, print_every=1000, check_gradients_every=None):
-        """Trains Poincare embeddings using specified parameters.
+        """Train Poincare embeddings using specified parameters.
 
         Parameters
         ----------
@@ -602,10 +646,10 @@ class PoincareModel(utils.SaveLoad):
                     time_taken = time.time() - last_time
                     speed = print_every * batch_size / time_taken
                     logger.info(
-                        'Training on epoch %d, examples #%d-#%d, loss: %.2f'
+                        'training on epoch %d, examples #%d-#%d, loss: %.2f'
                         % (epoch, i, i + batch_size, avg_loss))
                     logger.info(
-                        'Time taken for %d examples: %.2f s, %.2f examples / s'
+                        'time taken for %d examples: %.2f s, %.2f examples / s'
                         % (print_every * batch_size, time_taken, speed))
                     last_time = time.time()
                     avg_loss = 0.0
@@ -614,8 +658,7 @@ class PoincareModel(utils.SaveLoad):
 class PoincareBatch(object):
     """Compute Poincare distances, gradients and loss for a training batch.
 
-    Class for computing Poincare distances, gradients and loss for a training batch,
-    and storing intermediate state to avoid recomputing multiple times.
+    Storie intermediate state to avoid recomputing multiple times.
 
     """
     def __init__(self, vectors_u, vectors_v, indices_u, indices_v, regularization_coeff=1.0):
@@ -625,18 +668,16 @@ class PoincareBatch(object):
         Parameters
         ----------
         vectors_u : numpy.array
-            Vectors of all nodes `u` in the batch.
-            Expected shape (batch_size, dim).
+            Vectors of all nodes `u` in the batch. Expected shape (batch_size, dim).
         vectors_v : numpy.array
             Vectors of all positively related nodes `v` and negatively sampled nodes `v'`,
-            for each node `u` in the batch.
-            Expected shape (1 + neg_size, dim, batch_size).
-        indices_u : list
+            for each node `u` in the batch. Expected shape (1 + neg_size, dim, batch_size).
+        indices_u : list of int
             List of node indices for each of the vectors in `vectors_u`.
-        indices_v : list
+        indices_v : list of lists of int
             Nested list of lists, each of which is a  list of node indices
             for each of the vectors in `vectors_v` for a specific node `u`.
-        regularization_coeff : float
+        regularization_coeff : float, optional
             Coefficient to use for l2-regularization
 
         """
@@ -770,9 +811,9 @@ class PoincareBatch(object):
 
 
 class PoincareKeyedVectors(BaseKeyedVectors):
-    """Class to contain vectors and vocab for the :class:`~gensim.models.poincare.PoincareModel` training class.
+    """Vectors and vocab for the :class:`~gensim.models.poincare.PoincareModel` training class.
 
-    Used to perform operations on the vectors such as vector lookup, distance etc.
+    Used to perform operations on the vectors such as vector lookup, distance calculations etc.
 
     """
 
@@ -798,21 +839,26 @@ class PoincareKeyedVectors(BaseKeyedVectors):
         self.index2word = value
 
     def word_vec(self, word):
-        """
-        Accept a single word as input.
-        Returns the word's representations in vector space, as a 1D numpy array.
+        """Return the word's representations in vector space, as a 1D numpy array.
 
-        Example::
+        Examples
+        --------
 
-          >>> trained_model.word_vec('office')
-          array([ -1.40128313e-02, ...])
+        >>> from gensim.test.utils import datapath
+        >>>
+        >>> # Read the sample relations file and train the model
+        >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
+        >>> model = PoincareModel(train_data=relations)
+        >>> model.train(epochs=50)
+        >>>
+        >>> # Query the trained model.
+        >>> wv = model.kv.word_vec('kangaroo.n.01')
 
         """
         return super(PoincareKeyedVectors, self).get_vector(word)
 
     def words_closer_than(self, w1, w2):
-        """
-        Returns all words that are closer to `w1` than `w2` is to `w1`.
+        """Return all words that are closer to `w1` than `w2` is to `w1`.
 
         Parameters
         ----------
@@ -828,9 +874,16 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Examples
         --------
-
-        >>> model.words_closer_than('carnivore.n.01', 'mammal.n.01')
-        ['dog.n.01', 'canine.n.02']
+        >>> from gensim.test.utils import datapath
+        >>>
+        >>> # Read the sample relations file and train the model
+        >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
+        >>> model = PoincareModel(train_data=relations)
+        >>> model.train(epochs=50)
+        >>>
+        >>> # Which term is closer to 'kangaroo' than 'metatherian' is to 'kangaroo'?
+        >>> model.kv.words_closer_than('kangaroo.n.01', 'metatherian.n.01')
+        [u'marsupial.n.01', u'phalanger.n.01']
 
         """
         return super(PoincareKeyedVectors, self).closer_than(w1, w2)
@@ -937,7 +990,7 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
     def closest_child(self, node):
         """
-        Returns the node closest to `node` that is lower in the hierarchy than `node`.
+        Return the node closest to `node` that is lower in the hierarchy than `node`.
 
         Parameters
         ----------
@@ -963,7 +1016,7 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
     def closest_parent(self, node):
         """
-        Returns the node closest to `node` that is higher in the hierarchy than `node`.
+        Return the node closest to `node` that is higher in the hierarchy than `node`.
 
         Parameters
         ----------
@@ -989,7 +1042,7 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
     def descendants(self, node, max_depth=5):
         """
-        Returns the list of recursively closest children from the given node, upto a max depth of `max_depth`.
+        Return the list of recursively closest children from the given node, upto a max depth of `max_depth`.
 
         Parameters
         ----------
@@ -1015,7 +1068,7 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
     def ancestors(self, node):
         """
-        Returns the list of recursively closest parents from the given node.
+        Return the list of recursively closest parents from the given node.
 
         Parameters
         ----------
@@ -1054,9 +1107,16 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Examples
         --------
-
-        >>> model.distance('mammal.n.01', 'carnivore.n.01')
-        2.13
+        >>> from gensim.test.utils import datapath
+        >>>
+        >>> # Read the sample relations file and train the model
+        >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
+        >>> model = PoincareModel(train_data=relations)
+        >>> model.train(epochs=50)
+        >>>
+        >>> # What is the distance between the words 'mammal' and 'carnivore'?
+        >>> model.kv.distance('mammal.n.01', 'carnivore.n.01')
+        2.9742298803339304
 
         Notes
         -----
@@ -1085,9 +1145,16 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Examples
         --------
-
-        >>> model.similarity('mammal.n.01', 'carnivore.n.01')
-        0.73
+        >>> from gensim.test.utils import datapath
+        >>>
+        >>> # Read the sample relations file and train the model
+        >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
+        >>> model = PoincareModel(train_data=relations)
+        >>> model.train(epochs=50)
+        >>>
+        >>> # What is the similarity between the words 'mammal' and 'carnivore'?
+        >>> model.kv.similarity('mammal.n.01', 'carnivore.n.01')
+        0.25162107631176484
 
         Notes
         -----
@@ -1120,8 +1187,16 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Examples
         --------
-        >>> vectors.most_similar('lion.n.01')
-        [('lion_cub.n.01', 0.4484), ('lionet.n.01', 0.6552), ...]
+        >>> from gensim.test.utils import datapath
+        >>>
+        >>> # Read the sample relations file and train the model
+        >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
+        >>> model = PoincareModel(train_data=relations)
+        >>> model.train(epochs=50)
+        >>>
+        >>> # Which words are most similar to 'kangaroo'?
+        >>> model.kv.most_similar('kangaroo.n.01', topn=2)
+        [(u'kangaroo.n.01', 0.0), (u'marsupial.n.01', 0.26524229460827725)]
 
         """
         if not restrict_vocab:
@@ -1153,10 +1228,10 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Parameters
         ----------
-        node_or_vector : str/int or numpy.array
+        node_or_vector : {str, int, numpy.array}
             Node key or vector from which distances are to be computed.
 
-        other_nodes : iterable of str/int or None
+        other_nodes : {iterable of str, iterable of int, None}, optional
             For each node in `other_nodes` distance from `node_or_vector` is computed.
             If None or empty, distance of `node_or_vector` from all nodes in vocab is computed (including itself).
 
@@ -1168,12 +1243,19 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Examples
         --------
+        >>> from gensim.test.utils import datapath
+        >>>
+        >>> # Read the sample relations file and train the model
+        >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
+        >>> model = PoincareModel(train_data=relations)
+        >>> model.train(epochs=50)
+        >>>
+        >>> # Check the distances between a word and a list of other words.
+        >>> model.kv.distances('mammal.n.01', ['carnivore.n.01', 'dog.n.01'])
+        array([2.97422988, 2.83007402])
 
-        >>> model.distances('mammal.n.01', ['carnivore.n.01', 'dog.n.01'])
-        np.array([2.1199, 2.0710]
-
-        >>> model.distances('mammal.n.01')
-        np.array([0.43753847, 3.67973852, ..., 6.66172886])
+        >>> # Check the distances between a word and every other word in the vocab.
+        >>> all_distances = model.kv.distances('mammal.n.01')
 
         Notes
         -----
@@ -1198,7 +1280,7 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Parameters
         ----------
-        node_or_vector : str/int or numpy.array
+        node_or_vector : {str, int, numpy.array}
             Input node key or vector for which position in hierarchy is to be returned.
 
         Returns
@@ -1208,9 +1290,16 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Examples
         --------
-
-        >>> model.norm('mammal.n.01')
-        0.9
+        >>> from gensim.test.utils import datapath
+        >>>
+        >>> # Read the sample relations file and train the model
+        >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
+        >>> model = PoincareModel(train_data=relations)
+        >>> model.train(epochs=50)
+        >>>
+        >>> # Get the norm of the embedding of the word `mammal`.
+        >>> model.kv.norm('mammal.n.01')
+        0.6423008703542398
 
         Notes
         -----
@@ -1230,10 +1319,10 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Parameters
         ----------
-        node_or_vector_1 : str/int or numpy.array
+        node_or_vector_1 : {str, int, numpy.array}
             Input node key or vector.
 
-        node_or_vector_2 : str/int or numpy.array
+        node_or_vector_2 : {str, int, numpy.array}
             Input node key or vector.
 
         Returns
@@ -1243,12 +1332,18 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Examples
         --------
+        >>> from gensim.test.utils import datapath
+        >>>
+        >>> # Read the sample relations file and train the model
+        >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
+        >>> model = PoincareModel(train_data=relations)
+        >>> model.train(epochs=50)
+        >>>
+        >>> model.kv.difference_in_hierarchy('mammal.n.01', 'dog.n.01')
+        0.05382517902410999
 
-        >>> model.difference_in_hierarchy('mammal.n.01', 'dog.n.01')
-        0.51
-
-        >>> model.difference_in_hierarchy('dog.n.01', 'mammal.n.01')
-        -0.51
+        >>> model.kv.difference_in_hierarchy('dog.n.01', 'mammal.n.01')
+        -0.05382517902410999
 
         Notes
         -----
@@ -1260,7 +1355,7 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
 
 class PoincareRelations(object):
-    """Class to stream relations for `PoincareModel` from a tsv-like file."""
+    """Stream relations for `PoincareModel` from a tsv-like file."""
 
     def __init__(self, file_path, encoding='utf8', delimiter='\t'):
         """Initialize instance from file containing a pair of nodes (a relation) per line.
@@ -1281,7 +1376,7 @@ class PoincareRelations(object):
         self.delimiter = delimiter
 
     def __iter__(self):
-        """Streams relations from self.file_path decoded into unicode strings.
+        """Stream relations from self.file_path decoded into unicode strings.
 
         Yields
         -------
@@ -1303,7 +1398,7 @@ class PoincareRelations(object):
 
 
 class NegativesBuffer(object):
-    """Class to buffer and return negative samples."""
+    """Buffer and return negative samples."""
 
     def __init__(self, items):
         """Initialize instance from list or numpy array of samples.
@@ -1319,7 +1414,7 @@ class NegativesBuffer(object):
         self._current_index = 0
 
     def num_items(self):
-        """Returns number of items remaining in the buffer.
+        """Return the number of items remaining in the buffer.
 
         Returns
         -------
@@ -1330,7 +1425,7 @@ class NegativesBuffer(object):
         return len(self._items) - self._current_index
 
     def get_items(self, num_items):
-        """Returns next `num_items` from buffer.
+        """Return the next `num_items` from buffer.
 
         Parameters
         ----------
@@ -1355,7 +1450,7 @@ class NegativesBuffer(object):
 
 
 class ReconstructionEvaluation(object):
-    """Evaluating reconstruction on given network for given embedding."""
+    """Evaluate reconstruction on given network for given embedding."""
 
     def __init__(self, file_path, embedding):
         """Initialize evaluation instance with tsv file containing relation pairs and embedding to be evaluated.
@@ -1364,7 +1459,7 @@ class ReconstructionEvaluation(object):
         ----------
         file_path : str
             Path to tsv file containing relation pairs.
-        embedding : PoincareKeyedVectors instance
+        embedding : :class:`~gensim.models.poincare.PoincareKeyedVectors`
             Embedding to be evaluated.
 
         """
@@ -1391,15 +1486,15 @@ class ReconstructionEvaluation(object):
 
         Parameters
         ----------
-        all_distances : numpy.array (float)
+        all_distances : numpy.array of float
             Array of all distances (floats) for a specific item.
         positive_relations : list
             List of indices of positive relations for the item.
 
         Returns
         -------
-        tuple (list, float)
-            The list contains ranks (int) of positive relations in the same order as `positive_relations`.
+        tuple (list of int, float)
+            The list contains ranks of positive relations in the same order as `positive_relations`.
             The float is the Average Precision of the ranking.
             e.g. ([1, 2, 3, 20], 0.610).
 
@@ -1418,12 +1513,12 @@ class ReconstructionEvaluation(object):
 
         Parameters
         ----------
-        max_n : int or None
+        max_n : int, optional
             Maximum number of positive relations to evaluate, all if `max_n` is None.
 
         Returns
         -------
-        dict
+        dict of (str, float)
             Contains (metric_name, metric_value) pairs.
             e.g. {'mean_rank': 50.3, 'MAP': 0.31}.
 
@@ -1436,12 +1531,12 @@ class ReconstructionEvaluation(object):
 
         Parameters
         ----------
-        max_n : int or None
+        max_n : int, optional
             Maximum number of positive relations to evaluate, all if `max_n` is None.
 
         Returns
         -------
-        tuple (float, float)
+        tuple of (float, float)
             Contains (mean_rank, MAP).
             e.g (50.3, 0.31)
 
@@ -1464,7 +1559,7 @@ class ReconstructionEvaluation(object):
 
 
 class LinkPredictionEvaluation(object):
-    """Evaluating reconstruction on given network for given embedding."""
+    """Evaluate reconstruction on given network for given embedding."""
 
     def __init__(self, train_path, test_path, embedding):
         """Initialize evaluation instance with tsv file containing relation pairs and embedding to be evaluated.
@@ -1475,7 +1570,7 @@ class LinkPredictionEvaluation(object):
             Path to tsv file containing relation pairs used for training.
         test_path : str
             Path to tsv file containing relation pairs to evaluate.
-        embedding : PoincareKeyedVectors instance
+        embedding : :class:`~gensim.models.poincare.PoincareKeyedVectors`
             Embedding to be evaluated.
 
         """
@@ -1504,17 +1599,17 @@ class LinkPredictionEvaluation(object):
 
         Parameters
         ----------
-        all_distances : numpy.array (float)
+        all_distances : numpy.array of float
             Array of all distances for a specific item.
-        unknown_relations : list
+        unknown_relations : list of int
             List of indices of unknown positive relations.
-        known_relations : list
+        known_relations : list of int
             List of indices of known positive relations.
 
         Returns
         -------
-        tuple (list, float)
-            The list contains ranks (int) of positive relations in the same order as `positive_relations`.
+        tuple (list of int, float)
+            The list contains ranks of positive relations in the same order as `positive_relations`.
             The float is the Average Precision of the ranking.
             e.g. ([1, 2, 3, 20], 0.610).
 
@@ -1534,12 +1629,12 @@ class LinkPredictionEvaluation(object):
 
         Parameters
         ----------
-        max_n : int or None
+        max_n : int, optional
             Maximum number of positive relations to evaluate, all if `max_n` is None.
 
         Returns
         -------
-        dict
+        dict of (str, float)
             Contains (metric_name, metric_value) pairs.
             e.g. {'mean_rank': 50.3, 'MAP': 0.31}.
 
@@ -1552,7 +1647,7 @@ class LinkPredictionEvaluation(object):
 
         Parameters
         ----------
-        max_n : int or None
+        max_n : int, optional
             Maximum number of positive relations to evaluate, all if `max_n` is None.
 
         Returns
@@ -1581,7 +1676,7 @@ class LinkPredictionEvaluation(object):
 
 
 class LexicalEntailmentEvaluation(object):
-    """Evaluating reconstruction on given network for any embedding."""
+    """Evaluate reconstruction on given network for any embedding."""
 
     def __init__(self, filepath):
         """Initialize evaluation instance with HyperLex text file containing relation pairs.
@@ -1608,7 +1703,7 @@ class LexicalEntailmentEvaluation(object):
 
         Parameters
         ----------
-        embedding : PoincareKeyedVectors instance
+        embedding : :class:`~gensim.models.poincare.PoincareKeyedVectors`
             Embedding to use for computing predicted score.
         trie : pygtrie.Trie instance
             Trie to use for finding matching vocab terms for input terms.
@@ -1655,7 +1750,7 @@ class LexicalEntailmentEvaluation(object):
 
         Returns
         -------
-        list (str)
+        list of str
             List of matching terms.
 
         """
@@ -1669,7 +1764,7 @@ class LexicalEntailmentEvaluation(object):
 
         Parameters
         ----------
-        embedding : PoincareKeyedVectors instance
+        embedding : :class:`~gensim.models.poincare.PoincareKeyedVectors`
             Embedding for which trie is to be created.
 
         Returns
@@ -1694,7 +1789,7 @@ class LexicalEntailmentEvaluation(object):
 
         Parameters
         ----------
-        embedding : PoincareKeyedVectors instance
+        embedding : :class:`~gensim.models.poincare.PoincareKeyedVectors`
             Embedding for which evaluation is to be done.
 
         Returns
@@ -1717,6 +1812,6 @@ class LexicalEntailmentEvaluation(object):
             count += 1
             predicted_scores.append(predicted_score)
             expected_scores.append(expected_score)
-        print('Skipped pairs: %d out of %d' % (skipped, len(self.scores)))
+        logger.info('skipped pairs: %d out of %d' % (skipped, len(self.scores)))
         spearman = spearmanr(expected_scores, predicted_scores)
         return spearman.correlation

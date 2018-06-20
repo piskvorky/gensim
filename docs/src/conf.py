@@ -21,11 +21,16 @@ sys.path.append(os.path.abspath('.'))
 
 # -- General configuration -----------------------------------------------------
 
-html_theme = 'gensim_theme'
+html_theme = 'sphinx_rtd_theme'
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinxcontrib.napoleon', 'sphinx.ext.imgmath', 'sphinxcontrib.programoutput']
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinxcontrib.napoleon',
+    'sphinxcontrib.programoutput',
+    'sphinx_rtd_theme',
+]
 autoclass_content = "both"
 
 # Add any paths that contain templates here, relative to this directory.
@@ -38,14 +43,14 @@ source_suffix = '.rst'
 # source_encoding = 'utf-8'
 
 # The master toctree document.
-master_doc = 'indextoc'
+master_doc = 'index'
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
-html_additional_pages = {'index': './_templates/indexcontent.html'}
+#html_additional_pages = {'index': './_templates/indexcontent.html'}
 
 # General information about the project.
-project = u'gensim'
+project = u'Gensim'
 copyright = u'2009-now, Radim Řehůřek <me(at)radimrehurek.com>'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -128,7 +133,7 @@ html_theme_path = ['.']
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
-html_title = "gensim"
+#html_title = "Gensim"
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 # html_short_title = ''
