@@ -152,11 +152,10 @@ class Metric(object):
 
         See Also
         --------
-        Implementation of this method for various metric classes::
-            * :meth:`~gensim.models.callbacks.CoherenceMetric.get_value`
-            * :meth:`~gensim.models.callbacks.PerplexityMetric.get_value`
-            * :meth:`~gensim.models.callbacks.DiffMetric.get_value`
-            * :meth:`~gensim.models.callbacks.ConvergenceMetric.get_value`
+        :meth:`gensim.models.callbacks.CoherenceMetric.get_value`
+        :meth:`gensim.models.callbacks.PerplexityMetric.get_value`
+        :meth:`gensim.models.callbacks.DiffMetric.get_value`
+        :meth:`gensim.models.callbacks.ConvergenceMetric.get_value`
 
         Returns
         -------
@@ -200,9 +199,10 @@ class CoherenceMetric(Metric):
             Size of the window to be used for coherence measures using boolean
             sliding window as their probability estimator. For 'u_mass' this doesn't matter.
             If 'None', the default window sizes are used which are:
-                * 'c_v' : 110
-                * 'c_uci' : 10
-                * 'c_npmi' : 10
+
+                * `c_v` - 110
+                * `c_uci` - 10
+                * `c_npmi` - 10
         topn : int, optional
             Number of top words to be extracted from each topic.
         logger : {'shell', 'visdom'}, optional
@@ -233,10 +233,11 @@ class CoherenceMetric(Metric):
         **kwargs
             Key word arguments to override the object's internal attributes.
             One of the following parameters are expected:
-                'model': Pre-trained topic model of type :class:`~gensim.models.ldamodelLdaModel`, or one
-                of its wrappers, such as :class:`~gensim.models.wrappers.ldamallet.LdaMallet` or
-                :class:`~gensim.models.wrapper.ldavowpalwabbit.LdaVowpalWabbit`.
-                'topics' : List of tokenized topics.
+
+                * `model` - pre-trained topic model of type :class:`~gensim.models.ldamodel.LdaModel`, or one
+                  of its wrappers, such as :class:`~gensim.models.wrappers.ldamallet.LdaMallet` or
+                  :class:`~gensim.models.wrappers.ldavowpalwabbit.LdaVowpalWabbit`.
+                * `topics` - list of tokenized topics.
 
         Returns
         -------
@@ -291,9 +292,9 @@ class PerplexityMetric(Metric):
         **kwargs
             Key word arguments to override the object's internal attributes.
             A trained topic model is expected using the 'model' key. This can be of type
-            :class:`~gensim.models.ldamodelLdaModel`, or one of its wrappers, such as
+            :class:`~gensim.models.ldamodel.LdaModel`, or one of its wrappers, such as
             :class:`~gensim.models.wrappers.ldamallet.LdaMallet` or
-             :class:`~gensim.models.wrapper.ldavowpalwabbit.LdaVowpalWabbit`.
+            :class:`~gensim.models.wrapper.ldavowpalwabbit.LdaVowpalWabbit`.
 
         Returns
         -------

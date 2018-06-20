@@ -4,7 +4,6 @@
 # Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-
 """
 Optimized `Latent Dirichlet Allocation (LDA) <https://en.wikipedia.org/wiki/Latent_Dirichlet_allocation>` in Python.
 
@@ -14,24 +13,21 @@ This module allows both LDA model estimation from a training corpus and inferenc
 distribution on new, unseen documents. The model can also be updated with new documents
 for online training.
 
-The core estimation code is based on the `onlineldavb.py` script by M. Hoffman [1]_, see
-**Hoffman, Blei, Bach: Online Learning for Latent Dirichlet Allocation, NIPS 2010.**
+The core estimation code is based on the `onlineldavb.py` script by `Hoffman, Blei, Bach: Online Learning for Latent
+Dirichlet Allocation, NIPS 2010 <http://www.cs.princeton.edu/~mdhoffma>`_.
 
 The algorithm:
 
-1. Is **streamed**: training documents may come in sequentially, no random access required.
-2. Runs in **constant memory** w.r.t. the number of documents: size of the
-  training corpus does not affect memory footprint, can process corpora larger than RAM.
-3. Is **distributed**: makes use of a cluster of machines, if available, to
-  speed up model estimation.
-
-.. [1] http://www.cs.princeton.edu/~mdhoffma
+#. Is **streamed**: training documents may come in sequentially, no random access required.
+#. Runs in **constant memory** w.r.t. the number of documents: size of the training corpus does not affect memory
+   footprint, can process corpora larger than RAM.
+#. Is **distributed**: makes use of a cluster of machines, if available, to speed up model estimation.
 
 
 Usage examples
 --------------
 
-#. Train an LDA model using a Gensim corpus:
+Train an LDA model using a Gensim corpus
 
 >>> from gensim.test.utils import common_texts
 >>> from gensim.corpora.dictionary import Dictionary
@@ -43,7 +39,7 @@ Usage examples
 >>> # Train the model on the corpus.
 >>> lda = LdaModel(common_corpus, num_topics=10)
 
-#. Save a model to disk, or reload a pre-trained model.
+Save a model to disk, or reload a pre-trained model
 
 >>> from gensim.test.utils import datapath
 >>>
@@ -54,7 +50,7 @@ Usage examples
 >>> # Load a potentially pretrained model from disk.
 >>> lda = LdaModel.load(temp_file)
 
-#. Query, the model using new, unseen documents:
+Query, the model using new, unseen documents
 
 >>> # Create a new corpus, made of previously unseen documents.
 >>> other_texts = [
@@ -67,12 +63,12 @@ Usage examples
 >>> unseen_doc = other_corpus[0]
 >>> repr = lda[unseen_doc] # get topic probability distribution for a document
 
-#. Update the model by incrementally training on the new corpus.
+Update the model by incrementally training on the new corpus
 
 >>> lda.update(other_corpus)
 >>> repr = lda[unseen_doc]
 
-#. A lot of parameters can be tuned to optimize training for your specific case:
+A lot of parameters can be tuned to optimize training for your specific case
 
 >>> lda = LdaModel(common_corpus, num_topics=50, alpha='auto', eval_every=5)  # learn asymmetric alpha from data
 
@@ -319,13 +315,13 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     Examples
     -------
-    #. Initialize a model using a Gensim corpus.
+    Initialize a model using a Gensim corpus.
 
     >>> from gensim.test.utils import common_corpus
     >>>
     >>> lda = LdaModel(common_corpus, num_topics=10)
 
-    #.You can then infer topic distributions on new, unseen documents.
+    You can then infer topic distributions on new, unseen documents.
 
     >>> doc_bow = [(1, 0.3), (2, 0.1), (0, 0.09)]
     >>> doc_lda = lda[doc_bow]
@@ -337,7 +333,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     >>>
     >>> lda.update(other_corpus)
 
-    Model persistency is achieved through its :meth:`~gensim.models.ldamodel.LdaModel.load` / :meth:`~gensim.models.ldamodel.LdaModel.save` methods.
+    Model persistency is achieved through :meth:`~gensim.models.ldamodel.LdaModel.load` and
+    :meth:`~gensim.models.ldamodel.LdaModel.save` methods.
 
     """
 
@@ -848,12 +845,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Hyper-parameter that controls how much we will slow down the first steps the first few iterations.
             Corresponds to Tau_0 from `Matthew D. Hoffman, David M. Blei, Francis Bach:
             "Online Learning for Latent Dirichlet Allocation NIPS'10" <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
-            chunks_as_numpy (bool): Whether each chunk passed to `.inference` should be a np
-                array of not. np can in some settings turn the term IDs
-                into floats, these will be converted back into integers in
-                inference, which incurs a performance hit. For distributed
-                computing it may be desirable to keep the chunks as np
-                arrays.
         passes : int, optional
             Number of passes through the corpus during training.
         update_every : int, optional
@@ -868,7 +859,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         chunks_as_numpy : bool
             Whether each chunk passed to the inference step should be a np.ndarray or not. Numpy can in some settings
             turn the term IDs into floats, these will be converted back into integers in inference, which incurs a
-            performance hit. For distributed computing it may be desirable to keep the chunks as np.ndarrays.
+            performance hit. For distributed computing it may be desirable to keep the chunks as `np.ndarray`.
 
         """
         # use parameters given in constructor, unless user explicitly overrode them
@@ -1529,7 +1520,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
              those ones that exceed `sep_limit` set in :meth:`~gensim.utils.SaveLoad.save`. The main
              concern here is the `alpha` array if for instance using `alpha='auto'`.
 
-        Please refer to the `wiki recipes section <https://github.com/RaRe-Technologies/gensim/wiki/Recipes-&-FAQ#q9-how-do-i-load-a-model-in-python-3-that-was-trained-and-saved-using-python-2>`_
+        Please refer to the `wiki recipes section
+        <https://github.com/RaRe-Technologies/gensim/wiki/
+        Recipes-&-FAQ#q9-how-do-i-load-a-model-in-python-3-that-was-trained-and-saved-using-python-2>`_
         for an example on how to work around these issues.
 
         See Also
