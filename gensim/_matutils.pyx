@@ -72,7 +72,7 @@ cdef DTYPE_t _mean_absolute_difference(DTYPE_t[:] a, DTYPE_t[:] b) nogil:
     return result
 
 
-def logsumexp(x):
+def _logsumexp(x):
     """Log of sum of exponentials, using :func:`~gensim._matutils._logsumexp_2d`.
 
     Parameters
@@ -139,7 +139,7 @@ cdef DTYPE_t _logsumexp_2d(DTYPE_t[:, :] data) nogil:
     return result
 
 
-def dirichlet_expectation(alpha):
+def _dirichlet_expectation(alpha):
     """Expected value of log(theta) where theta is drawn from a Dirichlet distribution.
     Using :func:`~gensim._matutils.dirichlet_expectation_1d` or :func:`~gensim._matutils.dirichlet_expectation_2d`.
 
