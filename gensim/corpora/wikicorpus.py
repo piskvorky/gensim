@@ -6,15 +6,16 @@
 # Copyright (C) 2018 Emmanouil Stergiadis <em.stergiadis@gmail.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-
 """Construct a corpus from a Wikipedia (or other MediaWiki-based) database dump.
+
+Uses multiprocessing internally to parallelize the work and process the dump more quickly.
 
 Notes
 -----
 If you have the `pattern` package installed, this module will use a fancy lemmatization to get a lemma
 of each token (instead of plain alphabetic tokenizer). The package is available at [1]_ .
 
-See :mod:`~gensim.scripts.make_wiki` for a canned (example) script based on this module.
+See :mod:`~gensim.scripts.make_wiki` for a canned (example) command-line script based on this module.
 
 References
 ----------
@@ -287,7 +288,7 @@ def remove_file(s):
 
 
 def tokenize(content, token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True):
-    """Tokenize a piece of text from wikipedia.
+    """Tokenize a piece of text from Wikipedia.
 
     Set `token_min_len`, `token_max_len` as character length (not bytes!) thresholds for individual tokens.
 
@@ -398,12 +399,12 @@ _extract_pages = extract_pages  # for backward compatibility
 
 def process_article(args, tokenizer_func=tokenize, token_min_len=TOKEN_MIN_LEN,
                     token_max_len=TOKEN_MAX_LEN, lower=True):
-    """Parse a wikipedia article, extract all tokens.
+    """Parse a Wikipedia article, extract all tokens.
 
     Notes
     -----
     Set `tokenizer_func` (defaults is :func:`~gensim.corpora.wikicorpus.tokenize`) parameter for languages
-    like japanese or thai to perform better tokenization.
+    like Japanese or Thai to perform better tokenization.
     The `tokenizer_func` needs to take 4 parameters: (text: str, token_min_len: int, token_max_len: int, lower: bool).
 
     Parameters
@@ -478,7 +479,7 @@ def _process_article(args):
 
 
 class WikiCorpus(TextCorpus):
-    """Treat a wikipedia articles dump as a **read-only** corpus.
+    """Treat a Wikipedia articles dump as a read-only, streamed, memory-efficient corpus.
 
     Supported dump formats:
 
@@ -489,7 +490,7 @@ class WikiCorpus(TextCorpus):
 
     Notes
     -----
-    Dumps for English wikipedia can be founded `here <https://dumps.wikimedia.org/enwiki/>`_.
+    Dumps for the English Wikipedia can be founded at https://dumps.wikimedia.org/enwiki/.
 
     Attributes
     ----------
@@ -521,21 +522,23 @@ class WikiCorpus(TextCorpus):
         Parameters
         ----------
         fname : str
-            Path to file with wikipedia dump.
+            Path to the Wikipedia dump file.
         processes : int, optional
-            Number of processes to run, defaults to **number of cpu - 1**.
+            Number of processes to run, defaults to `max(1, number of cpu - 1)`.
         lemmatize : bool
-            Whether to use lemmatization instead of simple regexp tokenization.
-            Defaults to `True` if *pattern* package installed.
+            Use lemmatization instead of simple regexp tokenization?
+
+            Defaults to `True` if you have the `pattern package <https://github.com/clips/pattern>`_ installed.
         dictionary : :class:`~gensim.corpora.dictionary.Dictionary`, optional
             Dictionary, if not provided,  this scans the corpus once, to determine its vocabulary
             (this needs **really long time**).
-        filter_namespaces : tuple of str
+        filter_namespaces : tuple of str, optional
             Namespaces to consider.
         tokenizer_func : function, optional
             Function that will be used for tokenization. By default, use :func:`~gensim.corpora.wikicorpus.tokenize`.
-            Need to support interface:
-            tokenizer_func(text: str, token_min_len: int, token_max_len: int, lower: bool) -> list of str.
+
+            If you inject your own tokenizer, it must conform to this interface:
+            `tokenizer_func(text: str, token_min_len: int, token_max_len: int, lower: bool) -> list of str`
         article_min_tokens : int, optional
             Minimum tokens in article. Article will be ignored if number of tokens is less.
         token_min_len : int, optional
@@ -543,7 +546,7 @@ class WikiCorpus(TextCorpus):
         token_max_len : int, optional
             Maximal token length.
         lower : bool, optional
-             If True - convert all text to lower case.
+             Convert all text to lower case?
 
         """
         self.fname = fname
@@ -561,7 +564,10 @@ class WikiCorpus(TextCorpus):
         self.dictionary = dictionary or Dictionary(self.get_texts())
 
     def get_texts(self):
-        """Iterate over the dump, yielding list of tokens for each article.
+        """Iterate over the dump, yielding a list of tokens for each article that passed
+        the length and namespace filtering.
+
+        Uses multiprocessing internally to parallelize the work and process the dump more quickly.
 
         Notes
         -----
