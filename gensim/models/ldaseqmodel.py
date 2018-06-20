@@ -4,47 +4,45 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 # Based on Copyright (C) 2016 Radim Rehurek <radimrehurek@seznam.cz>
 
+"""Lda Sequence model, inspired by `David M. Blei, John D. Lafferty: "Dynamic Topic Models"
+<https://mimno.infosci.cornell.edu/info6150/readings/dynamic_topic_models.pdf>`_ .
+The original C/C++ implementation can be found on `blei-lab/dtm <https://github.com/blei-lab/dtm>`.
 
-"""
 
-Inspired by `David M. Blei, John D. Lafferty: "Dynamic Topic Models"
-<https://mimno.infosci.cornell.edu/info6150/readings/dynamic_topic_models.pdf>`_ paper. The original C/C++
-implementation can be found on `GitHub <https://github.com/blei-lab/dtm>`.
+TODO: The next steps to take this forward would be:
 
-TODO:
-The next steps to take this forward would be:
-
-    1) Include DIM mode. Most of the infrastructure for this is in place.
-    2) See if LdaPost can be replaced by LdaModel completely without breaking anything.
-    3) Heavy lifting going on in the Sslm class - efforts can be made to cythonise mathematical methods.
-        - in particular, update_obs and the optimization takes a lot time.
-    4) Try and make it distributed, especially around the E and M step.
-    5) Remove all C/C++ coding style/syntax.
+#. Include DIM mode. Most of the infrastructure for this is in place.
+#. See if LdaPost can be replaced by LdaModel completely without breaking anything.
+#. Heavy lifting going on in the Sslm class - efforts can be made to cythonise mathematical methods, in particular,
+   update_obs and the optimization takes a lot time.
+#. Try and make it distributed, especially around the E and M step.
+#. Remove all C/C++ coding style/syntax.
 
 Examples
 --------
 
-#. Set up a model using have 30 documents, with 5 in the first time-slice, 10 in the second, and 15 in the third:
+Set up a model using have 30 documents, with 5 in the first time-slice, 10 in the second, and 15 in the third
 
->>> from gensim.test.utils import common_corpus, datapath
+>>> from gensim.test.utils import common_corpus
+>>> from gensim.models import LdaSeqModel
 >>>
 >>> ldaseq = LdaSeqModel(corpus=common_corpus, time_slice=[2, 4, 3], num_topics=2, chunksize=1)
 
-#. Persist a model to disk and reload it later:
+Persist a model to disk and reload it later
 
+>>> from gensim.test.utils import datapath
+>>>
 >>> temp_file = datapath("model")
 >>> ldaseq.save(temp_file)
 >>>
 >>> # Load a potentially pre-trained model from disk.
 >>> ldaseq = LdaSeqModel.load(temp_file)
 
-#. Access the document embeddings generated from the DTM:
+Access the document embeddings generated from the DTM
 
 >>> doc = common_corpus[1]
 >>>
->>> # Each element in the embedding is the probability assigned to a topic.
 >>> embedding = ldaseq[doc]
->>> assert sum(embedding) == 1
 
 """
 
@@ -55,16 +53,15 @@ from scipy.special import digamma, gammaln
 from scipy import optimize
 import logging
 
-logger = logging.getLogger('gensim.models.ldaseqmodel')
+logger = logging.getLogger(__name__)
 
 
 class LdaSeqModel(utils.SaveLoad):
     """Estimate Dynamic Topic Model parameters based on a training corpus."""
-
     def __init__(self, corpus=None, time_slice=None, id2word=None, alphas=0.01, num_topics=10,
                  initialize='gensim', sstats=None, lda_model=None, obs_variance=0.5, chain_variance=0.005, passes=10,
                  random_state=None, lda_inference_max_iter=25, em_min_iter=6, em_max_iter=20, chunksize=100):
-        """The constructor sets all training parameters, and optionally trains the model if `corpus` is provided.
+        """
 
         Parameters
         ----------
@@ -88,9 +85,9 @@ class LdaSeqModel(utils.SaveLoad):
                 * 'gensim': Uses gensim's LDA initialization.
                 * 'own': Uses your own initialization matrix of an LDA model that has been previously trained.
                 * 'lda_model': Use a previously used LDA model, passing it through the `lda_model` argument.
-        sstats : np.ndarray of shape (`self.vocab_len`, `num_topics`), optional
+        sstats : numpy.ndarray , optional
             Sufficient statistics used for initializing the model if `initialize == 'own'`. Corresponds to matrix
-            beta in the linked paper for time slice 0.
+            beta in the linked paper for time slice 0, expected shape (`self.vocab_len`, `num_topics`).
         lda_model : :class:`~gensim.models.ldamodel.LdaModel`
             Model whose sufficient statistics will be used to initialize the current object if `initialize == 'gensim'`.
         obs_variance : float, optional
@@ -200,8 +197,8 @@ class LdaSeqModel(utils.SaveLoad):
             <https://mimno.infosci.cornell.edu/info6150/readings/dynamic_topic_models.pdf>`_.
         alpha : float
             The prior probability for the model.
-        init_suffstats : np.ndarray of shape (`self.vocab_len`, `num_topics`)
-            Sufficient statistics used for initializing the model.
+        init_suffstats : numpy.ndarray
+            Sufficient statistics used for initializing the model, expected shape (`self.vocab_len`, `num_topics`).
 
         """
         self.alphas = alpha
@@ -232,6 +229,8 @@ class LdaSeqModel(utils.SaveLoad):
             Minimum number of time slices to be inspected.
         em_max_iter : int
             Maximum number of time slices to be inspected.
+        chunksize : int
+            Number of documents to be processed in each chunk.
 
         Returns
         -------
@@ -313,9 +312,10 @@ class LdaSeqModel(utils.SaveLoad):
         ----------
         corpus : {iterable of list of (int, float), scipy.sparse.csc}
             Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
-        topic_suffstats : np.ndarray of shape (`self.vocab_len`, `num_topics`)
-            Sufficient statistics for time slice 0, used for initializing the model if `initialize == 'own'`.
-        gammas : np.ndarray
+        topic_suffstats : numpy.ndarray
+            Sufficient statistics for time slice 0, used for initializing the model if `initialize == 'own'`,
+            expected shape (`self.vocab_len`, `num_topics`).
+        gammas : numpy.ndarray
             Topic weight variational parameters for each document. If not supplied, it will be inferred from the model.
         lhoods : list of float
             The total log probability lower bound for each topic. Corresponds to the phi variational parameters in the
@@ -366,9 +366,9 @@ class LdaSeqModel(utils.SaveLoad):
         ----------
         corpus : {iterable of list of (int, float), scipy.sparse.csc}
             Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
-        topic_suffstats : np.ndarray of shape (`self.vocab_len`, `num_topics`)
-            Sufficient statistics of the current model.
-        gammas : np.ndarray
+        topic_suffstats : numpy.ndarray
+            Sufficient statistics of the current model, expected shape (`self.vocab_len`, `num_topics`).
+        gammas : numpy.ndarray
             Topic weight variational parameters for each document. If not supplied, it will be inferred from the model.
         lhoods : list of float of length `self.num_topics`
             The total log probability bound for each topic. Corresponds to phi from the linked paper.
@@ -465,8 +465,8 @@ class LdaSeqModel(utils.SaveLoad):
 
         Parameters
         ----------
-        topic_suffstats : np.ndarray of shape (`self.vocab_len`, `num_topics`)
-            Sufficient statistics of the current model.
+        topic_suffstats : numpy.ndarray
+            Sufficient statistics of the current model, expected shape (`self.vocab_len`, `num_topics`).
 
         Returns
         -------
@@ -590,13 +590,14 @@ class LdaSeqModel(utils.SaveLoad):
         -------
         doc_topics : list of length `self.num_topics`
             Probability for each topic in the mixture (essentially a point in the `self.num_topics - 1` simplex.
-        topic_term : np.ndarray of shape (`num_topics`, vocabulary length)
-            The representation of each topic as a multinomial over words in the vocabulary.
+        topic_term : numpy.ndarray
+            The representation of each topic as a multinomial over words in the vocabulary,
+            expected shape (`num_topics`, vocabulary length).
         doc_lengths : list of int
             The number of words in each document. These could be fixed, or drawn from a Poisson distribution.
-        term_frequency : np.ndarray of shape (number of documents, length of vocabulary)
+        term_frequency : numpy.ndarray
             The term frequency matrix (denoted as beta in the original Blei paper). This could also be the TF-IDF
-            representation of the corpus.
+            representation of the corpus, expected shape (number of documents, length of vocabulary).
         vocab : list of str
             The set of unique terms existing in the cropuse's vocabulary.
 
@@ -744,13 +745,13 @@ class sslm(utils.SaveLoad):
         -----
         This function essentially computes Var[\beta_{t,w}] for t = 1:T
 
-        :math::
+        .. :math::
 
             fwd\_variance[t] \equiv E((beta_{t,w}-mean_{t,w})^2 |beta_{t}\ for\ 1:t) =
             (obs\_variance / fwd\_variance[t - 1] + chain\_variance + obs\_variance ) *
             (fwd\_variance[t - 1] + obs\_variance)
 
-        :math::
+        .. :math::
 
             variance[t] \equiv E((beta_{t,w}-mean\_cap_{t,w})^2 |beta\_cap_{t}\ for\ 1:t) =
             fwd\_variance[t - 1] + (fwd\_variance[t - 1] / fwd\_variance[t - 1] + obs\_variance)^2 *
@@ -765,7 +766,7 @@ class sslm(utils.SaveLoad):
 
         Returns
         -------
-        (np.ndarray, np.ndarray)
+        (numpy.ndarray, numpy.ndarray)
             The first returned value is the variance of each word in each time slice, the second value is the
             inferred posterior variance for the same pairs.
 
@@ -803,13 +804,13 @@ class sslm(utils.SaveLoad):
         -----
         This function essentially computes E[\beta_{t,w}] for t = 1:T.
 
-        :math::
+        .. :math::
 
             Fwd_Mean(t) ≡  E(beta_{t,w} | beta_ˆ 1:t )
             = (obs_variance / fwd_variance[t - 1] + chain_variance + obs_variance ) * fwd_mean[t - 1] +
             (1 - (obs_variance / fwd_variance[t - 1] + chain_variance + obs_variance)) * beta
 
-        :math::
+        .. :math::
 
             Mean(t) ≡ E(beta_{t,w} | beta_ˆ 1:T )
             = fwd_mean[t - 1] + (obs_variance / fwd_variance[t - 1] + obs_variance) +
@@ -824,7 +825,7 @@ class sslm(utils.SaveLoad):
 
         Returns
         -------
-        (np.ndarray, np.ndarray)
+        (numpy.ndarray, numpy.ndarray)
             The first returned value is the mean of each word in each time slice, the second value is the
             inferred posterior mean for the same pairs.
 
@@ -860,7 +861,7 @@ class sslm(utils.SaveLoad):
 
         Returns
         -------
-        np.ndarray of float
+        numpy.ndarray of float
             The expected value for the log probabilities for each word and time slice.
 
         """
@@ -880,8 +881,9 @@ class sslm(utils.SaveLoad):
             Observed variance used to approximate the true and forward variance.
         chain_variance : float
             Gaussian parameter defined in the beta distribution to dictate how the beta values evolve over time.
-        sstats : np.ndarray of shape (`self.vocab_len`, `num_topics`)
-            Sufficient statistics of the LDA model. Corresponds to matrix beta in the linked paper for time slice 0.
+        sstats : numpy.ndarray
+            Sufficient statistics of the LDA model. Corresponds to matrix beta in the linked paper for time slice 0,
+            expected shape (`self.vocab_len`, `num_topics`).
 
         """
         W = self.vocab_len
@@ -917,9 +919,9 @@ class sslm(utils.SaveLoad):
 
         Parameters
         ----------
-        sstats : np.ndarray of shape (`self.vocab_len`, `num_topics`)
+        sstats : numpy.ndarray
             Sufficient statistics for a particular topic. Corresponds to matrix beta in the linked paper for the
-            current time slice.
+            current time slice, expected shape (`self.vocab_len`, `num_topics`).
 
         Returns
         -------
@@ -973,9 +975,9 @@ class sslm(utils.SaveLoad):
 
         Parameters
         ----------
-        sstats : np.ndarray of shape (`self.vocab_len`, `num_topics`)
+        sstats : numpy.ndarray
             Sufficient statistics for a particular topic. Corresponds to matrix beta in the linked paper for the first
-            time slice.
+            time slice, expected shape (`self.vocab_len`, `num_topics`).
         totals : list of int of length `len(self.time_slice)`
             The totals for each time slice.
 
@@ -1042,15 +1044,15 @@ class sslm(utils.SaveLoad):
 
         Parameters
         ----------
-        sstats : np.ndarray of shape (`self.vocab_len`, `num_topics`)
+        sstats : numpy.ndarray
             Sufficient statistics for a particular topic. Corresponds to matrix beta in the linked paper for the first
-            time slice.
+            time slice, expected shape (`self.vocab_len`, `num_topics`).
         totals : list of int of length `len(self.time_slice)`
             The totals for each time slice.
 
         Returns
         -------
-        (np.ndarray of float, np.ndarray of float)
+        (numpy.ndarray of float, numpy.ndarray of float)
             The updated optimized values for obs and the zeta variational parameter.
 
         """
@@ -1116,7 +1118,7 @@ class sslm(utils.SaveLoad):
 
         Compute the derivative of:
 
-        :math::
+        .. :math::
 
             E[\beta_{t,w}]/d obs_{s,w} for t = 1:T.
 
@@ -1256,7 +1258,7 @@ class LdaPost(utils.SaveLoad):
             The maximum number of words in a document.
         num_topics : int, optional
             Number of topics discovered by the LDA model.
-        gamma : np.ndarray, optional
+        gamma : numpy.ndarray, optional
             Topic weight variational parameters for each document. If not supplied, it will be inferred from the model.
         lhood : float, optional
             The log likelihood lower bound.
