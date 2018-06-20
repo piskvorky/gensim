@@ -4,11 +4,14 @@
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""This module contains implementations of basic interfaces used across the whole gensim package.
-These interfaces usable for building corpus, transformation and similarity classes.
+"""
+Basic interfaces used across the whole Gensim package.
 
-All interfaces are realized as abstract base classes (i.e. some optional functionality is provided in the interface
-itself, so that the interfaces should be inherited).
+These interfaces are used for building corpora, model transformation and similarity queries.
+
+The interfaces are realized as abstract base classes. This means some functionality is already
+provided in the interface itself, and subclasses should inherit from these interfaces
+and implement the missing methods.
 
 """
 
@@ -70,14 +73,7 @@ class CorpusABC(utils.SaveLoad):
     """
 
     def __iter__(self):
-        """Iterate over corpus, **should be overridden in inheritor class**.
-
-        Raises
-        ------
-        NotImplementedError
-            Since it's abstract class this iterator protocol should be overwritten in the inherited class.
-
-        """
+        """Iterate all over corpus."""
         raise NotImplementedError('cannot instantiate abstract base class')
 
     def save(self, *args, **kwargs):
@@ -85,46 +81,35 @@ class CorpusABC(utils.SaveLoad):
 
         Warnings
         --------
-        This save only "state" of corpus class (not corpus-data at all),
-        for saving data please use :meth:`~gensim.interfaces.CorpusABC.save_corpus` instead`.
+        This save only the "state" of a corpus class, not the corpus data!
 
-        Parameters
-        ----------
-        *args
-            Variable length argument list.
-        **kwargs
-            Arbitrary keyword arguments.
+        For saving data use the `serialize` method of the output format you'd like to use
+        (e.g. :meth:`~gensim.corpora.mmcorpus.MmCorpus.serialize()`).
 
         """
         import warnings
         warnings.warn(
-            "corpus.save() stores only the (tiny) iteration object; "
+            "corpus.save() stores only the (tiny) iteration object in memory; "
             "to serialize the actual corpus content, use e.g. MmCorpus.serialize(corpus)"
         )
         super(CorpusABC, self).save(*args, **kwargs)
 
     def __len__(self):
-        """Get size of the corpus (number of documents), **should be overridden in inheritor class**.
-
-        Raises
-        ------
-        NotImplementedError
-            Since it's abstract class this method should be reimplemented later.
-
-        """
+        """Return the corpus size = the total number of documents in it."""
         raise NotImplementedError("must override __len__() before calling len(corpus)")
 
     @staticmethod
     def save_corpus(fname, corpus, id2word=None, metadata=False):
-        """Saves given `corpus` to disk, **should be overridden in inheritor class**.
+        """Save `corpus` to disk.
 
         Some formats support saving the dictionary (`feature_id -> word` mapping),
         which can be provided by the optional `id2word` parameter.
 
         Notes
         -----
-        Some corpus also support an index of where each document begins, so that the documents on disk
+        Some corpora also support random access via document indexing, so that the documents on disk
         can be accessed in O(1) time (see the :class:`gensim.corpora.indexedcorpus.IndexedCorpus` base class).
+
         In this case, :meth:`~gensim.interfaces.CorpusABC.save_corpus` is automatically called internally by
         :func:`serialize`, which does :meth:`~gensim.interfaces.CorpusABC.save_corpus` plus saves the index
         at the same time.
@@ -140,27 +125,26 @@ class CorpusABC(utils.SaveLoad):
         id2word : :class:`~gensim.corpora.Dictionary`, optional
             Dictionary of corpus.
         metadata : bool, optional
-            If True, will write some meta-information to `fname` too.
+            If True, will write additional metadata to a separate too.
 
         """
         raise NotImplementedError('cannot instantiate abstract base class')
 
 
 class TransformedCorpus(CorpusABC):
-    """Interface for corpus supports transformations."""
+    """Interface for corpora that are the result of an online (streamed) transformation."""
     def __init__(self, obj, corpus, chunksize=None, **kwargs):
         """
 
         Parameters
         ----------
         obj : object
-            Some corpus class from :mod:`gensim.corpora`.
+            A transformation :class:`~gensim.interfaces.TransformationABC` object that will be applied
+            to each document from `corpus` during iteration.
         corpus : iterable of list of (int, number)
-            Corpus in BoW format.
+            Corpus in bag-of-words format.
         chunksize : int, optional
-            If provided - more effective processing (by group of documents) will performed.
-        kwargs
-            Arbitrary keyword arguments.
+            If provided, a slightly more effective processing will be performed by grouping documents from `corpus`.
 
         """
         self.obj, self.corpus, self.chunksize = obj, corpus, chunksize
@@ -170,18 +154,18 @@ class TransformedCorpus(CorpusABC):
         self.metadata = False
 
     def __len__(self):
-        """Get size of the corpus."""
+        """Get corpus size."""
         return len(self.corpus)
 
     def __iter__(self):
-        """Iterate over the corpus.
+        """Iterate over the corpus, applying the selected transformation.
 
-        If `chunksize` is set, works in "batch-manner" (more efficient).
+        If `chunksize` was set in the constructor, works in "batch-manner" (more efficient).
 
         Yields
         ------
         list of (int, number)
-            Document in BoW format
+            Documents in the sparse Gensim bag-of-words format.
 
         """
         if self.chunksize:
@@ -193,22 +177,26 @@ class TransformedCorpus(CorpusABC):
                 yield self.obj[doc]
 
     def __getitem__(self, docno):
-        """Get element from corpus index `docno`.
+        """Transform the document at position `docno` within `corpus` specified in the constructor.
 
         Parameters
         ----------
         docno : int
-            Index of document in corpus.
+            Position of the document to transform. Document offset inside `self.corpus`.
+
+        Notes
+        -----
+        `self.corpus` must support random indexing.
 
         Returns
         -------
         list of (int, number)
-            Document in BoW format
+            Transformed document in the sparse Gensim bag-of-words format.
 
         Raises
         ------
         RuntimeError
-            If corpus doesn't support slicing (:meth`__getitem__` doesn't exists).
+            If corpus doesn't support index slicing (:meth`__getitem__` doesn't exists).
 
         """
         if hasattr(self.corpus, '__getitem__'):
@@ -227,26 +215,18 @@ class TransformationABC(utils.SaveLoad):
     >>> from gensim.test.utils import common_dictionary, common_corpus
     >>>
     >>> model = LsiModel(common_corpus, id2word=common_dictionary)
-    >>> bow_vector = model[common_corpus[0]]  # model applied through __getitem__ on document from corpus.
-    >>> bow_corpus = model[common_corpus]  # also, we can apply model on full corpus
-
+    >>> bow_vector = model[common_corpus[0]]  # model applied through __getitem__ on one document from corpus.
+    >>> bow_corpus = model[common_corpus]  # also, we can apply model on the full corpus
 
     """
 
     def __getitem__(self, vec):
-        """Get element of `transformations`, **should be overridden in inheritor class**.
-
-        Transforms vector from one vector space into another **or** whole corpus into another.
+        """Transform a single document, or a whole corpus, from one vector space into another.
 
         Parameters
         ----------
-        vec : object
-            Given vector.
-
-        Raises
-        ------
-        NotImplementedError
-            Since it's abstract class this method should be reimplemented later.
+        vec : {list of (int, number), iterable of list of (int, number)}
+            Document in bag-of-words, or streamed corpus.
 
         """
         raise NotImplementedError('cannot instantiate abstract base class')
@@ -257,11 +237,9 @@ class TransformationABC(utils.SaveLoad):
         Parameters
         ----------
         corpus : iterable of list of (int, number)
-            Corpus in BoW format.
+            Corpus in sparse Gensim bag-of-words format.
         chunksize : int, optional
-            If provided - more effective processing (by group of documents) will performed.
-        kwargs
-            Arbitrary keyword arguments.
+            If provided, a more effective processing will performed.
 
         Returns
         -------
@@ -276,9 +254,8 @@ class SimilarityABC(utils.SaveLoad):
     """Interface for similarity search over a corpus.
 
     In all instances, there is a corpus against which we want to perform the similarity search.
-    For each similarity search, the input is a document and the output are its similarities
+    For each similarity search, the input is a document or a corpus, and the output are the similarities
     to individual corpus documents.
-
 
     Examples
     --------
@@ -296,56 +273,46 @@ class SimilarityABC(utils.SaveLoad):
     See Also
     --------
     :mod:`gensim.similarities`
-        Provided different type of indexes for search.
+        Different index implementations of this interface.
 
     """
 
     def __init__(self, corpus):
-        """Initialization of object, **should be overridden in inheritor class**.
+        """
 
         Parameters
         ----------
         corpus : iterable of list of (int, number)
-            Corpus in BoW format.
-
-        Raises
-        ------
-        NotImplementedError
-            Since it's abstract class this method should be reimplemented later.
+            Corpus in sparse Gensim bag-of-words format.
 
         """
         raise NotImplementedError("cannot instantiate Abstract Base Class")
 
     def get_similarities(self, doc):
-        """Get similarity measures of documents of corpus to given `doc`, **should be overridden in inheritor class**.
+        """Get similarities of the given document or corpus against this index.
 
         Parameters
         ----------
-        doc : list of (int, number)
-            Document in BoW format.
-
-        Raises
-        ------
-        NotImplementedError
-            Since it's abstract class this method should be reimplemented later.
+        doc : {list of (int, number), iterable of list of (int, number)}
+            Document in the sparse Gensim bag-of-words format, or a streamed corpus of such documents.
 
         """
         raise NotImplementedError("cannot instantiate Abstract Base Class")
 
     def __getitem__(self, query):
-        """Get access to similarities of document/corpus `query` to all documents in the corpus.
+        """Get similarities of the given document or corpus against this index.
 
-        Using :meth:`~gensim.interfaces.SimilarityABC.get_similarities`
-
+        Uses :meth:`~gensim.interfaces.SimilarityABC.get_similarities` internally.
 
         Notes
         -----
-        Passing corpus to `query` (instead of document) can be more efficient, because will processed in batching-way.
+        Passing an entire corpus as `query` can be more efficient than passing its documents one after another,
+        because it will issue queries in batches internally.
 
         Parameters
         ----------
-        query : {list of (int, int), iterable of list of (int, int)}
-            Document or corpus in BoW format.
+        query : {list of (int, number), iterable of list of (int, number)}
+            Document in the sparse Gensim bag-of-words format, or a streamed corpus of such documents.
 
         Returns
         -------
@@ -383,12 +350,12 @@ class SimilarityABC(utils.SaveLoad):
             return matutils.full2sparse_clipped(result, self.num_best)
 
     def __iter__(self):
-        """Iterate over all documents, computes similarity against all other documents in the index.
+        """Iterate over all documents, compute similarity of each document against all other documents in the index.
 
         Yields
         ------
         {`scipy.sparse.csr.csr_matrix`, list of (int, float)}
-            Similarity of current document and all documents of corpus.
+            Similarity of the current document and all documents in the corpus.
 
         """
         # turn off query normalization (vectors in the index are assumed to be already normalized)
