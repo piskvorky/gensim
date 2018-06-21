@@ -5,7 +5,7 @@
 # Copyright (C) 2017 Mohit Rathore <mrmohitrathoremr@gmail.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""This module implement functionality related to the `Term Frequency - Inverse Document Frequency
+"""This module implements functionality related to the `Term Frequency - Inverse Document Frequency
 <https://en.wikipedia.org/wiki/Tf%E2%80%93idf>` vector space bag-of-words models.
 
 For a more in-depth exposition of TF-IDF and its various SMART variants (normalization, weighting schemes),
