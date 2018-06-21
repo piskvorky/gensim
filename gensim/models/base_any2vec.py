@@ -172,7 +172,7 @@ class BaseAny2VecModel(utils.SaveLoad):
             for callback in self.callbacks:
                 callback.on_batch_begin(self)
 
-            # No GIL
+            # No GIL (almost)
             tally, raw_tally = self._do_train_job(data_iterable, job_parameters, thread_private_mem)
 
             for callback in self.callbacks:

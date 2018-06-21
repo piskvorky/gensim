@@ -57,27 +57,19 @@ cdef unsigned long long bisect_left(np.uint32_t *a, unsigned long long x, unsign
 cdef unsigned long long random_int32(unsigned long long *next_random) nogil
 
 
-cdef extern from "<iostream>" namespace "std":
-    cdef cppclass istream:
-        istream& read(const char*, int) except+
-
-cdef extern from "<iostream>" namespace "std::ios_base":
-    cdef cppclass open_mode:
-        pass
-    cdef open_mode binary
-    # you can define other constants as needed
-
 cdef extern from "<fstream>" namespace "std":
-    cdef cppclass ifstream(istream):
+    cdef cppclass ifstream:
         # constructors
+        ifstream() except +
         ifstream(const char*) except +
-        ifstream(const char*, open_mode) except+
+        ifstream& operator>>(string&) except +
 
 cdef class CythonLineSentence:
     """Simple format: one sentence = one line; words already preprocessed and separated by whitespace.
     """
     cdef public char* source
     cdef public int max_sentence_length
+    cdef ifstream fd
 
-    cdef string read_line(self, ifstream*) nogil
-    cdef vector[string] next_batch(self) nogil
+    cpdef string read_line(self) nogil
+    cpdef vector[string] next_batch(self) nogil

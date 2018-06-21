@@ -68,12 +68,14 @@ cdef class CythonLineSentence:
         """
         self.source = source
         self.max_sentence_length = max_sentence_length
+        self.fd = ifstream(source)
 
-    cdef string read_line(self, ifstream* fd) nogil:
+    cpdef string read_line(self) nogil:
+        cdef string val
+        self.fd >> val
+        return val
 
-        return string()
-
-    cdef vector[string] next_batch(self) nogil:
+    cpdef vector[string] next_batch(self) nogil:
         return vector[string]()
 
 
