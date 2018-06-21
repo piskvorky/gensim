@@ -6,7 +6,7 @@
 
 Inspired by:
 
-* `Mikolov et al "Distributed Representations of Words and Phrases and their Compositionality"
+* `Mikolov, et. al: "Distributed Representations of Words and Phrases and their Compositionality"
   <https://arxiv.org/abs/1310.4546>`_
 * `"Normalized (Pointwise) Mutual Information in Colocation Extraction" by Gerlof Bouma
   <https://svn.spraakdata.gu.se/repos/gerlof/pub/www/Docs/npmi-pfd.pdf>`_
@@ -274,8 +274,8 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         -----
         'npmi' is more robust when dealing with common words that form part of common bigrams, and
         ranges from -1 to 1, but is slower to calculate than the default. The default is the PMI-like scoring
-        as described by `Mikolov et al "Distributed Representations of Words
-        and Phrases and their Compositionality" <https://arxiv.org/abs/1310.4546>`_.
+        as described by `Mikolov, et. al: "Distributed Representations of Words and Phrases and their Compositionality"
+        <https://arxiv.org/abs/1310.4546>`_.
 
         To use a custom scoring function, pass in a function with the following signature:
 
@@ -627,8 +627,8 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
 
 
 def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
-    """Bigram scoring function, based on the original `"Efficient Estimaton of Word Representations in Vector Space" by
-    Mikolov <https://arxiv.org/pdf/1301.3781.pdf>`_.
+    """Bigram scoring function, based on the original `Mikolov, et. al: "Distributed Representations
+    of Words and Phrases and their Compositionality" <https://arxiv.org/abs/1310.4546>`_.
 
     Parameters
     ----------
@@ -647,7 +647,7 @@ def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count
 
     Notes
     -----
-    Formula: :math:`\\frac{(worda\_count - min\_count) * len\_vocab }{ (worda\_count * wordb\_count)}`.
+    Formula: :math:`\\frac{(bigram\_count - min\_count) * len\_vocab }{ (worda\_count * wordb\_count)}`.
 
     """
     return (bigram_count - min_count) / worda_count / wordb_count * len_vocab
