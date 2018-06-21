@@ -13,7 +13,7 @@ class ValidationCallback(Callback):
 
     def on_epoch_end(self, epoch, logs={}):
         # Import has to be here to prevent cyclic import
-        from gensim.similarity_learning import mapk, mean_ndcg
+        from evaluation_metrics import mapk, mean_ndcg
         X1 = self.test_data["X1"]
         X2 = self.test_data["X2"]
         y = self.test_data["y"]
