@@ -5,10 +5,8 @@
 # Copyright (C) 2017 Mohit Rathore <mrmohitrathoremr@gmail.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""
-This module implement functionality related to the
-`Term Frequency - Inverse Document Frequency <https://en.wikipedia.org/wiki/Tf%E2%80%93idf>` vector
-space bag-of-words models.
+"""This module implement functionality related to the `Term Frequency - Inverse Document Frequency
+<https://en.wikipedia.org/wiki/Tf%E2%80%93idf>` vector space bag-of-words models.
 
 For a more in-depth exposition of TF-IDF and its various SMART variants (normalization, weighting schemes),
 see the blog post at https://rare-technologies.com/pivoted-document-length-normalisation/
@@ -216,11 +214,7 @@ def smartirs_normalize(x, norm_scheme, return_norm=False):
         else:
             return x
     elif norm_scheme == "c":
-        result, length = matutils.unitvec(x, return_norm=return_norm)
-        if return_norm:
-            return result, length
-        else:
-            return result
+        return matutils.unitvec(x, return_norm=return_norm)
 
 
 class TfidfModel(interfaces.TransformationABC):
@@ -241,7 +235,6 @@ class TfidfModel(interfaces.TransformationABC):
     >>> vector = model[corpus[0]]  # apply model to the first corpus document
 
     """
-
     def __init__(self, corpus=None, id2word=None, dictionary=None, wlocal=utils.identity,
                  wglobal=df2idf, normalize=True, smartirs=None, pivot=None, slope=0.65):
         """Compute TF-IDF by multiplying a local component (term frequency) with a global component
@@ -310,8 +303,8 @@ class TfidfModel(interfaces.TransformationABC):
         slope : float, optional
             Parameter required by pivoted document length normalization which determines the slope to which
             the `old normalization` can be tilted. This parameter only works when pivot is defined.
-        """
 
+        """
         self.id2word = id2word
         self.wlocal, self.wglobal, self.normalize = wlocal, wglobal, normalize
         self.num_docs, self.num_nnz, self.idfs = None, None, None
@@ -355,6 +348,7 @@ class TfidfModel(interfaces.TransformationABC):
     def load(cls, *args, **kwargs):
         """Load a previously saved TfidfModel class. Handles backwards compatibility from
         older TfidfModel versions which did not use pivoted document normalization.
+
         """
         model = super(TfidfModel, cls).load(*args, **kwargs)
         if not hasattr(model, 'pivot'):
