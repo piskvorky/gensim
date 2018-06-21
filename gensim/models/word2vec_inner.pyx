@@ -55,32 +55,6 @@ cdef extern from "linesentence.h":
         vector[string] ReadSentence() nogil except +
 
 
-def _batch_iterator(self, input_stream, cur_epoch=0, total_examples=None, total_words=None):
-    job_batch, batch_size = [], 0
-    job_no = 0
-
-    for data_idx, data in enumerate(input_stream):
-        data_length = self._raw_word_count([data])
-
-        # can we fit this sentence into the existing job batch?
-        if batch_size + data_length <= self.batch_words:
-            # yes => add it to the current job
-            job_batch.append(data)
-            batch_size += data_length
-        else:
-            job_no += 1
-
-            yield job_batch
-
-            # add the sentence that didn't fit as the first item of a new job
-            job_batch, batch_size = [data], data_length
-    # add the last job too (may be significantly smaller than batch_words)
-    if job_batch:
-        job_no += 1
-        yield job_batch
-
-
-
 @cython.final
 cdef class CythonLineSentence:
     cdef FastLineSentence* _thisptr
