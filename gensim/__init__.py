@@ -2,7 +2,7 @@
 of documents.
 """
 
-from gensim import parsing, corpora, matutils, interfaces, models, similarities, summarization, utils, similarity_learning  # noqa:F401
+from gensim import parsing, corpora, matutils, interfaces, models, similarities, summarization, utils  # noqa:F401
 import logging
 
 __version__ = '3.4.0'

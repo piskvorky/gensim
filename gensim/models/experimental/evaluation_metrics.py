@@ -8,7 +8,8 @@ logging.basicConfig(
 
 def mapk(Y_true, Y_pred):
     """Function to get Mean Average Precision(MAP) for a given set of Y_true, Y_pred
-    TODO Currently doesn't support mapping at k. Couldn't use only map as it's a
+    
+    Note: Currently doesn't support mapping at k. Couldn't use only map as it's a
     reserved word
 
     parameters:
@@ -107,14 +108,3 @@ def mean_ndcg(Y_true, Y_pred, k=10):
                 (len(Y_true) - n_skipped, len(Y_true),
                 (float(n_skipped) / len(Y_true)) * 100, n_skipped))
     return np.mean(np.array(ndcgs))
-
-
-def accuracy(Y_true, Y_pred):
-    """Calculates accuracy as (number of correct predictions / number of predictions)
-    WARNING: TODO this definition of accuracy doesn't allow for two correct answers
-    """
-    n_correct = 0
-    for y_pred, y_true in zip(Y_pred, Y_true):
-        if (np.argmax(y_true) == np.argmax(y_pred)):
-            n_correct += 1
-    return n_correct / len(Y_true)

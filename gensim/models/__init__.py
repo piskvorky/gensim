@@ -22,6 +22,7 @@ from .ldaseqmodel import LdaSeqModel  # noqa:F401
 from .fasttext import FastText  # noqa:F401
 from .translation_matrix import TranslationMatrix, BackMappingTranslationMatrix  # noqa:F401
 
+from models import experimental
 from . import wrappers  # noqa:F401
 from . import deprecated  # noqa:F401
 
