@@ -250,7 +250,8 @@ setup(
 
     ext_modules=[
         Extension('gensim.models.word2vec_inner',
-            sources=['./gensim/models/word2vec_inner.cpp'],
+            sources=['./gensim/models/word2vec_inner.cpp', './gensim/models/linesentence.cpp'],
+            language="c++",
             include_dirs=[model_dir]),
         Extension('gensim.models.doc2vec_inner',
             sources=['./gensim/models/doc2vec_inner.c'],

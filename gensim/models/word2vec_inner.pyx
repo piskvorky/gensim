@@ -1,5 +1,6 @@
 #!/usr/bin/env cython
 # distutils: language = c++
+# distutils: sources = linesentence.cpp
 # cython: boundscheck=False
 # cython: wraparound=False
 # cython: cdivision=True
@@ -49,12 +50,19 @@ cdef REAL_t[EXP_TABLE_SIZE] LOG_TABLE
 cdef int ONE = 1
 cdef REAL_t ONEF = <REAL_t>1.0
 
+cdef extern from "linesentence.h":
+    cdef cppclass FastLineSentence:
+        FastLineSentence(string&) except +
+        vector[string] ReadSentence() nogil except +
+
 @cython.final
 cdef class CythonLineSentence:
-    """Simple format: one sentence = one line; words already preprocessed and separated by whitespace.
-    """
-    def __cinit__(self, source, max_sentence_length):
-        self.fd = new ifstream(source)
+    cdef FastLineSentence* _thisptr
+    cdef public string source
+    cdef public int max_sentence_length
+
+    def __cinit__(self, source, max_sentence_length=MAX_SENTENCE_LEN):
+        self._thisptr = new FastLineSentence(source)
 
     def __init__(self, source, max_sentence_length=MAX_SENTENCE_LEN):
         """
@@ -75,13 +83,11 @@ cdef class CythonLineSentence:
         self.max_sentence_length = max_sentence_length
 
     def __dealloc__(self):
-        if self.fd != NULL:
-            del self.fd
+        if self._thisptr != NULL:
+            del self._thisptr
 
-    cpdef string read_line(self) nogil:
-        cdef string val
-        deref(self.fd) >> val
-        return val
+    cpdef vector[string] read_sentence(self) nogil:
+        return self._thisptr.ReadSentence()
 
     cpdef vector[string] next_batch(self) nogil:
         return vector[string]()
