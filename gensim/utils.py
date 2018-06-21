@@ -73,11 +73,8 @@ def get_random_state(seed):
 
     Notes
     -----
-    Method originally from [1]_ and written by @joshloyal.
-
-    References
-    ----------
-    .. [1] https://github.com/maciejkula/glove-python
+    Method originally from `maciejkula/glove-python <https://github.com/maciejkula/glove-python>`_
+    and written by `@joshloyal <https://github.com/joshloyal>`_.
 
     """
     if seed is None or seed is np.random:
@@ -94,11 +91,7 @@ def synchronous(tlockname):
 
     Notes
     -----
-    Adapted from [2]_.
-
-    References
-    ----------
-    .. [2] http://code.activestate.com/recipes/577105-synchronization-decorator-for-class-methods/
+    Adapted from http://code.activestate.com/recipes/577105-synchronization-decorator-for-class-methods/.
 
     """
     def _synched(func):
@@ -406,6 +399,7 @@ class SaveLoad(object):
         See Also
         --------
         :meth:`~gensim.utils.SaveLoad.save`
+            Save object to file.
 
         Returns
         -------
@@ -526,18 +520,12 @@ class SaveLoad(object):
 
         Notes
         -----
-        If `separately` is None, automatically detect large
-        numpy/scipy.sparse arrays in the object being stored, and store
-        them into separate files. This avoids pickle memory errors and
-        allows mmap'ing large arrays back on load efficiently.
+        If `separately` is None, automatically detect large numpy/scipy.sparse arrays in the object being stored,
+        and store them into separate files. This avoids pickle memory errors and allows mmap'ing large arrays back
+        on load efficiently.
 
-        You can also set `separately` manually, in which case it must be
-        a list of attribute names to be stored in separate files. The
-        automatic check is not performed in this case.
-
-        See Also
-        --------
-        :meth:`~gensim.utils.SaveLoad.load`
+        You can also set `separately` manually, in which case it must be a list of attribute names to be stored
+        in separate files. The automatic check is not performed in this case.
 
         """
         logger.info("saving %s object under %s, separately %s", self.__class__.__name__, fname, separately)
@@ -684,6 +672,7 @@ class SaveLoad(object):
         See Also
         --------
         :meth:`~gensim.utils.SaveLoad.load`
+            Load object from file.
 
         """
         try:
@@ -741,7 +730,6 @@ class FakeDict(object):
     This is meant to avoid allocating real dictionaries when `num_terms` is huge, which is a waste of memory.
 
     """
-
     def __init__(self, num_terms):
         """
 
@@ -783,8 +771,8 @@ class FakeDict(object):
         list of int
             Highest id, packed in list.
 
-        Warnings
-        --------
+        Notes
+        -----
         To avoid materializing the whole `range(0, self.num_terms)`,
         this returns the highest id = `[self.num_terms - 1]` only.
 
@@ -928,7 +916,6 @@ class RepeatCorpus(SaveLoad):
     [[(1, 2)], [], [(1, 2)], [], [(1, 2)]]
 
     """
-
     def __init__(self, corpus, reps):
         """
 
@@ -959,7 +946,6 @@ class RepeatCorpusNTimes(SaveLoad):
     [[(1, 0.5)], [], [(1, 0.5)], [], [(1, 0.5)], []]
 
     """
-
     def __init__(self, corpus, n):
         """
 
@@ -982,7 +968,6 @@ class RepeatCorpusNTimes(SaveLoad):
 
 class ClippedCorpus(SaveLoad):
     """Wrap a `corpus` and return `max_doc` element from it."""
-
     def __init__(self, corpus, max_docs=None):
         """
 
@@ -1011,7 +996,6 @@ class ClippedCorpus(SaveLoad):
 
 class SlicedCorpus(SaveLoad):
     """Wrap `corpus` and return a slice of it."""
-
     def __init__(self, corpus, slice_):
         """
 
@@ -1057,7 +1041,7 @@ class SlicedCorpus(SaveLoad):
 
 def safe_unichr(intval):
     """Create a unicode character from its integer value. In case `unichr` fails, render the character
-    as an escaped `\U<8-byte hex value of intval>` string.
+    as an escaped `\\U<8-byte hex value of intval>` string.
 
     Parameters
     ----------
@@ -1323,7 +1307,7 @@ def smart_extension(fname, ext):
 
     >>> from gensim.utils import smart_extension
     >>> smart_extension("my_file.pkl.gz", ".vectors")
-    'my_file.pkl.vectors.gz''
+    'my_file.pkl.vectors.gz'
 
     """
     fname, oext = os.path.splitext(fname)
@@ -1406,7 +1390,9 @@ def revdict(d):
 
 def deprecated(reason):
     """Decorator to mark functions as deprecated.
+
     Calling a decorated function will result in a warning being emitted, using warnings.warn.
+    Adapted from https://stackoverflow.com/a/40301488/8001386.
 
     Parameters
     ----------
@@ -1417,11 +1403,6 @@ def deprecated(reason):
     -------
     function
         Decorated function
-
-    Notes
-    -----
-
-    Adapted from https://stackoverflow.com/a/40301488/8001386
 
     """
     if isinstance(reason, string_types):
@@ -1460,19 +1441,18 @@ def deprecated(reason):
 
 @deprecated("Function will be removed in 4.0.0")
 def toptexts(query, texts, index, n=10):
-    """
-    Debug fnc to help inspect the top `n` most similar documents (according to a
-    similarity index `index`), to see if they are actually related to the query.
+    """Debug fnc to help inspect the top `n` most similar documents (according to a similarity index `index`),
+    to see if they are actually related to the query.
 
     Parameters
     ----------
-    query : list
+    query : {list of (int, number), numpy.ndarray}
         vector OR BoW (list of tuples)
     texts : str
         object that can return something insightful for each document via `texts[docid]`,
         such as its fulltext or snippet.
     index : any
-        a class from gensim.similarity.docsim
+        A instance from from :mod:`gensim.similarity.docsim`.
 
     Return
     ------
@@ -1566,7 +1546,6 @@ def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None, ns_conf=None
     """Register an object with the Pyro name server.
 
     Start the name server if not running yet and block until the daemon is terminated.
-
     The object is registered under `name`, or `name`+ some random suffix if `random_suffix` is set.
 
     """
@@ -1587,7 +1566,7 @@ def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None, ns_conf=None
 
 
 def has_pattern():
-    """Check whether the `pattern` (https://github.com/clips/pattern) package is installed.
+    """Check whether the `pattern <https://github.com/clips/pattern>`_ package is installed.
 
     Returns
     -------
@@ -1604,7 +1583,7 @@ def has_pattern():
 
 def lemmatize(content, allowed_tags=re.compile(r'(NN|VB|JJ|RB)'), light=False,
               stopwords=frozenset(), min_length=2, max_length=15):
-    """Use the English lemmatizer from `pattern` (https://github.com/clips/pattern) to extract UTF8-encoded tokens in
+    """Use the English lemmatizer from `pattern <https://github.com/clips/pattern>`_ to extract UTF8-encoded tokens in
     their base form aka lemma, e.g. "are, is, being" becomes "be" etc.
 
     This is a smarter version of stemming, taking word context into account.
@@ -1632,7 +1611,12 @@ def lemmatize(content, allowed_tags=re.compile(r'(NN|VB|JJ|RB)'), light=False,
 
     Warnings
     --------
-    This function is only available when the optional 'pattern' package is installed.
+    This function is only available when the optional `pattern <https://github.com/clips/pattern>`_ is installed.
+
+    Raises
+    ------
+    ImportError
+        If `pattern <https://github.com/clips/pattern>`_ not installed.
 
     Examples
     --------
@@ -1794,8 +1778,7 @@ def keep_vocab_item(word, count, min_count, trim_rule=None):
         Discard words with frequency smaller than this.
     trim_rule : function, optional
         Custom function to decide whether to keep or discard this word.
-
-    If a custom `trim_rule` is not specified, the default behaviour is simply `count >= min_count`.
+        If a custom `trim_rule` is not specified, the default behaviour is simply `count >= min_count`.
 
     Returns
     -------
@@ -1821,8 +1804,7 @@ def check_output(stdout=subprocess.PIPE, *popenargs, **kwargs):
     r"""Run OS command with the given arguments and return its output as a byte string.
 
     Backported from Python 2.7 with a few minor modifications. Widely used for :mod:`gensim.models.wrappers`.
-
-    Behaves very similar to [6]_.
+    Behaves very similar to https://docs.python.org/2/library/subprocess.html#subprocess.check_output.
 
     Examples
     --------
@@ -1834,10 +1816,6 @@ def check_output(stdout=subprocess.PIPE, *popenargs, **kwargs):
     ------
     KeyboardInterrupt
         If Ctrl+C pressed.
-
-    References
-    ----------
-    .. [6] https://docs.python.org/2/library/subprocess.html#subprocess.check_output
 
     """
     try:
