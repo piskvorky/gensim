@@ -16,12 +16,10 @@ cimport numpy as np
 from libc.math cimport exp
 from libc.math cimport log
 from libc.string cimport memset, strtok
-# from libc.stdio cimport FILE, fopen, fscanf, fclose
-from libcpp.string cimport string#, getline
+from libcpp.string cimport string
 from libcpp.vector cimport vector
-# from libcpp.sstream cimport istringstream
+from libcpp cimport bool as bool_t
 
-from cython.operator import dereference as deref
 
 # scipy <= 0.15
 try:
@@ -50,47 +48,92 @@ cdef REAL_t[EXP_TABLE_SIZE] LOG_TABLE
 cdef int ONE = 1
 cdef REAL_t ONEF = <REAL_t>1.0
 
+
 cdef extern from "linesentence.h":
     cdef cppclass FastLineSentence:
         FastLineSentence(string&) except +
         vector[string] ReadSentence() nogil except +
 
+
+def _batch_iterator(self, input_stream, cur_epoch=0, total_examples=None, total_words=None):
+    job_batch, batch_size = [], 0
+    job_no = 0
+
+    for data_idx, data in enumerate(input_stream):
+        data_length = self._raw_word_count([data])
+
+        # can we fit this sentence into the existing job batch?
+        if batch_size + data_length <= self.batch_words:
+            # yes => add it to the current job
+            job_batch.append(data)
+            batch_size += data_length
+        else:
+            job_no += 1
+
+            yield job_batch
+
+            # add the sentence that didn't fit as the first item of a new job
+            job_batch, batch_size = [data], data_length
+    # add the last job too (may be significantly smaller than batch_words)
+    if job_batch:
+        job_no += 1
+        yield job_batch
+
+
+
 @cython.final
 cdef class CythonLineSentence:
     cdef FastLineSentence* _thisptr
     cdef public string source
-    cdef public int max_sentence_length
+    cdef public int max_sentence_length, max_words_in_batch
+    cdef vector[string] buf_data
 
     def __cinit__(self, source, max_sentence_length=MAX_SENTENCE_LEN):
         self._thisptr = new FastLineSentence(source)
 
     def __init__(self, source, max_sentence_length=MAX_SENTENCE_LEN):
-        """
-        `source` can be either a string or a file object. Clip the file to the first
-        `limit` lines (or not clipped if limit is None, the default).
-
-        Example::
-
-            sentences = LineSentence('myfile.txt')
-
-        Or for compressed files::
-
-            sentences = LineSentence('compressed_text.txt.bz2')
-            sentences = LineSentence('compressed_text.txt.gz')
-
-        """
         self.source = source
-        self.max_sentence_length = max_sentence_length
+        self.max_sentence_length = max_sentence_length  # isn't used in this hacky prototype
+        self.max_words_in_batch = MAX_SENTENCE_LEN
 
     def __dealloc__(self):
         if self._thisptr != NULL:
             del self._thisptr
 
-    cpdef vector[string] read_sentence(self) nogil:
+    cpdef vector[string] read_sentence(self) nogil except *:
         return self._thisptr.ReadSentence()
 
-    cpdef vector[string] next_batch(self) nogil:
-        return vector[string]()
+    cpdef vector[vector[string]] next_batch(self) except *:
+        with nogil:
+            return self._next_batch()
+
+    cpdef vector[vector[string]] _next_batch(self) nogil except *:
+        cdef:
+            vector[vector[string]] job_batch
+            vector[string] data
+            int batch_size = 0
+            int data_length = 0
+
+        # Try to read data from previous calls which was not returned
+        if self.buf_data.size() > 0:
+            data = self.buf_data
+            self.buf_data.clear()
+        else:
+            data = self.read_sentence()
+
+        data_length = data.size()
+        while batch_size + data_length <= self.max_words_in_batch:
+            job_batch.push_back(data)
+            batch_size += data_length
+
+            # TODO: if it raises an exception, we will not return a batch we read up to this moment
+            data = self.read_sentence()
+            data_length = data.size()
+
+        # Save data which doesn't fit in batch in order to return it later.
+        buf_data = data
+
+        return job_batch
 
 
 # for when fblas.sdot returns a double
