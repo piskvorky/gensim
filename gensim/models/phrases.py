@@ -4,6 +4,14 @@
 
 """Automatically detect common phrases -- multi-word expressions / word n-grams -- from a stream of sentences.
 
+Inspired by:
+
+* `Mikolov et al "Distributed Representations of Words and Phrases and their Compositionality"
+  <https://arxiv.org/abs/1310.4546>`_
+* `"Normalized (Pointwise) Mutual Information in Colocation Extraction" by Gerlof Bouma
+  <https://svn.spraakdata.gu.se/repos/gerlof/pub/www/Docs/npmi-pfd.pdf>`_
+
+
 Examples
 --------
 >>> from gensim.test.utils import datapath
@@ -25,6 +33,7 @@ Examples
 ...     pass
 
 """
+
 import sys
 import os
 import logging
@@ -86,7 +95,6 @@ def _is_single(obj):
 
 class SentenceAnalyzer(object):
     """Base util class for :class:`~gensim.models.phrases.Phrases` and :class:`~gensim.models.phrases.Phraser`."""
-
     def score_item(self, worda, wordb, components, scorer):
         """Get bi-gram score statistics.
 
@@ -123,8 +131,8 @@ class SentenceAnalyzer(object):
 
         Parameters
         ----------
-        sentence : Iterable of str
-            Token list representing the sentence to be analyzed.
+        sentence : iterable of str
+            Token sequence representing the sentence to be analyzed.
         threshold : float
             The minimum score for a bigram to be taken into account.
         common_terms : list of object
@@ -266,8 +274,8 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         -----
         'npmi' is more robust when dealing with common words that form part of common bigrams, and
         ranges from -1 to 1, but is slower to calculate than the default. The default is the PMI-like scoring
-        as described by Mikoliv et al in `Distributed Representations of Words
-        and Phrases and their Compositionality <https://arxiv.org/abs/1310.4546>`_.
+        as described by `Mikolov et al "Distributed Representations of Words
+        and Phrases and their Compositionality" <https://arxiv.org/abs/1310.4546>`_.
 
         To use a custom scoring function, pass in a function with the following signature:
 
@@ -278,8 +286,8 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         * min_count - the `min_count` setting of the Phrases class
         * corpus_word_count - the total number of tokens (non-unique) in `sentences`
 
-        The scoring function must accept all these parameters, even if it doesn't use them in its scoring.
-        The scoring function must be pickleable.
+        The scoring function **must accept all these parameters**, even if it doesn't use them in its scoring.
+        The scoring function **must be pickleable**.
 
         """
         if min_count <= 0:
@@ -336,8 +344,8 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
 
     @classmethod
     def load(cls, *args, **kwargs):
-        """Load a previously saved Phrases class. Handles backwards compatibility from older Phrases versions
-        which did not support pluggable scoring functions.
+        """Load a previously saved Phrases class.
+        Handles backwards compatibility from older Phrases versions which did not support pluggable scoring functions.
 
         Parameters
         ----------
@@ -557,7 +565,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
 
         Returns
         -------
-        {list of str, :class:`gensim.iterfaces.TransformedCorpus`}
+        {list of str, :class:`gensim.interfaces.TransformedCorpus`}
             `sentence` with detected phrase bigrams merged together, or a streamed corpus of such sentences
             if the input was a corpus.
 
@@ -577,16 +585,13 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         >>> #Both of these tokens appear in corpus at least twice, and phrase score is higher, than treshold = 1:
         >>> print(phrases[sent])
         [u'trees_graph', u'minors']
-
-        >>> from gensim.test.utils import datapath
-        >>> from gensim.models.word2vec import Text8Corpus
-        >>> from gensim.models.phrases import Phrases
         >>>
         >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
         >>> phrases = Phrases(sentences, min_count=1, threshold=1)
+        >>> phraser = Phraser(phrases)  # for speedup
         >>>
         >>> sent = [[u'trees', u'graph', u'minors'],[u'graph', u'minors']]
-        >>> for phrase in phrases[sent]:
+        >>> for phrase in phraser[sent]:
         ...     pass
 
         """
