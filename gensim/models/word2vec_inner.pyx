@@ -20,6 +20,8 @@ from libcpp.string cimport string#, getline
 from libcpp.vector cimport vector
 # from libcpp.sstream cimport istringstream
 
+from cython.operator import dereference as deref
+
 # scipy <= 0.15
 try:
     from scipy.linalg.blas import fblas
@@ -51,6 +53,9 @@ cdef REAL_t ONEF = <REAL_t>1.0
 cdef class CythonLineSentence:
     """Simple format: one sentence = one line; words already preprocessed and separated by whitespace.
     """
+    def __cinit__(self, source, max_sentence_length):
+        self.fd = new ifstream(source)
+
     def __init__(self, source, max_sentence_length=MAX_SENTENCE_LEN):
         """
         `source` can be either a string or a file object. Clip the file to the first
@@ -68,11 +73,14 @@ cdef class CythonLineSentence:
         """
         self.source = source
         self.max_sentence_length = max_sentence_length
-        self.fd = ifstream(source)
+
+    def __dealloc__(self):
+        if self.fd != NULL:
+            del self.fd
 
     cpdef string read_line(self) nogil:
         cdef string val
-        self.fd >> val
+        deref(self.fd) >> val
         return val
 
     cpdef vector[string] next_batch(self) nogil:

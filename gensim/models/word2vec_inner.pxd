@@ -69,7 +69,7 @@ cdef class CythonLineSentence:
     """
     cdef public char* source
     cdef public int max_sentence_length
-    cdef ifstream fd
+    cdef ifstream* fd
 
     cpdef string read_line(self) nogil
     cpdef vector[string] next_batch(self) nogil
