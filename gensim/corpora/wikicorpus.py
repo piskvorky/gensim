@@ -285,7 +285,7 @@ def tokenize(content, token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, 
     token_max_len : int
         Maximal token length.
     lower : bool
-         If True - convert `content` to lower case.
+         Convert `content` to lower case?
 
     Returns
     -------
@@ -405,7 +405,7 @@ def process_article(args, tokenizer_func=tokenize, token_min_len=TOKEN_MIN_LEN,
     token_max_len : int
         Maximal token length.
     lower : bool
-         If True - convert article text to lower case.
+         Convert article text to lower case?
 
     Returns
     -------
@@ -514,7 +514,7 @@ class WikiCorpus(TextCorpus):
             Defaults to `True` if you have the `pattern <https://github.com/clips/pattern>`_ package installed.
         dictionary : :class:`~gensim.corpora.dictionary.Dictionary`, optional
             Dictionary, if not provided,  this scans the corpus once, to determine its vocabulary
-            (**IMPORTANT: this needs really long time**).
+            **IMPORTANT: this needs a really long time**.
         filter_namespaces : tuple of str, optional
             Namespaces to consider.
         tokenizer_func : function, optional
@@ -528,7 +528,7 @@ class WikiCorpus(TextCorpus):
         token_max_len : int, optional
             Maximal token length.
         lower : bool, optional
-             Convert all text to lower case.
+             Convert all text to lower case?
 
         Warnings
         --------

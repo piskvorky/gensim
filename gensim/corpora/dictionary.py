@@ -212,7 +212,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         allow_update : bool, optional
             Update self, by adding new tokens from `document` and updating internal corpus statistics.
         return_missing : bool, optional
-            If True - return missing tokens (tokens present in `document` but not in self) with frequencies.
+            Return missing tokens (tokens present in `document` but not in self) with frequencies?
 
         Return
         ------
@@ -458,7 +458,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         fname : str
             Path to output file.
         sort_by_word : bool, optional
-            Sort words in lexicographical order before writing them out.
+            Sort words in lexicographical order before writing them out?
 
         Notes
         -----

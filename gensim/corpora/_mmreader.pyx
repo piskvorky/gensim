@@ -1,6 +1,8 @@
 # Copyright (C) 2018 Radim Rehurek <radimrehurek@seznam.cz>
 # cython: embedsignature=True
+
 """Reader for corpus in the Matrix Market format."""
+
 from __future__ import with_statement
 
 from gensim import utils

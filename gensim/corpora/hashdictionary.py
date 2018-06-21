@@ -73,7 +73,7 @@ class HashDictionary(utils.SaveLoad, dict):
         myhash : function, optional
             Hash function, should support interface `myhash(str) -> int`, uses `zlib.adler32` by default.
         debug : bool, optional
-            If True - store which tokens have mapped to a given id. **Will use a lot of RAM**.
+            Store which tokens have mapped to a given id? **Will use a lot of RAM**.
             If you find yourself running out of memory (or not sure that you really need raw tokens),
             keep `debug=False`.
 
@@ -211,7 +211,7 @@ class HashDictionary(utils.SaveLoad, dict):
         document : sequence of str
             A sequence of word tokens = **tokenized and normalized** strings.
         allow_update : bool, optional
-            If True - update corpus statistics and if `debug=True`, also the reverse id=>word mapping.
+            Update corpus statistics and if `debug=True`, also the reverse id=>word mapping?
         return_missing : bool, optional
             Not used. Only here for compatibility with the Dictionary class.
 

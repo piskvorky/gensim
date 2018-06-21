@@ -123,7 +123,7 @@ class CorpusABC(utils.SaveLoad):
         id2word : :class:`~gensim.corpora.Dictionary`, optional
             Dictionary of corpus.
         metadata : bool, optional
-            If True, will write additional metadata to a separate too.
+            Write additional metadata to a separate too?
 
         """
         raise NotImplementedError('cannot instantiate abstract base class')

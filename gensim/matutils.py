@@ -60,8 +60,8 @@ def argsort(x, topn=None, reverse=False):
         Number of indices of the smallest (greatest) elements to be returned.
         If not given, indices of all elements will be returned in ascending (descending) order.
     reverse : bool, optional
-        If True - return the `topn` greatest elements in descending order,
-        instead of smallest elements in ascending order.
+        Return the `topn` greatest elements in descending order,
+        instead of smallest elements in ascending order?
 
     Returns
     -------
@@ -526,7 +526,7 @@ class Dense2Corpus(object):
         dense : numpy.ndarray
             Corpus in dense format.
         documents_columns : bool, optional
-            If True - documents in `dense` represented as columns, as opposed to rows.
+            Documents in `dense` represented as columns, as opposed to rows?
 
         """
         if documents_columns:
@@ -569,7 +569,7 @@ class Sparse2Corpus(object):
         sparse : `scipy.sparse`
             Corpus scipy sparse format
         documents_columns : bool, optional
-            If True - documents will be column, rows otherwise.
+            Documents will be column?
 
         """
         if documents_columns:
@@ -691,7 +691,7 @@ def unitvec(vec, norm='l2', return_norm=False):
     norm : {'l1', 'l2'}, optional
         Metric to normalize in.
     return_norm : bool, optional
-        If True - return the length of vector `vec`, in addition to the normalized vector itself.
+        Return the length of vector `vec`, in addition to the normalized vector itself?
 
     Returns
     -------
@@ -1307,7 +1307,7 @@ class MmWriter(object):
         num_terms : int, optional
             Number of terms in the corpus. If provided, the `corpus.num_terms` attribute (if any) will be ignored.
         metadata : bool, optional
-            If True - generate a metadata file.
+            Generate a metadata file?
 
         Returns
         -------

@@ -98,7 +98,7 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
         progress_cnt : int, optional
             How often to report (log) progress.
         metadata : bool, optional
-            If true, writes out additional metadata.
+            Writes out additional metadata?
 
         Warnings
         --------
