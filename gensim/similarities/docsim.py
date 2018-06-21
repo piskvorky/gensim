@@ -23,7 +23,7 @@ or :class:`~gensim.similarities.docsim.SparseMatrixSimilarity` classes directly.
 These are more simple but do not scale as well: they keep the entire index in RAM, no sharding. They also do not
 support adding new document to the index dynamically.
 
-Once the index has been initialized, you can query for document similarity simply by:
+Once the index has been initialized, you can query for document similarity simply by
 
 >>> from gensim.test.utils import common_corpus, common_dictionary, get_tmpfile
 >>>
@@ -33,7 +33,7 @@ Once the index has been initialized, you can query for document similarity simpl
 >>> index = Similarity(index_tmpfile, common_corpus, num_features=len(common_dictionary)) # build the index
 >>> similarities = index[query] # get similarities between the query and all index documents
 
-If you have more query documents, you can submit them all at once, in a batch:
+If you have more query documents, you can submit them all at once, in a batch
 
 >>> from gensim.test.utils import common_corpus, common_dictionary, get_tmpfile
 >>>
@@ -92,9 +92,9 @@ class Shard(utils.SaveLoad):
     :class:`~gensim.similarities.docsim.SparseMatrixSimilarity`, etc, so that it mmaps from disk on request (query).
 
     """
-
     def __init__(self, fname, index):
         """
+
         Parameters
         ----------
         fname : str
@@ -961,10 +961,13 @@ class WmdSimilarity(interfaces.SimilarityABC):
     <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/WMD_tutorial.ipynb>`_ for more examples.
 
     When using this code, please consider citing the following papers:
-    `Ofir Pele and Michael Werman, "A linear time histogram metric for improved SIFT matching"
-    <http://www.cs.huji.ac.il/~werman/Papers/ECCV2008.pdf>`_, `Ofir Pele and Michael Werman, "Fast and robust earth
-    mover's distances" <http://www.cs.huji.ac.il/~werman/Papers/ICCV2009.pdf>`_, `"Matt Kusner et al. "From Word
-    Embeddings To Document Distances" <http://proceedings.mlr.press/v37/kusnerb15.pdf>`_.
+
+    * `Ofir Pele and Michael Werman, "A linear time histogram metric for improved SIFT matching"
+      <http://www.cs.huji.ac.il/~werman/Papers/ECCV2008.pdf>`_
+    * `Ofir Pele and Michael Werman, "Fast and robust earth mover's distances"
+      <http://www.cs.huji.ac.il/~werman/Papers/ICCV2009.pdf>`_
+    * `Matt Kusner et al. "From Word Embeddings To Document Distances"
+      <http://proceedings.mlr.press/v37/kusnerb15.pdf>`_
 
     Example
     -------
@@ -983,7 +986,6 @@ class WmdSimilarity(interfaces.SimilarityABC):
     >>> sims = index[query]
 
     """
-
     def __init__(self, corpus, w2v_model, num_best=None, normalize_w2v_and_replace=True, chunksize=256):
         """
 
@@ -1090,10 +1092,10 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
         Index similarity (dense with cosine distance).
 
     """
-
     def __init__(self, corpus, num_features=None, num_terms=None, num_docs=None, num_nnz=None,
                  num_best=None, chunksize=500, dtype=numpy.float32, maintain_sparsity=False):
         """
+
         Parameters
         ----------
         corpus: iterable of list of (int, float)
@@ -1117,7 +1119,6 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
             Return sparse arrays from :meth:`~gensim.similarities.docsim.SparseMatrixSimilarity.get_similarities`?
 
         """
-
         self.num_best = num_best
         self.normalize = True
         self.chunksize = chunksize
