@@ -462,7 +462,7 @@ class Similarity(interfaces.SimilarityABC):
         if PARALLEL_SHARDS and PARALLEL_SHARDS > 1:
             logger.debug("spawning %i query processes", PARALLEL_SHARDS)
             pool = multiprocessing.Pool(PARALLEL_SHARDS)
-            result = pool.imap(query_shard, args, chunksize=1 + len(args) / PARALLEL_SHARDS)
+            result = pool.imap(query_shard, args, chunksize=1 + len(list(args)) / PARALLEL_SHARDS)
         else:
             # serial processing, one shard after another
             pool = None
