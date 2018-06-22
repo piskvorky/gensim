@@ -1193,45 +1193,51 @@ class Word2VecVocab(utils.SaveLoad):
         self.raw_vocab = None
         self.max_final_vocab = max_final_vocab
 
-    def scan_vocab(self, input_streams, progress_per=10000, workers=1, trim_rule=None):
-        manager = mp.Manager()
-        progress_queue = manager.Queue()
-        pool = mp.Pool(processes=min(workers, len(input_streams)))
-
-        results = [
-            pool.apply_async(_scan_vocab_worker,
-                             (stream, progress_queue, progress_per, self.max_vocab_size, trim_rule)
-                             ) for stream in input_streams
-        ]
-        pool.close()
+    def scan_vocab(self, input_streams, progress_per=10000, trim_rule=None):
+        """Do an initial scan of all words appearing in sentences."""
+        from itertools import chain
+        line_sentences = []
+        for st in input_streams:
+            if isinstance(st, string_types):
+                line_sentences.append(LineSentence(st))
+            else:
+                raise RuntimeError("error!!!!!!!!")
+        sentences = chain(*line_sentences)
 
         logger.info("collecting all words and their counts")
-        unfinished_tasks = len(results)
-        total_words = 0
         sentence_no = -1
-        while unfinished_tasks > 0:
-            report = progress_queue.get()
-            if report is None:
-                unfinished_tasks -= 1
-                logger.info("scan vocab task finished; awaiting finish of %i more tasks", unfinished_tasks)
-            elif isinstance(report, string_types):
-                logger.warning(report)
-            else:
-                num_words, num_sentences = report
-                total_words += num_words
-                sentence_no += num_sentences
+        total_words = 0
+        min_reduce = 1
+        vocab = defaultdict(int)
+        checked_string_types = 0
+        for sentence_no, sentence in enumerate(sentences):
+            if not checked_string_types:
+                if isinstance(sentence, string_types):
+                    logger.warning(
+                        "Each 'sentences' item should be a list of words (usually unicode strings). "
+                        "First item here is instead plain %s.",
+                        type(sentence)
+                    )
+                checked_string_types += 1
+            if sentence_no % progress_per == 0:
+                logger.info(
+                    "PROGRESS: at sentence #%i, processed %i words, keeping %i word types",
+                    sentence_no, total_words, len(vocab)
+                )
+            for word in sentence:
+                vocab[word] += 1
+            total_words += len(sentence)
 
-                if sentence_no % progress_per == 0:
-                    logger.info("PROGRESS: at sentence #%i, processed %i words", sentence_no, total_words)
+            if self.max_vocab_size and len(vocab) > self.max_vocab_size:
+                utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
+                min_reduce += 1
 
-        self.raw_vocab = reduce(utils.merge_dicts, [res.get() for res in results])
         logger.info(
             "collected %i word types from a corpus of %i raw words and %i sentences",
-            len(self.raw_vocab), total_words, sentence_no + 1
+            len(vocab), total_words, sentence_no + 1
         )
-
         corpus_count = sentence_no + 1
-
+        self.raw_vocab = vocab
         return total_words, corpus_count
 
     def sort_vocab(self, wv):

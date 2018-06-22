@@ -184,37 +184,37 @@ class BaseAny2VecModel(utils.SaveLoad):
         progress_queue.put(None)
         logger.debug("worker exiting, processed %i jobs", jobs_processed)
 
-    def _batch_iterator(self, input_stream, cur_epoch=0, total_examples=None, total_words=None):
-        job_batch, batch_size = [], 0
-        job_no = 0
-
-        for data_idx, data in enumerate(input_stream):
-            data_length = self._raw_word_count([data])
-
-            # can we fit this sentence into the existing job batch?
-            if batch_size + data_length <= self.batch_words:
-                # yes => add it to the current job
-                job_batch.append(data)
-                batch_size += data_length
-            else:
-                job_no += 1
-
-                yield job_batch
-
-                # add the sentence that didn't fit as the first item of a new job
-                job_batch, batch_size = [data], data_length
-        # add the last job too (may be significantly smaller than batch_words)
-        if job_batch:
-            job_no += 1
-            yield job_batch
-
-        if job_no == 0 and self.train_count == 0:
-            logger.warning(
-                "train() called with an empty iterator (if not intended, "
-                "be sure to provide a corpus that offers restartable iteration = an iterable)."
-            )
-
-        logger.debug("batch iterator loop exiting, total %i jobs", job_no)
+    # def _batch_iterator(self, input_stream, cur_epoch=0, total_examples=None, total_words=None):
+    #     job_batch, batch_size = [], 0
+    #     job_no = 0
+    #
+    #     for data_idx, data in enumerate(input_stream):
+    #         data_length = self._raw_word_count([data])
+    #
+    #         # can we fit this sentence into the existing job batch?
+    #         if batch_size + data_length <= self.batch_words:
+    #             # yes => add it to the current job
+    #             job_batch.append(data)
+    #             batch_size += data_length
+    #         else:
+    #             job_no += 1
+    #
+    #             yield job_batch
+    #
+    #             # add the sentence that didn't fit as the first item of a new job
+    #             job_batch, batch_size = [data], data_length
+    #     # add the last job too (may be significantly smaller than batch_words)
+    #     if job_batch:
+    #         job_no += 1
+    #         yield job_batch
+    #
+    #     if job_no == 0 and self.train_count == 0:
+    #         logger.warning(
+    #             "train() called with an empty iterator (if not intended, "
+    #             "be sure to provide a corpus that offers restartable iteration = an iterable)."
+    #         )
+    #
+    #     logger.debug("batch iterator loop exiting, total %i jobs", job_no)
 
     def _log_progress(self, progress_queue, cur_epoch, example_count, total_examples,
                       raw_word_count, total_words, trained_word_count, elapsed):
@@ -546,7 +546,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         start_time = time.time()
 
         total_words, corpus_count = self.vocabulary.scan_vocab(
-            input_streams, progress_per=progress_per, workers=workers, trim_rule=trim_rule)
+            input_streams, progress_per=progress_per, trim_rule=trim_rule)
         self.corpus_count = corpus_count
         report_values = self.vocabulary.prepare_vocab(
             self.hs, self.negative, self.wv, update=update, keep_raw_vocab=keep_raw_vocab,
