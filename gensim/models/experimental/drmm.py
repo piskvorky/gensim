@@ -1,12 +1,18 @@
-import keras
-from keras.models import Model
-from keras.layers import Input, Embedding, Dense, Lambda, Dropout, Activation, Reshape, Dot, Permute  # noqa
-from keras.activations import softmax
+try:
+    import keras
+    from keras.models import Model
+    from keras.layers import Input, Embedding, Dense, Lambda, Dropout, Activation, Reshape, Dot, Permute  # noqa
+    from keras.activations import softmax
+    KERAS_AVAILABLE = True
+except ImportError:
+    KERAS_AVAILABLE =False
 
 
 class DRMM:
     def __init__(self, text_maxlen, vocab_size, embedding_matrix, hist_size=60, dropout_rate=0.,
                  hidden_sizes=[20, 1], target_mode='ranking'):
+        if not KERAS_AVAILABLE:
+            raise ImportError("Please install Keras to use this function")
         self.initializer_fc = keras.initializers.RandomUniform(
             minval=-0.1, maxval=0.1, seed=11)
         self.initializer_gate = keras.initializers.RandomUniform(

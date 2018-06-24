@@ -2,28 +2,33 @@ import logging
 import six
 import random
 import numpy
-import tensorflow
 
 import numpy as np
-import keras.backend as K
 from gensim.scripts.glove2word2vec import glove2word2vec
 from gensim.test.utils import get_tmpfile
 from gensim.models import KeyedVectors
 from collections import Counter
-from keras import optimizers
-from keras.losses import hinge
 from custom_losses import rank_hinge_loss
 from sklearn.preprocessing import normalize
 from custom_callbacks import ValidationCallback
 
+try:
+    import keras.backend as K
+    from keras import optimizers
+    from keras.losses import hinge
+    from keras.models import Model
+    from keras.layers import Input, Embedding, Dot, Dense, Lambda, Reshape, Dropout
+    from keras.activations import softmax
+    import tensorflow
+    tensorflow.set_random_seed(101010)
+    KERAS_AVAILABLE = True
+except ImportError:
+    KERAS_AVAILABLE =False
+
 random.seed(101010)
 numpy.random.seed(101010)
-tensorflow.set_random_seed(101010)
 logger = logging.getLogger(__name__)
 
-from keras.models import Model
-from keras.layers import Input, Embedding, Dot, Dense, Lambda, Reshape, Dropout
-from keras.activations import softmax
 from gensim import utils
 
 class DRMM_TKS(utils.SaveLoad):
@@ -532,6 +537,8 @@ class _drmm_tks:
                 hidden_sizes = [10, 20, 30]
             will add 3 fully connected layers of 10, 20 and 30 hidden neurons
         """
+        if not KERAS_AVAILABLE:
+            raise ImportError("Please install Keras to use this model")
         self.embedding = embedding
         self.embed_dim = embedding.shape[1]
         self.embed_trainable = embed_trainable

@@ -1,5 +1,9 @@
-from keras.callbacks import Callback
 import logging
+try:
+    from keras.callbacks import Callback
+    KERAS_AVAILABLE = True
+except ImportError:
+    KERAS_AVAILABLE =False
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -9,6 +13,9 @@ logging.basicConfig(
 class ValidationCallback(Callback):
 
     def __init__(self, test_data):
+        if not KERAS_AVAILABLE:
+            raise ImportError("Please install Keras to use this class")
+
         self.test_data = test_data
 
     def on_epoch_end(self, epoch, logs={}):

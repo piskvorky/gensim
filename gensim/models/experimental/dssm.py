@@ -1,6 +1,11 @@
-from keras.models import Sequential, Model
-from keras.layers import Input, Dense, Dot, Dropout
-from keras import regularizers
+try:
+    from keras.models import Sequential, Model
+    from keras.layers import Input, Dense, Dot, Dropout
+    from keras import regularizers
+    KERAS_AVAILABLE = True
+except ImportError:
+    KERAS_AVAILABLE = FALSE
+
 
 
 class DSSM(object):
@@ -37,6 +42,8 @@ class DSSM(object):
             TODO check working
 
         """
+        if not KERAS_AVAILABLE:
+            rasie ImportError("Please install Keras to use this model")
         self.vocab_size = vocab_size
         self.hidden_sizes = hidden_sizes
         self.regularizer_rate = regularizer_rate
