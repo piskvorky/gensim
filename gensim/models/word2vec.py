@@ -631,7 +631,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
     def __init__(self, sentences=None, input_streams=None, size=100, alpha=0.025, window=5, min_count=5,
                  max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
-                 sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
+                 sg=0, hs=0, negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
                  trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False, callbacks=(),
                  max_final_vocab=None):
         """
@@ -667,6 +667,12 @@ class Word2Vec(BaseWordEmbeddingsModel):
             If > 0, negative sampling will be used, the int for negative specifies how many "noise words"
             should be drawn (usually between 5-20).
             If set to 0, no negative sampling is used.
+        ns_exponent : float, optional
+            The exponent used to shape the negative sampling distribution. A value of 1.0 samples exactly in proportion
+            to the frequencies, 0.0 samples all words equally, while a negative value samples low-frequency words more
+            than high-frequency words. The popular default value of 0.75 was chosen by the original Word2Vec paper.
+            More recently, in https://arxiv.org/abs/1804.04212, Caselles-Dupré, Lesaint, & Royo-Letelier suggest that
+            other values may perform better for recommendation applications.
         cbow_mean : {0, 1}, optional
             If 0, use the sum of the context word vectors. If 1, use the mean, only applies when cbow is used.
         alpha : float, optional
@@ -736,8 +742,8 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
         self.wv = Word2VecKeyedVectors(size)
         self.vocabulary = Word2VecVocab(
-            max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
-            sorted_vocab=bool(sorted_vocab), null_word=null_word, max_final_vocab=max_final_vocab)
+            max_vocab_size=max_vocab_size, min_count=min_count, sample=sample, sorted_vocab=bool(sorted_vocab),
+            null_word=null_word, max_final_vocab=max_final_vocab, ns_exponent=ns_exponent)
         self.trainables = Word2VecTrainables(seed=seed, vector_size=size, hashfxn=hashfxn)
 
         super(Word2Vec, self).__init__(
@@ -1487,7 +1493,7 @@ class Word2VecVocab(utils.SaveLoad):
     """Vocabulary used by :class:`~gensim.models.word2vec.Word2Vec`."""
     def __init__(
             self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0,
-            max_final_vocab=None):
+            max_final_vocab=None, ns_exponent=0.75):
         self.max_vocab_size = max_vocab_size
         self.min_count = min_count
         self.sample = sample
@@ -1496,6 +1502,7 @@ class Word2VecVocab(utils.SaveLoad):
         self.cum_table = None  # for negative sampling
         self.raw_vocab = None
         self.max_final_vocab = max_final_vocab
+        self.ns_exponent = ns_exponent
 
     def _scan_vocab_singlestream(self, sentences, progress_per, trim_rule):
         sentence_no = -1
@@ -1787,9 +1794,9 @@ class Word2VecVocab(utils.SaveLoad):
 
             logger.info("built huffman tree with maximum node depth %i", max_depth)
 
-    def make_cum_table(self, wv, power=0.75, domain=2**31 - 1):
-        """Create a cumulative-distribution table using stored vocabulary word counts for drawing random words
-        in the negative-sampling training routines.
+    def make_cum_table(self, wv, domain=2**31 - 1):
+        """Create a cumulative-distribution table using stored vocabulary word counts for
+        drawing random words in the negative-sampling training routines.
 
         To draw a word index, choose a random integer up to the maximum value in the table (cum_table[-1]),
         then finding that integer's sorted insertion point (as if by `bisect_left` or `ndarray.searchsorted()`).
@@ -1803,10 +1810,10 @@ class Word2VecVocab(utils.SaveLoad):
         # compute sum of all power (Z in paper)
         train_words_pow = 0.0
         for word_index in xrange(vocab_size):
-            train_words_pow += wv.vocab[wv.index2word[word_index]].count**power
+            train_words_pow += wv.vocab[wv.index2word[word_index]].count**self.ns_exponent
         cumulative = 0.0
         for word_index in xrange(vocab_size):
-            cumulative += wv.vocab[wv.index2word[word_index]].count**power
+            cumulative += wv.vocab[wv.index2word[word_index]].count**self.ns_exponent
             self.cum_table[word_index] = round(cumulative / train_words_pow * domain)
         if len(self.cum_table) > 0:
             assert self.cum_table[-1] == domain

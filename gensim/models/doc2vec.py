@@ -489,6 +489,12 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             If > 0, negative sampling will be used, the int for negative specifies how many "noise words"
             should be drawn (usually between 5-20).
             If set to 0, no negative sampling is used.
+        ns_exponent : float, optional
+            The exponent used to shape the negative sampling distribution. A value of 1.0 samples exactly in proportion
+            to the frequencies, 0.0 samples all words equally, while a negative value samples low-frequency words more
+            than high-frequency words. The popular default value of 0.75 was chosen by the original Word2Vec paper.
+            More recently, in https://arxiv.org/abs/1804.04212, Caselles-Dupré, Lesaint, & Royo-Letelier suggest that
+            other values may perform better for recommendation applications.
         dm_mean : {1,0}, optional
             If 0 , use the sum of the context word vectors. If 1, use the mean.
             Only applies when `dm` is used in non-concatenative mode.
@@ -552,7 +558,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         self.dm_tag_count = int(dm_tag_count)
 
         kwargs['null_word'] = dm_concat
-        vocabulary_keys = ['max_vocab_size', 'min_count', 'sample', 'sorted_vocab', 'null_word']
+        vocabulary_keys = ['max_vocab_size', 'min_count', 'sample', 'sorted_vocab', 'null_word', 'ns_exponent']
         vocabulary_kwargs = dict((k, kwargs[k]) for k in vocabulary_keys if k in kwargs)
         self.vocabulary = Doc2VecVocab(**vocabulary_kwargs)
 
@@ -1163,7 +1169,7 @@ class Doc2VecVocab(Word2VecVocab):
     This includes a mapping from words found in the corpus to their total frequency count.
 
     """
-    def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0):
+    def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0, ns_exponent=0.75):
         """
 
         Parameters
@@ -1182,11 +1188,17 @@ class Doc2VecVocab(Word2VecVocab):
         null_word : {0, 1}
             If True, a null pseudo-word will be created for padding when using concatenative L1 (run-of-words).
             This word is only ever input – never predicted – so count, huffman-point, etc doesn't matter.
+        ns_exponent : float, optional
+            The exponent used to shape the negative sampling distribution. A value of 1.0 samples exactly in proportion
+            to the frequencies, 0.0 samples all words equally, while a negative value samples low-frequency words more
+            than high-frequency words. The popular default value of 0.75 was chosen by the original Word2Vec paper.
+            More recently, in https://arxiv.org/abs/1804.04212, Caselles-Dupré, Lesaint, & Royo-Letelier suggest that
+            other values may perform better for recommendation applications.
 
         """
         super(Doc2VecVocab, self).__init__(
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
-            sorted_vocab=sorted_vocab, null_word=null_word)
+            sorted_vocab=sorted_vocab, null_word=null_word, ns_exponent=ns_exponent)
 
     def _scan_vocab_multistream(self, input_streams, docvecs, workers, trim_rule):
         manager = multiprocessing.Manager()

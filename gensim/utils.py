@@ -4,7 +4,7 @@
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""This module contains various general utility functions."""
+"""Various general utility functions."""
 
 from __future__ import with_statement
 from contextlib import contextmanager
@@ -74,11 +74,8 @@ def get_random_state(seed):
 
     Notes
     -----
-    Method originally from [1]_ and written by @joshloyal.
-
-    References
-    ----------
-    .. [1] https://github.com/maciejkula/glove-python
+    Method originally from `maciejkula/glove-python <https://github.com/maciejkula/glove-python>`_
+    and written by `@joshloyal <https://github.com/joshloyal>`_.
 
     """
     if seed is None or seed is np.random:
@@ -95,11 +92,7 @@ def synchronous(tlockname):
 
     Notes
     -----
-    Adapted from [2]_
-
-    References
-    ----------
-    .. [2] http://code.activestate.com/recipes/577105-synchronization-decorator-for-class-methods/
+    Adapted from http://code.activestate.com/recipes/577105-synchronization-decorator-for-class-methods/.
 
     """
     def _synched(func):
@@ -118,7 +111,7 @@ def synchronous(tlockname):
 
 
 def file_or_filename(input):
-    """Open file with `smart_open`.
+    """Open a filename for reading with `smart_open`, or seek to the beginning if `input` is an already open file.
 
     Parameters
     ----------
@@ -127,8 +120,8 @@ def file_or_filename(input):
 
     Returns
     -------
-    input : file-like object
-        Opened file OR seek out to 0 byte if `input` is already file-like object.
+    file-like object
+        An open file, positioned at the beginning.
 
     """
     if isinstance(input, string_types):
@@ -142,7 +135,7 @@ def file_or_filename(input):
 
 @contextmanager
 def open_file(input):
-    """Provide "with-like" behaviour except closing the file object.
+    """Provide "with-like" behaviour without closing the file object.
 
     Parameters
     ----------
@@ -171,7 +164,7 @@ def open_file(input):
 
 
 def deaccent(text):
-    """Remove accentuation from the given string.
+    """Remove letter accents from the given string.
 
     Parameters
     ----------
@@ -181,7 +174,7 @@ def deaccent(text):
     Returns
     -------
     str
-        Unicode string without accentuation.
+        Unicode string without accents.
 
     Examples
     --------
@@ -222,25 +215,24 @@ def copytree_hardlink(source, dest):
 
 
 def tokenize(text, lowercase=False, deacc=False, encoding='utf8', errors="strict", to_lower=False, lower=False):
-    """Iteratively yield tokens as unicode strings, removing accent marks and optionally lowercasing string
-    if any from `lowercase`, `to_lower`, `lower` set to True.
+    """Iteratively yield tokens as unicode strings, optionally removing accent marks and lowercasing it.
 
     Parameters
     ----------
-    text : str
+    text : str or bytes
         Input string.
-    lowercase : bool, optional
-        If True - lowercase input string.
     deacc : bool, optional
-        If True - remove accentuation from string by :func:`~gensim.utils.deaccent`.
+        Remove accentuation using :func:`~gensim.utils.deaccent`?
     encoding : str, optional
         Encoding of input string, used as parameter for :func:`~gensim.utils.to_unicode`.
     errors : str, optional
         Error handling behaviour, used as parameter for :func:`~gensim.utils.to_unicode`.
+    lowercase : bool, optional
+        Lowercase the input string?
     to_lower : bool, optional
-        Same as `lowercase`.
+        Same as `lowercase`. Convenience alias.
     lower : bool, optional
-        Same as `lowercase`.
+        Same as `lowercase`. Convenience alias.
 
     Yields
     ------
@@ -282,19 +274,20 @@ def simple_tokenize(text):
 
 
 def simple_preprocess(doc, deacc=False, min_len=2, max_len=15):
-    """Convert a document into a list of tokens (also with lowercase and optional de-accents),
-    used :func:`~gensim.utils.tokenize`.
+    """Convert a document into a list of lowercase tokens, ignoring tokens that are too short or too long.
+
+    Uses :func:`~gensim.utils.tokenize` internally.
 
     Parameters
     ----------
     doc : str
         Input document.
     deacc : bool, optional
-        If True - remove accentuation from string by :func:`~gensim.utils.deaccent`.
+        Remove accent marks from tokens using :func:`~gensim.utils.deaccent`?
     min_len : int, optional
-        Minimal length of token in result (inclusive).
+        Minimum length of token (inclusive). Shorter tokens are discarded.
     max_len : int, optional
-        Maximal length of token in result (inclusive).
+        Maximum length of token in result (inclusive). Longer tokens are discarded.
 
     Returns
     -------
@@ -310,16 +303,16 @@ def simple_preprocess(doc, deacc=False, min_len=2, max_len=15):
 
 
 def any2utf8(text, errors='strict', encoding='utf8'):
-    """Convert `text` to bytestring in utf8.
+    """Convert a unicode or bytes string in the given encoding into a utf8 bytestring.
 
     Parameters
     ----------
     text : str
         Input text.
     errors : str, optional
-        Error handling behaviour, used as parameter for `unicode` function (python2 only).
+        Error handling behaviour if `text` is a bytestring.
     encoding : str, optional
-        Encoding of `text` for `unicode` function (python2 only).
+        Encoding of `text` if it is a bytestring.
 
     Returns
     -------
@@ -338,16 +331,16 @@ to_utf8 = any2utf8
 
 
 def any2unicode(text, encoding='utf8', errors='strict'):
-    """Convert `text` to unicode.
+    """Convert `text` (bytestring in given encoding or unicode) to unicode.
 
     Parameters
     ----------
     text : str
         Input text.
     errors : str, optional
-        Error handling behaviour, used as parameter for `unicode` function (python2 only).
+        Error handling behaviour if `text` is a bytestring.
     encoding : str, optional
-        Encoding of `text` for `unicode` function (python2 only).
+        Encoding of `text` if it is a bytestring.
 
     Returns
     -------
@@ -364,7 +357,7 @@ to_unicode = any2unicode
 
 
 def call_on_class_only(*args, **kwargs):
-    """Helper for raise `AttributeError` if method should be called from instance.
+    """Helper to raise `AttributeError` if a class method is called on an instance. Used internally.
 
     Parameters
     ----------
@@ -376,24 +369,24 @@ def call_on_class_only(*args, **kwargs):
     Raises
     ------
     AttributeError
-        If `load` method are called on instance.
+        If a class method is called on an instance.
 
     """
     raise AttributeError('This method should be called on a class object.')
 
 
 class SaveLoad(object):
-    """Class which inherit from this class have save/load functions, which un/pickle them to disk.
+    """Serialize/deserialize object from disk, by equipping objects with the save()/load() methods.
 
     Warnings
     --------
-    This uses pickle for de/serializing, so objects must not contain unpicklable attributes,
+    This uses pickle internally (among other techniques), so objects must not contain unpicklable attributes
     such as lambda functions etc.
 
     """
     @classmethod
     def load(cls, fname, mmap=None):
-        """Load a previously saved object (using :meth:`~gensim.utils.SaveLoad.save`) from file.
+        """Load an object previously saved using :meth:`~gensim.utils.SaveLoad.save` from a file.
 
         Parameters
         ----------
@@ -407,6 +400,7 @@ class SaveLoad(object):
         See Also
         --------
         :meth:`~gensim.utils.SaveLoad.save`
+            Save object to file.
 
         Returns
         -------
@@ -415,8 +409,8 @@ class SaveLoad(object):
 
         Raises
         ------
-        IOError
-            When methods are called on instance (should be called from class).
+        AttributeError
+            When called on an object instance instead of class (this is a class method).
 
         """
         logger.info("loading %s object from %s", cls.__name__, fname)
@@ -429,20 +423,20 @@ class SaveLoad(object):
         return obj
 
     def _load_specials(self, fname, mmap, compress, subname):
-        """Loads any attributes that were stored specially, and gives the same opportunity
-        to recursively included :class:`~gensim.utils.SaveLoad` instances.
+        """Load attributes that were stored separately, and give them the same opportunity
+        to recursively load using the :class:`~gensim.utils.SaveLoad` interface.
 
         Parameters
         ----------
         fname : str
-            Path to file that contains needed object.
-        mmap : str
-            Memory-map option.
+            Input file path.
+        mmap :  {None, ‘r+’, ‘r’, ‘w+’, ‘c’}
+            Memory-map options. See `numpy.load(mmap_mode)
+            <https://docs.scipy.org/doc/numpy-1.14.0/reference/generated/numpy.load.html>`_.
         compress : bool
-            Set to True if file is compressed.
+            Is the input file compressed?
         subname : str
-            ...
-
+            Attribute name. Set automatically during recursive processing.
 
         """
         def mmap_error(obj, filename):
@@ -493,7 +487,7 @@ class SaveLoad(object):
 
     @staticmethod
     def _adapt_by_suffix(fname):
-        """Give appropriate compress setting and filename formula.
+        """Get compress setting and filename for numpy file compression.
 
         Parameters
         ----------
@@ -510,7 +504,7 @@ class SaveLoad(object):
         return compress, lambda *args: '.'.join(args + (suffix,))
 
     def _smart_save(self, fname, separately=None, sep_limit=10 * 1024**2, ignore=frozenset(), pickle_protocol=2):
-        """Save the object to file.
+        """Save the object to a file. Used internally by :meth:`gensim.utils.SaveLoad.save()`.
 
         Parameters
         ----------
@@ -527,18 +521,12 @@ class SaveLoad(object):
 
         Notes
         -----
-        If `separately` is None, automatically detect large
-        numpy/scipy.sparse arrays in the object being stored, and store
-        them into separate files. This avoids pickle memory errors and
-        allows mmap'ing large arrays back on load efficiently.
+        If `separately` is None, automatically detect large numpy/scipy.sparse arrays in the object being stored,
+        and store them into separate files. This avoids pickle memory errors and allows mmap'ing large arrays back
+        on load efficiently.
 
-        You can also set `separately` manually, in which case it must be
-        a list of attribute names to be stored in separate files. The
-        automatic check is not performed in this case.
-
-        See Also
-        --------
-        :meth:`~gensim.utils.SaveLoad.load`
+        You can also set `separately` manually, in which case it must be a list of attribute names to be stored
+        in separate files. The automatic check is not performed in this case.
 
         """
         logger.info("saving %s object under %s, separately %s", self.__class__.__name__, fname, separately)
@@ -565,11 +553,11 @@ class SaveLoad(object):
         fname : str
             Output filename.
         separately : list or None
-            Iterable of attributes than need to store distinctly
+            List of attributes to store separately.
         sep_limit : int
-            Limit for separation.
+            Don't store arrays smaller than this separately. In bytes.
         ignore : iterable of str
-            Attributes that shouldn't be store.
+            Attributes that shouldn't be stored at all.
         pickle_protocol : int
             Protocol number for pickle.
         compress : bool
@@ -660,7 +648,7 @@ class SaveLoad(object):
         return restores + [(self, asides)]
 
     def save(self, fname_or_handle, separately=None, sep_limit=10 * 1024**2, ignore=frozenset(), pickle_protocol=2):
-        """Save the object to file.
+        """Save the object to a file.
 
         Parameters
         ----------
@@ -668,21 +656,24 @@ class SaveLoad(object):
             Path to output file or already opened file-like object. If the object is a file handle,
             no special array handling will be performed, all attributes will be saved to the same file.
         separately : list of str or None, optional
-            If None -  automatically detect large numpy/scipy.sparse arrays in the object being stored, and store
-            them into separate files. This avoids pickle memory errors and allows mmap'ing large arrays
-            back on load efficiently.
-            If list of str - this attributes will be stored in separate files, the automatic check
+            If None, automatically detect large numpy/scipy.sparse arrays in the object being stored, and store
+            them into separate files. This prevent memory errors for large objects, and also allows
+            `memory-mapping <https://en.wikipedia.org/wiki/Mmap>`_ the large arrays for efficient
+            loading and sharing the large arrays in RAM between multiple processes.
+
+            If list of str: store these attributes into separate files. The automated size check
             is not performed in this case.
-        sep_limit : int
-            Limit for automatic separation.
-        ignore : frozenset of str
-            Attributes that shouldn't be serialize/store.
-        pickle_protocol : int
+        sep_limit : int, optional
+            Don't store arrays smaller than this separately. In bytes.
+        ignore : frozenset of str, optional
+            Attributes that shouldn't be stored at all.
+        pickle_protocol : int, optional
             Protocol number for pickle.
 
         See Also
         --------
         :meth:`~gensim.utils.SaveLoad.load`
+            Load object from file.
 
         """
         try:
@@ -714,7 +705,7 @@ def get_max_id(corpus):
 
     Parameters
     ----------
-    corpus : iterable of iterable of (int, int)
+    corpus : iterable of iterable of (int, numeric)
         Collection of texts in BoW format.
 
     Returns
@@ -740,7 +731,6 @@ class FakeDict(object):
     This is meant to avoid allocating real dictionaries when `num_terms` is huge, which is a waste of memory.
 
     """
-
     def __init__(self, num_terms):
         """
 
@@ -782,8 +772,8 @@ class FakeDict(object):
         list of int
             Highest id, packed in list.
 
-        Warnings
-        --------
+        Notes
+        -----
         To avoid materializing the whole `range(0, self.num_terms)`,
         this returns the highest id = `[self.num_terms - 1]` only.
 
@@ -805,7 +795,7 @@ def dict_from_corpus(corpus):
 
     Parameters
     ----------
-    corpus : iterable of iterable of (int, int)
+    corpus : iterable of iterable of (int, numeric)
         Collection of texts in BoW format.
 
     Returns
@@ -826,17 +816,25 @@ def dict_from_corpus(corpus):
 
 
 def is_corpus(obj):
-    """Check whether `obj` is a corpus.
+    """Check whether `obj` is a corpus, by peeking at its first element. Works even on streamed generators.
+    The peeked element is put back into a object returned by this function, so always use
+    that returned object instead of the original `obj`.
 
     Parameters
     ----------
     obj : object
-        Something `iterable of iterable` that contains (int, int).
+        An `iterable of iterable` that contains (int, numeric).
 
-    Return
-    ------
+    Returns
+    -------
     (bool, object)
-        Pair of (is_corpus, `obj`), is_corpus True if `obj` is corpus.
+        Pair of (is `obj` a corpus, `obj` with peeked element restored)
+
+    Examples
+    --------
+    >>> from gensim.utils import is_corpus
+    >>> corpus = [[(1, 1.0)], [(2, -0.3), (3, 0.12)]]
+    >>> corpus_or_not, corpus = is_corpus(corpus)
 
     Warnings
     --------
@@ -919,13 +917,12 @@ class RepeatCorpus(SaveLoad):
     [[(1, 2)], [], [(1, 2)], [], [(1, 2)]]
 
     """
-
     def __init__(self, corpus, reps):
         """
 
         Parameters
         ----------
-        corpus : iterable of iterable of (int, int)
+        corpus : iterable of iterable of (int, numeric)
             Input corpus.
         reps : int
             Number of repeats for documents from corpus.
@@ -950,13 +947,12 @@ class RepeatCorpusNTimes(SaveLoad):
     [[(1, 0.5)], [], [(1, 0.5)], [], [(1, 0.5)], []]
 
     """
-
     def __init__(self, corpus, n):
         """
 
         Parameters
         ----------
-        corpus : iterable of iterable of (int, int)
+        corpus : iterable of iterable of (int, numeric)
             Input corpus.
         n : int
             Number of repeats for corpus.
@@ -972,17 +968,16 @@ class RepeatCorpusNTimes(SaveLoad):
 
 
 class ClippedCorpus(SaveLoad):
-    """Wrap a `corpus` and return `max_doc` element from it"""
-
+    """Wrap a `corpus` and return `max_doc` element from it."""
     def __init__(self, corpus, max_docs=None):
         """
 
         Parameters
         ----------
-        corpus : iterable of iterable of (int, int)
+        corpus : iterable of iterable of (int, numeric)
             Input corpus.
         max_docs : int
-            Maximal number of documents in result corpus.
+            Maximum number of documents in the wrapped corpus.
 
         Warnings
         --------
@@ -1001,17 +996,16 @@ class ClippedCorpus(SaveLoad):
 
 
 class SlicedCorpus(SaveLoad):
-    """Wrap `corpus` and return the slice of it"""
-
+    """Wrap `corpus` and return a slice of it."""
     def __init__(self, corpus, slice_):
         """
 
         Parameters
         ----------
-        corpus : iterable of iterable of (int, int)
+        corpus : iterable of iterable of (int, numeric)
             Input corpus.
         slice_ : slice or iterable
-            Slice for `corpus`
+            Slice for `corpus`.
 
         Notes
         -----
@@ -1047,7 +1041,8 @@ class SlicedCorpus(SaveLoad):
 
 
 def safe_unichr(intval):
-    """
+    """Create a unicode character from its integer value. In case `unichr` fails, render the character
+    as an escaped `\\U<8-byte hex value of intval>` string.
 
     Parameters
     ----------
@@ -1070,13 +1065,14 @@ def safe_unichr(intval):
 
 
 def decode_htmlentities(text):
-    """Decode HTML entities in text, coded as hex, decimal or named.
-    This function from [3]_.
+    """Decode all HTML entities in text that are encoded as hex, decimal or named entities.
+    Adapted from `python-twitter-ircbot/html_decode.py
+    <http://github.com/sku/python-twitter-ircbot/blob/321d94e0e40d0acc92f5bf57d126b57369da70de/html_decode.py>`_.
 
     Parameters
     ----------
     text : str
-        Input html text.
+        Input HTML.
 
     Examples
     --------
@@ -1089,10 +1085,6 @@ def decode_htmlentities(text):
     l'eau
     >>> print(decode_htmlentities("foo &lt; bar"))
     foo < bar
-
-    References
-    ----------
-    .. [3] http://github.com/sku/python-twitter-ircbot/blob/321d94e0e40d0acc92f5bf57d126b57369da70de/html_decode.py
 
     """
     def substitute_entity(match):
@@ -1121,22 +1113,23 @@ def decode_htmlentities(text):
 
 
 def chunkize_serial(iterable, chunksize, as_numpy=False, dtype=np.float32):
-    """Give elements from the iterable in `chunksize`-ed lists.
-    The last returned element may be smaller (if length of collection is not divisible by `chunksize`).
+    """Yield elements from `iterable` in "chunksize"-ed groups.
+
+    The last returned element may be smaller if the length of collection is not divisible by `chunksize`.
 
     Parameters
     ----------
     iterable : iterable of object
-        Any iterable.
+        An iterable.
     chunksize : int
-        Size of chunk from result.
+        Split iterable into chunks of this size.
     as_numpy : bool, optional
-        If True - yield `np.ndarray`, otherwise - list
+        Yield chunks as `np.ndarray` instead of lists.
 
     Yields
     ------
-    list of object OR np.ndarray
-        Groups based on `iterable`
+    list OR np.ndarray
+        "chunksize"-ed chunks of elements from `iterable`.
 
     Examples
     --------
@@ -1162,7 +1155,26 @@ grouper = chunkize_serial
 
 
 class InputQueue(multiprocessing.Process):
+    """Populate a queue of input chunks from a streamed corpus.
+
+    Useful for reading and chunking corpora in the background, in a separate process,
+    so that workers that use the queue are not starved for input chunks.
+
+    """
     def __init__(self, q, corpus, chunksize, maxsize, as_numpy):
+        """
+        Parameters
+        ----------
+        q : multiprocessing.Queue
+            Enqueue chunks into this queue.
+        corpus : iterable of iterable of (int, numeric)
+            Corpus to read and split into "chunksize"-ed groups
+        chunksize : int
+            Split `corpus` into chunks of this size.
+        as_numpy : bool, optional
+            Enqueue chunks as `numpy.ndarray` instead of lists.
+
+        """
         super(InputQueue, self).__init__()
         self.q = q
         self.maxsize = maxsize
@@ -1198,50 +1210,56 @@ if os.name == 'nt':
     warnings.warn("detected Windows; aliasing chunkize to chunkize_serial")
 
     def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
-        """Split `corpus` into smaller chunks, used :func:`~gensim.utils.chunkize_serial`.
+        """Split `corpus` into fixed-sized chunks, using :func:`~gensim.utils.chunkize_serial`.
 
         Parameters
         ----------
         corpus : iterable of object
-            Any iterable object.
+            An iterable.
         chunksize : int
-            Size of chunk from result.
+            Split `corpus` into chunks of this size.
         maxsize : int, optional
-            THIS PARAMETER IGNORED.
+            Ignored. For interface compatibility only.
         as_numpy : bool, optional
-            If True - yield `np.ndarray`, otherwise - list
+            Yield chunks as `np.ndarray`s instead of lists?
 
         Yields
         ------
-        list of object OR np.ndarray
-            Groups based on `iterable`
+        list OR np.ndarray
+            "chunksize"-ed chunks of elements from `corpus`.
 
         """
         for chunk in chunkize_serial(corpus, chunksize, as_numpy=as_numpy):
             yield chunk
 else:
     def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
-        """Split `corpus` into smaller chunks, used :func:`~gensim.utils.chunkize_serial`.
+        """Split `corpus` into fixed-sized chunks, using :func:`~gensim.utils.chunkize_serial`.
 
         Parameters
         ----------
         corpus : iterable of object
-            Any iterable object.
+            An iterable.
         chunksize : int
-            Size of chunk from result.
+            Split `corpus` into chunks of this size.
         maxsize : int, optional
-            THIS PARAMETER IGNORED.
+            If > 0, prepare chunks in a background process, filling a chunk queue of size at most `maxsize`.
         as_numpy : bool, optional
-            If True - yield `np.ndarray`, otherwise - list
+            Yield chunks as `np.ndarray` instead of lists?
+
+        Yields
+        ------
+        list OR np.ndarray
+            "chunksize"-ed chunks of elements from `corpus`.
 
         Notes
         -----
         Each chunk is of length `chunksize`, except the last one which may be smaller.
         A once-only input stream (`corpus` from a generator) is ok, chunking is done efficiently via itertools.
 
-        If `maxsize > 1`, don't wait idly in between successive chunk `yields`, but rather keep filling a short queue
+        If `maxsize > 0`, don't wait idly in between successive chunk `yields`, but rather keep filling a short queue
         (of size at most `maxsize`) with forthcoming chunks in advance. This is realized by starting a separate process,
-        and is meant to reduce I/O delays, which can be significant when `corpus` comes from a slow medium (like HDD).
+        and is meant to reduce I/O delays, which can be significant when `corpus` comes from a slow medium
+        like HDD, database or network.
 
         If `maxsize == 0`, don't fool around with parallelism and simply yield the chunksize
         via :func:`~gensim.utils.chunkize_serial` (no I/O optimizations).
@@ -1270,19 +1288,27 @@ else:
 
 
 def smart_extension(fname, ext):
-    """Generate filename with `ext`.
+    """Append a file extension `ext` to `fname`, while keeping compressed extensions like `.bz2` or
+    `.gz` (if any) at the end.
 
     Parameters
     ----------
     fname : str
-        Path to file.
+        Filename or full path.
     ext : str
-        File extension.
+        Extension to append before any compression extensions.
 
     Returns
     -------
     str
-        New path to file with `ext`.
+        New path to file with `ext` appended.
+
+    Examples
+    --------
+
+    >>> from gensim.utils import smart_extension
+    >>> smart_extension("my_file.pkl.gz", ".vectors")
+    'my_file.pkl.vectors.gz'
 
     """
     fname, oext = os.path.splitext(fname)
@@ -1297,7 +1323,7 @@ def smart_extension(fname, ext):
 
 
 def pickle(obj, fname, protocol=2):
-    """Pickle object `obj` to file `fname`.
+    """Pickle object `obj` to file `fname`, using smart_open so that `fname` can be on S3, HDFS, compressed etc.
 
     Parameters
     ----------
@@ -1306,7 +1332,7 @@ def pickle(obj, fname, protocol=2):
     fname : str
         Path to pickle file.
     protocol : int, optional
-        Pickle protocol number, default is 2 to support compatible across python 2.x and 3.x.
+        Pickle protocol number. Default is 2 in order to support compatibility across python 2.x and 3.x.
 
     """
     with smart_open(fname, 'wb') as fout:  # 'b' for binary, needed on Windows
@@ -1314,7 +1340,7 @@ def pickle(obj, fname, protocol=2):
 
 
 def unpickle(fname):
-    """Load object from `fname`.
+    """Load object from `fname`, using smart_open so that `fname` can be on S3, HDFS, compressed etc.
 
     Parameters
     ----------
@@ -1364,7 +1390,10 @@ def revdict(d):
 
 
 def deprecated(reason):
-    """Decorator which can be used to mark functions as deprecated.
+    """Decorator to mark functions as deprecated.
+
+    Calling a decorated function will result in a warning being emitted, using warnings.warn.
+    Adapted from https://stackoverflow.com/a/40301488/8001386.
 
     Parameters
     ----------
@@ -1375,14 +1404,6 @@ def deprecated(reason):
     -------
     function
         Decorated function
-
-    Notes
-    -----
-    It will result in a warning being emitted when the function is used, base code from [4]_.
-
-    References
-    ----------
-    .. [4] https://stackoverflow.com/a/40301488/8001386
 
     """
     if isinstance(reason, string_types):
@@ -1421,19 +1442,18 @@ def deprecated(reason):
 
 @deprecated("Function will be removed in 4.0.0")
 def toptexts(query, texts, index, n=10):
-    """
-    Debug fnc to help inspect the top `n` most similar documents (according to a
-    similarity index `index`), to see if they are actually related to the query.
+    """Debug fnc to help inspect the top `n` most similar documents (according to a similarity index `index`),
+    to see if they are actually related to the query.
 
     Parameters
     ----------
-    query : list
+    query : {list of (int, number), numpy.ndarray}
         vector OR BoW (list of tuples)
     texts : str
         object that can return something insightful for each document via `texts[docid]`,
         such as its fulltext or snippet.
     index : any
-        a class from gensim.similarity.docsim
+        A instance from from :mod:`gensim.similarity.docsim`.
 
     Return
     ------
@@ -1448,7 +1468,7 @@ def toptexts(query, texts, index, n=10):
 
 
 def randfname(prefix='gensim'):
-    """Generate path with random filename/
+    """Generate a random filename in temp.
 
     Parameters
     ----------
@@ -1458,7 +1478,7 @@ def randfname(prefix='gensim'):
     Returns
     -------
     str
-        Full path with random filename (in temporary folder).
+        Full path in the in system's temporary folder, ending in a random filename.
 
     """
     randpart = hex(random.randint(0, 0xffffff))[2:]
@@ -1468,11 +1488,13 @@ def randfname(prefix='gensim'):
 @deprecated("Function will be removed in 4.0.0")
 def upload_chunked(server, docs, chunksize=1000, preprocess=None):
     """Memory-friendly upload of documents to a SimServer (or Pyro SimServer proxy).
+
     Notes
     -----
     Use this function to train or index large collections -- avoid sending the
     entire corpus over the wire as a single Pyro in-memory object. The documents
     will be sent in smaller chunks, of `chunksize` documents each.
+
     """
     start = 0
     for chunk in grouper(docs, chunksize):
@@ -1495,18 +1517,18 @@ def getNS(host=None, port=None, broadcast=True, hmac_key=None):
     Parameters
     ----------
     host : str, optional
-        Hostname of ns.
+        Name server hostname.
     port : int, optional
-        Port of ns.
+        Name server port.
     broadcast : bool, optional
-        If True - use broadcast mechanism (i.e. all Pyro nodes in local network), not otherwise.
+        Use broadcast mechanism? (i.e. reach out to all Pyro nodes in the network)
     hmac_key : str, optional
         Private key.
 
     Raises
     ------
     RuntimeError
-        when Pyro name server is not found
+        When Pyro name server is not found.
 
     Returns
     -------
@@ -1522,9 +1544,10 @@ def getNS(host=None, port=None, broadcast=True, hmac_key=None):
 
 
 def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None, ns_conf=None):
-    """Register object with name server (starting the name server if not running
-    yet) and block until the daemon is terminated. The object is registered under
-    `name`, or `name`+ some random suffix if `random_suffix` is set.
+    """Register an object with the Pyro name server.
+
+    Start the name server if not running yet and block until the daemon is terminated.
+    The object is registered under `name`, or `name`+ some random suffix if `random_suffix` is set.
 
     """
     if ns_conf is None:
@@ -1544,16 +1567,12 @@ def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None, ns_conf=None
 
 
 def has_pattern():
-    """Check that `pattern` [5]_ package already installed.
+    """Check whether the `pattern <https://github.com/clips/pattern>`_ package is installed.
 
     Returns
     -------
     bool
-        True if `pattern` installed, False otherwise.
-
-    References
-    ----------
-    .. [5] https://github.com/clips/pattern
+        Is `pattern` installed?
 
     """
     try:
@@ -1565,8 +1584,9 @@ def has_pattern():
 
 def lemmatize(content, allowed_tags=re.compile(r'(NN|VB|JJ|RB)'), light=False,
               stopwords=frozenset(), min_length=2, max_length=15):
-    """Use the English lemmatizer from `pattern` [5]_ to extract UTF8-encoded tokens in
-    their base form=lemma, e.g. "are, is, being" -> "be" etc.
+    """Use the English lemmatizer from `pattern <https://github.com/clips/pattern>`_ to extract UTF8-encoded tokens in
+    their base form aka lemma, e.g. "are, is, being" becomes "be" etc.
+
     This is a smarter version of stemming, taking word context into account.
 
     Parameters
@@ -1578,29 +1598,38 @@ def lemmatize(content, allowed_tags=re.compile(r'(NN|VB|JJ|RB)'), light=False,
         Only considers nouns, verbs, adjectives and adverbs by default (=all other lemmas are discarded).
     light : bool, optional
         DEPRECATED FLAG, DOESN'T SUPPORT BY `pattern`.
-    stopwords : frozenset
+    stopwords : frozenset, optional
         Set of words that will be removed from output.
-    min_length : int
+    min_length : int, optional
         Minimal token length in output (inclusive).
-    max_length : int
+    max_length : int, optional
         Maximal token length in output (inclusive).
 
     Returns
     -------
     list of str
-        List with tokens with POS tag.
+        List with tokens with POS tags.
 
     Warnings
     --------
-    This function is only available when the optional 'pattern' package is installed.
+    This function is only available when the optional `pattern <https://github.com/clips/pattern>`_ is installed.
+
+    Raises
+    ------
+    ImportError
+        If `pattern <https://github.com/clips/pattern>`_ not installed.
 
     Examples
     --------
     >>> from gensim.utils import lemmatize
     >>> lemmatize('Hello World! How is it going?! Nonexistentword, 21')
     ['world/NN', 'be/VB', 'go/VB', 'nonexistentword/NN']
+
+    Note the context-dependent part-of-speech tags between these two examples:
+
     >>> lemmatize('The study ranks high.')
     ['study/NN', 'rank/VB', 'high/JJ']
+
     >>> lemmatize('The ranks study hard.')
     ['rank/NN', 'study/VB', 'hard/RB']
 
@@ -1633,16 +1662,16 @@ def lemmatize(content, allowed_tags=re.compile(r'(NN|VB|JJ|RB)'), light=False,
 
 
 def mock_data_row(dim=1000, prob_nnz=0.5, lam=1.0):
-    """Create a random gensim BoW vector.
+    """Create a random gensim BoW vector, with the feature counts following the Poisson distribution.
 
     Parameters
     ----------
     dim : int, optional
         Dimension of vector.
     prob_nnz : float, optional
-        Probability of each coordinate will be nonzero, will be drawn from Poisson distribution.
+        Probability of each coordinate will be nonzero, will be drawn from the Poisson distribution.
     lam : float, optional
-        Parameter for Poisson distribution.
+        Lambda parameter for the Poisson distribution.
 
     Returns
     -------
@@ -1655,7 +1684,7 @@ def mock_data_row(dim=1000, prob_nnz=0.5, lam=1.0):
 
 
 def mock_data(n_items=1000, dim=1000, prob_nnz=0.5, lam=1.0):
-    """Create a random gensim-style corpus (BoW), used :func:`~gensim.utils.mock_data_row`.
+    """Create a random Gensim-style corpus (BoW), using :func:`~gensim.utils.mock_data_row`.
 
     Parameters
     ----------
@@ -1682,6 +1711,7 @@ def prune_vocab(vocab, min_reduce, trim_rule=None):
     """Remove all entries from the `vocab` dictionary with count smaller than `min_reduce`.
 
     Modifies `vocab` in place, returns the sum of all counts that were pruned.
+
     Parameters
     ----------
     vocab : dict
@@ -1781,18 +1811,19 @@ RULE_KEEP = 2
 
 
 def keep_vocab_item(word, count, min_count, trim_rule=None):
-    """Check that should we keep `word` in vocab or remove.
+    """Should we keep `word` in the vocab or remove it?
 
     Parameters
     ----------
     word : str
         Input word.
     count : int
-        Number of times that word contains in corpus.
+        Number of times that word appeared in a corpus.
     min_count : int
-        Frequency threshold for `word`.
+        Discard words with frequency smaller than this.
     trim_rule : function, optional
-        Function for trimming entities from vocab, default behaviour is `vocab[w] <= min_reduce`.
+        Custom function to decide whether to keep or discard this word.
+        If a custom `trim_rule` is not specified, the default behaviour is simply `count >= min_count`.
 
     Returns
     -------
@@ -1815,11 +1846,10 @@ def keep_vocab_item(word, count, min_count, trim_rule=None):
 
 
 def check_output(stdout=subprocess.PIPE, *popenargs, **kwargs):
-    r"""Run command with arguments and return its output as a byte string.
-    Backported from Python 2.7 as it's implemented as pure python on stdlib + small modification.
-    Widely used for :mod:`gensim.models.wrappers`.
+    r"""Run OS command with the given arguments and return its output as a byte string.
 
-    Very similar with [6]_
+    Backported from Python 2.7 with a few minor modifications. Widely used for :mod:`gensim.models.wrappers`.
+    Behaves very similar to https://docs.python.org/2/library/subprocess.html#subprocess.check_output.
 
     Examples
     --------
@@ -1831,10 +1861,6 @@ def check_output(stdout=subprocess.PIPE, *popenargs, **kwargs):
     ------
     KeyboardInterrupt
         If Ctrl+C pressed.
-
-    References
-    ----------
-    .. [6] https://docs.python.org/2/library/subprocess.html#subprocess.check_output
 
     """
     try:
@@ -1856,21 +1882,21 @@ def check_output(stdout=subprocess.PIPE, *popenargs, **kwargs):
 
 
 def sample_dict(d, n=10, use_random=True):
-    """Pick `n` items from dictionary `d`.
+    """Selected `n` (possibly random) items from the dictionary `d`.
 
     Parameters
     ----------
     d : dict
         Input dictionary.
     n : int, optional
-        Number of items that will be picked.
+        Number of items to select.
     use_random : bool, optional
-        If True - pick items randomly, otherwise - according to natural dict iteration.
+        Select items randomly (without replacement), instead of by the natural dict iteration order?
 
     Returns
     -------
     list of (object, object)
-        Picked items from dictionary, represented as list.
+        Selected items from dictionary, as a list.
 
     """
     selected_keys = random.sample(list(d), min(len(d), n)) if use_random else itertools.islice(iterkeys(d), n)
@@ -1925,9 +1951,9 @@ def strided_windows(ndarray, window_size):
 
 def iter_windows(texts, window_size, copy=False, ignore_below_size=True, include_doc_num=False):
     """Produce a generator over the given texts using a sliding window of `window_size`.
+
     The windows produced are views of some subsequence of a text.
     To use deep copies instead, pass `copy=True`.
-
 
     Parameters
     ----------
@@ -1936,11 +1962,11 @@ def iter_windows(texts, window_size, copy=False, ignore_below_size=True, include
     window_size : int
         Size of sliding window.
     copy : bool, optional
-        If True - produce deep copies.
+        Produce deep copies.
     ignore_below_size : bool, optional
-        If True - ignore documents that are not at least `window_size` in length.
+        Ignore documents that are not at least `window_size` in length?
     include_doc_num : bool, optional
-        If True - will be yield doc_num too.
+        Yield the text position with `texts` along with each window?
 
     """
     for doc_num, document in enumerate(texts):
@@ -1962,18 +1988,18 @@ def _iter_windows(document, window_size, copy=False, ignore_below_size=True):
 
 
 def flatten(nested_list):
-    """Recursively flatten out a nested list.
+    """Recursively flatten a nested sequence of elements.
 
     Parameters
     ----------
-    nested_list : list
-        Possibly nested list.
+    nested_list : iterable
+        Possibly nested sequence of elements to flatten.
 
     Returns
     -------
     list
-        Flattened version of input, where any list elements have been unpacked into the top-level list
-        in a recursive fashion.
+        Flattened version of `nested_list` where any elements that are an iterable (`collections.Iterable`)
+        have been unpacked into the top-level list, in a recursive fashion.
 
     """
     return list(lazy_flatten(nested_list))
