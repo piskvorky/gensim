@@ -6,7 +6,9 @@ import tensorflow
 
 import numpy as np
 import keras.backend as K
-
+from gensim.scripts.glove2word2vec import glove2word2vec
+from gensim.test.utils import get_tmpfile
+from gensim.models import KeyedVectors
 from collections import Counter
 from keras import optimizers
 from keras.losses import hinge
@@ -22,104 +24,9 @@ logger = logging.getLogger(__name__)
 from keras.models import Model
 from keras.layers import Input, Embedding, Dot, Dense, Lambda, Reshape, Dropout
 from keras.activations import softmax
+from gensim import utils
 
-
-class DRMM_TKS:
-    """This is a variant version of DRMM, which applied topk pooling in the matching matrix.
-    It has the following steps:
-    1. embed queries into embedding vector named 'q_embed' and 'd_embed' respectively
-    2. computing 'q_embed' and 'd_embed' with element-wise multiplication
-    3. computing output of upper layer with dense layer operation
-    4. take softmax operation on the output of this layer named 'g' and find the k largest entries named 'mm_k'.
-    5. input 'mm_k' into hidden layers, with specified length of layers and activation function
-    6. compute 'g' and 'mm_k' with element-wise multiplication.
-    # Returns
-        Score list between queries and documents.
-    """
-
-    def __init__(self, embedding, vocab_size, embed_trainable=False, target_mode='ranking',
-                 topk=50, dropout_rate=0.5, text_maxlen=100, hidden_sizes=[100, 1]):
-        """Initializes the model
-        Parameters:
-        ----------
-        embedding: numpy array matrix
-            A numpy array matrix which has the embeddings extracted from a pretrained
-            word embedding like Stanford Glove
-            This is fed to the Embedding Layer which then outputs the word embedding
-        vocab_size: int
-            The number of unique words in the corpus
-        embed_trainable: boolean
-            Whether the embeddings should be trained
-            if True, the embeddings are trianed
-        target_mode: 'training', 'ranking' or 'classification'
-            Indicates the mode in which the model will be used and thus changes the topology
-        topk: int
-            Used for topk pooling in the matching matrix
-        dropout_rate: float between 0 and 1
-            The probability of making a neuron dead
-            Used for regularization
-        text_maxlen: int
-            The maximum possible length of a sentence
-            used for deiciding matrix dimensions
-        hidden_sizes: list of ints
-            The list of hidden sizes for the fully connected layers connected to the matching matrix
-            For example
-                hidden_sizes = [10, 20, 30]
-            will add 3 fully connected layers of 10, 20 and 30 hidden neurons
-        """
-        self.embedding = embedding
-        self.embed_dim = embedding.shape[1]
-        self.embed_trainable = embed_trainable
-        self.topk = topk
-        self.dropout_rate = dropout_rate
-        self.text_maxlen = text_maxlen
-        self.vocab_size = vocab_size
-        self.hidden_sizes = hidden_sizes
-        self.num_layers = len(self.hidden_sizes)
-        self.target_mode = target_mode
-        self.build()
-
-    def build(self):
-        """Builds the model based on parameters set during initialization"""
-        query = Input(name='query', shape=(self.text_maxlen,))
-        doc = Input(name='doc', shape=(self.text_maxlen,))
-        embedding = Embedding(self.embedding.shape[0], self.embedding.shape[1], weights=[self.embedding],
-                                trainable=self.embed_trainable)
-
-        q_embed = embedding(query)
-        d_embed = embedding(doc)
-
-        mm = Dot(axes=[2, 2], normalize=True, name="mm_q_embed_DOT_d_embed")([q_embed, d_embed])
-
-        # compute term gating
-        w_g = Dense(1, name="w_g_Dense_1_q_embed")(q_embed)
-
-        g = Lambda(lambda x: softmax(x, axis=1), output_shape=(self.text_maxlen, ), name="g_Softmax_w_g")(w_g)
-        g = Reshape((self.text_maxlen,), name="g_Reshape_maxlen_w_g")(g)
-
-        mm_k = Lambda(lambda x: K.tf.nn.top_k(x, k=self.topk, sorted=True)[0], name="mm_k_topk_mm")(mm)
-
-        for i in range(self.num_layers):
-            mm_k = Dense(self.hidden_sizes[i], activation='softplus', kernel_initializer='he_uniform',
-                         bias_initializer='zeros', name="mm_k_Dense_%d_mm_k" % self.hidden_sizes[i])(mm_k)
-
-        mm_k_dropout = Dropout(rate=self.dropout_rate, name="mm_k_dropout_Dropout_mm_k")(mm_k)
-
-        mm_reshape = Reshape((self.text_maxlen,), name="mm_reshape_Reshape_maxlen_mm_k_dropout")(mm_k_dropout)
-
-        mean = Dot(axes=[1, 1], normalize=True, name="mean_mm_reshape_DOT_g")([mm_reshape, g])
-
-        if self.target_mode == 'classification':
-            out_ = Dense(2, activation='softmax')(mean)
-        elif self.target_mode in ['regression', 'ranking']:
-            out_ = Reshape((1,), name="out_Reshape_mean")(mean)
-
-        self.model = Model(inputs=[query, doc], outputs=out_)
-
-    def get_model(self):
-        return self.model
-
-class DRMM_TKS_Model:
+class DRMM_TKS(utils.SaveLoad):
     """User friendly model for training on similarity learning data.
     You only have to provide sentences in the data as a list of words.
 
@@ -215,7 +122,6 @@ class DRMM_TKS_Model:
         self.word_embedding_path = word_embedding_path
         self.word2index, self.index2word = {}, {}
         self.keep_full_embedding = keep_full_embedding
-        self.additional_word2index = {}
         self.normalize_embeddings = normalize_embeddings
         self.model = None
         self.epochs = epochs
@@ -237,6 +143,7 @@ class DRMM_TKS_Model:
 
         logger.info("Starting Vocab Build")
 
+        # get all the vocab words
         for q in self.queries:
             self.word_counter.update(q)
         for doc in self.docs:
@@ -251,93 +158,89 @@ class DRMM_TKS_Model:
         logger.info("Vocab Size is %d" % self.vocab_size)
 
         logger.info("Building embedding index using pretrained word embeddings")
-        embeddings_index = {}
-        with open(self.word_embedding_path) as f:
-            for line in f:
-                values = line.split()
-                word = values[0]
-                coefs = np.asarray(values[1:], dtype='float32')
-                embeddings_index[word] = coefs
-        self.embedding_dim = six.next(
-            six.itervalues(embeddings_index)).shape[0]
-        embedding_vocab_size = len(embeddings_index)
+        # Use KeyedVectors for easy and quick access od word embeddings
+        glove_file = self.word_embedding_path
+        tmp_file = get_tmpfile("tmp_word2vec.txt")
+        embedding_vocab_size, self.embedding_dim = glove2word2vec(glove_file, tmp_file)
+        kv_model = KeyedVectors.load_word2vec_format(tmp_file)
 
         logger.info("The embeddings_index built from the given file has %d words of %d dimensions" %
                     (embedding_vocab_size, self.embedding_dim))
 
-        if self.keep_full_embedding:
-            if self.unk_handle_method == 'random':
-                self.embedding_matrix = np.random.uniform(-0.2, 0.2,
-                                        (self.vocab_size + 1, self.embedding_dim))  # one for ignore vec
-            elif self.unk_handle_method == 'zero':
-                self.embedding_matrix = np.zeros(
-                    (self.vocab_size + 1, self.embedding_dim))  # one for ignore vec
-        else:
-            # one for pad, one for ignore vec
-            if self.unk_handle_method == 'random':
-                self.embedding_matrix = np.random.uniform(-0.2, 0.2,
-                                                          (self.vocab_size + 2, self.embedding_dim))
-            elif self.unk_handle_method == 'zero':
-                self.embedding_matrix = np.zeros(
-                    (self.vocab_size + 2, self.embedding_dim))
+        logger.info("Building the Embedding Matrix for the model's Embedding Layer")
 
-        # We add 1 for the padding word
-        logger.info("Embedding Matrix for Embedding Layer has shape %s " %
-                    str(self.embedding_matrix.shape))
+        # Initialize the embedding matrix
+        # UNK word gets the vector based on the method
+        if self.unk_handle_method == 'random':
+            self.embedding_matrix = np.random.uniform(-0.2, 0.2,
+                                                      (self.vocab_size, self.embedding_dim))
+        elif self.unk_handle_method == 'zero':
+            self.embedding_matrix = np.zeros(
+                (self.vocab_size, self.embedding_dim))
+
         n_non_embedding_words = 0
         for word, i in self.word2index.items():
-            embedding_vector = embeddings_index.get(word)
-            if embedding_vector is not None:
-                # words not found in embedding index will be all-zeros.
-                self.embedding_matrix[i] = embedding_vector
+            if word in kv_model:
+                # words not found in keyed vectors will get the vector based on unk_handle_method
+                self.embedding_matrix[i] = kv_model[word]
             else:
                 n_non_embedding_words += 1
-        logger.info("There are %d words not in the embeddings. Setting them to zero" %
-                    n_non_embedding_words)
+        logger.info("There are %d words out of %d (%.2f%%) not in the embeddings. Setting them to %s" %
+                    (n_non_embedding_words, self.vocab_size, n_non_embedding_words*100/self.vocab_size,
+                    self.unk_handle_method))
+
+        # The point where vocab words end
+        vocab_offset = self.vocab_size
 
         if self.keep_full_embedding:
+            # Include embeddings for words in embedding file but not in the train vocab
+            # It will be useful for embedding words encountered in validation and test set
             logger.info(
-                "Adding additional dimensions from the embedding file to embedding matrix")
+                "Adding additional words from the embedding file to embedding matrix")
             i = self.vocab_size
             extra_embeddings = []
-            for word in embeddings_index.keys():
+            # Take the words in the embedding file which aren't there int the train vocab
+            for word in list(kv_model.vocab):
                 if word not in self.word2index:
-                    # Stack the new word's vector and index it
-                    extra_embeddings.append(embeddings_index.get(word))
+                    # Add the new word's vector and index it
+                    extra_embeddings.append(kv_model[word])
                     # We also need to keep an additional indexing of these
                     # words
-                    self.additional_word2index[word] = i
+                    self.word2index[word] = i
                     i += 1
 
-            if self.unk_handle_method == 'random':
-                unk_embedding_row = np.random.uniform(
-                    -0.2, 0.2, (1, self.embedding_dim))
-            elif self.unk_handle_method == 'zero':
-                unk_embedding_row = np.zeros((1, self.embedding_dim))
+            vocab_offset = i
 
-            pad_embedding_row = np.random.uniform(-0.2,
-                                                  0.2, (1, self.embedding_dim))
+        # Set the pad and unk word to second last and last index
+        self.pad_word_index = vocab_offset
+        self.unk_word_index = vocab_offset + 1
 
+        if self.unk_handle_method == 'random':
+            unk_embedding_row = np.random.uniform(
+                -0.2, 0.2, (1, self.embedding_dim))
+        elif self.unk_handle_method == 'zero':
+            unk_embedding_row = np.zeros((1, self.embedding_dim))
+
+        pad_embedding_row = np.random.uniform(-0.2,
+                                              0.2, (1, self.embedding_dim))
+
+        if self.keep_full_embedding:
             self.embedding_matrix = np.vstack(
                 [self.embedding_matrix, np.array(extra_embeddings),
                  pad_embedding_row, unk_embedding_row])
-
-            # Last word is kept as the pad word
-            # Here that is the last word in the embedding matrix
-            self.pad_word_index = i
-            self.unk_word_index = i + 1
-
         else:
-            self.pad_word_index = self.vocab_size
-            self.unk_word_index = self.vocab_size + 1
+            self.embedding_matrix = np.vstack(
+                [self.embedding_matrix, pad_embedding_row, unk_embedding_row])
 
         if self.normalize_embeddings:
             logger.info("Normalizing the word embeddings")
             self.embedding_matrix = normalize(self.embedding_matrix)
 
-        logger.info("Embedding Matrix now has shape %s" %
+
+        logger.info("Embedding Matrix build complete. It now has shape %s" %
                     str(self.embedding_matrix.shape))
         logger.info("Pad word has been set to index %d" % self.pad_word_index)
+        logger.info("Unknown word has been set to index %d" % self.unk_word_index)
         logger.info("Embedding index build complete")
 
     def make_indexed(self, sentence):
@@ -448,7 +351,7 @@ class DRMM_TKS_Model:
     def train_model(self):
         """Trains a DRMM_TKS model using specified parameters"""
         X1_train, X2_train, y_train = self.get_full_batch()
-        drmm_tks = DRMM_TKS(
+        drmm_tks = _drmm_tks(
             embedding=self.embedding_matrix, vocab_size=self.embedding_matrix.shape[0],
             text_maxlen=self.text_maxlen)
 
@@ -486,7 +389,7 @@ class DRMM_TKS_Model:
             indexed_long_doc_list = self.translate_user_data(long_doc_list)
 
             val_callback = ValidationCallback({"X1": indexed_long_queries,
-                            "X2": indexed_long_doc_list, "doc_lengths": doc_lens, "y": long_test_labels})
+                                               "X2": indexed_long_doc_list, "doc_lengths": doc_lens, "y": long_test_labels})
 
         self.model.compile(optimizer=optimizer, loss=loss,
                            metrics=['accuracy'])
@@ -509,20 +412,25 @@ class DRMM_TKS_Model:
                 [[12, 54],
                  [65, 23, 21]"""
         translated_data = []
+        n_skipped_words = 0
         for sentence in data:
             translated_sentence = []
             for word in sentence:
-                try:
+                if word in self.word2index:
                     translated_sentence.append(self.word2index[word])
-                except KeyError:
+                else:
                     # If the key isn't there give it the zero word index
                     translated_sentence.append(self.unk_word_index)
+                    n_skipped_words += 1
             if len(sentence) > self.text_maxlen:
                 logger.info("text_maxlen: %d isn't big enough. Error at sentence of length %d. Sentence is %s" % (
                     self.text_maxlen, len(sentence), str(sentence)))
             translated_sentence = translated_sentence + \
                 (self.text_maxlen - len(sentence)) * [self.pad_word_index]
             translated_data.append(np.array(translated_sentence))
+
+        logger.info("Found %d unknown words. Set them to unknown word index : %d" %
+            (n_skipped_words, self.unk_word_index))
         return np.array(translated_data)
 
     def predict(self, queries, docs):
@@ -564,3 +472,128 @@ class DRMM_TKS_Model:
         indexed_long_doc_list = self.translate_user_data(long_doc_list)
         print(self.model.predict(
             x={'query': indexed_long_queries, 'doc': indexed_long_doc_list}))
+
+    def save(self, name):
+        """Save the model. This saved model can be loaded again using :func:`~gensim.models.word2vec.Word2Vec.load`,
+        which supports online training and getting vectors for vocabulary words.
+
+        Parameters
+        ----------
+        fname : str
+            Path to the file.
+
+        """
+        # don't bother storing the cached normalized vectors, recalculable table
+        #kwargs['ignore'] = kwargs.get('ignore', ['vectors_norm', 'cum_table'])
+        name = open(name, 'w')
+        super(DRMM_TKS, self).save(name)
+
+class _drmm_tks:
+    """The keras class for drmm tks model
+    This is a variant version of DRMM, which applied topk pooling in the matching matrix.
+    It has the following steps:
+    1. embed queries into embedding vector named 'q_embed' and 'd_embed' respectively
+    2. computing 'q_embed' and 'd_embed' with element-wise multiplication
+    3. computing output of upper layer with dense layer operation
+    4. take softmax operation on the output of this layer named 'g' and find the k largest entries named 'mm_k'.
+    5. input 'mm_k' into hidden layers, with specified length of layers and activation function
+    6. compute 'g' and 'mm_k' with element-wise multiplication.
+    # Returns
+        Score list between queries and documents.
+    """
+
+    def __init__(self, embedding, vocab_size, embed_trainable=False, target_mode='ranking',
+                 topk=50, dropout_rate=0.5, text_maxlen=100, hidden_sizes=[100, 1]):
+        """Initializes the model
+        Parameters:
+        ----------
+        embedding: numpy array matrix
+            A numpy array matrix which has the embeddings extracted from a pretrained
+            word embedding like Stanford Glove
+            This is fed to the Embedding Layer which then outputs the word embedding
+        vocab_size: int
+            The number of unique words in the corpus
+        embed_trainable: boolean
+            Whether the embeddings should be trained
+            if True, the embeddings are trianed
+        target_mode: 'training', 'ranking' or 'classification'
+            Indicates the mode in which the model will be used and thus changes the topology
+        topk: int
+            Used for topk pooling in the matching matrix
+        dropout_rate: float between 0 and 1
+            The probability of making a neuron dead
+            Used for regularization
+        text_maxlen: int
+            The maximum possible length of a sentence
+            used for deiciding matrix dimensions
+        hidden_sizes: list of ints
+            The list of hidden sizes for the fully connected layers connected to the matching matrix
+            For example
+                hidden_sizes = [10, 20, 30]
+            will add 3 fully connected layers of 10, 20 and 30 hidden neurons
+        """
+        self.embedding = embedding
+        self.embed_dim = embedding.shape[1]
+        self.embed_trainable = embed_trainable
+        self.topk = topk
+        self.dropout_rate = dropout_rate
+        self.text_maxlen = text_maxlen
+        self.vocab_size = vocab_size
+        self.hidden_sizes = hidden_sizes
+        self.num_layers = len(self.hidden_sizes)
+        self.target_mode = target_mode
+        self.build()
+
+    def build(self):
+        """Builds the model based on parameters set during initialization"""
+        query = Input(name='query', shape=(self.text_maxlen,))
+        doc = Input(name='doc', shape=(self.text_maxlen,))
+        embedding = Embedding(self.embedding.shape[0], self.embedding.shape[1], weights=[self.embedding],
+                              trainable=self.embed_trainable)
+
+        q_embed = embedding(query)
+        d_embed = embedding(doc)
+
+        mm = Dot(axes=[2, 2], normalize=True,
+                 name="mm_q_embed_DOT_d_embed")([q_embed, d_embed])
+
+        # compute term gating
+        w_g = Dense(1, name="w_g_Dense_1_q_embed", activation='softmax')(q_embed)
+
+        # https://stackoverflow.com/questions/49425056/keras-lambda-layer-and-variables-typeerror-cant-pickle-thread-lock-objects
+        # def softmax_lambda(x):
+        #     return softmax(x, axis=1)
+        # # g = Lambda(lambda x: softmax(x, axis=1), output_shape=(
+        #     # self.text_maxlen, ), name="g_Softmax_w_g")(w_g)
+        # g = Lambda(softmax_lambda, output_shape=(
+        #     self.text_maxlen, ), name="g_Softmax_w_g")(w_g)
+
+        g = Reshape((self.text_maxlen,), name="g_Reshape_maxlen_w_g")(w_g)
+
+        def topk_lambda(x):
+            return  K.tf.nn.top_k(x, k=self.topk, sorted=True)[0]
+
+        mm_k = Lambda(lambda x: K.tf.nn.top_k(x, k=self.topk, sorted=True)[0])(mm)
+
+        for i in range(self.num_layers):
+            mm_k = Dense(self.hidden_sizes[i], activation='softplus', kernel_initializer='he_uniform',
+                         bias_initializer='zeros', name="mm_k_Dense_%d_mm_k" % self.hidden_sizes[i])(mm_k)
+
+        mm_k_dropout = Dropout(rate=self.dropout_rate,
+                               name="mm_k_dropout_Dropout_mm_k")(mm_k)
+
+        mm_reshape = Reshape(
+            (self.text_maxlen,), name="mm_reshape_Reshape_maxlen_mm_k_dropout")(mm_k_dropout)
+
+        mean = Dot(axes=[1, 1], normalize=True,
+                   name="mean_mm_reshape_DOT_g")([mm_reshape, g])
+
+        if self.target_mode == 'classification':
+            out_ = Dense(2, activation='softmax')(mean)
+        elif self.target_mode in ['regression', 'ranking']:
+            out_ = Reshape((1,), name="out_Reshape_mean")(mean)
+
+        self.model = Model(inputs=[query, doc], outputs=out_)
+
+    def get_model(self):
+        return self.model
