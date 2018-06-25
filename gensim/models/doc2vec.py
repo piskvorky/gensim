@@ -756,9 +756,9 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         doc_words : list of str
             A document for which the vector representation will be inferred.
         alpha : float, optional
-            The initial learning rate. If unspecified, value from model initiation will be reused.
+            The initial learning rate. If unspecified, value from model initialization will be reused.
         min_alpha : float, optional
-            Learning rate will linearly drop to `min_alpha` over each inference epoch. If unspecified,
+            Learning rate will linearly drop to `min_alpha` over all inference epochs. If unspecified,
             value from model initialization will be reused.
         epochs : int, optional
             Number of times to train the new document. Larger values take more time, but may improve
