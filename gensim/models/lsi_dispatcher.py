@@ -4,24 +4,17 @@
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-""":class:`~gensim.models.lsi_dispatcher.Dispatcher` process which orchestrates
-distributed :class:`~gensim.models.lsimodel.LsiModel` computations.
+"""Dispatcher process which orchestrates distributed :class:`~gensim.models.lsimodel.LsiModel` computations.
 Run this script only once, on the master node in your cluster.
 
 Notes
 -----
-The dispatches expects to find worker scripts already running. Make sure you run as many workers as you like on
+The dispatcher expects to find worker scripts already running. Make sure you run as many workers as you like on
 your machines **before** launching the dispatcher.
 
-Warnings
---------
-Requires installed `Pyro4 <https://pythonhosted.org/Pyro4/>`_.
-Distributed version works only in local network.
 
-
-How to use distributed :class:`~gensim.models.lsimodel.LsiModel`
-----------------------------------------------------------------
-
+How to use distributed LSI
+--------------------------
 
 #. Install needed dependencies (Pyro4) ::
 
@@ -100,7 +93,7 @@ class Dispatcher(object):
 
     """
     def __init__(self, maxsize=0):
-        """Partly initializes the dispatcher.
+        """Partly initialize the dispatcher.
 
         A full initialization (including initialization of the workers) requires a call to
         :meth:`~gensim.models.lsi_dispatcher.Dispatcher.initialize`
@@ -117,7 +110,7 @@ class Dispatcher(object):
 
     @Pyro4.expose
     def initialize(self, **model_params):
-        """Fully initializes the dispatcher and all its workers.
+        """Fully initialize the dispatcher and all its workers.
 
         Parameters
         ----------
@@ -127,7 +120,7 @@ class Dispatcher(object):
         Raises
         ------
         RuntimeError
-            When no workers are found (the `gensim.scripts.lsi_worker` script must be ran beforehand).
+            When no workers are found (the :mod:`gensim.model.lsi_worker` script must be ran beforehand).
 
         """
         self.jobs = Queue(maxsize=self.maxsize)
@@ -168,7 +161,7 @@ class Dispatcher(object):
 
     @Pyro4.expose
     def getjob(self, worker_id):
-        """Atomically pops a job from the queue.
+        """Atomically pop a job from the queue.
 
         Parameters
         ----------
@@ -192,7 +185,7 @@ class Dispatcher(object):
 
         Parameters
         ----------
-        job : iterable of iterable of (int, float)
+        job : iterable of list of (int, float)
             The corpus in BoW format.
 
         """
@@ -246,8 +239,7 @@ class Dispatcher(object):
 
         The job done event is logged and then control is asynchronously transfered back to the worker
         (who can then request another job). In this way, control flow basically oscillates between
-        :meth:`gensim.models.lsi_dispatcher.Dispatcher.jobdone` and
-        :meth:`gensim.models.lsi_worker.Worker.requestjob`.
+        :meth:`gensim.models.lsi_dispatcher.Dispatcher.jobdone` and :meth:`gensim.models.lsi_worker.Worker.requestjob`.
 
         Parameters
         ----------
@@ -273,7 +265,7 @@ class Dispatcher(object):
 
     @Pyro4.oneway
     def exit(self):
-        """Terminate all registered workers and then the dispatcher."""
+        """Terminate all workers and then the dispatcher."""
         for workerid, worker in iteritems(self.workers):
             logger.info("terminating worker %s", workerid)
             worker.exit()
