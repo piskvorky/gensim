@@ -10,9 +10,13 @@ topics from documents, as efficiently (computer-wise) and painlessly (human-wise
 
 Gensim is designed to process raw, unstructured digital texts ("*plain text*").
 
-The algorithms in Gensim, such as **Word2Vec**, **FastText**, **Latent Semantic Analysis**, **Latent Dirichlet Allocation** and **Random Projections**, discover semantic structure of documents by examining statistical co-occurrence patterns within a corpus of training documents. These algorithms are **unsupervised**, which means no human input is necessary -- you only need a corpus of plain text documents.
+The algorithms in Gensim, such as :doc:`Word2Vec <word2vec>`, :doc:`FastText <fasttext>`,
+:doc:`Latent Semantic Analysis <lsimodel>`, :doc:`Latent Dirichlet Allocation <ldamodel>` etc,
+automatically discover the semantic structure of documents by examining statistical
+co-occurrence patterns within a corpus of training documents. These algorithms are **unsupervised**,
+which means no human input is necessary -- you only need a corpus of plain text documents.
 
-Once these statistical patterns are found, any plain text documents can be succinctly expressed in the new, semantic representation and queried for topical similarity against other documents, words or phrases.
+Once these statistical patterns are found, any plain text documents (sentence, phrase, word…) can be succinctly expressed in the new, semantic representation and queried for topical similarity against other documents (words, phrases…).
 
 .. note::
    If the previous paragraphs left you confused, you can read more about the `Vector
