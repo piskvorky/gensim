@@ -8,13 +8,13 @@ from gensim.test.utils import get_tmpfile
 from gensim.models import KeyedVectors
 from collections import Counter
 from custom_losses import rank_hinge_loss
+from custom_layers import TopKLayer
 from sklearn.preprocessing import normalize
 from custom_callbacks import ValidationCallback
 from gensim import utils
 
 try:
     import keras.backend as K
-    from keras.engine.topology import Layer
     from keras import optimizers
     from keras.losses import hinge
     from keras.models import Model
@@ -395,7 +395,7 @@ class DRMM_TKS(utils.SaveLoad):
             indexed_long_doc_list = self.translate_user_data(long_doc_list)
 
             val_callback = ValidationCallback({"X1": indexed_long_queries, "X2": indexed_long_doc_list,
-                                                "doc_lengths": doc_lens, "y": long_test_labels})
+                                               "doc_lengths": doc_lens, "y": long_test_labels})
 
         self.model.compile(optimizer=optimizer, loss=loss,
                            metrics=['accuracy'])
@@ -568,20 +568,7 @@ class _drmm_tks:
 
         # compute term gating
         w_g = Dense(1, activation='softmax')(q_embed)
-
-        # https://stackoverflow.com/questions/49425056/keras-lambda-layer-and-variables-typeerror-cant-pickle-thread-lock-objects
-        # def softmax_lambda(x):
-        #     return softmax(x, axis=1)
-        # # g = Lambda(lambda x: softmax(x, axis=1), output_shape=(
-        #     # self.text_maxlen, ), name="g_Softmax_w_g")(w_g)
-        # g = Lambda(softmax_lambda, output_shape=(
-        #     self.text_maxlen, ), name="g_Softmax_w_g")(w_g)
-
         g = Reshape((self.text_maxlen,))(w_g)
-
-        # def topk_lambda(x, actual):
-        #     x = np.array(actual)
-        #     return  K.tf.nn.top_k(x, k=self.topk, sorted=True)[0]
 
         mm_k = TopKLayer(topk=self.topk, output_dim=(
             self.text_maxlen, self.embedding_dim))(mm)
@@ -606,35 +593,3 @@ class _drmm_tks:
 
     def get_model(self):
         return self.model
-
-
-class TopKLayer(Layer):
-    def __init__(self, output_dim, topk, **kwargs):
-        self.output_dim = output_dim
-        self.topk = topk
-        super(TopKLayer, self).__init__(**kwargs)
-
-    def build(self, input_shape):
-        # # Create a trainable weight variable for this layer.
-        # self.kernel = self.add_weight(name='kernel',
-        #                               shape=(input_shape[1], self.output_dim),
-        #                               initializer='uniform',
-        #                               trainable=True)
-        # Be sure to call this at the end
-        super(TopKLayer, self).build(input_shape)
-        # self.built=True
-
-    def call(self, x):
-        return K.tf.nn.top_k(x, k=self.topk, sorted=True)[0]
-
-    def compute_output_shape(self, input_shape):
-        # print((input_shape[0], self.output_dim[0], self.output_dim[1]))
-        return (input_shape[0], self.output_dim[0], self.output_dim[1])
-
-    def get_config(self):
-        config = {
-            'topk': self.topk,
-            'output_dim': self.output_dim
-        }
-        base_config = super(TopKLayer, self).get_config()
-        return dict(list(base_config.items()) + list(config.items()))
