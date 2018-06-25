@@ -15,7 +15,7 @@ or, alternatively for `conda` environments::
 
   conda install -c conda-forge gensim
 
-In case that fails, make sure you're installing into a writeable location (or use `sudo`).
+In case that fails, make sure you're installing into a writeable location (or use `sudo`), or keep reading.
 
 -----
 
@@ -31,7 +31,7 @@ platform that supports Python 2.6+ and NumPy. Gensim depends on the following so
 
 
 Install Python and `pip`
----------------------------------
+------------------------
 
 Check what version of Python you have with::
 
@@ -103,15 +103,11 @@ There are also alternative routes to install:
 Testing Gensim
 --------------
 
-To test the package, unzip the `tar.gz source <http://pypi.python.org/pypi/gensim>`_ and run::
-
-    python setup.py test
-
-Gensim uses continuous integration, automatically running a full test suite and documentation build
-on each pull request: |Travis|_
+Gensim uses continuous integration, automatically running a full test suite on each pull request: |Travis|_
 
 .. |Travis| image:: https://travis-ci.org/RaRe-Technologies/gensim.svg?branch=develop
 .. _Travis: https://travis-ci.org/RaRe-Technologies/gensim
+
 
 Problems?
 ---------
