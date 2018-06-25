@@ -5,7 +5,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """Dispatcher process which orchestrates distributed :class:`~gensim.models.lsimodel.LsiModel` computations.
-Run this script only once, on the master node in your cluster.
+Run this script only once, on any node in your cluster.
 
 Notes
 -----
@@ -43,7 +43,6 @@ How to use distributed LSI
     >>> from gensim.models import LsiModel
     >>>
     >>> model = LsiModel(common_corpus, id2word=common_dictionary, distributed=True)
-
 
 Command line arguments
 ----------------------
@@ -115,7 +114,8 @@ class Dispatcher(object):
         Parameters
         ----------
         **model_params
-            Keyword parameters used to initialize individual workers, see :class:`~gensim.models.lsimodel.LsiModel`.
+            Keyword parameters used to initialize individual workers (gets handed all the way down to `worker.initialize()`).
+            See :class:`~gensim.models.lsimodel.LsiModel`.
 
         Raises
         ------
@@ -141,7 +141,7 @@ class Dispatcher(object):
                     worker.initialize(workerid, dispatcher=self.callback, **model_params)
                     self.workers[workerid] = worker
                 except Pyro4.errors.PyroError:
-                    logger.exception("unresponsive worker at %s, deleting it from the name server" % uri)
+                    logger.exception("unresponsive worker at %s, deleting it from the name server", uri)
                     ns.remove(name)
 
         if not self.workers:
@@ -235,7 +235,11 @@ class Dispatcher(object):
     @Pyro4.oneway
     @utils.synchronous('lock_update')
     def jobdone(self, workerid):
-        """Callback used by workers to notify when their job is done.
+        """
+        A worker has finished its job. Log this event and then asynchronously
+        transfer control back to the worker.
+
+        Callback used by workers to notify when their job is done.
 
         The job done event is logged and then control is asynchronously transfered back to the worker
         (who can then request another job). In this way, control flow basically oscillates between
@@ -265,7 +269,7 @@ class Dispatcher(object):
 
     @Pyro4.oneway
     def exit(self):
-        """Terminate all workers and then the dispatcher."""
+        """Terminate all registered workers and then the dispatcher."""
         for workerid, worker in iteritems(self.workers):
             logger.info("terminating worker %s", workerid)
             worker.exit()

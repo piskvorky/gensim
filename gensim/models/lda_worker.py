@@ -4,20 +4,15 @@
 # Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-""":class:`~gensim.models.lda_worker.Worker` ("slave") process used in computing
-distributed :class:`~gensim.models.ldamodel.LdaModel`.
+"""Worker ("slave") process used in computing distributed Latent Dirichlet Allocation
+(LDA, :class:`~gensim.models.ldamodel.LdaModel`).
 
 Run this script on every node in your cluster. If you wish, you may even run it multiple times on a single machine,
 to make better use of multiple cores (just beware that memory footprint increases accordingly).
 
-Warnings
---------
-Requires installed `Pyro4 <https://pythonhosted.org/Pyro4/>`_.
-
 
 How to use distributed :class:`~gensim.models.ldamodel.LdaModel`
 ----------------------------------------------------------------
-
 
 #. Install needed dependencies (Pyro4) ::
 
@@ -88,12 +83,12 @@ class Worker(object):
     """
 
     def __init__(self):
-        """Partly initializes the model."""
+        """Partly initialize the model."""
         self.model = None
 
     @Pyro4.expose
     def initialize(self, myid, dispatcher, **model_params):
-        """Fully initializes the worker.
+        """Fully initialize the worker.
 
         Parameters
         ----------
@@ -145,7 +140,7 @@ class Worker(object):
 
     @utils.synchronous('lock_update')
     def processjob(self, job):
-        """Incrementally processes the job and potentially logs progress.
+        """Incrementally process the job and potentially logs progress.
 
         Parameters
         ----------

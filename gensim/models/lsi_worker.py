@@ -113,7 +113,7 @@ class Worker(object):
         Raises
         ------
         RuntimeError
-            If `self.model` is None (i.e. worker non initialized).
+            If `self.model` is None (i.e. worker not initialized).
 
         """
         if self.model is None:
