@@ -3,7 +3,7 @@ try:
     from keras.layers import Lambda
     KERAS_AVAILABLE = True
 except ImportError:
-    KERAS_AVAILABLE =False
+    KERAS_AVAILABLE = False
 
 
 def rank_hinge_loss(y_true, y_pred):

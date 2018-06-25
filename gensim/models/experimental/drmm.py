@@ -5,7 +5,7 @@ try:
     from keras.activations import softmax
     KERAS_AVAILABLE = True
 except ImportError:
-    KERAS_AVAILABLE =False
+    KERAS_AVAILABLE = False
 
 
 class DRMM:

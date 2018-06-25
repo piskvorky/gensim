@@ -1,5 +1,4 @@
 import logging
-import six
 import random
 import numpy
 
@@ -11,25 +10,25 @@ from collections import Counter
 from custom_losses import rank_hinge_loss
 from sklearn.preprocessing import normalize
 from custom_callbacks import ValidationCallback
+from gensim import utils
 
 try:
     import keras.backend as K
+    from keras.engine.topology import Layer
     from keras import optimizers
     from keras.losses import hinge
     from keras.models import Model
-    from keras.layers import Input, Embedding, Dot, Dense, Lambda, Reshape, Dropout
-    from keras.activations import softmax
+    from keras.layers import Input, Embedding, Dot, Dense, Reshape, Dropout
     import tensorflow
     tensorflow.set_random_seed(101010)
     KERAS_AVAILABLE = True
 except ImportError:
-    KERAS_AVAILABLE =False
+    KERAS_AVAILABLE = False
 
 random.seed(101010)
 numpy.random.seed(101010)
 logger = logging.getLogger(__name__)
 
-from gensim import utils
 
 class DRMM_TKS(utils.SaveLoad):
     """User friendly model for training on similarity learning data.
@@ -166,13 +165,15 @@ class DRMM_TKS(utils.SaveLoad):
         # Use KeyedVectors for easy and quick access od word embeddings
         glove_file = self.word_embedding_path
         tmp_file = get_tmpfile("tmp_word2vec.txt")
-        embedding_vocab_size, self.embedding_dim = glove2word2vec(glove_file, tmp_file)
+        embedding_vocab_size, self.embedding_dim = glove2word2vec(
+            glove_file, tmp_file)
         kv_model = KeyedVectors.load_word2vec_format(tmp_file)
 
         logger.info("The embeddings_index built from the given file has %d words of %d dimensions" %
                     (embedding_vocab_size, self.embedding_dim))
 
-        logger.info("Building the Embedding Matrix for the model's Embedding Layer")
+        logger.info(
+            "Building the Embedding Matrix for the model's Embedding Layer")
 
         # Initialize the embedding matrix
         # UNK word gets the vector based on the method
@@ -191,8 +192,8 @@ class DRMM_TKS(utils.SaveLoad):
             else:
                 n_non_embedding_words += 1
         logger.info("There are %d words out of %d (%.2f%%) not in the embeddings. Setting them to %s" %
-                    (n_non_embedding_words, self.vocab_size, n_non_embedding_words*100/self.vocab_size,
-                    self.unk_handle_method))
+                    (n_non_embedding_words, self.vocab_size, n_non_embedding_words * 100 / self.vocab_size,
+                     self.unk_handle_method))
 
         # The point where vocab words end
         vocab_offset = self.vocab_size
@@ -241,11 +242,11 @@ class DRMM_TKS(utils.SaveLoad):
             logger.info("Normalizing the word embeddings")
             self.embedding_matrix = normalize(self.embedding_matrix)
 
-
         logger.info("Embedding Matrix build complete. It now has shape %s" %
                     str(self.embedding_matrix.shape))
         logger.info("Pad word has been set to index %d" % self.pad_word_index)
-        logger.info("Unknown word has been set to index %d" % self.unk_word_index)
+        logger.info("Unknown word has been set to index %d" %
+                    self.unk_word_index)
         logger.info("Embedding index build complete")
 
     def make_indexed(self, sentence):
@@ -393,8 +394,8 @@ class DRMM_TKS(utils.SaveLoad):
             indexed_long_queries = self.translate_user_data(long_queries)
             indexed_long_doc_list = self.translate_user_data(long_doc_list)
 
-            val_callback = ValidationCallback({"X1": indexed_long_queries,
-                                               "X2": indexed_long_doc_list, "doc_lengths": doc_lens, "y": long_test_labels})
+            val_callback = ValidationCallback({"X1": indexed_long_queries, "X2": indexed_long_doc_list,
+                                                "doc_lengths": doc_lens, "y": long_test_labels})
 
         self.model.compile(optimizer=optimizer, loss=loss,
                            metrics=['accuracy'])
@@ -435,7 +436,7 @@ class DRMM_TKS(utils.SaveLoad):
             translated_data.append(np.array(translated_sentence))
 
         logger.info("Found %d unknown words. Set them to unknown word index : %d" %
-            (n_skipped_words, self.unk_word_index))
+                    (n_skipped_words, self.unk_word_index))
         return np.array(translated_data)
 
     def predict(self, queries, docs):
@@ -475,10 +476,10 @@ class DRMM_TKS(utils.SaveLoad):
 
         indexed_long_queries = self.translate_user_data(long_queries)
         indexed_long_doc_list = self.translate_user_data(long_doc_list)
-        print(self.model.predict(
-            x={'query': indexed_long_queries, 'doc': indexed_long_doc_list}))
+        return self.model.predict(
+            x={'query': indexed_long_queries, 'doc': indexed_long_doc_list})
 
-    def save(self, name):
+    def save(self, fname, *args, **kwargs):
         """Save the model. This saved model can be loaded again using :func:`~gensim.models.word2vec.Word2Vec.load`,
         which supports online training and getting vectors for vocabulary words.
 
@@ -488,10 +489,12 @@ class DRMM_TKS(utils.SaveLoad):
             Path to the file.
 
         """
-        # don't bother storing the cached normalized vectors, recalculable table
-        #kwargs['ignore'] = kwargs.get('ignore', ['vectors_norm', 'cum_table'])
-        name = open(name, 'w')
-        super(DRMM_TKS, self).save(name)
+        # don't save the keras model as it needs to be saved with a keras function
+        kwargs['ignore'] = kwargs.get('ignore', ['model'])
+        kwargs['fname_or_handle'] = fname
+        super(DRMM_TKS, self).save(*args, **kwargs)
+        self.model.save(fname + ".keras")
+
 
 class _drmm_tks:
     """The keras class for drmm tks model
@@ -540,7 +543,7 @@ class _drmm_tks:
         if not KERAS_AVAILABLE:
             raise ImportError("Please install Keras to use this model")
         self.embedding = embedding
-        self.embed_dim = embedding.shape[1]
+        self.embedding_dim = embedding.shape[1]
         self.embed_trainable = embed_trainable
         self.topk = topk
         self.dropout_rate = dropout_rate
@@ -561,11 +564,10 @@ class _drmm_tks:
         q_embed = embedding(query)
         d_embed = embedding(doc)
 
-        mm = Dot(axes=[2, 2], normalize=True,
-                 name="mm_q_embed_DOT_d_embed")([q_embed, d_embed])
+        mm = Dot(axes=[2, 2], normalize=True)([q_embed, d_embed])
 
         # compute term gating
-        w_g = Dense(1, name="w_g_Dense_1_q_embed", activation='softmax')(q_embed)
+        w_g = Dense(1, activation='softmax')(q_embed)
 
         # https://stackoverflow.com/questions/49425056/keras-lambda-layer-and-variables-typeerror-cant-pickle-thread-lock-objects
         # def softmax_lambda(x):
@@ -575,32 +577,64 @@ class _drmm_tks:
         # g = Lambda(softmax_lambda, output_shape=(
         #     self.text_maxlen, ), name="g_Softmax_w_g")(w_g)
 
-        g = Reshape((self.text_maxlen,), name="g_Reshape_maxlen_w_g")(w_g)
+        g = Reshape((self.text_maxlen,))(w_g)
 
-        def topk_lambda(x):
-            return  K.tf.nn.top_k(x, k=self.topk, sorted=True)[0]
+        # def topk_lambda(x, actual):
+        #     x = np.array(actual)
+        #     return  K.tf.nn.top_k(x, k=self.topk, sorted=True)[0]
 
-        mm_k = Lambda(lambda x: K.tf.nn.top_k(x, k=self.topk, sorted=True)[0])(mm)
+        mm_k = TopKLayer(topk=self.topk, output_dim=(
+            self.text_maxlen, self.embedding_dim))(mm)
 
         for i in range(self.num_layers):
             mm_k = Dense(self.hidden_sizes[i], activation='softplus', kernel_initializer='he_uniform',
-                         bias_initializer='zeros', name="mm_k_Dense_%d_mm_k" % self.hidden_sizes[i])(mm_k)
+                         bias_initializer='zeros')(mm_k)
 
-        mm_k_dropout = Dropout(rate=self.dropout_rate,
-                               name="mm_k_dropout_Dropout_mm_k")(mm_k)
+        mm_k_dropout = Dropout(rate=self.dropout_rate)(mm_k)
 
         mm_reshape = Reshape(
-            (self.text_maxlen,), name="mm_reshape_Reshape_maxlen_mm_k_dropout")(mm_k_dropout)
+            (self.text_maxlen,))(mm_k_dropout)
 
-        mean = Dot(axes=[1, 1], normalize=True,
-                   name="mean_mm_reshape_DOT_g")([mm_reshape, g])
+        mean = Dot(axes=[1, 1], normalize=True)([mm_reshape, g])
 
         if self.target_mode == 'classification':
             out_ = Dense(2, activation='softmax')(mean)
         elif self.target_mode in ['regression', 'ranking']:
-            out_ = Reshape((1,), name="out_Reshape_mean")(mean)
+            out_ = Reshape((1,))(mean)
 
         self.model = Model(inputs=[query, doc], outputs=out_)
 
     def get_model(self):
         return self.model
+
+
+class TopKLayer(Layer):
+    def __init__(self, output_dim, topk, **kwargs):
+        self.output_dim = output_dim
+        self.topk = topk
+        super(TopKLayer, self).__init__(**kwargs)
+
+    def build(self, input_shape):
+        # # Create a trainable weight variable for this layer.
+        # self.kernel = self.add_weight(name='kernel',
+        #                               shape=(input_shape[1], self.output_dim),
+        #                               initializer='uniform',
+        #                               trainable=True)
+        # Be sure to call this at the end
+        super(TopKLayer, self).build(input_shape)
+        # self.built=True
+
+    def call(self, x):
+        return K.tf.nn.top_k(x, k=self.topk, sorted=True)[0]
+
+    def compute_output_shape(self, input_shape):
+        # print((input_shape[0], self.output_dim[0], self.output_dim[1]))
+        return (input_shape[0], self.output_dim[0], self.output_dim[1])
+
+    def get_config(self):
+        config = {
+            'topk': self.topk,
+            'output_dim': self.output_dim
+        }
+        base_config = super(TopKLayer, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))

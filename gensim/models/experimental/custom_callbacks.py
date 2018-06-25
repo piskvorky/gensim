@@ -3,7 +3,7 @@ try:
     from keras.callbacks import Callback
     KERAS_AVAILABLE = True
 except ImportError:
-    KERAS_AVAILABLE =False
+    KERAS_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(

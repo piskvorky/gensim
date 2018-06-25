@@ -4,8 +4,7 @@ try:
     from keras import regularizers
     KERAS_AVAILABLE = True
 except ImportError:
-    KERAS_AVAILABLE = FALSE
-
+    KERAS_AVAILABLE = False
 
 
 class DSSM(object):
@@ -43,7 +42,7 @@ class DSSM(object):
 
         """
         if not KERAS_AVAILABLE:
-            rasie ImportError("Please install Keras to use this model")
+            raise ImportError("Please install Keras to use this model")
         self.vocab_size = vocab_size
         self.hidden_sizes = hidden_sizes
         self.regularizer_rate = regularizer_rate

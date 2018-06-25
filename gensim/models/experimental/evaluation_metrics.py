@@ -8,7 +8,7 @@ logging.basicConfig(
 
 def mapk(Y_true, Y_pred):
     """Function to get Mean Average Precision(MAP) for a given set of Y_true, Y_pred
-    
+
     Note: Currently doesn't support mapping at k. Couldn't use only map as it's a
     reserved word
 
