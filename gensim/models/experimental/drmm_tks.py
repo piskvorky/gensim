@@ -57,7 +57,8 @@ class DRMM_TKS(utils.SaveLoad):
 
     def __init__(self, queries, docs, labels, word_embedding_path=None,
                  text_maxlen=200, keep_full_embedding=True, normalize_embeddings=True,
-                 epochs=10, unk_handle_method='zero', validation_data=None):
+                 epochs=10, unk_handle_method='zero', validation_data=None, topk=50,
+                 target_mode='ranking'):
         """Initializes the model and trains it
 
         Parameters:
@@ -95,7 +96,7 @@ class DRMM_TKS(utils.SaveLoad):
 
         text_maxlen: int
             The maximum possible length of a query or a document
-            This is used for padding.
+            This is used for padding sentences.
 
         keep_full_embedding: boolean
             Whether the full embedding should be built or only the words in the dataset's vocab
@@ -116,13 +117,19 @@ class DRMM_TKS(utils.SaveLoad):
             where test_queries, test_docs  and test_labels are of the same form as
             their counter parts stated above
 
+        topk: int
+            the k topmost values in the interaction matrix between the queries and the docs
+
+        target_mode: str {'ranking', 'classification'}
+            the way the model should be trained, either to rank or classify
+
         """
         self.queries = queries
         self.docs = docs
         self.labels = labels
         self.word_counter = Counter()
         self.text_maxlen = text_maxlen
-        # self.hist_size = hist_size
+        self.topk = topk
         self.word_embedding_path = word_embedding_path
         self.word2index, self.index2word = {}, {}
         self.keep_full_embedding = keep_full_embedding
@@ -130,6 +137,11 @@ class DRMM_TKS(utils.SaveLoad):
         self.model = None
         self.epochs = epochs
         self.validation_data = validation_data
+        self.target_mode = target_mode
+
+        if self.target_mode not in ['ranking', 'classification']:
+            raise ValueError("Unkown target_mode %s. It must be either 'ranking' or 'classification'" %
+                            self.target_mode)
 
         if unk_handle_method not in ['random', 'zero']:
             raise ValueError("Unkown token handling method %s" %
@@ -140,7 +152,7 @@ class DRMM_TKS(utils.SaveLoad):
         self.pair_list = self._get_pair_list()
         self.indexed_pair_list = self._make_indexed_pair_list()
         if self.queries is not None and self.docs is not None and self.labels is not None:
-            self.train_model()
+            self.train()
         else:
             logger.info("Model won't be trained as data is either not provided or is incomplete.")
 
@@ -358,14 +370,10 @@ class DRMM_TKS(utils.SaveLoad):
                                       self._make_indexed(d_pos), self._make_indexed(d_neg)])
         return indexed_pair_list
 
-    def train_model(self):
+    def train(self):
         """Trains a DRMM_TKS model using specified parameters"""
         X1_train, X2_train, y_train = self.get_full_batch()
-        drmm_tks = _drmm_tks(
-            embedding=self.embedding_matrix, vocab_size=self.embedding_matrix.shape[0],
-            text_maxlen=self.text_maxlen)
-
-        self.model = drmm_tks.get_model()
+        self.model = self._get_keras_model()
         self.model.summary()
 
         optimizer = 'adam'
@@ -520,44 +528,31 @@ class DRMM_TKS(utils.SaveLoad):
         gensim_model.model = keras_model
         return gensim_model
 
-class _drmm_tks:
-    """The keras class for drmm tks model
-    This is a variant version of DRMM, which applied topk pooling in the matching matrix.
-    It has the following steps:
-    1. embed queries into embedding vector named 'q_embed' and 'd_embed' respectively
-    2. computing 'q_embed' and 'd_embed' with element-wise multiplication
-    3. computing output of upper layer with dense layer operation
-    4. take softmax operation on the output of this layer named 'g' and find the k largest entries named 'mm_k'.
-    5. input 'mm_k' into hidden layers, with specified length of layers and activation function
-    6. compute 'g' and 'mm_k' with element-wise multiplication.
-    # Returns
-        Score list between queries and documents.
-    """
 
-    def __init__(self, embedding, vocab_size, embed_trainable=False, target_mode='ranking',
-                 topk=50, dropout_rate=0.5, text_maxlen=100, hidden_sizes=[100, 1]):
-        """Initializes the model
+    def _get_keras_model(self, embed_trainable=False, dropout_rate=0.5, hidden_sizes=[100, 1]):
+        """Builds and returns the keras class for drmm tks model
+
+        About DRMM_TKS
+        --------------
+        This is a variant version of DRMM, which applied topk pooling in the matching matrix.
+        It has the following steps:
+        1. embed queries into embedding vector named 'q_embed' and 'd_embed' respectively
+        2. computing 'q_embed' and 'd_embed' with element-wise multiplication
+        3. computing output of upper layer with dense layer operation
+        4. take softmax operation on the output of this layer named 'g' and find the k largest entries named 'mm_k'.
+        5. input 'mm_k' into hidden layers, with specified length of layers and activation function
+        6. compute 'g' and 'mm_k' with element-wise multiplication.
+        
+        On predicting, the model returns the score list between queries and documents.
+
         Parameters:
         ----------
-        embedding: numpy array matrix
-            A numpy array matrix which has the embeddings extracted from a pretrained
-            word embedding like Stanford Glove
-            This is fed to the Embedding Layer which then outputs the word embedding
-        vocab_size: int
-            The number of unique words in the corpus
         embed_trainable: boolean
             Whether the embeddings should be trained
             if True, the embeddings are trianed
-        target_mode: 'training', 'ranking' or 'classification'
-            Indicates the mode in which the model will be used and thus changes the topology
-        topk: int
-            Used for topk pooling in the matching matrix
         dropout_rate: float between 0 and 1
             The probability of making a neuron dead
-            Used for regularization
-        text_maxlen: int
-            The maximum possible length of a sentence
-            used for deiciding matrix dimensions
+            Used for regularization.
         hidden_sizes: list of ints
             The list of hidden sizes for the fully connected layers connected to the matching matrix
             For example
@@ -566,24 +561,13 @@ class _drmm_tks:
         """
         if not KERAS_AVAILABLE:
             raise ImportError("Please install Keras to use this model")
-        self.embedding = embedding
-        self.embedding_dim = embedding.shape[1]
-        self.embed_trainable = embed_trainable
-        self.topk = topk
-        self.dropout_rate = dropout_rate
-        self.text_maxlen = text_maxlen
-        self.vocab_size = vocab_size
-        self.hidden_sizes = hidden_sizes
-        self.num_layers = len(self.hidden_sizes)
-        self.target_mode = target_mode
-        self.build()
 
-    def build(self):
-        """Builds the model based on parameters set during initialization"""
+        n_layers = len(hidden_sizes)
+        
         query = Input(name='query', shape=(self.text_maxlen,))
         doc = Input(name='doc', shape=(self.text_maxlen,))
-        embedding = Embedding(self.embedding.shape[0], self.embedding.shape[1], weights=[self.embedding],
-                              trainable=self.embed_trainable)
+        embedding = Embedding(self.embedding_matrix.shape[0], self.embedding_dim,
+                              weights=[self.embedding_matrix], trainable=embed_trainable)
 
         q_embed = embedding(query)
         d_embed = embedding(doc)
@@ -597,11 +581,11 @@ class _drmm_tks:
         mm_k = TopKLayer(topk=self.topk, output_dim=(
             self.text_maxlen, self.embedding_dim))(mm)
 
-        for i in range(self.num_layers):
-            mm_k = Dense(self.hidden_sizes[i], activation='softplus', kernel_initializer='he_uniform',
+        for i in range(n_layers):
+            mm_k = Dense(hidden_sizes[i], activation='softplus', kernel_initializer='he_uniform',
                          bias_initializer='zeros')(mm_k)
 
-        mm_k_dropout = Dropout(rate=self.dropout_rate)(mm_k)
+        mm_k_dropout = Dropout(rate=dropout_rate)(mm_k)
 
         mm_reshape = Reshape(
             (self.text_maxlen,))(mm_k_dropout)
@@ -613,7 +597,5 @@ class _drmm_tks:
         elif self.target_mode in ['regression', 'ranking']:
             out_ = Reshape((1,))(mean)
 
-        self.model = Model(inputs=[query, doc], outputs=out_)
-
-    def get_model(self):
-        return self.model
+        model = Model(inputs=[query, doc], outputs=out_)
+        return model
