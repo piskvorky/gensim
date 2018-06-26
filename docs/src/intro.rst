@@ -117,7 +117,7 @@ The whole Gensim package revolves around the concepts of :term:`corpus`, :term:`
         therefore the original documents must be similar, too". Of course, whether
         such conclusions correspond to reality depends on how well we picked our questions.
 
-    Gensim Sparse Vector, Bag-of-words Vector
+    Gensim sparse vector, Bag-of-words vector
         To save space, in Gensim we omit all vector elements with value 0.0. For example, instead of the
         3-dimensional dense vector ``(0.0, 2.0, 5.0)``, we write only ``[(2, 2.0), (3, 5.0)]`` (note the missing ``(1, 0.0)``). Each vector element is a pair (2-tuple) of ``(feature_id, feature_value)``. The values of all missing features in this sparse representation can be unambiguously resolved to zero, ``0.0``.
 
