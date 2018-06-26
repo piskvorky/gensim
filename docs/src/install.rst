@@ -37,7 +37,16 @@ Testing Gensim
 --------------
 
 Gensim uses continuous integration, automatically running a full test suite on each pull request with
-Travis |Travis|_, CircleCI |CircleCI|_ and AppVeyor |AppVeyor|_.
+
++------------+-----------------------------------------------------------------------------------------+--------------+
+| CI service | Task                                                                                    | Build badge  |
++============+=========================================================================================+==============+
+| Travis     | Run tests on Linux and check `code-style <https://www.python.org/dev/peps/pep-0008/?>`_ | |Travis|_    |
++------------+-----------------------------------------------------------------------------------------+--------------+
+| AppVeyor   | Run tests on Windows                                                                    | |AppVeyor|_  |
++------------+-----------------------------------------------------------------------------------------+--------------+
+| CicleCI    | Build documentation                                                                     | |CircleCI|_  |
++------------+-----------------------------------------------------------------------------------------+--------------+
 
 .. |Travis| image:: https://travis-ci.org/RaRe-Technologies/gensim.svg?branch=develop
 .. _Travis: https://travis-ci.org/RaRe-Technologies/gensim
