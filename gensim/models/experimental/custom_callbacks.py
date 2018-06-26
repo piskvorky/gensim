@@ -37,6 +37,6 @@ class ValidationCallback(Callback):
             Y_true.append(y[offset: offset + doc_size])
             offset += doc_size
 
-        print("MAP: ", mapk(Y_true, Y_pred))
+        logger.info("MAP: {}".format(mapk(Y_true, Y_pred)))
         for k in [1, 3, 5, 10, 20]:
-            print("nDCG@", str(k), ": ", mean_ndcg(Y_true, Y_pred, k=k))
+            logger.info("nDCG@{} : {}".format(str(k), mean_ndcg(Y_true, Y_pred, k=k)))

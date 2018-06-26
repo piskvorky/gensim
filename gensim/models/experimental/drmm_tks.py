@@ -137,9 +137,12 @@ class DRMM_TKS(utils.SaveLoad):
         self.unk_handle_method = unk_handle_method
 
         self.build_vocab()
-        self.pair_list = self.get_pair_list()
-        self.indexed_pair_list = self.make_indexed_pair_list()
-        self.train_model()
+        self.pair_list = self._get_pair_list()
+        self.indexed_pair_list = self._make_indexed_pair_list()
+        if self.queries is not None and self.docs is not None and self.labels is not None:
+            self.train_model()
+        else:
+            logger.info("Model won't be trained as data is either not provided or is incomplete.")
 
     def build_vocab(self):
         """Indexes all the words and makes an embedding_matrix which
@@ -249,13 +252,13 @@ class DRMM_TKS(utils.SaveLoad):
                     self.unk_word_index)
         logger.info("Embedding index build complete")
 
-    def make_indexed(self, sentence):
+    def _make_indexed(self, sentence):
         """Returns the indexed version of the sentence based on self.word2index
         in the form of a list
 
         Parameters:
         -----------
-        sentence str
+        sentence list of str
             The sentence to be indexed
 
         Raises:
@@ -264,7 +267,8 @@ class DRMM_TKS(utils.SaveLoad):
         """
         indexed_sent = [self.word2index[word] for word in sentence]
         if len(indexed_sent) > self.text_maxlen:
-            raise ValueError("text_maxlen: %d isn't big enough. Error at sentence of length %d. Sentence is %s" %
+            raise ValueError("text_maxlen: %d isn't big enough."
+                             "Error at sentence of length %d. Sentence is %s" %
                              (self.text_maxlen, len(sentence), sentence))
 
         indexed_sent = indexed_sent + \
@@ -306,7 +310,7 @@ class DRMM_TKS(utils.SaveLoad):
             X2[i * 2 + 1, :neg_doc_len] = neg_doc[:neg_doc_len]
         return X1, X2, y
 
-    def get_pair_list(self):
+    def _get_pair_list(self):
         """Returns a list with query document pairs in the format
         (query, positive_doc, negative_doc)
 
@@ -344,14 +348,14 @@ class DRMM_TKS(utils.SaveLoad):
                             pair_list.append((q, item[0], new_item[0]))
         return pair_list
 
-    def make_indexed_pair_list(self):
+    def _make_indexed_pair_list(self):
         """Converts the existing word based pair list into an indexed format
 
-        Note: pair_list needs to be first created using get_pair_list"""
+        Note: pair_list needs to be first created using _get_pair_list"""
         indexed_pair_list = []
         for q, d_pos, d_neg in self.pair_list:
-            indexed_pair_list.append([self.make_indexed(q),
-                                      self.make_indexed(d_pos), self.make_indexed(d_neg)])
+            indexed_pair_list.append([self._make_indexed(q),
+                                      self._make_indexed(d_pos), self._make_indexed(d_neg)])
         return indexed_pair_list
 
     def train_model(self):
@@ -391,8 +395,8 @@ class DRMM_TKS(utils.SaveLoad):
                 for i in range(doc_len):
                     long_queries.append(q)
 
-            indexed_long_queries = self.translate_user_data(long_queries)
-            indexed_long_doc_list = self.translate_user_data(long_doc_list)
+            indexed_long_queries = self._translate_user_data(long_queries)
+            indexed_long_doc_list = self._translate_user_data(long_doc_list)
 
             val_callback = ValidationCallback({"X1": indexed_long_queries, "X2": indexed_long_doc_list,
                                                "doc_lengths": doc_lens, "y": long_test_labels})
@@ -402,7 +406,7 @@ class DRMM_TKS(utils.SaveLoad):
         self.model.fit(x={"query": X1_train, "doc": X2_train}, y=y_train, batch_size=5,
                        verbose=1, epochs=self.epochs, shuffle=True, callbacks=[val_callback])
 
-    def translate_user_data(self, data):
+    def _translate_user_data(self, data):
         """Translates given user data (as a list of words) into an indexed
         format which the model understands
 
@@ -474,8 +478,8 @@ class DRMM_TKS(utils.SaveLoad):
             for i in range(len(docs)):
                 long_queries.append(q)
 
-        indexed_long_queries = self.translate_user_data(long_queries)
-        indexed_long_doc_list = self.translate_user_data(long_doc_list)
+        indexed_long_queries = self._translate_user_data(long_queries)
+        indexed_long_doc_list = self._translate_user_data(long_doc_list)
         return self.model.predict(
             x={'query': indexed_long_queries, 'doc': indexed_long_doc_list})
 
