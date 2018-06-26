@@ -68,8 +68,6 @@ or from the `Python Package Index <http://pypi.python.org/pypi/gensim>`_.
 Core concepts
 -------------
 
-The whole Gensim package revolves around the concepts of :term:`corpus`, :term:`vector` and :term:`model`.
-
 .. glossary::
 
     Corpus
