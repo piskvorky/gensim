@@ -37,10 +37,10 @@ Prerequisites
 
 For communication between nodes, `gensim` uses `Pyro (PYthon Remote Objects)
 <http://pypi.python.org/pypi/Pyro4>`_, version >= 4.27. This is a library for low-level socket communication
-and remote procedure calls (RPC) in Python. `Pyro` is a pure-Python library, so its
+and remote procedure calls (RPC) in Python. `Pyro4` is a pure-Python library, so its
 installation is quite painless and only involves copying its `*.py` files somewhere onto your Python's import path::
 
-  sudo easy_install Pyro4
+  pip install Pyro4
 
 You don't have to install Pyro to run Gensim, but if you don't, you won't be able
 to access the distributed features (i.e., everything will always run in serial mode,
