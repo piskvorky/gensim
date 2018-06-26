@@ -495,6 +495,26 @@ class DRMM_TKS(utils.SaveLoad):
         super(DRMM_TKS, self).save(*args, **kwargs)
         self.model.save(fname + ".keras")
 
+    @classmethod
+    def load(cls, *args, **kwargs):
+        """Loads a previously saved `DRMM TKS` model. Also see `save()`.
+
+        Parameters
+        ----------
+        fname : str
+            Path to the saved file.
+
+        Returns
+        -------
+        :obj: `~gensim.models.experimental.DRMM_TKS`
+            Returns the loaded model as an instance of :class: `~gensim.models.experimental.DRMM_TKS`.
+        """
+        from keras.models import load_model
+        fname = args[0]
+        gensim_model = super(DRMM_TKS, cls).load(*args, **kwargs)
+        keras_model = load_model(fname + '.keras', custom_objects={'TopKLayer': TopKLayer})
+        gensim_model.model = keras_model
+        return gensim_model
 
 class _drmm_tks:
     """The keras class for drmm tks model
