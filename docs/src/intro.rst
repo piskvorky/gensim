@@ -10,8 +10,9 @@ topics from documents, as efficiently (computer-wise) and painlessly (human-wise
 
 Gensim is designed to process raw, unstructured digital texts ("*plain text*").
 
-The algorithms in Gensim, such as Word2Vec, FastText, Latent Semantic Analysis (LSI, LSA), Latent Dirichlet
-Allocation (LDA) etc, automatically discover the semantic structure of documents by examining statistical
+The algorithms in Gensim, such as :class:`~gensim.models.word2vec.Word2Vec`, :class:`~gensim.models.fasttext.FastText`,
+Latent Semantic Analysis (LSI, LSA, see :class:`~gensim.models.lsimodel.LsiModel`), Latent Dirichlet
+Allocation (LDA, see :class:`~gensim.models.ldamodel.LdaModel`) etc, automatically discover the semantic structure of documents by examining statistical
 co-occurrence patterns within a corpus of training documents. These algorithms are **unsupervised**,
 which means no human input is necessary -- you only need a corpus of plain text documents.
 
@@ -32,8 +33,9 @@ Features
   reside fully in RAM at any one time (can process large, web-scale corpora).
 * **Memory sharing** -- trained models can be persisted to disk and loaded back via mmap. Multiple processes can share the same data, cutting down RAM footprint.
 * Efficient implementations for several popular vector space algorithms,
-  including Word2Vec, Doc2Vec, FastText, TF-IDF, Latent Semantic Analysis (LSI, LSA),
-  Latent Dirichlet Allocation (LDA) or Random Projection.
+  including :class:`~gensim.models.word2vec.Word2Vec`, :class:`~gensim.models.doc2vec.Doc2Vec`, :class:`~gensim.models.fasttext.FastText`,
+  TF-IDF, Latent Semantic Analysis (LSI, LSA, see :class:`~gensim.models.lsimodel.LsiModel`),
+  Latent Dirichlet Allocation (LDA, see :class:`~gensim.models.ldamodel.LdaModel`) or Random Projection (see :class:`~gensim.models.rpmodel.RpModel`).
 * I/O wrappers and readers from several popular data formats.
 * Fast similarity queries for documents in their semantic representation.
 
@@ -124,7 +126,9 @@ The whole Gensim package revolves around the concepts of :term:`corpus`, :term:`
         required to transform one document representation to another. In Gensim, documents are
         represented as vectors so a model can be thought of as a transformation
         between two vector spaces. The parameters of this transformation are learned from the training corpus. Gensim
-        implements multiple models, such as Word2Vec, Latent Semantic Indexing, LDA, FastText etc.
+        implements multiple models, such as :class:`~gensim.models.word2vec.Word2Vec`,
+        :class:`~gensim.models.lsimodel.LsiModel`, :class:`~gensim.models.ldamodel.LdaModel`,
+        :class:`~gensim.models.fasttext.FastText` etc.
 
 .. seealso::
 
