@@ -15,9 +15,9 @@ or, alternatively for `conda` environments::
 
   conda install -c conda-forge gensim
 
-In case that fails, make sure you're installing into a writeable location (or use `sudo`), or keep reading.
+That's it! Congratulations, you can proceed to the :doc:`tutorials <tutorial>`.
 
-That's it! Congratulations, you can proceed to the :doc:`tutorials <tutorial>`
+In case that failed, make sure you're installing into a writeable location (or use `sudo`).
 
 -----
 
@@ -36,8 +36,8 @@ platform that supports Python 2.7+ and NumPy. Gensim depends on the following so
 Testing Gensim
 --------------
 
-Gensim uses continuous integration, automatically running a full test suite on each pull request:
-|Travis|_ |CircleCI|_ |AppVeyor|_
+Gensim uses continuous integration, automatically running a full test suite on each pull request with
+Travis |Travis|_, CircleCI |CircleCI|_ and AppVeyor |AppVeyor|_.
 
 .. |Travis| image:: https://travis-ci.org/RaRe-Technologies/gensim.svg?branch=develop
 .. _Travis: https://travis-ci.org/RaRe-Technologies/gensim
