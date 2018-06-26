@@ -45,7 +45,7 @@ Gensim uses continuous integration, automatically running a full test suite on e
 +------------+-----------------------------------------------------------------------------------------+--------------+
 | AppVeyor   | Run tests on Windows                                                                    | |AppVeyor|_  |
 +------------+-----------------------------------------------------------------------------------------+--------------+
-| CicleCI    | Build documentation                                                                     | |CircleCI|_  |
+| CircleCI    | Build documentation                                                                     | |CircleCI|_  |
 +------------+-----------------------------------------------------------------------------------------+--------------+
 
 .. |Travis| image:: https://travis-ci.org/RaRe-Technologies/gensim.svg?branch=develop
