@@ -481,7 +481,7 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
     return effective_words
 
 
-def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
+cpdef train_epoch_cbow(model, input_stream, alpha, _work, _neu1, compute_loss):
     cdef int hs = model.hs
     cdef int negative = model.negative
     cdef int sample = (model.vocabulary.sample != 0)
@@ -583,7 +583,6 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
                 if negative:
                     next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random, word_locks, _compute_loss, &_running_training_loss)
 
-    model.running_training_loss = _running_training_loss
     return effective_words
 
 

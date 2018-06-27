@@ -139,7 +139,7 @@ from six.moves import xrange
 logger = logging.getLogger(__name__)
 
 try:
-    from gensim.models.word2vec_inner import train_batch_sg, train_batch_cbow
+    from gensim.models.word2vec_inner import train_batch_sg, train_epoch_cbow
     from gensim.models.word2vec_inner import score_sentence_sg, score_sentence_cbow
     from gensim.models.word2vec_inner import FAST_VERSION, MAX_WORDS_IN_BATCH
 
@@ -550,28 +550,11 @@ class Word2Vec(BaseWordEmbeddingsModel):
         jobs_processed = 0
         alpha = self._get_job_params(0)
         input_stream = CythonLineSentence(fname)
-        while True:
-            if not input_stream.is_eof():
-                # Prepare batch with NO GIL
-                data_iterable = input_stream.next_batch()
-            else:
-                break
 
-            for callback in self.callbacks:
-                callback.on_batch_begin(self)
-
-            # No GIL (almost) (_do_train_job)
-            tally = train_batch_cbow(self, data_iterable, alpha, work, neu1, False)
-            raw_tally = self._raw_word_count(data_iterable)
-
-            for callback in self.callbacks:
-                callback.on_batch_end(self)
-
-            progress_queue.put((len(data_iterable), tally, raw_tally))  # report back progress
-            jobs_processed += 1
-
+        tally, raw_tally = train_epoch_cbow(self, input_stream, alpha, work, neu1, False)
+        progress_queue.put((0, tally, raw_tally))
         progress_queue.put(None)
-        logger.debug("worker exiting, processed %i jobs", jobs_processed)
+        # logger.debug("worker exiting, processed %i jobs", jobs_processed)
 
     def _clear_post_train(self):
         """Resets certain properties of the model, post training."""
