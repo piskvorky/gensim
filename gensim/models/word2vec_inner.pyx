@@ -20,7 +20,7 @@ from libcpp.string cimport string
 from libcpp.vector cimport vector
 from libcpp cimport bool as bool_t
 from libcpp.unordered_map cimport unordered_map
-from libcpp.pair import pair
+from libcpp.pair cimport pair
 
 # scipy <= 0.15
 try:
@@ -48,6 +48,8 @@ cdef REAL_t[EXP_TABLE_SIZE] LOG_TABLE
 
 cdef int ONE = 1
 cdef REAL_t ONEF = <REAL_t>1.0
+
+ctypedef unsigned long long ULongLong
 
 
 cdef extern from "linesentence.h":
@@ -520,7 +522,10 @@ cpdef train_epoch_cbow(model, input_stream, alpha, _work, _neu1, compute_loss):
     cdef unsigned long long next_random
 
     # for preparing batches without Python GIL
-    cdef unordered_map[string, pair[unsigned long long, unsigned long long]] vocab
+    cdef unordered_map[string, pair[ULongLong, ULongLong]] vocab
+    cdef vector[vector[string]] sentences
+    cdef string token
+    cdef vector[string] sent
 
     if hs:
         syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
@@ -538,18 +543,18 @@ cpdef train_epoch_cbow(model, input_stream, alpha, _work, _neu1, compute_loss):
 
     # prepare C structures so we can go "full C" and release the Python GIL
 
-    for word in model.wv.vocab:
-        vocab[word] = (model.wv.vocab[word].index, model.wv.vocab[word].sample_int)
+    for token in model.wv.vocab:
+        vocab[token] = (model.wv.vocab[token].index, model.wv.vocab[token].sample_int)
 
     sentences = input_stream.next_batch()
 
-    cdef pair[unsigned long long, unsigned long long] word
+    cdef pair[ULongLong, ULongLong] word
     sentence_idx[0] = 0  # indices of the first sentence always start at 0
     for sent in sentences:
-        if not sent:
+        if sent.empty():
             continue  # ignore empty sentences; leave effective_sentences unchanged
         for token in sent:
-            if token not in vocab:
+            if vocab.find(token) == vocab.end():
                 continue # leaving `effective_words` unchanged = shortening the sentence = expanding the window
             word = vocab[token]
             if sample and word.second < random_int32(&next_random):
