@@ -19,7 +19,8 @@ from libc.string cimport memset, strtok
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 from libcpp cimport bool as bool_t
-
+from libcpp.unordered_map cimport unordered_map
+from libcpp.pair import pair
 
 # scipy <= 0.15
 try:
@@ -518,6 +519,9 @@ cpdef train_epoch_cbow(model, input_stream, alpha, _work, _neu1, compute_loss):
     # for sampling (negative and frequent-word downsampling)
     cdef unsigned long long next_random
 
+    # for preparing batches without Python GIL
+    cdef unordered_map[string, pair[unsigned long long, unsigned long long]] vocab
+
     if hs:
         syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
 
@@ -533,22 +537,25 @@ cpdef train_epoch_cbow(model, input_stream, alpha, _work, _neu1, compute_loss):
     neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
 
     # prepare C structures so we can go "full C" and release the Python GIL
-    vlookup = model.wv.vocab
+
+    for word in model.wv.vocab:
+        vocab[word] = (model.wv.vocab[word].index, model.wv.vocab[word].sample_int)
+
+    sentences = input_stream.next_batch()
+
+    cdef pair[unsigned long long, unsigned long long] word
     sentence_idx[0] = 0  # indices of the first sentence always start at 0
     for sent in sentences:
         if not sent:
             continue  # ignore empty sentences; leave effective_sentences unchanged
         for token in sent:
-            word = vlookup[token] if token in vlookup else None
-            if word is None:
-                continue  # leaving `effective_words` unchanged = shortening the sentence = expanding the window
-            if sample and word.sample_int < random_int32(&next_random):
+            if token not in vocab:
+                continue # leaving `effective_words` unchanged = shortening the sentence = expanding the window
+            word = vocab[token]
+            if sample and word.second < random_int32(&next_random):
                 continue
-            indexes[effective_words] = word.index
-            if hs:
-                codelens[effective_words] = <int>len(word.code)
-                codes[effective_words] = <np.uint8_t *>np.PyArray_DATA(word.code)
-                points[effective_words] = <np.uint32_t *>np.PyArray_DATA(word.point)
+            indexes[effective_words] = word.first
+
             effective_words += 1
             if effective_words == MAX_SENTENCE_LEN:
                 break  # TODO: log warning, tally overflow?
@@ -583,7 +590,7 @@ cpdef train_epoch_cbow(model, input_stream, alpha, _work, _neu1, compute_loss):
                 if negative:
                     next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random, word_locks, _compute_loss, &_running_training_loss)
 
-    return effective_words
+    return effective_words, effective_words  # return properly raw_tally as a second value (not tally)
 
 
 # Score is only implemented for hierarchical softmax
