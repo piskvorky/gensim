@@ -53,25 +53,23 @@ class DRMM_TKS(utils.SaveLoad):
 
     labels = [[0, 1],
               [1, 0, 0]]
+
     """
 
-    def __init__(self, queries, docs, labels, word_embedding_path=None,
-                 text_maxlen=200, keep_full_embedding=True, normalize_embeddings=True,
-                 epochs=10, unk_handle_method='zero', validation_data=None, topk=50,
-                 target_mode='ranking'):
+    def __init__(self, queries=None, docs=None, labels=None, word_embedding_path=None,
+                 text_maxlen=200, normalize_embeddings=True, epochs=10, unk_handle_method='zero',
+                 validation_data=None, topk=50, target_mode='ranking'):
         """Initializes the model and trains it
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         queries: list of list of string words
             The questions for the similarity learning model
             Example:
             queries=["When was World Wat 1 fought ?".split(),
                      "When was Gandhi born ?".split()],
-
         docs: list of list of list of string words
             The candidate answers for the similarity learning model
-
             Example:
             docs = [
                     ["The world war was bad".split(),
@@ -80,7 +78,6 @@ class DRMM_TKS(utils.SaveLoad):
                      "He fought for the Indian freedom movement".split(),
                      "Gandhi was assasinated".split()]
                    ]
-
         labels: list of list of ints
             Indicates when a candidate document is relevant to a query
             1 : relevant
@@ -89,40 +86,27 @@ class DRMM_TKS(utils.SaveLoad):
             Example:
             labels = [[0, 1],
                       [1, 0, 0]]
-
         word_embedding_path: str
             path to the Glove vectors which have the embeddings in a .txt format
             If unset, random word embeddings will be used
-
         text_maxlen: int
             The maximum possible length of a query or a document
             This is used for padding sentences.
-
-        keep_full_embedding: boolean
-            Whether the full embedding should be built or only the words in the dataset's vocab
-            This becomes important for checking validation and test sets
-
-        normalize_embeddings: boolean
+        normalize_embeddings: bool
             Whether the word embeddings provided should be normalized
-
         epochs: int
             The number of epochs for which the model should train on the data
-
-        unk_handle_method: string {'zero', 'random'}
+        unk_handle_method: {'zero', 'random'}
             The method for handling unkown words
             'zero': unknown words are given a zero vector
             'random': unknown words are given a uniformly random vector
-
         validation_data: list of the form [test_queries, test_docs, test_labels]
             where test_queries, test_docs  and test_labels are of the same form as
             their counter parts stated above
-
         topk: int
             the k topmost values in the interaction matrix between the queries and the docs
-
         target_mode: str {'ranking', 'classification'}
             the way the model should be trained, either to rank or classify
-
         """
         self.queries = queries
         self.docs = docs
@@ -132,7 +116,6 @@ class DRMM_TKS(utils.SaveLoad):
         self.topk = topk
         self.word_embedding_path = word_embedding_path
         self.word2index, self.index2word = {}, {}
-        self.keep_full_embedding = keep_full_embedding
         self.normalize_embeddings = normalize_embeddings
         self.model = None
         self.epochs = epochs
@@ -144,8 +127,7 @@ class DRMM_TKS(utils.SaveLoad):
                             self.target_mode)
 
         if unk_handle_method not in ['random', 'zero']:
-            raise ValueError("Unkown token handling method %s" %
-                             str(unk_handle_method))
+            raise ValueError("Unkown token handling method %s" % str(unk_handle_method))
         self.unk_handle_method = unk_handle_method
 
         self.build_vocab()
@@ -210,27 +192,24 @@ class DRMM_TKS(utils.SaveLoad):
                     (n_non_embedding_words, self.vocab_size, n_non_embedding_words * 100 / self.vocab_size,
                      self.unk_handle_method))
 
+        # Include embeddings for words in embedding file but not in the train vocab
+        # It will be useful for embedding words encountered in validation and test set
+        logger.info(
+            "Adding additional words from the embedding file to embedding matrix"
+        )
+
         # The point where vocab words end
         vocab_offset = self.vocab_size
-
-        if self.keep_full_embedding:
-            # Include embeddings for words in embedding file but not in the train vocab
-            # It will be useful for embedding words encountered in validation and test set
-            logger.info(
-                "Adding additional words from the embedding file to embedding matrix")
-            i = self.vocab_size
-            extra_embeddings = []
-            # Take the words in the embedding file which aren't there int the train vocab
-            for word in list(kv_model.vocab):
-                if word not in self.word2index:
-                    # Add the new word's vector and index it
-                    extra_embeddings.append(kv_model[word])
-                    # We also need to keep an additional indexing of these
-                    # words
-                    self.word2index[word] = i
-                    i += 1
-
-            vocab_offset = i
+        extra_embeddings = []
+        # Take the words in the embedding file which aren't there int the train vocab
+        for word in list(kv_model.vocab):
+            if word not in self.word2index:
+                # Add the new word's vector and index it
+                extra_embeddings.append(kv_model[word])
+                # We also need to keep an additional indexing of these
+                # words
+                self.word2index[word] = vocab_offset
+                vocab_offset += 1
 
         # Set the pad and unk word to second last and last index
         self.pad_word_index = vocab_offset
@@ -245,13 +224,10 @@ class DRMM_TKS(utils.SaveLoad):
         pad_embedding_row = np.random.uniform(-0.2,
                                               0.2, (1, self.embedding_dim))
 
-        if self.keep_full_embedding:
-            self.embedding_matrix = np.vstack(
-                [self.embedding_matrix, np.array(extra_embeddings),
-                 pad_embedding_row, unk_embedding_row])
-        else:
-            self.embedding_matrix = np.vstack(
-                [self.embedding_matrix, pad_embedding_row, unk_embedding_row])
+        self.embedding_matrix = np.vstack(
+            [self.embedding_matrix, np.array(extra_embeddings),
+             pad_embedding_row, unk_embedding_row]
+        )
 
         if self.normalize_embeddings:
             logger.info("Normalizing the word embeddings")
@@ -265,11 +241,11 @@ class DRMM_TKS(utils.SaveLoad):
         logger.info("Embedding index build complete")
 
     def _make_indexed(self, sentence):
-        """Returns the indexed version of the sentence based on self.word2index
+        """Gets the indexed version of the sentence based on self.word2index
         in the form of a list
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sentence list of str
             The sentence to be indexed
 
@@ -279,12 +255,11 @@ class DRMM_TKS(utils.SaveLoad):
         """
         indexed_sent = [self.word2index[word] for word in sentence]
         if len(indexed_sent) > self.text_maxlen:
-            raise ValueError("text_maxlen: %d isn't big enough."
-                             "Error at sentence of length %d. Sentence is %s" %
-                             (self.text_maxlen, len(sentence), sentence))
-
-        indexed_sent = indexed_sent + \
-            [self.pad_word_index] * (self.text_maxlen - len(indexed_sent))
+            raise ValueError(
+                "text_maxlen: %d isn't big enough. Error at sentence of length %d."
+                "Sentence is %s" % (self.text_maxlen, len(sentence), sentence)
+            )
+        indexed_sent = indexed_sent + [self.pad_word_index] * (self.text_maxlen - len(indexed_sent))
         return indexed_sent
 
     def get_full_batch(self):
@@ -323,7 +298,7 @@ class DRMM_TKS(utils.SaveLoad):
         return X1, X2, y
 
     def _get_pair_list(self):
-        """Returns a list with query document pairs in the format
+        """Gets a list with query document pairs in the format
         (query, positive_doc, negative_doc)
 
         Example output:
@@ -363,11 +338,11 @@ class DRMM_TKS(utils.SaveLoad):
     def _make_indexed_pair_list(self):
         """Converts the existing word based pair list into an indexed format
 
-        Note: pair_list needs to be first created using _get_pair_list"""
+        Note: pair_list needs to be first created using :meth:`~gensim.models.experimental.DRMM_TKS._get_pair_list"""
+
         indexed_pair_list = []
         for q, d_pos, d_neg in self.pair_list:
-            indexed_pair_list.append([self._make_indexed(q),
-                                      self._make_indexed(d_pos), self._make_indexed(d_neg)])
+            indexed_pair_list.append([self._make_indexed(q), self._make_indexed(d_pos), self._make_indexed(d_neg)])
         return indexed_pair_list
 
     def train(self):
@@ -418,7 +393,7 @@ class DRMM_TKS(utils.SaveLoad):
         """Translates given user data (as a list of words) into an indexed
         format which the model understands
 
-        Parameters:
+        Parameters
         ----------
         data: list of list of string words
             The data to be tranlsated
@@ -441,10 +416,10 @@ class DRMM_TKS(utils.SaveLoad):
                     translated_sentence.append(self.unk_word_index)
                     n_skipped_words += 1
             if len(sentence) > self.text_maxlen:
-                logger.info("text_maxlen: %d isn't big enough. Error at sentence of length %d. Sentence is %s" % (
-                    self.text_maxlen, len(sentence), str(sentence)))
-            translated_sentence = translated_sentence + \
-                (self.text_maxlen - len(sentence)) * [self.pad_word_index]
+                logger.info("text_maxlen: %d isn't big enough. Error at sentence of length %d."
+                    "Sentence is %s" % (self.text_maxlen, len(sentence), str(sentence))
+                )
+            translated_sentence = translated_sentence + (self.text_maxlen - len(sentence)) * [self.pad_word_index]
             translated_data.append(np.array(translated_sentence))
 
         logger.info("Found %d unknown words. Set them to unknown word index : %d" %
@@ -454,18 +429,14 @@ class DRMM_TKS(utils.SaveLoad):
     def predict(self, queries, docs):
         """Predcits on the input paramters using the trained model
 
-        Parameters:
-        -----------
+        Parameters        ----------
         queries: list of list of string words
             The questions for the similarity learning model
-
             Example:
             queries=["When was World Wat 1 fought ?".split(),
                      "When was Gandhi born ?".split()],
-
         docs: list of list of list of string words
             The candidate answers for the similarity learning model
-
             Example:
             docs = [
                     ["The world war was bad".split(),
@@ -495,8 +466,7 @@ class DRMM_TKS(utils.SaveLoad):
         """Save the model. This saved model can be loaded again using :func:`~gensim.models.word2vec.Word2Vec.load`,
         which supports online training and getting vectors for vocabulary words.
 
-        Parameters
-        ----------
+        Parameters        ----------
         fname : str
             Path to the file.
 
@@ -511,8 +481,7 @@ class DRMM_TKS(utils.SaveLoad):
     def load(cls, *args, **kwargs):
         """Loads a previously saved `DRMM TKS` model. Also see `save()`.
 
-        Parameters
-        ----------
+        Parameters        ----------
         fname : str
             Path to the saved file.
 
@@ -545,9 +514,9 @@ class DRMM_TKS(utils.SaveLoad):
         
         On predicting, the model returns the score list between queries and documents.
 
-        Parameters:
+        Parameters
         ----------
-        embed_trainable: boolean
+        embed_trainable: bool
             Whether the embeddings should be trained
             if True, the embeddings are trianed
         dropout_rate: float between 0 and 1

@@ -13,10 +13,10 @@ class TopKLayer(Layer):
 
     def __init__(self, output_dim, topk, **kwargs):
         """
-        Parameters:
+        Parameters
         ----------
-        output_dim : The dimension of the tensor after going through this layer
-
+        output_dim : tuple of ints
+            The dimension of the tensor after going through this layer
         topk : int
             The k topmost values to be returned"""
         self.output_dim = output_dim

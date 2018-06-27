@@ -11,8 +11,24 @@ logging.basicConfig(
 
 
 class ValidationCallback(Callback):
-
+    """Callback for providing validation metrics on the model trained so far"""
     def __init__(self, test_data):
+        """
+        Parameters
+        ----------
+        test_data: dict
+            A dictionary which holds the validation data
+            It consists of the following keys:
+                "X1" : The queries as a numpy array of shape (n_samples, text_maxlen)
+                "X2" : The candidate docs as a numpy array of shape (n_samples, text_maxlen)
+                "y" : List of ints 
+                      It is the labels for each of the query-doc pairs as a 1 or 0 with shape (n_samples,)
+                      where 1: doc is relevant to query
+                            0: doc is not relevant to query
+                "doc_lengths" : list of ints
+                                It contains the length of each document group. I.e., the number of queries
+                                which represent one topic. It is needed for calculating the metrics.
+        """
         if not KERAS_AVAILABLE:
             raise ImportError("Please install Keras to use this class")
 
@@ -37,6 +53,6 @@ class ValidationCallback(Callback):
             Y_true.append(y[offset: offset + doc_size])
             offset += doc_size
 
-        logger.info("MAP: {}".format(mapk(Y_true, Y_pred)))
+        logger.info("MAP: %.2f", mapk(Y_true, Y_pred))
         for k in [1, 3, 5, 10, 20]:
-            logger.info("nDCG@{} : {}".format(str(k), mean_ndcg(Y_true, Y_pred, k=k)))
+            logger.info("nDCG@%d : %.2f", k, mean_ndcg(Y_true, Y_pred, k=k))

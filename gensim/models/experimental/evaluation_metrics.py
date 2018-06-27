@@ -12,15 +12,14 @@ def mapk(Y_true, Y_pred):
     Note: Currently doesn't support mapping at k. Couldn't use only map as it's a
     reserved word
 
-    parameters:
-    ===========
+    Parameters
+    ----------
     Y_true : numpy array of ints either 1 or 0
         Contains the true, ground truth values of the queries
         Example: [[0, 1, 0, 1],
                   [0, 0, 0, 0, 1, 0],
                   [0, 1, 0]
                  ]
-
     Y_pred : numpy array of floats between -1 and 1
         Contains the predicted cosine similarity values of the queries
         Example: [
@@ -60,8 +59,8 @@ def mean_ndcg(Y_true, Y_pred, k=10):
     """Calculates the mean discounted normalized cumulative gain over all
     the entries limited to the integer k
 
-    parameters:
-    ===========
+    Parameters
+    ----------
     Y_true : numpy array of floats giving the rank of document for a given query
         Contains the true, ground truth values of the queries
         Example: [
@@ -69,7 +68,6 @@ def mean_ndcg(Y_true, Y_pred, k=10):
                   [0, 0, 0, 0, 1, 0],
                   [0, 1, 0]
                  ]
-
     Y_pred : numpy array of floats between -1 and 1
         Contains the predicted cosine similarity values of the queries
         Example: [[0.1, , -0.01, 0.4],
