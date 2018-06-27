@@ -301,10 +301,12 @@ class TfidfModel(interfaces.TransformationABC):
             Only when `pivot` is not None will pivoted document length normalization be applied.
             Otherwise, regular TfIdf is used.
         slope : float, optional
-            Parameter required by pivoted document length normalization which determines the slope to which
-            the `old normalization` can be tilted. This parameter only works when pivot is defined.
+            It is the parameter required by pivoted document length normalization which determines the slope to which
+            the `old normalization` can be tilted. This parameter only works when pivot is defined by user and is not
+            None.
 
         """
+
         self.id2word = id2word
         self.wlocal, self.wglobal, self.normalize = wlocal, wglobal, normalize
         self.num_docs, self.num_nnz, self.idfs = None, None, None

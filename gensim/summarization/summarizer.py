@@ -322,14 +322,15 @@ def _build_hasheable_corpus(corpus):
 
 
 def summarize_corpus(corpus, ratio=0.2):
-    """Get a list of the most important documents of a corpus using a variation of the TextRank algorithm [1]_.
-     Used as helper for summarize :func:`~gensim.summarization.summarizer.summarizer`
+    """Get a list of the most important documents of a corpus using a
+    variation of the `TextRank algorithm<https://arxiv.org/abs/1602.03606>`.
 
-    Note
-    ----
+    Used as helper for summarize :func:`~gensim.summarization.summarizer.summarizer`
+
+    Notes
+    -----
     The input must have at least :const:`~gensim.summarization.summarizer.INPUT_MIN_LENGTH` documents for the summary
     to make sense.
-
 
     Parameters
     ----------
@@ -343,6 +344,12 @@ def summarize_corpus(corpus, ratio=0.2):
     -------
     list of str
         Most important documents of given `corpus` sorted by the document score, highest first.
+
+    References
+    ----------
+    .. [] Federico Barrios, Federico L´opez, Luis Argerich, Rosita Wachenchauzer (2016).
+       Variations of the Similarity Function of TextRank for Automated Summarization,
+       https://arxiv.org/abs/1602.03606
 
     """
     hashable_corpus = _build_hasheable_corpus(corpus)

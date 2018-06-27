@@ -1,4 +1,6 @@
-"""This package contains functions to preprocess raw text"""
+"""
+Raw text preprocessing.
+"""
 
 from .porter import PorterStemmer  # noqa:F401
 from .preprocessing import (remove_stopwords, strip_punctuation, strip_punctuation2,  # noqa:F401

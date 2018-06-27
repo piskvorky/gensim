@@ -1,7 +1,4 @@
-"""
-This package contains algorithms for extracting document representations from their raw
-bag-of-word counts.
-"""
+"""Documents and words representations."""
 
 # bring model classes directly into package namespace, to save some typing
 from .coherencemodel import CoherenceModel  # noqa:F401

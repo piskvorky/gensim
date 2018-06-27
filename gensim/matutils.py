@@ -239,7 +239,7 @@ def ismatrix(m):
 
 
 def any2sparse(vec, eps=1e-9):
-    """Convert a numpy.ndarray or `scipy.sparse` vector into the Gensim bag-of-words format.
+    """Convert a `numpy.ndarray` or `scipy.sparse` vector into the Gensim bag-of-words format.
 
     Parameters
     ----------
@@ -316,7 +316,7 @@ def scipy2scipy_clipped(matrix, topn, eps=1e-9):
 
 
 def scipy2sparse(vec, eps=1e-9):
-    """Convert a scipy.sparse vector into the Gensim bag-of-words format.
+    """Convert a `scipy.sparse` vector into the Gensim bag-of-words format.
 
     Parameters
     ----------
@@ -551,7 +551,7 @@ class Dense2Corpus(object):
 
 
 class Sparse2Corpus(object):
-    """Convert a matrix in scipy.sparse format into a streaming Gensim corpus.
+    """Convert a matrix in `scipy.sparse` format into a streaming Gensim corpus.
 
     See Also
     --------
@@ -655,6 +655,8 @@ def ret_normalized_vec(vec, length):
 
 
 def ret_log_normalize_vec(vec, axis=1):
+    #TODO: Write docstring
+
     log_max = 100.0
     if len(vec.shape) == 1:
         max_val = np.max(vec)

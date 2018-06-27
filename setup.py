@@ -274,7 +274,7 @@ setup(
 
     url='http://radimrehurek.com/gensim',
     download_url='http://pypi.python.org/pypi/gensim',
-    
+
     license='LGPLv2.1',
 
     keywords='Singular Value Decomposition, SVD, Latent Semantic Indexing, '
@@ -315,7 +315,15 @@ setup(
         'distributed': distributed_env,
         'test-win': win_testenv,
         'test': linux_testenv,
-        'docs': linux_testenv + distributed_env + ['sphinx', 'sphinxcontrib-napoleon', 'plotly', 'pattern', 'sphinxcontrib.programoutput'],
+        'docs': linux_testenv + distributed_env + [
+            'sphinx',
+            'sphinxcontrib-napoleon',
+            'plotly', 'pattern',
+            'sphinx_gallery',
+            'matplotlib',
+            'sphinxcontrib.programoutput',
+            'pillow'
+        ],
     },
 
     include_package_data=True,

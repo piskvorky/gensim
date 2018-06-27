@@ -9,3 +9,5 @@
    support
    wiki
    apiref
+   apiref_legacy
+   user_guide
