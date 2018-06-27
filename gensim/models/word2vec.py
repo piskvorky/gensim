@@ -118,6 +118,8 @@ from gensim.utils import keep_vocab_item, call_on_class_only
 from gensim.models.keyedvectors import Vocab, Word2VecKeyedVectors
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 
+from gensim.models.word2vec_inner import CythonLineSentence
+
 try:
     from queue import Queue, Empty
 except ImportError:
@@ -534,18 +536,42 @@ class Word2Vec(BaseWordEmbeddingsModel):
             seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, compute_loss=compute_loss,
             fast_version=FAST_VERSION)
 
-    def _do_train_job(self, sentences, alpha, inits):
-        """
-        Train a single batch of sentences. Return 2-tuple `(effective word count after
-        ignoring unknown words and sentence length trimming, total word count)`.
-        """
-        work, neu1 = inits
-        tally = 0
-        if self.sg:
-            tally += train_batch_sg(self, sentences, alpha, work, self.compute_loss)
-        else:
-            tally += train_batch_cbow(self, sentences, alpha, work, neu1, self.compute_loss)
-        return tally, self._raw_word_count(sentences)
+    # def _do_train_job(self, sentences, alpha, inits):
+    #     """
+    #     Train a single batch of sentences. Return 2-tuple `(effective word count after
+    #     ignoring unknown words and sentence length trimming, total word count)`.
+    #     """
+    #     work, neu1 = inits
+    #     tally = train_batch_cbow(self, sentences, alpha, work, neu1, self.compute_loss)
+    #     return tally, self._raw_word_count(sentences)
+
+    def _worker_loop(self, fname, progress_queue):
+        work, neu1 = self._get_thread_working_mem()
+        jobs_processed = 0
+        alpha = self._get_job_params(0)
+        input_stream = CythonLineSentence(fname)
+        while True:
+            if not input_stream.is_eof:
+                # Prepare batch with NO GIL
+                data_iterable = input_stream.next_batch()
+            else:
+                break
+
+            for callback in self.callbacks:
+                callback.on_batch_begin(self)
+
+            # No GIL (almost) (_do_train_job)
+            tally = train_batch_cbow(self, data_iterable, alpha, work, neu1, False)
+            raw_tally = self._raw_word_count(data_iterable)
+
+            for callback in self.callbacks:
+                callback.on_batch_end(self)
+
+            progress_queue.put((len(data_iterable), tally, raw_tally))  # report back progress
+            jobs_processed += 1
+
+        progress_queue.put(None)
+        logger.debug("worker exiting, processed %i jobs", jobs_processed)
 
     def _clear_post_train(self):
         """Resets certain properties of the model, post training."""

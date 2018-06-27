@@ -61,6 +61,7 @@ cdef class CythonLineSentence:
     cdef public string source
     cdef public int max_sentence_length, max_words_in_batch
     cdef vector[string] buf_data
+    cdef public bool_t is_eof
 
     def __cinit__(self, source, max_sentence_length=MAX_SENTENCE_LEN):
         self._thisptr = new FastLineSentence(source)
@@ -69,6 +70,7 @@ cdef class CythonLineSentence:
         self.source = source
         self.max_sentence_length = max_sentence_length  # isn't used in this hacky prototype
         self.max_words_in_batch = MAX_SENTENCE_LEN
+        self.is_eof = False
 
     def __dealloc__(self):
         if self._thisptr != NULL:
@@ -106,6 +108,9 @@ cdef class CythonLineSentence:
 
         # Save data which doesn't fit in batch in order to return it later.
         buf_data = data
+
+        if self._thisptr.IsEof():
+            self.is_eof = True
 
         return job_batch
 
