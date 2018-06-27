@@ -37,6 +37,8 @@ extensions = [
 ]
 autoclass_content = "both"
 
+napoleon_google_docstring = False  # Disable support for google-style docstring
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
