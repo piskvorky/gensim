@@ -8,8 +8,8 @@ FastLineSentence::FastLineSentence(const std::string& filename) : fs_(filename),
 
 std::vector<std::string> FastLineSentence::ReadSentence() {
     if (fs_.eof()) {
-        if_eof_ = true;
-        return {}
+        is_eof_ = true;
+        return {};
     }
 	std::string line, word;
 	std::getline(fs_, line);
