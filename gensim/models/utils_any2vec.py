@@ -4,7 +4,7 @@
 # Author: Shiva Manne <s.manne@rare-technologies.com>
 # Copyright (C) 2018 RaRe Technologies s.r.o.
 
-"""This module contains various general functions useful for any2vec models."""
+"""General functions used for any2vec models."""
 
 import logging
 import numpy as np
@@ -17,57 +17,62 @@ from six import iteritems
 
 logger = logging.getLogger(__name__)
 
+try:
+    from gensim.models._utils_any2vec import ft_hash as _ft_hash, compute_ngrams as _compute_ngrams
+except ImportError:
+    FAST_VERSION = -1
 
-def _compute_ngrams(word, min_n, max_n):
-    """Returns the list of all possible ngrams for a given word.
+    # failed... fall back to plain python
+    def _ft_hash(string):
+        """Calculate hash based on `string`.
+        Reproduce `hash method from Facebook fastText implementation
+        <https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc>`_.
 
-    Parameters
-    ----------
-    word : str
-        The word whose ngrams need to be computed
-    min_n : int
-        minimum character length of the ngrams
-    max_n : int
-        maximum character length of the ngrams
+        Parameters
+        ----------
+        string : str
+            The string whose hash needs to be calculated.
 
-    Returns
-    -------
-    :obj:`list` of :obj:`str`
-        List of character ngrams
+        Returns
+        -------
+        int
+            The hash of the string.
 
-    """
-    BOW, EOW = ('<', '>')  # Used by FastText to attach to all words as prefix and suffix
-    extended_word = BOW + word + EOW
-    ngrams = []
-    for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
-        for i in range(0, len(extended_word) - ngram_length + 1):
-            ngrams.append(extended_word[i:i + ngram_length])
-    return ngrams
+        """
+        # Runtime warnings for integer overflow are raised, this is expected behaviour. These warnings are suppressed.
+        old_settings = np.seterr(all='ignore')
+        h = np.uint32(2166136261)
+        for c in string:
+            h = h ^ np.uint32(ord(c))
+            h = h * np.uint32(16777619)
+        np.seterr(**old_settings)
+        return h
 
+    def _compute_ngrams(word, min_n, max_n):
+        """Get the list of all possible ngrams for a given word.
 
-def _ft_hash(string):
-    """Reproduces [hash method](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
-    used in [1]_.
+        Parameters
+        ----------
+        word : str
+            The word whose ngrams need to be computed.
+        min_n : int
+            Minimum character length of the ngrams.
+        max_n : int
+            Maximum character length of the ngrams.
 
-    Parameter
-    ---------
-    string : str
-        The string whose hash needs to be calculated
+        Returns
+        -------
+        list of str
+            Sequence of character ngrams.
 
-    Returns
-    -------
-    int
-        The hash of the string
-
-    """
-    # Runtime warnings for integer overflow are raised, this is expected behaviour. These warnings are suppressed.
-    old_settings = np.seterr(all='ignore')
-    h = np.uint32(2166136261)
-    for c in string:
-        h = h ^ np.uint32(ord(c))
-        h = h * np.uint32(16777619)
-    np.seterr(**old_settings)
-    return h
+        """
+        BOW, EOW = ('<', '>')  # Used by FastText to attach to all words as prefix and suffix
+        extended_word = BOW + word + EOW
+        ngrams = []
+        for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
+            for i in range(0, len(extended_word) - ngram_length + 1):
+                ngrams.append(extended_word[i:i + ngram_length])
+        return ngrams
 
 
 def _save_word2vec_format(fname, vocab, vectors, fvocab=None, binary=False, total_vec=None):
@@ -77,18 +82,18 @@ def _save_word2vec_format(fname, vocab, vectors, fvocab=None, binary=False, tota
         Parameters
         ----------
         fname : str
-            The file path used to save the vectors in
+            The file path used to save the vectors in.
         vocab : dict
-            The vocabulary of words
+            The vocabulary of words.
         vectors : numpy.array
-            The vectors to be stored
-        fvocab : str
-            Optional file path used to save the vocabulary
-        binary : bool
+            The vectors to be stored.
+        fvocab : str, optional
+            File path used to save the vocabulary.
+        binary : bool, optional
             If True, the data wil be saved in binary word2vec format, else it will be saved in plain text.
-        total_vec :  int
-            Optional parameter to explicitly specify total no. of vectors
-            (in case word vectors are appended with document vectors afterwards)
+        total_vec : int, optional
+            Explicitly specify total number of vectors
+            (in case word vectors are appended with document vectors afterwards).
 
         """
         if not (vocab or vectors):
@@ -127,31 +132,29 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
     ----------
     fname : str
         The file path to the saved word2vec-format file.
-    fvocab : str
-            Optional file path to the vocabulary.Word counts are read from `fvocab` filename,
-            if set (this is the file generated by `-save-vocab` flag of the original C tool).
-    binary : bool
+    fvocab : str, optional
+        File path to the vocabulary.Word counts are read from `fvocab` filename, if set
+        (this is the file generated by `-save-vocab` flag of the original C tool).
+    binary : bool, optional
         If True, indicates whether the data is in binary word2vec format.
-    encoding : str
-        If you trained the C model using non-utf8 encoding for words, specify that
-        encoding in `encoding`.
-    unicode_errors : str
+    encoding : str, optional
+        If you trained the C model using non-utf8 encoding for words, specify that encoding in `encoding`.
+    unicode_errors : str, optional
         default 'strict', is a string suitable to be passed as the `errors`
         argument to the unicode() (Python 2.x) or str() (Python 3.x) function. If your source
         file may include word tokens truncated in the middle of a multibyte unicode character
         (as is common from the original word2vec.c tool), 'ignore' or 'replace' may help.
-    limit : int
+    limit : int, optional
         Sets a maximum number of word-vectors to read from the file. The default,
         None, means read all.
-    datatype : :class: `numpy.float*`
-        (Experimental) Can coerce dimensions to a non-default float type (such
-        as np.float16) to save memory. (Such types may result in much slower bulk operations
-        or incompatibility with optimized routines.)
+    datatype : type, optional
+        (Experimental) Can coerce dimensions to a non-default float type (such as `np.float16`) to save memory.
+        Such types may result in much slower bulk operations or incompatibility with optimized routines.)
 
     Returns
     -------
-    :obj: `cls`
-        Returns the loaded model as an instance of :class: `cls`.
+    object
+        Returns the loaded model as an instance of :class:`cls`.
 
     """
     from gensim.models.keyedvectors import Vocab

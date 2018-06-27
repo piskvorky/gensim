@@ -4,9 +4,10 @@
 # Copyright (C) 2013 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""Computing similarities across a collection of documents in the Vector Space Model.
+"""Compute similarities across a collection of documents in the Vector Space Model.
 
-The main class is :class:`~gensim.similarity.docsim.Similarity`, which builds an index for a given set of documents.
+The main class is :class:`~gensim.similarities.docsim.Similarity`, which builds an index for a given set of documents.
+
 Once the index is built, you can perform efficient queries like "Tell me how similar is this query document to each
 document in the index?". The result is a vector of numbers as large as the size of the initial set of documents,
 that is, one float for each index document. Alternatively, you can also request only the top-N most
@@ -15,13 +16,15 @@ similar index documents to the query.
 
 How It Works
 ------------
-The :class:`~gensim.similarity.docsim.Similarity` class splits the index into several smaller sub-indexes ("shards"),
-which are disk-based. If your entire index fits in memory (~hundreds of thousands documents for 1GB of RAM),
-you can also use the :class:`~gensim.similarity.docsim.MatrixSimilarity`
-or :class:`~gensim.similarity.docsim.SparseMatrixSimilarity` classes directly.
-These are more simple but do not scale as well (they keep the entire index in RAM, no sharding).
+The :class:`~gensim.similarities.docsim.Similarity` class splits the index into several smaller sub-indexes ("shards"),
+which are disk-based. If your entire index fits in memory (~one million documents per 1GB of RAM),
+you can also use the :class:`~gensim.similarities.docsim.MatrixSimilarity`
+or :class:`~gensim.similarities.docsim.SparseMatrixSimilarity` classes directly.
+These are more simple but do not scale as well: they keep the entire index in RAM, no sharding. They also do not
+support adding new document to the index dynamically.
 
-Once the index has been initialized, you can query for document similarity simply by:
+Once the index has been initialized, you can query for document similarity simply by
+
 >>> from gensim.test.utils import common_corpus, common_dictionary, get_tmpfile
 >>>
 >>> index_tmpfile = get_tmpfile("index")
@@ -30,7 +33,7 @@ Once the index has been initialized, you can query for document similarity simpl
 >>> index = Similarity(index_tmpfile, common_corpus, num_features=len(common_dictionary)) # build the index
 >>> similarities = index[query] # get similarities between the query and all index documents
 
-If you have more query documents, you can submit them all at once, in a batch:
+If you have more query documents, you can submit them all at once, in a batch
 
 >>> from gensim.test.utils import common_corpus, common_dictionary, get_tmpfile
 >>>
@@ -41,12 +44,12 @@ If you have more query documents, you can submit them all at once, in a batch:
 >>> for similarities in index[batch_of_documents]: # the batch is simply an iterable of documents, aka gensim corpus.
 ...     pass
 
-The benefit of this batch (aka "chunked") querying is much better performance.
+The benefit of this batch (aka "chunked") querying is a much better performance.
 To see the speed-up on your machine, run ``python -m gensim.test.simspeed``
 (compare to my results `here <http://groups.google.com/group/gensim/msg/4f6f171a869e4fca?>`_).
 
 There is also a special syntax for when you need similarity of documents in the index
-to the index itself (i.e. queries=indexed documents themselves). This special syntax
+to the index itself (i.e. queries = the indexed documents themselves). This special syntax
 uses the faster, batch queries internally and **is ideal for all-vs-all pairwise similarities**:
 
 >>> from gensim.test.utils import common_corpus, common_dictionary, get_tmpfile
@@ -58,6 +61,7 @@ uses the faster, batch queries internally and **is ideal for all-vs-all pairwise
 ...     pass
 
 """
+
 import logging
 import itertools
 import os
@@ -88,9 +92,9 @@ class Shard(utils.SaveLoad):
     :class:`~gensim.similarities.docsim.SparseMatrixSimilarity`, etc, so that it mmaps from disk on request (query).
 
     """
-
     def __init__(self, fname, index):
         """
+
         Parameters
         ----------
         fname : str
@@ -171,7 +175,6 @@ class Shard(utils.SaveLoad):
         The vector is of the same type as the underlying index (ie., dense for
         :class:`~gensim.similarities.docsim.MatrixSimilarity`
         and scipy.sparse for :class:`~gensim.similarities.docsim.SparseMatrixSimilarity`.
-        TODO: Can dense be scipy.sparse?
 
         """
         assert 0 <= pos < len(self), "requested position out of range"
@@ -212,10 +215,8 @@ def query_shard(args):
 
     Returns
     -------
-    :class:`numpy.ndarray`
-        Similarities of document/corpus if index is :class:`~gensim.similarities.docsim.MatrixSimilarity` **or**
-    :class:`scipy.sparse.csr_matrix`
-        for case if index is :class:`~gensim.similarities.docsim.SparseMatrixSimilarity`.
+    :class:`numpy.ndarray` or :class:`scipy.sparse.csr_matrix`
+        Similarities of the query against documents indexed in this shard.
 
     """
     query, shard = args  # simulate starmap (not part of multiprocessing in older Pythons)
@@ -226,14 +227,14 @@ def query_shard(args):
 
 
 class Similarity(interfaces.SimilarityABC):
-    """Compute cosine similarity of a dynamic query against a static corpus of documents ('the index').
+    """Compute cosine similarity of a dynamic query against a corpus of documents ('the index').
+
+    The index supports adding new documents dynamically.
 
     Notes
     -----
     Scalability is achieved by sharding the index into smaller pieces, each of which fits into core memory
     The shards themselves are simply stored as files to disk and mmap'ed back as needed.
-
-
 
     Examples
     --------
@@ -276,31 +277,34 @@ class Similarity(interfaces.SimilarityABC):
         Parameters
         ----------
         output_prefix : str
-            Prefix for shard filename. If None - random filename in temp will be used.
+            Prefix for shard filename. If None, a random filename in temp will be used.
         corpus : iterable of list of (int, number)
-            Corpus in BoW format.
+            Corpus in streamed Gensim bag-of-words format.
         num_features : int
             Size of the dictionary (number of features).
         num_best : int, optional
             If set, return only the `num_best` most similar documents, always leaving out documents with similarity = 0.
             Otherwise, return a full vector with one float for every document in the index.
         chunksize : int, optional
-            Size of block.
+            Size of query chunks. Used internally when the query is an entire corpus.
         shardsize : int, optional
-            Size of shards should be chosen so that a `shardsize x chunksize` matrix of floats fits comfortably
-            into memory.
+            Maximum shard size, in documents. Choose a value so that a `shardsize x chunksize` matrix of floats fits
+            comfortably into your RAM.
         norm : {'l1', 'l2'}, optional
             Normalization to use.
 
         Notes
-        ------------
-        Documents are split (internally, transparently) into shards of `shardsize` documents each, converted to matrix,
-        for faster BLAS calls. Each shard is stored to disk under `output_prefix.shard_number`.
+        -----
+        Documents are split (internally, transparently) into shards of `shardsize` documents each, and each shard
+        converted to a matrix, for faster BLAS calls. Each shard is stored to disk under `output_prefix.shard_number`.
+
         If you don't specify an output prefix, a random filename in temp will be used.
-        If your entire index fits in memory (~hundreds of thousands
-        documents for 1GB of RAM), you can also use the :class:`~gensim.similarities.docsim.MatrixSimilarity`
-        or :class:`~gensim.similarities.docsim.SparseMatrixSimilarity` classes directly. These are more simple
-        but do not scale as well (they keep the entire index in RAM, no sharding).
+
+        If your entire index fits in memory (~1 million documents per 1GB of RAM), you can also use the
+        :class:`~gensim.similarities.docsim.MatrixSimilarity` or
+        :class:`~gensim.similarities.docsim.SparseMatrixSimilarity` classes directly.
+        These are more simple but do not scale as well (they keep the entire index in RAM, no sharding).
+        They also do not support adding new document dynamically.
 
         """
         if output_prefix is None:
@@ -427,7 +431,7 @@ class Similarity(interfaces.SimilarityABC):
         self.fresh_docs, self.fresh_nnz = [], 0
 
     def reopen_shard(self):
-        """Reopen incomplete shard."""
+        """Reopen an incomplete shard."""
         assert self.shards
         if self.fresh_docs:
             raise ValueError("cannot reopen a shard with fresh documents in index")
@@ -441,25 +445,24 @@ class Similarity(interfaces.SimilarityABC):
         logger.debug("reopen complete")
 
     def query_shards(self, query):
-        """Applying shard[query] for each shard in `self.shards`, as a sequence.
+        """Apply shard[query] to each shard in `self.shards`. Used internally.
 
         Parameters
         ----------
         query : {iterable of list of (int, number) , list of (int, number))}
             Document in BoW format or corpus of documents.
 
-
         Returns
         -------
-        (None, list of ...)
-            Result of search.
+        (None, list of individual shard query results)
+            Query results.
 
         """
         args = zip([query] * len(self.shards), self.shards)
         if PARALLEL_SHARDS and PARALLEL_SHARDS > 1:
             logger.debug("spawning %i query processes", PARALLEL_SHARDS)
             pool = multiprocessing.Pool(PARALLEL_SHARDS)
-            result = pool.imap(query_shard, args, chunksize=1 + len(args) / PARALLEL_SHARDS)
+            result = pool.imap(query_shard, args, chunksize=1 + len(list(args)) / PARALLEL_SHARDS)
         else:
             # serial processing, one shard after another
             pool = None
@@ -467,19 +470,17 @@ class Similarity(interfaces.SimilarityABC):
         return pool, result
 
     def __getitem__(self, query):
-        """Get similarities of document (or corpus) `query` to all documents in the corpus.
+        """Get similarities of the document (or corpus) `query` to all documents in the corpus.
 
         Parameters
         ----------
         query : {iterable of list of (int, number) , list of (int, number))}
-            Corpus or document of corpus.
+            A single document in bag-of-words format, or a corpus (iterable) of such documents.
 
         Return
         ------
-        :class:`numpy.ndarray`
-            Similarities of document/corpus if index is :class:`~gensim.similarities.docsim.MatrixSimilarity` **or**
-        :class:`scipy.sparse.csr_matrix`
-            for case if index is :class:`~gensim.similarities.docsim.SparseMatrixSimilarity`.
+        :class:`numpy.ndarray` or :class:`scipy.sparse.csr_matrix`
+            Similarities of the query against this index.
 
         Notes
         -----
@@ -496,7 +497,7 @@ class Similarity(interfaces.SimilarityABC):
         >>>
         >>> corpus = TextCorpus(datapath('testcorpus.txt'))
         >>> index = Similarity('temp', corpus, num_features=400)
-        >>> result = index[corpus]  # similarities matrix
+        >>> result = index[corpus]  # pairwise similarities of each document against each document
 
         """
         self.close_shard()  # no-op if no documents added to index since last query
@@ -547,7 +548,7 @@ class Similarity(interfaces.SimilarityABC):
         return result
 
     def vector_by_id(self, docpos):
-        """Get indexed vector corresponding to the document at position `docpos`.
+        """Get the indexed vector corresponding to the document at position `docpos`.
 
         Parameters
         ----------
@@ -557,7 +558,7 @@ class Similarity(interfaces.SimilarityABC):
         Return
         ------
         :class:`scipy.sparse.csr_matrix`
-            Indexed vector, internal type depends on underlying index.
+            Indexed vector.
 
         Examples
         --------
@@ -584,19 +585,17 @@ class Similarity(interfaces.SimilarityABC):
         return result
 
     def similarity_by_id(self, docpos):
-        """Get similarity of the given document only by `docpos`.
+        """Get similarity of a document specified by its index position `docpos`.
 
         Parameters
         ----------
         docpos : int
-            Document position in index
+            Document position in the index.
 
         Return
         ------
-        :class:`numpy.ndarray`
-            Similarities of document/corpus if index is :class:`~gensim.similarities.docsim.MatrixSimilarity` **or**
-        :class:`scipy.sparse.csr_matrix`
-            for case if index is :class:`~gensim.similarities.docsim.SparseMatrixSimilarity`.
+        :class:`numpy.ndarray` or :class:`scipy.sparse.csr_matrix`
+            Similarities of the given document against this index.
 
         Examples
         --------
@@ -617,14 +616,12 @@ class Similarity(interfaces.SimilarityABC):
 
     def __iter__(self):
         """For each index document in index, compute cosine similarity against all other documents in the index.
-        Using :meth:`~gensim.similarities.docsim.Similarity.iter_chunks`.
+        Uses :meth:`~gensim.similarities.docsim.Similarity.iter_chunks` internally.
 
         Yields
         ------
-        :class:`numpy.ndarray`
-            Similarities of document if index is :class:`~gensim.similarities.docsim.MatrixSimilarity` **or**
-        :class:`scipy.sparse.csr_matrix`
-            for case if index is :class:`~gensim.similarities.docsim.SparseMatrixSimilarity`.
+        :class:`numpy.ndarray` or :class:`scipy.sparse.csr_matrix`
+            Similarities of each document in turn against the index.
 
         """
         # turn off query normalization (vectors in the index are already normalized, save some CPU)
@@ -640,24 +637,18 @@ class Similarity(interfaces.SimilarityABC):
         self.norm = norm  # restore normalization
 
     def iter_chunks(self, chunksize=None):
-        """Iteratively yield the index as chunks of documents, each of size <= chunksize.
+        """Iteratively yield the index as chunks of document vectors, each of size <= chunksize.
 
         Parameters
         ----------
         chunksize : int, optional
             Size of chunk,, if None - `self.chunksize` will be used.
 
-        Notes
-        -----
-        The chunk is returned in its raw form.
-        The size of the chunk may be smaller than requested; it is up to the caller to check the result for real length.
-
         Yields
         ------
-        :class:`numpy.ndarray`
-            Similarities of document if index is :class:`~gensim.similarities.docsim.MatrixSimilarity` **or**
-        :class:`scipy.sparse.csr_matrix`
-            for case if index is :class:`~gensim.similarities.docsim.SparseMatrixSimilarity`.
+        :class:`numpy.ndarray` or :class:`scipy.sparse.csr_matrix`
+            Chunks of the index as 2D arrays. The arrays are either dense or sparse, depending on
+            whether the shard was storing dense or sparse vectors.
 
         """
         self.close_shard()
@@ -677,26 +668,27 @@ class Similarity(interfaces.SimilarityABC):
                 yield chunk
 
     def check_moved(self):
-        """Update shard locations (for case if the server directory has moved on filesystem)."""
+        """Update shard locations, for case where the server prefix location changed on the filesystem."""
         dirname = os.path.dirname(self.output_prefix)
         for shard in self.shards:
             shard.dirname = dirname
 
     def save(self, fname=None, *args, **kwargs):
-        """Save the object via pickling (also see load) under filename specified in the constructor.
+        """Save the index object via pickling under `fname`. See also :meth:`~gensim.docsim.Similarity.load()`.
 
         Parameters
         ----------
         fname : str, optional
             Path for save index, if not provided - will be saved to `self.output_prefix`.
         *args : object
-            Arguments, look at :meth:`gensim.interfaces.SimilarityABC.save`.
+            Arguments, see :meth:`gensim.utils.SaveLoad.save`.
         **kwargs : object
-            Keyword arguments, look at :meth:`gensim.interfaces.SimilarityABC.save`.
+            Keyword arguments, see :meth:`gensim.utils.SaveLoad.save`.
 
         Notes
         -----
-        Call :meth:`~gensim.similarities.Similarity.close_shard` internally to spill unfinished shards to disk first.
+        Will call :meth:`~gensim.similarities.Similarity.close_shard` internally to spill
+        any unfinished shards to disk first.
 
         Examples
         --------
@@ -708,7 +700,7 @@ class Similarity(interfaces.SimilarityABC):
         >>> output_fname = get_tmpfile("saved_index")
         >>>
         >>> corpus = TextCorpus(datapath('testcorpus.txt'))
-        >>> index = Similarity(temp_fname, corpus, num_features=400)
+        >>> index = Similarity(output_fname, corpus, num_features=400)
         >>>
         >>> index.save(output_fname)
         >>> loaded_index = index.load(output_fname)
@@ -720,7 +712,7 @@ class Similarity(interfaces.SimilarityABC):
         super(Similarity, self).save(fname, *args, **kwargs)
 
     def destroy(self):
-        """Delete all files under self.output_prefix, object is not usable after calling this method anymore."""
+        """Delete all files under self.output_prefix Index is not usable anymore after calling this method."""
         import glob
         for fname in glob.glob(self.output_prefix + '*'):
             logger.info("deleting %s", fname)
@@ -748,18 +740,18 @@ class MatrixSimilarity(interfaces.SimilarityABC):
         Parameters
         ----------
         corpus : iterable of list of (int, number)
-            Corpus in BoW format.
+            Corpus in streamed Gensim bag-of-words format.
         num_best : int, optional
             If set, return only the `num_best` most similar documents, always leaving out documents with similarity = 0.
             Otherwise, return a full vector with one float for every document in the index.
-        dtype : numpy.dtype
-            Datatype of internal matrix
-        num_features : int, optional
-            Size of the dictionary.
-        chunksize : int, optional
-            Size of chunk.
+        num_features : int
+            Size of the dictionary (number of features).
         corpus_len : int, optional
-            Size of `corpus`, if not specified - will scan corpus to determine size.
+            Number of documents in `corpus`. If not specified, will scan the corpus to determine the matrix size.
+        chunksize : int, optional
+            Size of query chunks. Used internally when the query is an entire corpus.
+        dtype : numpy.dtype, optional
+            Datatype to store the internal matrix in.
 
         """
         if num_features is None:
@@ -804,7 +796,7 @@ class MatrixSimilarity(interfaces.SimilarityABC):
         return self.index.shape[0]
 
     def get_similarities(self, query):
-        """Get similarity between `query` and current index instance.
+        """Get similarity between `query` and this index.
 
         Warnings
         --------
@@ -914,15 +906,15 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
         return len(self.corpus)
 
     def get_similarities(self, query):
-        """Get similarity between `query` and current index instance.
+        """Get similarity between `query` and this index.
 
         Warnings
         --------
-        Do not use this function directly; use the self[query] syntax instead.
+        Do not use this function directly; use the `self[query]` syntax instead.
 
         Parameters
         ----------
-        query : {list of (int, number), iterable of list of (int, number), :class:`scipy.sparse.csr_matrix`
+        query : {list of (int, number), iterable of list of (int, number)
             Document or collection of documents.
 
         Return
@@ -931,29 +923,29 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
             Similarity matrix.
 
         """
-        if isinstance(query, numpy.ndarray):
-            # Convert document indexes to actual documents.
-            query = [self.corpus[i] for i in query]
 
-        if not query or not isinstance(query[0], list):
-            query = [query]
+        is_corpus, query = utils.is_corpus(query)
+        if not is_corpus:
+            if isinstance(query, numpy.ndarray):
+                # Convert document indexes to actual documents.
+                query = [self.corpus[i] for i in query]
+            else:
+                query = [query]
 
-        n_queries = len(query)
         result = []
-        for qidx in range(n_queries):
+        for query_document in query:
             # Compute similarity for each query.
-            qresult = [matutils.softcossim(document, query[qidx], self.similarity_matrix)
-                       for document in self.corpus]
+            qresult = [matutils.softcossim(query_document, corpus_document, self.similarity_matrix)
+                       for corpus_document in self.corpus]
             qresult = numpy.array(qresult)
 
             # Append single query result to list of all results.
             result.append(qresult)
 
-        if len(result) == 1:
-            # Only one query.
-            result = result[0]
-        else:
+        if is_corpus:
             result = numpy.array(result)
+        else:
+            result = result[0]
 
         return result
 
@@ -964,16 +956,18 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
 class WmdSimilarity(interfaces.SimilarityABC):
     """Compute negative WMD similarity against a corpus of documents by storing the index matrix in memory.
 
-
     See :class:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors` for more information.
     Also, tutorial `notebook
     <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/WMD_tutorial.ipynb>`_ for more examples.
 
     When using this code, please consider citing the following papers:
-    `Ofir Pele and Michael Werman, "A linear time histogram metric for improved SIFT matching"
-    <http://www.cs.huji.ac.il/~werman/Papers/ECCV2008.pdf>`_, `Ofir Pele and Michael Werman, "Fast and robust earth
-    mover's distances" <http://www.cs.huji.ac.il/~werman/Papers/ICCV2009.pdf>`_, `"Matt Kusner et al. "From Word
-    Embeddings To Document Distances" <http://proceedings.mlr.press/v37/kusnerb15.pdf>`_.
+
+    * `Ofir Pele and Michael Werman, "A linear time histogram metric for improved SIFT matching"
+      <http://www.cs.huji.ac.il/~werman/Papers/ECCV2008.pdf>`_
+    * `Ofir Pele and Michael Werman, "Fast and robust earth mover's distances"
+      <http://www.cs.huji.ac.il/~werman/Papers/ICCV2009.pdf>`_
+    * `Matt Kusner et al. "From Word Embeddings To Document Distances"
+      <http://proceedings.mlr.press/v37/kusnerb15.pdf>`_
 
     Example
     -------
@@ -992,7 +986,6 @@ class WmdSimilarity(interfaces.SimilarityABC):
     >>> sims = index[query]
 
     """
-
     def __init__(self, corpus, w2v_model, num_best=None, normalize_w2v_and_replace=True, chunksize=256):
         """
 
@@ -1030,15 +1023,15 @@ class WmdSimilarity(interfaces.SimilarityABC):
         return len(self.corpus)
 
     def get_similarities(self, query):
-        """Get similarity between `query` and current index instance.
+        """Get similarity between `query` and this index.
 
         Warnings
         --------
-        Do not use this function directly; use the self[query] syntax instead.
+        Do not use this function directly; use the `self[query]` syntax instead.
 
         Parameters
         ----------
-        query : {list of (int, number), iterable of list of (int, number), :class:`scipy.sparse.csr_matrix`
+        query : {list of (int, number), iterable of list of (int, number)
             Document or collection of documents.
 
         Return
@@ -1082,7 +1075,7 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
 
     Notes
     -----
-    Use this if your input corpus contains sparse vectors (such as documents in bag-of-words format) and fits into RAM.
+    Use this if your input corpus contains sparse vectors (such as TF-IDF documents) and fits into RAM.
 
     The matrix is internally stored as a :class:`scipy.sparse.csr_matrix` matrix. Unless the entire
     matrix fits into main memory, use :class:`~gensim.similarities.docsim.Similarity` instead.
@@ -1099,35 +1092,33 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
         Index similarity (dense with cosine distance).
 
     """
-
     def __init__(self, corpus, num_features=None, num_terms=None, num_docs=None, num_nnz=None,
                  num_best=None, chunksize=500, dtype=numpy.float32, maintain_sparsity=False):
         """
+
         Parameters
         ----------
         corpus: iterable of list of (int, float)
             A list of documents in the BoW format.
         num_features : int, optional
-            Size of the dictionary.
+            Size of the dictionary. Must be either specified, or present in `corpus.num_terms`.
         num_terms : int, optional
-            Number of terms, **must be specified**.
+            Alias for `num_features`, you can use either.
         num_docs : int, optional
-            Number of documents in `corpus`.
+            Number of documents in `corpus`. Will be calculated if not provided.
         num_nnz : int, optional
-            Number of non-zero terms.
+            Number of non-zero elements in `corpus`. Will be calculated if not provided.
         num_best : int, optional
             If set, return only the `num_best` most similar documents, always leaving out documents with similarity = 0.
             Otherwise, return a full vector with one float for every document in the index.
         chunksize : int, optional
-            Size of chunk.
+            Size of query chunks. Used internally when the query is an entire corpus.
         dtype : numpy.dtype, optional
-            Data type of internal matrix.
+            Data type of the internal matrix.
         maintain_sparsity : bool, optional
-            if True - will return sparse arr from
-            :meth:`~gensim.similarities.docsim.SparseMatrixSimilarity.get_similarities`.
+            Return sparse arrays from :meth:`~gensim.similarities.docsim.SparseMatrixSimilarity.get_similarities`?
 
         """
-
         self.num_best = num_best
         self.normalize = True
         self.chunksize = chunksize
@@ -1168,11 +1159,11 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
         return self.index.shape[0]
 
     def get_similarities(self, query):
-        """Get similarity between `query` and current index instance.
+        """Get similarity between `query` and this index.
 
         Warnings
         --------
-        Do not use this function directly; use the self[query] syntax instead.
+        Do not use this function directly; use the `self[query]` syntax instead.
 
         Parameters
         ----------

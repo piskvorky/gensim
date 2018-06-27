@@ -4,7 +4,7 @@
 from gensim import parsing, corpora, matutils, interfaces, models, similarities, summarization, utils # noqa:F401
 import logging
 
-__version__ = '3.3.0'
+__version__ = '3.4.0'
 
 
 class NullHandler(logging.Handler):
