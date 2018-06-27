@@ -62,7 +62,6 @@ cdef class CythonLineSentence:
     cdef public string source
     cdef public int max_sentence_length, max_words_in_batch
     cdef vector[string] buf_data
-    cdef public bool_t is_eof
 
     def __cinit__(self, source, max_sentence_length=MAX_SENTENCE_LEN):
         self._thisptr = new FastLineSentence(source)
@@ -71,11 +70,13 @@ cdef class CythonLineSentence:
         self.source = source
         self.max_sentence_length = max_sentence_length  # isn't used in this hacky prototype
         self.max_words_in_batch = MAX_SENTENCE_LEN
-        self.is_eof = False
 
     def __dealloc__(self):
         if self._thisptr != NULL:
             del self._thisptr
+
+    cpdef bool_t is_eof(self) nogil:
+        return self._thisptr.IsEof()
 
     cpdef vector[string] read_sentence(self) nogil except *:
         return self._thisptr.ReadSentence()
@@ -91,6 +92,13 @@ cdef class CythonLineSentence:
             int batch_size = 0
             int data_length = 0
 
+        if self.is_eof() and self.buf_data.size() == 0:
+            return job_batch
+        elif self.is_eof():
+            job_batch.push_back(self.buf_data)
+            self.buf_data.clear()
+            return job_batch
+
         # Try to read data from previous calls which was not returned
         if self.buf_data.size() > 0:
             data = self.buf_data
@@ -103,15 +111,14 @@ cdef class CythonLineSentence:
             job_batch.push_back(data)
             batch_size += data_length
 
-            # TODO: if it raises an exception, we will not return a batch we read up to this moment
+            if self.is_eof():
+                break
             data = self.read_sentence()
             data_length = data.size()
 
-        # Save data which doesn't fit in batch in order to return it later.
-        buf_data = data
-
-        if self._thisptr.IsEof():
-            self.is_eof = True
+        if not self.is_eof():
+            # Save data which doesn't fit in batch in order to return it later.
+            buf_data = data
 
         return job_batch
 

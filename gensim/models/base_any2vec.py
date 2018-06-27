@@ -136,32 +136,32 @@ class BaseAny2VecModel(utils.SaveLoad):
         """Check that the training parameters provided make sense. e.g. raise error if `epochs` not provided."""
         raise NotImplementedError()
 
-    def _worker_loop(self, fname, progress_queue):
-        thread_private_mem = self._get_thread_working_mem()
-        jobs_processed = 0
-        job_parameters = self._get_job_params(0)
-        input_stream = CythonLineSentence(fname)
-        while True:
-            try:
-                # Prepare batch with NO GIL
-                data_iterable = input_stream.next_batch()
-            except:
-                break
-
-            for callback in self.callbacks:
-                callback.on_batch_begin(self)
-
+    # def _worker_loop(self, fname, progress_queue):
+    #     thread_private_mem = self._get_thread_working_mem()
+    #     jobs_processed = 0
+    #     job_parameters = self._get_job_params(0)
+    #     input_stream = CythonLineSentence(fname)
+    #     while True:
+    #         try:
+    #             Prepare batch with NO GIL
+                # data_iterable = input_stream.next_batch()
+            # except:
+            #     break
+            #
+            # for callback in self.callbacks:
+            #     callback.on_batch_begin(self)
+            #
             # No GIL (almost)
-            tally, raw_tally = self._do_train_job(data_iterable, job_parameters, thread_private_mem)
-
-            for callback in self.callbacks:
-                callback.on_batch_end(self)
-
-            progress_queue.put((len(data_iterable), tally, raw_tally))  # report back progress
-            jobs_processed += 1
-
-        progress_queue.put(None)
-        logger.debug("worker exiting, processed %i jobs", jobs_processed)
+            # tally, raw_tally = self._do_train_job(data_iterable, job_parameters, thread_private_mem)
+            #
+            # for callback in self.callbacks:
+            #     callback.on_batch_end(self)
+            #
+            # progress_queue.put((len(data_iterable), tally, raw_tally))  # report back progress
+            # jobs_processed += 1
+        #
+        # progress_queue.put(None)
+        # logger.debug("worker exiting, processed %i jobs", jobs_processed)
 
     # def _batch_iterator(self, input_stream, cur_epoch=0, total_examples=None, total_words=None):
     #     job_batch, batch_size = [], 0

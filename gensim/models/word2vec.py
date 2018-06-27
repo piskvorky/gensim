@@ -551,7 +551,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
         alpha = self._get_job_params(0)
         input_stream = CythonLineSentence(fname)
         while True:
-            if not input_stream.is_eof:
+            if not input_stream.is_eof():
                 # Prepare batch with NO GIL
                 data_iterable = input_stream.next_batch()
             else:
