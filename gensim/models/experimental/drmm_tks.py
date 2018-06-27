@@ -130,13 +130,12 @@ class DRMM_TKS(utils.SaveLoad):
             raise ValueError("Unkown token handling method %s" % str(unk_handle_method))
         self.unk_handle_method = unk_handle_method
 
-        self.build_vocab()
-        self.pair_list = self._get_pair_list()
-        self.indexed_pair_list = self._make_indexed_pair_list()
         if self.queries is not None and self.docs is not None and self.labels is not None:
+            self.build_vocab()
             self.train()
         else:
-            logger.info("Model won't be trained as data is either not provided or is incomplete.")
+            logger.info("Vocab won't be built and Model won't be trained"
+                        " as data is either not provided or is incomplete.")
 
     def build_vocab(self):
         """Indexes all the words and makes an embedding_matrix which
@@ -262,7 +261,7 @@ class DRMM_TKS(utils.SaveLoad):
         indexed_sent = indexed_sent + [self.pad_word_index] * (self.text_maxlen - len(indexed_sent))
         return indexed_sent
 
-    def get_full_batch(self):
+    def _get_full_batch(self):
         """Provides all the data points int the format: X1, X2, y with
         alternate positive and negative examples
 
@@ -345,9 +344,33 @@ class DRMM_TKS(utils.SaveLoad):
             indexed_pair_list.append([self._make_indexed(q), self._make_indexed(d_pos), self._make_indexed(d_neg)])
         return indexed_pair_list
 
-    def train(self):
+    def train(self, queries=None, docs=None, labels=None, word_embedding_path=None,
+              text_maxlen=None, normalize_embeddings=None, epochs=None, unk_handle_method=None,
+              validation_data=None, topk=None, target_mode=None):
         """Trains a DRMM_TKS model using specified parameters"""
-        X1_train, X2_train, y_train = self.get_full_batch()
+
+        # In case the user wants to initialize and train the model in different phases
+        self.queries = queries or self.queries
+        self.docs = docs or self.docs
+        self.labels = labels or self.labels
+        self.word_embedding_path = word_embedding_path or self.word_embedding_path
+        self.text_maxlen = text_maxlen or self.text_maxlen
+        self.normalize_embeddings = normalize_embeddings or self.normalize_embeddings
+        self.epochs = epochs or self.epochs
+        self.unk_handle_method = unk_handle_method or self.unk_handle_method
+        self.validation_data = validation_data or self.validation_data
+        self.topk = topk or self.topk
+        self.target_mode = target_mode or self.target_mode
+
+        if self.queries is None and self.docs is None and self.labels is None:
+            raise ValueError("queries, docs and labels have to be specified")
+
+        # We need to build these each time since any of the parameters can change from each train to trian
+        self.pair_list = self._get_pair_list()
+        self.indexed_pair_list = self._make_indexed_pair_list()
+
+
+        X1_train, X2_train, y_train = self._get_full_batch()
         self.model = self._get_keras_model()
         self.model.summary()
 
