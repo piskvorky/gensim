@@ -53,6 +53,7 @@ cdef extern from "linesentence.h":
     cdef cppclass FastLineSentence:
         FastLineSentence(string&) except +
         vector[string] ReadSentence() nogil except +
+        bool_t IsEof() nogil
 
 
 @cython.final
