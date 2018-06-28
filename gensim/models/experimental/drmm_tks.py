@@ -1,8 +1,6 @@
 import logging
-import random
-import numpy
-
 import numpy as np
+from numpy import random as np_random
 from gensim.scripts.glove2word2vec import glove2word2vec
 from gensim.test.utils import get_tmpfile
 from gensim.models import KeyedVectors
@@ -13,22 +11,30 @@ from sklearn.preprocessing import normalize
 from custom_callbacks import ValidationCallback
 from gensim import utils
 from collections import Iterable
+import random as rn
 try:
     import keras.backend as K
     from keras import optimizers
     from keras.losses import hinge
     from keras.models import Model
     from keras.layers import Input, Embedding, Dot, Dense, Reshape, Dropout
-    import tensorflow
-    tensorflow.set_random_seed(101010)
+    import tensorflow as tf
+    import os
+    # For understanding why random seeding has been done as below, refer to
+    # https://keras.io/getting-started/faq/#how-can-i-obtain-reproducible-results-using-keras-during-development
+    os.environ['PYTHONHASHSEED'] = '0'
+    np.random.seed(42)
+    rn.seed(12345)
+    session_conf = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
+    tf.set_random_seed(1234)
+    sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
+    K.set_session(sess)
     KERAS_AVAILABLE = True
 except ImportError:
     KERAS_AVAILABLE = False
 
-random.seed(101010)
-numpy.random.seed(101010)
-logger = logging.getLogger(__name__)
 
+logger = logging.getLogger(__name__)
 
 class DRMM_TKS(utils.SaveLoad):
     """User friendly model for training on similarity learning data.
@@ -186,8 +192,7 @@ class DRMM_TKS(utils.SaveLoad):
             self.embedding_matrix = np.random.uniform(-0.2, 0.2,
                                                       (self.vocab_size, self.embedding_dim))
         elif self.unk_handle_method == 'zero':
-            self.embedding_matrix = np.zeros(
-                (self.vocab_size, self.embedding_dim))
+            self.embedding_matrix = np.zeros((self.vocab_size, self.embedding_dim))
 
         n_non_embedding_words = 0
         for word, i in self.word2index.items():
@@ -195,6 +200,9 @@ class DRMM_TKS(utils.SaveLoad):
                 # words not found in keyed vectors will get the vector based on unk_handle_method
                 self.embedding_matrix[i] = kv_model[word]
             else:
+                if self.unk_handle_method == 'random':
+                    # Creates the same random vector for the given string each time
+                    self.embedding_matrix[i] = self._seeded_vector(word, self.embedding_dim)
                 n_non_embedding_words += 1
         logger.info("There are %d words out of %d (%.2f%%) not in the embeddings. Setting them to %s" %
                     (n_non_embedding_words, self.vocab_size, n_non_embedding_words * 100 / self.vocab_size,
@@ -247,6 +255,16 @@ class DRMM_TKS(utils.SaveLoad):
         logger.info("Unknown word has been set to index %d" %
                     self.unk_word_index)
         logger.info("Embedding index build complete")
+
+    def _string2numeric_hash(text):
+        "Gets a numeric hash for a given string"
+        return int(hashlib.md5(text.encode()).hexdigest()[:8], 16)
+
+    def _seeded_vector(self, seed_string, vector_size):
+        """Create one 'random' vector (but deterministic by seed_string)"""
+        # Note: built-in hash() may vary by Python version or even (in Py3.x) per launch
+        once = np_random.RandomState(self._string2numeric_hash(seed_string) & 0xffffffff)
+        return (once.rand(vector_size) - 0.5) / vector_size
 
     def _make_indexed(self, sentence):
         """Gets the indexed version of the sentence based on self.word2index
