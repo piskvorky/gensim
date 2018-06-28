@@ -19,19 +19,32 @@ class ValidationCallback(Callback):
         test_data : dict
             A dictionary which holds the validation data
             It consists of the following keys:
-                "X1" : The queries as a numpy array of shape (n_samples, text_maxlen)
-                "X2" : The candidate docs as a numpy array of shape (n_samples, text_maxlen)
-                "y" : List of ints
+                "X1" : numpy array
+                    The queries as a numpy array of shape (n_samples, text_maxlen)
+                "X2" : numpy array
+                    The candidate docs as a numpy array of shape (n_samples, text_maxlen)
+                "y" : list of int
                       It is the labels for each of the query-doc pairs as a 1 or 0 with shape (n_samples,)
                       where 1: doc is relevant to query
                             0: doc is not relevant to query
-                "doc_lengths" : list of ints
+                "doc_lengths" : list of int
                                 It contains the length of each document group. I.e., the number of queries
                                 which represent one topic. It is needed for calculating the metrics.
         """
+
         if not KERAS_AVAILABLE:
             raise ImportError("Please install Keras to use this class")
 
+        # Check if all test_data is a dicitonary with all the right keys 
+        try:
+            # If an empty dict is passed
+            if len(test_data.keys()) == 0:
+                raise ValueError("test_data dictionary is empty. It doesn't have the keys: 'X1', 'X2', 'y', 'doc_lengths'")
+            for key in test_data.keys():
+                if key not in ['X1', 'X2', 'y', 'doc_lengths']:
+                    raise ValueError("test_data dictionary doesn't have the  keys: 'X1', 'X2', 'y', 'doc_lengths'")
+        except AttributeError:
+            raise ValueError("test_data must be a dictionary with the keys: 'X1', 'X2', 'y', 'doc_lengths'")
         self.test_data = test_data
 
     def on_epoch_end(self, epoch, logs={}):

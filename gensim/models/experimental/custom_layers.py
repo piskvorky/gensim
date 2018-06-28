@@ -5,12 +5,11 @@ try:
 except ImportError:
     KERAS_AVAILABLE = False
 
-"""All custiom keras layers will be housed here"""
+"""Script where all the custom keras layers are kept."""
 
 
 class TopKLayer(Layer):
     """Layer to get top k values from the interaction matrix in drmm_tks model"""
-
     def __init__(self, output_dim, topk, **kwargs):
         """
         Parameters
@@ -18,7 +17,8 @@ class TopKLayer(Layer):
         output_dim : tuple of ints
             The dimension of the tensor after going through this layer
         topk : int
-            The k topmost values to be returned"""
+            The k topmost values to be returned
+        """
         self.output_dim = output_dim
         self.topk = topk
         super(TopKLayer, self).__init__(**kwargs)

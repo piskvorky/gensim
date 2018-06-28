@@ -30,20 +30,20 @@ It has the following steps:
 On predicting, the model returns the score list between queries and documents.
 
 
-Initialize a model with e.g.::
+Initialize a model with e.g.:
 
-    >>> model = DRMM_TKS(queries, docs, labels, word_embedding=word_embedding_path)
+  >>> model = DRMM_TKS(queries, docs, labels, word_embedding=word_embedding_path)
 
-Train the model with e.g.::
+Train the model with e.g.:
 
-    >>> model.train(epochs=12)
+  >>> model.train(epochs=12)
 
-Persist a model to disk with::
+Persist a model to disk with:
 
     >>> model.save(fname)
     >>> model = DRMM_TKS.load(fname)
 
-The trained model can predict on new data like e.g.::
+The trained model can predict on new data like e.g.:
   >>> queries = ["how are glacier caves formed ?".lower().split()]
   >>> docs = ["A partly submerged glacier cave on Perito Moreno Glacier".lower().split(),
               "A glacier cave is a cave formed within the ice of a glacier".lower().split()]
@@ -51,13 +51,14 @@ The trained model can predict on new data like e.g.::
   [[0.5416601]
    [0.6190841]]
 
-.. [1] Jiafeng Guo, Yixing Fan, Qingyao Ai, W. Bruce Croft
-       A Deep Relevance Matching Model for Ad-hoc Retrieval
-       http://www.bigdatalab.ac.cn/~gjf/papers/2016/CIKM2016a_guo.pdf
-.. [2] MatchZoo Repository
-       https://github.com/faneshion/MatchZoo
-.. [3] Similarity Learning
-       https://en.wikipedia.org/wiki/Similarity_learning
+More information can be found in:
+`Jiafeng Guo, Yixing Fan, Qingyao Ai, W. Bruce Croft
+"A Deep Relevance Matching Model for Ad-hoc Retrieval"
+<http://www.bigdatalab.ac.cn/~gjf/papers/2016/CIKM2016a_guo.pdf>`
+
+`MatchZoo Repository "MatchZoo Repository" <https://github.com/faneshion/MatchZoo>`
+
+`Similarity Learning "Similarity Learning Wiki Page" <https://en.wikipedia.org/wiki/Similarity_learning>`
 
 """
 
@@ -79,6 +80,7 @@ import random as rn
 try:
     import keras.backend as K
     from keras import optimizers
+    from keras.models import load_model
     from keras.losses import hinge
     from keras.models import Model
     from keras.layers import Input, Embedding, Dot, Dense, Reshape, Dropout
@@ -148,7 +150,7 @@ class DRMM_TKS(utils.SaveLoad):
                      "He fought for the Indian freedom movement".split(),
                      "Gandhi was assasinated".split()]
                    ]
-        labels: list of list of ints
+        labels: list of list of int
             Indicates when a candidate document is relevant to a query
             1 : relevant
             0 : irrelevant
@@ -417,7 +419,7 @@ class DRMM_TKS(utils.SaveLoad):
         (query, positive_doc, negative_doc)
 
         [(q1, d+, d-), (q2, d+, d-), (q3, d+, d-), ..., (qn, d+, d-)]
-            where each query or document is a list of ints
+            where each query or document is a list of int
 
         Example
         -------
@@ -644,7 +646,6 @@ class DRMM_TKS(utils.SaveLoad):
         :obj: `~gensim.models.experimental.DRMM_TKS`
             Returns the loaded model as an instance of :class: `~gensim.models.experimental.DRMM_TKS`.
         """
-        from keras.models import load_model
         fname = args[0]
         gensim_model = super(DRMM_TKS, cls).load(*args, **kwargs)
         keras_model = load_model(
@@ -676,7 +677,7 @@ class DRMM_TKS(utils.SaveLoad):
         dropout_rate : float between 0 and 1
             The probability of making a neuron dead
             Used for regularization.
-        hidden_sizes : list of ints
+        hidden_sizes : list of int
             The list of hidden sizes for the fully connected layers connected to the matching matrix
             Example :
                 hidden_sizes = [10, 20, 30]
