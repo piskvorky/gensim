@@ -16,12 +16,12 @@ class ValidationCallback(Callback):
         """
         Parameters
         ----------
-        test_data: dict
+        test_data : dict
             A dictionary which holds the validation data
             It consists of the following keys:
                 "X1" : The queries as a numpy array of shape (n_samples, text_maxlen)
                 "X2" : The candidate docs as a numpy array of shape (n_samples, text_maxlen)
-                "y" : List of ints 
+                "y" : List of ints
                       It is the labels for each of the query-doc pairs as a 1 or 0 with shape (n_samples,)
                       where 1: doc is relevant to query
                             0: doc is not relevant to query
