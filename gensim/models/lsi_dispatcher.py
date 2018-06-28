@@ -114,7 +114,9 @@ class Dispatcher(object):
         Parameters
         ----------
         **model_params
-            Keyword parameters used to initialize individual workers (gets handed all the way down to `worker.initialize()`).
+            Keyword parameters used to initialize individual workers
+            (gets handed all the way down to `worker.initialize()`).
+
             See :class:`~gensim.models.lsimodel.LsiModel`.
 
         Raises
