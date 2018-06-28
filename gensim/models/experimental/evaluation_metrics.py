@@ -50,8 +50,8 @@ def mapk(Y_true, Y_pred):
             ap = avg / n_relevant
             aps.append(ap)
 
-    logger.info("Using %d out of %d data points which is %.2f%%. %d were skipped" %
-                (len(Y_true) - n_skipped, len(Y_true), (float(n_skipped) / len(Y_true)) * 100, n_skipped))
+    # logger.info("Using %d out of %d data points which is %.2f%%. %d were skipped" %
+    #             (len(Y_true) - n_skipped, len(Y_true), (float(n_skipped) / len(Y_true)) * 100, n_skipped))
     return np.mean(np.array(aps))
 
 
@@ -102,7 +102,7 @@ def mean_ndcg(Y_true, Y_pred, k=10):
 
         if idcg != 0:
             ndcgs.append(dcg / idcg)
-    logger.info("Using %d out of %d data points which is %.2f%%. %d were skipped" %
-                (len(Y_true) - n_skipped, len(Y_true),
-                (float(n_skipped) / len(Y_true)) * 100, n_skipped))
+    # logger.info("Using %d out of %d data points which is %.2f%%. %d were skipped" %
+    #             (len(Y_true) - n_skipped, len(Y_true),
+    #             (float(n_skipped) / len(Y_true)) * 100, n_skipped))
     return np.mean(np.array(ndcgs))

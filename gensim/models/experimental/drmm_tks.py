@@ -520,7 +520,7 @@ class DRMM_TKS(utils.SaveLoad):
         self.model.compile(optimizer=optimizer, loss=loss,
                            metrics=['accuracy'])
         if is_iterable:
-            self.model.fit_generator(train_generator, steps_per_epoch=128)
+            self.model.fit_generator(train_generator, steps_per_epoch=128, callbacks=[val_callback], epochs=self.epochs)
         else:
             self.model.fit(x={"query": X1_train, "doc": X2_train}, y=y_train, batch_size=5,
                            verbose=1, epochs=self.epochs, shuffle=True, callbacks=[val_callback])
