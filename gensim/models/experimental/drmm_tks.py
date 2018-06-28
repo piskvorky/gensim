@@ -36,7 +36,7 @@ class DRMM_TKS(utils.SaveLoad):
 
     Example Usage:
     -------------
-    drmm_tks_model = DRMM_TKS_Model(queries, docs, labels, word_embedding_path)
+    drmm_tks_model = DRMM_TKS_Model(queries, docs, labels, word_embedding)
     drmm_tks_model.predict(test_queries, test_docs)
 
     The data should have the format:
@@ -56,7 +56,7 @@ class DRMM_TKS(utils.SaveLoad):
 
     """
 
-    def __init__(self, queries=None, docs=None, labels=None, word_embedding_path=None,
+    def __init__(self, queries=None, docs=None, labels=None, word_embedding=None,
                  text_maxlen=200, normalize_embeddings=True, epochs=10, unk_handle_method='zero',
                  validation_data=None, topk=50, target_mode='ranking'):
         """Initializes the model and trains it
@@ -86,7 +86,7 @@ class DRMM_TKS(utils.SaveLoad):
             Example:
             labels = [[0, 1],
                       [1, 0, 0]]
-        word_embedding_path: str
+        word_embedding: str
             path to the Glove vectors which have the embeddings in a .txt format
             If unset, random word embeddings will be used
         text_maxlen: int
@@ -114,7 +114,7 @@ class DRMM_TKS(utils.SaveLoad):
         self.word_counter = Counter()
         self.text_maxlen = text_maxlen
         self.topk = topk
-        self.word_embedding_path = word_embedding_path
+        self.word_embedding = word_embedding
         self.word2index, self.index2word = {}, {}
         self.normalize_embeddings = normalize_embeddings
         self.model = None
@@ -158,12 +158,21 @@ class DRMM_TKS(utils.SaveLoad):
         logger.info("Vocab Size is %d" % self.vocab_size)
 
         logger.info("Building embedding index using pretrained word embeddings")
-        # Use KeyedVectors for easy and quick access od word embeddings
-        glove_file = self.word_embedding_path
-        tmp_file = get_tmpfile("tmp_word2vec.txt")
-        embedding_vocab_size, self.embedding_dim = glove2word2vec(
-            glove_file, tmp_file)
-        kv_model = KeyedVectors.load_word2vec_format(tmp_file)
+        if type(self.word_embedding) == str:
+            # Use KeyedVectors for easy and quick access of word embeddings
+            glove_file = self.word_embedding
+            tmp_file = get_tmpfile("tmp_word2vec.txt")
+            embedding_vocab_size, self.embedding_dim = glove2word2vec(
+                glove_file, tmp_file)
+            kv_model = KeyedVectors.load_word2vec_format(tmp_file)
+        elif  type(self.word_embedding) == KeyedVectors:
+            kv_model = self.word_embedding
+            embedding_vocab_size, self.embedding_dim = len(kv_model.vocab), kv_model.vector_size
+        else:
+            raise ValueError("Unknown value of word_embedding : %s."
+                             "Must be either a string path to Glove Embedding file or a KeyedVector"
+                  )
+
 
         logger.info("The embeddings_index built from the given file has %d words of %d dimensions" %
                     (embedding_vocab_size, self.embedding_dim))
@@ -361,7 +370,7 @@ class DRMM_TKS(utils.SaveLoad):
                         if new_item[1] == 0:
                             yield(self._make_indexed(q), self._make_indexed(item[0]), self._make_indexed(new_item[0]))
 
-    def train(self, queries=None, docs=None, labels=None, word_embedding_path=None,
+    def train(self, queries=None, docs=None, labels=None, word_embedding=None,
               text_maxlen=None, normalize_embeddings=None, epochs=None, unk_handle_method=None,
               validation_data=None, topk=None, target_mode=None):
         """Trains a DRMM_TKS model using specified parameters"""
@@ -370,7 +379,7 @@ class DRMM_TKS(utils.SaveLoad):
         self.queries = queries or self.queries
         self.docs = docs or self.docs
         self.labels = labels or self.labels
-        self.word_embedding_path = word_embedding_path or self.word_embedding_path
+        self.word_embedding = word_embedding or self.word_embedding  # TODO this won't update anything!
         self.text_maxlen = text_maxlen or self.text_maxlen
         self.normalize_embeddings = normalize_embeddings or self.normalize_embeddings
         self.epochs = epochs or self.epochs
