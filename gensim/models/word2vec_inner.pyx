@@ -84,11 +84,11 @@ cdef class CythonLineSentence:
     cpdef vector[string] read_sentence(self) nogil except *:
         return self._thisptr.ReadSentence()
 
-    cpdef vector[vector[string]] next_batch(self) except *:
-        with nogil:
-            return self._next_batch()
+    # cpdef vector[vector[string]] next_batch(self) except *:
+    #     with nogil:
+    #         return self._next_batch()
 
-    cpdef vector[vector[string]] _next_batch(self) nogil except *:
+    cpdef vector[vector[string]] next_batch(self) nogil except *:
         cdef:
             vector[vector[string]] job_batch
             vector[string] data
@@ -484,11 +484,12 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
     return effective_words
 
 
-cpdef train_epoch_cbow(model, input_stream, alpha, _work, _neu1, compute_loss):
+cpdef train_epoch_cbow(model, _input_stream, alpha, _work, _neu1, compute_loss):
     cdef int hs = model.hs
     cdef int negative = model.negative
     cdef int sample = (model.vocabulary.sample != 0)
     cdef int cbow_mean = model.cbow_mean
+    cdef CythonLineSentence input_stream = _input_stream
 
     cdef int _compute_loss = (1 if compute_loss == True else 0)
     cdef REAL_t _running_training_loss = model.running_training_loss
@@ -548,6 +549,8 @@ cpdef train_epoch_cbow(model, input_stream, alpha, _work, _neu1, compute_loss):
 
     # release GIL & train on all sentences
     cdef int total_effective_words = 0, total_effective_sentences = 0, total_words = 0
+    cdef pair[ULongLong, ULongLong] word
+    cdef ULongLong random_number
 
     with nogil:
         while not input_stream.is_eof():
@@ -555,8 +558,6 @@ cpdef train_epoch_cbow(model, input_stream, alpha, _work, _neu1, compute_loss):
             effective_words = 0
 
             sentences = input_stream.next_batch()
-
-            cdef pair[ULongLong, ULongLong] word
             sentence_idx[0] = 0  # indices of the first sentence always start at 0
             for sent in sentences:
                 total_words += sent.size()
@@ -585,9 +586,8 @@ cpdef train_epoch_cbow(model, input_stream, alpha, _work, _neu1, compute_loss):
                     break  # TODO: log warning, tally overflow?
 
             # precompute "reduced window" offsets in a single randint() call
-            for i, item in enumerate(model.random.randint(0, window, effective_words)):
-                reduced_windows[i] = item
-
+            for i in range(effective_words):
+                reduced_windows[i] = random_int32(&next_random) % window
 
             for sent_idx in range(effective_sentences):
                 idx_start = sentence_idx[sent_idx]
