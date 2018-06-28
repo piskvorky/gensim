@@ -12,7 +12,7 @@ from custom_layers import TopKLayer
 from sklearn.preprocessing import normalize
 from custom_callbacks import ValidationCallback
 from gensim import utils
-
+from collections import Iterable
 try:
     import keras.backend as K
     from keras import optimizers
@@ -274,27 +274,56 @@ class DRMM_TKS(utils.SaveLoad):
             1 : X2[i] is relevant to X1[i]
             0 : X2[i] is not relevant to X1[i]
         """
+        X1, X2, y = [], [], []
+        for i, (query, pos_doc, neg_doc) in enumerate(self.pair_list):
+            X1.append(query)
+            X2.append(pos_doc)
+            y.append(1)
+            X1.append(query)
+            X2.append(neg_doc)
+            y.append(0)
+        return np.array(X1), np.array(X2), np.array(y)
 
-        num_samples = len(self.indexed_pair_list)
-        X1 = np.zeros((num_samples * 2, self.text_maxlen))
-        X2 = np.zeros((num_samples * 2, self.text_maxlen))
-        # To be uncommented when histogram support is included
-        # if self.hist_size is not None:
-        #     X2 = np.zeros((num_samples * 2, self.text_maxlen, self.hist_size))
-        y = np.zeros((num_samples * 2, 1))
-        X1[:] = self.pad_word_index
-        X2[:] = self.pad_word_index
-        y[::2] = 1
-        for i, (query, pos_doc, neg_doc) in enumerate(self.indexed_pair_list):
-            query_len = min(self.text_maxlen, len(query))
-            pos_doc_len = min(self.text_maxlen, len(pos_doc))
-            neg_doc_len = min(self.text_maxlen, len(neg_doc))
+    def _get_full_batch_iter(self, batch_size):
+        """Provides all the data points int the format: X1, X2, y with
+        alternate positive and negative examples
 
-            X1[i * 2, :query_len] = query[:query_len]
-            X2[i * 2, :pos_doc_len] = pos_doc[:pos_doc_len]
-            X1[i * 2 + 1, :query_len] = query[:query_len]
-            X2[i * 2 + 1, :neg_doc_len] = neg_doc[:neg_doc_len]
-        return X1, X2, y
+        X1: the queries
+            shape : (num_samples, text_maxlen)
+        X2: the docs
+            shape : (num_samples, text_maxlen)
+        y: int {0, 1}
+            The relation between X1[i] and X2[j]
+            1 : X2[i] is relevant to X1[i]
+            0 : X2[i] is not relevant to X1[i]
+        """
+        X1, X2, y = [], [], []
+        while True:
+            for i, (query, pos_doc, neg_doc) in enumerate(self.pair_list):
+                X1.append(query)
+                X2.append(pos_doc)
+                y.append(1)
+                X1.append(query)
+                X2.append(neg_doc)
+                y.append(0)
+                if i%batch_size == 0 and i != 0:
+                    yield ({'query': np.array(X1), 'doc': np.array(X2)}, np.array(y))
+                    X1, X2, y = [], [], []
+            return np.array(X1), np.array(X2), np.array(y)
+
+        while True:
+            for i, (query, pos_doc, neg_doc) in enumerate(self.pair_list):
+                query_len = min(self.text_maxlen, len(query))
+                pos_doc_len = min(self.text_maxlen, len(pos_doc))
+                neg_doc_len = min(self.text_maxlen, len(neg_doc))
+
+                X1[i * 2, :query_len] = query[:query_len]
+                X2[i * 2, :pos_doc_len] = pos_doc[:pos_doc_len]
+                X1[i * 2 + 1, :query_len] = query[:query_len]
+                X2[i * 2 + 1, :neg_doc_len] = neg_doc[:neg_doc_len]
+
+                if i%batch_size == 0 and i != 0:
+                    yield ({'queries': X1, 'docs': X2}, y)
 
     def _get_pair_list(self):
         """Gets a list with query document pairs in the format
@@ -325,24 +354,12 @@ class DRMM_TKS(utils.SaveLoad):
         """
         pair_list = []
         for q, doc, label in zip(self.queries, self.docs, self.labels):
-            doc, label = (list(t)
-                          for t in zip(*sorted(zip(doc, label), reverse=True)))
+            doc, label = (list(t) for t in zip(*sorted(zip(doc, label), reverse=True)))
             for item in zip(doc, label):
                 if item[1] == 1:
                     for new_item in zip(doc, label):
                         if new_item[1] == 0:
-                            pair_list.append((q, item[0], new_item[0]))
-        return pair_list
-
-    def _make_indexed_pair_list(self):
-        """Converts the existing word based pair list into an indexed format
-
-        Note: pair_list needs to be first created using :meth:`~gensim.models.experimental.DRMM_TKS._get_pair_list"""
-
-        indexed_pair_list = []
-        for q, d_pos, d_neg in self.pair_list:
-            indexed_pair_list.append([self._make_indexed(q), self._make_indexed(d_pos), self._make_indexed(d_neg)])
-        return indexed_pair_list
+                            yield(self._make_indexed(q), self._make_indexed(item[0]), self._make_indexed(new_item[0]))
 
     def train(self, queries=None, docs=None, labels=None, word_embedding_path=None,
               text_maxlen=None, normalize_embeddings=None, epochs=None, unk_handle_method=None,
@@ -364,13 +381,21 @@ class DRMM_TKS(utils.SaveLoad):
 
         if self.queries is None and self.docs is None and self.labels is None:
             raise ValueError("queries, docs and labels have to be specified")
-
         # We need to build these each time since any of the parameters can change from each train to trian
+
+        # TODO A check for queries, docs and labels
+        is_iterable = False
+        if isinstance(self.queries, Iterable) and not isinstance(self.queries, list):
+            is_iterable = True
+
+
         self.pair_list = self._get_pair_list()
-        self.indexed_pair_list = self._make_indexed_pair_list()
 
+        if is_iterable:
+            train_generator = self._get_full_batch_iter(32)
+        else:
+            X1_train, X2_train, y_train = self._get_full_batch()
 
-        X1_train, X2_train, y_train = self._get_full_batch()
         self.model = self._get_keras_model()
         self.model.summary()
 
@@ -409,7 +434,10 @@ class DRMM_TKS(utils.SaveLoad):
 
         self.model.compile(optimizer=optimizer, loss=loss,
                            metrics=['accuracy'])
-        self.model.fit(x={"query": X1_train, "doc": X2_train}, y=y_train, batch_size=5,
+        if is_iterable: 
+            self.model.fit_generator(train_generator, steps_per_epoch=128)
+        else:
+            self.model.fit(x={"query": X1_train, "doc": X2_train}, y=y_train, batch_size=5,
                        verbose=1, epochs=self.epochs, shuffle=True, callbacks=[val_callback])
 
     def _translate_user_data(self, data):
