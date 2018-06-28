@@ -546,56 +546,69 @@ cpdef train_epoch_cbow(model, input_stream, alpha, _work, _neu1, compute_loss):
     for token in model.wv.vocab:
         vocab[token] = (model.wv.vocab[token].index, model.wv.vocab[token].sample_int)
 
-    sentences = input_stream.next_batch()
-
-    cdef pair[ULongLong, ULongLong] word
-    sentence_idx[0] = 0  # indices of the first sentence always start at 0
-    for sent in sentences:
-        if sent.empty():
-            continue  # ignore empty sentences; leave effective_sentences unchanged
-        for token in sent:
-            if vocab.find(token) == vocab.end():
-                continue # leaving `effective_words` unchanged = shortening the sentence = expanding the window
-            word = vocab[token]
-            if sample and word.second < random_int32(&next_random):
-                continue
-            indexes[effective_words] = word.first
-
-            effective_words += 1
-            if effective_words == MAX_SENTENCE_LEN:
-                break  # TODO: log warning, tally overflow?
-
-        # keep track of which words go into which sentence, so we don't train
-        # across sentence boundaries.
-        # indices of sentence number X are between <sentence_idx[X], sentence_idx[X])
-        effective_sentences += 1
-        sentence_idx[effective_sentences] = effective_words
-
-        if effective_words == MAX_SENTENCE_LEN:
-            break  # TODO: log warning, tally overflow?
-
-    # precompute "reduced window" offsets in a single randint() call
-    for i, item in enumerate(model.random.randint(0, window, effective_words)):
-        reduced_windows[i] = item
-
     # release GIL & train on all sentences
-    with nogil:
-        for sent_idx in range(effective_sentences):
-            idx_start = sentence_idx[sent_idx]
-            idx_end = sentence_idx[sent_idx + 1]
-            for i in range(idx_start, idx_end):
-                j = i - window + reduced_windows[i]
-                if j < idx_start:
-                    j = idx_start
-                k = i + window + 1 - reduced_windows[i]
-                if k > idx_end:
-                    k = idx_end
-                if hs:
-                    fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, j, k, cbow_mean, word_locks, _compute_loss, &_running_training_loss)
-                if negative:
-                    next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random, word_locks, _compute_loss, &_running_training_loss)
+    cdef int total_effective_words = 0, total_effective_sentences = 0, total_words = 0
 
-    return effective_words, effective_words  # return properly raw_tally as a second value (not tally)
+    with nogil:
+        while not input_stream.is_eof():
+            effective_sentences = 0
+            effective_words = 0
+
+            sentences = input_stream.next_batch()
+
+            cdef pair[ULongLong, ULongLong] word
+            sentence_idx[0] = 0  # indices of the first sentence always start at 0
+            for sent in sentences:
+                total_words += sent.size()
+
+                if sent.empty():
+                    continue  # ignore empty sentences; leave effective_sentences unchanged
+                for token in sent:
+                    if vocab.find(token) == vocab.end():
+                        continue # leaving `effective_words` unchanged = shortening the sentence = expanding the window
+                    word = vocab[token]
+                    if sample and word.second < random_int32(&next_random):
+                        continue
+                    indexes[effective_words] = word.first
+
+                    effective_words += 1
+                    if effective_words == MAX_SENTENCE_LEN:
+                        break  # TODO: log warning, tally overflow?
+
+                # keep track of which words go into which sentence, so we don't train
+                # across sentence boundaries.
+                # indices of sentence number X are between <sentence_idx[X], sentence_idx[X])
+                effective_sentences += 1
+                sentence_idx[effective_sentences] = effective_words
+
+                if effective_words == MAX_SENTENCE_LEN:
+                    break  # TODO: log warning, tally overflow?
+
+            # precompute "reduced window" offsets in a single randint() call
+            for i, item in enumerate(model.random.randint(0, window, effective_words)):
+                reduced_windows[i] = item
+
+
+            for sent_idx in range(effective_sentences):
+                idx_start = sentence_idx[sent_idx]
+                idx_end = sentence_idx[sent_idx + 1]
+                for i in range(idx_start, idx_end):
+                    j = i - window + reduced_windows[i]
+                    if j < idx_start:
+                        j = idx_start
+                    k = i + window + 1 - reduced_windows[i]
+                    if k > idx_end:
+                        k = idx_end
+                    if hs:
+                        fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, j, k, cbow_mean, word_locks, _compute_loss, &_running_training_loss)
+                    if negative:
+                        next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random, word_locks, _compute_loss, &_running_training_loss)
+
+            total_effective_sentences += effective_sentences
+            total_effective_words += total_effective_words
+
+
+    return total_effective_words, total_words  # return properly raw_tally as a second value (not tally)
 
 
 # Score is only implemented for hierarchical softmax
