@@ -480,7 +480,6 @@ Functions
     unitvec
     cossim
     isbow
-    convert_vec
     kullback_leibler
     jensen_shannon
     hellinger
