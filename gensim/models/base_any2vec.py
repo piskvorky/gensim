@@ -10,7 +10,6 @@ from gensim import utils
 import logging
 from timeit import default_timer
 import threading
-import multiprocessing as mp
 from six.moves import xrange
 from six import itervalues
 from gensim import matutils
