@@ -26,7 +26,7 @@ from gensim import matutils
 from gensim.test import basetmtests
 from gensim.test.utils import (datapath,
     get_tmpfile, common_texts, common_dictionary as dictionary, common_corpus as corpus)
-
+from gensim.matutils import jensen_shannon
 # TODO:
 # Test that computing the bound on new unseen documents works as expected (this is somewhat different
 # in the author-topic model than in LDA).
@@ -449,6 +449,45 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         for topic_no, probability in result:
             self.assertTrue(isinstance(topic_no, int))
             self.assertTrue(isinstance(probability, float))
+
+    def testNewAuthorTopics(self):
+
+        model = self.class_(
+            corpus, author2doc=author2doc, id2word=dictionary, num_topics=2,
+            passes=100, random_state=np.random.seed(0)
+        )
+        author2doc_newauthor = {}
+        author2doc_newauthor["test"] = [0, 1]
+        model.update(corpus=corpus[0:2], author2doc=author2doc_newauthor)
+
+        # temp save model state vars before get_new_author_topics is called
+        state_gamma_len = len(model.state.gamma)
+        author2doc_len = len(model.author2doc)
+        author2id_len = len(model.author2id)
+        id2author_len = len(model.id2author)
+        doc2author_len = len(model.doc2author)
+
+        new_author_topics = model.get_new_author_topics(corpus=corpus[0:2])
+
+        # sanity check
+        for k, v in new_author_topics:
+            self.assertTrue(isinstance(k, int))
+            self.assertTrue(isinstance(v, float))
+
+        # make sure topics are similar enough
+        similarity = 1 / (1 + jensen_shannon(model["test"], new_author_topics))
+        self.assertTrue(similarity >= 0.9)
+
+        # produce an error to test if rollback occurs
+        with self.assertRaises(TypeError):
+            model.get_new_author_topics(corpus=corpus[0])
+
+        # assure rollback was successful and the model state is as before
+        self.assertEqual(state_gamma_len, len(model.state.gamma))
+        self.assertEqual(author2doc_len, len(model.author2doc))
+        self.assertEqual(author2id_len, len(model.author2id))
+        self.assertEqual(id2author_len, len(model.id2author))
+        self.assertEqual(doc2author_len, len(model.doc2author))
 
     def testPasses(self):
         # long message includes the original error message with a custom one
