@@ -49,6 +49,7 @@ try:
 except ImportError:
     # failed... fall back to plain numpy (20-80x slower training than the above)
     FAST_VERSION = -1
+
     def do_train_job_slow(model, sentences):
         """Train on a batch of input sentences with plain python/numpy.
 
