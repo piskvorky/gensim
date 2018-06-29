@@ -5,19 +5,19 @@
 # Copyright (C) 2018 RaRe Technologies s.r.o.
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""Makes a trainable and usable model for getting similarity between documents using the DRMM_TKS model which
-is a variant of DRMM model
+"""This module makes a trainable and usable model for getting similarity between documents using the DRMM_TKS model
 
 Once the model is trained with the query-candidate-relevance data, the model can provide a vector for each new
 document which is entered into it. The similarity between any 2 documents can then be measured using the
 cosine similarty between the vectors.
 
-Abbreviations:
+Abbreviations
+=============
 DRMM : Deep Relevance Matching Model
 TKS : Top K Solutions
 
 About DRMM_TKS
---------------
+==============
 This is a variant version of DRMM, which applied topk pooling in the matching matrix.
 It has the following steps:
 1. embed queries and docs into embedding vector named 'q_embed' and 'd_embed' respectively
@@ -29,27 +29,44 @@ It has the following steps:
 
 On predicting, the model returns the score list between queries and documents.
 
+The trained model needs to be trained on data in the format:
+>>> queries = ["When was World War 1 fought ?".lower().split(), \
+               "When was Gandhi born ?".lower().split()]
 
-Initialize a model with e.g.:
+>>> docs = [["The world war was bad".lower().split(),\
+        "It was fought in 1996".lower().split()],\
+        ["Gandhi was born in the 18th century".lower().split(),\
+         "He fought for the Indian freedom movement".lower().split(),\
+         "Gandhi was assasinated".lower().split()]]
 
-  >>> model = DRMM_TKS(queries, docs, labels, word_embedding=word_embedding_path)
+>>> labels = [[0, 1],\
+             [1, 0, 0]]
 
-Train the model with e.g.:
+Get some pretrained word embeddings as KeyedVectors from gensim-data
+>>> import gensim.downloader as api
+>>> word_embeddings_kv = api.load('glove-wiki-gigaword-50')
 
-  >>> model.train(epochs=12)
+Initialize a model with:
+>>> model = DRMM_TKS(queries, docs, labels, word_embedding=word_embeddings_kv, verbose=0)
 
 Persist a model to disk with:
+>>> from gensim.test.utils import get_tmpfile
+>>> file_path = get_tmpfile('DRMM_TKS.model')
+>>> model.save(file_path)
+>>> model = DRMM_TKS.load(file_path)
 
-    >>> model.save(fname)
-    >>> model = DRMM_TKS.load(fname)
+# You can also create the modela and train it later:
+# >>> model = DRMM_TKS()
+# >>> model.train(epochs=12)
 
-The trained model can predict on new data like e.g.:
-  >>> queries = ["how are glacier caves formed ?".lower().split()]
-  >>> docs = ["A partly submerged glacier cave on Perito Moreno Glacier".lower().split(),
-              "A glacier cave is a cave formed within the ice of a glacier".lower().split()]
-  >>> drmm_tks_model.predict(queries, docs)
-  [[0.5416601]
-   [0.6190841]]
+
+# >>> queries = ["how are glacier caves formed ?".lower().split()]
+# >>> docs = ["A partly submerged glacier cave on Perito Moreno Glacier".lower().split(),\
+#           "A glacier cave is a cave formed within the ice of a glacier".lower().split()]
+
+# >>> drmm_tks_model.predict(queries, docs)
+# [[0.5416601]
+# [0.6190841]]
 
 More information can be found in:
 `Jiafeng Guo, Yixing Fan, Qingyao Ai, W. Bruce Croft
@@ -86,21 +103,73 @@ try:
     from keras.layers import Input, Embedding, Dot, Dense, Reshape, Dropout
     import tensorflow as tf
     import os
-    # For understanding why random seeding has been done as below, refer to
-    # https://keras.io/getting-started/faq/#how-can-i-obtain-reproducible-results-using-keras-during-development
-    os.environ['PYTHONHASHSEED'] = '0'
-    np.random.seed(42)
-    rn.seed(12345)
-    session_conf = tf.ConfigProto(
-        intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
-    tf.set_random_seed(1234)
-    sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
-    K.set_session(sess)
     KERAS_AVAILABLE = True
 except ImportError:
     KERAS_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
+
+def _get_full_batch_iter(pair_list, batch_size):
+    """Provides all the data points int the format: X1, X2, y with
+    alternate positive and negative examples of `batch_size` in a streamable format.
+
+    Yields
+    -------
+    X1 : numpy array of shape (batch_size * 2, text_maxlen)
+        the queries
+    X2 : numpy array of shape (batch_size * 2, text_maxlen)
+        the docs
+    y : numpy array with {0, 1} of shape (batch_size * 2, 1)
+        The relation between X1[i] and X2[j]
+        1 : X2[i] is relevant to X1[i]
+        0 : X2[i] is not relevant to X1[i]
+    """
+
+    X1, X2, y = [], [], []
+    while True:
+        for i, (query, pos_doc, neg_doc) in enumerate(pair_list):
+            X1.append(query)
+            X2.append(pos_doc)
+            y.append(1)
+            X1.append(query)
+            X2.append(neg_doc)
+            y.append(0)
+            if i % batch_size == 0 and i != 0:
+                yield ({'query': np.array(X1), 'doc': np.array(X2)}, np.array(y))
+                X1, X2, y = [], [], []
+
+def _get_pair_list(queries, docs, labels, _make_indexed):
+    """Yields a tuple with query document pairs in the format
+    (query, positive_doc, negative_doc)
+
+    [(q1, d+, d-), (q2, d+, d-), (q3, d+, d-), ..., (qn, d+, d-)]
+        where each query or document is a list of int
+
+    Example
+    -------
+    [(['When', 'was', 'Abraham', 'Lincoln', 'born', '?'],
+      ['He', 'was', 'born', 'in', '1809'],
+      ['Abraham', 'Lincoln', 'was', 'the', 'president',
+       'of', 'the', 'United', 'States', 'of', 'America']),
+
+     (['When', 'was', 'the', 'first', 'World', 'War', '?'],
+      ['It', 'was', 'fought', 'in', '1914'],
+      ['There', 'were', 'over', 'a', 'million', 'deaths']),
+
+     (['When', 'was', 'the', 'first', 'World', 'War', '?'],
+      ['It', 'was', 'fought', 'in', '1914'],
+      ['The', 'first', 'world', 'war', 'was', 'bad'])
+    ]
+
+    """
+
+    for q, doc, label in zip(queries, docs, labels):
+        doc, label = (list(t) for t in zip(*sorted(zip(doc, label), reverse=True)))
+        for item in zip(doc, label):
+            if item[1] == 1:
+                for new_item in zip(doc, label):
+                    if new_item[1] == 0:
+                        yield(_make_indexed(q), _make_indexed(item[0]), _make_indexed(new_item[0]))
 
 
 class DRMM_TKS(utils.SaveLoad):
@@ -109,38 +178,38 @@ class DRMM_TKS(utils.SaveLoad):
 
     Examples
     --------
-    >>> queries = ["When was World Wat 1 fought ?".lower().split(),
-             "When was Gandhi born ?".lower().split()]
+    # >>> queries = ["When was World Wat 1 fought ?".lower().split(),
+    #          "When was Gandhi born ?".lower().split()]
 
-    >>> docs = [
-            ["The world war was bad".lower().split(),
-            "It was fought in 1996".lower().split()],
-            ["Gandhi was born in the 18th century".lower().split(),
-             "He fought for the Indian freedom movement".lower().split(),
-             "Gandhi was assasinated".lower().split()]
-           ]
+    # >>> docs = [
+    #         ["The world war was bad".lower().split(),
+    #         "It was fought in 1996".lower().split()],
+    #         ["Gandhi was born in the 18th century".lower().split(),
+    #          "He fought for the Indian freedom movement".lower().split(),
+    #          "Gandhi was assasinated".lower().split()]
+    #        ]
 
-    >>> labels = [[0, 1],
-                 [1, 0, 0]]
+    # >>> labels = [[0, 1],
+    #              [1, 0, 0]]
 
-    >>> drmm_tks_model = DRMM_TKS_Model(queries, docs, labels, word_embedding)
-    >>> drmm_tks_model.predict(["What is AWS ?".lower().split()],
-                               ["AWS is costly .".lower().split(), "It stands for Amazon Web Services".lower().split()])
+    # >>> drmm_tks_model = DRMM_TKS_Model(queries, docs, labels, word_embedding)
+    # >>> drmm_tks_model.predict(["What is AWS ?".lower().split()],
+    #                            ["AWS is costly .".lower().split(), "It stands for Amazon Web Services".lower().split()])
     """
 
     def __init__(self, queries=None, docs=None, labels=None, word_embedding=None,
                  text_maxlen=200, normalize_embeddings=True, epochs=10, unk_handle_method='zero',
-                 validation_data=None, topk=50, target_mode='ranking'):
+                 validation_data=None, topk=50, target_mode='ranking', verbose=1):
         """Initializes the model and trains it
 
         Parameters
         ----------
-        queries: list of list of string words
+        queries: list of list of string words, optional
             The questions for the similarity learning model
             Example:
             queries=["When was World Wat 1 fought ?".split(),
                      "When was Gandhi born ?".split()],
-        docs: list of list of list of string words
+        docs: list of list of list of string words, optional
             The candidate answers for the similarity learning model
             Example:
             docs = [
@@ -150,35 +219,37 @@ class DRMM_TKS(utils.SaveLoad):
                      "He fought for the Indian freedom movement".split(),
                      "Gandhi was assasinated".split()]
                    ]
-        labels: list of list of int
+        labels: list of list of int, optional
             Indicates when a candidate document is relevant to a query
             1 : relevant
             0 : irrelevant
             Example:
             labels = [[0, 1],
                       [1, 0, 0]]
-        word_embedding : str or :class:`~gensim.models.keyedvectors.KeyedVectors`
-            path to the Glove vectors which have the embeddings in a .txt format OR
+        word_embedding : :class:`~gensim.models.keyedvectors.KeyedVectors`, optional
             a KeyedVector object which has the embeddings pre-loaded
-            If unset, random word embeddings will be used
-        text_maxlen : int
+            If None, random word embeddings will be used
+        text_maxlen : int, optional
             The maximum possible length of a query or a document
             This is used for padding sentences.
-        normalize_embeddings : bool
+        normalize_embeddings : bool, optional
             Whether the word embeddings provided should be normalized
-        epochs : int
+        epochs : int, optional
             The number of epochs for which the model should train on the data
-        unk_handle_method : {'zero', 'random'}
+        unk_handle_method : {'zero', 'random'}, optional
             The method for handling unkown words
             'zero' : unknown words are given a zero vector
             'random' : unknown words are given a uniformly random vector bassed on the word string hash.
-        validation_data: list of the form [test_queries, test_docs, test_labels]
+        validation_data: list of the form [test_queries, test_docs, test_labels], optional
             where test_queries, test_docs  and test_labels are of the same form as
             their counter parts stated above.
-        topk : int
+        topk : int, optional
             the k topmost values in the interaction matrix between the queries and the docs
-        target_mode : {'ranking', 'classification'}
+        target_mode : {'ranking', 'classification'}, optional
             the way the model should be trained, either to rank or classify
+        verbose: {0, 1, 2}
+            the level of information shared while training
+            0 = silent, 1 = progress bar, 2 = one line per epoch
         """
         self.queries = queries
         self.docs = docs
@@ -193,24 +264,28 @@ class DRMM_TKS(utils.SaveLoad):
         self.epochs = epochs
         self.validation_data = validation_data
         self.target_mode = target_mode
+        self.verbose = verbose
+
+        # These functions have been defined outside the class and set as attributes here
+        # so that they can be ignored when saving the model to file
+        self._get_pair_list = _get_pair_list
+        self._get_full_batch_iter = _get_full_batch_iter
 
         if self.target_mode not in ['ranking', 'classification']:
-            raise ValueError("Unkown target_mode %s. It must be either 'ranking' or 'classification'" %
-                             self.target_mode)
+            raise ValueError("Unkown target_mode %s. It must be either"
+                             "'ranking' or 'classification'" % self.target_mode)
 
         if unk_handle_method not in ['random', 'zero']:
-            raise ValueError("Unkown token handling method %s" %
-                             str(unk_handle_method))
+            raise ValueError("Unkown token handling method %s" % str(unk_handle_method))
         self.unk_handle_method = unk_handle_method
 
         if self.queries is not None and self.docs is not None and self.labels is not None:
-            self.build_vocab()
-            self.train()
-        else:
-            logger.info("Vocab won't be built and Model won't be trained"
-                        " as data is either not provided or is incomplete.")
+            self.build_vocab(self.queries, self.docs, self.labels, self.word_embedding)
+            self.train(self.queries, self.docs, self.labels, self.word_embedding,
+                       self.text_maxlen, self.normalize_embeddings, self.epochs, self.unk_handle_method,
+                       self.validation_data, self.topk, self.target_mode, self.verbose)
 
-    def build_vocab(self):
+    def build_vocab(self, queries, docs, labels, word_embedding):
         """Indexes all the words and makes an embedding_matrix which
         can be fed directly into an Embedding layer"""
 
@@ -231,17 +306,9 @@ class DRMM_TKS(utils.SaveLoad):
         logger.info("Vocab Size is %d" % self.vocab_size)
 
         logger.info("Building embedding index using pretrained word embeddings")
-        if type(self.word_embedding) == str:
-            # Use KeyedVectors for easy and quick access of word embeddings
-            glove_file = self.word_embedding
-            tmp_file = get_tmpfile("tmp_word2vec.txt")
-            embedding_vocab_size, self.embedding_dim = glove2word2vec(
-                glove_file, tmp_file)
-            kv_model = KeyedVectors.load_word2vec_format(tmp_file)
-        elif type(self.word_embedding) == KeyedVectors:
+        if type(self.word_embedding) == KeyedVectors:
             kv_model = self.word_embedding
-            embedding_vocab_size, self.embedding_dim = len(
-                kv_model.vocab), kv_model.vector_size
+            embedding_vocab_size, self.embedding_dim = len(kv_model.vocab), kv_model.vector_size
         else:
             raise ValueError("Unknown value of word_embedding : %s."
                              "Must be either a string path to Glove Embedding file or a KeyedVector"
@@ -259,8 +326,7 @@ class DRMM_TKS(utils.SaveLoad):
             self.embedding_matrix = np.random.uniform(-0.2, 0.2,
                                                       (self.vocab_size, self.embedding_dim))
         elif self.unk_handle_method == 'zero':
-            self.embedding_matrix = np.zeros(
-                (self.vocab_size, self.embedding_dim))
+            self.embedding_matrix = np.zeros((self.vocab_size, self.embedding_dim))
 
         n_non_embedding_words = 0
         for word, i in self.word2index.items():
@@ -270,8 +336,7 @@ class DRMM_TKS(utils.SaveLoad):
             else:
                 if self.unk_handle_method == 'random':
                     # Creates the same random vector for the given string each time
-                    self.embedding_matrix[i] = self._seeded_vector(
-                        word, self.embedding_dim)
+                    self.embedding_matrix[i] = self._seeded_vector(word, self.embedding_dim)
                 n_non_embedding_words += 1
         logger.info("There are %d words out of %d (%.2f%%) not in the embeddings. Setting them to %s" %
                     (n_non_embedding_words, self.vocab_size, n_non_embedding_words * 100 / self.vocab_size,
@@ -301,8 +366,7 @@ class DRMM_TKS(utils.SaveLoad):
         self.unk_word_index = vocab_offset + 1
 
         if self.unk_handle_method == 'random':
-            unk_embedding_row = np.random.uniform(
-                -0.2, 0.2, (1, self.embedding_dim))
+            unk_embedding_row = np.random.uniform(-0.2, 0.2, (1, self.embedding_dim))
         elif self.unk_handle_method == 'zero':
             unk_embedding_row = np.zeros((1, self.embedding_dim))
 
@@ -385,74 +449,10 @@ class DRMM_TKS(utils.SaveLoad):
             y.append(0)
         return np.array(X1), np.array(X2), np.array(y)
 
-    def _get_full_batch_iter(self, batch_size):
-        """Provides all the data points int the format: X1, X2, y with
-        alternate positive and negative examples of `batch_size` in a streamable format.
-
-        Yields
-        -------
-        X1 : numpy array of shape (batch_size * 2, text_maxlen)
-            the queries
-        X2 : numpy array of shape (batch_size * 2, text_maxlen)
-            the docs
-        y : numpy array with {0, 1} of shape (batch_size * 2, 1)
-            The relation between X1[i] and X2[j]
-            1 : X2[i] is relevant to X1[i]
-            0 : X2[i] is not relevant to X1[i]
-        """
-
-        X1, X2, y = [], [], []
-        while True:
-            for i, (query, pos_doc, neg_doc) in enumerate(self.pair_list):
-                X1.append(query)
-                X2.append(pos_doc)
-                y.append(1)
-                X1.append(query)
-                X2.append(neg_doc)
-                y.append(0)
-                if i % batch_size == 0 and i != 0:
-                    yield ({'query': np.array(X1), 'doc': np.array(X2)}, np.array(y))
-                    X1, X2, y = [], [], []
-
-    def _get_pair_list(self):
-        """Yields a tuple with query document pairs in the format
-        (query, positive_doc, negative_doc)
-
-        [(q1, d+, d-), (q2, d+, d-), (q3, d+, d-), ..., (qn, d+, d-)]
-            where each query or document is a list of int
-
-        Example
-        -------
-        [(['When', 'was', 'Abraham', 'Lincoln', 'born', '?'],
-          ['He', 'was', 'born', 'in', '1809'],
-          ['Abraham', 'Lincoln', 'was', 'the', 'president',
-           'of', 'the', 'United', 'States', 'of', 'America']),
-
-         (['When', 'was', 'the', 'first', 'World', 'War', '?'],
-          ['It', 'was', 'fought', 'in', '1914'],
-          ['There', 'were', 'over', 'a', 'million', 'deaths']),
-
-         (['When', 'was', 'the', 'first', 'World', 'War', '?'],
-          ['It', 'was', 'fought', 'in', '1914'],
-          ['The', 'first', 'world', 'war', 'was', 'bad'])
-        ]
-
-        """
-
-        for q, doc, label in zip(self.queries, self.docs, self.labels):
-            doc, label = (list(t)
-                          for t in zip(*sorted(zip(doc, label), reverse=True)))
-            for item in zip(doc, label):
-                if item[1] == 1:
-                    for new_item in zip(doc, label):
-                        if new_item[1] == 0:
-                            yield(self._make_indexed(q), self._make_indexed(item[0]), self._make_indexed(new_item[0]))
-
-    def train(self, queries=None, docs=None, labels=None, word_embedding=None,
-              text_maxlen=None, normalize_embeddings=None, epochs=None, unk_handle_method=None,
-              validation_data=None, topk=None, target_mode=None):
+    def train(self, queries, docs, labels, word_embedding=None,
+              text_maxlen=200, normalize_embeddings=True, epochs=10, unk_handle_method='zero',
+              validation_data=None, topk=50, target_mode='ranking', verbose=1):
         """Trains a DRMM_TKS model using specified parameters"""
-
         # In case the user wants to initialize and train the model in different phases
         self.queries = queries or self.queries
         self.docs = docs or self.docs
@@ -467,7 +467,7 @@ class DRMM_TKS(utils.SaveLoad):
         self.topk = topk or self.topk
         self.target_mode = target_mode or self.target_mode
 
-        if self.queries is None and self.docs is None and self.labels is None:
+        if self.queries is None or self.docs is None or self.labels is None:
             raise ValueError("queries, docs and labels have to be specified")
         # We need to build these each time since any of the parameters can change from each train to trian
 
@@ -476,15 +476,15 @@ class DRMM_TKS(utils.SaveLoad):
         if isinstance(self.queries, Iterable) and not isinstance(self.queries, list):
             is_iterable = True
 
-        self.pair_list = self._get_pair_list()
+        self.pair_list = self._get_pair_list(self.queries, self.docs, self.labels, self._make_indexed)
 
         if is_iterable:
-            train_generator = self._get_full_batch_iter(32)
+            train_generator = self._get_full_batch_iter(self.pair_list, 32)
         else:
             X1_train, X2_train, y_train = self._get_full_batch()
 
         self.model = self._get_keras_model()
-        self.model.summary()
+        self.model.summary(print_fn=logger.info)
 
         optimizer = 'adam'
         optimizer = optimizers.get(optimizer)
@@ -518,14 +518,16 @@ class DRMM_TKS(utils.SaveLoad):
 
             val_callback = ValidationCallback({"X1": indexed_long_queries, "X2": indexed_long_doc_list,
                                                "doc_lengths": doc_lens, "y": long_test_labels})
+            val_callback = [val_callback]
 
         self.model.compile(optimizer=optimizer, loss=loss,
                            metrics=['accuracy'])
         if is_iterable:
-            self.model.fit_generator(train_generator, steps_per_epoch=128, callbacks=[val_callback], epochs=self.epochs)
+            self.model.fit_generator(train_generator, steps_per_epoch=128, callbacks=[val_callback],
+                                    epochs=self.epochs)
         else:
             self.model.fit(x={"query": X1_train, "doc": X2_train}, y=y_train, batch_size=5,
-                           verbose=1, epochs=self.epochs, shuffle=True, callbacks=[val_callback])
+                           verbose=self.verbose, epochs=self.epochs, shuffle=True, callbacks=val_callback)
 
     def _translate_user_data(self, data):
         """Translates given user data into an indexed format which the model understands.
@@ -534,15 +536,6 @@ class DRMM_TKS(utils.SaveLoad):
         ----------
         data : list of list of string words
             The data to be tranlsated
-
-        Example
-        -------
-        >>> data = [["Hello World".split(),
-                     "Translate this sentence".split()]
-                    ]
-        >>> _translate_user_data(data)
-        [[12, 54],
-         [65, 23, 21]
 
         """
 
@@ -626,7 +619,10 @@ class DRMM_TKS(utils.SaveLoad):
 
         """
         # don't save the keras model as it needs to be saved with a keras function
-        kwargs['ignore'] = kwargs.get('ignore', ['model'])
+        # Also, we can't save iterable properties. So, ignore them.
+        kwargs['ignore'] = kwargs.get(
+                            'ignore', ['model', '_get_pair_list', '_get_full_batch_iter',
+                                        'queries', 'docs', 'labels', 'pair_list'])
         kwargs['fname_or_handle'] = fname
         super(DRMM_TKS, self).save(*args, **kwargs)
         self.model.save(fname + ".keras")
@@ -671,13 +667,13 @@ class DRMM_TKS(utils.SaveLoad):
 
         Parameters
         ----------
-        embed_trainable : bool
+        embed_trainable : bool, optional
             Whether the embeddings should be trained
             if True, the embeddings are trianed
-        dropout_rate : float between 0 and 1
+        dropout_rate : float between 0 and 1, optional
             The probability of making a neuron dead
             Used for regularization.
-        hidden_sizes : list of int
+        hidden_sizes : list of int, optional
             The list of hidden sizes for the fully connected layers connected to the matching matrix
             Example :
                 hidden_sizes = [10, 20, 30]

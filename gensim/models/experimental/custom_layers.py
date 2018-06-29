@@ -12,6 +12,7 @@ class TopKLayer(Layer):
     """Layer to get top k values from the interaction matrix in drmm_tks model"""
     def __init__(self, output_dim, topk, **kwargs):
         """
+
         Parameters
         ----------
         output_dim : tuple of ints
