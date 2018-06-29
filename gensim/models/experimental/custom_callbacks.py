@@ -35,11 +35,13 @@ class ValidationCallback(Callback):
         if not KERAS_AVAILABLE:
             raise ImportError("Please install Keras to use this class")
 
-        # Check if all test_data is a dicitonary with all the right keys 
+        # Check if all test_data is a dicitonary with all the right keys
         try:
             # If an empty dict is passed
             if len(test_data.keys()) == 0:
-                raise ValueError("test_data dictionary is empty. It doesn't have the keys: 'X1', 'X2', 'y', 'doc_lengths'")
+                raise ValueError(
+                      "test_data dictionary is empty. It doesn't have the keys: 'X1', 'X2', 'y', 'doc_lengths'"
+                    )
             for key in test_data.keys():
                 if key not in ['X1', 'X2', 'y', 'doc_lengths']:
                     raise ValueError("test_data dictionary doesn't have the  keys: 'X1', 'X2', 'y', 'doc_lengths'")
