@@ -40,9 +40,8 @@ import numpy as np
 from numpy import dot
 from gensim import utils, matutils
 from gensim.utils import tokenize
-from random import randint
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
-from scipy.special import expit
+from scipy.stats import logistic
 import os
 
 try:
@@ -50,25 +49,21 @@ try:
 except ImportError:
     # failed... fall back to plain numpy (20-80x slower training than the above)
     FAST_VERSION = -1
-
     def do_train_job_slow(model, sentences):
         """Train on a batch of input sentences with plain python/numpy.
 
         """
         ntokens = model.vocabulary.ntokens
-        local_token_count = 0
-        model.token_count = 0
-        model.nexamples = 0
+        token_count = 0
+        nexamples = 0
         progress = 0
         for i in range(model.epochs):
             logger.info("Epoch %i :", i)
             for sentence in sentences:
-                progress = model.token_count / (model.epochs * ntokens)
-                if progress >= 1:
-                    break
+                progress = token_count / (model.epochs * ntokens)
                 lr = model.alpha * (1.0 - progress)
                 ntokens_temp, words = model.vocabulary.get_line(sentence)
-                local_token_count += ntokens_temp
+                token_count += ntokens_temp
                 if len(words) > 1:
                     for i in range(len(words)):
                         if model.random.uniform(0, 1) > model.vocabulary.pdiscard[words[i]]:
@@ -76,20 +71,21 @@ except ImportError:
                         context = list(words)
                         context[i] = 0
                         context = model.vocabulary.add_word_ngrams_train(
-                                context=context, n=model.word_ngrams, k=model.dropout_k)
+                                context=context, n=model.word_ngrams, k=model.dropout_k, random=model.random)
                         model._update(input_=context, target=words[i], lr=lr)
-                if local_token_count > model.batch_words:
-                    model.token_count += local_token_count
-                    local_token_count = 0
-                if model.token_count >= model.epochs * ntokens:
+                        nexamples += 1
+                if token_count >= model.epochs * ntokens:
                     break
+            loss = model.loss
+            if nexamples > 0:
+                loss = model.loss / nexamples
             if model.compute_loss is True:
                 logger.info(
-                    "Progress: %.2f, lr: %.4f, loss: %.4f", progress * 100, lr, model.loss / model.nexamples
+                    "Progress: %.2f, lr: %.4f, loss: %.4f", progress * 100, lr, loss
                     )
             else:
                 logger.info("Progress: %.2f, lr: %.4f", progress * 100, lr)
-        return model.token_count
+        return token_count
 
 logger = logging.getLogger(__name__)
 
@@ -258,7 +254,7 @@ class Sent2VecVocab(object):
             f = self.words[i].count / self.ntokens
             self.pdiscard.append(((self.sample / f) ** 0.5) + (self.sample / f))
 
-    def add_word_ngrams_train(self, context, n, k):
+    def add_word_ngrams_train(self, context, n, k, random):
         """Training word ngrams for a given context and target word.
 
         Parameters
@@ -268,8 +264,9 @@ class Sent2VecVocab(object):
         n : int
             Number of word ngrams.
         k : int
-            Number of word ngrams dropped while
-        training a Sent2Vec model.
+            Number of word ngrams dropped while training a Sent2Vec model.
+        random : np.random.RandomState
+            Model random state seeded with a particular value.
         Returns
         -------
         line : list
@@ -281,7 +278,7 @@ class Sent2VecVocab(object):
         line_size = len(line)
         discard = [False] * line_size
         while num_discarded < k and line_size - num_discarded > 2:
-            token_to_discard = randint(0, line_size - 1)
+            token_to_discard = random.randint(0, line_size - 1)
             if discard[token_to_discard] is False:
                 discard[token_to_discard] = True
                 num_discarded += 1
@@ -355,7 +352,7 @@ class Sent2VecVocab(object):
 
 
 class Sent2Vec(BaseWordEmbeddingsModel):
-    """Class for training and using neural networks described in [1]_
+    """Class for training and using neural networks.
 
     """
     def __init__(self, sentences=None, size=100, alpha=0.01, epochs=5, min_count=5, negative=10,
@@ -517,7 +514,7 @@ class Sent2Vec(BaseWordEmbeddingsModel):
             Binary logistic regression loss.
 
         """
-        score = expit(np.dot(self.wo[target], self.hidden))
+        score = logistic.cdf(np.dot(self.wo[target], self.hidden))
         alpha = lr * (float(label) - score)
         self.grad += self.wo[target] * alpha
         self.wo[target] += self.hidden * alpha
@@ -585,12 +582,8 @@ class Sent2Vec(BaseWordEmbeddingsModel):
         assert(target < self.vocabulary.size)
         if len(input_) == 0:
             return
-        self.hidden = np.zeros(self.vector_size)
-        for i in input_:
-            self.hidden += self.wi[i]
-        self.hidden *= (1.0 / len(input_))
+        self.hidden = np.mean(self.wi[input_], axis=0)
         self.loss += self._negative_sampling(target, lr)
-        self.nexamples += 1
         self.grad *= (1.0 / len(input_))
         for i in input_:
             self.wi[i] += self.grad
