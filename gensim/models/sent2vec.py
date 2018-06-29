@@ -50,6 +50,45 @@ try:
 except ImportError:
     # failed... fall back to plain numpy (20-80x slower training than the above)
     FAST_VERSION = -1
+    def do_train_job_slow(model, sentences):
+        """Train on a batch of input sentences with plain python/numpy.
+    
+        """
+        ntokens = model.vocabulary.ntokens
+        local_token_count = 0
+        model.token_count = 0
+        model.nexamples = 0
+        progress = 0
+        for i in range(model.epochs):
+            logger.info("Epoch %i :", i)
+            for sentence in sentences:
+                progress = model.token_count / (model.epochs * ntokens)
+                if progress >= 1:
+                    break
+                lr = model.alpha * (1.0 - progress)
+                ntokens_temp, words = model.vocabulary.get_line(sentence)
+                local_token_count += ntokens_temp
+                if len(words) > 1:
+                    for i in range(len(words)):
+                        if model.random.uniform(0, 1) > model.vocabulary.pdiscard[words[i]]:
+                            continue
+                        context = list(words)
+                        context[i] = 0
+                        context = model.vocabulary.add_word_ngrams_train(
+                                context=context, n=model.word_ngrams, k=model.dropout_k)
+                        model._update(input_=context, target=words[i], lr=lr)
+                if local_token_count > model.batch_words:
+                    model.token_count += local_token_count
+                    local_token_count = 0
+                if model.token_count >= model.epochs * ntokens:
+                    break
+            if model.compute_loss is True:
+                logger.info(
+                    "Progress: %.2f, lr: %.4f, loss: %.4f", progress * 100, lr, model.loss / model.nexamples
+                    )
+            else:
+                logger.info("Progress: %.2f, lr: %.4f", progress * 100, lr)
+        return model.token_count
 
 logger = logging.getLogger(__name__)
 
@@ -319,7 +358,7 @@ class Sent2Vec(BaseWordEmbeddingsModel):
 
     """
     def __init__(self, sentences=None, size=100, alpha=0.01, epochs=5, min_count=5, negative=10,
-                 word_word_ngrams=2, bucket=2000000, sample=0.0001, dropout_k=2, seed=42,
+                 word_ngrams=2, bucket=2000000, sample=0.0001, dropout_k=2, seed=42,
                  min_alpha=0.001, batch_words=10000, workers=3, max_vocab_size=30000000,
                  compute_loss=False, callbacks=()):
         """
@@ -338,7 +377,7 @@ class Sent2Vec(BaseWordEmbeddingsModel):
             Ignore all words with total frequency lower than this.
         negative : int, optional
             Specifies how many "noise words" should be drawn (usually between 5-20).
-        word_word_ngrams : int, optional
+        word_ngrams : int, optional
             Max length of word ngram in number of words.
         bucket : int, optional
             Number of hash buckets for vocabulary.
@@ -369,11 +408,10 @@ class Sent2Vec(BaseWordEmbeddingsModel):
         self.random = np.random.RandomState(seed)
         self.negpos = 1
         self.loss = 0.0
-        self.negative_table_size = 10000000
         self.negatives = []
         self.vocabulary = Sent2VecVocab(sample=sample, bucket=bucket, max_vocab_size=max_vocab_size)
         self.min_count = min_count
-        self.word_word_ngrams = word_word_ngrams
+        self.word_ngrams = word_ngrams
         self.bucket = bucket
         self.sample = sample
         self.dropout_k = dropout_k
@@ -499,11 +537,12 @@ class Sent2Vec(BaseWordEmbeddingsModel):
         if update:
             self.negatives = list(self.negatives)
         z = 0.0
+        negative_table_size = min(3 * len(counts), 10000000)
         for i in range(len(counts)):
             z += counts[i] ** 0.5
         for i in range(len(counts)):
             c = counts[i] ** 0.5
-            for j in range(int(c * self.negative_table_size / z) + 1):
+            for j in range(int(c * negative_table_size / z) + 1):
                 self.negatives.append(i)
         self.random.shuffle(self.negatives)
         self.negatives = np.array(self.negatives)
@@ -554,46 +593,6 @@ class Sent2Vec(BaseWordEmbeddingsModel):
         self.grad *= (1.0 / len(input_))
         for i in input_:
             self.wi[i] += self.grad
-
-    def _do_train_job_slow(self, sentences):
-        """Train on a batch of input sentences with plain python/numpy.
-
-        """
-        ntokens = self.vocabulary.ntokens
-        local_token_count = 0
-        self.token_count = 0
-        self.nexamples = 0
-        progress = 0
-        for i in range(self.epochs):
-            logger.info("Epoch %i :", i)
-            for sentence in sentences:
-                progress = self.token_count / (self.epochs * ntokens)
-                if progress >= 1:
-                    break
-                lr = self.alpha * (1.0 - progress)
-                ntokens_temp, words = self.vocabulary.get_line(sentence)
-                local_token_count += ntokens_temp
-                if len(words) > 1:
-                    for i in range(len(words)):
-                        if self.random.uniform(0, 1) > self.vocabulary.pdiscard[words[i]]:
-                            continue
-                        context = list(words)
-                        context[i] = 0
-                        context = self.vocabulary.add_word_ngrams_train(
-                                context=context, n=self.word_word_ngrams, k=self.dropout_k)
-                        self._update(input_=context, target=words[i], lr=lr)
-                if local_token_count > self.batch_words:
-                    self.token_count += local_token_count
-                    local_token_count = 0
-                if self.token_count >= self.epochs * ntokens:
-                    break
-            if self.compute_loss is True:
-                logger.info(
-                    "Progress: %.2f, lr: %.4f, loss: %.4f", progress * 100, lr, self.loss / self.nexamples
-                    )
-            else:
-                logger.info("Progress: %.2f, lr: %.4f", progress * 100, lr)
-        return self.token_count
 
     def _do_train_job(self, sentences, alpha, inits):
         """Train on a batch of input `sentences`
@@ -647,27 +646,27 @@ class Sent2Vec(BaseWordEmbeddingsModel):
                                           ).astype(np.float32)
             self.wo = np.zeros((self.vocabulary.size, self.vector_size), dtype=np.float32)
             self._init_table_negatives(counts=counts, update=update)
-        else:
-            logger.info("Updating dictionary...")
-            if self.vocabulary.size == 0:
-                raise RuntimeError(
-                    "You cannot do an online vocabulary-update of a model which has no prior vocabulary. "
-                    "First build the vocabulary of your model with a corpus "
-                    "before doing an online update.")
-            prev_dict_size = self.vocabulary.size
-            self.corpus_count = self.vocabulary.read(sentences=sentences, min_count=self.min_count)
-            logger.info(
-                "Dictionary updated, dictionary size: %i, tokens read: %i",
-                self.vocabulary.size, self.vocabulary.ntokens
-                )
-            counts = [entry.count for entry in self.vocabulary.words]
-            new_wi = self.random.uniform((-1 / self.vector_size), ((-1 / self.vector_size) + 1),
-                                              (self.vocabulary.size - prev_dict_size + self.bucket,
-                                               self.vector_size)).astype(np.float32)
-            new_wo = np.zeros((self.vocabulary.size - prev_dict_size, self.vector_size), dtype=np.float32)
-            self.wi = np.append(self.wi, new_wi, axis=0)
-            self.wo = np.append(self.wo, new_wo, axis=0)
-            self._init_table_negatives(counts=counts, update=update)
+            return
+        logger.info("Updating dictionary...")
+        if self.vocabulary.size == 0:
+            raise RuntimeError(
+                "You cannot do an online vocabulary-update of a model which has no prior vocabulary. "
+                "First build the vocabulary of your model with a corpus "
+                "before doing an online update.")
+        prev_dict_size = self.vocabulary.size
+        self.corpus_count = self.vocabulary.read(sentences=sentences, min_count=self.min_count)
+        logger.info(
+            "Dictionary updated, dictionary size: %i, tokens read: %i",
+            self.vocabulary.size, self.vocabulary.ntokens
+            )
+        counts = [entry.count for entry in self.vocabulary.words]
+        new_wi = self.random.uniform((-1 / self.vector_size), ((-1 / self.vector_size) + 1),
+                                          (self.vocabulary.size - prev_dict_size + self.bucket,
+                                           self.vector_size)).astype(np.float32)
+        new_wo = np.zeros((self.vocabulary.size - prev_dict_size, self.vector_size), dtype=np.float32)
+        self.wi = np.append(self.wi, new_wi, axis=0)
+        self.wo = np.append(self.wo, new_wo, axis=0)
+        self._init_table_negatives(counts=counts, update=update)
 
     def train(self, sentences, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None, word_count=0,
@@ -723,7 +722,7 @@ class Sent2Vec(BaseWordEmbeddingsModel):
 
         """
         if FAST_VERSION < 0:
-            return self._do_train_job_slow(sentences)
+            return do_train_job_slow(self, sentences)
         return super(Sent2Vec, self).train(
             sentences, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
@@ -745,11 +744,8 @@ class Sent2Vec(BaseWordEmbeddingsModel):
         """
         ntokens_temp, words = self.vocabulary.get_line(sentence)
         sent_vec = np.zeros(self.vector_size)
-        line = self.vocabulary.add_word_ngrams(context=words, n=self.word_word_ngrams)
-        for word_vec in line:
-            sent_vec += self.wi[word_vec]
-        if len(line) > 0:
-            sent_vec *= (1.0 / len(line))
+        line = self.vocabulary.add_word_ngrams(context=words, n=self.word_ngrams)
+        sent_vec = np.mean(self.wi[line], axis=0)
         return sent_vec
 
     @classmethod
