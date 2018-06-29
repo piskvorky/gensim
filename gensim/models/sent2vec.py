@@ -50,9 +50,10 @@ try:
 except ImportError:
     # failed... fall back to plain numpy (20-80x slower training than the above)
     FAST_VERSION = -1
+
     def do_train_job_slow(model, sentences):
         """Train on a batch of input sentences with plain python/numpy.
-    
+
         """
         ntokens = model.vocabulary.ntokens
         local_token_count = 0
@@ -745,7 +746,8 @@ class Sent2Vec(BaseWordEmbeddingsModel):
         ntokens_temp, words = self.vocabulary.get_line(sentence)
         sent_vec = np.zeros(self.vector_size)
         line = self.vocabulary.add_word_ngrams(context=words, n=self.word_ngrams)
-        sent_vec = np.mean(self.wi[line], axis=0)
+        if len(line) > 0:
+            sent_vec = np.mean(self.wi[line], axis=0)
         return sent_vec
 
     @classmethod
@@ -753,7 +755,7 @@ class Sent2Vec(BaseWordEmbeddingsModel):
         return super(BaseWordEmbeddingsModel, cls).load(*args, **kwargs)
 
     def save(self, *args, **kwargs):
-        kwargs['ignore'] = kwargs.get('ignore', ['wo', 'hidden', 'grad'])
+        kwargs['ignore'] = kwargs.get('ignore', ['hidden', 'grad'])
         return super(Sent2Vec, self).save(*args, **kwargs)
 
     def similarity(self, sent1, sent2):
