@@ -296,16 +296,16 @@ cdef unsigned long long fast_sentence_cbow_neg(
 def train_batch_sg(model, sentences, alpha, _work, compute_loss):
     cdef int hs = model.hs
     cdef int negative = model.negative
-    cdef int sample = (model.vocabulary.sample != 0)
+    cdef int sample = (model.sample != 0)
 
     cdef int _compute_loss = (1 if compute_loss == True else 0)
     cdef REAL_t _running_training_loss = model.running_training_loss
 
-    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
-    cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_lockf))
+    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.syn0))
+    cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.syn0_lockf))
     cdef REAL_t *work
     cdef REAL_t _alpha = alpha
-    cdef int size = model.wv.vector_size
+    cdef int size = model.layer1_size
 
     cdef int codelens[MAX_SENTENCE_LEN]
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
@@ -330,12 +330,12 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
     cdef unsigned long long next_random
 
     if hs:
-        syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
+        syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
 
     if negative:
-        syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
-        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
-        cum_table_len = len(model.vocabulary.cum_table)
+        syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
+        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
+        cum_table_len = len(model.cum_table)
     if negative or sample:
         next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
@@ -403,17 +403,17 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
 def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
     cdef int hs = model.hs
     cdef int negative = model.negative
-    cdef int sample = (model.vocabulary.sample != 0)
+    cdef int sample = (model.sample != 0)
     cdef int cbow_mean = model.cbow_mean
 
     cdef int _compute_loss = (1 if compute_loss == True else 0)
     cdef REAL_t _running_training_loss = model.running_training_loss
 
-    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
-    cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_lockf))
+    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.syn0))
+    cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.syn0_lockf))
     cdef REAL_t *work
     cdef REAL_t _alpha = alpha
-    cdef int size = model.wv.vector_size
+    cdef int size = model.layer1_size
 
     cdef int codelens[MAX_SENTENCE_LEN]
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
@@ -438,12 +438,12 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
     cdef unsigned long long next_random
 
     if hs:
-        syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
+        syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
 
     if negative:
-        syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
-        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
-        cum_table_len = len(model.vocabulary.cum_table)
+        syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
+        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
+        cum_table_len = len(model.cum_table)
     if negative or sample:
         next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
@@ -509,9 +509,9 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
 # Score is only implemented for hierarchical softmax
 def score_sentence_sg(model, sentence, _work):
 
-    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
+    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.syn0))
     cdef REAL_t *work
-    cdef int size = model.wv.vector_size
+    cdef int size = model.layer1_size
 
     cdef int codelens[MAX_SENTENCE_LEN]
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
@@ -525,7 +525,7 @@ def score_sentence_sg(model, sentence, _work):
     cdef np.uint32_t *points[MAX_SENTENCE_LEN]
     cdef np.uint8_t *codes[MAX_SENTENCE_LEN]
 
-    syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
+    syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
 
     # convert Python structures to primitive types, so we can release the GIL
     work = <REAL_t *>np.PyArray_DATA(_work)
@@ -579,7 +579,7 @@ cdef void score_pair_sg_hs(
         row2 = word_point[b] * size
         f = our_dot(&size, &syn0[row1], &ONE, &syn1[row2], &ONE)
         sgn = (-1)**word_code[b] # ch function: 0-> 1, 1 -> -1
-        f *= sgn
+        f = sgn*f
         if f <= -MAX_EXP or f >= MAX_EXP:
             continue
         f = LOG_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
@@ -589,10 +589,10 @@ def score_sentence_cbow(model, sentence, _work, _neu1):
 
     cdef int cbow_mean = model.cbow_mean
 
-    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
+    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.syn0))
     cdef REAL_t *work
     cdef REAL_t *neu1
-    cdef int size = model.wv.vector_size
+    cdef int size = model.layer1_size
 
     cdef int codelens[MAX_SENTENCE_LEN]
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
@@ -607,7 +607,7 @@ def score_sentence_cbow(model, sentence, _work, _neu1):
     cdef np.uint32_t *points[MAX_SENTENCE_LEN]
     cdef np.uint8_t *codes[MAX_SENTENCE_LEN]
 
-    syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
+    syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
 
     # convert Python structures to primitive types, so we can release the GIL
     work = <REAL_t *>np.PyArray_DATA(_work)
@@ -673,7 +673,7 @@ cdef void score_pair_cbow_hs(
         row2 = word_point[b] * size
         f = our_dot(&size, neu1, &ONE, &syn1[row2], &ONE)
         sgn = (-1)**word_code[b] # ch function: 0-> 1, 1 -> -1
-        f *= sgn
+        f = sgn*f
         if f <= -MAX_EXP or f >= MAX_EXP:
             continue
         f = LOG_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]

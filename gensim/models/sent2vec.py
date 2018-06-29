@@ -30,12 +30,8 @@ You can perform the NLP similarity task with the model
 
 >>> similarity = model.similarity(['graph', 'minors', 'trees'], ['eps', 'user', 'interface', 'system'])
 
-
-References
-----------
-.. Unsupervised Learning of Sentence Embeddings using Compositional n-Gram Features.
-   <https://arxiv.org/abs/1703.02507>
-.. Sent2Vec C++ implementation. <https://github.com/epfml/sent2vec>
+`Unsupervised Learning of Sentence Embeddings using Compositional n-Gram Features. <https://arxiv.org/abs/1703.02507>`_
+`Sent2Vec C++ implementation. <https://github.com/epfml/sent2vec>`_
 
 """
 from __future__ import division
@@ -59,8 +55,9 @@ logger = logging.getLogger(__name__)
 
 
 class Entry(object):
-    """Class for populating Sent2Vec's dictionary."""
+    """Class for populating Sent2Vec's dictionary.
 
+    """
     def __init__(self, word=None, count=0):
         """
 
@@ -81,7 +78,6 @@ class Sent2VecVocab(object):
     word ngrams.
 
     """
-
     def __init__(self, sample, bucket, max_vocab_size, min_count=5, max_line_size=1024):
         """
 
@@ -215,15 +211,16 @@ class Sent2VecVocab(object):
             self.size += 1
 
     def init_table_discard(self):
-        """Downsample higher frequency words. Initializing discard table according to given sampling threshold."""
+        """Downsample higher frequency words. Initializing discard table according to given sampling threshold.
 
+        """
         for i in range(self.size):
             f = self.words[i].count / self.ntokens
             self.pdiscard.append(((self.sample / f) ** 0.5) + (self.sample / f))
 
-    def add_ngrams_train(self, context, n, k):
-        """
-        Training word ngrams for a given context and target word.
+    def add_word_ngrams_train(self, context, n, k):
+        """Training word ngrams for a given context and target word.
+
         Parameters
         ----------
         context : list
@@ -237,8 +234,8 @@ class Sent2VecVocab(object):
         -------
         line : list
             List of word and word ngram ids.
-        """
 
+        """
         line = list(context)
         num_discarded = 0
         line_size = len(line)
@@ -259,8 +256,9 @@ class Sent2VecVocab(object):
                 line.append(self.size + (h % self.bucket))
         return line
 
-    def add_ngrams(self, context, n):
+    def add_word_ngrams(self, context, n):
         """Computing word ngrams for given sentence while inferring sentence vector.
+        The ngrams computed are continuous sequence of `n` items starting from a particular target word.
 
         Parameters
         ----------
@@ -275,7 +273,6 @@ class Sent2VecVocab(object):
             List of word and word ngram ids.
 
         """
-
         line = list(context)
         line_size = len(context)
         for i in range(line_size):
@@ -303,7 +300,6 @@ class Sent2VecVocab(object):
             List of word ids.
 
         """
-
         words = []
         ntokens = 0
         for word in sentence:
@@ -319,10 +315,11 @@ class Sent2VecVocab(object):
 
 
 class Sent2Vec(BaseWordEmbeddingsModel):
-    """Class for training and using neural networks described in [1]_"""
+    """Class for training and using neural networks described in [1]_
 
+    """
     def __init__(self, sentences=None, size=100, alpha=0.01, epochs=5, min_count=5, negative=10,
-                 word_ngrams=2, bucket=2000000, sample=0.0001, dropout_k=2, seed=42,
+                 word_word_ngrams=2, bucket=2000000, sample=0.0001, dropout_k=2, seed=42,
                  min_alpha=0.001, batch_words=10000, workers=3, max_vocab_size=30000000,
                  compute_loss=False, callbacks=()):
         """
@@ -341,8 +338,8 @@ class Sent2Vec(BaseWordEmbeddingsModel):
             Ignore all words with total frequency lower than this.
         negative : int, optional
             Specifies how many "noise words" should be drawn (usually between 5-20).
-        word_ngrams : int, optional
-            Max length of word ngram.
+        word_word_ngrams : int, optional
+            Max length of word ngram in number of words.
         bucket : int, optional
             Number of hash buckets for vocabulary.
         sample : float, optional
@@ -376,7 +373,7 @@ class Sent2Vec(BaseWordEmbeddingsModel):
         self.negatives = []
         self.vocabulary = Sent2VecVocab(sample=sample, bucket=bucket, max_vocab_size=max_vocab_size)
         self.min_count = min_count
-        self.word_ngrams = word_ngrams
+        self.word_word_ngrams = word_word_ngrams
         self.bucket = bucket
         self.sample = sample
         self.dropout_k = dropout_k
@@ -395,11 +392,15 @@ class Sent2Vec(BaseWordEmbeddingsModel):
             self.compute_loss = kwargs['compute_loss']
 
     def _clear_post_train(self):
-        """Resets certain properties of the model, post training."""
+        """Resets certain properties of the model, post training.
+
+        """
         # Avoid NotImplementedError
 
     def _check_training_sanity(self, epochs=None, total_examples=None, total_words=None, **kwargs):
-        """Check that the training parameters provided make sense. e.g. raise error if `epochs` not provided."""
+        """Check that the training parameters provided make sense. e.g. raise error if `epochs` not provided.
+
+        """
         if self.alpha > self.min_alpha_yet_reached:
             logger.warning("Effective 'alpha' higher than previous training cycles")
 
@@ -429,14 +430,16 @@ class Sent2Vec(BaseWordEmbeddingsModel):
             self.workers, self.vocabulary.size, self.vector_size, self.sample, self.negative)
 
     def _get_thread_working_mem(self):
-        """Get private working memory per thread."""
+        """Get private working memory per thread.
+
+        """
         hidden = np.zeros(self.vector_size, dtype=np.float32)  # per-thread private work memory
         grad = np.zeros(self.vector_size, dtype=np.float32)
         return hidden, grad
 
     def _negative_sampling(self, target, lr):
-        """
-        Get loss using negative sampling.
+        """Get loss using negative sampling.
+
         Pararmeters
         -----------
         target : int
@@ -447,8 +450,8 @@ class Sent2Vec(BaseWordEmbeddingsModel):
         -------
         loss : float
             Negative sampling loss.
-        """
 
+        """
         loss = 0.0
         self.grad = np.zeros(self.vector_size)
         for i in range(self.negative + 1):
@@ -459,8 +462,8 @@ class Sent2Vec(BaseWordEmbeddingsModel):
         return loss
 
     def _binarylogistic(self, target, label, lr):
-        """
-        Compute loss for given target, label and learning rate using binary logistic regression.
+        """Compute loss for given target, label and learning rate using binary logistic regression.
+
         Parameters
         ----------
         target : int
@@ -473,8 +476,8 @@ class Sent2Vec(BaseWordEmbeddingsModel):
         -------
         float
             Binary logistic regression loss.
-        """
 
+        """
         score = expit(np.dot(self.wo[target], self.hidden))
         alpha = lr * (float(label) - score)
         self.grad += self.wo[target] * alpha
@@ -506,8 +509,8 @@ class Sent2Vec(BaseWordEmbeddingsModel):
         self.negatives = np.array(self.negatives)
 
     def _get_negative(self, target):
-        """
-        Get a negative from the list of negatives for caluculating nagtive sampling loss.
+        """Get a negative from the list of negatives for caluculating nagtive sampling loss.
+
         Parameter
         ---------
         target : int
@@ -516,8 +519,8 @@ class Sent2Vec(BaseWordEmbeddingsModel):
         -------
         int
             Word id of negative sample.
-        """
 
+        """
         while True:
             negative = self.negatives[self.negpos]
             self.negpos = (self.negpos + 1) % len(self.negatives)
@@ -526,8 +529,8 @@ class Sent2Vec(BaseWordEmbeddingsModel):
         return negative
 
     def _update(self, input_, target, lr):
-        """
-        Update model's neural weights for given context, target word and learning rate.
+        """Update model's neural weights for given context, target word and learning rate.
+
         Parameters
         ----------
         input_ : list
@@ -536,8 +539,8 @@ class Sent2Vec(BaseWordEmbeddingsModel):
             Word id of target word.
         lr : float
             Current Learning rate.
-        """
 
+        """
         assert(target >= 0)
         assert(target < self.vocabulary.size)
         if len(input_) == 0:
@@ -553,8 +556,8 @@ class Sent2Vec(BaseWordEmbeddingsModel):
             self.wi[i] += self.grad
 
     def _do_train_job_slow(self, sentences):
-        """
-        Train on a batch of input sentences with plain python/numpy.
+        """Train on a batch of input sentences with plain python/numpy.
+
         """
         ntokens = self.vocabulary.ntokens
         local_token_count = 0
@@ -576,8 +579,8 @@ class Sent2Vec(BaseWordEmbeddingsModel):
                             continue
                         context = list(words)
                         context[i] = 0
-                        context = self.vocabulary.add_ngrams_train(
-                                context=context, n=self.word_ngrams, k=self.dropout_k)
+                        context = self.vocabulary.add_word_ngrams_train(
+                                context=context, n=self.word_word_ngrams, k=self.dropout_k)
                         self._update(input_=context, target=words[i], lr=lr)
                 if local_token_count > self.batch_words:
                     self.token_count += local_token_count
@@ -585,8 +588,9 @@ class Sent2Vec(BaseWordEmbeddingsModel):
                 if self.token_count >= self.epochs * ntokens:
                     break
             if self.compute_loss is True:
-                logger.info("Progress: %.2f, lr: %.4f, loss: %.4f",
-                            progress * 100, lr, self.loss / self.nexamples)
+                logger.info(
+                    "Progress: %.2f, lr: %.4f, loss: %.4f", progress * 100, lr, self.loss / self.nexamples
+                    )
             else:
                 logger.info("Progress: %.2f, lr: %.4f", progress * 100, lr)
         return self.token_count
@@ -613,6 +617,7 @@ class Sent2Vec(BaseWordEmbeddingsModel):
             Number of examples processed in given training batch.
         loss : float
             Loss for given training batch.
+
         """
         hidden, grad = inits
         local_token_count, nexamples, loss = _do_train_job_fast(self, sentences, alpha, hidden, grad)
@@ -627,12 +632,15 @@ class Sent2Vec(BaseWordEmbeddingsModel):
             Input sentences.
         update : boolean
             Update existing vocabulary using input sentences if True
+
         """
         if not update:
             logger.info("Creating dictionary...")
             self.corpus_count = self.vocabulary.read(sentences=sentences, min_count=self.min_count)
-            logger.info("Dictionary created, dictionary size: %i, tokens read: %i",
-                        self.vocabulary.size, self.vocabulary.ntokens)
+            logger.info(
+                "Dictionary created, dictionary size: %i, tokens read: %i",
+                self.vocabulary.size, self.vocabulary.ntokens
+                )
             counts = [entry.count for entry in self.vocabulary.words]
             self.wi = self.random.uniform((-1 / self.vector_size), ((-1 / self.vector_size) + 1),
                                           (self.vocabulary.size + self.bucket, self.vector_size)
@@ -648,8 +656,10 @@ class Sent2Vec(BaseWordEmbeddingsModel):
                     "before doing an online update.")
             prev_dict_size = self.vocabulary.size
             self.corpus_count = self.vocabulary.read(sentences=sentences, min_count=self.min_count)
-            logger.info("Dictionary updated, dictionary size: %i, tokens read: %i",
-                        self.vocabulary.size, self.vocabulary.ntokens)
+            logger.info(
+                "Dictionary updated, dictionary size: %i, tokens read: %i",
+                self.vocabulary.size, self.vocabulary.ntokens
+                )
             counts = [entry.count for entry in self.vocabulary.words]
             new_wi = self.random.uniform((-1 / self.vector_size), ((-1 / self.vector_size) + 1),
                                               (self.vocabulary.size - prev_dict_size + self.bucket,
@@ -697,7 +707,8 @@ class Sent2Vec(BaseWordEmbeddingsModel):
         report_delay : float
             Seconds to wait before reporting progress.
         compute_loss: bool
-            If True, computes and stores loss value which can be retrieved using `model.get_latest_training_loss()`.
+            If True, computes and stores loss value which can be retrieved using
+            :meth:`~gensim.models.sent2vec.Sent2Vec.get_latest_training_loss`.
         callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`
             List of callbacks that need to be executed/run at specific stages during training.
 
@@ -709,8 +720,8 @@ class Sent2Vec(BaseWordEmbeddingsModel):
         >>> model = Sent2Vec(min_count=1)
         >>> model.build_vocab(sentences)
         >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.epochs)
-        """
 
+        """
         if FAST_VERSION < 0:
             return self._do_train_job_slow(sentences)
         return super(Sent2Vec, self).train(
@@ -732,10 +743,9 @@ class Sent2Vec(BaseWordEmbeddingsModel):
             Sentence vector for input sentence.
 
         """
-
         ntokens_temp, words = self.vocabulary.get_line(sentence)
         sent_vec = np.zeros(self.vector_size)
-        line = self.vocabulary.add_ngrams(context=words, n=self.word_ngrams)
+        line = self.vocabulary.add_word_ngrams(context=words, n=self.word_word_ngrams)
         for word_vec in line:
             sent_vec += self.wi[word_vec]
         if len(line) > 0:
@@ -745,6 +755,10 @@ class Sent2Vec(BaseWordEmbeddingsModel):
     @classmethod
     def load(cls, *args, **kwargs):
         return super(BaseWordEmbeddingsModel, cls).load(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        kwargs['ignore'] = kwargs.get('ignore', ['wo', 'hidden', 'grad'])
+        return super(Sent2Vec, self).save(*args, **kwargs)
 
     def similarity(self, sent1, sent2):
         """Function to compute cosine similarity between two sentences.
@@ -762,13 +776,13 @@ class Sent2Vec(BaseWordEmbeddingsModel):
             Cosine similarity score between two sentence vectors.
 
         """
-
         return dot(matutils.unitvec(self[sent1]), matutils.unitvec(self[sent2]))
 
 
 class TorontoCorpus(object):
-    """Iterate over sentences from the Toronto Book Corpus."""
+    """Iterate over sentences from the Toronto Book Corpus.
 
+    """
     def __init__(self, dirname):
         """
 
