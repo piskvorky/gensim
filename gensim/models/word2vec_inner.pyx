@@ -21,6 +21,7 @@ from libcpp.vector cimport vector
 from libcpp cimport bool as bool_t
 from libcpp.unordered_map cimport unordered_map
 from libcpp.pair cimport pair
+from libc.stdio cimport printf
 
 # scipy <= 0.15
 try:
@@ -544,8 +545,9 @@ cpdef train_epoch_cbow(model, _input_stream, alpha, _work, _neu1, compute_loss):
 
     # prepare C structures so we can go "full C" and release the Python GIL
 
-    for token in model.wv.vocab:
-        vocab[token] = (model.wv.vocab[token].index, model.wv.vocab[token].sample_int)
+    for py_token in model.wv.vocab:
+        token = py_token.encode('utf8')
+        vocab[token] = (model.wv.vocab[py_token].index, model.wv.vocab[py_token].sample_int)
 
     # release GIL & train on all sentences
     cdef int total_effective_words = 0, total_effective_sentences = 0, total_words = 0
@@ -605,7 +607,7 @@ cpdef train_epoch_cbow(model, _input_stream, alpha, _work, _neu1, compute_loss):
                         next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random, word_locks, _compute_loss, &_running_training_loss)
 
             total_effective_sentences += effective_sentences
-            total_effective_words += total_effective_words
+            total_effective_words += effective_words
 
 
     return total_effective_words, total_words  # return properly raw_tally as a second value (not tally)
