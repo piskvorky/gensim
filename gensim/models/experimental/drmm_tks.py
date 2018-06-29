@@ -85,10 +85,10 @@ import hashlib
 from numpy import random as np_random
 from gensim.models import KeyedVectors
 from collections import Counter
-from custom_losses import rank_hinge_loss
-from custom_layers import TopKLayer
+from .custom_losses import rank_hinge_loss
+from .custom_layers import TopKLayer
 from sklearn.preprocessing import normalize
-from custom_callbacks import ValidationCallback
+from .custom_callbacks import ValidationCallback
 from gensim import utils
 from collections import Iterable
 
