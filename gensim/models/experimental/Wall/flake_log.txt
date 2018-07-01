@@ -1,0 +1,2408 @@
+flake8 recreate: /home/vanessa/aneeshj/gensim/.tox/flake8
+flake8 installdeps: flake8
+flake8 installed: flake8==3.5.0,mccabe==0.6.1,numpy==1.11.3,pkg-resources==0.0.0,pycodestyle==2.3.1,pyflakes==1.6.0,scipy==0.18.1
+flake8 runtests: PYTHONHASHSEED='2930762398'
+flake8 runtests: commands[0] | flake8 gensim/
+gensim/models/experimental/temp.py:6:61: E502 the backslash is redundant between brackets
+queries = ["When was World War 1 fought ?".lower().split(), \
+                                                            ^
+gensim/models/experimental/temp.py:9:50: E502 the backslash is redundant between brackets
+docs = [["The world war was bad".lower().split(),\
+                                                 ^
+gensim/models/experimental/temp.py:10:50: E502 the backslash is redundant between brackets
+        "It was fought in 1996".lower().split()],\
+                                                 ^
+gensim/models/experimental/temp.py:11:64: E502 the backslash is redundant between brackets
+        ["Gandhi was born in the 18th century".lower().split(),\
+                                                               ^
+gensim/models/experimental/temp.py:12:70: E502 the backslash is redundant between brackets
+         "He fought for the Indian freedom movement".lower().split(),\
+                                                                     ^
+gensim/models/experimental/temp.py:15:18: E502 the backslash is redundant between brackets
+labels = [[0, 1],\
+                 ^
+gensim/models/experimental/temp.py:21:35: W292 no newline at end of file
+model.train(queries, docs, labels)                                  ^
+gensim/models/experimental/Wall/drmm_tks_example.py:7:1: E402 module level import not at top of file
+from custom_losses import rank_hinge_loss
+^
+gensim/models/experimental/Wall/drmm_tks_example.py:7:1: F401 'custom_losses.rank_hinge_loss' imported but unused
+from custom_losses import rank_hinge_loss
+^
+gensim/models/experimental/Wall/drmm_tks_example.py:8:1: W391 blank line at end of file
+
+^
+gensim/models/experimental/Wall/gen_test.py:2:1: W191 indentation contains tabs
+	for i in range(10):
+^
+gensim/models/experimental/Wall/gen_test.py:3:1: W191 indentation contains tabs
+		print('yielding')
+^
+gensim/models/experimental/Wall/gen_test.py:4:1: W191 indentation contains tabs
+		yield i, i+1, i-1
+^
+gensim/models/experimental/Wall/gen_test.py:4:13: E226 missing whitespace around arithmetic operator
+		yield i, i+1, i-1
+            ^
+gensim/models/experimental/Wall/gen_test.py:4:18: E226 missing whitespace around arithmetic operator
+		yield i, i+1, i-1
+                 ^
+gensim/models/experimental/Wall/gen_test.py:6:1: E305 expected 2 blank lines after class or function definition, found 1
+gen = my_gen()
+^
+gensim/models/experimental/Wall/gen_test.py:9:1: W191 indentation contains tabs
+	print(a, b, c)^
+gensim/models/experimental/Wall/gen_test.py:9:16: W292 no newline at end of file
+	print(a, b, c)               ^
+gensim/models/experimental/Wall/my_Iter_xmaple.py:3:1: F401 'pprint.pprint' imported but unused
+from pprint import pprint
+^
+gensim/models/experimental/Wall/my_Iter_xmaple.py:6:1: E402 module level import not at top of file
+import csv
+^
+gensim/models/experimental/Wall/my_Iter_xmaple.py:7:1: E402 module level import not at top of file
+import re
+^
+gensim/models/experimental/Wall/my_Iter_xmaple.py:8:1: E402 module level import not at top of file
+from drmm_tks import DRMM_TKS
+^
+gensim/models/experimental/Wall/my_Iter_xmaple.py:84:1: E305 expected 2 blank lines after class or function definition, found 1
+q_iterable = MyIter('query', os.path.join('..', 'data', 'WikiQACorpus', 'WikiQA-train.tsv'))
+^
+gensim/models/experimental/Wall/my_Iter_xmaple.py:93:58: E261 at least two spaces before inline comment
+                          epochs=1, validation_data=None)#[test_queries, test_docs, test_labels])
+                                                         ^
+gensim/models/experimental/Wall/my_Iter_xmaple.py:93:58: E262 inline comment should start with '# '
+                          epochs=1, validation_data=None)#[test_queries, test_docs, test_labels])
+                                                         ^
+gensim/models/experimental/Wall/load_test.py:1:1: F401 'keras.engine.topology.Layer' imported but unused
+from keras.engine.topology import Layer
+^
+gensim/models/experimental/Wall/load_test.py:2:1: F401 'keras.backend as K' imported but unused
+import keras.backend as K
+^
+gensim/models/experimental/Wall/load_test.py:3:1: F401 'keras.models.load_model' imported but unused
+from keras.models import load_model
+^
+gensim/models/experimental/Wall/load_test.py:9:1: E402 module level import not at top of file
+from custom_layers import TopKLayer
+^
+gensim/models/experimental/Wall/load_test.py:9:1: F401 'custom_layers.TopKLayer' imported but unused
+from custom_layers import TopKLayer
+^
+gensim/models/experimental/Wall/load_test.py:10:1: E402 module level import not at top of file
+from drmm_tks import DRMM_TKS
+^
+gensim/models/experimental/Wall/load_test.py:13:8: E231 missing whitespace after ','
+q = [[0,1,2,3,4,4958,400051,400051,400051,400051,
+       ^
+gensim/models/experimental/Wall/load_test.py:13:10: E231 missing whitespace after ','
+q = [[0,1,2,3,4,4958,400051,400051,400051,400051,
+         ^
+gensim/models/experimental/Wall/load_test.py:13:12: E231 missing whitespace after ','
+q = [[0,1,2,3,4,4958,400051,400051,400051,400051,
+           ^
+gensim/models/experimental/Wall/load_test.py:13:14: E231 missing whitespace after ','
+q = [[0,1,2,3,4,4958,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:13:16: E231 missing whitespace after ','
+q = [[0,1,2,3,4,4958,400051,400051,400051,400051,
+               ^
+gensim/models/experimental/Wall/load_test.py:13:21: E231 missing whitespace after ','
+q = [[0,1,2,3,4,4958,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:13:28: E231 missing whitespace after ','
+q = [[0,1,2,3,4,4958,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:13:35: E231 missing whitespace after ','
+q = [[0,1,2,3,4,4958,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:13:42: E231 missing whitespace after ','
+q = [[0,1,2,3,4,4958,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:14:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:14:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:14:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:14:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:14:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:14:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:14:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:14:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:14:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:15:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:15:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:15:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:15:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:15:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:15:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:15:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:15:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:15:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:16:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:16:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:16:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:16:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:16:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:16:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:16:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:16:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:16:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:17:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:17:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:17:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:17:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:17:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:17:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:17:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:17:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:17:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:18:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:18:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:18:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:18:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:18:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:18:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:18:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:18:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:18:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:19:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:19:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:19:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:19:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:19:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:19:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:19:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:19:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:19:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:20:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:20:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:20:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:20:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:20:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:20:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:20:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:20:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:20:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:21:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:21:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:21:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:21:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:21:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:21:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:21:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:21:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:21:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:22:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:22:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:22:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:22:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:22:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:22:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:22:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:22:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:22:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:23:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:23:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:23:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:23:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:23:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:23:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:23:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:23:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:23:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:24:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:24:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:24:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:24:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:24:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:24:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:24:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:24:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:24:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:25:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:25:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:25:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:25:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:25:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:25:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:25:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:25:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:25:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:26:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:26:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:26:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:26:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:26:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:26:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:26:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:26:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:26:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:27:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:27:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:27:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:27:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:27:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:27:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:27:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:27:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:27:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:28:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:28:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:28:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:28:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:28:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:28:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:28:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:28:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:28:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:29:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:29:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:29:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:29:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:29:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:29:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:29:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:29:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:29:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:30:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:30:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:30:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:30:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:30:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:30:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:30:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:30:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:30:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:31:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:31:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:31:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:31:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:31:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:31:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:31:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:31:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:31:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:32:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051],
+      ^
+gensim/models/experimental/Wall/load_test.py:32:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051],
+             ^
+gensim/models/experimental/Wall/load_test.py:32:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051],
+                    ^
+gensim/models/experimental/Wall/load_test.py:32:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051],
+                           ^
+gensim/models/experimental/Wall/load_test.py:32:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051],
+                                  ^
+gensim/models/experimental/Wall/load_test.py:32:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051],
+                                         ^
+gensim/models/experimental/Wall/load_test.py:32:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051],
+                                                ^
+gensim/models/experimental/Wall/load_test.py:32:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051],
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:32:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051],
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:33:3: E231 missing whitespace after ','
+[0,1,2,3,4,4958,400051,400051,400051,400051,
+  ^
+gensim/models/experimental/Wall/load_test.py:33:5: E231 missing whitespace after ','
+[0,1,2,3,4,4958,400051,400051,400051,400051,
+    ^
+gensim/models/experimental/Wall/load_test.py:33:7: E231 missing whitespace after ','
+[0,1,2,3,4,4958,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:33:9: E231 missing whitespace after ','
+[0,1,2,3,4,4958,400051,400051,400051,400051,
+        ^
+gensim/models/experimental/Wall/load_test.py:33:11: E231 missing whitespace after ','
+[0,1,2,3,4,4958,400051,400051,400051,400051,
+          ^
+gensim/models/experimental/Wall/load_test.py:33:16: E231 missing whitespace after ','
+[0,1,2,3,4,4958,400051,400051,400051,400051,
+               ^
+gensim/models/experimental/Wall/load_test.py:33:23: E231 missing whitespace after ','
+[0,1,2,3,4,4958,400051,400051,400051,400051,
+                      ^
+gensim/models/experimental/Wall/load_test.py:33:30: E231 missing whitespace after ','
+[0,1,2,3,4,4958,400051,400051,400051,400051,
+                             ^
+gensim/models/experimental/Wall/load_test.py:33:37: E231 missing whitespace after ','
+[0,1,2,3,4,4958,400051,400051,400051,400051,
+                                    ^
+gensim/models/experimental/Wall/load_test.py:34:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:34:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:34:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:34:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:34:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:34:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:34:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:34:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:34:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:35:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:35:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:35:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:35:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:35:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:35:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:35:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:35:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:35:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:36:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:36:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:36:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:36:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:36:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:36:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:36:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:36:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:36:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:37:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:37:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:37:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:37:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:37:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:37:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:37:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:37:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:37:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:38:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:38:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:38:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:38:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:38:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:38:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:38:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:38:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:38:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:39:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:39:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:39:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:39:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:39:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:39:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:39:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:39:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:39:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:40:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:40:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:40:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:40:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:40:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:40:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:40:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:40:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:40:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:41:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:41:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:41:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:41:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:41:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:41:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:41:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:41:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:41:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:42:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:42:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:42:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:42:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:42:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:42:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:42:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:42:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:42:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:43:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:43:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:43:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:43:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:43:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:43:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:43:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:43:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:43:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:44:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:44:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:44:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:44:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:44:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:44:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:44:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:44:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:44:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:45:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:45:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:45:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:45:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:45:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:45:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:45:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:45:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:45:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:46:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:46:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:46:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:46:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:46:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:46:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:46:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:46:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:46:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:47:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:47:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:47:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:47:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:47:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:47:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:47:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:47:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:47:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:48:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:48:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:48:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:48:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:48:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:48:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:48:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:48:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:48:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:49:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:49:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:49:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:49:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:49:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:49:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:49:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:49:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:49:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:50:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:50:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:50:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:50:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:50:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:50:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:50:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:50:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:50:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:51:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:51:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:51:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:51:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:51:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:51:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:51:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:51:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:51:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:52:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051]]
+      ^
+gensim/models/experimental/Wall/load_test.py:52:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051]]
+             ^
+gensim/models/experimental/Wall/load_test.py:52:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051]]
+                    ^
+gensim/models/experimental/Wall/load_test.py:52:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051]]
+                           ^
+gensim/models/experimental/Wall/load_test.py:52:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051]]
+                                  ^
+gensim/models/experimental/Wall/load_test.py:52:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051]]
+                                         ^
+gensim/models/experimental/Wall/load_test.py:52:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051]]
+                                                ^
+gensim/models/experimental/Wall/load_test.py:52:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051]]
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:52:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051]]
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:54:13: E231 missing whitespace after ','
+d = [[400052,292,293,2,294,104,400052,400052,400052,400051,
+            ^
+gensim/models/experimental/Wall/load_test.py:54:17: E231 missing whitespace after ','
+d = [[400052,292,293,2,294,104,400052,400052,400052,400051,
+                ^
+gensim/models/experimental/Wall/load_test.py:54:21: E231 missing whitespace after ','
+d = [[400052,292,293,2,294,104,400052,400052,400052,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:54:23: E231 missing whitespace after ','
+d = [[400052,292,293,2,294,104,400052,400052,400052,400051,
+                      ^
+gensim/models/experimental/Wall/load_test.py:54:27: E231 missing whitespace after ','
+d = [[400052,292,293,2,294,104,400052,400052,400052,400051,
+                          ^
+gensim/models/experimental/Wall/load_test.py:54:31: E231 missing whitespace after ','
+d = [[400052,292,293,2,294,104,400052,400052,400052,400051,
+                              ^
+gensim/models/experimental/Wall/load_test.py:54:38: E231 missing whitespace after ','
+d = [[400052,292,293,2,294,104,400052,400052,400052,400051,
+                                     ^
+gensim/models/experimental/Wall/load_test.py:54:45: E231 missing whitespace after ','
+d = [[400052,292,293,2,294,104,400052,400052,400052,400051,
+                                            ^
+gensim/models/experimental/Wall/load_test.py:54:52: E231 missing whitespace after ','
+d = [[400052,292,293,2,294,104,400052,400052,400052,400051,
+                                                   ^
+gensim/models/experimental/Wall/load_test.py:55:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:55:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:55:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:55:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:55:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:55:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:55:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:55:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:55:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:56:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:56:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:56:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:56:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:56:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:56:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:56:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:56:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:56:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:57:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:57:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:57:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:57:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:57:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:57:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:57:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:57:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:57:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:58:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:58:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:58:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:58:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:58:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:58:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:58:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:58:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:58:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:59:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:59:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:59:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:59:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:59:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:59:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:59:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:59:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:59:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:60:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:60:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:60:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:60:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:60:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:60:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:60:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:60:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:60:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:61:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:61:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:61:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:61:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:61:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:61:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:61:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:61:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:61:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:62:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:62:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:62:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:62:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:62:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:62:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:62:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:62:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:62:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:63:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:63:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:63:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:63:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:63:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:63:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:63:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:63:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:63:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:64:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:64:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:64:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:64:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:64:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:64:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:64:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:64:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:64:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:65:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:65:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:65:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:65:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:65:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:65:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:65:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:65:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:65:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:66:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:66:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:66:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:66:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:66:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:66:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:66:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:66:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:66:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:67:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:67:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:67:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:67:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:67:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:67:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:67:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:67:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:67:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:68:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:68:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:68:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:68:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:68:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:68:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:68:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:68:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:68:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:69:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:69:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:69:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:69:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:69:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:69:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:69:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:69:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:69:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:70:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:70:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:70:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:70:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:70:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:70:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:70:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:70:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:70:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:71:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:71:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:71:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:71:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:71:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:71:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:71:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:71:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:71:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:72:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:72:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:72:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:72:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:72:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:72:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:72:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:72:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:72:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:73:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051],
+      ^
+gensim/models/experimental/Wall/load_test.py:73:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051],
+             ^
+gensim/models/experimental/Wall/load_test.py:73:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051],
+                    ^
+gensim/models/experimental/Wall/load_test.py:73:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051],
+                           ^
+gensim/models/experimental/Wall/load_test.py:73:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051],
+                                  ^
+gensim/models/experimental/Wall/load_test.py:73:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051],
+                                         ^
+gensim/models/experimental/Wall/load_test.py:73:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051],
+                                                ^
+gensim/models/experimental/Wall/load_test.py:73:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051],
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:73:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051],
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:74:8: E231 missing whitespace after ','
+[400052,2,294,6,16,294,4,130,11,297,
+       ^
+gensim/models/experimental/Wall/load_test.py:74:10: E231 missing whitespace after ','
+[400052,2,294,6,16,294,4,130,11,297,
+         ^
+gensim/models/experimental/Wall/load_test.py:74:14: E231 missing whitespace after ','
+[400052,2,294,6,16,294,4,130,11,297,
+             ^
+gensim/models/experimental/Wall/load_test.py:74:16: E231 missing whitespace after ','
+[400052,2,294,6,16,294,4,130,11,297,
+               ^
+gensim/models/experimental/Wall/load_test.py:74:19: E231 missing whitespace after ','
+[400052,2,294,6,16,294,4,130,11,297,
+                  ^
+gensim/models/experimental/Wall/load_test.py:74:23: E231 missing whitespace after ','
+[400052,2,294,6,16,294,4,130,11,297,
+                      ^
+gensim/models/experimental/Wall/load_test.py:74:25: E231 missing whitespace after ','
+[400052,2,294,6,16,294,4,130,11,297,
+                        ^
+gensim/models/experimental/Wall/load_test.py:74:29: E231 missing whitespace after ','
+[400052,2,294,6,16,294,4,130,11,297,
+                            ^
+gensim/models/experimental/Wall/load_test.py:74:32: E231 missing whitespace after ','
+[400052,2,294,6,16,294,4,130,11,297,
+                               ^
+gensim/models/experimental/Wall/load_test.py:75:2: E231 missing whitespace after ','
+9,16,2,400051,400051,400051,400051,400051,400051,400051,
+ ^
+gensim/models/experimental/Wall/load_test.py:75:5: E231 missing whitespace after ','
+9,16,2,400051,400051,400051,400051,400051,400051,400051,
+    ^
+gensim/models/experimental/Wall/load_test.py:75:7: E231 missing whitespace after ','
+9,16,2,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:75:14: E231 missing whitespace after ','
+9,16,2,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:75:21: E231 missing whitespace after ','
+9,16,2,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:75:28: E231 missing whitespace after ','
+9,16,2,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:75:35: E231 missing whitespace after ','
+9,16,2,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:75:42: E231 missing whitespace after ','
+9,16,2,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:75:49: E231 missing whitespace after ','
+9,16,2,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:76:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:76:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:76:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:76:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:76:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:76:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:76:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:76:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:76:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:77:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:77:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:77:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:77:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:77:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:77:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:77:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:77:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:77:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:78:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:78:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:78:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:78:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:78:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:78:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:78:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:78:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:78:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:79:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:79:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:79:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:79:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:79:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:79:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:79:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:79:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:79:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:80:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:80:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:80:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:80:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:80:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:80:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:80:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:80:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:80:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:81:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:81:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:81:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:81:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:81:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:81:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:81:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:81:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:81:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:82:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:82:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:82:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:82:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:82:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:82:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:82:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:82:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:82:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:83:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:83:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:83:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:83:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:83:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:83:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:83:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:83:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:83:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:84:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:84:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:84:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:84:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:84:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:84:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:84:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:84:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:84:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:85:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:85:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:85:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:85:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:85:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:85:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:85:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:85:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:85:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:86:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:86:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:86:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:86:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:86:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:86:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:86:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:86:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:86:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:87:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:87:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:87:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:87:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:87:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:87:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:87:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:87:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:87:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:88:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:88:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:88:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:88:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:88:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:88:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:88:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:88:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:88:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:89:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:89:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:89:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:89:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:89:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:89:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:89:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:89:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:89:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:90:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:90:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:90:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:90:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:90:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:90:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:90:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:90:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:90:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:91:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:91:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:91:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:91:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:91:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:91:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:91:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:91:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:91:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:92:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+      ^
+gensim/models/experimental/Wall/load_test.py:92:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+             ^
+gensim/models/experimental/Wall/load_test.py:92:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                    ^
+gensim/models/experimental/Wall/load_test.py:92:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                           ^
+gensim/models/experimental/Wall/load_test.py:92:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                  ^
+gensim/models/experimental/Wall/load_test.py:92:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                         ^
+gensim/models/experimental/Wall/load_test.py:92:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                ^
+gensim/models/experimental/Wall/load_test.py:92:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:92:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051,
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:93:7: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051]]
+      ^
+gensim/models/experimental/Wall/load_test.py:93:14: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051]]
+             ^
+gensim/models/experimental/Wall/load_test.py:93:21: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051]]
+                    ^
+gensim/models/experimental/Wall/load_test.py:93:28: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051]]
+                           ^
+gensim/models/experimental/Wall/load_test.py:93:35: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051]]
+                                  ^
+gensim/models/experimental/Wall/load_test.py:93:42: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051]]
+                                         ^
+gensim/models/experimental/Wall/load_test.py:93:49: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051]]
+                                                ^
+gensim/models/experimental/Wall/load_test.py:93:56: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051]]
+                                                       ^
+gensim/models/experimental/Wall/load_test.py:93:63: E231 missing whitespace after ','
+400051,400051,400051,400051,400051,400051,400051,400051,400051,400051]]
+                                                              ^
+gensim/models/experimental/Wall/load_test.py:95:1: E402 module level import not at top of file
+import numpy as np
+^
+gensim/models/experimental/Wall/my_UI_Example.py:6:1: E402 module level import not at top of file
+import csv
+^
+gensim/models/experimental/Wall/my_UI_Example.py:7:1: E402 module level import not at top of file
+import re
+^
+gensim/models/experimental/Wall/my_UI_Example.py:8:1: E402 module level import not at top of file
+from drmm_tks import DRMM_TKS
+^
+gensim/models/experimental/Wall/my_UI_Example.py:10:1: E402 module level import not at top of file
+from gensim.scripts.glove2word2vec import glove2word2vec
+^
+gensim/models/experimental/Wall/my_UI_Example.py:11:1: E402 module level import not at top of file
+from gensim.test.utils import get_tmpfile
+^
+gensim/models/experimental/Wall/my_UI_Example.py:12:1: E402 module level import not at top of file
+from gensim.models import KeyedVectors
+^
+gensim/models/experimental/Wall/my_UI_Example.py:89:1: E303 too many blank lines (4)
+train_queries, test_queries = queries[:int(len(queries)*0.1)], queries[int(len(queries)*0.1):]
+^
+gensim/models/experimental/Wall/my_UI_Example.py:89:56: E226 missing whitespace around arithmetic operator
+train_queries, test_queries = queries[:int(len(queries)*0.1)], queries[int(len(queries)*0.1):]
+                                                       ^
+gensim/models/experimental/Wall/my_UI_Example.py:89:88: E226 missing whitespace around arithmetic operator
+train_queries, test_queries = queries[:int(len(queries)*0.1)], queries[int(len(queries)*0.1):]
+                                                                                       ^
+gensim/models/experimental/Wall/my_UI_Example.py:90:44: E226 missing whitespace around arithmetic operator
+train_docs, test_docs = docs[:int(len(docs)*0.1)], docs[int(len(docs)*0.1):]
+                                           ^
+gensim/models/experimental/Wall/my_UI_Example.py:90:70: E226 missing whitespace around arithmetic operator
+train_docs, test_docs = docs[:int(len(docs)*0.1)], docs[int(len(docs)*0.1):]
+                                                                     ^
+gensim/models/experimental/Wall/my_UI_Example.py:91:52: E226 missing whitespace around arithmetic operator
+train_labels, test_labels = labels[:int(len(labels)*0.1)], labels[int(len(labels)*0.1):]
+                                                   ^
+gensim/models/experimental/Wall/my_UI_Example.py:91:82: E226 missing whitespace around arithmetic operator
+train_labels, test_labels = labels[:int(len(labels)*0.1)], labels[int(len(labels)*0.1):]
+                                                                                 ^
+gensim/models/experimental/Wall/my_UI_Example.py:101:1: E402 module level import not at top of file
+from collections import Iterable
+^
+gensim/models/experimental/Wall/my_UI_Example.py:101:1: F401 'collections.Iterable' imported but unused
+from collections import Iterable
+^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:1:10: E401 multiple imports on one line
+import os, sys
+         ^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:15:19: E741 ambiguous variable name 'l'
+            qpos, l = parts[0], int(parts[3])
+                  ^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:17:25: E701 multiple statements on one line (colon)
+                if qflag: qref.append(1)
+                        ^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:18:21: E701 multiple statements on one line (colon)
+                else: qref.append(0)
+                    ^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:22:16: E741 ambiguous variable name 'l'
+            if l == 1: qflag = True
+               ^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:22:22: E701 multiple statements on one line (colon)
+            if l == 1: qflag = True
+                     ^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:23:17: E701 multiple statements on one line (colon)
+        if qflag: qref.append(1)
+                ^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:24:13: E701 multiple statements on one line (colon)
+        else: qref.append(0)
+            ^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:38:27: E701 multiple statements on one line (colon)
+            if scr >= thre: pred.append(1)
+                          ^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:39:17: E701 multiple statements on one line (colon)
+            else: pred.append(0)
+                ^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:47:18: E701 multiple statements on one line (colon)
+        if r == 1: ref_cnt += 1.0
+                 ^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:48:18: E701 multiple statements on one line (colon)
+        if p == 1: pred_cnt += 1.0
+                 ^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:49:29: E701 multiple statements on one line (colon)
+        if r == 1 and p == 1: match_cnt += 1.0
+                            ^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:54:18: E701 multiple statements on one line (colon)
+        if r == 1: ref_cnt += 1.0
+                 ^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:55:30: E701 multiple statements on one line (colon)
+        if pred[pidx] >= thre: pred_cnt += 1.0
+                             ^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:56:60: E701 multiple statements on one line (colon)
+        if r == 1 and pred[pidx] >= thre and ref[pidx] == 1: match_cnt += 1.0
+                                                           ^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:58:1: W293 blank line contains whitespace
+    
+^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:62:60: E701 multiple statements on one line (colon)
+        if r == 1 and pred[pidx] >= thre and ref[pidx] == 1: qmatch_cnt += 1.0
+                                                           ^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:63:42: E701 multiple statements on one line (colon)
+        elif r == 0 and pred[pidx] < thre: qmatch_cnt += 1.0
+                                         ^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:66:28: E226 missing whitespace around arithmetic operator
+    return [prec, reca, 2.0*prec*reca/(prec+reca), qprec, qreca, 2.0*qprec*qreca/(qprec+qreca), qacc]
+                           ^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:66:33: E226 missing whitespace around arithmetic operator
+    return [prec, reca, 2.0*prec*reca/(prec+reca), qprec, qreca, 2.0*qprec*qreca/(qprec+qreca), qacc]
+                                ^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:66:38: E226 missing whitespace around arithmetic operator
+    return [prec, reca, 2.0*prec*reca/(prec+reca), qprec, qreca, 2.0*qprec*qreca/(qprec+qreca), qacc]
+                                     ^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:66:44: E226 missing whitespace around arithmetic operator
+    return [prec, reca, 2.0*prec*reca/(prec+reca), qprec, qreca, 2.0*qprec*qreca/(qprec+qreca), qacc]
+                                           ^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:66:69: E226 missing whitespace around arithmetic operator
+    return [prec, reca, 2.0*prec*reca/(prec+reca), qprec, qreca, 2.0*qprec*qreca/(qprec+qreca), qacc]
+                                                                    ^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:66:75: E226 missing whitespace around arithmetic operator
+    return [prec, reca, 2.0*prec*reca/(prec+reca), qprec, qreca, 2.0*qprec*qreca/(qprec+qreca), qacc]
+                                                                          ^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:66:81: E226 missing whitespace around arithmetic operator
+    return [prec, reca, 2.0*prec*reca/(prec+reca), qprec, qreca, 2.0*qprec*qreca/(qprec+qreca), qacc]
+                                                                                ^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:66:88: E226 missing whitespace around arithmetic operator
+    return [prec, reca, 2.0*prec*reca/(prec+reca), qprec, qreca, 2.0*qprec*qreca/(qprec+qreca), qacc]
+                                                                                       ^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:70:1: E303 too many blank lines (3)
+if __name__ == "__main__":
+^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:76:1: W191 indentation contains tabs
+	
+^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:76:1: E101 indentation contains mixed spaces and tabs
+	
+^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:76:1: W293 blank line contains whitespace
+	
+^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:77:1: E101 indentation contains mixed spaces and tabs
+    print "WikiQA Question Triggering: precision = %.4f, recall = %.4f, F1 = %.4f" %(results[3], results[4], results[5])
+^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:77:82: E999 SyntaxError: invalid syntax
+    print "WikiQA Question Triggering: precision = %.4f, recall = %.4f, F1 = %.4f" %(results[3], results[4], results[5])
+                                                                                 ^
+gensim/similarity_learning/data/WikiQACorpus/eval.py:77:85: E225 missing whitespace around operator
+    print "WikiQA Question Triggering: precision = %.4f, recall = %.4f, F1 = %.4f" %(results[3], results[4], results[5])
+                                                                                    ^
+ERROR: InvocationError: '/home/vanessa/aneeshj/gensim/.tox/flake8/bin/flake8 gensim/'
+___________________________________ summary ____________________________________
+ERROR:   flake8: commands failed
