@@ -82,14 +82,9 @@ class UniformTermSimilarityIndex(TermSimilarityIndex):
 
     def most_similar(self, t1, topn=10):
         yielded = 0
-        for t2_index in range(len(self.dictionary)):
-            t2 = self.dictionary[t2_index]
-            if t1 != t2:
-                if yielded < topn:
-                    yield (t2, self.term_similarity)
-                    yielded += 1
-                else:
-                    break
+        for __, (t2_index, t2) in zip(range(topn), (
+                (t2_index, t2) for t2_index, t2 in self.dictionary.items() if t2 != t1)):
+            yield (t2, self.term_similarity)
 
 
 def _shortest_uint_dtype(max_value):
@@ -167,7 +162,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
 
         if tfidf is None:
             logger.info("iterating over columns in dictionary order")
-            columns = range(matrix_order)
+            columns = sorted(dictionary.keys)
         else:
             assert max(tfidf.idfs) == matrix_order - 1
             logger.info("iterating over columns in tf-idf order")

@@ -113,9 +113,9 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
         heap = []
         for t2, similarity in self.pool.imap_unordered(
                 _levsim_worker, (
-                    (t1, self.dictionary[t2_index], self.alpha, self.beta)
-                    for t2_index in range(len(self.dictionary))
-                    if t1 != self.dictionary[t2_index]),
+                    (t1, t2, self.alpha, self.beta)
+                    for t2_index, t2 in self.dictionary.items()
+                    if t1 != t2),
                 self.CHUNK_SIZE):
             heappush(heap, (-similarity, t2))
         for _, (t2, similarity) in zip(
