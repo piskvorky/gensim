@@ -12,8 +12,6 @@ from heapq import heappush, heappop
 import logging
 from multiprocessing import Pool
 
-from numpy import float32 as REAL
-
 # If python-Levenshtein is available, import it.
 # If python-Levenshtein is unavailable, ImportError will be raised in levsim.
 try:
@@ -22,8 +20,7 @@ try:
 except ImportError:
     LEVENSHTEIN_EXT = False
 
-from gensim.similarities.termsim import TermSimilarityIndex, SparseTermSimilarityMatrix
-from gensim.utils import deprecated
+from gensim.similarities.termsim import TermSimilarityIndex
 
 logger = logging.getLogger(__name__)
 

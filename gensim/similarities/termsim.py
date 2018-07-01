@@ -81,7 +81,6 @@ class UniformTermSimilarityIndex(TermSimilarityIndex):
         self.term_similarity = term_similarity
 
     def most_similar(self, t1, topn=10):
-        yielded = 0
         for __, (t2_index, t2) in zip(range(topn), (
                 (t2_index, t2) for t2_index, t2 in self.dictionary.items() if t2 != t1)):
             yield (t2, self.term_similarity)

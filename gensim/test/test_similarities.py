@@ -29,7 +29,6 @@ from gensim.test.utils import (datapath, get_tmpfile,
     common_texts as texts, common_dictionary as dictionary, common_corpus as corpus)
 from gensim.similarities import UniformTermSimilarityIndex
 from gensim.similarities import SparseTermSimilarityMatrix
-from gensim.similarities import levenshtein
 from gensim.similarities import LevenshteinSimilarityIndex
 
 try:
