@@ -887,8 +887,6 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
         --------
         :meth:`gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similarity_matrix`
             A term similarity matrix produced from term embeddings.
-        :func:`gensim.similarities.levenshtein.similarity_matrix`
-            A term similarity matrix produced from Levenshtein distances.
         :func:`gensim.matutils.softcossim`
             The Soft Cosine Measure.
 

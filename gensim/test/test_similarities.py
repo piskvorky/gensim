@@ -987,63 +987,6 @@ class TestLevenshteinSimilarityIndex(unittest.TestCase):
         self.assertTrue(numpy.allclose(first_similarities ** 2.0, second_similarities))
 
 
-class TestLevenshtein(unittest.TestCase):
-    def test_similarity_matrix(self):
-        """Test similarity_matrix returns expected results."""
-
-        documents = [[u"government", u"denied", u"holiday"], [u"holiday", u"slowing", u"hollingworth"]]
-        dictionary = Dictionary(documents)
-
-        # checking symmetry
-        similarity_matrix = levenshtein.similarity_matrix(dictionary).todense()
-        self.assertTrue((similarity_matrix.T == similarity_matrix).all())
-
-        # checking the existence of ones on the main diagonal
-        self.assertTrue(
-            (numpy.diag(similarity_matrix) ==
-             numpy.ones(similarity_matrix.shape[0])).all())
-
-        # checking that thresholding works as expected
-        similarity_matrix = levenshtein.similarity_matrix(dictionary).todense()
-        self.assertEquals(0, numpy.sum(similarity_matrix == 0))
-
-        similarity_matrix = levenshtein.similarity_matrix(dictionary, threshold=0.1).todense()
-        self.assertEquals(20, numpy.sum(similarity_matrix == 0))
-
-        # checking that alpha and beta work as expected
-        distances = numpy.array([
-            [1, 7, 6, 11, 6],
-            [7, 1, 9, 9, 9],
-            [6, 9, 1, 8, 6],
-            [11, 9, 8, 1, 9],
-            [6, 9, 6, 9, 1]])
-        lengths = numpy.array([
-            [6, 10, 7, 12, 7],
-            [10, 10, 10, 12, 10],
-            [7, 10, 7, 12, 7],
-            [12, 12, 12, 12, 12],
-            [7, 10, 7, 12, 7]])
-        alpha = 1.2
-        beta = 3.4
-        expected_similarity_matrix = alpha * (1.0 - distances * 1.0 / lengths)**beta
-        numpy.fill_diagonal(expected_similarity_matrix, 1)
-        similarity_matrix = levenshtein.similarity_matrix(dictionary, alpha=alpha, beta=beta).todense()
-        self.assertTrue(numpy.allclose(expected_similarity_matrix, similarity_matrix))
-
-        # checking that nonzero_limit works as expected
-        similarity_matrix = levenshtein.similarity_matrix(dictionary).todense()
-        self.assertEquals(0, numpy.sum(similarity_matrix == 0))
-
-        zeros = numpy.array([
-            [0, 0, 0, 1, 1],
-            [0, 0, 1, 1, 1],
-            [0, 1, 0, 0, 1],
-            [1, 1, 0, 0, 0],
-            [1, 1, 1, 0, 0]])
-        similarity_matrix = levenshtein.similarity_matrix(dictionary, nonzero_limit=2).todense()
-        self.assertTrue(numpy.all(zeros == (similarity_matrix == 0)))
-
-
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
