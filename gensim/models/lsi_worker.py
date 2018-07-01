@@ -112,8 +112,13 @@ class Worker(object):
     @Pyro4.expose
     @Pyro4.oneway
     def requestjob(self):
-        """Request jobs from the dispatcher, in a perpetual loop until
-        :meth:`~gensim.models.lsi_worker.Worker.getstate()` is called.
+        """Request jobs from the dispatcher, in a perpetual loop until :meth:`~gensim.models.lsi_worker.Worker.getstate`
+        is called.
+
+        Raises
+        ------
+        RuntimeError
+            If `self.model` is None (i.e. worker non initialized).
 
         """
         if self.model is None:

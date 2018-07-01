@@ -127,7 +127,7 @@ class Dispatcher(object):
         Raises
         ------
         RuntimeError
-            When no workers are found (the `gensim.scripts.lsi_worker` script must be ran beforehand).
+            When no workers are found (the :mod:`gensim.model.lsi_worker` script must be ran beforehand).
 
         """
         self.jobs = Queue(maxsize=self.maxsize)
@@ -192,7 +192,7 @@ class Dispatcher(object):
 
         Parameters
         ----------
-        job : iterable of iterable of (int, float)
+        job : iterable of list of (int, float)
             The corpus in BoW format.
 
         """
@@ -246,8 +246,7 @@ class Dispatcher(object):
 
         The job done event is logged and then control is asynchronously transfered back to the worker
         (who can then request another job). In this way, control flow basically oscillates between
-        :meth:`gensim.models.lsi_dispatcher.Dispatcher.jobdone` and
-        :meth:`gensim.models.lsi_worker.Worker.requestjob`.
+        :meth:`gensim.models.lsi_dispatcher.Dispatcher.jobdone` and :meth:`gensim.models.lsi_worker.Worker.requestjob`.
 
         Parameters
         ----------
@@ -273,7 +272,7 @@ class Dispatcher(object):
 
     @Pyro4.oneway
     def exit(self):
-        """Terminate all registered workers and then the dispatcher."""
+        """Terminate all workers and then the dispatcher."""
         for workerid, worker in iteritems(self.workers):
             logger.info("terminating worker %s", workerid)
             worker.exit()
