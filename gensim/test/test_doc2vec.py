@@ -513,8 +513,16 @@ class ConcatenatedDoc2Vec(object):
     def __getitem__(self, token):
         return np.concatenate([model[token] for model in self.models])
 
-    def infer_vector(self, document, alpha=0.1, min_alpha=0.0001, steps=5):
-        return np.concatenate([model.infer_vector(document, alpha, min_alpha, steps) for model in self.models])
+    def __str__(self):
+        """Abbreviated name, built from submodels' names"""
+        return "+".join([str(model) for model in self.models])
+
+    @property
+    def epochs(self):
+        return self.models[0].epochs
+
+    def infer_vector(self, document, alpha=None, min_alpha=None, epochs=None, steps=None):
+        return np.concatenate([model.infer_vector(document, alpha, min_alpha, epochs, steps) for model in self.models])
 
     def train(self, *ignore_args, **ignore_kwargs):
         pass  # train subcomponents individually
