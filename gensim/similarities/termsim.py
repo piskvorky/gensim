@@ -232,7 +232,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
 
         Returns
         -------
-        `self.matrix.dtype` or `scipy.sparse.csr_matrix`
+        `self.matrix.dtype`,  `scipy.sparse.csr_matrix`, or :class:`numpy.matrix`
             The inner product(s) between `X` and `Y`.
 
         References
@@ -244,7 +244,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
 
         """
         if not X or not Y:
-            return 0.0
+            return self.matrix.dtype.type(0.0)
 
         is_corpus_X, X = is_corpus(X)
         is_corpus_Y, Y = is_corpus(Y)
@@ -301,7 +301,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
 
                 X = np.multiply(X, 1 / np.sqrt(X_norm)).T
                 Y = np.multiply(Y, 1 / np.sqrt(Y_norm))
-                Y[Y == np.inf] = 0  # Account for division by zero when Y_norm.min() == 0.0
+                Y = np.nan_to_num(Y)  # Account for division by zero when Y_norm.min() == 0.0
 
             result = X.T.dot(matrix).dot(Y)
 

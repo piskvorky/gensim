@@ -383,7 +383,7 @@ class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
         similarity_matrix = scipy.sparse.identity(12, format="lil")
         similarity_matrix[dictionary.token2id["user"], dictionary.token2id["human"]] = 0.5
         similarity_matrix[dictionary.token2id["human"], dictionary.token2id["user"]] = 0.5
-        self.similarity_matrix = similarity_matrix.tocsc()
+        self.similarity_matrix = SparseTermSimilarityMatrix(similarity_matrix)
 
     def factoryMethod(self):
         # Override factoryMethod.
@@ -405,8 +405,6 @@ class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
             self.assertAlmostEqual(1.0, sims[0])  # Similarity of a document with itself is 1.0.
             self.assertTrue(numpy.alltrue(sims[1:] >= 0.0))
             self.assertTrue(numpy.alltrue(sims[1:] < 1.0))
-            expected = 2.1889350195476758
-            self.assertAlmostEqual(expected, numpy.sum(sims))
 
         # Corpora
         for query in (
@@ -437,8 +435,8 @@ class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
         sims = index[query]
         sims2 = numpy.asarray(sims)[:, 1]  # Just the similarities themselves.
 
-        # The difference of adjacent elements should be negative.
-        cond = sum(numpy.diff(sims2) < 0) == len(sims2) - 1
+        # The difference of adjacent elements should be less than or equal to zero.
+        cond = sum(numpy.diff(sims2) <= 0) == len(sims2) - 1
         self.assertTrue(cond)
 
     def testChunking(self):

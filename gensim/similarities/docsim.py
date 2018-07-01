@@ -71,7 +71,7 @@ import numpy
 import scipy.sparse
 
 from gensim import interfaces, utils, matutils
-from gensim.utils import deprecated
+from .termsim import SparseTermSimilarityMatrix
 from six.moves import map as imap, xrange, zip as izip
 
 
@@ -845,29 +845,24 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
     --------
     >>> from gensim.test.utils import common_texts
     >>> from gensim.corpora import Dictionary
-    >>> from gensim.models import Word2Vec
-    >>> from gensim.similarities import SoftCosineSimilarity
+    >>> from gensim.models import Word2Vec, WordEmbeddingSimilarityIndex
+    >>> from gensim.similarities import SoftCosineSimilarity, TermSimilarityMatrix
     >>>
     >>> model = Word2Vec(common_texts, size=20, min_count=1)  # train word-vectors
+    >>> termsim_index = WordEmbeddingSimilarityIndex(model)
     >>> dictionary = Dictionary(common_texts)
     >>> bow_corpus = [dictionary.doc2bow(document) for document in common_texts]
+    >>> similarity_matrix = TermSimilarityMatrix(termsim_index, dictionary)  # construct similarity matrix
+    >>> docsim_index = SoftCosineSimilarity(bow_corpus, similarity_matrix, num_best=10)
     >>>
-    >>> similarity_matrix = model.wv.similarity_matrix(dictionary)  # construct similarity matrix
-    >>> index = SoftCosineSimilarity(bow_corpus, similarity_matrix, num_best=10)
-    >>>
-    >>> # Make a query.
-    >>> query = 'graph trees computer'.split()
-    >>> # calculate similarity between query and each doc from bow_corpus
-    >>> sims = index[dictionary.doc2bow(query)]
+    >>> query = 'graph trees computer'.split()  # make a query
+    >>> sims = docsim_index[dictionary.doc2bow(query)]  # calculate similarity of query to each doc from bow_corpus
 
     Check out `Tutorial Notebook
     <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/soft_cosine_tutorial.ipynb>`_
     for more examples.
 
     """
-    @deprecated(
-        "Method will be removed in 4.0.0, use "
-        "gensim.similarities.termsim.SparseTermSimilarityMatrix.inner_product instead")
     def __init__(self, corpus, similarity_matrix, num_best=None, chunksize=256):
         """
 
@@ -875,9 +870,8 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
         ----------
         corpus: iterable of list of (int, float)
             A list of documents in the BoW format.
-        similarity_matrix : :class:`scipy.sparse.csc_matrix`
-            A term similarity matrix, typically produced by
-            :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similarity_matrix`.
+        similarity_matrix : :class:`gensim.similarities.SparseTermSimilarityMatrix`
+            A term similarity matrix.
         num_best : int, optional
             The number of results to retrieve for a query, if None - return similarities with all elements from corpus.
         chunksize: int, optional
@@ -885,14 +879,23 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
 
         See Also
         --------
-        :meth:`gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similarity_matrix`
-            A term similarity matrix produced from term embeddings.
-        :func:`gensim.matutils.softcossim`
-            The Soft Cosine Measure.
+        :class:`gensim.similarities.SparseTermSimilarityMatrix`
+            A sparse term similarity matrix build using a term similarity index.
+        :class:`gensim.similarities.LevenshteinSimilarityIndex`
+            A term similarity index that computes Levenshtein similarities between terms.
+        :class:`gensim.models.WordEmbeddingSimilarityIndex`
+            A term similarity index that computes cosine similarities between word embeddings.
 
         """
+        if scipy.sparse.issparse(similarity_matrix):
+            logger.warn(
+                "Support for passing an unencapsulated sparse matrix will be removed in 4.0.0, pass "
+                "a SparseTermSimilarityMatrix instance instead")
+            self.similarity_matrix = SparseTermSimilarityMatrix(similarity_matrix)
+        else:
+            self.similarity_matrix = similarity_matrix
+
         self.corpus = corpus
-        self.similarity_matrix = similarity_matrix
         self.num_best = num_best
         self.chunksize = chunksize
 
@@ -904,15 +907,9 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
         # index is simply an array from 0 to size of corpus.
         self.index = numpy.arange(len(corpus))
 
-    @deprecated(
-        "Method will be removed in 4.0.0, use "
-        "gensim.similarities.termsim.SparseTermSimilarityMatrix.inner_product instead")
     def __len__(self):
         return len(self.corpus)
 
-    @deprecated(
-        "Method will be removed in 4.0.0, use "
-        "gensim.similarities.termsim.SparseTermSimilarityMatrix.inner_product instead")
     def get_similarities(self, query):
         """Get similarity between `query` and this index.
 
@@ -922,8 +919,8 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
 
         Parameters
         ----------
-        query : {list of (int, number), iterable of list of (int, number)
-            Document or collection of documents.
+        query : list of (int, number) or iterable of list of (int, number)
+            Document or a corpus of documents.
 
         Return
         ------
@@ -931,35 +928,20 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
             Similarity matrix.
 
         """
+        if not self.corpus:
+            return numpy.array()
 
         is_corpus, query = utils.is_corpus(query)
-        if not is_corpus:
-            if isinstance(query, numpy.ndarray):
-                # Convert document indexes to actual documents.
-                query = [self.corpus[i] for i in query]
-            else:
-                query = [query]
+        if not is_corpus and isinstance(query, numpy.ndarray):
+            query = [self.corpus[i] for i in query]  # convert document indexes to actual documents
+        result = self.similarity_matrix.inner_product(query, self.corpus, normalized=True)
 
-        result = []
-        for query_document in query:
-            # Compute similarity for each query.
-            qresult = [matutils.softcossim(query_document, corpus_document, self.similarity_matrix)
-                       for corpus_document in self.corpus]
-            qresult = numpy.array(qresult)
+        if scipy.sparse.issparse(result):
+            return numpy.asarray(result.todense())
+        if numpy.isscalar(result):
+            return numpy.array(result)
+        return numpy.asarray(result)[0]
 
-            # Append single query result to list of all results.
-            result.append(qresult)
-
-        if is_corpus:
-            result = numpy.array(result)
-        else:
-            result = result[0]
-
-        return result
-
-    @deprecated(
-        "Method will be removed in 4.0.0, use "
-        "gensim.similarities.termsim.SparseTermSimilarityMatrix.inner_product instead")
     def __str__(self):
         return "%s<%i docs, %i features>" % (self.__class__.__name__, len(self), self.similarity_matrix.shape[0])
 
