@@ -13,6 +13,7 @@ cosine similarty between the vectors.
 
 Abbreviations
 =============
+
 DRMM : Deep Relevance Matching Model
 TKS : Top K Solutions
 
@@ -20,6 +21,7 @@ About DRMM_TKS
 ==============
 This is a variant version of DRMM, which applied topk pooling in the matching matrix.
 It has the following steps:
+
 1. embed queries and docs into embedding vector named 'q_embed' and 'd_embed' respectively
 2. computing 'q_embed' and 'd_embed' with element-wise multiplication
 3. computing output of upper layer with dense layer operation
@@ -30,6 +32,7 @@ It has the following steps:
 On predicting, the model returns the score list between queries and documents.
 
 The trained model needs to be trained on data in the format:
+
 >>> queries = ["When was World War 1 fought ?".lower().split(),
 ...            "When was Gandhi born ?".lower().split()]
 >>> docs = [["The world war was bad".lower().split(),
@@ -43,16 +46,19 @@ The trained model needs to be trained on data in the format:
 >>> model = DRMM_TKS(queries, docs, labels, word_embedding=word_embeddings_kv, verbose=0)
 
 Persist a model to disk with :
+
 >>> from gensim.test.utils import get_tmpfile
 >>> file_path = get_tmpfile('DRMM_TKS.model')
 >>> model.save(file_path)
 >>> model = DRMM_TKS.load(file_path)
 
 You can also create the modela and train it later :
+
 >>> model = DRMM_TKS()
 >>> model.train(queries, docs, labels, word_embeddings_kv, epochs=12, verbose=0)
 
 Testing on new data :
+
 >>> queries = ["how are glacier caves formed ?".lower().split()]
 >>> docs = ["A partly submerged glacier cave on Perito Moreno Glacier".lower().split(),
 ...         "A glacier cave is a cave formed within the ice of a glacier".lower().split()]
@@ -78,9 +84,9 @@ import hashlib
 from numpy import random as np_random
 from gensim.models import KeyedVectors
 from collections import Counter
-from custom_losses import rank_hinge_loss
-from custom_layers import TopKLayer
-from custom_callbacks import ValidationCallback
+from gensim.models.experimental.custom_losses import rank_hinge_loss
+from gensim.models.experimental.custom_layers import TopKLayer
+from gensim.models.experimental.custom_callbacks import ValidationCallback
 from sklearn.preprocessing import normalize
 from gensim import utils
 from collections import Iterable
@@ -220,6 +226,7 @@ class DRMM_TKS(utils.SaveLoad):
         Usage
         -----
         The trained model needs to be trained on data in the format:
+
         >>> queries = ["When was World War 1 fought ?".lower().split(),
         ...            "When was Gandhi born ?".lower().split()]
         >>> docs = [["The world war was bad".lower().split(),
@@ -610,10 +617,10 @@ class DRMM_TKS(utils.SaveLoad):
         ...         ["Gandhi was born in the 18th century".split(), "He fought for the Indian freedom movement".split(),
         ...          "Gandhi was assasinated".split()]]
         >>> print(model.predict(queries, docs))
-        [[0.9824947 ]
-         [0.96985346]
-         [0.9841316 ]
-         [0.9899247 ]]
+        [[0.9824946 ]
+         [0.9698535 ]
+         [0.9841315 ]
+         [0.98992467]]
         """
 
         doc_lens = []
