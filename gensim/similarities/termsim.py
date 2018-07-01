@@ -261,7 +261,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
             dtype = self.matrix.dtype
             X = np.array([X[i] if i in X else 0 for i in word_indices], dtype=dtype)
             Y = np.array([Y[i] if i in Y else 0 for i in word_indices], dtype=dtype)
-            matrix = self.matrix[[[i] for i in word_indices], word_indices].todense()
+            matrix = self.matrix[word_indices].T[word_indices].T.todense()
 
             result = X.T.dot(matrix).dot(Y)
 
@@ -293,20 +293,20 @@ class SparseTermSimilarityMatrix(SaveLoad):
             X = dict(X)
             X = np.array([X[i] if i in X else 0 for i in word_indices], dtype=dtype)
             Y = corpus2csc(Y, num_terms=self.matrix.shape[0], dtype=dtype)[word_indices, :].todense()
-            matrix = self.matrix[[[i] for i in word_indices], word_indices].todense()
-
+            matrix = self.matrix[word_indices].T[word_indices].T.todense()
             if normalized:
                 # use the following equality: np.diag(A.T.dot(B).dot(A)) == A.T.dot(B).multiply(A.T).sum(axis=1).T
                 X_norm = np.multiply(X.T.dot(matrix), X.T).sum(axis=1).T
                 Y_norm = np.multiply(Y.T.dot(matrix), Y.T).sum(axis=1).T
 
                 assert \
-                    X_norm.min() >= 0.0 and Y_norm.min() >= 0.0, \
+                    X_norm.min() > 0.0 and Y_norm.min() >= 0.0, \
                     u"sparse documents must not contain any explicit zero entries and the similarity matrix S " \
                     u"must satisfy x^T * S * x > 0 for any nonzero bag-of-words vector x."
 
                 X = np.multiply(X, 1 / np.sqrt(X_norm)).T
                 Y = np.multiply(Y, 1 / np.sqrt(Y_norm))
+                Y[Y == np.inf] = 0  # Account for division by zero when Y_norm.min() == 0.0
 
             result = X.T.dot(matrix).dot(Y)
 
@@ -329,12 +329,13 @@ class SparseTermSimilarityMatrix(SaveLoad):
                 Y_norm = Y.T.dot(matrix).multiply(Y.T).sum(axis=1).T
 
                 assert \
-                    X_norm.min() >= 0.0 and Y_norm.min() >= 0.0, \
+                    X_norm.min() > 0.0 and Y_norm.min() >= 0.0, \
                     u"sparse documents must not contain any explicit zero entries and the similarity matrix S " \
                     u"must satisfy x^T * S * x > 0 for any nonzero bag-of-words vector x."
 
                 X = X.multiply(sparse.csr_matrix(1 / np.sqrt(X_norm)))
                 Y = Y.multiply(sparse.csr_matrix(1 / np.sqrt(Y_norm)))
+                Y[Y == np.inf] = 0  # Account for division by zero when Y_norm.min() == 0.0
 
             result = X.T.dot(matrix).dot(Y)
 
