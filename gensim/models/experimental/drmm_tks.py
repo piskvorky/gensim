@@ -456,7 +456,7 @@ class DRMM_TKS(utils.SaveLoad):
               text_maxlen=200, normalize_embeddings=True, epochs=10, unk_handle_method='zero',
               validation_data=None, topk=50, target_mode='ranking', verbose=1):
         """Trains a DRMM_TKS model using specified parameters
-        
+
         This method is called from on model initialization if the data is provided.
         It can also be trained in an online manner or after initialization
         """
@@ -559,7 +559,7 @@ class DRMM_TKS(utils.SaveLoad):
         ----------
         data : list of list of string words
             The data to be tranlsated
-        
+
         Examples
         --------
         >>> from gensim.test.utils import datapath
@@ -601,7 +601,7 @@ class DRMM_TKS(utils.SaveLoad):
         Parameters
         ----------
         queries : list of list of str
-            The questions for the similarity learning model            
+            The questions for the similarity learning model
         docs : list of list of list of str
             The candidate answers for the similarity learning model
 
