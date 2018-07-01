@@ -32,21 +32,14 @@ On predicting, the model returns the score list between queries and documents.
 The trained model needs to be trained on data in the format:
 >>> queries = ["When was World War 1 fought ?".lower().split(),
 ...            "When was Gandhi born ?".lower().split()]
-
 >>> docs = [["The world war was bad".lower().split(),
 ...     "It was fought in 1996".lower().split()],
 ...     ["Gandhi was born in the 18th century".lower().split(),
 ...      "He fought for the Indian freedom movement".lower().split(),
 ...      "Gandhi was assasinated".lower().split()]]
-
->>> labels = [[0, 1],
-...          [1, 0, 0]]
-
-Get some pretrained word embeddings as KeyedVectors from gensim-data
+>>> labels = [[0, 1], [1, 0, 0]]
 >>> import gensim.downloader as api
 >>> word_embeddings_kv = api.load('glove-wiki-gigaword-50')
-
-Initialize a model with :
 >>> model = DRMM_TKS(queries, docs, labels, word_embedding=word_embeddings_kv, verbose=0)
 
 Persist a model to disk with :
@@ -85,10 +78,10 @@ import hashlib
 from numpy import random as np_random
 from gensim.models import KeyedVectors
 from collections import Counter
-from .custom_losses import rank_hinge_loss
-from .custom_layers import TopKLayer
+from custom_losses import rank_hinge_loss
+from custom_layers import TopKLayer
+from custom_callbacks import ValidationCallback
 from sklearn.preprocessing import normalize
-from .custom_callbacks import ValidationCallback
 from gensim import utils
 from collections import Iterable
 
@@ -177,7 +170,7 @@ class DRMM_TKS(utils.SaveLoad):
     """
 
     def __init__(self, queries=None, docs=None, labels=None, word_embedding=None,
-                 text_maxlen=200, normalize_embeddings=True, epochs=10, unk_handle_method='zero',
+                 text_maxlen=200, normalize_embeddings=True, epochs=10, unk_handle_method='random',
                  validation_data=None, topk=50, target_mode='ranking', verbose=1):
         """Initializes the model and trains it
 
@@ -186,25 +179,19 @@ class DRMM_TKS(utils.SaveLoad):
         queries: iterable list of list of string words, optional
             The questions for the similarity learning model
             Example:
-            queries=["When was World Wat 1 fought ?".split(),
-                     "When was Gandhi born ?".split()],
+            queries=["When was World Wat 1 fought ?".split(), "When was Gandhi born ?".split()],
         docs: iterable list of list of list of string words, optional
             The candidate answers for the similarity learning model
             Example:
-            docs = [
-                    ["The world war was bad".split(),
-                    "It was fought in 1996".split()],
-                    ["Gandhi was born in the 18th century".split(),
-                     "He fought for the Indian freedom movement".split(),
-                     "Gandhi was assasinated".split()]
-                   ]
+            docs = [["The world war was bad".split(), "It was fought in 1996".split()],
+            ["Gandhi was born in the 18th century".split(), "He fought for the Indian freedom movement".split(),
+            "Gandhi was assasinated".split()]]
         labels: iterable list of list of int, optional
             Indicates when a candidate document is relevant to a query
             1 : relevant
             0 : irrelevant
             Example:
-            labels = [[0, 1],
-                      [1, 0, 0]]
+            labels = [[0, 1], [1, 0, 0]]
         word_embedding : :class:`~gensim.models.keyedvectors.KeyedVectors`, optional
             a KeyedVector object which has the embeddings pre-loaded
             If None, random word embeddings will be used
@@ -229,6 +216,22 @@ class DRMM_TKS(utils.SaveLoad):
         verbose: {0, 1, 2}
             the level of information shared while training
             0 = silent, 1 = progress bar, 2 = one line per epoch
+
+        Usage
+        -----
+        The trained model needs to be trained on data in the format:
+        >>> queries = ["When was World War 1 fought ?".lower().split(),
+        ...            "When was Gandhi born ?".lower().split()]
+        >>> docs = [["The world war was bad".lower().split(),
+        ...     "It was fought in 1996".lower().split()],
+        ...     ["Gandhi was born in the 18th century".lower().split(),
+        ...      "He fought for the Indian freedom movement".lower().split(),
+        ...      "Gandhi was assasinated".lower().split()]]
+        >>> labels = [[0, 1],
+        ...          [1, 0, 0]]
+        >>> import gensim.downloader as api
+        >>> word_embeddings_kv = api.load('glove-wiki-gigaword-50')
+        >>> model = DRMM_TKS(queries, docs, labels, word_embedding=word_embeddings_kv, verbose=0)
         """
         self.queries = queries
         self.docs = docs
@@ -245,6 +248,7 @@ class DRMM_TKS(utils.SaveLoad):
         self.target_mode = target_mode
         self.verbose = verbose
         self.first_train = True  # Whether the model has been trained before
+        self.needs_vocab_build = True
 
         # These functions have been defined outside the class and set as attributes here
         # so that they can be ignored when saving the model to file
@@ -356,10 +360,15 @@ class DRMM_TKS(utils.SaveLoad):
         pad_embedding_row = np.random.uniform(-0.2,
                                               0.2, (1, self.embedding_dim))
 
-        self.embedding_matrix = np.vstack(
-            [self.embedding_matrix, np.array(extra_embeddings),
-             pad_embedding_row, unk_embedding_row]
-        )
+        if len(extra_embeddings) > 0:
+            self.embedding_matrix = np.vstack(
+                [self.embedding_matrix, np.array(extra_embeddings),
+                 pad_embedding_row, unk_embedding_row]
+            )
+        else:
+            self.embedding_matrix = np.vstack(
+                [self.embedding_matrix, pad_embedding_row, unk_embedding_row]
+            )
 
         if self.normalize_embeddings:
             logger.info("Normalizing the word embeddings")
@@ -371,21 +380,24 @@ class DRMM_TKS(utils.SaveLoad):
         logger.info("Unknown word has been set to index %d" %
                     self.unk_word_index)
         logger.info("Embedding index build complete")
+        self.needs_vocab_build = False
 
-    def _string2numeric_hash(text):
+    def _string2numeric_hash(self, text):
         "Gets a numeric hash for a given string"
         return int(hashlib.md5(text.encode()).hexdigest()[:8], 16)
 
     def _seeded_vector(self, seed_string, vector_size):
         """Create one 'random' vector (but deterministic by seed_string)"""
         # Note: built-in hash() may vary by Python version or even (in Py3.x) per launch
-        once = np_random.RandomState(
-            self._string2numeric_hash(seed_string) & 0xffffffff)
+        once = np_random.RandomState(self._string2numeric_hash(seed_string) & 0xffffffff)
         return (once.rand(vector_size) - 0.5) / vector_size
 
     def _make_indexed(self, sentence):
         """Gets the indexed version of the sentence based on the self.word2index dict
         in the form of a list
+
+        This function should never encounter any OOV words since it only indexes
+        in vocab words
 
         Parameters
         ----------
@@ -397,7 +409,10 @@ class DRMM_TKS(utils.SaveLoad):
         ValueError : If the sentence has a lenght more than text_maxlen
         """
 
-        indexed_sent = [self.word2index[word] for word in sentence]
+        indexed_sent = []
+        for word in sentence:
+            indexed_sent.append(self.word2index[word])
+
         if len(indexed_sent) > self.text_maxlen:
             raise ValueError(
                 "text_maxlen: %d isn't big enough. Error at sentence of length %d."
@@ -435,12 +450,12 @@ class DRMM_TKS(utils.SaveLoad):
     def train(self, queries, docs, labels, word_embedding=None,
               text_maxlen=200, normalize_embeddings=True, epochs=10, unk_handle_method='zero',
               validation_data=None, topk=50, target_mode='ranking', verbose=1):
-        """Trains a DRMM_TKS model using specified parameters"""
+        """Trains a DRMM_TKS model using specified parameters
+        
+        This method is called from on model initialization if the data is provided.
+        It can also be trained in an online manner or after initialization
+        """
 
-        # If the vocab wasn't built initially, we will rebuild it now
-        needs_vocab_build = False
-        if self.queries is None:
-            needs_vocab_build = True
         self.queries = queries or self.queries
         self.docs = docs or self.docs
         self.labels = labels or self.labels
@@ -463,12 +478,14 @@ class DRMM_TKS(utils.SaveLoad):
         if self.queries is None or self.docs is None or self.labels is None:
             raise ValueError("queries, docs and labels have to be specified")
         # We need to build these each time since any of the parameters can change from each train to trian
-        if needs_vocab_build:
+        if self.needs_vocab_build:
             self.build_vocab(self.queries, self.docs, self.labels, self.word_embedding)
 
         is_iterable = False
         if isinstance(self.queries, Iterable) and not isinstance(self.queries, list):
             is_iterable = True
+            logger.info("Input is an iterable amd will be streamed")
+
         self.pair_list = self._get_pair_list(self.queries, self.docs, self.labels, self._make_indexed)
         if is_iterable:
             train_generator = self._get_full_batch_iter(self.pair_list, 32)
@@ -530,14 +547,24 @@ class DRMM_TKS(utils.SaveLoad):
 
     def _translate_user_data(self, data):
         """Translates given user data into an indexed format which the model understands.
+        If a model is not in the vocabulary, it is assigned the `unk_word_index` which maps
+        to the unk vector decided by `unk_handle_method`
 
         Parameters
         ----------
         data : list of list of string words
             The data to be tranlsated
-
+        
+        Usage
+        -----
+        >>> from gensim.test.utils import datapath
+        >>> model = DRMM_TKS.load(datapath('drmm_tks'))
+        >>>
+        >>> queries = ["When was World War 1 fought ?".split(), "When was Gandhi born ?".split()]
+        >>> print(model._translate_user_data(queries))
+        [[31  1 23 31  4  5  6 30 30 30]
+         [31  1 31  8  6 30 30 30 30 30]]
         """
-
         translated_data = []
         n_skipped_words = 0
         for sentence in data:
@@ -569,27 +596,33 @@ class DRMM_TKS(utils.SaveLoad):
         Parameters
         ----------
         queries : list of list of str
-            The questions for the similarity learning model
-            Example :
-            queries=["When was World Wat 1 fought ?".split(),
-                     "When was Gandhi born ?".split()]
+            The questions for the similarity learning model            
         docs : list of list of list of str
             The candidate answers for the similarity learning model
-            Example:
-            docs = [
-                    ["The world war was bad".split(),
-                    "It was fought in 1996".split()],
-                    ["Gandhi was born in the 18th century".split(),
-                     "He fought for the Indian freedom movement".split(),
-                     "Gandhi was assasinated".split()]
-                   ]
 
+        Usage
+        -----
+        >>> from gensim.test.utils import datapath
+        >>> model = DRMM_TKS.load(datapath('drmm_tks'))
+        >>>
+        >>> queries = ["When was World War 1 fought ?".split(), "When was Gandhi born ?".split()]
+        >>> docs = [["The world war was bad".split(), "It was fought in 1996".split()],
+        ...         ["Gandhi was born in the 18th century".split(), "He fought for the Indian freedom movement".split(),
+        ...          "Gandhi was assasinated".split()]]
+        >>> print(model.predict(queries, docs))
+        [[0.9824947 ]
+         [0.96985346]
+         [0.9841316 ]
+         [0.9899247 ]]
         """
 
         doc_lens = []
         long_doc_list = []
         for doc in docs:
-            long_doc_list.append(doc)
+            i = 0
+            for d in doc:
+                long_doc_list.append(d)
+                i += 1
             doc_lens.append(len(doc))
 
         long_queries = []
@@ -616,6 +649,12 @@ class DRMM_TKS(utils.SaveLoad):
         fname : str
             Path to the file.
 
+        Usage
+        -----
+        >>> from gensim.test.utils import datapath, get_tmpfile
+        >>> model = DRMM_TKS.load(datapath('drmm_tks'))
+        >>> model_save_path = get_tmpfile('drmm_tks_model')
+        >>> model.save(model_save_path)
         """
         # don't save the keras model as it needs to be saved with a keras function
         # Also, we can't save iterable properties. So, ignore them.
@@ -640,12 +679,20 @@ class DRMM_TKS(utils.SaveLoad):
         -------
         :obj: `~gensim.models.experimental.DRMM_TKS`
             Returns the loaded model as an instance of :class: `~gensim.models.experimental.DRMM_TKS`.
+
+        Usage
+        -----
+        >>> from gensim.test.utils import datapath, get_tmpfile
+        >>> model_file_path = datapath('drmm_tks')
+        >>> model = DRMM_TKS.load(model_file_path)
         """
         fname = args[0]
         gensim_model = super(DRMM_TKS, cls).load(*args, **kwargs)
         keras_model = load_model(
             fname + '.keras', custom_objects={'TopKLayer': TopKLayer})
         gensim_model.model = keras_model
+        gensim_model._get_pair_list = _get_pair_list
+        gensim_model._get_full_batch_iter = _get_full_batch_iter
         return gensim_model
 
     def _get_keras_model(self, embed_trainable=False, dropout_rate=0.5, hidden_sizes=[100, 1]):
