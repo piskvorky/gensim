@@ -13,8 +13,8 @@ cosine similarty between the vectors.
 
 Abbreviations
 =============
-
 DRMM : Deep Relevance Matching Model
+
 TKS : Top K Solutions
 
 About DRMM_TKS
@@ -22,12 +22,12 @@ About DRMM_TKS
 This is a variant version of DRMM, which applied topk pooling in the matching matrix.
 It has the following steps:
 
-1. embed queries and docs into embedding vector named 'q_embed' and 'd_embed' respectively
-2. computing 'q_embed' and 'd_embed' with element-wise multiplication
-3. computing output of upper layer with dense layer operation
-4. take softmax operation on the output of this layer named 'g' and find the k largest entries named 'mm_k'.
-5. input 'mm_k' into hidden layers, with specified length of layers and activation function
-6. compute 'g' and 'mm_k' with element-wise multiplication.
+1. embed queries and docs into embedding vector named `q_embed` and `d_embed` respectively.
+2. computing `q_embed` and `d_embed` with element-wise multiplication.
+3. computing output of upper layer with dense layer operation.
+4. take softmax operation on the output of this layer named `g` and find the k largest entries named `mm_k`.
+5. input `mm_k` into hidden layers, with specified length of layers and activation function.
+6. compute `g` and `mm_k` with element-wise multiplication.
 
 On predicting, the model returns the score list between queries and documents.
 
@@ -36,10 +36,10 @@ The trained model needs to be trained on data in the format:
 >>> queries = ["When was World War 1 fought ?".lower().split(),
 ...            "When was Gandhi born ?".lower().split()]
 >>> docs = [["The world war was bad".lower().split(),
-...     "It was fought in 1996".lower().split()],
-...     ["Gandhi was born in the 18th century".lower().split(),
-...      "He fought for the Indian freedom movement".lower().split(),
-...      "Gandhi was assasinated".lower().split()]]
+...          "It was fought in 1996".lower().split()],
+...         ["Gandhi was born in the 18th century".lower().split(),
+...         "He fought for the Indian freedom movement".lower().split(),
+...         "Gandhi was assasinated".lower().split()]]
 >>> labels = [[0, 1], [1, 0, 0]]
 >>> import gensim.downloader as api
 >>> word_embeddings_kv = api.load('glove-wiki-gigaword-50')
@@ -63,18 +63,23 @@ Testing on new data :
 >>> docs = ["A partly submerged glacier cave on Perito Moreno Glacier".lower().split(),
 ...         "A glacier cave is a cave formed within the ice of a glacier".lower().split()]
 
-# Uncomment when proper random seeding is learnt
-# >>> model.predict(queries, docs)
-# [[0.5416601]
-# [0.6190841]]
+
+Predicting on new data :
+
+>>> from gensim.test.utils import datapath
+>>> model = DRMM_TKS.load(datapath('drmm_tks'))
+>>> print(model.predict([["hello", "world"]], [["i", "am", "happy"], ["good", "morning"]]))
+[[0.97115195]
+ [0.98854554]]
 
 More information can be found in:
+
 `Jiafeng Guo, Yixing Fan, Qingyao Ai, W. Bruce Croft "A Deep Relevance Matching Model for Ad-hoc Retrieval"
-<http://www.bigdatalab.ac.cn/~gjf/papers/2016/CIKM2016a_guo.pdf>`
+<http://www.bigdatalab.ac.cn/~gjf/papers/2016/CIKM2016a_guo.pdf>`_
 
-`MatchZoo Repository "MatchZoo Repository" <https://github.com/faneshion/MatchZoo>`
+`MatchZoo Repository <https://github.com/faneshion/MatchZoo>`_
 
-`Similarity Learning "Similarity Learning Wiki Page" <https://en.wikipedia.org/wiki/Similarity_learning>`
+`Similarity Learning Wikipedia Page <https://en.wikipedia.org/wiki/Similarity_learning>`_
 
 """
 
@@ -183,35 +188,27 @@ class DRMM_TKS(utils.SaveLoad):
         Parameters
         ----------
         queries: iterable list of list of string words, optional
-            The questions for the similarity learning model
-            Example:
-            queries=["When was World Wat 1 fought ?".split(), "When was Gandhi born ?".split()],
+            The questions for the similarity learning model.
         docs: iterable list of list of list of string words, optional
-            The candidate answers for the similarity learning model
-            Example:
-            docs = [["The world war was bad".split(), "It was fought in 1996".split()],
-            ["Gandhi was born in the 18th century".split(), "He fought for the Indian freedom movement".split(),
-            "Gandhi was assasinated".split()]]
+            The candidate answers for the similarity learning model.
         labels: iterable list of list of int, optional
             Indicates when a candidate document is relevant to a query
             1 : relevant
             0 : irrelevant
-            Example:
-            labels = [[0, 1], [1, 0, 0]]
         word_embedding : :class:`~gensim.models.keyedvectors.KeyedVectors`, optional
-            a KeyedVector object which has the embeddings pre-loaded
-            If None, random word embeddings will be used
+            a KeyedVector object which has the embeddings pre-loaded.
+            If None, random word embeddings will be used.
         text_maxlen : int, optional
-            The maximum possible length of a query or a document
+            The maximum possible length of a query or a document.
             This is used for padding sentences.
         normalize_embeddings : bool, optional
-            Whether the word embeddings provided should be normalized
+            Whether the word embeddings provided should be normalized.
         epochs : int, optional
-            The number of epochs for which the model should train on the data
+            The number of epochs for which the model should train on the data.
         unk_handle_method : {'zero', 'random'}, optional
-            The method for handling unkown words
-            'zero' : unknown words are given a zero vector
-            'random' : unknown words are given a uniformly random vector bassed on the word string hash
+            The method for handling unkown words.
+                - 'zero' : unknown words are given a zero vector
+                - 'random' : unknown words are given a uniformly random vector bassed on the word string hash
         validation_data: list of the form [test_queries, test_docs, test_labels], optional
             where test_queries, test_docs  and test_labels are of the same form as
             their counter parts stated above.
@@ -219,21 +216,22 @@ class DRMM_TKS(utils.SaveLoad):
             the k topmost values in the interaction matrix between the queries and the docs
         target_mode : {'ranking', 'classification'}, optional
             the way the model should be trained, either to rank or classify
-        verbose: {0, 1, 2}
+        verbose : {0, 1, 2}
             the level of information shared while training
             0 = silent, 1 = progress bar, 2 = one line per epoch
 
-        Usage
-        -----
-        The trained model needs to be trained on data in the format:
+
+        Examples
+        --------
+        The trained model needs to be trained on data in the format
 
         >>> queries = ["When was World War 1 fought ?".lower().split(),
         ...            "When was Gandhi born ?".lower().split()]
         >>> docs = [["The world war was bad".lower().split(),
-        ...     "It was fought in 1996".lower().split()],
-        ...     ["Gandhi was born in the 18th century".lower().split(),
-        ...      "He fought for the Indian freedom movement".lower().split(),
-        ...      "Gandhi was assasinated".lower().split()]]
+        ...          "It was fought in 1996".lower().split()],
+        ...        ["Gandhi was born in the 18th century".lower().split(),
+        ...         "He fought for the Indian freedom movement".lower().split(),
+        ...         "Gandhi was assasinated".lower().split()]]
         >>> labels = [[0, 1],
         ...          [1, 0, 0]]
         >>> import gensim.downloader as api
@@ -562,8 +560,8 @@ class DRMM_TKS(utils.SaveLoad):
         data : list of list of string words
             The data to be tranlsated
         
-        Usage
-        -----
+        Examples
+        --------
         >>> from gensim.test.utils import datapath
         >>> model = DRMM_TKS.load(datapath('drmm_tks'))
         >>>
@@ -607,8 +605,9 @@ class DRMM_TKS(utils.SaveLoad):
         docs : list of list of list of str
             The candidate answers for the similarity learning model
 
-        Usage
-        -----
+
+        Examples
+        --------
         >>> from gensim.test.utils import datapath
         >>> model = DRMM_TKS.load(datapath('drmm_tks'))
         >>>
@@ -656,8 +655,8 @@ class DRMM_TKS(utils.SaveLoad):
         fname : str
             Path to the file.
 
-        Usage
-        -----
+        Examples
+        --------
         >>> from gensim.test.utils import datapath, get_tmpfile
         >>> model = DRMM_TKS.load(datapath('drmm_tks'))
         >>> model_save_path = get_tmpfile('drmm_tks_model')
@@ -687,8 +686,9 @@ class DRMM_TKS(utils.SaveLoad):
         :obj: `~gensim.models.experimental.DRMM_TKS`
             Returns the loaded model as an instance of :class: `~gensim.models.experimental.DRMM_TKS`.
 
-        Usage
-        -----
+
+        Examples
+        --------
         >>> from gensim.test.utils import datapath, get_tmpfile
         >>> model_file_path = datapath('drmm_tks')
         >>> model = DRMM_TKS.load(model_file_path)

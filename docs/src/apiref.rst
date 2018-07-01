@@ -68,6 +68,7 @@ Modules:
     models/deprecated/keyedvectors
     models/deprecated/fasttext_wrapper
     models/base_any2vec
+    models/experimental/drmm_tks
     similarities/docsim
     similarities/index
     sklearn_api/atmodel

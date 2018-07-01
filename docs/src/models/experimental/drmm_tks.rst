@@ -1,4 +1,4 @@
-:mod:`models.experimental.drmm_tks` -- DRMM_TKS Document Similarity Learning
+:mod:`models.experimental.drmm_tks` -- Similarity Learning
 ============================================================================
 
 .. automodule:: gensim.models.experimental.drmm_tks
