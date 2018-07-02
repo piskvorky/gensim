@@ -8,9 +8,7 @@
 This module provides a namespace for functions that use the Levenshtein distance.
 """
 
-from heapq import heappush, heappop
 import logging
-from multiprocessing import Pool
 
 # If python-Levenshtein is available, import it.
 # If python-Levenshtein is unavailable, ImportError will be raised in levsim.
@@ -60,11 +58,6 @@ def levsim(t1, t2, alpha=1.8, beta=5.0):
     return alpha * (1 - distance(t1, t2) * 1.0 / max(len(t1), len(t2)))**beta
 
 
-def _levsim_worker(args):
-    _, t2, _, _ = args
-    return (t2, levsim(*args))
-
-
 class LevenshteinSimilarityIndex(TermSimilarityIndex):
     """
     Computes Levenshtein similarities between terms and retrieves most similar
@@ -74,8 +67,6 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
     ----------
     dictionary : :class:`~gensim.corpora.dictionary.Dictionary`
         A dictionary that specifies the considered terms.
-    workers : int, optional
-        The number of workers to use when computing the Levenshtein similarities.
     alpha : float, optional
         The multiplicative factor alpha defined by Charlet and Damnati (2017).
     beta : float, optional
@@ -92,33 +83,19 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
         Build a term similarity matrix and compute the Soft Cosine Measure.
 
     """
-    CHUNK_SIZE = 5000  # the number of similarities a single worker computes in one batch
-
-    def __init__(self, dictionary, workers=1, alpha=1.8, beta=5.0, threshold=0.0):
+    def __init__(self, dictionary, alpha=1.8, beta=5.0, threshold=0.0):
         self.dictionary = dictionary
-        self.pool = Pool(workers)
         self.alpha = alpha
         self.beta = beta
         self.threshold = threshold
         super(LevenshteinSimilarityIndex, self).__init__()
 
-    def __del__(self):
-        self.pool.close()
-        self.pool.join()
-
     def most_similar(self, t1, topn=10):
-        heap = []
-        for t2, similarity in self.pool.imap_unordered(
-                _levsim_worker, (
-                    (t1, t2, self.alpha, self.beta)
-                    for t2_index, t2 in self.dictionary.items()
-                    if t1 != t2),
-                self.CHUNK_SIZE):
-            heappush(heap, (-similarity, t2))
-        for _, (t2, similarity) in zip(
-                range(topn),
-                (
-                    (t2, -_similarity) for _similarity, t2 in (
-                        heappop(heap) for _ in range(len(heap)))
-                    if similarity > self.threshold)):
+        for _, (t2, similarity) in zip(range(topn), (
+                (t2, similarity) for similarity, t2 in sorted(
+                    (
+                        (levsim(t1, t2, self.alpha, self.beta), t2)
+                        for t2 in self.dictionary.values() if t1 != t2
+                    ), reverse=True)
+                if similarity > self.threshold)):
             yield (t2, similarity)
