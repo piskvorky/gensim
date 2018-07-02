@@ -69,8 +69,9 @@ Predicting on new data :
 >>> from gensim.test.utils import datapath
 >>> model = DRMM_TKS.load(datapath('drmm_tks'))
 >>> print(model.predict([["hello", "world"]], [["i", "am", "happy"], ["good", "morning"]]))
-[[0.97115195]
- [0.98854554]]
+[[0.99346054]
+ [0.999115  ]
+ [0.9989991 ]]
 
 More information can be found in:
 
@@ -115,6 +116,14 @@ def _get_full_batch_iter(pair_list, batch_size):
     """Provides all the data points int the format: X1, X2, y with
     alternate positive and negative examples of `batch_size` in a streamable format.
 
+    Parameters
+    ----------
+    pair_list : iterable list of tuple
+                See docstring for _get_pair_list for more details
+    batch_size : int
+        half the size in which the generator will yield datapoints. The size is doubled since
+        we include positive and negative examples.
+
     Yields
     -------
     X1 : numpy array of shape (batch_size * 2, text_maxlen)
@@ -141,12 +150,25 @@ def _get_full_batch_iter(pair_list, batch_size):
                 X1, X2, y = [], [], []
 
 
-def _get_pair_list(queries, docs, labels, _make_indexed):
+def _get_pair_list(queries, docs, labels, _make_indexed, is_iterable):
     """Yields a tuple with query document pairs in the format
     (query, positive_doc, negative_doc)
-
     [(q1, d+, d-), (q2, d+, d-), (q3, d+, d-), ..., (qn, d+, d-)]
         where each query or document is a list of int
+
+    Parameters
+    ----------
+    queries : iterable list of list of str
+        The queries to the model
+    docs : iterable list of list of list of str
+        The candidate documents for each query
+    labels : iterable list of int
+        The relevance of the document to the query. 1 = relevant, 0 = not relevant
+    _make_indexed : function
+        Translates the given sentence as a list of list of str into a list of list of int
+        based on the model's internal dictionary
+    is_iterable : bool
+        Whether the input data is streamable
 
     Example
     -------
@@ -165,7 +187,16 @@ def _get_pair_list(queries, docs, labels, _make_indexed):
     ]
 
     """
-    while True:
+    if is_iterable:
+        while True:
+            for q, doc, label in zip(queries, docs, labels):
+                doc, label = (list(t) for t in zip(*sorted(zip(doc, label), reverse=True)))
+                for item in zip(doc, label):
+                    if item[1] == 1:
+                        for new_item in zip(doc, label):
+                            if new_item[1] == 0:
+                                yield(_make_indexed(q), _make_indexed(item[0]), _make_indexed(new_item[0]))
+    else:
         for q, doc, label in zip(queries, docs, labels):
             doc, label = (list(t) for t in zip(*sorted(zip(doc, label), reverse=True)))
             for item in zip(doc, label):
@@ -491,7 +522,7 @@ class DRMM_TKS(utils.SaveLoad):
             is_iterable = True
             logger.info("Input is an iterable amd will be streamed")
 
-        self.pair_list = self._get_pair_list(self.queries, self.docs, self.labels, self._make_indexed)
+        self.pair_list = self._get_pair_list(self.queries, self.docs, self.labels, self._make_indexed, is_iterable)
         if is_iterable:
             train_generator = self._get_full_batch_iter(self.pair_list, 10)
         else:
@@ -616,10 +647,11 @@ class DRMM_TKS(utils.SaveLoad):
         ...         ["Gandhi was born in the 18th century".split(), "He fought for the Indian freedom movement".split(),
         ...          "Gandhi was assasinated".split()]]
         >>> print(model.predict(queries, docs))
-        [[0.9824946 ]
-         [0.9698535 ]
-         [0.9841315 ]
-         [0.98992467]]
+        [[0.9933108 ]
+         [0.9925415 ]
+         [0.9827911 ]
+         [0.99258184]
+         [0.9960481 ]]
         """
 
         long_query_list = []
@@ -642,17 +674,22 @@ class DRMM_TKS(utils.SaveLoad):
 
 
     def evaluate(self, queries, docs, labels):
-        """Evaluates the model and provides the results in terms of metrics
+        """Evaluates the model and provides the results in terms of metrics (MAP, nDCG)
 
         Parameters
         ----------
+        queries : list of list of str
+            The questions for the similarity learning model
+        docs : list of list of list of str
+            The candidate answers for the similarity learning model
+        labels : list of list of int
+            The relevance of the document to the query. 1 = relevant, 0 = not relevant
         """
 
         long_doc_list = []
         long_label_list = []
         long_query_list = []
         doc_lens = []
-
         for query, doc, label in zip(queries, docs, labels):
             i = 0
             for d, l in zip(doc, label):
@@ -665,7 +702,6 @@ class DRMM_TKS(utils.SaveLoad):
         indexed_long_query_list = self._translate_user_data(long_query_list)
         indexed_long_doc_list = self._translate_user_data(long_doc_list)
         predictions = self.model.predict(x={'query': indexed_long_query_list, 'doc': indexed_long_doc_list})
-
         Y_pred = []
         Y_true = []
         offset = 0
