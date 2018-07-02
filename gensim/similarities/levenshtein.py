@@ -63,6 +63,12 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
     Computes Levenshtein similarities between terms and retrieves most similar
     terms for a given term.
 
+    Notes
+    -----
+    This is a naive implementation that iteratively computes pointwise Levenshtein similarities
+    between individual terms. Using this implementation to compute the similarity of all terms in
+    real-world dictionaries such as the English Wikipedia will take years.
+
     Parameters
     ----------
     dictionary : :class:`~gensim.corpora.dictionary.Dictionary`

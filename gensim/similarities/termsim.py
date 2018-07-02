@@ -117,6 +117,12 @@ class SparseTermSimilarityMatrix(SaveLoad):
     """
     Builds a sparse term similarity matrix using a term similarity index.
 
+    Notes
+    -----
+    Building a DOK matrix, and converting it to a CSC matrix carries a significant memory overhead.
+    Future work should switch to building arrays of rows, columns, and non-zero elements and
+    directly passing these arrays to the CSC matrix constructor without copying.
+
     Parameters
     ----------
     source : :class:`~gensim.similarities.termsim.TermSimilarityIndex` or :class:`scipy.sparse.spmatrix`
