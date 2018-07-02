@@ -92,6 +92,7 @@ from collections import Counter
 from gensim.models.experimental.custom_losses import rank_hinge_loss
 from gensim.models.experimental.custom_layers import TopKLayer
 from gensim.models.experimental.custom_callbacks import ValidationCallback
+from gensim.models.experimental.evaluation_metrics import mapk, mean_ndcg
 from sklearn.preprocessing import normalize
 from gensim import utils
 from collections import Iterable
@@ -107,7 +108,6 @@ try:
 except ImportError:
     KERAS_AVAILABLE = False
 
-np.random.seed(42)
 logger = logging.getLogger(__name__)
 
 
@@ -165,14 +165,14 @@ def _get_pair_list(queries, docs, labels, _make_indexed):
     ]
 
     """
-
-    for q, doc, label in zip(queries, docs, labels):
-        doc, label = (list(t) for t in zip(*sorted(zip(doc, label), reverse=True)))
-        for item in zip(doc, label):
-            if item[1] == 1:
-                for new_item in zip(doc, label):
-                    if new_item[1] == 0:
-                        yield(_make_indexed(q), _make_indexed(item[0]), _make_indexed(new_item[0]))
+    while True:
+        for q, doc, label in zip(queries, docs, labels):
+            doc, label = (list(t) for t in zip(*sorted(zip(doc, label), reverse=True)))
+            for item in zip(doc, label):
+                if item[1] == 1:
+                    for new_item in zip(doc, label):
+                        if new_item[1] == 0:
+                            yield(_make_indexed(q), _make_indexed(item[0]), _make_indexed(new_item[0]))
 
 
 class DRMM_TKS(utils.SaveLoad):
@@ -454,7 +454,7 @@ class DRMM_TKS(utils.SaveLoad):
 
     def train(self, queries, docs, labels, word_embedding=None,
               text_maxlen=200, normalize_embeddings=True, epochs=10, unk_handle_method='zero',
-              validation_data=None, topk=50, target_mode='ranking', verbose=1):
+              validation_data=None, topk=50, target_mode='ranking', verbose=1, batch_size=10, steps_per_epoch=281):
         """Trains a DRMM_TKS model using specified parameters
 
         This method is called from on model initialization if the data is provided.
@@ -493,7 +493,7 @@ class DRMM_TKS(utils.SaveLoad):
 
         self.pair_list = self._get_pair_list(self.queries, self.docs, self.labels, self._make_indexed)
         if is_iterable:
-            train_generator = self._get_full_batch_iter(self.pair_list, 32)
+            train_generator = self._get_full_batch_iter(self.pair_list, 10)
         else:
             X1_train, X2_train, y_train = self._get_full_batch()
 
@@ -517,26 +517,26 @@ class DRMM_TKS(utils.SaveLoad):
         val_callback = None
         if self.validation_data is not None:
             test_queries, test_docs, test_labels = self.validation_data
-            doc_lens = []
-            long_doc_list = []
-            long_test_labels = []
 
-            for label, doc in zip(test_labels, test_docs):
-                for l, d in zip(label, doc):
+            long_doc_list = []
+            long_label_list = []
+            long_query_list = []
+            doc_lens = []
+
+            for query, doc, label in zip(test_queries, test_docs, test_labels):
+                i = 0
+                for d, l in zip(doc, label):
+                    long_query_list.append(query)
                     long_doc_list.append(d)
-                    long_test_labels.append(l)
+                    long_label_list.append(l)
+                    i += 1
                 doc_lens.append(len(doc))
 
-            long_queries = []
-            for doc_len, q in zip(doc_lens, test_queries):
-                for i in range(doc_len):
-                    long_queries.append(q)
-
-            indexed_long_queries = self._translate_user_data(long_queries)
+            indexed_long_query_list = self._translate_user_data(long_query_list)
             indexed_long_doc_list = self._translate_user_data(long_doc_list)
 
-            val_callback = ValidationCallback({"X1": indexed_long_queries, "X2": indexed_long_doc_list,
-                                               "doc_lengths": doc_lens, "y": long_test_labels})
+            val_callback = ValidationCallback({"X1": indexed_long_query_list, "X2": indexed_long_doc_list,
+                                               "doc_lengths": doc_lens, "y": long_label_list})
             val_callback = [val_callback]  # since `model.fit` requires a list
 
         # If train is called again, not all values should be reset
@@ -544,7 +544,7 @@ class DRMM_TKS(utils.SaveLoad):
             self.first_train = False
 
         if is_iterable:
-            self.model.fit_generator(train_generator, steps_per_epoch=128, callbacks=[val_callback],
+            self.model.fit_generator(train_generator, steps_per_epoch=steps_per_epoch, callbacks=val_callback,
                                     epochs=self.epochs)
         else:
             self.model.fit(x={"query": X1_train, "doc": X2_train}, y=y_train, batch_size=5,
@@ -622,24 +622,62 @@ class DRMM_TKS(utils.SaveLoad):
          [0.98992467]]
         """
 
-        doc_lens = []
+        long_query_list = []
         long_doc_list = []
-        for doc in docs:
-            i = 0
+        for query, doc in zip(queries, docs):
             for d in doc:
+                long_query_list.append(query)
                 long_doc_list.append(d)
+
+        indexed_long_query_list = self._translate_user_data(long_query_list)
+        indexed_long_doc_list = self._translate_user_data(long_doc_list)
+
+        predictions = self.model.predict(x={'query': indexed_long_query_list, 'doc': indexed_long_doc_list})
+
+        logger.info("Predictions in the format query, doc, similarity")
+        for i, (q, d) in enumerate(zip(long_query_list, long_doc_list)):
+            logger.info("%s\t%s\t%s", str(q), str(d), str(predictions[i][0]))
+
+        return predictions
+
+
+    def evaluate(self, queries, docs, labels):
+        """Evaluates the model and provides the results in terms of metrics
+
+        Parameters
+        ----------
+        """
+
+        long_doc_list = []
+        long_label_list = []
+        long_query_list = []
+        doc_lens = []
+
+        for query, doc, label in zip(queries, docs, labels):
+            i = 0
+            for d, l in zip(doc, label):
+                long_query_list.append(query)
+                long_doc_list.append(d)
+                long_label_list.append(l)
                 i += 1
             doc_lens.append(len(doc))
 
-        long_queries = []
-        for doc_len, q in zip(doc_lens, queries):
-            for i in range(len(docs)):
-                long_queries.append(q)
-
-        indexed_long_queries = self._translate_user_data(long_queries)
+        indexed_long_query_list = self._translate_user_data(long_query_list)
         indexed_long_doc_list = self._translate_user_data(long_doc_list)
-        return self.model.predict(
-            x={'query': indexed_long_queries, 'doc': indexed_long_doc_list})
+        predictions = self.model.predict(x={'query': indexed_long_query_list, 'doc': indexed_long_doc_list})
+
+        Y_pred = []
+        Y_true = []
+        offset = 0
+
+        for doc_size in doc_lens:
+            Y_pred.append(predictions[offset: offset + doc_size])
+            Y_true.append(long_label_list[offset: offset + doc_size])
+            offset += doc_size
+
+        logger.info("MAP: %.2f", mapk(Y_true, Y_pred))
+        for k in [1, 3, 5, 10, 20]:
+            logger.info("nDCG@%d : %.2f", k, mean_ndcg(Y_true, Y_pred, k=k))
 
     def save(self, fname, *args, **kwargs):
         """Save the model.
