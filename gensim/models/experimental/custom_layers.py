@@ -15,10 +15,10 @@ class TopKLayer(Layer):
 
         Parameters
         ----------
-        output_dim : tuple of ints
-            The dimension of the tensor after going through this layer
+        output_dim : tuple of int
+            The dimension of the tensor after going through this layer.
         topk : int
-            The k topmost values to be returned
+            The k topmost values to be returned.
         """
         self.output_dim = output_dim
         self.topk = topk

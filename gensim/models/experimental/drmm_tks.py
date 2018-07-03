@@ -13,9 +13,8 @@ cosine similarty between the vectors.
 
 Abbreviations
 =============
-DRMM : Deep Relevance Matching Model
-
-TKS : Top K Solutions
+- DRMM : Deep Relevance Matching Model
+- TKS : Top K Solutions
 
 About DRMM_TKS
 ==============
@@ -33,15 +32,13 @@ On predicting, the model returns the score list between queries and documents.
 
 The trained model needs to be trained on data in the format:
 
->>> queries = ["When was World War 1 fought ?".lower().split(),
-...            "When was Gandhi born ?".lower().split()]
->>> docs = [["The world war was bad".lower().split(),
-...          "It was fought in 1996".lower().split()],
-...         ["Gandhi was born in the 18th century".lower().split(),
-...         "He fought for the Indian freedom movement".lower().split(),
-...         "Gandhi was assasinated".lower().split()]]
->>> labels = [[0, 1], [1, 0, 0]]
+>>> from gensim.models.experimental import DRMM_TKS
 >>> import gensim.downloader as api
+>>> queries = ["When was World War 1 fought ?".lower().split(), "When was Gandhi born ?".lower().split()]
+>>> docs = [["The world war was bad".lower().split(), "It was fought in 1996".lower().split()], ["Gandhi was born in"
+...        "the 18th century".lower().split(), "He fought for the Indian freedom movement".lower().split(),
+...        "Gandhi was assasinated".lower().split()]]
+>>> labels = [[0, 1], [1, 0, 0]]
 >>> word_embeddings_kv = api.load('glove-wiki-gigaword-50')
 >>> model = DRMM_TKS(queries, docs, labels, word_embedding=word_embeddings_kv, verbose=0)
 
@@ -59,27 +56,24 @@ You can also create the modela and train it later :
 
 Testing on new data :
 
->>> queries = ["how are glacier caves formed ?".lower().split()]
->>> docs = ["A partly submerged glacier cave on Perito Moreno Glacier".lower().split(),
-...         "A glacier cave is a cave formed within the ice of a glacier".lower().split()]
-
-
-Predicting on new data :
-
 >>> from gensim.test.utils import datapath
 >>> model = DRMM_TKS.load(datapath('drmm_tks'))
->>> print(model.predict([["hello", "world"]], [["i", "am", "happy"], ["good", "morning"]]))
-[[0.99346054]
- [0.999115  ]
- [0.9989991 ]]
+>>>
+>>> queries = ["how are glacier caves formed ?".lower().split()]
+>>> docs = [["A partly submerged glacier cave on Perito Moreno Glacier".lower().split(), "glacier cave is cave formed"
+...        " within the ice of glacier".lower().split()]]
+>>> print(model.predict(queries, docs))
+[[0.9915068 ]
+ [0.99228466]]
+>>> print(model.predict([["hello", "world"]], [[["i", "am", "happy"], ["good", "morning"]]]))
+[[0.9975487]
+ [0.999115 ]]
+
 
 More information can be found in:
-
 `Jiafeng Guo, Yixing Fan, Qingyao Ai, W. Bruce Croft "A Deep Relevance Matching Model for Ad-hoc Retrieval"
 <http://www.bigdatalab.ac.cn/~gjf/papers/2016/CIKM2016a_guo.pdf>`_
-
 `MatchZoo Repository <https://github.com/faneshion/MatchZoo>`_
-
 `Similarity Learning Wikipedia Page <https://en.wikipedia.org/wiki/Similarity_learning>`_
 
 """
@@ -224,8 +218,8 @@ class DRMM_TKS(utils.SaveLoad):
             The candidate answers for the similarity learning model.
         labels: iterable list of list of int, optional
             Indicates when a candidate document is relevant to a query
-            1 : relevant
-            0 : irrelevant
+            - 1 : relevant
+            - 0 : irrelevant
         word_embedding : :class:`~gensim.models.keyedvectors.KeyedVectors`, optional
             a KeyedVector object which has the embeddings pre-loaded.
             If None, random word embeddings will be used.
@@ -249,22 +243,20 @@ class DRMM_TKS(utils.SaveLoad):
             the way the model should be trained, either to rank or classify
         verbose : {0, 1, 2}
             the level of information shared while training
-            0 = silent, 1 = progress bar, 2 = one line per epoch
+                - 0 : silent
+                - 1 : progress bar
+                - 2 : one line per epoch
 
 
         Examples
         --------
         The trained model needs to be trained on data in the format
 
-        >>> queries = ["When was World War 1 fought ?".lower().split(),
-        ...            "When was Gandhi born ?".lower().split()]
-        >>> docs = [["The world war was bad".lower().split(),
-        ...          "It was fought in 1996".lower().split()],
-        ...        ["Gandhi was born in the 18th century".lower().split(),
-        ...         "He fought for the Indian freedom movement".lower().split(),
-        ...         "Gandhi was assasinated".lower().split()]]
-        >>> labels = [[0, 1],
-        ...          [1, 0, 0]]
+        >>> queries = ["When was World War 1 fought ?".lower().split(), "When was Gandhi born ?".lower().split()]
+        >>> docs = [["The world war was bad".lower().split(), "It was fought in 1996".lower().split()], ["Gandhi was"
+        ...    "born in the 18th century".lower().split(), "He fought for the Indian freedom movement".lower().split(),
+        ...    "Gandhi was assasinated".lower().split()]]
+        >>> labels = [[0, 1], [1, 0, 0]]
         >>> import gensim.downloader as api
         >>> word_embeddings_kv = api.load('glove-wiki-gigaword-50')
         >>> model = DRMM_TKS(queries, docs, labels, word_embedding=word_embeddings_kv, verbose=0)
@@ -292,8 +284,9 @@ class DRMM_TKS(utils.SaveLoad):
         self._get_full_batch_iter = _get_full_batch_iter
 
         if self.target_mode not in ['ranking', 'classification']:
-            raise ValueError("Unkown target_mode %s. It must be either"
-                             "'ranking' or 'classification'" % self.target_mode)
+            raise ValueError(
+                "Unkown target_mode %s. It must be either 'ranking' or 'classification'" % self.target_mode
+            )
 
         if unk_handle_method not in ['random', 'zero']:
             raise ValueError("Unkown token handling method %s" % str(unk_handle_method))
@@ -346,8 +339,7 @@ class DRMM_TKS(utils.SaveLoad):
         # Initialize the embedding matrix
         # UNK word gets the vector based on the method
         if self.unk_handle_method == 'random':
-            self.embedding_matrix = np.random.uniform(-0.2, 0.2,
-                                                      (self.vocab_size, self.embedding_dim))
+            self.embedding_matrix = np.random.uniform(-0.2, 0.2, (self.vocab_size, self.embedding_dim))
         elif self.unk_handle_method == 'zero':
             self.embedding_matrix = np.zeros((self.vocab_size, self.embedding_dim))
 
@@ -361,9 +353,10 @@ class DRMM_TKS(utils.SaveLoad):
                     # Creates the same random vector for the given string each time
                     self.embedding_matrix[i] = self._seeded_vector(word, self.embedding_dim)
                 n_non_embedding_words += 1
-        logger.info("There are %d words out of %d (%.2f%%) not in the embeddings. Setting them to %s" %
-                    (n_non_embedding_words, self.vocab_size, n_non_embedding_words * 100 / self.vocab_size,
-                     self.unk_handle_method))
+        logger.info(
+            "There are %d words out of %d (%.2f%%) not in the embeddings. Setting them to %s", n_non_embedding_words,
+            self.vocab_size, n_non_embedding_words * 100 / self.vocab_size, self.unk_handle_method
+        )
 
         # Include embeddings for words in embedding file but not in the train vocab
         # It will be useful for embedding words encountered in validation and test set
@@ -410,11 +403,9 @@ class DRMM_TKS(utils.SaveLoad):
             logger.info("Normalizing the word embeddings")
             self.embedding_matrix = normalize(self.embedding_matrix)
 
-        logger.info("Embedding Matrix build complete. It now has shape %s" %
-                    str(self.embedding_matrix.shape))
-        logger.info("Pad word has been set to index %d" % self.pad_word_index)
-        logger.info("Unknown word has been set to index %d" %
-                    self.unk_word_index)
+        logger.info("Embedding Matrix build complete. It now has shape %s", str(self.embedding_matrix.shape))
+        logger.info("Pad word has been set to index %d", self.pad_word_index)
+        logger.info("Unknown word has been set to index %d", self.unk_word_index)
         logger.info("Embedding index build complete")
         self.needs_vocab_build = False
 
@@ -566,8 +557,10 @@ class DRMM_TKS(utils.SaveLoad):
             indexed_long_query_list = self._translate_user_data(long_query_list)
             indexed_long_doc_list = self._translate_user_data(long_doc_list)
 
-            val_callback = ValidationCallback({"X1": indexed_long_query_list, "X2": indexed_long_doc_list,
-                                               "doc_lengths": doc_lens, "y": long_label_list})
+            val_callback = ValidationCallback(
+                                {"X1": indexed_long_query_list, "X2": indexed_long_doc_list, "doc_lengths": doc_lens,
+                                "y": long_label_list}
+                            )
             val_callback = [val_callback]  # since `model.fit` requires a list
 
         # If train is called again, not all values should be reset
@@ -613,16 +606,17 @@ class DRMM_TKS(utils.SaveLoad):
                     translated_sentence.append(self.unk_word_index)
                     n_skipped_words += 1
             if len(sentence) > self.text_maxlen:
-                logger.info("text_maxlen: %d isn't big enough. Error at sentence of length %d."
-                            "Sentence is %s" % (
-                                self.text_maxlen, len(sentence), str(sentence))
-                            )
+                logger.info(
+                    "text_maxlen: %d isn't big enough. Error at sentence of length %d."
+                    "Sentence is %s", self.text_maxlen, len(sentence), str(sentence)
+                )
             translated_sentence = translated_sentence + \
                 (self.text_maxlen - len(sentence)) * [self.pad_word_index]
             translated_data.append(np.array(translated_sentence))
 
-        logger.info("Found %d unknown words. Set them to unknown word index : %d" %
-                    (n_skipped_words, self.unk_word_index))
+        logger.info(
+            "Found %d unknown words. Set them to unknown word index : %d", n_skipped_words, self.unk_word_index
+        )
         return np.array(translated_data)
 
     def predict(self, queries, docs):
@@ -643,9 +637,9 @@ class DRMM_TKS(utils.SaveLoad):
         >>> model = DRMM_TKS.load(datapath('drmm_tks'))
         >>>
         >>> queries = ["When was World War 1 fought ?".split(), "When was Gandhi born ?".split()]
-        >>> docs = [["The world war was bad".split(), "It was fought in 1996".split()],
-        ...         ["Gandhi was born in the 18th century".split(), "He fought for the Indian freedom movement".split(),
-        ...          "Gandhi was assasinated".split()]]
+        >>> docs = [["The world war was bad".split(), "It was fought in 1996".split()], ["Gandhi was born in the 18th"
+        ...        " century".split(), "He fought for the Indian freedom movement".split(), "Gandhi was"
+        ...        " assasinated".split()]]
         >>> print(model.predict(queries, docs))
         [[0.9933108 ]
          [0.9925415 ]
@@ -672,9 +666,9 @@ class DRMM_TKS(utils.SaveLoad):
 
         return predictions
 
-
     def evaluate(self, queries, docs, labels):
         """Evaluates the model and provides the results in terms of metrics (MAP, nDCG)
+        This should ideally be called on the test set.
 
         Parameters
         ----------
@@ -685,7 +679,6 @@ class DRMM_TKS(utils.SaveLoad):
         labels : list of list of int
             The relevance of the document to the query. 1 = relevant, 0 = not relevant
         """
-
         long_doc_list = []
         long_label_list = []
         long_query_list = []
@@ -698,19 +691,16 @@ class DRMM_TKS(utils.SaveLoad):
                 long_label_list.append(l)
                 i += 1
             doc_lens.append(len(doc))
-
         indexed_long_query_list = self._translate_user_data(long_query_list)
         indexed_long_doc_list = self._translate_user_data(long_doc_list)
         predictions = self.model.predict(x={'query': indexed_long_query_list, 'doc': indexed_long_doc_list})
         Y_pred = []
         Y_true = []
         offset = 0
-
         for doc_size in doc_lens:
             Y_pred.append(predictions[offset: offset + doc_size])
             Y_true.append(long_label_list[offset: offset + doc_size])
             offset += doc_size
-
         logger.info("MAP: %.2f", mapk(Y_true, Y_pred))
         for k in [1, 3, 5, 10, 20]:
             logger.info("nDCG@%d : %.2f", k, mean_ndcg(Y_true, Y_pred, k=k))

@@ -17,19 +17,18 @@ class ValidationCallback(Callback):
         Parameters
         ----------
         test_data : dict
-            A dictionary which holds the validation data
-            It consists of the following keys:
-                "X1" : numpy array
+            A dictionary which holds the validation data. It consists of the following keys:
+                - "X1" : numpy array
                     The queries as a numpy array of shape (n_samples, text_maxlen)
-                "X2" : numpy array
+                - "X2" : numpy array
                     The candidate docs as a numpy array of shape (n_samples, text_maxlen)
-                "y" : list of int
-                      It is the labels for each of the query-doc pairs as a 1 or 0 with shape (n_samples,)
-                      where 1: doc is relevant to query
-                            0: doc is not relevant to query
-                "doc_lengths" : list of int
-                                It contains the length of each document group. I.e., the number of queries
-                                which represent one topic. It is needed for calculating the metrics.
+                - "y" : list of int
+                    It is the labels for each of the query-doc pairs as a 1 or 0 with shape (n_samples,)
+                    where 1 : doc is relevant to query, 0 : doc is not relevant to query
+                - "doc_lengths" : list of int
+                    It contains the length of each document group. I.e., the number of queries
+                    which represent one topic. It is needed for calculating the metrics.
+
         """
 
         if not KERAS_AVAILABLE:

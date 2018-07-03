@@ -3,7 +3,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
-    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO
+)
 
 
 def mapk(Y_true, Y_pred):
@@ -19,8 +20,8 @@ def mapk(Y_true, Y_pred):
     Y_pred : numpy array or list of floats
         Contains the predicted similarity score between a query and document
 
-    Usage
-    -----
+    Examples
+    --------
     >>> Y_true = [[0, 1, 0, 1], [0, 0, 0, 0, 1, 0], [0, 1, 0]]
     >>> Y_pred = [[0.1, 0.2, -0.01, 0.4], [0.12, -0.43, 0.2, 0.1, 0.99, 0.7], [0.5, 0.63, 0.92]]
     >>> print(mapk(Y_true, Y_pred))
@@ -61,8 +62,9 @@ def mean_ndcg(Y_true, Y_pred, k=10):
     Y_pred : numpy array or list of floats
         Contains the predicted similarity score between a query and document
 
-    Usage
-    -----
+
+    Examples
+    --------
     >>> Y_true = [[0, 1, 0, 1], [0, 0, 0, 0, 1, 0], [0, 1, 0]]
     >>> Y_pred = [[0.1, 0.2, -0.01, 0.4], [0.12, -0.43, 0.2, 0.1, 0.19, 0.7], [0.5, 0.63, 0.72]]
     >>> for k in [1, 3, 5, 10]:

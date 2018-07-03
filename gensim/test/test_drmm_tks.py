@@ -27,14 +27,10 @@ class TestDrmmTksModel(unittest.TestCase):
         model.save(get_tmpfile('temp_drmm_tks_model'))
 
     def testTrainModel(self):
-        queries = ["When was World War 1 fought ?".lower().split(),
-                   "When was Gandhi born ?".lower().split()]
-        docs = [["The world war was bad".lower().split(),
-                 "It was fought in 1996".lower().split()],
-                ["Gandhi was born in the 18th century".lower().split(),
-                 "He fought for the Indian freedom movement".lower().split(),
+        queries = ["When was World War 1 fought ?".lower().split(), "When was Gandhi born ?".lower().split()]
+        docs = [["The world war was bad".lower().split(), "It was fought in 1996".lower().split()], ["Gandhi was born"
+                 " in the 18th century".lower().split(), "He fought for the Indian freedom movement".lower().split(),
                  "Gandhi was assasinated".lower().split()]]
         labels = [[0, 1], [1, 0, 0]]
         word_embeddings_kv = api.load('glove-wiki-gigaword-50')
-        model = DRMM_TKS(queries, docs, labels,
-                         word_embedding=word_embeddings_kv, verbose=0)
+        model = DRMM_TKS(queries, docs, labels, word_embedding=word_embeddings_kv, verbose=0)  # noqa:F841
