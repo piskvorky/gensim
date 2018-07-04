@@ -14,6 +14,7 @@ from gensim.models.fasttext import FastText
 from gensim.models.word2vec import Word2Vec
 from gensim.models.doc2vec import Doc2Vec, TaggedLineDocument
 from gensim.models.word2vec import LineSentence
+from gensim.models.word2vec_inner import CythonLineSentence
 
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
@@ -45,7 +46,7 @@ def benchmark_model(input_streams, model, window, workers, vector_size):
         }
     else:
         kwargs = {
-            'input_streams': [inp for inp in input_streams]  # hack for CythonLineSentence
+            'input_streams': [CythonLineSentence(inp) for inp in input_streams]
         }
 
     kwargs['size'] = vector_size

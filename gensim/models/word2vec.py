@@ -118,7 +118,6 @@ from gensim.utils import keep_vocab_item, call_on_class_only
 from gensim.models.keyedvectors import Vocab, Word2VecKeyedVectors
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 
-from gensim.models.word2vec_inner import CythonLineSentence
 
 try:
     from queue import Queue, Empty
@@ -545,11 +544,10 @@ class Word2Vec(BaseWordEmbeddingsModel):
     #     tally = train_batch_cbow(self, sentences, alpha, work, neu1, self.compute_loss)
     #     return tally, self._raw_word_count(sentences)
 
-    def _worker_loop(self, fname, progress_queue):
+    def _worker_loop(self, input_stream, progress_queue):
         work, neu1 = self._get_thread_working_mem()
         jobs_processed = 0
         alpha = self._get_job_params(0)
-        input_stream = CythonLineSentence(fname)
 
         tally, raw_tally = train_epoch_cbow(self, input_stream, alpha, work, neu1, False)
         progress_queue.put((0, tally, raw_tally))
