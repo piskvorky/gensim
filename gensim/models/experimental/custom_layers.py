@@ -31,7 +31,7 @@ class TopKLayer(Layer):
         return K.tf.nn.top_k(x, k=self.topk, sorted=True)[0]
 
     def compute_output_shape(self, input_shape):
-        return (input_shape[0], self.output_dim[0], self.output_dim[1])
+        return (input_shape[0], self.output_dim[0], self.topk)
 
     def get_config(self):
         config = {
