@@ -11,7 +11,9 @@ public:
 
 	std::vector<std::string> ReadSentence();
 	inline bool IsEof() const { return is_eof_; }
+	inline void Reset() { fs_.close(); fs_ = std::ifstream(filename_); is_eof_ = false; }
 private:
+    std::string filename_;
 	std::ifstream fs_;
 	bool is_eof_;
 };

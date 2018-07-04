@@ -58,6 +58,7 @@ cdef extern from "linesentence.h":
         FastLineSentence(string&) except +
         vector[string] ReadSentence() nogil except +
         bool_t IsEof() nogil
+        void Reset() nogil
 
 
 @cython.final
@@ -85,12 +86,13 @@ cdef class CythonLineSentence:
     cpdef vector[string] read_sentence(self) nogil except *:
         return self._thisptr.ReadSentence()
 
-    cpdef vector[string] read_sentence_gil(self):
-        return self._thisptr.ReadSentence()
+    cpdef void reset(self) nogil:
+        self._thisptr.Reset()
 
     def __iter__(self):
+        self.reset()
         while not self.is_eof():
-            sent = self.read_sentence_gil()
+            sent = self.read_sentence()
             yield sent
 
     cpdef vector[vector[string]] next_batch(self) nogil except *:
@@ -548,9 +550,11 @@ cpdef train_epoch_cbow(model, _input_stream, alpha, _work, _neu1, compute_loss):
     neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
 
     # prepare C structures so we can go "full C" and release the Python GIL
-
     for py_token in model.wv.vocab:
-        token = py_token.encode('utf8')
+        try:
+            token = py_token.encode('utf8')
+        except:
+            token = py_token
         vocab[token] = (model.wv.vocab[py_token].index, model.wv.vocab[py_token].sample_int)
 
     # release GIL & train on all sentences
@@ -559,6 +563,7 @@ cpdef train_epoch_cbow(model, _input_stream, alpha, _work, _neu1, compute_loss):
     cdef ULongLong random_number
 
     with nogil:
+        input_stream.reset()
         while not input_stream.is_eof():
             effective_sentences = 0
             effective_words = 0
