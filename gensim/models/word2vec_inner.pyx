@@ -85,9 +85,13 @@ cdef class CythonLineSentence:
     cpdef vector[string] read_sentence(self) nogil except *:
         return self._thisptr.ReadSentence()
 
-    # cpdef vector[vector[string]] next_batch(self) except *:
-    #     with nogil:
-    #         return self._next_batch()
+    cpdef vector[string] read_sentence_gil(self):
+        return self._thisptr.ReadSentence()
+
+    def __iter__(self):
+        while not self.is_eof():
+            sent = self.read_sentence_gil()
+            yield sent
 
     cpdef vector[vector[string]] next_batch(self) nogil except *:
         cdef:

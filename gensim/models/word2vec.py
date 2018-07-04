@@ -1166,14 +1166,7 @@ class Word2VecVocab(utils.SaveLoad):
 
     def scan_vocab(self, input_streams, progress_per=10000, trim_rule=None):
         """Do an initial scan of all words appearing in sentences."""
-        from itertools import chain
-        line_sentences = []
-        for st in input_streams:
-            if isinstance(st, string_types):
-                line_sentences.append(LineSentence(st))
-            else:
-                raise RuntimeError("error!!!!!!!!")
-        sentences = chain(*line_sentences)
+        sentences = itertools.chain(*input_streams)
 
         logger.info("collecting all words and their counts")
         sentence_no = -1
