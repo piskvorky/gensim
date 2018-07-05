@@ -721,6 +721,13 @@ class TestWikiCorpus(TestTextCorpus):
         # An empty file is not legit XML
         pass
 
+    def test_custom_filterfunction(self):
+        def reject_all(elem, *args, **kwargs):
+            return False
+        corpus = self.corpus_class(self.enwiki, filter_articles=reject_all)
+        texts = corpus.get_texts()
+        self.assertEquals(len(texts), 0)
+
 
 class TestTextDirectoryCorpus(unittest.TestCase):
 
