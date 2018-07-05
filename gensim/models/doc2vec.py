@@ -743,7 +743,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         """
         return 60 * len(self.docvecs.offset2doctag) + 140 * len(self.docvecs.doctags)
 
-    def infer_vector(self, doc_words, alpha=0.1, min_alpha=0.0001, steps=5):
+    def infer_vector(self, doc_words, alpha=None, min_alpha=None, epochs=None, steps=None):
         """Infer a vector for given post-bulk training document.
 
         Notes
@@ -756,12 +756,17 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         doc_words : list of str
             A document for which the vector representation will be inferred.
         alpha : float, optional
-            The initial learning rate.
+            The initial learning rate. If unspecified, value from model initialization will be reused.
         min_alpha : float, optional
-            Learning rate will linearly drop to `min_alpha` as training progresses.
-        steps : int, optional
-            Number of times to train the new document. A higher value may slow down training, but it will result in more
-            stable representations.
+            Learning rate will linearly drop to `min_alpha` over all inference epochs. If unspecified,
+            value from model initialization will be reused.
+        epochs : int, optional
+            Number of times to train the new document. Larger values take more time, but may improve
+            quality and run-to-run stability of inferred vectors. If unspecified, the `epochs` value
+            from model initialization will be reused.
+        steps : int, optional, deprecated
+            Previous name for `epochs`, still available for now for backward compatibility: if
+            `epochs` is unspecified but `steps` is, the `steps` value will be used.
 
         Returns
         -------
@@ -769,15 +774,19 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             The inferred paragraph vector for the new document.
 
         """
+        alpha = alpha or self.alpha
+        min_alpha = min_alpha or self.min_alpha
+        epochs = epochs or steps or self.epochs
+
         doctag_vectors, doctag_locks = self.trainables.get_doctag_trainables(doc_words, self.docvecs.vector_size)
         doctag_indexes = [0]
         work = zeros(self.trainables.layer1_size, dtype=REAL)
         if not self.sg:
             neu1 = matutils.zeros_aligned(self.trainables.layer1_size, dtype=REAL)
 
-        alpha_delta = (alpha - min_alpha) / (steps - 1)
+        alpha_delta = (alpha - min_alpha) / max(epochs - 1, 1)
 
-        for i in range(steps):
+        for i in range(epochs):
             if self.sg:
                 train_document_dbow(
                     self, doc_words, doctag_indexes, alpha, work,
