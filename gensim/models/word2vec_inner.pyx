@@ -622,31 +622,29 @@ cpdef train_epoch_cbow(model, _input_stream, alpha, _work, _neu1, compute_loss):
     return total_effective_words, total_words  # return properly raw_tally as a second value (not tally)
 
 
-cdef vector[vector[string]] iterate_batches_from_pystream(input_stream):
-    cdef vector[vector[string]] job_batch
-    cdef vector[string] data
-
-    cdef int batch_size = 0
-    cdef int data_length = 0
+def iterate_batches_from_pystream(input_stream):
+    job_batch = []
+    data = None
+    batch_size = 0
+    data_length = 0
 
     for data in input_stream:
-        data_length = data.size()
+        data_length = len(data)
 
         # can we fit this sentence into the existing job batch?
         if batch_size + data_length <= MAX_SENTENCE_LEN:
             # yes => add it to the current job
-            job_batch.push_back(data)
+            job_batch.append(data)
             batch_size += data_length
         else:
             yield job_batch
 
-            job_batch.clear()
+            job_batch = [data]
 
-            job_batch.push_back(data)
             batch_size = data_length
 
     # add the last job too (may be significantly smaller than batch_words)
-    if not job_batch.empty():
+    if job_batch:
         yield job_batch
 
 
@@ -720,7 +718,7 @@ cpdef train_epoch_cbow_pystream(model, input_stream, alpha, _work, _neu1, comput
     cdef pair[ULongLong, ULongLong] word
     cdef ULongLong random_number
 
-    while sentences in iterate_batches_from_pystream(input_stream):
+    for sentences in iterate_batches_from_pystream(input_stream):
         with nogil:
             effective_sentences = 0
             effective_words = 0
