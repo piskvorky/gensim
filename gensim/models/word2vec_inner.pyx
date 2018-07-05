@@ -622,6 +622,162 @@ cpdef train_epoch_cbow(model, _input_stream, alpha, _work, _neu1, compute_loss):
     return total_effective_words, total_words  # return properly raw_tally as a second value (not tally)
 
 
+cdef vector[vector[string]] iterate_batches_from_pystream(input_stream):
+    cdef vector[vector[string]] job_batch
+    cdef vector[string] data
+
+    cdef int batch_size = 0
+    cdef int data_length = 0
+
+    for data in input_stream:
+        data_length = data.size()
+
+        # can we fit this sentence into the existing job batch?
+        if batch_size + data_length <= MAX_SENTENCE_LEN:
+            # yes => add it to the current job
+            job_batch.push_back(data)
+            batch_size += data_length
+        else:
+            yield job_batch
+
+            job_batch.clear()
+
+            job_batch.push_back(data)
+            batch_size = data_length
+
+    # add the last job too (may be significantly smaller than batch_words)
+    if not job_batch.empty():
+        yield job_batch
+
+
+cpdef train_epoch_cbow_pystream(model, input_stream, alpha, _work, _neu1, compute_loss):
+    cdef int hs = model.hs
+    cdef int negative = model.negative
+    cdef int sample = (model.vocabulary.sample != 0)
+    cdef int cbow_mean = model.cbow_mean
+
+    cdef int _compute_loss = (1 if compute_loss == True else 0)
+    cdef REAL_t _running_training_loss = model.running_training_loss
+
+    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
+    cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_lockf))
+    cdef REAL_t *work
+    cdef REAL_t _alpha = alpha
+    cdef int size = model.wv.vector_size
+
+    cdef int codelens[MAX_SENTENCE_LEN]
+    cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
+    cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
+    cdef int sentence_idx[MAX_SENTENCE_LEN + 1]
+    cdef int window = model.window
+
+    cdef int i, j, k
+    cdef int effective_words = 0, effective_sentences = 0
+    cdef int sent_idx, idx_start, idx_end
+
+    # For hierarchical softmax
+    cdef REAL_t *syn1
+    cdef np.uint32_t *points[MAX_SENTENCE_LEN]
+    cdef np.uint8_t *codes[MAX_SENTENCE_LEN]
+
+    # For negative sampling
+    cdef REAL_t *syn1neg
+    cdef np.uint32_t *cum_table
+    cdef unsigned long long cum_table_len
+    # for sampling (negative and frequent-word downsampling)
+    cdef unsigned long long next_random
+
+    # for preparing batches without Python GIL
+    cdef unordered_map[string, pair[ULongLong, ULongLong]] vocab
+    cdef vector[vector[string]] sentences
+    cdef string token
+    cdef vector[string] sent
+
+    if hs:
+        syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
+
+    if negative:
+        syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
+        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
+        cum_table_len = len(model.vocabulary.cum_table)
+    if negative or sample:
+        next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
+
+    # convert Python structures to primitive types, so we can release the GIL
+    work = <REAL_t *>np.PyArray_DATA(_work)
+    neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
+
+    # prepare C structures so we can go "full C" and release the Python GIL
+    for py_token in model.wv.vocab:
+        try:
+            token = py_token.encode('utf8')
+        except:
+            token = py_token
+        vocab[token] = (model.wv.vocab[py_token].index, model.wv.vocab[py_token].sample_int)
+
+    # release GIL & train on all sentences
+    cdef int total_effective_words = 0, total_effective_sentences = 0, total_words = 0
+    cdef pair[ULongLong, ULongLong] word
+    cdef ULongLong random_number
+
+    while sentences in iterate_batches_from_pystream(input_stream):
+        with nogil:
+            effective_sentences = 0
+            effective_words = 0
+
+            sentence_idx[0] = 0  # indices of the first sentence always start at 0
+            for sent in sentences:
+                total_words += sent.size()
+
+                if sent.empty():
+                    continue  # ignore empty sentences; leave effective_sentences unchanged
+                for token in sent:
+                    if vocab.find(token) == vocab.end():
+                        continue # leaving `effective_words` unchanged = shortening the sentence = expanding the window
+                    word = vocab[token]
+                    if sample and word.second < random_int32(&next_random):
+                        continue
+                    indexes[effective_words] = word.first
+
+                    effective_words += 1
+                    if effective_words == MAX_SENTENCE_LEN:
+                        break  # TODO: log warning, tally overflow?
+
+                # keep track of which words go into which sentence, so we don't train
+                # across sentence boundaries.
+                # indices of sentence number X are between <sentence_idx[X], sentence_idx[X])
+                effective_sentences += 1
+                sentence_idx[effective_sentences] = effective_words
+
+                if effective_words == MAX_SENTENCE_LEN:
+                    break  # TODO: log warning, tally overflow?
+
+            # precompute "reduced window" offsets in a single randint() call
+            for i in range(effective_words):
+                reduced_windows[i] = random_int32(&next_random) % window
+
+            for sent_idx in range(effective_sentences):
+                idx_start = sentence_idx[sent_idx]
+                idx_end = sentence_idx[sent_idx + 1]
+                for i in range(idx_start, idx_end):
+                    j = i - window + reduced_windows[i]
+                    if j < idx_start:
+                        j = idx_start
+                    k = i + window + 1 - reduced_windows[i]
+                    if k > idx_end:
+                        k = idx_end
+                    if hs:
+                        fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, j, k, cbow_mean, word_locks, _compute_loss, &_running_training_loss)
+                    if negative:
+                        next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random, word_locks, _compute_loss, &_running_training_loss)
+
+            total_effective_sentences += effective_sentences
+            total_effective_words += effective_words
+
+
+    return total_effective_words, total_words  # return properly raw_tally as a second value (not tally)
+
+
 # Score is only implemented for hierarchical softmax
 def score_sentence_sg(model, sentence, _work):
 

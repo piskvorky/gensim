@@ -7,6 +7,7 @@
 
 class FastLineSentence {
 public:
+    explicit FastLineSentence();
 	explicit FastLineSentence(const std::string& filename);
 
 	std::vector<std::string> ReadSentence();

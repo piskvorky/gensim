@@ -4,6 +4,7 @@
 #include "linesentence.h"
 
 
+FastLineSentence::FastLineSentence() : is_eof_(false) { }
 FastLineSentence::FastLineSentence(const std::string& filename) : filename_(filename), fs_(filename), is_eof_(false) { }
 
 std::vector<std::string> FastLineSentence::ReadSentence() {
