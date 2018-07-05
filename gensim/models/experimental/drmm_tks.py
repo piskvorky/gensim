@@ -132,6 +132,7 @@ def _get_full_batch_iter(pair_list, batch_size):
 
     X1, X2, y = [], [], []
     while True:
+        j=0
         for i, (query, pos_doc, neg_doc) in enumerate(pair_list):
             X1.append(query)
             X2.append(pos_doc)
@@ -139,6 +140,7 @@ def _get_full_batch_iter(pair_list, batch_size):
             X1.append(query)
             X2.append(neg_doc)
             y.append(0)
+            j+=1
             if i % batch_size == 0 and i != 0:
                 yield ({'query': np.array(X1), 'doc': np.array(X2)}, np.array(y))
                 X1, X2, y = [], [], []
@@ -183,13 +185,16 @@ def _get_pair_list(queries, docs, labels, _make_indexed, is_iterable):
     """
     if is_iterable:
         while True:
+            j=0
             for q, doc, label in zip(queries, docs, labels):
                 doc, label = (list(t) for t in zip(*sorted(zip(doc, label), reverse=True)))
                 for item in zip(doc, label):
                     if item[1] == 1:
                         for new_item in zip(doc, label):
                             if new_item[1] == 0:
+                                j+=1
                                 yield(_make_indexed(q), _make_indexed(item[0]), _make_indexed(new_item[0]))
+            print("SAMPLA RE!!!!!!!!!!!!!!!!!!", j)
     else:
         for q, doc, label in zip(queries, docs, labels):
             doc, label = (list(t) for t in zip(*sorted(zip(doc, label), reverse=True)))
@@ -445,8 +450,7 @@ class DRMM_TKS(utils.SaveLoad):
                 "text_maxlen: %d isn't big enough. Error at sentence of length %d."
                 "Sentence is %s" % (self.text_maxlen, len(sentence), sentence)
             )
-        indexed_sent = indexed_sent + \
-            [self.pad_word_index] * (self.text_maxlen - len(indexed_sent))
+        indexed_sent = indexed_sent + [self.pad_word_index] * (self.text_maxlen - len(indexed_sent))
         return indexed_sent
 
     def _get_full_batch(self):
@@ -472,11 +476,13 @@ class DRMM_TKS(utils.SaveLoad):
             X1.append(query)
             X2.append(neg_doc)
             y.append(0)
+
+        print('There are pairs in pair_list', np.array(X1).shape, np.array(X2).shape, np.array(y).shape)
         return np.array(X1), np.array(X2), np.array(y)
 
     def train(self, queries, docs, labels, word_embedding=None,
               text_maxlen=200, normalize_embeddings=True, epochs=10, unk_handle_method='zero',
-              validation_data=None, topk=50, target_mode='ranking', verbose=1, batch_size=10, steps_per_epoch=281):
+              validation_data=None, topk=20, target_mode='ranking', verbose=1, batch_size=5, steps_per_epoch=900):
         """Trains a DRMM_TKS model using specified parameters
 
         This method is called from on model initialization if the data is provided.
@@ -523,12 +529,15 @@ class DRMM_TKS(utils.SaveLoad):
             # The settings below should be set only once
             self.model = self._get_keras_model()
             optimizer = 'adam'
+            optimizer = 'adadelta'
             optimizer = optimizers.get(optimizer)
-            K.set_value(optimizer.lr, 0.0001)
+            learning_rate = 0.0001
+            learning_rate = 1
+            K.set_value(optimizer.lr, learning_rate)
             # either one can be selected. Currently, the choice is manual.
-            loss = rank_hinge_loss
             loss = hinge
             loss = 'mse'
+            loss = rank_hinge_loss
             self.model.compile(optimizer=optimizer, loss=loss, metrics=['accuracy'])
         else:
             logger.info("Model will be retrained")
@@ -569,10 +578,10 @@ class DRMM_TKS(utils.SaveLoad):
 
         if is_iterable:
             self.model.fit_generator(train_generator, steps_per_epoch=steps_per_epoch, callbacks=val_callback,
-                                    epochs=self.epochs)
+                                    epochs=self.epochs, shuffle=False, )
         else:
             self.model.fit(x={"query": X1_train, "doc": X2_train}, y=y_train, batch_size=5,
-                           verbose=self.verbose, epochs=self.epochs, shuffle=True, callbacks=val_callback)
+                           verbose=self.verbose, epochs=self.epochs, shuffle=False, callbacks=val_callback)
 
     def _translate_user_data(self, data):
         """Translates given user data into an indexed format which the model understands.
@@ -829,7 +838,7 @@ class DRMM_TKS(utils.SaveLoad):
         mm_reshape = Reshape(
             (self.text_maxlen,))(mm_k_dropout)
 
-        mean = Dot(axes=[1, 1], normalize=True)([mm_reshape, g])
+        mean = Dot(axes=[1, 1])([mm_reshape, g])
 
         if self.target_mode == 'classification':
             out_ = Dense(2, activation='softmax')(mean)

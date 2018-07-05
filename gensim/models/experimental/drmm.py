@@ -94,11 +94,13 @@ from collections import Iterable
 
 try:
     import keras.backend as K
+    import keras
     from keras import optimizers
     from keras.models import load_model
     from keras.losses import hinge
     from keras.models import Model
-    from keras.layers import Input, Embedding, Dot, Dense, Reshape, Dropout
+    from keras.layers import Input, Embedding, Dot, Dense, Reshape, Dropout, Permute, Lambda, Activation
+    from keras.activations import softmax
     KERAS_AVAILABLE = True
 except ImportError:
     KERAS_AVAILABLE = False
@@ -106,7 +108,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-def _get_full_batch_iter(pair_list, batch_size):
+def _get_full_batch_iter(pair_list, batch_size, hist_size, calc_hist):
     """Provides all the data points int the format: X1, X2, y with
     alternate positive and negative examples of `batch_size` in a streamable format.
 
@@ -134,12 +136,16 @@ def _get_full_batch_iter(pair_list, batch_size):
     while True:
         for i, (query, pos_doc, neg_doc) in enumerate(pair_list):
             X1.append(query)
-            X2.append(pos_doc)
+            X2.append(calc_hist(query, pos_doc))
             y.append(1)
             X1.append(query)
-            X2.append(neg_doc)
+            X2.append(calc_hist(query, neg_doc))
             y.append(0)
             if i % batch_size == 0 and i != 0:
+                # print(np.array(X1))
+                # print(np.array(X1).shape)
+                # print(np.array(X2))
+                # print(np.array(X2).shape)
                 yield ({'query': np.array(X1), 'doc': np.array(X2)}, np.array(y))
                 X1, X2, y = [], [], []
 
@@ -199,15 +205,14 @@ def _get_pair_list(queries, docs, labels, _make_indexed, is_iterable):
                         if new_item[1] == 0:
                             yield(_make_indexed(q), _make_indexed(item[0]), _make_indexed(new_item[0]))
 
-
-class DRMM_TKS(utils.SaveLoad):
+class DRMM(utils.SaveLoad):
     """Model for training a Similarity Learning Model using the DRMM TKS model.
     You only have to provide sentences in the data as a list of words.
     """
 
-    def __init__(self, queries=None, docs=None, labels=None, word_embedding=None,
+    def __init__(self, queries=None, docs=None, labels=None, word_embedding=None, batch_size=10,
                  text_maxlen=200, normalize_embeddings=True, epochs=10, unk_handle_method='random',
-                 validation_data=None, topk=50, target_mode='ranking', verbose=1):
+                 validation_data=None, target_mode='ranking', verbose=1, hist_size=60):
         """Initializes the model and trains it
 
         Parameters
@@ -246,6 +251,8 @@ class DRMM_TKS(utils.SaveLoad):
                 - 0 : silent
                 - 1 : progress bar
                 - 2 : one line per epoch
+        batch_size : int
+            half the size of the batch. Half since the there are positive and negative examples 
 
 
         Examples
@@ -266,7 +273,6 @@ class DRMM_TKS(utils.SaveLoad):
         self.labels = labels
         self.word_counter = Counter()
         self.text_maxlen = text_maxlen
-        self.topk = topk
         self.word_embedding = word_embedding
         self.word2index, self.index2word = {}, {}
         self.normalize_embeddings = normalize_embeddings
@@ -277,6 +283,7 @@ class DRMM_TKS(utils.SaveLoad):
         self.verbose = verbose
         self.first_train = True  # Whether the model has been trained before
         self.needs_vocab_build = True
+        self.hist_size = hist_size
 
         # These functions have been defined outside the class and set as attributes here
         # so that they can be ignored when saving the model to file
@@ -295,8 +302,8 @@ class DRMM_TKS(utils.SaveLoad):
         if self.queries is not None and self.docs is not None and self.labels is not None:
             self.build_vocab(self.queries, self.docs, self.labels, self.word_embedding)
             self.train(self.queries, self.docs, self.labels, self.word_embedding,
-                       self.text_maxlen, self.normalize_embeddings, self.epochs, self.unk_handle_method,
-                       self.validation_data, self.topk, self.target_mode, self.verbose)
+                       self.text_maxlen, self.normalize_embeddings, self.epochs,
+                       self.validation_data)
 
     def build_vocab(self, queries, docs, labels, word_embedding):
         """Indexes all the words and makes an embedding_matrix which
@@ -474,9 +481,27 @@ class DRMM_TKS(utils.SaveLoad):
             y.append(0)
         return np.array(X1), np.array(X2), np.array(y)
 
+    def calc_hist(self, t1, t2):
+        """Calculates the histogram using the interaction between the """
+        mhist = np.zeros((self.text_maxlen, self.hist_size), dtype=np.float32)
+
+        t1_rep = self.embedding_matrix[t1]
+        t2_rep = self.embedding_matrix[t2]
+
+        mm = t1_rep.dot(np.transpose(t2_rep))
+
+        for (i,j), v in np.ndenumerate(mm):
+            if i >= self.text_maxlen:
+                break
+            vid = int((v + 1.) / 2. * ( self.hist_size - 1.))
+            mhist[i][vid] += 1.
+        mhist += 1.
+        mhist = np.log10(mhist)
+        return mhist
+
     def train(self, queries, docs, labels, word_embedding=None,
-              text_maxlen=200, normalize_embeddings=True, epochs=10, unk_handle_method='zero',
-              validation_data=None, topk=50, target_mode='ranking', verbose=1, batch_size=10, steps_per_epoch=281):
+              text_maxlen=200, normalize_embeddings=True, epochs=10, unk_handle_method='zero', hist_size=60,
+              validation_data=None, target_mode='ranking', verbose=1, batch_size=10, steps_per_epoch=281):
         """Trains a DRMM_TKS model using specified parameters
 
         This method is called from on model initialization if the data is provided.
@@ -494,8 +519,9 @@ class DRMM_TKS(utils.SaveLoad):
         self.epochs = epochs or self.epochs
         self.unk_handle_method = unk_handle_method or self.unk_handle_method
         self.validation_data = validation_data or self.validation_data
-        self.topk = topk or self.topk
         self.target_mode = target_mode or self.target_mode
+        self.batch_size = batch_size or self.batch_size
+        self.hist_size = hist_size or self.hist_size
 
         if verbose != 0:  # Check needed since 0 or 2 will always give 2
             self.verbose = verbose or self.verbose
@@ -515,7 +541,7 @@ class DRMM_TKS(utils.SaveLoad):
 
         self.pair_list = self._get_pair_list(self.queries, self.docs, self.labels, self._make_indexed, is_iterable)
         if is_iterable:
-            train_generator = self._get_full_batch_iter(self.pair_list, 10)
+            train_generator = self._get_full_batch_iter(self.pair_list, self.batch_size, self.hist_size, self.calc_hist)
         else:
             X1_train, X2_train, y_train = self._get_full_batch()
 
@@ -538,6 +564,7 @@ class DRMM_TKS(utils.SaveLoad):
 
         # Put the validation data in as a callback
         val_callback = None
+        print("BBBBBBBBBBBBBBBBB", self.validation_data)
         if self.validation_data is not None:
             test_queries, test_docs, test_labels = self.validation_data
 
@@ -766,21 +793,8 @@ class DRMM_TKS(utils.SaveLoad):
         gensim_model._get_full_batch_iter = _get_full_batch_iter
         return gensim_model
 
-    def _get_keras_model(self, embed_trainable=False, dropout_rate=0.5, hidden_sizes=[300, 200, 1]):
+    def _get_keras_model(self, embed_trainable=False, dropout_rate=0.5, hidden_sizes=[20, 1]):
         """Builds and returns the keras class for drmm tks model
-
-        About DRMM_TKS
-        --------------
-        This is a variant version of DRMM, which applied topk pooling in the matching matrix.
-        It has the following steps:
-        1. embed queries into embedding vector named 'q_embed' and 'd_embed' respectively
-        2. computing 'q_embed' and 'd_embed' with element-wise multiplication
-        3. computing output of upper layer with dense layer operation
-        4. take softmax operation on the output of this layer named 'g' and find the k largest entries named 'mm_k'.
-        5. input 'mm_k' into hidden layers, with specified length of layers and activation function
-        6. compute 'g' and 'mm_k' with element-wise multiplication.
-
-        On predicting, the model returns the score list between queries and documents.
 
         Parameters
         ----------
@@ -802,36 +816,39 @@ class DRMM_TKS(utils.SaveLoad):
 
         n_layers = len(hidden_sizes)
 
+        
+        self.initializer_fc = keras.initializers.RandomUniform(minval=-0.1, maxval=0.1, seed=11)
+        self.initializer_gate = keras.initializers.RandomUniform(minval=-0.01, maxval=0.01, seed=11)
+        self.dropout_rate = dropout_rate
+
+        # def tensor_product(x):
+        #     a = x[0]
+        #     b = x[1]
+        #     y = K.batch_dot(a, b, axis=1)
+        #     y = K.einsum('ijk, ikl->ijl', a, b)
+        #     return y
+
         query = Input(name='query', shape=(self.text_maxlen,))
-        doc = Input(name='doc', shape=(self.text_maxlen,))
-        embedding = Embedding(self.embedding_matrix.shape[0], self.embedding_dim, weights=[self.embedding_matrix],
-                        trainable=embed_trainable)
+        doc = Input(name='doc', shape=(self.text_maxlen, self.hist_size))
+
+        embedding = Embedding(self.embedding_matrix.shape[0], self.embedding_matrix.shape[1], weights=[self.embedding_matrix], trainable = False)
 
         q_embed = embedding(query)
-        d_embed = embedding(doc)
+        q_w = Dense(1, kernel_initializer=self.initializer_gate, use_bias=False)(q_embed)
+        q_w = Lambda(lambda x: softmax(x, axis=1), output_shape=(self.text_maxlen, ))(q_w)
+        z = doc
+        z = Dropout(rate=self.dropout_rate)(z)
+        for i in range(n_layers-1):
+            z = Dense(hidden_sizes[i], kernel_initializer=self.initializer_fc)(z)
+            z = Activation('tanh')(z)
+        z = Dense(hidden_sizes[n_layers-1], kernel_initializer=self.initializer_fc)(z)
+        z = Permute((2, 1))(z)
+        z = Reshape((self.text_maxlen,))(z)
+        q_w = Reshape((self.text_maxlen,))(q_w)
 
-        mm = Dot(axes=[2, 2], normalize=True)([q_embed, d_embed])
-
-        # compute term gating
-        w_g = Dense(1, activation='softmax')(q_embed)
-        g = Reshape((self.text_maxlen,))(w_g)
-
-        mm_k = TopKLayer(topk=self.topk, output_dim=(self.text_maxlen, self.embedding_dim))(mm)
-
-        for i in range(n_layers):
-            mm_k = Dense(hidden_sizes[i], activation='softplus', kernel_initializer='he_uniform',
-                         bias_initializer='zeros')(mm_k)
-
-        mm_k_dropout = Dropout(rate=dropout_rate)(mm_k)
-
-        mm_reshape = Reshape((self.text_maxlen,))(mm_k_dropout)
-
-        mean = Dot(axes=[1, 1], normalize=True)([mm_reshape, g])
-
+        out_ = Dot( axes= [1, 1])([z, q_w])
         if self.target_mode == 'classification':
-            out_ = Dense(2, activation='softmax')(mean)
-        elif self.target_mode in ['regression', 'ranking']:
-            out_ = Reshape((1,))(mean)
+            out_ = Dense(2, activation='softmax')(out_)
 
-        model = Model(inputs=[query, doc], outputs=out_)
+        model = Model(inputs=[query, doc], outputs=[out_])
         return model
