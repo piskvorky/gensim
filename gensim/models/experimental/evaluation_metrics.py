@@ -35,8 +35,7 @@ def mapk(Y_true, Y_pred):
             n_skipped += 1
             continue
 
-        pred_sorted = sorted(zip(y_true, y_pred),
-                             key=lambda x: x[1], reverse=True)
+        pred_sorted = sorted(zip(y_true, y_pred), key=lambda x: x[1], reverse=True)
         avg = 0
         n_relevant = 0
 

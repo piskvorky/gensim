@@ -132,7 +132,6 @@ def _get_full_batch_iter(pair_list, batch_size):
 
     X1, X2, y = [], [], []
     while True:
-        j=0
         for i, (query, pos_doc, neg_doc) in enumerate(pair_list):
             X1.append(query)
             X2.append(pos_doc)
@@ -140,7 +139,6 @@ def _get_full_batch_iter(pair_list, batch_size):
             X1.append(query)
             X2.append(neg_doc)
             y.append(0)
-            j+=1
             if i % batch_size == 0 and i != 0:
                 yield ({'query': np.array(X1), 'doc': np.array(X2)}, np.array(y))
                 X1, X2, y = [], [], []
@@ -194,7 +192,6 @@ def _get_pair_list(queries, docs, labels, _make_indexed, is_iterable):
                             if new_item[1] == 0:
                                 j+=1
                                 yield(_make_indexed(q), _make_indexed(item[0]), _make_indexed(new_item[0]))
-            print("SAMPLA RE!!!!!!!!!!!!!!!!!!", j)
     else:
         for q, doc, label in zip(queries, docs, labels):
             doc, label = (list(t) for t in zip(*sorted(zip(doc, label), reverse=True)))
@@ -476,8 +473,6 @@ class DRMM_TKS(utils.SaveLoad):
             X1.append(query)
             X2.append(neg_doc)
             y.append(0)
-
-        print('There are pairs in pair_list', np.array(X1).shape, np.array(X2).shape, np.array(y).shape)
         return np.array(X1), np.array(X2), np.array(y)
 
     def train(self, queries, docs, labels, word_embedding=None,
@@ -619,8 +614,7 @@ class DRMM_TKS(utils.SaveLoad):
                     "text_maxlen: %d isn't big enough. Error at sentence of length %d."
                     "Sentence is %s", self.text_maxlen, len(sentence), str(sentence)
                 )
-            translated_sentence = translated_sentence + \
-                (self.text_maxlen - len(sentence)) * [self.pad_word_index]
+            translated_sentence = translated_sentence + (self.text_maxlen - len(sentence)) * [self.pad_word_index]
             translated_data.append(np.array(translated_sentence))
 
         logger.info(
