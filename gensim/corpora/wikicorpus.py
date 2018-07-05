@@ -102,6 +102,42 @@ References
 """
 
 
+
+def filter_example(elem, text, *args, **kwargs):
+    """Example function for filtering arbitrary documents from wikipedia dump.
+
+    Parameters
+    ----------
+    elem : etree.Element
+        XML etree element
+    text : str
+        The text of the XML node 
+    namespace
+    title
+    page_tag
+    text_path
+    title_path
+    ns_path=ns_path
+    pageid_path
+    """
+
+    # Filter German wikipedia dump for articles that are marked either as Lesenswert (featured)
+    # or Exzellent (excellent) by wikipedia editors.
+    # *********************
+    # regex is in the function call so that we do not pollute the wikicorpus namespace
+    # do not do this in production as this function is called for every element in
+    # the wiki dump
+    _regex_de_excellent = re.compile('.*\{\{(Exzellent.*?)\}\}[\s]*', flags=re.DOTALL)
+    _regex_de_featured = re.compile('.*\{\{(Lesenswert.*?)\}\}[\s]*', flags=re.DOTALL)
+
+    if text is None:
+        return None
+    if _regex_de_excellent.match(text) or _regex_de_featured.match(text):
+        return True
+    else:
+        return None
+
+
 def find_interlinks(raw):
     """Find all interlinks to other articles in the dump.
 
