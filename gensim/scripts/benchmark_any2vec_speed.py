@@ -46,7 +46,7 @@ def benchmark_model(input_streams, model, window, workers, vector_size):
         }
     else:
         kwargs = {
-            'input_streams': [CythonLineSentence(inp) for inp in input_streams]
+            'input_streams': [LineSentence(inp) for inp in input_streams]
         }
 
     kwargs['size'] = vector_size

@@ -138,7 +138,7 @@ from six.moves import xrange
 logger = logging.getLogger(__name__)
 
 try:
-    from gensim.models.word2vec_inner import train_batch_sg, train_epoch_cbow
+    from gensim.models.word2vec_inner import train_batch_sg, train_epoch_cbow, train_epoch_cbow_pystream
     from gensim.models.word2vec_inner import score_sentence_sg, score_sentence_cbow
     from gensim.models.word2vec_inner import FAST_VERSION, MAX_WORDS_IN_BATCH
 
@@ -549,7 +549,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
         jobs_processed = 0
         alpha = self._get_job_params(0)
 
-        tally, raw_tally = train_epoch_cbow(self, input_stream, alpha, work, neu1, False)
+        tally, raw_tally = train_epoch_cbow_pystream(self, input_stream, alpha, work, neu1, False)
         progress_queue.put((0, tally, raw_tally))
         progress_queue.put(None)
         # logger.debug("worker exiting, processed %i jobs", jobs_processed)

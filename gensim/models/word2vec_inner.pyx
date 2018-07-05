@@ -629,6 +629,7 @@ def iterate_batches_from_pystream(input_stream):
     data_length = 0
 
     for data in input_stream:
+        data = [x.encode('utf8') for x in data]
         data_length = len(data)
 
         # can we fit this sentence into the existing job batch?
