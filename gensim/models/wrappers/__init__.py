@@ -1,5 +1,5 @@
 """
-This package contains wrappers for other topic modeling programs.
+Wrappers for external distibutional semantic libraries.
 """
 
 from .ldamallet import LdaMallet  # noqa:F401

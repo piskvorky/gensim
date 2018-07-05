@@ -292,7 +292,7 @@ class TfidfModel(interfaces.TransformationABC):
         pivot : float, optional
             See the blog post at https://rare-technologies.com/pivoted-document-length-normalisation/.
 
-            Pivot is the point around which the regular normalization curve is `tilted` to get the new pivoted
+            Pivot is the point around which the regular normalization curve is "tilted" to get the new pivoted
             normalization curve. In the paper `Amit Singhal, Chris Buckley, Mandar Mitra:
             "Pivoted Document Length Normalization" <http://singhal.info/pivoted-dln.pdf>`_ it is the point where the
             retrieval and relevance curves intersect.
@@ -301,10 +301,12 @@ class TfidfModel(interfaces.TransformationABC):
             Only when `pivot` is not None will pivoted document length normalization be applied.
             Otherwise, regular TfIdf is used.
         slope : float, optional
-            Parameter required by pivoted document length normalization which determines the slope to which
-            the `old normalization` can be tilted. This parameter only works when pivot is defined.
+            It is the parameter required by pivoted document length normalization which determines the slope to which
+            the `old normalization` can be tilted. This parameter only works when pivot is defined by user and is not
+            None.
 
         """
+
         self.id2word = id2word
         self.wlocal, self.wglobal, self.normalize = wlocal, wglobal, normalize
         self.num_docs, self.num_nnz, self.idfs = None, None, None

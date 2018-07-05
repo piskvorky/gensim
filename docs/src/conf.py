@@ -19,13 +19,22 @@ import sys
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.append(os.path.abspath('.'))
 
+import sphinx_gallery
+
 # -- General configuration -----------------------------------------------------
 
 html_theme = 'gensim_theme'
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinxcontrib.napoleon', 'sphinx.ext.imgmath', 'sphinxcontrib.programoutput']
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.napoleon',
+    'sphinx.ext.imgmath',
+    'sphinx_gallery.gen_gallery',
+    'sphinxcontrib.programoutput',
+]
 autoclass_content = "both"
 
 napoleon_google_docstring = False  # Disable support for google-style docstring
@@ -33,11 +42,26 @@ napoleon_google_docstring = False  # Disable support for google-style docstring
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
+# Generate stub files for autosummary entries
+autosummary_generate = True
+
+# Only class' own docs in autoclass directive
+autoclass_content = 'both'
+
+autodoc_member_order = 'bysource'
+
 # The suffix of source filenames.
 source_suffix = '.rst'
 
 # The encoding of source files.
 # source_encoding = 'utf-8'
+
+sphinx_gallery_conf = {
+    'doc_module': 'gensim',
+    'backreferences_dir': os.path.join('modules', 'generated'),
+    'reference_url': {'gensim': None},
+    'plot_gallery': True,
+}
 
 # The master toctree document.
 master_doc = 'indextoc'

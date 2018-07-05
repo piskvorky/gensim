@@ -49,7 +49,9 @@ Thumbs.db
 .eggs
 cython_debug
 docs/src/_build/
-docs/_static
+docs/src/generated/
+docs/src/modules/generated/
+docs/src/auto_examples/
 docs/notebooks/.ipynb_checkpoints
 dedan_gensim.tmproj
 gensim*.egg-info
@@ -70,7 +72,10 @@ data
 *.model
 *~
 *_out.txt
-*.html
+docs/src/*.html
+docs/src/modules/*.html
 *.inv
 *.js
-docs/_images/
+!docs/src/_static/js/*.js
+!docs/src/gensim_theme/static/*.js
+docs/src/_images/
