@@ -13,6 +13,7 @@ for out-of-vocabulary words.
 
 This module contains a fast native C implementation of Fasttext with Python interfaces. It is **not** only a wrapper
 around Facebook's implementation.
+
 For a tutorial see `this noteboook
 <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/FastText_Tutorial.ipynb>`_.
 
@@ -22,14 +23,14 @@ training routines.**
 Usage examples
 --------------
 
-Initialize and train a model
+Initialize and train a model:
 
 >>> from gensim.test.utils import common_texts
 >>> from gensim.models import FastText
 >>>
 >>> model = FastText(common_texts, size=4, window=3, min_count=1, iter=10)
 
-Persist a model to disk with
+Persist a model to disk with:
 
 >>> from gensim.test.utils import get_tmpfile
 >>>
@@ -38,7 +39,7 @@ Persist a model to disk with
 >>> model.save(fname)
 >>> model = FastText.load(fname)  # you can continue training with the loaded model!
 
-Retrieve word-vector for vocab and out-of-vocab word
+Retrieve word-vector for vocab and out-of-vocab word:
 
 >>> existent_word = "computer"
 >>> existent_word in model.wv.vocab
@@ -50,7 +51,7 @@ True
 False
 >>> oov_vec = model.wv[oov_word]  # numpy vector for OOV word
 
-You can perform various NLP word tasks with the model, some of them are already built-in
+You can perform various NLP word tasks with the model, some of them are already built-in:
 
 >>> similarities = model.wv.most_similar(positive=['computer', 'human'], negative=['interface'])
 >>> most_similar = similarities[0]
@@ -62,13 +63,13 @@ You can perform various NLP word tasks with the model, some of them are already 
 >>>
 >>> sim_score = model.wv.similarity('computer', 'human')
 
-Correlation with human opinion on word similarity
+Correlation with human opinion on word similarity:
 
 >>> from gensim.test.utils import datapath
 >>>
 >>> similarities = model.wv.evaluate_word_pairs(datapath('wordsim353.tsv'))
 
-And on word analogies
+And on word analogies:
 
 >>> analogies_result = model.wv.accuracy(datapath('questions-words.txt'))
 
