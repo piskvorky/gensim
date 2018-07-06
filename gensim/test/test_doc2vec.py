@@ -103,6 +103,8 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertTrue(model.docvecs.max_rawint == 299)
         self.assertTrue(model.docvecs.count == 300)
 
+        self.model_sanity(model)
+
         # Model stored in multiple files
         model_file = 'doc2vec_old_sep'
         model = doc2vec.Doc2Vec.load(datapath(model_file))
@@ -117,6 +119,40 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertTrue(model.trainables.vectors_docs_lockf.shape == (300, ))
         self.assertTrue(model.docvecs.max_rawint == 299)
         self.assertTrue(model.docvecs.count == 300)
+
+        self.model_sanity(model)
+
+        # load really old model
+        model_file = 'd2v-lee-v0.13.0'
+        model = doc2vec.Doc2Vec.load(datapath(model_file))
+        self.model_sanity(model)
+
+        # Test loading doc2vec models from all previous versions
+        old_versions = [
+            '0.12.0', '0.12.1', '0.12.2', '0.12.3', '0.12.4',
+            '0.13.0', '0.13.1', '0.13.2', '0.13.3', '0.13.4',
+            '1.0.0', '1.0.1', '2.0.0', '2.1.0', '2.2.0', '2.3.0',
+            '3.0.0', '3.1.0', '3.2.0', '3.3.0', '3.4.0'
+        ]
+
+        saved_models_dir = datapath('old_d2v_models/d2v_{}.mdl')
+        for old_version in old_versions:
+            model = doc2vec.Doc2Vec.load(saved_models_dir.format(old_version))
+            self.assertTrue(len(model.wv.vocab) == 3)
+            self.assertTrue(model.wv.vectors.shape == (3, 4))
+            self.assertTrue(model.docvecs.vectors_docs.shape == (2, 4))
+            self.assertTrue(model.docvecs.count == 2)
+            # check if inferring vectors for new documents and similarity search works.
+            doc0_inferred = model.infer_vector(list(DocsLeeCorpus())[0].words)
+            sims_to_infer = model.docvecs.most_similar([doc0_inferred], topn=len(model.docvecs))
+            self.assertTrue(sims_to_infer)
+            # check if inferring vectors and similarity search works after saving and loading back the model
+            tmpf = get_tmpfile('gensim_doc2vec.tst')
+            model.save(tmpf)
+            loaded_model = doc2vec.Doc2Vec.load(tmpf)
+            doc0_inferred = loaded_model.infer_vector(list(DocsLeeCorpus())[0].words)
+            sims_to_infer = loaded_model.docvecs.most_similar([doc0_inferred], topn=len(loaded_model.docvecs))
+            self.assertTrue(sims_to_infer)
 
     def test_unicode_in_doctag(self):
         """Test storing document vectors of a model with unicode titles."""
@@ -477,8 +513,16 @@ class ConcatenatedDoc2Vec(object):
     def __getitem__(self, token):
         return np.concatenate([model[token] for model in self.models])
 
-    def infer_vector(self, document, alpha=0.1, min_alpha=0.0001, steps=5):
-        return np.concatenate([model.infer_vector(document, alpha, min_alpha, steps) for model in self.models])
+    def __str__(self):
+        """Abbreviated name, built from submodels' names"""
+        return "+".join([str(model) for model in self.models])
+
+    @property
+    def epochs(self):
+        return self.models[0].epochs
+
+    def infer_vector(self, document, alpha=None, min_alpha=None, epochs=None, steps=None):
+        return np.concatenate([model.infer_vector(document, alpha, min_alpha, epochs, steps) for model in self.models])
 
     def train(self, *ignore_args, **ignore_kwargs):
         pass  # train subcomponents individually

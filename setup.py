@@ -239,12 +239,12 @@ win_testenv = [
 linux_testenv = win_testenv + [
     'annoy',
     'tensorflow <= 1.3.0',
-    'keras >= 2.0.4',
+    'keras >= 2.0.4, <= 2.1.4',
 ]
 
 setup(
     name='gensim',
-    version='3.4.0',
+    version='3.5.0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 

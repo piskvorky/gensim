@@ -4,21 +4,15 @@
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-""":class:`~gensim.models.lsi_worker.Worker` ("slave") process used in computing
-distributed :class:`~gensim.models.lsimodel.LsiModel`.
+"""Worker ("slave") process used in computing distributed Latent Semantic Indexing (LSI,
+:class:`~gensim.models.lsimodel.LsiModel`) models.
 
 Run this script on every node in your cluster. If you wish, you may even run it multiple times on a single machine,
-to make better use of multiple cores (just beware that memory footprint increases accordingly).
-
-Warnings
---------
-Requires installed `Pyro4 <https://pythonhosted.org/Pyro4/>`_.
-Distributed version works only in local network.
+to make better use of multiple cores (just beware that memory footprint increases linearly).
 
 
-How to use distributed :class:`~gensim.models.lsimodel.LsiModel`
-----------------------------------------------------------------
-
+How to use distributed LSI
+--------------------------
 
 #. Install needed dependencies (Pyro4) ::
 
@@ -56,6 +50,7 @@ Command line arguments
    :ellipsis: 0, -3
 
 """
+
 from __future__ import with_statement
 import os
 import sys
@@ -79,7 +74,7 @@ SAVE_DEBUG = 0  # save intermediate models after every SAVE_DEBUG updates (0 for
 
 class Worker(object):
     def __init__(self):
-        """Partly initializes the model.
+        """Partly initialize the model.
 
         A full initialization requires a call to :meth:`~gensim.models.lsi_worker.Worker.initialize`.
 
@@ -88,7 +83,7 @@ class Worker(object):
 
     @Pyro4.expose
     def initialize(self, myid, dispatcher, **model_params):
-        """Fully initializes the worker.
+        """Fully initialize the worker.
 
         Parameters
         ----------
@@ -112,8 +107,13 @@ class Worker(object):
     @Pyro4.expose
     @Pyro4.oneway
     def requestjob(self):
-        """Request jobs from the dispatcher, in a perpetual loop until
-        :meth:`~gensim.models.lsi_worker.Worker.getstate()` is called.
+        """Request jobs from the dispatcher, in a perpetual loop until :meth:`~gensim.models.lsi_worker.Worker.getstate`
+        is called.
+
+        Raises
+        ------
+        RuntimeError
+            If `self.model` is None (i.e. worker not initialized).
 
         """
         if self.model is None:
@@ -135,7 +135,7 @@ class Worker(object):
 
     @utils.synchronous('lock_update')
     def processjob(self, job):
-        """Incrementally processes the job and potentially logs progress.
+        """Incrementally process the job and potentially logs progress.
 
         Parameters
         ----------
@@ -168,14 +168,14 @@ class Worker(object):
     @Pyro4.expose
     @utils.synchronous('lock_update')
     def reset(self):
-        """Resets the worker by deleting its current projection."""
+        """Reset the worker by deleting its current projection."""
         logger.info("resetting worker #%i", self.myid)
         self.model.projection = self.model.projection.empty_like()
         self.finished = False
 
     @Pyro4.oneway
     def exit(self):
-        """Terminates the worker."""
+        """Terminate the worker."""
         logger.info("terminating worker #%i", self.myid)
         os._exit(0)
 
