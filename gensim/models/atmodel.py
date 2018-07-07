@@ -767,8 +767,8 @@ class AuthorTopicModel(LdaModel):
 
             # Train on all documents of authors in input_corpus.
             train_corpus_idx = []
-
-            for doc_ids in self.author2doc.values():  # For all documents in total corpus.
+            # Collect all documents of authors.
+            for doc_ids in self.author2doc.values():
                 train_corpus_idx.extend(doc_ids)
 
             # Make the list of training documents unique.
