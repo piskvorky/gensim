@@ -727,6 +727,7 @@ class TestWikiCorpus(TestTextCorpus):
         corpus = self.corpus_class(self.enwiki, filter_articles=reject_all)
         texts = corpus.get_texts()
         self.assertTrue(all([not t for t in texts]))
+
         def keep_some(elem, title, *args, **kwargs):
             return title[0] == 'C'
         corpus = self.corpus_class(self.enwiki, filter_articles=reject_all)
