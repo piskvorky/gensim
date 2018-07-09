@@ -8,8 +8,7 @@ FastLineSentence::FastLineSentence() : is_eof_(false) { }
 FastLineSentence::FastLineSentence(const std::string& filename) : filename_(filename), fs_(filename), is_eof_(false) { }
 
 std::vector<std::string> FastLineSentence::ReadSentence() {
-    if (fs_.eof()) {
-        is_eof_ = true;
+    if (is_eof_) {
         return {};
     }
 	std::string line, word;
@@ -21,5 +20,8 @@ std::vector<std::string> FastLineSentence::ReadSentence() {
 		res.push_back(word);
 	}
 
+    if (fs_.eof()) {
+        is_eof_ = true;
+    }
 	return res;
 }

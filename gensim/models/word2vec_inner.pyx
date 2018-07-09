@@ -21,6 +21,7 @@ from libc.math cimport log
 from libc.string cimport memset
 from libcpp.string cimport string
 from libcpp.vector cimport vector
+from libc.stdio cimport printf
 from libcpp cimport bool as bool_t
 
 # scipy <= 0.15
@@ -63,16 +64,16 @@ cdef extern from "fast_line_sentence.h":
 cdef class CythonLineSentence:
     cdef FastLineSentence* _thisptr
     cdef public string source
-    cdef public int max_sentence_length, max_words_in_batch
-    cdef vector[string] buf_data
+    cdef public size_t max_sentence_length, max_words_in_batch
+    cdef vector[vector[string]] buf_data
 
     def __cinit__(self, source, max_sentence_length=MAX_SENTENCE_LEN):
         self._thisptr = new FastLineSentence(source)
 
     def __init__(self, source, max_sentence_length=MAX_SENTENCE_LEN):
         self.source = source
-        self.max_sentence_length = max_sentence_length  # isn't used in this hacky prototype
-        self.max_words_in_batch = MAX_SENTENCE_LEN
+        self.max_sentence_length = max_sentence_length
+        self.max_words_in_batch = max_sentence_length
 
     def __dealloc__(self):
         if self._thisptr != NULL:
@@ -84,49 +85,84 @@ cdef class CythonLineSentence:
     cpdef vector[string] read_sentence(self) nogil except *:
         return self._thisptr.ReadSentence()
 
+    cpdef vector[vector[string]] _read_chunked_sentence(self) nogil except *:
+        cdef vector[string] sent = self.read_sentence()
+        return self._chunk_sentence(sent)
+
+    cpdef vector[vector[string]] _chunk_sentence(self, vector[string] sent) nogil:
+        cdef vector[vector[string]] res
+        cdef vector[string] chunk
+        cdef size_t cur_idx = 0
+
+        if sent.size() > self.max_sentence_length:
+            while cur_idx < sent.size():
+                chunk.clear()
+                for i in range(cur_idx, min(cur_idx + self.max_sentence_length, sent.size())):
+                    chunk.push_back(sent[i])
+
+                res.push_back(chunk)
+                cur_idx += chunk.size()
+        else:
+            res.push_back(sent)
+
+        return res
+
     cpdef void reset(self) nogil:
         self._thisptr.Reset()
 
     def __iter__(self):
         self.reset()
         while not self.is_eof():
-            sent = self.read_sentence()
-            yield sent
+            chunked_sentence = self._read_chunked_sentence()
+            for chunk in chunked_sentence:
+                if not chunk.empty():
+                    yield chunk
 
     cpdef vector[vector[string]] next_batch(self) nogil except *:
         cdef:
             vector[vector[string]] job_batch
+            vector[vector[string]] chunked_sentence
             vector[string] data
-            int batch_size = 0
-            int data_length = 0
+            size_t batch_size = 0
+            size_t last_idx = 0
+            size_t tmp = 0
 
-        if self.is_eof() and self.buf_data.size() == 0:
-            return job_batch
-        elif self.is_eof():
-            job_batch.push_back(self.buf_data)
+        if self.is_eof():
+            job_batch = self.buf_data
             self.buf_data.clear()
             return job_batch
 
         # Try to read data from previous calls which was not returned
-        if self.buf_data.size() > 0:
-            data = self.buf_data
+        if not self.buf_data.empty():
+            job_batch = self.buf_data
             self.buf_data.clear()
-        else:
+
+            for sent in job_batch:
+                batch_size += sent.size()
+
+        while not self.is_eof() and batch_size <= self.max_words_in_batch:
             data = self.read_sentence()
 
-        data_length = data.size()
-        while batch_size + data_length <= self.max_words_in_batch:
-            job_batch.push_back(data)
-            batch_size += data_length
+            chunked_sentence = self._chunk_sentence(data)
+            for chunk in chunked_sentence:
+                job_batch.push_back(chunk)
+                batch_size += chunk.size()
 
-            if self.is_eof():
-                break
-            data = self.read_sentence()
-            data_length = data.size()
-
-        if not self.is_eof():
+        if batch_size > self.max_words_in_batch:
             # Save data which doesn't fit in batch in order to return it later.
-            buf_data = data
+            self.buf_data.clear()
+
+            tmp = 0
+            for i in range(job_batch.size()):
+                if tmp + job_batch[i].size() > self.max_words_in_batch:
+                    last_idx = i
+                    break
+                else:
+                    tmp += job_batch[i].size()
+
+            for i in range(last_idx, job_batch.size()):
+                self.buf_data.push_back(job_batch[i])
+            job_batch.resize(last_idx)
 
         return job_batch
 
