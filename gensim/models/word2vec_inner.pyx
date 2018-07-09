@@ -127,11 +127,6 @@ cdef class CythonLineSentence:
             size_t last_idx = 0
             size_t tmp = 0
 
-        if self.is_eof():
-            job_batch = self.buf_data
-            self.buf_data.clear()
-            return job_batch
-
         # Try to read data from previous calls which was not returned
         if not self.buf_data.empty():
             job_batch = self.buf_data
@@ -152,13 +147,13 @@ cdef class CythonLineSentence:
             # Save data which doesn't fit in batch in order to return it later.
             self.buf_data.clear()
 
-            tmp = 0
+            tmp = batch_size
             for i in range(job_batch.size()):
-                if tmp + job_batch[i].size() > self.max_words_in_batch:
-                    last_idx = i
+                if tmp - job_batch[job_batch.size()-1-i].size() <= self.max_words_in_batch:
+                    last_idx = job_batch.size() - i
                     break
                 else:
-                    tmp += job_batch[i].size()
+                    tmp -= job_batch[job_batch.size()-1-i].size()
 
             for i in range(last_idx, job_batch.size()):
                 self.buf_data.push_back(job_batch[i])
