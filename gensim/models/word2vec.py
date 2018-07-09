@@ -549,8 +549,8 @@ class Word2Vec(BaseWordEmbeddingsModel):
         jobs_processed = 0
         alpha = self._get_job_params(0)
 
-        tally, raw_tally = train_epoch_cbow_pystream(self, input_stream, alpha, work, neu1, False)
-        progress_queue.put((0, tally, raw_tally))
+        examples, tally, raw_tally = train_epoch_cbow_pystream(self, input_stream, alpha, work, neu1, False)
+        progress_queue.put((examples, tally, raw_tally))
         progress_queue.put(None)
         # logger.debug("worker exiting, processed %i jobs", jobs_processed)
 

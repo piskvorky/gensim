@@ -558,7 +558,7 @@ cpdef train_epoch_cbow(model, _input_stream, alpha, _work, _neu1, compute_loss):
         vocab[token] = (model.wv.vocab[py_token].index, model.wv.vocab[py_token].sample_int)
 
     # release GIL & train on all sentences
-    cdef int total_effective_words = 0, total_effective_sentences = 0, total_words = 0
+    cdef int total_effective_words = 0, total_sentences = 0, total_words = 0
     cdef pair[ULongLong, ULongLong] word
     cdef ULongLong random_number
 
@@ -615,11 +615,11 @@ cpdef train_epoch_cbow(model, _input_stream, alpha, _work, _neu1, compute_loss):
                     if negative:
                         next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random, word_locks, _compute_loss, &_running_training_loss)
 
-            total_effective_sentences += effective_sentences
+            total_sentences += sentences.size()
             total_effective_words += effective_words
 
 
-    return total_effective_words, total_words  # return properly raw_tally as a second value (not tally)
+    return total_sentences, total_effective_words, total_words  # return properly raw_tally as a second value (not tally)
 
 
 def iterate_batches_from_pystream(input_stream):
@@ -715,7 +715,7 @@ cpdef train_epoch_cbow_pystream(model, input_stream, alpha, _work, _neu1, comput
         vocab[token] = (model.wv.vocab[py_token].index, model.wv.vocab[py_token].sample_int)
 
     # release GIL & train on all sentences
-    cdef int total_effective_words = 0, total_effective_sentences = 0, total_words = 0
+    cdef int total_effective_words = 0, total_sentences = 0, total_words = 0
     cdef pair[ULongLong, ULongLong] word
     cdef ULongLong random_number
 
@@ -770,11 +770,11 @@ cpdef train_epoch_cbow_pystream(model, input_stream, alpha, _work, _neu1, comput
                     if negative:
                         next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random, word_locks, _compute_loss, &_running_training_loss)
 
-            total_effective_sentences += effective_sentences
+            total_sentences += sentences.size()
             total_effective_words += effective_words
 
 
-    return total_effective_words, total_words  # return properly raw_tally as a second value (not tally)
+    return total_sentences, total_effective_words, total_words  # return properly raw_tally as a second value (not tally)
 
 
 # Score is only implemented for hierarchical softmax
