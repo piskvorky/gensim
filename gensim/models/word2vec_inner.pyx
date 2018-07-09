@@ -1,6 +1,6 @@
 #!/usr/bin/env cython
 # distutils: language = c++
-# distutils: sources = linesentence.cpp
+# distutils: sources = fast_line_sentence.cpp
 # cython: boundscheck=False
 # cython: wraparound=False
 # cython: cdivision=True
@@ -51,7 +51,7 @@ cdef int ONE = 1
 cdef REAL_t ONEF = <REAL_t>1.0
 
 
-cdef extern from "linesentence.h":
+cdef extern from "fast_line_sentence.h":
     cdef cppclass FastLineSentence:
         FastLineSentence(string&) except +
         vector[string] ReadSentence() nogil except +
