@@ -86,7 +86,6 @@ from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 from gensim.models.utils_any2vec import _compute_ngrams, _ft_hash
 
 from gensim.utils import deprecated, call_on_class_only
-from gensim import utils
 
 logger = logging.getLogger(__name__)
 
@@ -708,7 +707,9 @@ class FastText(BaseWordEmbeddingsModel):
             Specifies the encoding.
 
         """
-        with utils.smart_open(self.file_name, 'rb') as f:
+
+        # TODO use smart_open again when https://github.com/RaRe-Technologies/smart_open/issues/207 will be fixed
+        with open(self.file_name, 'rb') as f:
             self._load_model_params(f)
             self._load_dict(f, encoding=encoding)
             self._load_vectors(f)
