@@ -1,4 +1,6 @@
 #!/usr/bin/env cython
+# distutils: language = c++
+# distutils: sources = linesentence.cpp
 # cython: boundscheck=False
 # cython: wraparound=False
 # cython: cdivision=True
@@ -17,6 +19,9 @@ cimport numpy as np
 from libc.math cimport exp
 from libc.math cimport log
 from libc.string cimport memset
+from libcpp.string cimport string
+from libcpp.vector cimport vector
+from libcpp cimport bool as bool_t
 
 # scipy <= 0.15
 try:
@@ -44,6 +49,87 @@ cdef REAL_t[EXP_TABLE_SIZE] LOG_TABLE
 
 cdef int ONE = 1
 cdef REAL_t ONEF = <REAL_t>1.0
+
+
+cdef extern from "linesentence.h":
+    cdef cppclass FastLineSentence:
+        FastLineSentence(string&) except +
+        vector[string] ReadSentence() nogil except +
+        bool_t IsEof() nogil
+        void Reset() nogil
+
+
+@cython.final
+cdef class CythonLineSentence:
+    cdef FastLineSentence* _thisptr
+    cdef public string source
+    cdef public int max_sentence_length, max_words_in_batch
+    cdef vector[string] buf_data
+
+    def __cinit__(self, source, max_sentence_length=MAX_SENTENCE_LEN):
+        self._thisptr = new FastLineSentence(source)
+
+    def __init__(self, source, max_sentence_length=MAX_SENTENCE_LEN):
+        self.source = source
+        self.max_sentence_length = max_sentence_length  # isn't used in this hacky prototype
+        self.max_words_in_batch = MAX_SENTENCE_LEN
+
+    def __dealloc__(self):
+        if self._thisptr != NULL:
+            del self._thisptr
+
+    cpdef bool_t is_eof(self) nogil:
+        return self._thisptr.IsEof()
+
+    cpdef vector[string] read_sentence(self) nogil except *:
+        return self._thisptr.ReadSentence()
+
+    cpdef void reset(self) nogil:
+        self._thisptr.Reset()
+
+    def __iter__(self):
+        self.reset()
+        while not self.is_eof():
+            sent = self.read_sentence()
+            yield sent
+
+    cpdef vector[vector[string]] next_batch(self) nogil except *:
+        cdef:
+            vector[vector[string]] job_batch
+            vector[string] data
+            int batch_size = 0
+            int data_length = 0
+
+        if self.is_eof() and self.buf_data.size() == 0:
+            return job_batch
+        elif self.is_eof():
+            job_batch.push_back(self.buf_data)
+            self.buf_data.clear()
+            return job_batch
+
+        # Try to read data from previous calls which was not returned
+        if self.buf_data.size() > 0:
+            data = self.buf_data
+            self.buf_data.clear()
+        else:
+            data = self.read_sentence()
+
+        data_length = data.size()
+        while batch_size + data_length <= self.max_words_in_batch:
+            job_batch.push_back(data)
+            batch_size += data_length
+
+            if self.is_eof():
+                break
+            data = self.read_sentence()
+            data_length = data.size()
+
+        if not self.is_eof():
+            # Save data which doesn't fit in batch in order to return it later.
+            buf_data = data
+
+        return job_batch
+
 
 # for when fblas.sdot returns a double
 cdef REAL_t our_dot_double(const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil:
@@ -722,6 +808,14 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
 
     model.running_training_loss = _running_training_loss
     return effective_words
+
+
+def train_epoch_sg(model, _input_stream, alpha, _work, _neu1, compute_loss):
+    raise NotImplementedError
+
+
+def train_epoch_cbow(model, _input_stream, alpha, _work, _neu1, compute_loss):
+    pass
 
 
 def score_sentence_sg(model, sentence, _work):
