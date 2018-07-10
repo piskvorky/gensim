@@ -14,6 +14,10 @@
 
 import cython
 import numpy as np
+
+from gensim.utils import any2utf8
+from six import iteritems
+
 cimport numpy as np
 
 from libc.math cimport exp
@@ -21,6 +25,8 @@ from libc.math cimport log
 from libc.string cimport memset
 from libcpp.string cimport string
 from libcpp.vector cimport vector
+from libcpp.unordered_map cimport unordered_map
+from libcpp.pair cimport pair
 from libcpp cimport bool as bool_t
 
 # scipy <= 0.15
@@ -57,6 +63,14 @@ cdef extern from "fast_line_sentence.h":
         vector[string] ReadSentence() nogil except +
         bool_t IsEof() nogil
         void Reset() nogil
+
+
+cdef struct VocabItem:
+    int sample_int
+    np.uint32_t index
+    np.uint8_t *code
+    int code_len
+    np.uint32_t *point
 
 
 @cython.final
@@ -125,6 +139,7 @@ cdef class CythonLineSentence:
             size_t batch_size = 0
             size_t last_idx = 0
             size_t tmp = 0
+            int idx
 
         # Try to read data from previous calls which was not returned
         if not self.buf_data.empty():
@@ -147,12 +162,15 @@ cdef class CythonLineSentence:
             self.buf_data.clear()
 
             tmp = batch_size
-            for i in range(job_batch.size()):
-                if tmp - job_batch[job_batch.size()-1-i].size() <= self.max_words_in_batch:
-                    last_idx = job_batch.size() - i
+            idx = job_batch.size() - 1
+            while idx >= 0:
+                if tmp - job_batch[idx].size() <= self.max_words_in_batch:
+                    last_idx = idx + 1
                     break
                 else:
-                    tmp -= job_batch[job_batch.size()-1-i].size()
+                    tmp -= job_batch[idx].size()
+
+                idx -= 1
 
             for i in range(last_idx, job_batch.size()):
                 self.buf_data.push_back(job_batch[i])
@@ -844,8 +862,190 @@ def train_epoch_sg(model, _input_stream, alpha, _work, _neu1, compute_loss):
     raise NotImplementedError
 
 
-def train_epoch_cbow(model, _input_stream, alpha, _work, _neu1, compute_loss):
-    pass
+cdef void prepare_c_structures_for_batch(vector[vector[string]] &sentences, int sample, int hs, int window, int *total_words,
+                                         int *effective_words, int *effective_sentences, unsigned long long *next_random,
+                                         unordered_map[string, VocabItem] &vocab, int *sentence_idx, np.uint32_t *indexes,
+                                         int *codelens, np.uint8_t **codes, np.uint32_t **points,
+                                         np.uint32_t *reduced_windows) nogil:
+    cdef VocabItem word
+    cdef string token
+    cdef vector[string] sent
+
+    sentence_idx[0] = 0  # indices of the first sentence always start at 0
+    for sent in sentences:
+        if sent.empty():
+            continue # ignore empty sentences; leave effective_sentences unchanged
+        total_words[0] += sent.size()
+
+        for token in sent:
+            # leaving `effective_words` unchanged = shortening the sentence = expanding the window
+            if vocab.find(token) == vocab.end():
+                continue
+
+            word = vocab[token]
+            if sample and word.sample_int < random_int32(next_random):
+                continue
+            indexes[effective_words[0]] = word.index
+            if hs:
+                codelens[effective_words[0]] = word.code_len
+                codes[effective_words[0]] = word.code
+                points[effective_words[0]] = word.point
+            effective_words[0] += 1
+            if effective_words[0] == MAX_SENTENCE_LEN:
+                break  # TODO: log warning, tally overflow?
+
+        # keep track of which words go into which sentence, so we don't train
+        # across sentence boundaries.
+        # indices of sentence number X are between <sentence_idx[X], sentence_idx[X])
+        effective_sentences[0] += 1
+        sentence_idx[effective_sentences[0]] = effective_words[0]
+
+        if effective_words[0] == MAX_SENTENCE_LEN:
+            break  # TODO: log warning, tally overflow?
+
+    # precompute "reduced window" offsets in a single randint() call
+    for i in range(effective_words[0]):
+        reduced_windows[i] = random_int32(next_random) % window
+
+
+def train_epoch_cbow(model, input_stream, alpha, _work, _neu1, compute_loss):
+    """Train CBOW model for one epoch by training on an input stream. This function is used only in multistream mode.
+
+    Called internally from :meth:`~gensim.models.word2vec.Word2Vec.train`.
+
+    Parameters
+    ----------
+    model : :class:`~gensim.models.word2vec.Word2Vec`
+        The Word2Vec model instance to train.
+    input_stream : iterable of list of str
+        The corpus used to train the model.
+    alpha : float
+        The learning rate.
+    _work : np.ndarray
+        Private working memory for each worker.
+    _neu1 : np.ndarray
+        Private working memory for each worker.
+    compute_loss : bool
+        Whether or not the training loss should be computed in this batch.
+
+    Returns
+    -------
+    int
+        Number of words in the vocabulary actually used for training (They already existed in the vocabulary
+        and were not discarded by negative sampling).
+    """
+    cdef int hs = model.hs
+    cdef int negative = model.negative
+    cdef int sample = (model.vocabulary.sample != 0)
+    cdef int cbow_mean = model.cbow_mean
+
+    # Only used if `isinstance(input_stream, CythonLineSentence)` and fully releases Python GIL
+    cdef CythonLineSentence fast_input_stream
+
+    cdef int _compute_loss = (1 if compute_loss == True else 0)
+    cdef REAL_t _running_training_loss = model.running_training_loss
+
+    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
+    cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_lockf))
+    cdef REAL_t *work
+    cdef REAL_t _alpha = alpha
+    cdef int size = model.wv.vector_size
+
+    cdef int codelens[MAX_SENTENCE_LEN]
+    cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
+    cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
+    cdef int sentence_idx[MAX_SENTENCE_LEN + 1]
+    cdef int window = model.window
+
+    cdef int i, j, k
+    cdef int effective_words = 0, effective_sentences = 0
+    cdef int total_effective_words = 0, total_sentences = 0, total_words = 0
+    cdef int sent_idx, idx_start, idx_end
+
+    # For hierarchical softmax
+    cdef REAL_t *syn1
+    cdef np.uint32_t *points[MAX_SENTENCE_LEN]
+    cdef np.uint8_t *codes[MAX_SENTENCE_LEN]
+
+    # For negative sampling
+    cdef REAL_t *syn1neg
+    cdef np.uint32_t *cum_table
+    cdef unsigned long long cum_table_len
+    # for sampling (negative and frequent-word downsampling)
+    cdef unsigned long long next_random
+
+    if hs:
+        syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
+
+    if negative:
+        syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
+        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
+        cum_table_len = len(model.vocabulary.cum_table)
+    if negative or sample:
+        next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
+
+    # convert Python structures to primitive types, so we can release the GIL
+    work = <REAL_t *>np.PyArray_DATA(_work)
+    neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
+
+    # for preparing batches & training
+    cdef unordered_map[string, VocabItem] vocab
+    cdef vector[vector[string]] sentences
+    cdef unsigned long long random_number
+    cdef VocabItem word
+
+    # prepare C structures so we can go "full C" and release the Python GIL
+    for py_token, vocab_item in iteritems(model.wv.vocab):
+        token = any2utf8(py_token)
+        word.index = vocab_item.index
+        word.sample_int = vocab_item.sample_int
+
+        if hs:
+            word.code = <np.uint8_t *>np.PyArray_DATA(vocab_item.code)
+            word.code_len = <int>len(vocab_item.code)
+            word.point = <np.uint32_t *>np.PyArray_DATA(vocab_item.point)
+
+        vocab[token] = word
+
+    if isinstance(input_stream, CythonLineSentence):
+        # If using CythonLineSentence, then generate batches without Python GIL
+        fast_input_stream = input_stream
+        with nogil:
+            fast_input_stream.reset()
+            while not fast_input_stream.is_eof():
+                effective_sentences = 0
+                effective_words = 0
+
+                sentences = fast_input_stream.next_batch()
+
+                prepare_c_structures_for_batch(sentences, sample, hs, window, &total_words, &effective_words,
+                                               &effective_sentences, &next_random, vocab, sentence_idx, indexes,
+                                               codelens, codes, points, reduced_windows)
+
+                for sent_idx in range(effective_sentences):
+                    idx_start = sentence_idx[sent_idx]
+                    idx_end = sentence_idx[sent_idx + 1]
+                    for i in range(idx_start, idx_end):
+                        j = i - window + reduced_windows[i]
+                        if j < idx_start:
+                            j = idx_start
+                        k = i + window + 1 - reduced_windows[i]
+                        if k > idx_end:
+                            k = idx_end
+                        if hs:
+                            fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, j, k, cbow_mean, word_locks, _compute_loss, &_running_training_loss)
+                        if negative:
+                            next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random, word_locks, _compute_loss, &_running_training_loss)
+
+    else:
+        # Otherwise, prepare batches with GIL, but perform training without it.
+        pass
+        # while prepare_batch(input_stream, sentences, sentence_idx, indexes, reduced_windows):
+        #     with nogil:
+        #         pass
+
+    model.running_training_loss = _running_training_loss
+    return total_sentences, total_effective_words, total_words
 
 
 def score_sentence_sg(model, sentence, _work):
