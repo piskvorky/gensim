@@ -21,7 +21,6 @@ from libc.math cimport log
 from libc.string cimport memset
 from libcpp.string cimport string
 from libcpp.vector cimport vector
-from libc.stdio cimport printf
 from libcpp cimport bool as bool_t
 
 # scipy <= 0.15
