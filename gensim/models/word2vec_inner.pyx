@@ -908,6 +908,33 @@ cdef void prepare_c_structures_for_batch(vector[vector[string]] &sentences, int 
         reduced_windows[i] = random_int32(next_random) % window
 
 
+def iterate_batches_from_pystream(input_stream):
+    job_batch = []
+    data = None
+    batch_size = 0
+    data_length = 0
+
+    for data in input_stream:
+        data = [x.encode('utf8') for x in data]
+        data_length = len(data)
+
+        # can we fit this sentence into the existing job batch?
+        if batch_size + data_length <= MAX_SENTENCE_LEN:
+            # yes => add it to the current job
+            job_batch.append(data)
+            batch_size += data_length
+        else:
+            yield job_batch
+
+            job_batch = [data]
+
+            batch_size = data_length
+
+    # add the last job too (may be significantly smaller than batch_words)
+    if job_batch:
+        yield job_batch
+
+
 def train_epoch_cbow(model, input_stream, alpha, _work, _neu1, compute_loss):
     """Train CBOW model for one epoch by training on an input stream. This function is used only in multistream mode.
 
@@ -1037,12 +1064,37 @@ def train_epoch_cbow(model, input_stream, alpha, _work, _neu1, compute_loss):
                         if negative:
                             next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random, word_locks, _compute_loss, &_running_training_loss)
 
+                total_sentences += sentences.size()
+                total_effective_words += effective_words
+
     else:
         # Otherwise, prepare batches with GIL, but perform training without it.
-        pass
-        # while prepare_batch(input_stream, sentences, sentence_idx, indexes, reduced_windows):
-        #     with nogil:
-        #         pass
+        for sentences in iterate_batches_from_pystream(input_stream):
+            with nogil:
+                effective_sentences = 0
+                effective_words = 0
+
+                prepare_c_structures_for_batch(sentences, sample, hs, window, &total_words, &effective_words,
+                                               &effective_sentences, &next_random, vocab, sentence_idx, indexes,
+                                               codelens, codes, points, reduced_windows)
+
+                for sent_idx in range(effective_sentences):
+                    idx_start = sentence_idx[sent_idx]
+                    idx_end = sentence_idx[sent_idx + 1]
+                    for i in range(idx_start, idx_end):
+                        j = i - window + reduced_windows[i]
+                        if j < idx_start:
+                            j = idx_start
+                        k = i + window + 1 - reduced_windows[i]
+                        if k > idx_end:
+                            k = idx_end
+                        if hs:
+                            fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, j, k, cbow_mean, word_locks, _compute_loss, &_running_training_loss)
+                        if negative:
+                            next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random, word_locks, _compute_loss, &_running_training_loss)
+
+                total_sentences += sentences.size()
+                total_effective_words += effective_words
 
     model.running_training_loss = _running_training_loss
     return total_sentences, total_effective_words, total_words
