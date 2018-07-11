@@ -125,6 +125,13 @@ def filter_example(elem, text, *args, **kwargs):
         XPath expression for namespace.
     pageid_path : str
         XPath expression for page id.
+
+    Example:
+    ------
+    >>> import gensim.corpora
+    >>> filter_func = gensim.corpora.wikicorpus.filter_example
+    >>> dewiki = gensim.corpora.WikiCorpus('./dewiki-20180520-pages-articles-multistream.xml.bz2',
+            filter_articles=filter_func)
     """
     # Filter German wikipedia dump for articles that are marked either as
     # Lesenswert (featured) or Exzellent (excellent) by wikipedia editors.
