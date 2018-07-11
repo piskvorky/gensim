@@ -122,6 +122,9 @@ class BaseAny2VecModel(utils.SaveLoad):
         """Resets certain properties of the model post training. eg. `keyedvectors.vectors_norm`."""
         raise NotImplementedError()
 
+    def _do_train_epoch(self, input_stream, thread_private_mem, cur_epoch, total_examples=None, total_words=None):
+        raise NotImplementedError()
+
     def _do_train_job(self, data_iterable, job_parameters, thread_private_mem):
         """Train a single batch. Return 2-tuple `(effective word count, total word count)`."""
         raise NotImplementedError()
@@ -129,6 +132,16 @@ class BaseAny2VecModel(utils.SaveLoad):
     def _check_training_sanity(self, epochs=None, total_examples=None, total_words=None, **kwargs):
         """Check that the training parameters provided make sense. e.g. raise error if `epochs` not provided."""
         raise NotImplementedError()
+
+    def _worker_loop_multistream(self, input_stream, progress_queue, cur_epoch=0,
+                                 total_examples=None, total_words=None):
+        thread_private_mem = self._get_thread_working_mem()
+
+        examples, tally, raw_tally = self._do_train_epoch(input_stream, thread_private_mem, cur_epoch,
+                                                          total_examples=total_examples, total_words=total_words)
+
+        progress_queue.put((examples, tally, raw_tally))
+        progress_queue.put(None)
 
     def _worker_loop(self, job_queue, progress_queue):
         """Train the model, lifting batches of data from the queue.
@@ -252,8 +265,8 @@ class BaseAny2VecModel(utils.SaveLoad):
     def _log_train_end(self, raw_word_count, trained_word_count, total_elapsed, job_tally):
         raise NotImplementedError()
 
-    def _log_epoch_progress(self, progress_queue, job_queue, cur_epoch=0, total_examples=None, total_words=None,
-                            report_delay=1.0):
+    def _log_epoch_progress(self, progress_queue=None, job_queue=None, cur_epoch=0, total_examples=None,
+                            total_words=None, report_delay=1.0):
         """Get the progress report for a single training epoch.
 
         Parameters
@@ -322,7 +335,31 @@ class BaseAny2VecModel(utils.SaveLoad):
         self.total_train_time += elapsed
         return trained_word_count, raw_word_count, job_tally
 
-    def _train_epoch(self, data_iterable, cur_epoch=0, total_examples=None,
+    def _train_epoch_multistream(self, data_iterables, cur_epoch=0, total_examples=None, total_words=None):
+        assert len(data_iterables) == self.workers, "You have to pass the same amount of input streams as workers, " \
+                                                    "because each worker gets its own independent input stream."
+
+        progress_queue = Queue()
+
+        workers = [
+            threading.Thread(
+                target=self._worker_loop_multistream,
+                args=(input_stream, progress_queue,),
+                kwargs={'cur_epoch': cur_epoch, 'total_examples': total_examples, 'total_words': total_words}
+            ) for input_stream in data_iterables
+        ]
+
+        for thread in workers:
+            thread.daemon = True
+            thread.start()
+
+        trained_word_count, raw_word_count, job_tally = self._log_epoch_progress(
+            progress_queue=progress_queue, job_queue=None, cur_epoch=cur_epoch, total_examples=total_examples,
+            total_words=total_words)
+
+        return trained_word_count, raw_word_count, job_tally
+
+    def _train_epoch(self, data_iterable=None, cur_epoch=0, total_examples=None,
                      total_words=None, queue_factor=2, report_delay=1.0):
         """Train the model for a single epoch.
 
@@ -378,7 +415,7 @@ class BaseAny2VecModel(utils.SaveLoad):
 
         return trained_word_count, raw_word_count, job_tally
 
-    def train(self, data_iterable, epochs=None, total_examples=None,
+    def train(self, data_iterable=None, data_iterables=None, epochs=None, total_examples=None,
               total_words=None, queue_factor=2, report_delay=1.0, callbacks=(), **kwargs):
         """Train the model for multiple epochs using multiple workers.
 
@@ -433,8 +470,9 @@ class BaseAny2VecModel(utils.SaveLoad):
                 callback.on_epoch_begin(self)
 
             trained_word_count_epoch, raw_word_count_epoch, job_tally_epoch = self._train_epoch(
-                data_iterable, cur_epoch=cur_epoch, total_examples=total_examples, total_words=total_words,
-                queue_factor=queue_factor, report_delay=report_delay)
+                data_iterable=data_iterable, data_iterables=data_iterables, cur_epoch=cur_epoch,
+                total_examples=total_examples, total_words=total_words, queue_factor=queue_factor,
+                report_delay=report_delay)
             trained_word_count += trained_word_count_epoch
             raw_word_count += raw_word_count_epoch
             job_tally += job_tally_epoch
@@ -525,9 +563,9 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
     def _set_train_params(self, **kwargs):
         raise NotImplementedError()
 
-    def __init__(self, sentences=None, workers=3, vector_size=100, epochs=5, callbacks=(), batch_words=10000,
-                 trim_rule=None, sg=0, alpha=0.025, window=5, seed=1, hs=0, negative=5, ns_exponent=0.75, cbow_mean=1,
-                 min_alpha=0.0001, compute_loss=False, fast_version=0, **kwargs):
+    def __init__(self, sentences=None, workers=3, vector_size=100, epochs=5, callbacks=(),
+                 batch_words=10000, trim_rule=None, sg=0, alpha=0.025, window=5, seed=1, hs=0, negative=5,
+                 ns_exponent=0.75, cbow_mean=1, min_alpha=0.0001, compute_loss=False, fast_version=0, **kwargs):
         """
 
         Parameters
@@ -1152,14 +1190,14 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             logger.info(
                 "EPOCH %i - PROGRESS: at %.2f%% examples, %.0f words/s, in_qsize %i, out_qsize %i",
                 cur_epoch + 1, 100.0 * example_count / total_examples, trained_word_count / elapsed,
-                utils.qsize(job_queue), utils.qsize(progress_queue)
+                None if job_queue is None else utils.qsize(job_queue), utils.qsize(progress_queue)
             )
         else:
             # words-based progress %
             logger.info(
                 "EPOCH %i - PROGRESS: at %.2f%% words, %.0f words/s, in_qsize %i, out_qsize %i",
                 cur_epoch + 1, 100.0 * raw_word_count / total_words, trained_word_count / elapsed,
-                utils.qsize(job_queue), utils.qsize(progress_queue)
+                None if job_queue is None else utils.qsize(job_queue), utils.qsize(progress_queue)
             )
 
     def _log_epoch_end(self, cur_epoch, example_count, total_examples, raw_word_count, total_words,

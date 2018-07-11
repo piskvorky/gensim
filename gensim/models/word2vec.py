@@ -140,6 +140,7 @@ logger = logging.getLogger(__name__)
 
 try:
     from gensim.models.word2vec_inner import train_batch_sg, train_batch_cbow
+    from gensim.models.word2vec_inner import train_epoch_sg, train_epoch_cbow
     from gensim.models.word2vec_inner import score_sentence_sg, score_sentence_cbow
     from gensim.models.word2vec_inner import FAST_VERSION, MAX_WORDS_IN_BATCH
 
@@ -746,6 +747,18 @@ class Word2Vec(BaseWordEmbeddingsModel):
             batch_words=batch_words, trim_rule=trim_rule, sg=sg, alpha=alpha, window=window, seed=seed,
             hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, compute_loss=compute_loss,
             fast_version=FAST_VERSION)
+
+    def _do_train_epoch(self, input_stream, thread_private_mem, cur_epoch, total_examples=None, total_words=None):
+        work, neu1 = thread_private_mem
+
+        if self.sg:
+            examples, tally, raw_tally = train_epoch_sg(self, input_stream, cur_epoch, total_examples, total_words,
+                                                        work, neu1, self.compute_loss)
+        else:
+            examples, tally, raw_tally = train_epoch_cbow(self, input_stream, cur_epoch, total_examples, total_words,
+                                                          work, neu1, self.compute_loss)
+
+        return examples, tally, raw_tally
 
     def _do_train_job(self, sentences, alpha, inits):
         """Train the model on a single batch of sentences.

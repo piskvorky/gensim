@@ -935,7 +935,27 @@ def iterate_batches_from_pystream(input_stream):
         yield job_batch
 
 
-def train_epoch_cbow(model, input_stream, alpha, _work, _neu1, compute_loss):
+cdef REAL_t get_alpha(REAL_t alpha, REAL_t end_alpha, int cur_epoch, int num_epochs) nogil:
+    return alpha - ((alpha - end_alpha) * (<REAL_t> cur_epoch) / num_epochs)
+
+
+cdef REAL_t get_next_alpha(REAL_t start_alpha, REAL_t end_alpha, int total_examples, int total_words,
+                           int expected_examples, int expected_words, int cur_epoch, int num_epochs) nogil:
+    cdef REAL_t epoch_progress
+
+    if expected_examples != -1:
+        # examples-based decay
+        epoch_progress = (<REAL_t> total_examples) / expected_examples
+    else:
+        # word-based decay
+        epoch_progress = (<REAL_t> total_words) / expected_words
+
+    cdef REAL_t progress = (cur_epoch + epoch_progress) / num_epochs
+    cdef REAL_t next_alpha = start_alpha - (start_alpha - end_alpha) * progress
+    return max(end_alpha, next_alpha)
+
+
+def train_epoch_cbow(model, input_stream, _cur_epoch, _expected_examples, _expected_words, _work, _neu1, compute_loss):
     """Train CBOW model for one epoch by training on an input stream. This function is used only in multistream mode.
 
     Called internally from :meth:`~gensim.models.word2vec.Word2Vec.train`.
@@ -946,8 +966,8 @@ def train_epoch_cbow(model, input_stream, alpha, _work, _neu1, compute_loss):
         The Word2Vec model instance to train.
     input_stream : iterable of list of str
         The corpus used to train the model.
-    alpha : float
-        The learning rate.
+    _cur_epoch : int
+        Current epoch number. Used for calculating and decaying learning rate.
     _work : np.ndarray
         Private working memory for each worker.
     _neu1 : np.ndarray
@@ -965,6 +985,10 @@ def train_epoch_cbow(model, input_stream, alpha, _work, _neu1, compute_loss):
     cdef int negative = model.negative
     cdef int sample = (model.vocabulary.sample != 0)
     cdef int cbow_mean = model.cbow_mean
+    cdef int cur_epoch = _cur_epoch
+    cdef int num_epochs = model.epochs
+    cdef int expected_examples = (-1 if _expected_examples is None else _expected_examples)
+    cdef int expected_words = (-1 if _expected_words is None else _expected_words)
 
     # Only used if `isinstance(input_stream, CythonLineSentence)` and fully releases Python GIL
     cdef CythonLineSentence fast_input_stream
@@ -975,7 +999,9 @@ def train_epoch_cbow(model, input_stream, alpha, _work, _neu1, compute_loss):
     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
     cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_lockf))
     cdef REAL_t *work
-    cdef REAL_t _alpha = alpha
+    cdef REAL_t start_alpha = model.alpha
+    cdef REAL_t end_alpha = model.min_alpha
+    cdef REAL_t _alpha = get_alpha(model.alpha, end_alpha, cur_epoch, num_epochs)
     cdef int size = model.wv.vector_size
 
     cdef int codelens[MAX_SENTENCE_LEN]
@@ -1067,6 +1093,9 @@ def train_epoch_cbow(model, input_stream, alpha, _work, _neu1, compute_loss):
                 total_sentences += sentences.size()
                 total_effective_words += effective_words
 
+                _alpha = get_next_alpha(start_alpha, end_alpha, total_sentences, total_words,
+                                        expected_examples, expected_words, cur_epoch, num_epochs)
+
     else:
         # Otherwise, prepare batches with GIL, but perform training without it.
         for sentences in iterate_batches_from_pystream(input_stream):
@@ -1095,6 +1124,9 @@ def train_epoch_cbow(model, input_stream, alpha, _work, _neu1, compute_loss):
 
                 total_sentences += sentences.size()
                 total_effective_words += effective_words
+
+                _alpha = get_next_alpha(start_alpha, end_alpha, total_sentences, total_words,
+                                        expected_examples, expected_words, cur_epoch, num_epochs)
 
     model.running_training_loss = _running_training_loss
     return total_sentences, total_effective_words, total_words
