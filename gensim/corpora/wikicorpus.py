@@ -427,10 +427,11 @@ def extract_pages(f, filter_namespaces=False, filter_articles=None):
                     text = None
 
             if filter_articles is not None:
-                if not filter_articles(elem, namespace=namespace, title=title,
-                                       text=text, page_tag=page_tag,
-                                       text_path=text_path, title_path=title_path,
-                                       ns_path=ns_path, pageid_path=pageid_path):
+                if not filter_articles(
+                        elem, namespace=namespace, title=title,
+                        text=text, page_tag=page_tag,
+                        text_path=text_path, title_path=title_path,
+                        ns_path=ns_path, pageid_path=pageid_path):
                     text = None
 
             pageid = elem.find(pageid_path).text
