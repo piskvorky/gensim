@@ -359,7 +359,7 @@ class BaseAny2VecModel(utils.SaveLoad):
 
         return trained_word_count, raw_word_count, job_tally
 
-    def _train_epoch(self, data_iterable=None, cur_epoch=0, total_examples=None,
+    def _train_epoch(self, data_iterable, cur_epoch=0, total_examples=None,
                      total_words=None, queue_factor=2, report_delay=1.0):
         """Train the model for a single epoch.
 
@@ -469,10 +469,14 @@ class BaseAny2VecModel(utils.SaveLoad):
             for callback in self.callbacks:
                 callback.on_epoch_begin(self)
 
-            trained_word_count_epoch, raw_word_count_epoch, job_tally_epoch = self._train_epoch(
-                data_iterable=data_iterable, data_iterables=data_iterables, cur_epoch=cur_epoch,
-                total_examples=total_examples, total_words=total_words, queue_factor=queue_factor,
-                report_delay=report_delay)
+            if data_iterable is not None:
+                trained_word_count_epoch, raw_word_count_epoch, job_tally_epoch = self._train_epoch(
+                    data_iterable, cur_epoch=cur_epoch, total_examples=total_examples,
+                    total_words=total_words, queue_factor=queue_factor, report_delay=report_delay)
+            else:
+                trained_word_count_epoch, raw_word_count_epoch, job_tally_epoch = self._train_epoch_multistream(
+                    data_iterables, cur_epoch=cur_epoch, total_examples=total_examples, total_words=total_words)
+
             trained_word_count += trained_word_count_epoch
             raw_word_count += raw_word_count_epoch
             job_tally += job_tally_epoch
