@@ -43,7 +43,6 @@ from numpy import float32 as REAL, ones, random, dtype, zeros
 from types import GeneratorType
 from gensim.utils import deprecated
 import warnings
-import itertools
 
 try:
     from queue import Queue
