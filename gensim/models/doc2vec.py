@@ -56,6 +56,7 @@ Infer vector for new document
 import logging
 import os
 import warnings
+import multiprocessing
 
 try:
     from queue import Queue
@@ -64,6 +65,7 @@ except ImportError:
 
 from collections import namedtuple, defaultdict
 from timeit import default_timer
+from functools import reduce
 
 from numpy import zeros, float32 as REAL, empty, ones, \
     memmap as np_memmap, vstack, integer, dtype, sum as np_sum, add as np_add, repeat as np_repeat, concatenate
@@ -74,7 +76,7 @@ from gensim import utils, matutils  # utility fnc for pickling, common scipy ope
 from gensim.models.word2vec import Word2VecKeyedVectors, Word2VecVocab, Word2VecTrainables, train_cbow_pair,\
     train_sg_pair, train_batch_sg
 from six.moves import xrange
-from six import string_types, integer_types, itervalues
+from six import string_types, integer_types, itervalues, iteritems
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 from gensim.models.keyedvectors import Doc2VecKeyedVectors
 from types import GeneratorType
@@ -435,8 +437,9 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         includes not only the word vectors of each word in the context, but also the paragraph vector.
 
     """
-    def __init__(self, documents=None, dm_mean=None, dm=1, dbow_words=0, dm_concat=0, dm_tag_count=1,
-                 docvecs=None, docvecs_mapfile=None, comment=None, trim_rule=None, callbacks=(), **kwargs):
+    def __init__(self, documents=None, input_streams=None, dm_mean=None, dm=1, dbow_words=0, dm_concat=0,
+                 dm_tag_count=1, docvecs=None, docvecs_mapfile=None, comment=None, trim_rule=None, callbacks=(),
+                 **kwargs):
         """
 
         Parameters
@@ -445,6 +448,9 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             Input corpus, can be simply a list of elements, but for larger corpora,consider an iterable that streams
             the documents directly from disk/network. If you don't supply `documents`, the model is
             left uninitialized -- use if you plan to initialize it in some other way.
+        input_streams : list or tuple of iterable of iterables
+            The tuple or list of `documents`-like arguments. Use it if you have multiple input streams. It is possible
+            to process streams in parallel, using `workers` parameter.
         dm : {1,0}, optional
             Defines the training algorithm. If `dm=1`, 'distributed memory' (PV-DM) is used.
             Otherwise, `distributed bag of words` (PV-DBOW) is employed.
@@ -566,12 +572,22 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         self.docvecs = docvecs or Doc2VecKeyedVectors(self.vector_size, docvecs_mapfile)
 
         self.comment = comment
-        if documents is not None:
-            if isinstance(documents, GeneratorType):
+        if documents is not None or input_streams is not None:
+            self._check_input_data_sanity(data_iterable=documents, data_iterables=input_streams)
+            if input_streams is not None:
+                if not isinstance(input_streams, (tuple, list)):
+                    raise TypeError("You must pass tuple or list as the input_streams argument.")
+                if any(isinstance(stream, GeneratorType) for stream in input_streams):
+                    raise TypeError("You can't pass a generator as any of input streams. Try an iterator.")
+                if any(isinstance(stream, TaggedLineDocument) for stream in input_streams):
+                    warnings.warn("Using TaggedLineDocument in multistream mode can lead to incorrect results "
+                                  "because of tags collision.")
+            elif isinstance(documents, GeneratorType):
                 raise TypeError("You can't pass a generator as the documents argument. Try an iterator.")
-            self.build_vocab(documents, trim_rule=trim_rule)
+            self.build_vocab(documents=documents, input_streams=input_streams,
+                             trim_rule=trim_rule, workers=self.workers)
             self.train(
-                documents, total_examples=self.corpus_count, epochs=self.epochs,
+                documents=documents, input_streams=input_streams, total_examples=self.corpus_count, epochs=self.epochs,
                 start_alpha=self.alpha, end_alpha=self.min_alpha, callbacks=callbacks)
 
     @property
@@ -661,7 +677,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
                 )
         return tally, self._raw_word_count(job)
 
-    def train(self, documents, total_examples=None, total_words=None,
+    def train(self, documents=None, input_streams=None, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None,
               word_count=0, queue_factor=2, report_delay=1.0, callbacks=()):
         """Update the model's neural weights.
@@ -683,6 +699,9 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             Can be simply a list of elements, but for larger corpora,consider an iterable that streams
             the documents directly from disk/network. If you don't supply `documents`, the model is
             left uninitialized -- use if you plan to initialize it in some other way.
+        input_streams : list or tuple of iterable of iterables
+            The tuple or list of `documents`-like arguments. Use it if you have multiple input streams. It is possible
+            to process streams in parallel, using `workers` parameter.
         total_examples : int, optional
             Count of sentences.
         total_words : int, optional
@@ -712,7 +731,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
         """
         super(Doc2Vec, self).train(
-            documents, total_examples=total_examples, total_words=total_words,
+            sentences=documents, input_streams=input_streams, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
             queue_factor=queue_factor, report_delay=report_delay, callbacks=callbacks)
 
@@ -743,7 +762,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         """
         return 60 * len(self.docvecs.offset2doctag) + 140 * len(self.docvecs.doctags)
 
-    def infer_vector(self, doc_words, alpha=0.1, min_alpha=0.0001, steps=5):
+    def infer_vector(self, doc_words, alpha=None, min_alpha=None, epochs=None, steps=None):
         """Infer a vector for given post-bulk training document.
 
         Notes
@@ -756,12 +775,17 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         doc_words : list of str
             A document for which the vector representation will be inferred.
         alpha : float, optional
-            The initial learning rate.
+            The initial learning rate. If unspecified, value from model initialization will be reused.
         min_alpha : float, optional
-            Learning rate will linearly drop to `min_alpha` as training progresses.
-        steps : int, optional
-            Number of times to train the new document. A higher value may slow down training, but it will result in more
-            stable representations.
+            Learning rate will linearly drop to `min_alpha` over all inference epochs. If unspecified,
+            value from model initialization will be reused.
+        epochs : int, optional
+            Number of times to train the new document. Larger values take more time, but may improve
+            quality and run-to-run stability of inferred vectors. If unspecified, the `epochs` value
+            from model initialization will be reused.
+        steps : int, optional, deprecated
+            Previous name for `epochs`, still available for now for backward compatibility: if
+            `epochs` is unspecified but `steps` is, the `steps` value will be used.
 
         Returns
         -------
@@ -769,15 +793,19 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             The inferred paragraph vector for the new document.
 
         """
+        alpha = alpha or self.alpha
+        min_alpha = min_alpha or self.min_alpha
+        epochs = epochs or steps or self.epochs
+
         doctag_vectors, doctag_locks = self.trainables.get_doctag_trainables(doc_words, self.docvecs.vector_size)
         doctag_indexes = [0]
         work = zeros(self.trainables.layer1_size, dtype=REAL)
         if not self.sg:
             neu1 = matutils.zeros_aligned(self.trainables.layer1_size, dtype=REAL)
 
-        alpha_delta = (alpha - min_alpha) / (steps - 1)
+        alpha_delta = (alpha - min_alpha) / max(epochs - 1, 1)
 
-        for i in range(steps):
+        for i in range(epochs):
             if self.sg:
                 train_document_dbow(
                     self, doc_words, doctag_indexes, alpha, work,
@@ -988,7 +1016,8 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         report['doctag_syn0'] = self.docvecs.count * self.vector_size * dtype(REAL).itemsize
         return super(Doc2Vec, self).estimate_memory(vocab_size, report=report)
 
-    def build_vocab(self, documents, update=False, progress_per=10000, keep_raw_vocab=False, trim_rule=None, **kwargs):
+    def build_vocab(self, documents=None, input_streams=None, update=False, progress_per=10000, keep_raw_vocab=False,
+                    trim_rule=None, workers=None, **kwargs):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
 
         Parameters
@@ -997,6 +1026,9 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             Can be simply a list of :class:`~gensim.models.doc2vec.TaggedDocument` elements, but for larger corpora,
             consider an iterable that streams the documents directly from disk/network.
             See :class:`~gensim.models.doc2vec.TaggedBrownCorpus` or :class:`~gensim.models.doc2vec.TaggedLineDocument`
+        input_streams : list or tuple of iterable of iterables
+            The tuple or list of `documents`-like arguments. Use it if you have multiple input streams. It is possible
+            to process streams in parallel, using `workers` parameter.
         update : bool
             If true, the new words in `sentences` will be added to model's vocab.
         progress_per : int
@@ -1017,12 +1049,19 @@ class Doc2Vec(BaseWordEmbeddingsModel):
                 * `count` (int) - the word's frequency count in the corpus
                 * `min_count` (int) - the minimum count threshold.
 
+        workers : int
+            Used if `input_streams` is passed. Determines how many processes to use for vocab building.
+            Actual number of workers is determined by `min(len(input_streams), workers)`.
+
         **kwargs
             Additional key word arguments passed to the internal vocabulary construction.
 
         """
+        workers = workers or self.workers
         total_words, corpus_count = self.vocabulary.scan_vocab(
-            documents, self.docvecs, progress_per=progress_per, trim_rule=trim_rule)
+            documents=documents, input_streams=input_streams, docvecs=self.docvecs,
+            progress_per=progress_per, trim_rule=trim_rule, workers=workers
+        )
         self.corpus_count = corpus_count
         report_values = self.vocabulary.prepare_vocab(
             self.hs, self.negative, self.wv, update=update, keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule,
@@ -1086,6 +1125,53 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             self.hs, self.negative, self.wv, self.docvecs, update=update)
 
 
+def _note_doctag(key, document_length, docvecs):
+    """Note a document tag during initial corpus scan, for structure sizing."""
+    if isinstance(key, integer_types + (integer,)):
+        docvecs.max_rawint = max(docvecs.max_rawint, key)
+    else:
+        if key in docvecs.doctags:
+            docvecs.doctags[key] = docvecs.doctags[key].repeat(document_length)
+        else:
+            docvecs.doctags[key] = Doctag(len(docvecs.offset2doctag), document_length, 1)
+            docvecs.offset2doctag.append(key)
+    docvecs.count = docvecs.max_rawint + 1 + len(docvecs.offset2doctag)
+
+
+def _scan_vocab_worker(stream, progress_queue, max_vocab_size, trim_rule):
+    min_reduce = 1
+    vocab = defaultdict(int)
+    doclen2tags = defaultdict(list)
+    checked_string_types = 0
+    document_no = -1
+    total_words = 0
+    for document_no, document in enumerate(stream):
+        if not checked_string_types:
+            if isinstance(document.words, string_types):
+                log_msg = "Each 'words' should be a list of words (usually unicode strings). " \
+                          "First 'words' here is instead plain %s." % type(document.words)
+                progress_queue.put(log_msg)
+
+            checked_string_types += 1
+
+        document_length = len(document.words)
+
+        for tag in document.tags:
+            doclen2tags[document_length].append(tag)
+
+        for word in document.words:
+            vocab[word] += 1
+        total_words += len(document.words)
+
+        if max_vocab_size and len(vocab) > max_vocab_size:
+            utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
+            min_reduce += 1
+
+    progress_queue.put((total_words, document_no + 1))
+    progress_queue.put(None)
+    return vocab, doclen2tags
+
+
 class Doc2VecVocab(Word2VecVocab):
     """Vocabulary used by :class:`~gensim.models.doc2vec.Doc2Vec`.
 
@@ -1123,7 +1209,94 @@ class Doc2VecVocab(Word2VecVocab):
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
             sorted_vocab=sorted_vocab, null_word=null_word, ns_exponent=ns_exponent)
 
-    def scan_vocab(self, documents, docvecs, progress_per=10000, trim_rule=None):
+    def _scan_vocab_multistream(self, input_streams, docvecs, workers, trim_rule):
+        manager = multiprocessing.Manager()
+        progress_queue = manager.Queue()
+
+        workers = min(workers, len(input_streams))
+        logger.info("Scanning vocab in %i processes.", workers)
+        pool = multiprocessing.Pool(processes=workers)
+
+        worker_max_vocab_size = self.max_vocab_size // workers if self.max_vocab_size else None
+        results = [
+            pool.apply_async(_scan_vocab_worker,
+                             (stream, progress_queue, worker_max_vocab_size, trim_rule)
+                             ) for stream in input_streams
+        ]
+        pool.close()
+
+        unfinished_tasks = len(results)
+        total_words = 0
+        total_documents = 0
+        while unfinished_tasks > 0:
+            report = progress_queue.get()
+            if report is None:
+                unfinished_tasks -= 1
+                logger.info("scan vocab task finished, processed %i documents and %i words;"
+                            " awaiting finish of %i more tasks", total_documents, total_words, unfinished_tasks)
+            elif isinstance(report, string_types):
+                logger.warning(report)
+            else:
+                num_words, num_documents = report
+                total_words += num_words
+                total_documents += num_documents
+
+        results = [res.get() for res in results]  # pairs (vocab, doclen2tags)
+        self.raw_vocab = reduce(utils.merge_counts, [r[0] for r in results])
+        if self.max_vocab_size:
+            utils.trim_vocab_by_freq(self.raw_vocab, self.max_vocab_size, trim_rule=trim_rule)
+
+        # Update `docvecs` with document tags information.
+        for (_, doclen2tags) in results:
+            for document_length, tags in iteritems(doclen2tags):
+                for tag in tags:
+                    _note_doctag(tag, document_length, docvecs)
+        return total_words, total_documents
+
+    def _scan_vocab_singlestream(self, documents, docvecs, progress_per, trim_rule):
+        document_no = -1
+        total_words = 0
+        min_reduce = 1
+        interval_start = default_timer() - 0.00001  # guard against next sample being identical
+        interval_count = 0
+        checked_string_types = 0
+        vocab = defaultdict(int)
+        for document_no, document in enumerate(documents):
+            if not checked_string_types:
+                if isinstance(document.words, string_types):
+                    logger.warning(
+                        "Each 'words' should be a list of words (usually unicode strings). "
+                        "First 'words' here is instead plain %s.",
+                        type(document.words)
+                    )
+                checked_string_types += 1
+            if document_no % progress_per == 0:
+                interval_rate = (total_words - interval_count) / (default_timer() - interval_start)
+                logger.info(
+                    "PROGRESS: at example #%i, processed %i words (%i/s), %i word types, %i tags",
+                    document_no, total_words, interval_rate, len(vocab), docvecs.count
+                )
+                interval_start = default_timer()
+                interval_count = total_words
+            document_length = len(document.words)
+
+            for tag in document.tags:
+                _note_doctag(tag, document_length, docvecs)
+
+            for word in document.words:
+                vocab[word] += 1
+            total_words += len(document.words)
+
+            if self.max_vocab_size and len(vocab) > self.max_vocab_size:
+                utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
+                min_reduce += 1
+
+        corpus_count = document_no + 1
+        self.raw_vocab = vocab
+        return total_words, corpus_count
+
+    def scan_vocab(self, documents=None, input_streams=None, docvecs=None, progress_per=10000, workers=None,
+                   trim_rule=None):
         """Create the models Vocabulary: A mapping from unique words in the corpus to their frequency count.
 
         Parameters
@@ -1155,75 +1328,17 @@ class Doc2VecVocab(Word2VecVocab):
 
         """
         logger.info("collecting all words and their counts")
-        document_no = -1
-        total_words = 0
-        min_reduce = 1
-        interval_start = default_timer() - 0.00001  # guard against next sample being identical
-        interval_count = 0
-        checked_string_types = 0
-        vocab = defaultdict(int)
-        for document_no, document in enumerate(documents):
-            if not checked_string_types:
-                if isinstance(document.words, string_types):
-                    logger.warning(
-                        "Each 'words' should be a list of words (usually unicode strings). "
-                        "First 'words' here is instead plain %s.",
-                        type(document.words)
-                    )
-                checked_string_types += 1
-            if document_no % progress_per == 0:
-                interval_rate = (total_words - interval_count) / (default_timer() - interval_start)
-                logger.info(
-                    "PROGRESS: at example #%i, processed %i words (%i/s), %i word types, %i tags",
-                    document_no, total_words, interval_rate, len(vocab), docvecs.count
-                )
-                interval_start = default_timer()
-                interval_count = total_words
-            document_length = len(document.words)
-
-            for tag in document.tags:
-                self.note_doctag(tag, document_no, document_length, docvecs)
-
-            for word in document.words:
-                vocab[word] += 1
-            total_words += len(document.words)
-
-            if self.max_vocab_size and len(vocab) > self.max_vocab_size:
-                utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
-                min_reduce += 1
+        if input_streams is None:
+            total_words, corpus_count = self._scan_vocab_singlestream(documents, docvecs, progress_per, trim_rule)
+        else:
+            total_words, corpus_count = self._scan_vocab_multistream(input_streams, docvecs, workers, trim_rule)
 
         logger.info(
             "collected %i word types and %i unique tags from a corpus of %i examples and %i words",
-            len(vocab), docvecs.count, document_no + 1, total_words
+            len(self.raw_vocab), docvecs.count, corpus_count, total_words
         )
-        corpus_count = document_no + 1
-        self.raw_vocab = vocab
+
         return total_words, corpus_count
-
-    def note_doctag(self, key, document_no, document_length, docvecs):
-        """Note a document tag during initial corpus scan, for correctly setting the keyedvectors size.
-
-        Parameters
-        ----------
-        key : {int, str}
-            The tag to be noted.
-        document_no : int
-            The document's index in `docvecs`. Unused.
-        document_length : int
-            The document's length in words.
-        docvecs : list of :class:`~gensim.models.keyedvectors.Doc2VecKeyedVectors`
-            Vector representations of the documents in the corpus. Each vector has size == `vector_size`
-
-        """
-        if isinstance(key, integer_types + (integer,)):
-            docvecs.max_rawint = max(docvecs.max_rawint, key)
-        else:
-            if key in docvecs.doctags:
-                docvecs.doctags[key] = docvecs.doctags[key].repeat(document_length)
-            else:
-                docvecs.doctags[key] = Doctag(len(docvecs.offset2doctag), document_length, 1)
-                docvecs.offset2doctag.append(key)
-        docvecs.count = docvecs.max_rawint + 1 + len(docvecs.offset2doctag)
 
     def indexed_doctags(self, doctag_tokens, docvecs):
         """Get the indexes and backing-arrays used in training examples.
