@@ -43,6 +43,7 @@ from numpy import float32 as REAL, ones, random, dtype, zeros
 from types import GeneratorType
 from gensim.utils import deprecated
 import warnings
+import itertools
 
 try:
     from queue import Queue
@@ -132,6 +133,11 @@ class BaseAny2VecModel(utils.SaveLoad):
     def _check_training_sanity(self, epochs=None, total_examples=None, total_words=None, **kwargs):
         """Check that the training parameters provided make sense. e.g. raise error if `epochs` not provided."""
         raise NotImplementedError()
+
+    def _check_input_data_sanity(self, data_iterable=None, data_iterables=None):
+        """Check that only one argument is not None."""
+        if not ((data_iterable is not None) ^ (data_iterables is not None)):
+            raise ValueError("You must provide only one of singlestream or multistream arguments.")
 
     def _worker_loop_multistream(self, input_stream, progress_queue, cur_epoch=0,
                                  total_examples=None, total_words=None):
@@ -359,14 +365,16 @@ class BaseAny2VecModel(utils.SaveLoad):
 
         return trained_word_count, raw_word_count, job_tally
 
-    def _train_epoch(self, data_iterable, cur_epoch=0, total_examples=None,
-                     total_words=None, queue_factor=2, report_delay=1.0):
+    def _train_epoch(self, data_iterable, cur_epoch=0, total_examples=None, total_words=None,
+                     queue_factor=2, report_delay=1.0):
         """Train the model for a single epoch.
 
         Parameters
         ----------
         data_iterable : iterable of list of object
             The input corpus. This will be split in chunks and these chunks will be pushed to the queue.
+        data_iterables : iterable of iterables of list of object
+            The iterable of input streams like `data_iterable`. Use this parameter in multistream mode.
         cur_epoch : int, optional
             The current training epoch, needed to compute the training parameters for each job.
             For example in many implementations the learning rate would be dropping with the number of epochs.
@@ -567,7 +575,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
     def _set_train_params(self, **kwargs):
         raise NotImplementedError()
 
-    def __init__(self, sentences=None, workers=3, vector_size=100, epochs=5, callbacks=(),
+    def __init__(self, sentences=None, input_streams=None, workers=3, vector_size=100, epochs=5, callbacks=(),
                  batch_words=10000, trim_rule=None, sg=0, alpha=0.025, window=5, seed=1, hs=0, negative=5,
                  ns_exponent=0.75, cbow_mean=1, min_alpha=0.0001, compute_loss=False, fast_version=0, **kwargs):
         """
@@ -666,13 +674,20 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
                 self.neg_labels = zeros(self.negative + 1)
                 self.neg_labels[0] = 1.
 
-        if sentences is not None:
-            if isinstance(sentences, GeneratorType):
+        if sentences is not None or input_streams is not None:
+            self._check_input_data_sanity(data_iterable=sentences, data_iterables=input_streams)
+            if input_streams is not None:
+                if not isinstance(input_streams, (tuple, list)):
+                    raise TypeError("You must pass tuple or list as the input_streams argument.")
+                if any(isinstance(stream, GeneratorType) for stream in input_streams):
+                    raise TypeError("You can't pass a generator as any of input streams. Try an iterator.")
+            elif isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
-            self.build_vocab(sentences, trim_rule=trim_rule)
+
+            self.build_vocab(sentences=sentences, input_streams=input_streams, trim_rule=trim_rule)
             self.train(
-                sentences, total_examples=self.corpus_count, epochs=self.epochs, start_alpha=self.alpha,
-                end_alpha=self.min_alpha, compute_loss=compute_loss)
+                sentences=sentences, input_streams=input_streams, total_examples=self.corpus_count, epochs=self.epochs,
+                start_alpha=self.alpha, end_alpha=self.min_alpha, compute_loss=compute_loss)
         else:
             if trim_rule is not None:
                 logger.warning(
@@ -805,7 +820,8 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             self.__class__.__name__, len(self.wv.index2word), self.vector_size, self.alpha
         )
 
-    def build_vocab(self, sentences, update=False, progress_per=10000, keep_raw_vocab=False, trim_rule=None, **kwargs):
+    def build_vocab(self, sentences=None, input_streams=None, workers=None, update=False, progress_per=10000,
+                    keep_raw_vocab=False, trim_rule=None, **kwargs):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
 
         Parameters
@@ -815,7 +831,13 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` module for such examples.
-        update : bool, optional
+        input_streams : list or tuple of iterable of iterables
+            The tuple or list of `sentences`-like arguments. Use it if you have multiple input streams. It is possible
+            to process streams in parallel, using `workers` parameter.
+        workers : int
+            Used if `input_streams` is passed. Determines how many processes to use for vocab building.
+            Actual number of workers is determined by `min(len(input_streams), workers)`.
+        update : bool
             If true, the new words in `sentences` will be added to model's vocab.
         progress_per : int, optional
             Indicates how many words to process before showing/updating the progress.
@@ -839,8 +861,10 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             Key word arguments propagated to `self.vocabulary.prepare_vocab`
 
         """
+        workers = workers or self.workers
         total_words, corpus_count = self.vocabulary.scan_vocab(
-            sentences, progress_per=progress_per, trim_rule=trim_rule)
+            sentences=sentences, input_streams=input_streams, progress_per=progress_per, trim_rule=trim_rule,
+            workers=workers)
         self.corpus_count = corpus_count
         report_values = self.vocabulary.prepare_vocab(
             self.hs, self.negative, self.wv, update=update, keep_raw_vocab=keep_raw_vocab,
@@ -929,7 +953,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         )
         return report
 
-    def train(self, sentences, total_examples=None, total_words=None,
+    def train(self, sentences=None, input_streams=None, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None, word_count=0,
               queue_factor=2, report_delay=1.0, compute_loss=False, callbacks=()):
         """Train the model. If the hyper-parameters are passed, they override the ones set in the constructor.
@@ -975,8 +999,8 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         self.compute_loss = compute_loss
         self.running_training_loss = 0.0
         return super(BaseWordEmbeddingsModel, self).train(
-            sentences, total_examples=total_examples, total_words=total_words,
-            epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
+            data_iterable=sentences, data_iterables=input_streams, total_examples=total_examples,
+            total_words=total_words, epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
             queue_factor=queue_factor, report_delay=report_delay, compute_loss=compute_loss, callbacks=callbacks)
 
     def _get_job_params(self, cur_epoch):

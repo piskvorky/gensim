@@ -113,6 +113,7 @@ from timeit import default_timer
 from copy import deepcopy
 from collections import defaultdict
 import threading
+import multiprocessing
 import itertools
 import warnings
 
@@ -135,6 +136,7 @@ from gensim import utils, matutils  # utility fnc for pickling, common scipy ope
 from gensim.utils import deprecated
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
+from functools import reduce
 
 logger = logging.getLogger(__name__)
 
@@ -627,7 +629,8 @@ class Word2Vec(BaseWordEmbeddingsModel):
         (which means that the size of the hidden layer is equal to the number of features `self.size`).
 
     """
-    def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
+
+    def __init__(self, sentences=None, input_streams=None, size=100, alpha=0.025, window=5, min_count=5,
                  max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
                  sg=0, hs=0, negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
                  trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False, callbacks=(),
@@ -645,6 +648,9 @@ class Word2Vec(BaseWordEmbeddingsModel):
             <https://rare-technologies.com/data-streaming-in-python-generators-iterators-iterables/>`_.
             If you don't supply `sentences`, the model is left uninitialized -- use if you plan to initialize it
             in some other way.
+        input_streams : list or tuple of iterable of iterables
+            The tuple or list of `sentences`-like arguments. Use it if you have multiple input streams. It is possible
+            to process streams in parallel, using `workers` parameter.
         size : int, optional
             Dimensionality of the word vectors.
         window : int, optional
@@ -708,7 +714,6 @@ class Word2Vec(BaseWordEmbeddingsModel):
                 * `word` (str) - the word we are examining
                 * `count` (int) - the word's frequency count in the corpus
                 * `min_count` (int) - the minimum count threshold.
-
         sorted_vocab : {0, 1}, optional
             If 1, sort the vocabulary by descending frequency before assigning word indexes.
             See :meth:`~gensim.models.word2vec.Word2VecVocab.sort_vocab()`.
@@ -727,8 +732,8 @@ class Word2Vec(BaseWordEmbeddingsModel):
         Initialize and train a :class:`~gensim.models.word2vec.Word2Vec` model
 
         >>> from gensim.models import Word2Vec
-        >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
-        >>> model = Word2Vec(sentences, min_count=1)
+        >>> input_streams = [[["cat", "say", "meow"], ["dog", "say", "woof"]]]
+        >>> model = Word2Vec(input_streams=input_streams, min_count=1)
 
         """
         self.max_final_vocab = max_final_vocab
@@ -743,9 +748,9 @@ class Word2Vec(BaseWordEmbeddingsModel):
         self.trainables = Word2VecTrainables(seed=seed, vector_size=size, hashfxn=hashfxn)
 
         super(Word2Vec, self).__init__(
-            sentences=sentences, workers=workers, vector_size=size, epochs=iter, callbacks=callbacks,
-            batch_words=batch_words, trim_rule=trim_rule, sg=sg, alpha=alpha, window=window, seed=seed,
-            hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, compute_loss=compute_loss,
+            sentences=sentences, input_streams=input_streams, workers=workers, vector_size=size, epochs=iter,
+            callbacks=callbacks, batch_words=batch_words, trim_rule=trim_rule, sg=sg, alpha=alpha, window=window,
+            seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, compute_loss=compute_loss,
             fast_version=FAST_VERSION)
 
     def _do_train_epoch(self, input_stream, thread_private_mem, cur_epoch, total_examples=None, total_words=None):
@@ -795,7 +800,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
             self.compute_loss = kwargs['compute_loss']
         self.running_training_loss = 0
 
-    def train(self, sentences, total_examples=None, total_words=None,
+    def train(self, sentences=None, input_streams=None, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None, word_count=0,
               queue_factor=2, report_delay=1.0, compute_loss=False, callbacks=()):
         """Update the model's neural weights from a sequence of sentences.
@@ -823,11 +828,14 @@ class Word2Vec(BaseWordEmbeddingsModel):
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
             See also the `tutorial on data streaming in Python
             <https://rare-technologies.com/data-streaming-in-python-generators-iterators-iterables/>`_.
-        total_examples : int, optional
-            Count of sentences. Used to decay the `alpha` learning rate.
-        total_words : int, optional
-            Count of raw words in sentences. Used to decay the `alpha` learning rate.
-        epochs : int, optional
+        input_streams : list or tuple of iterable of iterables
+            The tuple or list of `sentences`-like arguments. Use it if you have multiple input streams. It is possible
+            to process streams in parallel, using `workers` parameter.
+        total_examples : int
+            Count of sentences.
+        total_words : int
+            Count of raw words in sentences.
+        epochs : int
             Number of iterations (epochs) over the corpus.
         start_alpha : float, optional
             Initial learning rate. If supplied, replaces the starting `alpha` from the constructor,
@@ -855,16 +863,17 @@ class Word2Vec(BaseWordEmbeddingsModel):
         Examples
         --------
         >>> from gensim.models import Word2Vec
-        >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
+        >>> input_streams = [[["cat", "say", "meow"], ["dog", "say", "woof"]]]
         >>>
         >>> model = Word2Vec(min_count=1)
-        >>> model.build_vocab(sentences)  # prepare the model vocabulary
-        >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)  # train word vectors
+        >>> model.build_vocab(input_streams=input_streams)  # prepare the model vocabulary
+        >>> model.train(input_streams=input_streams,
+        >>>             total_examples=model.corpus_count, epochs=model.iter)  # train word vectors
         (1, 30)
 
         """
         return super(Word2Vec, self).train(
-            sentences, total_examples=total_examples, total_words=total_words,
+            sentences=sentences, input_streams=input_streams, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
             queue_factor=queue_factor, report_delay=report_delay, compute_loss=compute_loss, callbacks=callbacks)
 
@@ -1459,6 +1468,40 @@ class PathLineSentences(object):
                         i += self.max_sentence_length
 
 
+def _scan_vocab_worker(stream, progress_queue, max_vocab_size=None, trim_rule=None):
+    """Do an initial scan of all words appearing in stream.
+
+    Note: This function can not be Word2VecVocab's method because
+    of multiprocessing synchronization specifics in Python.
+    """
+    min_reduce = 1
+    vocab = defaultdict(int)
+    checked_string_types = 0
+    sentence_no = -1
+    total_words = 0
+    for sentence_no, sentence in enumerate(stream):
+        if not checked_string_types:
+            if isinstance(sentence, string_types):
+                log_msg = "Each 'sentences' item should be a list of words (usually unicode strings). " \
+                          "First item here is instead plain %s." % type(sentence)
+                progress_queue.put(log_msg)
+
+            checked_string_types += 1
+
+        for word in sentence:
+            vocab[word] += 1
+
+        if max_vocab_size and len(vocab) > max_vocab_size:
+            utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
+            min_reduce += 1
+
+        total_words += len(sentence)
+
+    progress_queue.put((total_words, sentence_no + 1))
+    progress_queue.put(None)
+    return vocab
+
+
 class Word2VecVocab(utils.SaveLoad):
     """Vocabulary used by :class:`~gensim.models.word2vec.Word2Vec`."""
     def __init__(
@@ -1474,9 +1517,7 @@ class Word2VecVocab(utils.SaveLoad):
         self.max_final_vocab = max_final_vocab
         self.ns_exponent = ns_exponent
 
-    def scan_vocab(self, sentences, progress_per=10000, trim_rule=None):
-        """Do an initial scan of all words appearing in sentences."""
-        logger.info("collecting all words and their counts")
+    def _scan_vocab_singlestream(self, sentences, progress_per, trim_rule):
         sentence_no = -1
         total_words = 0
         min_reduce = 1
@@ -1504,12 +1545,60 @@ class Word2VecVocab(utils.SaveLoad):
                 utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
                 min_reduce += 1
 
-        logger.info(
-            "collected %i word types from a corpus of %i raw words and %i sentences",
-            len(vocab), total_words, sentence_no + 1
-        )
         corpus_count = sentence_no + 1
         self.raw_vocab = vocab
+        return total_words, corpus_count
+
+    def _scan_vocab_multistream(self, input_streams, workers, trim_rule):
+        manager = multiprocessing.Manager()
+        progress_queue = manager.Queue()
+
+        logger.info("Scanning vocab in %i processes.", min(workers, len(input_streams)))
+
+        workers = min(workers, len(input_streams))
+        pool = multiprocessing.Pool(processes=workers)
+
+        worker_max_vocab_size = self.max_vocab_size // workers if self.max_vocab_size else None
+        results = [
+            pool.apply_async(_scan_vocab_worker,
+                             (stream, progress_queue, worker_max_vocab_size, trim_rule)
+                             ) for stream in input_streams
+        ]
+        pool.close()
+
+        unfinished_tasks = len(results)
+        total_words = 0
+        total_sentences = 0
+        while unfinished_tasks > 0:
+            report = progress_queue.get()
+            if report is None:
+                unfinished_tasks -= 1
+                logger.info("scan vocab task finished, processed %i sentences and %i words;"
+                            " awaiting finish of %i more tasks", total_sentences, total_words, unfinished_tasks)
+            elif isinstance(report, string_types):
+                logger.warning(report)
+            else:
+                num_words, num_sentences = report
+                total_words += num_words
+                total_sentences += num_sentences
+
+        self.raw_vocab = reduce(utils.merge_counts, [res.get() for res in results])
+        if self.max_vocab_size:
+            utils.trim_vocab_by_freq(self.raw_vocab, self.max_vocab_size, trim_rule=trim_rule)
+        return total_words, total_sentences
+
+    def scan_vocab(self, sentences=None, input_streams=None, progress_per=10000, workers=None, trim_rule=None):
+        logger.info("collecting all words and their counts")
+        if sentences is not None:
+            total_words, corpus_count = self._scan_vocab_singlestream(sentences, progress_per, trim_rule)
+        else:
+            total_words, corpus_count = self._scan_vocab_multistream(input_streams, workers, trim_rule)
+
+        logger.info(
+            "collected %i word types from a corpus of %i raw words and %i sentences",
+            len(self.raw_vocab), total_words, corpus_count
+        )
+
         return total_words, corpus_count
 
     def sort_vocab(self, wv):
