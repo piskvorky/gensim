@@ -123,6 +123,27 @@ class SparseTermSimilarityMatrix(SaveLoad):
     Future work should switch to building arrays of rows, columns, and non-zero elements and
     directly passing these arrays to the CSC matrix constructor without copying.
 
+    Examples
+    --------
+    >>> from gensim.test.utils import common_texts
+    >>> from gensim.corpora import Dictionary
+    >>> from gensim.models import Word2Vec, WordEmbeddingSimilarityIndex
+    >>> from gensim.similarities import SoftCosineSimilarity, TermSimilarityMatrix
+    >>>
+    >>> model = Word2Vec(common_texts, size=20, min_count=1)  # train word-vectors
+    >>> termsim_index = WordEmbeddingSimilarityIndex(model)
+    >>> dictionary = Dictionary(common_texts)
+    >>> bow_corpus = [dictionary.doc2bow(document) for document in common_texts]
+    >>> similarity_matrix = TermSimilarityMatrix(termsim_index, dictionary)  # construct similarity matrix
+    >>> docsim_index = SoftCosineSimilarity(bow_corpus, similarity_matrix, num_best=10)
+    >>>
+    >>> query = 'graph trees computer'.split()  # make a query
+    >>> sims = docsim_index[dictionary.doc2bow(query)]  # calculate similarity of query to each doc from bow_corpus
+
+    Check out `Tutorial Notebook
+    <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/soft_cosine_tutorial.ipynb>`_
+    for more examples.
+
     Parameters
     ----------
     source : :class:`~gensim.similarities.termsim.TermSimilarityIndex` or :class:`scipy.sparse.spmatrix`
