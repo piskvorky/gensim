@@ -587,6 +587,9 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` for such examples.
+        input_streams : list or tuple of iterable of iterables
+            The tuple or list of `sentences`-like arguments. Use it if you have multiple input streams. It is possible
+            to process streams in parallel, using `workers` parameter.
         workers : int, optional
             Number of working threads, used for multiprocessing.
         vector_size : int, optional
@@ -965,6 +968,9 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` module for such examples.
+        input_streams : list or tuple of iterable of iterables
+            The tuple or list of `sentences`-like arguments. Use it if you have multiple input streams. It is possible
+            to process streams in parallel, using `workers` parameter.
         total_examples : int, optional
             Count of sentences.
         total_words : int, optional
