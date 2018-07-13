@@ -140,7 +140,7 @@ Correlation with human opinion on word similarity
 
 And on word analogies
 
->>> analogy_scores = model.wv.accuracy(datapath('questions-words.txt'))
+>>> analogy_scores = model.wv.evaluate_word_analogies(datapath('questions-words.txt'))
 
 and so on.
 
