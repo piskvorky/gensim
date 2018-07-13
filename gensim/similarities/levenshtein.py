@@ -13,7 +13,7 @@ import logging
 # If python-Levenshtein is available, import it.
 # If python-Levenshtein is unavailable, ImportError will be raised in levsim.
 try:
-    from Levenshtein import distance
+    import Levenshtein
     LEVENSHTEIN_EXT = True
 except ImportError:
     LEVENSHTEIN_EXT = False
@@ -23,7 +23,7 @@ from gensim.similarities.termsim import TermSimilarityIndex
 logger = logging.getLogger(__name__)
 
 
-def levsim(t1, t2, alpha=1.8, beta=5.0):
+def levsim(t1, t2, alpha=1.8, beta=5.0, max_distance=float("inf")):
     """Get the Levenshtein similarity between two terms.
 
     Return the Levenshtein similarity between two terms. The similarity is a
@@ -39,6 +39,9 @@ def levsim(t1, t2, alpha=1.8, beta=5.0):
         The multiplicative factor alpha defined by Charlet and Damnati (2017).
     beta : float
         The exponential factor beta defined by Charlet and Damnati (2017).
+    max_distance : {int,float}
+        The maximum Levenshtein distance between t1, and t2. Larger distances
+        will result in the Levenshtein similarity of zero.
 
     Returns
     -------
@@ -55,7 +58,12 @@ def levsim(t1, t2, alpha=1.8, beta=5.0):
     """
     if not LEVENSHTEIN_EXT:
         raise ImportError("Please install python-Levenshtein Python package to compute the Levenshtein distance.")
-    return alpha * (1 - distance(t1, t2) * 1.0 / max(len(t1), len(t2)))**beta
+    distance = Levenshtein.distance(t1, t2)
+    if distance >= max_distance:  # This allows future optimization, where Levenshtein.distance terminates early
+        similarity = 0.0
+    else:
+        similarity = alpha * (1 - distance * 1.0 / max(len(t1), len(t2)))**beta
+    return similarity
 
 
 class LevenshteinSimilarityIndex(TermSimilarityIndex):
