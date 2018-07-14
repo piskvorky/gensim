@@ -26,7 +26,7 @@ from libc.string cimport memset
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 from libcpp.unordered_map cimport unordered_map
-from libcpp.pair cimport pair
+from libc.stdio cimport printf, fopen, fputs, fclose
 from libcpp cimport bool as bool_t
 
 # scipy <= 0.15
@@ -59,6 +59,7 @@ cdef REAL_t ONEF = <REAL_t>1.0
 
 cdef extern from "fast_line_sentence.h":
     cdef cppclass FastLineSentence:
+        FastLineSentence() except +
         FastLineSentence(string&) except +
         vector[string] ReadSentence() nogil except +
         bool_t IsEof() nogil
@@ -66,11 +67,15 @@ cdef extern from "fast_line_sentence.h":
 
 
 cdef struct VocabItem:
-    int sample_int
+    long long sample_int
     np.uint32_t index
     np.uint8_t *code
     int code_len
     np.uint32_t *point
+
+
+def rebuild_cython_line_sentence(source, max_sentence_length):
+    return CythonLineSentence(source, max_sentence_length=max_sentence_length)
 
 
 @cython.final
@@ -130,6 +135,9 @@ cdef class CythonLineSentence:
             for chunk in chunked_sentence:
                 if not chunk.empty():
                     yield chunk
+
+    def __reduce__(self):
+        return rebuild_cython_line_sentence, (self.source, self.max_sentence_length)
 
     cpdef vector[vector[string]] next_batch(self) nogil except *:
         cdef:
