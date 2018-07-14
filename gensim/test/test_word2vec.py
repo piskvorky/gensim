@@ -967,6 +967,17 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
             for words in sentences:
                 self.assertEqual(words, utils.to_unicode(orig.readline()).split())
 
+    def testCythonLineSentenceWorksWithFilename(self):
+        """Does CythonLineSentence work with a filename argument?"""
+        try:
+            from gensim.models import word2vec_inner
+            with utils.smart_open(datapath('lee_background.cor')) as orig:
+                sentences = word2vec_inner.CythonLineSentence(datapath('lee_background.cor'))
+                for words in sentences:
+                    self.assertEqual(words, utils.to_unicode(orig.readline()).split())
+        except ImportError:
+            pass
+
     def testLineSentenceWorksWithCompressedFile(self):
         """Does LineSentence work with a compressed file object argument?"""
         with utils.smart_open(datapath('head500.noblanks.cor')) as orig:
