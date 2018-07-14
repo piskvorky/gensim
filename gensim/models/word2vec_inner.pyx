@@ -26,7 +26,6 @@ from libc.string cimport memset
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 from libcpp.unordered_map cimport unordered_map
-from libc.stdio cimport printf, fopen, fputs, fclose
 from libcpp cimport bool as bool_t
 
 # scipy <= 0.15
