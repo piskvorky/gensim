@@ -677,9 +677,9 @@ def npmi_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, co
         pab = bigram_count / corpus_word_count
         return log(pab / (pa * pb)) / -log(pab)
     else:
-        # Return the value below minimal npmi, to make sure that phrases
+        # Return -infinity to make sure that phrases
         # will be created only out of bigrams more frequent than min_count
-        return -1.1
+        return float('-inf')
 
 
 def pseudocorpus(source_vocab, sep, common_terms=frozenset()):
