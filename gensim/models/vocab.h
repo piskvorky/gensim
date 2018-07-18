@@ -13,16 +13,16 @@ struct VocabItem {
 };
 
 
-int DictContains(PyObject *dict, PyObject *key) {
-    return PyDict_Contains(dict, key);
+bool DictContains(PyObject *dict, const char *key) {
+    return PyDict_GetItemString(dict, key) != NULL;
 }
 
-VocabItem GetVocabItemFrom(PyObject *dict, PyObject *word, bool hs) {
+VocabItem GetVocabItemFrom(PyObject *dict, const char *word, bool hs) {
     VocabItem result;
     PyObject *item = NULL, *attr = NULL;
 
     result.error = false;
-    item = PyDict_GetItem(dict, word);
+    item = PyDict_GetItemString(dict, word);
 
     // Fill result.sample_int
     if (PyObject_HasAttrString(item, "sample_int") != 1) {
