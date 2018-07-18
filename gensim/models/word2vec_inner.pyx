@@ -19,13 +19,16 @@ from gensim.utils import any2utf8
 from six import iteritems
 
 cimport numpy as np
+np.import_array()
+
+from cpython.ref cimport PyObject
+from cpython.dict cimport PyDict_Contains
 
 from libc.math cimport exp
 from libc.math cimport log
 from libc.string cimport memset
 from libcpp.string cimport string
 from libcpp.vector cimport vector
-from libcpp.unordered_map cimport unordered_map
 from libcpp cimport bool as bool_t
 
 # scipy <= 0.15
@@ -65,12 +68,28 @@ cdef extern from "fast_line_sentence.h":
         void Reset() nogil
 
 
-cdef struct VocabItem:
-    long long sample_int
-    np.uint32_t index
-    np.uint8_t *code
-    int code_len
-    np.uint32_t *point
+cdef extern from "vocab.h":
+    struct VocabItem:
+        long long sample_int
+        np.uint32_t index
+        np.uint8_t *code
+        int code_len
+        np.uint32_t *point
+        bool_t error
+
+    VocabItem GetVocabItemFrom(PyObject *vocab, PyObject *word, bool_t hs) nogil
+    int DictContains(PyObject *dict, PyObject *key) nogil
+
+
+cpdef fillvocab(dct, word):
+    cdef PyObject* dct_ptr = <PyObject*> dct
+    cdef PyObject* word_ptr = <PyObject*> word
+    cdef VocabItem res
+    # with nogil:
+    res = GetVocabItemFrom(dct_ptr, word_ptr, True)
+    if res.error:
+        print "There was an error!"
+    return res.sample_int, res.index, res.code[0], res.point[3]
 
 
 def rebuild_cython_line_sentence(source, max_sentence_length):
@@ -867,12 +886,13 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
 
 cdef void prepare_c_structures_for_batch(vector[vector[string]] &sentences, int sample, int hs, int window, int *total_words,
                                          int *effective_words, int *effective_sentences, unsigned long long *next_random,
-                                         unordered_map[string, VocabItem] &vocab, int *sentence_idx, np.uint32_t *indexes,
+                                         PyObject *vocab, int *sentence_idx, np.uint32_t *indexes,
                                          int *codelens, np.uint8_t **codes, np.uint32_t **points,
                                          np.uint32_t *reduced_windows) nogil:
     cdef VocabItem word
     cdef string token
     cdef vector[string] sent
+    cdef PyObject *token_ptr = NULL
 
     sentence_idx[0] = 0  # indices of the first sentence always start at 0
     for sent in sentences:
@@ -882,10 +902,11 @@ cdef void prepare_c_structures_for_batch(vector[vector[string]] &sentences, int 
 
         for token in sent:
             # leaving `effective_words` unchanged = shortening the sentence = expanding the window
-            if vocab.find(token) == vocab.end():
+            token_ptr = <PyObject *> token
+            if not DictContains(vocab, token_ptr):
                 continue
 
-            word = vocab[token]
+            word = GetVocabItemFrom(vocab, token_ptr, hs)
             if sample and word.sample_int < random_int32(next_random):
                 continue
             indexes[effective_words[0]] = word.index
@@ -918,7 +939,8 @@ def iterate_batches_from_pystream(input_stream):
     data_length = 0
 
     for data in input_stream:
-        data = [any2utf8(x) for x in data]
+        # data = [any2utf8(x) for x in data]
+        data = [x.encode('utf8') for x in data]
         data_length = len(data)
 
         # can we fit this sentence into the existing job batch?
@@ -1045,23 +1067,10 @@ def train_epoch_sg(model, input_stream, _cur_epoch, _expected_examples, _expecte
     work = <REAL_t *>np.PyArray_DATA(_work)
 
     # for preparing batches & training
-    cdef unordered_map[string, VocabItem] vocab
     cdef vector[vector[string]] sentences
     cdef unsigned long long random_number
     cdef VocabItem word
-
-    # prepare C structures so we can go "full C" and release the Python GIL
-    for py_token, vocab_item in iteritems(model.wv.vocab):
-        token = any2utf8(py_token)
-        word.index = vocab_item.index
-        word.sample_int = vocab_item.sample_int
-
-        if hs:
-            word.code = <np.uint8_t *>np.PyArray_DATA(vocab_item.code)
-            word.code_len = <int>len(vocab_item.code)
-            word.point = <np.uint32_t *>np.PyArray_DATA(vocab_item.point)
-
-        vocab[token] = word
+    cdef PyObject *vocab = <PyObject *> model.wv.vocab
 
     if isinstance(input_stream, CythonLineSentence):
         # If using CythonLineSentence, then generate batches without Python GIL
@@ -1230,23 +1239,10 @@ def train_epoch_cbow(model, input_stream, _cur_epoch, _expected_examples, _expec
     neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
 
     # for preparing batches & training
-    cdef unordered_map[string, VocabItem] vocab
     cdef vector[vector[string]] sentences
     cdef unsigned long long random_number
     cdef VocabItem word
-
-    # prepare C structures so we can go "full C" and release the Python GIL
-    for py_token, vocab_item in iteritems(model.wv.vocab):
-        token = any2utf8(py_token)
-        word.index = vocab_item.index
-        word.sample_int = vocab_item.sample_int
-
-        if hs:
-            word.code = <np.uint8_t *>np.PyArray_DATA(vocab_item.code)
-            word.code_len = <int>len(vocab_item.code)
-            word.point = <np.uint32_t *>np.PyArray_DATA(vocab_item.point)
-
-        vocab[token] = word
+    cdef PyObject *vocab = <PyObject *> model.wv.vocab
 
     if isinstance(input_stream, CythonLineSentence):
         # If using CythonLineSentence, then generate batches without Python GIL
