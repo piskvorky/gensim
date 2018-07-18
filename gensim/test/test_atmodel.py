@@ -49,15 +49,19 @@ texts = [['human', 'interface', 'computer'],
  ['trees'],
  ['graph', 'trees'],
  ['graph', 'minors', 'trees'],
- ['graph', 'minors', 'survey']]
+ ['graph', 'minors', 'survey'],
+ ['only_occurs_once_in_corpus_and_alone_in_doc'],
+]
 dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
 
 # Assign some authors randomly to the documents above.
-author2doc = {'john': [0, 1, 2, 3, 4, 5, 6], 'jane': [2, 3, 4, 5, 6, 7, 8], 'jack': [0, 2, 4, 6, 8], 'jill': [1, 3, 5, 7]}
+author2doc = {'john': [0, 1, 2, 3, 4, 5, 6], 'jane': [2, 3, 4, 5, 6, 7, 8], 'jack': [0, 2, 4, 6, 8], 'jill': [1, 3, 5, 7], 'joaquin': [9]}
 doc2author = {0: ['john', 'jack'], 1: ['john', 'jill'], 2: ['john', 'jane', 'jack'], 3: ['john', 'jane', 'jill'],
         4: ['john', 'jane', 'jack'], 5: ['john', 'jane', 'jill'], 6: ['john', 'jane', 'jack'], 7: ['jane', 'jill'],
-        8: ['jane', 'jack']}
+        8: ['jane', 'jack'],
+        9: ['juaqin'],
+}
 
 # More data with new and old authors (to test update method).
 # Although the text is just a subset of the previous, the model
@@ -115,6 +119,15 @@ class TestAuthorTopicModel(unittest.TestCase, basetests.TestBaseTopicModel):
         jill_topics = model.get_author_topics('jill')
         jill_topics = matutils.sparse2full(jill_topics, model.num_topics)
         self.assertTrue(all(jill_topics > 0))
+
+    def testEmptyDocument(self):
+        _dictionary = Dictionary(texts)
+        _dictionary.filter_extremes(no_below=2)
+        _corpus = [_dictionary.doc2bow(text) for text in texts]
+        try:
+            model = self.class_(_corpus, author2doc=author2doc, id2word=_dictionary, num_topics=2)
+        except IndexError:
+            raise IndexError("error occurs in 1.0.0 release tag")
 
     def testAuthor2docMissing(self):
         # Check that the results are the same if author2doc is constructed automatically from doc2author.
