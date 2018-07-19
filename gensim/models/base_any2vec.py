@@ -39,11 +39,10 @@ import threading
 from six.moves import xrange
 from six import itervalues
 from gensim import matutils
-from numpy import float32 as REAL, ones, random, dtype, zeros, array
+from numpy import float32 as REAL, ones, random, dtype, zeros
 from types import GeneratorType
 from gensim.utils import deprecated
 import warnings
-import psutil
 
 try:
     from queue import Queue
@@ -51,54 +50,6 @@ except ImportError:
     from Queue import Queue
 
 logger = logging.getLogger(__name__)
-
-
-PERFORMANCE_METRICS = None
-_NUM_STATS_UPDATES = None
-
-
-def _reset_performance_metrics():
-    global PERFORMANCE_METRICS, _NUM_STATS_UPDATES, _QUEUE_SIZE_SUM
-    PERFORMANCE_METRICS = {
-        'total_time': 0.0,   # Total training time for 1 epoch in seconds.
-        'queue_size': 0.0,   # Average job queue size.
-        'words_sec': 0.0,    # Average speed in words per second.
-        'cpu_load': zeros(psutil.cpu_count(), dtype=REAL),
-        'cpu_load_sum': 0.0,
-        'vocab_time': 0.0
-    }
-
-    _NUM_STATS_UPDATES = 0.0
-
-    # Stub call in order to obtain correct results for subsequent calls.
-    psutil.cpu_percent(interval=None, percpu=True)
-
-
-def _update_queue_and_cpu_stats(qsize):
-    global _NUM_STATS_UPDATES
-    PERFORMANCE_METRICS['queue_size'] += qsize
-    PERFORMANCE_METRICS['cpu_load'] += array(psutil.cpu_percent(interval=None, percpu=True), dtype=REAL)
-
-    _NUM_STATS_UPDATES += 1
-
-
-def _set_vocab_time(elapsed):
-    PERFORMANCE_METRICS['vocab_time'] = elapsed
-
-
-def _finalize_performance_metrics(elapsed, words_sec):
-    PERFORMANCE_METRICS['total_time'] = elapsed
-    PERFORMANCE_METRICS['words_sec'] = words_sec
-
-    if _NUM_STATS_UPDATES:
-        PERFORMANCE_METRICS['queue_size'] = PERFORMANCE_METRICS['queue_size'] / _NUM_STATS_UPDATES
-        PERFORMANCE_METRICS['cpu_load'] = PERFORMANCE_METRICS['cpu_load'] / _NUM_STATS_UPDATES
-        PERFORMANCE_METRICS['cpu_load_sum'] = PERFORMANCE_METRICS['cpu_load'].sum()
-
-    # Explicitly format to string because floats are not serializable by json
-    PERFORMANCE_METRICS['cpu_load'] = ', '.join('{:.2f}'.format(x) for x in PERFORMANCE_METRICS['cpu_load'])
-    PERFORMANCE_METRICS['cpu_load_sum'] = str(PERFORMANCE_METRICS['cpu_load_sum'])
-
 
 
 class BaseAny2VecModel(utils.SaveLoad):
@@ -138,7 +89,6 @@ class BaseAny2VecModel(utils.SaveLoad):
             Number of words to be processed by a single job.
 
         """
-        _reset_performance_metrics()
         self.vector_size = int(vector_size)
         self.workers = int(workers)
         self.epochs = epochs
@@ -736,10 +686,6 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             elif isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
 
-            if input_streams is not None and len(input_streams) == 1:
-                sentences = input_streams[0]
-                input_streams = None
-
             self.build_vocab(sentences=sentences, input_streams=input_streams, trim_rule=trim_rule)
             self.train(
                 sentences=sentences, input_streams=input_streams, total_examples=self.corpus_count, epochs=self.epochs,
@@ -1277,15 +1223,14 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             logger.info(
                 "EPOCH %i - PROGRESS: at %.2f%% examples, %.0f words/s, in_qsize %i, out_qsize %i",
                 cur_epoch + 1, 100.0 * example_count / total_examples, trained_word_count / elapsed,
-                -1 if job_queue is None else utils.qsize(job_queue), utils.qsize(progress_queue)
+                None if job_queue is None else utils.qsize(job_queue), utils.qsize(progress_queue)
             )
-            _update_queue_and_cpu_stats(0)
         else:
             # words-based progress %
             logger.info(
                 "EPOCH %i - PROGRESS: at %.2f%% words, %.0f words/s, in_qsize %i, out_qsize %i",
                 cur_epoch + 1, 100.0 * raw_word_count / total_words, trained_word_count / elapsed,
-                -1 if job_queue is None else utils.qsize(job_queue), utils.qsize(progress_queue)
+                None if job_queue is None else utils.qsize(job_queue), utils.qsize(progress_queue)
             )
 
     def _log_epoch_end(self, cur_epoch, example_count, total_examples, raw_word_count, total_words,
@@ -1319,8 +1264,6 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             "EPOCH - %i : training on %i raw words (%i effective words) took %.1fs, %.0f effective words/s",
             cur_epoch + 1, raw_word_count, trained_word_count, elapsed, trained_word_count / elapsed
         )
-
-        _finalize_performance_metrics(elapsed, trained_word_count / elapsed)
 
         # check that the input corpus hasn't changed during iteration
         if total_examples and total_examples != example_count:
