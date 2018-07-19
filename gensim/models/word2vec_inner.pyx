@@ -77,13 +77,13 @@ cdef extern from "vocab.h":
         np.uint32_t *point
         bool_t error
 
-    VocabItem GetVocabItemFrom(PyObject *vocab, const char *word, bool_t hs) nogil
-    bool_t DictContains(PyObject *dict, const char *key) nogil
+    VocabItem GetVocabItemFrom(PyObject *vocab, PyObject *word, bool_t hs) nogil
+    int DictContains(PyObject *dict, PyObject *key) nogil
 
 
 cpdef fillvocab(dct, word):
     cdef PyObject* dct_ptr = <PyObject*> dct
-    cdef char* word_ptr = word
+    cdef PyObject* word_ptr = <PyObject*> word
     cdef VocabItem res
     # with nogil:
     res = GetVocabItemFrom(dct_ptr, word_ptr, True)
@@ -892,6 +892,7 @@ cdef void prepare_c_structures_for_batch(vector[vector[string]] &sentences, int 
     cdef VocabItem word
     cdef string token
     cdef vector[string] sent
+    cdef PyObject *token_ptr = NULL
 
     sentence_idx[0] = 0  # indices of the first sentence always start at 0
     for sent in sentences:
@@ -901,10 +902,11 @@ cdef void prepare_c_structures_for_batch(vector[vector[string]] &sentences, int 
 
         for token in sent:
             # leaving `effective_words` unchanged = shortening the sentence = expanding the window
-            if not DictContains(vocab, token.c_str()):
+            token_ptr = <PyObject *> token
+            if not DictContains(vocab, token_ptr):
                 continue
 
-            word = GetVocabItemFrom(vocab, token.c_str(), hs)
+            word = GetVocabItemFrom(vocab, token_ptr, hs)
             if sample and word.sample_int < random_int32(next_random):
                 continue
             indexes[effective_words[0]] = word.index
