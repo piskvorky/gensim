@@ -989,7 +989,6 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             total_words=total_words, epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
             queue_factor=queue_factor, report_delay=report_delay, compute_loss=compute_loss, callbacks=callbacks)
 
-
     def get_latest_training_loss(self):
         return 0
 
