@@ -9,7 +9,7 @@ Automated tests for checking transformation algorithms (the models package).
 """
 
 
-from __future__ import with_statement
+from __future__ import with_statement, division
 
 import logging
 import unittest
@@ -121,6 +121,38 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertTrue(model.docvecs.count == 300)
 
         self.model_sanity(model)
+
+        # load really old model
+        model_file = 'd2v-lee-v0.13.0'
+        model = doc2vec.Doc2Vec.load(datapath(model_file))
+        self.model_sanity(model)
+
+        # Test loading doc2vec models from all previous versions
+        old_versions = [
+            '0.12.0', '0.12.1', '0.12.2', '0.12.3', '0.12.4',
+            '0.13.0', '0.13.1', '0.13.2', '0.13.3', '0.13.4',
+            '1.0.0', '1.0.1', '2.0.0', '2.1.0', '2.2.0', '2.3.0',
+            '3.0.0', '3.1.0', '3.2.0', '3.3.0', '3.4.0'
+        ]
+
+        saved_models_dir = datapath('old_d2v_models/d2v_{}.mdl')
+        for old_version in old_versions:
+            model = doc2vec.Doc2Vec.load(saved_models_dir.format(old_version))
+            self.assertTrue(len(model.wv.vocab) == 3)
+            self.assertTrue(model.wv.vectors.shape == (3, 4))
+            self.assertTrue(model.docvecs.vectors_docs.shape == (2, 4))
+            self.assertTrue(model.docvecs.count == 2)
+            # check if inferring vectors for new documents and similarity search works.
+            doc0_inferred = model.infer_vector(list(DocsLeeCorpus())[0].words)
+            sims_to_infer = model.docvecs.most_similar([doc0_inferred], topn=len(model.docvecs))
+            self.assertTrue(sims_to_infer)
+            # check if inferring vectors and similarity search works after saving and loading back the model
+            tmpf = get_tmpfile('gensim_doc2vec.tst')
+            model.save(tmpf)
+            loaded_model = doc2vec.Doc2Vec.load(tmpf)
+            doc0_inferred = loaded_model.infer_vector(list(DocsLeeCorpus())[0].words)
+            sims_to_infer = loaded_model.docvecs.most_similar([doc0_inferred], topn=len(loaded_model.docvecs))
+            self.assertTrue(sims_to_infer)
 
     def test_unicode_in_doctag(self):
         """Test storing document vectors of a model with unicode titles."""
@@ -266,6 +298,37 @@ class TestDoc2VecModel(unittest.TestCase):
         model2 = doc2vec.Doc2Vec(corpus, size=100, min_count=2, iter=20, workers=1)
         self.models_equal(model, model2)
 
+    def test_multistream_training(self):
+        """Test doc2vec multistream training."""
+        input_streams = [list_corpus[:len(list_corpus) // 2], list_corpus[len(list_corpus) // 2:]]
+
+        model = doc2vec.Doc2Vec(inpsize=100, min_count=2, iter=20, workers=1, seed=42)
+        model.build_vocab(input_streams=input_streams, workers=1)
+        self.assertEqual(model.docvecs.doctag_syn0.shape, (300, 100))
+        model.train(input_streams=input_streams, total_examples=model.corpus_count, epochs=model.iter)
+        self.model_sanity(model)
+
+        # build vocab and train in one step; must be the same as above
+        model2 = doc2vec.Doc2Vec(input_streams=input_streams, size=100, min_count=2, iter=20, workers=1, seed=42)
+
+        # check resulted vectors; note that order of words may be different
+        for word in model.wv.index2word:
+            self.assertEqual(model.wv.most_similar(word, topn=5), model2.wv.most_similar(word, topn=5))
+
+    def test_multistream_build_vocab(self):
+        # Expected vocab
+        model = doc2vec.Doc2Vec(min_count=0)
+        model.build_vocab(list_corpus)
+        singlestream_vocab = model.vocabulary.raw_vocab
+
+        # Multistream vocab
+        model2 = doc2vec.Doc2Vec(min_count=0)
+        input_streams = [list_corpus[:len(list_corpus) // 2], list_corpus[len(list_corpus) // 2:]]
+        model2.build_vocab(input_streams=input_streams, workers=2)
+        multistream_vocab = model2.vocabulary.raw_vocab
+
+        self.assertEqual(singlestream_vocab, multistream_vocab)
+
     def test_dbow_hs(self):
         """Test DBOW doc2vec training."""
         model = doc2vec.Doc2Vec(list_corpus, dm=0, hs=1, negative=0, min_count=2, iter=20)
@@ -381,7 +444,6 @@ class TestDoc2VecModel(unittest.TestCase):
         # check docvecs
         self.assertEqual(len(model.docvecs.doctags), len(model2.docvecs.doctags))
         self.assertEqual(len(model.docvecs.offset2doctag), len(model2.docvecs.offset2doctag))
-        self.assertTrue(np.allclose(model.docvecs.doctag_syn0, model2.docvecs.doctag_syn0))
 
     def test_delete_temporary_training_data(self):
         """Test doc2vec model after delete_temporary_training_data"""
@@ -481,8 +543,16 @@ class ConcatenatedDoc2Vec(object):
     def __getitem__(self, token):
         return np.concatenate([model[token] for model in self.models])
 
-    def infer_vector(self, document, alpha=0.1, min_alpha=0.0001, steps=5):
-        return np.concatenate([model.infer_vector(document, alpha, min_alpha, steps) for model in self.models])
+    def __str__(self):
+        """Abbreviated name, built from submodels' names"""
+        return "+".join([str(model) for model in self.models])
+
+    @property
+    def epochs(self):
+        return self.models[0].epochs
+
+    def infer_vector(self, document, alpha=None, min_alpha=None, epochs=None, steps=None):
+        return np.concatenate([model.infer_vector(document, alpha, min_alpha, epochs, steps) for model in self.models])
 
     def train(self, *ignore_args, **ignore_kwargs):
         pass  # train subcomponents individually
