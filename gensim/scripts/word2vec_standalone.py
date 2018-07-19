@@ -7,7 +7,7 @@
 """
 USAGE: %(program)s -train CORPUS -output VECTORS -size SIZE -window WINDOW
 -cbow CBOW -sample SAMPLE -hs HS -negative NEGATIVE -threads THREADS -iter ITER
--min_count MIN-COUNT -alpha ALPHA -binary BINARY -accuracy FILE
+-min_count MIN-COUNT -alpha ALPHA -binary BINARY -accuracy FILE [-loss]
 
 Trains a neural embedding model on text file CORPUS.
 Parameters essentially reproduce those used by the original C tool
@@ -45,11 +45,12 @@ Parameters for training:
                 Compute accuracy of the resulting model analogical inference power on questions file <file>
                 See an example of questions file
                 at https://code.google.com/p/word2vec/source/browse/trunk/questions-words.txt
-        -loss
-            If true, the loss will be computed and printed during training
+        -loss <>
+                If present, the loss will be computed and printed during training
 
 Example: python -m gensim.scripts.word2vec_standalone -train data.txt \
          -output vec.txt -size 200 -sample 1e-4 -binary 0 -iter 3
+
 """
 
 
