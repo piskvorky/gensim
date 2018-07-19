@@ -1201,7 +1201,8 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             # examples-based progress %
             if self.compute_loss:
                 logger.info(
-                    "EPOCH %i - PROGRESS: at %.2f%% examples, %.0f words/s, in_qsize %i, out_qsize %i, current_loss %.3f",
+                    ("EPOCH %i - PROGRESS: at %.2f%% examples, %.0f words/s, "
+                     "in_qsize %i, out_qsize %i, current_loss %.3f"),
                     cur_epoch + 1, 100.0 * example_count / total_examples, trained_word_count / elapsed,
                     utils.qsize(job_queue), utils.qsize(progress_queue), loss
                 )
@@ -1221,7 +1222,8 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
                 )
             else:
                 logger.info(
-                    "EPOCH %i - PROGRESS: at %.2f%% words, %.0f words/s, in_qsize %i, out_qsize %i, current_loss %.3f",
+                    ("EPOCH %i - PROGRESS: at %.2f%% words, %.0f words/s, "
+                     "in_qsize %i, out_qsize %i, current_loss %.3f"),
                     cur_epoch + 1, 100.0 * raw_word_count / total_words, trained_word_count / elapsed,
                     utils.qsize(job_queue), utils.qsize(progress_queue), loss
                 )
