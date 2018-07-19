@@ -298,8 +298,8 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
     cdef int negative = model.negative
     cdef int sample = (model.vocabulary.sample != 0)
 
-    cdef int _compute_loss = (1 if compute_loss == True else 0)
-    cdef REAL_t _running_training_loss = model.running_training_loss
+    cdef int _compute_loss = (1 if compute_loss is True else 0)
+    cdef REAL_t _running_training_loss = 0
 
     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
     cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_lockf))
@@ -314,7 +314,7 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
     cdef int window = model.window
 
     cdef int i, j, k
-    cdef int effective_words = 0, effective_sentences = 0
+    cdef int effective_words = 0, effective_sentences = 0, effective_samples = 0
     cdef int sent_idx, idx_start, idx_end
 
     # For hierarchical softmax
@@ -388,16 +388,17 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
                 k = i + window + 1 - reduced_windows[i]
                 if k > idx_end:
                     k = idx_end
+                _running_training_loss_sample = 0
                 for j in range(j, k):
                     if j == i:
                         continue
+                    effective_samples += 1
                     if hs:
                         fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work, word_locks, _compute_loss, &_running_training_loss)
                     if negative:
                         next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random, word_locks, _compute_loss, &_running_training_loss)
-
-    model.running_training_loss = _running_training_loss
-    return effective_words
+    model.running_training_loss += _running_training_loss
+    return effective_words, effective_samples
 
 
 def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
@@ -406,8 +407,8 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
     cdef int sample = (model.vocabulary.sample != 0)
     cdef int cbow_mean = model.cbow_mean
 
-    cdef int _compute_loss = (1 if compute_loss == True else 0)
-    cdef REAL_t _running_training_loss = model.running_training_loss
+    cdef int _compute_loss = (1 if compute_loss is True else 0)
+    cdef REAL_t _running_training_loss = 0
 
     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
     cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_lockf))
@@ -502,8 +503,8 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
                 if negative:
                     next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random, word_locks, _compute_loss, &_running_training_loss)
 
-    model.running_training_loss = _running_training_loss
-    return effective_words
+    model.running_training_loss += _running_training_loss
+    return effective_words, effective_words
 
 
 # Score is only implemented for hierarchical softmax

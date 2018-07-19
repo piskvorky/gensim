@@ -45,6 +45,8 @@ Parameters for training:
                 Compute accuracy of the resulting model analogical inference power on questions file <file>
                 See an example of questions file
                 at https://code.google.com/p/word2vec/source/browse/trunk/questions-words.txt
+        -loss
+            If true, the loss will be computed and printed during training
 
 Example: python -m gensim.scripts.word2vec_standalone -train data.txt \
          -output vec.txt -size 200 -sample 1e-4 -binary 0 -iter 3
@@ -105,6 +107,8 @@ if __name__ == "__main__":
         type=int, default=0, choices=[0, 1]
     )
     parser.add_argument("-accuracy", help="Use questions from file ACCURACY to evaluate the model")
+    parser.add_argument("-loss", help="Should the loss will be computed and printed during training",
+                        action="store_true")
 
     args = parser.parse_args()
 
@@ -122,7 +126,8 @@ if __name__ == "__main__":
     model = Word2Vec(
         corpus, size=args.size, min_count=args.min_count, workers=args.threads,
         window=args.window, sample=args.sample, alpha=args.alpha, sg=skipgram,
-        hs=args.hs, negative=args.negative, cbow_mean=1, iter=args.iter
+        hs=args.hs, negative=args.negative, cbow_mean=1, iter=args.iter,
+        compute_loss=args.loss
     )
 
     if args.output:
