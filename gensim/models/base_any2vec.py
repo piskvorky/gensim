@@ -177,8 +177,16 @@ class BaseAny2VecModel(utils.SaveLoad):
             for callback in self.callbacks:
                 callback.on_batch_begin(self)
 
-            tally, raw_tally, effective_samples = self._do_train_job(
+            stats_tuple = self._do_train_job(
                 data_iterable, job_parameters, thread_private_mem)
+            if len(stats_tuple) == 3:
+                tally, raw_tally, effective_samples = stats_tuple
+            else:
+                # Model doesn't implement the samples tallying. We assume
+                # that the number of samples is the effective words tally. This
+                # gives coherent outputs with previous implementaitons
+                tally, raw_tally = stats_tuple
+                effective_samples = tally
 
             for callback in self.callbacks:
                 callback.on_batch_end(self)
@@ -980,6 +988,10 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             data_iterable=sentences, data_iterables=input_streams, total_examples=total_examples,
             total_words=total_words, epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
             queue_factor=queue_factor, report_delay=report_delay, compute_loss=compute_loss, callbacks=callbacks)
+
+
+    def get_latest_training_loss(self):
+        return 0
 
     def _get_job_params(self, cur_epoch):
         """Get the learning rate used in the current epoch.
