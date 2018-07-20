@@ -12,29 +12,26 @@ Automated tests for checking transformation algorithms (the models package).
 import logging
 import unittest
 import os
-import tempfile
 
 import numpy
 
 from gensim.models.wrappers import wordrank
+from gensim.test.utils import datapath, get_tmpfile
 
-module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
-
-def testfile():
-    # temporary model will be stored to this file
-    return os.path.join(tempfile.gettempdir(), 'gensim_wordrank.test')
 
 class TestWordrank(unittest.TestCase):
     def setUp(self):
         wr_home = os.environ.get('WR_HOME', None)
         self.wr_path = wr_home if wr_home else None
         self.corpus_file = datapath('lee.cor')
-        self.out_path = 'testmodel'
+        self.out_name = 'testmodel'
         self.wr_file = datapath('test_glove.txt')
         if not self.wr_path:
             return
-        self.test_model = wordrank.Wordrank.train(self.wr_path, self.corpus_file, self.out_path, iter=6, dump_period=5,period=5)
+        self.test_model = wordrank.Wordrank.train(
+            self.wr_path, self.corpus_file, self.out_name, iter=6,
+            dump_period=5, period=5, np=4, cleanup_files=True
+        )
 
     def testLoadWordrankFormat(self):
         """Test model successfully loaded from Wordrank format file"""
@@ -42,7 +39,7 @@ class TestWordrank(unittest.TestCase):
         vocab_size, dim = 76, 50
         self.assertEqual(model.syn0.shape, (vocab_size, dim))
         self.assertEqual(len(model.vocab), vocab_size)
-        os.remove(self.wr_file+'.w2vformat')
+        os.remove(self.wr_file + '.w2vformat')
 
     def testEnsemble(self):
         """Test ensemble of two embeddings"""
@@ -50,14 +47,15 @@ class TestWordrank(unittest.TestCase):
             return
         new_emb = self.test_model.ensemble_embedding(self.wr_file, self.wr_file)
         self.assertEqual(new_emb.shape, (76, 50))
-        os.remove(self.wr_file+'.w2vformat')
+        os.remove(self.wr_file + '.w2vformat')
 
     def testPersistence(self):
         """Test storing/loading the entire model"""
         if not self.wr_path:
             return
-        self.test_model.save(testfile())
-        loaded = wordrank.Wordrank.load(testfile())
+        tmpf = get_tmpfile('gensim_wordrank.test')
+        self.test_model.save(tmpf)
+        loaded = wordrank.Wordrank.load(tmpf)
         self.models_equal(self.test_model, loaded)
 
     def testSimilarity(self):
@@ -77,8 +75,7 @@ class TestWordrank(unittest.TestCase):
         self.assertEqual(set(model.vocab.keys()), set(model2.vocab.keys()))
         self.assertTrue(numpy.allclose(model.syn0, model2.syn0))
 
+
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
-
-    

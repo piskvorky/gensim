@@ -1,3 +1,5 @@
+:orphan:
+
 .. _changes_080:
 
 Change Set for 0.8.0

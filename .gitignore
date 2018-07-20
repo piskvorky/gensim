@@ -40,6 +40,8 @@ Thumbs.db
 
 # Other #
 #########
+.tox/
+.cache/
 .project
 .pydevproject
 .ropeproject
@@ -71,3 +73,4 @@ data
 *.html
 *.inv
 *.js
+docs/_images/

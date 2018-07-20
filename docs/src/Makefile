@@ -1,8 +1,11 @@
 # Makefile for Sphinx documentation
 #
+# In order to compile this documentation you need to have sphinx
+# and sphinxcontrib-napoleon. You can install them using:
+# pip3 install sphinx sphinxcontrib-napoleon
 
 # You can set these variables from the command line.
-SPHINXOPTS    =
+SPHINXOPTS    = -W
 SPHINXBUILD   = sphinx-build
 PAPER         =
 BUILDDIR      = _build
@@ -37,7 +40,7 @@ html:
 	@echo
 	@echo "Build finished. The HTML pages are in ../"
 
-upload: 
+upload:
 	scp -r _build/html/* rr:public_html/gensim/
 
 dirhtml:

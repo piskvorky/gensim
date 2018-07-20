@@ -16,22 +16,13 @@ from __future__ import division  # always use floats
 from __future__ import with_statement
 
 import logging
-import tempfile
-import unittest
-import bz2
 import os
+import unittest
 
 from gensim import utils, corpora, models, similarities
-
-# sample data files are located in the same folder
-module_path = os.path.dirname(__file__)
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
+from gensim.test.utils import datapath, get_tmpfile
 
 logger = logging.getLogger('test_miislita')
-
-
-def get_tmpfile(suffix):
-    return os.path.join(tempfile.gettempdir(), suffix)
 
 
 class CorpusMiislita(corpora.TextCorpus):
@@ -45,16 +36,15 @@ class CorpusMiislita(corpora.TextCorpus):
         .cor format: one document per line, words separated by whitespace.
 
         """
-        with self.getstream() as stream:
-            for doc in stream:
-                yield [word for word in utils.to_unicode(doc).lower().split()
-                        if word not in CorpusMiislita.stoplist]
+        for doc in self.getstream():
+            yield [word for word in utils.to_unicode(doc).lower().split()
+                    if word not in CorpusMiislita.stoplist]
 
     def __len__(self):
         """Define this so we can use `len(corpus)`"""
         if 'length' not in self.__dict__:
             logger.info("caching corpus size (calculating number of documents)")
-            self.length = sum(1 for doc in self.get_texts())
+            self.length = sum(1 for _ in self.get_texts())
         return self.length
 
 
@@ -73,7 +63,6 @@ class TestMiislita(unittest.TestCase):
         miislita2 = corpora.MmCorpus(ftmp)
         self.assertEqual(list(miislita), list(miislita2))
 
-
     def test_save_load_ability(self):
         """
         Make sure we can save and load (un/pickle) TextCorpus objects (as long
@@ -91,7 +80,6 @@ class TestMiislita(unittest.TestCase):
 
         self.assertEqual(len(miislita), len(miislita2))
         self.assertEqual(miislita.dictionary.token2id, miislita2.dictionary.token2id)
-
 
     def test_miislita_high_level(self):
         # construct corpus from file

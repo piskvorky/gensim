@@ -4,137 +4,334 @@
 # Copyright (C) 2013 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
+r"""This module contains functions to compute confirmation on a pair of words or word subsets.
+
+Notes
+-----
+The advantage of indirect confirmation measure is that it computes similarity of words in :math:`W'` and
+:math:`W^{*}` with respect to direct confirmations to all words. Eg. Suppose `x` and `z` are both competing
+brands of cars, which semantically support each other. However, both brands are seldom mentioned
+together in documents in the reference corpus. But their confirmations to other words like “road”
+or “speed” do strongly correlate. This would be reflected by an indirect confirmation measure.
+Thus, indirect confirmation measures may capture semantic support that direct measures would miss.
+
+The formula used to compute indirect confirmation measure is
+
+.. math::
+
+    \widetilde{m}_{sim(m, \gamma)}(W', W^{*}) = s_{sim}(\vec{v}^{\,}_{m,\gamma}(W'), \vec{v}^{\,}_{m,\gamma}(W^{*}))
+
+
+where :math:`s_{sim}` can be cosine, dice or jaccard similarity and
+
+.. math::
+
+    \vec{v}^{\,}_{m,\gamma}(W') = \Bigg \{{\sum_{w_{i} \in W'}^{ } m(w_{i}, w_{j})^{\gamma}}\Bigg \}_{j = 1,...,|W|}
+
 """
-This module contains functions to compute confirmation on a pair of words or word subsets. The advantage of indirect
-confirmation measure is that it computes similarity of words in W' and W* with respect to direct confirmations to all words.
-Eg. Suppose x and z are both competing brands of cars, which semantically support each other. However, both brands are
-seldom mentioned together in documents in the reference corpus. But their confirmations to other words like “road”
-or “speed” do strongly correlate. This would be reflected by an indirect confirmation measure. Thus, indirect confirmation
-measures may capture semantic support that direct measures would miss.
 
-The formula used to compute indirect confirmation measure is:
-
-m_{sim}_{(m, \gamma)}(W', W*) = s_{sim}(\vec{V}^{\,}_{m,\gamma}(W'), \vec{V}^{\,}_{m,\gamma}(W*))
-
-where s_sim can be cosine, dice or jaccard similarity and
-
-\vec{V}^{\,}_{m,\gamma}(W') = \Bigg \{{\sum_{w_{i} \in W'}^{ } m(w_{i}, w_{j})^{\gamma}}\Bigg \}_{j = 1,...,|W|}
-
-Here 'm' is the direct confirmation measure used.
-"""
-
+import itertools
 import logging
-import numpy as np
 
-from gensim.topic_coherence import direct_confirmation_measure
-from gensim.matutils import cossim
+import numpy as np
+import scipy.sparse as sps
+
+from gensim.topic_coherence.direct_confirmation_measure import aggregate_segment_sims, log_ratio_measure
 
 logger = logging.getLogger(__name__)
 
 
-def _present(w_prime_star, w, w_backtrack):
-    """
-    Internal helper function to return index of (w_prime_star, w) in w_backtrack.
-    Return -1 if not present.
-    """
-    index = -1
-    flag = 0
-    for arr in w_backtrack:
-        index += 1
-        if np.all(w_prime_star == arr[0]) and np.all(w == arr[1]):
-            flag += 1
-            break
-    if not flag:
-        return -1
-    return index
+def word2vec_similarity(segmented_topics, accumulator, with_std=False, with_support=False):
+    """For each topic segmentation, compute average cosine similarity using a
+    :class:`~gensim.topic_coherence.text_analysis.WordVectorsAccumulator`.
 
-def _make_seg(w_prime, w, per_topic_postings, measure, gamma, backtrack, num_docs):
-    """
-    Internal helper function to return context vectors for segmentations.
-    """
-    context_vectors = {}
-    if isinstance(w_prime, np.ndarray):
-        for w_j in w:
-            for w_i in w_prime:
-                if (w_i, w_j) not in backtrack:
-                    backtrack[(w_i, w_j)] = measure[0]([[(w_i, w_j)]], per_topic_postings, num_docs, measure[1])[0]
-                if w_j not in context_vectors:
-                    context_vectors[w_j] = backtrack[(w_i, w_j)] ** gamma
-                else:
-                    context_vectors[w_j] += backtrack[(w_i, w_j)] ** gamma
-    else:
-        for w_j in w:
-            if (w_prime, w_j) not in backtrack:
-                backtrack[(w_prime, w_j)] = measure[0]([[(w_prime, w_j)]], per_topic_postings, num_docs, measure[1])[0]
-            context_vectors[w_j] = backtrack[(w_prime, w_j)] ** gamma
-    return (context_vectors, backtrack)
+    Parameters
+    ----------
+    segmented_topics : list of lists of (int, `numpy.ndarray`)
+        Output from the :func:`~gensim.topic_coherence.segmentation.s_one_set`.
+    accumulator : :class:`~gensim.topic_coherence.text_analysis.WordVectorsAccumulator` or
+                  :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
+        Word occurrence accumulator.
+    with_std : bool, optional
+        True to also include standard deviation across topic segment sets
+        in addition to the mean coherence for each topic.
+    with_support : bool, optional
+        True to also include support across topic segments. The support is defined as
+        the number of pairwise similarity comparisons were used to compute the overall topic coherence.
 
-def cosine_similarity(topics, segmented_topics, per_topic_postings, measure, gamma, num_docs):
-    """
-    This function calculates the indirect cosine measure. Given context vectors
-    _   _         _   _
-    u = V(W') and w = V(W*) for the word sets of a pair S_i = (W', W*) indirect
-                                                                _     _
-    cosine measure is computed as the cosine similarity between u and w. The formula used is:
-
-    m_{sim}_{(m, \gamma)}(W', W*) = s_{sim}(\vec{V}^{\,}_{m,\gamma}(W'), \vec{V}^{\,}_{m,\gamma}(W*))
-
-    where each vector \vec{V}^{\,}_{m,\gamma}(W') = \Bigg \{{\sum_{w_{i} \in W'}^{ } m(w_{i}, w_{j})^{\gamma}}\Bigg \}_{j = 1,...,|W|}
-
-    Args:
-    ----
-    topics : Topics obtained from the trained topic model.
-    segmented_topics : segmented_topics : Output from the segmentation module of the segmented topics. Is a list of list of tuples.
-    per_topic_postings : Output from the probability_estimation module. Is a dictionary of the posting list of all topics.
-    measure : String. Direct confirmation measure to be used. Supported values are "nlr" (normalized log ratio).
-    gamma : Gamma value for computing W', W* vectors.
-    num_docs : Total number of documents in corresponding corpus.
-
-    Returns:
+    Returns
     -------
-    s_cos_sim : array of cosine similarity of the context vectors for each segmentation
-    """
-    if measure == 'nlr':
-        # make normalized log ratio measure tuple
-        measure = (direct_confirmation_measure.log_ratio_measure, True)
-    else:
-        raise ValueError("The direct confirmation measure you entered is not currently supported.")
-    backtrack = {}  # Backtracking dictionary for storing measure values of topic id tuples eg. (1, 2).
-    """
-    For backtracking context vectors, we will create a list called w_backtrack to store (w_prime, w) or
-    (w_star, w) tuples and a corresponding list context_vector_backtrack which will create a
-    mapping of (w_prime or w_star, w) ---> context_vector.
-    """
-    w_backtrack = []
-    context_vector_backtrack = []
-    s_cos_sim = []
-    for top_words, s_i in zip(topics, segmented_topics):
-        for w_prime, w_star in s_i:
-            # Step 1. Check if (w_prime, top_words) tuple in w_backtrack.
-            # Step 2. If yes, return corresponding context vector
-            w_prime_index = _present(w_prime, top_words, w_backtrack)
-            if w_backtrack and w_prime_index != -1:
-                w_prime_context_vectors = context_vector_backtrack[w_prime_index]
-            else:
-                w_prime_context_vectors, backtrack_i = _make_seg(w_prime, top_words, per_topic_postings, measure, gamma, backtrack, num_docs)
-                backtrack.update(backtrack_i)
-                # Update backtracking lists
-                w_backtrack.append((w_prime, top_words))
-                context_vector_backtrack.append(w_prime_context_vectors)
+    list of (float[, float[, int]])
+        Сosine word2vec similarities per topic (with std/support if `with_std`, `with_support`).
 
-            # Step 1. Check if (w_star, top_words) tuple in w_backtrack.
-            # Step 2. If yes, check if corresponding w is the same
-            w_star_index = _present(w_star, top_words, w_backtrack)
-            if w_backtrack and w_star_index != -1:
-                w_star_context_vectors = context_vector_backtrack[w_star_index]
-            else:
-                w_star_context_vectors, backtrack_i = _make_seg(w_star, top_words, per_topic_postings, measure, gamma, backtrack, num_docs)
-                backtrack.update(backtrack_i)
-                # Update all backtracking lists
-                w_backtrack.append((w_star, top_words))
-                context_vector_backtrack.append(w_star_context_vectors)
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from gensim.corpora.dictionary import Dictionary
+    >>> from gensim.topic_coherence import indirect_confirmation_measure
+    >>> from gensim.topic_coherence import text_analysis
+    >>>
+    >>> # create segmentation
+    >>> segmentation = [[(1, np.array([1, 2])), (2, np.array([1, 2]))]]
+    >>>
+    >>> # create accumulator
+    >>> dictionary = Dictionary()
+    >>> dictionary.id2token = {1: 'fake', 2: 'tokens'}
+    >>> accumulator = text_analysis.WordVectorsAccumulator({1, 2}, dictionary)
+    >>> _ = accumulator.accumulate([['fake', 'tokens'],['tokens', 'fake']], 5)
+    >>>
+    >>> # should be (0.726752426218 0.00695475919227)
+    >>> mean, std = indirect_confirmation_measure.word2vec_similarity(segmentation, accumulator, with_std=True)[0]
 
-            s_cos_sim_i = cossim(w_prime_context_vectors.items(), w_star_context_vectors.items())
-            s_cos_sim.append(s_cos_sim_i)
+    """
+    topic_coherences = []
+    total_oov = 0
 
-    return s_cos_sim
+    for topic_index, topic_segments in enumerate(segmented_topics):
+        segment_sims = []
+        num_oov = 0
+        for w_prime, w_star in topic_segments:
+            if not hasattr(w_prime, '__iter__'):
+                w_prime = [w_prime]
+            if not hasattr(w_star, '__iter__'):
+                w_star = [w_star]
+
+            try:
+                segment_sims.append(accumulator.ids_similarity(w_prime, w_star))
+            except ZeroDivisionError:
+                num_oov += 1
+
+        if num_oov > 0:
+            total_oov += 1
+            logger.warning(
+                "%d terms for topic %d are not in word2vec model vocabulary",
+                num_oov, topic_index)
+        topic_coherences.append(aggregate_segment_sims(segment_sims, with_std, with_support))
+
+    if total_oov > 0:
+        logger.warning("%d terms for are not in word2vec model vocabulary", total_oov)
+    return topic_coherences
+
+
+def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr',
+                      gamma=1, with_std=False, with_support=False):
+    """Calculate the indirect cosine measure.
+
+    Parameters
+    ----------
+    segmented_topics: list of lists of (int, `numpy.ndarray`)
+        Output from the segmentation module of the segmented topics.
+    accumulator: :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
+        Output from the probability_estimation module. Is an topics: Topics obtained from the trained topic model.
+    measure : str, optional
+        Direct confirmation measure to be used. Supported values are "nlr" (normalized log ratio).
+    gamma: float, optional
+        Gamma value for computing :math:`W'` and :math:`W^{*}` vectors.
+    with_std : bool
+        True to also include standard deviation across topic segment sets in addition to the mean coherence
+        for each topic; default is False.
+    with_support : bool
+        True to also include support across topic segments. The support is defined as the number of pairwise similarity
+        comparisons were used to compute the overall topic coherence.
+
+    Returns
+    -------
+    list
+        List of indirect cosine similarity measure for each topic.
+
+    Examples
+    --------
+    >>> from gensim.corpora.dictionary import Dictionary
+    >>> from gensim.topic_coherence import indirect_confirmation_measure, text_analysis
+    >>> import numpy as np
+    >>>
+    >>> # create accumulator
+    >>> dictionary = Dictionary()
+    >>> dictionary.id2token = {1: 'fake', 2: 'tokens'}
+    >>> accumulator = text_analysis.InvertedIndexAccumulator({1, 2}, dictionary)
+    >>> accumulator._inverted_index = {0: {2, 3, 4}, 1: {3, 5}}
+    >>> accumulator._num_docs = 5
+    >>>
+    >>> # create topics
+    >>> topics = [np.array([1, 2])]
+    >>>
+    >>> # create segmentation
+    >>> segmentation = [[(1, np.array([1, 2])), (2, np.array([1, 2]))]]
+    >>> obtained = indirect_confirmation_measure.cosine_similarity(segmentation, accumulator, topics, 'nlr', 1)
+    >>> print obtained[0]
+    0.623018926945
+
+    """
+    context_vectors = ContextVectorComputer(measure, topics, accumulator, gamma)
+
+    topic_coherences = []
+    for topic_words, topic_segments in zip(topics, segmented_topics):
+        topic_words = tuple(topic_words)  # because tuples are hashable
+        segment_sims = np.zeros(len(topic_segments))
+        for i, (w_prime, w_star) in enumerate(topic_segments):
+            w_prime_cv = context_vectors[w_prime, topic_words]
+            w_star_cv = context_vectors[w_star, topic_words]
+            segment_sims[i] = _cossim(w_prime_cv, w_star_cv)
+
+        topic_coherences.append(aggregate_segment_sims(segment_sims, with_std, with_support))
+
+    return topic_coherences
+
+
+class ContextVectorComputer(object):
+    """Lazily compute context vectors for topic segments.
+
+    Parameters
+    ----------
+    measure: str
+        Confirmation measure.
+    topics: list of numpy.array
+        Topics.
+    accumulator : :class:`~gensim.topic_coherence.text_analysis.WordVectorsAccumulator` or
+                  :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
+        Word occurrence accumulator from probability_estimation.
+    gamma: float
+        Value for computing vectors.
+
+    Attributes
+    ----------
+    sim_cache: dict
+        Cache similarities between tokens (pairs of word ids), e.g. (1, 2).
+    context_vector_cache: dict
+        Mapping from (segment, topic_words) --> context_vector.
+
+    Example
+    -------
+    >>> from gensim.corpora.dictionary import Dictionary
+    >>> from gensim.topic_coherence import indirect_confirmation_measure, text_analysis
+    >>> import numpy as np
+    >>>
+    >>> # create measure, topics
+    >>> measure = 'nlr'
+    >>> topics =  [np.array([1, 2])]
+    >>>
+    >>> # create accumulator
+    >>> dictionary = Dictionary()
+    >>> dictionary.id2token = {1: 'fake', 2: 'tokens'}
+    >>> accumulator = text_analysis.WordVectorsAccumulator({1, 2}, dictionary)
+    >>> _ = accumulator.accumulate([['fake', 'tokens'],['tokens', 'fake']], 5)
+    >>> cont_vect_comp = indirect_confirmation_measure.ContextVectorComputer(measure, topics, accumulator, 1)
+    >>> cont_vect_comp.mapping
+    {1: 0, 2: 1}
+    >>> cont_vect_comp.vocab_size
+    2
+
+    """
+
+    def __init__(self, measure, topics, accumulator, gamma):
+
+        if measure == 'nlr':
+            self.similarity = _pair_npmi
+        else:
+            raise ValueError(
+                "The direct confirmation measure you entered is not currently supported.")
+
+        self.mapping = _map_to_contiguous(topics)
+        self.vocab_size = len(self.mapping)
+        self.accumulator = accumulator
+        self.gamma = gamma
+        self.sim_cache = {}
+        self.context_vector_cache = {}
+
+    def __getitem__(self, idx):
+        return self.compute_context_vector(*idx)
+
+    def compute_context_vector(self, segment_word_ids, topic_word_ids):
+        """Check if (segment_word_ids, topic_word_ids) context vector has been cached.
+
+        Parameters
+        ----------
+        segment_word_ids: list
+            Ids of words in segment.
+        topic_word_ids: list
+            Ids of words in topic.
+        Returns
+        -------
+        csr_matrix :class:`~scipy.sparse.csr`
+            If context vector has been cached, then return corresponding context vector,
+            else compute, cache, and return.
+
+        """
+        key = _key_for_segment(segment_word_ids, topic_word_ids)
+        context_vector = self.context_vector_cache.get(key, None)
+        if context_vector is None:
+            context_vector = self._make_seg(segment_word_ids, topic_word_ids)
+            self.context_vector_cache[key] = context_vector
+        return context_vector
+
+    def _make_seg(self, segment_word_ids, topic_word_ids):
+        """Return context vectors for segmentation (Internal helper function).
+
+        Parameters
+        ----------
+        segment_word_ids : iterable or int
+            Ids of words in segment.
+        topic_word_ids : list
+            Ids of words in topic.
+        Returns
+        -------
+        csr_matrix :class:`~scipy.sparse.csr`
+            Matrix in Compressed Sparse Row format
+
+        """
+        context_vector = sps.lil_matrix((self.vocab_size, 1))
+        if not hasattr(segment_word_ids, '__iter__'):
+            segment_word_ids = (segment_word_ids,)
+
+        for w_j in topic_word_ids:
+            idx = (self.mapping[w_j], 0)
+            for pair in (tuple(sorted((w_i, w_j))) for w_i in segment_word_ids):
+                if pair not in self.sim_cache:
+                    self.sim_cache[pair] = self.similarity(pair, self.accumulator)
+
+                context_vector[idx] += self.sim_cache[pair] ** self.gamma
+
+        return context_vector.tocsr()
+
+
+def _pair_npmi(pair, accumulator):
+    """Compute normalized pairwise mutual information (**NPMI**) between a pair of words.
+
+    Parameters
+    ----------
+    pair : (int, int)
+        The pair of words (word_id1, word_id2).
+    accumulator : :class:`~gensim.topic_coherence.text_analysis.InvertedIndexAccumulator`
+        Word occurrence accumulator from probability_estimation.
+
+    Return
+    ------
+    float
+        NPMI between a pair of words.
+
+    """
+    return log_ratio_measure([[pair]], accumulator, True)[0]
+
+
+def _cossim(cv1, cv2):
+    return cv1.T.dot(cv2)[0, 0] / (_magnitude(cv1) * _magnitude(cv2))
+
+
+def _magnitude(sparse_vec):
+    return np.sqrt(np.sum(sparse_vec.data ** 2))
+
+
+def _map_to_contiguous(ids_iterable):
+    uniq_ids = {}
+    n = 0
+    for id_ in itertools.chain.from_iterable(ids_iterable):
+        if id_ not in uniq_ids:
+            uniq_ids[id_] = n
+            n += 1
+    return uniq_ids
+
+
+def _key_for_segment(segment, topic_words):
+    """A segment may have a single number of an iterable of them."""
+    segment_key = tuple(segment) if hasattr(segment, '__iter__') else segment
+    return segment_key, topic_words
