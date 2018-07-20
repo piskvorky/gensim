@@ -117,9 +117,10 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         _a2d = author2doc.copy()
         _a2d['joaquin'] = [len(_local_texts) - 1]
         try:
-            model = self.class_(_corpus, author2doc=_a2d, id2word=_dictionary, num_topics=2)
+            _ = self.class_(_corpus, author2doc=_a2d, id2word=_dictionary, num_topics=2)
         except IndexError:
             raise IndexError("error occurs in 1.0.0 release tag")
+        assert(_)
 
     def testAuthor2docMissing(self):
         # Check that the results are the same if author2doc is constructed automatically from doc2author.
