@@ -9,9 +9,10 @@ This module provides a namespace for functions that use the Levenshtein distance
 """
 
 import logging
+from math import ceil
 
 # If python-Levenshtein is available, import it.
-# If python-Levenshtein is unavailable, ImportError will be raised in levsim.
+# If python-Levenshtein is unavailable, ImportError will be raised in levdist.
 try:
     import Levenshtein
     LEVENSHTEIN_EXT = True
@@ -23,7 +24,44 @@ from gensim.similarities.termsim import TermSimilarityIndex
 logger = logging.getLogger(__name__)
 
 
-def levsim(t1, t2, alpha=1.8, beta=5.0, max_distance=float("inf")):
+def levdist(t1, t2, max_distance=float("inf")):
+    """Get the Levenshtein distance between two terms.
+
+    Return the Levenshtein distance between two terms. The distance is a
+    number between <1.0, inf>, higher is less similar.
+
+    Parameters
+    ----------
+    t1 : {bytes, str, unicode}
+        The first compared term.
+    t2 : {bytes, str, unicode}
+        The second compared term.
+    max_distance : {int, float}
+        The maximum Levenshtein distance between `t1`, and `t2`. Greater
+        distances will result in the Levenshtein distance of `max(len(t1),
+        len(t2))`.
+
+    Returns
+    -------
+    int
+        The Levenshtein distance between `t1` and `t2`.
+
+    Notes
+    -----
+    `max_distance` provides opportunities for future optimizations, where
+    the Levenshtein distance computation terminates early.
+
+    """
+    if not LEVENSHTEIN_EXT:
+        raise ImportError("Please install python-Levenshtein Python package to compute the Levenshtein distance.")
+
+    distance = Levenshtein.distance(t1, t2)
+    if distance > max_distance:
+        return max(len(t1), len(t2))
+    return distance
+
+
+def levsim(t1, t2, alpha=1.8, beta=5.0, min_similarity=0.0):
     """Get the Levenshtein similarity between two terms.
 
     Return the Levenshtein similarity between two terms. The similarity is a
@@ -39,9 +77,9 @@ def levsim(t1, t2, alpha=1.8, beta=5.0, max_distance=float("inf")):
         The multiplicative factor alpha defined by Charlet and Damnati (2017).
     beta : float
         The exponential factor beta defined by Charlet and Damnati (2017).
-    max_distance : {int,float}
-        The maximum Levenshtein distance between t1, and t2. Larger distances
-        will result in the Levenshtein similarity of zero.
+    min_similarity : {int, float}
+        The minimum Levenshtein similarity between `t1`, and `t2`. Smaller
+        similarities will result in the Levenshtein similarity of zero.
 
     Returns
     -------
@@ -56,13 +94,19 @@ def levsim(t1, t2, alpha=1.8, beta=5.0, max_distance=float("inf")):
     Answering", 2017 <http://www.aclweb.org/anthology/S/S17/S17-2051.pdf>`__.
 
     """
-    if not LEVENSHTEIN_EXT:
-        raise ImportError("Please install python-Levenshtein Python package to compute the Levenshtein distance.")
-    distance = Levenshtein.distance(t1, t2)
-    if distance >= max_distance:  # This allows future optimization, where Levenshtein.distance terminates early
-        similarity = 0.0
-    else:
-        similarity = alpha * (1 - distance * 1.0 / max(len(t1), len(t2)))**beta
+    assert alpha >= 0
+    assert beta >= 0
+
+    max_lengths = max(len(t1), len(t2))
+    if max_lengths == 0.0:
+        return 1.0
+
+    min_similarity = float(max(min(min_similarity, 1.0), 0.0))
+    max_distance = int(ceil(max_lengths * (1 - (min_similarity / alpha) ** (1 / beta))))
+    distance = levdist(t1, t2, max_distance)
+    similarity = alpha * (1 - distance * 1.0 / max_lengths)**beta
+    if similarity < min_similarity:
+        return 0.0
     return similarity
 
 

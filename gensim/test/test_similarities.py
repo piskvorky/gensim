@@ -30,6 +30,7 @@ from gensim.test.utils import (datapath, get_tmpfile,
 from gensim.similarities import UniformTermSimilarityIndex
 from gensim.similarities import SparseTermSimilarityMatrix
 from gensim.similarities import LevenshteinSimilarityIndex
+from gensim.similarities.levenshtein import levdist, levsim
 
 try:
     from pyemd import emd  # noqa:F401
@@ -936,6 +937,64 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         result = matrix.inner_product([vec1] * 3, [vec2] * 2, normalized=True)
         self.assertTrue(isinstance(result, scipy.sparse.csr_matrix))
         self.assertTrue(numpy.allclose(expected_result, result.todense()))
+
+
+class TestLevenshteinDistance(unittest.TestCase):
+    def test_max_distance(self):
+        t1 = "holiday"
+        t2 = "day"
+        max_distance = max(len(t1), len(t2))
+
+        self.assertEqual(4, levdist(t1, t2))
+        self.assertEqual(4, levdist(t1, t2, 4))
+        self.assertEqual(max_distance, levdist(t1, t2, 2))
+        self.assertEqual(max_distance, levdist(t1, t2, -2))
+
+
+class TestLevenshteinSimilarity(unittest.TestCase):
+    def test_empty_strings(self):
+        t1 = ""
+        t2 = ""
+
+        self.assertEqual(1.0, levsim(t1, t2))
+
+    def test_negative_hyperparameters(self):
+        t1 = "holiday"
+        t2 = "day"
+        alpha = 2.0
+        beta = 2.0
+
+        with self.assertRaises(AssertionError):
+            levsim(t1, t2, -alpha, beta)
+
+        with self.assertRaises(AssertionError):
+            levsim(t1, t2, alpha, -beta)
+
+        with self.assertRaises(AssertionError):
+            levsim(t1, t2, -alpha, -beta)
+
+    def test_min_similarity(self):
+        t1 = "holiday"
+        t2 = "day"
+        alpha = 2.0
+        beta = 2.0
+        similarity = alpha * (1 - 4.0 / 7)**beta
+        assert similarity > 0.1 and similarity < 0.5
+
+        self.assertAlmostEqual(similarity, levsim(t1, t2, alpha, beta))
+
+        self.assertAlmostEqual(similarity, levsim(t1, t2, alpha, beta, -2))
+        self.assertAlmostEqual(similarity, levsim(t1, t2, alpha, beta, -2.0))
+
+        self.assertAlmostEqual(similarity, levsim(t1, t2, alpha, beta, 0))
+        self.assertAlmostEqual(similarity, levsim(t1, t2, alpha, beta, 0.0))
+
+        self.assertEqual(similarity, levsim(t1, t2, alpha, beta, 0.1))
+        self.assertEqual(0.0, levsim(t1, t2, alpha, beta, 0.5))
+        self.assertEqual(0.0, levsim(t1, t2, alpha, beta, 1.0))
+
+        self.assertEqual(0.0, levsim(t1, t2, alpha, beta, 2))
+        self.assertEqual(0.0, levsim(t1, t2, alpha, beta, 2.0))
 
 
 class TestLevenshteinSimilarityIndex(unittest.TestCase):
