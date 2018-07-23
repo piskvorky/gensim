@@ -9,7 +9,7 @@ This module provides a namespace for functions that use the Levenshtein distance
 """
 
 import logging
-from math import ceil
+from math import floor
 
 # If python-Levenshtein is available, import it.
 # If python-Levenshtein is unavailable, ImportError will be raised in levdist.
@@ -102,11 +102,9 @@ def levsim(t1, t2, alpha=1.8, beta=5.0, min_similarity=0.0):
         return 1.0
 
     min_similarity = float(max(min(min_similarity, 1.0), 0.0))
-    max_distance = int(ceil(max_lengths * (1 - (min_similarity / alpha) ** (1 / beta))))
+    max_distance = int(floor(max_lengths * (1 - (min_similarity / alpha) ** (1 / beta))))
     distance = levdist(t1, t2, max_distance)
     similarity = alpha * (1 - distance * 1.0 / max_lengths)**beta
-    if similarity < min_similarity:
-        return 0.0
     return similarity
 
 
