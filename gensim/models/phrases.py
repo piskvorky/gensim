@@ -671,7 +671,7 @@ def npmi_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, co
     where :math:`prob(word) = \\frac{word\_count}{corpus\_word\_count}`
 
     """
-    if bigram_count > min_count:
+    if bigram_count >= min_count:
         pa = worda_count / corpus_word_count
         pb = wordb_count / corpus_word_count
         pab = bigram_count / corpus_word_count
