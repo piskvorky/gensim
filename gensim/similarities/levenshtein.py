@@ -151,8 +151,8 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
         for _, (t2, similarity) in zip(range(topn), (
                 (t2, similarity) for similarity, t2 in sorted(
                     (
-                        (levsim(t1, t2, self.alpha, self.beta), t2)
+                        (levsim(t1, t2, self.alpha, self.beta, self.threshold), t2)
                         for t2 in self.dictionary.values() if t1 != t2
                     ), reverse=True)
-                if similarity > self.threshold)):
+                if similarity > 0)):
             yield (t2, similarity)
