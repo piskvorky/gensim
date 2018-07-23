@@ -36,20 +36,18 @@ def levdist(t1, t2, max_distance=float("inf")):
         The first compared term.
     t2 : {bytes, str, unicode}
         The second compared term.
-    max_distance : {int, float}
-        The maximum Levenshtein distance between `t1`, and `t2`. Greater
-        distances will result in the Levenshtein distance of `max(len(t1),
-        len(t2))`.
+    max_distance : {int, float}, optional
+        If you don't care about distances larger than a known threshold, a more
+        efficient code path can be taken. For terms that are clearly "too far
+        apart", we will not compute the distance exactly, but we will return
+        `max(len(t1), len(t2))` more quickly, meaning "more than
+        `max_distance`".
+        Default: always compute distance exactly, no threshold clipping.
 
     Returns
     -------
     int
         The Levenshtein distance between `t1` and `t2`.
-
-    Notes
-    -----
-    `max_distance` provides opportunities for future optimizations, where
-    the Levenshtein distance computation terminates early.
 
     """
     if not LEVENSHTEIN_EXT:
@@ -73,13 +71,16 @@ def levsim(t1, t2, alpha=1.8, beta=5.0, min_similarity=0.0):
         The first compared term.
     t2 : {bytes, str, unicode}
         The second compared term.
-    alpha : float
+    alpha : float, optional
         The multiplicative factor alpha defined by Charlet and Damnati (2017).
-    beta : float
+    beta : float, optional
         The exponential factor beta defined by Charlet and Damnati (2017).
-    min_similarity : {int, float}
-        The minimum Levenshtein similarity between `t1`, and `t2`. Smaller
-        similarities will result in the Levenshtein similarity of zero.
+    min_similarity : {int, float}, optional
+        If you don't care about similarities smaller than a known threshold, a
+        more efficient code path can be taken. For terms that are clearly "too
+        far apart", we will not compute the distance exactly, but we will
+        return zero more quickly, meaning "less than `min_similarity`".
+        Default: always compute similarity exactly, no threshold clipping.
 
     Returns
     -------
