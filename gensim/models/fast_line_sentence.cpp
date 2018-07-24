@@ -5,8 +5,9 @@
 FastLineSentence::FastLineSentence() : is_eof_(false) { }
 FastLineSentence::FastLineSentence(const std::string& filename, size_t offset) : filename_(filename),
                                                                                  fs_(filename),
+                                                                                 offset_(offset),
                                                                                  is_eof_(false) {
-    fs_.seekg(offset);
+    fs_.seekg(offset_);
 }
 
 std::vector<std::string> FastLineSentence::ReadSentence() {
