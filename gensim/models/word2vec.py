@@ -113,7 +113,6 @@ from timeit import default_timer
 from copy import deepcopy
 from collections import defaultdict
 import threading
-import multiprocessing
 import itertools
 import warnings
 
@@ -136,11 +135,11 @@ from gensim import utils, matutils  # utility fnc for pickling, common scipy ope
 from gensim.utils import deprecated
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
-from functools import reduce
 
 logger = logging.getLogger(__name__)
 
 try:
+    from gensim.models.word2vec_inner import CythonLineSentence
     from gensim.models.word2vec_inner import train_batch_sg, train_batch_cbow
     from gensim.models.word2vec_inner import train_epoch_sg, train_epoch_cbow
     from gensim.models.word2vec_inner import score_sentence_sg, score_sentence_cbow
@@ -753,15 +752,16 @@ class Word2Vec(BaseWordEmbeddingsModel):
             seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, compute_loss=compute_loss,
             fast_version=FAST_VERSION)
 
-    def _do_train_epoch(self, input_stream, thread_private_mem, cur_epoch, total_examples=None, total_words=None):
+    def _do_train_epoch(self, corpus_file, offset, thread_private_mem, cur_epoch, total_examples=None,
+                        total_words=None):
         work, neu1 = thread_private_mem
 
         if self.sg:
-            examples, tally, raw_tally = train_epoch_sg(self, input_stream, cur_epoch, total_examples, total_words,
-                                                        work, neu1, self.compute_loss)
+            examples, tally, raw_tally = train_epoch_sg(self, corpus_file, offset, cur_epoch, total_examples,
+                                                        total_words, work, neu1, self.compute_loss)
         else:
-            examples, tally, raw_tally = train_epoch_cbow(self, input_stream, cur_epoch, total_examples, total_words,
-                                                          work, neu1, self.compute_loss)
+            examples, tally, raw_tally = train_epoch_cbow(self, corpus_file, offset, cur_epoch, total_examples,
+                                                          total_words, work, neu1, self.compute_loss)
 
         return examples, tally, raw_tally
 
@@ -1517,7 +1517,7 @@ class Word2VecVocab(utils.SaveLoad):
         self.max_final_vocab = max_final_vocab
         self.ns_exponent = ns_exponent
 
-    def _scan_vocab_singlestream(self, sentences, progress_per, trim_rule):
+    def _scan_vocab(self, sentences, progress_per, trim_rule):
         sentence_no = -1
         total_words = 0
         min_reduce = 1
@@ -1549,50 +1549,12 @@ class Word2VecVocab(utils.SaveLoad):
         self.raw_vocab = vocab
         return total_words, corpus_count
 
-    def _scan_vocab_multistream(self, input_streams, workers, trim_rule):
-        manager = multiprocessing.Manager()
-        progress_queue = manager.Queue()
-
-        logger.info("Scanning vocab in %i processes.", min(workers, len(input_streams)))
-
-        workers = min(workers, len(input_streams))
-        pool = multiprocessing.Pool(processes=workers)
-
-        worker_max_vocab_size = self.max_vocab_size // workers if self.max_vocab_size else None
-        results = [
-            pool.apply_async(_scan_vocab_worker,
-                             (stream, progress_queue, worker_max_vocab_size, trim_rule)
-                             ) for stream in input_streams
-        ]
-        pool.close()
-
-        unfinished_tasks = len(results)
-        total_words = 0
-        total_sentences = 0
-        while unfinished_tasks > 0:
-            report = progress_queue.get()
-            if report is None:
-                unfinished_tasks -= 1
-                logger.info("scan vocab task finished, processed %i sentences and %i words;"
-                            " awaiting finish of %i more tasks", total_sentences, total_words, unfinished_tasks)
-            elif isinstance(report, string_types):
-                logger.warning(report)
-            else:
-                num_words, num_sentences = report
-                total_words += num_words
-                total_sentences += num_sentences
-
-        self.raw_vocab = reduce(utils.merge_counts, [res.get() for res in results])
-        if self.max_vocab_size:
-            utils.trim_vocab_by_freq(self.raw_vocab, self.max_vocab_size, trim_rule=trim_rule)
-        return total_words, total_sentences
-
-    def scan_vocab(self, sentences=None, input_streams=None, progress_per=10000, workers=None, trim_rule=None):
+    def scan_vocab(self, sentences=None, corpus_file=None, progress_per=10000, workers=None, trim_rule=None):
         logger.info("collecting all words and their counts")
-        if sentences is not None:
-            total_words, corpus_count = self._scan_vocab_singlestream(sentences, progress_per, trim_rule)
-        else:
-            total_words, corpus_count = self._scan_vocab_multistream(input_streams, workers, trim_rule)
+        if corpus_file:
+            sentences = LineSentence(corpus_file)
+
+        total_words, corpus_count = self._scan_vocab(sentences, progress_per, trim_rule)
 
         logger.info(
             "collected %i word types from a corpus of %i raw words and %i sentences",

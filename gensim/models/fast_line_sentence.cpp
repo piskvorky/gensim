@@ -3,7 +3,11 @@
 
 
 FastLineSentence::FastLineSentence() : is_eof_(false) { }
-FastLineSentence::FastLineSentence(const std::string& filename) : filename_(filename), fs_(filename), is_eof_(false) { }
+FastLineSentence::FastLineSentence(const std::string& filename, size_t offset) : filename_(filename),
+                                                                                 fs_(filename),
+                                                                                 is_eof_(false) {
+    fs_.seekg(offset);
+}
 
 std::vector<std::string> FastLineSentence::ReadSentence() {
     if (is_eof_) {

@@ -8,7 +8,7 @@
 class FastLineSentence {
 public:
     explicit FastLineSentence();
-	explicit FastLineSentence(const std::string& filename);
+	explicit FastLineSentence(const std::string& filename, size_t offset = 0);
 
 	std::vector<std::string> ReadSentence();
 	inline bool IsEof() const { return is_eof_; }

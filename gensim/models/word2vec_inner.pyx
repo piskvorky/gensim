@@ -59,7 +59,7 @@ cdef REAL_t ONEF = <REAL_t>1.0
 cdef extern from "fast_line_sentence.h":
     cdef cppclass FastLineSentence:
         FastLineSentence() except +
-        FastLineSentence(string&) except +
+        FastLineSentence(string&, size_t) except +
         vector[string] ReadSentence() nogil except +
         bool_t IsEof() nogil
         void Reset() nogil
@@ -81,14 +81,15 @@ def rebuild_cython_line_sentence(source, max_sentence_length):
 cdef class CythonLineSentence:
     cdef FastLineSentence* _thisptr
     cdef public string source
-    cdef public size_t max_sentence_length, max_words_in_batch
+    cdef public size_t max_sentence_length, max_words_in_batch, offset
     cdef vector[vector[string]] buf_data
 
-    def __cinit__(self, source, max_sentence_length=MAX_SENTENCE_LEN):
-        self._thisptr = new FastLineSentence(source)
+    def __cinit__(self, source, offset, max_sentence_length=MAX_SENTENCE_LEN):
+        self._thisptr = new FastLineSentence(source, offset)
 
-    def __init__(self, source, max_sentence_length=MAX_SENTENCE_LEN):
+    def __init__(self, source, offset=0, max_sentence_length=MAX_SENTENCE_LEN):
         self.source = source
+        self.offset = offset
         self.max_sentence_length = max_sentence_length
         self.max_words_in_batch = max_sentence_length
 
@@ -958,7 +959,8 @@ cdef REAL_t get_next_alpha(REAL_t start_alpha, REAL_t end_alpha, int total_examp
     return max(end_alpha, next_alpha)
 
 
-def train_epoch_sg(model, input_stream, _cur_epoch, _expected_examples, _expected_words, _work, _neu1, compute_loss):
+def train_epoch_sg(model, corpus_file, offset, _cur_epoch, _expected_examples, _expected_words, _work, _neu1,
+                   compute_loss):
     """Train Skipgram model for one epoch by training on an input stream. This function is used only in multistream mode.
 
     Called internally from :meth:`~gensim.models.word2vec.Word2Vec.train`.
@@ -987,6 +989,7 @@ def train_epoch_sg(model, input_stream, _cur_epoch, _expected_examples, _expecte
     cdef int hs = model.hs
     cdef int negative = model.negative
     cdef int sample = (model.vocabulary.sample != 0)
+    cdef int workers = model.workers
 
     # For learning rate updates
     cdef int cur_epoch = _cur_epoch
@@ -997,8 +1000,7 @@ def train_epoch_sg(model, input_stream, _cur_epoch, _expected_examples, _expecte
     cdef REAL_t end_alpha = model.min_alpha
     cdef REAL_t _alpha = get_alpha(model.alpha, end_alpha, cur_epoch, num_epochs)
 
-    # Only used if `isinstance(input_stream, CythonLineSentence)` and fully releases Python GIL
-    cdef CythonLineSentence fast_input_stream
+    cdef CythonLineSentence input_stream = CythonLineSentence(corpus_file, offset)
 
     cdef int _compute_loss = (1 if compute_loss == True else 0)
     cdef REAL_t _running_training_loss = model.running_training_loss
@@ -1063,85 +1065,48 @@ def train_epoch_sg(model, input_stream, _cur_epoch, _expected_examples, _expecte
 
         vocab[token] = word
 
-    if isinstance(input_stream, CythonLineSentence):
-        # If using CythonLineSentence, then generate batches without Python GIL
-        fast_input_stream = input_stream
-        with nogil:
-            fast_input_stream.reset()
-            while not fast_input_stream.is_eof():
-                effective_sentences = 0
-                effective_words = 0
+    with nogil:
+        input_stream.reset()
+        while not (input_stream.is_eof() or total_words > expected_words / workers):
+            effective_sentences = 0
+            effective_words = 0
 
-                sentences = fast_input_stream.next_batch()
+            sentences = input_stream.next_batch()
 
-                prepare_c_structures_for_batch(sentences, sample, hs, window, &total_words, &effective_words,
-                                               &effective_sentences, &next_random, vocab, sentence_idx, indexes,
-                                               codelens, codes, points, reduced_windows)
+            prepare_c_structures_for_batch(sentences, sample, hs, window, &total_words, &effective_words,
+                                           &effective_sentences, &next_random, vocab, sentence_idx, indexes,
+                                           codelens, codes, points, reduced_windows)
 
-                for sent_idx in range(effective_sentences):
-                    idx_start = sentence_idx[sent_idx]
-                    idx_end = sentence_idx[sent_idx + 1]
-                    for i in range(idx_start, idx_end):
-                        j = i - window + reduced_windows[i]
-                        if j < idx_start:
-                            j = idx_start
-                        k = i + window + 1 - reduced_windows[i]
-                        if k > idx_end:
-                            k = idx_end
-                        for j in range(j, k):
-                            if j == i:
-                                continue
-                            if hs:
-                                fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work, word_locks, _compute_loss, &_running_training_loss)
-                            if negative:
-                                next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random, word_locks, _compute_loss, &_running_training_loss)
+            for sent_idx in range(effective_sentences):
+                idx_start = sentence_idx[sent_idx]
+                idx_end = sentence_idx[sent_idx + 1]
+                for i in range(idx_start, idx_end):
+                    j = i - window + reduced_windows[i]
+                    if j < idx_start:
+                        j = idx_start
+                    k = i + window + 1 - reduced_windows[i]
+                    if k > idx_end:
+                        k = idx_end
+                    for j in range(j, k):
+                        if j == i:
+                            continue
+                        if hs:
+                            fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work, word_locks, _compute_loss, &_running_training_loss)
+                        if negative:
+                            next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random, word_locks, _compute_loss, &_running_training_loss)
 
-                total_sentences += sentences.size()
-                total_effective_words += effective_words
+            total_sentences += sentences.size()
+            total_effective_words += effective_words
 
-                _alpha = get_next_alpha(start_alpha, end_alpha, total_sentences, total_words,
-                                        expected_examples, expected_words, cur_epoch, num_epochs)
-
-    else:
-        # Otherwise, prepare batches with GIL, but perform training without it.
-        for sentences in iterate_batches_from_pystream(input_stream):
-            with nogil:
-                effective_sentences = 0
-                effective_words = 0
-
-                prepare_c_structures_for_batch(sentences, sample, hs, window, &total_words, &effective_words,
-                                               &effective_sentences, &next_random, vocab, sentence_idx, indexes,
-                                               codelens, codes, points, reduced_windows)
-
-                for sent_idx in range(effective_sentences):
-                    idx_start = sentence_idx[sent_idx]
-                    idx_end = sentence_idx[sent_idx + 1]
-                    for i in range(idx_start, idx_end):
-                        j = i - window + reduced_windows[i]
-                        if j < idx_start:
-                            j = idx_start
-                        k = i + window + 1 - reduced_windows[i]
-                        if k > idx_end:
-                            k = idx_end
-                        for j in range(j, k):
-                            if j == i:
-                                continue
-                            if hs:
-                                fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work, word_locks, _compute_loss, &_running_training_loss)
-                            if negative:
-                                next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random, word_locks, _compute_loss, &_running_training_loss)
-
-                total_sentences += sentences.size()
-                total_effective_words += effective_words
-
-                _alpha = get_next_alpha(start_alpha, end_alpha, total_sentences, total_words,
-                                        expected_examples, expected_words, cur_epoch, num_epochs)
+            _alpha = get_next_alpha(start_alpha, end_alpha, total_sentences, total_words,
+                                    expected_examples, expected_words, cur_epoch, num_epochs)
 
     model.running_training_loss = _running_training_loss
     return total_sentences, total_effective_words, total_words
 
 
-def train_epoch_cbow(model, input_stream, _cur_epoch, _expected_examples, _expected_words, _work, _neu1, compute_loss):
+def train_epoch_cbow(model, corpus_file, offset, _cur_epoch, _expected_examples, _expected_words, _work, _neu1,
+                     compute_loss):
     """Train CBOW model for one epoch by training on an input stream. This function is used only in multistream mode.
 
     Called internally from :meth:`~gensim.models.word2vec.Word2Vec.train`.
@@ -1181,8 +1146,7 @@ def train_epoch_cbow(model, input_stream, _cur_epoch, _expected_examples, _expec
     cdef REAL_t end_alpha = model.min_alpha
     cdef REAL_t _alpha = get_alpha(model.alpha, end_alpha, cur_epoch, num_epochs)
 
-    # Only used if `isinstance(input_stream, CythonLineSentence)` and fully releases Python GIL
-    cdef CythonLineSentence fast_input_stream
+    cdef CythonLineSentence input_stream = CythonLineSentence(corpus_file, offset)
 
     cdef int _compute_loss = (1 if compute_loss == True else 0)
     cdef REAL_t _running_training_loss = model.running_training_loss
@@ -1248,73 +1212,38 @@ def train_epoch_cbow(model, input_stream, _cur_epoch, _expected_examples, _expec
 
         vocab[token] = word
 
-    if isinstance(input_stream, CythonLineSentence):
-        # If using CythonLineSentence, then generate batches without Python GIL
-        fast_input_stream = input_stream
-        with nogil:
-            fast_input_stream.reset()
-            while not fast_input_stream.is_eof():
-                effective_sentences = 0
-                effective_words = 0
+    with nogil:
+        input_stream.reset()
+        while not (input_stream.is_eof() or total_words > expected_words / workers):
+            effective_sentences = 0
+            effective_words = 0
 
-                sentences = fast_input_stream.next_batch()
+            sentences = input_stream.next_batch()
 
-                prepare_c_structures_for_batch(sentences, sample, hs, window, &total_words, &effective_words,
-                                               &effective_sentences, &next_random, vocab, sentence_idx, indexes,
-                                               codelens, codes, points, reduced_windows)
+            prepare_c_structures_for_batch(sentences, sample, hs, window, &total_words, &effective_words,
+                                           &effective_sentences, &next_random, vocab, sentence_idx, indexes,
+                                           codelens, codes, points, reduced_windows)
 
-                for sent_idx in range(effective_sentences):
-                    idx_start = sentence_idx[sent_idx]
-                    idx_end = sentence_idx[sent_idx + 1]
-                    for i in range(idx_start, idx_end):
-                        j = i - window + reduced_windows[i]
-                        if j < idx_start:
-                            j = idx_start
-                        k = i + window + 1 - reduced_windows[i]
-                        if k > idx_end:
-                            k = idx_end
-                        if hs:
-                            fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, j, k, cbow_mean, word_locks, _compute_loss, &_running_training_loss)
-                        if negative:
-                            next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random, word_locks, _compute_loss, &_running_training_loss)
+            for sent_idx in range(effective_sentences):
+                idx_start = sentence_idx[sent_idx]
+                idx_end = sentence_idx[sent_idx + 1]
+                for i in range(idx_start, idx_end):
+                    j = i - window + reduced_windows[i]
+                    if j < idx_start:
+                        j = idx_start
+                    k = i + window + 1 - reduced_windows[i]
+                    if k > idx_end:
+                        k = idx_end
+                    if hs:
+                        fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, j, k, cbow_mean, word_locks, _compute_loss, &_running_training_loss)
+                    if negative:
+                        next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random, word_locks, _compute_loss, &_running_training_loss)
 
-                total_sentences += sentences.size()
-                total_effective_words += effective_words
+            total_sentences += sentences.size()
+            total_effective_words += effective_words
 
-                _alpha = get_next_alpha(start_alpha, end_alpha, total_sentences, total_words,
-                                        expected_examples, expected_words, cur_epoch, num_epochs)
-
-    else:
-        # Otherwise, prepare batches with GIL, but perform training without it.
-        for sentences in iterate_batches_from_pystream(input_stream):
-            with nogil:
-                effective_sentences = 0
-                effective_words = 0
-
-                prepare_c_structures_for_batch(sentences, sample, hs, window, &total_words, &effective_words,
-                                               &effective_sentences, &next_random, vocab, sentence_idx, indexes,
-                                               codelens, codes, points, reduced_windows)
-
-                for sent_idx in range(effective_sentences):
-                    idx_start = sentence_idx[sent_idx]
-                    idx_end = sentence_idx[sent_idx + 1]
-                    for i in range(idx_start, idx_end):
-                        j = i - window + reduced_windows[i]
-                        if j < idx_start:
-                            j = idx_start
-                        k = i + window + 1 - reduced_windows[i]
-                        if k > idx_end:
-                            k = idx_end
-                        if hs:
-                            fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, j, k, cbow_mean, word_locks, _compute_loss, &_running_training_loss)
-                        if negative:
-                            next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random, word_locks, _compute_loss, &_running_training_loss)
-
-                total_sentences += sentences.size()
-                total_effective_words += effective_words
-
-                _alpha = get_next_alpha(start_alpha, end_alpha, total_sentences, total_words,
-                                        expected_examples, expected_words, cur_epoch, num_epochs)
+            _alpha = get_next_alpha(start_alpha, end_alpha, total_sentences, total_words,
+                                    expected_examples, expected_words, cur_epoch, num_epochs)
 
     model.running_training_loss = _running_training_loss
     return total_sentences, total_effective_words, total_words
