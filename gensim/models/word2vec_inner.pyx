@@ -1136,6 +1136,7 @@ def train_epoch_cbow(model, corpus_file, offset, _cur_epoch, _expected_examples,
     cdef int negative = model.negative
     cdef int sample = (model.vocabulary.sample != 0)
     cdef int cbow_mean = model.cbow_mean
+    cdef int workers = model.workers
 
     # For learning rate updates
     cdef int cur_epoch = _cur_epoch
