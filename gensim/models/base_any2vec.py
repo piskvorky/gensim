@@ -39,7 +39,7 @@ import threading
 from six.moves import xrange
 from six import itervalues, string_types
 from gensim import matutils
-from numpy import float32 as REAL, ones, random, dtype, zeros, array
+from numpy import float32 as REAL, ones, random, dtype, zeros
 from types import GeneratorType
 from gensim.utils import deprecated
 import warnings
@@ -1269,7 +1269,6 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             "EPOCH - %i : training on %i raw words (%i effective words) took %.1fs, %.0f effective words/s",
             cur_epoch + 1, raw_word_count, trained_word_count, elapsed, trained_word_count / elapsed
         )
-
 
         # check that the input corpus hasn't changed during iteration
         if total_examples and total_examples != example_count:
