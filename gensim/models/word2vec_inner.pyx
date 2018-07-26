@@ -19,6 +19,7 @@ from gensim.utils import any2utf8
 from six import iteritems
 
 cimport numpy as np
+from cpython.version cimport PY_MAJOR_VERSION
 
 from libc.math cimport exp
 from libc.math cimport log
@@ -85,6 +86,8 @@ cdef class CythonLineSentence:
     cdef vector[vector[string]] buf_data
 
     def __cinit__(self, source, offset=0, max_sentence_length=MAX_SENTENCE_LEN):
+        if isinstance(source, str) and PY_MAJOR_VERSION > 2:
+            source = source.encode('utf8')
         self._thisptr = new FastLineSentence(source, offset)
 
     def __init__(self, source, offset=0, max_sentence_length=MAX_SENTENCE_LEN):
