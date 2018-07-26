@@ -12,7 +12,7 @@ public:
 
 	std::vector<std::string> ReadSentence();
 	inline bool IsEof() const { return is_eof_; }
-	inline void Reset() { fs_ = std::ifstream(filename_); fs_.seekg(offset_); is_eof_ = false;  }
+	inline void Reset() { fs_.clear(); fs_.seekg(offset_); fs_.seekg(offset_); is_eof_ = false;  }
 
 private:
     std::string filename_;
