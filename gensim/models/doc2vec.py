@@ -56,7 +56,6 @@ Infer vector for new document
 import logging
 import os
 import warnings
-import multiprocessing
 
 try:
     from queue import Queue
@@ -65,7 +64,6 @@ except ImportError:
 
 from collections import namedtuple, defaultdict
 from timeit import default_timer
-from functools import reduce
 
 from numpy import zeros, float32 as REAL, empty, ones, \
     memmap as np_memmap, vstack, integer, dtype, sum as np_sum, add as np_add, repeat as np_repeat, concatenate
@@ -76,7 +74,7 @@ from gensim import utils, matutils  # utility fnc for pickling, common scipy ope
 from gensim.models.word2vec import Word2VecKeyedVectors, Word2VecVocab, Word2VecTrainables, train_cbow_pair,\
     train_sg_pair, train_batch_sg
 from six.moves import xrange
-from six import string_types, integer_types, itervalues, iteritems
+from six import string_types, integer_types, itervalues
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 from gensim.models.keyedvectors import Doc2VecKeyedVectors
 from types import GeneratorType
