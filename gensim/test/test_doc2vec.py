@@ -298,37 +298,6 @@ class TestDoc2VecModel(unittest.TestCase):
         model2 = doc2vec.Doc2Vec(corpus, size=100, min_count=2, iter=20, workers=1)
         self.models_equal(model, model2)
 
-    def test_multistream_training(self):
-        """Test doc2vec multistream training."""
-        input_streams = [list_corpus[:len(list_corpus) // 2], list_corpus[len(list_corpus) // 2:]]
-
-        model = doc2vec.Doc2Vec(inpsize=100, min_count=2, iter=20, workers=1, seed=42)
-        model.build_vocab(input_streams=input_streams, workers=1)
-        self.assertEqual(model.docvecs.doctag_syn0.shape, (300, 100))
-        model.train(input_streams=input_streams, total_examples=model.corpus_count, epochs=model.iter)
-        self.model_sanity(model)
-
-        # build vocab and train in one step; must be the same as above
-        model2 = doc2vec.Doc2Vec(input_streams=input_streams, size=100, min_count=2, iter=20, workers=1, seed=42)
-
-        # check resulted vectors; note that order of words may be different
-        for word in model.wv.index2word:
-            self.assertEqual(model.wv.most_similar(word, topn=5), model2.wv.most_similar(word, topn=5))
-
-    def test_multistream_build_vocab(self):
-        # Expected vocab
-        model = doc2vec.Doc2Vec(min_count=0)
-        model.build_vocab(list_corpus)
-        singlestream_vocab = model.vocabulary.raw_vocab
-
-        # Multistream vocab
-        model2 = doc2vec.Doc2Vec(min_count=0)
-        input_streams = [list_corpus[:len(list_corpus) // 2], list_corpus[len(list_corpus) // 2:]]
-        model2.build_vocab(input_streams=input_streams, workers=2)
-        multistream_vocab = model2.vocabulary.raw_vocab
-
-        self.assertEqual(singlestream_vocab, multistream_vocab)
-
     def test_dbow_hs(self):
         """Test DBOW doc2vec training."""
         model = doc2vec.Doc2Vec(list_corpus, dm=0, hs=1, negative=0, min_count=2, iter=20)

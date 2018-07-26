@@ -437,7 +437,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         includes not only the word vectors of each word in the context, but also the paragraph vector.
 
     """
-    def __init__(self, documents=None, input_streams=None, dm_mean=None, dm=1, dbow_words=0, dm_concat=0,
+    def __init__(self, documents=None, corpus_file=None, dm_mean=None, dm=1, dbow_words=0, dm_concat=0,
                  dm_tag_count=1, docvecs=None, docvecs_mapfile=None, comment=None, trim_rule=None, callbacks=(),
                  **kwargs):
         """
@@ -572,22 +572,18 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         self.docvecs = docvecs or Doc2VecKeyedVectors(self.vector_size, docvecs_mapfile)
 
         self.comment = comment
-        if documents is not None or input_streams is not None:
-            self._check_input_data_sanity(data_iterable=documents, data_iterables=input_streams)
-            if input_streams is not None:
-                if not isinstance(input_streams, (tuple, list)):
-                    raise TypeError("You must pass tuple or list as the input_streams argument.")
-                if any(isinstance(stream, GeneratorType) for stream in input_streams):
-                    raise TypeError("You can't pass a generator as any of input streams. Try an iterator.")
-                if any(isinstance(stream, TaggedLineDocument) for stream in input_streams):
-                    warnings.warn("Using TaggedLineDocument in multistream mode can lead to incorrect results "
-                                  "because of tags collision.")
+
+        assert corpus_file is None, "corpus_file for Doc2Vec is not supported yet."
+        if documents is not None or corpus_file is not None:
+            self._check_input_data_sanity(data_iterable=documents, corpus_file=corpus_file)
+            if corpus_file is not None and not isinstance(corpus_file, string_types):
+                raise TypeError("You must pass string as the corpus_file argument.")
             elif isinstance(documents, GeneratorType):
                 raise TypeError("You can't pass a generator as the documents argument. Try an iterator.")
-            self.build_vocab(documents=documents, input_streams=input_streams,
+            self.build_vocab(documents=documents, corpus_file=corpus_file,
                              trim_rule=trim_rule, workers=self.workers)
             self.train(
-                documents=documents, input_streams=input_streams, total_examples=self.corpus_count, epochs=self.epochs,
+                documents=documents, corpus_file=corpus_file, total_examples=self.corpus_count, epochs=self.epochs,
                 start_alpha=self.alpha, end_alpha=self.min_alpha, callbacks=callbacks)
 
     @property
@@ -677,7 +673,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
                 )
         return tally, self._raw_word_count(job)
 
-    def train(self, documents=None, input_streams=None, total_examples=None, total_words=None,
+    def train(self, documents=None, corpus_file=None, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None,
               word_count=0, queue_factor=2, report_delay=1.0, callbacks=()):
         """Update the model's neural weights.
@@ -731,7 +727,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
         """
         super(Doc2Vec, self).train(
-            sentences=documents, input_streams=input_streams, total_examples=total_examples, total_words=total_words,
+            sentences=documents, corpus_file=corpus_file, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
             queue_factor=queue_factor, report_delay=report_delay, callbacks=callbacks)
 
@@ -1016,7 +1012,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         report['doctag_syn0'] = self.docvecs.count * self.vector_size * dtype(REAL).itemsize
         return super(Doc2Vec, self).estimate_memory(vocab_size, report=report)
 
-    def build_vocab(self, documents=None, input_streams=None, update=False, progress_per=10000, keep_raw_vocab=False,
+    def build_vocab(self, documents=None, corpus_file=None, update=False, progress_per=10000, keep_raw_vocab=False,
                     trim_rule=None, workers=None, **kwargs):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
 
@@ -1059,7 +1055,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         """
         workers = workers or self.workers
         total_words, corpus_count = self.vocabulary.scan_vocab(
-            documents=documents, input_streams=input_streams, docvecs=self.docvecs,
+            documents=documents, corpus_file=corpus_file, docvecs=self.docvecs,
             progress_per=progress_per, trim_rule=trim_rule, workers=workers
         )
         self.corpus_count = corpus_count
@@ -1138,40 +1134,6 @@ def _note_doctag(key, document_length, docvecs):
     docvecs.count = docvecs.max_rawint + 1 + len(docvecs.offset2doctag)
 
 
-def _scan_vocab_worker(stream, progress_queue, max_vocab_size, trim_rule):
-    min_reduce = 1
-    vocab = defaultdict(int)
-    doclen2tags = defaultdict(list)
-    checked_string_types = 0
-    document_no = -1
-    total_words = 0
-    for document_no, document in enumerate(stream):
-        if not checked_string_types:
-            if isinstance(document.words, string_types):
-                log_msg = "Each 'words' should be a list of words (usually unicode strings). " \
-                          "First 'words' here is instead plain %s." % type(document.words)
-                progress_queue.put(log_msg)
-
-            checked_string_types += 1
-
-        document_length = len(document.words)
-
-        for tag in document.tags:
-            doclen2tags[document_length].append(tag)
-
-        for word in document.words:
-            vocab[word] += 1
-        total_words += len(document.words)
-
-        if max_vocab_size and len(vocab) > max_vocab_size:
-            utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
-            min_reduce += 1
-
-    progress_queue.put((total_words, document_no + 1))
-    progress_queue.put(None)
-    return vocab, doclen2tags
-
-
 class Doc2VecVocab(Word2VecVocab):
     """Vocabulary used by :class:`~gensim.models.doc2vec.Doc2Vec`.
 
@@ -1209,51 +1171,7 @@ class Doc2VecVocab(Word2VecVocab):
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
             sorted_vocab=sorted_vocab, null_word=null_word, ns_exponent=ns_exponent)
 
-    def _scan_vocab_multistream(self, input_streams, docvecs, workers, trim_rule):
-        manager = multiprocessing.Manager()
-        progress_queue = manager.Queue()
-
-        workers = min(workers, len(input_streams))
-        logger.info("Scanning vocab in %i processes.", workers)
-        pool = multiprocessing.Pool(processes=workers)
-
-        worker_max_vocab_size = self.max_vocab_size // workers if self.max_vocab_size else None
-        results = [
-            pool.apply_async(_scan_vocab_worker,
-                             (stream, progress_queue, worker_max_vocab_size, trim_rule)
-                             ) for stream in input_streams
-        ]
-        pool.close()
-
-        unfinished_tasks = len(results)
-        total_words = 0
-        total_documents = 0
-        while unfinished_tasks > 0:
-            report = progress_queue.get()
-            if report is None:
-                unfinished_tasks -= 1
-                logger.info("scan vocab task finished, processed %i documents and %i words;"
-                            " awaiting finish of %i more tasks", total_documents, total_words, unfinished_tasks)
-            elif isinstance(report, string_types):
-                logger.warning(report)
-            else:
-                num_words, num_documents = report
-                total_words += num_words
-                total_documents += num_documents
-
-        results = [res.get() for res in results]  # pairs (vocab, doclen2tags)
-        self.raw_vocab = reduce(utils.merge_counts, [r[0] for r in results])
-        if self.max_vocab_size:
-            utils.trim_vocab_by_freq(self.raw_vocab, self.max_vocab_size, trim_rule=trim_rule)
-
-        # Update `docvecs` with document tags information.
-        for (_, doclen2tags) in results:
-            for document_length, tags in iteritems(doclen2tags):
-                for tag in tags:
-                    _note_doctag(tag, document_length, docvecs)
-        return total_words, total_documents
-
-    def _scan_vocab_singlestream(self, documents, docvecs, progress_per, trim_rule):
+    def _scan_vocab(self, documents, docvecs, progress_per, trim_rule):
         document_no = -1
         total_words = 0
         min_reduce = 1
@@ -1295,7 +1213,7 @@ class Doc2VecVocab(Word2VecVocab):
         self.raw_vocab = vocab
         return total_words, corpus_count
 
-    def scan_vocab(self, documents=None, input_streams=None, docvecs=None, progress_per=10000, workers=None,
+    def scan_vocab(self, documents=None, corpus_file=None, docvecs=None, progress_per=10000, workers=None,
                    trim_rule=None):
         """Create the models Vocabulary: A mapping from unique words in the corpus to their frequency count.
 
@@ -1328,10 +1246,10 @@ class Doc2VecVocab(Word2VecVocab):
 
         """
         logger.info("collecting all words and their counts")
-        if input_streams is None:
-            total_words, corpus_count = self._scan_vocab_singlestream(documents, docvecs, progress_per, trim_rule)
-        else:
-            total_words, corpus_count = self._scan_vocab_multistream(input_streams, docvecs, workers, trim_rule)
+        if corpus_file is not None:
+            documents = TaggedLineDocument(corpus_file)
+
+        total_words, corpus_count = self._scan_vocab(documents, docvecs, progress_per, trim_rule)
 
         logger.info(
             "collected %i word types and %i unique tags from a corpus of %i examples and %i words",

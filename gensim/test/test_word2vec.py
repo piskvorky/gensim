@@ -166,20 +166,6 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertEqual(reported_values['num_retained_words'], 4)
         self.assertEqual(model.vocabulary.effective_min_count, 3)
 
-    def testMultiStreamBuildVocab(self):
-        # Expected vocab
-        model = word2vec.Word2Vec(min_count=0)
-        model.build_vocab(sentences)
-        singlestream_vocab = model.vocabulary.raw_vocab
-
-        # Multistream vocab
-        model = word2vec.Word2Vec(min_count=0)
-        input_streams = [sentences[:len(sentences) // 2], sentences[len(sentences) // 2:]]
-        model.build_vocab(input_streams=input_streams, workers=2)
-        multistream_vocab = model.vocabulary.raw_vocab
-
-        self.assertEqual(singlestream_vocab, multistream_vocab)
-
     def testOnlineLearning(self):
         """Test that the algorithm is able to add new words to the
         vocabulary and to a trained model when using a sorted vocabulary"""
@@ -492,30 +478,6 @@ class TestWord2VecModel(unittest.TestCase):
 
         # build vocab and train in one step; must be the same as above
         model2 = word2vec.Word2Vec(sentences, size=2, min_count=1, hs=1, negative=0)
-        self.models_equal(model, model2)
-
-    def testMultistreamTraining(self):
-        """Test word2vec multistream training."""
-        # build vocabulary, don't train yet
-        input_streams = [sentences[:len(sentences) // 2], sentences[len(sentences) // 2:]]
-        model = word2vec.Word2Vec(size=2, min_count=1, hs=1, negative=0, workers=1, seed=42)
-        model.build_vocab(input_streams=input_streams)
-
-        self.assertTrue(model.wv.syn0.shape == (len(model.wv.vocab), 2))
-        self.assertTrue(model.syn1.shape == (len(model.wv.vocab), 2))
-
-        model.train(input_streams=input_streams, total_examples=model.corpus_count, epochs=model.iter)
-        sims = model.most_similar('graph', topn=10)
-
-        # test querying for "most similar" by vector
-        graph_vector = model.wv.syn0norm[model.wv.vocab['graph'].index]
-        sims2 = model.most_similar(positive=[graph_vector], topn=11)
-        sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
-        self.assertEqual(sims, sims2)
-
-        # build vocab and train in one step; must be the same as above
-        model2 = word2vec.Word2Vec(input_streams=input_streams, size=2, min_count=1, hs=1, negative=0,
-                                   workers=1, seed=42)
         self.models_equal(model, model2)
 
     def testScoring(self):

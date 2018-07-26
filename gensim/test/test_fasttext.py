@@ -81,52 +81,6 @@ class TestFastTextModel(unittest.TestCase):
         oov_vec = model['minor']  # oov word
         self.assertEqual(len(oov_vec), 10)
 
-    def test_multistream_training(self):
-        input_streams = [sentences[:len(sentences) // 2], sentences[len(sentences) // 2:]]
-        model = FT_gensim(size=5, min_count=1, hs=1, negative=0, seed=42, workers=1)
-        model.build_vocab(input_streams=input_streams, workers=2)
-        self.model_sanity(model)
-
-        model.train(input_streams=input_streams, total_examples=model.corpus_count, epochs=model.iter)
-        sims = model.most_similar('graph', topn=10)
-
-        self.assertEqual(model.wv.syn0.shape, (12, 5))
-        self.assertEqual(len(model.wv.vocab), 12)
-        self.assertEqual(model.wv.syn0_vocab.shape[1], 5)
-        self.assertEqual(model.wv.syn0_ngrams.shape[1], 5)
-        self.model_sanity(model)
-
-        # test querying for "most similar" by vector
-        graph_vector = model.wv.syn0norm[model.wv.vocab['graph'].index]
-        sims2 = model.most_similar(positive=[graph_vector], topn=11)
-        sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
-        self.assertEqual(sims, sims2)
-
-        # build vocab and train in one step; must be the same as above
-        model2 = FT_gensim(input_streams=input_streams, size=5, min_count=1, hs=1, negative=0, seed=42, workers=1)
-        self.models_equal(model, model2)
-
-        # verify oov-word vector retrieval
-        invocab_vec = model['minors']  # invocab word
-        self.assertEqual(len(invocab_vec), 5)
-
-        oov_vec = model['minor']  # oov word
-        self.assertEqual(len(oov_vec), 5)
-
-    def test_multistream_build_vocab(self):
-        # Expected vocab
-        model = FT_gensim(size=5, min_count=1, hs=1, negative=0, seed=42)
-        model.build_vocab(list_corpus)
-        singlestream_vocab = model.vocabulary.raw_vocab
-
-        # Multistream vocab
-        model2 = FT_gensim(size=5, min_count=1, hs=1, negative=0, seed=42)
-        input_streams = [list_corpus[:len(list_corpus) // 2], list_corpus[len(list_corpus) // 2:]]
-        model2.build_vocab(input_streams=input_streams, workers=2)
-        multistream_vocab = model2.vocabulary.raw_vocab
-
-        self.assertEqual(singlestream_vocab, multistream_vocab)
-
     def models_equal(self, model, model2):
         self.assertEqual(len(model.wv.vocab), len(model2.wv.vocab))
         self.assertEqual(model.num_ngram_vectors, model2.num_ngram_vectors)
