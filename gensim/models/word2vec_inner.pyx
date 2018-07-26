@@ -86,7 +86,9 @@ cdef class CythonLineSentence:
     cdef vector[vector[string]] buf_data
 
     def __cinit__(self, source, offset=0, max_sentence_length=MAX_SENTENCE_LEN):
-        if isinstance(source, str) and PY_MAJOR_VERSION > 2:
+        if isinstance(source, bytes):
+            source = <bytes>source
+        else:
             source = source.encode('utf8')
         self._thisptr = new FastLineSentence(source, offset)
 
