@@ -253,6 +253,7 @@ setup(
             sources=['./gensim/models/word2vec_inner.cpp', './gensim/models/fast_line_sentence.cpp'],
             language="c++",
             extra_compile_args=["-std=c++11"] if os.name != 'nt' else [],
+            extra_link_args=["-std=c++11"] if os.name != 'nt' else [],
             include_dirs=[model_dir]),
         Extension('gensim.models.doc2vec_inner',
             sources=['./gensim/models/doc2vec_inner.c'],
