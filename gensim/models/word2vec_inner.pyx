@@ -84,7 +84,7 @@ cdef class CythonLineSentence:
     cdef public size_t max_sentence_length, max_words_in_batch, offset
     cdef vector[vector[string]] buf_data
 
-    def __cinit__(self, source, offset, max_sentence_length=MAX_SENTENCE_LEN):
+    def __cinit__(self, source, offset=0, max_sentence_length=MAX_SENTENCE_LEN):
         self._thisptr = new FastLineSentence(source, offset)
 
     def __init__(self, source, offset=0, max_sentence_length=MAX_SENTENCE_LEN):

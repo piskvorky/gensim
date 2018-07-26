@@ -2519,7 +2519,7 @@ static PyObject *__pyx_pf_6gensim_6models_14word2vec_inner_rebuild_cython_line_s
 /* "gensim/models/word2vec_inner.pyx":87
  *     cdef vector[vector[string]] buf_data
  * 
- *     def __cinit__(self, source, offset, max_sentence_length=MAX_SENTENCE_LEN):             # <<<<<<<<<<<<<<
+ *     def __cinit__(self, source, offset=0, max_sentence_length=MAX_SENTENCE_LEN):             # <<<<<<<<<<<<<<
  *         self._thisptr = new FastLineSentence(source, offset)
  * 
  */
@@ -2536,6 +2536,7 @@ static int __pyx_pw_6gensim_6models_14word2vec_inner_18CythonLineSentence_1__cin
   {
     static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_source,&__pyx_n_s_offset,&__pyx_n_s_max_sentence_length,0};
     PyObject* values[3] = {0,0,0};
+    values[1] = ((PyObject *)__pyx_int_0);
     values[2] = ((PyObject *)__pyx_int_10000);
     if (unlikely(__pyx_kwds)) {
       Py_ssize_t kw_args;
@@ -2557,9 +2558,9 @@ static int __pyx_pw_6gensim_6models_14word2vec_inner_18CythonLineSentence_1__cin
         else goto __pyx_L5_argtuple_error;
         CYTHON_FALLTHROUGH;
         case  1:
-        if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_offset)) != 0)) kw_args--;
-        else {
-          __Pyx_RaiseArgtupleInvalid("__cinit__", 0, 2, 3, 1); __PYX_ERR(0, 87, __pyx_L3_error)
+        if (kw_args > 0) {
+          PyObject* value = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_offset);
+          if (value) { values[1] = value; kw_args--; }
         }
         CYTHON_FALLTHROUGH;
         case  2:
@@ -2576,7 +2577,8 @@ static int __pyx_pw_6gensim_6models_14word2vec_inner_18CythonLineSentence_1__cin
         case  3: values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
         CYTHON_FALLTHROUGH;
         case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
-        values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+        CYTHON_FALLTHROUGH;
+        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
         break;
         default: goto __pyx_L5_argtuple_error;
       }
@@ -2587,7 +2589,7 @@ static int __pyx_pw_6gensim_6models_14word2vec_inner_18CythonLineSentence_1__cin
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__cinit__", 0, 2, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 87, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("__cinit__", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 87, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("gensim.models.word2vec_inner.CythonLineSentence.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -2610,7 +2612,7 @@ static int __pyx_pf_6gensim_6models_14word2vec_inner_18CythonLineSentence___cini
 
   /* "gensim/models/word2vec_inner.pyx":88
  * 
- *     def __cinit__(self, source, offset, max_sentence_length=MAX_SENTENCE_LEN):
+ *     def __cinit__(self, source, offset=0, max_sentence_length=MAX_SENTENCE_LEN):
  *         self._thisptr = new FastLineSentence(source, offset)             # <<<<<<<<<<<<<<
  * 
  *     def __init__(self, source, offset=0, max_sentence_length=MAX_SENTENCE_LEN):
@@ -2628,7 +2630,7 @@ static int __pyx_pf_6gensim_6models_14word2vec_inner_18CythonLineSentence___cini
   /* "gensim/models/word2vec_inner.pyx":87
  *     cdef vector[vector[string]] buf_data
  * 
- *     def __cinit__(self, source, offset, max_sentence_length=MAX_SENTENCE_LEN):             # <<<<<<<<<<<<<<
+ *     def __cinit__(self, source, offset=0, max_sentence_length=MAX_SENTENCE_LEN):             # <<<<<<<<<<<<<<
  *         self._thisptr = new FastLineSentence(source, offset)
  * 
  */
