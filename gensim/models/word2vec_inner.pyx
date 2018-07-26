@@ -78,22 +78,25 @@ def rebuild_cython_line_sentence(source, max_sentence_length):
     return CythonLineSentence(source, max_sentence_length=max_sentence_length)
 
 
+cpdef bytes to_bytes(key):
+    if isinstance(key, bytes):
+        return <bytes>key
+    else:
+        return key.encode('utf8')
+
+
 @cython.final
 cdef class CythonLineSentence:
     cdef FastLineSentence* _thisptr
-    cdef public string source
+    cdef public bytes source
     cdef public size_t max_sentence_length, max_words_in_batch, offset
     cdef vector[vector[string]] buf_data
 
     def __cinit__(self, source, offset=0, max_sentence_length=MAX_SENTENCE_LEN):
-        if isinstance(source, bytes):
-            source = <bytes>source
-        else:
-            source = source.encode('utf8')
-        self._thisptr = new FastLineSentence(source, offset)
+        self._thisptr = new FastLineSentence(to_bytes(source), offset)
 
     def __init__(self, source, offset=0, max_sentence_length=MAX_SENTENCE_LEN):
-        self.source = source
+        self.source = to_bytes(source)
         self.offset = offset
         self.max_sentence_length = max_sentence_length
         self.max_words_in_batch = max_sentence_length
