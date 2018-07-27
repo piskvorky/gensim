@@ -85,12 +85,6 @@ cdef bytes to_bytes(key):
         return key.encode('utf8')
 
 
-cdef unicode to_unicode(key):
-       if isinstance(key, bytes):
-           return (<bytes>key).decode('utf8')
-       return key
-
-
 @cython.final
 cdef class CythonLineSentence:
     cdef FastLineSentence* _thisptr
@@ -148,7 +142,7 @@ cdef class CythonLineSentence:
             chunked_sentence = self._read_chunked_sentence()
             for chunk in chunked_sentence:
                 if not chunk.empty():
-                    yield [to_unicode(s) for s in chunk]
+                    yield chunk
 
     def __reduce__(self):
         return rebuild_cython_line_sentence, (self.source, self.max_sentence_length)

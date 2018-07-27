@@ -936,7 +936,7 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
             with utils.smart_open(datapath('lee_background.cor')) as orig:
                 sentences = word2vec_inner.CythonLineSentence(datapath('lee_background.cor'))
                 for words in sentences:
-                    self.assertEqual(words, utils.to_unicode(orig.readline()).split())
+                    self.assertEqual(words, orig.readline().split())
         except ImportError:
             pass
 
