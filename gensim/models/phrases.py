@@ -661,7 +661,7 @@ def npmi_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, co
     len_vocab : int
         NOT USED.
     min_count: int
-        Take into account only bigrams with count above this value.
+        Ignore all bigrams with total collected count lower than this value.
     corpus_word_count : int
         Number of words in corpus.
 
