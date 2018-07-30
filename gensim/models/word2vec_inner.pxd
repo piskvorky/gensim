@@ -22,8 +22,6 @@ cimport numpy as np
 cdef extern from "voidptr.h":
     void* PyCObject_AsVoidPtr(object obj)
 
-cdef extern from "fast_line_sentence.cpp":
-    pass
 
 cdef extern from "fast_line_sentence.h":
     cdef cppclass FastLineSentence:
