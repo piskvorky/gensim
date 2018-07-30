@@ -1,6 +1,5 @@
 #!/usr/bin/env cython
 # distutils: language = c++
-# distutils: sources = fast_line_sentence.cpp
 # cython: boundscheck=False
 # cython: wraparound=False
 # cython: cdivision=True
@@ -19,14 +18,13 @@ from gensim.utils import any2utf8
 from six import iteritems
 
 cimport numpy as np
-from cpython.version cimport PY_MAJOR_VERSION
 
 from libc.math cimport exp
 from libc.math cimport log
 from libc.string cimport memset
 from libcpp.string cimport string
-from libcpp.vector cimport vector
 from libcpp.unordered_map cimport unordered_map
+from libcpp.vector cimport vector
 from libcpp cimport bool as bool_t
 
 # scipy <= 0.15
@@ -57,21 +55,24 @@ cdef int ONE = 1
 cdef REAL_t ONEF = <REAL_t>1.0
 
 
-cdef extern from "fast_line_sentence.h":
-    cdef cppclass FastLineSentence:
-        FastLineSentence() except +
-        FastLineSentence(string&, size_t) except +
-        vector[string] ReadSentence() nogil except +
-        bool_t IsEof() nogil
-        void Reset() nogil
+cdef class CythonVocab:
+    def __init__(self, pyvocab, hs=0):
+        cdef VocabItem word
 
+        for py_token, vocab_item in iteritems(pyvocab):
+            token = any2utf8(py_token)
+            word.index = vocab_item.index
+            word.sample_int = vocab_item.sample_int
 
-cdef struct VocabItem:
-    long long sample_int
-    np.uint32_t index
-    np.uint8_t *code
-    int code_len
-    np.uint32_t *point
+            if hs:
+                word.code = <np.uint8_t *>np.PyArray_DATA(vocab_item.code)
+                word.code_len = <int>len(vocab_item.code)
+                word.point = <np.uint32_t *>np.PyArray_DATA(vocab_item.point)
+
+            self.vocab[token] = word
+
+    cdef unordered_map[string, VocabItem]* get_vocab_ptr(self) nogil except *:
+        return &self.vocab
 
 
 def rebuild_cython_line_sentence(source, max_sentence_length):
@@ -85,7 +86,6 @@ cdef bytes to_bytes(key):
         return key.encode('utf8')
 
 
-@cython.final
 cdef class CythonLineSentence:
     cdef FastLineSentence* _thisptr
     cdef public bytes source
@@ -876,7 +876,7 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
 
 cdef void prepare_c_structures_for_batch(vector[vector[string]] &sentences, int sample, int hs, int window, int *total_words,
                                          int *effective_words, int *effective_sentences, unsigned long long *next_random,
-                                         unordered_map[string, VocabItem] &vocab, int *sentence_idx, np.uint32_t *indexes,
+                                         unordered_map[string, VocabItem] *vocab, int *sentence_idx, np.uint32_t *indexes,
                                          int *codelens, np.uint8_t **codes, np.uint32_t **points,
                                          np.uint32_t *reduced_windows) nogil:
     cdef VocabItem word
@@ -891,10 +891,10 @@ cdef void prepare_c_structures_for_batch(vector[vector[string]] &sentences, int 
 
         for token in sent:
             # leaving `effective_words` unchanged = shortening the sentence = expanding the window
-            if vocab.find(token) == vocab.end():
+            if vocab[0].find(token) == vocab[0].end():
                 continue
 
-            word = vocab[token]
+            word = vocab[0][token]
             if sample and word.sample_int < random_int32(next_random):
                 continue
             indexes[effective_words[0]] = word.index
@@ -967,8 +967,8 @@ cdef REAL_t get_next_alpha(REAL_t start_alpha, REAL_t end_alpha, int total_examp
     return max(end_alpha, next_alpha)
 
 
-def train_epoch_sg(model, corpus_file, offset, _cur_epoch, _expected_examples, _expected_words, _work, _neu1,
-                   compute_loss):
+def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work,
+                   _neu1, compute_loss):
     """Train Skipgram model for one epoch by training on an input stream. This function is used only in multistream mode.
 
     Called internally from :meth:`~gensim.models.word2vec.Word2Vec.train`.
@@ -1009,6 +1009,7 @@ def train_epoch_sg(model, corpus_file, offset, _cur_epoch, _expected_examples, _
     cdef REAL_t _alpha = get_alpha(model.alpha, end_alpha, cur_epoch, num_epochs)
 
     cdef CythonLineSentence input_stream = CythonLineSentence(corpus_file, offset)
+    cdef CythonVocab vocab = _cython_vocab
 
     cdef int _compute_loss = (1 if compute_loss == True else 0)
     cdef REAL_t _running_training_loss = model.running_training_loss
@@ -1055,23 +1056,9 @@ def train_epoch_sg(model, corpus_file, offset, _cur_epoch, _expected_examples, _
     work = <REAL_t *>np.PyArray_DATA(_work)
 
     # for preparing batches & training
-    cdef unordered_map[string, VocabItem] vocab
     cdef vector[vector[string]] sentences
     cdef unsigned long long random_number
     cdef VocabItem word
-
-    # prepare C structures so we can go "full C" and release the Python GIL
-    for py_token, vocab_item in iteritems(model.wv.vocab):
-        token = any2utf8(py_token)
-        word.index = vocab_item.index
-        word.sample_int = vocab_item.sample_int
-
-        if hs:
-            word.code = <np.uint8_t *>np.PyArray_DATA(vocab_item.code)
-            word.code_len = <int>len(vocab_item.code)
-            word.point = <np.uint32_t *>np.PyArray_DATA(vocab_item.point)
-
-        vocab[token] = word
 
     with nogil:
         input_stream.reset()
@@ -1082,7 +1069,7 @@ def train_epoch_sg(model, corpus_file, offset, _cur_epoch, _expected_examples, _
             sentences = input_stream.next_batch()
 
             prepare_c_structures_for_batch(sentences, sample, hs, window, &total_words, &effective_words,
-                                           &effective_sentences, &next_random, vocab, sentence_idx, indexes,
+                                           &effective_sentences, &next_random, vocab.get_vocab_ptr(), sentence_idx, indexes,
                                            codelens, codes, points, reduced_windows)
 
             for sent_idx in range(effective_sentences):
@@ -1113,8 +1100,8 @@ def train_epoch_sg(model, corpus_file, offset, _cur_epoch, _expected_examples, _
     return total_sentences, total_effective_words, total_words
 
 
-def train_epoch_cbow(model, corpus_file, offset, _cur_epoch, _expected_examples, _expected_words, _work, _neu1,
-                     compute_loss):
+def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work,
+                     _neu1, compute_loss):
     """Train CBOW model for one epoch by training on an input stream. This function is used only in multistream mode.
 
     Called internally from :meth:`~gensim.models.word2vec.Word2Vec.train`.
@@ -1156,6 +1143,7 @@ def train_epoch_cbow(model, corpus_file, offset, _cur_epoch, _expected_examples,
     cdef REAL_t _alpha = get_alpha(model.alpha, end_alpha, cur_epoch, num_epochs)
 
     cdef CythonLineSentence input_stream = CythonLineSentence(corpus_file, offset)
+    cdef CythonVocab vocab = _cython_vocab
 
     cdef int _compute_loss = (1 if compute_loss == True else 0)
     cdef REAL_t _running_training_loss = model.running_training_loss
@@ -1203,23 +1191,9 @@ def train_epoch_cbow(model, corpus_file, offset, _cur_epoch, _expected_examples,
     neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
 
     # for preparing batches & training
-    cdef unordered_map[string, VocabItem] vocab
     cdef vector[vector[string]] sentences
     cdef unsigned long long random_number
     cdef VocabItem word
-
-    # prepare C structures so we can go "full C" and release the Python GIL
-    for py_token, vocab_item in iteritems(model.wv.vocab):
-        token = any2utf8(py_token)
-        word.index = vocab_item.index
-        word.sample_int = vocab_item.sample_int
-
-        if hs:
-            word.code = <np.uint8_t *>np.PyArray_DATA(vocab_item.code)
-            word.code_len = <int>len(vocab_item.code)
-            word.point = <np.uint32_t *>np.PyArray_DATA(vocab_item.point)
-
-        vocab[token] = word
 
     with nogil:
         input_stream.reset()
@@ -1230,7 +1204,7 @@ def train_epoch_cbow(model, corpus_file, offset, _cur_epoch, _expected_examples,
             sentences = input_stream.next_batch()
 
             prepare_c_structures_for_batch(sentences, sample, hs, window, &total_words, &effective_words,
-                                           &effective_sentences, &next_random, vocab, sentence_idx, indexes,
+                                           &effective_sentences, &next_random, vocab.get_vocab_ptr(), sentence_idx, indexes,
                                            codelens, codes, points, reduced_windows)
 
             for sent_idx in range(effective_sentences):

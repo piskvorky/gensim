@@ -124,7 +124,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         """Resets certain properties of the model post training. eg. `keyedvectors.vectors_norm`."""
         raise NotImplementedError()
 
-    def _do_train_epoch(self, corpus_file, offset, thread_private_mem, cur_epoch, total_examples=None,
+    def _do_train_epoch(self, corpus_file, offset, cython_vocab, thread_private_mem, cur_epoch, total_examples=None,
                         total_words=None):
         raise NotImplementedError()
 
@@ -141,12 +141,13 @@ class BaseAny2VecModel(utils.SaveLoad):
         if not ((data_iterable is not None) ^ (corpus_file is not None)):
             raise ValueError("You must provide only one of singlestream or multistream arguments.")
 
-    def _worker_loop_multistream(self, corpus_file, offset, progress_queue, cur_epoch=0,
+    def _worker_loop_multistream(self, corpus_file, offset, cython_vocab, progress_queue, cur_epoch=0,
                                  total_examples=None, total_words=None):
         thread_private_mem = self._get_thread_working_mem()
 
-        examples, tally, raw_tally = self._do_train_epoch(corpus_file, offset, thread_private_mem, cur_epoch,
-                                                          total_examples=total_examples, total_words=total_words)
+        examples, tally, raw_tally = self._do_train_epoch(corpus_file, offset, cython_vocab, thread_private_mem,
+                                                          cur_epoch, total_examples=total_examples,
+                                                          total_words=total_words)
 
         progress_queue.put((examples, tally, raw_tally))
         progress_queue.put(None)
@@ -347,6 +348,9 @@ class BaseAny2VecModel(utils.SaveLoad):
         if not total_words:
             raise ValueError("total_words must be provided alongside corpus_file argument.")
 
+        from gensim.models.word2vec_inner import CythonVocab
+        cython_vocab = CythonVocab(self.wv.vocab)
+
         progress_queue = Queue()
 
         corpus_file_size = os.path.getsize(corpus_file)
@@ -354,7 +358,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         workers = [
             threading.Thread(
                 target=self._worker_loop_multistream,
-                args=(corpus_file, corpus_file_size / self.workers * thread_id, progress_queue,),
+                args=(corpus_file, corpus_file_size / self.workers * thread_id, cython_vocab, progress_queue,),
                 kwargs={'cur_epoch': cur_epoch, 'total_examples': total_examples, 'total_words': total_words}
             ) for thread_id in range(self.workers)
         ]

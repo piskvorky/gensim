@@ -751,16 +751,16 @@ class Word2Vec(BaseWordEmbeddingsModel):
             seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, compute_loss=compute_loss,
             fast_version=FAST_VERSION)
 
-    def _do_train_epoch(self, corpus_file, offset, thread_private_mem, cur_epoch, total_examples=None,
+    def _do_train_epoch(self, corpus_file, offset, cython_vocab, thread_private_mem, cur_epoch, total_examples=None,
                         total_words=None):
         work, neu1 = thread_private_mem
 
         if self.sg:
-            examples, tally, raw_tally = train_epoch_sg(self, corpus_file, offset, cur_epoch, total_examples,
-                                                        total_words, work, neu1, self.compute_loss)
+            examples, tally, raw_tally = train_epoch_sg(self, corpus_file, offset, cython_vocab, cur_epoch,
+                                                        total_examples, total_words, work, neu1, self.compute_loss)
         else:
-            examples, tally, raw_tally = train_epoch_cbow(self, corpus_file, offset, cur_epoch, total_examples,
-                                                          total_words, work, neu1, self.compute_loss)
+            examples, tally, raw_tally = train_epoch_cbow(self, corpus_file, offset, cython_vocab, cur_epoch,
+                                                          total_examples, total_words, work, neu1, self.compute_loss)
 
         return examples, tally, raw_tally
 

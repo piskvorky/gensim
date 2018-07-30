@@ -1,14 +1,50 @@
+# distutils: language = c++
+# cython: boundscheck=False
+# cython: wraparound=False
+# cython: cdivision=True
+# cython: embedsignature=True
+# coding: utf-8
 #
 # shared type definitions for word2vec_inner
 # used by both word2vec_inner.pyx (automatically) and doc2vec_inner.pyx (by explicit cimport)
 #
 # Copyright (C) 2013 Radim Rehurek <me@radimrehurek.com>
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.htmlcimport numpy as np
+# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+
+from libcpp.string cimport string
+from libcpp.vector cimport vector
+from libcpp.unordered_map cimport unordered_map
+from libcpp cimport bool as bool_t
+
+cimport numpy as np
+
 
 cdef extern from "voidptr.h":
     void* PyCObject_AsVoidPtr(object obj)
 
-cimport numpy as np
+cdef extern from "fast_line_sentence.cpp":
+    pass
+
+cdef extern from "fast_line_sentence.h":
+    cdef cppclass FastLineSentence:
+        FastLineSentence() except +
+        FastLineSentence(string&, size_t) except +
+        vector[string] ReadSentence() nogil except +
+        bool_t IsEof() nogil
+        void Reset() nogil
+
+cdef struct VocabItem:
+    long long sample_int
+    np.uint32_t index
+    np.uint8_t *code
+    int code_len
+    np.uint32_t *point
+
+cdef class CythonVocab:
+    cdef unordered_map[string, VocabItem] vocab
+    cdef unordered_map[string, VocabItem]* get_vocab_ptr(self) nogil except *
+
+
 ctypedef np.float32_t REAL_t
 
 # BLAS routine signatures
