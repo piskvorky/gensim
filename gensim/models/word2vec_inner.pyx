@@ -55,6 +55,7 @@ cdef int ONE = 1
 cdef REAL_t ONEF = <REAL_t>1.0
 
 
+@cython.final
 cdef class CythonVocab:
     def __init__(self, pyvocab, hs=0):
         cdef VocabItem word
@@ -86,6 +87,7 @@ cdef bytes to_bytes(key):
         return key.encode('utf8')
 
 
+@cython.final
 cdef class CythonLineSentence:
     def __cinit__(self, source, offset=0, max_sentence_length=MAX_SENTENCE_LEN):
         self._thisptr = new FastLineSentence(to_bytes(source), offset)
