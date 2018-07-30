@@ -1,6 +1,8 @@
 # Copyright (C) 2018 Radim Rehurek <radimrehurek@seznam.cz>
 # cython: embedsignature=True
+
 """Reader for corpus in the Matrix Market format."""
+
 from __future__ import with_statement
 
 from gensim import utils
@@ -17,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 cdef class MmReader(object):
-    """Matrix market file reader (fast Cython version), used for :class:`~gensim.corpora.mmcorpus.MmCorpus`.
+    """Matrix market file reader (fast Cython version), used internally in :class:`~gensim.corpora.mmcorpus.MmCorpus`.
 
     Wrap a term-document matrix on disk (in matrix-market format), and present it
     as an object which supports iteration over the rows (~documents).
@@ -32,10 +34,10 @@ cdef class MmReader(object):
         Number of non-zero terms.
 
     Notes
-    ----------
-    Note that the file is read into memory one document at a time, not the whole
-    matrix at once (unlike scipy.io.mmread). This allows us to process corpora
-    which are larger than the available RAM.
+    -----
+    Note that the file is read into memory one document at a time, not the whole matrix at once
+    (unlike e.g. `scipy.io.mmread` and other implementations).
+    This allows us to process corpora which are larger than the available RAM.
 
     """
     cdef public input
@@ -48,11 +50,11 @@ cdef class MmReader(object):
         Parameters
         ----------
         input : {str, file-like object}
-            Path to input file in MM format or a file-like object that supports `seek()`
-            (e.g. :class:`~gzip.GzipFile`, :class:`~bz2.BZ2File`).
+            Path to the input file in MM format or a file-like object that supports `seek()`
+            (e.g. smart_open objects).
 
         transposed : bool, optional
-            if True, expects lines to represent doc_id, term_id, value. Else, expects term_id, doc_id, value.
+            Do lines represent `doc_id, term_id, value`, instead of `term_id, doc_id, value`?
 
         """
         logger.info("initializing cython corpus reader from %s", input)
@@ -83,7 +85,7 @@ cdef class MmReader(object):
         )
 
     def __len__(self):
-        """Get size of corpus (number of documents)."""
+        """Get the corpus size: total number of documents."""
         return self.num_docs
 
     def __str__(self):
@@ -105,18 +107,18 @@ cdef class MmReader(object):
             break
 
     def __iter__(self):
-        """Iterate through corpus.
+        """Iterate through all documents in the corpus.
 
         Notes
         ------
         Note that the total number of vectors returned is always equal to the number of rows specified
-        in the header, empty documents are inserted and yielded where appropriate, even if they are not explicitly
+        in the header: empty documents are inserted and yielded where appropriate, even if they are not explicitly
         stored in the Matrix Market file.
 
         Yields
         ------
         (int, list of (int, number))
-            Document id and Document in BoW format
+            Document id and document in sparse bag-of-words format.
 
         """
         cdef long long docid, termid, previd
@@ -165,17 +167,17 @@ cdef class MmReader(object):
             yield previd, []
 
     def docbyoffset(self, offset):
-        """Get document at file offset `offset` (in bytes).
+        """Get the document at file offset `offset` (in bytes).
 
         Parameters
         ----------
         offset : int
-            Offset, in bytes, of desired document.
+            File offset, in bytes, of the desired document.
 
         Returns
         ------
         list of (int, str)
-            Document in BoW format.
+            Document in sparse bag-of-words format.
 
         """
         # empty documents are not stored explicitly in MM format, so the index marks
