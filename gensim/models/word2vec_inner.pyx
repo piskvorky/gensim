@@ -71,7 +71,7 @@ cdef class CythonVocab:
 
             self.vocab[token] = word
 
-    cdef unordered_map[string, VocabItem]* get_vocab_ptr(self) nogil except *:
+    cdef cvocab_t* get_vocab_ptr(self) nogil except *:
         return &self.vocab
 
 
@@ -87,11 +87,6 @@ cdef bytes to_bytes(key):
 
 
 cdef class CythonLineSentence:
-    cdef FastLineSentence* _thisptr
-    cdef public bytes source
-    cdef public size_t max_sentence_length, max_words_in_batch, offset
-    cdef vector[vector[string]] buf_data
-
     def __cinit__(self, source, offset=0, max_sentence_length=MAX_SENTENCE_LEN):
         self._thisptr = new FastLineSentence(to_bytes(source), offset)
 
@@ -876,7 +871,7 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
 
 cdef void prepare_c_structures_for_batch(vector[vector[string]] &sentences, int sample, int hs, int window, int *total_words,
                                          int *effective_words, int *effective_sentences, unsigned long long *next_random,
-                                         unordered_map[string, VocabItem] *vocab, int *sentence_idx, np.uint32_t *indexes,
+                                         cvocab_t *vocab, int *sentence_idx, np.uint32_t *indexes,
                                          int *codelens, np.uint8_t **codes, np.uint32_t **points,
                                          np.uint32_t *reduced_windows) nogil:
     cdef VocabItem word

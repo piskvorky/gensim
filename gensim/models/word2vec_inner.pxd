@@ -33,6 +33,21 @@ cdef extern from "fast_line_sentence.h":
         bool_t IsEof() nogil
         void Reset() nogil
 
+
+cdef class CythonLineSentence:
+    cdef FastLineSentence* _thisptr
+    cdef public bytes source
+    cdef public size_t max_sentence_length, max_words_in_batch, offset
+    cdef vector[vector[string]] buf_data
+
+    cpdef bool_t is_eof(self) nogil
+    cpdef vector[string] read_sentence(self) nogil except *
+    cpdef vector[vector[string]] _read_chunked_sentence(self) nogil except *
+    cpdef vector[vector[string]] _chunk_sentence(self, vector[string] sent) nogil
+    cpdef void reset(self) nogil
+    cpdef vector[vector[string]] next_batch(self) nogil except *
+
+
 cdef struct VocabItem:
     long long sample_int
     np.uint32_t index
@@ -40,9 +55,11 @@ cdef struct VocabItem:
     int code_len
     np.uint32_t *point
 
+ctypedef unordered_map[string, VocabItem] cvocab_t
+
 cdef class CythonVocab:
-    cdef unordered_map[string, VocabItem] vocab
-    cdef unordered_map[string, VocabItem]* get_vocab_ptr(self) nogil except *
+    cdef cvocab_t vocab
+    cdef cvocab_t* get_vocab_ptr(self) nogil except *
 
 
 ctypedef np.float32_t REAL_t
