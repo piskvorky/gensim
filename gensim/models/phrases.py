@@ -677,8 +677,8 @@ def npmi_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, co
         pab = bigram_count / corpus_word_count
         return log(pab / (pa * pb)) / -log(pab)
     else:
-        # Return -infinity to make sure that phrases
-        # will be created only out of bigrams more frequent than min_count
+        # Return -infinity to make sure that no phrases will be created
+        # from bigrams less frequent than min_count
         return float('-inf')
 
 
