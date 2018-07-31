@@ -22,6 +22,7 @@ except ImportError:
     import pickle as _pickle
 
 import re
+import codecs
 import unicodedata
 import os
 import random
@@ -2025,3 +2026,17 @@ def lazy_flatten(nested_list):
                 yield sub
         else:
             yield el
+
+
+def save_as_line_sentence(corpus, filename):
+    """Save the corpus in LineSentence format, i.e. each sentence on a separate line,
+    tokens are separated by space.
+
+    Parameters
+    ----------
+    corpus : iterable of iterables of strings
+
+    """
+    with codecs.open(filename, 'w', encoding='utf8') as fout:
+        for sentence in corpus:
+            fout.write(' '.join(sentence) + '\n')

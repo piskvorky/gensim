@@ -19,7 +19,7 @@ import numpy as np
 
 from gensim import utils
 from gensim.models import word2vec, keyedvectors
-from gensim.test.utils import datapath, get_tmpfile, common_texts as sentences
+from gensim.test.utils import datapath, get_tmpfile, temporary_file, common_texts as sentences
 from testfixtures import log_capture
 
 try:
@@ -480,6 +480,30 @@ class TestWord2VecModel(unittest.TestCase):
         model2 = word2vec.Word2Vec(sentences, size=2, min_count=1, hs=1, negative=0)
         self.models_equal(model, model2)
 
+    @unittest.skipIf(word2vec.FAST_VERSION < 0, "corpus_file argument requires FAST_VERSION >= 0")
+    def testTrainingMultistream(self):
+        """Test word2vec training with corpus_file argument."""
+        # build vocabulary, don't train yet
+        with temporary_file(get_tmpfile('gensim_word2vec.tst')) as tf:
+            utils.save_as_line_sentence(sentences, tf)
+
+            model = word2vec.Word2Vec(size=2, min_count=1, hs=1, negative=0)
+            model.build_vocab(corpus_file=tf)
+
+            self.assertTrue(model.wv.syn0.shape == (len(model.wv.vocab), 2))
+            self.assertTrue(model.syn1.shape == (len(model.wv.vocab), 2))
+
+            model.train(corpus_file=tf, total_words=model.corpus_total_words, epochs=model.iter)
+            sims = model.most_similar('graph', topn=10)
+            # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
+
+            # test querying for "most similar" by vector
+            graph_vector = model.wv.syn0norm[model.wv.vocab['graph'].index]
+            sims2 = model.most_similar(positive=[graph_vector], topn=11)
+            sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
+            self.assertEqual(sims, sims2)
+
+
     def testScoring(self):
         """Test word2vec scoring."""
         model = word2vec.Word2Vec(sentences, size=2, min_count=1, hs=1, negative=0)
@@ -524,6 +548,21 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(0.1 < pearson < 1.0)
         self.assertTrue(0.1 < spearman < 1.0)
         self.assertTrue(0.0 <= oov < 90.0)
+
+    @unittest.skipIf(word2vec.FAST_VERSION < 0, "CythonLineSentence exists only with FAST_VERSION >= 0")
+    def testEvaluateWordPairsMultistream(self):
+        """Test Spearman and Pearson correlation coefficients give sane results on similarity datasets"""
+        with temporary_file(get_tmpfile('gensim_word2vec.tst')) as tf:
+            utils.save_as_line_sentence(word2vec.LineSentence(datapath('head500.noblanks.cor.bz2')), tf)
+
+            model = word2vec.Word2Vec(corpus_file=tf, min_count=3, iter=10)
+            correlation = model.evaluate_word_pairs(datapath('wordsim353.tsv'))
+            pearson = correlation[0][0]
+            spearman = correlation[1][0]
+            oov = correlation[2]
+            self.assertTrue(0.1 < pearson < 1.0)
+            self.assertTrue(0.1 < spearman < 1.0)
+            self.assertTrue(0.0 <= oov < 90.0)
 
     def model_sanity(self, model, train=True):
         """Even tiny models trained on LeeCorpus should pass these sanity checks"""
@@ -929,16 +968,14 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
             for words in sentences:
                 self.assertEqual(words, utils.to_unicode(orig.readline()).split())
 
+    @unittest.skipIf(word2vec.FAST_VERSION < 0, "CythonLineSentence exists only with FAST_VERSION >= 0")
     def testCythonLineSentenceWorksWithFilename(self):
         """Does CythonLineSentence work with a filename argument?"""
-        try:
-            from gensim.models import word2vec_inner
-            with utils.smart_open(datapath('lee_background.cor')) as orig:
-                sentences = word2vec_inner.CythonLineSentence(datapath('lee_background.cor'))
-                for words in sentences:
-                    self.assertEqual(words, orig.readline().split())
-        except ImportError:
-            pass
+        from gensim.models import word2vec_inner
+        with utils.smart_open(datapath('lee_background.cor')) as orig:
+            sentences = word2vec_inner.CythonLineSentence(datapath('lee_background.cor'))
+            for words in sentences:
+                self.assertEqual(words, orig.readline().split())
 
     def testLineSentenceWorksWithCompressedFile(self):
         """Does LineSentence work with a compressed file object argument?"""
