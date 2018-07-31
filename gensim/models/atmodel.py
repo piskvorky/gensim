@@ -766,13 +766,13 @@ class AuthorTopicModel(LdaModel):
                 self.doc2author[d] = a_list
 
             # Train on all documents of authors in input_corpus.
-            train_corpus_idx = []
-            for _ in author2doc.keys():  # For all authors in input corpus.
-                for doc_ids in self.author2doc.values():  # For all documents in total corpus.
-                    train_corpus_idx.extend(doc_ids)
+            train_corpus_idx = set()
+            # Collect all documents of authors.
+            for doc_ids in self.author2doc.values():
+                train_corpus_idx.update(doc_ids)
 
             # Make the list of training documents unique.
-            train_corpus_idx = list(set(train_corpus_idx))
+            train_corpus_idx = sorted(train_corpus_idx)
 
         # train_corpus_idx is only a list of indexes, so "len" is valid.
         lencorpus = len(train_corpus_idx)

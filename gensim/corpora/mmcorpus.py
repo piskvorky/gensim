@@ -4,8 +4,7 @@
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-
-"""Corpus in the Matrix Market format."""
+"""Corpus in the `Matrix Market format <https://math.nist.gov/MatrixMarket/formats.html>`_."""
 
 import logging
 
@@ -17,24 +16,28 @@ logger = logging.getLogger(__name__)
 
 
 class MmCorpus(matutils.MmReader, IndexedCorpus):
-    """Corpus in matrix market format.
+    """Corpus serialized using the `sparse coordinate Matrix Market format
+    <https://math.nist.gov/MatrixMarket/formats.html>`_.
 
     Wrap a term-document matrix on disk (in matrix-market format), and present it
-    as an object which supports iteration over the rows (~documents).
+    as an object which supports iteration over the matrix rows (~documents).
+
+    Notable instance attributes:
 
     Attributes
-    ----------
+    ------------------
     num_docs : int
-        Number of documents in market matrix file.
+        Number of documents in the market matrix file.
     num_terms : int
-        Number of terms.
+        Number of features (terms, topics).
     num_nnz : int
-        Number of non-zero terms.
+        Number of non-zero elements in the sparse MM matrix.
 
     Notes
-    ----------
-    Note that the file is read into memory one document at a time, not the whole matrix at once
-    (unlike :meth:`~scipy.io.mmread`). This allows us to process corpora which are larger than the available RAM.
+    -----
+    The file is read into memory one document at a time, not the whole matrix at once,
+    unlike e.g. `scipy.io.mmread` and other implementations. This allows you to **process corpora which are larger
+    than the available RAM**, in a streamed manner.
 
     Example
     --------
@@ -47,7 +50,6 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
     ...     pass
 
     """
-
     def __init__(self, fname):
         """
 
@@ -55,27 +57,26 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
         ----------
         fname : {str, file-like object}
             Path to file in MM format or a file-like object that supports `seek()`
-            (e.g. :class:`gzip.GzipFile`, :class:`bz2.BZ2File`).
+            (e.g. a compressed file opened by `smart_open <https://github.com/RaRe-Technologies/smart_open>`_).
 
         """
-
         # avoid calling super(), too confusing
         IndexedCorpus.__init__(self, fname)
         matutils.MmReader.__init__(self, fname)
 
     def __iter__(self):
-        """Iterate through document.
+        """Iterate through all documents.
 
         Yields
         ------
-        list of (int, str)
-            Document in BoW format.
+        list of (int, numeric)
+            Document in the `sparse Gensim bag-of-words format <intro.rst#core-concepts>`__.
 
         Notes
         ------
         The total number of vectors returned is always equal to the number of rows specified in the header.
         Empty documents are inserted and yielded where appropriate, even if they are not explicitly stored in the
-        Matrix Market file.
+        (sparse) Matrix Market file.
 
         """
         for doc_id, doc in super(MmCorpus, self).__iter__():
@@ -83,7 +84,7 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
 
     @staticmethod
     def save_corpus(fname, corpus, id2word=None, progress_cnt=1000, metadata=False):
-        """Save a corpus in the Matrix Market format to disk.
+        """Save a corpus to disk in the sparse coordinate Matrix Market format.
 
         Parameters
         ----------
@@ -92,16 +93,17 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
         corpus : iterable of list of (int, number)
             Corpus in Bow format.
         id2word : dict of (int, str), optional
-            WordId -> Word.
+            Mapping between word_id -> word. Used to retrieve the total vocabulary size if provided.
+            Otherwise, the total vocabulary size is estimated based on the highest feature id encountered in `corpus`.
         progress_cnt : int, optional
-            Progress counter.
+            How often to report (log) progress.
         metadata : bool, optional
-            If true, writes out additional metadata.
+            Writes out additional metadata?
 
-        Notes
-        -----
-        This function is automatically called by `MmCorpus.serialize`; don't
-        call it directly, call `serialize` instead.
+        Warnings
+        --------
+        This function is automatically called by :class:`~gensim.corpora.mmcorpus.MmCorpus.serialize`, don't
+        call it directly, call :class:`~gensim.corpora.mmcorpus.MmCorpus.serialize` instead.
 
         Example
         -------

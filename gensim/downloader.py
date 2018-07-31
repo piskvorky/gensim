@@ -420,7 +420,7 @@ def load(name, return_path=False):
 
 if __name__ == '__main__':
     logging.basicConfig(
-        format='%(asctime)s :%(name)s :%(levelname)s :%(message)s', stream=sys.stdout, level=logging.INFO
+        format='%(asctime)s : %(name)s : %(levelname)s : %(message)s', stream=sys.stdout, level=logging.INFO
     )
     parser = argparse.ArgumentParser(
         description="Gensim console API",
