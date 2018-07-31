@@ -143,6 +143,28 @@ class BaseAny2VecModel(utils.SaveLoad):
 
     def _worker_loop_multistream(self, corpus_file, offset, cython_vocab, progress_queue, cur_epoch=0,
                                  total_examples=None, total_words=None):
+        """Train the model on a `corpus_file` in LineSentence format.
+
+        This function will be called in parallel by multiple workers (threads or processes) to make
+        optimal use of multicore machines.
+
+        This function requires FAST_VERSION >= 0.
+
+        Parameters
+        ----------
+        corpus_file : str
+            Path to a corpus file in `gensim.models.word2vec.LineSentence` format.
+        offset : int
+            Offset in the `corpus_file` for particular worker.
+        cython_vocab : gensim.models.word2vec_inner.CythonVocab
+            Copy of the vocabulary in order to access it without GIL.
+        progress_queue : Queue of (int, int, int)
+            A queue of progress reports. Each report is represented as a tuple of these 3 elements:
+                * Size of data chunk processed, for example number of sentences in the corpus chunk.
+                * Effective word count used in training (after ignoring unknown words and trimming the sentence length).
+                * Total word count used in training.
+
+        """
         thread_private_mem = self._get_thread_working_mem()
 
         examples, tally, raw_tally = self._do_train_epoch(corpus_file, offset, cython_vocab, thread_private_mem,
@@ -345,6 +367,31 @@ class BaseAny2VecModel(utils.SaveLoad):
         return trained_word_count, raw_word_count, job_tally
 
     def _train_epoch_multistream(self, corpus_file, cur_epoch=0, total_examples=None, total_words=None):
+        """Train the model for a single epoch.
+
+        Parameters
+        ----------
+        corpus_file : str
+            Path to a corpus file in `gensim.models.word2vec.LineSentence` format.
+        cur_epoch : int, optional
+            The current training epoch, needed to compute the training parameters for each job.
+            For example in many implementations the learning rate would be dropping with the number of epochs.
+        total_examples : int, optional
+            Count of objects in the `data_iterator`. In the usual case this would correspond to the number of sentences
+            in a corpus, used to log progress.
+        total_words : int
+            Count of total objects in `data_iterator`. In the usual case this would correspond to the number of raw
+            words in a corpus, used to log progress. Must be provided in order to seek in `corpus_file`.
+
+        Returns
+        -------
+        (int, int, int)
+            The training report for this epoch consisting of three elements:
+                * Size of data chunk processed, for example number of sentences in the corpus chunk.
+                * Effective word count used in training (after ignoring unknown words and trimming the sentence length).
+                * Total word count used in training.
+
+        """
         if not total_words:
             raise ValueError("total_words must be provided alongside corpus_file argument.")
 
@@ -381,8 +428,6 @@ class BaseAny2VecModel(utils.SaveLoad):
         ----------
         data_iterable : iterable of list of object
             The input corpus. This will be split in chunks and these chunks will be pushed to the queue.
-        data_iterables : iterable of iterables of list of object
-            The iterable of input streams like `data_iterable`. Use this parameter in multistream mode.
         cur_epoch : int, optional
             The current training epoch, needed to compute the training parameters for each job.
             For example in many implementations the learning rate would be dropping with the number of epochs.
@@ -439,6 +484,9 @@ class BaseAny2VecModel(utils.SaveLoad):
         ----------
         data_iterable : iterable of list of object
             The input corpus. This will be split in chunks and these chunks will be pushed to the queue.
+        corpus_file : str
+            Path to a corpus file in `gensim.models.word2vec.LineSentence` format. If you use this argument instead
+            of `data_iterable`, you must provide `total_words` argument as well.
         epochs : int, optional
             Number of epochs (training iterations over the whole input) of training.
         total_examples : int, optional
@@ -595,9 +643,9 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` for such examples.
-        input_streams : list or tuple of iterable of iterables
-            The tuple or list of `sentences`-like arguments. Use it if you have multiple input streams. It is possible
-            to process streams in parallel, using `workers` parameter.
+        corpus_file : str
+            Path to a corpus file in `gensim.models.word2vec.LineSentence` format. You may use this argument instead of
+            `sentences` to get performance boost.
         workers : int, optional
             Number of working threads, used for multiprocessing.
         vector_size : int, optional
@@ -841,9 +889,9 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` module for such examples.
-        input_streams : list or tuple of iterable of iterables
-            The tuple or list of `sentences`-like arguments. Use it if you have multiple input streams. It is possible
-            to process streams in parallel, using `workers` parameter.
+        corpus_file : str
+            Path to a corpus file in `gensim.models.word2vec.LineSentence` format. You may use this argument instead of
+            `sentences` to get performance boost.
         workers : int
             Used if `input_streams` is passed. Determines how many processes to use for vocab building.
             Actual number of workers is determined by `min(len(input_streams), workers)`.
@@ -976,9 +1024,9 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` module for such examples.
-        input_streams : list or tuple of iterable of iterables
-            The tuple or list of `sentences`-like arguments. Use it if you have multiple input streams. It is possible
-            to process streams in parallel, using `workers` parameter.
+        corpus_file : str
+            Path to a corpus file in `gensim.models.word2vec.LineSentence` format. You may use this argument instead of
+            `sentences` to get performance boost.
         total_examples : int, optional
             Count of sentences.
         total_words : int, optional

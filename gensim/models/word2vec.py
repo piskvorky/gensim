@@ -646,9 +646,9 @@ class Word2Vec(BaseWordEmbeddingsModel):
             <https://rare-technologies.com/data-streaming-in-python-generators-iterators-iterables/>`_.
             If you don't supply `sentences`, the model is left uninitialized -- use if you plan to initialize it
             in some other way.
-        input_streams : list or tuple of iterable of iterables
-            The tuple or list of `sentences`-like arguments. Use it if you have multiple input streams. It is possible
-            to process streams in parallel, using `workers` parameter.
+        corpus_file : str
+            Path to a corpus file in `gensim.models.word2vec.LineSentence` format. You may use this argument instead of
+            `sentences` to get performance boost.
         size : int, optional
             Dimensionality of the word vectors.
         window : int, optional
@@ -827,9 +827,9 @@ class Word2Vec(BaseWordEmbeddingsModel):
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
             See also the `tutorial on data streaming in Python
             <https://rare-technologies.com/data-streaming-in-python-generators-iterators-iterables/>`_.
-        input_streams : list or tuple of iterable of iterables
-            The tuple or list of `sentences`-like arguments. Use it if you have multiple input streams. It is possible
-            to process streams in parallel, using `workers` parameter.
+        corpus_file : str
+            Path to a corpus file in `gensim.models.word2vec.LineSentence` format. You may use this argument instead of
+            `sentences` to get performance boost.
         total_examples : int
             Count of sentences.
         total_words : int
