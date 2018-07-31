@@ -503,7 +503,6 @@ class TestWord2VecModel(unittest.TestCase):
             sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
             self.assertEqual(sims, sims2)
 
-
     def testScoring(self):
         """Test word2vec scoring."""
         model = word2vec.Word2Vec(sentences, size=2, min_count=1, hs=1, negative=0)
@@ -564,13 +563,19 @@ class TestWord2VecModel(unittest.TestCase):
             self.assertTrue(0.1 < spearman < 1.0)
             self.assertTrue(0.0 <= oov < 90.0)
 
-    def model_sanity(self, model, train=True):
+    def model_sanity(self, model, train=True, with_corpus_file=False):
         """Even tiny models trained on LeeCorpus should pass these sanity checks"""
         # run extra before/after training tests if train=True
         if train:
             model.build_vocab(list_corpus)
             orig0 = np.copy(model.wv.syn0[0])
-            model.train(list_corpus, total_examples=model.corpus_count, epochs=model.iter)
+
+            if with_corpus_file:
+                tmpfile = get_tmpfile('gensim_word2vec.tst')
+                utils.save_as_line_sentence(list_corpus, tmpfile)
+                model.train(corpus_file=tmpfile, total_words=model.corpus_total_words, epochs=model.iter)
+            else:
+                model.train(list_corpus, total_examples=model.corpus_count, epochs=model.iter)
             self.assertFalse((orig0 == model.wv.syn0[1]).all())  # vector should vary after training
         sims = model.most_similar('war', topn=len(model.wv.index2word))
         t_rank = [word for word, score in sims].index('terrorism')
@@ -585,11 +590,15 @@ class TestWord2VecModel(unittest.TestCase):
         """Test skipgram w/ hierarchical softmax"""
         model = word2vec.Word2Vec(sg=1, window=4, hs=1, negative=0, min_count=5, iter=10, workers=2)
         self.model_sanity(model)
+        model = word2vec.Word2Vec(sg=1, window=4, hs=1, negative=0, min_count=5, iter=10, workers=2)
+        self.model_sanity(model, with_corpus_file=True)
 
     def test_sg_neg(self):
         """Test skipgram w/ negative sampling"""
         model = word2vec.Word2Vec(sg=1, window=4, hs=0, negative=15, min_count=5, iter=10, workers=2)
         self.model_sanity(model)
+        model = word2vec.Word2Vec(sg=1, window=4, hs=0, negative=15, min_count=5, iter=10, workers=2)
+        self.model_sanity(model, with_corpus_file=True)
 
     def test_cbow_hs(self):
         """Test CBOW w/ hierarchical softmax"""
@@ -598,6 +607,11 @@ class TestWord2VecModel(unittest.TestCase):
             min_count=5, iter=10, workers=2, batch_words=1000
         )
         self.model_sanity(model)
+        model = word2vec.Word2Vec(
+            sg=0, cbow_mean=1, alpha=0.05, window=8, hs=1, negative=0,
+            min_count=5, iter=10, workers=2, batch_words=1000
+        )
+        self.model_sanity(model, with_corpus_file=True)
 
     def test_cbow_neg(self):
         """Test CBOW w/ negative sampling"""
@@ -606,6 +620,11 @@ class TestWord2VecModel(unittest.TestCase):
             min_count=5, iter=10, workers=2, sample=0
         )
         self.model_sanity(model)
+        model = word2vec.Word2Vec(
+            sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=15,
+            min_count=5, iter=10, workers=2, sample=0
+        )
+        self.model_sanity(model, with_corpus_file=True)
 
     def test_cosmul(self):
         model = word2vec.Word2Vec(sentences, size=2, min_count=1, hs=1, negative=0)
