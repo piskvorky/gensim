@@ -29,6 +29,7 @@ Dataset example:
 Also, this API available via CLI::
 
     python -m gensim.downloader --info <dataname> # same as api.info(dataname)
+    python -m gensim.downloader --info_name_only # same as api.info(name_only=True)
     python -m gensim.downloader --download <dataname> # same as api.load(dataname, return_path=True)
 
 """
@@ -154,7 +155,7 @@ def _calculate_md5_checksum(fname):
     return hash_md5.hexdigest()
 
 
-def info(name=None, show_only_latest=True):
+def info(name=None, show_only_latest=True, name_only=False):
     """Provide the information related to model/dataset.
 
     Parameters
@@ -164,6 +165,8 @@ def info(name=None, show_only_latest=True):
     show_only_latest : bool, optional
         If storage contains different versions for one data/model, this flag allow to hide outdated versions.
         Affects only if `name` is None.
+    name_only : bool, optional
+        If True, will return only the names of available models and corpuses.
 
     Returns
     -------
@@ -204,6 +207,9 @@ def info(name=None, show_only_latest=True):
 
     if not show_only_latest:
         return information
+
+    if name_only:
+        return {"corpora": list(information['corpora'].keys()), "models": list(information['models'])}
 
     return {
         "corpora": {name: data for (name, data) in information['corpora'].items() if data.get("latest", True)},
@@ -439,6 +445,11 @@ if __name__ == '__main__':
         help="To get information about a corpus/model : python -m gensim.downloader -i <dataname>"
     )
 
+    group.add_argument(
+        "-no", "--info_name_only", action='store_true',
+        help="To get only the names of all the corpora and models : python -m gensim.downloader -no"
+    )
+
     args = parser.parse_args()
     if args.download is not None:
         data_path = load(args.download[0], return_path=True)
@@ -446,3 +457,5 @@ if __name__ == '__main__':
     elif args.info is not None:
         output = info() if (args.info == full_information) else info(name=args.info)
         print(json.dumps(output, indent=4))
+    elif args.info_name_only:
+        print(json.dumps(info(name_only=True), indent=4))
