@@ -250,6 +250,22 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(np.allclose(wv.syn0, loaded_wv.syn0))
         self.assertEqual(len(wv.vocab), len(loaded_wv.vocab))
 
+    def testPersistenceMultistream(self):
+        """Test storing/loading the entire model trained with corpus_file argument."""
+        with temporary_file(get_tmpfile('gensim_word2vec.tst')) as corpus_file:
+            utils.save_as_line_sentence(sentences, corpus_file)
+
+            tmpf = get_tmpfile('gensim_word2vec.tst')
+            model = word2vec.Word2Vec(corpus_file=corpus_file, min_count=1)
+            model.save(tmpf)
+            self.models_equal(model, word2vec.Word2Vec.load(tmpf))
+            #  test persistence of the KeyedVectors of a model
+            wv = model.wv
+            wv.save(tmpf)
+            loaded_wv = keyedvectors.KeyedVectors.load(tmpf)
+            self.assertTrue(np.allclose(wv.syn0, loaded_wv.syn0))
+            self.assertEqual(len(wv.vocab), len(loaded_wv.vocab))
+
     def testPersistenceWithConstructorRule(self):
         """Test storing/loading the entire model with a vocab trimming rule passed in the constructor."""
         tmpf = get_tmpfile('gensim_word2vec.tst')

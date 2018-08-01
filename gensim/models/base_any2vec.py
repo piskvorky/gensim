@@ -138,7 +138,7 @@ class BaseAny2VecModel(utils.SaveLoad):
 
     def _check_input_data_sanity(self, data_iterable=None, corpus_file=None):
         """Check that only one argument is None."""
-        if (data_iterable is None) ^ (corpus_file is None):
+        if not (data_iterable is None) ^ (corpus_file is None):
             raise ValueError("You must provide only one of singlestream or multistream arguments.")
 
     def _worker_loop_multistream(self, corpus_file, offset, cython_vocab, progress_queue, cur_epoch=0,
