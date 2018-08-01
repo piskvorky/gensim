@@ -192,6 +192,43 @@ class TestWord2VecModel(unittest.TestCase):
         model_neg.train(new_sentences, total_examples=model_neg.corpus_count, epochs=model_neg.iter)
         self.assertEqual(len(model_neg.wv.vocab), 14)
 
+    def testOnlineLearningMultistream(self):
+        """Test that the algorithm is able to add new words to the
+        vocabulary and to a trained model when using a sorted vocabulary"""
+        with temporary_file(get_tmpfile('gensim_word2vec1.tst')) as corpus_file,\
+                temporary_file(get_tmpfile('gensim_word2vec2.tst')) as new_corpus_file:
+            utils.save_as_line_sentence(sentences, corpus_file)
+            utils.save_as_line_sentence(new_sentences, new_corpus_file)
+
+            model_hs = word2vec.Word2Vec(corpus_file=corpus_file, size=10, min_count=0, seed=42, hs=1, negative=0)
+            model_neg = word2vec.Word2Vec(corpus_file=corpus_file, size=10, min_count=0, seed=42, hs=0, negative=5)
+            self.assertTrue(len(model_hs.wv.vocab), 12)
+            self.assertTrue(model_hs.wv.vocab['graph'].count, 3)
+            model_hs.build_vocab(corpus_file=new_corpus_file, update=True)
+            model_neg.build_vocab(corpus_file=new_corpus_file, update=True)
+            self.assertTrue(model_hs.wv.vocab['graph'].count, 4)
+            self.assertTrue(model_hs.wv.vocab['artificial'].count, 4)
+            self.assertEqual(len(model_hs.wv.vocab), 14)
+            self.assertEqual(len(model_neg.wv.vocab), 14)
+
+    def testOnlineLearningAfterSaveMultistream(self):
+        """Test that the algorithm is able to add new words to the
+        vocabulary and to a trained model when using a sorted vocabulary"""
+        with temporary_file(get_tmpfile('gensim_word2vec1.tst')) as corpus_file,\
+                temporary_file(get_tmpfile('gensim_word2vec2.tst')) as new_corpus_file:
+            utils.save_as_line_sentence(sentences, corpus_file)
+            utils.save_as_line_sentence(new_sentences, new_corpus_file)
+
+            tmpf = get_tmpfile('gensim_word2vec.tst')
+            model_neg = word2vec.Word2Vec(corpus_file=corpus_file, size=10, min_count=0, seed=42, hs=0, negative=5)
+            model_neg.save(tmpf)
+            model_neg = word2vec.Word2Vec.load(tmpf)
+            self.assertTrue(len(model_neg.wv.vocab), 12)
+            model_neg.build_vocab(corpus_file=new_corpus_file, update=True)
+            model_neg.train(corpus_file=new_corpus_file, total_words=model_neg.corpus_total_words,
+                            epochs=model_neg.iter)
+            self.assertEqual(len(model_neg.wv.vocab), 14)
+
     def onlineSanity(self, model, trained_model=False):
         terro, others = [], []
         for l in list_corpus:
