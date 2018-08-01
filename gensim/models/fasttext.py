@@ -255,9 +255,9 @@ class FastText(BaseWordEmbeddingsModel):
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
             If you don't supply `sentences`, the model is left uninitialized -- use if you plan to initialize it
             in some other way.
-        input_streams : list or tuple of iterable of iterables
-            The tuple or list of `sentences`-like arguments. Use it if you have multiple input streams. It is possible
-            to process streams in parallel, using `workers` parameter.
+        corpus_file : str
+            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            You may use this argument instead of `sentences` to get performance boost.
         min_count : int, optional
             The model ignores all words with total frequency lower than this.
         size : int, optional
@@ -343,9 +343,9 @@ class FastText(BaseWordEmbeddingsModel):
         Initialize and train a `FastText` model::
 
         >>> from gensim.models import FastText
-        >>> input_streams = [[["cat", "say", "meow"], ["dog", "say", "woof"]]]
+        >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
         >>>
-        >>> model = FastText(input_streams=input_streams, min_count=1)
+        >>> model = FastText(sentences, min_count=1)
         >>> say_vector = model['say']  # get vector for word
         >>> of_vector = model['of']  # get vector for out-of-vocab word
 
@@ -421,7 +421,7 @@ class FastText(BaseWordEmbeddingsModel):
         return self.wv.num_ngram_vectors
 
     def build_vocab(self, sentences=None, corpus_file=None, update=False, progress_per=10000, keep_raw_vocab=False,
-                    trim_rule=None, workers=None, **kwargs):
+                    trim_rule=None, **kwargs):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
 
@@ -432,9 +432,9 @@ class FastText(BaseWordEmbeddingsModel):
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
-        input_streams : list or tuple of iterable of iterables
-            The tuple or list of `sentences`-like arguments. Use it if you have multiple input streams. It is possible
-            to process streams in parallel, using `workers` parameter.
+        corpus_file : str
+            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            You may use this argument instead of `sentences` to get performance boost.
         update : bool
             If true, the new words in `sentences` will be added to model's vocab.
         progress_per : int
@@ -455,9 +455,6 @@ class FastText(BaseWordEmbeddingsModel):
                 * `count` (int) - the word's frequency count in the corpus
                 * `min_count` (int) - the minimum count threshold.
 
-        workers : int
-            Used if `input_streams` is passed. Determines how many processes to use for vocab building.
-            Actual number of workers is determined by `min(len(input_streams), workers)`.
         **kwargs
             Additional key word parameters passed to
             :meth:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel.build_vocab`.
@@ -489,7 +486,7 @@ class FastText(BaseWordEmbeddingsModel):
 
         return super(FastText, self).build_vocab(
             sentences=sentences, corpus_file=corpus_file, update=update, progress_per=progress_per,
-            keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, workers=workers, **kwargs)
+            keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, **kwargs)
 
     def _set_train_params(self, **kwargs):
         pass
@@ -591,9 +588,9 @@ class FastText(BaseWordEmbeddingsModel):
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
-        input_streams : list or tuple of iterable of iterables
-            The tuple or list of `sentences`-like arguments. Use it if you have multiple input streams. It is possible
-            to process streams in parallel, using `workers` parameter.
+        corpus_file : str
+            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            If you use this argument instead of `sentences`, you must provide `total_words` argument as well.
         total_examples : int
             Count of sentences.
         total_words : int

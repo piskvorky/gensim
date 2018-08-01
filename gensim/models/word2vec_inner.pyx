@@ -142,6 +142,7 @@ cdef class CythonLineSentence:
                     yield chunk
 
     def __reduce__(self):
+        # This function helps pickle to correctly serialize objects of this class.
         return rebuild_cython_line_sentence, (self.source, self.max_sentence_length)
 
     cpdef vector[vector[string]] next_batch(self) nogil except *:

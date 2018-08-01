@@ -22,7 +22,6 @@ except ImportError:
     import pickle as _pickle
 
 import re
-import codecs
 import unicodedata
 import os
 import random
@@ -2037,6 +2036,6 @@ def save_as_line_sentence(corpus, filename):
     corpus : iterable of iterables of strings
 
     """
-    with codecs.open(filename, 'w', encoding='utf8') as fout:
+    with smart_open(filename, mode='w', encoding='utf8') as fout:
         for sentence in corpus:
             fout.write(' '.join(sentence) + '\n')

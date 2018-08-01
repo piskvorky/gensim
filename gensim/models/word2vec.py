@@ -647,8 +647,8 @@ class Word2Vec(BaseWordEmbeddingsModel):
             If you don't supply `sentences`, the model is left uninitialized -- use if you plan to initialize it
             in some other way.
         corpus_file : str
-            Path to a corpus file in `gensim.models.word2vec.LineSentence` format. You may use this argument instead of
-            `sentences` to get performance boost.
+            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            You may use this argument instead of `sentences` to get performance boost.
         size : int, optional
             Dimensionality of the word vectors.
         window : int, optional
@@ -730,8 +730,8 @@ class Word2Vec(BaseWordEmbeddingsModel):
         Initialize and train a :class:`~gensim.models.word2vec.Word2Vec` model
 
         >>> from gensim.models import Word2Vec
-        >>> input_streams = [[["cat", "say", "meow"], ["dog", "say", "woof"]]]
-        >>> model = Word2Vec(input_streams=input_streams, min_count=1)
+        >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
+        >>> model = Word2Vec(sentences, min_count=1)
 
         """
         self.max_final_vocab = max_final_vocab
@@ -828,8 +828,8 @@ class Word2Vec(BaseWordEmbeddingsModel):
             See also the `tutorial on data streaming in Python
             <https://rare-technologies.com/data-streaming-in-python-generators-iterators-iterables/>`_.
         corpus_file : str
-            Path to a corpus file in `gensim.models.word2vec.LineSentence` format. You may use this argument instead of
-            `sentences` to get performance boost.
+            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            You may use this argument instead of `sentences` to get performance boost.
         total_examples : int
             Count of sentences.
         total_words : int
@@ -862,12 +862,11 @@ class Word2Vec(BaseWordEmbeddingsModel):
         Examples
         --------
         >>> from gensim.models import Word2Vec
-        >>> input_streams = [[["cat", "say", "meow"], ["dog", "say", "woof"]]]
+        >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
         >>>
         >>> model = Word2Vec(min_count=1)
-        >>> model.build_vocab(input_streams=input_streams)  # prepare the model vocabulary
-        >>> model.train(input_streams=input_streams,
-        >>>             total_examples=model.corpus_count, epochs=model.iter)  # train word vectors
+        >>> model.build_vocab(sentences)  # prepare the model vocabulary
+        >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)  # train word vectors
         (1, 30)
 
         """

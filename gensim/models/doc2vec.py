@@ -571,7 +571,9 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
         self.comment = comment
 
-        assert corpus_file is None, "corpus_file for Doc2Vec is not supported yet."
+        if corpus_file is not None:
+            raise NotImplementedError("corpus_file for Doc2Vec is not supported yet.")
+
         if documents is not None or corpus_file is not None:
             self._check_input_data_sanity(data_iterable=documents, corpus_file=corpus_file)
             if corpus_file is not None and not isinstance(corpus_file, string_types):

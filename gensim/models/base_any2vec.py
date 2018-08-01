@@ -137,8 +137,8 @@ class BaseAny2VecModel(utils.SaveLoad):
         raise NotImplementedError()
 
     def _check_input_data_sanity(self, data_iterable=None, corpus_file=None):
-        """Check that only one argument is not None."""
-        if not ((data_iterable is not None) ^ (corpus_file is not None)):
+        """Check that only one argument is None."""
+        if (data_iterable is None) ^ (corpus_file is None):
             raise ValueError("You must provide only one of singlestream or multistream arguments.")
 
     def _worker_loop_multistream(self, corpus_file, offset, cython_vocab, progress_queue, cur_epoch=0,
@@ -148,15 +148,13 @@ class BaseAny2VecModel(utils.SaveLoad):
         This function will be called in parallel by multiple workers (threads or processes) to make
         optimal use of multicore machines.
 
-        This function requires FAST_VERSION >= 0.
-
         Parameters
         ----------
         corpus_file : str
-            Path to a corpus file in `gensim.models.word2vec.LineSentence` format.
+            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
         offset : int
-            Offset in the `corpus_file` for particular worker.
-        cython_vocab : gensim.models.word2vec_inner.CythonVocab
+            Offset (in bytes) in the `corpus_file` for particular worker.
+        cython_vocab : :class:`~gensim.models.word2vec_inner.CythonVocab`
             Copy of the vocabulary in order to access it without GIL.
         progress_queue : Queue of (int, int, int)
             A queue of progress reports. Each report is represented as a tuple of these 3 elements:
@@ -372,7 +370,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         Parameters
         ----------
         corpus_file : str
-            Path to a corpus file in `gensim.models.word2vec.LineSentence` format.
+            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
         cur_epoch : int, optional
             The current training epoch, needed to compute the training parameters for each job.
             For example in many implementations the learning rate would be dropping with the number of epochs.
@@ -485,8 +483,8 @@ class BaseAny2VecModel(utils.SaveLoad):
         data_iterable : iterable of list of object
             The input corpus. This will be split in chunks and these chunks will be pushed to the queue.
         corpus_file : str
-            Path to a corpus file in `gensim.models.word2vec.LineSentence` format. If you use this argument instead
-            of `data_iterable`, you must provide `total_words` argument as well.
+            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            If you use this argument instead of `data_iterable`, you must provide `total_words` argument as well.
         epochs : int, optional
             Number of epochs (training iterations over the whole input) of training.
         total_examples : int, optional
@@ -644,8 +642,8 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` for such examples.
         corpus_file : str
-            Path to a corpus file in `gensim.models.word2vec.LineSentence` format. You may use this argument instead of
-            `sentences` to get performance boost.
+            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            You may use this argument instead of `sentences` to get performance boost.
         workers : int, optional
             Number of working threads, used for multiprocessing.
         vector_size : int, optional
@@ -878,7 +876,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             self.__class__.__name__, len(self.wv.index2word), self.vector_size, self.alpha
         )
 
-    def build_vocab(self, sentences=None, corpus_file=None, workers=None, update=False, progress_per=10000,
+    def build_vocab(self, sentences=None, corpus_file=None, update=False, progress_per=10000,
                     keep_raw_vocab=False, trim_rule=None, **kwargs):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
 
@@ -890,11 +888,8 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` module for such examples.
         corpus_file : str
-            Path to a corpus file in `gensim.models.word2vec.LineSentence` format. You may use this argument instead of
-            `sentences` to get performance boost.
-        workers : int
-            Used if `input_streams` is passed. Determines how many processes to use for vocab building.
-            Actual number of workers is determined by `min(len(input_streams), workers)`.
+            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            You may use this argument instead of `sentences` to get performance boost.
         update : bool
             If true, the new words in `sentences` will be added to model's vocab.
         progress_per : int, optional
@@ -919,10 +914,8 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             Key word arguments propagated to `self.vocabulary.prepare_vocab`
 
         """
-        workers = workers or self.workers
         total_words, corpus_count = self.vocabulary.scan_vocab(
-            sentences=sentences, corpus_file=corpus_file, progress_per=progress_per, trim_rule=trim_rule,
-            workers=workers)
+            sentences=sentences, corpus_file=corpus_file, progress_per=progress_per, trim_rule=trim_rule)
         self.corpus_count = corpus_count
         self.corpus_total_words = total_words
         report_values = self.vocabulary.prepare_vocab(
@@ -1025,8 +1018,8 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` module for such examples.
         corpus_file : str
-            Path to a corpus file in `gensim.models.word2vec.LineSentence` format. You may use this argument instead of
-            `sentences` to get performance boost.
+            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            You may use this argument instead of `sentences` to get performance boost.
         total_examples : int, optional
             Count of sentences.
         total_words : int, optional
@@ -1235,6 +1228,8 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             model.vocabulary.make_cum_table(model.wv)  # rebuild cum_table from vocabulary
         if not hasattr(model, 'corpus_count'):
             model.corpus_count = None
+        if not hasattr(model, 'corpus_total_words'):
+            model.corpus_total_words = None
         if not hasattr(model.trainables, 'vectors_lockf') and hasattr(model.wv, 'vectors'):
             model.trainables.vectors_lockf = ones(len(model.wv.vectors), dtype=REAL)
         if not hasattr(model, 'random'):
@@ -1273,6 +1268,11 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             the sentence length).
         elapsed : int
             Elapsed time since the beginning of training in seconds.
+
+        Notes
+        -----
+        If you train the model via `corpus_file` argument, there is no job_queue, so reported job_queue size will
+        always be equal to -1.
 
         """
         if total_examples:

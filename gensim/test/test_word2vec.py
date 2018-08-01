@@ -858,6 +858,7 @@ class TestWord2VecModel(unittest.TestCase):
         saved_models_dir = datapath('old_w2v_models/w2v_{}.mdl')
         for old_version in old_versions:
             model = word2vec.Word2Vec.load(saved_models_dir.format(old_version))
+            self.assertIsNone(model.corpus_total_words)
             self.assertTrue(len(model.wv.vocab) == 3)
             self.assertTrue(model.wv.vectors.shape == (3, 4))
             # check if similarity search and online training works.

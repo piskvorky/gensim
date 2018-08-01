@@ -1,4 +1,3 @@
-#include <stdexcept>
 #include "fast_line_sentence.h"
 
 
