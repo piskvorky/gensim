@@ -2038,4 +2038,4 @@ def save_as_line_sentence(corpus, filename):
     """
     with smart_open(filename, mode='w', encoding='utf8') as fout:
         for sentence in corpus:
-            fout.write(' '.join(sentence) + '\n')
+            fout.write(u(' '.join(sentence) + '\n'))
