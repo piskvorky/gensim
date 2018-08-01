@@ -110,16 +110,14 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.assertTrue(all(jill_topics > 0))
 
     def testEmptyDocument(self):
-        _local_texts = common_texts + [['only_occurs_once_in_corpus_and_alone_in_doc']]
-        _dictionary = Dictionary(_local_texts)
-        _dictionary.filter_extremes(no_below=2)
-        _corpus = [_dictionary.doc2bow(text) for text in _local_texts]
-        _a2d = author2doc.copy()
-        _a2d['joaquin'] = [len(_local_texts) - 1]
-        try:
-            _ = self.class_(_corpus, author2doc=_a2d, id2word=_dictionary, num_topics=2)
-        except IndexError:
-            raise IndexError("error occurs in 1.0.0 release tag")
+        local_texts = common_texts + [['only_occurs_once_in_corpus_and_alone_in_doc']]
+        dictionary = Dictionary(local_texts)
+        dictionary.filter_extremes(no_below=2)
+        corpus = [dictionary.doc2bow(text) for text in local_texts]
+        a2d = author2doc.copy()
+        a2d['joaquin'] = [len(local_texts) - 1]
+
+        _ = self.class_(corpus, author2doc=a2d, id2word=dictionary, num_topics=2)
         assert(_)
 
     def testAuthor2docMissing(self):

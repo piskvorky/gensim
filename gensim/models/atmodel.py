@@ -460,7 +460,7 @@ class AuthorTopicModel(LdaModel):
                 # make sure the term IDs are ints, otherwise np will get upset
                 ids = [int(idx) for idx, _ in doc]
             else:
-                ids = [id for id, _ in doc]
+                ids = [idx for idx, _ in doc]
             ids = np.array(ids, dtype=np.integer)
             cts = np.array([cnt for _, cnt in doc], dtype=np.integer)
 
