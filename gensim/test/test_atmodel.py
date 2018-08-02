@@ -35,7 +35,6 @@ from gensim.matutils import jensen_shannon
 # increases the bound.
 # Test that models are compatiple across versions, as done in LdaModel.
 
-
 # Assign some authors randomly to the documents above.
 author2doc = {
     'john': [0, 1, 2, 3, 4, 5, 6],
@@ -109,6 +108,16 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         jill_topics = model.get_author_topics('jill')
         jill_topics = matutils.sparse2full(jill_topics, model.num_topics)
         self.assertTrue(all(jill_topics > 0))
+
+    def testEmptyDocument(self):
+        local_texts = common_texts + [['only_occurs_once_in_corpus_and_alone_in_doc']]
+        dictionary = Dictionary(local_texts)
+        dictionary.filter_extremes(no_below=2)
+        corpus = [dictionary.doc2bow(text) for text in local_texts]
+        a2d = author2doc.copy()
+        a2d['joaquin'] = [len(local_texts) - 1]
+
+        self.class_(corpus, author2doc=a2d, id2word=dictionary, num_topics=2)
 
     def testAuthor2docMissing(self):
         # Check that the results are the same if author2doc is constructed automatically from doc2author.
