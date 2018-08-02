@@ -241,19 +241,20 @@ class TestWindowing(unittest.TestCase):
 class TestSaveAsLineSentence(unittest.TestCase):
     def test_save_as_line_sentence_en(self):
         corpus_file = get_tmpfile('gensim_utils.tst')
-        ref_sentences = [['hello', 'world'], ['how', 'are', 'you']]
+        ref_sentences = [l.split() for l in utils.any2unicode('hello world\nhow are you').split('\n')]
+
         utils.save_as_line_sentence(ref_sentences, corpus_file)
 
-        with utils.smart_open(corpus_file) as fin:
+        with utils.smart_open(corpus_file, encoding='utf8') as fin:
             sentences = [line.strip().split() for line in fin.read().strip().split('\n')]
             self.assertEqual(sentences, ref_sentences)
 
     def test_save_as_line_sentence_ru(self):
         corpus_file = get_tmpfile('gensim_utils.tst')
-        ref_sentences = [['привет', 'мир'], ['как', 'ты', 'поживаешь']]
+        ref_sentences = [l.split() for l in utils.any2unicode('привет мир\nкак ты поживаешь').split('\n')]
         utils.save_as_line_sentence(ref_sentences, corpus_file)
 
-        with utils.smart_open(corpus_file) as fin:
+        with utils.smart_open(corpus_file, encoding='utf8') as fin:
             sentences = [line.strip().split() for line in fin.read().strip().split('\n')]
             self.assertEqual(sentences, ref_sentences)
 
