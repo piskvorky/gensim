@@ -117,8 +117,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         a2d = author2doc.copy()
         a2d['joaquin'] = [len(local_texts) - 1]
 
-        _ = self.class_(corpus, author2doc=a2d, id2word=dictionary, num_topics=2)
-        assert(_)
+        self.class_(corpus, author2doc=a2d, id2word=dictionary, num_topics=2)
 
     def testAuthor2docMissing(self):
         # Check that the results are the same if author2doc is constructed automatically from doc2author.
