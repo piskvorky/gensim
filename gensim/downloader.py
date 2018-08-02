@@ -29,7 +29,7 @@ Dataset example:
 Also, this API available via CLI::
 
     python -m gensim.downloader --info <dataname> # same as api.info(dataname)
-    python -m gensim.downloader --info name_only # same as api.info(name_only=True)
+    python -m gensim.downloader --info name # same as api.info(name_only=True)
     python -m gensim.downloader --download <dataname> # same as api.load(dataname, return_path=True)
 
 """
@@ -450,7 +450,7 @@ if __name__ == '__main__':
         data_path = load(args.download[0], return_path=True)
         logger.info("Data has been installed and data path is %s", data_path)
     elif args.info is not None:
-        if args.info == 'name_only':
+        if args.info == 'name':
             print(json.dumps(info(name_only=True), indent=4))
         else:
             output = info() if (args.info == full_information) else info(name=args.info)
