@@ -92,5 +92,3 @@ cdef unsigned long long fast_sentence_cbow_neg(
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
     int i, int j, int k, int cbow_mean, unsigned long long next_random, REAL_t *word_locks,
     const int _compute_loss, REAL_t *_running_training_loss_param) nogil
-
-

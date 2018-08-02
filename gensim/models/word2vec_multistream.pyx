@@ -32,7 +32,6 @@ from gensim.models.word2vec_inner cimport (
 )
 
 ctypedef np.float32_t REAL_t
-cdef REAL_t ONEF = <REAL_t>1.0
 DEF MAX_SENTENCE_LEN = 10000
 
 

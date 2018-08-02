@@ -250,7 +250,7 @@ setup(
 
     ext_modules=[
         Extension('gensim.models.word2vec_inner',
-            sources=['./gensim/models/word2vec_inner.cpp'],
+            sources=['./gensim/models/word2vec_inner.c'],
             include_dirs=[model_dir]),
         Extension('gensim.models.word2vec_multistream',
                   sources=['./gensim/models/word2vec_multistream.cpp', './gensim/models/fast_line_sentence.cpp'],
