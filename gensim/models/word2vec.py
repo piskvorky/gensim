@@ -140,7 +140,6 @@ logger = logging.getLogger(__name__)
 
 try:
     from gensim.models.word2vec_inner import train_batch_sg, train_batch_cbow
-    from gensim.models.word2vec_inner import train_epoch_sg, train_epoch_cbow
     from gensim.models.word2vec_inner import score_sentence_sg, score_sentence_cbow
     from gensim.models.word2vec_inner import FAST_VERSION, MAX_WORDS_IN_BATCH
 
@@ -332,6 +331,18 @@ except ImportError:
             log_prob_sentence += score_cbow_pair(model, word, l1)
 
         return log_prob_sentence
+
+try:
+    from gensim.models.word2vec_multistream import train_epoch_sg, train_epoch_cbow
+except ImportError:
+    # multistream word2vec is not supported
+    def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
+                       _work, _neu1, compute_loss):
+        raise RuntimeError("Training with corpus_file argument is not supported")
+
+    def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
+                         _work, _neu1, compute_loss):
+        raise RuntimeError("Training with corpus_file argument is not supported")
 
 
 def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_hidden=True,

@@ -393,7 +393,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         if not total_words:
             raise ValueError("total_words must be provided alongside corpus_file argument.")
 
-        from gensim.models.word2vec_inner import CythonVocab
+        from gensim.models.word2vec_multistream import CythonVocab
         cython_vocab = CythonVocab(self.wv.vocab, self.hs)
 
         progress_queue = Queue()
