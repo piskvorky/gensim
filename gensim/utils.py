@@ -2036,7 +2036,7 @@ def save_as_line_sentence(corpus, filename):
     corpus : iterable of iterables of strings
 
     """
-    with smart_open(filename, mode='w', encoding='utf8') as fout:
+    with smart_open(filename, mode='wb', encoding='utf8') as fout:
         for sentence in corpus:
             line = ' '.join(sentence) + '\n'
             if not isinstance(line, unicode):

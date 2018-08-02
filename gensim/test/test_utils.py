@@ -15,7 +15,7 @@ import numpy as np
 from six import iteritems
 
 from gensim import utils
-from gensim.test.utils import datapath
+from gensim.test.utils import datapath, get_tmpfile
 
 
 class TestIsCorpus(unittest.TestCase):
@@ -236,6 +236,26 @@ class TestWindowing(unittest.TestCase):
         not_nested = [1, 2, 3, 4, 5, 6]
         expected = [1, 2, 3, 4, 5, 6]
         self.assertEqual(utils.flatten(not_nested), expected)
+
+
+class TestSaveAsLineSentence(unittest.TestCase):
+    def test_save_as_line_sentence_en(self):
+        corpus_file = get_tmpfile('gensim_utils.tst')
+        ref_sentences = [['hello', 'world'], ['how', 'are', 'you']]
+        utils.save_as_line_sentence(ref_sentences, corpus_file)
+
+        with utils.smart_open(corpus_file) as fin:
+            sentences = [line.strip().split() for line in fin.read().strip().split('\n')]
+            self.assertEqual(sentences, ref_sentences)
+
+    def test_save_as_line_sentence_ru(self):
+        corpus_file = get_tmpfile('gensim_utils.tst')
+        ref_sentences = [['привет', 'мир'], ['как', 'ты', 'поживаешь']]
+        utils.save_as_line_sentence(ref_sentences, corpus_file)
+
+        with utils.smart_open(corpus_file) as fin:
+            sentences = [line.strip().split() for line in fin.read().strip().split('\n')]
+            self.assertEqual(sentences, ref_sentences)
 
 
 if __name__ == '__main__':

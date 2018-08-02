@@ -224,6 +224,9 @@ class TestWord2VecModel(unittest.TestCase):
             model_neg.save(tmpf)
             model_neg = word2vec.Word2Vec.load(tmpf)
             self.assertTrue(len(model_neg.wv.vocab), 12)
+            # Check that training works on the same data after load without calling build_vocab
+            model_neg.train(corpus_file=corpus_file, total_words=model_neg.corpus_total_words, epochs=model_neg.iter)
+            # Train on new corpus file
             model_neg.build_vocab(corpus_file=new_corpus_file, update=True)
             model_neg.train(corpus_file=new_corpus_file, total_words=model_neg.corpus_total_words,
                             epochs=model_neg.iter)
@@ -533,7 +536,7 @@ class TestWord2VecModel(unittest.TestCase):
         model2 = word2vec.Word2Vec(sentences, size=2, min_count=1, hs=1, negative=0)
         self.models_equal(model, model2)
 
-    @unittest.skipIf(os.uname()[0] != 'Linux', "corpus_file argument is supported only on Linux")
+    @unittest.skipIf(os.name != 'posix', "corpus_file argument is supported only on Linux")
     def testTrainingMultistream(self):
         """Test word2vec training with corpus_file argument."""
         # build vocabulary, don't train yet
@@ -601,7 +604,7 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(0.1 < spearman < 1.0)
         self.assertTrue(0.0 <= oov < 90.0)
 
-    @unittest.skipIf(os.uname()[0] != 'Linux', "CythonLineSentence is supported only on Linux")
+    @unittest.skipIf(os.name != 'posix', "CythonLineSentence is supported only on Linux")
     def testEvaluateWordPairsMultistream(self):
         """Test Spearman and Pearson correlation coefficients give sane results on similarity datasets"""
         with temporary_file(get_tmpfile('gensim_word2vec.tst')) as tf:
@@ -1041,7 +1044,7 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
             for words in sentences:
                 self.assertEqual(words, utils.to_unicode(orig.readline()).split())
 
-    @unittest.skipIf(os.uname()[0] != 'Linux', "CythonLineSentence is supported only on Linux")
+    @unittest.skipIf(os.name != 'posix', "CythonLineSentence is supported only on Linux")
     def testCythonLineSentenceWorksWithFilename(self):
         """Does CythonLineSentence work with a filename argument?"""
         from gensim.models import word2vec_inner
