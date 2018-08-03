@@ -1032,7 +1032,7 @@ typedef npy_longdouble __pyx_t_5numpy_longdouble_t;
  */
 typedef __pyx_t_5numpy_float32_t __pyx_t_6gensim_6models_14word2vec_inner_REAL_t;
 
-/* "gensim/models/word2vec_multistream.pyx":34
+/* "gensim/models/word2vec_multistream.pyx":33
  * )
  * 
  * ctypedef np.float32_t REAL_t             # <<<<<<<<<<<<<<
@@ -1236,7 +1236,7 @@ struct __pyx_obj_6gensim_6models_20word2vec_multistream_CythonVocab {
 };
 
 
-/* "gensim/models/word2vec_multistream.pyx":117
+/* "gensim/models/word2vec_multistream.pyx":116
  *         self._thisptr.Reset()
  * 
  *     def __iter__(self):             # <<<<<<<<<<<<<<
@@ -1253,7 +1253,7 @@ struct __pyx_obj_6gensim_6models_20word2vec_multistream___pyx_scope_struct____it
 
 
 
-/* "gensim/models/word2vec_multistream.pyx":72
+/* "gensim/models/word2vec_multistream.pyx":71
  * 
  * @cython.final
  * cdef class CythonLineSentence:             # <<<<<<<<<<<<<<
@@ -1278,7 +1278,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence_
 static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence_next_batch(struct __pyx_obj_6gensim_6models_20word2vec_multistream_CythonLineSentence *, int __pyx_skip_dispatch);
 
 
-/* "gensim/models/word2vec_multistream.pyx":40
+/* "gensim/models/word2vec_multistream.pyx":39
  * 
  * @cython.final
  * cdef class CythonVocab:             # <<<<<<<<<<<<<<
@@ -1378,8 +1378,11 @@ static int __Pyx_ParseOptionalKeywords(PyObject *kwds, PyObject **argnames[],\
 static void __Pyx_RaiseArgtupleInvalid(const char* func_name, int exact,
     Py_ssize_t num_min, Py_ssize_t num_max, Py_ssize_t num_found);
 
-/* GetModuleGlobalName.proto */
-static CYTHON_INLINE PyObject *__Pyx_GetModuleGlobalName(PyObject *name);
+/* Import.proto */
+static PyObject *__Pyx_Import(PyObject *name, PyObject *from_list, int level);
+
+/* ImportFrom.proto */
+static PyObject* __Pyx_ImportFrom(PyObject* module, PyObject* name);
 
 /* PyCFunctionFastCall.proto */
 #if CYTHON_FAST_PYCCALL
@@ -1425,6 +1428,9 @@ static CYTHON_INLINE int __Pyx_IterFinish(void);
 
 /* UnpackItemEndCheck.proto */
 static int __Pyx_IternextUnpackEndCheck(PyObject *retval, Py_ssize_t expected);
+
+/* GetModuleGlobalName.proto */
+static CYTHON_INLINE PyObject *__Pyx_GetModuleGlobalName(PyObject *name);
 
 /* ExtTypeTest.proto */
 static CYTHON_INLINE int __Pyx_TypeTest(PyObject *obj, PyTypeObject *type);
@@ -1555,12 +1561,6 @@ static int __Pyx_SetVtable(PyObject *dict, void *vtable);
 
 /* SetupReduce.proto */
 static int __Pyx_setup_reduce(PyObject* type_obj);
-
-/* Import.proto */
-static PyObject *__Pyx_Import(PyObject *name, PyObject *from_list, int level);
-
-/* ImportFrom.proto */
-static PyObject* __Pyx_ImportFrom(PyObject* module, PyObject* name);
 
 /* CLineInTraceback.proto */
 #ifdef CYTHON_CLINE_IN_TRACEBACK
@@ -2281,12 +2281,12 @@ static PyObject *__pyx_codeobj__20;
 static PyObject *__pyx_codeobj__22;
 /* Late includes */
 
-/* "gensim/models/word2vec_multistream.pyx":41
+/* "gensim/models/word2vec_multistream.pyx":40
  * @cython.final
  * cdef class CythonVocab:
  *     def __init__(self, pyvocab, hs=0):             # <<<<<<<<<<<<<<
  *         cdef VocabItem word
- * 
+ *         from six import iteritems
  */
 
 /* Python wrapper */
@@ -2325,7 +2325,7 @@ static int __pyx_pw_6gensim_6models_20word2vec_multistream_11CythonVocab_1__init
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__init__") < 0)) __PYX_ERR(1, 41, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__init__") < 0)) __PYX_ERR(1, 40, __pyx_L3_error)
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -2341,7 +2341,7 @@ static int __pyx_pw_6gensim_6models_20word2vec_multistream_11CythonVocab_1__init
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__init__", 0, 1, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(1, 41, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("__init__", 0, 1, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(1, 40, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("gensim.models.word2vec_multistream.CythonVocab.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -2356,6 +2356,7 @@ static int __pyx_pw_6gensim_6models_20word2vec_multistream_11CythonVocab_1__init
 
 static int __pyx_pf_6gensim_6models_20word2vec_multistream_11CythonVocab___init__(struct __pyx_obj_6gensim_6models_20word2vec_multistream_CythonVocab *__pyx_v_self, PyObject *__pyx_v_pyvocab, PyObject *__pyx_v_hs) {
   struct __pyx_t_6gensim_6models_20word2vec_multistream_VocabItem __pyx_v_word;
+  PyObject *__pyx_v_iteritems = NULL;
   PyObject *__pyx_v_py_token = NULL;
   PyObject *__pyx_v_vocab_item = NULL;
   PyObject *__pyx_v_token = NULL;
@@ -2376,105 +2377,126 @@ static int __pyx_pf_6gensim_6models_20word2vec_multistream_11CythonVocab___init_
   std::string __pyx_t_13;
   __Pyx_RefNannySetupContext("__init__", 0);
 
-  /* "gensim/models/word2vec_multistream.pyx":44
+  /* "gensim/models/word2vec_multistream.pyx":42
+ *     def __init__(self, pyvocab, hs=0):
  *         cdef VocabItem word
- * 
+ *         from six import iteritems             # <<<<<<<<<<<<<<
+ *         for py_token, vocab_item in iteritems(pyvocab):
+ *             token = any2utf8(py_token)
+ */
+  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 42, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_INCREF(__pyx_n_s_iteritems);
+  __Pyx_GIVEREF(__pyx_n_s_iteritems);
+  PyList_SET_ITEM(__pyx_t_1, 0, __pyx_n_s_iteritems);
+  __pyx_t_2 = __Pyx_Import(__pyx_n_s_six, __pyx_t_1, -1); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 42, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_1 = __Pyx_ImportFrom(__pyx_t_2, __pyx_n_s_iteritems); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 42, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_INCREF(__pyx_t_1);
+  __pyx_v_iteritems = __pyx_t_1;
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "gensim/models/word2vec_multistream.pyx":43
+ *         cdef VocabItem word
+ *         from six import iteritems
  *         for py_token, vocab_item in iteritems(pyvocab):             # <<<<<<<<<<<<<<
  *             token = any2utf8(py_token)
  *             word.index = vocab_item.index
  */
-  __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_iteritems); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 44, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = NULL;
-  if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_2))) {
-    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_2);
+  __Pyx_INCREF(__pyx_v_iteritems);
+  __pyx_t_1 = __pyx_v_iteritems; __pyx_t_3 = NULL;
+  if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_1))) {
+    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_1);
     if (likely(__pyx_t_3)) {
-      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_2);
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_1);
       __Pyx_INCREF(__pyx_t_3);
       __Pyx_INCREF(function);
-      __Pyx_DECREF_SET(__pyx_t_2, function);
+      __Pyx_DECREF_SET(__pyx_t_1, function);
     }
   }
   if (!__pyx_t_3) {
-    __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_v_pyvocab); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 44, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_v_pyvocab); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 43, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
   } else {
     #if CYTHON_FAST_PYCALL
-    if (PyFunction_Check(__pyx_t_2)) {
+    if (PyFunction_Check(__pyx_t_1)) {
       PyObject *__pyx_temp[2] = {__pyx_t_3, __pyx_v_pyvocab};
-      __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_2, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 44, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_PyFunction_FastCall(__pyx_t_1, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 43, __pyx_L1_error)
       __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
-      __Pyx_GOTREF(__pyx_t_1);
+      __Pyx_GOTREF(__pyx_t_2);
     } else
     #endif
     #if CYTHON_FAST_PYCCALL
-    if (__Pyx_PyFastCFunction_Check(__pyx_t_2)) {
+    if (__Pyx_PyFastCFunction_Check(__pyx_t_1)) {
       PyObject *__pyx_temp[2] = {__pyx_t_3, __pyx_v_pyvocab};
-      __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_2, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 44, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_PyCFunction_FastCall(__pyx_t_1, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 43, __pyx_L1_error)
       __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
-      __Pyx_GOTREF(__pyx_t_1);
+      __Pyx_GOTREF(__pyx_t_2);
     } else
     #endif
     {
-      __pyx_t_4 = PyTuple_New(1+1); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 44, __pyx_L1_error)
+      __pyx_t_4 = PyTuple_New(1+1); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 43, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_4);
       __Pyx_GIVEREF(__pyx_t_3); PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_3); __pyx_t_3 = NULL;
       __Pyx_INCREF(__pyx_v_pyvocab);
       __Pyx_GIVEREF(__pyx_v_pyvocab);
       PyTuple_SET_ITEM(__pyx_t_4, 0+1, __pyx_v_pyvocab);
-      __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 44, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_1);
+      __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_4, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 43, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_2);
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     }
   }
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (likely(PyList_CheckExact(__pyx_t_1)) || PyTuple_CheckExact(__pyx_t_1)) {
-    __pyx_t_2 = __pyx_t_1; __Pyx_INCREF(__pyx_t_2); __pyx_t_5 = 0;
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  if (likely(PyList_CheckExact(__pyx_t_2)) || PyTuple_CheckExact(__pyx_t_2)) {
+    __pyx_t_1 = __pyx_t_2; __Pyx_INCREF(__pyx_t_1); __pyx_t_5 = 0;
     __pyx_t_6 = NULL;
   } else {
-    __pyx_t_5 = -1; __pyx_t_2 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 44, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_6 = Py_TYPE(__pyx_t_2)->tp_iternext; if (unlikely(!__pyx_t_6)) __PYX_ERR(1, 44, __pyx_L1_error)
+    __pyx_t_5 = -1; __pyx_t_1 = PyObject_GetIter(__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 43, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_6 = Py_TYPE(__pyx_t_1)->tp_iternext; if (unlikely(!__pyx_t_6)) __PYX_ERR(1, 43, __pyx_L1_error)
   }
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   for (;;) {
     if (likely(!__pyx_t_6)) {
-      if (likely(PyList_CheckExact(__pyx_t_2))) {
-        if (__pyx_t_5 >= PyList_GET_SIZE(__pyx_t_2)) break;
+      if (likely(PyList_CheckExact(__pyx_t_1))) {
+        if (__pyx_t_5 >= PyList_GET_SIZE(__pyx_t_1)) break;
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-        __pyx_t_1 = PyList_GET_ITEM(__pyx_t_2, __pyx_t_5); __Pyx_INCREF(__pyx_t_1); __pyx_t_5++; if (unlikely(0 < 0)) __PYX_ERR(1, 44, __pyx_L1_error)
+        __pyx_t_2 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_5); __Pyx_INCREF(__pyx_t_2); __pyx_t_5++; if (unlikely(0 < 0)) __PYX_ERR(1, 43, __pyx_L1_error)
         #else
-        __pyx_t_1 = PySequence_ITEM(__pyx_t_2, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 44, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_1);
+        __pyx_t_2 = PySequence_ITEM(__pyx_t_1, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 43, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_2);
         #endif
       } else {
-        if (__pyx_t_5 >= PyTuple_GET_SIZE(__pyx_t_2)) break;
+        if (__pyx_t_5 >= PyTuple_GET_SIZE(__pyx_t_1)) break;
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-        __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_2, __pyx_t_5); __Pyx_INCREF(__pyx_t_1); __pyx_t_5++; if (unlikely(0 < 0)) __PYX_ERR(1, 44, __pyx_L1_error)
+        __pyx_t_2 = PyTuple_GET_ITEM(__pyx_t_1, __pyx_t_5); __Pyx_INCREF(__pyx_t_2); __pyx_t_5++; if (unlikely(0 < 0)) __PYX_ERR(1, 43, __pyx_L1_error)
         #else
-        __pyx_t_1 = PySequence_ITEM(__pyx_t_2, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 44, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_1);
+        __pyx_t_2 = PySequence_ITEM(__pyx_t_1, __pyx_t_5); __pyx_t_5++; if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 43, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_2);
         #endif
       }
     } else {
-      __pyx_t_1 = __pyx_t_6(__pyx_t_2);
-      if (unlikely(!__pyx_t_1)) {
+      __pyx_t_2 = __pyx_t_6(__pyx_t_1);
+      if (unlikely(!__pyx_t_2)) {
         PyObject* exc_type = PyErr_Occurred();
         if (exc_type) {
           if (likely(__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-          else __PYX_ERR(1, 44, __pyx_L1_error)
+          else __PYX_ERR(1, 43, __pyx_L1_error)
         }
         break;
       }
-      __Pyx_GOTREF(__pyx_t_1);
+      __Pyx_GOTREF(__pyx_t_2);
     }
-    if ((likely(PyTuple_CheckExact(__pyx_t_1))) || (PyList_CheckExact(__pyx_t_1))) {
-      PyObject* sequence = __pyx_t_1;
+    if ((likely(PyTuple_CheckExact(__pyx_t_2))) || (PyList_CheckExact(__pyx_t_2))) {
+      PyObject* sequence = __pyx_t_2;
       Py_ssize_t size = __Pyx_PySequence_SIZE(sequence);
       if (unlikely(size != 2)) {
         if (size > 2) __Pyx_RaiseTooManyValuesError(2);
         else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
-        __PYX_ERR(1, 44, __pyx_L1_error)
+        __PYX_ERR(1, 43, __pyx_L1_error)
       }
       #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
       if (likely(PyTuple_CheckExact(sequence))) {
@@ -2487,23 +2509,23 @@ static int __pyx_pf_6gensim_6models_20word2vec_multistream_11CythonVocab___init_
       __Pyx_INCREF(__pyx_t_4);
       __Pyx_INCREF(__pyx_t_3);
       #else
-      __pyx_t_4 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 44, __pyx_L1_error)
+      __pyx_t_4 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 43, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_4);
-      __pyx_t_3 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 44, __pyx_L1_error)
+      __pyx_t_3 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 43, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_3);
       #endif
-      __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     } else {
       Py_ssize_t index = -1;
-      __pyx_t_7 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_7)) __PYX_ERR(1, 44, __pyx_L1_error)
+      __pyx_t_7 = PyObject_GetIter(__pyx_t_2); if (unlikely(!__pyx_t_7)) __PYX_ERR(1, 43, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_7);
-      __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
       __pyx_t_8 = Py_TYPE(__pyx_t_7)->tp_iternext;
       index = 0; __pyx_t_4 = __pyx_t_8(__pyx_t_7); if (unlikely(!__pyx_t_4)) goto __pyx_L5_unpacking_failed;
       __Pyx_GOTREF(__pyx_t_4);
       index = 1; __pyx_t_3 = __pyx_t_8(__pyx_t_7); if (unlikely(!__pyx_t_3)) goto __pyx_L5_unpacking_failed;
       __Pyx_GOTREF(__pyx_t_3);
-      if (__Pyx_IternextUnpackEndCheck(__pyx_t_8(__pyx_t_7), 2) < 0) __PYX_ERR(1, 44, __pyx_L1_error)
+      if (__Pyx_IternextUnpackEndCheck(__pyx_t_8(__pyx_t_7), 2) < 0) __PYX_ERR(1, 43, __pyx_L1_error)
       __pyx_t_8 = NULL;
       __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
       goto __pyx_L6_unpacking_done;
@@ -2511,7 +2533,7 @@ static int __pyx_pf_6gensim_6models_20word2vec_multistream_11CythonVocab___init_
       __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
       __pyx_t_8 = NULL;
       if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
-      __PYX_ERR(1, 44, __pyx_L1_error)
+      __PYX_ERR(1, 43, __pyx_L1_error)
       __pyx_L6_unpacking_done:;
     }
     __Pyx_XDECREF_SET(__pyx_v_py_token, __pyx_t_4);
@@ -2519,14 +2541,14 @@ static int __pyx_pf_6gensim_6models_20word2vec_multistream_11CythonVocab___init_
     __Pyx_XDECREF_SET(__pyx_v_vocab_item, __pyx_t_3);
     __pyx_t_3 = 0;
 
-    /* "gensim/models/word2vec_multistream.pyx":45
- * 
+    /* "gensim/models/word2vec_multistream.pyx":44
+ *         from six import iteritems
  *         for py_token, vocab_item in iteritems(pyvocab):
  *             token = any2utf8(py_token)             # <<<<<<<<<<<<<<
  *             word.index = vocab_item.index
  *             word.sample_int = vocab_item.sample_int
  */
-    __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_any2utf8); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 45, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_any2utf8); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 44, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __pyx_t_4 = NULL;
     if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_3))) {
@@ -2539,117 +2561,117 @@ static int __pyx_pf_6gensim_6models_20word2vec_multistream_11CythonVocab___init_
       }
     }
     if (!__pyx_t_4) {
-      __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_v_py_token); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 45, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_1);
+      __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_v_py_token); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 44, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_2);
     } else {
       #if CYTHON_FAST_PYCALL
       if (PyFunction_Check(__pyx_t_3)) {
         PyObject *__pyx_temp[2] = {__pyx_t_4, __pyx_v_py_token};
-        __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_3, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 45, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyFunction_FastCall(__pyx_t_3, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 44, __pyx_L1_error)
         __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
-        __Pyx_GOTREF(__pyx_t_1);
+        __Pyx_GOTREF(__pyx_t_2);
       } else
       #endif
       #if CYTHON_FAST_PYCCALL
       if (__Pyx_PyFastCFunction_Check(__pyx_t_3)) {
         PyObject *__pyx_temp[2] = {__pyx_t_4, __pyx_v_py_token};
-        __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_3, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 45, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyCFunction_FastCall(__pyx_t_3, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 44, __pyx_L1_error)
         __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
-        __Pyx_GOTREF(__pyx_t_1);
+        __Pyx_GOTREF(__pyx_t_2);
       } else
       #endif
       {
-        __pyx_t_7 = PyTuple_New(1+1); if (unlikely(!__pyx_t_7)) __PYX_ERR(1, 45, __pyx_L1_error)
+        __pyx_t_7 = PyTuple_New(1+1); if (unlikely(!__pyx_t_7)) __PYX_ERR(1, 44, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_7);
         __Pyx_GIVEREF(__pyx_t_4); PyTuple_SET_ITEM(__pyx_t_7, 0, __pyx_t_4); __pyx_t_4 = NULL;
         __Pyx_INCREF(__pyx_v_py_token);
         __Pyx_GIVEREF(__pyx_v_py_token);
         PyTuple_SET_ITEM(__pyx_t_7, 0+1, __pyx_v_py_token);
-        __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_7, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 45, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_1);
+        __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_7, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 44, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_2);
         __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
       }
     }
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __Pyx_XDECREF_SET(__pyx_v_token, __pyx_t_1);
-    __pyx_t_1 = 0;
+    __Pyx_XDECREF_SET(__pyx_v_token, __pyx_t_2);
+    __pyx_t_2 = 0;
 
-    /* "gensim/models/word2vec_multistream.pyx":46
+    /* "gensim/models/word2vec_multistream.pyx":45
  *         for py_token, vocab_item in iteritems(pyvocab):
  *             token = any2utf8(py_token)
  *             word.index = vocab_item.index             # <<<<<<<<<<<<<<
  *             word.sample_int = vocab_item.sample_int
  * 
  */
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_vocab_item, __pyx_n_s_index); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 46, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_9 = __Pyx_PyInt_As_npy_uint32(__pyx_t_1); if (unlikely((__pyx_t_9 == ((npy_uint32)-1)) && PyErr_Occurred())) __PYX_ERR(1, 46, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_vocab_item, __pyx_n_s_index); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 45, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __pyx_t_9 = __Pyx_PyInt_As_npy_uint32(__pyx_t_2); if (unlikely((__pyx_t_9 == ((npy_uint32)-1)) && PyErr_Occurred())) __PYX_ERR(1, 45, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     __pyx_v_word.index = __pyx_t_9;
 
-    /* "gensim/models/word2vec_multistream.pyx":47
+    /* "gensim/models/word2vec_multistream.pyx":46
  *             token = any2utf8(py_token)
  *             word.index = vocab_item.index
  *             word.sample_int = vocab_item.sample_int             # <<<<<<<<<<<<<<
  * 
  *             if hs:
  */
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_vocab_item, __pyx_n_s_sample_int); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 47, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_10 = __Pyx_PyInt_As_PY_LONG_LONG(__pyx_t_1); if (unlikely((__pyx_t_10 == (PY_LONG_LONG)-1) && PyErr_Occurred())) __PYX_ERR(1, 47, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_vocab_item, __pyx_n_s_sample_int); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 46, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __pyx_t_10 = __Pyx_PyInt_As_PY_LONG_LONG(__pyx_t_2); if (unlikely((__pyx_t_10 == (PY_LONG_LONG)-1) && PyErr_Occurred())) __PYX_ERR(1, 46, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     __pyx_v_word.sample_int = __pyx_t_10;
 
-    /* "gensim/models/word2vec_multistream.pyx":49
+    /* "gensim/models/word2vec_multistream.pyx":48
  *             word.sample_int = vocab_item.sample_int
  * 
  *             if hs:             # <<<<<<<<<<<<<<
  *                 word.code = <np.uint8_t *>np.PyArray_DATA(vocab_item.code)
  *                 word.code_len = <int>len(vocab_item.code)
  */
-    __pyx_t_11 = __Pyx_PyObject_IsTrue(__pyx_v_hs); if (unlikely(__pyx_t_11 < 0)) __PYX_ERR(1, 49, __pyx_L1_error)
+    __pyx_t_11 = __Pyx_PyObject_IsTrue(__pyx_v_hs); if (unlikely(__pyx_t_11 < 0)) __PYX_ERR(1, 48, __pyx_L1_error)
     if (__pyx_t_11) {
 
-      /* "gensim/models/word2vec_multistream.pyx":50
+      /* "gensim/models/word2vec_multistream.pyx":49
  * 
  *             if hs:
  *                 word.code = <np.uint8_t *>np.PyArray_DATA(vocab_item.code)             # <<<<<<<<<<<<<<
  *                 word.code_len = <int>len(vocab_item.code)
  *                 word.point = <np.uint32_t *>np.PyArray_DATA(vocab_item.point)
  */
-      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_vocab_item, __pyx_n_s_code); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 50, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_1);
-      if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(1, 50, __pyx_L1_error)
-      __pyx_v_word.code = ((__pyx_t_5numpy_uint8_t *)PyArray_DATA(((PyArrayObject *)__pyx_t_1)));
-      __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+      __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_vocab_item, __pyx_n_s_code); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 49, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_2);
+      if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(1, 49, __pyx_L1_error)
+      __pyx_v_word.code = ((__pyx_t_5numpy_uint8_t *)PyArray_DATA(((PyArrayObject *)__pyx_t_2)));
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-      /* "gensim/models/word2vec_multistream.pyx":51
+      /* "gensim/models/word2vec_multistream.pyx":50
  *             if hs:
  *                 word.code = <np.uint8_t *>np.PyArray_DATA(vocab_item.code)
  *                 word.code_len = <int>len(vocab_item.code)             # <<<<<<<<<<<<<<
  *                 word.point = <np.uint32_t *>np.PyArray_DATA(vocab_item.point)
  * 
  */
-      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_vocab_item, __pyx_n_s_code); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 51, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_1);
-      __pyx_t_12 = PyObject_Length(__pyx_t_1); if (unlikely(__pyx_t_12 == ((Py_ssize_t)-1))) __PYX_ERR(1, 51, __pyx_L1_error)
-      __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+      __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_vocab_item, __pyx_n_s_code); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 50, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_2);
+      __pyx_t_12 = PyObject_Length(__pyx_t_2); if (unlikely(__pyx_t_12 == ((Py_ssize_t)-1))) __PYX_ERR(1, 50, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
       __pyx_v_word.code_len = ((int)__pyx_t_12);
 
-      /* "gensim/models/word2vec_multistream.pyx":52
+      /* "gensim/models/word2vec_multistream.pyx":51
  *                 word.code = <np.uint8_t *>np.PyArray_DATA(vocab_item.code)
  *                 word.code_len = <int>len(vocab_item.code)
  *                 word.point = <np.uint32_t *>np.PyArray_DATA(vocab_item.point)             # <<<<<<<<<<<<<<
  * 
  *             self.vocab[token] = word
  */
-      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_vocab_item, __pyx_n_s_point); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 52, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_1);
-      if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(1, 52, __pyx_L1_error)
-      __pyx_v_word.point = ((__pyx_t_5numpy_uint32_t *)PyArray_DATA(((PyArrayObject *)__pyx_t_1)));
-      __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+      __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_vocab_item, __pyx_n_s_point); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 51, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_2);
+      if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(1, 51, __pyx_L1_error)
+      __pyx_v_word.point = ((__pyx_t_5numpy_uint32_t *)PyArray_DATA(((PyArrayObject *)__pyx_t_2)));
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-      /* "gensim/models/word2vec_multistream.pyx":49
+      /* "gensim/models/word2vec_multistream.pyx":48
  *             word.sample_int = vocab_item.sample_int
  * 
  *             if hs:             # <<<<<<<<<<<<<<
@@ -2658,32 +2680,32 @@ static int __pyx_pf_6gensim_6models_20word2vec_multistream_11CythonVocab___init_
  */
     }
 
-    /* "gensim/models/word2vec_multistream.pyx":54
+    /* "gensim/models/word2vec_multistream.pyx":53
  *                 word.point = <np.uint32_t *>np.PyArray_DATA(vocab_item.point)
  * 
  *             self.vocab[token] = word             # <<<<<<<<<<<<<<
  * 
  *     cdef cvocab_t* get_vocab_ptr(self) nogil except *:
  */
-    __pyx_t_13 = __pyx_convert_string_from_py_std__in_string(__pyx_v_token); if (unlikely(PyErr_Occurred())) __PYX_ERR(1, 54, __pyx_L1_error)
+    __pyx_t_13 = __pyx_convert_string_from_py_std__in_string(__pyx_v_token); if (unlikely(PyErr_Occurred())) __PYX_ERR(1, 53, __pyx_L1_error)
     (__pyx_v_self->vocab[__pyx_t_13]) = __pyx_v_word;
 
-    /* "gensim/models/word2vec_multistream.pyx":44
+    /* "gensim/models/word2vec_multistream.pyx":43
  *         cdef VocabItem word
- * 
+ *         from six import iteritems
  *         for py_token, vocab_item in iteritems(pyvocab):             # <<<<<<<<<<<<<<
  *             token = any2utf8(py_token)
  *             word.index = vocab_item.index
  */
   }
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "gensim/models/word2vec_multistream.pyx":41
+  /* "gensim/models/word2vec_multistream.pyx":40
  * @cython.final
  * cdef class CythonVocab:
  *     def __init__(self, pyvocab, hs=0):             # <<<<<<<<<<<<<<
  *         cdef VocabItem word
- * 
+ *         from six import iteritems
  */
 
   /* function exit code */
@@ -2698,6 +2720,7 @@ static int __pyx_pf_6gensim_6models_20word2vec_multistream_11CythonVocab___init_
   __Pyx_AddTraceback("gensim.models.word2vec_multistream.CythonVocab.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = -1;
   __pyx_L0:;
+  __Pyx_XDECREF(__pyx_v_iteritems);
   __Pyx_XDECREF(__pyx_v_py_token);
   __Pyx_XDECREF(__pyx_v_vocab_item);
   __Pyx_XDECREF(__pyx_v_token);
@@ -2705,7 +2728,7 @@ static int __pyx_pf_6gensim_6models_20word2vec_multistream_11CythonVocab___init_
   return __pyx_r;
 }
 
-/* "gensim/models/word2vec_multistream.pyx":56
+/* "gensim/models/word2vec_multistream.pyx":55
  *             self.vocab[token] = word
  * 
  *     cdef cvocab_t* get_vocab_ptr(self) nogil except *:             # <<<<<<<<<<<<<<
@@ -2716,7 +2739,7 @@ static int __pyx_pf_6gensim_6models_20word2vec_multistream_11CythonVocab___init_
 static __pyx_t_6gensim_6models_20word2vec_multistream_cvocab_t *__pyx_f_6gensim_6models_20word2vec_multistream_11CythonVocab_get_vocab_ptr(struct __pyx_obj_6gensim_6models_20word2vec_multistream_CythonVocab *__pyx_v_self) {
   __pyx_t_6gensim_6models_20word2vec_multistream_cvocab_t *__pyx_r;
 
-  /* "gensim/models/word2vec_multistream.pyx":57
+  /* "gensim/models/word2vec_multistream.pyx":56
  * 
  *     cdef cvocab_t* get_vocab_ptr(self) nogil except *:
  *         return &self.vocab             # <<<<<<<<<<<<<<
@@ -2726,7 +2749,7 @@ static __pyx_t_6gensim_6models_20word2vec_multistream_cvocab_t *__pyx_f_6gensim_
   __pyx_r = (&__pyx_v_self->vocab);
   goto __pyx_L0;
 
-  /* "gensim/models/word2vec_multistream.pyx":56
+  /* "gensim/models/word2vec_multistream.pyx":55
  *             self.vocab[token] = word
  * 
  *     cdef cvocab_t* get_vocab_ptr(self) nogil except *:             # <<<<<<<<<<<<<<
@@ -2848,7 +2871,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_11CythonVocab_4
   return __pyx_r;
 }
 
-/* "gensim/models/word2vec_multistream.pyx":60
+/* "gensim/models/word2vec_multistream.pyx":59
  * 
  * 
  * def rebuild_cython_line_sentence(source, max_sentence_length):             # <<<<<<<<<<<<<<
@@ -2889,11 +2912,11 @@ static PyObject *__pyx_pw_6gensim_6models_20word2vec_multistream_1rebuild_cython
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_max_sentence_length)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("rebuild_cython_line_sentence", 1, 2, 2, 1); __PYX_ERR(1, 60, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("rebuild_cython_line_sentence", 1, 2, 2, 1); __PYX_ERR(1, 59, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "rebuild_cython_line_sentence") < 0)) __PYX_ERR(1, 60, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "rebuild_cython_line_sentence") < 0)) __PYX_ERR(1, 59, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 2) {
       goto __pyx_L5_argtuple_error;
@@ -2906,7 +2929,7 @@ static PyObject *__pyx_pw_6gensim_6models_20word2vec_multistream_1rebuild_cython
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("rebuild_cython_line_sentence", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(1, 60, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("rebuild_cython_line_sentence", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(1, 59, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("gensim.models.word2vec_multistream.rebuild_cython_line_sentence", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -2927,7 +2950,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_rebuild_cython_
   PyObject *__pyx_t_3 = NULL;
   __Pyx_RefNannySetupContext("rebuild_cython_line_sentence", 0);
 
-  /* "gensim/models/word2vec_multistream.pyx":61
+  /* "gensim/models/word2vec_multistream.pyx":60
  * 
  * def rebuild_cython_line_sentence(source, max_sentence_length):
  *     return CythonLineSentence(source, max_sentence_length=max_sentence_length)             # <<<<<<<<<<<<<<
@@ -2935,15 +2958,15 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_rebuild_cython_
  * 
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 61, __pyx_L1_error)
+  __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 60, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_INCREF(__pyx_v_source);
   __Pyx_GIVEREF(__pyx_v_source);
   PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_v_source);
-  __pyx_t_2 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 61, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 60, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_max_sentence_length, __pyx_v_max_sentence_length) < 0) __PYX_ERR(1, 61, __pyx_L1_error)
-  __pyx_t_3 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_6gensim_6models_20word2vec_multistream_CythonLineSentence), __pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 61, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_max_sentence_length, __pyx_v_max_sentence_length) < 0) __PYX_ERR(1, 60, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_6gensim_6models_20word2vec_multistream_CythonLineSentence), __pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 60, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
@@ -2951,7 +2974,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_rebuild_cython_
   __pyx_t_3 = 0;
   goto __pyx_L0;
 
-  /* "gensim/models/word2vec_multistream.pyx":60
+  /* "gensim/models/word2vec_multistream.pyx":59
  * 
  * 
  * def rebuild_cython_line_sentence(source, max_sentence_length):             # <<<<<<<<<<<<<<
@@ -2972,7 +2995,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_rebuild_cython_
   return __pyx_r;
 }
 
-/* "gensim/models/word2vec_multistream.pyx":64
+/* "gensim/models/word2vec_multistream.pyx":63
  * 
  * 
  * cdef bytes to_bytes(key):             # <<<<<<<<<<<<<<
@@ -2989,7 +3012,7 @@ static PyObject *__pyx_f_6gensim_6models_20word2vec_multistream_to_bytes(PyObjec
   PyObject *__pyx_t_4 = NULL;
   __Pyx_RefNannySetupContext("to_bytes", 0);
 
-  /* "gensim/models/word2vec_multistream.pyx":65
+  /* "gensim/models/word2vec_multistream.pyx":64
  * 
  * cdef bytes to_bytes(key):
  *     if isinstance(key, bytes):             # <<<<<<<<<<<<<<
@@ -3000,7 +3023,7 @@ static PyObject *__pyx_f_6gensim_6models_20word2vec_multistream_to_bytes(PyObjec
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "gensim/models/word2vec_multistream.pyx":66
+    /* "gensim/models/word2vec_multistream.pyx":65
  * cdef bytes to_bytes(key):
  *     if isinstance(key, bytes):
  *         return <bytes>key             # <<<<<<<<<<<<<<
@@ -3012,7 +3035,7 @@ static PyObject *__pyx_f_6gensim_6models_20word2vec_multistream_to_bytes(PyObjec
     __pyx_r = ((PyObject*)__pyx_v_key);
     goto __pyx_L0;
 
-    /* "gensim/models/word2vec_multistream.pyx":65
+    /* "gensim/models/word2vec_multistream.pyx":64
  * 
  * cdef bytes to_bytes(key):
  *     if isinstance(key, bytes):             # <<<<<<<<<<<<<<
@@ -3021,7 +3044,7 @@ static PyObject *__pyx_f_6gensim_6models_20word2vec_multistream_to_bytes(PyObjec
  */
   }
 
-  /* "gensim/models/word2vec_multistream.pyx":68
+  /* "gensim/models/word2vec_multistream.pyx":67
  *         return <bytes>key
  *     else:
  *         return key.encode('utf8')             # <<<<<<<<<<<<<<
@@ -3030,18 +3053,18 @@ static PyObject *__pyx_f_6gensim_6models_20word2vec_multistream_to_bytes(PyObjec
  */
   /*else*/ {
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_key, __pyx_n_s_encode); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 68, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_key, __pyx_n_s_encode); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 67, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_tuple__3, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 68, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_tuple__3, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 67, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    if (!(likely(PyBytes_CheckExact(__pyx_t_4))||((__pyx_t_4) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "bytes", Py_TYPE(__pyx_t_4)->tp_name), 0))) __PYX_ERR(1, 68, __pyx_L1_error)
+    if (!(likely(PyBytes_CheckExact(__pyx_t_4))||((__pyx_t_4) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "bytes", Py_TYPE(__pyx_t_4)->tp_name), 0))) __PYX_ERR(1, 67, __pyx_L1_error)
     __pyx_r = ((PyObject*)__pyx_t_4);
     __pyx_t_4 = 0;
     goto __pyx_L0;
   }
 
-  /* "gensim/models/word2vec_multistream.pyx":64
+  /* "gensim/models/word2vec_multistream.pyx":63
  * 
  * 
  * cdef bytes to_bytes(key):             # <<<<<<<<<<<<<<
@@ -3061,7 +3084,7 @@ static PyObject *__pyx_f_6gensim_6models_20word2vec_multistream_to_bytes(PyObjec
   return __pyx_r;
 }
 
-/* "gensim/models/word2vec_multistream.pyx":73
+/* "gensim/models/word2vec_multistream.pyx":72
  * @cython.final
  * cdef class CythonLineSentence:
  *     def __cinit__(self, source, offset=0, max_sentence_length=MAX_SENTENCE_LEN):             # <<<<<<<<<<<<<<
@@ -3115,7 +3138,7 @@ static int __pyx_pw_6gensim_6models_20word2vec_multistream_18CythonLineSentence_
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__cinit__") < 0)) __PYX_ERR(1, 73, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__cinit__") < 0)) __PYX_ERR(1, 72, __pyx_L3_error)
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -3134,7 +3157,7 @@ static int __pyx_pw_6gensim_6models_20word2vec_multistream_18CythonLineSentence_
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__cinit__", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(1, 73, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("__cinit__", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(1, 72, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("gensim.models.word2vec_multistream.CythonLineSentence.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -3156,27 +3179,27 @@ static int __pyx_pf_6gensim_6models_20word2vec_multistream_18CythonLineSentence_
   FastLineSentence *__pyx_t_4;
   __Pyx_RefNannySetupContext("__cinit__", 0);
 
-  /* "gensim/models/word2vec_multistream.pyx":74
+  /* "gensim/models/word2vec_multistream.pyx":73
  * cdef class CythonLineSentence:
  *     def __cinit__(self, source, offset=0, max_sentence_length=MAX_SENTENCE_LEN):
  *         self._thisptr = new FastLineSentence(to_bytes(source), offset)             # <<<<<<<<<<<<<<
  * 
  *     def __init__(self, source, offset=0, max_sentence_length=MAX_SENTENCE_LEN):
  */
-  __pyx_t_1 = __pyx_f_6gensim_6models_20word2vec_multistream_to_bytes(__pyx_v_source); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 74, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_6gensim_6models_20word2vec_multistream_to_bytes(__pyx_v_source); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 73, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(1, 74, __pyx_L1_error)
+  __pyx_t_2 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(1, 73, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_3 = __Pyx_PyInt_As_size_t(__pyx_v_offset); if (unlikely((__pyx_t_3 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(1, 74, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_As_size_t(__pyx_v_offset); if (unlikely((__pyx_t_3 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(1, 73, __pyx_L1_error)
   try {
     __pyx_t_4 = new FastLineSentence(__pyx_t_2, __pyx_t_3);
   } catch(...) {
     __Pyx_CppExn2PyErr();
-    __PYX_ERR(1, 74, __pyx_L1_error)
+    __PYX_ERR(1, 73, __pyx_L1_error)
   }
   __pyx_v_self->_thisptr = __pyx_t_4;
 
-  /* "gensim/models/word2vec_multistream.pyx":73
+  /* "gensim/models/word2vec_multistream.pyx":72
  * @cython.final
  * cdef class CythonLineSentence:
  *     def __cinit__(self, source, offset=0, max_sentence_length=MAX_SENTENCE_LEN):             # <<<<<<<<<<<<<<
@@ -3196,7 +3219,7 @@ static int __pyx_pf_6gensim_6models_20word2vec_multistream_18CythonLineSentence_
   return __pyx_r;
 }
 
-/* "gensim/models/word2vec_multistream.pyx":76
+/* "gensim/models/word2vec_multistream.pyx":75
  *         self._thisptr = new FastLineSentence(to_bytes(source), offset)
  * 
  *     def __init__(self, source, offset=0, max_sentence_length=MAX_SENTENCE_LEN):             # <<<<<<<<<<<<<<
@@ -3250,7 +3273,7 @@ static int __pyx_pw_6gensim_6models_20word2vec_multistream_18CythonLineSentence_
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__init__") < 0)) __PYX_ERR(1, 76, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__init__") < 0)) __PYX_ERR(1, 75, __pyx_L3_error)
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -3269,7 +3292,7 @@ static int __pyx_pw_6gensim_6models_20word2vec_multistream_18CythonLineSentence_
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__init__", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(1, 76, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("__init__", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(1, 75, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("gensim.models.word2vec_multistream.CythonLineSentence.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -3289,14 +3312,14 @@ static int __pyx_pf_6gensim_6models_20word2vec_multistream_18CythonLineSentence_
   size_t __pyx_t_2;
   __Pyx_RefNannySetupContext("__init__", 0);
 
-  /* "gensim/models/word2vec_multistream.pyx":77
+  /* "gensim/models/word2vec_multistream.pyx":76
  * 
  *     def __init__(self, source, offset=0, max_sentence_length=MAX_SENTENCE_LEN):
  *         self.source = to_bytes(source)             # <<<<<<<<<<<<<<
  *         self.offset = offset
  *         self.max_sentence_length = max_sentence_length
  */
-  __pyx_t_1 = __pyx_f_6gensim_6models_20word2vec_multistream_to_bytes(__pyx_v_source); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 77, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_6gensim_6models_20word2vec_multistream_to_bytes(__pyx_v_source); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 76, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_1);
   __Pyx_GOTREF(__pyx_v_self->source);
@@ -3304,37 +3327,37 @@ static int __pyx_pf_6gensim_6models_20word2vec_multistream_18CythonLineSentence_
   __pyx_v_self->source = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "gensim/models/word2vec_multistream.pyx":78
+  /* "gensim/models/word2vec_multistream.pyx":77
  *     def __init__(self, source, offset=0, max_sentence_length=MAX_SENTENCE_LEN):
  *         self.source = to_bytes(source)
  *         self.offset = offset             # <<<<<<<<<<<<<<
  *         self.max_sentence_length = max_sentence_length
  *         self.max_words_in_batch = max_sentence_length
  */
-  __pyx_t_2 = __Pyx_PyInt_As_size_t(__pyx_v_offset); if (unlikely((__pyx_t_2 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(1, 78, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_As_size_t(__pyx_v_offset); if (unlikely((__pyx_t_2 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(1, 77, __pyx_L1_error)
   __pyx_v_self->offset = __pyx_t_2;
 
-  /* "gensim/models/word2vec_multistream.pyx":79
+  /* "gensim/models/word2vec_multistream.pyx":78
  *         self.source = to_bytes(source)
  *         self.offset = offset
  *         self.max_sentence_length = max_sentence_length             # <<<<<<<<<<<<<<
  *         self.max_words_in_batch = max_sentence_length
  * 
  */
-  __pyx_t_2 = __Pyx_PyInt_As_size_t(__pyx_v_max_sentence_length); if (unlikely((__pyx_t_2 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(1, 79, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_As_size_t(__pyx_v_max_sentence_length); if (unlikely((__pyx_t_2 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(1, 78, __pyx_L1_error)
   __pyx_v_self->max_sentence_length = __pyx_t_2;
 
-  /* "gensim/models/word2vec_multistream.pyx":80
+  /* "gensim/models/word2vec_multistream.pyx":79
  *         self.offset = offset
  *         self.max_sentence_length = max_sentence_length
  *         self.max_words_in_batch = max_sentence_length             # <<<<<<<<<<<<<<
  * 
  *     def __dealloc__(self):
  */
-  __pyx_t_2 = __Pyx_PyInt_As_size_t(__pyx_v_max_sentence_length); if (unlikely((__pyx_t_2 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(1, 80, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_As_size_t(__pyx_v_max_sentence_length); if (unlikely((__pyx_t_2 == (size_t)-1) && PyErr_Occurred())) __PYX_ERR(1, 79, __pyx_L1_error)
   __pyx_v_self->max_words_in_batch = __pyx_t_2;
 
-  /* "gensim/models/word2vec_multistream.pyx":76
+  /* "gensim/models/word2vec_multistream.pyx":75
  *         self._thisptr = new FastLineSentence(to_bytes(source), offset)
  * 
  *     def __init__(self, source, offset=0, max_sentence_length=MAX_SENTENCE_LEN):             # <<<<<<<<<<<<<<
@@ -3354,7 +3377,7 @@ static int __pyx_pf_6gensim_6models_20word2vec_multistream_18CythonLineSentence_
   return __pyx_r;
 }
 
-/* "gensim/models/word2vec_multistream.pyx":82
+/* "gensim/models/word2vec_multistream.pyx":81
  *         self.max_words_in_batch = max_sentence_length
  * 
  *     def __dealloc__(self):             # <<<<<<<<<<<<<<
@@ -3378,7 +3401,7 @@ static void __pyx_pf_6gensim_6models_20word2vec_multistream_18CythonLineSentence
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("__dealloc__", 0);
 
-  /* "gensim/models/word2vec_multistream.pyx":83
+  /* "gensim/models/word2vec_multistream.pyx":82
  * 
  *     def __dealloc__(self):
  *         if self._thisptr != NULL:             # <<<<<<<<<<<<<<
@@ -3388,7 +3411,7 @@ static void __pyx_pf_6gensim_6models_20word2vec_multistream_18CythonLineSentence
   __pyx_t_1 = ((__pyx_v_self->_thisptr != NULL) != 0);
   if (__pyx_t_1) {
 
-    /* "gensim/models/word2vec_multistream.pyx":84
+    /* "gensim/models/word2vec_multistream.pyx":83
  *     def __dealloc__(self):
  *         if self._thisptr != NULL:
  *             del self._thisptr             # <<<<<<<<<<<<<<
@@ -3397,7 +3420,7 @@ static void __pyx_pf_6gensim_6models_20word2vec_multistream_18CythonLineSentence
  */
     delete __pyx_v_self->_thisptr;
 
-    /* "gensim/models/word2vec_multistream.pyx":83
+    /* "gensim/models/word2vec_multistream.pyx":82
  * 
  *     def __dealloc__(self):
  *         if self._thisptr != NULL:             # <<<<<<<<<<<<<<
@@ -3406,7 +3429,7 @@ static void __pyx_pf_6gensim_6models_20word2vec_multistream_18CythonLineSentence
  */
   }
 
-  /* "gensim/models/word2vec_multistream.pyx":82
+  /* "gensim/models/word2vec_multistream.pyx":81
  *         self.max_words_in_batch = max_sentence_length
  * 
  *     def __dealloc__(self):             # <<<<<<<<<<<<<<
@@ -3418,7 +3441,7 @@ static void __pyx_pf_6gensim_6models_20word2vec_multistream_18CythonLineSentence
   __Pyx_RefNannyFinishContext();
 }
 
-/* "gensim/models/word2vec_multistream.pyx":86
+/* "gensim/models/word2vec_multistream.pyx":85
  *             del self._thisptr
  * 
  *     cpdef bool_t is_eof(self) nogil:             # <<<<<<<<<<<<<<
@@ -3430,7 +3453,7 @@ static PyObject *__pyx_pw_6gensim_6models_20word2vec_multistream_18CythonLineSen
 static bool __pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence_is_eof(struct __pyx_obj_6gensim_6models_20word2vec_multistream_CythonLineSentence *__pyx_v_self, CYTHON_UNUSED int __pyx_skip_dispatch) {
   bool __pyx_r;
 
-  /* "gensim/models/word2vec_multistream.pyx":87
+  /* "gensim/models/word2vec_multistream.pyx":86
  * 
  *     cpdef bool_t is_eof(self) nogil:
  *         return self._thisptr.IsEof()             # <<<<<<<<<<<<<<
@@ -3440,7 +3463,7 @@ static bool __pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence_
   __pyx_r = __pyx_v_self->_thisptr->IsEof();
   goto __pyx_L0;
 
-  /* "gensim/models/word2vec_multistream.pyx":86
+  /* "gensim/models/word2vec_multistream.pyx":85
  *             del self._thisptr
  * 
  *     cpdef bool_t is_eof(self) nogil:             # <<<<<<<<<<<<<<
@@ -3473,7 +3496,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_18CythonLineSen
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("is_eof", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_PyBool_FromLong(__pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence_is_eof(__pyx_v_self, 1)); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 86, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyBool_FromLong(__pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence_is_eof(__pyx_v_self, 1)); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 85, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -3490,7 +3513,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_18CythonLineSen
   return __pyx_r;
 }
 
-/* "gensim/models/word2vec_multistream.pyx":89
+/* "gensim/models/word2vec_multistream.pyx":88
  *         return self._thisptr.IsEof()
  * 
  *     cpdef vector[string] read_sentence(self) nogil except *:             # <<<<<<<<<<<<<<
@@ -3503,7 +3526,7 @@ static std::vector<std::string>  __pyx_f_6gensim_6models_20word2vec_multistream_
   std::vector<std::string>  __pyx_r;
   std::vector<std::string>  __pyx_t_1;
 
-  /* "gensim/models/word2vec_multistream.pyx":90
+  /* "gensim/models/word2vec_multistream.pyx":89
  * 
  *     cpdef vector[string] read_sentence(self) nogil except *:
  *         return self._thisptr.ReadSentence()             # <<<<<<<<<<<<<<
@@ -3520,12 +3543,12 @@ static std::vector<std::string>  __pyx_f_6gensim_6models_20word2vec_multistream_
     #ifdef WITH_THREAD
     __Pyx_PyGILState_Release(__pyx_gilstate_save);
     #endif
-    __PYX_ERR(1, 90, __pyx_L1_error)
+    __PYX_ERR(1, 89, __pyx_L1_error)
   }
   __pyx_r = __pyx_t_1;
   goto __pyx_L0;
 
-  /* "gensim/models/word2vec_multistream.pyx":89
+  /* "gensim/models/word2vec_multistream.pyx":88
  *         return self._thisptr.IsEof()
  * 
  *     cpdef vector[string] read_sentence(self) nogil except *:             # <<<<<<<<<<<<<<
@@ -3570,8 +3593,8 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_18CythonLineSen
   PyObject *__pyx_t_2 = NULL;
   __Pyx_RefNannySetupContext("read_sentence", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence_read_sentence(__pyx_v_self, 1); if (unlikely(PyErr_Occurred())) __PYX_ERR(1, 89, __pyx_L1_error)
-  __pyx_t_2 = __pyx_convert_vector_to_py_std_3a__3a_string(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 89, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence_read_sentence(__pyx_v_self, 1); if (unlikely(PyErr_Occurred())) __PYX_ERR(1, 88, __pyx_L1_error)
+  __pyx_t_2 = __pyx_convert_vector_to_py_std_3a__3a_string(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 88, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_r = __pyx_t_2;
   __pyx_t_2 = 0;
@@ -3588,7 +3611,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_18CythonLineSen
   return __pyx_r;
 }
 
-/* "gensim/models/word2vec_multistream.pyx":92
+/* "gensim/models/word2vec_multistream.pyx":91
  *         return self._thisptr.ReadSentence()
  * 
  *     cpdef vector[vector[string]] _read_chunked_sentence(self) nogil except *:             # <<<<<<<<<<<<<<
@@ -3602,17 +3625,17 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
   std::vector<std::vector<std::string> >  __pyx_r;
   std::vector<std::string>  __pyx_t_1;
 
-  /* "gensim/models/word2vec_multistream.pyx":93
+  /* "gensim/models/word2vec_multistream.pyx":92
  * 
  *     cpdef vector[vector[string]] _read_chunked_sentence(self) nogil except *:
  *         cdef vector[string] sent = self.read_sentence()             # <<<<<<<<<<<<<<
  *         return self._chunk_sentence(sent)
  * 
  */
-  __pyx_t_1 = __pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence_read_sentence(__pyx_v_self, 0); if (unlikely(__Pyx_ErrOccurredWithGIL())) __PYX_ERR(1, 93, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence_read_sentence(__pyx_v_self, 0); if (unlikely(__Pyx_ErrOccurredWithGIL())) __PYX_ERR(1, 92, __pyx_L1_error)
   __pyx_v_sent = __pyx_t_1;
 
-  /* "gensim/models/word2vec_multistream.pyx":94
+  /* "gensim/models/word2vec_multistream.pyx":93
  *     cpdef vector[vector[string]] _read_chunked_sentence(self) nogil except *:
  *         cdef vector[string] sent = self.read_sentence()
  *         return self._chunk_sentence(sent)             # <<<<<<<<<<<<<<
@@ -3622,7 +3645,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
   __pyx_r = __pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence__chunk_sentence(__pyx_v_self, __pyx_v_sent, 0);
   goto __pyx_L0;
 
-  /* "gensim/models/word2vec_multistream.pyx":92
+  /* "gensim/models/word2vec_multistream.pyx":91
  *         return self._thisptr.ReadSentence()
  * 
  *     cpdef vector[vector[string]] _read_chunked_sentence(self) nogil except *:             # <<<<<<<<<<<<<<
@@ -3667,8 +3690,8 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_18CythonLineSen
   PyObject *__pyx_t_2 = NULL;
   __Pyx_RefNannySetupContext("_read_chunked_sentence", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence__read_chunked_sentence(__pyx_v_self, 1); if (unlikely(PyErr_Occurred())) __PYX_ERR(1, 92, __pyx_L1_error)
-  __pyx_t_2 = __pyx_convert_vector_to_py_std_3a__3a_vector_3c_std_3a__3a_string_3e___(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 92, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence__read_chunked_sentence(__pyx_v_self, 1); if (unlikely(PyErr_Occurred())) __PYX_ERR(1, 91, __pyx_L1_error)
+  __pyx_t_2 = __pyx_convert_vector_to_py_std_3a__3a_vector_3c_std_3a__3a_string_3e___(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 91, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_r = __pyx_t_2;
   __pyx_t_2 = 0;
@@ -3685,7 +3708,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_18CythonLineSen
   return __pyx_r;
 }
 
-/* "gensim/models/word2vec_multistream.pyx":96
+/* "gensim/models/word2vec_multistream.pyx":95
  *         return self._chunk_sentence(sent)
  * 
  *     cpdef vector[vector[string]] _chunk_sentence(self, vector[string] sent) nogil:             # <<<<<<<<<<<<<<
@@ -3706,7 +3729,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
   std::vector<std::string> ::size_type __pyx_t_4;
   std::vector<std::string> ::size_type __pyx_t_5;
 
-  /* "gensim/models/word2vec_multistream.pyx":99
+  /* "gensim/models/word2vec_multistream.pyx":98
  *         cdef vector[vector[string]] res
  *         cdef vector[string] chunk
  *         cdef size_t cur_idx = 0             # <<<<<<<<<<<<<<
@@ -3715,7 +3738,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
  */
   __pyx_v_cur_idx = 0;
 
-  /* "gensim/models/word2vec_multistream.pyx":101
+  /* "gensim/models/word2vec_multistream.pyx":100
  *         cdef size_t cur_idx = 0
  * 
  *         if sent.size() > self.max_sentence_length:             # <<<<<<<<<<<<<<
@@ -3725,7 +3748,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
   __pyx_t_1 = ((__pyx_v_sent.size() > __pyx_v_self->max_sentence_length) != 0);
   if (__pyx_t_1) {
 
-    /* "gensim/models/word2vec_multistream.pyx":102
+    /* "gensim/models/word2vec_multistream.pyx":101
  * 
  *         if sent.size() > self.max_sentence_length:
  *             while cur_idx < sent.size():             # <<<<<<<<<<<<<<
@@ -3736,7 +3759,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
       __pyx_t_1 = ((__pyx_v_cur_idx < __pyx_v_sent.size()) != 0);
       if (!__pyx_t_1) break;
 
-      /* "gensim/models/word2vec_multistream.pyx":103
+      /* "gensim/models/word2vec_multistream.pyx":102
  *         if sent.size() > self.max_sentence_length:
  *             while cur_idx < sent.size():
  *                 chunk.clear()             # <<<<<<<<<<<<<<
@@ -3745,7 +3768,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
  */
       __pyx_v_chunk.clear();
 
-      /* "gensim/models/word2vec_multistream.pyx":104
+      /* "gensim/models/word2vec_multistream.pyx":103
  *             while cur_idx < sent.size():
  *                 chunk.clear()
  *                 for i in range(cur_idx, min(cur_idx + self.max_sentence_length, sent.size())):             # <<<<<<<<<<<<<<
@@ -3764,7 +3787,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
       for (__pyx_t_5 = __pyx_v_cur_idx; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=1) {
         __pyx_v_i = __pyx_t_5;
 
-        /* "gensim/models/word2vec_multistream.pyx":105
+        /* "gensim/models/word2vec_multistream.pyx":104
  *                 chunk.clear()
  *                 for i in range(cur_idx, min(cur_idx + self.max_sentence_length, sent.size())):
  *                     chunk.push_back(sent[i])             # <<<<<<<<<<<<<<
@@ -3781,11 +3804,11 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
           #ifdef WITH_THREAD
           __Pyx_PyGILState_Release(__pyx_gilstate_save);
           #endif
-          __PYX_ERR(1, 105, __pyx_L1_error)
+          __PYX_ERR(1, 104, __pyx_L1_error)
         }
       }
 
-      /* "gensim/models/word2vec_multistream.pyx":107
+      /* "gensim/models/word2vec_multistream.pyx":106
  *                     chunk.push_back(sent[i])
  * 
  *                 res.push_back(chunk)             # <<<<<<<<<<<<<<
@@ -3802,10 +3825,10 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
         #ifdef WITH_THREAD
         __Pyx_PyGILState_Release(__pyx_gilstate_save);
         #endif
-        __PYX_ERR(1, 107, __pyx_L1_error)
+        __PYX_ERR(1, 106, __pyx_L1_error)
       }
 
-      /* "gensim/models/word2vec_multistream.pyx":108
+      /* "gensim/models/word2vec_multistream.pyx":107
  * 
  *                 res.push_back(chunk)
  *                 cur_idx += chunk.size()             # <<<<<<<<<<<<<<
@@ -3815,7 +3838,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
       __pyx_v_cur_idx = (__pyx_v_cur_idx + __pyx_v_chunk.size());
     }
 
-    /* "gensim/models/word2vec_multistream.pyx":101
+    /* "gensim/models/word2vec_multistream.pyx":100
  *         cdef size_t cur_idx = 0
  * 
  *         if sent.size() > self.max_sentence_length:             # <<<<<<<<<<<<<<
@@ -3825,7 +3848,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
     goto __pyx_L3;
   }
 
-  /* "gensim/models/word2vec_multistream.pyx":110
+  /* "gensim/models/word2vec_multistream.pyx":109
  *                 cur_idx += chunk.size()
  *         else:
  *             res.push_back(sent)             # <<<<<<<<<<<<<<
@@ -3843,12 +3866,12 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
       #ifdef WITH_THREAD
       __Pyx_PyGILState_Release(__pyx_gilstate_save);
       #endif
-      __PYX_ERR(1, 110, __pyx_L1_error)
+      __PYX_ERR(1, 109, __pyx_L1_error)
     }
   }
   __pyx_L3:;
 
-  /* "gensim/models/word2vec_multistream.pyx":112
+  /* "gensim/models/word2vec_multistream.pyx":111
  *             res.push_back(sent)
  * 
  *         return res             # <<<<<<<<<<<<<<
@@ -3858,7 +3881,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
   __pyx_r = __pyx_v_res;
   goto __pyx_L0;
 
-  /* "gensim/models/word2vec_multistream.pyx":96
+  /* "gensim/models/word2vec_multistream.pyx":95
  *         return self._chunk_sentence(sent)
  * 
  *     cpdef vector[vector[string]] _chunk_sentence(self, vector[string] sent) nogil:             # <<<<<<<<<<<<<<
@@ -3883,7 +3906,7 @@ static PyObject *__pyx_pw_6gensim_6models_20word2vec_multistream_18CythonLineSen
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("_chunk_sentence (wrapper)", 0);
   assert(__pyx_arg_sent); {
-    __pyx_v_sent = __pyx_convert_vector_from_py_std_3a__3a_string(__pyx_arg_sent); if (unlikely(PyErr_Occurred())) __PYX_ERR(1, 96, __pyx_L3_error)
+    __pyx_v_sent = __pyx_convert_vector_from_py_std_3a__3a_string(__pyx_arg_sent); if (unlikely(PyErr_Occurred())) __PYX_ERR(1, 95, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -3904,7 +3927,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_18CythonLineSen
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("_chunk_sentence", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __pyx_convert_vector_to_py_std_3a__3a_vector_3c_std_3a__3a_string_3e___(__pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence__chunk_sentence(__pyx_v_self, __pyx_v_sent, 1)); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 96, __pyx_L1_error)
+  __pyx_t_1 = __pyx_convert_vector_to_py_std_3a__3a_vector_3c_std_3a__3a_string_3e___(__pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence__chunk_sentence(__pyx_v_self, __pyx_v_sent, 1)); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 95, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -3921,7 +3944,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_18CythonLineSen
   return __pyx_r;
 }
 
-/* "gensim/models/word2vec_multistream.pyx":114
+/* "gensim/models/word2vec_multistream.pyx":113
  *         return res
  * 
  *     cpdef void reset(self) nogil:             # <<<<<<<<<<<<<<
@@ -3932,7 +3955,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_18CythonLineSen
 static PyObject *__pyx_pw_6gensim_6models_20word2vec_multistream_18CythonLineSentence_15reset(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
 static void __pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence_reset(struct __pyx_obj_6gensim_6models_20word2vec_multistream_CythonLineSentence *__pyx_v_self, CYTHON_UNUSED int __pyx_skip_dispatch) {
 
-  /* "gensim/models/word2vec_multistream.pyx":115
+  /* "gensim/models/word2vec_multistream.pyx":114
  * 
  *     cpdef void reset(self) nogil:
  *         self._thisptr.Reset()             # <<<<<<<<<<<<<<
@@ -3941,7 +3964,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence_
  */
   __pyx_v_self->_thisptr->Reset();
 
-  /* "gensim/models/word2vec_multistream.pyx":114
+  /* "gensim/models/word2vec_multistream.pyx":113
  *         return res
  * 
  *     cpdef void reset(self) nogil:             # <<<<<<<<<<<<<<
@@ -3972,7 +3995,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_18CythonLineSen
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("reset", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_void_to_None(__pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence_reset(__pyx_v_self, 1)); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 114, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_void_to_None(__pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence_reset(__pyx_v_self, 1)); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 113, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -3990,7 +4013,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_18CythonLineSen
 }
 static PyObject *__pyx_gb_6gensim_6models_20word2vec_multistream_18CythonLineSentence_18generator(__pyx_CoroutineObject *__pyx_generator, CYTHON_UNUSED PyThreadState *__pyx_tstate, PyObject *__pyx_sent_value); /* proto */
 
-/* "gensim/models/word2vec_multistream.pyx":117
+/* "gensim/models/word2vec_multistream.pyx":116
  *         self._thisptr.Reset()
  * 
  *     def __iter__(self):             # <<<<<<<<<<<<<<
@@ -4020,7 +4043,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_18CythonLineSen
   if (unlikely(!__pyx_cur_scope)) {
     __pyx_cur_scope = ((struct __pyx_obj_6gensim_6models_20word2vec_multistream___pyx_scope_struct____iter__ *)Py_None);
     __Pyx_INCREF(Py_None);
-    __PYX_ERR(1, 117, __pyx_L1_error)
+    __PYX_ERR(1, 116, __pyx_L1_error)
   } else {
     __Pyx_GOTREF(__pyx_cur_scope);
   }
@@ -4028,7 +4051,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_18CythonLineSen
   __Pyx_INCREF((PyObject *)__pyx_cur_scope->__pyx_v_self);
   __Pyx_GIVEREF((PyObject *)__pyx_cur_scope->__pyx_v_self);
   {
-    __pyx_CoroutineObject *gen = __Pyx_Generator_New((__pyx_coroutine_body_t) __pyx_gb_6gensim_6models_20word2vec_multistream_18CythonLineSentence_18generator, NULL, (PyObject *) __pyx_cur_scope, __pyx_n_s_iter, __pyx_n_s_CythonLineSentence___iter, __pyx_n_s_gensim_models_word2vec_multistre); if (unlikely(!gen)) __PYX_ERR(1, 117, __pyx_L1_error)
+    __pyx_CoroutineObject *gen = __Pyx_Generator_New((__pyx_coroutine_body_t) __pyx_gb_6gensim_6models_20word2vec_multistream_18CythonLineSentence_18generator, NULL, (PyObject *) __pyx_cur_scope, __pyx_n_s_iter, __pyx_n_s_CythonLineSentence___iter, __pyx_n_s_gensim_models_word2vec_multistre); if (unlikely(!gen)) __PYX_ERR(1, 116, __pyx_L1_error)
     __Pyx_DECREF(__pyx_cur_scope);
     __Pyx_RefNannyFinishContext();
     return (PyObject *) gen;
@@ -4063,9 +4086,9 @@ static PyObject *__pyx_gb_6gensim_6models_20word2vec_multistream_18CythonLineSen
     return NULL;
   }
   __pyx_L3_first_run:;
-  if (unlikely(!__pyx_sent_value)) __PYX_ERR(1, 117, __pyx_L1_error)
+  if (unlikely(!__pyx_sent_value)) __PYX_ERR(1, 116, __pyx_L1_error)
 
-  /* "gensim/models/word2vec_multistream.pyx":118
+  /* "gensim/models/word2vec_multistream.pyx":117
  * 
  *     def __iter__(self):
  *         self.reset()             # <<<<<<<<<<<<<<
@@ -4074,7 +4097,7 @@ static PyObject *__pyx_gb_6gensim_6models_20word2vec_multistream_18CythonLineSen
  */
   __pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence_reset(__pyx_cur_scope->__pyx_v_self, 0);
 
-  /* "gensim/models/word2vec_multistream.pyx":119
+  /* "gensim/models/word2vec_multistream.pyx":118
  *     def __iter__(self):
  *         self.reset()
  *         while not self.is_eof():             # <<<<<<<<<<<<<<
@@ -4085,17 +4108,17 @@ static PyObject *__pyx_gb_6gensim_6models_20word2vec_multistream_18CythonLineSen
     __pyx_t_1 = ((!(__pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence_is_eof(__pyx_cur_scope->__pyx_v_self, 0) != 0)) != 0);
     if (!__pyx_t_1) break;
 
-    /* "gensim/models/word2vec_multistream.pyx":120
+    /* "gensim/models/word2vec_multistream.pyx":119
  *         self.reset()
  *         while not self.is_eof():
  *             chunked_sentence = self._read_chunked_sentence()             # <<<<<<<<<<<<<<
  *             for chunk in chunked_sentence:
  *                 if not chunk.empty():
  */
-    __pyx_t_2 = __pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence__read_chunked_sentence(__pyx_cur_scope->__pyx_v_self, 0); if (unlikely(PyErr_Occurred())) __PYX_ERR(1, 120, __pyx_L1_error)
+    __pyx_t_2 = __pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence__read_chunked_sentence(__pyx_cur_scope->__pyx_v_self, 0); if (unlikely(PyErr_Occurred())) __PYX_ERR(1, 119, __pyx_L1_error)
     __pyx_cur_scope->__pyx_v_chunked_sentence = __pyx_t_2;
 
-    /* "gensim/models/word2vec_multistream.pyx":121
+    /* "gensim/models/word2vec_multistream.pyx":120
  *         while not self.is_eof():
  *             chunked_sentence = self._read_chunked_sentence()
  *             for chunk in chunked_sentence:             # <<<<<<<<<<<<<<
@@ -4109,7 +4132,7 @@ static PyObject *__pyx_gb_6gensim_6models_20word2vec_multistream_18CythonLineSen
       ++__pyx_t_3;
       __pyx_cur_scope->__pyx_v_chunk = __pyx_t_4;
 
-      /* "gensim/models/word2vec_multistream.pyx":122
+      /* "gensim/models/word2vec_multistream.pyx":121
  *             chunked_sentence = self._read_chunked_sentence()
  *             for chunk in chunked_sentence:
  *                 if not chunk.empty():             # <<<<<<<<<<<<<<
@@ -4119,14 +4142,14 @@ static PyObject *__pyx_gb_6gensim_6models_20word2vec_multistream_18CythonLineSen
       __pyx_t_1 = ((!(__pyx_cur_scope->__pyx_v_chunk.empty() != 0)) != 0);
       if (__pyx_t_1) {
 
-        /* "gensim/models/word2vec_multistream.pyx":123
+        /* "gensim/models/word2vec_multistream.pyx":122
  *             for chunk in chunked_sentence:
  *                 if not chunk.empty():
  *                     yield chunk             # <<<<<<<<<<<<<<
  * 
  *     def __reduce__(self):
  */
-        __pyx_t_5 = __pyx_convert_vector_to_py_std_3a__3a_string(__pyx_cur_scope->__pyx_v_chunk); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 123, __pyx_L1_error)
+        __pyx_t_5 = __pyx_convert_vector_to_py_std_3a__3a_string(__pyx_cur_scope->__pyx_v_chunk); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 122, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_5);
         __pyx_r = __pyx_t_5;
         __pyx_t_5 = 0;
@@ -4139,9 +4162,9 @@ static PyObject *__pyx_gb_6gensim_6models_20word2vec_multistream_18CythonLineSen
         return __pyx_r;
         __pyx_L9_resume_from_yield:;
         __pyx_t_3 = __pyx_cur_scope->__pyx_t_0;
-        if (unlikely(!__pyx_sent_value)) __PYX_ERR(1, 123, __pyx_L1_error)
+        if (unlikely(!__pyx_sent_value)) __PYX_ERR(1, 122, __pyx_L1_error)
 
-        /* "gensim/models/word2vec_multistream.pyx":122
+        /* "gensim/models/word2vec_multistream.pyx":121
  *             chunked_sentence = self._read_chunked_sentence()
  *             for chunk in chunked_sentence:
  *                 if not chunk.empty():             # <<<<<<<<<<<<<<
@@ -4150,7 +4173,7 @@ static PyObject *__pyx_gb_6gensim_6models_20word2vec_multistream_18CythonLineSen
  */
       }
 
-      /* "gensim/models/word2vec_multistream.pyx":121
+      /* "gensim/models/word2vec_multistream.pyx":120
  *         while not self.is_eof():
  *             chunked_sentence = self._read_chunked_sentence()
  *             for chunk in chunked_sentence:             # <<<<<<<<<<<<<<
@@ -4161,7 +4184,7 @@ static PyObject *__pyx_gb_6gensim_6models_20word2vec_multistream_18CythonLineSen
   }
   CYTHON_MAYBE_UNUSED_VAR(__pyx_cur_scope);
 
-  /* "gensim/models/word2vec_multistream.pyx":117
+  /* "gensim/models/word2vec_multistream.pyx":116
  *         self._thisptr.Reset()
  * 
  *     def __iter__(self):             # <<<<<<<<<<<<<<
@@ -4184,7 +4207,7 @@ static PyObject *__pyx_gb_6gensim_6models_20word2vec_multistream_18CythonLineSen
   return __pyx_r;
 }
 
-/* "gensim/models/word2vec_multistream.pyx":125
+/* "gensim/models/word2vec_multistream.pyx":124
  *                     yield chunk
  * 
  *     def __reduce__(self):             # <<<<<<<<<<<<<<
@@ -4214,7 +4237,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_18CythonLineSen
   PyObject *__pyx_t_3 = NULL;
   __Pyx_RefNannySetupContext("__reduce__", 0);
 
-  /* "gensim/models/word2vec_multistream.pyx":127
+  /* "gensim/models/word2vec_multistream.pyx":126
  *     def __reduce__(self):
  *         # This function helps pickle to correctly serialize objects of this class.
  *         return rebuild_cython_line_sentence, (self.source, self.max_sentence_length)             # <<<<<<<<<<<<<<
@@ -4222,11 +4245,11 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_18CythonLineSen
  *     cpdef vector[vector[string]] next_batch(self) nogil except *:
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_rebuild_cython_line_sentence); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 127, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_rebuild_cython_line_sentence); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 126, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyInt_FromSize_t(__pyx_v_self->max_sentence_length); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 127, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_FromSize_t(__pyx_v_self->max_sentence_length); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 126, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = PyTuple_New(2); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 127, __pyx_L1_error)
+  __pyx_t_3 = PyTuple_New(2); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 126, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_INCREF(__pyx_v_self->source);
   __Pyx_GIVEREF(__pyx_v_self->source);
@@ -4234,7 +4257,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_18CythonLineSen
   __Pyx_GIVEREF(__pyx_t_2);
   PyTuple_SET_ITEM(__pyx_t_3, 1, __pyx_t_2);
   __pyx_t_2 = 0;
-  __pyx_t_2 = PyTuple_New(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 127, __pyx_L1_error)
+  __pyx_t_2 = PyTuple_New(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 126, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_GIVEREF(__pyx_t_1);
   PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_t_1);
@@ -4246,7 +4269,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_18CythonLineSen
   __pyx_t_2 = 0;
   goto __pyx_L0;
 
-  /* "gensim/models/word2vec_multistream.pyx":125
+  /* "gensim/models/word2vec_multistream.pyx":124
  *                     yield chunk
  * 
  *     def __reduce__(self):             # <<<<<<<<<<<<<<
@@ -4267,7 +4290,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_18CythonLineSen
   return __pyx_r;
 }
 
-/* "gensim/models/word2vec_multistream.pyx":129
+/* "gensim/models/word2vec_multistream.pyx":128
  *         return rebuild_cython_line_sentence, (self.source, self.max_sentence_length)
  * 
  *     cpdef vector[vector[string]] next_batch(self) nogil except *:             # <<<<<<<<<<<<<<
@@ -4297,7 +4320,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
   std::vector<std::vector<std::string> > ::size_type __pyx_t_7;
   std::vector<std::vector<std::string> > ::size_type __pyx_t_8;
 
-  /* "gensim/models/word2vec_multistream.pyx":134
+  /* "gensim/models/word2vec_multistream.pyx":133
  *             vector[vector[string]] chunked_sentence
  *             vector[string] data
  *             size_t batch_size = 0             # <<<<<<<<<<<<<<
@@ -4306,7 +4329,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
  */
   __pyx_v_batch_size = 0;
 
-  /* "gensim/models/word2vec_multistream.pyx":135
+  /* "gensim/models/word2vec_multistream.pyx":134
  *             vector[string] data
  *             size_t batch_size = 0
  *             size_t last_idx = 0             # <<<<<<<<<<<<<<
@@ -4315,7 +4338,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
  */
   __pyx_v_last_idx = 0;
 
-  /* "gensim/models/word2vec_multistream.pyx":136
+  /* "gensim/models/word2vec_multistream.pyx":135
  *             size_t batch_size = 0
  *             size_t last_idx = 0
  *             size_t tmp = 0             # <<<<<<<<<<<<<<
@@ -4324,7 +4347,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
  */
   __pyx_v_tmp = 0;
 
-  /* "gensim/models/word2vec_multistream.pyx":140
+  /* "gensim/models/word2vec_multistream.pyx":139
  * 
  *         # Try to read data from previous calls which was not returned
  *         if not self.buf_data.empty():             # <<<<<<<<<<<<<<
@@ -4334,7 +4357,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
   __pyx_t_1 = ((!(__pyx_v_self->buf_data.empty() != 0)) != 0);
   if (__pyx_t_1) {
 
-    /* "gensim/models/word2vec_multistream.pyx":141
+    /* "gensim/models/word2vec_multistream.pyx":140
  *         # Try to read data from previous calls which was not returned
  *         if not self.buf_data.empty():
  *             job_batch = self.buf_data             # <<<<<<<<<<<<<<
@@ -4344,7 +4367,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
     __pyx_t_2 = __pyx_v_self->buf_data;
     __pyx_v_job_batch = __pyx_t_2;
 
-    /* "gensim/models/word2vec_multistream.pyx":142
+    /* "gensim/models/word2vec_multistream.pyx":141
  *         if not self.buf_data.empty():
  *             job_batch = self.buf_data
  *             self.buf_data.clear()             # <<<<<<<<<<<<<<
@@ -4353,7 +4376,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
  */
     __pyx_v_self->buf_data.clear();
 
-    /* "gensim/models/word2vec_multistream.pyx":144
+    /* "gensim/models/word2vec_multistream.pyx":143
  *             self.buf_data.clear()
  * 
  *             for sent in job_batch:             # <<<<<<<<<<<<<<
@@ -4367,7 +4390,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
       ++__pyx_t_3;
       __pyx_v_sent = __pyx_t_4;
 
-      /* "gensim/models/word2vec_multistream.pyx":145
+      /* "gensim/models/word2vec_multistream.pyx":144
  * 
  *             for sent in job_batch:
  *                 batch_size += sent.size()             # <<<<<<<<<<<<<<
@@ -4376,7 +4399,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
  */
       __pyx_v_batch_size = (__pyx_v_batch_size + __pyx_v_sent.size());
 
-      /* "gensim/models/word2vec_multistream.pyx":144
+      /* "gensim/models/word2vec_multistream.pyx":143
  *             self.buf_data.clear()
  * 
  *             for sent in job_batch:             # <<<<<<<<<<<<<<
@@ -4385,7 +4408,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
  */
     }
 
-    /* "gensim/models/word2vec_multistream.pyx":140
+    /* "gensim/models/word2vec_multistream.pyx":139
  * 
  *         # Try to read data from previous calls which was not returned
  *         if not self.buf_data.empty():             # <<<<<<<<<<<<<<
@@ -4394,7 +4417,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
  */
   }
 
-  /* "gensim/models/word2vec_multistream.pyx":147
+  /* "gensim/models/word2vec_multistream.pyx":146
  *                 batch_size += sent.size()
  * 
  *         while not self.is_eof() and batch_size <= self.max_words_in_batch:             # <<<<<<<<<<<<<<
@@ -4413,17 +4436,17 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
     __pyx_L8_bool_binop_done:;
     if (!__pyx_t_1) break;
 
-    /* "gensim/models/word2vec_multistream.pyx":148
+    /* "gensim/models/word2vec_multistream.pyx":147
  * 
  *         while not self.is_eof() and batch_size <= self.max_words_in_batch:
  *             data = self.read_sentence()             # <<<<<<<<<<<<<<
  * 
  *             chunked_sentence = self._chunk_sentence(data)
  */
-    __pyx_t_4 = __pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence_read_sentence(__pyx_v_self, 0); if (unlikely(__Pyx_ErrOccurredWithGIL())) __PYX_ERR(1, 148, __pyx_L1_error)
+    __pyx_t_4 = __pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence_read_sentence(__pyx_v_self, 0); if (unlikely(__Pyx_ErrOccurredWithGIL())) __PYX_ERR(1, 147, __pyx_L1_error)
     __pyx_v_data = __pyx_t_4;
 
-    /* "gensim/models/word2vec_multistream.pyx":150
+    /* "gensim/models/word2vec_multistream.pyx":149
  *             data = self.read_sentence()
  * 
  *             chunked_sentence = self._chunk_sentence(data)             # <<<<<<<<<<<<<<
@@ -4432,7 +4455,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
  */
     __pyx_v_chunked_sentence = __pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence__chunk_sentence(__pyx_v_self, __pyx_v_data, 0);
 
-    /* "gensim/models/word2vec_multistream.pyx":151
+    /* "gensim/models/word2vec_multistream.pyx":150
  * 
  *             chunked_sentence = self._chunk_sentence(data)
  *             for chunk in chunked_sentence:             # <<<<<<<<<<<<<<
@@ -4446,7 +4469,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
       ++__pyx_t_3;
       __pyx_v_chunk = __pyx_t_4;
 
-      /* "gensim/models/word2vec_multistream.pyx":152
+      /* "gensim/models/word2vec_multistream.pyx":151
  *             chunked_sentence = self._chunk_sentence(data)
  *             for chunk in chunked_sentence:
  *                 job_batch.push_back(chunk)             # <<<<<<<<<<<<<<
@@ -4463,10 +4486,10 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
         #ifdef WITH_THREAD
         __Pyx_PyGILState_Release(__pyx_gilstate_save);
         #endif
-        __PYX_ERR(1, 152, __pyx_L1_error)
+        __PYX_ERR(1, 151, __pyx_L1_error)
       }
 
-      /* "gensim/models/word2vec_multistream.pyx":153
+      /* "gensim/models/word2vec_multistream.pyx":152
  *             for chunk in chunked_sentence:
  *                 job_batch.push_back(chunk)
  *                 batch_size += chunk.size()             # <<<<<<<<<<<<<<
@@ -4475,7 +4498,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
  */
       __pyx_v_batch_size = (__pyx_v_batch_size + __pyx_v_chunk.size());
 
-      /* "gensim/models/word2vec_multistream.pyx":151
+      /* "gensim/models/word2vec_multistream.pyx":150
  * 
  *             chunked_sentence = self._chunk_sentence(data)
  *             for chunk in chunked_sentence:             # <<<<<<<<<<<<<<
@@ -4485,7 +4508,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
     }
   }
 
-  /* "gensim/models/word2vec_multistream.pyx":155
+  /* "gensim/models/word2vec_multistream.pyx":154
  *                 batch_size += chunk.size()
  * 
  *         if batch_size > self.max_words_in_batch:             # <<<<<<<<<<<<<<
@@ -4495,7 +4518,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
   __pyx_t_1 = ((__pyx_v_batch_size > __pyx_v_self->max_words_in_batch) != 0);
   if (__pyx_t_1) {
 
-    /* "gensim/models/word2vec_multistream.pyx":157
+    /* "gensim/models/word2vec_multistream.pyx":156
  *         if batch_size > self.max_words_in_batch:
  *             # Save data which doesn't fit in batch in order to return it later.
  *             self.buf_data.clear()             # <<<<<<<<<<<<<<
@@ -4504,7 +4527,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
  */
     __pyx_v_self->buf_data.clear();
 
-    /* "gensim/models/word2vec_multistream.pyx":159
+    /* "gensim/models/word2vec_multistream.pyx":158
  *             self.buf_data.clear()
  * 
  *             tmp = batch_size             # <<<<<<<<<<<<<<
@@ -4513,7 +4536,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
  */
     __pyx_v_tmp = __pyx_v_batch_size;
 
-    /* "gensim/models/word2vec_multistream.pyx":160
+    /* "gensim/models/word2vec_multistream.pyx":159
  * 
  *             tmp = batch_size
  *             idx = job_batch.size() - 1             # <<<<<<<<<<<<<<
@@ -4522,7 +4545,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
  */
     __pyx_v_idx = (__pyx_v_job_batch.size() - 1);
 
-    /* "gensim/models/word2vec_multistream.pyx":161
+    /* "gensim/models/word2vec_multistream.pyx":160
  *             tmp = batch_size
  *             idx = job_batch.size() - 1
  *             while idx >= 0:             # <<<<<<<<<<<<<<
@@ -4533,7 +4556,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
       __pyx_t_1 = ((__pyx_v_idx >= 0) != 0);
       if (!__pyx_t_1) break;
 
-      /* "gensim/models/word2vec_multistream.pyx":162
+      /* "gensim/models/word2vec_multistream.pyx":161
  *             idx = job_batch.size() - 1
  *             while idx >= 0:
  *                 if tmp - job_batch[idx].size() <= self.max_words_in_batch:             # <<<<<<<<<<<<<<
@@ -4543,7 +4566,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
       __pyx_t_1 = (((__pyx_v_tmp - (__pyx_v_job_batch[__pyx_v_idx]).size()) <= __pyx_v_self->max_words_in_batch) != 0);
       if (__pyx_t_1) {
 
-        /* "gensim/models/word2vec_multistream.pyx":163
+        /* "gensim/models/word2vec_multistream.pyx":162
  *             while idx >= 0:
  *                 if tmp - job_batch[idx].size() <= self.max_words_in_batch:
  *                     last_idx = idx + 1             # <<<<<<<<<<<<<<
@@ -4552,7 +4575,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
  */
         __pyx_v_last_idx = (__pyx_v_idx + 1);
 
-        /* "gensim/models/word2vec_multistream.pyx":164
+        /* "gensim/models/word2vec_multistream.pyx":163
  *                 if tmp - job_batch[idx].size() <= self.max_words_in_batch:
  *                     last_idx = idx + 1
  *                     break             # <<<<<<<<<<<<<<
@@ -4561,7 +4584,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
  */
         goto __pyx_L14_break;
 
-        /* "gensim/models/word2vec_multistream.pyx":162
+        /* "gensim/models/word2vec_multistream.pyx":161
  *             idx = job_batch.size() - 1
  *             while idx >= 0:
  *                 if tmp - job_batch[idx].size() <= self.max_words_in_batch:             # <<<<<<<<<<<<<<
@@ -4570,7 +4593,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
  */
       }
 
-      /* "gensim/models/word2vec_multistream.pyx":166
+      /* "gensim/models/word2vec_multistream.pyx":165
  *                     break
  *                 else:
  *                     tmp -= job_batch[idx].size()             # <<<<<<<<<<<<<<
@@ -4581,7 +4604,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
         __pyx_v_tmp = (__pyx_v_tmp - (__pyx_v_job_batch[__pyx_v_idx]).size());
       }
 
-      /* "gensim/models/word2vec_multistream.pyx":168
+      /* "gensim/models/word2vec_multistream.pyx":167
  *                     tmp -= job_batch[idx].size()
  * 
  *                 idx -= 1             # <<<<<<<<<<<<<<
@@ -4592,7 +4615,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
     }
     __pyx_L14_break:;
 
-    /* "gensim/models/word2vec_multistream.pyx":170
+    /* "gensim/models/word2vec_multistream.pyx":169
  *                 idx -= 1
  * 
  *             for i in range(last_idx, job_batch.size()):             # <<<<<<<<<<<<<<
@@ -4604,7 +4627,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
     for (__pyx_t_8 = __pyx_v_last_idx; __pyx_t_8 < __pyx_t_7; __pyx_t_8+=1) {
       __pyx_v_i = __pyx_t_8;
 
-      /* "gensim/models/word2vec_multistream.pyx":171
+      /* "gensim/models/word2vec_multistream.pyx":170
  * 
  *             for i in range(last_idx, job_batch.size()):
  *                 self.buf_data.push_back(job_batch[i])             # <<<<<<<<<<<<<<
@@ -4621,11 +4644,11 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
         #ifdef WITH_THREAD
         __Pyx_PyGILState_Release(__pyx_gilstate_save);
         #endif
-        __PYX_ERR(1, 171, __pyx_L1_error)
+        __PYX_ERR(1, 170, __pyx_L1_error)
       }
     }
 
-    /* "gensim/models/word2vec_multistream.pyx":172
+    /* "gensim/models/word2vec_multistream.pyx":171
  *             for i in range(last_idx, job_batch.size()):
  *                 self.buf_data.push_back(job_batch[i])
  *             job_batch.resize(last_idx)             # <<<<<<<<<<<<<<
@@ -4642,10 +4665,10 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
       #ifdef WITH_THREAD
       __Pyx_PyGILState_Release(__pyx_gilstate_save);
       #endif
-      __PYX_ERR(1, 172, __pyx_L1_error)
+      __PYX_ERR(1, 171, __pyx_L1_error)
     }
 
-    /* "gensim/models/word2vec_multistream.pyx":155
+    /* "gensim/models/word2vec_multistream.pyx":154
  *                 batch_size += chunk.size()
  * 
  *         if batch_size > self.max_words_in_batch:             # <<<<<<<<<<<<<<
@@ -4654,7 +4677,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
  */
   }
 
-  /* "gensim/models/word2vec_multistream.pyx":174
+  /* "gensim/models/word2vec_multistream.pyx":173
  *             job_batch.resize(last_idx)
  * 
  *         return job_batch             # <<<<<<<<<<<<<<
@@ -4664,7 +4687,7 @@ static std::vector<std::vector<std::string> >  __pyx_f_6gensim_6models_20word2ve
   __pyx_r = __pyx_v_job_batch;
   goto __pyx_L0;
 
-  /* "gensim/models/word2vec_multistream.pyx":129
+  /* "gensim/models/word2vec_multistream.pyx":128
  *         return rebuild_cython_line_sentence, (self.source, self.max_sentence_length)
  * 
  *     cpdef vector[vector[string]] next_batch(self) nogil except *:             # <<<<<<<<<<<<<<
@@ -4709,8 +4732,8 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_18CythonLineSen
   PyObject *__pyx_t_2 = NULL;
   __Pyx_RefNannySetupContext("next_batch", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence_next_batch(__pyx_v_self, 1); if (unlikely(PyErr_Occurred())) __PYX_ERR(1, 129, __pyx_L1_error)
-  __pyx_t_2 = __pyx_convert_vector_to_py_std_3a__3a_vector_3c_std_3a__3a_string_3e___(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 129, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence_next_batch(__pyx_v_self, 1); if (unlikely(PyErr_Occurred())) __PYX_ERR(1, 128, __pyx_L1_error)
+  __pyx_t_2 = __pyx_convert_vector_to_py_std_3a__3a_vector_3c_std_3a__3a_string_3e___(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 128, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_r = __pyx_t_2;
   __pyx_t_2 = 0;
@@ -5044,7 +5067,7 @@ static int __pyx_pf_6gensim_6models_20word2vec_multistream_18CythonLineSentence_
   return __pyx_r;
 }
 
-/* "gensim/models/word2vec_multistream.pyx":177
+/* "gensim/models/word2vec_multistream.pyx":176
  * 
  * 
  * cdef void prepare_c_structures_for_batch(vector[vector[string]] &sentences, int sample, int hs, int window, int *total_words,             # <<<<<<<<<<<<<<
@@ -5071,7 +5094,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
   int __pyx_t_12;
   int __pyx_t_13;
 
-  /* "gensim/models/word2vec_multistream.pyx":186
+  /* "gensim/models/word2vec_multistream.pyx":185
  *     cdef vector[string] sent
  * 
  *     sentence_idx[0] = 0  # indices of the first sentence always start at 0             # <<<<<<<<<<<<<<
@@ -5080,7 +5103,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
  */
   (__pyx_v_sentence_idx[0]) = 0;
 
-  /* "gensim/models/word2vec_multistream.pyx":187
+  /* "gensim/models/word2vec_multistream.pyx":186
  * 
  *     sentence_idx[0] = 0  # indices of the first sentence always start at 0
  *     for sent in sentences:             # <<<<<<<<<<<<<<
@@ -5094,7 +5117,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
     ++__pyx_t_1;
     __pyx_v_sent = __pyx_t_2;
 
-    /* "gensim/models/word2vec_multistream.pyx":188
+    /* "gensim/models/word2vec_multistream.pyx":187
  *     sentence_idx[0] = 0  # indices of the first sentence always start at 0
  *     for sent in sentences:
  *         if sent.empty():             # <<<<<<<<<<<<<<
@@ -5104,7 +5127,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
     __pyx_t_3 = (__pyx_v_sent.empty() != 0);
     if (__pyx_t_3) {
 
-      /* "gensim/models/word2vec_multistream.pyx":189
+      /* "gensim/models/word2vec_multistream.pyx":188
  *     for sent in sentences:
  *         if sent.empty():
  *             continue # ignore empty sentences; leave effective_sentences unchanged             # <<<<<<<<<<<<<<
@@ -5113,7 +5136,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
  */
       goto __pyx_L3_continue;
 
-      /* "gensim/models/word2vec_multistream.pyx":188
+      /* "gensim/models/word2vec_multistream.pyx":187
  *     sentence_idx[0] = 0  # indices of the first sentence always start at 0
  *     for sent in sentences:
  *         if sent.empty():             # <<<<<<<<<<<<<<
@@ -5122,7 +5145,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
  */
     }
 
-    /* "gensim/models/word2vec_multistream.pyx":190
+    /* "gensim/models/word2vec_multistream.pyx":189
  *         if sent.empty():
  *             continue # ignore empty sentences; leave effective_sentences unchanged
  *         total_words[0] += sent.size()             # <<<<<<<<<<<<<<
@@ -5132,7 +5155,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
     __pyx_t_4 = 0;
     (__pyx_v_total_words[__pyx_t_4]) = ((__pyx_v_total_words[__pyx_t_4]) + __pyx_v_sent.size());
 
-    /* "gensim/models/word2vec_multistream.pyx":192
+    /* "gensim/models/word2vec_multistream.pyx":191
  *         total_words[0] += sent.size()
  * 
  *         for token in sent:             # <<<<<<<<<<<<<<
@@ -5146,7 +5169,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
       ++__pyx_t_5;
       __pyx_v_token = __pyx_t_6;
 
-      /* "gensim/models/word2vec_multistream.pyx":194
+      /* "gensim/models/word2vec_multistream.pyx":193
  *         for token in sent:
  *             # leaving `effective_words` unchanged = shortening the sentence = expanding the window
  *             if vocab[0].find(token) == vocab[0].end():             # <<<<<<<<<<<<<<
@@ -5156,7 +5179,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
       __pyx_t_3 = (((__pyx_v_vocab[0]).find(__pyx_v_token) == (__pyx_v_vocab[0]).end()) != 0);
       if (__pyx_t_3) {
 
-        /* "gensim/models/word2vec_multistream.pyx":195
+        /* "gensim/models/word2vec_multistream.pyx":194
  *             # leaving `effective_words` unchanged = shortening the sentence = expanding the window
  *             if vocab[0].find(token) == vocab[0].end():
  *                 continue             # <<<<<<<<<<<<<<
@@ -5165,7 +5188,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
  */
         goto __pyx_L6_continue;
 
-        /* "gensim/models/word2vec_multistream.pyx":194
+        /* "gensim/models/word2vec_multistream.pyx":193
  *         for token in sent:
  *             # leaving `effective_words` unchanged = shortening the sentence = expanding the window
  *             if vocab[0].find(token) == vocab[0].end():             # <<<<<<<<<<<<<<
@@ -5174,7 +5197,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
  */
       }
 
-      /* "gensim/models/word2vec_multistream.pyx":197
+      /* "gensim/models/word2vec_multistream.pyx":196
  *                 continue
  * 
  *             word = vocab[0][token]             # <<<<<<<<<<<<<<
@@ -5183,7 +5206,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
  */
       __pyx_v_word = ((__pyx_v_vocab[0])[__pyx_v_token]);
 
-      /* "gensim/models/word2vec_multistream.pyx":198
+      /* "gensim/models/word2vec_multistream.pyx":197
  * 
  *             word = vocab[0][token]
  *             if sample and word.sample_int < random_int32(next_random):             # <<<<<<<<<<<<<<
@@ -5201,7 +5224,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
       __pyx_L10_bool_binop_done:;
       if (__pyx_t_3) {
 
-        /* "gensim/models/word2vec_multistream.pyx":199
+        /* "gensim/models/word2vec_multistream.pyx":198
  *             word = vocab[0][token]
  *             if sample and word.sample_int < random_int32(next_random):
  *                 continue             # <<<<<<<<<<<<<<
@@ -5210,7 +5233,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
  */
         goto __pyx_L6_continue;
 
-        /* "gensim/models/word2vec_multistream.pyx":198
+        /* "gensim/models/word2vec_multistream.pyx":197
  * 
  *             word = vocab[0][token]
  *             if sample and word.sample_int < random_int32(next_random):             # <<<<<<<<<<<<<<
@@ -5219,7 +5242,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
  */
       }
 
-      /* "gensim/models/word2vec_multistream.pyx":200
+      /* "gensim/models/word2vec_multistream.pyx":199
  *             if sample and word.sample_int < random_int32(next_random):
  *                 continue
  *             indexes[effective_words[0]] = word.index             # <<<<<<<<<<<<<<
@@ -5229,7 +5252,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
       __pyx_t_8 = __pyx_v_word.index;
       (__pyx_v_indexes[(__pyx_v_effective_words[0])]) = __pyx_t_8;
 
-      /* "gensim/models/word2vec_multistream.pyx":201
+      /* "gensim/models/word2vec_multistream.pyx":200
  *                 continue
  *             indexes[effective_words[0]] = word.index
  *             if hs:             # <<<<<<<<<<<<<<
@@ -5239,7 +5262,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
       __pyx_t_3 = (__pyx_v_hs != 0);
       if (__pyx_t_3) {
 
-        /* "gensim/models/word2vec_multistream.pyx":202
+        /* "gensim/models/word2vec_multistream.pyx":201
  *             indexes[effective_words[0]] = word.index
  *             if hs:
  *                 codelens[effective_words[0]] = word.code_len             # <<<<<<<<<<<<<<
@@ -5249,7 +5272,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
         __pyx_t_9 = __pyx_v_word.code_len;
         (__pyx_v_codelens[(__pyx_v_effective_words[0])]) = __pyx_t_9;
 
-        /* "gensim/models/word2vec_multistream.pyx":203
+        /* "gensim/models/word2vec_multistream.pyx":202
  *             if hs:
  *                 codelens[effective_words[0]] = word.code_len
  *                 codes[effective_words[0]] = word.code             # <<<<<<<<<<<<<<
@@ -5259,7 +5282,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
         __pyx_t_10 = __pyx_v_word.code;
         (__pyx_v_codes[(__pyx_v_effective_words[0])]) = __pyx_t_10;
 
-        /* "gensim/models/word2vec_multistream.pyx":204
+        /* "gensim/models/word2vec_multistream.pyx":203
  *                 codelens[effective_words[0]] = word.code_len
  *                 codes[effective_words[0]] = word.code
  *                 points[effective_words[0]] = word.point             # <<<<<<<<<<<<<<
@@ -5269,7 +5292,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
         __pyx_t_11 = __pyx_v_word.point;
         (__pyx_v_points[(__pyx_v_effective_words[0])]) = __pyx_t_11;
 
-        /* "gensim/models/word2vec_multistream.pyx":201
+        /* "gensim/models/word2vec_multistream.pyx":200
  *                 continue
  *             indexes[effective_words[0]] = word.index
  *             if hs:             # <<<<<<<<<<<<<<
@@ -5278,7 +5301,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
  */
       }
 
-      /* "gensim/models/word2vec_multistream.pyx":205
+      /* "gensim/models/word2vec_multistream.pyx":204
  *                 codes[effective_words[0]] = word.code
  *                 points[effective_words[0]] = word.point
  *             effective_words[0] += 1             # <<<<<<<<<<<<<<
@@ -5288,7 +5311,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
       __pyx_t_4 = 0;
       (__pyx_v_effective_words[__pyx_t_4]) = ((__pyx_v_effective_words[__pyx_t_4]) + 1);
 
-      /* "gensim/models/word2vec_multistream.pyx":206
+      /* "gensim/models/word2vec_multistream.pyx":205
  *                 points[effective_words[0]] = word.point
  *             effective_words[0] += 1
  *             if effective_words[0] == MAX_SENTENCE_LEN:             # <<<<<<<<<<<<<<
@@ -5298,7 +5321,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
       __pyx_t_3 = (((__pyx_v_effective_words[0]) == 0x2710) != 0);
       if (__pyx_t_3) {
 
-        /* "gensim/models/word2vec_multistream.pyx":207
+        /* "gensim/models/word2vec_multistream.pyx":206
  *             effective_words[0] += 1
  *             if effective_words[0] == MAX_SENTENCE_LEN:
  *                 break  # TODO: log warning, tally overflow?             # <<<<<<<<<<<<<<
@@ -5307,7 +5330,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
  */
         goto __pyx_L7_break;
 
-        /* "gensim/models/word2vec_multistream.pyx":206
+        /* "gensim/models/word2vec_multistream.pyx":205
  *                 points[effective_words[0]] = word.point
  *             effective_words[0] += 1
  *             if effective_words[0] == MAX_SENTENCE_LEN:             # <<<<<<<<<<<<<<
@@ -5316,7 +5339,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
  */
       }
 
-      /* "gensim/models/word2vec_multistream.pyx":192
+      /* "gensim/models/word2vec_multistream.pyx":191
  *         total_words[0] += sent.size()
  * 
  *         for token in sent:             # <<<<<<<<<<<<<<
@@ -5327,7 +5350,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
     }
     __pyx_L7_break:;
 
-    /* "gensim/models/word2vec_multistream.pyx":212
+    /* "gensim/models/word2vec_multistream.pyx":211
  *         # across sentence boundaries.
  *         # indices of sentence number X are between <sentence_idx[X], sentence_idx[X])
  *         effective_sentences[0] += 1             # <<<<<<<<<<<<<<
@@ -5337,7 +5360,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
     __pyx_t_4 = 0;
     (__pyx_v_effective_sentences[__pyx_t_4]) = ((__pyx_v_effective_sentences[__pyx_t_4]) + 1);
 
-    /* "gensim/models/word2vec_multistream.pyx":213
+    /* "gensim/models/word2vec_multistream.pyx":212
  *         # indices of sentence number X are between <sentence_idx[X], sentence_idx[X])
  *         effective_sentences[0] += 1
  *         sentence_idx[effective_sentences[0]] = effective_words[0]             # <<<<<<<<<<<<<<
@@ -5346,7 +5369,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
  */
     (__pyx_v_sentence_idx[(__pyx_v_effective_sentences[0])]) = (__pyx_v_effective_words[0]);
 
-    /* "gensim/models/word2vec_multistream.pyx":215
+    /* "gensim/models/word2vec_multistream.pyx":214
  *         sentence_idx[effective_sentences[0]] = effective_words[0]
  * 
  *         if effective_words[0] == MAX_SENTENCE_LEN:             # <<<<<<<<<<<<<<
@@ -5356,7 +5379,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
     __pyx_t_3 = (((__pyx_v_effective_words[0]) == 0x2710) != 0);
     if (__pyx_t_3) {
 
-      /* "gensim/models/word2vec_multistream.pyx":216
+      /* "gensim/models/word2vec_multistream.pyx":215
  * 
  *         if effective_words[0] == MAX_SENTENCE_LEN:
  *             break  # TODO: log warning, tally overflow?             # <<<<<<<<<<<<<<
@@ -5365,7 +5388,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
  */
       goto __pyx_L4_break;
 
-      /* "gensim/models/word2vec_multistream.pyx":215
+      /* "gensim/models/word2vec_multistream.pyx":214
  *         sentence_idx[effective_sentences[0]] = effective_words[0]
  * 
  *         if effective_words[0] == MAX_SENTENCE_LEN:             # <<<<<<<<<<<<<<
@@ -5374,7 +5397,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
  */
     }
 
-    /* "gensim/models/word2vec_multistream.pyx":187
+    /* "gensim/models/word2vec_multistream.pyx":186
  * 
  *     sentence_idx[0] = 0  # indices of the first sentence always start at 0
  *     for sent in sentences:             # <<<<<<<<<<<<<<
@@ -5385,7 +5408,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
   }
   __pyx_L4_break:;
 
-  /* "gensim/models/word2vec_multistream.pyx":219
+  /* "gensim/models/word2vec_multistream.pyx":218
  * 
  *     # precompute "reduced window" offsets in a single randint() call
  *     for i in range(effective_words[0]):             # <<<<<<<<<<<<<<
@@ -5397,7 +5420,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
   for (__pyx_t_13 = 0; __pyx_t_13 < __pyx_t_12; __pyx_t_13+=1) {
     __pyx_v_i = __pyx_t_13;
 
-    /* "gensim/models/word2vec_multistream.pyx":220
+    /* "gensim/models/word2vec_multistream.pyx":219
  *     # precompute "reduced window" offsets in a single randint() call
  *     for i in range(effective_words[0]):
  *         reduced_windows[i] = random_int32(next_random) % window             # <<<<<<<<<<<<<<
@@ -5407,7 +5430,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
     (__pyx_v_reduced_windows[__pyx_v_i]) = (__pyx_f_6gensim_6models_14word2vec_inner_random_int32(__pyx_v_next_random) % __pyx_v_window);
   }
 
-  /* "gensim/models/word2vec_multistream.pyx":177
+  /* "gensim/models/word2vec_multistream.pyx":176
  * 
  * 
  * cdef void prepare_c_structures_for_batch(vector[vector[string]] &sentences, int sample, int hs, int window, int *total_words,             # <<<<<<<<<<<<<<
@@ -5418,7 +5441,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
   /* function exit code */
 }
 
-/* "gensim/models/word2vec_multistream.pyx":223
+/* "gensim/models/word2vec_multistream.pyx":222
  * 
  * 
  * cdef REAL_t get_alpha(REAL_t alpha, REAL_t end_alpha, int cur_epoch, int num_epochs) nogil:             # <<<<<<<<<<<<<<
@@ -5429,7 +5452,7 @@ static void __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_
 static __pyx_t_6gensim_6models_20word2vec_multistream_REAL_t __pyx_f_6gensim_6models_20word2vec_multistream_get_alpha(__pyx_t_6gensim_6models_20word2vec_multistream_REAL_t __pyx_v_alpha, __pyx_t_6gensim_6models_20word2vec_multistream_REAL_t __pyx_v_end_alpha, int __pyx_v_cur_epoch, int __pyx_v_num_epochs) {
   __pyx_t_6gensim_6models_20word2vec_multistream_REAL_t __pyx_r;
 
-  /* "gensim/models/word2vec_multistream.pyx":224
+  /* "gensim/models/word2vec_multistream.pyx":223
  * 
  * cdef REAL_t get_alpha(REAL_t alpha, REAL_t end_alpha, int cur_epoch, int num_epochs) nogil:
  *     return alpha - ((alpha - end_alpha) * (<REAL_t> cur_epoch) / num_epochs)             # <<<<<<<<<<<<<<
@@ -5439,7 +5462,7 @@ static __pyx_t_6gensim_6models_20word2vec_multistream_REAL_t __pyx_f_6gensim_6mo
   __pyx_r = (__pyx_v_alpha - (((__pyx_v_alpha - __pyx_v_end_alpha) * ((__pyx_t_6gensim_6models_20word2vec_multistream_REAL_t)__pyx_v_cur_epoch)) / __pyx_v_num_epochs));
   goto __pyx_L0;
 
-  /* "gensim/models/word2vec_multistream.pyx":223
+  /* "gensim/models/word2vec_multistream.pyx":222
  * 
  * 
  * cdef REAL_t get_alpha(REAL_t alpha, REAL_t end_alpha, int cur_epoch, int num_epochs) nogil:             # <<<<<<<<<<<<<<
@@ -5452,7 +5475,7 @@ static __pyx_t_6gensim_6models_20word2vec_multistream_REAL_t __pyx_f_6gensim_6mo
   return __pyx_r;
 }
 
-/* "gensim/models/word2vec_multistream.pyx":227
+/* "gensim/models/word2vec_multistream.pyx":226
  * 
  * 
  * cdef REAL_t get_next_alpha(REAL_t start_alpha, REAL_t end_alpha, int total_examples, int total_words,             # <<<<<<<<<<<<<<
@@ -5470,7 +5493,7 @@ static __pyx_t_6gensim_6models_20word2vec_multistream_REAL_t __pyx_f_6gensim_6mo
   __pyx_t_6gensim_6models_20word2vec_multistream_REAL_t __pyx_t_3;
   __pyx_t_6gensim_6models_20word2vec_multistream_REAL_t __pyx_t_4;
 
-  /* "gensim/models/word2vec_multistream.pyx":231
+  /* "gensim/models/word2vec_multistream.pyx":230
  *     cdef REAL_t epoch_progress
  * 
  *     if expected_examples != -1:             # <<<<<<<<<<<<<<
@@ -5480,7 +5503,7 @@ static __pyx_t_6gensim_6models_20word2vec_multistream_REAL_t __pyx_f_6gensim_6mo
   __pyx_t_1 = ((__pyx_v_expected_examples != -1L) != 0);
   if (__pyx_t_1) {
 
-    /* "gensim/models/word2vec_multistream.pyx":233
+    /* "gensim/models/word2vec_multistream.pyx":232
  *     if expected_examples != -1:
  *         # examples-based decay
  *         epoch_progress = (<REAL_t> total_examples) / expected_examples             # <<<<<<<<<<<<<<
@@ -5489,7 +5512,7 @@ static __pyx_t_6gensim_6models_20word2vec_multistream_REAL_t __pyx_f_6gensim_6mo
  */
     __pyx_v_epoch_progress = (((__pyx_t_6gensim_6models_20word2vec_multistream_REAL_t)__pyx_v_total_examples) / __pyx_v_expected_examples);
 
-    /* "gensim/models/word2vec_multistream.pyx":231
+    /* "gensim/models/word2vec_multistream.pyx":230
  *     cdef REAL_t epoch_progress
  * 
  *     if expected_examples != -1:             # <<<<<<<<<<<<<<
@@ -5499,7 +5522,7 @@ static __pyx_t_6gensim_6models_20word2vec_multistream_REAL_t __pyx_f_6gensim_6mo
     goto __pyx_L3;
   }
 
-  /* "gensim/models/word2vec_multistream.pyx":236
+  /* "gensim/models/word2vec_multistream.pyx":235
  *     else:
  *         # word-based decay
  *         epoch_progress = (<REAL_t> total_words) / expected_words             # <<<<<<<<<<<<<<
@@ -5511,7 +5534,7 @@ static __pyx_t_6gensim_6models_20word2vec_multistream_REAL_t __pyx_f_6gensim_6mo
   }
   __pyx_L3:;
 
-  /* "gensim/models/word2vec_multistream.pyx":238
+  /* "gensim/models/word2vec_multistream.pyx":237
  *         epoch_progress = (<REAL_t> total_words) / expected_words
  * 
  *     cdef REAL_t progress = (cur_epoch + epoch_progress) / num_epochs             # <<<<<<<<<<<<<<
@@ -5520,7 +5543,7 @@ static __pyx_t_6gensim_6models_20word2vec_multistream_REAL_t __pyx_f_6gensim_6mo
  */
   __pyx_v_progress = ((__pyx_v_cur_epoch + __pyx_v_epoch_progress) / __pyx_v_num_epochs);
 
-  /* "gensim/models/word2vec_multistream.pyx":239
+  /* "gensim/models/word2vec_multistream.pyx":238
  * 
  *     cdef REAL_t progress = (cur_epoch + epoch_progress) / num_epochs
  *     cdef REAL_t next_alpha = start_alpha - (start_alpha - end_alpha) * progress             # <<<<<<<<<<<<<<
@@ -5529,7 +5552,7 @@ static __pyx_t_6gensim_6models_20word2vec_multistream_REAL_t __pyx_f_6gensim_6mo
  */
   __pyx_v_next_alpha = (__pyx_v_start_alpha - ((__pyx_v_start_alpha - __pyx_v_end_alpha) * __pyx_v_progress));
 
-  /* "gensim/models/word2vec_multistream.pyx":240
+  /* "gensim/models/word2vec_multistream.pyx":239
  *     cdef REAL_t progress = (cur_epoch + epoch_progress) / num_epochs
  *     cdef REAL_t next_alpha = start_alpha - (start_alpha - end_alpha) * progress
  *     return max(end_alpha, next_alpha)             # <<<<<<<<<<<<<<
@@ -5546,7 +5569,7 @@ static __pyx_t_6gensim_6models_20word2vec_multistream_REAL_t __pyx_f_6gensim_6mo
   __pyx_r = __pyx_t_4;
   goto __pyx_L0;
 
-  /* "gensim/models/word2vec_multistream.pyx":227
+  /* "gensim/models/word2vec_multistream.pyx":226
  * 
  * 
  * cdef REAL_t get_next_alpha(REAL_t start_alpha, REAL_t end_alpha, int total_examples, int total_words,             # <<<<<<<<<<<<<<
@@ -5559,7 +5582,7 @@ static __pyx_t_6gensim_6models_20word2vec_multistream_REAL_t __pyx_f_6gensim_6mo
   return __pyx_r;
 }
 
-/* "gensim/models/word2vec_multistream.pyx":243
+/* "gensim/models/word2vec_multistream.pyx":242
  * 
  * 
  * def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work,             # <<<<<<<<<<<<<<
@@ -5624,59 +5647,59 @@ static PyObject *__pyx_pw_6gensim_6models_20word2vec_multistream_3train_epoch_sg
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_corpus_file)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("train_epoch_sg", 1, 10, 10, 1); __PYX_ERR(1, 243, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("train_epoch_sg", 1, 10, 10, 1); __PYX_ERR(1, 242, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_offset)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("train_epoch_sg", 1, 10, 10, 2); __PYX_ERR(1, 243, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("train_epoch_sg", 1, 10, 10, 2); __PYX_ERR(1, 242, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
         if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_cython_vocab)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("train_epoch_sg", 1, 10, 10, 3); __PYX_ERR(1, 243, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("train_epoch_sg", 1, 10, 10, 3); __PYX_ERR(1, 242, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  4:
         if (likely((values[4] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_cur_epoch)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("train_epoch_sg", 1, 10, 10, 4); __PYX_ERR(1, 243, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("train_epoch_sg", 1, 10, 10, 4); __PYX_ERR(1, 242, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  5:
         if (likely((values[5] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_expected_examples)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("train_epoch_sg", 1, 10, 10, 5); __PYX_ERR(1, 243, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("train_epoch_sg", 1, 10, 10, 5); __PYX_ERR(1, 242, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  6:
         if (likely((values[6] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_expected_words)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("train_epoch_sg", 1, 10, 10, 6); __PYX_ERR(1, 243, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("train_epoch_sg", 1, 10, 10, 6); __PYX_ERR(1, 242, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  7:
         if (likely((values[7] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_work)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("train_epoch_sg", 1, 10, 10, 7); __PYX_ERR(1, 243, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("train_epoch_sg", 1, 10, 10, 7); __PYX_ERR(1, 242, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  8:
         if (likely((values[8] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_neu1)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("train_epoch_sg", 1, 10, 10, 8); __PYX_ERR(1, 243, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("train_epoch_sg", 1, 10, 10, 8); __PYX_ERR(1, 242, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  9:
         if (likely((values[9] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_compute_loss)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("train_epoch_sg", 1, 10, 10, 9); __PYX_ERR(1, 243, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("train_epoch_sg", 1, 10, 10, 9); __PYX_ERR(1, 242, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "train_epoch_sg") < 0)) __PYX_ERR(1, 243, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "train_epoch_sg") < 0)) __PYX_ERR(1, 242, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 10) {
       goto __pyx_L5_argtuple_error;
@@ -5705,7 +5728,7 @@ static PyObject *__pyx_pw_6gensim_6models_20word2vec_multistream_3train_epoch_sg
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("train_epoch_sg", 1, 10, 10, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(1, 243, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("train_epoch_sg", 1, 10, 10, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(1, 242, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("gensim.models.word2vec_multistream.train_epoch_sg", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -5786,87 +5809,87 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
   PyObject *__pyx_t_20 = NULL;
   __Pyx_RefNannySetupContext("train_epoch_sg", 0);
 
-  /* "gensim/models/word2vec_multistream.pyx":270
+  /* "gensim/models/word2vec_multistream.pyx":269
  *         and were not discarded by negative sampling).
  *     """
  *     cdef int hs = model.hs             # <<<<<<<<<<<<<<
  *     cdef int negative = model.negative
  *     cdef int sample = (model.vocabulary.sample != 0)
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_hs); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 270, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_hs); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 269, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 270, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 269, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_hs = __pyx_t_2;
 
-  /* "gensim/models/word2vec_multistream.pyx":271
+  /* "gensim/models/word2vec_multistream.pyx":270
  *     """
  *     cdef int hs = model.hs
  *     cdef int negative = model.negative             # <<<<<<<<<<<<<<
  *     cdef int sample = (model.vocabulary.sample != 0)
  *     cdef int workers = model.workers
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_negative); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 271, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_negative); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 270, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 271, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 270, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_negative = __pyx_t_2;
 
-  /* "gensim/models/word2vec_multistream.pyx":272
+  /* "gensim/models/word2vec_multistream.pyx":271
  *     cdef int hs = model.hs
  *     cdef int negative = model.negative
  *     cdef int sample = (model.vocabulary.sample != 0)             # <<<<<<<<<<<<<<
  *     cdef int workers = model.workers
  * 
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_vocabulary); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 272, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_vocabulary); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 271, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_sample); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 272, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_sample); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 271, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = PyObject_RichCompare(__pyx_t_3, __pyx_int_0, Py_NE); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 272, __pyx_L1_error)
+  __pyx_t_1 = PyObject_RichCompare(__pyx_t_3, __pyx_int_0, Py_NE); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 271, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 272, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 271, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_sample = __pyx_t_2;
 
-  /* "gensim/models/word2vec_multistream.pyx":273
+  /* "gensim/models/word2vec_multistream.pyx":272
  *     cdef int negative = model.negative
  *     cdef int sample = (model.vocabulary.sample != 0)
  *     cdef int workers = model.workers             # <<<<<<<<<<<<<<
  * 
  *     # For learning rate updates
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_workers); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 273, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_workers); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 272, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 273, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 272, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_workers = __pyx_t_2;
 
-  /* "gensim/models/word2vec_multistream.pyx":276
+  /* "gensim/models/word2vec_multistream.pyx":275
  * 
  *     # For learning rate updates
  *     cdef int cur_epoch = _cur_epoch             # <<<<<<<<<<<<<<
  *     cdef int num_epochs = model.epochs
  *     cdef int expected_examples = (-1 if _expected_examples is None else _expected_examples)
  */
-  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_v__cur_epoch); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 276, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_v__cur_epoch); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 275, __pyx_L1_error)
   __pyx_v_cur_epoch = __pyx_t_2;
 
-  /* "gensim/models/word2vec_multistream.pyx":277
+  /* "gensim/models/word2vec_multistream.pyx":276
  *     # For learning rate updates
  *     cdef int cur_epoch = _cur_epoch
  *     cdef int num_epochs = model.epochs             # <<<<<<<<<<<<<<
  *     cdef int expected_examples = (-1 if _expected_examples is None else _expected_examples)
  *     cdef int expected_words = (-1 if _expected_words is None else _expected_words)
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_epochs); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 277, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_epochs); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 276, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 277, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 276, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_num_epochs = __pyx_t_2;
 
-  /* "gensim/models/word2vec_multistream.pyx":278
+  /* "gensim/models/word2vec_multistream.pyx":277
  *     cdef int cur_epoch = _cur_epoch
  *     cdef int num_epochs = model.epochs
  *     cdef int expected_examples = (-1 if _expected_examples is None else _expected_examples)             # <<<<<<<<<<<<<<
@@ -5877,12 +5900,12 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
   if ((__pyx_t_4 != 0)) {
     __pyx_t_2 = -1;
   } else {
-    __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v__expected_examples); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 278, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v__expected_examples); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 277, __pyx_L1_error)
     __pyx_t_2 = __pyx_t_5;
   }
   __pyx_v_expected_examples = __pyx_t_2;
 
-  /* "gensim/models/word2vec_multistream.pyx":279
+  /* "gensim/models/word2vec_multistream.pyx":278
  *     cdef int num_epochs = model.epochs
  *     cdef int expected_examples = (-1 if _expected_examples is None else _expected_examples)
  *     cdef int expected_words = (-1 if _expected_words is None else _expected_words)             # <<<<<<<<<<<<<<
@@ -5893,58 +5916,58 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
   if ((__pyx_t_4 != 0)) {
     __pyx_t_2 = -1;
   } else {
-    __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v__expected_words); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 279, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v__expected_words); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 278, __pyx_L1_error)
     __pyx_t_2 = __pyx_t_5;
   }
   __pyx_v_expected_words = __pyx_t_2;
 
-  /* "gensim/models/word2vec_multistream.pyx":280
+  /* "gensim/models/word2vec_multistream.pyx":279
  *     cdef int expected_examples = (-1 if _expected_examples is None else _expected_examples)
  *     cdef int expected_words = (-1 if _expected_words is None else _expected_words)
  *     cdef REAL_t start_alpha = model.alpha             # <<<<<<<<<<<<<<
  *     cdef REAL_t end_alpha = model.min_alpha
  *     cdef REAL_t _alpha = get_alpha(model.alpha, end_alpha, cur_epoch, num_epochs)
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_alpha); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 280, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_alpha); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 279, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_6 = __pyx_PyFloat_AsFloat(__pyx_t_1); if (unlikely((__pyx_t_6 == ((npy_float32)-1)) && PyErr_Occurred())) __PYX_ERR(1, 280, __pyx_L1_error)
+  __pyx_t_6 = __pyx_PyFloat_AsFloat(__pyx_t_1); if (unlikely((__pyx_t_6 == ((npy_float32)-1)) && PyErr_Occurred())) __PYX_ERR(1, 279, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_start_alpha = __pyx_t_6;
 
-  /* "gensim/models/word2vec_multistream.pyx":281
+  /* "gensim/models/word2vec_multistream.pyx":280
  *     cdef int expected_words = (-1 if _expected_words is None else _expected_words)
  *     cdef REAL_t start_alpha = model.alpha
  *     cdef REAL_t end_alpha = model.min_alpha             # <<<<<<<<<<<<<<
  *     cdef REAL_t _alpha = get_alpha(model.alpha, end_alpha, cur_epoch, num_epochs)
  * 
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_min_alpha); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 281, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_min_alpha); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 280, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_6 = __pyx_PyFloat_AsFloat(__pyx_t_1); if (unlikely((__pyx_t_6 == ((npy_float32)-1)) && PyErr_Occurred())) __PYX_ERR(1, 281, __pyx_L1_error)
+  __pyx_t_6 = __pyx_PyFloat_AsFloat(__pyx_t_1); if (unlikely((__pyx_t_6 == ((npy_float32)-1)) && PyErr_Occurred())) __PYX_ERR(1, 280, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_end_alpha = __pyx_t_6;
 
-  /* "gensim/models/word2vec_multistream.pyx":282
+  /* "gensim/models/word2vec_multistream.pyx":281
  *     cdef REAL_t start_alpha = model.alpha
  *     cdef REAL_t end_alpha = model.min_alpha
  *     cdef REAL_t _alpha = get_alpha(model.alpha, end_alpha, cur_epoch, num_epochs)             # <<<<<<<<<<<<<<
  * 
  *     cdef CythonLineSentence input_stream = CythonLineSentence(corpus_file, offset)
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_alpha); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 282, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_alpha); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 281, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_6 = __pyx_PyFloat_AsFloat(__pyx_t_1); if (unlikely((__pyx_t_6 == ((npy_float32)-1)) && PyErr_Occurred())) __PYX_ERR(1, 282, __pyx_L1_error)
+  __pyx_t_6 = __pyx_PyFloat_AsFloat(__pyx_t_1); if (unlikely((__pyx_t_6 == ((npy_float32)-1)) && PyErr_Occurred())) __PYX_ERR(1, 281, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v__alpha = __pyx_f_6gensim_6models_20word2vec_multistream_get_alpha(__pyx_t_6, __pyx_v_end_alpha, __pyx_v_cur_epoch, __pyx_v_num_epochs);
 
-  /* "gensim/models/word2vec_multistream.pyx":284
+  /* "gensim/models/word2vec_multistream.pyx":283
  *     cdef REAL_t _alpha = get_alpha(model.alpha, end_alpha, cur_epoch, num_epochs)
  * 
  *     cdef CythonLineSentence input_stream = CythonLineSentence(corpus_file, offset)             # <<<<<<<<<<<<<<
  *     cdef CythonVocab vocab = _cython_vocab
  * 
  */
-  __pyx_t_1 = PyTuple_New(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 284, __pyx_L1_error)
+  __pyx_t_1 = PyTuple_New(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 283, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_INCREF(__pyx_v_corpus_file);
   __Pyx_GIVEREF(__pyx_v_corpus_file);
@@ -5952,34 +5975,34 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
   __Pyx_INCREF(__pyx_v_offset);
   __Pyx_GIVEREF(__pyx_v_offset);
   PyTuple_SET_ITEM(__pyx_t_1, 1, __pyx_v_offset);
-  __pyx_t_3 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_6gensim_6models_20word2vec_multistream_CythonLineSentence), __pyx_t_1, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 284, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_6gensim_6models_20word2vec_multistream_CythonLineSentence), __pyx_t_1, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 283, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_input_stream = ((struct __pyx_obj_6gensim_6models_20word2vec_multistream_CythonLineSentence *)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "gensim/models/word2vec_multistream.pyx":285
+  /* "gensim/models/word2vec_multistream.pyx":284
  * 
  *     cdef CythonLineSentence input_stream = CythonLineSentence(corpus_file, offset)
  *     cdef CythonVocab vocab = _cython_vocab             # <<<<<<<<<<<<<<
  * 
  *     cdef int _compute_loss = (1 if compute_loss == True else 0)
  */
-  if (!(likely(((__pyx_v__cython_vocab) == Py_None) || likely(__Pyx_TypeTest(__pyx_v__cython_vocab, __pyx_ptype_6gensim_6models_20word2vec_multistream_CythonVocab))))) __PYX_ERR(1, 285, __pyx_L1_error)
+  if (!(likely(((__pyx_v__cython_vocab) == Py_None) || likely(__Pyx_TypeTest(__pyx_v__cython_vocab, __pyx_ptype_6gensim_6models_20word2vec_multistream_CythonVocab))))) __PYX_ERR(1, 284, __pyx_L1_error)
   __pyx_t_3 = __pyx_v__cython_vocab;
   __Pyx_INCREF(__pyx_t_3);
   __pyx_v_vocab = ((struct __pyx_obj_6gensim_6models_20word2vec_multistream_CythonVocab *)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "gensim/models/word2vec_multistream.pyx":287
+  /* "gensim/models/word2vec_multistream.pyx":286
  *     cdef CythonVocab vocab = _cython_vocab
  * 
  *     cdef int _compute_loss = (1 if compute_loss == True else 0)             # <<<<<<<<<<<<<<
  *     cdef REAL_t _running_training_loss = model.running_training_loss
  * 
  */
-  __pyx_t_3 = PyObject_RichCompare(__pyx_v_compute_loss, Py_True, Py_EQ); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 287, __pyx_L1_error)
-  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(1, 287, __pyx_L1_error)
+  __pyx_t_3 = PyObject_RichCompare(__pyx_v_compute_loss, Py_True, Py_EQ); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 286, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(1, 286, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   if (__pyx_t_4) {
     __pyx_t_2 = 1;
@@ -5988,81 +6011,81 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
   }
   __pyx_v__compute_loss = __pyx_t_2;
 
-  /* "gensim/models/word2vec_multistream.pyx":288
+  /* "gensim/models/word2vec_multistream.pyx":287
  * 
  *     cdef int _compute_loss = (1 if compute_loss == True else 0)
  *     cdef REAL_t _running_training_loss = model.running_training_loss             # <<<<<<<<<<<<<<
  * 
  *     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
  */
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_running_training_loss); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 288, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_running_training_loss); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 287, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_6 = __pyx_PyFloat_AsFloat(__pyx_t_3); if (unlikely((__pyx_t_6 == ((npy_float32)-1)) && PyErr_Occurred())) __PYX_ERR(1, 288, __pyx_L1_error)
+  __pyx_t_6 = __pyx_PyFloat_AsFloat(__pyx_t_3); if (unlikely((__pyx_t_6 == ((npy_float32)-1)) && PyErr_Occurred())) __PYX_ERR(1, 287, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_v__running_training_loss = __pyx_t_6;
 
-  /* "gensim/models/word2vec_multistream.pyx":290
+  /* "gensim/models/word2vec_multistream.pyx":289
  *     cdef REAL_t _running_training_loss = model.running_training_loss
  * 
  *     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))             # <<<<<<<<<<<<<<
  *     cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_lockf))
  *     cdef REAL_t *work
  */
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_wv); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 290, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_wv); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 289, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_vectors); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 290, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_vectors); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 289, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(1, 290, __pyx_L1_error)
+  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(1, 289, __pyx_L1_error)
   __pyx_v_syn0 = ((__pyx_t_6gensim_6models_20word2vec_multistream_REAL_t *)PyArray_DATA(((PyArrayObject *)__pyx_t_1)));
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "gensim/models/word2vec_multistream.pyx":291
+  /* "gensim/models/word2vec_multistream.pyx":290
  * 
  *     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
  *     cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_lockf))             # <<<<<<<<<<<<<<
  *     cdef REAL_t *work
  *     cdef int size = model.wv.vector_size
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_trainables); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 291, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_trainables); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 290, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_vectors_lockf); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 291, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_vectors_lockf); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 290, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(1, 291, __pyx_L1_error)
+  if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(1, 290, __pyx_L1_error)
   __pyx_v_word_locks = ((__pyx_t_6gensim_6models_20word2vec_multistream_REAL_t *)PyArray_DATA(((PyArrayObject *)__pyx_t_3)));
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "gensim/models/word2vec_multistream.pyx":293
+  /* "gensim/models/word2vec_multistream.pyx":292
  *     cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_lockf))
  *     cdef REAL_t *work
  *     cdef int size = model.wv.vector_size             # <<<<<<<<<<<<<<
  * 
  *     cdef int codelens[MAX_SENTENCE_LEN]
  */
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_wv); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 293, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_wv); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 292, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_vector_size); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 293, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_vector_size); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 292, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 293, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 292, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_size = __pyx_t_2;
 
-  /* "gensim/models/word2vec_multistream.pyx":299
+  /* "gensim/models/word2vec_multistream.pyx":298
  *     cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
  *     cdef int sentence_idx[MAX_SENTENCE_LEN + 1]
  *     cdef int window = model.window             # <<<<<<<<<<<<<<
  * 
  *     cdef int i, j, k
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_window); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 299, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_window); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 298, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 299, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 298, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_window = __pyx_t_2;
 
-  /* "gensim/models/word2vec_multistream.pyx":302
+  /* "gensim/models/word2vec_multistream.pyx":301
  * 
  *     cdef int i, j, k
  *     cdef int effective_words = 0, effective_sentences = 0             # <<<<<<<<<<<<<<
@@ -6072,7 +6095,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
   __pyx_v_effective_words = 0;
   __pyx_v_effective_sentences = 0;
 
-  /* "gensim/models/word2vec_multistream.pyx":303
+  /* "gensim/models/word2vec_multistream.pyx":302
  *     cdef int i, j, k
  *     cdef int effective_words = 0, effective_sentences = 0
  *     cdef int total_effective_words = 0, total_sentences = 0, total_words = 0             # <<<<<<<<<<<<<<
@@ -6083,7 +6106,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
   __pyx_v_total_sentences = 0;
   __pyx_v_total_words = 0;
 
-  /* "gensim/models/word2vec_multistream.pyx":318
+  /* "gensim/models/word2vec_multistream.pyx":317
  *     cdef unsigned long long next_random
  * 
  *     if hs:             # <<<<<<<<<<<<<<
@@ -6093,23 +6116,23 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
   __pyx_t_4 = (__pyx_v_hs != 0);
   if (__pyx_t_4) {
 
-    /* "gensim/models/word2vec_multistream.pyx":319
+    /* "gensim/models/word2vec_multistream.pyx":318
  * 
  *     if hs:
  *         syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))             # <<<<<<<<<<<<<<
  * 
  *     if negative:
  */
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_trainables); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 319, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_trainables); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 318, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_syn1); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 319, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_syn1); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 318, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(1, 319, __pyx_L1_error)
+    if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(1, 318, __pyx_L1_error)
     __pyx_v_syn1 = ((__pyx_t_6gensim_6models_20word2vec_multistream_REAL_t *)PyArray_DATA(((PyArrayObject *)__pyx_t_3)));
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-    /* "gensim/models/word2vec_multistream.pyx":318
+    /* "gensim/models/word2vec_multistream.pyx":317
  *     cdef unsigned long long next_random
  * 
  *     if hs:             # <<<<<<<<<<<<<<
@@ -6118,7 +6141,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
  */
   }
 
-  /* "gensim/models/word2vec_multistream.pyx":321
+  /* "gensim/models/word2vec_multistream.pyx":320
  *         syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
  * 
  *     if negative:             # <<<<<<<<<<<<<<
@@ -6128,55 +6151,55 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
   __pyx_t_4 = (__pyx_v_negative != 0);
   if (__pyx_t_4) {
 
-    /* "gensim/models/word2vec_multistream.pyx":322
+    /* "gensim/models/word2vec_multistream.pyx":321
  * 
  *     if negative:
  *         syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))             # <<<<<<<<<<<<<<
  *         cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
  *         cum_table_len = len(model.vocabulary.cum_table)
  */
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_trainables); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 322, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_trainables); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 321, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_syn1neg); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 322, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_syn1neg); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 321, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(1, 322, __pyx_L1_error)
+    if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(1, 321, __pyx_L1_error)
     __pyx_v_syn1neg = ((__pyx_t_6gensim_6models_20word2vec_multistream_REAL_t *)PyArray_DATA(((PyArrayObject *)__pyx_t_1)));
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-    /* "gensim/models/word2vec_multistream.pyx":323
+    /* "gensim/models/word2vec_multistream.pyx":322
  *     if negative:
  *         syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
  *         cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))             # <<<<<<<<<<<<<<
  *         cum_table_len = len(model.vocabulary.cum_table)
  *     if negative or sample:
  */
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_vocabulary); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 323, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_vocabulary); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 322, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_cum_table); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 323, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_cum_table); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 322, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(1, 323, __pyx_L1_error)
+    if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(1, 322, __pyx_L1_error)
     __pyx_v_cum_table = ((__pyx_t_5numpy_uint32_t *)PyArray_DATA(((PyArrayObject *)__pyx_t_3)));
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-    /* "gensim/models/word2vec_multistream.pyx":324
+    /* "gensim/models/word2vec_multistream.pyx":323
  *         syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
  *         cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
  *         cum_table_len = len(model.vocabulary.cum_table)             # <<<<<<<<<<<<<<
  *     if negative or sample:
  *         next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
  */
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_vocabulary); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 324, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_vocabulary); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 323, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_cum_table); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 324, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_cum_table); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 323, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_7 = PyObject_Length(__pyx_t_1); if (unlikely(__pyx_t_7 == ((Py_ssize_t)-1))) __PYX_ERR(1, 324, __pyx_L1_error)
+    __pyx_t_7 = PyObject_Length(__pyx_t_1); if (unlikely(__pyx_t_7 == ((Py_ssize_t)-1))) __PYX_ERR(1, 323, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __pyx_v_cum_table_len = __pyx_t_7;
 
-    /* "gensim/models/word2vec_multistream.pyx":321
+    /* "gensim/models/word2vec_multistream.pyx":320
  *         syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
  * 
  *     if negative:             # <<<<<<<<<<<<<<
@@ -6185,7 +6208,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
  */
   }
 
-  /* "gensim/models/word2vec_multistream.pyx":325
+  /* "gensim/models/word2vec_multistream.pyx":324
  *         cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
  *         cum_table_len = len(model.vocabulary.cum_table)
  *     if negative or sample:             # <<<<<<<<<<<<<<
@@ -6203,41 +6226,41 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
   __pyx_L6_bool_binop_done:;
   if (__pyx_t_4) {
 
-    /* "gensim/models/word2vec_multistream.pyx":326
+    /* "gensim/models/word2vec_multistream.pyx":325
  *         cum_table_len = len(model.vocabulary.cum_table)
  *     if negative or sample:
  *         next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)             # <<<<<<<<<<<<<<
  * 
  *     # convert Python structures to primitive types, so we can release the GIL
  */
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_random); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 326, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_random); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 325, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_randint); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 326, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_randint); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 325, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_tuple__4, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 326, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_tuple__4, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 325, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_3 = PyNumber_Multiply(__pyx_int_16777216, __pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 326, __pyx_L1_error)
+    __pyx_t_3 = PyNumber_Multiply(__pyx_int_16777216, __pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 325, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_random); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 326, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_random); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 325, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_randint); if (unlikely(!__pyx_t_9)) __PYX_ERR(1, 326, __pyx_L1_error)
+    __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_randint); if (unlikely(!__pyx_t_9)) __PYX_ERR(1, 325, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_9, __pyx_tuple__5, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 326, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_9, __pyx_tuple__5, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 325, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-    __pyx_t_9 = PyNumber_Add(__pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_9)) __PYX_ERR(1, 326, __pyx_L1_error)
+    __pyx_t_9 = PyNumber_Add(__pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_9)) __PYX_ERR(1, 325, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_10 = __Pyx_PyInt_As_unsigned_PY_LONG_LONG(__pyx_t_9); if (unlikely((__pyx_t_10 == (unsigned PY_LONG_LONG)-1) && PyErr_Occurred())) __PYX_ERR(1, 326, __pyx_L1_error)
+    __pyx_t_10 = __Pyx_PyInt_As_unsigned_PY_LONG_LONG(__pyx_t_9); if (unlikely((__pyx_t_10 == (unsigned PY_LONG_LONG)-1) && PyErr_Occurred())) __PYX_ERR(1, 325, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
     __pyx_v_next_random = __pyx_t_10;
 
-    /* "gensim/models/word2vec_multistream.pyx":325
+    /* "gensim/models/word2vec_multistream.pyx":324
  *         cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
  *         cum_table_len = len(model.vocabulary.cum_table)
  *     if negative or sample:             # <<<<<<<<<<<<<<
@@ -6246,17 +6269,17 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
  */
   }
 
-  /* "gensim/models/word2vec_multistream.pyx":329
+  /* "gensim/models/word2vec_multistream.pyx":328
  * 
  *     # convert Python structures to primitive types, so we can release the GIL
  *     work = <REAL_t *>np.PyArray_DATA(_work)             # <<<<<<<<<<<<<<
  * 
  *     # for preparing batches & training
  */
-  if (!(likely(((__pyx_v__work) == Py_None) || likely(__Pyx_TypeTest(__pyx_v__work, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(1, 329, __pyx_L1_error)
+  if (!(likely(((__pyx_v__work) == Py_None) || likely(__Pyx_TypeTest(__pyx_v__work, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(1, 328, __pyx_L1_error)
   __pyx_v_work = ((__pyx_t_6gensim_6models_20word2vec_multistream_REAL_t *)PyArray_DATA(((PyArrayObject *)__pyx_v__work)));
 
-  /* "gensim/models/word2vec_multistream.pyx":336
+  /* "gensim/models/word2vec_multistream.pyx":335
  *     cdef VocabItem word
  * 
  *     with nogil:             # <<<<<<<<<<<<<<
@@ -6271,7 +6294,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
       #endif
       /*try:*/ {
 
-        /* "gensim/models/word2vec_multistream.pyx":337
+        /* "gensim/models/word2vec_multistream.pyx":336
  * 
  *     with nogil:
  *         input_stream.reset()             # <<<<<<<<<<<<<<
@@ -6280,7 +6303,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
  */
         __pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence_reset(__pyx_v_input_stream, 0);
 
-        /* "gensim/models/word2vec_multistream.pyx":338
+        /* "gensim/models/word2vec_multistream.pyx":337
  *     with nogil:
  *         input_stream.reset()
  *         while not (input_stream.is_eof() or total_words > expected_words / workers):             # <<<<<<<<<<<<<<
@@ -6300,7 +6323,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
           __pyx_t_8 = ((!__pyx_t_4) != 0);
           if (!__pyx_t_8) break;
 
-          /* "gensim/models/word2vec_multistream.pyx":339
+          /* "gensim/models/word2vec_multistream.pyx":338
  *         input_stream.reset()
  *         while not (input_stream.is_eof() or total_words > expected_words / workers):
  *             effective_sentences = 0             # <<<<<<<<<<<<<<
@@ -6309,7 +6332,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
  */
           __pyx_v_effective_sentences = 0;
 
-          /* "gensim/models/word2vec_multistream.pyx":340
+          /* "gensim/models/word2vec_multistream.pyx":339
  *         while not (input_stream.is_eof() or total_words > expected_words / workers):
  *             effective_sentences = 0
  *             effective_words = 0             # <<<<<<<<<<<<<<
@@ -6318,26 +6341,26 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
  */
           __pyx_v_effective_words = 0;
 
-          /* "gensim/models/word2vec_multistream.pyx":342
+          /* "gensim/models/word2vec_multistream.pyx":341
  *             effective_words = 0
  * 
  *             sentences = input_stream.next_batch()             # <<<<<<<<<<<<<<
  * 
  *             prepare_c_structures_for_batch(sentences, sample, hs, window, &total_words, &effective_words,
  */
-          __pyx_t_11 = __pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence_next_batch(__pyx_v_input_stream, 0); if (unlikely(__Pyx_ErrOccurredWithGIL())) __PYX_ERR(1, 342, __pyx_L9_error)
+          __pyx_t_11 = __pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence_next_batch(__pyx_v_input_stream, 0); if (unlikely(__Pyx_ErrOccurredWithGIL())) __PYX_ERR(1, 341, __pyx_L9_error)
           __pyx_v_sentences = __pyx_t_11;
 
-          /* "gensim/models/word2vec_multistream.pyx":345
+          /* "gensim/models/word2vec_multistream.pyx":344
  * 
  *             prepare_c_structures_for_batch(sentences, sample, hs, window, &total_words, &effective_words,
  *                                            &effective_sentences, &next_random, vocab.get_vocab_ptr(), sentence_idx, indexes,             # <<<<<<<<<<<<<<
  *                                            codelens, codes, points, reduced_windows)
  * 
  */
-          __pyx_t_12 = __pyx_f_6gensim_6models_20word2vec_multistream_11CythonVocab_get_vocab_ptr(__pyx_v_vocab); if (unlikely(__Pyx_ErrOccurredWithGIL())) __PYX_ERR(1, 345, __pyx_L9_error)
+          __pyx_t_12 = __pyx_f_6gensim_6models_20word2vec_multistream_11CythonVocab_get_vocab_ptr(__pyx_v_vocab); if (unlikely(__Pyx_ErrOccurredWithGIL())) __PYX_ERR(1, 344, __pyx_L9_error)
 
-          /* "gensim/models/word2vec_multistream.pyx":344
+          /* "gensim/models/word2vec_multistream.pyx":343
  *             sentences = input_stream.next_batch()
  * 
  *             prepare_c_structures_for_batch(sentences, sample, hs, window, &total_words, &effective_words,             # <<<<<<<<<<<<<<
@@ -6346,7 +6369,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
  */
           __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_for_batch(__pyx_v_sentences, __pyx_v_sample, __pyx_v_hs, __pyx_v_window, (&__pyx_v_total_words), (&__pyx_v_effective_words), (&__pyx_v_effective_sentences), (&__pyx_v_next_random), __pyx_t_12, __pyx_v_sentence_idx, __pyx_v_indexes, __pyx_v_codelens, __pyx_v_codes, __pyx_v_points, __pyx_v_reduced_windows);
 
-          /* "gensim/models/word2vec_multistream.pyx":348
+          /* "gensim/models/word2vec_multistream.pyx":347
  *                                            codelens, codes, points, reduced_windows)
  * 
  *             for sent_idx in range(effective_sentences):             # <<<<<<<<<<<<<<
@@ -6358,7 +6381,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
           for (__pyx_t_13 = 0; __pyx_t_13 < __pyx_t_5; __pyx_t_13+=1) {
             __pyx_v_sent_idx = __pyx_t_13;
 
-            /* "gensim/models/word2vec_multistream.pyx":349
+            /* "gensim/models/word2vec_multistream.pyx":348
  * 
  *             for sent_idx in range(effective_sentences):
  *                 idx_start = sentence_idx[sent_idx]             # <<<<<<<<<<<<<<
@@ -6367,7 +6390,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
  */
             __pyx_v_idx_start = (__pyx_v_sentence_idx[__pyx_v_sent_idx]);
 
-            /* "gensim/models/word2vec_multistream.pyx":350
+            /* "gensim/models/word2vec_multistream.pyx":349
  *             for sent_idx in range(effective_sentences):
  *                 idx_start = sentence_idx[sent_idx]
  *                 idx_end = sentence_idx[sent_idx + 1]             # <<<<<<<<<<<<<<
@@ -6376,7 +6399,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
  */
             __pyx_v_idx_end = (__pyx_v_sentence_idx[(__pyx_v_sent_idx + 1)]);
 
-            /* "gensim/models/word2vec_multistream.pyx":351
+            /* "gensim/models/word2vec_multistream.pyx":350
  *                 idx_start = sentence_idx[sent_idx]
  *                 idx_end = sentence_idx[sent_idx + 1]
  *                 for i in range(idx_start, idx_end):             # <<<<<<<<<<<<<<
@@ -6388,7 +6411,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
             for (__pyx_t_16 = __pyx_v_idx_start; __pyx_t_16 < __pyx_t_15; __pyx_t_16+=1) {
               __pyx_v_i = __pyx_t_16;
 
-              /* "gensim/models/word2vec_multistream.pyx":352
+              /* "gensim/models/word2vec_multistream.pyx":351
  *                 idx_end = sentence_idx[sent_idx + 1]
  *                 for i in range(idx_start, idx_end):
  *                     j = i - window + reduced_windows[i]             # <<<<<<<<<<<<<<
@@ -6397,7 +6420,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
  */
               __pyx_v_j = ((__pyx_v_i - __pyx_v_window) + (__pyx_v_reduced_windows[__pyx_v_i]));
 
-              /* "gensim/models/word2vec_multistream.pyx":353
+              /* "gensim/models/word2vec_multistream.pyx":352
  *                 for i in range(idx_start, idx_end):
  *                     j = i - window + reduced_windows[i]
  *                     if j < idx_start:             # <<<<<<<<<<<<<<
@@ -6407,7 +6430,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
               __pyx_t_8 = ((__pyx_v_j < __pyx_v_idx_start) != 0);
               if (__pyx_t_8) {
 
-                /* "gensim/models/word2vec_multistream.pyx":354
+                /* "gensim/models/word2vec_multistream.pyx":353
  *                     j = i - window + reduced_windows[i]
  *                     if j < idx_start:
  *                         j = idx_start             # <<<<<<<<<<<<<<
@@ -6416,7 +6439,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
  */
                 __pyx_v_j = __pyx_v_idx_start;
 
-                /* "gensim/models/word2vec_multistream.pyx":353
+                /* "gensim/models/word2vec_multistream.pyx":352
  *                 for i in range(idx_start, idx_end):
  *                     j = i - window + reduced_windows[i]
  *                     if j < idx_start:             # <<<<<<<<<<<<<<
@@ -6425,7 +6448,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
  */
               }
 
-              /* "gensim/models/word2vec_multistream.pyx":355
+              /* "gensim/models/word2vec_multistream.pyx":354
  *                     if j < idx_start:
  *                         j = idx_start
  *                     k = i + window + 1 - reduced_windows[i]             # <<<<<<<<<<<<<<
@@ -6434,7 +6457,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
  */
               __pyx_v_k = (((__pyx_v_i + __pyx_v_window) + 1) - (__pyx_v_reduced_windows[__pyx_v_i]));
 
-              /* "gensim/models/word2vec_multistream.pyx":356
+              /* "gensim/models/word2vec_multistream.pyx":355
  *                         j = idx_start
  *                     k = i + window + 1 - reduced_windows[i]
  *                     if k > idx_end:             # <<<<<<<<<<<<<<
@@ -6444,7 +6467,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
               __pyx_t_8 = ((__pyx_v_k > __pyx_v_idx_end) != 0);
               if (__pyx_t_8) {
 
-                /* "gensim/models/word2vec_multistream.pyx":357
+                /* "gensim/models/word2vec_multistream.pyx":356
  *                     k = i + window + 1 - reduced_windows[i]
  *                     if k > idx_end:
  *                         k = idx_end             # <<<<<<<<<<<<<<
@@ -6453,7 +6476,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
  */
                 __pyx_v_k = __pyx_v_idx_end;
 
-                /* "gensim/models/word2vec_multistream.pyx":356
+                /* "gensim/models/word2vec_multistream.pyx":355
  *                         j = idx_start
  *                     k = i + window + 1 - reduced_windows[i]
  *                     if k > idx_end:             # <<<<<<<<<<<<<<
@@ -6462,7 +6485,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
  */
               }
 
-              /* "gensim/models/word2vec_multistream.pyx":358
+              /* "gensim/models/word2vec_multistream.pyx":357
  *                     if k > idx_end:
  *                         k = idx_end
  *                     for j in range(j, k):             # <<<<<<<<<<<<<<
@@ -6474,7 +6497,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
               for (__pyx_t_19 = __pyx_v_j; __pyx_t_19 < __pyx_t_18; __pyx_t_19+=1) {
                 __pyx_v_j = __pyx_t_19;
 
-                /* "gensim/models/word2vec_multistream.pyx":359
+                /* "gensim/models/word2vec_multistream.pyx":358
  *                         k = idx_end
  *                     for j in range(j, k):
  *                         if j == i:             # <<<<<<<<<<<<<<
@@ -6484,7 +6507,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
                 __pyx_t_8 = ((__pyx_v_j == __pyx_v_i) != 0);
                 if (__pyx_t_8) {
 
-                  /* "gensim/models/word2vec_multistream.pyx":360
+                  /* "gensim/models/word2vec_multistream.pyx":359
  *                     for j in range(j, k):
  *                         if j == i:
  *                             continue             # <<<<<<<<<<<<<<
@@ -6493,7 +6516,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
  */
                   goto __pyx_L21_continue;
 
-                  /* "gensim/models/word2vec_multistream.pyx":359
+                  /* "gensim/models/word2vec_multistream.pyx":358
  *                         k = idx_end
  *                     for j in range(j, k):
  *                         if j == i:             # <<<<<<<<<<<<<<
@@ -6502,7 +6525,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
  */
                 }
 
-                /* "gensim/models/word2vec_multistream.pyx":361
+                /* "gensim/models/word2vec_multistream.pyx":360
  *                         if j == i:
  *                             continue
  *                         if hs:             # <<<<<<<<<<<<<<
@@ -6512,7 +6535,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
                 __pyx_t_8 = (__pyx_v_hs != 0);
                 if (__pyx_t_8) {
 
-                  /* "gensim/models/word2vec_multistream.pyx":362
+                  /* "gensim/models/word2vec_multistream.pyx":361
  *                             continue
  *                         if hs:
  *                             fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work, word_locks, _compute_loss, &_running_training_loss)             # <<<<<<<<<<<<<<
@@ -6521,7 +6544,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
  */
                   __pyx_f_6gensim_6models_14word2vec_inner_fast_sentence_sg_hs((__pyx_v_points[__pyx_v_i]), (__pyx_v_codes[__pyx_v_i]), (__pyx_v_codelens[__pyx_v_i]), __pyx_v_syn0, __pyx_v_syn1, __pyx_v_size, (__pyx_v_indexes[__pyx_v_j]), __pyx_v__alpha, __pyx_v_work, __pyx_v_word_locks, __pyx_v__compute_loss, (&__pyx_v__running_training_loss));
 
-                  /* "gensim/models/word2vec_multistream.pyx":361
+                  /* "gensim/models/word2vec_multistream.pyx":360
  *                         if j == i:
  *                             continue
  *                         if hs:             # <<<<<<<<<<<<<<
@@ -6530,7 +6553,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
  */
                 }
 
-                /* "gensim/models/word2vec_multistream.pyx":363
+                /* "gensim/models/word2vec_multistream.pyx":362
  *                         if hs:
  *                             fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work, word_locks, _compute_loss, &_running_training_loss)
  *                         if negative:             # <<<<<<<<<<<<<<
@@ -6540,7 +6563,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
                 __pyx_t_8 = (__pyx_v_negative != 0);
                 if (__pyx_t_8) {
 
-                  /* "gensim/models/word2vec_multistream.pyx":364
+                  /* "gensim/models/word2vec_multistream.pyx":363
  *                             fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work, word_locks, _compute_loss, &_running_training_loss)
  *                         if negative:
  *                             next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random, word_locks, _compute_loss, &_running_training_loss)             # <<<<<<<<<<<<<<
@@ -6549,7 +6572,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
  */
                   __pyx_v_next_random = __pyx_f_6gensim_6models_14word2vec_inner_fast_sentence_sg_neg(__pyx_v_negative, __pyx_v_cum_table, __pyx_v_cum_table_len, __pyx_v_syn0, __pyx_v_syn1neg, __pyx_v_size, (__pyx_v_indexes[__pyx_v_i]), (__pyx_v_indexes[__pyx_v_j]), __pyx_v__alpha, __pyx_v_work, __pyx_v_next_random, __pyx_v_word_locks, __pyx_v__compute_loss, (&__pyx_v__running_training_loss));
 
-                  /* "gensim/models/word2vec_multistream.pyx":363
+                  /* "gensim/models/word2vec_multistream.pyx":362
  *                         if hs:
  *                             fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work, word_locks, _compute_loss, &_running_training_loss)
  *                         if negative:             # <<<<<<<<<<<<<<
@@ -6562,7 +6585,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
             }
           }
 
-          /* "gensim/models/word2vec_multistream.pyx":366
+          /* "gensim/models/word2vec_multistream.pyx":365
  *                             next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random, word_locks, _compute_loss, &_running_training_loss)
  * 
  *             total_sentences += sentences.size()             # <<<<<<<<<<<<<<
@@ -6571,7 +6594,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
  */
           __pyx_v_total_sentences = (__pyx_v_total_sentences + __pyx_v_sentences.size());
 
-          /* "gensim/models/word2vec_multistream.pyx":367
+          /* "gensim/models/word2vec_multistream.pyx":366
  * 
  *             total_sentences += sentences.size()
  *             total_effective_words += effective_words             # <<<<<<<<<<<<<<
@@ -6580,7 +6603,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
  */
           __pyx_v_total_effective_words = (__pyx_v_total_effective_words + __pyx_v_effective_words);
 
-          /* "gensim/models/word2vec_multistream.pyx":369
+          /* "gensim/models/word2vec_multistream.pyx":368
  *             total_effective_words += effective_words
  * 
  *             _alpha = get_next_alpha(start_alpha, end_alpha, total_sentences, total_words,             # <<<<<<<<<<<<<<
@@ -6591,7 +6614,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
         }
       }
 
-      /* "gensim/models/word2vec_multistream.pyx":336
+      /* "gensim/models/word2vec_multistream.pyx":335
  *     cdef VocabItem word
  * 
  *     with nogil:             # <<<<<<<<<<<<<<
@@ -6617,19 +6640,19 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
       }
   }
 
-  /* "gensim/models/word2vec_multistream.pyx":372
+  /* "gensim/models/word2vec_multistream.pyx":371
  *                                     expected_examples, expected_words, cur_epoch, num_epochs)
  * 
  *     model.running_training_loss = _running_training_loss             # <<<<<<<<<<<<<<
  *     return total_sentences, total_effective_words, total_words
  * 
  */
-  __pyx_t_9 = PyFloat_FromDouble(__pyx_v__running_training_loss); if (unlikely(!__pyx_t_9)) __PYX_ERR(1, 372, __pyx_L1_error)
+  __pyx_t_9 = PyFloat_FromDouble(__pyx_v__running_training_loss); if (unlikely(!__pyx_t_9)) __PYX_ERR(1, 371, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_9);
-  if (__Pyx_PyObject_SetAttrStr(__pyx_v_model, __pyx_n_s_running_training_loss, __pyx_t_9) < 0) __PYX_ERR(1, 372, __pyx_L1_error)
+  if (__Pyx_PyObject_SetAttrStr(__pyx_v_model, __pyx_n_s_running_training_loss, __pyx_t_9) < 0) __PYX_ERR(1, 371, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
 
-  /* "gensim/models/word2vec_multistream.pyx":373
+  /* "gensim/models/word2vec_multistream.pyx":372
  * 
  *     model.running_training_loss = _running_training_loss
  *     return total_sentences, total_effective_words, total_words             # <<<<<<<<<<<<<<
@@ -6637,13 +6660,13 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
  * 
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_9 = __Pyx_PyInt_From_int(__pyx_v_total_sentences); if (unlikely(!__pyx_t_9)) __PYX_ERR(1, 373, __pyx_L1_error)
+  __pyx_t_9 = __Pyx_PyInt_From_int(__pyx_v_total_sentences); if (unlikely(!__pyx_t_9)) __PYX_ERR(1, 372, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_9);
-  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_total_effective_words); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 373, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_total_effective_words); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 372, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_total_words); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 373, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_total_words); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 372, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_20 = PyTuple_New(3); if (unlikely(!__pyx_t_20)) __PYX_ERR(1, 373, __pyx_L1_error)
+  __pyx_t_20 = PyTuple_New(3); if (unlikely(!__pyx_t_20)) __PYX_ERR(1, 372, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_20);
   __Pyx_GIVEREF(__pyx_t_9);
   PyTuple_SET_ITEM(__pyx_t_20, 0, __pyx_t_9);
@@ -6658,7 +6681,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
   __pyx_t_20 = 0;
   goto __pyx_L0;
 
-  /* "gensim/models/word2vec_multistream.pyx":243
+  /* "gensim/models/word2vec_multistream.pyx":242
  * 
  * 
  * def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work,             # <<<<<<<<<<<<<<
@@ -6682,7 +6705,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_2train_epoch_sg
   return __pyx_r;
 }
 
-/* "gensim/models/word2vec_multistream.pyx":376
+/* "gensim/models/word2vec_multistream.pyx":375
  * 
  * 
  * def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work,             # <<<<<<<<<<<<<<
@@ -6747,59 +6770,59 @@ static PyObject *__pyx_pw_6gensim_6models_20word2vec_multistream_5train_epoch_cb
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_corpus_file)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("train_epoch_cbow", 1, 10, 10, 1); __PYX_ERR(1, 376, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("train_epoch_cbow", 1, 10, 10, 1); __PYX_ERR(1, 375, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_offset)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("train_epoch_cbow", 1, 10, 10, 2); __PYX_ERR(1, 376, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("train_epoch_cbow", 1, 10, 10, 2); __PYX_ERR(1, 375, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
         if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_cython_vocab)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("train_epoch_cbow", 1, 10, 10, 3); __PYX_ERR(1, 376, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("train_epoch_cbow", 1, 10, 10, 3); __PYX_ERR(1, 375, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  4:
         if (likely((values[4] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_cur_epoch)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("train_epoch_cbow", 1, 10, 10, 4); __PYX_ERR(1, 376, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("train_epoch_cbow", 1, 10, 10, 4); __PYX_ERR(1, 375, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  5:
         if (likely((values[5] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_expected_examples)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("train_epoch_cbow", 1, 10, 10, 5); __PYX_ERR(1, 376, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("train_epoch_cbow", 1, 10, 10, 5); __PYX_ERR(1, 375, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  6:
         if (likely((values[6] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_expected_words)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("train_epoch_cbow", 1, 10, 10, 6); __PYX_ERR(1, 376, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("train_epoch_cbow", 1, 10, 10, 6); __PYX_ERR(1, 375, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  7:
         if (likely((values[7] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_work)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("train_epoch_cbow", 1, 10, 10, 7); __PYX_ERR(1, 376, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("train_epoch_cbow", 1, 10, 10, 7); __PYX_ERR(1, 375, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  8:
         if (likely((values[8] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_neu1)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("train_epoch_cbow", 1, 10, 10, 8); __PYX_ERR(1, 376, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("train_epoch_cbow", 1, 10, 10, 8); __PYX_ERR(1, 375, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  9:
         if (likely((values[9] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_compute_loss)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("train_epoch_cbow", 1, 10, 10, 9); __PYX_ERR(1, 376, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("train_epoch_cbow", 1, 10, 10, 9); __PYX_ERR(1, 375, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "train_epoch_cbow") < 0)) __PYX_ERR(1, 376, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "train_epoch_cbow") < 0)) __PYX_ERR(1, 375, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 10) {
       goto __pyx_L5_argtuple_error;
@@ -6828,7 +6851,7 @@ static PyObject *__pyx_pw_6gensim_6models_20word2vec_multistream_5train_epoch_cb
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("train_epoch_cbow", 1, 10, 10, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(1, 376, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("train_epoch_cbow", 1, 10, 10, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(1, 375, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("gensim.models.word2vec_multistream.train_epoch_cbow", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -6908,100 +6931,100 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
   PyObject *__pyx_t_17 = NULL;
   __Pyx_RefNannySetupContext("train_epoch_cbow", 0);
 
-  /* "gensim/models/word2vec_multistream.pyx":403
+  /* "gensim/models/word2vec_multistream.pyx":402
  *         and were not discarded by negative sampling).
  *     """
  *     cdef int hs = model.hs             # <<<<<<<<<<<<<<
  *     cdef int negative = model.negative
  *     cdef int sample = (model.vocabulary.sample != 0)
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_hs); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 403, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_hs); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 402, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 403, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 402, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_hs = __pyx_t_2;
 
-  /* "gensim/models/word2vec_multistream.pyx":404
+  /* "gensim/models/word2vec_multistream.pyx":403
  *     """
  *     cdef int hs = model.hs
  *     cdef int negative = model.negative             # <<<<<<<<<<<<<<
  *     cdef int sample = (model.vocabulary.sample != 0)
  *     cdef int cbow_mean = model.cbow_mean
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_negative); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 404, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_negative); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 403, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 404, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 403, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_negative = __pyx_t_2;
 
-  /* "gensim/models/word2vec_multistream.pyx":405
+  /* "gensim/models/word2vec_multistream.pyx":404
  *     cdef int hs = model.hs
  *     cdef int negative = model.negative
  *     cdef int sample = (model.vocabulary.sample != 0)             # <<<<<<<<<<<<<<
  *     cdef int cbow_mean = model.cbow_mean
  *     cdef int workers = model.workers
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_vocabulary); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 405, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_vocabulary); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 404, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_sample); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 405, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_sample); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 404, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = PyObject_RichCompare(__pyx_t_3, __pyx_int_0, Py_NE); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 405, __pyx_L1_error)
+  __pyx_t_1 = PyObject_RichCompare(__pyx_t_3, __pyx_int_0, Py_NE); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 404, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 405, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 404, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_sample = __pyx_t_2;
 
-  /* "gensim/models/word2vec_multistream.pyx":406
+  /* "gensim/models/word2vec_multistream.pyx":405
  *     cdef int negative = model.negative
  *     cdef int sample = (model.vocabulary.sample != 0)
  *     cdef int cbow_mean = model.cbow_mean             # <<<<<<<<<<<<<<
  *     cdef int workers = model.workers
  * 
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_cbow_mean); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 406, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_cbow_mean); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 405, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 406, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 405, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_cbow_mean = __pyx_t_2;
 
-  /* "gensim/models/word2vec_multistream.pyx":407
+  /* "gensim/models/word2vec_multistream.pyx":406
  *     cdef int sample = (model.vocabulary.sample != 0)
  *     cdef int cbow_mean = model.cbow_mean
  *     cdef int workers = model.workers             # <<<<<<<<<<<<<<
  * 
  *     # For learning rate updates
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_workers); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 407, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_workers); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 406, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 407, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 406, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_workers = __pyx_t_2;
 
-  /* "gensim/models/word2vec_multistream.pyx":410
+  /* "gensim/models/word2vec_multistream.pyx":409
  * 
  *     # For learning rate updates
  *     cdef int cur_epoch = _cur_epoch             # <<<<<<<<<<<<<<
  *     cdef int num_epochs = model.epochs
  *     cdef int expected_examples = (-1 if _expected_examples is None else _expected_examples)
  */
-  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_v__cur_epoch); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 410, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_v__cur_epoch); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 409, __pyx_L1_error)
   __pyx_v_cur_epoch = __pyx_t_2;
 
-  /* "gensim/models/word2vec_multistream.pyx":411
+  /* "gensim/models/word2vec_multistream.pyx":410
  *     # For learning rate updates
  *     cdef int cur_epoch = _cur_epoch
  *     cdef int num_epochs = model.epochs             # <<<<<<<<<<<<<<
  *     cdef int expected_examples = (-1 if _expected_examples is None else _expected_examples)
  *     cdef int expected_words = (-1 if _expected_words is None else _expected_words)
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_epochs); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 411, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_epochs); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 410, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 411, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 410, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_num_epochs = __pyx_t_2;
 
-  /* "gensim/models/word2vec_multistream.pyx":412
+  /* "gensim/models/word2vec_multistream.pyx":411
  *     cdef int cur_epoch = _cur_epoch
  *     cdef int num_epochs = model.epochs
  *     cdef int expected_examples = (-1 if _expected_examples is None else _expected_examples)             # <<<<<<<<<<<<<<
@@ -7012,12 +7035,12 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
   if ((__pyx_t_4 != 0)) {
     __pyx_t_2 = -1;
   } else {
-    __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v__expected_examples); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 412, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v__expected_examples); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 411, __pyx_L1_error)
     __pyx_t_2 = __pyx_t_5;
   }
   __pyx_v_expected_examples = __pyx_t_2;
 
-  /* "gensim/models/word2vec_multistream.pyx":413
+  /* "gensim/models/word2vec_multistream.pyx":412
  *     cdef int num_epochs = model.epochs
  *     cdef int expected_examples = (-1 if _expected_examples is None else _expected_examples)
  *     cdef int expected_words = (-1 if _expected_words is None else _expected_words)             # <<<<<<<<<<<<<<
@@ -7028,58 +7051,58 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
   if ((__pyx_t_4 != 0)) {
     __pyx_t_2 = -1;
   } else {
-    __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v__expected_words); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 413, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v__expected_words); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 412, __pyx_L1_error)
     __pyx_t_2 = __pyx_t_5;
   }
   __pyx_v_expected_words = __pyx_t_2;
 
-  /* "gensim/models/word2vec_multistream.pyx":414
+  /* "gensim/models/word2vec_multistream.pyx":413
  *     cdef int expected_examples = (-1 if _expected_examples is None else _expected_examples)
  *     cdef int expected_words = (-1 if _expected_words is None else _expected_words)
  *     cdef REAL_t start_alpha = model.alpha             # <<<<<<<<<<<<<<
  *     cdef REAL_t end_alpha = model.min_alpha
  *     cdef REAL_t _alpha = get_alpha(model.alpha, end_alpha, cur_epoch, num_epochs)
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_alpha); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 414, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_alpha); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 413, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_6 = __pyx_PyFloat_AsFloat(__pyx_t_1); if (unlikely((__pyx_t_6 == ((npy_float32)-1)) && PyErr_Occurred())) __PYX_ERR(1, 414, __pyx_L1_error)
+  __pyx_t_6 = __pyx_PyFloat_AsFloat(__pyx_t_1); if (unlikely((__pyx_t_6 == ((npy_float32)-1)) && PyErr_Occurred())) __PYX_ERR(1, 413, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_start_alpha = __pyx_t_6;
 
-  /* "gensim/models/word2vec_multistream.pyx":415
+  /* "gensim/models/word2vec_multistream.pyx":414
  *     cdef int expected_words = (-1 if _expected_words is None else _expected_words)
  *     cdef REAL_t start_alpha = model.alpha
  *     cdef REAL_t end_alpha = model.min_alpha             # <<<<<<<<<<<<<<
  *     cdef REAL_t _alpha = get_alpha(model.alpha, end_alpha, cur_epoch, num_epochs)
  * 
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_min_alpha); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 415, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_min_alpha); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 414, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_6 = __pyx_PyFloat_AsFloat(__pyx_t_1); if (unlikely((__pyx_t_6 == ((npy_float32)-1)) && PyErr_Occurred())) __PYX_ERR(1, 415, __pyx_L1_error)
+  __pyx_t_6 = __pyx_PyFloat_AsFloat(__pyx_t_1); if (unlikely((__pyx_t_6 == ((npy_float32)-1)) && PyErr_Occurred())) __PYX_ERR(1, 414, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_end_alpha = __pyx_t_6;
 
-  /* "gensim/models/word2vec_multistream.pyx":416
+  /* "gensim/models/word2vec_multistream.pyx":415
  *     cdef REAL_t start_alpha = model.alpha
  *     cdef REAL_t end_alpha = model.min_alpha
  *     cdef REAL_t _alpha = get_alpha(model.alpha, end_alpha, cur_epoch, num_epochs)             # <<<<<<<<<<<<<<
  * 
  *     cdef CythonLineSentence input_stream = CythonLineSentence(corpus_file, offset)
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_alpha); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 416, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_alpha); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 415, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_6 = __pyx_PyFloat_AsFloat(__pyx_t_1); if (unlikely((__pyx_t_6 == ((npy_float32)-1)) && PyErr_Occurred())) __PYX_ERR(1, 416, __pyx_L1_error)
+  __pyx_t_6 = __pyx_PyFloat_AsFloat(__pyx_t_1); if (unlikely((__pyx_t_6 == ((npy_float32)-1)) && PyErr_Occurred())) __PYX_ERR(1, 415, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v__alpha = __pyx_f_6gensim_6models_20word2vec_multistream_get_alpha(__pyx_t_6, __pyx_v_end_alpha, __pyx_v_cur_epoch, __pyx_v_num_epochs);
 
-  /* "gensim/models/word2vec_multistream.pyx":418
+  /* "gensim/models/word2vec_multistream.pyx":417
  *     cdef REAL_t _alpha = get_alpha(model.alpha, end_alpha, cur_epoch, num_epochs)
  * 
  *     cdef CythonLineSentence input_stream = CythonLineSentence(corpus_file, offset)             # <<<<<<<<<<<<<<
  *     cdef CythonVocab vocab = _cython_vocab
  * 
  */
-  __pyx_t_1 = PyTuple_New(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 418, __pyx_L1_error)
+  __pyx_t_1 = PyTuple_New(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 417, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_INCREF(__pyx_v_corpus_file);
   __Pyx_GIVEREF(__pyx_v_corpus_file);
@@ -7087,34 +7110,34 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
   __Pyx_INCREF(__pyx_v_offset);
   __Pyx_GIVEREF(__pyx_v_offset);
   PyTuple_SET_ITEM(__pyx_t_1, 1, __pyx_v_offset);
-  __pyx_t_3 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_6gensim_6models_20word2vec_multistream_CythonLineSentence), __pyx_t_1, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 418, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_6gensim_6models_20word2vec_multistream_CythonLineSentence), __pyx_t_1, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 417, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_input_stream = ((struct __pyx_obj_6gensim_6models_20word2vec_multistream_CythonLineSentence *)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "gensim/models/word2vec_multistream.pyx":419
+  /* "gensim/models/word2vec_multistream.pyx":418
  * 
  *     cdef CythonLineSentence input_stream = CythonLineSentence(corpus_file, offset)
  *     cdef CythonVocab vocab = _cython_vocab             # <<<<<<<<<<<<<<
  * 
  *     cdef int _compute_loss = (1 if compute_loss == True else 0)
  */
-  if (!(likely(((__pyx_v__cython_vocab) == Py_None) || likely(__Pyx_TypeTest(__pyx_v__cython_vocab, __pyx_ptype_6gensim_6models_20word2vec_multistream_CythonVocab))))) __PYX_ERR(1, 419, __pyx_L1_error)
+  if (!(likely(((__pyx_v__cython_vocab) == Py_None) || likely(__Pyx_TypeTest(__pyx_v__cython_vocab, __pyx_ptype_6gensim_6models_20word2vec_multistream_CythonVocab))))) __PYX_ERR(1, 418, __pyx_L1_error)
   __pyx_t_3 = __pyx_v__cython_vocab;
   __Pyx_INCREF(__pyx_t_3);
   __pyx_v_vocab = ((struct __pyx_obj_6gensim_6models_20word2vec_multistream_CythonVocab *)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "gensim/models/word2vec_multistream.pyx":421
+  /* "gensim/models/word2vec_multistream.pyx":420
  *     cdef CythonVocab vocab = _cython_vocab
  * 
  *     cdef int _compute_loss = (1 if compute_loss == True else 0)             # <<<<<<<<<<<<<<
  *     cdef REAL_t _running_training_loss = model.running_training_loss
  * 
  */
-  __pyx_t_3 = PyObject_RichCompare(__pyx_v_compute_loss, Py_True, Py_EQ); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 421, __pyx_L1_error)
-  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(1, 421, __pyx_L1_error)
+  __pyx_t_3 = PyObject_RichCompare(__pyx_v_compute_loss, Py_True, Py_EQ); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 420, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(1, 420, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   if (__pyx_t_4) {
     __pyx_t_2 = 1;
@@ -7123,81 +7146,81 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
   }
   __pyx_v__compute_loss = __pyx_t_2;
 
-  /* "gensim/models/word2vec_multistream.pyx":422
+  /* "gensim/models/word2vec_multistream.pyx":421
  * 
  *     cdef int _compute_loss = (1 if compute_loss == True else 0)
  *     cdef REAL_t _running_training_loss = model.running_training_loss             # <<<<<<<<<<<<<<
  * 
  *     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
  */
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_running_training_loss); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 422, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_running_training_loss); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 421, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_6 = __pyx_PyFloat_AsFloat(__pyx_t_3); if (unlikely((__pyx_t_6 == ((npy_float32)-1)) && PyErr_Occurred())) __PYX_ERR(1, 422, __pyx_L1_error)
+  __pyx_t_6 = __pyx_PyFloat_AsFloat(__pyx_t_3); if (unlikely((__pyx_t_6 == ((npy_float32)-1)) && PyErr_Occurred())) __PYX_ERR(1, 421, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_v__running_training_loss = __pyx_t_6;
 
-  /* "gensim/models/word2vec_multistream.pyx":424
+  /* "gensim/models/word2vec_multistream.pyx":423
  *     cdef REAL_t _running_training_loss = model.running_training_loss
  * 
  *     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))             # <<<<<<<<<<<<<<
  *     cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_lockf))
  *     cdef REAL_t *work
  */
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_wv); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 424, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_wv); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 423, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_vectors); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 424, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_vectors); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 423, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(1, 424, __pyx_L1_error)
+  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(1, 423, __pyx_L1_error)
   __pyx_v_syn0 = ((__pyx_t_6gensim_6models_20word2vec_multistream_REAL_t *)PyArray_DATA(((PyArrayObject *)__pyx_t_1)));
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "gensim/models/word2vec_multistream.pyx":425
+  /* "gensim/models/word2vec_multistream.pyx":424
  * 
  *     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
  *     cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_lockf))             # <<<<<<<<<<<<<<
  *     cdef REAL_t *work
  *     cdef int size = model.wv.vector_size
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_trainables); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 425, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_trainables); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 424, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_vectors_lockf); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 425, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_vectors_lockf); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 424, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(1, 425, __pyx_L1_error)
+  if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(1, 424, __pyx_L1_error)
   __pyx_v_word_locks = ((__pyx_t_6gensim_6models_20word2vec_multistream_REAL_t *)PyArray_DATA(((PyArrayObject *)__pyx_t_3)));
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "gensim/models/word2vec_multistream.pyx":427
+  /* "gensim/models/word2vec_multistream.pyx":426
  *     cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_lockf))
  *     cdef REAL_t *work
  *     cdef int size = model.wv.vector_size             # <<<<<<<<<<<<<<
  * 
  *     cdef int codelens[MAX_SENTENCE_LEN]
  */
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_wv); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 427, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_wv); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 426, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_vector_size); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 427, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_vector_size); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 426, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 427, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 426, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_size = __pyx_t_2;
 
-  /* "gensim/models/word2vec_multistream.pyx":433
+  /* "gensim/models/word2vec_multistream.pyx":432
  *     cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
  *     cdef int sentence_idx[MAX_SENTENCE_LEN + 1]
  *     cdef int window = model.window             # <<<<<<<<<<<<<<
  * 
  *     cdef int i, j, k
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_window); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 433, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_window); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 432, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 433, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 432, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_window = __pyx_t_2;
 
-  /* "gensim/models/word2vec_multistream.pyx":436
+  /* "gensim/models/word2vec_multistream.pyx":435
  * 
  *     cdef int i, j, k
  *     cdef int effective_words = 0, effective_sentences = 0             # <<<<<<<<<<<<<<
@@ -7207,7 +7230,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
   __pyx_v_effective_words = 0;
   __pyx_v_effective_sentences = 0;
 
-  /* "gensim/models/word2vec_multistream.pyx":437
+  /* "gensim/models/word2vec_multistream.pyx":436
  *     cdef int i, j, k
  *     cdef int effective_words = 0, effective_sentences = 0
  *     cdef int total_effective_words = 0, total_sentences = 0, total_words = 0             # <<<<<<<<<<<<<<
@@ -7218,7 +7241,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
   __pyx_v_total_sentences = 0;
   __pyx_v_total_words = 0;
 
-  /* "gensim/models/word2vec_multistream.pyx":452
+  /* "gensim/models/word2vec_multistream.pyx":451
  *     cdef unsigned long long next_random
  * 
  *     if hs:             # <<<<<<<<<<<<<<
@@ -7228,23 +7251,23 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
   __pyx_t_4 = (__pyx_v_hs != 0);
   if (__pyx_t_4) {
 
-    /* "gensim/models/word2vec_multistream.pyx":453
+    /* "gensim/models/word2vec_multistream.pyx":452
  * 
  *     if hs:
  *         syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))             # <<<<<<<<<<<<<<
  * 
  *     if negative:
  */
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_trainables); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 453, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_trainables); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 452, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_syn1); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 453, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_syn1); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 452, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(1, 453, __pyx_L1_error)
+    if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(1, 452, __pyx_L1_error)
     __pyx_v_syn1 = ((__pyx_t_6gensim_6models_20word2vec_multistream_REAL_t *)PyArray_DATA(((PyArrayObject *)__pyx_t_3)));
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-    /* "gensim/models/word2vec_multistream.pyx":452
+    /* "gensim/models/word2vec_multistream.pyx":451
  *     cdef unsigned long long next_random
  * 
  *     if hs:             # <<<<<<<<<<<<<<
@@ -7253,7 +7276,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
  */
   }
 
-  /* "gensim/models/word2vec_multistream.pyx":455
+  /* "gensim/models/word2vec_multistream.pyx":454
  *         syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
  * 
  *     if negative:             # <<<<<<<<<<<<<<
@@ -7263,55 +7286,55 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
   __pyx_t_4 = (__pyx_v_negative != 0);
   if (__pyx_t_4) {
 
-    /* "gensim/models/word2vec_multistream.pyx":456
+    /* "gensim/models/word2vec_multistream.pyx":455
  * 
  *     if negative:
  *         syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))             # <<<<<<<<<<<<<<
  *         cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
  *         cum_table_len = len(model.vocabulary.cum_table)
  */
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_trainables); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 456, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_trainables); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 455, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_syn1neg); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 456, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_syn1neg); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 455, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(1, 456, __pyx_L1_error)
+    if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(1, 455, __pyx_L1_error)
     __pyx_v_syn1neg = ((__pyx_t_6gensim_6models_20word2vec_multistream_REAL_t *)PyArray_DATA(((PyArrayObject *)__pyx_t_1)));
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-    /* "gensim/models/word2vec_multistream.pyx":457
+    /* "gensim/models/word2vec_multistream.pyx":456
  *     if negative:
  *         syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
  *         cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))             # <<<<<<<<<<<<<<
  *         cum_table_len = len(model.vocabulary.cum_table)
  *     if negative or sample:
  */
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_vocabulary); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 457, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_vocabulary); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 456, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_cum_table); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 457, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_cum_table); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 456, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(1, 457, __pyx_L1_error)
+    if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(1, 456, __pyx_L1_error)
     __pyx_v_cum_table = ((__pyx_t_5numpy_uint32_t *)PyArray_DATA(((PyArrayObject *)__pyx_t_3)));
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-    /* "gensim/models/word2vec_multistream.pyx":458
+    /* "gensim/models/word2vec_multistream.pyx":457
  *         syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
  *         cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
  *         cum_table_len = len(model.vocabulary.cum_table)             # <<<<<<<<<<<<<<
  *     if negative or sample:
  *         next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
  */
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_vocabulary); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 458, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_vocabulary); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 457, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_cum_table); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 458, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_cum_table); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 457, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_7 = PyObject_Length(__pyx_t_1); if (unlikely(__pyx_t_7 == ((Py_ssize_t)-1))) __PYX_ERR(1, 458, __pyx_L1_error)
+    __pyx_t_7 = PyObject_Length(__pyx_t_1); if (unlikely(__pyx_t_7 == ((Py_ssize_t)-1))) __PYX_ERR(1, 457, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __pyx_v_cum_table_len = __pyx_t_7;
 
-    /* "gensim/models/word2vec_multistream.pyx":455
+    /* "gensim/models/word2vec_multistream.pyx":454
  *         syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
  * 
  *     if negative:             # <<<<<<<<<<<<<<
@@ -7320,7 +7343,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
  */
   }
 
-  /* "gensim/models/word2vec_multistream.pyx":459
+  /* "gensim/models/word2vec_multistream.pyx":458
  *         cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
  *         cum_table_len = len(model.vocabulary.cum_table)
  *     if negative or sample:             # <<<<<<<<<<<<<<
@@ -7338,41 +7361,41 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
   __pyx_L6_bool_binop_done:;
   if (__pyx_t_4) {
 
-    /* "gensim/models/word2vec_multistream.pyx":460
+    /* "gensim/models/word2vec_multistream.pyx":459
  *         cum_table_len = len(model.vocabulary.cum_table)
  *     if negative or sample:
  *         next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)             # <<<<<<<<<<<<<<
  * 
  *     # convert Python structures to primitive types, so we can release the GIL
  */
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_random); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 460, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_random); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 459, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_randint); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 460, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_randint); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 459, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_tuple__6, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 460, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_tuple__6, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 459, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_3 = PyNumber_Multiply(__pyx_int_16777216, __pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 460, __pyx_L1_error)
+    __pyx_t_3 = PyNumber_Multiply(__pyx_int_16777216, __pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 459, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_random); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 460, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_model, __pyx_n_s_random); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 459, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_randint); if (unlikely(!__pyx_t_9)) __PYX_ERR(1, 460, __pyx_L1_error)
+    __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_randint); if (unlikely(!__pyx_t_9)) __PYX_ERR(1, 459, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_9, __pyx_tuple__7, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 460, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_9, __pyx_tuple__7, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 459, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-    __pyx_t_9 = PyNumber_Add(__pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_9)) __PYX_ERR(1, 460, __pyx_L1_error)
+    __pyx_t_9 = PyNumber_Add(__pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_9)) __PYX_ERR(1, 459, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_10 = __Pyx_PyInt_As_unsigned_PY_LONG_LONG(__pyx_t_9); if (unlikely((__pyx_t_10 == (unsigned PY_LONG_LONG)-1) && PyErr_Occurred())) __PYX_ERR(1, 460, __pyx_L1_error)
+    __pyx_t_10 = __Pyx_PyInt_As_unsigned_PY_LONG_LONG(__pyx_t_9); if (unlikely((__pyx_t_10 == (unsigned PY_LONG_LONG)-1) && PyErr_Occurred())) __PYX_ERR(1, 459, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
     __pyx_v_next_random = __pyx_t_10;
 
-    /* "gensim/models/word2vec_multistream.pyx":459
+    /* "gensim/models/word2vec_multistream.pyx":458
  *         cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
  *         cum_table_len = len(model.vocabulary.cum_table)
  *     if negative or sample:             # <<<<<<<<<<<<<<
@@ -7381,27 +7404,27 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
  */
   }
 
-  /* "gensim/models/word2vec_multistream.pyx":463
+  /* "gensim/models/word2vec_multistream.pyx":462
  * 
  *     # convert Python structures to primitive types, so we can release the GIL
  *     work = <REAL_t *>np.PyArray_DATA(_work)             # <<<<<<<<<<<<<<
  *     neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
  * 
  */
-  if (!(likely(((__pyx_v__work) == Py_None) || likely(__Pyx_TypeTest(__pyx_v__work, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(1, 463, __pyx_L1_error)
+  if (!(likely(((__pyx_v__work) == Py_None) || likely(__Pyx_TypeTest(__pyx_v__work, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(1, 462, __pyx_L1_error)
   __pyx_v_work = ((__pyx_t_6gensim_6models_20word2vec_multistream_REAL_t *)PyArray_DATA(((PyArrayObject *)__pyx_v__work)));
 
-  /* "gensim/models/word2vec_multistream.pyx":464
+  /* "gensim/models/word2vec_multistream.pyx":463
  *     # convert Python structures to primitive types, so we can release the GIL
  *     work = <REAL_t *>np.PyArray_DATA(_work)
  *     neu1 = <REAL_t *>np.PyArray_DATA(_neu1)             # <<<<<<<<<<<<<<
  * 
  *     # for preparing batches & training
  */
-  if (!(likely(((__pyx_v__neu1) == Py_None) || likely(__Pyx_TypeTest(__pyx_v__neu1, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(1, 464, __pyx_L1_error)
+  if (!(likely(((__pyx_v__neu1) == Py_None) || likely(__Pyx_TypeTest(__pyx_v__neu1, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(1, 463, __pyx_L1_error)
   __pyx_v_neu1 = ((__pyx_t_6gensim_6models_20word2vec_multistream_REAL_t *)PyArray_DATA(((PyArrayObject *)__pyx_v__neu1)));
 
-  /* "gensim/models/word2vec_multistream.pyx":471
+  /* "gensim/models/word2vec_multistream.pyx":470
  *     cdef VocabItem word
  * 
  *     with nogil:             # <<<<<<<<<<<<<<
@@ -7416,7 +7439,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
       #endif
       /*try:*/ {
 
-        /* "gensim/models/word2vec_multistream.pyx":472
+        /* "gensim/models/word2vec_multistream.pyx":471
  * 
  *     with nogil:
  *         input_stream.reset()             # <<<<<<<<<<<<<<
@@ -7425,7 +7448,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
  */
         __pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence_reset(__pyx_v_input_stream, 0);
 
-        /* "gensim/models/word2vec_multistream.pyx":473
+        /* "gensim/models/word2vec_multistream.pyx":472
  *     with nogil:
  *         input_stream.reset()
  *         while not (input_stream.is_eof() or total_words > expected_words / workers):             # <<<<<<<<<<<<<<
@@ -7445,7 +7468,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
           __pyx_t_8 = ((!__pyx_t_4) != 0);
           if (!__pyx_t_8) break;
 
-          /* "gensim/models/word2vec_multistream.pyx":474
+          /* "gensim/models/word2vec_multistream.pyx":473
  *         input_stream.reset()
  *         while not (input_stream.is_eof() or total_words > expected_words / workers):
  *             effective_sentences = 0             # <<<<<<<<<<<<<<
@@ -7454,7 +7477,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
  */
           __pyx_v_effective_sentences = 0;
 
-          /* "gensim/models/word2vec_multistream.pyx":475
+          /* "gensim/models/word2vec_multistream.pyx":474
  *         while not (input_stream.is_eof() or total_words > expected_words / workers):
  *             effective_sentences = 0
  *             effective_words = 0             # <<<<<<<<<<<<<<
@@ -7463,26 +7486,26 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
  */
           __pyx_v_effective_words = 0;
 
-          /* "gensim/models/word2vec_multistream.pyx":477
+          /* "gensim/models/word2vec_multistream.pyx":476
  *             effective_words = 0
  * 
  *             sentences = input_stream.next_batch()             # <<<<<<<<<<<<<<
  * 
  *             prepare_c_structures_for_batch(sentences, sample, hs, window, &total_words, &effective_words,
  */
-          __pyx_t_11 = __pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence_next_batch(__pyx_v_input_stream, 0); if (unlikely(__Pyx_ErrOccurredWithGIL())) __PYX_ERR(1, 477, __pyx_L9_error)
+          __pyx_t_11 = __pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence_next_batch(__pyx_v_input_stream, 0); if (unlikely(__Pyx_ErrOccurredWithGIL())) __PYX_ERR(1, 476, __pyx_L9_error)
           __pyx_v_sentences = __pyx_t_11;
 
-          /* "gensim/models/word2vec_multistream.pyx":480
+          /* "gensim/models/word2vec_multistream.pyx":479
  * 
  *             prepare_c_structures_for_batch(sentences, sample, hs, window, &total_words, &effective_words,
  *                                            &effective_sentences, &next_random, vocab.get_vocab_ptr(), sentence_idx, indexes,             # <<<<<<<<<<<<<<
  *                                            codelens, codes, points, reduced_windows)
  * 
  */
-          __pyx_t_12 = __pyx_f_6gensim_6models_20word2vec_multistream_11CythonVocab_get_vocab_ptr(__pyx_v_vocab); if (unlikely(__Pyx_ErrOccurredWithGIL())) __PYX_ERR(1, 480, __pyx_L9_error)
+          __pyx_t_12 = __pyx_f_6gensim_6models_20word2vec_multistream_11CythonVocab_get_vocab_ptr(__pyx_v_vocab); if (unlikely(__Pyx_ErrOccurredWithGIL())) __PYX_ERR(1, 479, __pyx_L9_error)
 
-          /* "gensim/models/word2vec_multistream.pyx":479
+          /* "gensim/models/word2vec_multistream.pyx":478
  *             sentences = input_stream.next_batch()
  * 
  *             prepare_c_structures_for_batch(sentences, sample, hs, window, &total_words, &effective_words,             # <<<<<<<<<<<<<<
@@ -7491,7 +7514,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
  */
           __pyx_f_6gensim_6models_20word2vec_multistream_prepare_c_structures_for_batch(__pyx_v_sentences, __pyx_v_sample, __pyx_v_hs, __pyx_v_window, (&__pyx_v_total_words), (&__pyx_v_effective_words), (&__pyx_v_effective_sentences), (&__pyx_v_next_random), __pyx_t_12, __pyx_v_sentence_idx, __pyx_v_indexes, __pyx_v_codelens, __pyx_v_codes, __pyx_v_points, __pyx_v_reduced_windows);
 
-          /* "gensim/models/word2vec_multistream.pyx":483
+          /* "gensim/models/word2vec_multistream.pyx":482
  *                                            codelens, codes, points, reduced_windows)
  * 
  *             for sent_idx in range(effective_sentences):             # <<<<<<<<<<<<<<
@@ -7503,7 +7526,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
           for (__pyx_t_13 = 0; __pyx_t_13 < __pyx_t_5; __pyx_t_13+=1) {
             __pyx_v_sent_idx = __pyx_t_13;
 
-            /* "gensim/models/word2vec_multistream.pyx":484
+            /* "gensim/models/word2vec_multistream.pyx":483
  * 
  *             for sent_idx in range(effective_sentences):
  *                 idx_start = sentence_idx[sent_idx]             # <<<<<<<<<<<<<<
@@ -7512,7 +7535,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
  */
             __pyx_v_idx_start = (__pyx_v_sentence_idx[__pyx_v_sent_idx]);
 
-            /* "gensim/models/word2vec_multistream.pyx":485
+            /* "gensim/models/word2vec_multistream.pyx":484
  *             for sent_idx in range(effective_sentences):
  *                 idx_start = sentence_idx[sent_idx]
  *                 idx_end = sentence_idx[sent_idx + 1]             # <<<<<<<<<<<<<<
@@ -7521,7 +7544,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
  */
             __pyx_v_idx_end = (__pyx_v_sentence_idx[(__pyx_v_sent_idx + 1)]);
 
-            /* "gensim/models/word2vec_multistream.pyx":486
+            /* "gensim/models/word2vec_multistream.pyx":485
  *                 idx_start = sentence_idx[sent_idx]
  *                 idx_end = sentence_idx[sent_idx + 1]
  *                 for i in range(idx_start, idx_end):             # <<<<<<<<<<<<<<
@@ -7533,7 +7556,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
             for (__pyx_t_16 = __pyx_v_idx_start; __pyx_t_16 < __pyx_t_15; __pyx_t_16+=1) {
               __pyx_v_i = __pyx_t_16;
 
-              /* "gensim/models/word2vec_multistream.pyx":487
+              /* "gensim/models/word2vec_multistream.pyx":486
  *                 idx_end = sentence_idx[sent_idx + 1]
  *                 for i in range(idx_start, idx_end):
  *                     j = i - window + reduced_windows[i]             # <<<<<<<<<<<<<<
@@ -7542,7 +7565,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
  */
               __pyx_v_j = ((__pyx_v_i - __pyx_v_window) + (__pyx_v_reduced_windows[__pyx_v_i]));
 
-              /* "gensim/models/word2vec_multistream.pyx":488
+              /* "gensim/models/word2vec_multistream.pyx":487
  *                 for i in range(idx_start, idx_end):
  *                     j = i - window + reduced_windows[i]
  *                     if j < idx_start:             # <<<<<<<<<<<<<<
@@ -7552,7 +7575,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
               __pyx_t_8 = ((__pyx_v_j < __pyx_v_idx_start) != 0);
               if (__pyx_t_8) {
 
-                /* "gensim/models/word2vec_multistream.pyx":489
+                /* "gensim/models/word2vec_multistream.pyx":488
  *                     j = i - window + reduced_windows[i]
  *                     if j < idx_start:
  *                         j = idx_start             # <<<<<<<<<<<<<<
@@ -7561,7 +7584,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
  */
                 __pyx_v_j = __pyx_v_idx_start;
 
-                /* "gensim/models/word2vec_multistream.pyx":488
+                /* "gensim/models/word2vec_multistream.pyx":487
  *                 for i in range(idx_start, idx_end):
  *                     j = i - window + reduced_windows[i]
  *                     if j < idx_start:             # <<<<<<<<<<<<<<
@@ -7570,7 +7593,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
  */
               }
 
-              /* "gensim/models/word2vec_multistream.pyx":490
+              /* "gensim/models/word2vec_multistream.pyx":489
  *                     if j < idx_start:
  *                         j = idx_start
  *                     k = i + window + 1 - reduced_windows[i]             # <<<<<<<<<<<<<<
@@ -7579,7 +7602,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
  */
               __pyx_v_k = (((__pyx_v_i + __pyx_v_window) + 1) - (__pyx_v_reduced_windows[__pyx_v_i]));
 
-              /* "gensim/models/word2vec_multistream.pyx":491
+              /* "gensim/models/word2vec_multistream.pyx":490
  *                         j = idx_start
  *                     k = i + window + 1 - reduced_windows[i]
  *                     if k > idx_end:             # <<<<<<<<<<<<<<
@@ -7589,7 +7612,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
               __pyx_t_8 = ((__pyx_v_k > __pyx_v_idx_end) != 0);
               if (__pyx_t_8) {
 
-                /* "gensim/models/word2vec_multistream.pyx":492
+                /* "gensim/models/word2vec_multistream.pyx":491
  *                     k = i + window + 1 - reduced_windows[i]
  *                     if k > idx_end:
  *                         k = idx_end             # <<<<<<<<<<<<<<
@@ -7598,7 +7621,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
  */
                 __pyx_v_k = __pyx_v_idx_end;
 
-                /* "gensim/models/word2vec_multistream.pyx":491
+                /* "gensim/models/word2vec_multistream.pyx":490
  *                         j = idx_start
  *                     k = i + window + 1 - reduced_windows[i]
  *                     if k > idx_end:             # <<<<<<<<<<<<<<
@@ -7607,7 +7630,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
  */
               }
 
-              /* "gensim/models/word2vec_multistream.pyx":493
+              /* "gensim/models/word2vec_multistream.pyx":492
  *                     if k > idx_end:
  *                         k = idx_end
  *                     if hs:             # <<<<<<<<<<<<<<
@@ -7617,7 +7640,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
               __pyx_t_8 = (__pyx_v_hs != 0);
               if (__pyx_t_8) {
 
-                /* "gensim/models/word2vec_multistream.pyx":494
+                /* "gensim/models/word2vec_multistream.pyx":493
  *                         k = idx_end
  *                     if hs:
  *                         fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, j, k, cbow_mean, word_locks, _compute_loss, &_running_training_loss)             # <<<<<<<<<<<<<<
@@ -7626,7 +7649,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
  */
                 __pyx_f_6gensim_6models_14word2vec_inner_fast_sentence_cbow_hs((__pyx_v_points[__pyx_v_i]), (__pyx_v_codes[__pyx_v_i]), __pyx_v_codelens, __pyx_v_neu1, __pyx_v_syn0, __pyx_v_syn1, __pyx_v_size, __pyx_v_indexes, __pyx_v__alpha, __pyx_v_work, __pyx_v_i, __pyx_v_j, __pyx_v_k, __pyx_v_cbow_mean, __pyx_v_word_locks, __pyx_v__compute_loss, (&__pyx_v__running_training_loss));
 
-                /* "gensim/models/word2vec_multistream.pyx":493
+                /* "gensim/models/word2vec_multistream.pyx":492
  *                     if k > idx_end:
  *                         k = idx_end
  *                     if hs:             # <<<<<<<<<<<<<<
@@ -7635,7 +7658,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
  */
               }
 
-              /* "gensim/models/word2vec_multistream.pyx":495
+              /* "gensim/models/word2vec_multistream.pyx":494
  *                     if hs:
  *                         fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, j, k, cbow_mean, word_locks, _compute_loss, &_running_training_loss)
  *                     if negative:             # <<<<<<<<<<<<<<
@@ -7645,7 +7668,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
               __pyx_t_8 = (__pyx_v_negative != 0);
               if (__pyx_t_8) {
 
-                /* "gensim/models/word2vec_multistream.pyx":496
+                /* "gensim/models/word2vec_multistream.pyx":495
  *                         fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, j, k, cbow_mean, word_locks, _compute_loss, &_running_training_loss)
  *                     if negative:
  *                         next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random, word_locks, _compute_loss, &_running_training_loss)             # <<<<<<<<<<<<<<
@@ -7654,7 +7677,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
  */
                 __pyx_v_next_random = __pyx_f_6gensim_6models_14word2vec_inner_fast_sentence_cbow_neg(__pyx_v_negative, __pyx_v_cum_table, __pyx_v_cum_table_len, __pyx_v_codelens, __pyx_v_neu1, __pyx_v_syn0, __pyx_v_syn1neg, __pyx_v_size, __pyx_v_indexes, __pyx_v__alpha, __pyx_v_work, __pyx_v_i, __pyx_v_j, __pyx_v_k, __pyx_v_cbow_mean, __pyx_v_next_random, __pyx_v_word_locks, __pyx_v__compute_loss, (&__pyx_v__running_training_loss));
 
-                /* "gensim/models/word2vec_multistream.pyx":495
+                /* "gensim/models/word2vec_multistream.pyx":494
  *                     if hs:
  *                         fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, j, k, cbow_mean, word_locks, _compute_loss, &_running_training_loss)
  *                     if negative:             # <<<<<<<<<<<<<<
@@ -7665,7 +7688,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
             }
           }
 
-          /* "gensim/models/word2vec_multistream.pyx":498
+          /* "gensim/models/word2vec_multistream.pyx":497
  *                         next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random, word_locks, _compute_loss, &_running_training_loss)
  * 
  *             total_sentences += sentences.size()             # <<<<<<<<<<<<<<
@@ -7674,7 +7697,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
  */
           __pyx_v_total_sentences = (__pyx_v_total_sentences + __pyx_v_sentences.size());
 
-          /* "gensim/models/word2vec_multistream.pyx":499
+          /* "gensim/models/word2vec_multistream.pyx":498
  * 
  *             total_sentences += sentences.size()
  *             total_effective_words += effective_words             # <<<<<<<<<<<<<<
@@ -7683,7 +7706,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
  */
           __pyx_v_total_effective_words = (__pyx_v_total_effective_words + __pyx_v_effective_words);
 
-          /* "gensim/models/word2vec_multistream.pyx":501
+          /* "gensim/models/word2vec_multistream.pyx":500
  *             total_effective_words += effective_words
  * 
  *             _alpha = get_next_alpha(start_alpha, end_alpha, total_sentences, total_words,             # <<<<<<<<<<<<<<
@@ -7694,7 +7717,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
         }
       }
 
-      /* "gensim/models/word2vec_multistream.pyx":471
+      /* "gensim/models/word2vec_multistream.pyx":470
  *     cdef VocabItem word
  * 
  *     with nogil:             # <<<<<<<<<<<<<<
@@ -7720,30 +7743,30 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
       }
   }
 
-  /* "gensim/models/word2vec_multistream.pyx":504
+  /* "gensim/models/word2vec_multistream.pyx":503
  *                                     expected_examples, expected_words, cur_epoch, num_epochs)
  * 
  *     model.running_training_loss = _running_training_loss             # <<<<<<<<<<<<<<
  *     return total_sentences, total_effective_words, total_words
  */
-  __pyx_t_9 = PyFloat_FromDouble(__pyx_v__running_training_loss); if (unlikely(!__pyx_t_9)) __PYX_ERR(1, 504, __pyx_L1_error)
+  __pyx_t_9 = PyFloat_FromDouble(__pyx_v__running_training_loss); if (unlikely(!__pyx_t_9)) __PYX_ERR(1, 503, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_9);
-  if (__Pyx_PyObject_SetAttrStr(__pyx_v_model, __pyx_n_s_running_training_loss, __pyx_t_9) < 0) __PYX_ERR(1, 504, __pyx_L1_error)
+  if (__Pyx_PyObject_SetAttrStr(__pyx_v_model, __pyx_n_s_running_training_loss, __pyx_t_9) < 0) __PYX_ERR(1, 503, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
 
-  /* "gensim/models/word2vec_multistream.pyx":505
+  /* "gensim/models/word2vec_multistream.pyx":504
  * 
  *     model.running_training_loss = _running_training_loss
  *     return total_sentences, total_effective_words, total_words             # <<<<<<<<<<<<<<
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_9 = __Pyx_PyInt_From_int(__pyx_v_total_sentences); if (unlikely(!__pyx_t_9)) __PYX_ERR(1, 505, __pyx_L1_error)
+  __pyx_t_9 = __Pyx_PyInt_From_int(__pyx_v_total_sentences); if (unlikely(!__pyx_t_9)) __PYX_ERR(1, 504, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_9);
-  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_total_effective_words); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 505, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_total_effective_words); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 504, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_total_words); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 505, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_total_words); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 504, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_17 = PyTuple_New(3); if (unlikely(!__pyx_t_17)) __PYX_ERR(1, 505, __pyx_L1_error)
+  __pyx_t_17 = PyTuple_New(3); if (unlikely(!__pyx_t_17)) __PYX_ERR(1, 504, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_17);
   __Pyx_GIVEREF(__pyx_t_9);
   PyTuple_SET_ITEM(__pyx_t_17, 0, __pyx_t_9);
@@ -7758,7 +7781,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
   __pyx_t_17 = 0;
   goto __pyx_L0;
 
-  /* "gensim/models/word2vec_multistream.pyx":376
+  /* "gensim/models/word2vec_multistream.pyx":375
  * 
  * 
  * def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work,             # <<<<<<<<<<<<<<
@@ -11277,7 +11300,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
 };
 static int __Pyx_InitCachedBuiltins(void) {
   __pyx_builtin_TypeError = __Pyx_GetBuiltinName(__pyx_n_s_TypeError); if (!__pyx_builtin_TypeError) __PYX_ERR(0, 2, __pyx_L1_error)
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(1, 104, __pyx_L1_error)
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(1, 103, __pyx_L1_error)
   __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) __PYX_ERR(3, 229, __pyx_L1_error)
   __pyx_builtin_RuntimeError = __Pyx_GetBuiltinName(__pyx_n_s_RuntimeError); if (!__pyx_builtin_RuntimeError) __PYX_ERR(3, 810, __pyx_L1_error)
   __pyx_builtin_ImportError = __Pyx_GetBuiltinName(__pyx_n_s_ImportError); if (!__pyx_builtin_ImportError) __PYX_ERR(3, 1000, __pyx_L1_error)
@@ -11309,42 +11332,42 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__2);
   __Pyx_GIVEREF(__pyx_tuple__2);
 
-  /* "gensim/models/word2vec_multistream.pyx":68
+  /* "gensim/models/word2vec_multistream.pyx":67
  *         return <bytes>key
  *     else:
  *         return key.encode('utf8')             # <<<<<<<<<<<<<<
  * 
  * 
  */
-  __pyx_tuple__3 = PyTuple_Pack(1, __pyx_n_s_utf8); if (unlikely(!__pyx_tuple__3)) __PYX_ERR(1, 68, __pyx_L1_error)
+  __pyx_tuple__3 = PyTuple_Pack(1, __pyx_n_s_utf8); if (unlikely(!__pyx_tuple__3)) __PYX_ERR(1, 67, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__3);
   __Pyx_GIVEREF(__pyx_tuple__3);
 
-  /* "gensim/models/word2vec_multistream.pyx":326
+  /* "gensim/models/word2vec_multistream.pyx":325
  *         cum_table_len = len(model.vocabulary.cum_table)
  *     if negative or sample:
  *         next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)             # <<<<<<<<<<<<<<
  * 
  *     # convert Python structures to primitive types, so we can release the GIL
  */
-  __pyx_tuple__4 = PyTuple_Pack(2, __pyx_int_0, __pyx_int_16777216); if (unlikely(!__pyx_tuple__4)) __PYX_ERR(1, 326, __pyx_L1_error)
+  __pyx_tuple__4 = PyTuple_Pack(2, __pyx_int_0, __pyx_int_16777216); if (unlikely(!__pyx_tuple__4)) __PYX_ERR(1, 325, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__4);
   __Pyx_GIVEREF(__pyx_tuple__4);
-  __pyx_tuple__5 = PyTuple_Pack(2, __pyx_int_0, __pyx_int_16777216); if (unlikely(!__pyx_tuple__5)) __PYX_ERR(1, 326, __pyx_L1_error)
+  __pyx_tuple__5 = PyTuple_Pack(2, __pyx_int_0, __pyx_int_16777216); if (unlikely(!__pyx_tuple__5)) __PYX_ERR(1, 325, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__5);
   __Pyx_GIVEREF(__pyx_tuple__5);
 
-  /* "gensim/models/word2vec_multistream.pyx":460
+  /* "gensim/models/word2vec_multistream.pyx":459
  *         cum_table_len = len(model.vocabulary.cum_table)
  *     if negative or sample:
  *         next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)             # <<<<<<<<<<<<<<
  * 
  *     # convert Python structures to primitive types, so we can release the GIL
  */
-  __pyx_tuple__6 = PyTuple_Pack(2, __pyx_int_0, __pyx_int_16777216); if (unlikely(!__pyx_tuple__6)) __PYX_ERR(1, 460, __pyx_L1_error)
+  __pyx_tuple__6 = PyTuple_Pack(2, __pyx_int_0, __pyx_int_16777216); if (unlikely(!__pyx_tuple__6)) __PYX_ERR(1, 459, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__6);
   __Pyx_GIVEREF(__pyx_tuple__6);
-  __pyx_tuple__7 = PyTuple_Pack(2, __pyx_int_0, __pyx_int_16777216); if (unlikely(!__pyx_tuple__7)) __PYX_ERR(1, 460, __pyx_L1_error)
+  __pyx_tuple__7 = PyTuple_Pack(2, __pyx_int_0, __pyx_int_16777216); if (unlikely(!__pyx_tuple__7)) __PYX_ERR(1, 459, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__7);
   __Pyx_GIVEREF(__pyx_tuple__7);
 
@@ -11445,41 +11468,41 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__16);
   __Pyx_GIVEREF(__pyx_tuple__16);
 
-  /* "gensim/models/word2vec_multistream.pyx":60
+  /* "gensim/models/word2vec_multistream.pyx":59
  * 
  * 
  * def rebuild_cython_line_sentence(source, max_sentence_length):             # <<<<<<<<<<<<<<
  *     return CythonLineSentence(source, max_sentence_length=max_sentence_length)
  * 
  */
-  __pyx_tuple__17 = PyTuple_Pack(2, __pyx_n_s_source, __pyx_n_s_max_sentence_length); if (unlikely(!__pyx_tuple__17)) __PYX_ERR(1, 60, __pyx_L1_error)
+  __pyx_tuple__17 = PyTuple_Pack(2, __pyx_n_s_source, __pyx_n_s_max_sentence_length); if (unlikely(!__pyx_tuple__17)) __PYX_ERR(1, 59, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__17);
   __Pyx_GIVEREF(__pyx_tuple__17);
-  __pyx_codeobj__18 = (PyObject*)__Pyx_PyCode_New(2, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__17, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_gensim_models_word2vec_multistre_2, __pyx_n_s_rebuild_cython_line_sentence, 60, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__18)) __PYX_ERR(1, 60, __pyx_L1_error)
+  __pyx_codeobj__18 = (PyObject*)__Pyx_PyCode_New(2, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__17, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_gensim_models_word2vec_multistre_2, __pyx_n_s_rebuild_cython_line_sentence, 59, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__18)) __PYX_ERR(1, 59, __pyx_L1_error)
 
-  /* "gensim/models/word2vec_multistream.pyx":243
+  /* "gensim/models/word2vec_multistream.pyx":242
  * 
  * 
  * def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work,             # <<<<<<<<<<<<<<
  *                    _neu1, compute_loss):
  *     """Train Skipgram model for one epoch by training on an input stream. This function is used only in multistream mode.
  */
-  __pyx_tuple__19 = PyTuple_Pack(55, __pyx_n_s_model, __pyx_n_s_corpus_file, __pyx_n_s_offset, __pyx_n_s_cython_vocab, __pyx_n_s_cur_epoch, __pyx_n_s_expected_examples, __pyx_n_s_expected_words, __pyx_n_s_work, __pyx_n_s_neu1, __pyx_n_s_compute_loss, __pyx_n_s_hs, __pyx_n_s_negative, __pyx_n_s_sample, __pyx_n_s_workers, __pyx_n_s_cur_epoch_2, __pyx_n_s_num_epochs, __pyx_n_s_expected_examples_2, __pyx_n_s_expected_words_2, __pyx_n_s_start_alpha, __pyx_n_s_end_alpha, __pyx_n_s_alpha_2, __pyx_n_s_input_stream, __pyx_n_s_vocab, __pyx_n_s_compute_loss_2, __pyx_n_s_running_training_loss_2, __pyx_n_s_syn0, __pyx_n_s_word_locks, __pyx_n_s_work_2, __pyx_n_s_size, __pyx_n_s_codelens, __pyx_n_s_indexes, __pyx_n_s_reduced_windows, __pyx_n_s_sentence_idx, __pyx_n_s_window, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_k, __pyx_n_s_effective_words, __pyx_n_s_effective_sentences, __pyx_n_s_total_effective_words, __pyx_n_s_total_sentences, __pyx_n_s_total_words, __pyx_n_s_sent_idx, __pyx_n_s_idx_start, __pyx_n_s_idx_end, __pyx_n_s_syn1, __pyx_n_s_points, __pyx_n_s_codes, __pyx_n_s_syn1neg, __pyx_n_s_cum_table, __pyx_n_s_cum_table_len, __pyx_n_s_next_random, __pyx_n_s_sentences, __pyx_n_s_random_number, __pyx_n_s_word); if (unlikely(!__pyx_tuple__19)) __PYX_ERR(1, 243, __pyx_L1_error)
+  __pyx_tuple__19 = PyTuple_Pack(55, __pyx_n_s_model, __pyx_n_s_corpus_file, __pyx_n_s_offset, __pyx_n_s_cython_vocab, __pyx_n_s_cur_epoch, __pyx_n_s_expected_examples, __pyx_n_s_expected_words, __pyx_n_s_work, __pyx_n_s_neu1, __pyx_n_s_compute_loss, __pyx_n_s_hs, __pyx_n_s_negative, __pyx_n_s_sample, __pyx_n_s_workers, __pyx_n_s_cur_epoch_2, __pyx_n_s_num_epochs, __pyx_n_s_expected_examples_2, __pyx_n_s_expected_words_2, __pyx_n_s_start_alpha, __pyx_n_s_end_alpha, __pyx_n_s_alpha_2, __pyx_n_s_input_stream, __pyx_n_s_vocab, __pyx_n_s_compute_loss_2, __pyx_n_s_running_training_loss_2, __pyx_n_s_syn0, __pyx_n_s_word_locks, __pyx_n_s_work_2, __pyx_n_s_size, __pyx_n_s_codelens, __pyx_n_s_indexes, __pyx_n_s_reduced_windows, __pyx_n_s_sentence_idx, __pyx_n_s_window, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_k, __pyx_n_s_effective_words, __pyx_n_s_effective_sentences, __pyx_n_s_total_effective_words, __pyx_n_s_total_sentences, __pyx_n_s_total_words, __pyx_n_s_sent_idx, __pyx_n_s_idx_start, __pyx_n_s_idx_end, __pyx_n_s_syn1, __pyx_n_s_points, __pyx_n_s_codes, __pyx_n_s_syn1neg, __pyx_n_s_cum_table, __pyx_n_s_cum_table_len, __pyx_n_s_next_random, __pyx_n_s_sentences, __pyx_n_s_random_number, __pyx_n_s_word); if (unlikely(!__pyx_tuple__19)) __PYX_ERR(1, 242, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__19);
   __Pyx_GIVEREF(__pyx_tuple__19);
-  __pyx_codeobj__20 = (PyObject*)__Pyx_PyCode_New(10, 0, 55, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__19, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_gensim_models_word2vec_multistre_2, __pyx_n_s_train_epoch_sg, 243, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__20)) __PYX_ERR(1, 243, __pyx_L1_error)
+  __pyx_codeobj__20 = (PyObject*)__Pyx_PyCode_New(10, 0, 55, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__19, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_gensim_models_word2vec_multistre_2, __pyx_n_s_train_epoch_sg, 242, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__20)) __PYX_ERR(1, 242, __pyx_L1_error)
 
-  /* "gensim/models/word2vec_multistream.pyx":376
+  /* "gensim/models/word2vec_multistream.pyx":375
  * 
  * 
  * def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work,             # <<<<<<<<<<<<<<
  *                      _neu1, compute_loss):
  *     """Train CBOW model for one epoch by training on an input stream. This function is used only in multistream mode.
  */
-  __pyx_tuple__21 = PyTuple_Pack(57, __pyx_n_s_model, __pyx_n_s_corpus_file, __pyx_n_s_offset, __pyx_n_s_cython_vocab, __pyx_n_s_cur_epoch, __pyx_n_s_expected_examples, __pyx_n_s_expected_words, __pyx_n_s_work, __pyx_n_s_neu1, __pyx_n_s_compute_loss, __pyx_n_s_hs, __pyx_n_s_negative, __pyx_n_s_sample, __pyx_n_s_cbow_mean, __pyx_n_s_workers, __pyx_n_s_cur_epoch_2, __pyx_n_s_num_epochs, __pyx_n_s_expected_examples_2, __pyx_n_s_expected_words_2, __pyx_n_s_start_alpha, __pyx_n_s_end_alpha, __pyx_n_s_alpha_2, __pyx_n_s_input_stream, __pyx_n_s_vocab, __pyx_n_s_compute_loss_2, __pyx_n_s_running_training_loss_2, __pyx_n_s_syn0, __pyx_n_s_word_locks, __pyx_n_s_work_2, __pyx_n_s_size, __pyx_n_s_codelens, __pyx_n_s_indexes, __pyx_n_s_reduced_windows, __pyx_n_s_sentence_idx, __pyx_n_s_window, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_k, __pyx_n_s_effective_words, __pyx_n_s_effective_sentences, __pyx_n_s_total_effective_words, __pyx_n_s_total_sentences, __pyx_n_s_total_words, __pyx_n_s_sent_idx, __pyx_n_s_idx_start, __pyx_n_s_idx_end, __pyx_n_s_syn1, __pyx_n_s_points, __pyx_n_s_codes, __pyx_n_s_syn1neg, __pyx_n_s_cum_table, __pyx_n_s_cum_table_len, __pyx_n_s_next_random, __pyx_n_s_neu1_2, __pyx_n_s_sentences, __pyx_n_s_random_number, __pyx_n_s_word); if (unlikely(!__pyx_tuple__21)) __PYX_ERR(1, 376, __pyx_L1_error)
+  __pyx_tuple__21 = PyTuple_Pack(57, __pyx_n_s_model, __pyx_n_s_corpus_file, __pyx_n_s_offset, __pyx_n_s_cython_vocab, __pyx_n_s_cur_epoch, __pyx_n_s_expected_examples, __pyx_n_s_expected_words, __pyx_n_s_work, __pyx_n_s_neu1, __pyx_n_s_compute_loss, __pyx_n_s_hs, __pyx_n_s_negative, __pyx_n_s_sample, __pyx_n_s_cbow_mean, __pyx_n_s_workers, __pyx_n_s_cur_epoch_2, __pyx_n_s_num_epochs, __pyx_n_s_expected_examples_2, __pyx_n_s_expected_words_2, __pyx_n_s_start_alpha, __pyx_n_s_end_alpha, __pyx_n_s_alpha_2, __pyx_n_s_input_stream, __pyx_n_s_vocab, __pyx_n_s_compute_loss_2, __pyx_n_s_running_training_loss_2, __pyx_n_s_syn0, __pyx_n_s_word_locks, __pyx_n_s_work_2, __pyx_n_s_size, __pyx_n_s_codelens, __pyx_n_s_indexes, __pyx_n_s_reduced_windows, __pyx_n_s_sentence_idx, __pyx_n_s_window, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_k, __pyx_n_s_effective_words, __pyx_n_s_effective_sentences, __pyx_n_s_total_effective_words, __pyx_n_s_total_sentences, __pyx_n_s_total_words, __pyx_n_s_sent_idx, __pyx_n_s_idx_start, __pyx_n_s_idx_end, __pyx_n_s_syn1, __pyx_n_s_points, __pyx_n_s_codes, __pyx_n_s_syn1neg, __pyx_n_s_cum_table, __pyx_n_s_cum_table_len, __pyx_n_s_next_random, __pyx_n_s_neu1_2, __pyx_n_s_sentences, __pyx_n_s_random_number, __pyx_n_s_word); if (unlikely(!__pyx_tuple__21)) __PYX_ERR(1, 375, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__21);
   __Pyx_GIVEREF(__pyx_tuple__21);
-  __pyx_codeobj__22 = (PyObject*)__Pyx_PyCode_New(10, 0, 57, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__21, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_gensim_models_word2vec_multistre_2, __pyx_n_s_train_epoch_cbow, 376, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__22)) __PYX_ERR(1, 376, __pyx_L1_error)
+  __pyx_codeobj__22 = (PyObject*)__Pyx_PyCode_New(10, 0, 57, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__21, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_gensim_models_word2vec_multistre_2, __pyx_n_s_train_epoch_cbow, 375, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__22)) __PYX_ERR(1, 375, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -11540,26 +11563,26 @@ static int __Pyx_modinit_type_init_code(void) {
   __pyx_vtable_6gensim_6models_20word2vec_multistream_CythonLineSentence._chunk_sentence = (std::vector<std::vector<std::string> >  (*)(struct __pyx_obj_6gensim_6models_20word2vec_multistream_CythonLineSentence *, std::vector<std::string> , int __pyx_skip_dispatch))__pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence__chunk_sentence;
   __pyx_vtable_6gensim_6models_20word2vec_multistream_CythonLineSentence.reset = (void (*)(struct __pyx_obj_6gensim_6models_20word2vec_multistream_CythonLineSentence *, int __pyx_skip_dispatch))__pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence_reset;
   __pyx_vtable_6gensim_6models_20word2vec_multistream_CythonLineSentence.next_batch = (std::vector<std::vector<std::string> >  (*)(struct __pyx_obj_6gensim_6models_20word2vec_multistream_CythonLineSentence *, int __pyx_skip_dispatch))__pyx_f_6gensim_6models_20word2vec_multistream_18CythonLineSentence_next_batch;
-  if (PyType_Ready(&__pyx_type_6gensim_6models_20word2vec_multistream_CythonLineSentence) < 0) __PYX_ERR(1, 72, __pyx_L1_error)
+  if (PyType_Ready(&__pyx_type_6gensim_6models_20word2vec_multistream_CythonLineSentence) < 0) __PYX_ERR(1, 71, __pyx_L1_error)
   __pyx_type_6gensim_6models_20word2vec_multistream_CythonLineSentence.tp_print = 0;
   if ((CYTHON_USE_TYPE_SLOTS && CYTHON_USE_PYTYPE_LOOKUP) && likely(!__pyx_type_6gensim_6models_20word2vec_multistream_CythonLineSentence.tp_dictoffset && __pyx_type_6gensim_6models_20word2vec_multistream_CythonLineSentence.tp_getattro == PyObject_GenericGetAttr)) {
     __pyx_type_6gensim_6models_20word2vec_multistream_CythonLineSentence.tp_getattro = __Pyx_PyObject_GenericGetAttrNoDict;
   }
-  if (__Pyx_SetVtable(__pyx_type_6gensim_6models_20word2vec_multistream_CythonLineSentence.tp_dict, __pyx_vtabptr_6gensim_6models_20word2vec_multistream_CythonLineSentence) < 0) __PYX_ERR(1, 72, __pyx_L1_error)
-  if (PyObject_SetAttrString(__pyx_m, "CythonLineSentence", (PyObject *)&__pyx_type_6gensim_6models_20word2vec_multistream_CythonLineSentence) < 0) __PYX_ERR(1, 72, __pyx_L1_error)
+  if (__Pyx_SetVtable(__pyx_type_6gensim_6models_20word2vec_multistream_CythonLineSentence.tp_dict, __pyx_vtabptr_6gensim_6models_20word2vec_multistream_CythonLineSentence) < 0) __PYX_ERR(1, 71, __pyx_L1_error)
+  if (PyObject_SetAttrString(__pyx_m, "CythonLineSentence", (PyObject *)&__pyx_type_6gensim_6models_20word2vec_multistream_CythonLineSentence) < 0) __PYX_ERR(1, 71, __pyx_L1_error)
   __pyx_ptype_6gensim_6models_20word2vec_multistream_CythonLineSentence = &__pyx_type_6gensim_6models_20word2vec_multistream_CythonLineSentence;
   __pyx_vtabptr_6gensim_6models_20word2vec_multistream_CythonVocab = &__pyx_vtable_6gensim_6models_20word2vec_multistream_CythonVocab;
   __pyx_vtable_6gensim_6models_20word2vec_multistream_CythonVocab.get_vocab_ptr = (__pyx_t_6gensim_6models_20word2vec_multistream_cvocab_t *(*)(struct __pyx_obj_6gensim_6models_20word2vec_multistream_CythonVocab *))__pyx_f_6gensim_6models_20word2vec_multistream_11CythonVocab_get_vocab_ptr;
-  if (PyType_Ready(&__pyx_type_6gensim_6models_20word2vec_multistream_CythonVocab) < 0) __PYX_ERR(1, 40, __pyx_L1_error)
+  if (PyType_Ready(&__pyx_type_6gensim_6models_20word2vec_multistream_CythonVocab) < 0) __PYX_ERR(1, 39, __pyx_L1_error)
   __pyx_type_6gensim_6models_20word2vec_multistream_CythonVocab.tp_print = 0;
   if ((CYTHON_USE_TYPE_SLOTS && CYTHON_USE_PYTYPE_LOOKUP) && likely(!__pyx_type_6gensim_6models_20word2vec_multistream_CythonVocab.tp_dictoffset && __pyx_type_6gensim_6models_20word2vec_multistream_CythonVocab.tp_getattro == PyObject_GenericGetAttr)) {
     __pyx_type_6gensim_6models_20word2vec_multistream_CythonVocab.tp_getattro = __Pyx_PyObject_GenericGetAttrNoDict;
   }
-  if (__Pyx_SetVtable(__pyx_type_6gensim_6models_20word2vec_multistream_CythonVocab.tp_dict, __pyx_vtabptr_6gensim_6models_20word2vec_multistream_CythonVocab) < 0) __PYX_ERR(1, 40, __pyx_L1_error)
-  if (PyObject_SetAttrString(__pyx_m, "CythonVocab", (PyObject *)&__pyx_type_6gensim_6models_20word2vec_multistream_CythonVocab) < 0) __PYX_ERR(1, 40, __pyx_L1_error)
-  if (__Pyx_setup_reduce((PyObject*)&__pyx_type_6gensim_6models_20word2vec_multistream_CythonVocab) < 0) __PYX_ERR(1, 40, __pyx_L1_error)
+  if (__Pyx_SetVtable(__pyx_type_6gensim_6models_20word2vec_multistream_CythonVocab.tp_dict, __pyx_vtabptr_6gensim_6models_20word2vec_multistream_CythonVocab) < 0) __PYX_ERR(1, 39, __pyx_L1_error)
+  if (PyObject_SetAttrString(__pyx_m, "CythonVocab", (PyObject *)&__pyx_type_6gensim_6models_20word2vec_multistream_CythonVocab) < 0) __PYX_ERR(1, 39, __pyx_L1_error)
+  if (__Pyx_setup_reduce((PyObject*)&__pyx_type_6gensim_6models_20word2vec_multistream_CythonVocab) < 0) __PYX_ERR(1, 39, __pyx_L1_error)
   __pyx_ptype_6gensim_6models_20word2vec_multistream_CythonVocab = &__pyx_type_6gensim_6models_20word2vec_multistream_CythonVocab;
-  if (PyType_Ready(&__pyx_type_6gensim_6models_20word2vec_multistream___pyx_scope_struct____iter__) < 0) __PYX_ERR(1, 117, __pyx_L1_error)
+  if (PyType_Ready(&__pyx_type_6gensim_6models_20word2vec_multistream___pyx_scope_struct____iter__) < 0) __PYX_ERR(1, 116, __pyx_L1_error)
   __pyx_type_6gensim_6models_20word2vec_multistream___pyx_scope_struct____iter__.tp_print = 0;
   if ((CYTHON_USE_TYPE_SLOTS && CYTHON_USE_PYTYPE_LOOKUP) && likely(!__pyx_type_6gensim_6models_20word2vec_multistream___pyx_scope_struct____iter__.tp_dictoffset && __pyx_type_6gensim_6models_20word2vec_multistream___pyx_scope_struct____iter__.tp_getattro == PyObject_GenericGetAttr)) {
     __pyx_type_6gensim_6models_20word2vec_multistream___pyx_scope_struct____iter__.tp_getattro = __Pyx_PyObject_GenericGetAttrNoDict;
@@ -11829,8 +11852,8 @@ if (!__Pyx_RefNanny) {
  * import numpy as np
  * 
  * from gensim.utils import any2utf8             # <<<<<<<<<<<<<<
- * from six import iteritems
  * 
+ * cimport numpy as np
  */
   __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 17, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
@@ -11846,28 +11869,7 @@ if (!__Pyx_RefNanny) {
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "gensim/models/word2vec_multistream.pyx":18
- * 
- * from gensim.utils import any2utf8
- * from six import iteritems             # <<<<<<<<<<<<<<
- * 
- * cimport numpy as np
- */
-  __pyx_t_2 = PyList_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 18, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_INCREF(__pyx_n_s_iteritems);
-  __Pyx_GIVEREF(__pyx_n_s_iteritems);
-  PyList_SET_ITEM(__pyx_t_2, 0, __pyx_n_s_iteritems);
-  __pyx_t_1 = __Pyx_Import(__pyx_n_s_six, __pyx_t_2, -1); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 18, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_ImportFrom(__pyx_t_1, __pyx_n_s_iteritems); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 18, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_iteritems, __pyx_t_2) < 0) __PYX_ERR(1, 18, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-
-  /* "gensim/models/word2vec_multistream.pyx":35
+  /* "gensim/models/word2vec_multistream.pyx":34
  * 
  * ctypedef np.float32_t REAL_t
  * cdef REAL_t ONEF = <REAL_t>1.0             # <<<<<<<<<<<<<<
@@ -11876,51 +11878,51 @@ if (!__Pyx_RefNanny) {
  */
   __pyx_v_6gensim_6models_20word2vec_multistream_ONEF = ((__pyx_t_6gensim_6models_20word2vec_multistream_REAL_t)1.0);
 
-  /* "gensim/models/word2vec_multistream.pyx":60
+  /* "gensim/models/word2vec_multistream.pyx":59
  * 
  * 
  * def rebuild_cython_line_sentence(source, max_sentence_length):             # <<<<<<<<<<<<<<
  *     return CythonLineSentence(source, max_sentence_length=max_sentence_length)
  * 
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_6gensim_6models_20word2vec_multistream_1rebuild_cython_line_sentence, NULL, __pyx_n_s_gensim_models_word2vec_multistre); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 60, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_rebuild_cython_line_sentence, __pyx_t_1) < 0) __PYX_ERR(1, 60, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_6gensim_6models_20word2vec_multistream_1rebuild_cython_line_sentence, NULL, __pyx_n_s_gensim_models_word2vec_multistre); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 59, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_rebuild_cython_line_sentence, __pyx_t_2) < 0) __PYX_ERR(1, 59, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "gensim/models/word2vec_multistream.pyx":243
+  /* "gensim/models/word2vec_multistream.pyx":242
  * 
  * 
  * def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work,             # <<<<<<<<<<<<<<
  *                    _neu1, compute_loss):
  *     """Train Skipgram model for one epoch by training on an input stream. This function is used only in multistream mode.
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_6gensim_6models_20word2vec_multistream_3train_epoch_sg, NULL, __pyx_n_s_gensim_models_word2vec_multistre); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 243, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_train_epoch_sg, __pyx_t_1) < 0) __PYX_ERR(1, 243, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_6gensim_6models_20word2vec_multistream_3train_epoch_sg, NULL, __pyx_n_s_gensim_models_word2vec_multistre); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 242, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_train_epoch_sg, __pyx_t_2) < 0) __PYX_ERR(1, 242, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "gensim/models/word2vec_multistream.pyx":376
+  /* "gensim/models/word2vec_multistream.pyx":375
  * 
  * 
  * def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work,             # <<<<<<<<<<<<<<
  *                      _neu1, compute_loss):
  *     """Train CBOW model for one epoch by training on an input stream. This function is used only in multistream mode.
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_6gensim_6models_20word2vec_multistream_5train_epoch_cbow, NULL, __pyx_n_s_gensim_models_word2vec_multistre); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 376, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_train_epoch_cbow, __pyx_t_1) < 0) __PYX_ERR(1, 376, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_6gensim_6models_20word2vec_multistream_5train_epoch_cbow, NULL, __pyx_n_s_gensim_models_word2vec_multistre); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 375, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_train_epoch_cbow, __pyx_t_2) < 0) __PYX_ERR(1, 375, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
   /* "gensim/models/word2vec_multistream.pyx":1
  * #!/usr/bin/env cython             # <<<<<<<<<<<<<<
  * # distutils: language = c++
  * # cython: boundscheck=False
  */
-  __pyx_t_1 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 1, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_test, __pyx_t_1) < 0) __PYX_ERR(1, 1, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_2 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 1, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_test, __pyx_t_2) < 0) __PYX_ERR(1, 1, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
   /* "vector.to_py":60
  * 
@@ -12143,35 +12145,87 @@ static void __Pyx_RaiseArgtupleInvalid(
                  (num_expected == 1) ? "" : "s", num_found);
 }
 
-/* GetModuleGlobalName */
-static CYTHON_INLINE PyObject *__Pyx_GetModuleGlobalName(PyObject *name) {
-    PyObject *result;
-#if !CYTHON_AVOID_BORROWED_REFS
-#if CYTHON_COMPILING_IN_CPYTHON && PY_VERSION_HEX >= 0x030500A1
-    result = _PyDict_GetItem_KnownHash(__pyx_d, name, ((PyASCIIObject *) name)->hash);
-    if (likely(result)) {
-        Py_INCREF(result);
-    } else if (unlikely(PyErr_Occurred())) {
-        result = NULL;
-    } else {
-#else
-    result = PyDict_GetItem(__pyx_d, name);
-    if (likely(result)) {
-        Py_INCREF(result);
-    } else {
-#endif
-#else
-    result = PyObject_GetItem(__pyx_d, name);
-    if (!result) {
-        PyErr_Clear();
-#endif
-        result = __Pyx_GetBuiltinName(name);
+/* Import */
+static PyObject *__Pyx_Import(PyObject *name, PyObject *from_list, int level) {
+    PyObject *empty_list = 0;
+    PyObject *module = 0;
+    PyObject *global_dict = 0;
+    PyObject *empty_dict = 0;
+    PyObject *list;
+    #if PY_MAJOR_VERSION < 3
+    PyObject *py_import;
+    py_import = __Pyx_PyObject_GetAttrStr(__pyx_b, __pyx_n_s_import);
+    if (!py_import)
+        goto bad;
+    #endif
+    if (from_list)
+        list = from_list;
+    else {
+        empty_list = PyList_New(0);
+        if (!empty_list)
+            goto bad;
+        list = empty_list;
     }
-    return result;
+    global_dict = PyModule_GetDict(__pyx_m);
+    if (!global_dict)
+        goto bad;
+    empty_dict = PyDict_New();
+    if (!empty_dict)
+        goto bad;
+    {
+        #if PY_MAJOR_VERSION >= 3
+        if (level == -1) {
+            if (strchr(__Pyx_MODULE_NAME, '.')) {
+                module = PyImport_ImportModuleLevelObject(
+                    name, global_dict, empty_dict, list, 1);
+                if (!module) {
+                    if (!PyErr_ExceptionMatches(PyExc_ImportError))
+                        goto bad;
+                    PyErr_Clear();
+                }
+            }
+            level = 0;
+        }
+        #endif
+        if (!module) {
+            #if PY_MAJOR_VERSION < 3
+            PyObject *py_level = PyInt_FromLong(level);
+            if (!py_level)
+                goto bad;
+            module = PyObject_CallFunctionObjArgs(py_import,
+                name, global_dict, empty_dict, list, py_level, NULL);
+            Py_DECREF(py_level);
+            #else
+            module = PyImport_ImportModuleLevelObject(
+                name, global_dict, empty_dict, list, level);
+            #endif
+        }
+    }
+bad:
+    #if PY_MAJOR_VERSION < 3
+    Py_XDECREF(py_import);
+    #endif
+    Py_XDECREF(empty_list);
+    Py_XDECREF(empty_dict);
+    return module;
+}
+
+/* ImportFrom */
+static PyObject* __Pyx_ImportFrom(PyObject* module, PyObject* name) {
+    PyObject* value = __Pyx_PyObject_GetAttrStr(module, name);
+    if (unlikely(!value) && PyErr_ExceptionMatches(PyExc_AttributeError)) {
+        PyErr_Format(PyExc_ImportError,
+        #if PY_MAJOR_VERSION < 3
+            "cannot import name %.230s", PyString_AS_STRING(name));
+        #else
+            "cannot import name %S", name);
+        #endif
+    }
+    return value;
 }
 
 /* PyCFunctionFastCall */
-    #if CYTHON_FAST_PYCCALL
+#if CYTHON_FAST_PYCCALL
 static CYTHON_INLINE PyObject * __Pyx_PyCFunction_FastCall(PyObject *func_obj, PyObject **args, Py_ssize_t nargs) {
     PyCFunctionObject *func = (PyCFunctionObject*)func_obj;
     PyCFunction meth = PyCFunction_GET_FUNCTION(func);
@@ -12194,7 +12248,7 @@ static CYTHON_INLINE PyObject * __Pyx_PyCFunction_FastCall(PyObject *func_obj, P
 #endif
 
 /* PyFunctionFastCall */
-    #if CYTHON_FAST_PYCALL
+#if CYTHON_FAST_PYCALL
 #include "frameobject.h"
 static PyObject* __Pyx_PyFunction_FastCallNoKw(PyCodeObject *co, PyObject **args, Py_ssize_t na,
                                                PyObject *globals) {
@@ -12314,7 +12368,7 @@ done:
 #endif
 
 /* PyObjectCall */
-    #if CYTHON_COMPILING_IN_CPYTHON
+#if CYTHON_COMPILING_IN_CPYTHON
 static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg, PyObject *kw) {
     PyObject *result;
     ternaryfunc call = func->ob_type->tp_call;
@@ -12334,7 +12388,7 @@ static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg
 #endif
 
 /* PyObjectCallMethO */
-    #if CYTHON_COMPILING_IN_CPYTHON
+#if CYTHON_COMPILING_IN_CPYTHON
 static CYTHON_INLINE PyObject* __Pyx_PyObject_CallMethO(PyObject *func, PyObject *arg) {
     PyObject *self, *result;
     PyCFunction cfunc;
@@ -12354,7 +12408,7 @@ static CYTHON_INLINE PyObject* __Pyx_PyObject_CallMethO(PyObject *func, PyObject
 #endif
 
 /* PyObjectCallOneArg */
-    #if CYTHON_COMPILING_IN_CPYTHON
+#if CYTHON_COMPILING_IN_CPYTHON
 static PyObject* __Pyx__PyObject_CallOneArg(PyObject *func, PyObject *arg) {
     PyObject *result;
     PyObject *args = PyTuple_New(1);
@@ -12394,20 +12448,20 @@ static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObjec
 #endif
 
 /* RaiseTooManyValuesToUnpack */
-    static CYTHON_INLINE void __Pyx_RaiseTooManyValuesError(Py_ssize_t expected) {
+static CYTHON_INLINE void __Pyx_RaiseTooManyValuesError(Py_ssize_t expected) {
     PyErr_Format(PyExc_ValueError,
                  "too many values to unpack (expected %" CYTHON_FORMAT_SSIZE_T "d)", expected);
 }
 
 /* RaiseNeedMoreValuesToUnpack */
-    static CYTHON_INLINE void __Pyx_RaiseNeedMoreValuesError(Py_ssize_t index) {
+static CYTHON_INLINE void __Pyx_RaiseNeedMoreValuesError(Py_ssize_t index) {
     PyErr_Format(PyExc_ValueError,
                  "need more than %" CYTHON_FORMAT_SSIZE_T "d value%.1s to unpack",
                  index, (index == 1) ? "" : "s");
 }
 
 /* IterFinish */
-    static CYTHON_INLINE int __Pyx_IterFinish(void) {
+static CYTHON_INLINE int __Pyx_IterFinish(void) {
 #if CYTHON_FAST_THREAD_STATE
     PyThreadState *tstate = __Pyx_PyThreadState_Current;
     PyObject* exc_type = tstate->curexc_type;
@@ -12442,7 +12496,7 @@ static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObjec
 }
 
 /* UnpackItemEndCheck */
-    static int __Pyx_IternextUnpackEndCheck(PyObject *retval, Py_ssize_t expected) {
+static int __Pyx_IternextUnpackEndCheck(PyObject *retval, Py_ssize_t expected) {
     if (unlikely(retval)) {
         Py_DECREF(retval);
         __Pyx_RaiseTooManyValuesError(expected);
@@ -12451,6 +12505,33 @@ static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObjec
         return __Pyx_IterFinish();
     }
     return 0;
+}
+
+/* GetModuleGlobalName */
+static CYTHON_INLINE PyObject *__Pyx_GetModuleGlobalName(PyObject *name) {
+    PyObject *result;
+#if !CYTHON_AVOID_BORROWED_REFS
+#if CYTHON_COMPILING_IN_CPYTHON && PY_VERSION_HEX >= 0x030500A1
+    result = _PyDict_GetItem_KnownHash(__pyx_d, name, ((PyASCIIObject *) name)->hash);
+    if (likely(result)) {
+        Py_INCREF(result);
+    } else if (unlikely(PyErr_Occurred())) {
+        result = NULL;
+    } else {
+#else
+    result = PyDict_GetItem(__pyx_d, name);
+    if (likely(result)) {
+        Py_INCREF(result);
+    } else {
+#endif
+#else
+    result = PyObject_GetItem(__pyx_d, name);
+    if (!result) {
+        PyErr_Clear();
+#endif
+        result = __Pyx_GetBuiltinName(name);
+    }
+    return result;
 }
 
 /* ExtTypeTest */
@@ -12995,85 +13076,6 @@ GOOD:
     Py_XDECREF(setstate);
     Py_XDECREF(setstate_cython);
     return ret;
-}
-
-/* Import */
-      static PyObject *__Pyx_Import(PyObject *name, PyObject *from_list, int level) {
-    PyObject *empty_list = 0;
-    PyObject *module = 0;
-    PyObject *global_dict = 0;
-    PyObject *empty_dict = 0;
-    PyObject *list;
-    #if PY_MAJOR_VERSION < 3
-    PyObject *py_import;
-    py_import = __Pyx_PyObject_GetAttrStr(__pyx_b, __pyx_n_s_import);
-    if (!py_import)
-        goto bad;
-    #endif
-    if (from_list)
-        list = from_list;
-    else {
-        empty_list = PyList_New(0);
-        if (!empty_list)
-            goto bad;
-        list = empty_list;
-    }
-    global_dict = PyModule_GetDict(__pyx_m);
-    if (!global_dict)
-        goto bad;
-    empty_dict = PyDict_New();
-    if (!empty_dict)
-        goto bad;
-    {
-        #if PY_MAJOR_VERSION >= 3
-        if (level == -1) {
-            if (strchr(__Pyx_MODULE_NAME, '.')) {
-                module = PyImport_ImportModuleLevelObject(
-                    name, global_dict, empty_dict, list, 1);
-                if (!module) {
-                    if (!PyErr_ExceptionMatches(PyExc_ImportError))
-                        goto bad;
-                    PyErr_Clear();
-                }
-            }
-            level = 0;
-        }
-        #endif
-        if (!module) {
-            #if PY_MAJOR_VERSION < 3
-            PyObject *py_level = PyInt_FromLong(level);
-            if (!py_level)
-                goto bad;
-            module = PyObject_CallFunctionObjArgs(py_import,
-                name, global_dict, empty_dict, list, py_level, NULL);
-            Py_DECREF(py_level);
-            #else
-            module = PyImport_ImportModuleLevelObject(
-                name, global_dict, empty_dict, list, level);
-            #endif
-        }
-    }
-bad:
-    #if PY_MAJOR_VERSION < 3
-    Py_XDECREF(py_import);
-    #endif
-    Py_XDECREF(empty_list);
-    Py_XDECREF(empty_dict);
-    return module;
-}
-
-/* ImportFrom */
-      static PyObject* __Pyx_ImportFrom(PyObject* module, PyObject* name) {
-    PyObject* value = __Pyx_PyObject_GetAttrStr(module, name);
-    if (unlikely(!value) && PyErr_ExceptionMatches(PyExc_AttributeError)) {
-        PyErr_Format(PyExc_ImportError,
-        #if PY_MAJOR_VERSION < 3
-            "cannot import name %.230s", PyString_AS_STRING(name));
-        #else
-            "cannot import name %S", name);
-        #endif
-    }
-    return value;
 }
 
 /* CLineInTraceback */
