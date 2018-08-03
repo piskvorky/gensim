@@ -37,6 +37,8 @@ Data:
 import math
 from six import iteritems
 from six.moves import xrange
+from functools import partial
+from multiprocessing import Pool
 
 
 PARAM_K1 = 1.5
@@ -151,6 +153,13 @@ class BM25(object):
             scores.append(score)
         return scores
 
+def _get_scores(bm25, document, average_idf):
+    scores = []
+    for index in xrange(bm25.corpus_size):
+        score = bm25.get_score(document, index, average_idf)
+        scores.append(score)
+    return scores
+
 
 def get_bm25_weights(corpus):
     """Returns BM25 scores (weights) of documents in corpus.
@@ -180,9 +189,13 @@ def get_bm25_weights(corpus):
     bm25 = BM25(corpus)
     average_idf = sum(float(val) for val in bm25.idf.values()) / len(bm25.idf)
 
-    weights = []
-    for doc in corpus:
-        scores = bm25.get_scores(doc, average_idf)
-        weights.append(scores)
+    # weights = []
+    # for doc in corpus:
+    #     scores = bm25.get_scores(doc, average_idf)
+    #     weights.append(scores)
+
+    get_score = partial(_get_scores, bm25, average_idf=average_idf)
+    pool = Pool()
+    weights = pool.map(get_score, corpus)
 
     return weights
