@@ -461,11 +461,11 @@ class AuthorTopicModel(LdaModel):
                 ids = [int(idx) for idx, _ in doc]
             else:
                 ids = [idx for idx, _ in doc]
-            ids = np.array(ids, dtype=np.integer)
-            cts = np.array([cnt for _, cnt in doc], dtype=np.integer)
+            ids = np.array(ids, dtype=np.int)
+            cts = np.array([cnt for _, cnt in doc], dtype=np.int)
 
             # Get all authors in current document, and convert the author names to integer IDs.
-            authors_d = np.array([self.author2id[a] for a in self.doc2author[doc_no]], dtype=np.integer)
+            authors_d = np.array([self.author2id[a] for a in self.doc2author[doc_no]], dtype=np.int)
 
             gammad = self.state.gamma[authors_d, :]  # gamma of document d before update.
             tilde_gamma = gammad.copy()  # gamma that will be updated.
@@ -973,9 +973,9 @@ class AuthorTopicModel(LdaModel):
             else:
                 doc_no = d
             # Get all authors in current document, and convert the author names to integer IDs.
-            authors_d = np.array([self.author2id[a] for a in self.doc2author[doc_no]], dtype=np.integer)
-            ids = np.array([id for id, _ in doc], dtype=np.integer)  # Word IDs in doc.
-            cts = np.array([cnt for _, cnt in doc], dtype=np.integer)  # Word counts.
+            authors_d = np.array([self.author2id[a] for a in self.doc2author[doc_no]], dtype=np.int)
+            ids = np.array([id for id, _ in doc], dtype=np.int)  # Word IDs in doc.
+            cts = np.array([cnt for _, cnt in doc], dtype=np.int)  # Word counts.
 
             if d % self.chunksize == 0:
                 logger.debug("bound: at document #%i in chunk", d)
