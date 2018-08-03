@@ -1047,9 +1047,9 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
     @unittest.skipIf(os.name != 'posix', "CythonLineSentence is supported only on Linux")
     def testCythonLineSentenceWorksWithFilename(self):
         """Does CythonLineSentence work with a filename argument?"""
-        from gensim.models import word2vec_inner
+        from gensim.models import word2vec_multistream
         with utils.smart_open(datapath('lee_background.cor')) as orig:
-            sentences = word2vec_inner.CythonLineSentence(datapath('lee_background.cor'))
+            sentences = word2vec_multistream.CythonLineSentence(datapath('lee_background.cor'))
             for words in sentences:
                 self.assertEqual(words, orig.readline().split())
 
