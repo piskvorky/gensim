@@ -11,6 +11,7 @@ sudo python ./setup.py install
 """
 
 import os
+import platform
 import sys
 import warnings
 import ez_setup
@@ -262,12 +263,20 @@ ext_modules = [
 ]
 
 if not (os.name == 'nt' and sys.version_info[0] < 3):
+    extra_args = []
+    system = platform.system()
+
+    if system == 'Linux':
+        extra_args.append('-std=c++11')
+    elif system == 'Darwin':
+        extra_args.extend(['-stdlib=libc++', '-std=c++11'])
+
     ext_modules.append(
         Extension('gensim.models.word2vec_multistream',
                   sources=['./gensim/models/word2vec_multistream.cpp', './gensim/models/fast_line_sentence.cpp'],
                   language='c++',
-                  extra_compile_args=["-std=c++11"],
-                  extra_link_args=["-std=c++11"])
+                  extra_compile_args=extra_args,
+                  extra_link_args=extra_args)
     )
 
 setup(
