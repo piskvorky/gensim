@@ -242,35 +242,41 @@ linux_testenv = win_testenv + [
     'keras >= 2.0.4, <= 2.1.4',
 ]
 
+ext_modules = [
+    Extension('gensim.models.word2vec_inner',
+        sources=['./gensim/models/word2vec_inner.c'],
+        include_dirs=[model_dir]),
+    Extension('gensim.models.doc2vec_inner',
+        sources=['./gensim/models/doc2vec_inner.c'],
+        include_dirs=[model_dir]),
+    Extension('gensim.corpora._mmreader',
+        sources=['./gensim/corpora/_mmreader.c']),
+    Extension('gensim.models.fasttext_inner',
+        sources=['./gensim/models/fasttext_inner.c'],
+        include_dirs=[model_dir]),
+    Extension('gensim.models._utils_any2vec',
+        sources=['./gensim/models/_utils_any2vec.c'],
+        include_dirs=[model_dir]),
+    Extension('gensim._matutils',
+        sources=['./gensim/_matutils.c']),
+]
+
+if not (os.name == 'nt' and sys.version_info[0] < 3):
+    ext_modules.append(
+        Extension('gensim.models.word2vec_multistream',
+                  sources=['./gensim/models/word2vec_multistream.cpp', './gensim/models/fast_line_sentence.cpp'],
+                  language='c++',
+                  extra_compile_args=["-std=c++11"],
+                  extra_link_args=["-std=c++11"])
+    )
+
 setup(
     name='gensim',
     version='3.5.0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
-    ext_modules=[
-        Extension('gensim.models.word2vec_inner',
-            sources=['./gensim/models/word2vec_inner.c'],
-            include_dirs=[model_dir]),
-        Extension('gensim.models.word2vec_multistream',
-                  sources=['./gensim/models/word2vec_multistream.cpp', './gensim/models/fast_line_sentence.cpp'],
-                  language='c++',
-                  extra_compile_args=["-std=c++11"] if os.name != 'nt' else [],
-                  extra_link_args=["-std=c++11"] if os.name != 'nt' else []),
-        Extension('gensim.models.doc2vec_inner',
-            sources=['./gensim/models/doc2vec_inner.c'],
-            include_dirs=[model_dir]),
-        Extension('gensim.corpora._mmreader',
-            sources=['./gensim/corpora/_mmreader.c']),
-        Extension('gensim.models.fasttext_inner',
-            sources=['./gensim/models/fasttext_inner.c'],
-            include_dirs=[model_dir]),
-        Extension('gensim.models._utils_any2vec',
-            sources=['./gensim/models/_utils_any2vec.c'],
-            include_dirs=[model_dir]),
-        Extension('gensim._matutils',
-            sources=['./gensim/_matutils.c']),
-    ],
+    ext_modules=ext_modules,
     cmdclass=cmdclass,
     packages=find_packages(),
 
