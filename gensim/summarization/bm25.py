@@ -155,6 +155,7 @@ class BM25(object):
 
 
 def _get_scores(bm25, document, average_idf):
+    """helper function for retrieve bm25 scores in parallel"""
     scores = []
     for index in xrange(bm25.corpus_size):
         score = bm25.get_score(document, index, average_idf)
