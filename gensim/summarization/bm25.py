@@ -203,7 +203,7 @@ def get_bm25_weights(corpus, n_jobs=1):
     average_idf = sum(float(val) for val in bm25.idf.values()) / len(bm25.idf)
 
     if _effective_n_jobs(n_jobs) == 1:
-        weights = [bm25.get_scores(doc, average_idf)]
+        weights = [bm25.get_scores(doc, average_idf) for doc in corpus]
         return weights
 
     # weights = []
