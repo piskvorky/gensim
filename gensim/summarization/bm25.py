@@ -38,7 +38,7 @@ import math
 from six import iteritems
 from six.moves import xrange
 from functools import partial
-from multiprocessing import Pool
+from multiprocessing import Pool, cpu_count
 
 
 PARAM_K1 = 1.5
@@ -153,6 +153,7 @@ class BM25(object):
             scores.append(score)
         return scores
 
+
 def _get_scores(bm25, document, average_idf):
     scores = []
     for index in xrange(bm25.corpus_size):
@@ -161,7 +162,18 @@ def _get_scores(bm25, document, average_idf):
     return scores
 
 
-def get_bm25_weights(corpus):
+def _effective_n_jobs(n_jobs):
+    """Determine the number of jobs which are going to run in parallel"""
+    if n_jobs == 0:
+        raise ValueError('n_jobs == 0 in Parallel has no meaning')
+    elif n_jobs is None:
+        return 1
+    elif n_jobs < 0:
+        n_jobs = max(cpu_count() + 1 + n_jobs, 1)
+    return n_jobs
+
+
+def get_bm25_weights(corpus, n_jobs=1):
     """Returns BM25 scores (weights) of documents in corpus.
     Each document has to be weighted with every document in given corpus.
 
@@ -189,13 +201,19 @@ def get_bm25_weights(corpus):
     bm25 = BM25(corpus)
     average_idf = sum(float(val) for val in bm25.idf.values()) / len(bm25.idf)
 
+    if _effective_n_jobs(n_jobs) == 1:
+        weights = [bm25.get_scores(doc, average_idf)]
+        return weights
+
     # weights = []
     # for doc in corpus:
     #     scores = bm25.get_scores(doc, average_idf)
     #     weights.append(scores)
 
     get_score = partial(_get_scores, bm25, average_idf=average_idf)
-    pool = Pool()
+    pool = Pool(n_jobs)
     weights = pool.map(get_score, corpus)
+    pool.close()
+    pool.join()
 
     return weights
