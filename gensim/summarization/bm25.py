@@ -196,7 +196,7 @@ def get_bm25_weights(corpus, n_jobs=1):
     ...     ["cat", "outer", "space"],
     ...     ["wag", "dog"]
     ... ]
-    >>> result = get_bm25_weights(corpus)
+    >>> result = get_bm25_weights(corpus, n_jobs=-1)
 
     """
     bm25 = BM25(corpus)
