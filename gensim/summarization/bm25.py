@@ -182,6 +182,8 @@ def get_bm25_weights(corpus, n_jobs=1):
     ----------
     corpus : list of list of str
         Corpus of documents.
+    n_jobs : int
+        The number of processes to use for computing bm25.
 
     Returns
     -------
