@@ -202,12 +202,13 @@ def get_bm25_weights(corpus, n_jobs=1):
     bm25 = BM25(corpus)
     average_idf = sum(float(val) for val in bm25.idf.values()) / len(bm25.idf)
 
-    if _effective_n_jobs(n_jobs) == 1:
+    n_processes = _effective_n_jobs(n_jobs)
+    if n_processes == 1:
         weights = [bm25.get_scores(doc, average_idf) for doc in corpus]
         return weights
 
     get_score = partial(_get_scores, bm25, average_idf=average_idf)
-    pool = Pool(n_jobs)
+    pool = Pool(n_processes)
     weights = pool.map(get_score, corpus)
     pool.close()
     pool.join()
