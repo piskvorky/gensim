@@ -124,19 +124,21 @@ class TestWord2Vec2Tensor(unittest.TestCase):
         try:
             with smart_open(self.metadata_file, 'rb') as f:
                 metadata = f.readlines()
-        except FileNotFoundError:
-            self.fail(
-                'Metadata file %s creation failed. \
-                Check the parameters and input file format.' % self.metadata_file
-                )
+        except Exception:
+            if not os.path.isfile(os.path.join(self.metadata_file)):
+                self.fail(
+                    'Metadata file %s creation failed. \
+                    Check the parameters and input file format.' % self.metadata_file
+                    )
         try:
             with smart_open(self.tensor_file, 'rb') as f:
                 vectors = f.readlines()
-        except FileNotFoundError:
-            self.fail(
-                'Tensor file %s creation failed. \
-                Check the parameters and input file format.' % self.tensor_file
-                )
+        except Exception:
+            if not os.path.isfile(os.path.join(self.tensor_file)):
+                self.fail(
+                    'Tensor file %s creation failed. \
+                    Check the parameters and input file format.' % self.tensor_file
+                    )
 
         # check if number of words and vector size in tensor file line up with word2vec
         with smart_open(self.datapath, 'rb') as f:
