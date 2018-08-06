@@ -26,6 +26,7 @@ from gensim.scripts.word2vec2tensor import word2vec2tensor
 from gensim.utils import to_utf8
 from gensim.models import KeyedVectors
 
+
 class TestSegmentWiki(unittest.TestCase):
 
     def setUp(self):
@@ -116,8 +117,7 @@ class TestWord2Vec2Tensor(unittest.TestCase):
         self.metadata_file = self.output_folder + '_metadata.tsv'
         self.tensor_file = self.output_folder + '_tensor.tsv'
         self.vector_file = self.output_folder + '_vector.tsv'
-        print(self.vector_file)
-        print(self.tensor_file)
+
     def testConversion(self):
         word2vec2tensor(word2vec_model_path=self.datapath, tensor_filename=self.output_folder)
 
@@ -173,14 +173,10 @@ class TestWord2Vec2Tensor(unittest.TestCase):
         # test vectors for each word are the same
         for word in orig_model.vocab.keys():
             if not np.array_equal(orig_model[word], test_model[word]):
-                print(" out boy0: ", word)
-                print(" out boy: ", orig_model[word])
-                print(" out boy:2 ",test_model[word])
                 self.fail(
                 'Original word2vec model %s and tensor model %s store different \
                 vectors for word %s.' % (self.datapath, self.vector_file, word)
                 )
-
 
 
 if __name__ == '__main__':
