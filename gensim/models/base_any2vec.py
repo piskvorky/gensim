@@ -124,15 +124,19 @@ class BaseAny2VecModel(utils.SaveLoad):
         raise NotImplementedError()
 
     def _do_train_job(self, data_iterable, job_parameters, thread_private_mem):
-        """Train a single batch. Return 3-tuple
-        `(effective word count, total word count, total samples used)`.
-
-        The total samples used is the same as the effective word count when
-        using CBOW, but it can differ with Skip-Gram, since a random number of
-        positve examples are used for each effective word.
-
-        Knowing the effective number of samples used allows us to compute the
-        average loss for an epoch.
+        """Train a single batch.
+        `
+        Returns
+        -------
+        (int, int, int)
+        effective_word_count: int
+            The number of words processed after ignoring unknown words and sentence length trimming.
+        total_word_count: int
+            The total number of words in this batch.
+        total_samples_used: int
+            The total samples used while training on this data. This is the same as the effective word count when using
+            CBOW, but it can differ with Skip-Gram, since a random number of positve examples are used for each average
+            loss for an epoch.
 
         """
         raise NotImplementedError()
@@ -182,9 +186,10 @@ class BaseAny2VecModel(utils.SaveLoad):
             if len(stats_tuple) == 3:
                 tally, raw_tally, effective_samples = stats_tuple
             else:
-                # Model doesn't implement the samples tallying. We assume
-                # that the number of samples is the effective words tally. This
-                # gives coherent outputs with previous implementaitons
+                # TODO: Some models haven't updated their _do_train_job method to return a 3-tuple instead of a
+                # 2-tuple, containing also the number of samples used while processing the batch.
+                # For those models that don't implement samples tallying, We assume that the number of samples is the
+                # effective words tally. This gives coherent outputs with previous implementations.
                 tally, raw_tally = stats_tuple
                 effective_samples = tally
 
@@ -192,8 +197,7 @@ class BaseAny2VecModel(utils.SaveLoad):
                 callback.on_batch_end(self)
 
             # report back progress
-            progress_queue.put(
-                (len(data_iterable), tally, raw_tally, effective_samples))
+            progress_queue.put((len(data_iterable), tally, raw_tally, effective_samples))
             jobs_processed += 1
         logger.debug("worker exiting, processed %i jobs", jobs_processed)
 
@@ -269,7 +273,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         logger.debug("job loop exiting, total %i jobs", job_no)
 
     def _log_progress(self, job_queue, progress_queue, cur_epoch, example_count, total_examples,
-                      raw_word_count, total_words, trained_word_count, total_samples, elapsed):
+                      raw_word_count, total_words, trained_word_count, elapsed):
         raise NotImplementedError()
 
     def _log_epoch_end(self, cur_epoch, example_count, total_examples, raw_word_count, total_words,
@@ -990,7 +994,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             queue_factor=queue_factor, report_delay=report_delay, compute_loss=compute_loss, callbacks=callbacks)
 
     def get_latest_training_loss(self):
-        return 0
+        raise NotImplementedError("To compute the loss for a model, you must implement get_latest_training_loss")
 
     def _get_job_params(self, cur_epoch):
         """Get the learning rate used in the current epoch.
@@ -1204,40 +1208,22 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             Elapsed time since the beginning of training in seconds.
 
         """
-        if total_samples == 0:
-            loss = -1
-        else:
-            loss = self.get_latest_training_loss() / total_samples
         if total_examples:
-            # examples-based progress %
-            if self.compute_loss:
-                logger.info(
-                    ("EPOCH %i - PROGRESS: at %.2f%% examples, %.0f words/s, "
-                     "in_qsize %i, out_qsize %i, current_loss %.3f"),
-                    cur_epoch + 1, 100.0 * example_count / total_examples, trained_word_count / elapsed,
-                    utils.qsize(job_queue), utils.qsize(progress_queue), loss
-                )
-            else:
-                logger.info(
-                    "EPOCH %i - PROGRESS: at %.2f%% examples, %.0f words/s, in_qsize %i, out_qsize %i",
-                    cur_epoch + 1, 100.0 * example_count / total_examples, trained_word_count / elapsed,
-                    utils.qsize(job_queue), utils.qsize(progress_queue)
-                )
+            div = total_examples
         else:
-            # words-based progress %
-            if self.compute_loss:
-                logger.info(
-                    "EPOCH %i - PROGRESS: at %.2f%% words, %.0f words/s, in_qsize %i, out_qsize %i",
-                    cur_epoch + 1, 100.0 * raw_word_count / total_words, trained_word_count / elapsed,
-                    utils.qsize(job_queue), utils.qsize(progress_queue)
-                )
+            div = total_words
+
+        msg = "EPOCH %i - PROGRESS: at %.2f%% examples, %.0f words/s, in_qsize %i, out_qsize %i"
+        args = (cur_epoch + 1, 100.0 * example_count / div, trained_word_count / elapsed,
+                utils.qsize(job_queue), utils.qsize(progress_queue))
+        if self.compute_loss:
+            if total_samples == 0:
+                loss = -1
             else:
-                logger.info(
-                    ("EPOCH %i - PROGRESS: at %.2f%% words, %.0f words/s, "
-                     "in_qsize %i, out_qsize %i, current_loss %.3f"),
-                    cur_epoch + 1, 100.0 * raw_word_count / total_words, trained_word_count / elapsed,
-                    utils.qsize(job_queue), utils.qsize(progress_queue), loss
-                )
+                loss = self.get_latest_training_loss() / total_samples
+            msg += ", current_loss %.3f"
+            args += (loss,)
+        logger.info(msg, *args)
 
     def _log_epoch_end(self, cur_epoch, example_count, total_examples, raw_word_count, total_words,
                        trained_word_count, elapsed):

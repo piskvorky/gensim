@@ -178,6 +178,8 @@ except ImportError:
         int
             Number of words in the vocabulary actually used for training (that already existed in the vocabulary
             and were not discarded by negative sampling).
+        int
+            Number of samples used for training. A sample is a positive/negative example.
 
         """
         result = 0
@@ -231,6 +233,9 @@ except ImportError:
         int
             Number of words in the vocabulary actually used for training (that already existed in the vocabulary
             and were not discarded by negative sampling).
+        int
+            Number of samples used for training. A sample is a positive/negative example. In the case of CBOW
+            this is the same as the effective number of words.
 
         """
         result = 0

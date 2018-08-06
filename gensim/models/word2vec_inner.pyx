@@ -485,13 +485,15 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
     int
         Number of words in the vocabulary actually used for training (They already existed in the vocabulary
         and were not discarded by negative sampling).
+    int
+        Number of samples used for training. A sample is a positive/negative example.
 
     """
     cdef int hs = model.hs
     cdef int negative = model.negative
     cdef int sample = (model.vocabulary.sample != 0)
 
-    cdef int _compute_loss = (1 if compute_loss is True else 0)
+    cdef int _compute_loss = (1 if compute_loss else 0)
     cdef REAL_t _running_training_loss = 0
 
     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
@@ -619,13 +621,16 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
     int
         Number of words in the vocabulary actually used for training (They already existed in the vocabulary
         and were not discarded by negative sampling).
+    int
+        Number of samples used for training. A sample is a positive/negative example. In the case of CBOW
+        this is the same as the effective number of words.
     """
     cdef int hs = model.hs
     cdef int negative = model.negative
     cdef int sample = (model.vocabulary.sample != 0)
     cdef int cbow_mean = model.cbow_mean
 
-    cdef int _compute_loss = (1 if compute_loss is True else 0)
+    cdef int _compute_loss = (1 if compute_loss else 0)
     cdef REAL_t _running_training_loss = 0
 
     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
