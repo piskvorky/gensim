@@ -252,7 +252,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         threshold : float, optional
             Represent a score threshold for forming the phrases (higher means fewer phrases).
             A phrase of words `a` followed by `b` is accepted if the score of the phrase is greater than threshold.
-            Hardly depends on concrete socring-function, see the `scoring` parameter.
+            Heavily depends on concrete socring-function, see the `scoring` parameter.
         max_vocab_size : int, optional
             Maximum size (number of tokens) of the vocabulary. Used to control pruning of less common words,
             to keep memory under control. The default of 40M needs about 3.6GB of RAM. Increase/decrease
