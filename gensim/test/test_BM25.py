@@ -49,9 +49,9 @@ class TestBM25(unittest.TestCase):
         weights1 = get_bm25_weights(common_texts)
         weights2 = get_bm25_weights(common_texts, n_jobs=2)
         weights3 = get_bm25_weights(common_texts, n_jobs=-1)
-        self.assertEqual(weights1, weights2)
-        self.assertEqual(weights1, weights3)
-        self.assertEqual(weights2, weights3)
+        self.assertAlmostEqual(weights1, weights2)
+        self.assertAlmostEqual(weights1, weights3)
+        self.assertAlmostEqual(weights2, weights3)
 
 
 if __name__ == '__main__':
