@@ -620,6 +620,8 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         new_s = []
         for words, score in bigrams:
             if score is not None:
+                for w in words:
+                    new_s.append(w)
                 words = delimiter.join(words)
             new_s.append(words)
 
@@ -870,6 +872,8 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
         new_s = []
         for words, score in bigrams:
             if score is not None:
+                for w in words:
+                    new_s.append(w)
                 words = delimiter.join(words)
             new_s.append(words)
         return [utils.to_unicode(w) for w in new_s]
