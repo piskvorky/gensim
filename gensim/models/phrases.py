@@ -620,6 +620,8 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         new_s = []
         for words, score in bigrams:
             if score is not None:
+                for w in words:
+                    new_s.append(w)
                 words = delimiter.join(words)
             new_s.append(words)
 
@@ -776,7 +778,7 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
             count += 1
             if not count % 50000:
                 logger.info('Phraser added %i phrasegrams', count)
-        logger.info('Phraser built with %i %i phrasegrams', count, len(self.phrasegrams))
+        logger.info('Phraser built with %i phrasegrams', len(self.phrasegrams))
 
     def pseudocorpus(self, phrases_model):
         """Alias for :func:`gensim.models.phrases.pseudocorpus`.
@@ -870,6 +872,8 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
         new_s = []
         for words, score in bigrams:
             if score is not None:
+                for w in words:
+                    new_s.append(w)
                 words = delimiter.join(words)
             new_s.append(words)
         return [utils.to_unicode(w) for w in new_s]
