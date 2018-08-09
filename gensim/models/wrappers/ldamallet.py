@@ -74,7 +74,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
 
     """
     def __init__(self, mallet_path, corpus=None, num_topics=100, alpha=50, id2word=None, workers=4, prefix=None,
-                 optimize_interval=0, iterations=1000, topic_threshold=0.0):
+                 optimize_interval=0, iterations=1000, topic_threshold=0.0, random_seed=None):
         """
 
         Parameters
@@ -100,6 +100,8 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
             Number of training iterations.
         topic_threshold : float, optional
             Threshold of the probability above which we consider a topic.
+        random_seed: int, optional
+            Random seed to ensure consistent results, default is None   
 
         """
         self.mallet_path = mallet_path
@@ -122,6 +124,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         self.workers = workers
         self.optimize_interval = optimize_interval
         self.iterations = iterations
+        self.random_seed = random_seed
         if corpus is not None:
             self.train(corpus)
 
@@ -268,11 +271,16 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         cmd = self.mallet_path + ' train-topics --input %s --num-topics %s  --alpha %s --optimize-interval %s '\
             '--num-threads %s --output-state %s --output-doc-topics %s --output-topic-keys %s '\
             '--num-iterations %s --inferencer-filename %s --doc-topics-threshold %s'
+
+        if self.random_seed != None:
+            cmd += ' --random-seed ' + str(self.random_seed)
+        
         cmd = cmd % (
             self.fcorpusmallet(), self.num_topics, self.alpha, self.optimize_interval,
             self.workers, self.fstate(), self.fdoctopics(), self.ftopickeys(), self.iterations,
             self.finferencer(), self.topic_threshold
         )
+
         # NOTE "--keep-sequence-bigrams" / "--use-ngrams true" poorer results + runs out of memory
         logger.info("training MALLET LDA with %s", cmd)
         check_output(args=cmd, shell=True)
