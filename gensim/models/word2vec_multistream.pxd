@@ -59,6 +59,7 @@ ctypedef unordered_map[string, VocabItem] cvocab_t
 
 cdef class CythonVocab:
     cdef cvocab_t vocab
+    cdef subword_arrays
     cdef cvocab_t* get_vocab_ptr(self) nogil except *
 
 
