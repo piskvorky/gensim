@@ -101,7 +101,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         topic_threshold : float, optional
             Threshold of the probability above which we consider a topic.
         random_seed: int, optional
-            Random seed to ensure consistent results, default is None   
+            Random seed to ensure consistent results.   
 
         """
         self.mallet_path = mallet_path
@@ -272,7 +272,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
             '--num-threads %s --output-state %s --output-doc-topics %s --output-topic-keys %s '\
             '--num-iterations %s --inferencer-filename %s --doc-topics-threshold %s'
 
-        if self.random_seed != None:
+        if self.random_seed is not None:
             cmd += ' --random-seed ' + str(self.random_seed)
         
         cmd = cmd % (
@@ -280,7 +280,6 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
             self.workers, self.fstate(), self.fdoctopics(), self.ftopickeys(), self.iterations,
             self.finferencer(), self.topic_threshold
         )
-
         # NOTE "--keep-sequence-bigrams" / "--use-ngrams true" poorer results + runs out of memory
         logger.info("training MALLET LDA with %s", cmd)
         check_output(args=cmd, shell=True)
