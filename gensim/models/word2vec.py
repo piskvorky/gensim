@@ -333,9 +333,7 @@ except ImportError:
         return log_prob_sentence
 
 try:
-    from gensim.models.word2vec_multistream import train_epoch_sg, train_epoch_cbow
-
-    MULTISTREAM_VERSION = 1
+    from gensim.models.word2vec_multistream import train_epoch_sg, train_epoch_cbow, MULTISTREAM_VERSION
 except ImportError:
     # multistream word2vec is not supported
     MULTISTREAM_VERSION = -1
