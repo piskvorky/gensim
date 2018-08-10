@@ -5,7 +5,7 @@
 # cython: embedsignature=True
 # coding: utf-8
 #
-# shared type definitions for word2vec_multistream
+# shared type definitions for fasttext_multistream
 #
 # Copyright (C) 2013 Radim Rehurek <me@radimrehurek.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
@@ -16,6 +16,8 @@ from libcpp.unordered_map cimport unordered_map
 from libcpp cimport bool as bool_t
 
 cimport numpy as np
+
+ctypedef np.float32_t REAL_t
 
 
 cdef extern from "fast_line_sentence.h":
@@ -48,8 +50,18 @@ cdef struct VocabItem:
     int code_len
     np.uint32_t *point
 
+    # for FastText
+    int subword_idx_len
+    np.uint32_t *subword_idx
+
+
 ctypedef unordered_map[string, VocabItem] cvocab_t
 
 cdef class CythonVocab:
     cdef cvocab_t vocab
     cdef cvocab_t* get_vocab_ptr(self) nogil except *
+
+
+cdef REAL_t get_alpha(REAL_t alpha, REAL_t end_alpha, int cur_epoch, int num_epochs) nogil
+cdef REAL_t get_next_alpha(REAL_t start_alpha, REAL_t end_alpha, int total_examples, int total_words,
+                           int expected_examples, int expected_words, int cur_epoch, int num_epochs) nogil

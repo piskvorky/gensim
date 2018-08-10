@@ -204,6 +204,23 @@ except ImportError:
             result += len(word_vocabs)
         return result
 
+try:
+    from gensim.models.fasttext_multistream import train_epoch_sg, train_epoch_cbow
+
+    MULTISTREAM_VERSION = 1
+except ImportError:
+    # multistream fasttext is not supported
+    MULTISTREAM_VERSION = -1
+
+    def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
+                       _work, _neu1, compute_loss):
+        raise RuntimeError("Training with corpus_file argument is not supported")
+
+    def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
+                         _work, _neu1, compute_loss):
+        raise RuntimeError("Training with corpus_file argument is not supported")
+
+
 FASTTEXT_FILEFORMAT_MAGIC = 793712314
 
 
@@ -533,6 +550,19 @@ class FastText(BaseWordEmbeddingsModel):
             len(self.wv.vocab), num_buckets, self.vector_size, report['total']
         )
         return report
+
+    def _do_train_epoch(self, corpus_file, offset, cython_vocab, thread_private_mem, cur_epoch, total_examples=None,
+                        total_words=None):
+        work, neu1 = thread_private_mem
+
+        if self.sg:
+            examples, tally, raw_tally = train_epoch_sg(self, corpus_file, offset, cython_vocab, cur_epoch,
+                                                        total_examples, total_words, work, neu1, self.compute_loss)
+        else:
+            examples, tally, raw_tally = train_epoch_cbow(self, corpus_file, offset, cython_vocab, cur_epoch,
+                                                          total_examples, total_words, work, neu1, self.compute_loss)
+
+        return examples, tally, raw_tally
 
     def _do_train_job(self, sentences, alpha, inits):
         """Train a single batch of sentences. Return 2-tuple `(effective word count after
