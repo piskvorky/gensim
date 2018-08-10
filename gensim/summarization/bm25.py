@@ -157,7 +157,7 @@ class BM25(object):
 def _get_scores(bm25, document, average_idf):
     """Helper function for retrieving bm25 scores of given `document` in parallel
     in relation to every item in corpus.
-    
+
     Parameters
     ----------
     bm25 : BM25 object
@@ -171,7 +171,7 @@ def _get_scores(bm25, document, average_idf):
     -------
     list of float
         BM25 scores.
-    
+
     """
     scores = []
     for index in xrange(bm25.corpus_size):
@@ -185,7 +185,7 @@ def _effective_n_jobs(n_jobs):
 
     Just like in sklearn, passing n_jobs=-1 means using all available
     CPU cores.
-    
+
     Parameters
     ----------
     n_jobs : int
@@ -195,7 +195,7 @@ def _effective_n_jobs(n_jobs):
     -------
     int
         number of effective jobs
-    
+
     """
     if n_jobs == 0:
         raise ValueError('n_jobs == 0 in Parallel has no meaning')
