@@ -334,8 +334,12 @@ except ImportError:
 
 try:
     from gensim.models.word2vec_multistream import train_epoch_sg, train_epoch_cbow
+
+    MULTISTREAM_VERSION = 1
 except ImportError:
     # multistream word2vec is not supported
+    MULTISTREAM_VERSION = -1
+
     def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
                        _work, _neu1, compute_loss):
         raise RuntimeError("Training with corpus_file argument is not supported")
