@@ -569,6 +569,16 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
                         doc = [(id_, float(weight) / total_weight) for id_, weight in doc]
                 yield doc
 
+    @classmethod
+    def load(cls, *args, **kwargs):
+        """Load a previously saved LdaMallet class. Handles backwards compatibility from
+        older LdaMallet versions which did not use random_seed parameter.
+        """
+        model = super(LdaMallet, cls).load(*args, **kwargs)
+        if not hasattr(model, 'random_seed'):
+            model.random_seed = None
+    
+        return model
 
 def malletmodel2ldamodel(mallet_model, gamma_threshold=0.001, iterations=50):
     """Convert :class:`~gensim.models.wrappers.ldamallet.LdaMallet` to :class:`~gensim.models.ldamodel.LdaModel`.
