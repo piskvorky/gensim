@@ -1235,12 +1235,13 @@ struct __pyx_obj_6gensim_6models_20word2vec_multistream_CythonLineSentence {
  * 
  * cdef class CythonVocab:             # <<<<<<<<<<<<<<
  *     cdef cvocab_t vocab
- *     cdef cvocab_t* get_vocab_ptr(self) nogil except *
+ *     cdef subword_arrays
  */
 struct __pyx_obj_6gensim_6models_20word2vec_multistream_CythonVocab {
   PyObject_HEAD
   struct __pyx_vtabstruct_6gensim_6models_20word2vec_multistream_CythonVocab *__pyx_vtab;
   __pyx_t_6gensim_6models_20word2vec_multistream_cvocab_t vocab;
+  PyObject *subword_arrays;
 };
 
 
@@ -1269,7 +1270,7 @@ static struct __pyx_vtabstruct_6gensim_6models_20word2vec_multistream_CythonLine
  * 
  * cdef class CythonVocab:             # <<<<<<<<<<<<<<
  *     cdef cvocab_t vocab
- *     cdef cvocab_t* get_vocab_ptr(self) nogil except *
+ *     cdef subword_arrays
  */
 
 struct __pyx_vtabstruct_6gensim_6models_20word2vec_multistream_CythonVocab {

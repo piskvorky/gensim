@@ -1228,12 +1228,13 @@ struct __pyx_obj_6gensim_6models_20word2vec_multistream_CythonLineSentence {
  * 
  * cdef class CythonVocab:             # <<<<<<<<<<<<<<
  *     cdef cvocab_t vocab
- *     cdef cvocab_t* get_vocab_ptr(self) nogil except *
+ *     cdef subword_arrays
  */
 struct __pyx_obj_6gensim_6models_20word2vec_multistream_CythonVocab {
   PyObject_HEAD
   struct __pyx_vtabstruct_6gensim_6models_20word2vec_multistream_CythonVocab *__pyx_vtab;
   __pyx_t_6gensim_6models_20word2vec_multistream_cvocab_t vocab;
+  PyObject *subword_arrays;
 };
 
 
@@ -1379,15 +1380,6 @@ static int __Pyx_ParseOptionalKeywords(PyObject *kwds, PyObject **argnames[],\
 static void __Pyx_RaiseArgtupleInvalid(const char* func_name, int exact,
     Py_ssize_t num_min, Py_ssize_t num_max, Py_ssize_t num_found);
 
-/* PyObjectSetAttrStr.proto */
-#if CYTHON_USE_TYPE_SLOTS
-#define __Pyx_PyObject_DelAttrStr(o,n) __Pyx_PyObject_SetAttrStr(o, n, NULL)
-static CYTHON_INLINE int __Pyx_PyObject_SetAttrStr(PyObject* obj, PyObject* attr_name, PyObject* value);
-#else
-#define __Pyx_PyObject_DelAttrStr(o,n)   PyObject_DelAttr(o,n)
-#define __Pyx_PyObject_SetAttrStr(o,n,v) PyObject_SetAttr(o,n,v)
-#endif
-
 /* GetModuleGlobalName.proto */
 static CYTHON_INLINE PyObject *__Pyx_GetModuleGlobalName(PyObject *name);
 
@@ -1528,6 +1520,15 @@ static void __Pyx_Raise(PyObject *type, PyObject *value, PyObject *tb, PyObject 
 static void __Pyx_WriteUnraisable(const char *name, int clineno,
                                   int lineno, const char *filename,
                                   int full_traceback, int nogil);
+
+/* PyObjectSetAttrStr.proto */
+#if CYTHON_USE_TYPE_SLOTS
+#define __Pyx_PyObject_DelAttrStr(o,n) __Pyx_PyObject_SetAttrStr(o, n, NULL)
+static CYTHON_INLINE int __Pyx_PyObject_SetAttrStr(PyObject* obj, PyObject* attr_name, PyObject* value);
+#else
+#define __Pyx_PyObject_DelAttrStr(o,n)   PyObject_DelAttr(o,n)
+#define __Pyx_PyObject_SetAttrStr(o,n,v) PyObject_SetAttr(o,n,v)
+#endif
 
 /* DictGetItem.proto */
 #if PY_MAJOR_VERSION >= 3 && !CYTHON_COMPILING_IN_PYPY
@@ -2126,7 +2127,6 @@ static const char __pyx_k_reduce_cython[] = "__reduce_cython__";
 static const char __pyx_k_vectors_lockf[] = "vectors_lockf";
 static const char __pyx_k_compute_loss_2[] = "_compute_loss";
 static const char __pyx_k_expected_words[] = "_expected_words";
-static const char __pyx_k_subword_arrays[] = "subword_arrays";
 static const char __pyx_k_train_epoch_sg[] = "train_epoch_sg";
 static const char __pyx_k_effective_words[] = "effective_words";
 static const char __pyx_k_reduced_windows[] = "reduced_windows";
@@ -2136,6 +2136,7 @@ static const char __pyx_k_expected_words_2[] = "expected_words";
 static const char __pyx_k_train_epoch_cbow[] = "train_epoch_cbow";
 static const char __pyx_k_expected_examples[] = "_expected_examples";
 static const char __pyx_k_cline_in_traceback[] = "cline_in_traceback";
+static const char __pyx_k_MULTISTREAM_VERSION[] = "MULTISTREAM_VERSION";
 static const char __pyx_k_effective_sentences[] = "effective_sentences";
 static const char __pyx_k_expected_examples_2[] = "expected_examples";
 static const char __pyx_k_max_sentence_length[] = "max_sentence_length";
@@ -2160,6 +2161,7 @@ static PyObject *__pyx_n_s_CythonLineSentence___iter;
 static PyObject *__pyx_kp_u_Format_string_allocated_too_shor;
 static PyObject *__pyx_kp_u_Format_string_allocated_too_shor_2;
 static PyObject *__pyx_n_s_ImportError;
+static PyObject *__pyx_n_s_MULTISTREAM_VERSION;
 static PyObject *__pyx_kp_u_Non_native_byte_order_not_suppor;
 static PyObject *__pyx_n_s_RuntimeError;
 static PyObject *__pyx_n_s_TypeError;
@@ -2256,7 +2258,6 @@ static PyObject *__pyx_n_s_six;
 static PyObject *__pyx_n_s_size;
 static PyObject *__pyx_n_s_source;
 static PyObject *__pyx_n_s_start_alpha;
-static PyObject *__pyx_n_s_subword_arrays;
 static PyObject *__pyx_n_s_syn0;
 static PyObject *__pyx_n_s_syn1;
 static PyObject *__pyx_n_s_syn1neg;
@@ -2315,6 +2316,7 @@ static PyObject *__pyx_tp_new_6gensim_6models_20word2vec_multistream_CythonLineS
 static PyObject *__pyx_tp_new_6gensim_6models_20word2vec_multistream_CythonVocab(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static PyObject *__pyx_tp_new_6gensim_6models_20word2vec_multistream___pyx_scope_struct____iter__(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static PyObject *__pyx_int_0;
+static PyObject *__pyx_int_1;
 static PyObject *__pyx_int_10000;
 static PyObject *__pyx_int_16777216;
 static PyObject *__pyx_tuple_;
@@ -2462,8 +2464,11 @@ static int __pyx_pf_6gensim_6models_20word2vec_multistream_11CythonVocab___init_
  */
   __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 45, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (__Pyx_PyObject_SetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_subword_arrays, __pyx_t_1) < 0) __PYX_ERR(1, 45, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __Pyx_GIVEREF(__pyx_t_1);
+  __Pyx_GOTREF(__pyx_v_self->subword_arrays);
+  __Pyx_DECREF(__pyx_v_self->subword_arrays);
+  __pyx_v_self->subword_arrays = __pyx_t_1;
+  __pyx_t_1 = 0;
 
   /* "gensim/models/word2vec_multistream.pyx":47
  *         self.subword_arrays = []
@@ -2848,10 +2853,7 @@ static int __pyx_pf_6gensim_6models_20word2vec_multistream_11CythonVocab___init_
  * 
  * 
  */
-      __pyx_t_13 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_subword_arrays); if (unlikely(!__pyx_t_13)) __PYX_ERR(1, 65, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_13);
-      __pyx_t_14 = __Pyx_PyObject_Append(__pyx_t_13, __pyx_v_word_subwords); if (unlikely(__pyx_t_14 == ((int)-1))) __PYX_ERR(1, 65, __pyx_L1_error)
-      __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
+      __pyx_t_14 = __Pyx_PyObject_Append(__pyx_v_self->subword_arrays, __pyx_v_word_subwords); if (unlikely(__pyx_t_14 == ((int)-1))) __PYX_ERR(1, 65, __pyx_L1_error)
 
       /* "gensim/models/word2vec_multistream.pyx":58
  * 
@@ -7932,6 +7934,7 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
  * 
  *     model.running_training_loss = _running_training_loss             # <<<<<<<<<<<<<<
  *     return total_sentences, total_effective_words, total_words
+ * 
  */
   __pyx_t_9 = PyFloat_FromDouble(__pyx_v__running_training_loss); if (unlikely(!__pyx_t_9)) __PYX_ERR(1, 518, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_9);
@@ -7942,6 +7945,8 @@ static PyObject *__pyx_pf_6gensim_6models_20word2vec_multistream_4train_epoch_cb
  * 
  *     model.running_training_loss = _running_training_loss
  *     return total_sentences, total_effective_words, total_words             # <<<<<<<<<<<<<<
+ * 
+ * 
  */
   __Pyx_XDECREF(__pyx_r);
   __pyx_t_9 = __Pyx_PyInt_From_int(__pyx_v_total_sentences); if (unlikely(!__pyx_t_9)) __PYX_ERR(1, 519, __pyx_L1_error)
@@ -11146,13 +11151,34 @@ static PyObject *__pyx_tp_new_6gensim_6models_20word2vec_multistream_CythonVocab
   p = ((struct __pyx_obj_6gensim_6models_20word2vec_multistream_CythonVocab *)o);
   p->__pyx_vtab = __pyx_vtabptr_6gensim_6models_20word2vec_multistream_CythonVocab;
   new((void*)&(p->vocab)) __pyx_t_6gensim_6models_20word2vec_multistream_cvocab_t();
+  p->subword_arrays = Py_None; Py_INCREF(Py_None);
   return o;
 }
 
 static void __pyx_tp_dealloc_6gensim_6models_20word2vec_multistream_CythonVocab(PyObject *o) {
   struct __pyx_obj_6gensim_6models_20word2vec_multistream_CythonVocab *p = (struct __pyx_obj_6gensim_6models_20word2vec_multistream_CythonVocab *)o;
+  PyObject_GC_UnTrack(o);
   __Pyx_call_destructor(p->vocab);
+  Py_CLEAR(p->subword_arrays);
   (*Py_TYPE(o)->tp_free)(o);
+}
+
+static int __pyx_tp_traverse_6gensim_6models_20word2vec_multistream_CythonVocab(PyObject *o, visitproc v, void *a) {
+  int e;
+  struct __pyx_obj_6gensim_6models_20word2vec_multistream_CythonVocab *p = (struct __pyx_obj_6gensim_6models_20word2vec_multistream_CythonVocab *)o;
+  if (p->subword_arrays) {
+    e = (*v)(p->subword_arrays, a); if (e) return e;
+  }
+  return 0;
+}
+
+static int __pyx_tp_clear_6gensim_6models_20word2vec_multistream_CythonVocab(PyObject *o) {
+  PyObject* tmp;
+  struct __pyx_obj_6gensim_6models_20word2vec_multistream_CythonVocab *p = (struct __pyx_obj_6gensim_6models_20word2vec_multistream_CythonVocab *)o;
+  tmp = ((PyObject*)p->subword_arrays);
+  p->subword_arrays = Py_None; Py_INCREF(Py_None);
+  Py_XDECREF(tmp);
+  return 0;
 }
 
 static PyMethodDef __pyx_methods_6gensim_6models_20word2vec_multistream_CythonVocab[] = {
@@ -11186,10 +11212,10 @@ static PyTypeObject __pyx_type_6gensim_6models_20word2vec_multistream_CythonVoca
   0, /*tp_getattro*/
   0, /*tp_setattro*/
   0, /*tp_as_buffer*/
-  Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_VERSION_TAG|Py_TPFLAGS_CHECKTYPES|Py_TPFLAGS_HAVE_NEWBUFFER, /*tp_flags*/
+  Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_VERSION_TAG|Py_TPFLAGS_CHECKTYPES|Py_TPFLAGS_HAVE_NEWBUFFER|Py_TPFLAGS_HAVE_GC, /*tp_flags*/
   "CythonVocab(wv, hs=0, fasttext=0)", /*tp_doc*/
-  0, /*tp_traverse*/
-  0, /*tp_clear*/
+  __pyx_tp_traverse_6gensim_6models_20word2vec_multistream_CythonVocab, /*tp_traverse*/
+  __pyx_tp_clear_6gensim_6models_20word2vec_multistream_CythonVocab, /*tp_clear*/
   0, /*tp_richcompare*/
   0, /*tp_weaklistoffset*/
   0, /*tp_iter*/
@@ -11363,6 +11389,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_kp_u_Format_string_allocated_too_shor, __pyx_k_Format_string_allocated_too_shor, sizeof(__pyx_k_Format_string_allocated_too_shor), 0, 1, 0, 0},
   {&__pyx_kp_u_Format_string_allocated_too_shor_2, __pyx_k_Format_string_allocated_too_shor_2, sizeof(__pyx_k_Format_string_allocated_too_shor_2), 0, 1, 0, 0},
   {&__pyx_n_s_ImportError, __pyx_k_ImportError, sizeof(__pyx_k_ImportError), 0, 0, 1, 1},
+  {&__pyx_n_s_MULTISTREAM_VERSION, __pyx_k_MULTISTREAM_VERSION, sizeof(__pyx_k_MULTISTREAM_VERSION), 0, 0, 1, 1},
   {&__pyx_kp_u_Non_native_byte_order_not_suppor, __pyx_k_Non_native_byte_order_not_suppor, sizeof(__pyx_k_Non_native_byte_order_not_suppor), 0, 1, 0, 0},
   {&__pyx_n_s_RuntimeError, __pyx_k_RuntimeError, sizeof(__pyx_k_RuntimeError), 0, 0, 1, 1},
   {&__pyx_n_s_TypeError, __pyx_k_TypeError, sizeof(__pyx_k_TypeError), 0, 0, 1, 1},
@@ -11459,7 +11486,6 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_size, __pyx_k_size, sizeof(__pyx_k_size), 0, 0, 1, 1},
   {&__pyx_n_s_source, __pyx_k_source, sizeof(__pyx_k_source), 0, 0, 1, 1},
   {&__pyx_n_s_start_alpha, __pyx_k_start_alpha, sizeof(__pyx_k_start_alpha), 0, 0, 1, 1},
-  {&__pyx_n_s_subword_arrays, __pyx_k_subword_arrays, sizeof(__pyx_k_subword_arrays), 0, 0, 1, 1},
   {&__pyx_n_s_syn0, __pyx_k_syn0, sizeof(__pyx_k_syn0), 0, 0, 1, 1},
   {&__pyx_n_s_syn1, __pyx_k_syn1, sizeof(__pyx_k_syn1), 0, 0, 1, 1},
   {&__pyx_n_s_syn1neg, __pyx_k_syn1neg, sizeof(__pyx_k_syn1neg), 0, 0, 1, 1},
@@ -11703,6 +11729,7 @@ static int __Pyx_InitCachedConstants(void) {
 static int __Pyx_InitGlobals(void) {
   if (__Pyx_InitStrings(__pyx_string_tab) < 0) __PYX_ERR(1, 1, __pyx_L1_error);
   __pyx_int_0 = PyInt_FromLong(0); if (unlikely(!__pyx_int_0)) __PYX_ERR(1, 1, __pyx_L1_error)
+  __pyx_int_1 = PyInt_FromLong(1); if (unlikely(!__pyx_int_1)) __PYX_ERR(1, 1, __pyx_L1_error)
   __pyx_int_10000 = PyInt_FromLong(10000L); if (unlikely(!__pyx_int_10000)) __PYX_ERR(1, 1, __pyx_L1_error)
   __pyx_int_16777216 = PyInt_FromLong(16777216L); if (unlikely(!__pyx_int_16777216)) __PYX_ERR(1, 1, __pyx_L1_error)
   return 0;
@@ -12121,6 +12148,13 @@ if (!__Pyx_RefNanny) {
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_train_epoch_cbow, __pyx_t_1) < 0) __PYX_ERR(1, 390, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
+  /* "gensim/models/word2vec_multistream.pyx":522
+ * 
+ * 
+ * MULTISTREAM_VERSION = 1             # <<<<<<<<<<<<<<
+ */
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_MULTISTREAM_VERSION, __pyx_int_1) < 0) __PYX_ERR(1, 522, __pyx_L1_error)
+
   /* "gensim/models/word2vec_multistream.pyx":1
  * #!/usr/bin/env cython             # <<<<<<<<<<<<<<
  * # distutils: language = c++
@@ -12351,20 +12385,6 @@ static void __Pyx_RaiseArgtupleInvalid(
                  func_name, more_or_less, num_expected,
                  (num_expected == 1) ? "" : "s", num_found);
 }
-
-/* PyObjectSetAttrStr */
-#if CYTHON_USE_TYPE_SLOTS
-static CYTHON_INLINE int __Pyx_PyObject_SetAttrStr(PyObject* obj, PyObject* attr_name, PyObject* value) {
-    PyTypeObject* tp = Py_TYPE(obj);
-    if (likely(tp->tp_setattro))
-        return tp->tp_setattro(obj, attr_name, value);
-#if PY_MAJOR_VERSION < 3
-    if (likely(tp->tp_setattr))
-        return tp->tp_setattr(obj, PyString_AS_STRING(attr_name), value);
-#endif
-    return PyObject_SetAttr(obj, attr_name, value);
-}
-#endif
 
 /* GetModuleGlobalName */
 static CYTHON_INLINE PyObject *__Pyx_GetModuleGlobalName(PyObject *name) {
@@ -13064,6 +13084,20 @@ bad:
         PyGILState_Release(state);
 #endif
 }
+
+/* PyObjectSetAttrStr */
+    #if CYTHON_USE_TYPE_SLOTS
+static CYTHON_INLINE int __Pyx_PyObject_SetAttrStr(PyObject* obj, PyObject* attr_name, PyObject* value) {
+    PyTypeObject* tp = Py_TYPE(obj);
+    if (likely(tp->tp_setattro))
+        return tp->tp_setattro(obj, attr_name, value);
+#if PY_MAJOR_VERSION < 3
+    if (likely(tp->tp_setattr))
+        return tp->tp_setattr(obj, PyString_AS_STRING(attr_name), value);
+#endif
+    return PyObject_SetAttr(obj, attr_name, value);
+}
+#endif
 
 /* DictGetItem */
     #if PY_MAJOR_VERSION >= 3 && !CYTHON_COMPILING_IN_PYPY
