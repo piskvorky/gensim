@@ -101,7 +101,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         topic_threshold : float, optional
             Threshold of the probability above which we consider a topic.
         random_seed: int, optional
-            Random seed to ensure consistent results.   
+            Random seed to ensure consistent results.
 
         """
         self.mallet_path = mallet_path
@@ -578,6 +578,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
             model.random_seed = None
     
         return model
+
 
 def malletmodel2ldamodel(mallet_model, gamma_threshold=0.001, iterations=50):
     """Convert :class:`~gensim.models.wrappers.ldamallet.LdaMallet` to :class:`~gensim.models.ldamodel.LdaModel`.
