@@ -23,7 +23,6 @@ from gensim.scripts.segment_wiki import segment_all_articles, segment_and_write_
 from gensim.test.utils import datapath, get_tmpfile
 
 from gensim.scripts.word2vec2tensor import word2vec2tensor
-from gensim.utils import to_utf8
 from gensim.models import KeyedVectors
 
 
@@ -132,7 +131,9 @@ class TestWord2Vec2Tensor(unittest.TestCase):
             first_line = f.readline().strip()
 
         number_words, vector_size = map(int, first_line.split(b' '))
-        self.assertTrue(len(metadata) == len(vectors) == number_words, ('Metadata file %s and tensor file %s imply different number of rows.' % (self.metadata_file, self.tensor_file)))
+        self.assertTrue(len(metadata) == len(vectors) == number_words,
+            ('Metadata file %s and tensor file %s imply different number of rows.'
+                % (self.metadata_file, self.tensor_file)))
 
         # grab metadata and vectors from written file
         metadata = [word.strip() for word in metadata]
@@ -145,8 +146,9 @@ class TestWord2Vec2Tensor(unittest.TestCase):
         for word, vector in zip(metadata, vectors):
             word_string = word.decode("utf8")
             vector_string = vector.decode("utf8")
-            vector_array = np.array(list(map(float,vector_string.split())))
+            vector_array = np.array(list(map(float, vector_string.split())))
             np.testing.assert_almost_equal(orig_model[word_string], vector_array)
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)

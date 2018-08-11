@@ -47,8 +47,6 @@ import argparse
 from smart_open import smart_open
 import gensim
 
-import numpy as np
-
 logger = logging.getLogger(__name__)
 
 
@@ -67,7 +65,7 @@ def word2vec2tensor(word2vec_model_path, tensor_filename, binary=False):
         True if input file in binary format.
 
     """
-    model = gensim.models.KeyedVectors.load_word2vec_format(word2vec_model_path, binary=binary, datatype=np.float64)
+    model = gensim.models.KeyedVectors.load_word2vec_format(word2vec_model_path, binary=binary)
     outfiletsv = tensor_filename + '_tensor.tsv'
     outfiletsvmeta = tensor_filename + '_metadata.tsv'
 
