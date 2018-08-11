@@ -71,7 +71,7 @@ cdef void our_saxpy_noblas(const int *N, const float *alpha, const float *X, con
     for i from 0 <= i < N[0] by 1:
         Y[i * (incY[0])] = (alpha[0]) * X[i * (incX[0])] + Y[i * (incY[0])]
 
-cdef void fast_sentence_sg_hs(
+cdef void w2v_fast_sentence_sg_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
     REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work, REAL_t *word_locks,
@@ -156,7 +156,7 @@ cdef inline unsigned long long random_int32(unsigned long long *next_random) nog
     next_random[0] = (next_random[0] * <unsigned long long>25214903917ULL + 11) & 281474976710655ULL
     return this_random
 
-cdef unsigned long long fast_sentence_sg_neg(
+cdef unsigned long long w2v_fast_sentence_sg_neg(
     const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len,
     REAL_t *syn0, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work,
@@ -247,7 +247,7 @@ cdef unsigned long long fast_sentence_sg_neg(
     return next_random
 
 
-cdef void fast_sentence_cbow_hs(
+cdef void w2v_fast_sentence_cbow_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, int codelens[MAX_SENTENCE_LEN],
     REAL_t *neu1, REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
@@ -345,7 +345,7 @@ cdef void fast_sentence_cbow_hs(
             our_saxpy(&size, &word_locks[indexes[m]], work, &ONE, &syn0[indexes[m] * size], &ONE)
 
 
-cdef unsigned long long fast_sentence_cbow_neg(
+cdef unsigned long long w2v_fast_sentence_cbow_neg(
     const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len, int codelens[MAX_SENTENCE_LEN],
     REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
@@ -587,9 +587,9 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
                     if j == i:
                         continue
                     if hs:
-                        fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work, word_locks, _compute_loss, &_running_training_loss)
+                        w2v_fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work, word_locks, _compute_loss, &_running_training_loss)
                     if negative:
-                        next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random, word_locks, _compute_loss, &_running_training_loss)
+                        next_random = w2v_fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random, word_locks, _compute_loss, &_running_training_loss)
 
     model.running_training_loss = _running_training_loss
     return effective_words
@@ -718,9 +718,9 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
                 if k > idx_end:
                     k = idx_end
                 if hs:
-                    fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, j, k, cbow_mean, word_locks, _compute_loss, &_running_training_loss)
+                    w2v_fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, j, k, cbow_mean, word_locks, _compute_loss, &_running_training_loss)
                 if negative:
-                    next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random, word_locks, _compute_loss, &_running_training_loss)
+                    next_random = w2v_fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random, word_locks, _compute_loss, &_running_training_loss)
 
     model.running_training_loss = _running_training_loss
     return effective_words

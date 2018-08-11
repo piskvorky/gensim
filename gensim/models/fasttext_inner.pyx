@@ -39,7 +39,7 @@ cdef REAL_t[EXP_TABLE_SIZE] LOG_TABLE
 cdef int ONE = 1
 cdef REAL_t ONEF = <REAL_t>1.0
 
-cdef unsigned long long fast_sentence_sg_neg(
+cdef unsigned long long fasttext_fast_sentence_sg_neg(
     const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len,
     REAL_t *syn0_vocab, REAL_t *syn0_ngrams, REAL_t *syn1neg, const int size,
     const np.uint32_t word_index, const np.uint32_t *subwords_index, const np.uint32_t subwords_len,
@@ -88,7 +88,7 @@ cdef unsigned long long fast_sentence_sg_neg(
     return next_random
 
 
-cdef void fast_sentence_sg_hs(
+cdef void fasttext_fast_sentence_sg_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
     REAL_t *syn0_vocab, REAL_t *syn0_ngrams, REAL_t *syn1, const int size,
     const np.uint32_t *subwords_index, const np.uint32_t subwords_len, 
@@ -125,7 +125,7 @@ cdef void fast_sentence_sg_hs(
         our_saxpy(&size, &word_locks_ngrams[subwords_index[d]], work, &ONE, &syn0_ngrams[subwords_index[d]*size], &ONE)
 
 
-cdef unsigned long long fast_sentence_cbow_neg(
+cdef unsigned long long fasttext_fast_sentence_cbow_neg(
     const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len, int codelens[MAX_SENTENCE_LEN],
     REAL_t *neu1,  REAL_t *syn0_vocab, REAL_t *syn0_ngrams, REAL_t *syn1neg, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], np.uint32_t *subwords_idx[MAX_SENTENCE_LEN],
@@ -193,7 +193,7 @@ cdef unsigned long long fast_sentence_cbow_neg(
     return next_random
 
 
-cdef void fast_sentence_cbow_hs(
+cdef void fasttext_fast_sentence_cbow_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, int codelens[MAX_SENTENCE_LEN],
     REAL_t *neu1, REAL_t *syn0_vocab, REAL_t *syn0_ngrams, REAL_t *syn1, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], np.uint32_t *subwords_idx[MAX_SENTENCE_LEN],
@@ -384,12 +384,12 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
                     if j == i:
                         continue
                     if hs:
-                        fast_sentence_sg_hs(
+                        fasttext_fast_sentence_sg_hs(
                             points[j], codes[j], codelens[j], syn0_vocab, syn0_ngrams, syn1, size,
                             subwords_idx[i], subwords_idx_len[i], _alpha, work, l1, word_locks_vocab,
                             word_locks_ngrams)
                     if negative:
-                        next_random = fast_sentence_sg_neg(
+                        next_random = fasttext_fast_sentence_sg_neg(
                             negative, cum_table, cum_table_len, syn0_vocab, syn0_ngrams, syn1neg, size,
                             indexes[j], subwords_idx[i], subwords_idx_len[i], _alpha, work, l1,
                             next_random, word_locks_vocab, word_locks_ngrams)
@@ -534,12 +534,12 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1):
                     k = idx_end
 
                 if hs:
-                    fast_sentence_cbow_hs(
+                    fasttext_fast_sentence_cbow_hs(
                         points[i], codes[i], codelens, neu1, syn0_vocab, syn0_ngrams, syn1, size, indexes,
                         subwords_idx, subwords_idx_len, _alpha, work, i, j, k, cbow_mean, word_locks_vocab,
                         word_locks_ngrams)
                 if negative:
-                    next_random = fast_sentence_cbow_neg(
+                    next_random = fasttext_fast_sentence_cbow_neg(
                         negative, cum_table, cum_table_len, codelens, neu1, syn0_vocab, syn0_ngrams,
                         syn1neg, size, indexes, subwords_idx, subwords_idx_len, _alpha, work, i, j, k,
                         cbow_mean, next_random, word_locks_vocab, word_locks_ngrams)

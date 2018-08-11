@@ -18,10 +18,10 @@ from libcpp.string cimport string
 from libcpp.vector cimport vector
 
 from gensim.models.fasttext_inner cimport (
-    fast_sentence_sg_hs,
-    fast_sentence_sg_neg,
-    fast_sentence_cbow_hs,
-    fast_sentence_cbow_neg,
+    fasttext_fast_sentence_sg_hs,
+    fasttext_fast_sentence_sg_neg,
+    fasttext_fast_sentence_cbow_hs,
+    fasttext_fast_sentence_cbow_neg,
 )
 
 from gensim.models.word2vec_inner cimport random_int32
@@ -218,12 +218,12 @@ def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expec
                         if j == i:
                             continue
                         if hs:
-                            fast_sentence_sg_hs(
+                            fasttext_fast_sentence_sg_hs(
                                 points[j], codes[j], codelens[j], syn0_vocab, syn0_ngrams, syn1, size,
                                 subwords_idx[i], subwords_idx_len[i], _alpha, work, l1, word_locks_vocab,
                                 word_locks_ngrams)
                         if negative:
-                            next_random = fast_sentence_sg_neg(
+                            next_random = fasttext_fast_sentence_sg_neg(
                                 negative, cum_table, cum_table_len, syn0_vocab, syn0_ngrams, syn1neg, size,
                                 indexes[j], subwords_idx[i], subwords_idx_len[i], _alpha, work, l1,
                                 next_random, word_locks_vocab, word_locks_ngrams)
@@ -364,12 +364,12 @@ def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _exp
                         k = idx_end
 
                     if hs:
-                        fast_sentence_cbow_hs(
+                        fasttext_fast_sentence_cbow_hs(
                             points[i], codes[i], codelens, neu1, syn0_vocab, syn0_ngrams, syn1, size, indexes,
                             subwords_idx, subwords_idx_len, _alpha, work, i, j, k, cbow_mean, word_locks_vocab,
                             word_locks_ngrams)
                     if negative:
-                        next_random = fast_sentence_cbow_neg(
+                        next_random = fasttext_fast_sentence_cbow_neg(
                             negative, cum_table, cum_table_len, codelens, neu1, syn0_vocab, syn0_ngrams,
                             syn1neg, size, indexes, subwords_idx, subwords_idx_len, _alpha, work, i, j, k,
                             cbow_mean, next_random, word_locks_vocab, word_locks_ngrams)

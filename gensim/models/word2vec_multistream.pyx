@@ -24,10 +24,10 @@ from libcpp.vector cimport vector
 from libcpp cimport bool as bool_t
 
 from gensim.models.word2vec_inner cimport (
-    fast_sentence_sg_hs,
-    fast_sentence_sg_neg,
-    fast_sentence_cbow_hs,
-    fast_sentence_cbow_neg,
+    w2v_fast_sentence_sg_hs,
+    w2v_fast_sentence_sg_neg,
+    w2v_fast_sentence_cbow_hs,
+    w2v_fast_sentence_cbow_neg,
     random_int32
 )
 
@@ -373,9 +373,9 @@ def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expec
                         if j == i:
                             continue
                         if hs:
-                            fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work, word_locks, _compute_loss, &_running_training_loss)
+                            w2v_fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work, word_locks, _compute_loss, &_running_training_loss)
                         if negative:
-                            next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random, word_locks, _compute_loss, &_running_training_loss)
+                            next_random = w2v_fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random, word_locks, _compute_loss, &_running_training_loss)
 
             total_sentences += sentences.size()
             total_effective_words += effective_words
@@ -505,9 +505,9 @@ def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _exp
                     if k > idx_end:
                         k = idx_end
                     if hs:
-                        fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, j, k, cbow_mean, word_locks, _compute_loss, &_running_training_loss)
+                        w2v_fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, j, k, cbow_mean, word_locks, _compute_loss, &_running_training_loss)
                     if negative:
-                        next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random, word_locks, _compute_loss, &_running_training_loss)
+                        next_random = w2v_fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random, word_locks, _compute_loss, &_running_training_loss)
 
             total_sentences += sentences.size()
             total_effective_words += effective_words

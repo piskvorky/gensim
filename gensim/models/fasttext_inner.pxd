@@ -15,7 +15,7 @@ from word2vec_inner cimport REAL_t
 
 DEF MAX_SENTENCE_LEN = 10000
 
-cdef unsigned long long fast_sentence_sg_neg(
+cdef unsigned long long fasttext_fast_sentence_sg_neg(
     const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len,
     REAL_t *syn0_vocab, REAL_t *syn0_ngrams, REAL_t *syn1neg, const int size,
     const np.uint32_t word_index, const np.uint32_t *subwords_index, const np.uint32_t subwords_len,
@@ -23,7 +23,7 @@ cdef unsigned long long fast_sentence_sg_neg(
     REAL_t *word_locks_ngrams) nogil
 
 
-cdef void fast_sentence_sg_hs(
+cdef void fasttext_fast_sentence_sg_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
     REAL_t *syn0_vocab, REAL_t *syn0_ngrams, REAL_t *syn1, const int size,
     const np.uint32_t *subwords_index, const np.uint32_t subwords_len,
@@ -31,7 +31,7 @@ cdef void fast_sentence_sg_hs(
     REAL_t *word_locks_ngrams) nogil
 
 
-cdef unsigned long long fast_sentence_cbow_neg(
+cdef unsigned long long fasttext_fast_sentence_cbow_neg(
     const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len, int codelens[MAX_SENTENCE_LEN],
     REAL_t *neu1,  REAL_t *syn0_vocab, REAL_t *syn0_ngrams, REAL_t *syn1neg, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], np.uint32_t *subwords_idx[MAX_SENTENCE_LEN],
@@ -39,7 +39,7 @@ cdef unsigned long long fast_sentence_cbow_neg(
     int i, int j, int k, int cbow_mean, unsigned long long next_random, REAL_t *word_locks_vocab, REAL_t *word_locks_ngrams) nogil
 
 
-cdef void fast_sentence_cbow_hs(
+cdef void fasttext_fast_sentence_cbow_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, int codelens[MAX_SENTENCE_LEN],
     REAL_t *neu1, REAL_t *syn0_vocab, REAL_t *syn0_ngrams, REAL_t *syn1, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], np.uint32_t *subwords_idx[MAX_SENTENCE_LEN],
