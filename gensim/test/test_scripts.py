@@ -113,7 +113,7 @@ class TestSegmentWiki(unittest.TestCase):
 class TestWord2Vec2Tensor(unittest.TestCase):
     def setUp(self):
         self.datapath = datapath('word2vec_pre_kv_c')
-        self.output_folder = get_tmpfile('')
+        self.output_folder = get_tmpfile('w2v2t_test')
         self.metadata_file = self.output_folder + '_metadata.tsv'
         self.tensor_file = self.output_folder + '_tensor.tsv'
         self.vector_file = self.output_folder + '_vector.tsv'
@@ -121,65 +121,32 @@ class TestWord2Vec2Tensor(unittest.TestCase):
     def testConversion(self):
         word2vec2tensor(word2vec_model_path=self.datapath, tensor_filename=self.output_folder)
 
-        try:
-            with smart_open(self.metadata_file, 'rb') as f:
-                metadata = f.readlines()
-        except Exception:
-            if not os.path.isfile(os.path.join(self.metadata_file)):
-                self.fail(
-                    'Metadata file %s creation failed. \
-                    Check the parameters and input file format.' % self.metadata_file
-                    )
-        try:
-            with smart_open(self.tensor_file, 'rb') as f:
-                vectors = f.readlines()
-        except Exception:
-            if not os.path.isfile(os.path.join(self.tensor_file)):
-                self.fail(
-                    'Tensor file %s creation failed. \
-                    Check the parameters and input file format.' % self.tensor_file
-                    )
+        with smart_open(self.metadata_file, 'rb') as f:
+            metadata = f.readlines()
+
+        with smart_open(self.tensor_file, 'rb') as f:
+            vectors = f.readlines()
 
         # check if number of words and vector size in tensor file line up with word2vec
         with smart_open(self.datapath, 'rb') as f:
             first_line = f.readline().strip()
 
         number_words, vector_size = map(int, first_line.split(b' '))
-        if not len(metadata) == len(vectors) == number_words:
-            self.fail(
-                'Metadata file %s and tensor file %s \
-                imply different number of rows.' % (self.metadata_file, self.tensor_file)
-                )
+        self.assertTrue(len(metadata) == len(vectors) == number_words, ('Metadata file %s and tensor file %s imply different number of rows.' % (self.metadata_file, self.tensor_file)))
 
-        # write word2vec to file
+        # grab metadata and vectors from written file
         metadata = [word.strip() for word in metadata]
         vectors = [vector.replace(b'\t', b' ') for vector in vectors]
-        word2veclines = [metadata[i] + b' ' + vectors[i] for i in range(len(metadata))]
-        with smart_open(self.vector_file, 'wb') as f:
-            # write header
-            f.write(to_utf8(str(number_words) + ' ' + str(vector_size) + '\n'))
-            f.writelines(word2veclines)
 
-        # test that the converted model loads successfully
-        test_model = KeyedVectors.load_word2vec_format(self.vector_file, binary=False)
-
-        # test vocabularies are the same
+        # get the originaly vector KV model
         orig_model = KeyedVectors.load_word2vec_format(self.datapath, binary=False)
 
-        if not orig_model.vocab.keys() == test_model.vocab.keys():
-            self.fail(
-                'Original word2vec model %s and tensor model %s have \
-                different vocabularies.' % (self.datapath, self.vector_file)
-                )
-
-        # test vectors for each word are the same
-        for word in orig_model.vocab.keys():
-            if not np.array_equal(orig_model[word], test_model[word]):
-                self.fail(
-                'Original word2vec model %s and tensor model %s store different \
-                vectors for word %s.' % (self.datapath, self.vector_file, word)
-                )
-
+        # check that the KV model and tensor files have the same values key-wise
+        for word, vector in zip(metadata, vectors):
+            word_string = word.decode("utf8")
+            vector_string = vector.decode("utf8")
+            vector_array = np.array(list(map(float,vector_string.split())))
+            np.testing.assert_almost_equal(orig_model[word_string], vector_array)
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
