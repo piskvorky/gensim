@@ -576,7 +576,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         model = super(LdaMallet, cls).load(*args, **kwargs)
         if not hasattr(model, 'random_seed'):
             model.random_seed = None
-    
+        
         return model
 
 
