@@ -396,7 +396,6 @@ class TestFastTextModel(unittest.TestCase):
                 min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
                 sorted_vocab=1, workers=1, min_alpha=0.0)
 
-
             lee_data = LineSentence(datapath('lee_background.cor'))
             utils.save_as_line_sentence(lee_data, corpus_file)
 
