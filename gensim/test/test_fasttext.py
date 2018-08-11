@@ -15,7 +15,7 @@ from gensim.models.fasttext import FastText as FT_gensim
 from gensim.models.wrappers.fasttext import FastTextKeyedVectors
 from gensim.models.wrappers.fasttext import FastText as FT_wrapper
 from gensim.models.keyedvectors import Word2VecKeyedVectors
-from gensim.test.utils import datapath, get_tmpfile, common_texts as sentences
+from gensim.test.utils import datapath, get_tmpfile, temporary_file, common_texts as sentences
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +80,36 @@ class TestFastTextModel(unittest.TestCase):
 
         oov_vec = model['minor']  # oov word
         self.assertEqual(len(oov_vec), 10)
+
+    def test_training_multisream(self):
+        with temporary_file(get_tmpfile('gensim_word2vec.tst')) as corpus_file:
+            utils.save_as_line_sentence(sentences, corpus_file)
+
+            model = FT_gensim(size=10, min_count=1, hs=1, negative=0, seed=42, workers=1)
+            model.build_vocab(corpus_file=corpus_file)
+            self.model_sanity(model)
+
+            model.train(corpus_file=corpus_file, total_words=model.corpus_total_words, epochs=model.iter)
+            sims = model.most_similar('graph', topn=10)
+
+            self.assertEqual(model.wv.syn0.shape, (12, 10))
+            self.assertEqual(len(model.wv.vocab), 12)
+            self.assertEqual(model.wv.syn0_vocab.shape[1], 10)
+            self.assertEqual(model.wv.syn0_ngrams.shape[1], 10)
+            self.model_sanity(model)
+
+            # test querying for "most similar" by vector
+            graph_vector = model.wv.syn0norm[model.wv.vocab['graph'].index]
+            sims2 = model.most_similar(positive=[graph_vector], topn=11)
+            sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
+            self.assertEqual(sims, sims2)
+
+            # verify oov-word vector retrieval
+            invocab_vec = model['minors']  # invocab word
+            self.assertEqual(len(invocab_vec), 10)
+
+            oov_vec = model['minor']  # oov word
+            self.assertEqual(len(oov_vec), 10)
 
     def models_equal(self, model, model2):
         self.assertEqual(len(model.wv.vocab), len(model2.wv.vocab))
