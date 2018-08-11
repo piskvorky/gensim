@@ -6,6 +6,7 @@ import logging
 import unittest
 import os
 import struct
+import six
 
 import numpy as np
 
@@ -81,6 +82,7 @@ class TestFastTextModel(unittest.TestCase):
         oov_vec = model['minor']  # oov word
         self.assertEqual(len(oov_vec), 10)
 
+    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
     def test_training_multisream(self):
         with temporary_file(get_tmpfile('gensim_word2vec.tst')) as corpus_file:
             utils.save_as_line_sentence(sentences, corpus_file)
