@@ -11,44 +11,19 @@ Automated tests for checking transformation algorithms (the models package).
 
 import logging
 import unittest
-import os
-import os.path
-import tempfile
-
-import six
-import scipy.linalg
 
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import hdpmodel
-from gensim import matutils
-from gensim.test import basetests
+from gensim.test import basetmtests
+from gensim.test.utils import datapath, common_texts
 
 import numpy as np
 
-module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
+dictionary = Dictionary(common_texts)
+corpus = [dictionary.doc2bow(text) for text in common_texts]
 
 
-# set up vars used in testing ("Deerwester" from the web tutorial)
-texts = [['human', 'interface', 'computer'],
- ['survey', 'user', 'computer', 'system', 'response', 'time'],
- ['eps', 'user', 'interface', 'system'],
- ['system', 'human', 'system', 'eps'],
- ['user', 'response', 'time'],
- ['trees'],
- ['graph', 'trees'],
- ['graph', 'minors', 'trees'],
- ['graph', 'minors', 'survey']]
-dictionary = Dictionary(texts)
-corpus = [dictionary.doc2bow(text) for text in texts]
-
-
-def testfile():
-    # temporary data will be stored to this file
-    return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
-
-
-class TestHdpModel(unittest.TestCase, basetests.TestBaseTopicModel):
+class TestHdpModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
         self.class_ = hdpmodel.HdpModel
@@ -63,8 +38,8 @@ class TestHdpModel(unittest.TestCase, basetests.TestBaseTopicModel):
         prob, word = results[1].split('+')[0].split('*')
         self.assertEqual(results[0], 0)
         self.assertEqual(prob, expected_prob)
-        self.assertEqual(word, expected_word)        
- 
+        self.assertEqual(word, expected_word)
+
         return
 
     def testLDAmodel(self):

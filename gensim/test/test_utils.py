@@ -11,9 +11,11 @@ Automated tests for checking various utils functions.
 import logging
 import unittest
 
-from gensim import utils
-from six import iteritems
 import numpy as np
+from six import iteritems
+
+from gensim import utils
+from gensim.test.utils import datapath
 
 
 class TestIsCorpus(unittest.TestCase):
@@ -81,18 +83,64 @@ class TestUtils(unittest.TestCase):
         # create a string that fails to decode with unichr on narrow python builds
         body = u'It&#146;s the Year of the Horse. YES VIN DIESEL &#128588; &#128175;'
         expected = u'It\x92s the Year of the Horse. YES VIN DIESEL \U0001f64c \U0001f4af'
-        self.assertEquals(utils.decode_htmlentities(body), expected)
+        self.assertEqual(utils.decode_htmlentities(body), expected)
+
+    def test_open_file_existent_file(self):
+        number_of_lines_in_file = 30
+        with utils.open_file(datapath('testcorpus.mm')) as infile:
+            self.assertEqual(sum(1 for _ in infile), number_of_lines_in_file)
+
+    def test_open_file_non_existent_file(self):
+        with self.assertRaises(Exception):
+            with utils.open_file('non_existent_file.txt'):
+                pass
+
+    def test_open_file_existent_file_object(self):
+        number_of_lines_in_file = 30
+        file_obj = open(datapath('testcorpus.mm'))
+        with utils.open_file(file_obj) as infile:
+            self.assertEqual(sum(1 for _ in infile), number_of_lines_in_file)
+
+    def test_open_file_non_existent_file_object(self):
+        file_obj = None
+        with self.assertRaises(Exception):
+            with utils.open_file(file_obj):
+                pass
+
 
 class TestSampleDict(unittest.TestCase):
     def test_sample_dict(self):
-        d = {1:2,2:3,3:4,4:5}
-        expected_dict = [(1,2),(2,3)]
-        expected_dict_random = [(k,v) for k,v in iteritems(d)]
-        sampled_dict = utils.sample_dict(d,2,False)
-        self.assertEqual(sampled_dict,expected_dict)
-        sampled_dict_random = utils.sample_dict(d,2)
+        d = {1: 2, 2: 3, 3: 4, 4: 5}
+        expected_dict = [(1, 2), (2, 3)]
+        expected_dict_random = [(k, v) for k, v in iteritems(d)]
+        sampled_dict = utils.sample_dict(d, 2, False)
+        self.assertEqual(sampled_dict, expected_dict)
+        sampled_dict_random = utils.sample_dict(d, 2)
         if sampled_dict_random in expected_dict_random:
             self.assertTrue(True)
+
+
+class TestTrimVocabByFreq(unittest.TestCase):
+    def test_trim_vocab(self):
+        d = {"word1": 5, "word2": 1, "word3": 2}
+        expected_dict = {"word1": 5, "word3": 2}
+        utils.trim_vocab_by_freq(d, topk=2)
+        self.assertEqual(d, expected_dict)
+
+        d = {"word1": 5, "word2": 2, "word3": 2, "word4": 1}
+        expected_dict = {"word1": 5, "word2": 2, "word3": 2}
+        utils.trim_vocab_by_freq(d, topk=2)
+        self.assertEqual(d, expected_dict)
+
+
+class TestMergeDicts(unittest.TestCase):
+    def test_merge_dicts(self):
+        d1 = {"word1": 5, "word2": 1, "word3": 2}
+        d2 = {"word1": 2, "word3": 3, "word4": 10}
+
+        res_dict = utils.merge_counts(d1, d2)
+        expected_dict = {"word1": 7, "word2": 1, "word3": 5, "word4": 10}
+        self.assertEqual(res_dict, expected_dict)
 
 
 class TestWindowing(unittest.TestCase):
@@ -178,6 +226,16 @@ class TestWindowing(unittest.TestCase):
 
         windows[2][0] = 'modified'
         self.assertEqual('test', texts[1][0])
+
+    def test_flatten_nested(self):
+        nested_list = [[[1, 2, 3], [4, 5]], 6]
+        expected = [1, 2, 3, 4, 5, 6]
+        self.assertEqual(utils.flatten(nested_list), expected)
+
+    def test_flatten_not_nested(self):
+        not_nested = [1, 2, 3, 4, 5, 6]
+        expected = [1, 2, 3, 4, 5, 6]
+        self.assertEqual(utils.flatten(not_nested), expected)
 
 
 if __name__ == '__main__':

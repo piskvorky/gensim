@@ -7,7 +7,7 @@ BIN_PATH=~/xrehurek/gensim/dmlcz
 RESULT_PATH=~/xrehurek/results
 
 # set python path, so that python can find and import gensim modules
-export PYTHONPATH=~/xrehurek:$PYTHONPATH
+export PYTHONPATH=~/xrehurek:${PYTHONPATH}
 
 # Language is set to 'any', meaning all articles are processed for similarity in
 # one go, regardless of their language.
@@ -17,18 +17,18 @@ language=any
 
 
 # ========== parse all article sources, build article co-occurence matrix ======
-${BIN_PATH}/gensim_build.py $language 2>&1 | tee ${RESULT_PATH}/gensim_build.log
+${BIN_PATH}/gensim_build.py ${language} 2>&1 | tee ${RESULT_PATH}/gensim_build.log
 
 
 # ========== build transformation models =======================================
 for method in tfidf rp;
 do
-	( ${BIN_PATH}/gensim_genmodel.py $language $method 2>&1 | tee ${RESULT_PATH}/gensim_genmodel_${method}.log ) &
+	( ${BIN_PATH}/gensim_genmodel.py ${language} ${method} 2>&1 | tee ${RESULT_PATH}/gensim_genmodel_${method}.log ) &
 done
 wait
 
 method=lsi
-${BIN_PATH}/gensim_genmodel.py $language $method 2>&1 | tee ${RESULT_PATH}/gensim_genmodel_${method}.log
+${BIN_PATH}/gensim_genmodel.py ${language} ${method} 2>&1 | tee ${RESULT_PATH}/gensim_genmodel_${method}.log
 
 
 # =========== generate output xml files ========================================
@@ -36,6 +36,6 @@ ${BIN_PATH}/gensim_genmodel.py $language $method 2>&1 | tee ${RESULT_PATH}/gensi
 # NOTE if out of memory, move tfidf out of the loop (tfidf uses a lot of memory here)
 for method in tfidf lsi rp;
 do
-    ( ${BIN_PATH}/gensim_xml.py $language $method 2>&1 | tee ${RESULT_PATH}/gensim_xml_${method}.log ) &
+    ( ${BIN_PATH}/gensim_xml.py ${language} ${method} 2>&1 | tee ${RESULT_PATH}/gensim_xml_${method}.log ) &
 done
 wait

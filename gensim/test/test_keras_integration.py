@@ -1,5 +1,4 @@
 import unittest
-import os
 import numpy as np
 from gensim.models import word2vec
 
@@ -21,26 +20,12 @@ try:
 except ImportError:
     raise unittest.SkipTest("Test requires Keras to be installed, which is not available")
 
-sentences = [
-    ['human', 'interface', 'computer'],
-    ['survey', 'user', 'computer', 'system', 'response', 'time'],
-    ['eps', 'user', 'interface', 'system'],
-    ['system', 'human', 'system', 'eps'],
-    ['user', 'response', 'time'],
-    ['trees'],
-    ['graph', 'trees'],
-    ['graph', 'minors', 'trees'],
-    ['graph', 'minors', 'survey']
-]
-
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
+from gensim.test.utils import common_texts
 
 
 class TestKerasWord2VecWrapper(unittest.TestCase):
     def setUp(self):
-        self.model_cos_sim = word2vec.Word2Vec(sentences, size=100, min_count=1, hs=1)
-        # self.model_twenty_ng = word2vec.Word2Vec(word2vec.LineSentence(datapath('20_newsgroup_keras_w2v_data.txt')), min_count=1)
+        self.model_cos_sim = word2vec.Word2Vec(common_texts, size=100, min_count=1, hs=1)
         self.model_twenty_ng = word2vec.Word2Vec(min_count=1)
 
     def testWord2VecTraining(self):
@@ -66,7 +51,7 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
         keras_w2v_model = self.model_cos_sim
         keras_w2v_model_wv = keras_w2v_model.wv
 
-        embedding_layer = keras_w2v_model_wv.get_embedding_layer()
+        embedding_layer = keras_w2v_model_wv.get_keras_embedding()
 
         input_a = Input(shape=(1,), dtype='int32', name='input_a')
         input_b = Input(shape=(1,), dtype='int32', name='input_b')
@@ -79,14 +64,18 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
 
         word_a = 'graph'
         word_b = 'trees'
-        output = model.predict([np.asarray([keras_w2v_model.wv.vocab[word_a].index]), np.asarray([keras_w2v_model.wv.vocab[word_b].index])])
+        output = model.predict([
+            np.asarray([keras_w2v_model.wv.vocab[word_a].index]),
+            np.asarray([keras_w2v_model.wv.vocab[word_b].index])
+        ])
         # output is the cosine distance between the two words (as a similarity measure)
 
         self.assertTrue(type(output[0][0][0]) == np.float32)     # verify that  a float is returned
 
     def testEmbeddingLayer20NewsGroup(self):
         """
-        Test Keras 'Embedding' layer returned by 'get_embedding_layer' function for a smaller version of the 20NewsGroup classification problem.
+        Test Keras 'Embedding' layer returned by 'get_embedding_layer' function
+        for a smaller version of the 20NewsGroup classification problem.
         """
         MAX_SEQUENCE_LENGTH = 1000
 
@@ -112,8 +101,8 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
                     texts.append(sentence)
                     texts_w2v.append(sentence.split(' '))
                     labels.append(label_id)
-            except:
-                None
+            except Exception:
+                pass
 
         # Vectorize the text samples into a 2D integer tensor
         tokenizer = Tokenizer()
@@ -128,11 +117,11 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
         y_train = labels
 
         # prepare the embedding layer using the wrapper
-        Keras_w2v = self.model_twenty_ng
-        Keras_w2v.build_vocab(texts_w2v)
-        Keras_w2v.train(texts, total_examples=Keras_w2v.corpus_count, epochs=Keras_w2v.iter)
-        Keras_w2v_wv = Keras_w2v.wv
-        embedding_layer = Keras_w2v_wv.get_embedding_layer()
+        keras_w2v = self.model_twenty_ng
+        keras_w2v.build_vocab(texts_w2v)
+        keras_w2v.train(texts, total_examples=keras_w2v.corpus_count, epochs=keras_w2v.iter)
+        keras_w2v_wv = keras_w2v.wv
+        embedding_layer = keras_w2v_wv.get_keras_embedding()
 
         # create a 1D convnet to solve our classification task
         sequence_input = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32')
@@ -152,7 +141,9 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
         fit_ret_val = model.fit(x_train, y_train, epochs=1)
 
         # verify the type of the object returned after training
-        self.assertTrue(type(fit_ret_val) == keras.callbacks.History)  # value returned is a `History` instance. Its `history` attribute contains all information collected during training.
+        # value returned is a `History` instance.
+        # Its `history` attribute contains all information collected during training.
+        self.assertTrue(type(fit_ret_val) == keras.callbacks.History)
 
 
 if __name__ == '__main__':

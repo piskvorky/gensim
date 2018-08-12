@@ -37,7 +37,12 @@ class TestDirectConfirmationMeasure(unittest.TestCase):
             self.segmentation, self.accumulator)[0]
         # Answer should be ~ ln(1 / 2) = -0.693147181
         expected = -0.693147181
-        self.assertAlmostEqual(obtained, expected)
+        self.assertAlmostEqual(expected, obtained)
+
+        mean, std = direct_confirmation_measure.log_conditional_probability(
+            self.segmentation, self.accumulator, with_std=True)[0]
+        self.assertAlmostEqual(expected, mean)
+        self.assertEqual(0.0, std)
 
     def testLogRatioMeasure(self):
         """Test log_ratio_measure()"""
@@ -45,7 +50,12 @@ class TestDirectConfirmationMeasure(unittest.TestCase):
             self.segmentation, self.accumulator)[0]
         # Answer should be ~ ln{(1 / 5) / [(3 / 5) * (2 / 5)]} = -0.182321557
         expected = -0.182321557
-        self.assertAlmostEqual(obtained, expected)
+        self.assertAlmostEqual(expected, obtained)
+
+        mean, std = direct_confirmation_measure.log_ratio_measure(
+            self.segmentation, self.accumulator, with_std=True)[0]
+        self.assertAlmostEqual(expected, mean)
+        self.assertEqual(0.0, std)
 
     def testNormalizedLogRatioMeasure(self):
         """Test normalized_log_ratio_measure()"""
@@ -53,7 +63,12 @@ class TestDirectConfirmationMeasure(unittest.TestCase):
             self.segmentation, self.accumulator, normalize=True)[0]
         # Answer should be ~ -0.182321557 / -ln(1 / 5) = -0.113282753
         expected = -0.113282753
-        self.assertAlmostEqual(obtained, expected)
+        self.assertAlmostEqual(expected, obtained)
+
+        mean, std = direct_confirmation_measure.log_ratio_measure(
+            self.segmentation, self.accumulator, normalize=True, with_std=True)[0]
+        self.assertAlmostEqual(expected, mean)
+        self.assertEqual(0.0, std)
 
 
 if __name__ == '__main__':

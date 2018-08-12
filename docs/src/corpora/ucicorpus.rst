@@ -1,8 +1,8 @@
-:mod:`corpora.ucicorpus` -- Corpus in UCI bag-of-words format
-==============================================================================================================
+:mod:`corpora.ucicorpus` -- Corpus in UCI format
+================================================
 
 .. automodule:: gensim.corpora.ucicorpus
-    :synopsis: Corpus in University of California, Irvine (UCI) bag-of-words format
+    :synopsis: Corpus in UCI format
     :members:
     :inherited-members:
     :undoc-members:

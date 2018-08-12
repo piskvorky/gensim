@@ -2,33 +2,29 @@
 # cython: boundscheck=False
 # cython: wraparound=False
 # cython: cdivision=True
+# cython: embedsignature=True
 # coding: utf-8
 #
 # Copyright (C) 2013 Radim Rehurek <me@radimrehurek.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+
+"""Optimized cython functions for training :class:`~gensim.models.doc2vec.Doc2Vec` model."""
 
 import cython
 import numpy as np
 from numpy import zeros, float32 as REAL
 cimport numpy as np
 
-from libc.math cimport exp
 from libc.string cimport memset, memcpy
 
 # scipy <= 0.15
 try:
-     from scipy.linalg.blas import fblas
+    from scipy.linalg.blas import fblas
 except ImportError:
-     # in scipy > 0.15, fblas function has been removed
-     import scipy.linalg.blas as fblas
+    # in scipy > 0.15, fblas function has been removed
+    import scipy.linalg.blas as fblas
 
-from word2vec_inner cimport bisect_left, random_int32, \
-     scopy, saxpy, sdot, dsdot, snrm2, sscal, \
-     REAL_t, EXP_TABLE, \
-     our_dot, our_saxpy, \
-     our_dot_double, our_dot_float, our_dot_noblas, our_saxpy_noblas
-
-from word2vec import FAST_VERSION
+from word2vec_inner cimport bisect_left, random_int32, sscal, REAL_t, EXP_TABLE, our_dot, our_saxpy
 
 DEF MAX_DOCUMENT_LEN = 10000
 
@@ -227,9 +223,53 @@ cdef unsigned long long fast_document_dmc_neg(
 def train_document_dbow(model, doc_words, doctag_indexes, alpha, work=None,
                         train_words=False, learn_doctags=True, learn_words=True, learn_hidden=True,
                         word_vectors=None, word_locks=None, doctag_vectors=None, doctag_locks=None):
+    """Update distributed bag of words model ("PV-DBOW") by training on a single document.
+
+    Called internally from :meth:`~gensim.models.doc2vec.Doc2Vec.train` and
+    :meth:`~gensim.models.doc2vec.Doc2Vec.infer_vector`.
+
+    Parameters
+    ----------
+    model : :class:`~gensim.models.doc2vec.Doc2Vec`
+        The model to train.
+    doc_words : list of str
+        The input document as a list of words to be used for training. Each word will be looked up in
+        the model's vocabulary.
+    doctag_indexes : list of int
+        Indices into `doctag_vectors` used to obtain the tags of the document.
+    alpha : float
+        Learning rate.
+    work : list of float, optional
+        Updates to be performed on each neuron in the hidden layer of the underlying network.
+    train_words : bool, optional
+        Word vectors will be updated exactly as per Word2Vec skip-gram training only if **both** `learn_words`
+        and `train_words` are set to True.
+    learn_doctags : bool, optional
+        Whether the tag vectors should be updated.
+    learn_words : bool, optional
+        Word vectors will be updated exactly as per Word2Vec skip-gram training only if **both**
+        `learn_words` and `train_words` are set to True.
+    learn_hidden : bool, optional
+        Whether or not the weights of the hidden layer will be updated.
+    word_vectors : numpy.ndarray, optional
+        The vector representation for each word in the vocabulary. If None, these will be retrieved from the model.
+    word_locks : numpy.ndarray, optional
+        A learning lock factor for each weight in the hidden layer for words, value 0 completely blocks updates,
+        a value of 1 allows to update word-vectors.
+    doctag_vectors : numpy.ndarray, optional
+        Vector representations of the tags. If None, these will be retrieved from the model.
+    doctag_locks : numpy.ndarray, optional
+        The lock factors for each tag, same as `word_locks`, but for document-vectors.
+
+    Returns
+    -------
+    int
+        Number of words in the input document that were actually used for training.
+
+    """
     cdef int hs = model.hs
     cdef int negative = model.negative
-    cdef int sample = (model.sample != 0)
+    cdef int sample = (model.vocabulary.sample != 0)
     cdef int _train_words = train_words
     cdef int _learn_words = learn_words
     cdef int _learn_hidden = learn_hidden
@@ -241,7 +281,7 @@ def train_document_dbow(model, doc_words, doctag_indexes, alpha, work=None,
     cdef REAL_t *_doctag_locks
     cdef REAL_t *_work
     cdef REAL_t _alpha = alpha
-    cdef int size = model.layer1_size
+    cdef int size = model.trainables.layer1_size
 
     cdef int codelens[MAX_DOCUMENT_LEN]
     cdef np.uint32_t indexes[MAX_DOCUMENT_LEN]
@@ -268,31 +308,31 @@ def train_document_dbow(model, doc_words, doctag_indexes, alpha, work=None,
 
     # default vectors, locks from syn0/doctag_syn0
     if word_vectors is None:
-       word_vectors = model.wv.syn0
+       word_vectors = model.wv.vectors
     _word_vectors = <REAL_t *>(np.PyArray_DATA(word_vectors))
     if doctag_vectors is None:
-       doctag_vectors = model.docvecs.doctag_syn0
+       doctag_vectors = model.docvecs.vectors_docs
     _doctag_vectors = <REAL_t *>(np.PyArray_DATA(doctag_vectors))
     if word_locks is None:
-       word_locks = model.syn0_lockf
+       word_locks = model.trainables.vectors_lockf
     _word_locks = <REAL_t *>(np.PyArray_DATA(word_locks))
     if doctag_locks is None:
-       doctag_locks = model.docvecs.doctag_syn0_lockf
+       doctag_locks = model.trainables.vectors_docs_lockf
     _doctag_locks = <REAL_t *>(np.PyArray_DATA(doctag_locks))
 
     if hs:
-        syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
+        syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
 
     if negative:
-        syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
-        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
-        cum_table_len = len(model.cum_table)
+        syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
+        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
+        cum_table_len = len(model.vocabulary.cum_table)
     if negative or sample:
         next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
     # convert Python structures to primitive types, so we can release the GIL
     if work is None:
-       work = zeros(model.layer1_size, dtype=REAL)
+       work = zeros(model.trainables.layer1_size, dtype=REAL)
     _work = <REAL_t *>np.PyArray_DATA(work)
 
     vlookup = model.wv.vocab
@@ -363,9 +403,54 @@ def train_document_dbow(model, doc_words, doctag_indexes, alpha, work=None,
 def train_document_dm(model, doc_words, doctag_indexes, alpha, work=None, neu1=None,
                       learn_doctags=True, learn_words=True, learn_hidden=True,
                       word_vectors=None, word_locks=None, doctag_vectors=None, doctag_locks=None):
+    """Update distributed memory model ("PV-DM") by training on a single document.
+    This method implements the DM model with a projection (input) layer that is either the sum or mean of the context
+    vectors, depending on the model's `dm_mean` configuration field.
+
+    Called internally from :meth:`~gensim.models.doc2vec.Doc2Vec.train` and
+    :meth:`~gensim.models.doc2vec.Doc2Vec.infer_vector`.
+
+    Parameters
+    ----------
+    model : :class:`~gensim.models.doc2vec.Doc2Vec`
+        The model to train.
+    doc_words : list of str
+        The input document as a list of words to be used for training. Each word will be looked up in
+        the model's vocabulary.
+    doctag_indexes : list of int
+        Indices into `doctag_vectors` used to obtain the tags of the document.
+    alpha : float
+        Learning rate.
+    work : np.ndarray, optional
+        Private working memory for each worker.
+    neu1 : np.ndarray, optional
+        Private working memory for each worker.
+    learn_doctags : bool, optional
+        Whether the tag vectors should be updated.
+    learn_words : bool, optional
+        Word vectors will be updated exactly as per Word2Vec skip-gram training only if **both**
+        `learn_words` and `train_words` are set to True.
+    learn_hidden : bool, optional
+        Whether or not the weights of the hidden layer will be updated.
+    word_vectors : numpy.ndarray, optional
+        The vector representation for each word in the vocabulary. If None, these will be retrieved from the model.
+    word_locks : numpy.ndarray, optional
+        A learning lock factor for each weight in the hidden layer for words, value 0 completely blocks updates,
+        a value of 1 allows to update word-vectors.
+    doctag_vectors : numpy.ndarray, optional
+        Vector representations of the tags. If None, these will be retrieved from the model.
+    doctag_locks : numpy.ndarray, optional
+        The lock factors for each tag, same as `word_locks`, but for document-vectors.
+
+    Returns
+    -------
+    int
+        Number of words in the input document that were actually used for training.
+
+    """
     cdef int hs = model.hs
     cdef int negative = model.negative
-    cdef int sample = (model.sample != 0)
+    cdef int sample = (model.vocabulary.sample != 0)
     cdef int _learn_doctags = learn_doctags
     cdef int _learn_words = learn_words
     cdef int _learn_hidden = learn_hidden
@@ -379,7 +464,7 @@ def train_document_dm(model, doc_words, doctag_indexes, alpha, work=None, neu1=N
     cdef REAL_t *_work
     cdef REAL_t *_neu1
     cdef REAL_t _alpha = alpha
-    cdef int size = model.layer1_size
+    cdef int size = model.trainables.layer1_size
 
     cdef int codelens[MAX_DOCUMENT_LEN]
     cdef np.uint32_t indexes[MAX_DOCUMENT_LEN]
@@ -403,36 +488,37 @@ def train_document_dm(model, doc_words, doctag_indexes, alpha, work=None, neu1=N
     cdef unsigned long long cum_table_len
     cdef unsigned long long next_random
 
+
     # default vectors, locks from syn0/doctag_syn0
     if word_vectors is None:
-       word_vectors = model.wv.syn0
+        word_vectors = model.wv.vectors
     _word_vectors = <REAL_t *>(np.PyArray_DATA(word_vectors))
     if doctag_vectors is None:
-       doctag_vectors = model.docvecs.doctag_syn0
+        doctag_vectors = model.docvecs.vectors_docs
     _doctag_vectors = <REAL_t *>(np.PyArray_DATA(doctag_vectors))
     if word_locks is None:
-       word_locks = model.syn0_lockf
+        word_locks = model.trainables.vectors_lockf
     _word_locks = <REAL_t *>(np.PyArray_DATA(word_locks))
     if doctag_locks is None:
-       doctag_locks = model.docvecs.doctag_syn0_lockf
+        doctag_locks = model.trainables.vectors_docs_lockf
     _doctag_locks = <REAL_t *>(np.PyArray_DATA(doctag_locks))
 
     if hs:
-        syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
+        syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
 
     if negative:
-        syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
-        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
-        cum_table_len = len(model.cum_table)
+        syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
+        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
+        cum_table_len = len(model.vocabulary.cum_table)
     if negative or sample:
         next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
     # convert Python structures to primitive types, so we can release the GIL
     if work is None:
-       work = zeros(model.layer1_size, dtype=REAL)
+       work = zeros(model.trainables.layer1_size, dtype=REAL)
     _work = <REAL_t *>np.PyArray_DATA(work)
     if neu1 is None:
-       neu1 = zeros(model.layer1_size, dtype=REAL)
+       neu1 = zeros(model.trainables.layer1_size, dtype=REAL)
     _neu1 = <REAL_t *>np.PyArray_DATA(neu1)
 
     vlookup = model.wv.vocab
@@ -520,9 +606,54 @@ def train_document_dm(model, doc_words, doctag_indexes, alpha, work=None, neu1=N
 def train_document_dm_concat(model, doc_words, doctag_indexes, alpha, work=None, neu1=None,
                              learn_doctags=True, learn_words=True, learn_hidden=True,
                              word_vectors=None, word_locks=None, doctag_vectors=None, doctag_locks=None):
+    """Update distributed memory model ("PV-DM") by training on a single document, using a concatenation of the context
+     window word vectors (rather than a sum or average).
+     This might be slower since the input at each batch will be significantly larger.
+
+    Called internally from :meth:`~gensim.models.doc2vec.Doc2Vec.train` and
+    :meth:`~gensim.models.doc2vec.Doc2Vec.infer_vector`.
+
+    Parameters
+    ----------
+    model : :class:`~gensim.models.doc2vec.Doc2Vec`
+        The model to train.
+    doc_words : list of str
+        The input document as a list of words to be used for training. Each word will be looked up in
+        the model's vocabulary.
+    doctag_indexes : list of int
+        Indices into `doctag_vectors` used to obtain the tags of the document.
+    alpha : float, optional
+        Learning rate.
+    work : np.ndarray, optional
+        Private working memory for each worker.
+    neu1 : np.ndarray, optional
+        Private working memory for each worker.
+    learn_doctags : bool, optional
+        Whether the tag vectors should be updated.
+    learn_words : bool, optional
+        Word vectors will be updated exactly as per Word2Vec skip-gram training only if **both**
+        `learn_words` and `train_words` are set to True.
+    learn_hidden : bool, optional
+        Whether or not the weights of the hidden layer will be updated.
+    word_vectors : numpy.ndarray, optional
+        The vector representation for each word in the vocabulary. If None, these will be retrieved from the model.
+    word_locks : numpy.ndarray, optional
+        A learning lock factor for each weight in the hidden layer for words, value 0 completely blocks updates,
+        a value of 1 allows to update word-vectors.
+    doctag_vectors : numpy.ndarray, optional
+        Vector representations of the tags. If None, these will be retrieved from the model.
+    doctag_locks : numpy.ndarray, optional
+        The lock factors for each tag, same as `word_locks`, but for document-vectors.
+
+    Returns
+    -------
+    int
+        Number of words in the input document that were actually used for training.
+
+    """
     cdef int hs = model.hs
     cdef int negative = model.negative
-    cdef int sample = (model.sample != 0)
+    cdef int sample = (model.vocabulary.sample != 0)
     cdef int _learn_doctags = learn_doctags
     cdef int _learn_words = learn_words
     cdef int _learn_hidden = learn_hidden
@@ -534,8 +665,8 @@ def train_document_dm_concat(model, doc_words, doctag_indexes, alpha, work=None,
     cdef REAL_t *_work
     cdef REAL_t *_neu1
     cdef REAL_t _alpha = alpha
-    cdef int layer1_size = model.layer1_size
-    cdef int vector_size = model.vector_size
+    cdef int layer1_size = model.trainables.layer1_size
+    cdef int vector_size = model.docvecs.vector_size
 
     cdef int codelens[MAX_DOCUMENT_LEN]
     cdef np.uint32_t indexes[MAX_DOCUMENT_LEN]
@@ -567,34 +698,34 @@ def train_document_dm_concat(model, doc_words, doctag_indexes, alpha, work=None,
 
     # default vectors, locks from syn0/doctag_syn0
     if word_vectors is None:
-       word_vectors = model.wv.syn0
+       word_vectors = model.wv.vectors
     _word_vectors = <REAL_t *>(np.PyArray_DATA(word_vectors))
     if doctag_vectors is None:
-       doctag_vectors = model.docvecs.doctag_syn0
+       doctag_vectors = model.docvecs.vectors_docs
     _doctag_vectors = <REAL_t *>(np.PyArray_DATA(doctag_vectors))
     if word_locks is None:
-       word_locks = model.syn0_lockf
+       word_locks = model.trainables.vectors_lockf
     _word_locks = <REAL_t *>(np.PyArray_DATA(word_locks))
     if doctag_locks is None:
-       doctag_locks = model.docvecs.doctag_syn0_lockf
+       doctag_locks = model.trainables.vectors_docs_lockf
     _doctag_locks = <REAL_t *>(np.PyArray_DATA(doctag_locks))
 
     if hs:
-        syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
+        syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
 
     if negative:
-        syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
-        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
-        cum_table_len = len(model.cum_table)
+        syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
+        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
+        cum_table_len = len(model.vocabulary.cum_table)
     if negative or sample:
         next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
     # convert Python structures to primitive types, so we can release the GIL
     if work is None:
-       work = zeros(model.layer1_size, dtype=REAL)
+       work = zeros(model.trainables.layer1_size, dtype=REAL)
     _work = <REAL_t *>np.PyArray_DATA(work)
     if neu1 is None:
-       neu1 = zeros(model.layer1_size, dtype=REAL)
+       neu1 = zeros(model.trainables.layer1_size, dtype=REAL)
     _neu1 = <REAL_t *>np.PyArray_DATA(neu1)
 
     vlookup = model.wv.vocab
@@ -640,7 +771,7 @@ def train_document_dm_concat(model, doc_words, doctag_indexes, alpha, work=None,
                     window_indexes[n] =  null_word_index
                 else:
                     window_indexes[n] = indexes[m]
-                n = n + 1
+                n += 1
             for m in range(2 * window):
                 memcpy(&_neu1[(doctag_len + m) * vector_size], &_word_vectors[window_indexes[m] * vector_size],
                        vector_size * cython.sizeof(REAL_t))

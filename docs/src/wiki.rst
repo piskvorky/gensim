@@ -38,14 +38,14 @@ Latent Semantic Analysis
 
 First let's load the corpus iterator and dictionary, created in the second step above::
 
-    >>> import logging, gensim, bz2
+    >>> import logging, gensim
     >>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
     >>> # load id->word mapping (the dictionary), one of the results of step 2 above
     >>> id2word = gensim.corpora.Dictionary.load_from_text('wiki_en_wordids.txt')
     >>> # load corpus iterator
     >>> mm = gensim.corpora.MmCorpus('wiki_en_tfidf.mm')
-    >>> # mm = gensim.corpora.MmCorpus(bz2.BZ2File('wiki_en_tfidf.mm.bz2')) # use this if you compressed the TFIDF output (recommended)
+    >>> # mm = gensim.corpora.MmCorpus('wiki_en_tfidf.mm.bz2') # use this if you compressed the TFIDF output (recommended)
 
     >>> print(mm)
     MmCorpus(3931787 documents, 100000 features, 756379027 non-zero entries)
@@ -93,14 +93,14 @@ Latent Dirichlet Allocation
 
 As with Latent Semantic Analysis above, first load the corpus iterator and dictionary::
 
-    >>> import logging, gensim, bz2
+    >>> import logging, gensim
     >>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
     >>> # load id->word mapping (the dictionary), one of the results of step 2 above
     >>> id2word = gensim.corpora.Dictionary.load_from_text('wiki_en_wordids.txt')
     >>> # load corpus iterator
     >>> mm = gensim.corpora.MmCorpus('wiki_en_tfidf.mm')
-    >>> # mm = gensim.corpora.MmCorpus(bz2.BZ2File('wiki_en_tfidf.mm.bz2')) # use this if you compressed the TFIDF output
+    >>> # mm = gensim.corpora.MmCorpus('wiki_en_tfidf.mm.bz2') # use this if you compressed the TFIDF output
 
     >>> print(mm)
     MmCorpus(3931787 documents, 100000 features, 756379027 non-zero entries)

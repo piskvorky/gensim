@@ -28,16 +28,16 @@ class TestIndirectConfirmation(unittest.TestCase):
         self.gamma = 1
         self.measure = 'nlr'
 
-        dictionary = Dictionary()
-        dictionary.id2token = {1: 'fake', 2: 'tokens'}
-        self.accumulator = text_analysis.InvertedIndexAccumulator({1, 2}, dictionary)
-        self.accumulator._inverted_index = {0: {2, 3, 4}, 1: {3, 5}}
-        self.accumulator._num_docs = 5
+        self.dictionary = Dictionary()
+        self.dictionary.id2token = {1: 'fake', 2: 'tokens'}
 
     def testCosineSimilarity(self):
         """Test cosine_similarity()"""
+        accumulator = text_analysis.InvertedIndexAccumulator({1, 2}, self.dictionary)
+        accumulator._inverted_index = {0: {2, 3, 4}, 1: {3, 5}}
+        accumulator._num_docs = 5
         obtained = indirect_confirmation_measure.cosine_similarity(
-            self.segmentation, self.accumulator, self.topics, self.measure, self.gamma)
+            self.segmentation, accumulator, self.topics, self.measure, self.gamma)
 
         # The steps involved in this calculation are as follows:
         # 1. Take (1, array([1, 2]). Take w' which is 1.
@@ -48,6 +48,25 @@ class TestIndirectConfirmation(unittest.TestCase):
         # 6. Similarly for the second segmentation.
         expected = (0.6230 + 0.6230) / 2.  # To account for EPSILON approximation
         self.assertAlmostEqual(expected, obtained[0], 4)
+
+        mean, std = indirect_confirmation_measure.cosine_similarity(
+            self.segmentation, accumulator, self.topics, self.measure, self.gamma,
+            with_std=True)[0]
+        self.assertAlmostEqual(expected, mean, 4)
+        self.assertAlmostEqual(0.0, std, 1)
+
+    def testWord2VecSimilarity(self):
+        """Sanity check word2vec_similarity."""
+        accumulator = text_analysis.WordVectorsAccumulator({1, 2}, self.dictionary)
+        accumulator.accumulate([
+            ['fake', 'tokens'],
+            ['tokens', 'fake']
+        ], 5)
+
+        mean, std = indirect_confirmation_measure.word2vec_similarity(
+            self.segmentation, accumulator, with_std=True)[0]
+        self.assertNotEqual(0.0, mean)
+        self.assertNotEqual(0.0, std)
 
 
 if __name__ == '__main__':

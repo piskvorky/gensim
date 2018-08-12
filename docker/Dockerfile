@@ -23,8 +23,8 @@ RUN apt-get update \
     python-pip=8.1.1-2ubuntu0.4 \
     python-setuptools=20.7.0-1 \
     unzip=6.0-20ubuntu1 \
-    wget=1.17.1-1ubuntu1.1 \
-    subversion=1.9.3-2ubuntu1 \
+    wget=1.17.1-1ubuntu1.3 \
+    subversion=1.9.3-2ubuntu1.1 \
     locales=2.23-0ubuntu9 \
     libopenblas-dev=0.2.18-1ubuntu1 \
     libboost-program-options-dev=1.58.0.1ubuntu1 \
@@ -150,6 +150,10 @@ RUN cd /gensim/gensim_dependencies \
     && make install
 
 # Start gensim
+
+# Fix ipython kernel version
+RUN ipython2 kernel install
+RUN ipython3 kernel install
 
 # Run check script
 RUN python2 /gensim/docker/check_fast_version.py

@@ -17,20 +17,12 @@ from __future__ import with_statement
 
 import logging
 import os
-import tempfile
 import unittest
 
 from gensim import utils, corpora, models, similarities
-
-# sample data files are located in the same folder
-module_path = os.path.dirname(__file__)
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
+from gensim.test.utils import datapath, get_tmpfile
 
 logger = logging.getLogger('test_miislita')
-
-
-def get_tmpfile(suffix):
-    return os.path.join(tempfile.gettempdir(), suffix)
 
 
 class CorpusMiislita(corpora.TextCorpus):
@@ -71,7 +63,6 @@ class TestMiislita(unittest.TestCase):
         miislita2 = corpora.MmCorpus(ftmp)
         self.assertEqual(list(miislita), list(miislita2))
 
-
     def test_save_load_ability(self):
         """
         Make sure we can save and load (un/pickle) TextCorpus objects (as long
@@ -89,7 +80,6 @@ class TestMiislita(unittest.TestCase):
 
         self.assertEqual(len(miislita), len(miislita2))
         self.assertEqual(miislita.dictionary.token2id, miislita2.dictionary.token2id)
-
 
     def test_miislita_high_level(self):
         # construct corpus from file
