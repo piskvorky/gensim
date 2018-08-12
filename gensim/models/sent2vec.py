@@ -356,7 +356,7 @@ class Sent2Vec(BaseWordEmbeddingsModel):
     """Class for training and using neural networks.
 
     """
-    def __init__(self, sentences=None, size=100, alpha=0.01, epochs=5, min_count=5, negative=10,
+    def __init__(self, sentences=None, input_streams=None, size=100, alpha=0.01, epochs=5, min_count=5, negative=10,
                  word_ngrams=2, bucket=2000000, sample=0.0001, dropout_k=2, seed=42,
                  min_alpha=0.001, batch_words=10000, workers=3, max_vocab_size=30000000,
                  compute_loss=False, callbacks=()):
@@ -419,7 +419,7 @@ class Sent2Vec(BaseWordEmbeddingsModel):
         self.callbacks = callbacks
 
         super(Sent2Vec, self).__init__(
-            sentences=sentences, workers=workers, vector_size=size, epochs=epochs,
+            sentences=sentences, input_streams=input_streams, workers=workers, vector_size=size, epochs=epochs,
             batch_words=batch_words, alpha=alpha, seed=seed, negative=negative,
             min_alpha=min_alpha, fast_version=FAST_VERSION, compute_loss=compute_loss,
             callbacks=callbacks)
@@ -617,7 +617,7 @@ class Sent2Vec(BaseWordEmbeddingsModel):
         local_token_count, nexamples, loss = _do_train_job_fast(self, sentences, alpha, hidden, grad)
         return nexamples, local_token_count
 
-    def build_vocab(self, sentences, update=False, trim_rule=None):
+    def build_vocab(self, sentences, input_streams=None, update=False, trim_rule=None):
         """Build vocab from `sentences`
 
         Parameters
@@ -663,7 +663,7 @@ class Sent2Vec(BaseWordEmbeddingsModel):
         self.wo = np.append(self.wo, new_wo, axis=0)
         self._init_table_negatives(counts=counts, update=update)
 
-    def train(self, sentences, total_examples=None, total_words=None,
+    def train(self, sentences, input_streams=None, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None, word_count=0,
               queue_factor=2, report_delay=1.0, compute_loss=False, callbacks=()):
         """Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
