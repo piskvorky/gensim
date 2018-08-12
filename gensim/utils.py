@@ -33,12 +33,13 @@ import shutil
 import sys
 import subprocess
 import inspect
+import heapq
 
 import numpy as np
 import numbers
 import scipy.sparse
 
-from six import iterkeys, iteritems, u, string_types, unichr
+from six import iterkeys, iteritems, itervalues, u, string_types, unichr
 from six.moves import xrange
 
 from smart_open import smart_open
@@ -1737,6 +1738,50 @@ def prune_vocab(vocab, min_reduce, trim_rule=None):
         old_len - len(vocab), min_reduce, old_len, len(vocab)
     )
     return result
+
+
+def trim_vocab_by_freq(vocab, topk, trim_rule=None):
+    """Retain `topk` most frequent words in `vocab`.
+    If there are more words with the same frequency as `topk`-th one, they will be kept.
+    Modifies `vocab` in place, returns nothing.
+
+    Parameters
+    ----------
+    vocab : dict
+        Input dictionary.
+    topk : int
+        Number of words with highest frequencies to keep.
+    trim_rule : function, optional
+        Function for trimming entities from vocab, default behaviour is `vocab[w] <= min_count`.
+
+    """
+    if topk >= len(vocab):
+        return
+
+    min_count = heapq.nlargest(topk, itervalues(vocab))[-1]
+    prune_vocab(vocab, min_count, trim_rule=trim_rule)
+
+
+def merge_counts(dict1, dict2):
+    """Merge `dict1` of (word, freq1) and `dict2` of (word, freq2) into `dict1` of (word, freq1+freq2).
+    Parameters
+    ----------
+    dict1 : dict of (str, int)
+        First dictionary.
+    dict2 : dict of (str, int)
+        Second dictionary.
+    Returns
+    -------
+    result : dict
+        Merged dictionary with sum of frequencies as values.
+    """
+    for word, freq in iteritems(dict2):
+        if word in dict1:
+            dict1[word] += freq
+        else:
+            dict1[word] = freq
+
+    return dict1
 
 
 def qsize(queue):
