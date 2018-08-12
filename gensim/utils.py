@@ -44,6 +44,8 @@ from six.moves import xrange
 
 from smart_open import smart_open
 
+from multiprocessing import cpu_count
+
 if sys.version_info[0] >= 3:
     unicode = str
 
@@ -2025,3 +2027,29 @@ def lazy_flatten(nested_list):
                 yield sub
         else:
             yield el
+
+
+def effective_n_jobs(n_jobs):
+    """Determines the number of jobs can run in parallel.
+
+    Just like in sklearn, passing n_jobs=-1 means using all available
+    CPU cores.
+
+    Parameters
+    ----------
+    n_jobs : int
+        Number of workers requested by caller.
+
+    Returns
+    -------
+    int
+        Number of effective jobs.
+
+    """
+    if n_jobs == 0:
+        raise ValueError('n_jobs == 0 in Parallel has no meaning')
+    elif n_jobs is None:
+        return 1
+    elif n_jobs < 0:
+        n_jobs = max(cpu_count() + 1 + n_jobs, 1)
+    return n_jobs

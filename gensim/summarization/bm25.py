@@ -38,8 +38,8 @@ import math
 from six import iteritems
 from six.moves import xrange
 from functools import partial
-from multiprocessing import Pool, cpu_count
-
+from multiprocessing import Pool
+from ..utils import effective_n_jobs
 
 PARAM_K1 = 1.5
 PARAM_B = 0.75
@@ -180,32 +180,6 @@ def _get_scores(bm25, document, average_idf):
     return scores
 
 
-def _effective_n_jobs(n_jobs):
-    """Determines the number of jobs can run in parallel.
-
-    Just like in sklearn, passing n_jobs=-1 means using all available
-    CPU cores.
-
-    Parameters
-    ----------
-    n_jobs : int
-        Number of workers requested by caller.
-
-    Returns
-    -------
-    int
-        number of effective jobs
-
-    """
-    if n_jobs == 0:
-        raise ValueError('n_jobs == 0 in Parallel has no meaning')
-    elif n_jobs is None:
-        return 1
-    elif n_jobs < 0:
-        n_jobs = max(cpu_count() + 1 + n_jobs, 1)
-    return n_jobs
-
-
 def get_bm25_weights(corpus, n_jobs=1):
     """Returns BM25 scores (weights) of documents in corpus.
     Each document has to be weighted with every document in given corpus.
@@ -236,7 +210,7 @@ def get_bm25_weights(corpus, n_jobs=1):
     bm25 = BM25(corpus)
     average_idf = sum(float(val) for val in bm25.idf.values()) / len(bm25.idf)
 
-    n_processes = _effective_n_jobs(n_jobs)
+    n_processes = effective_n_jobs(n_jobs)
     if n_processes == 1:
         weights = [bm25.get_scores(doc, average_idf) for doc in corpus]
         return weights
