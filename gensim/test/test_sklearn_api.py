@@ -1161,7 +1161,6 @@ class TestPhrasesTransformer(unittest.TestCase):
 
 class TestPhrasesTransformerCommonTerms(unittest.TestCase):
     def setUp(self):
-        numpy.random.seed(0)
         self.model = PhrasesTransformer(min_count=1, threshold=1, common_terms=common_terms)
         self.expected_transformations = [
             [u'the', u'mayor_of_new', u'york', u'was', u'there'],
@@ -1169,6 +1168,23 @@ class TestPhrasesTransformerCommonTerms(unittest.TestCase):
             [u'the', u'bank_of_america', u'offices', u'are', u'open'],
             [u'the', u'bank_of_america', u'offices', u'are', u'closed']
         ]
+
+    def testCompareToOld(self):
+        # Phrases-model extracted from PhrasesTransformer fitted same way as in above test class TestPhrasesTransformer
+        phrases_model = models.phrases.Phrases.load("gensim/test/test_data/phrases_for_phrases_transformer.model")
+        old_phrases_transformer = PhrasesTransformer(min_count=1, threshold=1)
+        # manually set models instead of using fit()
+        old_phrases_transformer.gensim_model = phrases_model
+        old_phrases_transformer.phraser = models.phrases.Phraser(phrases_model)
+
+        doc = phrases_sentences[-1]
+        phrase_tokens = old_phrases_transformer.transform(doc)[0]
+        expected_phrase_tokens = [u'graph_minors', u'survey', u'human_interface']
+        self.assertEqual(phrase_tokens, expected_phrase_tokens)
+
+        self.model.fit(phrases_sentences)
+        new_phrase_tokens = self.model.transform(doc)[0]
+        self.assertEqual(new_phrase_tokens, phrase_tokens)
 
     def testFitAndTransform(self):
         self.model.fit(phrases_w_common_terms)
