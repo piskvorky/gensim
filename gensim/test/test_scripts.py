@@ -147,7 +147,7 @@ class TestWord2Vec2Tensor(unittest.TestCase):
             word_string = word.decode("utf8")
             vector_string = vector.decode("utf8")
             vector_array = np.array(list(map(float, vector_string.split())))
-            np.testing.assert_almost_equal(orig_model[word_string], vector_array)
+            np.testing.assert_almost_equal(orig_model[word_string], vector_array, decimal=5)
 
 
 if __name__ == '__main__':
