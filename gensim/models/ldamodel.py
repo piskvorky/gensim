@@ -531,7 +531,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
                 * an 1D array of length equal to the number of expected topics,
                 * 'asymmetric': Uses a fixed normalized assymetric prior of `1.0 / topicno`.
-                * 'default': Learns an assymetric prior from the corpus.
+                * 'auto': Learns an assymetric prior from the corpus.
         name : {'alpha', 'eta'}
             Whether the `prior` is parameterized by the alpha vector (1 parameter per topic)
             or by the eta (1 parameter per unique term in the vocabulary).
