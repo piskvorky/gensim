@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
+# Copyright (C) 2018 Vimig Socrates <vimig.socrates@gmail.com>
 # Copyright (C) 2016 Loreto Parisi <loretoparisi@gmail.com>
 # Copyright (C) 2016 Silvio Olivastri <silvio.olivastri@gmail.com>
 # Copyright (C) 2016 Radim Rehurek <radim@rare-technologies.com>
@@ -43,6 +44,7 @@ import sys
 import logging
 import argparse
 
+from smart_open import smart_open
 import gensim
 
 logger = logging.getLogger(__name__)
@@ -67,12 +69,11 @@ def word2vec2tensor(word2vec_model_path, tensor_filename, binary=False):
     outfiletsv = tensor_filename + '_tensor.tsv'
     outfiletsvmeta = tensor_filename + '_metadata.tsv'
 
-    with open(outfiletsv, 'w+') as file_vector:
-        with open(outfiletsvmeta, 'w+') as file_metadata:
-            for word in model.index2word:
-                file_metadata.write(gensim.utils.to_utf8(word) + gensim.utils.to_utf8('\n'))
-                vector_row = '\t'.join(str(x) for x in model[word])
-                file_vector.write(vector_row + '\n')
+    with smart_open(outfiletsv, 'wb') as file_vector, smart_open(outfiletsvmeta, 'wb') as file_metadata:
+        for word in model.index2word:
+            file_metadata.write(gensim.utils.to_utf8(word) + gensim.utils.to_utf8('\n'))
+            vector_row = '\t'.join(str(x) for x in model[word])
+            file_vector.write(gensim.utils.to_utf8(vector_row) + gensim.utils.to_utf8('\n'))
 
     logger.info("2D tensor file saved to %s", outfiletsv)
     logger.info("Tensor metadata file saved to %s", outfiletsvmeta)
