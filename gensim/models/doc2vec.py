@@ -446,9 +446,9 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             Input corpus, can be simply a list of elements, but for larger corpora,consider an iterable that streams
             the documents directly from disk/network. If you don't supply `documents`, the model is
             left uninitialized -- use if you plan to initialize it in some other way.
-        input_streams : list or tuple of iterable of iterables
-            The tuple or list of `documents`-like arguments. Use it if you have multiple input streams. It is possible
-            to process streams in parallel, using `workers` parameter.
+        corpus_file : str
+            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            You may use this argument instead of `sentences` to get performance boost.
         dm : {1,0}, optional
             Defines the training algorithm. If `dm=1`, 'distributed memory' (PV-DM) is used.
             Otherwise, `distributed bag of words` (PV-DBOW) is employed.
@@ -581,7 +581,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             elif isinstance(documents, GeneratorType):
                 raise TypeError("You can't pass a generator as the documents argument. Try an iterator.")
             self.build_vocab(documents=documents, corpus_file=corpus_file,
-                             trim_rule=trim_rule, workers=self.workers)
+                             trim_rule=trim_rule)
             self.train(
                 documents=documents, corpus_file=corpus_file, total_examples=self.corpus_count, epochs=self.epochs,
                 start_alpha=self.alpha, end_alpha=self.min_alpha, callbacks=callbacks)
@@ -695,9 +695,9 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             Can be simply a list of elements, but for larger corpora,consider an iterable that streams
             the documents directly from disk/network. If you don't supply `documents`, the model is
             left uninitialized -- use if you plan to initialize it in some other way.
-        input_streams : list or tuple of iterable of iterables
-            The tuple or list of `documents`-like arguments. Use it if you have multiple input streams. It is possible
-            to process streams in parallel, using `workers` parameter.
+        corpus_file : str
+            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            You may use this argument instead of `sentences` to get performance boost.
         total_examples : int, optional
             Count of sentences.
         total_words : int, optional
@@ -1013,7 +1013,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         return super(Doc2Vec, self).estimate_memory(vocab_size, report=report)
 
     def build_vocab(self, documents=None, corpus_file=None, update=False, progress_per=10000, keep_raw_vocab=False,
-                    trim_rule=None, workers=None, **kwargs):
+                    trim_rule=None, **kwargs):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
 
         Parameters
@@ -1022,9 +1022,9 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             Can be simply a list of :class:`~gensim.models.doc2vec.TaggedDocument` elements, but for larger corpora,
             consider an iterable that streams the documents directly from disk/network.
             See :class:`~gensim.models.doc2vec.TaggedBrownCorpus` or :class:`~gensim.models.doc2vec.TaggedLineDocument`
-        input_streams : list or tuple of iterable of iterables
-            The tuple or list of `documents`-like arguments. Use it if you have multiple input streams. It is possible
-            to process streams in parallel, using `workers` parameter.
+        corpus_file : str
+            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            You may use this argument instead of `sentences` to get performance boost.
         update : bool
             If true, the new words in `sentences` will be added to model's vocab.
         progress_per : int
@@ -1045,18 +1045,13 @@ class Doc2Vec(BaseWordEmbeddingsModel):
                 * `count` (int) - the word's frequency count in the corpus
                 * `min_count` (int) - the minimum count threshold.
 
-        workers : int
-            Used if `input_streams` is passed. Determines how many processes to use for vocab building.
-            Actual number of workers is determined by `min(len(input_streams), workers)`.
-
         **kwargs
             Additional key word arguments passed to the internal vocabulary construction.
 
         """
-        workers = workers or self.workers
         total_words, corpus_count = self.vocabulary.scan_vocab(
             documents=documents, corpus_file=corpus_file, docvecs=self.docvecs,
-            progress_per=progress_per, trim_rule=trim_rule, workers=workers
+            progress_per=progress_per, trim_rule=trim_rule
         )
         self.corpus_count = corpus_count
         report_values = self.vocabulary.prepare_vocab(
@@ -1213,8 +1208,7 @@ class Doc2VecVocab(Word2VecVocab):
         self.raw_vocab = vocab
         return total_words, corpus_count
 
-    def scan_vocab(self, documents=None, corpus_file=None, docvecs=None, progress_per=10000, workers=None,
-                   trim_rule=None):
+    def scan_vocab(self, documents=None, corpus_file=None, docvecs=None, progress_per=10000, trim_rule=None):
         """Create the models Vocabulary: A mapping from unique words in the corpus to their frequency count.
 
         Parameters
