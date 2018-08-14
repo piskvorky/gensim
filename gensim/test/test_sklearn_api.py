@@ -1170,13 +1170,7 @@ class TestPhrasesTransformerCommonTerms(unittest.TestCase):
         ]
 
     def testCompareToOld(self):
-        # Phrases-model extracted from PhrasesTransformer fitted same way as in above test class TestPhrasesTransformer
-        phrases_model = models.phrases.Phrases.load("gensim/test/test_data/phrases_for_phrases_transformer.model")
-        old_phrases_transformer = PhrasesTransformer(min_count=1, threshold=1)
-        # manually set models instead of using fit()
-        old_phrases_transformer.gensim_model = phrases_model
-        old_phrases_transformer.phraser = models.phrases.Phraser(phrases_model)
-
+        old_phrases_transformer = pickle.load(datapath("phrases_transformer.pkl"))
         doc = phrases_sentences[-1]
         phrase_tokens = old_phrases_transformer.transform(doc)[0]
         expected_phrase_tokens = [u'graph_minors', u'survey', u'human_interface']
