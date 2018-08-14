@@ -345,6 +345,32 @@ except ImportError:
         return len(padded_document_indexes) - pre_pad_count - post_pad_count
 
 
+try:
+    from gensim.models.doc2vec_multistream import (
+        d2v_train_epoch_dbow,
+        d2v_train_epoch_dm_concat,
+        d2v_train_epoch_dm,
+        MULTISTREAM_VERSION
+    )
+except ImportError:
+    # multistream doc2vec is not supported
+    MULTISTREAM_VERSION = -1
+
+    # def d2v_train_epoch_dbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
+    #                          _work, _neu1):
+    #     raise NotImplementedError("Training with corpus_file argument is not supported.")
+    #
+    #
+    # def d2v_train_epoch_dm_concat(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples,
+    #                               _expected_words, _work, _neu1):
+    #     raise NotImplementedError("Training with corpus_file argument is not supported.")
+    #
+    #
+    # def d2v_train_epoch_dm(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
+    #                        _work, _neu1):
+    #     raise NotImplementedError("Training with corpus_file argument is not supported.")
+
+
 class TaggedDocument(namedtuple('TaggedDocument', 'words tags')):
     """Represents a document along with a tag, input document format for :class:`~gensim.models.doc2vec.Doc2Vec`.
 
@@ -571,9 +597,6 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
         self.comment = comment
 
-        if corpus_file is not None:
-            raise NotImplementedError("corpus_file for Doc2Vec is not supported yet.")
-
         if documents is not None or corpus_file is not None:
             self._check_input_data_sanity(data_iterable=documents, corpus_file=corpus_file)
             if corpus_file is not None and not isinstance(corpus_file, string_types):
@@ -631,6 +654,29 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         self.docvecs.doctags = other_model.docvecs.doctags
         self.docvecs.offset2doctag = other_model.docvecs.offset2doctag
         self.trainables.reset_weights(self.hs, self.negative, self.wv, self.docvecs)
+
+    def _do_train_epoch(self, corpus_file, offset, cython_vocab, thread_private_mem, cur_epoch, total_examples=None,
+                        total_words=None):
+        work, neu1 = thread_private_mem
+        doctag_vectors = self.docvecs.vectors_docs
+        doctag_locks = self.trainables.vectors_docs_lockf
+
+        if self.sg:
+            examples, tally, raw_tally = d2v_train_epoch_dbow(self, corpus_file, offset, cython_vocab, cur_epoch,
+                                                              total_examples, total_words, work, neu1,
+                                                              self.docvecs.count, doctag_vectors=doctag_vectors,
+                                                              doctag_locks=doctag_locks, train_words=self.dbow_words)
+        elif self.dm_concat:
+            examples, tally, raw_tally = d2v_train_epoch_dm_concat(self, corpus_file, offset, cython_vocab, cur_epoch,
+                                                                   total_examples, total_words, work, neu1,
+                                                                   self.docvecs.count, doctag_vectors=doctag_vectors,
+                                                                   doctag_locks=doctag_locks)
+        else:
+            examples, tally, raw_tally = d2v_train_epoch_dm(self, corpus_file, offset, cython_vocab, cur_epoch,
+                                                            total_examples, total_words, work, neu1, self.docvecs.count,
+                                                            doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
+
+        return examples, tally, raw_tally
 
     def _do_train_job(self, job, alpha, inits):
         """Train model using `job` data.
@@ -1215,6 +1261,9 @@ class Doc2VecVocab(Word2VecVocab):
         ----------
         documents : iterable of :class:`~gensim.models.doc2vec.TaggedDocument`
             The tagged documents used to create the vocabulary. Their tags can be either str tokens or ints (faster).
+        corpus_file : str
+            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            You may use this argument instead of `sentences` to get performance boost.
         docvecs : list of :class:`~gensim.models.keyedvectors.Doc2VecKeyedVectors`
             The vector representations of the documents in our corpus. Each of them has a size == `vector_size`.
         progress_per : int

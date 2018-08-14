@@ -287,6 +287,14 @@ if not (os.name == 'nt' and sys.version_info[0] < 3):
                   extra_link_args=extra_args)
     )
 
+    ext_modules.append(
+        Extension('gensim.models.doc2vec_multistream',
+                  sources=['./gensim/models/doc2vec_multistream.cpp'],
+                  language='c++',
+                  extra_compile_args=extra_args,
+                  extra_link_args=extra_args)
+    )
+
 setup(
     name='gensim',
     version='3.5.0',
