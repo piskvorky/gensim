@@ -285,7 +285,6 @@ class BaseAny2VecModel(utils.SaveLoad):
 
     def _log_epoch_progress(self, progress_queue, job_queue, cur_epoch=0, total_examples=None, total_words=None,
                             report_delay=1.0):
-
         """Get the progress report for a single training epoch.
 
         Parameters
@@ -1209,12 +1208,14 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
         """
         if total_examples:
+            progress_unit = "examples"
             div = total_examples
         else:
             div = total_words
+            progress_unit = "words"
 
-        msg = "EPOCH %i - PROGRESS: at %.2f%% examples, %.0f words/s, in_qsize %i, out_qsize %i"
-        args = (cur_epoch + 1, 100.0 * example_count / div, trained_word_count / elapsed,
+        msg = "EPOCH %i - PROGRESS: at %.2f%% %s, %.0f words/s, in_qsize %i, out_qsize %i"
+        args = (cur_epoch + 1, 100.0 * example_count / div, progress_unit, trained_word_count / elapsed,
                 utils.qsize(job_queue), utils.qsize(progress_queue))
         if self.compute_loss:
             if total_samples == 0:
