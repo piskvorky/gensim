@@ -138,10 +138,13 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
             Phrase representation for each of the input sentences.
 
         """
-        if self.gensim_model is None or self.phraser is None:
+        if self.gensim_model is None:
             raise NotFittedError(
                 "This model has not been fitted yet. Call 'fit' with appropriate arguments before using this method."
             )
+
+        if self.phraser is None:
+            self.phraser = Phraser(self.gensim_model)
 
         # input as python lists
         if isinstance(docs[0], string_types):
