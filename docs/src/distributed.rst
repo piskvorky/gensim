@@ -1,7 +1,7 @@
 .. _distributed:
 
 Distributed Computing
-===================================
+=====================
 
 Why distributed computing?
 ---------------------------
@@ -37,20 +37,20 @@ Prerequisites
 
 For communication between nodes, `gensim` uses `Pyro (PYthon Remote Objects)
 <http://pypi.python.org/pypi/Pyro4>`_, version >= 4.27. This is a library for low-level socket communication
-and remote procedure calls (RPC) in Python. `Pyro` is a pure-Python library, so its
+and remote procedure calls (RPC) in Python. `Pyro4` is a pure-Python library, so its
 installation is quite painless and only involves copying its `*.py` files somewhere onto your Python's import path::
 
-  sudo easy_install Pyro4
+  pip install Pyro4
 
-You don't have to install `Pyro` to run `gensim`, but if you don't, you won't be able
+You don't have to install Pyro to run Gensim, but if you don't, you won't be able
 to access the distributed features (i.e., everything will always run in serial mode,
 the examples on this page don't apply).
 
 
 Core concepts
------------------------------------
+-------------
 
-As always, `gensim` strives for a clear and straightforward API (see :ref:`design`).
+As always, Gensim strives for a clear and straightforward API (see :ref:`design`).
 To this end, *you do not need to make any changes in your code at all* in order to
 run it over a cluster of computers!
 

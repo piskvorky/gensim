@@ -4,23 +4,46 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 # Based on Copyright (C) 2016 Radim Rehurek <radimrehurek@seznam.cz>
 
-
-"""
-
-Inspired by the Blei's original DTM code and paper.
-Original DTM C/C++ code: https://github.com/blei-lab/dtm
-DTM Paper: https://www.cs.princeton.edu/~blei/papers/BleiLafferty2006a.pdf
+"""Lda Sequence model, inspired by `David M. Blei, John D. Lafferty: "Dynamic Topic Models"
+<https://mimno.infosci.cornell.edu/info6150/readings/dynamic_topic_models.pdf>`_ .
+The original C/C++ implementation can be found on `blei-lab/dtm <https://github.com/blei-lab/dtm>`.
 
 
-TODO:
-The next steps to take this forward would be:
+TODO: The next steps to take this forward would be:
 
-    1) Include DIM mode. Most of the infrastructure for this is in place.
-    2) See if LdaPost can be replaced by LdaModel completely without breaking anything.
-    3) Heavy lifting going on in the sslm class - efforts can be made to cythonise mathematical methods.
-        - in particular, update_obs and the optimization takes a lot time.
-    4) Try and make it distributed, especially around the E and M step.
-    5) Remove all C/C++ coding style/syntax.
+#. Include DIM mode. Most of the infrastructure for this is in place.
+#. See if LdaPost can be replaced by LdaModel completely without breaking anything.
+#. Heavy lifting going on in the Sslm class - efforts can be made to cythonise mathematical methods, in particular,
+   update_obs and the optimization takes a lot time.
+#. Try and make it distributed, especially around the E and M step.
+#. Remove all C/C++ coding style/syntax.
+
+Examples
+--------
+
+Set up a model using have 30 documents, with 5 in the first time-slice, 10 in the second, and 15 in the third
+
+>>> from gensim.test.utils import common_corpus
+>>> from gensim.models import LdaSeqModel
+>>>
+>>> ldaseq = LdaSeqModel(corpus=common_corpus, time_slice=[2, 4, 3], num_topics=2, chunksize=1)
+
+Persist a model to disk and reload it later
+
+>>> from gensim.test.utils import datapath
+>>>
+>>> temp_file = datapath("model")
+>>> ldaseq.save(temp_file)
+>>>
+>>> # Load a potentially pre-trained model from disk.
+>>> ldaseq = LdaSeqModel.load(temp_file)
+
+Access the document embeddings generated from the DTM
+
+>>> doc = common_corpus[1]
+>>>
+>>> embedding = ldaseq[doc]
+
 """
 
 from gensim import utils, matutils
@@ -30,52 +53,62 @@ from scipy.special import digamma, gammaln
 from scipy import optimize
 import logging
 
-logger = logging.getLogger('gensim.models.ldaseqmodel')
+logger = logging.getLogger(__name__)
 
 
 class LdaSeqModel(utils.SaveLoad):
-    """
-    The constructor estimates Dynamic Topic Model parameters based
-    on a training corpus.
-    If we have 30 documents, with 5 in the first time-slice, 10 in the second, and 15 in the third, we would
-    set up our model like this:
-
-    >>> ldaseq = LdaSeqModel(corpus=corpus, time_slice= [5, 10, 15], num_topics=5)
-
-    Model persistency is achieved through inheriting utils.SaveLoad.
-
-    >>> ldaseq.save("ldaseq")
-
-    saves the model to disk.
-    """
-
+    """Estimate Dynamic Topic Model parameters based on a training corpus."""
     def __init__(self, corpus=None, time_slice=None, id2word=None, alphas=0.01, num_topics=10,
                  initialize='gensim', sstats=None, lda_model=None, obs_variance=0.5, chain_variance=0.005, passes=10,
                  random_state=None, lda_inference_max_iter=25, em_min_iter=6, em_max_iter=20, chunksize=100):
         """
-        `corpus` is any iterable gensim corpus
 
-        `time_slice` as described above is a list which contains the number of documents in each time-slice
+        Parameters
+        ----------
+        corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
+            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+            If not given, the model is left untrained (presumably because you want to call
+            :meth:`~gensim.models.ldamodel.LdaSeqModel.update` manually).
+        time_slice : list of int, optional
+            Number of documents in each time-slice. Each time slice could for example represent a year's published
+            papers, in case the corpus comes from a journal publishing over multiple years.
+            It is asummed that `sum(time_slice) == num_topics`.
+        id2word : dict of (int, str), optional
+            Mapping from word IDs to words. It is used to determine the vocabulary size, as well as for
+            debugging and topic printing.
+        alphas : float, optional
+            The prior probability for the model.
+        num_topics : int, optional
+            The number of requested latent topics to be extracted from the training corpus.
+        initialize : {'gensim', 'own', 'ldamodel'}, optional
+            Controls the initialization of the DTM model. Supports three different modes:
+                * 'gensim': Uses gensim's LDA initialization.
+                * 'own': Uses your own initialization matrix of an LDA model that has been previously trained.
+                * 'lda_model': Use a previously used LDA model, passing it through the `lda_model` argument.
+        sstats : numpy.ndarray , optional
+            Sufficient statistics used for initializing the model if `initialize == 'own'`. Corresponds to matrix
+            beta in the linked paper for time slice 0, expected shape (`self.vocab_len`, `num_topics`).
+        lda_model : :class:`~gensim.models.ldamodel.LdaModel`
+            Model whose sufficient statistics will be used to initialize the current object if `initialize == 'gensim'`.
+        obs_variance : float, optional
+            Observed variance used to approximate the true and forward variance as shown in
+            `David M. Blei, John D. Lafferty: "Dynamic Topic Models"
+            <https://mimno.infosci.cornell.edu/info6150/readings/dynamic_topic_models.pdf>`_.
+        chain_variance : float, optional
+            Gaussian parameter defined in the beta distribution to dictate how the beta values evolve over time.
+        passes : int, optional
+            Number of passes over the corpus for the initial :class:`~gensim.models.ldamodel.LdaModel`
+        random_state : {numpy.random.RandomState, int}, optional
+            Can be a np.random.RandomState object, or the seed to generate one. Used for reproducibility of results.
+        lda_inference_max_iter : int, optional
+            Maximum number of iterations in the inference step of the LDA training.
+        em_min_iter : int, optional
+            Minimum number of iterations until converge of the Expectation-Maximization algorithm
+        em_max_iter : int, optional
+            Maximum number of iterations until converge of the Expectation-Maximization algorithm.
+        chunksize : int, optional
+            Number of documents in the corpus do be processed in in a chunk.
 
-        `id2word` is a mapping from word ids (integers) to words (strings).
-        It is used to determine the vocabulary size and printing topics.
-
-        `alphas`  is a prior of your choice and should be a double or float value. default is 0.01
-
-        `num_topics` is the number of requested latent topics to be extracted from the training corpus.
-
-        `initalize` allows the user to decide how he wants to initialise the DTM model. Default is through gensim LDA.
-        You can use your own sstats of an LDA model previously trained as well by specifying 'own'
-        and passing a np matrix through sstats.
-        If you wish to just pass a previously used LDA model, pass it through `lda_model`
-        Shape of sstats is (vocab_len, num_topics)
-
-        `chain_variance` is a constant which dictates how the beta values evolve - it is a gaussian parameter
-        defined in the beta distribution.
-
-        `passes` is the number of passes of the initial LdaModel.
-
-        `random_state` can be a np.random.RandomState object or the seed for one, for the LdaModel.
         """
         self.id2word = id2word
         if corpus is None and self.id2word is None:
@@ -152,8 +185,21 @@ class LdaSeqModel(utils.SaveLoad):
             self.fit_lda_seq(corpus, lda_inference_max_iter, em_min_iter, em_max_iter, chunksize)
 
     def init_ldaseq_ss(self, topic_chain_variance, topic_obs_variance, alpha, init_suffstats):
-        """
-        Method to initialize State Space Language Model, topic wise.
+        """Initialize State Space Language Model, topic-wise.
+
+        Parameters
+        ----------
+        topic_chain_variance : float
+            Gaussian parameter defined in the beta distribution to dictate how the beta values evolve.
+        topic_obs_variance : float
+            Observed variance used to approximate the true and forward variance as shown in
+            `David M. Blei, John D. Lafferty: "Dynamic Topic Models"
+            <https://mimno.infosci.cornell.edu/info6150/readings/dynamic_topic_models.pdf>`_.
+        alpha : float
+            The prior probability for the model.
+        init_suffstats : numpy.ndarray
+            Sufficient statistics used for initializing the model, expected shape (`self.vocab_len`, `num_topics`).
+
         """
         self.alphas = alpha
         for k, chain in enumerate(self.topic_chains):
@@ -166,16 +212,30 @@ class LdaSeqModel(utils.SaveLoad):
             # ldaseq.topic_chains[k].w_phi_sq = np.zeros((ldaseq.vocab_len, ldaseq.num_time_slices))
 
     def fit_lda_seq(self, corpus, lda_inference_max_iter, em_min_iter, em_max_iter, chunksize):
-        """
-        fit an lda sequence model:
-            for each time period:
-                set up lda model with E[log p(w|z)] and \alpha
+        """Fit a LDA Sequence model (DTM).
 
-                for each document:
-                    perform posterior inference
-                    update sufficient statistics/likelihood
+        This method will iteratively setup LDA models and perform EM steps until the sufficient statistics convergence,
+        or until the maximum number of iterations is reached. Because the true posterior is intractable, an
+        appropriately tight lower bound must be used instead. This function will optimize this bound, by minimizing
+        its true Kullback-Liebler Divergence with the true posterior.
 
-            maximize topics
+        Parameters
+        ----------
+        corpus : {iterable of list of (int, float), scipy.sparse.csc}
+            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+        lda_inference_max_iter : int
+            Maximum number of iterations for the inference step of LDA.
+        em_min_iter : int
+            Minimum number of time slices to be inspected.
+        em_max_iter : int
+            Maximum number of time slices to be inspected.
+        chunksize : int
+            Number of documents to be processed in each chunk.
+
+        Returns
+        -------
+        float
+            The highest lower bound for the true posterior produced after all iterations.
 
        """
         LDASQE_EM_THRESHOLD = 1e-4
@@ -243,10 +303,37 @@ class LdaSeqModel(utils.SaveLoad):
 
     def lda_seq_infer(self, corpus, topic_suffstats, gammas, lhoods,
                       iter_, lda_inference_max_iter, chunksize):
-        """
-        Inference or E- Step.
-        This is used to set up the gensim LdaModel to be used for each time-slice.
+        """Inference (or E-step) for the lower bound EM optimization.
+
+        This is used to set up the gensim :class:`~gensim.models.ldamodel.LdaModel` to be used for each time-slice.
         It also allows for Document Influence Model code to be written in.
+
+        Parameters
+        ----------
+        corpus : {iterable of list of (int, float), scipy.sparse.csc}
+            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+        topic_suffstats : numpy.ndarray
+            Sufficient statistics for time slice 0, used for initializing the model if `initialize == 'own'`,
+            expected shape (`self.vocab_len`, `num_topics`).
+        gammas : numpy.ndarray
+            Topic weight variational parameters for each document. If not supplied, it will be inferred from the model.
+        lhoods : list of float
+            The total log probability lower bound for each topic. Corresponds to the phi variational parameters in the
+            linked paper.
+        iter_ : int
+            Current iteration.
+        lda_inference_max_iter : int
+            Maximum number of iterations for the inference step of LDA.
+        chunksize : int
+            Number of documents to be processed in each chunk.
+
+        Returns
+        -------
+        (float, list of float)
+            The first value is the highest lower bound for the true posterior.
+            The second value is the list of optimized dirichlet variational parameters for the approximation of
+            the posterior.
+
         """
         num_topics = self.num_topics
         vocab_len = self.vocab_len
@@ -273,10 +360,39 @@ class LdaSeqModel(utils.SaveLoad):
 
     def inferDTMseq(self, corpus, topic_suffstats, gammas, lhoods, lda,
                     ldapost, iter_, bound, lda_inference_max_iter, chunksize):
-        """
-        Computes the likelihood of a sequential corpus under an LDA seq model, and return the likelihood bound.
-        Need to pass the LdaSeq model, corpus, sufficient stats, gammas and lhoods matrices previously created,
-        and LdaModel and LdaPost class objects.
+        """Compute the likelihood of a sequential corpus under an LDA seq model, and reports the likelihood bound.
+
+        Parameters
+        ----------
+        corpus : {iterable of list of (int, float), scipy.sparse.csc}
+            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+        topic_suffstats : numpy.ndarray
+            Sufficient statistics of the current model, expected shape (`self.vocab_len`, `num_topics`).
+        gammas : numpy.ndarray
+            Topic weight variational parameters for each document. If not supplied, it will be inferred from the model.
+        lhoods : list of float of length `self.num_topics`
+            The total log probability bound for each topic. Corresponds to phi from the linked paper.
+        lda : :class:`~gensim.models.ldamodel.LdaModel`
+            The trained LDA model of the previous iteration.
+        ldapost : :class:`~gensim.models.ldaseqmodel.LdaPost`
+            Posterior probability variables for the given LDA model. This will be used as the true (but intractable)
+            posterior.
+        iter_ : int
+            The current iteration.
+        bound : float
+            The LDA bound produced after all iterations.
+        lda_inference_max_iter : int
+            Maximum number of iterations for the inference step of LDA.
+        chunksize : int
+            Number of documents to be processed in each chunk.
+
+        Returns
+        -------
+        (float, list of float)
+            The first value is the highest lower bound for the true posterior.
+            The second value is the list of optimized dirichlet variational parameters for the approximation of
+            the posterior.
+
         """
         doc_index = 0  # overall doc_index in corpus
         time = 0  # current time-slice
@@ -322,8 +438,21 @@ class LdaSeqModel(utils.SaveLoad):
         return bound, gammas
 
     def make_lda_seq_slice(self, lda, time):
-        """
-        set up the LDA model topic-word values with that of ldaseq.
+        """Update the LDA model topic-word values using time slices.
+
+        Parameters
+        ----------
+
+        lda : :class:`~gensim.models.ldamodel.LdaModel`
+            The stationary model to be updated
+        time : int
+            The time slice assigned to the stationary model.
+
+        Returns
+        -------
+        lda : :class:`~gensim.models.ldamodel.LdaModel`
+            The stationary model updated to reflect the passed time slice.
+
         """
         for k in range(0, self.num_topics):
             lda.topics[:, k] = np.copy(self.topic_chains[k].e_log_prob[:, time])
@@ -332,8 +461,18 @@ class LdaSeqModel(utils.SaveLoad):
         return lda
 
     def fit_lda_seq_topics(self, topic_suffstats):
-        """
-        Fit lda sequence topic wise.
+        """Fit the sequential model topic-wise.
+
+        Parameters
+        ----------
+        topic_suffstats : numpy.ndarray
+            Sufficient statistics of the current model, expected shape (`self.vocab_len`, `num_topics`).
+
+        Returns
+        -------
+        float
+            The sum of the optimized lower bounds for all topics.
+
         """
         lhood = 0
 
@@ -345,8 +484,21 @@ class LdaSeqModel(utils.SaveLoad):
         return lhood
 
     def print_topic_times(self, topic, top_terms=20):
-        """
-        Prints one topic showing each time-slice.
+        """Get the most relevant words for a topic, for each timeslice. This can be used to inspect the evolution of a
+        topic through time.
+
+        Parameters
+        ----------
+        topic : int
+            The index of the topic.
+        top_terms : int, optional
+            Number of most relevant words associated with the topic to be returned.
+
+        Returns
+        -------
+        list of list of str
+            Top `top_terms` relevant terms for the topic for each time slice.
+
         """
         topics = []
         for time in range(0, self.num_time_slices):
@@ -355,19 +507,44 @@ class LdaSeqModel(utils.SaveLoad):
         return topics
 
     def print_topics(self, time=0, top_terms=20):
+        """Get the most relevant words for every topic.
+
+        Parameters
+        ----------
+        time : int, optional
+            The time slice in which we are interested in (since topics evolve over time, it is expected that the most
+            relevant words will also gradually change).
+        top_terms : int, optional
+            Number of most relevant words to be returned for each topic.
+
+        Returns
+        -------
+        list of list of (str, float)
+            Representation of all topics. Each of them is represented by a list of pairs of words and their assigned
+            probability.
+
         """
-        Prints all topics in a particular time-slice.
-        """
-        topics = []
-        for topic in range(0, self.num_topics):
-            topics.append(self.print_topic(topic, time, top_terms))
-        return topics
+        return [self.print_topic(topic, time, top_terms) for topic in range(0, self.num_topics)]
 
     def print_topic(self, topic, time=0, top_terms=20):
-        """
-        Topic is the topic number
-        Time is for a particular time_slice
-        top_terms is the number of terms to display
+        """Get the list of words most relevant to the given topic.
+
+        Parameters
+        ----------
+        topic : int
+            The index of the topic to be inspected.
+        time : int, optional
+            The time slice in which we are interested in (since topics evolve over time, it is expected that the most
+            relevant words will also gradually change).
+        top_terms : int, optional
+            Number of words associated with the topic to be returned.
+
+        Returns
+        -------
+        list of (str, float)
+            The representation of this topic. Each element in the list includes the word itself, along with the
+            probability assigned to it by the topic.
+
         """
         topic = self.topic_chains[topic].e_log_prob
         topic = np.transpose(topic)
@@ -378,20 +555,52 @@ class LdaSeqModel(utils.SaveLoad):
         return beststr
 
     def doc_topics(self, doc_number):
-        """
-        On passing the LdaSeqModel trained ldaseq object, the doc_number of your document in the corpus,
-        it returns the doc-topic probabilities of that document.
+        """Get the topic mixture for a document.
+
+        Uses the priors for the dirichlet distribution that approximates the true posterior with the optimal
+        lower bound, and therefore requires the model to be already trained.
+
+
+        Parameters
+        ----------
+        doc_number : int
+            Index of the document for which the mixture is returned.
+
+        Returns
+        -------
+        list of length `self.num_topics`
+            Probability for each topic in the mixture (essentially a point in the `self.num_topics - 1` simplex.
+
         """
         doc_topic = np.copy(self.gammas)
         doc_topic /= doc_topic.sum(axis=1)[:, np.newaxis]
         return doc_topic[doc_number]
 
     def dtm_vis(self, time, corpus):
-        """
-        returns term_frequency, vocab, doc_lengths, topic-term distributions and doc_topic distributions,
-        specified by pyLDAvis format.
-        all of these are needed to visualise topics for DTM for a particular time-slice via pyLDAvis.
-        input parameter is the year to do the visualisation.
+        """Get the information needed to visualize the corpus model at a given time slice, using the pyLDAvis format.
+
+        Parameters
+        ----------
+        time : int
+            The time slice we are interested in.
+        corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
+            The corpus we want to visualize at the given time slice.
+
+        Returns
+        -------
+        doc_topics : list of length `self.num_topics`
+            Probability for each topic in the mixture (essentially a point in the `self.num_topics - 1` simplex.
+        topic_term : numpy.ndarray
+            The representation of each topic as a multinomial over words in the vocabulary,
+            expected shape (`num_topics`, vocabulary length).
+        doc_lengths : list of int
+            The number of words in each document. These could be fixed, or drawn from a Poisson distribution.
+        term_frequency : numpy.ndarray
+            The term frequency matrix (denoted as beta in the original Blei paper). This could also be the TF-IDF
+            representation of the corpus, expected shape (number of documents, length of vocabulary).
+        vocab : list of str
+            The set of unique terms existing in the cropuse's vocabulary.
+
         """
         doc_topic = np.copy(self.gammas)
         doc_topic /= doc_topic.sum(axis=1)[:, np.newaxis]
@@ -409,14 +618,26 @@ class LdaSeqModel(utils.SaveLoad):
                 term_frequency[pair[0]] += pair[1]
 
         vocab = [self.id2word[i] for i in range(0, len(self.id2word))]
-        # returns np arrays for doc_topic proportions, topic_term proportions, and document_lengths, term_frequency.
-        # these should be passed to the `pyLDAvis.prepare` method to visualise one time-slice of DTM topics.
+
         return doc_topic, np.array(topic_term), doc_lengths, term_frequency, vocab
 
     def dtm_coherence(self, time):
-        """
-        returns all topics of a particular time-slice without probabilitiy values for it to be used
-        for either "u_mass" or "c_v" coherence.
+        """Get the coherence for each topic.
+
+        Can be used to measure the quality of the model, or to inspect the convergence through training via a callback.
+
+        Parameters
+        ----------
+        time : int
+            The time slice.
+
+        Returns
+        -------
+        list of list of str
+            The word representation for each topic, for each time slice. This can be used to check the time coherence
+            of topics as time evolves: If the most relevant words remain the same then the topic has somehow
+            converged or is relatively static, if they change rapidly the topic is evolving.
+
         """
         coherence_topics = []
         for topics in self.print_topics(time):
@@ -428,8 +649,18 @@ class LdaSeqModel(utils.SaveLoad):
         return coherence_topics
 
     def __getitem__(self, doc):
-        """
-        Similar to the LdaModel __getitem__ function, it returns topic proportions of a document passed.
+        """Get the topic mixture for the given document, using the inferred approximation of the true posterior.
+
+        Parameters
+        ----------
+        doc : list of (int, float)
+            The doc in BOW format. Can be an unseen document.
+
+        Returns
+        -------
+        list of float
+            Probabilities for each topic in the mixture. This is essentially a point in the `num_topics - 1` simplex.
+
         """
         lda_model = \
             ldamodel.LdaModel(num_topics=self.num_topics, alpha=self.alphas, id2word=self.id2word, dtype=np.float64)
@@ -448,14 +679,17 @@ class LdaSeqModel(utils.SaveLoad):
 
 
 class sslm(utils.SaveLoad):
-    """
-    The sslm class is the State Space Language Model for DTM and contains the following information:
-    `obs` values contain the doc - topic ratios
-    `e_log_prob` contains topic - word ratios
-    `mean`, `fwd_mean` contains the mean values to be used for inference for each word for a time_slice
-    `variance`, `fwd_variance` contains the variance values to be used for inference for each word in a time_slice
-    `fwd_mean`, `fwd_variance` are the forward posterior values.
-    `zeta` is an extra variational parameter with a value for each time-slice
+    """Encapsulate the inner State Space Language Model for DTM.
+
+    Some important attributes of this class:
+
+        * `obs` is a matrix containing the document to topic ratios.
+        * `e_log_prob` is a matrix containing the topic to word ratios.
+        * `mean` contains the mean values to be used for inference for each word for a time slice.
+        * `variance` contains the variance values to be used for inference of word in a time slice.
+        * `fwd_mean` and`fwd_variance` are the forward posterior values for the mean and the variance.
+        * `zeta` is an extra variational parameter with a value for each time slice.
+
     """
 
     def __init__(self, vocab_len=None, num_time_slices=None, num_topics=None, obs_variance=0.5, chain_variance=0.005):
@@ -485,35 +719,56 @@ class sslm(utils.SaveLoad):
         self.m_update_coeff_g = None
 
     def update_zeta(self):
-        """
-        Updates the Zeta Variational Parameter.
-        Zeta is described in the appendix and is equal
-        to sum (exp(mean[word] + Variance[word] / 2)), over every time-slice.
-        It is the value of variational parameter zeta which maximizes the lower bound.
+        """Update the Zeta variational parameter.
+
+        Zeta is described in the appendix and is equal to sum (exp(mean[word] + Variance[word] / 2)),
+        over every time-slice. It is the value of variational parameter zeta which maximizes the lower bound.
+
+        Returns
+        -------
+        list of float
+            The updated zeta values for each time slice.
+
         """
         for j, val in enumerate(self.zeta):
             self.zeta[j] = np.sum(np.exp(self.mean[:, j + 1] + self.variance[:, j + 1] / 2))
         return self.zeta
 
     def compute_post_variance(self, word, chain_variance):
-        """
-        Based on the  Variational Kalman Filtering approach for Approximate Inference
-        [https://www.cs.princeton.edu/~blei/papers/BleiLafferty2006a.pdf]
-        This function accepts the word to compute variance for, along with the associated sslm class object,
-        and returns variance and fwd_variance
-        Computes Var[\beta_{t,w}] for t = 1:T
+        """Get the variance, based on the `Variational Kalman Filtering approach for Approximate Inference (section 3.1)
+        <https://mimno.infosci.cornell.edu/info6150/readings/dynamic_topic_models.pdf>`_.
 
-        :math::
+        This function accepts the word to compute variance for, along with the associated sslm class object,
+        and returns the `variance` and the posterior approximation `fwd_variance`.
+
+        Notes
+        -----
+        This function essentially computes Var[\beta_{t,w}] for t = 1:T
+
+        .. :math::
 
             fwd\_variance[t] \equiv E((beta_{t,w}-mean_{t,w})^2 |beta_{t}\ for\ 1:t) =
-             (obs\_variance / fwd\_variance[t - 1] + chain\_variance + obs\_variance ) *
-             (fwd\_variance[t - 1] + obs\_variance)
+            (obs\_variance / fwd\_variance[t - 1] + chain\_variance + obs\_variance ) *
+            (fwd\_variance[t - 1] + obs\_variance)
 
-        :math::
+        .. :math::
 
             variance[t] \equiv E((beta_{t,w}-mean\_cap_{t,w})^2 |beta\_cap_{t}\ for\ 1:t) =
             fwd\_variance[t - 1] + (fwd\_variance[t - 1] / fwd\_variance[t - 1] + obs\_variance)^2 *
             (variance[t - 1] - (fwd\_variance[t-1] + obs\_variance))
+
+        Parameters
+        ----------
+        word: int
+            The word's ID.
+        chain_variance : float
+            Gaussian parameter defined in the beta distribution to dictate how the beta values evolve over time.
+
+        Returns
+        -------
+        (numpy.ndarray, numpy.ndarray)
+            The first returned value is the variance of each word in each time slice, the second value is the
+            inferred posterior variance for the same pairs.
 
         """
         INIT_VARIANCE_CONST = 1000
@@ -542,20 +797,37 @@ class sslm(utils.SaveLoad):
         return variance, fwd_variance
 
     def compute_post_mean(self, word, chain_variance):
-        """
-        Based on the Variational Kalman Filtering approach for Approximate Inference
-        [https://www.cs.princeton.edu/~blei/papers/BleiLafferty2006a.pdf]
-        This function accepts the word to compute mean for, along with the associated sslm class object,
-        and returns mean and fwd_mean
-        Essentially a forward-backward to compute E[\beta_{t,w}] for t = 1:T.
+        """Get the mean, based on the `Variational Kalman Filtering approach for Approximate Inference (section 3.1)
+        <https://mimno.infosci.cornell.edu/info6150/readings/dynamic_topic_models.pdf>`_.
 
-        Fwd_Mean(t) ≡  E(beta_{t,w} | beta_ˆ 1:t )
-        = (obs_variance / fwd_variance[t - 1] + chain_variance + obs_variance ) * fwd_mean[t - 1] +
-        (1 - (obs_variance / fwd_variance[t - 1] + chain_variance + obs_variance)) * beta
+        Notes
+        -----
+        This function essentially computes E[\beta_{t,w}] for t = 1:T.
 
-        Mean(t) ≡ E(beta_{t,w} | beta_ˆ 1:T )
-        = fwd_mean[t - 1] + (obs_variance / fwd_variance[t - 1] + obs_variance) +
-        (1 - obs_variance / fwd_variance[t - 1] + obs_variance)) * mean[t]
+        .. :math::
+
+            Fwd_Mean(t) ≡  E(beta_{t,w} | beta_ˆ 1:t )
+            = (obs_variance / fwd_variance[t - 1] + chain_variance + obs_variance ) * fwd_mean[t - 1] +
+            (1 - (obs_variance / fwd_variance[t - 1] + chain_variance + obs_variance)) * beta
+
+        .. :math::
+
+            Mean(t) ≡ E(beta_{t,w} | beta_ˆ 1:T )
+            = fwd_mean[t - 1] + (obs_variance / fwd_variance[t - 1] + obs_variance) +
+            (1 - obs_variance / fwd_variance[t - 1] + obs_variance)) * mean[t]
+
+        Parameters
+        ----------
+        word: int
+            The word's ID.
+        chain_variance : float
+            Gaussian parameter defined in the beta distribution to dictate how the beta values evolve over time.
+
+        Returns
+        -------
+        (numpy.ndarray, numpy.ndarray)
+            The first returned value is the mean of each word in each time slice, the second value is the
+            inferred posterior mean for the same pairs.
 
         """
         T = self.num_time_slices
@@ -581,21 +853,38 @@ class sslm(utils.SaveLoad):
         return mean, fwd_mean
 
     def compute_expected_log_prob(self):
-        """
-        Compute the expected log probability given values of m.
+        """Compute the expected log probability given values of m.
+
         The appendix describes the Expectation of log-probabilities in equation 5 of the DTM paper;
-        The below implementation is the result of solving the equation and is as implemented
-        in the original Blei DTM code.
+        The below implementation is the result of solving the equation and is implemented as in the original
+        Blei DTM code.
+
+        Returns
+        -------
+        numpy.ndarray of float
+            The expected value for the log probabilities for each word and time slice.
+
         """
         for (w, t), val in np.ndenumerate(self.e_log_prob):
             self.e_log_prob[w][t] = self.mean[w][t + 1] - np.log(self.zeta[t])
         return self.e_log_prob
 
     def sslm_counts_init(self, obs_variance, chain_variance, sstats):
-        """
-        Initialize State Space Language Model with LDA sufficient statistics.
-        Called for each topic-chain and initializes intial mean, variance and Topic-Word probabilities
+        """Initialize the State Space Language Model with LDA sufficient statistics.
+
+        Called for each topic-chain and initializes initial mean, variance and Topic-Word probabilities
         for the first time-slice.
+
+        Parameters
+        ----------
+        obs_variance : float, optional
+            Observed variance used to approximate the true and forward variance.
+        chain_variance : float
+            Gaussian parameter defined in the beta distribution to dictate how the beta values evolve over time.
+        sstats : numpy.ndarray
+            Sufficient statistics of the LDA model. Corresponds to matrix beta in the linked paper for time slice 0,
+            expected shape (`self.vocab_len`, `num_topics`).
+
         """
         W = self.vocab_len
         T = self.num_time_slices
@@ -621,11 +910,24 @@ class sslm(utils.SaveLoad):
         self.e_log_prob = self.compute_expected_log_prob()
 
     def fit_sslm(self, sstats):
-        """
-        Fits variational distribution.
+        """Fits variational distribution.
+
         This is essentially the m-step.
-        Accepts the sstats for a particular topic for input and maximizes values for that topic.
-        Updates the values in the update_obs() and compute_expected_log_prob methods.
+        Maximizes the approximation of the true posterior for a particular topic using the provided sufficient
+        statistics. Updates the values using :meth:`~gensim.models.ldaseqmodel.sslm.update_obs` and
+        :meth:`~gensim.models.ldaseqmodel.sslm.compute_expected_log_prob`.
+
+        Parameters
+        ----------
+        sstats : numpy.ndarray
+            Sufficient statistics for a particular topic. Corresponds to matrix beta in the linked paper for the
+            current time slice, expected shape (`self.vocab_len`, `num_topics`).
+
+        Returns
+        -------
+        float
+            The lower bound for the true posterior achieved using the fitted approximate distribution.
+
         """
         W = self.vocab_len
         bound = 0
@@ -667,9 +969,23 @@ class sslm(utils.SaveLoad):
         return bound
 
     def compute_bound(self, sstats, totals):
-        """
-        Compute log probability bound.
-        Forumula is as described in appendix of DTM by Blei. (formula no. 5)
+        """Compute the maximized lower bound achieved for the log probability of the true posterior.
+
+        Uses the formula presented in the appendix of the DTM paper (formula no. 5).
+
+        Parameters
+        ----------
+        sstats : numpy.ndarray
+            Sufficient statistics for a particular topic. Corresponds to matrix beta in the linked paper for the first
+            time slice, expected shape (`self.vocab_len`, `num_topics`).
+        totals : list of int of length `len(self.time_slice)`
+            The totals for each time slice.
+
+        Returns
+        -------
+        float
+            The maximized lower bound.
+
         """
         w = self.vocab_len
         t = self.num_time_slices
@@ -703,7 +1019,7 @@ class sslm(utils.SaveLoad):
 
                 v = self.variance[w][t]
 
-                # w_phi_l is only used in Document Influence Model; the values are aleays zero in this case
+                # w_phi_l is only used in Document Influence Model; the values are always zero in this case
                 # w_phi_l = sslm.w_phi_l[w][t - 1]
                 # exp_i = np.exp(-prev_m)
                 # term_1 += (np.power(m - prev_m - (w_phi_l * exp_i), 2) / (2 * chain_variance)) -
@@ -720,12 +1036,25 @@ class sslm(utils.SaveLoad):
         return val
 
     def update_obs(self, sstats, totals):
-        """
-        Function to perform optimization of obs. Parameters are suff_stats set up in the fit_sslm method.
+        """Optimize the bound with respect to the observed variables.
 
         TODO:
         This is by far the slowest function in the whole algorithm.
         Replacing or improving the performance of this would greatly speed things up.
+
+        Parameters
+        ----------
+        sstats : numpy.ndarray
+            Sufficient statistics for a particular topic. Corresponds to matrix beta in the linked paper for the first
+            time slice, expected shape (`self.vocab_len`, `num_topics`).
+        totals : list of int of length `len(self.time_slice)`
+            The totals for each time slice.
+
+        Returns
+        -------
+        (numpy.ndarray of float, numpy.ndarray of float)
+            The updated optimized values for obs and the zeta variational parameter.
+
         """
 
         OBS_NORM_CUTOFF = 2
@@ -785,10 +1114,28 @@ class sslm(utils.SaveLoad):
         return self.obs, self.zeta
 
     def compute_mean_deriv(self, word, time, deriv):
-        """
-        Used in helping find the optimum function.
-        computes derivative of E[\beta_{t,w}]/d obs_{s,w} for t = 1:T.
-        put the result in deriv, allocated T+1 vector
+        """Helper functions for optimizing a function.
+
+        Compute the derivative of:
+
+        .. :math::
+
+            E[\beta_{t,w}]/d obs_{s,w} for t = 1:T.
+
+        Parameters
+        ----------
+        word : int
+            The word's ID.
+        time : int
+            The time slice.
+        deriv : list of float
+            Derivative for each time slice.
+
+        Returns
+        -------
+        list of float
+            Mean derivative for each time slice.
+
         """
 
         T = self.num_time_slices
@@ -817,8 +1164,26 @@ class sslm(utils.SaveLoad):
         return deriv
 
     def compute_obs_deriv(self, word, word_counts, totals, mean_deriv_mtx, deriv):
-        """
-        Derivation of obs which is used in derivative function [df_obs] while optimizing.
+        """Derivation of obs which is used in derivative function `df_obs` while optimizing.
+
+        Parameters
+        ----------
+        word : int
+            The word's ID.
+        word_counts : list of int
+            Total word counts for each time slice.
+        totals : list of int of length `len(self.time_slice)`
+            The totals for each time slice.
+        mean_deriv_mtx : list of float
+            Mean derivative for each time slice.
+        deriv : list of float
+            Mean derivative for each time slice.
+
+        Returns
+        -------
+        list of float
+            Mean derivative for each time slice.
+
         """
 
         # flag
@@ -869,19 +1234,36 @@ class sslm(utils.SaveLoad):
             deriv[t] = term1 + term2 + term3 + term4
 
         return deriv
-# endclass sslm
 
 
 class LdaPost(utils.SaveLoad):
+    """Posterior values associated with each set of documents.
 
-    """
-    Posterior values associated with each set of documents.
     TODO: use **Hoffman, Blei, Bach: Online Learning for Latent Dirichlet Allocation, NIPS 2010.**
     to update phi, gamma. End game would be to somehow replace LdaPost entirely with LdaModel.
+
     """
 
     def __init__(self, doc=None, lda=None, max_doc_len=None, num_topics=None, gamma=None, lhood=None):
+        """Initialize the posterior value structure for the given LDA model.
 
+        Parameters
+        ----------
+        doc : list of (int, int)
+            A BOW representation of the document. Each element in the list is a pair of a word's ID and its number
+            of occurences in the document.
+        lda : :class:`~gensim.models.ldamodel.LdaModel`, optional
+            The underlying LDA model.
+        max_doc_len : int, optional
+            The maximum number of words in a document.
+        num_topics : int, optional
+            Number of topics discovered by the LDA model.
+        gamma : numpy.ndarray, optional
+            Topic weight variational parameters for each document. If not supplied, it will be inferred from the model.
+        lhood : float, optional
+            The log likelihood lower bound.
+
+        """
         self.doc = doc
         self.lda = lda
         self.gamma = gamma
@@ -901,13 +1283,26 @@ class LdaPost(utils.SaveLoad):
         self.renormalized_doc_weight = None
 
     def update_phi(self, doc_number, time):
-        """
-        Update variational multinomial parameters, based on a document and a time-slice.
+        """Update variational multinomial parameters, based on a document and a time-slice.
+
         This is done based on the original Blei-LDA paper, where:
         log_phi := beta * exp(Ψ(gamma)), over every topic for every word.
 
         TODO: incorporate lee-sueng trick used in
         **Lee, Seung: Algorithms for non-negative matrix factorization, NIPS 2001**.
+
+        Parameters
+        ----------
+        doc_number : int
+            Document number. Unused.
+        time : int
+            Time slice. Unused.
+
+        Returns
+        -------
+        (list of float, list of float)
+            Multinomial parameters, and their logarithm, for each word in the document.
+
         """
         num_topics = self.lda.num_topics
         # digamma values
@@ -939,9 +1334,16 @@ class LdaPost(utils.SaveLoad):
         return self.phi, self.log_phi
 
     def update_gamma(self):
-        """
-        update variational dirichlet parameters as described in the original Blei LDA paper:
+        """Update variational dirichlet parameters.
+
+        This operations is described in the original Blei LDA paper:
         gamma = alpha + sum(phi), over every topic for every word.
+
+        Returns
+        -------
+        list of float
+            The updated gamma parameters for each word in the document.
+
         """
         self.gamma = np.copy(self.lda.alpha)
         n = 0  # keep track of number of iterations for phi, log_phi
@@ -954,9 +1356,7 @@ class LdaPost(utils.SaveLoad):
         return self.gamma
 
     def init_lda_post(self):
-        """
-        Initialize variational posterior, does not return anything.
-        """
+        """Initialize variational posterior. """
         total = sum(count for word_id, count in self.doc)
         self.gamma.fill(self.lda.alpha[0] + float(total) / self.lda.num_topics)
         self.phi[:len(self.doc), :] = 1.0 / self.lda.num_topics
@@ -964,8 +1364,13 @@ class LdaPost(utils.SaveLoad):
         # ldapost.doc_weight = None
 
     def compute_lda_lhood(self):
-        """
-        compute the likelihood bound
+        """Compute the log likelihood bound.
+
+        Returns
+        -------
+        float
+            The optimal lower bound for the true posterior using the approximate distribution.
+
         """
         num_topics = self.lda.num_topics
         gamma_sum = np.sum(self.gamma)
@@ -1008,9 +1413,33 @@ class LdaPost(utils.SaveLoad):
 
     def fit_lda_post(self, doc_number, time, ldaseq, LDA_INFERENCE_CONVERGED=1e-8,
                     lda_inference_max_iter=25, g=None, g3_matrix=None, g4_matrix=None, g5_matrix=None):
-        """
-        Posterior inference for lda.
-        g, g3, g4 and g5 are matrices used in Document Influence Model and not used currently.
+        """Posterior inference for lda.
+
+        Parameters
+        ----------
+        doc_number : int
+            The documents number.
+        time : int
+            Time slice.
+        ldaseq : object
+            Unused.
+        LDA_INFERENCE_CONVERGED : float
+            Epsilon value used to check whether the inference step has sufficiently converged.
+        lda_inference_max_iter : int
+            Maximum number of iterations in the inference step.
+        g : object
+            Unused. Will be useful when the DIM model is implemented.
+        g3_matrix: object
+            Unused. Will be useful when the DIM model is implemented.
+        g4_matrix: object
+            Unused. Will be useful when the DIM model is implemented.
+        g5_matrix: object
+            Unused. Will be useful when the DIM model is implemented.
+
+        Returns
+        -------
+        float
+            The optimal lower bound for the true posterior using the approximate distribution.
         """
 
         self.init_lda_post()
@@ -1060,9 +1489,26 @@ class LdaPost(utils.SaveLoad):
         return lhood
 
     def update_lda_seq_ss(self, time, doc, topic_suffstats):
-        """
-        Update lda sequence sufficient statistics from an lda posterior.
-        This is very similar to the update_gamma method and uses the same formula.
+        """Update lda sequence sufficient statistics from an lda posterior.
+
+        This is very similar to the :meth:`~gensim.models.ldaseqmodel.LdaPost.update_gamma` method and uses
+        the same formula.
+
+        Parameters
+        ----------
+        time : int
+            The time slice.
+        doc : list of (int, float)
+            Unused but kept here for backwards compatibility. The document set in the constructor (`self.doc`) is used
+            instead.
+        topic_suffstats : list of float
+            Sufficient statistics for each topic.
+
+        Returns
+        -------
+        list of float
+            The updated sufficient statistics for each topic.
+
         """
         num_topics = self.lda.num_topics
 
@@ -1077,10 +1523,32 @@ class LdaPost(utils.SaveLoad):
         return topic_suffstats
 
 
-# the following functions are used in update_obs as the function to optimize
+# the following functions are used in update_obs as the objective function.
 def f_obs(x, *args):
-    """
-    Function which we are optimising for minimizing obs.
+    """Function which we are optimising for minimizing obs.
+
+    Parameters
+    ----------
+    x : list of float
+        The obs values for this word.
+    sslm : :class:`~gensim.models.ldaseqmodel.sslm`
+        The State Space Language Model for DTM.
+    word_counts : list of int
+        Total word counts for each time slice.
+    totals : list of int of length `len(self.time_slice)`
+        The totals for each time slice.
+    mean_deriv_mtx : list of float
+        Mean derivative for each time slice.
+    word : int
+        The word's ID.
+    deriv : list of float
+        Mean derivative for each time slice.
+
+    Returns
+    -------
+    list of float
+        The value of the objective function evaluated at point `x`.
+
     """
     sslm, word_counts, totals, mean_deriv_mtx, word, deriv = args
     # flag
@@ -1131,8 +1599,30 @@ def f_obs(x, *args):
 
 
 def df_obs(x, *args):
-    """
-    Derivative of function which optimises obs.
+    """Derivative of the objective function which optimises obs.
+
+    Parameters
+    ----------
+    x : list of float
+        The obs values for this word.
+    sslm : :class:`~gensim.models.ldaseqmodel.sslm`
+        The State Space Language Model for DTM.
+    word_counts : list of int
+        Total word counts for each time slice.
+    totals : list of int of length `len(self.time_slice)`
+        The totals for each time slice.
+    mean_deriv_mtx : list of float
+        Mean derivative for each time slice.
+    word : int
+        The word's ID.
+    deriv : list of float
+        Mean derivative for each time slice.
+
+    Returns
+    -------
+    list of float
+        The derivative of the objective function evaluated at point `x`.
+
     """
     sslm, word_counts, totals, mean_deriv_mtx, word, deriv = args
 

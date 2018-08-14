@@ -72,6 +72,9 @@ class TestApi(unittest.TestCase):
         self.assertEqual(sorted(data.keys()), sorted(['models', 'corpora']))
         self.assertTrue(len(data['models']))
         self.assertTrue(len(data['corpora']))
+        name_only_data = api.info(name_only=True)
+        self.assertEqual(len(name_only_data.keys()), 2)
+        self.assertTrue({'models', 'corpora'} == set(name_only_data))
 
 
 if __name__ == '__main__':

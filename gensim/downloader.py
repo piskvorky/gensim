@@ -29,6 +29,7 @@ Dataset example:
 Also, this API available via CLI::
 
     python -m gensim.downloader --info <dataname> # same as api.info(dataname)
+    python -m gensim.downloader --info name # same as api.info(name_only=True)
     python -m gensim.downloader --download <dataname> # same as api.load(dataname, return_path=True)
 
 """
@@ -154,7 +155,7 @@ def _calculate_md5_checksum(fname):
     return hash_md5.hexdigest()
 
 
-def info(name=None, show_only_latest=True):
+def info(name=None, show_only_latest=True, name_only=False):
     """Provide the information related to model/dataset.
 
     Parameters
@@ -164,6 +165,8 @@ def info(name=None, show_only_latest=True):
     show_only_latest : bool, optional
         If storage contains different versions for one data/model, this flag allow to hide outdated versions.
         Affects only if `name` is None.
+    name_only : bool, optional
+        If True, will return only the names of available models and corpora.
 
     Returns
     -------
@@ -204,6 +207,9 @@ def info(name=None, show_only_latest=True):
 
     if not show_only_latest:
         return information
+
+    if name_only:
+        return {"corpora": list(information['corpora'].keys()), "models": list(information['models'])}
 
     return {
         "corpora": {name: data for (name, data) in information['corpora'].items() if data.get("latest", True)},
@@ -420,7 +426,7 @@ def load(name, return_path=False):
 
 if __name__ == '__main__':
     logging.basicConfig(
-        format='%(asctime)s :%(name)s :%(levelname)s :%(message)s', stream=sys.stdout, level=logging.INFO
+        format='%(asctime)s : %(name)s : %(levelname)s : %(message)s', stream=sys.stdout, level=logging.INFO
     )
     parser = argparse.ArgumentParser(
         description="Gensim console API",
@@ -444,5 +450,8 @@ if __name__ == '__main__':
         data_path = load(args.download[0], return_path=True)
         logger.info("Data has been installed and data path is %s", data_path)
     elif args.info is not None:
-        output = info() if (args.info == full_information) else info(name=args.info)
-        print(json.dumps(output, indent=4))
+        if args.info == 'name':
+            print(json.dumps(info(name_only=True), indent=4))
+        else:
+            output = info() if (args.info == full_information) else info(name=args.info)
+            print(json.dumps(output, indent=4))

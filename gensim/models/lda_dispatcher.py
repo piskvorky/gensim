@@ -4,23 +4,18 @@
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-""":class:`~gensim.models.lda_dispatcher.Dispatcher` process which orchestrates
-distributed :class:`~gensim.models.ldamodel.LdaModel` computations.
-Run this script only once, on the master node in your cluster.
+"""Dispatcher process which orchestrates distributed Latent Dirichlet Allocation
+(LDA, :class:`~gensim.models.ldamodel.LdaModel`) computations.
+Run this script only once, on any node in your cluster.
 
 Notes
 -----
-The dispatches expects to find worker scripts already running. Make sure you run as many workers as you like on
-your  machines **before** launching the dispatcher.
-
-Warnings
---------
-Requires installed `Pyro4 <https://pythonhosted.org/Pyro4/>`_.
+The dispatcher expects to find worker scripts already running. Make sure you run as many workers as you like on
+your machines **before** launching the dispatcher.
 
 
 How to use distributed :class:`~gensim.models.ldamodel.LdaModel`
 ----------------------------------------------------------------
-
 
 #. Install needed dependencies (Pyro4) ::
 
@@ -58,7 +53,6 @@ Command line arguments
    :ellipsis: 0, -7
 
 """
-
 
 from __future__ import with_statement
 import argparse
@@ -126,7 +120,7 @@ class Dispatcher(object):
 
     @Pyro4.expose
     def initialize(self, **model_params):
-        """Fully initializes the dispatcher and all its workers.
+        """Fully initialize the dispatcher and all its workers.
 
         Parameters
         ----------
@@ -176,7 +170,7 @@ class Dispatcher(object):
 
     @Pyro4.expose
     def getjob(self, worker_id):
-        """Atomically pops a job from the queue.
+        """Atomically pop a job from the queue.
 
         Parameters
         ----------
@@ -242,7 +236,7 @@ class Dispatcher(object):
 
     @Pyro4.expose
     def reset(self, state):
-        """Reinitializes all workers for a new EM iteration.
+        """Reinitialize all workers for a new EM iteration.
 
         Parameters
         ----------
@@ -261,7 +255,9 @@ class Dispatcher(object):
     @Pyro4.oneway
     @utils.synchronous('lock_update')
     def jobdone(self, workerid):
-        """Callback used by workers to notify when their job is done.
+        """A worker has finished its job. Log this event and then asynchronously transfer control back to the worker.
+
+        Callback used by workers to notify when their job is done.
 
         The job done event is logged and then control is asynchronously transfered back to the worker
         (who can then request another job). In this way, control flow basically oscillates between
@@ -290,7 +286,7 @@ class Dispatcher(object):
 
     @Pyro4.oneway
     def exit(self):
-        """Terminate all workers and then the dispatcher."""
+        """Terminate all registered workers and then the dispatcher."""
         for workerid, worker in iteritems(self.workers):
             logger.info("terminating worker %s", workerid)
             worker.exit()
@@ -299,7 +295,6 @@ class Dispatcher(object):
 
 
 def main():
-    """Set up argument parser,logger and launches pyro daemon."""
     parser = argparse.ArgumentParser(description=__doc__[:-135], formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument(
         "--maxsize",
