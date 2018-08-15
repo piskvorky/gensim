@@ -194,7 +194,7 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertEqual(len(model_neg.wv.vocab), 14)
 
     @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
-    def testOnlineLearningMultistream(self):
+    def testOnlineLearningFromFile(self):
         """Test that the algorithm is able to add new words to the
         vocabulary and to a trained model when using a sorted vocabulary"""
         with temporary_file(get_tmpfile('gensim_word2vec1.tst')) as corpus_file,\
@@ -214,7 +214,7 @@ class TestWord2VecModel(unittest.TestCase):
             self.assertEqual(len(model_neg.wv.vocab), 14)
 
     @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
-    def testOnlineLearningAfterSaveMultistream(self):
+    def testOnlineLearningAfterSaveFromFile(self):
         """Test that the algorithm is able to add new words to the
         vocabulary and to a trained model when using a sorted vocabulary"""
         with temporary_file(get_tmpfile('gensim_word2vec1.tst')) as corpus_file,\
@@ -294,7 +294,7 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertEqual(len(wv.vocab), len(loaded_wv.vocab))
 
     @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
-    def testPersistenceMultistream(self):
+    def testPersistenceFromFile(self):
         """Test storing/loading the entire model trained with corpus_file argument."""
         with temporary_file(get_tmpfile('gensim_word2vec.tst')) as corpus_file:
             utils.save_as_line_sentence(sentences, corpus_file)
@@ -541,7 +541,7 @@ class TestWord2VecModel(unittest.TestCase):
         self.models_equal(model, model2)
 
     @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
-    def testTrainingMultistream(self):
+    def testTrainingFromFile(self):
         """Test word2vec training with corpus_file argument."""
         # build vocabulary, don't train yet
         with temporary_file(get_tmpfile('gensim_word2vec.tst')) as tf:
@@ -609,7 +609,7 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(0.0 <= oov < 90.0)
 
     @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
-    def testEvaluateWordPairsMultistream(self):
+    def testEvaluateWordPairsFromFile(self):
         """Test Spearman and Pearson correlation coefficients give sane results on similarity datasets"""
         with temporary_file(get_tmpfile('gensim_word2vec.tst')) as tf:
             utils.save_as_line_sentence(word2vec.LineSentence(datapath('head500.noblanks.cor.bz2')), tf)
@@ -652,7 +652,7 @@ class TestWord2VecModel(unittest.TestCase):
         self.model_sanity(model)
 
     @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
-    def test_sg_hs_multistream(self):
+    def test_sg_hs_fromfile(self):
         model = word2vec.Word2Vec(sg=1, window=4, hs=1, negative=0, min_count=5, iter=10, workers=2)
         self.model_sanity(model, with_corpus_file=True)
 
@@ -662,7 +662,7 @@ class TestWord2VecModel(unittest.TestCase):
         self.model_sanity(model)
 
     @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
-    def test_sg_neg_multistream(self):
+    def test_sg_neg_fromfile(self):
         model = word2vec.Word2Vec(sg=1, window=4, hs=0, negative=15, min_count=5, iter=10, workers=2)
         self.model_sanity(model, with_corpus_file=True)
 
@@ -675,7 +675,7 @@ class TestWord2VecModel(unittest.TestCase):
         self.model_sanity(model)
 
     @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
-    def test_cbow_hs_multistream(self):
+    def test_cbow_hs_fromfile(self):
         model = word2vec.Word2Vec(
             sg=0, cbow_mean=1, alpha=0.05, window=8, hs=1, negative=0,
             min_count=5, iter=10, workers=2, batch_words=1000
@@ -691,7 +691,7 @@ class TestWord2VecModel(unittest.TestCase):
         self.model_sanity(model)
 
     @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
-    def test_cbow_neg_multistream(self):
+    def test_cbow_neg_fromfile(self):
         model = word2vec.Word2Vec(
             sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=15,
             min_count=5, iter=10, workers=2, sample=0
@@ -1063,9 +1063,9 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
     @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
     def testCythonLineSentenceWorksWithFilename(self):
         """Does CythonLineSentence work with a filename argument?"""
-        from gensim.models import word2vec_multistream
+        from gensim.models import word2vec_corpusfile
         with utils.smart_open(datapath('lee_background.cor')) as orig:
-            sentences = word2vec_multistream.CythonLineSentence(datapath('lee_background.cor'))
+            sentences = word2vec_corpusfile.CythonLineSentence(datapath('lee_background.cor'))
             for words in sentences:
                 self.assertEqual(words, orig.readline().split())
 

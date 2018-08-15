@@ -346,15 +346,15 @@ except ImportError:
 
 
 try:
-    from gensim.models.doc2vec_multistream import (
+    from gensim.models.doc2vec_corpusfile import (
         d2v_train_epoch_dbow,
         d2v_train_epoch_dm_concat,
         d2v_train_epoch_dm,
-        MULTISTREAM_VERSION
+        CORPUSFILE_VERSION
     )
 except ImportError:
-    # multistream doc2vec is not supported
-    MULTISTREAM_VERSION = -1
+    # corpusfile doc2vec is not supported
+    CORPUSFILE_VERSION = -1
 
     def d2v_train_epoch_dbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
                              work, _neu1, docvecs_count, word_vectors=None, word_locks=None, train_words=False,

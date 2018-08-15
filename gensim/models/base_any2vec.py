@@ -139,10 +139,10 @@ class BaseAny2VecModel(utils.SaveLoad):
     def _check_input_data_sanity(self, data_iterable=None, corpus_file=None):
         """Check that only one argument is None."""
         if not (data_iterable is None) ^ (corpus_file is None):
-            raise ValueError("You must provide only one of singlestream or multistream arguments.")
+            raise ValueError("You must provide only one of singlestream or corpus_file arguments.")
 
-    def _worker_loop_multistream(self, corpus_file, offset, cython_vocab, progress_queue, cur_epoch=0,
-                                 total_examples=None, total_words=None):
+    def _worker_loop_corpusfile(self, corpus_file, offset, cython_vocab, progress_queue, cur_epoch=0,
+                                total_examples=None, total_words=None):
         """Train the model on a `corpus_file` in LineSentence format.
 
         This function will be called in parallel by multiple workers (threads or processes) to make
@@ -364,7 +364,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         self.total_train_time += elapsed
         return trained_word_count, raw_word_count, job_tally
 
-    def _train_epoch_multistream(self, corpus_file, cur_epoch=0, total_examples=None, total_words=None):
+    def _train_epoch_corpusfile(self, corpus_file, cur_epoch=0, total_examples=None, total_words=None):
         """Train the model for a single epoch.
 
         Parameters
@@ -393,7 +393,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         if not total_words:
             raise ValueError("total_words must be provided alongside corpus_file argument.")
 
-        from gensim.models.word2vec_multistream import CythonVocab
+        from gensim.models.word2vec_corpusfile import CythonVocab
         cython_vocab = CythonVocab(self.wv, hs=self.hs, fasttext=hasattr(self, 'word_ngrams'))
 
         progress_queue = Queue()
@@ -402,7 +402,7 @@ class BaseAny2VecModel(utils.SaveLoad):
 
         workers = [
             threading.Thread(
-                target=self._worker_loop_multistream,
+                target=self._worker_loop_corpusfile,
                 args=(corpus_file, corpus_file_size / self.workers * thread_id, cython_vocab, progress_queue,),
                 kwargs={'cur_epoch': cur_epoch, 'total_examples': total_examples, 'total_words': total_words}
             ) for thread_id in range(self.workers)
@@ -536,7 +536,7 @@ class BaseAny2VecModel(utils.SaveLoad):
                     data_iterable, cur_epoch=cur_epoch, total_examples=total_examples,
                     total_words=total_words, queue_factor=queue_factor, report_delay=report_delay)
             else:
-                trained_word_count_epoch, raw_word_count_epoch, job_tally_epoch = self._train_epoch_multistream(
+                trained_word_count_epoch, raw_word_count_epoch, job_tally_epoch = self._train_epoch_corpusfile(
                     corpus_file, cur_epoch=cur_epoch, total_examples=total_examples, total_words=total_words)
 
             trained_word_count += trained_word_count_epoch

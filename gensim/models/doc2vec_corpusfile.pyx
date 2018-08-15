@@ -225,8 +225,6 @@ def d2v_train_epoch_dbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, 
     # release GIL & train on the full corpus, document by document
     with nogil:
         input_stream.reset()
-        # Dummy read_sentence, to start from a new line (because offset is given in bytes).
-        input_stream.read_sentence()
         while not (input_stream.is_eof() or total_words > expected_words / workers):
             effective_words = 0
 
@@ -422,8 +420,6 @@ def d2v_train_epoch_dm(model, corpus_file, offset, _cython_vocab, _cur_epoch, _e
     # release GIL & train on the full corpus, document by document
     with nogil:
         input_stream.reset()
-        # Dummy read_sentence, to start from a new line (because offset is given in bytes).
-        input_stream.read_sentence()
         while not (input_stream.is_eof() or total_words > expected_words / workers):
             effective_words = 0
 
@@ -637,8 +633,6 @@ def d2v_train_epoch_dm_concat(model, corpus_file, offset, _cython_vocab, _cur_ep
     # release GIL & train on the full corpus, document by document
     with nogil:
         input_stream.reset()
-        # Dummy read_sentence, to start from a new line (because offset is given in bytes).
-        input_stream.read_sentence()
         while not (input_stream.is_eof() or total_words > expected_words / workers):
             effective_words = 0
 
@@ -705,4 +699,4 @@ def d2v_train_epoch_dm_concat(model, corpus_file, offset, _cython_vocab, _cur_ep
     return total_documents, total_effective_words, total_words
 
 
-MULTISTREAM_VERSION = 1
+CORPUSFILE_VERSION = 1

@@ -83,7 +83,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(len(oov_vec), 10)
 
     @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
-    def test_training_multistream(self):
+    def test_training_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
             utils.save_as_line_sentence(sentences, corpus_file)
 
@@ -140,7 +140,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(len(wv.vocab), len(loaded_wv.vocab))
 
     @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
-    def test_persistence_multistream(self):
+    def test_persistence_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext1.tst')) as corpus_file:
             utils.save_as_line_sentence(sentences, corpus_file)
 
@@ -389,7 +389,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertGreaterEqual(overlap_count, 2)
 
     @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
-    def test_cbow_hs_training_multistream(self):
+    def test_cbow_hs_training_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
             model_gensim = FT_gensim(
                 size=50, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0,
@@ -452,7 +452,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertGreaterEqual(overlap_count, 2)
 
     @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
-    def test_sg_hs_training_multistream(self):
+    def test_sg_hs_training_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
             model_gensim = FT_gensim(
                 size=50, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=1, negative=0,
@@ -515,7 +515,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertGreaterEqual(overlap_count, 2)
 
     @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
-    def test_cbow_neg_training_multistream(self):
+    def test_cbow_neg_training_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
             model_gensim = FT_gensim(
                 size=50, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=5,
@@ -578,7 +578,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertGreaterEqual(overlap_count, 2)
 
     @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
-    def test_sg_neg_training_multistream(self):
+    def test_sg_neg_training_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
             model_gensim = FT_gensim(
                 size=50, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=0, negative=5,
@@ -621,7 +621,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertTrue(model_hs.wv.vocab['artificial'].count, 4)
 
     @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
-    def test_online_learning_multistream(self):
+    def test_online_learning_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext1.tst')) as corpus_file, \
                 temporary_file(get_tmpfile('gensim_fasttext2.tst')) as new_corpus_file:
             utils.save_as_line_sentence(sentences, corpus_file)
@@ -646,7 +646,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(len(model_neg.wv.vocab), 14)
 
     @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
-    def test_online_learning_after_save_multistream(self):
+    def test_online_learning_after_save_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext1.tst')) as corpus_file, \
                 temporary_file(get_tmpfile('gensim_fasttext2.tst')) as new_corpus_file:
             utils.save_as_line_sentence(sentences, corpus_file)

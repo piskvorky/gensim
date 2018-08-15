@@ -14,6 +14,7 @@ from __future__ import with_statement, division
 import logging
 import unittest
 import os
+import six
 
 from six.moves import zip as izip
 from collections import namedtuple
@@ -23,7 +24,7 @@ import numpy as np
 
 from gensim import utils
 from gensim.models import doc2vec, keyedvectors
-from gensim.test.utils import datapath, get_tmpfile, common_texts as raw_sentences
+from gensim.test.utils import datapath, get_tmpfile, temporary_file, common_texts as raw_sentences
 
 
 class DocsLeeCorpus(object):
@@ -59,6 +60,10 @@ def load_on_instance():
     return model.load(tmpf)
 
 
+def save_lee_corpus_as_line_sentence(corpus_file):
+    utils.save_as_line_sentence((doc.words for doc in DocsLeeCorpus()), corpus_file)
+
+
 class TestDoc2VecModel(unittest.TestCase):
     def test_persistence(self):
         """Test storing/loading the entire model."""
@@ -66,6 +71,17 @@ class TestDoc2VecModel(unittest.TestCase):
         model = doc2vec.Doc2Vec(DocsLeeCorpus(), min_count=1)
         model.save(tmpf)
         self.models_equal(model, doc2vec.Doc2Vec.load(tmpf))
+
+    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
+    def test_persistence_fromfile(self):
+        """Test storing/loading the entire model."""
+        with temporary_file(get_tmpfile('gensim_word2vec.tst')) as corpus_file:
+            save_lee_corpus_as_line_sentence(corpus_file)
+
+            tmpf = get_tmpfile('gensim_doc2vec.tst')
+            model = doc2vec.Doc2Vec(corpus_file=corpus_file, min_count=1)
+            model.save(tmpf)
+            self.models_equal(model, doc2vec.Doc2Vec.load(tmpf))
 
     def testPersistenceWord2VecFormat(self):
         """Test storing the entire model in word2vec format."""
@@ -298,10 +314,34 @@ class TestDoc2VecModel(unittest.TestCase):
         model2 = doc2vec.Doc2Vec(corpus, size=100, min_count=2, iter=20, workers=1)
         self.models_equal(model, model2)
 
+    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
+    def test_training_fromfile(self):
+        """Test doc2vec training."""
+        with temporary_file(get_tmpfile('gensim_word2vec.tst')) as corpus_file:
+            save_lee_corpus_as_line_sentence(corpus_file)
+
+            model = doc2vec.Doc2Vec(size=100, min_count=2, iter=20, workers=1)
+            model.build_vocab(corpus_file=corpus_file)
+            self.assertEqual(model.docvecs.doctag_syn0.shape, (300, 100))
+            model.train(corpus_file=corpus_file, total_words=model.corpus_total_words, epochs=model.iter)
+
+            self.model_sanity(model)
+
+            model = doc2vec.Doc2Vec(corpus_file=corpus_file, size=100, min_count=2, iter=20, workers=1)
+            self.model_sanity(model)
+
     def test_dbow_hs(self):
         """Test DBOW doc2vec training."""
         model = doc2vec.Doc2Vec(list_corpus, dm=0, hs=1, negative=0, min_count=2, iter=20)
         self.model_sanity(model)
+
+    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
+    def test_dbow_hs_fromfile(self):
+        """Test DBOW doc2vec training."""
+        with temporary_file(get_tmpfile('gensim_word2vec.tst')) as corpus_file:
+            save_lee_corpus_as_line_sentence(corpus_file)
+            model = doc2vec.Doc2Vec(corpus_file=corpus_file, dm=0, hs=1, negative=0, min_count=2, iter=20)
+            self.model_sanity(model)
 
     def test_dmm_hs(self):
         """Test DM/mean doc2vec training."""
@@ -311,6 +351,17 @@ class TestDoc2VecModel(unittest.TestCase):
         )
         self.model_sanity(model)
 
+    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
+    def test_dmm_hs_fromfile(self):
+        """Test DBOW doc2vec training."""
+        with temporary_file(get_tmpfile('gensim_word2vec.tst')) as corpus_file:
+            save_lee_corpus_as_line_sentence(corpus_file)
+            model = doc2vec.Doc2Vec(
+                list_corpus, dm=1, dm_mean=1, size=24, window=4,
+                hs=1, negative=0, alpha=0.05, min_count=2, iter=20
+            )
+            self.model_sanity(model)
+
     def test_dms_hs(self):
         """Test DM/sum doc2vec training."""
         model = doc2vec.Doc2Vec(
@@ -318,6 +369,17 @@ class TestDoc2VecModel(unittest.TestCase):
             negative=0, alpha=0.05, min_count=2, iter=20
         )
         self.model_sanity(model)
+
+    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
+    def test_dms_hs_fromfile(self):
+        """Test DBOW doc2vec training."""
+        with temporary_file(get_tmpfile('gensim_word2vec.tst')) as corpus_file:
+            save_lee_corpus_as_line_sentence(corpus_file)
+            model = doc2vec.Doc2Vec(
+                list_corpus, dm=1, dm_mean=0, size=24, window=4, hs=1,
+                negative=0, alpha=0.05, min_count=2, iter=20
+            )
+            self.model_sanity(model)
 
     def test_dmc_hs(self):
         """Test DM/concatenate doc2vec training."""
@@ -327,10 +389,29 @@ class TestDoc2VecModel(unittest.TestCase):
         )
         self.model_sanity(model)
 
+    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
+    def test_dmc_hs_fromfile(self):
+        """Test DBOW doc2vec training."""
+        with temporary_file(get_tmpfile('gensim_word2vec.tst')) as corpus_file:
+            save_lee_corpus_as_line_sentence(corpus_file)
+            model = doc2vec.Doc2Vec(
+                list_corpus, dm=1, dm_concat=1, size=24, window=4,
+                hs=1, negative=0, alpha=0.05, min_count=2, iter=20
+            )
+            self.model_sanity(model)
+
     def test_dbow_neg(self):
         """Test DBOW doc2vec training."""
         model = doc2vec.Doc2Vec(list_corpus, dm=0, hs=0, negative=10, min_count=2, iter=20)
         self.model_sanity(model)
+
+    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
+    def test_dbow_neg_fromfile(self):
+        """Test DBOW doc2vec training."""
+        with temporary_file(get_tmpfile('gensim_word2vec.tst')) as corpus_file:
+            save_lee_corpus_as_line_sentence(corpus_file)
+            model = doc2vec.Doc2Vec(list_corpus, dm=0, hs=0, negative=10, min_count=2, iter=20)
+            self.model_sanity(model)
 
     def test_dmm_neg(self):
         """Test DM/mean doc2vec training."""
@@ -340,6 +421,17 @@ class TestDoc2VecModel(unittest.TestCase):
         )
         self.model_sanity(model)
 
+    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
+    def test_dmm_neg_fromfile(self):
+        """Test DBOW doc2vec training."""
+        with temporary_file(get_tmpfile('gensim_word2vec.tst')) as corpus_file:
+            save_lee_corpus_as_line_sentence(corpus_file)
+            model = doc2vec.Doc2Vec(
+                list_corpus, dm=1, dm_mean=1, size=24, window=4, hs=0,
+                negative=10, alpha=0.05, min_count=2, iter=20
+            )
+            self.model_sanity(model)
+
     def test_dms_neg(self):
         """Test DM/sum doc2vec training."""
         model = doc2vec.Doc2Vec(
@@ -348,6 +440,17 @@ class TestDoc2VecModel(unittest.TestCase):
         )
         self.model_sanity(model)
 
+    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
+    def test_dms_neg_fromfile(self):
+        """Test DBOW doc2vec training."""
+        with temporary_file(get_tmpfile('gensim_word2vec.tst')) as corpus_file:
+            save_lee_corpus_as_line_sentence(corpus_file)
+            model = doc2vec.Doc2Vec(
+                list_corpus, dm=1, dm_mean=0, size=24, window=4, hs=0,
+                negative=10, alpha=0.05, min_count=2, iter=20
+            )
+            self.model_sanity(model)
+
     def test_dmc_neg(self):
         """Test DM/concatenate doc2vec training."""
         model = doc2vec.Doc2Vec(
@@ -355,6 +458,17 @@ class TestDoc2VecModel(unittest.TestCase):
             negative=10, alpha=0.05, min_count=2, iter=20
         )
         self.model_sanity(model)
+
+    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
+    def test_dmc_neg_fromfile(self):
+        """Test DBOW doc2vec training."""
+        with temporary_file(get_tmpfile('gensim_word2vec.tst')) as corpus_file:
+            save_lee_corpus_as_line_sentence(corpus_file)
+            model = doc2vec.Doc2Vec(
+                list_corpus, dm=1, dm_concat=1, size=24, window=4, hs=0,
+                negative=10, alpha=0.05, min_count=2, iter=20
+            )
+            self.model_sanity(model)
 
     def test_parallel(self):
         """Test doc2vec parallel training."""
