@@ -272,24 +272,24 @@ if not (os.name == 'nt' and sys.version_info[0] < 3):
         extra_args.extend(['-stdlib=libc++', '-std=c++11'])
 
     ext_modules.append(
-        Extension('gensim.models.word2vec_multistream',
-                  sources=['./gensim/models/word2vec_multistream.cpp', './gensim/models/fast_line_sentence.cpp'],
+        Extension('gensim.models.word2vec_corpusfile',
+                  sources=['./gensim/models/word2vec_corpusfile.cpp', './gensim/models/fast_line_sentence.cpp'],
                   language='c++',
                   extra_compile_args=extra_args,
                   extra_link_args=extra_args)
     )
 
     ext_modules.append(
-        Extension('gensim.models.fasttext_multistream',
-                  sources=['./gensim/models/fasttext_multistream.cpp'],
+        Extension('gensim.models.fasttext_corpusfile',
+                  sources=['./gensim/models/fasttext_corpusfile.cpp'],
                   language='c++',
                   extra_compile_args=extra_args,
                   extra_link_args=extra_args)
     )
 
     ext_modules.append(
-        Extension('gensim.models.doc2vec_multistream',
-                  sources=['./gensim/models/doc2vec_multistream.cpp'],
+        Extension('gensim.models.doc2vec_corpusfile',
+                  sources=['./gensim/models/doc2vec_corpusfile.cpp'],
                   language='c++',
                   extra_compile_args=extra_args,
                   extra_link_args=extra_args)

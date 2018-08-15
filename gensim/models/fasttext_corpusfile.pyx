@@ -26,7 +26,7 @@ from gensim.models.fasttext_inner cimport (
 
 from gensim.models.word2vec_inner cimport random_int32
 
-from gensim.models.word2vec_multistream cimport (
+from gensim.models.word2vec_corpusfile cimport (
     VocabItem,
     CythonVocab,
     CythonLineSentence,

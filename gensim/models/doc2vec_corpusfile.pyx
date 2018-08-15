@@ -38,7 +38,7 @@ from gensim.models.doc2vec_inner cimport (
 
 from gensim.models.word2vec_inner cimport bisect_left, random_int32, sscal, REAL_t, EXP_TABLE, our_dot, our_saxpy
 
-from gensim.models.word2vec_multistream cimport (
+from gensim.models.word2vec_corpusfile cimport (
     VocabItem,
     CythonVocab,
     CythonLineSentence,
