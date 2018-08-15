@@ -1105,7 +1105,7 @@ typedef npy_clongdouble __pyx_t_5numpy_clongdouble_t;
  */
 typedef npy_cdouble __pyx_t_5numpy_complex_t;
 struct __pyx_t_6gensim_6models_14word2vec_inner_Word2VecConfig;
-struct __pyx_opt_args_6gensim_6models_14word2vec_inner_init_config;
+struct __pyx_opt_args_6gensim_6models_14word2vec_inner_init_w2v_config;
 
 /* "gensim/models/word2vec_inner.pxd":22
  * 
@@ -1217,9 +1217,9 @@ struct __pyx_t_6gensim_6models_14word2vec_inner_Word2VecConfig {
 /* "gensim/models/word2vec_inner.pxd":125
  * 
  * 
- * cdef init_config(Word2VecConfig *c, model, alpha, compute_loss, _work, _neu1=*)             # <<<<<<<<<<<<<<
+ * cdef init_w2v_config(Word2VecConfig *c, model, alpha, compute_loss, _work, _neu1=*)             # <<<<<<<<<<<<<<
  */
-struct __pyx_opt_args_6gensim_6models_14word2vec_inner_init_config {
+struct __pyx_opt_args_6gensim_6models_14word2vec_inner_init_w2v_config {
   int __pyx_n;
   PyObject *_neu1;
 };
@@ -2045,7 +2045,7 @@ static void (*__pyx_f_6gensim_6models_14word2vec_inner_w2v_fast_sentence_sg_hs)(
 static unsigned PY_LONG_LONG (*__pyx_f_6gensim_6models_14word2vec_inner_w2v_fast_sentence_sg_neg)(int const , __pyx_t_5numpy_uint32_t *, unsigned PY_LONG_LONG, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *, int const , __pyx_t_5numpy_uint32_t const , __pyx_t_5numpy_uint32_t const , __pyx_t_6gensim_6models_14word2vec_inner_REAL_t const , __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *, unsigned PY_LONG_LONG, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *, int const , __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *); /*proto*/
 static void (*__pyx_f_6gensim_6models_14word2vec_inner_w2v_fast_sentence_cbow_hs)(__pyx_t_5numpy_uint32_t const *, __pyx_t_5numpy_uint8_t const *, int *, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *, int const , __pyx_t_5numpy_uint32_t const *, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t const , __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *, int, int, int, int, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *, int const , __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *); /*proto*/
 static unsigned PY_LONG_LONG (*__pyx_f_6gensim_6models_14word2vec_inner_w2v_fast_sentence_cbow_neg)(int const , __pyx_t_5numpy_uint32_t *, unsigned PY_LONG_LONG, int *, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *, int const , __pyx_t_5numpy_uint32_t const *, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t const , __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *, int, int, int, int, unsigned PY_LONG_LONG, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *, int const , __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *); /*proto*/
-static PyObject *(*__pyx_f_6gensim_6models_14word2vec_inner_init_config)(struct __pyx_t_6gensim_6models_14word2vec_inner_Word2VecConfig *, PyObject *, PyObject *, PyObject *, PyObject *, struct __pyx_opt_args_6gensim_6models_14word2vec_inner_init_config *__pyx_optional_args); /*proto*/
+static PyObject *(*__pyx_f_6gensim_6models_14word2vec_inner_init_w2v_config)(struct __pyx_t_6gensim_6models_14word2vec_inner_Word2VecConfig *, PyObject *, PyObject *, PyObject *, PyObject *, struct __pyx_opt_args_6gensim_6models_14word2vec_inner_init_w2v_config *__pyx_optional_args); /*proto*/
 
 /* Module declarations from 'gensim.models.word2vec_corpusfile' */
 static PyTypeObject *__pyx_ptype_6gensim_6models_19word2vec_corpusfile_CythonLineSentence = 0;
@@ -6106,13 +6106,13 @@ static PyObject *__pyx_pf_6gensim_6models_19word2vec_corpusfile_2train_epoch_sg(
   /* "gensim/models/word2vec_corpusfile.pyx":305
  *     cdef int sent_idx, idx_start, idx_end
  * 
- *     init_config(&c, model, _alpha, compute_loss, _work)             # <<<<<<<<<<<<<<
+ *     init_w2v_config(&c, model, _alpha, compute_loss, _work)             # <<<<<<<<<<<<<<
  * 
  *     # for preparing batches & training
  */
   __pyx_t_6 = PyFloat_FromDouble(__pyx_v__alpha); if (unlikely(!__pyx_t_6)) __PYX_ERR(1, 305, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_2 = __pyx_f_6gensim_6models_14word2vec_inner_init_config((&__pyx_v_c), __pyx_v_model, __pyx_t_6, __pyx_v_compute_loss, __pyx_v__work, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 305, __pyx_L1_error)
+  __pyx_t_2 = __pyx_f_6gensim_6models_14word2vec_inner_init_w2v_config((&__pyx_v_c), __pyx_v_model, __pyx_t_6, __pyx_v_compute_loss, __pyx_v__work, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 305, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
@@ -6733,7 +6733,7 @@ static PyObject *__pyx_pf_6gensim_6models_19word2vec_corpusfile_4train_epoch_cbo
   int __pyx_t_4;
   __pyx_t_6gensim_6models_19word2vec_corpusfile_REAL_t __pyx_t_5;
   PyObject *__pyx_t_6 = NULL;
-  struct __pyx_opt_args_6gensim_6models_14word2vec_inner_init_config __pyx_t_7;
+  struct __pyx_opt_args_6gensim_6models_14word2vec_inner_init_w2v_config __pyx_t_7;
   int __pyx_t_8;
   std::vector<std::vector<std::string> >  __pyx_t_9;
   __pyx_t_6gensim_6models_19word2vec_corpusfile_cvocab_t *__pyx_t_10;
@@ -6897,7 +6897,7 @@ static PyObject *__pyx_pf_6gensim_6models_19word2vec_corpusfile_4train_epoch_cbo
   /* "gensim/models/word2vec_corpusfile.pyx":398
  *     cdef int sent_idx, idx_start, idx_end
  * 
- *     init_config(&c, model, _alpha, compute_loss, _work, _neu1)             # <<<<<<<<<<<<<<
+ *     init_w2v_config(&c, model, _alpha, compute_loss, _work, _neu1)             # <<<<<<<<<<<<<<
  * 
  *     # for preparing batches & training
  */
@@ -6905,7 +6905,7 @@ static PyObject *__pyx_pf_6gensim_6models_19word2vec_corpusfile_4train_epoch_cbo
   __Pyx_GOTREF(__pyx_t_6);
   __pyx_t_7.__pyx_n = 1;
   __pyx_t_7._neu1 = __pyx_v__neu1;
-  __pyx_t_2 = __pyx_f_6gensim_6models_14word2vec_inner_init_config((&__pyx_v_c), __pyx_v_model, __pyx_t_6, __pyx_v_compute_loss, __pyx_v__work, &__pyx_t_7); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 398, __pyx_L1_error)
+  __pyx_t_2 = __pyx_f_6gensim_6models_14word2vec_inner_init_w2v_config((&__pyx_v_c), __pyx_v_model, __pyx_t_6, __pyx_v_compute_loss, __pyx_v__work, &__pyx_t_7); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 398, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
@@ -11117,7 +11117,7 @@ static int __Pyx_modinit_function_import_code(void) {
   if (__Pyx_ImportFunction(__pyx_t_1, "w2v_fast_sentence_sg_neg", (void (**)(void))&__pyx_f_6gensim_6models_14word2vec_inner_w2v_fast_sentence_sg_neg, "unsigned PY_LONG_LONG (int const , __pyx_t_5numpy_uint32_t *, unsigned PY_LONG_LONG, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *, int const , __pyx_t_5numpy_uint32_t const , __pyx_t_5numpy_uint32_t const , __pyx_t_6gensim_6models_14word2vec_inner_REAL_t const , __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *, unsigned PY_LONG_LONG, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *, int const , __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *)") < 0) __PYX_ERR(1, 1, __pyx_L1_error)
   if (__Pyx_ImportFunction(__pyx_t_1, "w2v_fast_sentence_cbow_hs", (void (**)(void))&__pyx_f_6gensim_6models_14word2vec_inner_w2v_fast_sentence_cbow_hs, "void (__pyx_t_5numpy_uint32_t const *, __pyx_t_5numpy_uint8_t const *, int *, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *, int const , __pyx_t_5numpy_uint32_t const *, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t const , __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *, int, int, int, int, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *, int const , __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *)") < 0) __PYX_ERR(1, 1, __pyx_L1_error)
   if (__Pyx_ImportFunction(__pyx_t_1, "w2v_fast_sentence_cbow_neg", (void (**)(void))&__pyx_f_6gensim_6models_14word2vec_inner_w2v_fast_sentence_cbow_neg, "unsigned PY_LONG_LONG (int const , __pyx_t_5numpy_uint32_t *, unsigned PY_LONG_LONG, int *, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *, int const , __pyx_t_5numpy_uint32_t const *, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t const , __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *, int, int, int, int, unsigned PY_LONG_LONG, __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *, int const , __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *)") < 0) __PYX_ERR(1, 1, __pyx_L1_error)
-  if (__Pyx_ImportFunction(__pyx_t_1, "init_config", (void (**)(void))&__pyx_f_6gensim_6models_14word2vec_inner_init_config, "PyObject *(struct __pyx_t_6gensim_6models_14word2vec_inner_Word2VecConfig *, PyObject *, PyObject *, PyObject *, PyObject *, struct __pyx_opt_args_6gensim_6models_14word2vec_inner_init_config *__pyx_optional_args)") < 0) __PYX_ERR(1, 1, __pyx_L1_error)
+  if (__Pyx_ImportFunction(__pyx_t_1, "init_w2v_config", (void (**)(void))&__pyx_f_6gensim_6models_14word2vec_inner_init_w2v_config, "PyObject *(struct __pyx_t_6gensim_6models_14word2vec_inner_Word2VecConfig *, PyObject *, PyObject *, PyObject *, PyObject *, struct __pyx_opt_args_6gensim_6models_14word2vec_inner_init_w2v_config *__pyx_optional_args)") < 0) __PYX_ERR(1, 1, __pyx_L1_error)
   Py_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_RefNannyFinishContext();
   return 0;
