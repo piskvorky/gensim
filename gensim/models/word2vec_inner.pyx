@@ -464,6 +464,38 @@ cdef unsigned long long w2v_fast_sentence_cbow_neg(
     return next_random
 
 
+cdef init_config(Word2VecConfig *c, model, alpha, compute_loss, _work, _neu1=None):
+    c[0].hs = model.hs
+    c[0].negative = model.negative
+    c[0].sample = (model.vocabulary.sample != 0)
+    c[0].cbow_mean = model.cbow_mean
+    c[0].window = model.window
+
+    c[0].compute_loss = (1 if compute_loss else 0)
+    c[0].running_training_loss = model.running_training_loss
+
+    c[0].syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
+    c[0].word_locks = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_lockf))
+    c[0].alpha = alpha
+    c[0].size = model.wv.vector_size
+
+    if c[0].hs:
+        c[0].syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
+
+    if c[0].negative:
+        c[0].syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
+        c[0].cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
+        c[0].cum_table_len = len(model.vocabulary.cum_table)
+    if c[0].negative or c[0].sample:
+        c[0].next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
+
+    # convert Python structures to primitive types, so we can release the GIL
+    c[0].work = <REAL_t *>np.PyArray_DATA(_work)
+
+    if _neu1:
+        c[0].neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
+
+
 def train_batch_sg(model, sentences, alpha, _work, compute_loss):
     """Update skip-gram model by training on a batch of sentences.
 
@@ -490,35 +522,12 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
 
     """
     cdef Word2VecConfig c
-
-    c.hs = model.hs
-    c.negative = model.negative
-    c.sample = (model.vocabulary.sample != 0)
-
-    c.compute_loss = (1 if compute_loss else 0)
-    c.running_training_loss = model.running_training_loss
-
-    c.syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
-    c.word_locks = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_lockf))
-    c.alpha = alpha
-    c.size = model.wv.vector_size
-
     cdef int i, j, k
     cdef int effective_words = 0, effective_sentences = 0
     cdef int sent_idx, idx_start, idx_end
 
-    if c.hs:
-        c.syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
+    init_config(&c, model, alpha, compute_loss, _work)
 
-    if c.negative:
-        c.syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
-        c.cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
-        c.cum_table_len = len(model.vocabulary.cum_table)
-    if c.negative or c.sample:
-        c.next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
-
-    # convert Python structures to primitive types, so we can release the GIL
-    c.work = <REAL_t *>np.PyArray_DATA(_work)
 
     # prepare C structures so we can go "full C" and release the Python GIL
     vlookup = model.wv.vocab
@@ -605,39 +614,11 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
         and were not discarded by negative sampling).
     """
     cdef Word2VecConfig c
-
-    c.hs = model.hs
-    c.negative = model.negative
-    c.sample = (model.vocabulary.sample != 0)
-    c.cbow_mean = model.cbow_mean
-
-    c.compute_loss = (1 if compute_loss == True else 0)
-    c.running_training_loss = model.running_training_loss
-
-    c.syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
-    c.word_locks = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_lockf))
-    c.alpha = alpha
-    c.size = model.wv.vector_size
-
-    c.window = model.window
-
     cdef int i, j, k
     cdef int effective_words = 0, effective_sentences = 0
     cdef int sent_idx, idx_start, idx_end
 
-    if c.hs:
-        c.syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
-
-    if c.negative:
-        c.syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
-        c.cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
-        c.cum_table_len = len(model.vocabulary.cum_table)
-    if c.negative or c.sample:
-        c.next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
-
-    # convert Python structures to primitive types, so we can release the GIL
-    c.work = <REAL_t *>np.PyArray_DATA(_work)
-    c.neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
+    init_config(&c, model, alpha, compute_loss, _work, _neu1)
 
     # prepare C structures so we can go "full C" and release the Python GIL
     vlookup = model.wv.vocab
