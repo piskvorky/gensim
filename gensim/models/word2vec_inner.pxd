@@ -92,3 +92,30 @@ cdef unsigned long long w2v_fast_sentence_cbow_neg(
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
     int i, int j, int k, int cbow_mean, unsigned long long next_random, REAL_t *word_locks,
     const int _compute_loss, REAL_t *_running_training_loss_param) nogil
+
+
+cdef struct Word2VecConfig:
+    int hs, negative, sample, compute_loss, size, window, cbow_mean
+    REAL_t running_training_loss, alpha
+
+    REAL_t *syn0
+    REAL_t *word_locks
+    REAL_t *work
+    REAL_t *neu1
+
+    int codelens[MAX_SENTENCE_LEN]
+    np.uint32_t indexes[MAX_SENTENCE_LEN]
+    np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
+    int sentence_idx[MAX_SENTENCE_LEN + 1]
+
+    # For hierarchical softmax
+    REAL_t *syn1
+    np.uint32_t *points[MAX_SENTENCE_LEN]
+    np.uint8_t *codes[MAX_SENTENCE_LEN]
+
+    # For negative sampling
+    REAL_t *syn1neg
+    np.uint32_t *cum_table
+    unsigned long long cum_table_len
+    # for sampling (negative and frequent-word downsampling)
+    unsigned long long next_random
