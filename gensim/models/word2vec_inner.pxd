@@ -47,6 +47,34 @@ ctypedef void (*our_saxpy_ptr) (const int *N, const float *alpha, const float *X
 cdef our_dot_ptr our_dot
 cdef our_saxpy_ptr our_saxpy
 
+
+cdef struct Word2VecConfig:
+    int hs, negative, sample, compute_loss, size, window, cbow_mean, workers
+    REAL_t running_training_loss, alpha
+
+    REAL_t *syn0
+    REAL_t *word_locks
+    REAL_t *work
+    REAL_t *neu1
+
+    int codelens[MAX_SENTENCE_LEN]
+    np.uint32_t indexes[MAX_SENTENCE_LEN]
+    np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
+    int sentence_idx[MAX_SENTENCE_LEN + 1]
+
+    # For hierarchical softmax
+    REAL_t *syn1
+    np.uint32_t *points[MAX_SENTENCE_LEN]
+    np.uint8_t *codes[MAX_SENTENCE_LEN]
+
+    # For negative sampling
+    REAL_t *syn1neg
+    np.uint32_t *cum_table
+    unsigned long long cum_table_len
+    # for sampling (negative and frequent-word downsampling)
+    unsigned long long next_random
+
+
 # for when fblas.sdot returns a double
 cdef REAL_t our_dot_double(const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil
 
@@ -94,28 +122,4 @@ cdef unsigned long long w2v_fast_sentence_cbow_neg(
     const int _compute_loss, REAL_t *_running_training_loss_param) nogil
 
 
-cdef struct Word2VecConfig:
-    int hs, negative, sample, compute_loss, size, window, cbow_mean
-    REAL_t running_training_loss, alpha
-
-    REAL_t *syn0
-    REAL_t *word_locks
-    REAL_t *work
-    REAL_t *neu1
-
-    int codelens[MAX_SENTENCE_LEN]
-    np.uint32_t indexes[MAX_SENTENCE_LEN]
-    np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
-    int sentence_idx[MAX_SENTENCE_LEN + 1]
-
-    # For hierarchical softmax
-    REAL_t *syn1
-    np.uint32_t *points[MAX_SENTENCE_LEN]
-    np.uint8_t *codes[MAX_SENTENCE_LEN]
-
-    # For negative sampling
-    REAL_t *syn1neg
-    np.uint32_t *cum_table
-    unsigned long long cum_table_len
-    # for sampling (negative and frequent-word downsampling)
-    unsigned long long next_random
+cdef init_config(Word2VecConfig *c, model, alpha, compute_loss, _work, _neu1=*)

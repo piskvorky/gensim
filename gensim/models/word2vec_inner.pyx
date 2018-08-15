@@ -470,6 +470,7 @@ cdef init_config(Word2VecConfig *c, model, alpha, compute_loss, _work, _neu1=Non
     c[0].sample = (model.vocabulary.sample != 0)
     c[0].cbow_mean = model.cbow_mean
     c[0].window = model.window
+    c[0].workers = model.workers
 
     c[0].compute_loss = (1 if compute_loss else 0)
     c[0].running_training_loss = model.running_training_loss
