@@ -493,7 +493,7 @@ cdef init_w2v_config(Word2VecConfig *c, model, alpha, compute_loss, _work, _neu1
     # convert Python structures to primitive types, so we can release the GIL
     c[0].work = <REAL_t *>np.PyArray_DATA(_work)
 
-    if _neu1:
+    if _neu1 is not None:
         c[0].neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
 
 

@@ -4334,7 +4334,7 @@ static PyObject *__pyx_f_6gensim_6models_14word2vec_inner_init_w2v_config(struct
  *     # convert Python structures to primitive types, so we can release the GIL
  *     c[0].work = <REAL_t *>np.PyArray_DATA(_work)             # <<<<<<<<<<<<<<
  * 
- *     if _neu1:
+ *     if _neu1 is not None:
  */
   if (!(likely(((__pyx_v__work) == Py_None) || likely(__Pyx_TypeTest(__pyx_v__work, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 494, __pyx_L1_error)
   (__pyx_v_c[0]).work = ((__pyx_t_6gensim_6models_14word2vec_inner_REAL_t *)PyArray_DATA(((PyArrayObject *)__pyx_v__work)));
@@ -4342,16 +4342,17 @@ static PyObject *__pyx_f_6gensim_6models_14word2vec_inner_init_w2v_config(struct
   /* "gensim/models/word2vec_inner.pyx":496
  *     c[0].work = <REAL_t *>np.PyArray_DATA(_work)
  * 
- *     if _neu1:             # <<<<<<<<<<<<<<
+ *     if _neu1 is not None:             # <<<<<<<<<<<<<<
  *         c[0].neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
  * 
  */
-  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_v__neu1); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 496, __pyx_L1_error)
-  if (__pyx_t_4) {
+  __pyx_t_4 = (__pyx_v__neu1 != Py_None);
+  __pyx_t_7 = (__pyx_t_4 != 0);
+  if (__pyx_t_7) {
 
     /* "gensim/models/word2vec_inner.pyx":497
  * 
- *     if _neu1:
+ *     if _neu1 is not None:
  *         c[0].neu1 = <REAL_t *>np.PyArray_DATA(_neu1)             # <<<<<<<<<<<<<<
  * 
  * 
@@ -4362,7 +4363,7 @@ static PyObject *__pyx_f_6gensim_6models_14word2vec_inner_init_w2v_config(struct
     /* "gensim/models/word2vec_inner.pyx":496
  *     c[0].work = <REAL_t *>np.PyArray_DATA(_work)
  * 
- *     if _neu1:             # <<<<<<<<<<<<<<
+ *     if _neu1 is not None:             # <<<<<<<<<<<<<<
  *         c[0].neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
  * 
  */
