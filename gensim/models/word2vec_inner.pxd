@@ -122,4 +122,4 @@ cdef unsigned long long w2v_fast_sentence_cbow_neg(
     const int _compute_loss, REAL_t *_running_training_loss_param) nogil
 
 
-cdef init_config(Word2VecConfig *c, model, alpha, compute_loss, _work, _neu1=*)
+cdef init_w2v_config(Word2VecConfig *c, model, alpha, compute_loss, _work, _neu1=*)

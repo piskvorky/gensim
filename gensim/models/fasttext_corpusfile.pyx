@@ -22,6 +22,7 @@ from gensim.models.fasttext_inner cimport (
     fasttext_fast_sentence_sg_neg,
     fasttext_fast_sentence_cbow_hs,
     fasttext_fast_sentence_cbow_neg,
+    init
 )
 
 from gensim.models.word2vec_inner cimport random_int32

@@ -84,4 +84,4 @@ cdef void fasttext_fast_sentence_cbow_hs(
     int i, int j, int k, int cbow_mean, REAL_t *word_locks_vocab, REAL_t *word_locks_ngrams) nogil
 
 
-cdef init_config(FastTextConfig *c, model, alpha, _work, _neu1)
+cdef init_ft_config(FastTextConfig *c, model, alpha, _work, _neu1)

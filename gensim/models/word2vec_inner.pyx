@@ -464,7 +464,7 @@ cdef unsigned long long w2v_fast_sentence_cbow_neg(
     return next_random
 
 
-cdef init_config(Word2VecConfig *c, model, alpha, compute_loss, _work, _neu1=None):
+cdef init_w2v_config(Word2VecConfig *c, model, alpha, compute_loss, _work, _neu1=None):
     c[0].hs = model.hs
     c[0].negative = model.negative
     c[0].sample = (model.vocabulary.sample != 0)
@@ -527,7 +527,7 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
     cdef int effective_words = 0, effective_sentences = 0
     cdef int sent_idx, idx_start, idx_end
 
-    init_config(&c, model, alpha, compute_loss, _work)
+    init_w2v_config(&c, model, alpha, compute_loss, _work)
 
 
     # prepare C structures so we can go "full C" and release the Python GIL
@@ -619,7 +619,7 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
     cdef int effective_words = 0, effective_sentences = 0
     cdef int sent_idx, idx_start, idx_end
 
-    init_config(&c, model, alpha, compute_loss, _work, _neu1)
+    init_w2v_config(&c, model, alpha, compute_loss, _work, _neu1)
 
     # prepare C structures so we can go "full C" and release the Python GIL
     vlookup = model.wv.vocab

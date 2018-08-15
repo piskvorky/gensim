@@ -243,7 +243,7 @@ cdef void fasttext_fast_sentence_cbow_hs(
             our_saxpy(&size, &word_locks_ngrams[subwords_idx[m][d]], work, &ONE, &syn0_ngrams[subwords_idx[m][d]*size], &ONE)
 
 
-cdef init_config(FastTextConfig *c, model, alpha, _work, _neu1):
+cdef init_ft_config(FastTextConfig *c, model, alpha, _work, _neu1):
     c[0].hs = model.hs
     c[0].negative = model.negative
     c[0].sample = (model.vocabulary.sample != 0)
@@ -305,7 +305,7 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
     cdef int effective_words = 0, effective_sentences = 0
     cdef int sent_idx, idx_start, idx_end
 
-    init_config(&c, model, alpha, _work, _l1)
+    init_ft_config(&c, model, alpha, _work, _l1)
 
     # dummy dictionary to ensure that the memory locations that subwords_idx point to
     # are referenced throughout so that it isn't put back to free memory pool by Python's memory manager
@@ -412,7 +412,7 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1):
     cdef int effective_words = 0, effective_sentences = 0
     cdef int sent_idx, idx_start, idx_end
 
-    init_config(&c, model, alpha, _work, _neu1)
+    init_ft_config(&c, model, alpha, _work, _neu1)
 
     # dummy dictionary to ensure that the memory locations that subwords_idx point to
     # are referenced throughout so that it isn't put back to free memory pool by Python's memory manager

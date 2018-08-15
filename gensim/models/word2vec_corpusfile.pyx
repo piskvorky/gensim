@@ -29,7 +29,7 @@ from gensim.models.word2vec_inner cimport (
     w2v_fast_sentence_cbow_hs,
     w2v_fast_sentence_cbow_neg,
     random_int32,
-    init_config,
+    init_w2v_config,
     Word2VecConfig
 )
 
@@ -302,7 +302,7 @@ def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expec
     cdef int total_effective_words = 0, total_sentences = 0, total_words = 0
     cdef int sent_idx, idx_start, idx_end
 
-    init_config(&c, model, _alpha, compute_loss, _work)
+    init_w2v_config(&c, model, _alpha, compute_loss, _work)
 
     # for preparing batches & training
     cdef vector[vector[string]] sentences
@@ -395,7 +395,7 @@ def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _exp
     cdef int total_effective_words = 0, total_sentences = 0, total_words = 0
     cdef int sent_idx, idx_start, idx_end
 
-    init_config(&c, model, _alpha, compute_loss, _work, _neu1)
+    init_w2v_config(&c, model, _alpha, compute_loss, _work, _neu1)
 
     # for preparing batches & training
     cdef vector[vector[string]] sentences
