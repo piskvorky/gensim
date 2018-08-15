@@ -57,7 +57,7 @@ cdef void prepare_c_structures_for_batch(vector[string] &doc_words, int sample, 
                                          int *effective_words, unsigned long long *next_random, cvocab_t *vocab,
                                          np.uint32_t *indexes, int *codelens, np.uint8_t **codes, np.uint32_t **points,
                                          np.uint32_t *reduced_windows, int *document_len, int train_words,
-                                         int docvecs_count, int doc_tag, np.uint32_t *doctag_indexes) nogil:
+                                         int docvecs_count, int doc_tag) nogil:
     cdef VocabItem predict_word
     cdef string token
     cdef int i = 0
@@ -88,9 +88,7 @@ cdef void prepare_c_structures_for_batch(vector[string] &doc_words, int sample, 
             reduced_windows[i] = random_int32(next_random) % window
 
     if doc_tag < docvecs_count:
-        doctag_indexes[i] = doc_tag
         effective_words[0] += 1
-
 
 
 def d2v_train_epoch_dbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
@@ -168,7 +166,6 @@ def d2v_train_epoch_dbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, 
 
     cdef int codelens[MAX_DOCUMENT_LEN]
     cdef np.uint32_t indexes[MAX_DOCUMENT_LEN]
-    cdef np.uint32_t _doctag_indexes[MAX_DOCUMENT_LEN]
     cdef np.uint32_t reduced_windows[MAX_DOCUMENT_LEN]
     cdef int document_len
     cdef int window = model.window
@@ -242,7 +239,7 @@ def d2v_train_epoch_dbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, 
             prepare_c_structures_for_batch(doc_words, sample, hs, window, &total_words, &effective_words,
                                            &next_random, vocab.get_vocab_ptr(), indexes,
                                            codelens, codes, points, reduced_windows, &document_len, _train_words,
-                                           _docvecs_count, _doc_tag, _doctag_indexes)
+                                           _docvecs_count, _doc_tag)
 
             for i in range(document_len):
                 if _train_words:  # simultaneous skip-gram wordvec-training
@@ -269,11 +266,11 @@ def d2v_train_epoch_dbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, 
                 if _doc_tag < _docvecs_count:
                     if hs:
                         fast_document_dbow_hs(points[i], codes[i], codelens[i], _doctag_vectors, syn1, size,
-                                              _doctag_indexes[0], _alpha, _work, _learn_doctags, _learn_hidden,
+                                              _doc_tag, _alpha, _work, _learn_doctags, _learn_hidden,
                                               _doctag_locks)
                     if negative:
                         next_random = fast_document_dbow_neg(negative, cum_table, cum_table_len, _doctag_vectors,
-                                                             syn1neg, size, indexes[i], _doctag_indexes[0], _alpha,
+                                                             syn1neg, size, indexes[i], _doc_tag, _alpha,
                                                              _work, next_random, _learn_doctags, _learn_hidden,
                                                              _doctag_locks)
 
@@ -363,7 +360,6 @@ def d2v_train_epoch_dm(model, corpus_file, offset, _cython_vocab, _cur_epoch, _e
 
     cdef int codelens[MAX_DOCUMENT_LEN]
     cdef np.uint32_t indexes[MAX_DOCUMENT_LEN]
-    cdef np.uint32_t _doctag_indexes[MAX_DOCUMENT_LEN]
     cdef np.uint32_t reduced_windows[MAX_DOCUMENT_LEN]
     cdef int document_len
     cdef int window = model.window
@@ -440,7 +436,7 @@ def d2v_train_epoch_dm(model, corpus_file, offset, _cython_vocab, _cur_epoch, _e
             prepare_c_structures_for_batch(doc_words, sample, hs, window, &total_words, &effective_words,
                                            &next_random, vocab.get_vocab_ptr(), indexes,
                                            codelens, codes, points, reduced_windows, &document_len, _train_words,
-                                           _docvecs_count, _doc_tag, _doctag_indexes)
+                                           _docvecs_count, _doc_tag)
 
             for i in range(document_len):
                 j = i - window + reduced_windows[i]
@@ -462,7 +458,7 @@ def d2v_train_epoch_dm(model, corpus_file, offset, _cython_vocab, _cur_epoch, _e
 
                 if _doc_tag < _docvecs_count:
                     count += ONEF
-                    our_saxpy(&size, &ONEF, &_doctag_vectors[_doctag_indexes[0] * size], &ONE, _neu1, &ONE)
+                    our_saxpy(&size, &ONEF, &_doctag_vectors[_doc_tag * size], &ONE, _neu1, &ONE)
                 if count > (<REAL_t>0.5):
                     inv_count = ONEF/count
                 if cbow_mean:
@@ -481,8 +477,8 @@ def d2v_train_epoch_dm(model, corpus_file, offset, _cython_vocab, _cur_epoch, _e
                     sscal(&size, &inv_count, _work, &ONE)  # (does this need BLAS-variants like saxpy?)
                 # apply accumulated error in work
                 if _learn_doctags and _doc_tag < _docvecs_count:
-                    our_saxpy(&size, &_doctag_locks[_doctag_indexes[0]], _work,
-                              &ONE, &_doctag_vectors[_doctag_indexes[0] * size], &ONE)
+                    our_saxpy(&size, &_doctag_locks[_doc_tag], _work,
+                              &ONE, &_doctag_vectors[_doc_tag * size], &ONE)
                 if _learn_words:
                     for m in range(j, k):
                         if m == i:
@@ -576,7 +572,6 @@ def d2v_train_epoch_dm_concat(model, corpus_file, offset, _cython_vocab, _cur_ep
 
     cdef int codelens[MAX_DOCUMENT_LEN]
     cdef np.uint32_t indexes[MAX_DOCUMENT_LEN]
-    cdef np.uint32_t _doctag_indexes[MAX_DOCUMENT_LEN]
     cdef np.uint32_t window_indexes[MAX_DOCUMENT_LEN]
     cdef int document_len
     cdef int doctag_len
@@ -658,7 +653,7 @@ def d2v_train_epoch_dm_concat(model, corpus_file, offset, _cython_vocab, _cur_ep
             prepare_c_structures_for_batch(doc_words, sample, hs, window, &total_words, &effective_words,
                                            &next_random, vocab.get_vocab_ptr(), indexes,
                                            codelens, codes, points, NULL, &document_len, _train_words,
-                                           _docvecs_count, _doc_tag, _doctag_indexes)
+                                           _docvecs_count, _doc_tag)
 
             for i in range(document_len):
                 j = i - window      # negative OK: will pad with null word
@@ -667,7 +662,7 @@ def d2v_train_epoch_dm_concat(model, corpus_file, offset, _cython_vocab, _cur_ep
                 # compose l1 & clear work
                 if _doc_tag < _docvecs_count:
                     # doc vector(s)
-                    memcpy(&_neu1[0], &_doctag_vectors[_doctag_indexes[0] * vector_size],
+                    memcpy(&_neu1[0], &_doctag_vectors[_doc_tag * vector_size],
                            vector_size * cython.sizeof(REAL_t))
                 n = 0
                 for m in range(j, k):
@@ -693,10 +688,9 @@ def d2v_train_epoch_dm_concat(model, corpus_file, offset, _cython_vocab, _cur_ep
                                                         _neu1, syn1neg, indexes[i], _alpha, _work,
                                                        layer1_size, vector_size, _learn_hidden)
 
-                if _learn_doctags:
-                    for m in range(doctag_len):
-                        our_saxpy(&vector_size, &_doctag_locks[_doctag_indexes[m]], &_work[m * vector_size],
-                                  &ONE, &_doctag_vectors[_doctag_indexes[m] * vector_size], &ONE)
+                if _learn_doctags and _doc_tag < _docvecs_count:
+                    our_saxpy(&vector_size, &_doctag_locks[_doc_tag], &_work[m * vector_size],
+                              &ONE, &_doctag_vectors[_doc_tag * vector_size], &ONE)
                 if _learn_words:
                     for m in range(2 * window):
                         our_saxpy(&vector_size, &_word_locks[window_indexes[m]], &_work[(doctag_len + m) * vector_size],
