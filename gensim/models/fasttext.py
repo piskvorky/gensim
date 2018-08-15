@@ -556,10 +556,10 @@ class FastText(BaseWordEmbeddingsModel):
 
         if self.sg:
             examples, tally, raw_tally = train_epoch_sg(self, corpus_file, offset, cython_vocab, cur_epoch,
-                                                        total_examples, total_words, work, neu1, self.compute_loss)
+                                                        total_examples, total_words, work, neu1)
         else:
             examples, tally, raw_tally = train_epoch_cbow(self, corpus_file, offset, cython_vocab, cur_epoch,
-                                                          total_examples, total_words, work, neu1, self.compute_loss)
+                                                          total_examples, total_words, work, neu1)
 
         return examples, tally, raw_tally
 
