@@ -382,3 +382,6 @@ def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _exp
 
     model.running_training_loss = _running_training_loss
     return total_sentences, total_effective_words, total_words
+
+
+MULTISTREAM_VERSION = 1

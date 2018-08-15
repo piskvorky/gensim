@@ -292,7 +292,6 @@ def train_document_dbow(model, doc_words, doctag_indexes, alpha, work=None,
     cdef int window = model.window
 
     cdef int i, j
-    cdef unsigned long long r
     cdef long result = 0
 
     # For hierarchical softmax

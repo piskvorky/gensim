@@ -205,9 +205,7 @@ except ImportError:
         return result
 
 try:
-    from gensim.models.fasttext_multistream import train_epoch_sg, train_epoch_cbow
-
-    MULTISTREAM_VERSION = 1
+    from gensim.models.fasttext_multistream import train_epoch_sg, train_epoch_cbow, MULTISTREAM_VERSION
 except ImportError:
     # multistream fasttext is not supported
     MULTISTREAM_VERSION = -1

@@ -356,19 +356,22 @@ except ImportError:
     # multistream doc2vec is not supported
     MULTISTREAM_VERSION = -1
 
-    # def d2v_train_epoch_dbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
-    #                          _work, _neu1):
-    #     raise NotImplementedError("Training with corpus_file argument is not supported.")
-    #
-    #
-    # def d2v_train_epoch_dm_concat(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples,
-    #                               _expected_words, _work, _neu1):
-    #     raise NotImplementedError("Training with corpus_file argument is not supported.")
-    #
-    #
-    # def d2v_train_epoch_dm(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
-    #                        _work, _neu1):
-    #     raise NotImplementedError("Training with corpus_file argument is not supported.")
+    def d2v_train_epoch_dbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
+                             work, _neu1, docvecs_count, word_vectors=None, word_locks=None, train_words=False,
+                             learn_doctags=True, learn_words=True, learn_hidden=True, doctag_vectors=None,
+                             doctag_locks=None):
+        raise NotImplementedError("Training with corpus_file argument is not supported.")
+
+    def d2v_train_epoch_dm_concat(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples,
+                                  _expected_words, work, _neu1, docvecs_count, word_vectors=None, word_locks=None,
+                                  learn_doctags=True, learn_words=True, learn_hidden=True, doctag_vectors=None,
+                                  doctag_locks=None):
+        raise NotImplementedError("Training with corpus_file argument is not supported.")
+
+    def d2v_train_epoch_dm(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
+                             work, _neu1, docvecs_count, word_vectors=None, word_locks=None, learn_doctags=True,
+                             learn_words=True, learn_hidden=True, doctag_vectors=None, doctag_locks=None):
+        raise NotImplementedError("Training with corpus_file argument is not supported.")
 
 
 class TaggedDocument(namedtuple('TaggedDocument', 'words tags')):
