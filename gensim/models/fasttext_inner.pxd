@@ -15,6 +15,43 @@ from word2vec_inner cimport REAL_t
 
 DEF MAX_SENTENCE_LEN = 10000
 
+
+cdef struct FastTextConfig:
+    int hs, negative, sample, size, window, cbow_mean, workers
+    REAL_t alpha
+
+    REAL_t *syn0_vocab
+    REAL_t *word_locks_vocab
+    REAL_t *syn0_ngrams
+    REAL_t *word_locks_ngrams
+
+    REAL_t *work
+    REAL_t *neu1
+
+    int codelens[MAX_SENTENCE_LEN]
+    np.uint32_t indexes[MAX_SENTENCE_LEN]
+    np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
+    int sentence_idx[MAX_SENTENCE_LEN + 1]
+
+    # For hierarchical softmax
+    REAL_t *syn1
+    np.uint32_t *points[MAX_SENTENCE_LEN]
+    np.uint8_t *codes[MAX_SENTENCE_LEN]
+
+    # For negative sampling
+    REAL_t *syn1neg
+    np.uint32_t *cum_table
+    unsigned long long cum_table_len
+    # for sampling (negative and frequent-word downsampling)
+    unsigned long long next_random
+
+    # For passing subwords information as C objects for nogil
+    int subwords_idx_len[MAX_SENTENCE_LEN]
+    np.uint32_t *subwords_idx[MAX_SENTENCE_LEN]
+    # dummy dictionary to ensure that the memory locations that subwords_idx point to
+    # are referenced throughout so that it isn't put back to free memory pool by Python's memory manager
+
+
 cdef unsigned long long fasttext_fast_sentence_sg_neg(
     const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len,
     REAL_t *syn0_vocab, REAL_t *syn0_ngrams, REAL_t *syn1neg, const int size,
@@ -45,3 +82,6 @@ cdef void fasttext_fast_sentence_cbow_hs(
     const np.uint32_t indexes[MAX_SENTENCE_LEN], np.uint32_t *subwords_idx[MAX_SENTENCE_LEN],
     const int subwords_idx_len[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
     int i, int j, int k, int cbow_mean, REAL_t *word_locks_vocab, REAL_t *word_locks_ngrams) nogil
+
+
+cdef init_config(FastTextConfig *c, model, alpha, _work, _neu1)
