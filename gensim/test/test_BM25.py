@@ -44,6 +44,15 @@ class TestBM25(unittest.TestCase):
         self.assertAlmostEqual(weights[0][1], 0)
         self.assertAlmostEqual(weights[1][0], 0)
 
+    def test_multiprocessing(self):
+        """ Result should be the same using different processes """
+        weights1 = get_bm25_weights(common_texts)
+        weights2 = get_bm25_weights(common_texts, n_jobs=2)
+        weights3 = get_bm25_weights(common_texts, n_jobs=-1)
+        self.assertAlmostEqual(weights1, weights2)
+        self.assertAlmostEqual(weights1, weights3)
+        self.assertAlmostEqual(weights2, weights3)
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)

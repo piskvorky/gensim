@@ -24,6 +24,7 @@ import logging
 import multiprocessing
 import re
 import signal
+from pickle import PicklingError
 from xml.etree.cElementTree import \
     iterparse  # LXML isn't faster, so let's go with the built-in solution
 
@@ -31,6 +32,9 @@ from gensim import utils
 # cannot import whole gensim.corpora, because that imports wikicorpus...
 from gensim.corpora.dictionary import Dictionary
 from gensim.corpora.textcorpus import TextCorpus
+
+from six import raise_from
+
 
 logger = logging.getLogger(__name__)
 
@@ -87,6 +91,63 @@ IGNORED_NAMESPACES = [
     'Special', 'Talk'
 ]
 """`MediaWiki namespaces <https://www.mediawiki.org/wiki/Manual:Namespace>`_ that ought to be ignored."""
+
+
+def filter_example(elem, text, *args, **kwargs):
+    """Example function for filtering arbitrary documents from wikipedia dump.
+
+
+    The custom filter function is called _before_ tokenisation and should work on
+    the raw text and/or XML element information.
+
+    The filter function gets the entire context of the XML element passed into it,
+    but you can of course choose not the use some or all parts of the context. Please
+    refer to :func:`gensim.corpora.wikicorpus.extract_pages` for the exact details
+    of the page context.
+
+    Parameters
+    ----------
+    elem : etree.Element
+        XML etree element
+    text : str
+        The text of the XML node
+    namespace : str
+        XML namespace of the XML element
+    title : str
+       Page title
+    page_tag : str
+        XPath expression for page.
+    text_path : str
+        XPath expression for text.
+    title_path : str
+        XPath expression for title.
+    ns_path : str
+        XPath expression for namespace.
+    pageid_path : str
+        XPath expression for page id.
+
+    Example:
+    ------
+    >>> import gensim.corpora
+    >>> filter_func = gensim.corpora.wikicorpus.filter_example
+    >>> dewiki = gensim.corpora.WikiCorpus('./dewiki-20180520-pages-articles-multistream.xml.bz2',
+            filter_articles=filter_func)
+    """
+    # Filter German wikipedia dump for articles that are marked either as
+    # Lesenswert (featured) or Exzellent (excellent) by wikipedia editors.
+    # *********************
+    # regex is in the function call so that we do not pollute the wikicorpus
+    # namespace do not do this in production as this function is called for
+    # every element in the wiki dump
+    _regex_de_excellent = re.compile('.*\{\{(Exzellent.*?)\}\}[\s]*', flags=re.DOTALL)
+    _regex_de_featured = re.compile('.*\{\{(Lesenswert.*?)\}\}[\s]*', flags=re.DOTALL)
+
+    if text is None:
+        return False
+    if _regex_de_excellent.match(text) or _regex_de_featured.match(text):
+        return True
+    else:
+        return False
 
 
 def find_interlinks(raw):
@@ -324,7 +385,7 @@ def get_namespace(tag):
 _get_namespace = get_namespace
 
 
-def extract_pages(f, filter_namespaces=False):
+def extract_pages(f, filter_namespaces=False, filter_articles=None):
     """Extract pages from a MediaWiki database dump.
 
     Parameters
@@ -363,6 +424,14 @@ def extract_pages(f, filter_namespaces=False):
             if filter_namespaces:
                 ns = elem.find(ns_path).text
                 if ns not in filter_namespaces:
+                    text = None
+
+            if filter_articles is not None:
+                if not filter_articles(
+                        elem, namespace=namespace, title=title,
+                        text=text, page_tag=page_tag,
+                        text_path=text_path, title_path=title_path,
+                        ns_path=ns_path, pageid_path=pageid_path):
                     text = None
 
             pageid = elem.find(pageid_path).text
@@ -500,8 +569,11 @@ class WikiCorpus(TextCorpus):
     """
     def __init__(self, fname, processes=None, lemmatize=utils.has_pattern(), dictionary=None,
                  filter_namespaces=('0',), tokenizer_func=tokenize, article_min_tokens=ARTICLE_MIN_WORDS,
-                 token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True):
-        """
+                 token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True, filter_articles=None):
+        """Initialize the corpus.
+
+        Unless a dictionary is provided, this scans the corpus once,
+        to determine its vocabulary.
 
         Parameters
         ----------
@@ -528,7 +600,11 @@ class WikiCorpus(TextCorpus):
         token_max_len : int, optional
             Maximal token length.
         lower : bool, optional
-             Convert all text to lower case?
+             If True - convert all text to lower case.
+        filter_articles: callable or None, optional
+            If set, each XML article element will be passed to this callable before being processed. Only articles
+            where the callable returns an XML element are processed, returning None allows filtering out
+            some articles based on customised rules.
 
         Warnings
         --------
@@ -537,6 +613,7 @@ class WikiCorpus(TextCorpus):
         """
         self.fname = fname
         self.filter_namespaces = filter_namespaces
+        self.filter_articles = filter_articles
         self.metadata = False
         if processes is None:
             processes = max(1, multiprocessing.cpu_count() - 1)
@@ -589,7 +666,7 @@ class WikiCorpus(TextCorpus):
         texts = \
             ((text, self.lemmatize, title, pageid, tokenization_params)
              for title, text, pageid
-             in extract_pages(bz2.BZ2File(self.fname), self.filter_namespaces))
+             in extract_pages(bz2.BZ2File(self.fname), self.filter_namespaces, self.filter_articles))
         pool = multiprocessing.Pool(self.processes, init_to_ignore_interrupt)
 
         try:
@@ -616,6 +693,9 @@ class WikiCorpus(TextCorpus):
                 "(total %i articles, %i positions before pruning articles shorter than %i words)",
                 articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS
             )
+        except PicklingError as exc:
+            raise_from(PicklingError('Can not send filtering function {} to multiprocessing, '
+                'make sure the function can be pickled.'.format(self.filter_articles)), exc)
         else:
             logger.info(
                 "finished iterating over Wikipedia corpus of %i documents with %i positions "

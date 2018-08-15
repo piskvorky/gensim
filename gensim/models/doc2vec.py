@@ -20,13 +20,13 @@ For a usage example, see the `Doc2vec tutorial
 <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/doc2vec-lee.ipynb>`_.
 
 **Make sure you have a C compiler before installing Gensim, to use the optimized doc2vec routines** (70x speedup
-compared to plain NumPy implementation <https://rare-technologies.com/parallelizing-word2vec-in-python/>`_).
+compared to plain NumPy implementation, https://rare-technologies.com/parallelizing-word2vec-in-python/).
 
 
-Examples
---------
+Usage examples
+==============
 
-Initialize & train a model
+Initialize & train a model:
 
 >>> from gensim.test.utils import common_texts
 >>> from gensim.models.doc2vec import Doc2Vec, TaggedDocument
@@ -34,7 +34,7 @@ Initialize & train a model
 >>> documents = [TaggedDocument(doc, [i]) for i, doc in enumerate(common_texts)]
 >>> model = Doc2Vec(documents, vector_size=5, window=2, min_count=1, workers=4)
 
-Persist a model to disk
+Persist a model to disk:
 
 >>> from gensim.test.utils import get_tmpfile
 >>>
@@ -43,11 +43,11 @@ Persist a model to disk
 >>> model.save(fname)
 >>> model = Doc2Vec.load(fname)  # you can continue training with the loaded model!
 
-If you're finished training a model (=no more updates, only querying, reduce memory usage), you can do
+If you're finished training a model (=no more updates, only querying, reduce memory usage), you can do:
 
 >>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True)
 
-Infer vector for new document
+Infer vector for a new document:
 
 >>> vector = model.infer_vector(["system", "response"])
 

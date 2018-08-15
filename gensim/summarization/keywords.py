@@ -512,6 +512,9 @@ def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=
 
     _remove_unreachable_nodes(graph)
 
+    if not graph.edges():
+        return _format_results([], [], split, scores)
+
     # Ranks the tokens using the PageRank algorithm. Returns dict of lemma -> score
     pagerank_scores = _pagerank(graph)
 

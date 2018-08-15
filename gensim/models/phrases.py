@@ -113,7 +113,7 @@ class SentenceAnalyzer(object):
         Returns
         -------
         float
-            Score for given bi-gram, if bi-gram not presented in dictionary - return -1.
+            Score for given bi-gram. If bi-gram not present in dictionary - return -1.
 
         """
         vocab = self.vocab
@@ -136,7 +136,7 @@ class SentenceAnalyzer(object):
         threshold : float
             The minimum score for a bigram to be taken into account.
         common_terms : list of object
-            List of common terms, they have special treatment.
+            List of common terms, they receive special treatment.
         scorer : function
             Scorer function, as given to :class:`~gensim.models.phrases.Phrases`.
             See :func:`~gensim.models.phrases.npmi_scorer` and :func:`~gensim.models.phrases.original_scorer`.
@@ -224,7 +224,7 @@ class PhrasesTransformation(interfaces.TransformationABC):
                 else:
                     raise ValueError(
                         'failed to load %s model with unknown scoring setting %s' % (cls.__name__, model.scoring))
-        # if there is non common_terms attribute, initialize
+        # if there is no common_terms attribute, initialize
         if not hasattr(model, "common_terms"):
             logger.info('older version of %s loaded without common_terms attribute', cls.__name__)
             logger.info('setting common_terms to empty set')
@@ -252,7 +252,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         threshold : float, optional
             Represent a score threshold for forming the phrases (higher means fewer phrases).
             A phrase of words `a` followed by `b` is accepted if the score of the phrase is greater than threshold.
-            Hardly depends on concrete socring-function, see the `scoring` parameter.
+            Heavily depends on concrete scoring-function, see the `scoring` parameter.
         max_vocab_size : int, optional
             Maximum size (number of tokens) of the vocabulary. Used to control pruning of less common words,
             to keep memory under control. The default of 40M needs about 3.6GB of RAM. Increase/decrease
@@ -641,7 +641,7 @@ def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count
     len_vocab : int
         Size of vocabulary.
     min_count: int
-        Minimum score threshold.
+        Minimum collocation count threshold.
     corpus_word_count : int
         Not used in this particular scoring technique.
 
@@ -668,7 +668,7 @@ def npmi_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, co
     len_vocab : int
         Not used.
     min_count: int
-        Not used.
+        Ignore all bigrams with total collected count lower than this value.
     corpus_word_count : int
         Total number of words in the corpus.
 
@@ -678,10 +678,15 @@ def npmi_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, co
     where :math:`prob(word) = \\frac{word\_count}{corpus\_word\_count}`
 
     """
-    pa = worda_count / corpus_word_count
-    pb = wordb_count / corpus_word_count
-    pab = bigram_count / corpus_word_count
-    return log(pab / (pa * pb)) / -log(pab)
+    if bigram_count >= min_count:
+        pa = worda_count / corpus_word_count
+        pb = wordb_count / corpus_word_count
+        pab = bigram_count / corpus_word_count
+        return log(pab / (pa * pb)) / -log(pab)
+    else:
+        # Return -infinity to make sure that no phrases will be created
+        # from bigrams less frequent than min_count
+        return float('-inf')
 
 
 def pseudocorpus(source_vocab, sep, common_terms=frozenset()):
@@ -771,7 +776,7 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
             count += 1
             if not count % 50000:
                 logger.info('Phraser added %i phrasegrams', count)
-        logger.info('Phraser built with %i %i phrasegrams', count, len(self.phrasegrams))
+        logger.info('Phraser built with %i phrasegrams', len(self.phrasegrams))
 
     def pseudocorpus(self, phrases_model):
         """Alias for :func:`gensim.models.phrases.pseudocorpus`.

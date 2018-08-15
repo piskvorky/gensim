@@ -27,12 +27,12 @@ For a tutorial on Gensim word2vec, with an interactive web app trained on Google
 visit https://rare-technologies.com/word2vec-tutorial/.
 
 **Make sure you have a C compiler before installing Gensim, to use the optimized word2vec routines**
-(70x speedup compared to plain NumPy implementation, https://rare-technologies.com/parallelizing-word2vec-in-python/.
+(70x speedup compared to plain NumPy implementation, https://rare-technologies.com/parallelizing-word2vec-in-python/).
 
 Usage examples
 ==============
 
-Initialize a model with e.g.
+Initialize a model with e.g.:
 
 >>> from gensim.test.utils import common_texts, get_tmpfile
 >>> from gensim.models import Word2Vec
@@ -45,13 +45,13 @@ Initialize a model with e.g.
 The training is streamed, meaning `sentences` can be a generator, reading input data
 from disk on-the-fly, without loading the entire corpus into RAM.
 
-It also means you can continue training the model later
+It also means you can continue training the model later:
 
 >>> model = Word2Vec.load("word2vec.model")
 >>> model.train([["hello", "world"]], total_examples=1, epochs=1)
 (0, 2)
 
-The trained word vectors are stored in a :class:`~gensim.models.KeyedVectors` instance in `model.wv`:
+The trained word vectors are stored in a :class:`~gensim.models.keyedvectors.KeyedVectors` instance in `model.wv`:
 
 >>> vector = model.wv['computer']  # numpy vector of a word
 
@@ -68,7 +68,8 @@ fast loading and sharing the vectors in RAM between processes::
 >>> wv = KeyedVectors.load("model.wv", mmap='r')
 >>> vector = wv['computer']  # numpy vector of a word
 
-Gensim can also load word vectors in the "word2vec C format", as this :class:`~gensim.models.KeyedVectors` instance::
+Gensim can also load word vectors in the "word2vec C format", as a
+:class:`~gensim.models.keyedvectors.KeyedVectors` instance::
 
 >>> from gensim.test.utils import datapath
 >>>
@@ -84,7 +85,7 @@ You can perform various NLP word tasks with a trained model. Some of them
 are already built-in - you can see it in :mod:`gensim.models.keyedvectors`.
 
 If you're finished training a model (i.e. no more updates, only querying),
-you can switch to the :class:`~gensim.models.KeyedVectors` instance
+you can switch to the :class:`~gensim.models.keyedvectors.KeyedVectors` instance:
 
 >>> word_vectors = model.wv
 >>> del model
