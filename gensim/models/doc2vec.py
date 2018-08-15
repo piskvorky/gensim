@@ -609,8 +609,9 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             self.build_vocab(documents=documents, corpus_file=corpus_file,
                              trim_rule=trim_rule)
             self.train(
-                documents=documents, corpus_file=corpus_file, total_examples=self.corpus_count, epochs=self.epochs,
-                start_alpha=self.alpha, end_alpha=self.min_alpha, callbacks=callbacks)
+                documents=documents, corpus_file=corpus_file, total_examples=self.corpus_count,
+                total_words=self.corpus_total_words, epochs=self.epochs, start_alpha=self.alpha,
+                end_alpha=self.min_alpha, callbacks=callbacks)
 
     @property
     def dm(self):
@@ -1103,6 +1104,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             progress_per=progress_per, trim_rule=trim_rule
         )
         self.corpus_count = corpus_count
+        self.corpus_total_words = total_words
         report_values = self.vocabulary.prepare_vocab(
             self.hs, self.negative, self.wv, update=update, keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule,
             **kwargs)
