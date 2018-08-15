@@ -212,11 +212,11 @@ except ImportError:
     CORPUSFILE_VERSION = -1
 
     def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
-                       _work, _neu1, compute_loss):
+                       _work, _neu1):
         raise RuntimeError("Training with corpus_file argument is not supported")
 
     def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
-                         _work, _neu1, compute_loss):
+                         _work, _neu1):
         raise RuntimeError("Training with corpus_file argument is not supported")
 
 
