@@ -5,9 +5,10 @@
 # cython: embedsignature=True
 # coding: utf-8
 #
-# shared type definitions for fasttext_multistream
+# shared type definitions for word2vec_corpusfile
+# also used from fasttext_corpusfile and doc2vec_corpusfile
 #
-# Copyright (C) 2013 Radim Rehurek <me@radimrehurek.com>
+# Copyright (C) 2018 Dmitry Persiyanov <dmitry.persiyanov@gmail.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 from libcpp.string cimport string

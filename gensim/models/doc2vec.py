@@ -475,9 +475,10 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             Input corpus, can be simply a list of elements, but for larger corpora,consider an iterable that streams
             the documents directly from disk/network. If you don't supply `documents`, the model is
             left uninitialized -- use if you plan to initialize it in some other way.
-        corpus_file : str
+        corpus_file : str, optional
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
-            You may use this argument instead of `sentences` to get performance boost.
+            You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
+            `corpus_file` arguments need to be passed (or none of them).
         dm : {1,0}, optional
             Defines the training algorithm. If `dm=1`, 'distributed memory' (PV-DM) is used.
             Otherwise, `distributed bag of words` (PV-DBOW) is employed.
@@ -606,8 +607,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
                 raise TypeError("You must pass string as the corpus_file argument.")
             elif isinstance(documents, GeneratorType):
                 raise TypeError("You can't pass a generator as the documents argument. Try an iterator.")
-            self.build_vocab(documents=documents, corpus_file=corpus_file,
-                             trim_rule=trim_rule)
+            self.build_vocab(documents=documents, corpus_file=corpus_file, trim_rule=trim_rule)
             self.train(
                 documents=documents, corpus_file=corpus_file, total_examples=self.corpus_count,
                 total_words=self.corpus_total_words, epochs=self.epochs, start_alpha=self.alpha,
@@ -741,13 +741,14 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
         Parameters
         ----------
-        documents : iterable of list of :class:`~gensim.models.doc2vec.TaggedDocument`
+        documents : iterable of list of :class:`~gensim.models.doc2vec.TaggedDocument`, optional
             Can be simply a list of elements, but for larger corpora,consider an iterable that streams
             the documents directly from disk/network. If you don't supply `documents`, the model is
             left uninitialized -- use if you plan to initialize it in some other way.
-        corpus_file : str
+        corpus_file : str, optional
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
-            You may use this argument instead of `sentences` to get performance boost.
+            You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
+            `corpus_file` arguments need to be passed (not both of them).
         total_examples : int, optional
             Count of sentences.
         total_words : int, optional
@@ -1068,13 +1069,14 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
         Parameters
         ----------
-        documents : iterable of list of :class:`~gensim.models.doc2vec.TaggedDocument`
+        documents : iterable of list of :class:`~gensim.models.doc2vec.TaggedDocument`, optional
             Can be simply a list of :class:`~gensim.models.doc2vec.TaggedDocument` elements, but for larger corpora,
             consider an iterable that streams the documents directly from disk/network.
             See :class:`~gensim.models.doc2vec.TaggedBrownCorpus` or :class:`~gensim.models.doc2vec.TaggedLineDocument`
-        corpus_file : str
+        corpus_file : str, optional
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
-            You may use this argument instead of `sentences` to get performance boost.
+            You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
+            `corpus_file` arguments need to be passed (not both of them).
         update : bool
             If true, the new words in `sentences` will be added to model's vocab.
         progress_per : int
@@ -1264,11 +1266,12 @@ class Doc2VecVocab(Word2VecVocab):
 
         Parameters
         ----------
-        documents : iterable of :class:`~gensim.models.doc2vec.TaggedDocument`
+        documents : iterable of :class:`~gensim.models.doc2vec.TaggedDocument`, optional
             The tagged documents used to create the vocabulary. Their tags can be either str tokens or ints (faster).
-        corpus_file : str
+        corpus_file : str, optional
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
-            You may use this argument instead of `sentences` to get performance boost.
+            You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
+            `corpus_file` arguments need to be passed (not both of them).
         docvecs : list of :class:`~gensim.models.keyedvectors.Doc2VecKeyedVectors`
             The vector representations of the documents in our corpus. Each of them has a size == `vector_size`.
         progress_per : int

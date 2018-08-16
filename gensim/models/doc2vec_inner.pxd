@@ -6,7 +6,7 @@
 # cython: embedsignature=True
 # coding: utf-8
 #
-# Copyright (C) 2013 Radim Rehurek <me@radimrehurek.com>
+# Copyright (C) 2018 Dmitry Persiyanov <dmitry.persiyanov@gmail.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """Optimized cython functions for training :class:`~gensim.models.doc2vec.Doc2Vec` model."""

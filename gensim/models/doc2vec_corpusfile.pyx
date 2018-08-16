@@ -5,14 +5,13 @@
 # cython: embedsignature=True
 # coding: utf-8
 #
-# Copyright (C) 2013 Radim Rehurek <me@radimrehurek.com>
+# Copyright (C) 2018 Dmitry Persiyanov <dmitry.persiyanov@gmail.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""Optimized cython functions for training :class:`~gensim.models.doc2vec.Doc2Vec` model."""
+"""Optimized cython functions for file-based training :class:`~gensim.models.doc2vec.Doc2Vec` model."""
 
 import cython
 import numpy as np
-from numpy import zeros, float32 as REAL
 cimport numpy as np
 
 from libcpp.string cimport string
@@ -38,7 +37,7 @@ from gensim.models.doc2vec_inner cimport (
     Doc2VecConfig
 )
 
-from gensim.models.word2vec_inner cimport bisect_left, random_int32, sscal, REAL_t, EXP_TABLE, our_dot, our_saxpy
+from gensim.models.word2vec_inner cimport random_int32, sscal, REAL_t, our_saxpy
 
 from gensim.models.word2vec_corpusfile cimport (
     VocabItem,

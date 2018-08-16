@@ -660,9 +660,10 @@ class Word2Vec(BaseWordEmbeddingsModel):
             <https://rare-technologies.com/data-streaming-in-python-generators-iterators-iterables/>`_.
             If you don't supply `sentences`, the model is left uninitialized -- use if you plan to initialize it
             in some other way.
-        corpus_file : str
+        corpus_file : str, optional
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
-            You may use this argument instead of `sentences` to get performance boost.
+            You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
+            `corpus_file` arguments need to be passed (or none of them).
         size : int, optional
             Dimensionality of the word vectors.
         window : int, optional
@@ -841,9 +842,10 @@ class Word2Vec(BaseWordEmbeddingsModel):
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
             See also the `tutorial on data streaming in Python
             <https://rare-technologies.com/data-streaming-in-python-generators-iterators-iterables/>`_.
-        corpus_file : str
+        corpus_file : str, optional
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
-            You may use this argument instead of `sentences` to get performance boost.
+            You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
+            `corpus_file` arguments need to be passed (not both of them).
         total_examples : int
             Count of sentences.
         total_words : int

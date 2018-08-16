@@ -271,9 +271,10 @@ class FastText(BaseWordEmbeddingsModel):
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
             If you don't supply `sentences`, the model is left uninitialized -- use if you plan to initialize it
             in some other way.
-        corpus_file : str
+        corpus_file : str, optional
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
-            You may use this argument instead of `sentences` to get performance boost.
+            You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
+            `corpus_file` arguments need to be passed (or none of them).
         min_count : int, optional
             The model ignores all words with total frequency lower than this.
         size : int, optional
@@ -443,14 +444,15 @@ class FastText(BaseWordEmbeddingsModel):
 
         Parameters
         ----------
-        sentences : iterable of list of str
+        sentences : iterable of list of str, optional
             Can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
-        corpus_file : str
+        corpus_file : str, optional
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
-            You may use this argument instead of `sentences` to get performance boost.
+            You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
+            `corpus_file` arguments need to be passed (not both of them).
         update : bool
             If true, the new words in `sentences` will be added to model's vocab.
         progress_per : int
@@ -612,14 +614,15 @@ class FastText(BaseWordEmbeddingsModel):
 
         Parameters
         ----------
-        sentences : {iterable of iterables, list or tuple of iterable of iterables}
+        sentences : iterable of list of str, optional
             The `sentences` iterable can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
-        corpus_file : str
+        corpus_file : str, optional
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
-            If you use this argument instead of `sentences`, you must provide `total_words` argument as well.
+            If you use this argument instead of `sentences`, you must provide `total_words` argument as well. Only one
+            of `sentences` or `corpus_file` arguments need to be passed (not both of them).
         total_examples : int
             Count of sentences.
         total_words : int
