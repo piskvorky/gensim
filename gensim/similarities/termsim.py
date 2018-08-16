@@ -161,9 +161,9 @@ class SparseTermSimilarityMatrix(SaveLoad):
     symmetric : bool, optional
         Whether the symmetry of the term similarity matrix will be enforced. This parameter only has
         an effect when `source` is a :class:`scipy.sparse.spmatrix`.
-    nonzero_limit : int, optional
+    nonzero_limit : {int, None}, optional
         The maximum number of non-zero elements outside the diagonal in a single column of the
-        sparse term similarity matrix.
+        sparse term similarity matrix. If None, then no limit will be imposed.
     dtype : numpy.dtype, optional
         Data-type of the sparse term similarity matrix.
 
@@ -185,6 +185,9 @@ class SparseTermSimilarityMatrix(SaveLoad):
         matrix_order = len(dictionary)
 
         logger.info("constructing a sparse term similarity matrix using %s", index)
+
+        if nonzero_limit is None:
+            nonzero_limit = matrix_order
 
         if tfidf is None:
             logger.info("iterating over columns in dictionary order")
