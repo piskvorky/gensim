@@ -33,7 +33,9 @@ from gensim.models.doc2vec_inner cimport (
     fast_document_dm_hs,
     fast_document_dm_neg,
     fast_document_dmc_hs,
-    fast_document_dmc_neg
+    fast_document_dmc_neg,
+    init_d2v_config,
+    Doc2VecConfig
 )
 
 from gensim.models.word2vec_inner cimport bisect_left, random_int32, sscal, REAL_t, EXP_TABLE, our_dot, our_saxpy
