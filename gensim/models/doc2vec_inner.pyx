@@ -220,9 +220,9 @@ cdef unsigned long long fast_document_dmc_neg(
     return next_random
 
 
-cdef init_d2v_config(Doc2VecConfig *c, doctag_indexes, model, alpha, learn_doctags, learn_words, learn_hidden,
+cdef init_d2v_config(Doc2VecConfig *c, model, alpha, learn_doctags, learn_words, learn_hidden,
                      train_words=False, work=None, neu1=None, word_vectors=None, word_locks=None, doctag_vectors=None,
-                     doctag_locks=None):
+                     doctag_locks=None, docvecs_count=0):
     c[0].hs = model.hs
     c[0].negative = model.negative
     c[0].sample = (model.vocabulary.sample != 0)
@@ -234,14 +234,14 @@ cdef init_d2v_config(Doc2VecConfig *c, doctag_indexes, model, alpha, learn_docta
     c[0].alpha = alpha
     c[0].layer1_size = model.trainables.layer1_size
     c[0].vector_size = model.docvecs.vector_size
+    c[0].workers = model.workers
+    c[0].docvecs_count = docvecs_count
 
     c[0].window = model.window
     c[0].expected_doctag_len = model.dm_tag_count
 
     if '\0' in model.wv.vocab:
         c[0].null_word_index = model.wv.vocab['\0'].index
-
-    c[0].doctag_len = <int>min(MAX_DOCUMENT_LEN, len(doctag_indexes))
 
     # default vectors, locks from syn0/doctag_syn0
     if word_vectors is None:
@@ -329,9 +329,11 @@ def train_document_dbow(model, doc_words, doctag_indexes, alpha, work=None,
     cdef int i, j
     cdef long result = 0
 
-    init_d2v_config(&c, doctag_indexes, model, alpha, learn_doctags, learn_words, learn_hidden, train_words=train_words,
-                    work=work, neu1=None, word_vectors=word_vectors, word_locks=word_locks,
+    init_d2v_config(&c, model, alpha, learn_doctags, learn_words, learn_hidden, train_words=train_words, work=work,
+                    neu1=None, word_vectors=word_vectors, word_locks=word_locks,
                     doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
+
+    c.doctag_len = <int>min(MAX_DOCUMENT_LEN, len(doctag_indexes))
 
     vlookup = model.wv.vocab
     i = 0
@@ -453,9 +455,11 @@ def train_document_dm(model, doc_words, doctag_indexes, alpha, work=None, neu1=N
     cdef int i, j, k, m
     cdef long result = 0
 
-    init_d2v_config(&c, doctag_indexes, model, alpha, learn_doctags, learn_words, learn_hidden, train_words=False,
+    init_d2v_config(&c, model, alpha, learn_doctags, learn_words, learn_hidden, train_words=False,
                     work=work, neu1=neu1, word_vectors=word_vectors, word_locks=word_locks,
                     doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
+
+    c.doctag_len = <int>min(MAX_DOCUMENT_LEN, len(doctag_indexes))
 
     vlookup = model.wv.vocab
     i = 0
@@ -590,9 +594,10 @@ def train_document_dm_concat(model, doc_words, doctag_indexes, alpha, work=None,
     cdef int i, j, k, m, n
     cdef long result = 0
 
-    init_d2v_config(&c, doctag_indexes, model, alpha, learn_doctags, learn_words, learn_hidden, train_words=False,
-                    work=work, neu1=neu1, word_vectors=word_vectors, word_locks=word_locks,
-                    doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
+    init_d2v_config(&c, model, alpha, learn_doctags, learn_words, learn_hidden, train_words=False, work=work, neu1=neu1,
+                    word_vectors=word_vectors, word_locks=word_locks, doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
+
+    c.doctag_len = <int>min(MAX_DOCUMENT_LEN, len(doctag_indexes))
 
     if c.doctag_len != c.expected_doctag_len:
         return 0  # skip doc without expected number of tags
