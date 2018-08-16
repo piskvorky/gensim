@@ -140,8 +140,6 @@ def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expec
 
     # for preparing batches & training
     cdef vector[vector[string]] sentences
-    cdef unsigned long long random_number
-    cdef VocabItem word
 
     with nogil:
         input_stream.reset()
@@ -237,8 +235,6 @@ def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _exp
 
     # for preparing batches & training
     cdef vector[vector[string]] sentences
-    cdef unsigned long long random_number
-    cdef VocabItem word
 
     with nogil:
         input_stream.reset()

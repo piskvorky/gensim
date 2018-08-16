@@ -304,10 +304,7 @@ def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expec
 
     init_w2v_config(&c, model, _alpha, compute_loss, _work)
 
-    # for preparing batches & training
     cdef vector[vector[string]] sentences
-    cdef unsigned long long random_number
-    cdef VocabItem word
 
     with nogil:
         input_stream.reset()
@@ -397,10 +394,7 @@ def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _exp
 
     init_w2v_config(&c, model, _alpha, compute_loss, _work, _neu1)
 
-    # for preparing batches & training
     cdef vector[vector[string]] sentences
-    cdef unsigned long long random_number
-    cdef VocabItem word
 
     with nogil:
         input_stream.reset()
