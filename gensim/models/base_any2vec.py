@@ -44,6 +44,7 @@ from types import GeneratorType
 from gensim.utils import deprecated
 import warnings
 import os
+import copy
 
 
 try:
@@ -124,8 +125,8 @@ class BaseAny2VecModel(utils.SaveLoad):
         """Resets certain properties of the model post training. eg. `keyedvectors.vectors_norm`."""
         raise NotImplementedError()
 
-    def _do_train_epoch(self, corpus_file, offset, cython_vocab, thread_private_mem, cur_epoch, total_examples=None,
-                        total_words=None):
+    def _do_train_epoch(self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
+                        total_examples=None, total_words=None, **kwargs):
         raise NotImplementedError()
 
     def _do_train_job(self, data_iterable, job_parameters, thread_private_mem):
@@ -141,8 +142,8 @@ class BaseAny2VecModel(utils.SaveLoad):
         if not (data_iterable is None) ^ (corpus_file is None):
             raise ValueError("You must provide only one of singlestream or corpus_file arguments.")
 
-    def _worker_loop_corpusfile(self, corpus_file, offset, cython_vocab, progress_queue, cur_epoch=0,
-                                total_examples=None, total_words=None):
+    def _worker_loop_corpusfile(self, corpus_file, thread_id, offset, cython_vocab, progress_queue, cur_epoch=0,
+                                total_examples=None, total_words=None, **kwargs):
         """Train the model on a `corpus_file` in LineSentence format.
 
         This function will be called in parallel by multiple workers (threads or processes) to make
@@ -152,6 +153,8 @@ class BaseAny2VecModel(utils.SaveLoad):
         ----------
         corpus_file : str
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+        thread_id : int
+            Thread index starting from 0 to `number of workers - 1`.
         offset : int
             Offset (in bytes) in the `corpus_file` for particular worker.
         cython_vocab : :class:`~gensim.models.word2vec_inner.CythonVocab`
@@ -161,13 +164,16 @@ class BaseAny2VecModel(utils.SaveLoad):
                 * Size of data chunk processed, for example number of sentences in the corpus chunk.
                 * Effective word count used in training (after ignoring unknown words and trimming the sentence length).
                 * Total word count used in training.
+        **kwargs : object
+            Additional key word parameters for the specific model inheriting from this class.
 
         """
         thread_private_mem = self._get_thread_working_mem()
 
-        examples, tally, raw_tally = self._do_train_epoch(corpus_file, offset, cython_vocab, thread_private_mem,
-                                                          cur_epoch, total_examples=total_examples,
-                                                          total_words=total_words)
+        examples, tally, raw_tally = self._do_train_epoch(corpus_file, thread_id, offset, cython_vocab,
+                                                          thread_private_mem, cur_epoch,
+                                                          total_examples=total_examples,
+                                                          total_words=total_words, **kwargs)
 
         progress_queue.put((examples, tally, raw_tally))
         progress_queue.put(None)
@@ -364,7 +370,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         self.total_train_time += elapsed
         return trained_word_count, raw_word_count, job_tally
 
-    def _train_epoch_corpusfile(self, corpus_file, cur_epoch=0, total_examples=None, total_words=None):
+    def _train_epoch_corpusfile(self, corpus_file, cur_epoch=0, total_examples=None, total_words=None, **kwargs):
         """Train the model for a single epoch.
 
         Parameters
@@ -380,6 +386,8 @@ class BaseAny2VecModel(utils.SaveLoad):
         total_words : int
             Count of total objects in `data_iterator`. In the usual case this would correspond to the number of raw
             words in a corpus, used to log progress. Must be provided in order to seek in `corpus_file`.
+        **kwargs : object
+            Additional key word parameters for the specific model inheriting from this class.
 
         Returns
         -------
@@ -401,11 +409,17 @@ class BaseAny2VecModel(utils.SaveLoad):
 
         corpus_file_size = os.path.getsize(corpus_file)
 
+        thread_kwargs = copy.copy(kwargs)
+        thread_kwargs['cur_epoch'] = cur_epoch
+        thread_kwargs['total_examples'] = total_examples
+        thread_kwargs['total_words'] = total_words
         workers = [
             threading.Thread(
                 target=self._worker_loop_corpusfile,
-                args=(corpus_file, corpus_file_size / self.workers * thread_id, cython_vocab, progress_queue,),
-                kwargs={'cur_epoch': cur_epoch, 'total_examples': total_examples, 'total_words': total_words}
+                args=(
+                    corpus_file, thread_id, corpus_file_size / self.workers * thread_id, cython_vocab, progress_queue
+                ),
+                kwargs=thread_kwargs
             ) for thread_id in range(self.workers)
         ]
 
@@ -538,7 +552,7 @@ class BaseAny2VecModel(utils.SaveLoad):
                     total_words=total_words, queue_factor=queue_factor, report_delay=report_delay)
             else:
                 trained_word_count_epoch, raw_word_count_epoch, job_tally_epoch = self._train_epoch_corpusfile(
-                    corpus_file, cur_epoch=cur_epoch, total_examples=total_examples, total_words=total_words)
+                    corpus_file, cur_epoch=cur_epoch, total_examples=total_examples, total_words=total_words, **kwargs)
 
             trained_word_count += trained_word_count_epoch
             raw_word_count += raw_word_count_epoch
@@ -1010,7 +1024,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
     def train(self, sentences=None, corpus_file=None, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None, word_count=0,
-              queue_factor=2, report_delay=1.0, compute_loss=False, callbacks=()):
+              queue_factor=2, report_delay=1.0, compute_loss=False, callbacks=(), **kwargs):
         """Train the model. If the hyper-parameters are passed, they override the ones set in the constructor.
 
         Parameters
@@ -1045,6 +1059,8 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             :attr:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel.running_training_loss`.
         callbacks : list of :class:`~gensim.models.callbacks.CallbackAny2Vec`, optional
             List of callbacks that need to be executed/run at specific stages during training.
+        **kwargs : object
+            Additional key word parameters for the specific model inheriting from this class.
 
         Returns
         -------
@@ -1060,7 +1076,8 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         return super(BaseWordEmbeddingsModel, self).train(
             data_iterable=sentences, corpus_file=corpus_file, total_examples=total_examples,
             total_words=total_words, epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
-            queue_factor=queue_factor, report_delay=report_delay, compute_loss=compute_loss, callbacks=callbacks)
+            queue_factor=queue_factor, report_delay=report_delay, compute_loss=compute_loss, callbacks=callbacks,
+            **kwargs)
 
     def _get_job_params(self, cur_epoch):
         """Get the learning rate used in the current epoch.

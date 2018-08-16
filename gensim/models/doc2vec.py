@@ -78,7 +78,7 @@ from six import string_types, integer_types, itervalues
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 from gensim.models.keyedvectors import Doc2VecKeyedVectors
 from types import GeneratorType
-from gensim.utils import deprecated
+from gensim.utils import deprecated, smart_open
 
 logger = logging.getLogger(__name__)
 
@@ -356,21 +356,22 @@ except ImportError:
     # corpusfile doc2vec is not supported
     CORPUSFILE_VERSION = -1
 
-    def d2v_train_epoch_dbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
-                             work, _neu1, docvecs_count, word_vectors=None, word_locks=None, train_words=False,
-                             learn_doctags=True, learn_words=True, learn_hidden=True, doctag_vectors=None,
-                             doctag_locks=None):
+    def d2v_train_epoch_dbow(model, corpus_file, offset, start_doctag, _cython_vocab, _cur_epoch, _expected_examples,
+                             _expected_words, work, _neu1, docvecs_count, word_vectors=None, word_locks=None,
+                             train_words=False, learn_doctags=True, learn_words=True, learn_hidden=True,
+                             doctag_vectors=None, doctag_locks=None):
         raise NotImplementedError("Training with corpus_file argument is not supported.")
 
-    def d2v_train_epoch_dm_concat(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples,
-                                  _expected_words, work, _neu1, docvecs_count, word_vectors=None, word_locks=None,
-                                  learn_doctags=True, learn_words=True, learn_hidden=True, doctag_vectors=None,
-                                  doctag_locks=None):
+    def d2v_train_epoch_dm_concat(model, corpus_file, offset, start_doctag, _cython_vocab, _cur_epoch,
+                                  _expected_examples, _expected_words, work, _neu1, docvecs_count, word_vectors=None,
+                                  word_locks=None, learn_doctags=True, learn_words=True, learn_hidden=True,
+                                  doctag_vectors=None, doctag_locks=None):
         raise NotImplementedError("Training with corpus_file argument is not supported.")
 
-    def d2v_train_epoch_dm(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
-                             work, _neu1, docvecs_count, word_vectors=None, word_locks=None, learn_doctags=True,
-                             learn_words=True, learn_hidden=True, doctag_vectors=None, doctag_locks=None):
+    def d2v_train_epoch_dm(model, corpus_file, offset, start_doctag, _cython_vocab, _cur_epoch, _expected_examples,
+                           _expected_words, work, _neu1, docvecs_count, word_vectors=None, word_locks=None,
+                           learn_doctags=True, learn_words=True, learn_hidden=True, doctag_vectors=None,
+                           doctag_locks=None):
         raise NotImplementedError("Training with corpus_file argument is not supported.")
 
 
@@ -659,26 +660,31 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         self.docvecs.offset2doctag = other_model.docvecs.offset2doctag
         self.trainables.reset_weights(self.hs, self.negative, self.wv, self.docvecs)
 
-    def _do_train_epoch(self, corpus_file, offset, cython_vocab, thread_private_mem, cur_epoch, total_examples=None,
-                        total_words=None):
+    def _do_train_epoch(self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
+                        total_examples=None, total_words=None, offsets=None, start_doctags=None, **kwargs):
         work, neu1 = thread_private_mem
         doctag_vectors = self.docvecs.vectors_docs
         doctag_locks = self.trainables.vectors_docs_lockf
 
+        offset = offsets[thread_id]
+        start_doctag = start_doctags[thread_id]
+
         if self.sg:
-            examples, tally, raw_tally = d2v_train_epoch_dbow(self, corpus_file, offset, cython_vocab, cur_epoch,
-                                                              total_examples, total_words, work, neu1,
+            examples, tally, raw_tally = d2v_train_epoch_dbow(self, corpus_file, offset, start_doctag, cython_vocab,
+                                                              cur_epoch, total_examples, total_words, work, neu1,
                                                               self.docvecs.count, doctag_vectors=doctag_vectors,
                                                               doctag_locks=doctag_locks, train_words=self.dbow_words)
         elif self.dm_concat:
-            examples, tally, raw_tally = d2v_train_epoch_dm_concat(self, corpus_file, offset, cython_vocab, cur_epoch,
-                                                                   total_examples, total_words, work, neu1,
-                                                                   self.docvecs.count, doctag_vectors=doctag_vectors,
+            examples, tally, raw_tally = d2v_train_epoch_dm_concat(self, corpus_file, offset, start_doctag,
+                                                                   cython_vocab, cur_epoch, total_examples, total_words,
+                                                                   work, neu1, self.docvecs.count,
+                                                                   doctag_vectors=doctag_vectors,
                                                                    doctag_locks=doctag_locks)
         else:
-            examples, tally, raw_tally = d2v_train_epoch_dm(self, corpus_file, offset, cython_vocab, cur_epoch,
-                                                            total_examples, total_words, work, neu1, self.docvecs.count,
-                                                            doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
+            examples, tally, raw_tally = d2v_train_epoch_dm(self, corpus_file, offset, start_doctag, cython_vocab,
+                                                            cur_epoch, total_examples, total_words, work, neu1,
+                                                            self.docvecs.count, doctag_vectors=doctag_vectors,
+                                                            doctag_locks=doctag_locks)
 
         return examples, tally, raw_tally
 
@@ -777,10 +783,61 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             List of callbacks that need to be executed/run at specific stages during training.
 
         """
+        kwargs = {}
+        if corpus_file is not None:
+            # Calculate offsets for each worker along with initial doctags (doctag ~ document/line number in a file)
+            offsets, start_doctags = self._get_offsets_and_start_doctags_for_corpusfile(corpus_file, self.workers)
+            kwargs['offsets'] = offsets
+            kwargs['start_doctags'] = start_doctags
+
         super(Doc2Vec, self).train(
             sentences=documents, corpus_file=corpus_file, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
-            queue_factor=queue_factor, report_delay=report_delay, callbacks=callbacks)
+            queue_factor=queue_factor, report_delay=report_delay, callbacks=callbacks, **kwargs)
+
+    @classmethod
+    def _get_offsets_and_start_doctags_for_corpusfile(cls, corpus_file, workers):
+        """Get offset and initial document tag in a corpus_file for each worker.
+
+        Firstly, approximate offsets are calculated based on number of workers and corpus_file size.
+        Secondly, for each approximate offset we find the maximum offset which points to the beginning of line and
+        less than approximate offset.
+
+        Parameters
+        ----------
+        corpus_file : str
+            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+        workers : int
+            Number of workers.
+
+        Returns
+        -------
+        list of int, list of int
+            Lists with offsets and document tags with length = number of workers.
+        """
+        corpus_file_size = os.path.getsize(corpus_file)
+        approx_offsets = [int(corpus_file_size / workers * i) for i in range(workers)]
+        offsets = []
+        start_doctags = []
+
+        with smart_open(corpus_file) as fin:
+            curr_offset_idx = 0
+            prev_filepos = 0
+
+            for line_no, line in enumerate(fin):
+                if curr_offset_idx == len(approx_offsets):
+                    break
+
+                curr_filepos = fin.tell()
+                while curr_offset_idx != len(approx_offsets) and approx_offsets[curr_offset_idx] < curr_filepos:
+                    offsets.append(prev_filepos)
+                    start_doctags.append(line_no)
+
+                    curr_offset_idx += 1
+
+                prev_filepos = curr_filepos
+
+        return offsets, start_doctags
 
     def _raw_word_count(self, job):
         """Get the number of words in a given job.

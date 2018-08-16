@@ -173,6 +173,39 @@ class TestDoc2VecModel(unittest.TestCase):
             sims_to_infer = loaded_model.docvecs.most_similar([doc0_inferred], topn=len(loaded_model.docvecs))
             self.assertTrue(sims_to_infer)
 
+    def test_get_offsets_and_start_doctags(self):
+        # Each line takes 6 bytes (including '\n' character)
+        lines = ['line1', 'line2', 'line3', 'line4', 'line5']
+        tmpf = get_tmpfile('gensim_doc2vec.tst')
+
+        with utils.smart_open(tmpf, 'w') as fout:
+            for line in lines:
+                fout.write(line + '\n')
+
+        offsets, start_doctags = doc2vec.Doc2Vec._get_offsets_and_start_doctags_for_corpusfile(tmpf, 1)
+        self.assertEqual(offsets, [0])
+        self.assertEqual(start_doctags, [0])
+
+        offsets, start_doctags = doc2vec.Doc2Vec._get_offsets_and_start_doctags_for_corpusfile(tmpf, 2)
+        self.assertEqual(offsets, [0, 12])
+        self.assertEqual(start_doctags, [0, 2])
+
+        offsets, start_doctags = doc2vec.Doc2Vec._get_offsets_and_start_doctags_for_corpusfile(tmpf, 3)
+        self.assertEqual(offsets, [0, 6, 18])
+        self.assertEqual(start_doctags, [0, 1, 3])
+
+        offsets, start_doctags = doc2vec.Doc2Vec._get_offsets_and_start_doctags_for_corpusfile(tmpf, 4)
+        self.assertEqual(offsets, [0, 6, 12, 18])
+        self.assertEqual(start_doctags, [0, 1, 2, 3])
+
+        offsets, start_doctags = doc2vec.Doc2Vec._get_offsets_and_start_doctags_for_corpusfile(tmpf, 5)
+        self.assertEqual(offsets, [0, 6, 12, 18, 24])
+        self.assertEqual(start_doctags, [0, 1, 2, 3, 4])
+
+        offsets, start_doctags = doc2vec.Doc2Vec._get_offsets_and_start_doctags_for_corpusfile(tmpf, 6)
+        self.assertEqual(offsets, [0, 0, 6, 12, 18, 24])
+        self.assertEqual(start_doctags, [0, 0, 1, 2, 3, 4])
+
     def test_unicode_in_doctag(self):
         """Test storing document vectors of a model with unicode titles."""
         model = doc2vec.Doc2Vec(DocsLeeCorpus(unicode_tags=True), min_count=1)
