@@ -273,7 +273,7 @@ if not (os.name == 'nt' and sys.version_info[0] < 3):
 
     ext_modules.append(
         Extension('gensim.models.word2vec_corpusfile',
-                  sources=['./gensim/models/word2vec_corpusfile.cpp', './gensim/models/fast_line_sentence.cpp'],
+                  sources=['./gensim/models/word2vec_corpusfile.cpp'],
                   language='c++',
                   extra_compile_args=extra_args,
                   extra_link_args=extra_args)
