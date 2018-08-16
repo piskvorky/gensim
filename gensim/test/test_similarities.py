@@ -732,34 +732,32 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         self.tfidf = TfidfModel(dictionary=self.dictionary)
         self.index = UniformTermSimilarityIndex(self.dictionary, term_similarity=0.5)
 
-    def test_building(self):
-        """Test the matrix building algorithm."""
-
-        # check matrix type
+    def test_type(self):
+        """Test the type of the produced matrix."""
         matrix = SparseTermSimilarityMatrix(self.index, self.dictionary).matrix
         self.assertTrue(isinstance(matrix, scipy.sparse.csc_matrix))
 
-        # check symmetry
-        matrix = SparseTermSimilarityMatrix(self.index, self.dictionary).matrix.todense()
-        self.assertTrue(numpy.all(matrix == matrix.T))
-
-        # check the existence of ones on the main diagonal
+    def test_diagonal(self):
+        """Test the existence of ones on the main diagonal."""
         matrix = SparseTermSimilarityMatrix(self.index, self.dictionary).matrix.todense()
         self.assertTrue(numpy.all(numpy.diag(matrix) == numpy.ones(matrix.shape[0])))
 
-        # check the matrix order
+    def test_order(self):
+        """Test the matrix order."""
         matrix = SparseTermSimilarityMatrix(self.index, self.dictionary).matrix.todense()
         self.assertEqual(matrix.shape[0], len(self.dictionary))
         self.assertEqual(matrix.shape[1], len(self.dictionary))
 
-        # check that the dtype works as expected
+    def test_dtype(self):
+        """Test the dtype parameter of the matrix constructor."""
         matrix = SparseTermSimilarityMatrix(self.index, self.dictionary, dtype=numpy.float32).matrix.todense()
         self.assertEqual(numpy.float32, matrix.dtype)
 
         matrix = SparseTermSimilarityMatrix(self.index, self.dictionary, dtype=numpy.float64).matrix.todense()
         self.assertEqual(numpy.float64, matrix.dtype)
 
-        # check that the nonzero_limit works as expected
+    def test_nonzero_limit(self):
+        """Test the nonzero_limit parameter of the matrix constructor."""
         matrix = SparseTermSimilarityMatrix(self.index, self.dictionary, nonzero_limit=100).matrix.todense()
         self.assertGreaterEqual(101, numpy.max(numpy.sum(matrix != 0, axis=0)))
 
@@ -773,7 +771,11 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         self.assertEqual(1, numpy.max(numpy.sum(matrix != 0, axis=0)))
         self.assertTrue(numpy.all(matrix == numpy.eye(matrix.shape[0])))
 
-        # check that symmetric works as expected
+    def test_symmetric(self):
+        """Test the symmetric parameter of the matrix constructor."""
+        matrix = SparseTermSimilarityMatrix(self.index, self.dictionary).matrix.todense()
+        self.assertTrue(numpy.all(matrix == matrix.T))
+
         matrix = SparseTermSimilarityMatrix(
             self.index, self.dictionary, nonzero_limit=1).matrix.todense()
         expected_matrix = numpy.array([
@@ -794,9 +796,10 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
             [0.0, 0.0, 0.0, 0.0, 1.0]])
         self.assertTrue(numpy.all(expected_matrix == matrix))
 
-        # check that positive_definite works as expected
+    def test_positive_definite(self):
+        """Test the positive_definite parameter of the matrix constructor."""
         matrix = SparseTermSimilarityMatrix(
-            self.index, self.dictionary, nonzero_limit=2, positive_definite=False).matrix.todense()
+            self.index, self.dictionary, nonzero_limit=2).matrix.todense()
         expected_matrix = numpy.array([
             [1.0, 0.5, 0.5, 0.0, 0.0],
             [0.5, 1.0, 0.0, 0.5, 0.0],
@@ -815,7 +818,8 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
             [0.0, 0.0, 0.0, 0.0, 1.0]])
         self.assertTrue(numpy.all(expected_matrix == matrix))
 
-        # check that tfidf works as expected
+    def test_tfidf(self):
+        """Test the tfidf parameter of the matrix constructor."""
         matrix = SparseTermSimilarityMatrix(
             self.index, self.dictionary, nonzero_limit=1).matrix.todense()
         expected_matrix = numpy.array([
