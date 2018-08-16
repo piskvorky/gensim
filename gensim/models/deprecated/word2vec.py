@@ -1623,6 +1623,8 @@ class Word2Vec(SaveLoad):
             model.make_cum_table()  # rebuild cum_table from vocabulary
         if not hasattr(model, 'corpus_count'):
             model.corpus_count = None
+        if not hasattr(model, 'corpus_total_words'):
+            model.corpus_total_words = None
         for v in model.wv.vocab.values():
             if hasattr(v, 'sample_int'):
                 break  # already 0.12.0+ style int probabilities
