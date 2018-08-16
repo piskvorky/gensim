@@ -110,6 +110,7 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertTrue(model.wv.vectors.shape == (3955, 100))
         self.assertTrue(len(model.wv.vocab) == 3955)
         self.assertTrue(len(model.wv.index2word) == 3955)
+        self.assertIsNone(model.corpus_total_words)
         self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
         self.assertTrue(model.trainables.vectors_lockf.shape == (3955, ))
         self.assertTrue(model.vocabulary.cum_table.shape == (3955, ))
@@ -127,6 +128,7 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertTrue(model.wv.vectors.shape == (3955, 100))
         self.assertTrue(len(model.wv.vocab) == 3955)
         self.assertTrue(len(model.wv.index2word) == 3955)
+        self.assertIsNone(model.corpus_total_words)
         self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
         self.assertTrue(model.trainables.vectors_lockf.shape == (3955, ))
         self.assertTrue(model.vocabulary.cum_table.shape == (3955, ))
@@ -155,6 +157,7 @@ class TestDoc2VecModel(unittest.TestCase):
         for old_version in old_versions:
             model = doc2vec.Doc2Vec.load(saved_models_dir.format(old_version))
             self.assertTrue(len(model.wv.vocab) == 3)
+            self.assertIsNone(model.corpus_total_words)
             self.assertTrue(model.wv.vectors.shape == (3, 4))
             self.assertTrue(model.docvecs.vectors_docs.shape == (2, 4))
             self.assertTrue(model.docvecs.count == 2)
