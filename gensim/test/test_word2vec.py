@@ -207,7 +207,10 @@ class TestWord2VecModel(unittest.TestCase):
             self.assertTrue(len(model_hs.wv.vocab), 12)
             self.assertTrue(model_hs.wv.vocab['graph'].count, 3)
             model_hs.build_vocab(corpus_file=new_corpus_file, update=True)
+            model_hs.train(corpus_file=new_corpus_file, total_words=model_hs.corpus_total_words, epochs=model_hs.iter)
+
             model_neg.build_vocab(corpus_file=new_corpus_file, update=True)
+            model_neg.train(corpus_file=new_corpus_file, total_words=model_hs.corpus_total_words, epochs=model_hs.iter)
             self.assertTrue(model_hs.wv.vocab['graph'].count, 4)
             self.assertTrue(model_hs.wv.vocab['artificial'].count, 4)
             self.assertEqual(len(model_hs.wv.vocab), 14)
