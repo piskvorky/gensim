@@ -794,6 +794,27 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
             [0.0, 0.0, 0.0, 0.0, 1.0]])
         self.assertTrue(numpy.all(expected_matrix == matrix))
 
+        # check that positive_definite works as expected
+        matrix = SparseTermSimilarityMatrix(
+            self.index, self.dictionary, nonzero_limit=2, positive_definite=False).matrix.todense()
+        expected_matrix = numpy.array([
+            [1.0, 0.5, 0.5, 0.0, 0.0],
+            [0.5, 1.0, 0.0, 0.5, 0.0],
+            [0.5, 0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.5, 0.0, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 1.0]])
+        self.assertTrue(numpy.all(expected_matrix == matrix))
+
+        matrix = SparseTermSimilarityMatrix(
+            self.index, self.dictionary, nonzero_limit=2, positive_definite=True).matrix.todense()
+        expected_matrix = numpy.array([
+            [1.0, 0.5, 0.0, 0.0, 0.0],
+            [0.5, 1.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 1.0]])
+        self.assertTrue(numpy.all(expected_matrix == matrix))
+
         # check that tfidf works as expected
         matrix = SparseTermSimilarityMatrix(
             self.index, self.dictionary, nonzero_limit=1).matrix.todense()

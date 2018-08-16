@@ -161,6 +161,11 @@ class SparseTermSimilarityMatrix(SaveLoad):
     symmetric : bool, optional
         Whether the symmetry of the term similarity matrix will be enforced. This parameter only has
         an effect when `source` is a :class:`scipy.sparse.spmatrix`.
+    positive_definite: bool, optional
+        Whether the positive definiteness of the term similarity matrix will be enforced through
+        strict column diagonal dominance. Positive definiteness is a necessary precondition if you
+        later wish to derive a change-of-basis matrix from the term similarity matrix using Cholesky
+        factorization.
     nonzero_limit : {int, None}, optional
         The maximum number of non-zero elements outside the diagonal in a single column of the
         sparse term similarity matrix. If None, then no limit will be imposed.
@@ -174,7 +179,8 @@ class SparseTermSimilarityMatrix(SaveLoad):
     """
     PROGRESS_MESSAGE_PERIOD = 1000  # how many columns are processed between progress messages
 
-    def __init__(self, source, dictionary=None, tfidf=None, symmetric=True, nonzero_limit=100, dtype=np.float32):
+    def __init__(self, source, dictionary=None, tfidf=None, symmetric=True, positive_definite=False, nonzero_limit=100,
+                 dtype=np.float32):
         if sparse.issparse(source):
             self.matrix = source.tocsc()  # encapsulate the passed sparse matrix
             return
@@ -197,9 +203,12 @@ class SparseTermSimilarityMatrix(SaveLoad):
             logger.info("iterating over columns in tf-idf order")
             columns = [
                 term_index for term_index, _
-                in sorted(tfidf.idfs.items(), key=lambda x: (x[1], -x[0]), reverse=True)]
+                in sorted(
+                    tfidf.idfs.items(),
+                    key=lambda x: (lambda term_index, term_idf: (term_idf, -term_index))(*x), reverse=True)]
 
-        matrix_nonzero = np.array([1] * matrix_order, dtype=_shortest_uint_dtype(nonzero_limit))
+        column_nonzero = np.array([1] * matrix_order, dtype=_shortest_uint_dtype(nonzero_limit))
+        column_sum = np.zeros(matrix_order, dtype=dtype)
         matrix = sparse.identity(matrix_order, dtype=dtype, format="dok")
 
         for column_number, t1_index in enumerate(columns):
@@ -216,22 +225,36 @@ class SparseTermSimilarityMatrix(SaveLoad):
                         0.0, 1.0))
 
             t1 = dictionary[t1_index]
-            num_nonzero = matrix_nonzero[t1_index] - 1
+            num_nonzero = column_nonzero[t1_index] - 1
             num_rows = nonzero_limit - num_nonzero
-            rows = index.most_similar(t1, num_rows)
-            for row_number, (t2, similarity) in zip(range(num_rows), rows):
-                if t2 not in dictionary.token2id:
-                    logger.debug('an out-of-dictionary term "%s"', t2)
-                    continue
-                t2_index = dictionary.token2id[t2]
+            most_similar = [
+                (dictionary.token2id[term], similarity)
+                for term, similarity in index.most_similar(t1, num_rows)
+                if term in dictionary.token2id]
+
+            if tfidf is None:
+                rows = sorted(most_similar)
+            else:
+                rows = sorted(
+                    most_similar,
+                    key=lambda x: (lambda term_index, _: (tfidf.idfs[term_index], -term_index))(*x), reverse=True)
+
+            for row_number, (t2_index, similarity) in zip(range(num_rows), rows):
+                if positive_definite and column_sum[t1_index] + similarity >= 1.0:
+                    break
                 if symmetric:
-                    if matrix_nonzero[t2_index] <= nonzero_limit and not (t1_index, t2_index) in matrix:
+                    if column_nonzero[t2_index] <= nonzero_limit \
+                            and (not positive_definite or column_sum[t2_index] + similarity < 1.0) \
+                            and not (t1_index, t2_index) in matrix:
                         matrix[t1_index, t2_index] = similarity
-                        matrix_nonzero[t1_index] += 1
+                        column_nonzero[t1_index] += 1
+                        column_sum[t1_index] += similarity
                         matrix[t2_index, t1_index] = similarity
-                        matrix_nonzero[t2_index] += 1
+                        column_nonzero[t2_index] += 1
+                        column_sum[t2_index] += similarity
                 else:
                     matrix[t1_index, t2_index] = similarity
+                    column_sum[t1_index] += similarity
 
         logger.info(
             "constructed a sparse term similarity matrix with %0.06f%% density",
