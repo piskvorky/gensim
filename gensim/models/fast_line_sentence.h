@@ -7,7 +7,7 @@
 
 class FastLineSentence {
 public:
-    explicit FastLineSentence() is_eof_(false) { }
+    explicit FastLineSentence() : is_eof_(false) { }
 	explicit FastLineSentence(const std::string& filename, size_t offset = 0) : filename_(filename),
                                                                                 fs_(filename),
                                                                                 offset_(offset),
