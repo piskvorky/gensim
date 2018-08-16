@@ -138,15 +138,7 @@ def d2v_train_epoch_dbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, 
         Number of words in the input document that were actually used for training.
 
     """
-    cdef int hs = model.hs
-    cdef int negative = model.negative
-    cdef int sample = (model.vocabulary.sample != 0)
-    cdef int workers = model.workers
-    cdef int _train_words = train_words
-    cdef int _learn_words = learn_words
-    cdef int _learn_hidden = learn_hidden
-    cdef int _learn_doctags = learn_doctags
-    cdef int _docvecs_count = docvecs_count
+    cdef Doc2VecConfig c
 
     cdef int cur_epoch = _cur_epoch
     cdef int num_epochs = model.epochs
@@ -159,75 +151,22 @@ def d2v_train_epoch_dbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, 
     cdef CythonLineSentence input_stream = CythonLineSentence(corpus_file, offset)
     cdef CythonVocab vocab = _cython_vocab
 
-    cdef REAL_t *_word_vectors
-    cdef REAL_t *_doctag_vectors
-    cdef REAL_t *_word_locks
-    cdef REAL_t *_doctag_locks
-    cdef REAL_t *_work
-    cdef int size = model.trainables.layer1_size
-
-    cdef int codelens[MAX_DOCUMENT_LEN]
-    cdef np.uint32_t indexes[MAX_DOCUMENT_LEN]
-    cdef np.uint32_t reduced_windows[MAX_DOCUMENT_LEN]
-    cdef int document_len
-    cdef int window = model.window
-
-    cdef int i, j
-    cdef unsigned long long r
+    cdef int i, j, document_len
     cdef int effective_words = 0
     cdef int total_effective_words = 0, total_documents = 0, total_words = 0
     cdef int sent_idx, idx_start, idx_end
 
-    # For hierarchical softmax
-    cdef REAL_t *syn1
-    cdef np.uint32_t *points[MAX_DOCUMENT_LEN]
-    cdef np.uint8_t *codes[MAX_DOCUMENT_LEN]
-
-    # For negative sampling
-    cdef REAL_t *syn1neg
-    cdef np.uint32_t *cum_table
-    cdef unsigned long long cum_table_len
-    cdef unsigned long long next_random
-
-    # default vectors, locks from syn0/doctag_syn0
-    if word_vectors is None:
-       word_vectors = model.wv.vectors
-    _word_vectors = <REAL_t *>(np.PyArray_DATA(word_vectors))
-    if doctag_vectors is None:
-       doctag_vectors = model.docvecs.vectors_docs
-    _doctag_vectors = <REAL_t *>(np.PyArray_DATA(doctag_vectors))
-    if word_locks is None:
-       word_locks = model.trainables.vectors_lockf
-    _word_locks = <REAL_t *>(np.PyArray_DATA(word_locks))
-    if doctag_locks is None:
-       doctag_locks = model.trainables.vectors_docs_lockf
-    _doctag_locks = <REAL_t *>(np.PyArray_DATA(doctag_locks))
-
-    if hs:
-        syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
-
-    if negative:
-        syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
-        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
-        cum_table_len = len(model.vocabulary.cum_table)
-    if negative or sample:
-        next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
-
-    # convert Python structures to primitive types, so we can release the GIL
-    if work is None:
-       work = zeros(model.trainables.layer1_size, dtype=REAL)
-    _work = <REAL_t *>np.PyArray_DATA(work)
-
-    # for preparing batches & training
-    cdef vector[string] document
-    cdef unsigned long long random_number
-    cdef VocabItem word
+    cdef vector[string] doc_words
     cdef int _doc_tag
+
+    init_d2v_config(&c, model, _alpha, learn_doctags, learn_words, learn_hidden, train_words=train_words, work=work,
+                    neu1=neu1, word_vectors=word_vectors, word_locks=word_locks, doctag_vectors=doctag_vectors,
+                    doctag_locks=doctag_locks, docvecs_count=docvecs_count)
 
     # release GIL & train on the full corpus, document by document
     with nogil:
         input_stream.reset()
-        while not (input_stream.is_eof() or total_words > expected_words / workers):
+        while not (input_stream.is_eof() or total_words > expected_words / c.workers):
             effective_words = 0
 
             doc_words = input_stream.read_sentence()
@@ -236,56 +175,58 @@ def d2v_train_epoch_dbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, 
             if doc_words.empty():
                 continue
 
-            prepare_c_structures_for_batch(doc_words, sample, hs, window, &total_words, &effective_words,
-                                           &next_random, vocab.get_vocab_ptr(), indexes,
-                                           codelens, codes, points, reduced_windows, &document_len, _train_words,
-                                           _docvecs_count, _doc_tag)
+            prepare_c_structures_for_batch(doc_words, c.sample, c.hs, c.window, &total_words, &effective_words,
+                                           &c.next_random, vocab.get_vocab_ptr(), c.indexes,
+                                           c.codelens, c.codes, c.points, c.reduced_windows, &document_len, c.train_words,
+                                           c.docvecs_count, _doc_tag)
 
             for i in range(document_len):
-                if _train_words:  # simultaneous skip-gram wordvec-training
-                    j = i - window + reduced_windows[i]
+                if c.train_words:  # simultaneous skip-gram wordvec-training
+                    j = i - c.window + c.reduced_windows[i]
                     if j < 0:
                         j = 0
-                    k = i + window + 1 - reduced_windows[i]
+                    k = i + c.window + 1 - c.reduced_windows[i]
                     if k > document_len:
                         k = document_len
                     for j in range(j, k):
                         if j == i:
                             continue
-                        if hs:
+                        if c.hs:
                             # we reuse the DBOW function, as it is equivalent to skip-gram for this purpose
-                            fast_document_dbow_hs(points[i], codes[i], codelens[i], _word_vectors, syn1, size,
-                                                  indexes[j], _alpha, _work, _learn_words, _learn_hidden, _word_locks)
-                        if negative:
+                            fast_document_dbow_hs(c.points[i], c.codes[i], c.codelens[i], c.word_vectors, c.syn1,
+                                                  c.layer1_size, c.indexes[j], c.alpha, c.work, c.learn_words,
+                                                  c.learn_hidden, c.word_locks)
+                        if c.negative:
                             # we reuse the DBOW function, as it is equivalent to skip-gram for this purpose
-                            next_random = fast_document_dbow_neg(negative, cum_table, cum_table_len, _word_vectors,
-                                                                 syn1neg, size, indexes[i], indexes[j], _alpha, _work,
-                                                                 next_random, _learn_words, _learn_hidden, _word_locks)
+                            c.next_random = fast_document_dbow_neg(c.negative, c.cum_table, c.cum_table_len, c.word_vectors,
+                                                                   c.syn1neg, c.layer1_size, c.indexes[i], c.indexes[j],
+                                                                   c.alpha, c.work, c.next_random, c.learn_words,
+                                                                   c.learn_hidden, c.word_locks)
 
                 # docvec-training
-                if _doc_tag < _docvecs_count:
-                    if hs:
-                        fast_document_dbow_hs(points[i], codes[i], codelens[i], _doctag_vectors, syn1, size,
-                                              _doc_tag, _alpha, _work, _learn_doctags, _learn_hidden,
-                                              _doctag_locks)
-                    if negative:
-                        next_random = fast_document_dbow_neg(negative, cum_table, cum_table_len, _doctag_vectors,
-                                                             syn1neg, size, indexes[i], _doc_tag, _alpha,
-                                                             _work, next_random, _learn_doctags, _learn_hidden,
-                                                             _doctag_locks)
+                if _doc_tag < c.docvecs_count:
+                    if c.hs:
+                        fast_document_dbow_hs(c.points[i], c.codes[i], c.codelens[i], c.doctag_vectors, c.syn1,
+                                              c.layer1_size, _doc_tag, c.alpha, c.work, c.learn_doctags, c.learn_hidden,
+                                              c.doctag_locks)
+                    if c.negative:
+                        c.next_random = fast_document_dbow_neg(c.negative, c.cum_table, c.cum_table_len, c.doctag_vectors,
+                                                               c.syn1neg, c.layer1_size, c.indexes[i], _doc_tag, c.alpha,
+                                                               c.work, c.next_random, c.learn_doctags, c.learn_hidden,
+                                                               c.doctag_locks)
 
             total_documents += 1
             total_effective_words += effective_words
 
-            _alpha = get_next_alpha(start_alpha, end_alpha, total_documents, total_words, expected_examples,
-                                    expected_words, cur_epoch, num_epochs)
+            c.alpha = get_next_alpha(start_alpha, end_alpha, total_documents, total_words, expected_examples,
+                                     expected_words, cur_epoch, num_epochs)
 
     return total_documents, total_effective_words, total_words
 
 
 def d2v_train_epoch_dm(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
-                         work, neu1, docvecs_count, word_vectors=None, word_locks=None, learn_doctags=True,
-                         learn_words=True, learn_hidden=True, doctag_vectors=None, doctag_locks=None):
+                       work, neu1, docvecs_count, word_vectors=None, word_locks=None, learn_doctags=True,
+                       learn_words=True, learn_hidden=True, doctag_vectors=None, doctag_locks=None):
     """Train distributed memory model ("PV-DM") by training on a corpus file.
     This method implements the DM model with a projection (input) layer that is either the sum or mean of the context
     vectors, depending on the model's `dm_mean` configuration field.
@@ -327,17 +268,7 @@ def d2v_train_epoch_dm(model, corpus_file, offset, _cython_vocab, _cur_epoch, _e
         Number of words in the input document that were actually used for training.
 
     """
-    cdef int hs = model.hs
-    cdef int negative = model.negative
-    cdef int sample = (model.vocabulary.sample != 0)
-    cdef int workers = model.workers
-    cdef int _train_words = 0
-    cdef int _learn_words = learn_words
-    cdef int _learn_hidden = learn_hidden
-    cdef int _learn_doctags = learn_doctags
-    cdef int _docvecs_count = docvecs_count
-    cdef int cbow_mean = model.cbow_mean
-    cdef REAL_t count, inv_count = 1.0
+    cdef Doc2VecConfig c
 
     cdef int cur_epoch = _cur_epoch
     cdef int num_epochs = model.epochs
@@ -350,79 +281,23 @@ def d2v_train_epoch_dm(model, corpus_file, offset, _cython_vocab, _cur_epoch, _e
     cdef CythonLineSentence input_stream = CythonLineSentence(corpus_file, offset)
     cdef CythonVocab vocab = _cython_vocab
 
-    cdef REAL_t *_word_vectors
-    cdef REAL_t *_doctag_vectors
-    cdef REAL_t *_word_locks
-    cdef REAL_t *_doctag_locks
-    cdef REAL_t *_work
-    cdef REAL_t *_neu1
-    cdef int size = model.trainables.layer1_size
-
-    cdef int codelens[MAX_DOCUMENT_LEN]
-    cdef np.uint32_t indexes[MAX_DOCUMENT_LEN]
-    cdef np.uint32_t reduced_windows[MAX_DOCUMENT_LEN]
-    cdef int document_len
-    cdef int window = model.window
-
-    cdef int i, j, k, m
+    cdef int i, j, k, m, document_len
     cdef int effective_words = 0
     cdef int total_effective_words = 0, total_documents = 0, total_words = 0
     cdef int sent_idx, idx_start, idx_end
+    cdef REAL_t count, inv_count = 1.0
 
-    # For hierarchical softmax
-    cdef REAL_t *syn1
-    cdef np.uint32_t *points[MAX_DOCUMENT_LEN]
-    cdef np.uint8_t *codes[MAX_DOCUMENT_LEN]
-
-    # For negative sampling
-    cdef REAL_t *syn1neg
-    cdef np.uint32_t *cum_table
-    cdef unsigned long long cum_table_len
-    cdef unsigned long long next_random
-
-    # default vectors, locks from syn0/doctag_syn0
-    if word_vectors is None:
-       word_vectors = model.wv.vectors
-    _word_vectors = <REAL_t *>(np.PyArray_DATA(word_vectors))
-    if doctag_vectors is None:
-       doctag_vectors = model.docvecs.vectors_docs
-    _doctag_vectors = <REAL_t *>(np.PyArray_DATA(doctag_vectors))
-    if word_locks is None:
-       word_locks = model.trainables.vectors_lockf
-    _word_locks = <REAL_t *>(np.PyArray_DATA(word_locks))
-    if doctag_locks is None:
-       doctag_locks = model.trainables.vectors_docs_lockf
-    _doctag_locks = <REAL_t *>(np.PyArray_DATA(doctag_locks))
-
-    if hs:
-        syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
-
-    if negative:
-        syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
-        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
-        cum_table_len = len(model.vocabulary.cum_table)
-    if negative or sample:
-        next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
-
-    # convert Python structures to primitive types, so we can release the GIL
-    # convert Python structures to primitive types, so we can release the GIL
-    if work is None:
-       work = zeros(model.trainables.layer1_size, dtype=REAL)
-    _work = <REAL_t *>np.PyArray_DATA(work)
-    if neu1 is None:
-       neu1 = zeros(model.trainables.layer1_size, dtype=REAL)
-    _neu1 = <REAL_t *>np.PyArray_DATA(neu1)
-
-    # for preparing batches & training
-    cdef vector[string] document
-    cdef unsigned long long random_number
-    cdef VocabItem word
+    cdef vector[string] doc_words
     cdef int _doc_tag
+
+    init_d2v_config(&c, model, _alpha, learn_doctags, learn_words, learn_hidden, train_words=False, work=work,
+                    neu1=neu1, word_vectors=word_vectors, word_locks=word_locks, doctag_vectors=doctag_vectors,
+                    doctag_locks=doctag_locks, docvecs_count=docvecs_count)
 
     # release GIL & train on the full corpus, document by document
     with nogil:
         input_stream.reset()
-        while not (input_stream.is_eof() or total_words > expected_words / workers):
+        while not (input_stream.is_eof() or total_words > expected_words / c.workers):
             effective_words = 0
 
             doc_words = input_stream.read_sentence()
@@ -431,72 +306,72 @@ def d2v_train_epoch_dm(model, corpus_file, offset, _cython_vocab, _cur_epoch, _e
             if doc_words.empty():
                 continue
 
-            prepare_c_structures_for_batch(doc_words, sample, hs, window, &total_words, &effective_words,
-                                           &next_random, vocab.get_vocab_ptr(), indexes,
-                                           codelens, codes, points, reduced_windows, &document_len, _train_words,
-                                           _docvecs_count, _doc_tag)
+            prepare_c_structures_for_batch(doc_words, c.sample, c.hs, c.window, &total_words, &effective_words,
+                                           &c.next_random, vocab.get_vocab_ptr(), c.indexes, c.codelens, c.codes,
+                                           c.points, c.reduced_windows, &document_len, c.train_words,
+                                           c.docvecs_count, _doc_tag)
 
             for i in range(document_len):
-                j = i - window + reduced_windows[i]
+                j = i - c.window + c.reduced_windows[i]
                 if j < 0:
                     j = 0
-                k = i + window + 1 - reduced_windows[i]
+                k = i + c.window + 1 - c.reduced_windows[i]
                 if k > document_len:
                     k = document_len
 
                 # compose l1 (in _neu1) & clear _work
-                memset(_neu1, 0, size * cython.sizeof(REAL_t))
+                memset(c.neu1, 0, c.layer1_size * cython.sizeof(REAL_t))
                 count = <REAL_t>0.0
                 for m in range(j, k):
                     if m == i:
                         continue
                     else:
                         count += ONEF
-                        our_saxpy(&size, &ONEF, &_word_vectors[indexes[m] * size], &ONE, _neu1, &ONE)
+                        our_saxpy(&c.layer1_size, &ONEF, &c.word_vectors[c.indexes[m] * c.layer1_size], &ONE, c.neu1, &ONE)
 
-                if _doc_tag < _docvecs_count:
+                if _doc_tag < c.docvecs_count:
                     count += ONEF
-                    our_saxpy(&size, &ONEF, &_doctag_vectors[_doc_tag * size], &ONE, _neu1, &ONE)
+                    our_saxpy(&c.layer1_size, &ONEF, &c.doctag_vectors[_doc_tag * c.layer1_size], &ONE, c.neu1, &ONE)
                 if count > (<REAL_t>0.5):
                     inv_count = ONEF/count
-                if cbow_mean:
-                    sscal(&size, &inv_count, _neu1, &ONE)  # (does this need BLAS-variants like saxpy?)
-                memset(_work, 0, size * cython.sizeof(REAL_t))  # work to accumulate l1 error
-                if hs:
-                    fast_document_dm_hs(points[i], codes[i], codelens[i],
-                                        _neu1, syn1, _alpha, _work,
-                                        size, _learn_hidden)
-                if negative:
-                    next_random = fast_document_dm_neg(negative, cum_table, cum_table_len, next_random,
-                                                       _neu1, syn1neg, indexes[i], _alpha, _work,
-                                                       size, _learn_hidden)
+                if c.cbow_mean:
+                    sscal(&c.layer1_size, &inv_count, c.neu1, &ONE)  # (does this need BLAS-variants like saxpy?)
+                memset(c.work, 0, c.layer1_size * cython.sizeof(REAL_t))  # work to accumulate l1 error
+                if c.hs:
+                    fast_document_dm_hs(c.points[i], c.codes[i], c.codelens[i],
+                                        c.neu1, c.syn1, c.alpha, c.work,
+                                        c.layer1_size, c.learn_hidden)
+                if c.negative:
+                    c.next_random = fast_document_dm_neg(c.negative, c.cum_table, c.cum_table_len, c.next_random,
+                                                         c.neu1, c.syn1neg, c.indexes[i], c.alpha, c.work,
+                                                         c.layer1_size, c.learn_hidden)
 
-                if not cbow_mean:
-                    sscal(&size, &inv_count, _work, &ONE)  # (does this need BLAS-variants like saxpy?)
+                if not c.cbow_mean:
+                    sscal(&c.layer1_size, &inv_count, c.work, &ONE)  # (does this need BLAS-variants like saxpy?)
                 # apply accumulated error in work
-                if _learn_doctags and _doc_tag < _docvecs_count:
-                    our_saxpy(&size, &_doctag_locks[_doc_tag], _work,
-                              &ONE, &_doctag_vectors[_doc_tag * size], &ONE)
-                if _learn_words:
+                if c.learn_doctags and _doc_tag < c.docvecs_count:
+                    our_saxpy(&c.layer1_size, &c.doctag_locks[_doc_tag], c.work,
+                              &ONE, &c.doctag_vectors[_doc_tag * c.layer1_size], &ONE)
+                if c.learn_words:
                     for m in range(j, k):
                         if m == i:
                             continue
                         else:
-                             our_saxpy(&size, &_word_locks[indexes[m]], _work, &ONE,
-                                       &_word_vectors[indexes[m] * size], &ONE)
+                             our_saxpy(&c.layer1_size, &c.word_locks[c.indexes[m]], c.work, &ONE,
+                                       &c.word_vectors[c.indexes[m] * c.layer1_size], &ONE)
 
             total_documents += 1
             total_effective_words += effective_words
 
-            _alpha = get_next_alpha(start_alpha, end_alpha, total_documents, total_words, expected_examples,
+            c.alpha = get_next_alpha(start_alpha, end_alpha, total_documents, total_words, expected_examples,
                                     expected_words, cur_epoch, num_epochs)
 
     return total_documents, total_effective_words, total_words
 
 
 def d2v_train_epoch_dm_concat(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
-                         work, neu1, docvecs_count, word_vectors=None, word_locks=None, learn_doctags=True,
-                         learn_words=True, learn_hidden=True, doctag_vectors=None, doctag_locks=None):
+                              work, neu1, docvecs_count, word_vectors=None, word_locks=None, learn_doctags=True,
+                              learn_words=True, learn_hidden=True, doctag_vectors=None, doctag_locks=None):
     """Train distributed memory model ("PV-DM") by training on a corpus file, using a concatenation of the context
      window word vectors (rather than a sum or average).
      This might be slower since the input at each batch will be significantly larger.
@@ -538,15 +413,7 @@ def d2v_train_epoch_dm_concat(model, corpus_file, offset, _cython_vocab, _cur_ep
         Number of words in the input document that were actually used for training.
 
     """
-    cdef int hs = model.hs
-    cdef int negative = model.negative
-    cdef int sample = (model.vocabulary.sample != 0)
-    cdef int workers = model.workers
-    cdef int _train_words = 0
-    cdef int _learn_words = learn_words
-    cdef int _learn_hidden = learn_hidden
-    cdef int _learn_doctags = learn_doctags
-    cdef int _docvecs_count = docvecs_count
+    cdef Doc2VecConfig c
 
     cdef int cur_epoch = _cur_epoch
     cdef int num_epochs = model.epochs
@@ -559,143 +426,82 @@ def d2v_train_epoch_dm_concat(model, corpus_file, offset, _cython_vocab, _cur_ep
     cdef CythonLineSentence input_stream = CythonLineSentence(corpus_file, offset)
     cdef CythonVocab vocab = _cython_vocab
 
-    cdef REAL_t *_word_vectors
-    cdef REAL_t *_doctag_vectors
-    cdef REAL_t *_word_locks
-    cdef REAL_t *_doctag_locks
-    cdef REAL_t *_work
-    cdef REAL_t *_neu1
-    cdef int layer1_size = model.trainables.layer1_size
-    cdef int vector_size = model.docvecs.vector_size
-
-    cdef int codelens[MAX_DOCUMENT_LEN]
-    cdef np.uint32_t indexes[MAX_DOCUMENT_LEN]
-    cdef np.uint32_t window_indexes[MAX_DOCUMENT_LEN]
-    cdef int document_len
-    cdef int doctag_len
-    cdef int window = model.window
-    cdef int expected_doctag_len = model.dm_tag_count
-
-    cdef int i, j, k, m, n
-    cdef int null_word_index = model.wv.vocab['\0'].index
+    cdef int i, j, k, m, n, document_len
     cdef int effective_words = 0
     cdef int total_effective_words = 0, total_documents = 0, total_words = 0
     cdef int sent_idx, idx_start, idx_end
 
-    # For hierarchical softmax
-    cdef REAL_t *syn1
-    cdef np.uint32_t *points[MAX_DOCUMENT_LEN]
-    cdef np.uint8_t *codes[MAX_DOCUMENT_LEN]
-
-    # For negative sampling
-    cdef REAL_t *syn1neg
-    cdef np.uint32_t *cum_table
-    cdef unsigned long long cum_table_len
-    cdef unsigned long long next_random
-
-    # default vectors, locks from syn0/doctag_syn0
-    if word_vectors is None:
-       word_vectors = model.wv.vectors
-    _word_vectors = <REAL_t *>(np.PyArray_DATA(word_vectors))
-    if doctag_vectors is None:
-       doctag_vectors = model.docvecs.vectors_docs
-    _doctag_vectors = <REAL_t *>(np.PyArray_DATA(doctag_vectors))
-    if word_locks is None:
-       word_locks = model.trainables.vectors_lockf
-    _word_locks = <REAL_t *>(np.PyArray_DATA(word_locks))
-    if doctag_locks is None:
-       doctag_locks = model.trainables.vectors_docs_lockf
-    _doctag_locks = <REAL_t *>(np.PyArray_DATA(doctag_locks))
-
-    if hs:
-        syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
-
-    if negative:
-        syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
-        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
-        cum_table_len = len(model.vocabulary.cum_table)
-    if negative or sample:
-        next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
-
-    # convert Python structures to primitive types, so we can release the GIL
-    # convert Python structures to primitive types, so we can release the GIL
-    if work is None:
-       work = zeros(model.trainables.layer1_size, dtype=REAL)
-    _work = <REAL_t *>np.PyArray_DATA(work)
-    if neu1 is None:
-       neu1 = zeros(model.trainables.layer1_size, dtype=REAL)
-    _neu1 = <REAL_t *>np.PyArray_DATA(neu1)
-
-    # for preparing batches & training
-    cdef vector[string] document
-    cdef unsigned long long random_number
-    cdef VocabItem word
+    cdef vector[string] doc_words
     cdef int _doc_tag
+
+    init_d2v_config(&c, model, _alpha, learn_doctags, learn_words, learn_hidden, train_words=False, work=work,
+                    neu1=neu1, word_vectors=word_vectors, word_locks=word_locks, doctag_vectors=doctag_vectors,
+                    doctag_locks=doctag_locks, docvecs_count=docvecs_count)
 
     # release GIL & train on the full corpus, document by document
     with nogil:
         input_stream.reset()
-        while not (input_stream.is_eof() or total_words > expected_words / workers):
+        while not (input_stream.is_eof() or total_words > expected_words / c.workers):
             effective_words = 0
 
             doc_words = input_stream.read_sentence()
             _doc_tag = total_documents
-            doctag_len = _doc_tag < _docvecs_count
+            c.doctag_len = _doc_tag < c.docvecs_count
 
              # skip doc either empty or without expected number of tags
-            if doc_words.empty() or expected_doctag_len != doctag_len:
+            if doc_words.empty() or c.expected_doctag_len != c.doctag_len:
                 continue
 
-            prepare_c_structures_for_batch(doc_words, sample, hs, window, &total_words, &effective_words,
-                                           &next_random, vocab.get_vocab_ptr(), indexes,
-                                           codelens, codes, points, NULL, &document_len, _train_words,
-                                           _docvecs_count, _doc_tag)
+            prepare_c_structures_for_batch(doc_words, c.sample, c.hs, c.window, &total_words, &effective_words,
+                                           &c.next_random, vocab.get_vocab_ptr(), c.indexes,
+                                           c.codelens, c.codes, c.points, NULL, &document_len, c.train_words,
+                                           c.docvecs_count, _doc_tag)
 
             for i in range(document_len):
-                j = i - window      # negative OK: will pad with null word
-                k = i + window + 1  # past document end OK: will pad with null word
+                j = i - c.window      # negative OK: will pad with null word
+                k = i + c.window + 1  # past document end OK: will pad with null word
 
                 # compose l1 & clear work
-                if _doc_tag < _docvecs_count:
+                if _doc_tag < c.docvecs_count:
                     # doc vector(s)
-                    memcpy(&_neu1[0], &_doctag_vectors[_doc_tag * vector_size],
-                           vector_size * cython.sizeof(REAL_t))
+                    memcpy(&c.neu1[0], &c.doctag_vectors[_doc_tag * c.vector_size],
+                           c.vector_size * cython.sizeof(REAL_t))
                 n = 0
                 for m in range(j, k):
                     # word vectors in window
                     if m == i:
                         continue
                     if m < 0 or m >= document_len:
-                        window_indexes[n] =  null_word_index
+                        c.window_indexes[n] = c.null_word_index
                     else:
-                        window_indexes[n] = indexes[m]
+                        c.window_indexes[n] = c.indexes[m]
                     n += 1
-                for m in range(2 * window):
-                    memcpy(&_neu1[(doctag_len + m) * vector_size], &_word_vectors[window_indexes[m] * vector_size],
-                           vector_size * cython.sizeof(REAL_t))
-                memset(_work, 0, layer1_size * cython.sizeof(REAL_t))  # work to accumulate l1 error
+                for m in range(2 * c.window):
+                    memcpy(&c.neu1[(c.doctag_len + m) * c.vector_size], &c.word_vectors[c.window_indexes[m] * c.vector_size],
+                           c.vector_size * cython.sizeof(REAL_t))
+                memset(c.work, 0, c.layer1_size * cython.sizeof(REAL_t))  # work to accumulate l1 error
 
-                if hs:
-                    fast_document_dmc_hs(points[i], codes[i], codelens[i],
-                                         _neu1, syn1, _alpha, _work,
-                                         layer1_size, vector_size, _learn_hidden)
-                if negative:
-                    next_random = fast_document_dmc_neg(negative, cum_table, cum_table_len, next_random,
-                                                        _neu1, syn1neg, indexes[i], _alpha, _work,
-                                                       layer1_size, vector_size, _learn_hidden)
+                if c.hs:
+                    fast_document_dmc_hs(c.points[i], c.codes[i], c.codelens[i],
+                                         c.neu1, c.syn1, c.alpha, c.work,
+                                         c.layer1_size, c.vector_size, c.learn_hidden)
+                if c.negative:
+                    c.next_random = fast_document_dmc_neg(c.negative, c.cum_table, c.cum_table_len, c.next_random,
+                                                          c.neu1, c.syn1neg, c.indexes[i], c.alpha, c.work,
+                                                          c.layer1_size, c.vector_size, c.learn_hidden)
 
-                if _learn_doctags and _doc_tag < _docvecs_count:
-                    our_saxpy(&vector_size, &_doctag_locks[_doc_tag], &_work[m * vector_size],
-                              &ONE, &_doctag_vectors[_doc_tag * vector_size], &ONE)
-                if _learn_words:
-                    for m in range(2 * window):
-                        our_saxpy(&vector_size, &_word_locks[window_indexes[m]], &_work[(doctag_len + m) * vector_size],
-                                  &ONE, &_word_vectors[window_indexes[m] * vector_size], &ONE)
+                if c.learn_doctags and _doc_tag < c.docvecs_count:
+                    our_saxpy(&c.vector_size, &c.doctag_locks[_doc_tag], &c.work[m * c.vector_size],
+                              &ONE, &c.doctag_vectors[_doc_tag * c.vector_size], &ONE)
+                if c.learn_words:
+                    for m in range(2 * c.window):
+                        our_saxpy(&c.vector_size, &c.word_locks[c.window_indexes[m]], &c.work[(c.doctag_len + m) * c.vector_size],
+                                  &ONE, &c.word_vectors[c.window_indexes[m] * c.vector_size], &ONE)
 
             total_documents += 1
             total_effective_words += effective_words
 
-            _alpha = get_next_alpha(start_alpha, end_alpha, total_documents, total_words, expected_examples,
+            c.alpha = get_next_alpha(start_alpha, end_alpha, total_documents, total_words, expected_examples,
                                     expected_words, cur_epoch, num_epochs)
 
     return total_documents, total_effective_words, total_words
