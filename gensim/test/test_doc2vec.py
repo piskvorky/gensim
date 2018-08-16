@@ -175,12 +175,12 @@ class TestDoc2VecModel(unittest.TestCase):
 
     def test_get_offsets_and_start_doctags(self):
         # Each line takes 6 bytes (including '\n' character)
-        lines = ['line1', 'line2', 'line3', 'line4', 'line5']
+        lines = ['line1\n', 'line2\n', 'line3\n', 'line4\n', 'line5\n']
         tmpf = get_tmpfile('gensim_doc2vec.tst')
 
-        with utils.smart_open(tmpf, 'w') as fout:
+        with utils.smart_open(tmpf, 'wb', encoding='utf8') as fout:
             for line in lines:
-                fout.write(line + '\n')
+                fout.write(utils.any2unicode(line))
 
         offsets, start_doctags = doc2vec.Doc2Vec._get_offsets_and_start_doctags_for_corpusfile(tmpf, 1)
         self.assertEqual(offsets, [0])

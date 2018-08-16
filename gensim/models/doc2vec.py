@@ -78,7 +78,7 @@ from six import string_types, integer_types, itervalues
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 from gensim.models.keyedvectors import Doc2VecKeyedVectors
 from types import GeneratorType
-from gensim.utils import deprecated, smart_open
+from gensim.utils import deprecated, smart_open, any2utf8
 
 logger = logging.getLogger(__name__)
 
@@ -820,7 +820,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         offsets = []
         start_doctags = []
 
-        with smart_open(corpus_file) as fin:
+        with smart_open(corpus_file, encoding='utf8') as fin:
             curr_offset_idx = 0
             prev_filepos = 0
 
@@ -828,7 +828,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
                 if curr_offset_idx == len(approx_offsets):
                     break
 
-                curr_filepos = fin.tell()
+                curr_filepos = prev_filepos + len(any2utf8(line))
                 while curr_offset_idx != len(approx_offsets) and approx_offsets[curr_offset_idx] < curr_filepos:
                     offsets.append(prev_filepos)
                     start_doctags.append(line_no)
