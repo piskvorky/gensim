@@ -4,8 +4,11 @@
 # cython: cdivision=True
 # cython: embedsignature=True
 # coding: utf-8
+#
+# shared type definitions for fasttext_inner
+# used from fasttext_corpusfile
+#
 
-"""Optimized cython functions for training :class:`~gensim.models.fasttext.FastText` model."""
 
 import numpy as np
 cimport numpy as np

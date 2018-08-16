@@ -6,10 +6,11 @@
 # cython: embedsignature=True
 # coding: utf-8
 #
+# shared type definitions for doc2vec_inner
+# used from doc2vec_corpusfile
+#
 # Copyright (C) 2018 Dmitry Persiyanov <dmitry.persiyanov@gmail.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
-
-"""Optimized cython functions for training :class:`~gensim.models.doc2vec.Doc2Vec` model."""
 
 import numpy as np
 cimport numpy as np
