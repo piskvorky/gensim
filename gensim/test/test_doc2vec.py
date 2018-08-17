@@ -195,8 +195,13 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertEqual(start_doctags, [0, 1, 3])
 
         offsets, start_doctags = doc2vec.Doc2Vec._get_offsets_and_start_doctags_for_corpusfile(tmpf, 4)
-        self.assertEqual(offsets, [0, 6, 12, 18])
-        self.assertEqual(start_doctags, [0, 1, 2, 3])
+        # different results for windows vs. posix because newline character takes 2 and 1 bytes correspondingly.
+        if os.name == 'nt':
+            self.assertEqual(offsets, [0, 6, 12, 24])
+            self.assertEqual(start_doctags, [0, 1, 2, 4])
+        else:
+            self.assertEqual(offsets, [0, 6, 12, 18])
+            self.assertEqual(start_doctags, [0, 1, 2, 3])
 
         offsets, start_doctags = doc2vec.Doc2Vec._get_offsets_and_start_doctags_for_corpusfile(tmpf, 5)
         self.assertEqual(offsets, [0, 6, 12, 18, 24])
