@@ -670,21 +670,20 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         start_doctag = start_doctags[thread_id]
 
         if self.sg:
-            examples, tally, raw_tally = d2v_train_epoch_dbow(self, corpus_file, offset, start_doctag, cython_vocab,
-                                                              cur_epoch, total_examples, total_words, work, neu1,
-                                                              self.docvecs.count, doctag_vectors=doctag_vectors,
-                                                              doctag_locks=doctag_locks, train_words=self.dbow_words)
+            examples, tally, raw_tally = d2v_train_epoch_dbow(
+                self, corpus_file, offset, start_doctag, cython_vocab, cur_epoch,
+                total_examples, total_words, work, neu1, self.docvecs.count,
+                doctag_vectors=doctag_vectors, doctag_locks=doctag_locks, train_words=self.dbow_words)
         elif self.dm_concat:
-            examples, tally, raw_tally = d2v_train_epoch_dm_concat(self, corpus_file, offset, start_doctag,
-                                                                   cython_vocab, cur_epoch, total_examples, total_words,
-                                                                   work, neu1, self.docvecs.count,
-                                                                   doctag_vectors=doctag_vectors,
-                                                                   doctag_locks=doctag_locks)
+            examples, tally, raw_tally = d2v_train_epoch_dm_concat(
+                self, corpus_file, offset, start_doctag, cython_vocab, cur_epoch,
+                total_examples, total_words, work, neu1, self.docvecs.count,
+                doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
         else:
-            examples, tally, raw_tally = d2v_train_epoch_dm(self, corpus_file, offset, start_doctag, cython_vocab,
-                                                            cur_epoch, total_examples, total_words, work, neu1,
-                                                            self.docvecs.count, doctag_vectors=doctag_vectors,
-                                                            doctag_locks=doctag_locks)
+            examples, tally, raw_tally = d2v_train_epoch_dm(
+                self, corpus_file, offset, start_doctag, cython_vocab, cur_epoch,
+                total_examples, total_words, work, neu1, self.docvecs.count,
+                doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
 
         return examples, tally, raw_tally
 

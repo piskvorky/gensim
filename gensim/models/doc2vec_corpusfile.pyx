@@ -159,9 +159,10 @@ def d2v_train_epoch_dbow(model, corpus_file, offset, start_doctag, _cython_vocab
     cdef vector[string] doc_words
     cdef int _doc_tag = start_doctag
 
-    init_d2v_config(&c, model, _alpha, learn_doctags, learn_words, learn_hidden, train_words=train_words, work=work,
-                    neu1=neu1, word_vectors=word_vectors, word_locks=word_locks, doctag_vectors=doctag_vectors,
-                    doctag_locks=doctag_locks, docvecs_count=docvecs_count)
+    init_d2v_config(
+        &c, model, _alpha, learn_doctags, learn_words, learn_hidden, train_words=train_words,
+        work=work, neu1=neu1, word_vectors=word_vectors, word_locks=word_locks,
+        doctag_vectors=doctag_vectors, doctag_locks=doctag_locks, docvecs_count=docvecs_count)
 
     # release GIL & train on the full corpus, document by document
     with nogil:
@@ -174,10 +175,10 @@ def d2v_train_epoch_dbow(model, corpus_file, offset, start_doctag, _cython_vocab
             if doc_words.empty():
                 continue
 
-            prepare_c_structures_for_batch(doc_words, c.sample, c.hs, c.window, &total_words, &effective_words,
-                                           &c.next_random, vocab.get_vocab_ptr(), c.indexes,
-                                           c.codelens, c.codes, c.points, c.reduced_windows, &document_len, c.train_words,
-                                           c.docvecs_count, _doc_tag)
+            prepare_c_structures_for_batch(
+                doc_words, c.sample, c.hs, c.window, &total_words, &effective_words,
+                &c.next_random, vocab.get_vocab_ptr(), c.indexes, c.codelens,  c.codes, c.points,
+                c.reduced_windows, &document_len, c.train_words, c.docvecs_count, _doc_tag)
 
             for i in range(document_len):
                 if c.train_words:  # simultaneous skip-gram wordvec-training
@@ -192,34 +193,37 @@ def d2v_train_epoch_dbow(model, corpus_file, offset, start_doctag, _cython_vocab
                             continue
                         if c.hs:
                             # we reuse the DBOW function, as it is equivalent to skip-gram for this purpose
-                            fast_document_dbow_hs(c.points[i], c.codes[i], c.codelens[i], c.word_vectors, c.syn1,
-                                                  c.layer1_size, c.indexes[j], c.alpha, c.work, c.learn_words,
-                                                  c.learn_hidden, c.word_locks)
+                            fast_document_dbow_hs(
+                                c.points[i], c.codes[i], c.codelens[i], c.word_vectors, c.syn1, c.layer1_size,
+                                c.indexes[j], c.alpha, c.work, c.learn_words, c.learn_hidden, c.word_locks)
+
                         if c.negative:
                             # we reuse the DBOW function, as it is equivalent to skip-gram for this purpose
-                            c.next_random = fast_document_dbow_neg(c.negative, c.cum_table, c.cum_table_len, c.word_vectors,
-                                                                   c.syn1neg, c.layer1_size, c.indexes[i], c.indexes[j],
-                                                                   c.alpha, c.work, c.next_random, c.learn_words,
-                                                                   c.learn_hidden, c.word_locks)
+                            c.next_random = fast_document_dbow_neg(
+                                c.negative, c.cum_table, c.cum_table_len, c.word_vectors, c.syn1neg,
+                                c.layer1_size, c.indexes[i], c.indexes[j], c.alpha, c.work,
+                                c.next_random, c.learn_words, c.learn_hidden, c.word_locks)
 
                 # docvec-training
                 if _doc_tag < c.docvecs_count:
                     if c.hs:
-                        fast_document_dbow_hs(c.points[i], c.codes[i], c.codelens[i], c.doctag_vectors, c.syn1,
-                                              c.layer1_size, _doc_tag, c.alpha, c.work, c.learn_doctags, c.learn_hidden,
-                                              c.doctag_locks)
+                        fast_document_dbow_hs(
+                            c.points[i], c.codes[i], c.codelens[i], c.doctag_vectors, c.syn1, c.layer1_size,
+                            _doc_tag, c.alpha, c.work, c.learn_doctags, c.learn_hidden, c.doctag_locks)
+
                     if c.negative:
-                        c.next_random = fast_document_dbow_neg(c.negative, c.cum_table, c.cum_table_len, c.doctag_vectors,
-                                                               c.syn1neg, c.layer1_size, c.indexes[i], _doc_tag, c.alpha,
-                                                               c.work, c.next_random, c.learn_doctags, c.learn_hidden,
-                                                               c.doctag_locks)
+                        c.next_random = fast_document_dbow_neg(
+                            c.negative, c.cum_table, c.cum_table_len, c.doctag_vectors, c.syn1neg,
+                            c.layer1_size, c.indexes[i], _doc_tag, c.alpha, c.work, c.next_random,
+                            c.learn_doctags, c.learn_hidden, c.doctag_locks)
 
             total_documents += 1
             total_effective_words += effective_words
             _doc_tag += 1
 
-            c.alpha = get_next_alpha(start_alpha, end_alpha, total_documents, total_words, expected_examples,
-                                     expected_words, cur_epoch, num_epochs)
+            c.alpha = get_next_alpha(
+                start_alpha, end_alpha, total_documents, total_words,
+                expected_examples, expected_words, cur_epoch, num_epochs)
 
     return total_documents, total_effective_words, total_words
 
@@ -290,9 +294,10 @@ def d2v_train_epoch_dm(model, corpus_file, offset, start_doctag, _cython_vocab, 
     cdef vector[string] doc_words
     cdef int _doc_tag = start_doctag
 
-    init_d2v_config(&c, model, _alpha, learn_doctags, learn_words, learn_hidden, train_words=False, work=work,
-                    neu1=neu1, word_vectors=word_vectors, word_locks=word_locks, doctag_vectors=doctag_vectors,
-                    doctag_locks=doctag_locks, docvecs_count=docvecs_count)
+    init_d2v_config(
+        &c, model, _alpha, learn_doctags, learn_words, learn_hidden, train_words=False,
+        work=work, neu1=neu1, word_vectors=word_vectors, word_locks=word_locks,
+        doctag_vectors=doctag_vectors, doctag_locks=doctag_locks, docvecs_count=docvecs_count)
 
     # release GIL & train on the full corpus, document by document
     with nogil:
@@ -305,10 +310,10 @@ def d2v_train_epoch_dm(model, corpus_file, offset, start_doctag, _cython_vocab, 
             if doc_words.empty():
                 continue
 
-            prepare_c_structures_for_batch(doc_words, c.sample, c.hs, c.window, &total_words, &effective_words,
-                                           &c.next_random, vocab.get_vocab_ptr(), c.indexes, c.codelens, c.codes,
-                                           c.points, c.reduced_windows, &document_len, c.train_words,
-                                           c.docvecs_count, _doc_tag)
+            prepare_c_structures_for_batch(
+                doc_words, c.sample, c.hs, c.window, &total_words, &effective_words, &c.next_random,
+                vocab.get_vocab_ptr(), c.indexes, c.codelens, c.codes, c.points, c.reduced_windows,
+                &document_len, c.train_words, c.docvecs_count, _doc_tag)
 
             for i in range(document_len):
                 j = i - c.window + c.reduced_windows[i]
@@ -337,13 +342,14 @@ def d2v_train_epoch_dm(model, corpus_file, offset, start_doctag, _cython_vocab, 
                     sscal(&c.layer1_size, &inv_count, c.neu1, &ONE)  # (does this need BLAS-variants like saxpy?)
                 memset(c.work, 0, c.layer1_size * cython.sizeof(REAL_t))  # work to accumulate l1 error
                 if c.hs:
-                    fast_document_dm_hs(c.points[i], c.codes[i], c.codelens[i],
-                                        c.neu1, c.syn1, c.alpha, c.work,
-                                        c.layer1_size, c.learn_hidden)
+                    fast_document_dm_hs(
+                        c.points[i], c.codes[i], c.codelens[i], c.neu1,
+                        c.syn1, c.alpha, c.work, c.layer1_size, c.learn_hidden)
+
                 if c.negative:
-                    c.next_random = fast_document_dm_neg(c.negative, c.cum_table, c.cum_table_len, c.next_random,
-                                                         c.neu1, c.syn1neg, c.indexes[i], c.alpha, c.work,
-                                                         c.layer1_size, c.learn_hidden)
+                    c.next_random = fast_document_dm_neg(
+                        c.negative, c.cum_table, c.cum_table_len, c.next_random, c.neu1,
+                        c.syn1neg, c.indexes[i], c.alpha, c.work, c.layer1_size, c.learn_hidden)
 
                 if not c.cbow_mean:
                     sscal(&c.layer1_size, &inv_count, c.work, &ONE)  # (does this need BLAS-variants like saxpy?)
@@ -435,9 +441,10 @@ def d2v_train_epoch_dm_concat(model, corpus_file, offset, start_doctag, _cython_
     cdef vector[string] doc_words
     cdef int _doc_tag = start_doctag
 
-    init_d2v_config(&c, model, _alpha, learn_doctags, learn_words, learn_hidden, train_words=False, work=work,
-                    neu1=neu1, word_vectors=word_vectors, word_locks=word_locks, doctag_vectors=doctag_vectors,
-                    doctag_locks=doctag_locks, docvecs_count=docvecs_count)
+    init_d2v_config(
+        &c, model, _alpha, learn_doctags, learn_words, learn_hidden, train_words=False,
+        work=work, neu1=neu1, word_vectors=word_vectors, word_locks=word_locks,
+        doctag_vectors=doctag_vectors, doctag_locks=doctag_locks, docvecs_count=docvecs_count)
 
     # release GIL & train on the full corpus, document by document
     with nogil:
@@ -453,10 +460,10 @@ def d2v_train_epoch_dm_concat(model, corpus_file, offset, start_doctag, _cython_
             if doc_words.empty() or c.expected_doctag_len != c.doctag_len:
                 continue
 
-            prepare_c_structures_for_batch(doc_words, c.sample, c.hs, c.window, &total_words, &effective_words,
-                                           &c.next_random, vocab.get_vocab_ptr(), c.indexes,
-                                           c.codelens, c.codes, c.points, NULL, &document_len, c.train_words,
-                                           c.docvecs_count, _doc_tag)
+            prepare_c_structures_for_batch(
+                doc_words, c.sample, c.hs, c.window, &total_words, &effective_words,
+                &c.next_random, vocab.get_vocab_ptr(), c.indexes, c.codelens, c.codes,
+                c.points, NULL, &document_len, c.train_words, c.docvecs_count, _doc_tag)
 
             for i in range(document_len):
                 j = i - c.window      # negative OK: will pad with null word
@@ -483,13 +490,14 @@ def d2v_train_epoch_dm_concat(model, corpus_file, offset, start_doctag, _cython_
                 memset(c.work, 0, c.layer1_size * cython.sizeof(REAL_t))  # work to accumulate l1 error
 
                 if c.hs:
-                    fast_document_dmc_hs(c.points[i], c.codes[i], c.codelens[i],
-                                         c.neu1, c.syn1, c.alpha, c.work,
-                                         c.layer1_size, c.vector_size, c.learn_hidden)
+                    fast_document_dmc_hs(
+                        c.points[i], c.codes[i], c.codelens[i], c.neu1, c.syn1,
+                        c.alpha, c.work, c.layer1_size, c.vector_size, c.learn_hidden)
+
                 if c.negative:
-                    c.next_random = fast_document_dmc_neg(c.negative, c.cum_table, c.cum_table_len, c.next_random,
-                                                          c.neu1, c.syn1neg, c.indexes[i], c.alpha, c.work,
-                                                          c.layer1_size, c.vector_size, c.learn_hidden)
+                    c.next_random = fast_document_dmc_neg(
+                        c.negative, c.cum_table, c.cum_table_len, c.next_random, c.neu1, c.syn1neg,
+                        c.indexes[i], c.alpha, c.work, c.layer1_size, c.vector_size, c.learn_hidden)
 
                 if c.learn_doctags and _doc_tag < c.docvecs_count:
                     our_saxpy(&c.vector_size, &c.doctag_locks[_doc_tag], &c.work[m * c.vector_size],

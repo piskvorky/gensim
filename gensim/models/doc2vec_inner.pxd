@@ -82,7 +82,8 @@ cdef void fast_document_dmc_hs(
     const int layer1_size, const int vector_size, int learn_hidden) nogil
 
 
-cdef unsigned long long fast_document_dmc_neg(
+cdef unsigned long long
+    # type: (object, object, object, object, object, object, object, object, object, object, object, object) -> objectfast_document_dmc_neg(
     const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len, unsigned long long next_random,
     REAL_t *neu1, REAL_t *syn1neg, const int predict_word_index, const REAL_t alpha, REAL_t *work,
     const int layer1_size, const int vector_size, int learn_hidden) nogil

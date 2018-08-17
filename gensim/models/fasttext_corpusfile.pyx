@@ -42,11 +42,11 @@ DEF MAX_SENTENCE_LEN = 10000
 DEF MAX_SUBWORDS = 1000
 
 
-cdef void prepare_c_structures_for_batch(vector[vector[string]] &sentences, int sample, int hs, int window, int *total_words,
-                                         int *effective_words, int *effective_sentences, unsigned long long *next_random,
-                                         cvocab_t *vocab, int *sentence_idx, np.uint32_t *indexes,
-                                         int *codelens, np.uint8_t **codes, np.uint32_t **points,
-                                         np.uint32_t *reduced_windows, int *subwords_idx_len, np.uint32_t **subwords_idx) nogil:
+cdef void prepare_c_structures_for_batch(
+        vector[vector[string]] &sentences, int sample, int hs, int window, int *total_words,
+        int *effective_words, int *effective_sentences, unsigned long long *next_random, cvocab_t *vocab,
+        int *sentence_idx, np.uint32_t *indexes, int *codelens, np.uint8_t **codes, np.uint32_t **points,
+        np.uint32_t *reduced_windows, int *subwords_idx_len, np.uint32_t **subwords_idx) nogil:
     cdef VocabItem word
     cdef string token
     cdef vector[string] sent
@@ -92,8 +92,8 @@ cdef void prepare_c_structures_for_batch(vector[vector[string]] &sentences, int 
         reduced_windows[i] = random_int32(next_random) % window
 
 
-def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work,
-                   _l1):
+def train_epoch_sg(
+        model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work, _l1):
     """Train Skipgram model for one epoch by training on an input stream. This function is used only in multistream mode.
 
     Called internally from :meth:`~gensim.models.fasttext.FastText.train`.
@@ -149,10 +149,10 @@ def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expec
 
             sentences = input_stream.next_batch()
 
-            prepare_c_structures_for_batch(sentences, c.sample, c.hs, c.window, &total_words, &effective_words,
-                                           &effective_sentences, &c.next_random, vocab.get_vocab_ptr(), c.sentence_idx,
-                                           c.indexes, c.codelens, c.codes, c.points, c.reduced_windows,
-                                           c.subwords_idx_len, c.subwords_idx)
+            prepare_c_structures_for_batch(
+                sentences, c.sample, c.hs, c.window, &total_words, &effective_words, &effective_sentences,
+                &c.next_random, vocab.get_vocab_ptr(), c.sentence_idx, c.indexes, c.codelens,
+                c.codes, c.points, c.reduced_windows, c.subwords_idx_len, c.subwords_idx)
 
             for sent_idx in range(effective_sentences):
                 idx_start = c.sentence_idx[sent_idx]
@@ -244,10 +244,10 @@ def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _exp
 
             sentences = input_stream.next_batch()
 
-            prepare_c_structures_for_batch(sentences, c.sample, c.hs, c.window, &total_words, &effective_words,
-                                           &effective_sentences, &c.next_random, vocab.get_vocab_ptr(), c.sentence_idx,
-                                           c.indexes, c.codelens, c.codes, c.points, c.reduced_windows,
-                                           c.subwords_idx_len, c.subwords_idx)
+            prepare_c_structures_for_batch(
+                sentences, c.sample, c.hs, c.window, &total_words, &effective_words, &effective_sentences,
+                &c.next_random, vocab.get_vocab_ptr(), c.sentence_idx, c.indexes, c.codelens,
+                c.codes, c.points, c.reduced_windows, c.subwords_idx_len, c.subwords_idx)
 
             for sent_idx in range(effective_sentences):
                 idx_start = c.sentence_idx[sent_idx]

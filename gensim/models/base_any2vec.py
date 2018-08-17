@@ -170,10 +170,9 @@ class BaseAny2VecModel(utils.SaveLoad):
         """
         thread_private_mem = self._get_thread_working_mem()
 
-        examples, tally, raw_tally = self._do_train_epoch(corpus_file, thread_id, offset, cython_vocab,
-                                                          thread_private_mem, cur_epoch,
-                                                          total_examples=total_examples,
-                                                          total_words=total_words, **kwargs)
+        examples, tally, raw_tally = self._do_train_epoch(
+            corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
+            total_examples=total_examples, total_words=total_words, **kwargs)
 
         progress_queue.put((examples, tally, raw_tally))
         progress_queue.put(None)
@@ -428,8 +427,8 @@ class BaseAny2VecModel(utils.SaveLoad):
             thread.start()
 
         trained_word_count, raw_word_count, job_tally = self._log_epoch_progress(
-            progress_queue=progress_queue, job_queue=None, cur_epoch=cur_epoch, total_examples=total_examples,
-            total_words=total_words)
+            progress_queue=progress_queue, job_queue=None, cur_epoch=cur_epoch,
+            total_examples=total_examples, total_words=total_words)
 
         return trained_word_count, raw_word_count, job_tally
 
