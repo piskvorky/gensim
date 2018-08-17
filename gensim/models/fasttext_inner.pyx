@@ -42,12 +42,11 @@ cdef REAL_t ONEF = <REAL_t>1.0
 cdef unsigned long long fasttext_fast_sentence_sg_neg(
     const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len,
     REAL_t *syn0_vocab, REAL_t *syn0_ngrams, REAL_t *syn1neg, const int size,
-    const np.uint32_t word_index, const np.uint32_t *subwords_index, const np.uint32_t subwords_len,
-    const REAL_t alpha, REAL_t *work, REAL_t *l1, unsigned long long next_random, REAL_t *word_locks_vocab,
-    REAL_t *word_locks_ngrams) nogil:
+    const np.uint32_t word_index, const np.uint32_t word2_index, const np.uint32_t *subwords_index,
+    const np.uint32_t subwords_len, const REAL_t alpha, REAL_t *work, REAL_t *l1, unsigned long long next_random,
+    REAL_t *word_locks_vocab, REAL_t *word_locks_ngrams) nogil:
 
     cdef long long a
-    cdef np.uint32_t word2_index = subwords_index[0]
     cdef long long row1 = word2_index * size, row2
     cdef unsigned long long modulo = 281474976710655ULL
     cdef REAL_t f, g, label, f_dot, log_e_f_dot
@@ -58,7 +57,7 @@ cdef unsigned long long fasttext_fast_sentence_sg_neg(
     memset(l1, 0, size * cython.sizeof(REAL_t))
 
     scopy(&size, &syn0_vocab[row1], &ONE, l1, &ONE)
-    for d in range(1, subwords_len):
+    for d in range(subwords_len):
         our_saxpy(&size, &ONEF, &syn0_ngrams[subwords_index[d] * size], &ONE, l1, &ONE)
     cdef REAL_t norm_factor = ONEF / subwords_len
     sscal(&size, &norm_factor, l1 , &ONE)
@@ -83,7 +82,7 @@ cdef unsigned long long fasttext_fast_sentence_sg_neg(
         our_saxpy(&size, &g, &syn1neg[row2], &ONE, work, &ONE)
         our_saxpy(&size, &g, l1, &ONE, &syn1neg[row2], &ONE)
     our_saxpy(&size, &word_locks_vocab[word2_index], work, &ONE, &syn0_vocab[row1], &ONE)
-    for d in range(1, subwords_len):
+    for d in range(subwords_len):
         our_saxpy(&size, &word_locks_ngrams[subwords_index[d]], work, &ONE, &syn0_ngrams[subwords_index[d]*size], &ONE)
     return next_random
 
@@ -91,12 +90,11 @@ cdef unsigned long long fasttext_fast_sentence_sg_neg(
 cdef void fasttext_fast_sentence_sg_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
     REAL_t *syn0_vocab, REAL_t *syn0_ngrams, REAL_t *syn1, const int size,
-    const np.uint32_t *subwords_index, const np.uint32_t subwords_len, 
+    const np.uint32_t word2_index, const np.uint32_t *subwords_index, const np.uint32_t subwords_len,
     const REAL_t alpha, REAL_t *work, REAL_t *l1, REAL_t *word_locks_vocab,
     REAL_t *word_locks_ngrams) nogil:
 
     cdef long long a, b
-    cdef np.uint32_t word2_index = subwords_index[0]
     cdef long long row1 = word2_index * size, row2, sgn
     cdef REAL_t f, g, f_dot, lprob
 
@@ -104,7 +102,7 @@ cdef void fasttext_fast_sentence_sg_hs(
     memset(l1, 0, size * cython.sizeof(REAL_t))
 
     scopy(&size, &syn0_vocab[row1], &ONE, l1, &ONE)
-    for d in range(1, subwords_len):
+    for d in range(subwords_len):
         our_saxpy(&size, &ONEF, &syn0_ngrams[subwords_index[d] * size], &ONE, l1, &ONE)
     cdef REAL_t norm_factor = ONEF / subwords_len
     sscal(&size, &norm_factor, l1 , &ONE)
@@ -121,7 +119,7 @@ cdef void fasttext_fast_sentence_sg_hs(
         our_saxpy(&size, &g, l1, &ONE, &syn1[row2], &ONE)
 
     our_saxpy(&size, &word_locks_vocab[word2_index], work, &ONE, &syn0_vocab[row1], &ONE)
-    for d in range(1, subwords_len):
+    for d in range(subwords_len):
         our_saxpy(&size, &word_locks_ngrams[subwords_index[d]], work, &ONE, &syn0_ngrams[subwords_index[d]*size], &ONE)
 
 
@@ -307,10 +305,6 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
 
     init_ft_config(&c, model, alpha, _work, _l1)
 
-    # dummy dictionary to ensure that the memory locations that subwords_idx point to
-    # are referenced throughout so that it isn't put back to free memory pool by Python's memory manager
-    subword_arrays = {} 
-
     # prepare C structures so we can go "full C" and release the Python GIL
     vlookup = model.wv.vocab
     c.sentence_idx[0] = 0  # indices of the first sentence always start at 0
@@ -325,12 +319,8 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
                 continue
             c.indexes[effective_words] = word.index
 
-            subwords = model.wv.buckets_word[word.index]
-            word_subwords = np.array((word.index,) + subwords, dtype=np.uint32)
-            c.subwords_idx_len[effective_words] = <int>(len(subwords) + 1)
-            c.subwords_idx[effective_words] = <np.uint32_t *>np.PyArray_DATA(word_subwords)
-            # ensures reference count of word_subwords doesn't reach 0
-            subword_arrays[effective_words] = word_subwords
+            c.subwords_idx_len[effective_words] = <int>(len(model.wv.buckets_word[word.index]))
+            c.subwords_idx[effective_words] = <np.uint32_t *>np.PyArray_DATA(model.wv.buckets_word[word.index])
 
             if c.hs:
                 c.codelens[effective_words] = <int>len(word.code)
@@ -371,13 +361,13 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
                     if c.hs:
                         fasttext_fast_sentence_sg_hs(
                             c.points[j], c.codes[j], c.codelens[j], c.syn0_vocab, c.syn0_ngrams, c.syn1, c.size,
-                            c.subwords_idx[i], c.subwords_idx_len[i], c.alpha, c.work, c.neu1, c.word_locks_vocab,
-                            c.word_locks_ngrams)
+                            c.indexes[i], c.subwords_idx[i], c.subwords_idx_len[i], c.alpha, c.work, c.neu1,
+                            c.word_locks_vocab, c.word_locks_ngrams)
                     if c.negative:
                         c.next_random = fasttext_fast_sentence_sg_neg(
                             c.negative, c.cum_table, c.cum_table_len, c.syn0_vocab, c.syn0_ngrams, c.syn1neg, c.size,
-                            c.indexes[j], c.subwords_idx[i], c.subwords_idx_len[i], c.alpha, c.work, c.neu1,
-                            c.next_random, c.word_locks_vocab, c.word_locks_ngrams)
+                            c.indexes[j], c.indexes[i], c.subwords_idx[i], c.subwords_idx_len[i], c.alpha, c.work,
+                            c.neu1, c.next_random, c.word_locks_vocab, c.word_locks_ngrams)
 
     return effective_words
 
@@ -414,10 +404,6 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1):
 
     init_ft_config(&c, model, alpha, _work, _neu1)
 
-    # dummy dictionary to ensure that the memory locations that subwords_idx point to
-    # are referenced throughout so that it isn't put back to free memory pool by Python's memory manager
-    subword_arrays = {}
-
     if c.hs:
         c.syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
 
@@ -442,12 +428,8 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1):
                 continue
             c.indexes[effective_words] = word.index
 
-            subwords = model.wv.buckets_word[word.index]
-            word_subwords = np.array(subwords, dtype=np.uint32)
-            c.subwords_idx_len[effective_words] = <int>len(subwords)
-            c.subwords_idx[effective_words] = <np.uint32_t *>np.PyArray_DATA(word_subwords)
-            # ensures reference count of word_subwords doesn't reach 0
-            subword_arrays[effective_words] = word_subwords
+            c.subwords_idx_len[effective_words] = <int>len(model.wv.buckets_word[word.index])
+            c.subwords_idx[effective_words] = <np.uint32_t *>np.PyArray_DATA(model.wv.buckets_word[word.index])
 
             if c.hs:
                 c.codelens[effective_words] = <int>len(word.code)

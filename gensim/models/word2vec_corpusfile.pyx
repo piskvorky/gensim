@@ -41,11 +41,6 @@ cdef class CythonVocab:
     def __init__(self, wv, hs=0, fasttext=0):
         cdef VocabItem word
 
-        # dummy list to ensure that the memory locations that subwords_idx point to
-        # are referenced throughout so that it isn't put back to free memory pool by Python's memory manager
-        # used only in FastText model
-        self.subword_arrays = []
-
         for py_token, vocab_item in iteritems(wv.vocab):
             token = any2utf8(py_token)
             word.index = vocab_item.index
@@ -58,14 +53,8 @@ cdef class CythonVocab:
 
             # subwords information, used only in FastText model
             if fasttext:
-                subwords = wv.buckets_word[word.index]
-                word_subwords = np.array((word.index,) + subwords, dtype=np.uint32)
-
-                word.subword_idx_len = <int>(len(subwords) + 1)
-                word.subword_idx = <np.uint32_t *>np.PyArray_DATA(word_subwords)
-
-                self.subword_arrays.append(word_subwords)
-
+                word.subword_idx_len = <int>(len(wv.buckets_word[word.index]))
+                word.subword_idx = <np.uint32_t *>np.PyArray_DATA(wv.buckets_word[word.index])
 
             self.vocab[token] = word
 

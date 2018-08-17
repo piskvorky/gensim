@@ -196,7 +196,7 @@ except ImportError:
                 start = max(0, pos - model.window + reduced_window)
 
                 subwords_indices = (word.index,)
-                subwords_indices += model.wv.buckets_word[word.index]
+                subwords_indices += tuple(model.wv.buckets_word[word.index])
 
                 for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
                     if pos2 != pos:  # don't train on the `word` itself
@@ -1005,7 +1005,7 @@ class FastTextTrainables(Word2VecTrainables):
                         wv.hash2index[ngram_hash] = len(ngram_indices)
                         ngram_indices.append(ngram_hash)
                     buckets.append(wv.hash2index[ngram_hash])
-                wv.buckets_word[vocab.index] = tuple(buckets)
+                wv.buckets_word[vocab.index] = np.array(buckets, dtype=np.uint32)
             wv.num_ngram_vectors = len(ngram_indices)
 
             logger.info("Total number of ngrams is %d", wv.num_ngram_vectors)
@@ -1024,7 +1024,7 @@ class FastTextTrainables(Word2VecTrainables):
                         wv.hash2index[ngram_hash] = num_new_ngrams + self.old_hash2index_len
                         num_new_ngrams += 1
                     buckets.append(wv.hash2index[ngram_hash])
-                wv.buckets_word[vocab.index] = tuple(buckets)
+                wv.buckets_word[vocab.index] = np.array(buckets, dtype=np.uint32)
 
             wv.num_ngram_vectors += num_new_ngrams
             logger.info("Number of new ngrams is %d", num_new_ngrams)

@@ -51,22 +51,20 @@ cdef struct FastTextConfig:
     # For passing subwords information as C objects for nogil
     int subwords_idx_len[MAX_SENTENCE_LEN]
     np.uint32_t *subwords_idx[MAX_SENTENCE_LEN]
-    # dummy dictionary to ensure that the memory locations that subwords_idx point to
-    # are referenced throughout so that it isn't put back to free memory pool by Python's memory manager
 
 
 cdef unsigned long long fasttext_fast_sentence_sg_neg(
     const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len,
     REAL_t *syn0_vocab, REAL_t *syn0_ngrams, REAL_t *syn1neg, const int size,
-    const np.uint32_t word_index, const np.uint32_t *subwords_index, const np.uint32_t subwords_len,
-    const REAL_t alpha, REAL_t *work, REAL_t *l1, unsigned long long next_random, REAL_t *word_locks_vocab,
-    REAL_t *word_locks_ngrams) nogil
+    const np.uint32_t word_index, const np.uint32_t word2_index, const np.uint32_t *subwords_index,
+    const np.uint32_t subwords_len, const REAL_t alpha, REAL_t *work, REAL_t *l1, unsigned long long next_random,
+    REAL_t *word_locks_vocab, REAL_t *word_locks_ngrams) nogil
 
 
 cdef void fasttext_fast_sentence_sg_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
     REAL_t *syn0_vocab, REAL_t *syn0_ngrams, REAL_t *syn1, const int size,
-    const np.uint32_t *subwords_index, const np.uint32_t subwords_len,
+    const np.uint32_t word2_index, const np.uint32_t *subwords_index, const np.uint32_t subwords_len,
     const REAL_t alpha, REAL_t *work, REAL_t *l1, REAL_t *word_locks_vocab,
     REAL_t *word_locks_ngrams) nogil
 
