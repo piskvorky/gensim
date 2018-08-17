@@ -211,6 +211,24 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertEqual(offsets, [0, 0, 6, 12, 18, 24])
         self.assertEqual(start_doctags, [0, 0, 1, 2, 3, 4])
 
+    @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
+    def test_cython_linesentence_readline_after_getting_offsets(self):
+        lines = ['line1\n', 'line2\n', 'line3\n', 'line4\n', 'line5\n']
+        tmpf = get_tmpfile('gensim_doc2vec.tst')
+
+        with utils.smart_open(tmpf, 'wb', encoding='utf8') as fout:
+            for line in lines:
+                fout.write(utils.any2unicode(line))
+
+        from gensim.models.word2vec_corpusfile import CythonLineSentence
+
+        offsets, start_doctags = doc2vec.Doc2Vec._get_offsets_and_start_doctags_for_corpusfile(tmpf, 5)
+        for offset, line in zip(offsets, lines):
+            ls = CythonLineSentence(tmpf, offset)
+            sentence = ls.read_sentence()
+            self.assertEqual(len(sentence), 1)
+            self.assertEqual(sentence[0], utils.any2utf8(line.strip()))
+
     def test_unicode_in_doctag(self):
         """Test storing document vectors of a model with unicode titles."""
         model = doc2vec.Doc2Vec(DocsLeeCorpus(unicode_tags=True), min_count=1)
