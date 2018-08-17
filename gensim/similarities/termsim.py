@@ -77,12 +77,12 @@ class UniformTermSimilarityIndex(TermSimilarityIndex):
 
     """
     def __init__(self, dictionary, term_similarity=0.5):
-        self.dictionary = dictionary
+        self.dictionary = sorted(dictionary.items())
         self.term_similarity = term_similarity
 
     def most_similar(self, t1, topn=10):
         for __, (t2_index, t2) in zip(range(topn), (
-                (t2_index, t2) for t2_index, t2 in sorted(self.dictionary.items()) if t2 != t1)):
+                (t2_index, t2) for t2_index, t2 in self.dictionary if t2 != t1)):
             yield (t2, self.term_similarity)
 
 
