@@ -1989,9 +1989,9 @@ static PyObject *__pyx_codeobj__13;
 /* "gensim/models/fasttext_corpusfile.pyx":45
  * 
  * 
- * cdef void prepare_c_structures_for_batch(vector[vector[string]] &sentences, int sample, int hs, int window, int *total_words,             # <<<<<<<<<<<<<<
- *                                          int *effective_words, int *effective_sentences, unsigned long long *next_random,
- *                                          cvocab_t *vocab, int *sentence_idx, np.uint32_t *indexes,
+ * cdef void prepare_c_structures_for_batch(             # <<<<<<<<<<<<<<
+ *         vector[vector[string]] &sentences, int sample, int hs, int window, int *total_words,
+ *         int *effective_words, int *effective_sentences, unsigned long long *next_random, cvocab_t *vocab,
  */
 
 static void __pyx_f_6gensim_6models_19fasttext_corpusfile_prepare_c_structures_for_batch(std::vector<std::vector<std::string> >  &__pyx_v_sentences, int __pyx_v_sample, int __pyx_v_hs, int __pyx_v_window, int *__pyx_v_total_words, int *__pyx_v_effective_words, int *__pyx_v_effective_sentences, unsigned PY_LONG_LONG *__pyx_v_next_random, __pyx_t_6gensim_6models_19word2vec_corpusfile_cvocab_t *__pyx_v_vocab, int *__pyx_v_sentence_idx, __pyx_t_5numpy_uint32_t *__pyx_v_indexes, int *__pyx_v_codelens, __pyx_t_5numpy_uint8_t **__pyx_v_codes, __pyx_t_5numpy_uint32_t **__pyx_v_points, __pyx_t_5numpy_uint32_t *__pyx_v_reduced_windows, int *__pyx_v_subwords_idx_len, __pyx_t_5numpy_uint32_t **__pyx_v_subwords_idx) {
@@ -2372,9 +2372,9 @@ static void __pyx_f_6gensim_6models_19fasttext_corpusfile_prepare_c_structures_f
   /* "gensim/models/fasttext_corpusfile.pyx":45
  * 
  * 
- * cdef void prepare_c_structures_for_batch(vector[vector[string]] &sentences, int sample, int hs, int window, int *total_words,             # <<<<<<<<<<<<<<
- *                                          int *effective_words, int *effective_sentences, unsigned long long *next_random,
- *                                          cvocab_t *vocab, int *sentence_idx, np.uint32_t *indexes,
+ * cdef void prepare_c_structures_for_batch(             # <<<<<<<<<<<<<<
+ *         vector[vector[string]] &sentences, int sample, int hs, int window, int *total_words,
+ *         int *effective_words, int *effective_sentences, unsigned long long *next_random, cvocab_t *vocab,
  */
 
   /* function exit code */
@@ -2383,8 +2383,8 @@ static void __pyx_f_6gensim_6models_19fasttext_corpusfile_prepare_c_structures_f
 /* "gensim/models/fasttext_corpusfile.pyx":95
  * 
  * 
- * def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work,             # <<<<<<<<<<<<<<
- *                    _l1):
+ * def train_epoch_sg(             # <<<<<<<<<<<<<<
+ *         model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work, _l1):
  *     """Train Skipgram model for one epoch by training on an input stream. This function is used only in multistream mode.
  */
 
@@ -2804,31 +2804,31 @@ static PyObject *__pyx_pf_6gensim_6models_19fasttext_corpusfile_train_epoch_sg(C
  * 
  *             sentences = input_stream.next_batch()             # <<<<<<<<<<<<<<
  * 
- *             prepare_c_structures_for_batch(sentences, c.sample, c.hs, c.window, &total_words, &effective_words,
+ *             prepare_c_structures_for_batch(
  */
           __pyx_t_9 = ((struct __pyx_vtabstruct_6gensim_6models_19word2vec_corpusfile_CythonLineSentence *)__pyx_v_input_stream->__pyx_vtab)->next_batch(__pyx_v_input_stream, 0); if (unlikely(__Pyx_ErrOccurredWithGIL())) __PYX_ERR(0, 150, __pyx_L4_error)
           __pyx_v_sentences = __pyx_t_9;
 
-          /* "gensim/models/fasttext_corpusfile.pyx":153
+          /* "gensim/models/fasttext_corpusfile.pyx":154
+ *             prepare_c_structures_for_batch(
+ *                 sentences, c.sample, c.hs, c.window, &total_words, &effective_words, &effective_sentences,
+ *                 &c.next_random, vocab.get_vocab_ptr(), c.sentence_idx, c.indexes, c.codelens,             # <<<<<<<<<<<<<<
+ *                 c.codes, c.points, c.reduced_windows, c.subwords_idx_len, c.subwords_idx)
  * 
- *             prepare_c_structures_for_batch(sentences, c.sample, c.hs, c.window, &total_words, &effective_words,
- *                                            &effective_sentences, &c.next_random, vocab.get_vocab_ptr(), c.sentence_idx,             # <<<<<<<<<<<<<<
- *                                            c.indexes, c.codelens, c.codes, c.points, c.reduced_windows,
- *                                            c.subwords_idx_len, c.subwords_idx)
  */
-          __pyx_t_10 = ((struct __pyx_vtabstruct_6gensim_6models_19word2vec_corpusfile_CythonVocab *)__pyx_v_vocab->__pyx_vtab)->get_vocab_ptr(__pyx_v_vocab); if (unlikely(__Pyx_ErrOccurredWithGIL())) __PYX_ERR(0, 153, __pyx_L4_error)
+          __pyx_t_10 = ((struct __pyx_vtabstruct_6gensim_6models_19word2vec_corpusfile_CythonVocab *)__pyx_v_vocab->__pyx_vtab)->get_vocab_ptr(__pyx_v_vocab); if (unlikely(__Pyx_ErrOccurredWithGIL())) __PYX_ERR(0, 154, __pyx_L4_error)
 
           /* "gensim/models/fasttext_corpusfile.pyx":152
  *             sentences = input_stream.next_batch()
  * 
- *             prepare_c_structures_for_batch(sentences, c.sample, c.hs, c.window, &total_words, &effective_words,             # <<<<<<<<<<<<<<
- *                                            &effective_sentences, &c.next_random, vocab.get_vocab_ptr(), c.sentence_idx,
- *                                            c.indexes, c.codelens, c.codes, c.points, c.reduced_windows,
+ *             prepare_c_structures_for_batch(             # <<<<<<<<<<<<<<
+ *                 sentences, c.sample, c.hs, c.window, &total_words, &effective_words, &effective_sentences,
+ *                 &c.next_random, vocab.get_vocab_ptr(), c.sentence_idx, c.indexes, c.codelens,
  */
           __pyx_f_6gensim_6models_19fasttext_corpusfile_prepare_c_structures_for_batch(__pyx_v_sentences, __pyx_v_c.sample, __pyx_v_c.hs, __pyx_v_c.window, (&__pyx_v_total_words), (&__pyx_v_effective_words), (&__pyx_v_effective_sentences), (&__pyx_v_c.next_random), __pyx_t_10, __pyx_v_c.sentence_idx, __pyx_v_c.indexes, __pyx_v_c.codelens, __pyx_v_c.codes, __pyx_v_c.points, __pyx_v_c.reduced_windows, __pyx_v_c.subwords_idx_len, __pyx_v_c.subwords_idx);
 
           /* "gensim/models/fasttext_corpusfile.pyx":157
- *                                            c.subwords_idx_len, c.subwords_idx)
+ *                 c.codes, c.points, c.reduced_windows, c.subwords_idx_len, c.subwords_idx)
  * 
  *             for sent_idx in range(effective_sentences):             # <<<<<<<<<<<<<<
  *                 idx_start = c.sentence_idx[sent_idx]
@@ -3130,8 +3130,8 @@ static PyObject *__pyx_pf_6gensim_6models_19fasttext_corpusfile_train_epoch_sg(C
   /* "gensim/models/fasttext_corpusfile.pyx":95
  * 
  * 
- * def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work,             # <<<<<<<<<<<<<<
- *                    _l1):
+ * def train_epoch_sg(             # <<<<<<<<<<<<<<
+ *         model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work, _l1):
  *     """Train Skipgram model for one epoch by training on an input stream. This function is used only in multistream mode.
  */
 
@@ -3572,31 +3572,31 @@ static PyObject *__pyx_pf_6gensim_6models_19fasttext_corpusfile_2train_epoch_cbo
  * 
  *             sentences = input_stream.next_batch()             # <<<<<<<<<<<<<<
  * 
- *             prepare_c_structures_for_batch(sentences, c.sample, c.hs, c.window, &total_words, &effective_words,
+ *             prepare_c_structures_for_batch(
  */
           __pyx_t_9 = ((struct __pyx_vtabstruct_6gensim_6models_19word2vec_corpusfile_CythonLineSentence *)__pyx_v_input_stream->__pyx_vtab)->next_batch(__pyx_v_input_stream, 0); if (unlikely(__Pyx_ErrOccurredWithGIL())) __PYX_ERR(0, 245, __pyx_L4_error)
           __pyx_v_sentences = __pyx_t_9;
 
-          /* "gensim/models/fasttext_corpusfile.pyx":248
+          /* "gensim/models/fasttext_corpusfile.pyx":249
+ *             prepare_c_structures_for_batch(
+ *                 sentences, c.sample, c.hs, c.window, &total_words, &effective_words, &effective_sentences,
+ *                 &c.next_random, vocab.get_vocab_ptr(), c.sentence_idx, c.indexes, c.codelens,             # <<<<<<<<<<<<<<
+ *                 c.codes, c.points, c.reduced_windows, c.subwords_idx_len, c.subwords_idx)
  * 
- *             prepare_c_structures_for_batch(sentences, c.sample, c.hs, c.window, &total_words, &effective_words,
- *                                            &effective_sentences, &c.next_random, vocab.get_vocab_ptr(), c.sentence_idx,             # <<<<<<<<<<<<<<
- *                                            c.indexes, c.codelens, c.codes, c.points, c.reduced_windows,
- *                                            c.subwords_idx_len, c.subwords_idx)
  */
-          __pyx_t_10 = ((struct __pyx_vtabstruct_6gensim_6models_19word2vec_corpusfile_CythonVocab *)__pyx_v_vocab->__pyx_vtab)->get_vocab_ptr(__pyx_v_vocab); if (unlikely(__Pyx_ErrOccurredWithGIL())) __PYX_ERR(0, 248, __pyx_L4_error)
+          __pyx_t_10 = ((struct __pyx_vtabstruct_6gensim_6models_19word2vec_corpusfile_CythonVocab *)__pyx_v_vocab->__pyx_vtab)->get_vocab_ptr(__pyx_v_vocab); if (unlikely(__Pyx_ErrOccurredWithGIL())) __PYX_ERR(0, 249, __pyx_L4_error)
 
           /* "gensim/models/fasttext_corpusfile.pyx":247
  *             sentences = input_stream.next_batch()
  * 
- *             prepare_c_structures_for_batch(sentences, c.sample, c.hs, c.window, &total_words, &effective_words,             # <<<<<<<<<<<<<<
- *                                            &effective_sentences, &c.next_random, vocab.get_vocab_ptr(), c.sentence_idx,
- *                                            c.indexes, c.codelens, c.codes, c.points, c.reduced_windows,
+ *             prepare_c_structures_for_batch(             # <<<<<<<<<<<<<<
+ *                 sentences, c.sample, c.hs, c.window, &total_words, &effective_words, &effective_sentences,
+ *                 &c.next_random, vocab.get_vocab_ptr(), c.sentence_idx, c.indexes, c.codelens,
  */
           __pyx_f_6gensim_6models_19fasttext_corpusfile_prepare_c_structures_for_batch(__pyx_v_sentences, __pyx_v_c.sample, __pyx_v_c.hs, __pyx_v_c.window, (&__pyx_v_total_words), (&__pyx_v_effective_words), (&__pyx_v_effective_sentences), (&__pyx_v_c.next_random), __pyx_t_10, __pyx_v_c.sentence_idx, __pyx_v_c.indexes, __pyx_v_c.codelens, __pyx_v_c.codes, __pyx_v_c.points, __pyx_v_c.reduced_windows, __pyx_v_c.subwords_idx_len, __pyx_v_c.subwords_idx);
 
           /* "gensim/models/fasttext_corpusfile.pyx":252
- *                                            c.subwords_idx_len, c.subwords_idx)
+ *                 c.codes, c.points, c.reduced_windows, c.subwords_idx_len, c.subwords_idx)
  * 
  *             for sent_idx in range(effective_sentences):             # <<<<<<<<<<<<<<
  *                 idx_start = c.sentence_idx[sent_idx]
@@ -6551,8 +6551,8 @@ static int __Pyx_InitCachedConstants(void) {
   /* "gensim/models/fasttext_corpusfile.pyx":95
  * 
  * 
- * def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work,             # <<<<<<<<<<<<<<
- *                    _l1):
+ * def train_epoch_sg(             # <<<<<<<<<<<<<<
+ *         model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work, _l1):
  *     """Train Skipgram model for one epoch by training on an input stream. This function is used only in multistream mode.
  */
   __pyx_tuple__10 = PyTuple_Pack(31, __pyx_n_s_model, __pyx_n_s_corpus_file, __pyx_n_s_offset, __pyx_n_s_cython_vocab, __pyx_n_s_cur_epoch, __pyx_n_s_expected_examples, __pyx_n_s_expected_words, __pyx_n_s_work, __pyx_n_s_l1, __pyx_n_s_c, __pyx_n_s_cur_epoch_2, __pyx_n_s_num_epochs, __pyx_n_s_expected_examples_2, __pyx_n_s_expected_words_2, __pyx_n_s_start_alpha, __pyx_n_s_end_alpha, __pyx_n_s_alpha_2, __pyx_n_s_input_stream, __pyx_n_s_vocab, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_k, __pyx_n_s_effective_words, __pyx_n_s_effective_sentences, __pyx_n_s_total_effective_words, __pyx_n_s_total_sentences, __pyx_n_s_total_words, __pyx_n_s_sent_idx, __pyx_n_s_idx_start, __pyx_n_s_idx_end, __pyx_n_s_sentences); if (unlikely(!__pyx_tuple__10)) __PYX_ERR(0, 95, __pyx_L1_error)
@@ -6896,8 +6896,8 @@ if (!__Pyx_RefNanny) {
   /* "gensim/models/fasttext_corpusfile.pyx":95
  * 
  * 
- * def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work,             # <<<<<<<<<<<<<<
- *                    _l1):
+ * def train_epoch_sg(             # <<<<<<<<<<<<<<
+ *         model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work, _l1):
  *     """Train Skipgram model for one epoch by training on an input stream. This function is used only in multistream mode.
  */
   __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_6gensim_6models_19fasttext_corpusfile_1train_epoch_sg, NULL, __pyx_n_s_gensim_models_fasttext_corpusfil_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 95, __pyx_L1_error)

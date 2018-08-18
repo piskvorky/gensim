@@ -1189,7 +1189,7 @@ struct __pyx_opt_args_6gensim_6models_14word2vec_inner_init_w2v_config {
 struct __pyx_t_6gensim_6models_13doc2vec_inner_Doc2VecConfig;
 struct __pyx_opt_args_6gensim_6models_13doc2vec_inner_init_d2v_config;
 
-/* "gensim/models/doc2vec_inner.pxd":22
+/* "gensim/models/doc2vec_inner.pxd":23
  * 
  * 
  * cdef struct Doc2VecConfig:             # <<<<<<<<<<<<<<
@@ -1235,7 +1235,7 @@ struct __pyx_t_6gensim_6models_13doc2vec_inner_Doc2VecConfig {
   unsigned PY_LONG_LONG next_random;
 };
 
-/* "gensim/models/doc2vec_inner.pxd":90
+/* "gensim/models/doc2vec_inner.pxd":91
  * 
  * 
  * cdef init_d2v_config(Doc2VecConfig *c, model, alpha, learn_doctags, learn_words, learn_hidden, train_words=*, work=*,             # <<<<<<<<<<<<<<
