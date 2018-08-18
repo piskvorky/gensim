@@ -210,7 +210,7 @@ class TestDoc2VecModel(unittest.TestCase):
     @unittest.skipIf(os.name != 'nt', "See another test for posix above")
     def test_get_offsets_and_start_doctags_win(self):
         # Each line takes 7 bytes (including '\n' character which is actually '\r\n' on Windows)
-        lines = ['line1\r\n', 'line2\r\n', 'line3\r\n', 'line4\r\n', 'line5\r\n']
+        lines = ['line1\n', 'line2\n', 'line3\n', 'line4\n', 'line5\n']
         tmpf = get_tmpfile('gensim_doc2vec.tst')
 
         with utils.smart_open(tmpf, 'wb', encoding='utf8') as fout:
