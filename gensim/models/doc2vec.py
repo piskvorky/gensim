@@ -78,7 +78,7 @@ from six import string_types, integer_types, itervalues
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 from gensim.models.keyedvectors import Doc2VecKeyedVectors
 from types import GeneratorType
-from gensim.utils import deprecated, smart_open, any2utf8
+from gensim.utils import deprecated, smart_open
 
 logger = logging.getLogger(__name__)
 
