@@ -815,7 +815,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             Lists with offsets and document tags with length = number of workers.
         """
         corpus_file_size = os.path.getsize(corpus_file)
-        approx_offsets = [int(corpus_file_size / workers * i) for i in range(workers)]
+        approx_offsets = [int(corpus_file_size // workers * i) for i in range(workers)]
         offsets = []
         start_doctags = []
 

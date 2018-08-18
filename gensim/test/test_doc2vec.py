@@ -238,8 +238,8 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertEqual(start_doctags, [0, 1, 2, 3, 4])
 
         offsets, start_doctags = doc2vec.Doc2Vec._get_offsets_and_start_doctags_for_corpusfile(tmpf, 6)
-        self.assertEqual(offsets, [0, 0, 7, 14, 21, 28])
-        self.assertEqual(start_doctags, [0, 0, 1, 2, 3, 4])
+        self.assertEqual(offsets, [0, 0, 7, 14, 14, 21])
+        self.assertEqual(start_doctags, [0, 0, 1, 2, 2, 3])
 
     @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
     def test_cython_linesentence_readline_after_getting_offsets(self):
