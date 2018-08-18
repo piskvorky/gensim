@@ -173,6 +173,7 @@ class TestDoc2VecModel(unittest.TestCase):
             sims_to_infer = loaded_model.docvecs.most_similar([doc0_inferred], topn=len(loaded_model.docvecs))
             self.assertTrue(sims_to_infer)
 
+    @unittest.skipIf(os.name == 'nt', "See another test for Windows below")
     def test_get_offsets_and_start_doctags(self):
         # Each line takes 6 bytes (including '\n' character)
         lines = ['line1\n', 'line2\n', 'line3\n', 'line4\n', 'line5\n']
@@ -195,13 +196,8 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertEqual(start_doctags, [0, 1, 3])
 
         offsets, start_doctags = doc2vec.Doc2Vec._get_offsets_and_start_doctags_for_corpusfile(tmpf, 4)
-        # different results for windows vs. posix because newline character takes 2 and 1 bytes correspondingly.
-        if os.name == 'nt':
-            self.assertEqual(offsets, [0, 6, 12, 24])
-            self.assertEqual(start_doctags, [0, 1, 2, 4])
-        else:
-            self.assertEqual(offsets, [0, 6, 12, 18])
-            self.assertEqual(start_doctags, [0, 1, 2, 3])
+        self.assertEqual(offsets, [0, 6, 12, 18])
+        self.assertEqual(start_doctags, [0, 1, 2, 3])
 
         offsets, start_doctags = doc2vec.Doc2Vec._get_offsets_and_start_doctags_for_corpusfile(tmpf, 5)
         self.assertEqual(offsets, [0, 6, 12, 18, 24])
@@ -209,6 +205,40 @@ class TestDoc2VecModel(unittest.TestCase):
 
         offsets, start_doctags = doc2vec.Doc2Vec._get_offsets_and_start_doctags_for_corpusfile(tmpf, 6)
         self.assertEqual(offsets, [0, 0, 6, 12, 18, 24])
+        self.assertEqual(start_doctags, [0, 0, 1, 2, 3, 4])
+
+    @unittest.skipIf(os.name != 'nt', "See another test for posix above")
+    def test_get_offsets_and_start_doctags_win(self):
+        # Each line takes 7 bytes (including '\n' character which is actually '\r\n' on Windows)
+        lines = ['line1\r\n', 'line2\r\n', 'line3\r\n', 'line4\r\n', 'line5\r\n']
+        tmpf = get_tmpfile('gensim_doc2vec.tst')
+
+        with utils.smart_open(tmpf, 'wb', encoding='utf8') as fout:
+            for line in lines:
+                fout.write(utils.any2unicode(line))
+
+        offsets, start_doctags = doc2vec.Doc2Vec._get_offsets_and_start_doctags_for_corpusfile(tmpf, 1)
+        self.assertEqual(offsets, [0])
+        self.assertEqual(start_doctags, [0])
+
+        offsets, start_doctags = doc2vec.Doc2Vec._get_offsets_and_start_doctags_for_corpusfile(tmpf, 2)
+        self.assertEqual(offsets, [0, 14])
+        self.assertEqual(start_doctags, [0, 2])
+
+        offsets, start_doctags = doc2vec.Doc2Vec._get_offsets_and_start_doctags_for_corpusfile(tmpf, 3)
+        self.assertEqual(offsets, [0, 7, 21])
+        self.assertEqual(start_doctags, [0, 1, 3])
+
+        offsets, start_doctags = doc2vec.Doc2Vec._get_offsets_and_start_doctags_for_corpusfile(tmpf, 4)
+        self.assertEqual(offsets, [0, 7, 14, 21])
+        self.assertEqual(start_doctags, [0, 1, 2, 3])
+
+        offsets, start_doctags = doc2vec.Doc2Vec._get_offsets_and_start_doctags_for_corpusfile(tmpf, 5)
+        self.assertEqual(offsets, [0, 7, 14, 21, 28])
+        self.assertEqual(start_doctags, [0, 1, 2, 3, 4])
+
+        offsets, start_doctags = doc2vec.Doc2Vec._get_offsets_and_start_doctags_for_corpusfile(tmpf, 6)
+        self.assertEqual(offsets, [0, 0, 7, 14, 21, 28])
         self.assertEqual(start_doctags, [0, 0, 1, 2, 3, 4])
 
     @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")

@@ -819,7 +819,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         offsets = []
         start_doctags = []
 
-        with smart_open(corpus_file) as fin:
+        with smart_open(corpus_file, mode='rb') as fin:
             curr_offset_idx = 0
             prev_filepos = 0
 
