@@ -819,7 +819,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         offsets = []
         start_doctags = []
 
-        with smart_open(corpus_file, encoding='utf8') as fin:
+        with smart_open(corpus_file) as fin:
             curr_offset_idx = 0
             prev_filepos = 0
 
@@ -827,7 +827,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
                 if curr_offset_idx == len(approx_offsets):
                     break
 
-                curr_filepos = prev_filepos + len(any2utf8(line))
+                curr_filepos = prev_filepos + len(line)
                 while curr_offset_idx != len(approx_offsets) and approx_offsets[curr_offset_idx] < curr_filepos:
                     offsets.append(prev_filepos)
                     start_doctags.append(line_no)
