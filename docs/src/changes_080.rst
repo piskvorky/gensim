@@ -69,7 +69,7 @@ Other changes (that you're unlikely to notice unless you look)
 ----------------------------------------------------------------------
 
 * Improved efficiency of ``lsi[corpus]`` transformations (documents are chunked internally for better performance).
-* Large matrices (numpy/scipy.sparse, in `LsiModel`, `Similarity` etc.) are now mmapped to/from disk when doing `save/load`. The `cPickle` approach used previously was too `buggy <http://groups.google.com/group/gensim/browse_thread/thread/3c4c6c0f76c5938c#>`_ and `slow <http://dieter.plaetinck.be/poor_mans_pickle_implementations_benchmark.html>`_.
+* Large matrices (numpy/scipy.sparse, in `LsiModel`, `Similarity` etc.) are now `mmapped <https://en.wikipedia.org/wiki/Mmap>`_ to/from disk when doing `save/load`. The `cPickle` approach used previously was too `buggy <http://groups.google.com/group/gensim/browse_thread/thread/3c4c6c0f76c5938c#>`_ and `slow <http://dieter.plaetinck.be/poor_mans_pickle_implementations_benchmark.html>`_.
 * Renamed `chunks` parameter to `chunksize` (i.e. `LsiModel(corpus, num_topics=100, chunksize=20000)`). This better reflects its purpose: size of a chunk=number of documents to be processed at once.
 * Also improved memory efficiency of LSI and LDA model generation (again).
 * Removed SciPy 0.6 from the list of supported SciPi versions (need >=0.7 now).
