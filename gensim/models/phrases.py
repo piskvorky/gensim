@@ -346,7 +346,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
 
     @staticmethod
     def learn_vocab(sentences, max_vocab_size, delimiter=b'_', progress_per=10000,
-                    common_terms=frozenset()):
+                    common_terms=frozenset(), doc2vec=False):
         """Collect unigram/bigram counts from the `sentences` iterable.
         Parameters
         ----------
@@ -397,7 +397,8 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
                     sentence_no, total_words, len(vocab),
                 )
             
-            sentence = sentence.words
+            if doc2vec:
+              sentence = sentence.words
             
             s = [utils.any2utf8(w) for w in sentence]
             last_uncommon = None
@@ -454,7 +455,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         # sufficient counts, before being pruned out by the (large) accummulated
         # counts collected in previous learn_vocab runs.
         min_reduce, vocab, total_words = self.learn_vocab(
-            sentences, self.max_vocab_size, self.delimiter, self.progress_per, self.common_terms)
+            sentences, self.max_vocab_size, self.delimiter, self.progress_per, self.common_terms, self.doc2vec)
 
         self.corpus_word_count += total_words
         if len(self.vocab) > 0:
