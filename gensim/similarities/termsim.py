@@ -160,7 +160,9 @@ class SparseTermSimilarityMatrix(SaveLoad):
         terms, or in the order of term identifiers if None.
     symmetric : bool, optional
         Whether the symmetry of the term similarity matrix will be enforced. This parameter only has
-        an effect when `source` is a :class:`scipy.sparse.spmatrix`.
+        an effect when `source` is a :class:`scipy.sparse.spmatrix`. Positive definiteness is a
+        necessary precondition if you later wish to derive a change-of-basis matrix from the term
+        similarity matrix using Cholesky factorization.
     positive_definite: bool, optional
         Whether the positive definiteness of the term similarity matrix will be enforced through
         strict column diagonal dominance. Positive definiteness is a necessary precondition if you
