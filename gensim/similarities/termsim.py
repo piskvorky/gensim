@@ -250,13 +250,13 @@ class SparseTermSimilarityMatrix(SaveLoad):
                             and not (t1_index, t2_index) in matrix:
                         matrix[t1_index, t2_index] = similarity
                         column_nonzero[t1_index] += 1
-                        column_sum[t1_index] += similarity
+                        column_sum[t1_index] += abs(similarity)
                         matrix[t2_index, t1_index] = similarity
                         column_nonzero[t2_index] += 1
-                        column_sum[t2_index] += similarity
+                        column_sum[t2_index] += abs(similarity)
                 else:
                     matrix[t1_index, t2_index] = similarity
-                    column_sum[t1_index] += similarity
+                    column_sum[t1_index] += abs(similarity)
 
         logger.info(
             "constructed a sparse term similarity matrix with %0.06f%% density",
