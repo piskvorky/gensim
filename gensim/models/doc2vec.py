@@ -454,7 +454,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         dm : {1,0}, optional
             Defines the training algorithm. If `dm=1`, 'distributed memory' (PV-DM) is used.
             Otherwise, `distributed bag of words` (PV-DBOW) is employed.
-        size : int, optional
+        vector_size : int, optional
             Dimensionality of the feature vectors.
         window : int, optional
             The maximum distance between the current and predicted word within a sentence.
@@ -480,7 +480,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             useful range is (0, 1e-5).
         workers : int, optional
             Use these many worker threads to train the model (=faster training with multicore machines).
-        iter : int, optional
+        epochs : int, optional
             Number of iterations (epochs) over the corpus.
         hs : {1,0}, optional
             If 1, hierarchical softmax will be used for model training.
