@@ -617,7 +617,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
         This object essentially contains the mapping between words and embeddings. After training, it can be used
         directly to query those embeddings in various ways. See the module level docstring for examples.
 
-    vocabulary : :class:'~gensim.models.word2vec.Word2VecVocab'
+    vocabulary : :class:`~gensim.models.word2vec.Word2VecVocab`
         This object represents the vocabulary (sometimes called Dictionary in gensim) of the model.
         Besides keeping track of all unique words, this object provides extra functionality, such as
         constructing a huffman tree (frequent words are closer to the root), or discarding extremely rare words.
