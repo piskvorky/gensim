@@ -104,7 +104,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return self._W.T
 
     def __getitem__(self, bow, eps=None):
-        return self.get_document_topics(bow, eps)[0]
+        return self.get_document_topics(bow, eps)
 
     def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True):
         """
@@ -209,15 +209,17 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def get_document_topics(self, bow, minimum_probability=None):
         v = matutils.corpus2dense([bow], len(self.id2word), 1)
-        h, r = self._solveproj(v, self._W, v_max=np.inf)
+        h, _ = self._solveproj(v, self._W, v_max=np.inf)
 
         if self.normalize:
             h /= h.sum(axis=0)
 
-        if minimum_probability is not None:
-            h[h < minimum_probability] = 0
-
-        return h, r
+        return [
+            (idx, proba)
+            for idx, proba
+            in enumerate(h[:, 0])
+            if not minimum_probability or proba > minimum_probability
+        ]
 
     def _setup(self, corpus):
         self._h, self._r = None, None
