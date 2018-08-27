@@ -23,6 +23,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         passes=1,
         lambda_=1.,
         kappa=1.,
+        minimum_probability=0.01,
         use_r=False,
         store_r=False,
         w_max_iter=200,
@@ -64,6 +65,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.passes = passes
         self._lambda_ = lambda_
         self._kappa = kappa
+        self.minimum_probability = minimum_probability
         self.use_r = use_r
         self._w_max_iter = w_max_iter
         self._w_stop_condition = w_stop_condition
@@ -191,7 +193,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             as a tuple of `(topic_id, term_probability)`.
         """
         if minimum_probability is None:
-            minimum_probability = 1e-8
+            minimum_probability = self.minimum_probability
+        minimum_probability = max(minimum_probability, 1e-8)
 
         # if user enters word instead of id in vocab, change to get id
         if isinstance(word_id, str):
@@ -213,6 +216,10 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         if self.normalize:
             h /= h.sum(axis=0)
+
+        if minimum_probability is None:
+            minimum_probability = self.minimum_probability
+        minimum_probability = max(minimum_probability, 1e-8)
 
         return [
             (idx, proba)
@@ -294,7 +301,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             self._w_error = self.__error(v, self._h, self._r)
 
         for iter_number in range(self._w_max_iter):
-            logger.info("w_error: %s" % self._w_error)
+            logger.debug("w_error: %s" % self._w_error)
 
             self._W -= eta * (np.dot(self._W, self.A) - self.B)
             self.__transform()
@@ -352,7 +359,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             self._h_r_error = self.__error(v, h, r)
 
         for iter_number in range(self._h_r_max_iter):
-            logger.info("h_r_error: %s" % self._h_r_error)
+            logger.debug("h_r_error: %s" % self._h_r_error)
 
             Wt_v_minus_r = W.T.dot(v - r)
 
