@@ -57,7 +57,6 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         normalize
         """
         self._w_error = None
-        self._h_r_error = None
         self.n_features = None
         self.num_topics = num_topics
         self.id2word = id2word
@@ -275,7 +274,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
                 self.A += np.dot(h, h.T)
                 self.B += np.dot((v - r), h.T)
-                self._solve_w(v)
+                self._solve_w()
 
                 if chunk_idx % self.eval_every == 0:
                     logger.info(
@@ -294,11 +293,17 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 )
             )
 
-    def _solve_w(self, v):
+    def _solve_w(self):
+        def error():
+            return (
+                0.5 * np.trace(self._W.T.dot(self._W).dot(self.A))
+                - np.trace(self._W.T.dot(self.B))
+            )
+
         eta = self._kappa / np.linalg.norm(self.A, "fro")
 
         if not self._w_error:
-            self._w_error = self.__error(v, self._h, self._r)
+            self._w_error = error()
 
         for iter_number in range(self._w_max_iter):
             logger.debug("w_error: %s" % self._w_error)
@@ -306,19 +311,12 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             self._W -= eta * (np.dot(self._W, self.A) - self.B)
             self.__transform()
 
-            error_ = self.__error(v, self._h, self._r)
+            error_ = error()
 
-            if np.abs(error_ - self._w_error) < np.abs(
-                self._w_error * self._w_stop_condition
-            ):
+            if np.abs((error_ - self._w_error) / self._w_error) < self._w_stop_condition:
                 break
 
             self._w_error = error_
-
-    def __error(self, v, h, r):
-        return 0.5 * np.linalg.norm(
-            v - self._W.dot(h) - r, "fro"
-        ) ** 2 + self._lambda_ * np.linalg.norm(r, 1)
 
     @staticmethod
     def __solve_r(r_actual, lambda_, v_max):
@@ -355,27 +353,30 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         # eta = self._kappa / np.linalg.norm(W, 'fro') ** 2
 
-        if not self._h_r_error:
-            self._h_r_error = self.__error(v, h, r)
+        _h_r_error = None
 
         for iter_number in range(self._h_r_max_iter):
-            logger.debug("h_r_error: %s" % self._h_r_error)
+            logger.debug("h_r_error: %s" % _h_r_error)
+
+            error_ = 0
 
             Wt_v_minus_r = W.T.dot(v - r)
 
-            solve_h(h, Wt_v_minus_r, WtW, self._kappa)
+            error_ += solve_h(h, Wt_v_minus_r, WtW, self._kappa)
 
             if self.use_r:
                 r_actual = v - W.dot(h)
-                solve_r(r, r_actual, self._lambda_, self.v_max)
+                error_ += solve_r(r, r_actual, self._lambda_, self.v_max)
 
-            error_ = self.__error(v, h, r)
+            error_ /= m
 
-            if np.abs(self._h_r_error - error_) < np.abs(
-                    self._h_r_error * self._h_r_stop_condition
-            ):
+            if not _h_r_error:
+                _h_r_error = error_
+                continue
+
+            if np.abs(_h_r_error - error_) < self._h_r_stop_condition:
                 break
 
-            self._h_r_error = error_
+            _h_r_error = error_
 
         return h, r
