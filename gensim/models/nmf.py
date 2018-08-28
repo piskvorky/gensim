@@ -80,7 +80,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             self._R = None
 
         if corpus is not None:
-            self.update(corpus, chunksize)
+            self.update(corpus)
 
     @property
     def A(self):
