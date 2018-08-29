@@ -59,7 +59,7 @@ def poincare_2d_visualization(model, tree, figure_title, num_nodes=50, show_node
         mode='markers',
         marker=dict(color='rgb(30, 100, 200)'),
         text=node_labels,
-        textposition='bottom'
+        textposition='bottom center'
     )
 
     nodes_x, nodes_y, node_labels = [], [], []
@@ -73,7 +73,7 @@ def poincare_2d_visualization(model, tree, figure_title, num_nodes=50, show_node
         mode='markers+text',
         marker=dict(color='rgb(200, 100, 200)'),
         text=node_labels,
-        textposition='bottom'
+        textposition='bottom center'
     )
 
     node_out_degrees = Counter(hypernym_pair[1] for hypernym_pair in tree)
