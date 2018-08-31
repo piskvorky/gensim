@@ -210,7 +210,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return values
 
     def get_document_topics(self, bow, minimum_probability=None):
-        v = matutils.corpus2dense([bow], len(self.id2word), 1)
+        v = matutils.corpus2csc([bow], len(self.id2word), 1)
         h, _ = self._solveproj(v, self._W, v_max=np.inf)
 
         if self.normalize:
@@ -230,7 +230,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
     def _setup(self, corpus):
         self._h, self._r = None, None
         first_doc = next(iter(corpus))
-        first_doc = matutils.corpus2dense([first_doc], len(self.id2word), 1)[:, 0]
+        first_doc = matutils.corpus2csc([first_doc], len(self.id2word), 1)[:, 0]
         m = len(first_doc)
         avg = np.sqrt(first_doc.mean() / m)
 
@@ -265,7 +265,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             for chunk in utils.grouper(
                 corpus, self.chunksize, as_numpy=chunks_as_numpy
             ):
-                v = matutils.corpus2dense(chunk, len(self.id2word), len(chunk))
+                v = matutils.corpus2csc(chunk, len(self.id2word), len(chunk))
                 self._h, self._r = self._solveproj(v, self._W, r=self._r, h=self._h, v_max=self.v_max)
                 h, r = self._h, self._r
                 self._H.append(h)
