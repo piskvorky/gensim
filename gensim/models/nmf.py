@@ -230,7 +230,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
     def _setup(self, corpus):
         self._h, self._r = None, None
         first_doc = next(iter(corpus))
-        first_doc = matutils.corpus2csc([first_doc], len(self.id2word), 1)[:, 0]
+        first_doc = matutils.corpus2dense([first_doc], len(self.id2word), 1)[:, 0]
         m = len(first_doc)
         avg = np.sqrt(first_doc.mean() / m)
 
