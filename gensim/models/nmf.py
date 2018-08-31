@@ -231,10 +231,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self._h, self._r = None, None
         first_doc = next(iter(corpus))
         first_doc = matutils.corpus2csc([first_doc], len(self.id2word))[:, 0]
-        m = len(first_doc)
-        avg = np.sqrt(first_doc.mean() / m)
-
-        self.n_features = len(first_doc)
+        self.n_features = first_doc.shape[0]
+        avg = np.sqrt(first_doc.mean() / self.n_features)
 
         self._W = np.abs(
             avg
