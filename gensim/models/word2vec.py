@@ -151,7 +151,6 @@ except ImportError:
     FAST_VERSION = -1
     MAX_WORDS_IN_BATCH = 10000
 
-
     def train_batch_sg(model, sentences, alpha, work=None, compute_loss=False):
         """Update skip-gram model by training on a sequence of sentences.
 
@@ -204,7 +203,6 @@ except ImportError:
 
             result += len(word_vocabs)
         return result
-
 
     def train_batch_cbow(model, sentences, alpha, work=None, neu1=None, compute_loss=False):
         """Update CBOW model by training on a sequence of sentences.
@@ -260,7 +258,6 @@ except ImportError:
             result += len(word_vocabs)
         return result
 
-
     def score_sentence_sg(model, sentence, work=None):
         """Obtain likelihood score for a single sentence in a fitted skip-gram representation.
 
@@ -305,7 +302,6 @@ except ImportError:
                     log_prob_sentence += score_sg_pair(model, word, word2)
 
         return log_prob_sentence
-
 
     def score_sentence_cbow(model, sentence, work=None, neu1=None):
         """Obtain likelihood score for a single sentence in a fitted CBOW representation.
@@ -462,7 +458,6 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
         else:
             l1 += neu1e * lock_factor  # learn input -> hidden (mutates model.wv.syn0[word2.index], if that is l1)
     return neu1e
-
 
 def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=True, learn_hidden=True,
                     compute_loss=False, context_vectors=None, context_locks=None, is_ft=False):

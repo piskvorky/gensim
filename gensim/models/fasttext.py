@@ -98,7 +98,6 @@ except ImportError:
     FAST_VERSION = -1
     MAX_WORDS_IN_BATCH = 10000
 
-
     def train_batch_cbow(model, sentences, alpha, work=None, neu1=None):
         """Update CBOW model by training on a sequence of sentences.
 
@@ -828,8 +827,7 @@ class FastText(BaseWordEmbeddingsModel):
         num_vectors, dim = self.struct_unpack(file_handle, '@2q')
         # Vectors stored by [Matrix::save](https://github.com/facebookresearch/fastText/blob/master/src/matrix.cc)
         assert self.wv.vector_size == dim, (
-            'mismatch between vector size in model params ({}) and model vectors ({})'
-                .format(self.wv.vector_size, dim)
+            'mismatch between vector size in model params ({}) and model vectors ({})'.format(self.wv.vector_size, dim)
         )
         float_size = struct.calcsize('@f')
         if float_size == 4:
