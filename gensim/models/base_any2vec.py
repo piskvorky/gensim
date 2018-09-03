@@ -1094,9 +1094,9 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             raise ValueError("You must specify an explict epochs count. The usual value is epochs=model.epochs.")
         logger.info(
             "training model with %i workers on %i vocabulary and %i features, "
-            "using sg=%s hs=%s sample=%s negative=%s window=%s symmetric=%s",
+            "using sg=%s hs=%s sample=%s negative=%s window=%s",
             self.workers, len(self.wv.vocab), self.trainables.layer1_size, self.sg,
-            self.hs, self.vocabulary.sample, self.negative, self.window, self.symmetric
+            self.hs, self.vocabulary.sample, self.negative, self.window
         )
 
     @classmethod
