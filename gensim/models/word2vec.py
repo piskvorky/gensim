@@ -239,8 +239,8 @@ except ImportError:
         result = 0
         for sentence in sentences:
             word_vocabs = [
-                model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
-                                                       model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32
+                model.wv.vocab[w] for w in sentence
+                if w in model.wv.vocab and model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32
             ]
             for pos, word in enumerate(word_vocabs):
                 reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
@@ -458,6 +458,7 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
         else:
             l1 += neu1e * lock_factor  # learn input -> hidden (mutates model.wv.syn0[word2.index], if that is l1)
     return neu1e
+
 
 def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=True, learn_hidden=True,
                     compute_loss=False, context_vectors=None, context_locks=None, is_ft=False):

@@ -156,7 +156,6 @@ except ImportError:
             result += len(word_vocabs)
         return result
 
-
     def train_batch_sg(model, sentences, alpha, work=None, neu1=None):
         """Update skip-gram model by training on a sequence of sentences.
 
