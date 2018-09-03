@@ -106,29 +106,29 @@ where "words" are actually multiword expressions, such as `new_york_times` or `f
 
 from __future__ import division  # py3 "true division"
 
-import logging
-import sys
-import os
 import heapq
-from timeit import default_timer
-from copy import deepcopy
-from collections import defaultdict
-import threading
-import multiprocessing
 import itertools
+import logging
+import multiprocessing
+import os
+import sys
+import threading
 import warnings
+from collections import defaultdict
+from copy import deepcopy
+from timeit import default_timer
 
-from gensim.utils import keep_vocab_item, call_on_class_only
-from gensim.models.keyedvectors import Vocab, Word2VecKeyedVectors
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
+from gensim.models.keyedvectors import Vocab, Word2VecKeyedVectors
+from gensim.utils import keep_vocab_item, call_on_class_only
 
 try:
     from queue import Queue, Empty
 except ImportError:
     from Queue import Queue, Empty
 
-from numpy import exp, dot, zeros, random, dtype, float32 as REAL,\
-    uint32, seterr, array, uint8, vstack, fromstring, sqrt,\
+from numpy import exp, dot, zeros, random, dtype, float32 as REAL, \
+    uint32, seterr, array, uint8, vstack, fromstring, sqrt, \
     empty, sum as np_sum, ones, logaddexp, log, outer
 
 from scipy.special import expit
@@ -150,6 +150,7 @@ except ImportError:
     # failed... fall back to plain numpy (20-80x slower training than the above)
     FAST_VERSION = -1
     MAX_WORDS_IN_BATCH = 10000
+
 
     def train_batch_sg(model, sentences, alpha, work=None, compute_loss=False):
         """Update skip-gram model by training on a sequence of sentences.
@@ -190,7 +191,11 @@ except ImportError:
 
                 # now go over all words from the (reduced) window, predicting each one in turn
                 start = max(0, pos - model.window + reduced_window)
-                for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
+                if model.symmetric:
+                    end = pos + model.window + 1 - reduced_window
+                else:
+                    end = pos  # use only left side
+                for pos2, word2 in enumerate(word_vocabs[start:end], start):
                     # don't train on the `word` itself
                     if pos2 != pos:
                         train_sg_pair(
@@ -199,6 +204,7 @@ except ImportError:
 
             result += len(word_vocabs)
         return result
+
 
     def train_batch_cbow(model, sentences, alpha, work=None, neu1=None, compute_loss=False):
         """Update CBOW model by training on a sequence of sentences.
@@ -236,12 +242,16 @@ except ImportError:
         for sentence in sentences:
             word_vocabs = [
                 model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
-                model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32
+                                                       model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32
             ]
             for pos, word in enumerate(word_vocabs):
                 reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
                 start = max(0, pos - model.window + reduced_window)
-                window_pos = enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start)
+                if model.symmetric:
+                    end = pos + model.window + 1 - reduced_window
+                else:
+                    end = pos
+                window_pos = enumerate(word_vocabs[start:end], start)
                 word2_indices = [word2.index for pos2, word2 in window_pos if (word2 is not None and pos2 != pos)]
                 l1 = np_sum(model.wv.syn0[word2_indices], axis=0)  # 1 x vector_size
                 if word2_indices and model.cbow_mean:
@@ -249,6 +259,7 @@ except ImportError:
                 train_cbow_pair(model, word, word2_indices, l1, alpha, compute_loss=compute_loss)
             result += len(word_vocabs)
         return result
+
 
     def score_sentence_sg(model, sentence, work=None):
         """Obtain likelihood score for a single sentence in a fitted skip-gram representation.
@@ -284,12 +295,17 @@ except ImportError:
 
             # now go over all words from the window, predicting each one in turn
             start = max(0, pos - model.window)
-            for pos2, word2 in enumerate(word_vocabs[start: pos + model.window + 1], start):
+            if model.symmetric:
+                end = pos + model.window + 1
+            else:
+                end = pos
+            for pos2, word2 in enumerate(word_vocabs[start:end], start):
                 # don't train on OOV words and on the `word` itself
                 if word2 is not None and pos2 != pos:
                     log_prob_sentence += score_sg_pair(model, word, word2)
 
         return log_prob_sentence
+
 
     def score_sentence_cbow(model, sentence, work=None, neu1=None):
         """Obtain likelihood score for a single sentence in a fitted CBOW representation.
@@ -326,7 +342,11 @@ except ImportError:
                 continue  # OOV word in the input sentence => skip
 
             start = max(0, pos - model.window)
-            window_pos = enumerate(word_vocabs[start:(pos + model.window + 1)], start)
+            if model.symmetric:
+                end = pos + model.window + 1
+            else:
+                end = pos
+            window_pos = enumerate(word_vocabs[start:end], start)
             word2_indices = [word2.index for pos2, word2 in window_pos if (word2 is not None and pos2 != pos)]
             l1 = np_sum(model.wv.syn0[word2_indices], axis=0)  # 1 x layer1_size
             if word2_indices and model.cbow_mean:
@@ -630,7 +650,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
     """
 
-    def __init__(self, sentences=None, input_streams=None, size=100, alpha=0.025, window=5, min_count=5,
+    def __init__(self, sentences=None, input_streams=None, size=100, alpha=0.025, window=5, symmetric=1, min_count=5,
                  max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
                  sg=0, hs=0, negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
                  trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False, callbacks=(),
@@ -655,6 +675,8 @@ class Word2Vec(BaseWordEmbeddingsModel):
             Dimensionality of the word vectors.
         window : int, optional
             Maximum distance between the current and predicted word within a sentence.
+        symmetric : {0, 1}, optional
+            If 1 - using symmetric windows, if 0 - will use only left context words.
         min_count : int, optional
             Ignores all words with total frequency lower than this.
         workers : int, optional
@@ -750,8 +772,8 @@ class Word2Vec(BaseWordEmbeddingsModel):
         super(Word2Vec, self).__init__(
             sentences=sentences, input_streams=input_streams, workers=workers, vector_size=size, epochs=iter,
             callbacks=callbacks, batch_words=batch_words, trim_rule=trim_rule, sg=sg, alpha=alpha, window=window,
-            seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, compute_loss=compute_loss,
-            fast_version=FAST_VERSION)
+            symmetric=symmetric, seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha,
+            compute_loss=compute_loss, fast_version=FAST_VERSION)
 
     def _do_train_job(self, sentences, alpha, inits):
         """Train the model on a single batch of sentences.
@@ -1302,6 +1324,7 @@ class BrownCorpus(object):
      (part of `NLTK data <https://www.nltk.org/data.html>`_).
 
     """
+
     def __init__(self, dirname):
         self.dirname = dirname
 
@@ -1324,6 +1347,7 @@ class BrownCorpus(object):
 
 class Text8Corpus(object):
     """Iterate over sentences from the "text8" corpus, unzipped from http://mattmahoney.net/dc/text8.zip."""
+
     def __init__(self, fname, max_sentence_length=MAX_WORDS_IN_BATCH):
         self.fname = fname
         self.max_sentence_length = max_sentence_length
@@ -1355,6 +1379,7 @@ class LineSentence(object):
     Words must be already preprocessed and separated by whitespace.
 
     """
+
     def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None):
         """
 
@@ -1415,6 +1440,7 @@ class PathLineSentences(object):
     Does **not recurse** into subdirectories.
 
     """
+
     def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None):
         """
         Parameters
@@ -1492,6 +1518,7 @@ def _scan_vocab_worker(stream, progress_queue, max_vocab_size=None, trim_rule=No
 
 class Word2VecVocab(utils.SaveLoad):
     """Vocabulary used by :class:`~gensim.models.word2vec.Word2Vec`."""
+
     def __init__(
             self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0,
             max_final_vocab=None, ns_exponent=0.75):
@@ -1721,7 +1748,7 @@ class Word2VecVocab(utils.SaveLoad):
                 word_probability = 1.0
                 downsample_total += v
             if not dry_run:
-                wv.vocab[w].sample_int = int(round(word_probability * 2**32))
+                wv.vocab[w].sample_int = int(round(word_probability * 2 ** 32))
 
         if not dry_run and not keep_raw_vocab:
             logger.info("deleting the raw counts dictionary of %i items", len(self.raw_vocab))
@@ -1795,7 +1822,7 @@ class Word2VecVocab(utils.SaveLoad):
 
             logger.info("built huffman tree with maximum node depth %i", max_depth)
 
-    def make_cum_table(self, wv, domain=2**31 - 1):
+    def make_cum_table(self, wv, domain=2 ** 31 - 1):
         """Create a cumulative-distribution table using stored vocabulary word counts for
         drawing random words in the negative-sampling training routines.
 
@@ -1811,10 +1838,10 @@ class Word2VecVocab(utils.SaveLoad):
         # compute sum of all power (Z in paper)
         train_words_pow = 0.0
         for word_index in xrange(vocab_size):
-            train_words_pow += wv.vocab[wv.index2word[word_index]].count**self.ns_exponent
+            train_words_pow += wv.vocab[wv.index2word[word_index]].count ** self.ns_exponent
         cumulative = 0.0
         for word_index in xrange(vocab_size):
-            cumulative += wv.vocab[wv.index2word[word_index]].count**self.ns_exponent
+            cumulative += wv.vocab[wv.index2word[word_index]].count ** self.ns_exponent
             self.cum_table[word_index] = round(cumulative / train_words_pow * domain)
         if len(self.cum_table) > 0:
             assert self.cum_table[-1] == domain
@@ -1822,6 +1849,7 @@ class Word2VecVocab(utils.SaveLoad):
 
 class Word2VecTrainables(utils.SaveLoad):
     """Represents the inner shallow neural network used to train :class:`~gensim.models.word2vec.Word2Vec`."""
+
     def __init__(self, vector_size=100, seed=1, hashfxn=hash):
         self.hashfxn = hashfxn
         self.layer1_size = vector_size
@@ -1891,6 +1919,7 @@ class Word2VecTrainables(utils.SaveLoad):
 # -negative 5 -hs 0 -binary 0 -cbow 1 -iter 3
 if __name__ == "__main__":
     import argparse
+
     logging.basicConfig(
         format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s',
         level=logging.INFO
@@ -1912,6 +1941,8 @@ if __name__ == "__main__":
     parser.add_argument("-train", help="Use text data from file TRAIN to train the model", required=True)
     parser.add_argument("-output", help="Use file OUTPUT to save the resulting word vectors")
     parser.add_argument("-window", help="Set max skip length WINDOW between words; default is 5", type=int, default=5)
+    parser.add_argument("-symmetric", help="If 1 - using symmetric windows, if 0 - will use only left context words.",
+                        type=int, default=1)
     parser.add_argument("-size", help="Set size of word vectors; default is 100", type=int, default=100)
     parser.add_argument(
         "-sample",
@@ -1955,7 +1986,7 @@ if __name__ == "__main__":
 
     model = Word2Vec(
         corpus, size=args.size, min_count=args.min_count, workers=args.threads,
-        window=args.window, sample=args.sample, sg=skipgram, hs=args.hs,
+        window=args.window, symmetric=args.symmetric, sample=args.sample, sg=skipgram, hs=args.hs,
         negative=args.negative, cbow_mean=1, iter=args.iter
     )
 

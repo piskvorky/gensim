@@ -539,7 +539,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         raise NotImplementedError()
 
     def __init__(self, sentences=None, input_streams=None, workers=3, vector_size=100, epochs=5, callbacks=(),
-                 batch_words=10000, trim_rule=None, sg=0, alpha=0.025, window=5, seed=1, hs=0, negative=5,
+                 batch_words=10000, trim_rule=None, sg=0, alpha=0.025, window=5, symmetric=1, seed=1, hs=0, negative=5,
                  ns_exponent=0.75, cbow_mean=1, min_alpha=0.0001, compute_loss=False, fast_version=0, **kwargs):
         """
 
@@ -580,6 +580,8 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             The beginning learning rate. This will linearly reduce with iterations until it reaches `min_alpha`.
         window : int, optional
             The maximum distance between the current and predicted word within a sentence.
+        symmetric : {0, 1}, optional
+            If 1 - using symmetric windows, if 0 - will use only left context words.
         seed : int, optional
             Seed for the random number generator. Initial vectors for each word are seeded with a hash of
             the concatenation of word + `str(seed)`.
@@ -612,6 +614,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             logger.warning("consider setting layer size to a multiple of 4 for greater performance")
         self.alpha = float(alpha)
         self.window = int(window)
+        self.symmetric = bool(symmetric)
         self.random = random.RandomState(seed)
         self.min_alpha = float(min_alpha)
         self.hs = int(hs)
@@ -1091,9 +1094,9 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             raise ValueError("You must specify an explict epochs count. The usual value is epochs=model.epochs.")
         logger.info(
             "training model with %i workers on %i vocabulary and %i features, "
-            "using sg=%s hs=%s sample=%s negative=%s window=%s",
+            "using sg=%s hs=%s sample=%s negative=%s window=%s symmetric=%s",
             self.workers, len(self.wv.vocab), self.trainables.layer1_size, self.sg,
-            self.hs, self.vocabulary.sample, self.negative, self.window
+            self.hs, self.vocabulary.sample, self.negative, self.window, self.symmetric
         )
 
     @classmethod

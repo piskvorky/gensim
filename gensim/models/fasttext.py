@@ -81,11 +81,10 @@ import struct
 import numpy as np
 from numpy import ones, vstack, empty, float32 as REAL, sum as np_sum
 
-from gensim.models.word2vec import Word2VecVocab, Word2VecTrainables, train_sg_pair, train_cbow_pair
-from gensim.models.keyedvectors import Vocab, FastTextKeyedVectors
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
+from gensim.models.keyedvectors import Vocab, FastTextKeyedVectors
 from gensim.models.utils_any2vec import _compute_ngrams, _ft_hash
-
+from gensim.models.word2vec import Word2VecVocab, Word2VecTrainables, train_sg_pair, train_cbow_pair
 from gensim.utils import deprecated, call_on_class_only
 
 logger = logging.getLogger(__name__)
@@ -98,6 +97,7 @@ except ImportError:
     # failed... fall back to plain numpy (20-80x slower training than the above)
     FAST_VERSION = -1
     MAX_WORDS_IN_BATCH = 10000
+
 
     def train_batch_cbow(model, sentences, alpha, work=None, neu1=None):
         """Update CBOW model by training on a sequence of sentences.
@@ -156,6 +156,7 @@ except ImportError:
                 train_cbow_pair(model, word, subwords_indices, l1, alpha, is_ft=True)
             result += len(word_vocabs)
         return result
+
 
     def train_batch_sg(model, sentences, alpha, work=None, neu1=None):
         """Update skip-gram model by training on a sequence of sentences.
@@ -241,8 +242,9 @@ class FastText(BaseWordEmbeddingsModel):
         for the internal structure of words, besides their concurrence counts.
 
     """
-    def __init__(self, sentences=None, input_streams=None, sg=0, hs=0, size=100, alpha=0.025, window=5, min_count=5,
-                 max_vocab_size=None, word_ngrams=1, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
+
+    def __init__(self, sentences=None, input_streams=None, sg=0, hs=0, size=100, alpha=0.025, window=5, symmetric=1,
+                 min_count=5, max_vocab_size=None, word_ngrams=1, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
                  negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, iter=5, null_word=0, min_n=3, max_n=6,
                  sorted_vocab=1, bucket=2000000, trim_rule=None, batch_words=MAX_WORDS_IN_BATCH, callbacks=()):
         """
@@ -265,6 +267,8 @@ class FastText(BaseWordEmbeddingsModel):
             Dimensionality of the word vectors.
         window : int, optional
             The maximum distance between the current and predicted word within a sentence.
+        symmetric : {0, 1}, optional
+            If 1 - using symmetric windows, if 0 - will use only left context words.
         workers : int, optional
             Use these many worker threads to train the model (=faster training with multicore machines).
         alpha : float, optional
@@ -369,7 +373,8 @@ class FastText(BaseWordEmbeddingsModel):
         super(FastText, self).__init__(
             sentences=sentences, input_streams=input_streams, workers=workers, vector_size=size, epochs=iter,
             callbacks=callbacks, batch_words=batch_words, trim_rule=trim_rule, sg=sg, alpha=alpha, window=window,
-            seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, fast_version=FAST_VERSION)
+            symmetric=symmetric, seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha,
+            fast_version=FAST_VERSION)
 
     @property
     @deprecated("Attribute will be removed in 4.0.0, use wv.min_n instead")
@@ -824,7 +829,7 @@ class FastText(BaseWordEmbeddingsModel):
         # Vectors stored by [Matrix::save](https://github.com/facebookresearch/fastText/blob/master/src/matrix.cc)
         assert self.wv.vector_size == dim, (
             'mismatch between vector size in model params ({}) and model vectors ({})'
-            .format(self.wv.vector_size, dim)
+                .format(self.wv.vector_size, dim)
         )
         float_size = struct.calcsize('@f')
         if float_size == 4:
@@ -837,8 +842,8 @@ class FastText(BaseWordEmbeddingsModel):
         self.wv.vectors_ngrams = self.wv.vectors_ngrams.reshape((num_vectors, dim))
         assert self.wv.vectors_ngrams.shape == (
             self.trainables.bucket + len(self.wv.vocab), self.wv.vector_size), \
-            'mismatch between actual weight matrix shape {} and expected shape {}'\
-            .format(
+            'mismatch between actual weight matrix shape {} and expected shape {}' \
+                .format(
                 self.wv.vectors_ngrams.shape, (self.trainables.bucket + len(self.wv.vocab), self.wv.vector_size)
             )
 
@@ -924,6 +929,7 @@ class FastText(BaseWordEmbeddingsModel):
 
 class FastTextVocab(Word2VecVocab):
     """Vocabulary used by :class:`~gensim.models.fasttext.FastText`."""
+
     def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0, ns_exponent=0.75):
         super(FastTextVocab, self).__init__(
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
@@ -939,6 +945,7 @@ class FastTextVocab(Word2VecVocab):
 
 class FastTextTrainables(Word2VecTrainables):
     """Represents the inner shallow neural network used to train :class:`~gensim.models.fasttext.FastText`."""
+
     def __init__(self, vector_size=100, seed=1, hashfxn=hash, bucket=2000000):
         super(FastTextTrainables, self).__init__(
             vector_size=vector_size, seed=seed, hashfxn=hashfxn)
