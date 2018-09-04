@@ -190,7 +190,7 @@ except ImportError:
 
                 # now go over all words from the (reduced) window, predicting each one in turn
                 start = max(0, pos - model.window + reduced_window)
-                if not hasattr(model, 'symmetric') or model.symmetric:
+                if model.symmetric:
                     end = pos + model.window + 1 - reduced_window
                 else:
                     end = pos  # use only left side
@@ -245,7 +245,7 @@ except ImportError:
             for pos, word in enumerate(word_vocabs):
                 reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
                 start = max(0, pos - model.window + reduced_window)
-                if not hasattr(model, 'symmetric') or model.symmetric:
+                if model.symmetric:
                     end = pos + model.window + 1 - reduced_window
                 else:
                     end = pos
@@ -292,7 +292,7 @@ except ImportError:
 
             # now go over all words from the window, predicting each one in turn
             start = max(0, pos - model.window)
-            if not hasattr(model, 'symmetric') or model.symmetric:
+            if model.symmetric:
                 end = pos + model.window + 1
             else:
                 end = pos
@@ -338,7 +338,7 @@ except ImportError:
                 continue  # OOV word in the input sentence => skip
 
             start = max(0, pos - model.window)
-            if not hasattr(model, 'symmetric') or model.symmetric:
+            if model.symmetric:
                 end = pos + model.window + 1
             else:
                 end = pos

@@ -1131,6 +1131,8 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
         """
         model = super(BaseWordEmbeddingsModel, cls).load(*args, **kwargs)
+        if not hasattr(model, 'symmetric'):
+            model.symmetric = 1
         if not hasattr(model, 'ns_exponent'):
             model.ns_exponent = 0.75
         if not hasattr(model.vocabulary, 'ns_exponent'):
