@@ -81,10 +81,11 @@ import struct
 import numpy as np
 from numpy import ones, vstack, empty, float32 as REAL, sum as np_sum
 
-from gensim.models.base_any2vec import BaseWordEmbeddingsModel
-from gensim.models.keyedvectors import Vocab, FastTextKeyedVectors
-from gensim.models.utils_any2vec import _compute_ngrams, _ft_hash
 from gensim.models.word2vec import Word2VecVocab, Word2VecTrainables, train_sg_pair, train_cbow_pair
+from gensim.models.keyedvectors import Vocab, FastTextKeyedVectors
+from gensim.models.base_any2vec import BaseWordEmbeddingsModel
+from gensim.models.utils_any2vec import _compute_ngrams, _ft_hash
+
 from gensim.utils import deprecated, call_on_class_only
 
 logger = logging.getLogger(__name__)
@@ -826,7 +827,8 @@ class FastText(BaseWordEmbeddingsModel):
         num_vectors, dim = self.struct_unpack(file_handle, '@2q')
         # Vectors stored by [Matrix::save](https://github.com/facebookresearch/fastText/blob/master/src/matrix.cc)
         assert self.wv.vector_size == dim, (
-            'mismatch between vector size in model params ({}) and model vectors ({})'.format(self.wv.vector_size, dim)
+            'mismatch between vector size in model params ({}) and model vectors ({})'
+            .format(self.wv.vector_size, dim)
         )
         float_size = struct.calcsize('@f')
         if float_size == 4:
@@ -839,8 +841,8 @@ class FastText(BaseWordEmbeddingsModel):
         self.wv.vectors_ngrams = self.wv.vectors_ngrams.reshape((num_vectors, dim))
         assert self.wv.vectors_ngrams.shape == (
             self.trainables.bucket + len(self.wv.vocab), self.wv.vector_size), \
-            'mismatch between actual weight matrix shape {} and expected shape {}' \
-                .format(
+            'mismatch between actual weight matrix shape {} and expected shape {}'\
+            .format(
                 self.wv.vectors_ngrams.shape, (self.trainables.bucket + len(self.wv.vocab), self.wv.vector_size)
             )
 
@@ -926,7 +928,6 @@ class FastText(BaseWordEmbeddingsModel):
 
 class FastTextVocab(Word2VecVocab):
     """Vocabulary used by :class:`~gensim.models.fasttext.FastText`."""
-
     def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0, ns_exponent=0.75):
         super(FastTextVocab, self).__init__(
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
@@ -942,7 +943,6 @@ class FastTextVocab(Word2VecVocab):
 
 class FastTextTrainables(Word2VecTrainables):
     """Represents the inner shallow neural network used to train :class:`~gensim.models.fasttext.FastText`."""
-
     def __init__(self, vector_size=100, seed=1, hashfxn=hash, bucket=2000000):
         super(FastTextTrainables, self).__init__(
             vector_size=vector_size, seed=seed, hashfxn=hashfxn)
