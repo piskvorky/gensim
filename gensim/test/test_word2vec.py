@@ -825,7 +825,6 @@ class TestWord2VecModel(unittest.TestCase):
             if w == 'zzz':
                 z_score = s
 
-        print(x_score, y_score, z_score)
         self.assertGreater(z_score, y_score)
         self.assertGreater(z_score, x_score)
 
@@ -840,7 +839,6 @@ class TestWord2VecModel(unittest.TestCase):
                 y_score = s
             if w == 'zzz':
                 z_score = s
-        print(x_score, y_score, z_score)
         self.assertGreater(y_score, z_score)
         self.assertGreater(y_score, x_score)
 
