@@ -574,6 +574,26 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(report['buckets_word'], 640)
         self.assertEqual(report['total'], 6160)
 
+    def testTrainAsymmetric(self):
+        """Test training model with symmetric=0, save and load"""
+        asymmetric_sentences = [
+            ['aaa', 'bbb', 'xxx'],
+            ['bbb', 'aaa', 'xxx'],
+            ['ccc', 'ccc', 'yyy', 'aaa', 'hhh', 'jjj'],
+            ['ccc', 'ccc', 'yyy', 'ggg', 'aaa', 'kkk'],
+            ['aaa', 'bbb', 'zzz', 'ooo', 'ppp'],
+            ['bbb', 'aaa', 'zzz', 'lll', 'mmm'],
+        ]
+
+        asym_model = FT_gensim(size=10, min_count=1, sg=0, hs=0, negative=5, symmetric=0, window=2)
+        asym_model.build_vocab(asymmetric_sentences)
+        asym_model.train(asymmetric_sentences, total_examples=asym_model.corpus_count, epochs=asym_model.iter)
+
+        tmpf = get_tmpfile('gensim_fasttext.tst')
+        asym_model.save(tmpf)
+        loaded_model = FT_gensim.load(tmpf)
+        self.assertFalse(loaded_model.symmetric)
+
     def testLoadOldModel(self):
         """Test loading fasttext models from previous version"""
 
@@ -590,6 +610,8 @@ class TestFastTextModel(unittest.TestCase):
         self.assertTrue(model.wv.vectors_vocab.shape == (12, 100))
         self.assertTrue(model.wv.vectors_ngrams.shape == (202, 100))
 
+        self.assertTrue(model.symmetric)
+
         # Model stored in multiple files
         model_file = 'fasttext_old_sep'
         model = FT_gensim.load(datapath(model_file))
@@ -603,6 +625,8 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(len(model.wv.hash2index), 202)
         self.assertTrue(model.wv.vectors_vocab.shape == (12, 100))
         self.assertTrue(model.wv.vectors_ngrams.shape == (202, 100))
+
+        self.assertTrue(model.symmetric)
 
     def compare_with_wrapper(self, model_gensim, model_wrapper):
         # make sure we get >=2 overlapping words for top-10 similar words suggested for `night`

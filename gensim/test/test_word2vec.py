@@ -9,18 +9,18 @@ Automated tests for checking transformation algorithms (the models package).
 """
 from __future__ import division
 
-import logging
-import unittest
-import os
 import bz2
+import logging
+import os
 import sys
+import unittest
 
 import numpy as np
+from testfixtures import log_capture
 
 from gensim import utils
 from gensim.models import word2vec, keyedvectors
 from gensim.test.utils import datapath, get_tmpfile, common_texts as sentences
-from testfixtures import log_capture
 
 try:
     from pyemd import emd  # noqa:F401
@@ -790,6 +790,62 @@ class TestWord2VecModel(unittest.TestCase):
         model_without_neg = word2vec.Word2Vec(sentences, min_count=1, negative=0)
         self.assertRaises(RuntimeError, model_without_neg.predict_output_word, ['system', 'human'])
 
+    def testTrainAsymmetric(self):
+        """Test training model with symmetric=0, save and load"""
+        asymmetric_sentences = [
+            ['aaa', 'bbb', 'xxx'],
+            ['bbb', 'aaa', 'xxx'],
+            ['ccc', 'ccc', 'yyy', 'aaa', 'hhh', 'jjj'],
+            ['ccc', 'ccc', 'yyy', 'ggg', 'aaa', 'kkk'],
+            ['aaa', 'bbb', 'zzz', 'ooo', 'ppp'],
+            ['bbb', 'aaa', 'zzz', 'lll', 'mmm'],
+        ]
+
+        sym_model = word2vec.Word2Vec(size=10, min_count=1, sg=0, hs=0, negative=5, symmetric=1, window=2, iter=1000,
+                                      alpha=0.2)
+        sym_model.build_vocab(asymmetric_sentences)
+        sym_model.train(asymmetric_sentences, total_examples=sym_model.corpus_count, epochs=sym_model.iter)
+
+        asym_model = word2vec.Word2Vec(size=10, min_count=1, sg=0, hs=0, negative=5, symmetric=0, window=2, iter=1000,
+                                       alpha=0.2)
+        asym_model.build_vocab(asymmetric_sentences)
+        asym_model.train(asymmetric_sentences, total_examples=asym_model.corpus_count, epochs=asym_model.iter)
+
+        text_context = ['ccc', 'ooo', 'lll', 'mmm', 'ppp']
+
+        x_score = 0
+        y_score = 0
+        z_score = 0
+        for w, s in sym_model.predict_output_word(text_context):
+            if w == 'xxx':
+                x_score = s
+            if w == 'yyy':
+                y_score = s
+            if w == 'zzz':
+                z_score = s
+
+        self.assertGreater(z_score, y_score)
+        self.assertGreater(z_score, x_score)
+
+        x_score = 0
+        y_score = 0
+        z_score = 0
+        for w, s in asym_model.predict_output_word(text_context):
+            if w == 'xxx':
+                x_score = s
+            if w == 'yyy':
+                y_score = s
+            if w == 'zzz':
+                z_score = s
+
+        self.assertGreater(y_score, z_score)
+        self.assertGreater(y_score, x_score)
+
+        tmpf = get_tmpfile('gensim_word2vec.tst')
+        asym_model.save(tmpf)
+        loaded_model = word2vec.Word2Vec.load(tmpf)
+        self.assertFalse(loaded_model.symmetric)
+
     def testLoadOldModel(self):
         """Test loading word2vec models from previous version"""
 
@@ -802,6 +858,8 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(model.trainables.vectors_lockf.shape == (12,))
         self.assertTrue(model.vocabulary.cum_table.shape == (12,))
 
+        self.assertTrue(model.symmetric)
+
         self.onlineSanity(model, trained_model=True)
 
         # Model stored in multiple files
@@ -813,6 +871,8 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.wv.vector_size))
         self.assertTrue(model.trainables.vectors_lockf.shape == (12,))
         self.assertTrue(model.vocabulary.cum_table.shape == (12,))
+
+        self.assertTrue(model.symmetric)
 
         self.onlineSanity(model, trained_model=True)
 
@@ -840,6 +900,7 @@ class TestWord2VecModel(unittest.TestCase):
             model = word2vec.Word2Vec.load(saved_models_dir.format(old_version))
             self.assertTrue(len(model.wv.vocab) == 3)
             self.assertTrue(model.wv.vectors.shape == (3, 4))
+            self.assertTrue(model.symmetric)
             # check if similarity search and online training works.
             self.assertTrue(len(model.wv.most_similar('sentence')) == 2)
             model.build_vocab(list_corpus, update=True)

@@ -103,6 +103,8 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertTrue(model.docvecs.max_rawint == 299)
         self.assertTrue(model.docvecs.count == 300)
 
+        self.assertTrue(model.symmetric)
+
         self.model_sanity(model)
 
         # Model stored in multiple files
@@ -119,6 +121,8 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertTrue(model.trainables.vectors_docs_lockf.shape == (300, ))
         self.assertTrue(model.docvecs.max_rawint == 299)
         self.assertTrue(model.docvecs.count == 300)
+
+        self.assertTrue(model.symmetric)
 
         self.model_sanity(model)
 
@@ -142,6 +146,7 @@ class TestDoc2VecModel(unittest.TestCase):
             self.assertTrue(model.wv.vectors.shape == (3, 4))
             self.assertTrue(model.docvecs.vectors_docs.shape == (2, 4))
             self.assertTrue(model.docvecs.count == 2)
+            self.assertTrue(model.symmetric)
             # check if inferring vectors for new documents and similarity search works.
             doc0_inferred = model.infer_vector(list(DocsLeeCorpus())[0].words)
             sims_to_infer = model.docvecs.most_similar([doc0_inferred], topn=len(model.docvecs))
