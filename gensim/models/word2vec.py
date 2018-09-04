@@ -1813,7 +1813,7 @@ class Word2VecVocab(utils.SaveLoad):
 
             logger.info("built huffman tree with maximum node depth %i", max_depth)
 
-    def make_cum_table(self, wv, domain=2 ** 31 - 1):
+    def make_cum_table(self, wv, domain=2**31 - 1):
         """Create a cumulative-distribution table using stored vocabulary word counts for
         drawing random words in the negative-sampling training routines.
 
