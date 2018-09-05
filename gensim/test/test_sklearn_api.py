@@ -1170,7 +1170,7 @@ class TestPhrasesTransformerCommonTerms(unittest.TestCase):
         ]
 
     def testCompareToOld(self):
-        with open(datapath("phrases_transformer.pkl"), "rb") as old_phrases_transformer_pkl:
+        with open(datapath("phrases-transformer-v3-5-0.pkl"), "rb") as old_phrases_transformer_pkl:
             old_phrases_transformer = pickle.load(old_phrases_transformer_pkl)
         doc = phrases_sentences[-1]
         phrase_tokens = old_phrases_transformer.transform(doc)[0]

@@ -100,6 +100,11 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
         self.scoring = scoring
         self.common_terms = common_terms
 
+    def __setstate__(self, state):
+        self.__dict__ = state
+        self.common_terms = frozenset()
+        self.phraser = None
+
     def fit(self, X, y=None):
         """Fit the model according to the given training data.
 
