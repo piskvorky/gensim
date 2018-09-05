@@ -796,6 +796,56 @@ class TestWord2VecModel(unittest.TestCase):
         asym_model.build_vocab(sentences)
         asym_model.train(sentences, total_examples=asym_model.corpus_count, epochs=asym_model.iter)
 
+        asymmetric_sentences = [
+            ['aaa', 'bbb', 'xxx'],
+            ['bbb', 'aaa', 'xxx'],
+            ['ccc', 'ccc', 'yyy', 'aaa', 'hhh', 'jjj'],
+            ['ccc', 'ccc', 'yyy', 'ggg', 'aaa', 'kkk'],
+            ['aaa', 'bbb', 'zzz', 'ooo', 'ppp'],
+            ['bbb', 'aaa', 'zzz', 'lll', 'mmm'],
+        ]
+
+        sym_model = word2vec.Word2Vec(size=10, min_count=1, sg=0, hs=0, negative=5, symmetric=1, window=2, iter=5000,
+                                      alpha=0.1, seed=42)
+        sym_model.build_vocab(asymmetric_sentences)
+        sym_model.train(asymmetric_sentences, total_examples=sym_model.corpus_count, epochs=sym_model.iter)
+
+        asym_model = word2vec.Word2Vec(size=10, min_count=1, sg=0, hs=0, negative=5, symmetric=0, window=2, iter=5000,
+                                       alpha=0.1, seed=42)
+        asym_model.build_vocab(asymmetric_sentences)
+        asym_model.train(asymmetric_sentences, total_examples=asym_model.corpus_count, epochs=asym_model.iter)
+
+        text_context = ['ccc', 'ooo', 'lll', 'mmm', 'ppp']
+
+        x_score = 0
+        y_score = 0
+        z_score = 0
+
+        for w, s in sym_model.predict_output_word(text_context):
+            if w == 'xxx':
+                x_score = s
+            if w == 'yyy':
+                y_score = s
+            if w == 'zzz':
+                z_score = s
+
+        self.assertGreater(z_score, y_score)
+        self.assertGreater(z_score, x_score)
+
+        x_score = 0
+        y_score = 0
+        z_score = 0
+
+        for w, s in asym_model.predict_output_word(text_context):
+            if w == 'xxx':
+                x_score = s
+            if w == 'yyy':
+                y_score = s
+            if w == 'zzz':
+                z_score = s
+        self.assertGreater(y_score, z_score)
+        self.assertGreater(y_score, x_score)
+
         tmpf = get_tmpfile('gensim_word2vec.tst')
         asym_model.save(tmpf)
         loaded_model = word2vec.Word2Vec.load(tmpf)
