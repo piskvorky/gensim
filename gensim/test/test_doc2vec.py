@@ -303,6 +303,20 @@ class TestDoc2VecModel(unittest.TestCase):
         model2 = doc2vec.Doc2Vec(corpus, size=100, min_count=2, iter=20, workers=1)
         self.models_equal(model, model2)
 
+    def test_asymmetric_training(self):
+        """Test doc2vec training with symmetric=0."""
+        corpus = DocsLeeCorpus()
+        model = doc2vec.Doc2Vec(size=100, min_count=2, iter=20, workers=1, symmetric=0)
+        model.build_vocab(corpus)
+        self.assertEqual(model.docvecs.doctag_syn0.shape, (300, 100))
+        model.train(corpus, total_examples=model.corpus_count, epochs=model.iter)
+
+        self.model_sanity(model)
+
+        # build vocab and train in one step; must be the same as above
+        model2 = doc2vec.Doc2Vec(corpus, size=100, min_count=2, iter=20, workers=1, symmetric=0)
+        self.models_equal(model, model2)
+
     def test_multistream_training(self):
         """Test doc2vec multistream training."""
         input_streams = [list_corpus[:len(list_corpus) // 2], list_corpus[len(list_corpus) // 2:]]

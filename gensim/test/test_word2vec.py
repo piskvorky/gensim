@@ -805,13 +805,13 @@ class TestWord2VecModel(unittest.TestCase):
             ['bbb', 'aaa', 'zzz', 'lll', 'mmm'],
         ]
 
-        sym_model = word2vec.Word2Vec(size=10, min_count=1, sg=0, hs=0, negative=5, symmetric=1, window=2, iter=5000,
-                                      alpha=0.1, seed=42)
+        sym_model = word2vec.Word2Vec(size=10, min_count=1, sg=0, hs=0, negative=5, symmetric=1, window=2, iter=100,
+                                      alpha=0.1, seed=42, workers=1)
         sym_model.build_vocab(asymmetric_sentences)
         sym_model.train(asymmetric_sentences, total_examples=sym_model.corpus_count, epochs=sym_model.iter)
 
-        asym_model = word2vec.Word2Vec(size=10, min_count=1, sg=0, hs=0, negative=5, symmetric=0, window=2, iter=5000,
-                                       alpha=0.1, seed=42)
+        asym_model = word2vec.Word2Vec(size=10, min_count=1, sg=0, hs=0, negative=5, symmetric=0, window=2, iter=100,
+                                       alpha=0.1, seed=42, workers=1)
         asym_model.build_vocab(asymmetric_sentences)
         asym_model.train(asymmetric_sentences, total_examples=asym_model.corpus_count, epochs=asym_model.iter)
 
