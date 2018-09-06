@@ -709,10 +709,6 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
         reduced_windows[i] = item
 
     # release GIL & train on all sentences
-    if symmetric:
-        print('train_batch_cbow symmetric', symmetric, window)
-    else:
-        print('train_batch_cbow asymmetric', symmetric, window)
     with nogil:
         for sent_idx in range(effective_sentences):
             idx_start = sentence_idx[sent_idx]
