@@ -571,10 +571,6 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
         reduced_windows[i] = item
 
     # release GIL & train on all sentences
-    if symmetric:
-        print('symmetric')
-    else:
-        print('asymmetric')
     with nogil:
         for sent_idx in range(effective_sentences):
             idx_start = sentence_idx[sent_idx]
@@ -714,9 +710,9 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
 
     # release GIL & train on all sentences
     if symmetric:
-        print('train_batch_cbow symmetric', symmetric)
+        print('train_batch_cbow symmetric', symmetric, window)
     else:
-        print('train_batch_cbow asymmetric', symmetric)
+        print('train_batch_cbow asymmetric', symmetric, window)
     with nogil:
         for sent_idx in range(effective_sentences):
             idx_start = sentence_idx[sent_idx]
@@ -805,10 +801,6 @@ def score_sentence_sg(model, sentence, _work):
     # release GIL & train on the sentence
     work[0] = 0.0
 
-    if symmetric:
-        print('symmetric')
-    else:
-        print('asymmetric')
     with nogil:
         for i in range(sentence_len):
             if codelens[i] == 0:
@@ -918,10 +910,6 @@ def score_sentence_cbow(model, sentence, _work, _neu1):
 
     # release GIL & train on the sentence
     work[0] = 0.0
-    if symmetric:
-        print('symmetric')
-    else:
-        print('asymmetric')
     with nogil:
         for i in range(sentence_len):
             if codelens[i] == 0:
