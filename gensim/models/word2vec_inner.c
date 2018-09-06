@@ -1787,7 +1787,9 @@ static const char __pyx_k_effective_sentences[] = "effective_sentences";
 static const char __pyx_k_score_sentence_cbow[] = "score_sentence_cbow";
 static const char __pyx_k_running_training_loss[] = "running_training_loss";
 static const char __pyx_k_running_training_loss_2[] = "_running_training_loss";
+static const char __pyx_k_train_batch_cbow_symmetric[] = "train_batch_cbow symmetric";
 static const char __pyx_k_ndarray_is_not_C_contiguous[] = "ndarray is not C contiguous";
+static const char __pyx_k_train_batch_cbow_asymmetric[] = "train_batch_cbow asymmetric";
 static const char __pyx_k_gensim_models_word2vec_inner[] = "gensim.models.word2vec_inner";
 static const char __pyx_k_numpy_core_multiarray_failed_to[] = "numpy.core.multiarray failed to import";
 static const char __pyx_k_unknown_dtype_code_in_numpy_pxd[] = "unknown dtype code in numpy.pxd (%d)";
@@ -1895,6 +1897,8 @@ static PyObject *__pyx_n_s_syn1neg;
 static PyObject *__pyx_n_s_test;
 static PyObject *__pyx_n_s_token;
 static PyObject *__pyx_n_s_train_batch_cbow;
+static PyObject *__pyx_kp_s_train_batch_cbow_asymmetric;
+static PyObject *__pyx_kp_s_train_batch_cbow_symmetric;
 static PyObject *__pyx_n_s_train_batch_sg;
 static PyObject *__pyx_n_s_trainables;
 static PyObject *__pyx_kp_u_unknown_dtype_code_in_numpy_pxd;
@@ -6516,7 +6520,7 @@ static PyObject *__pyx_pf_6gensim_6models_14word2vec_inner_2train_batch_cbow(CYT
  * 
  *     # release GIL & train on all sentences
  *     if symmetric:             # <<<<<<<<<<<<<<
- *         print('symmetric')
+ *         print('train_batch_cbow symmetric', symmetric)
  *     else:
  */
   __pyx_t_4 = (__pyx_v_symmetric != 0);
@@ -6525,37 +6529,59 @@ static PyObject *__pyx_pf_6gensim_6models_14word2vec_inner_2train_batch_cbow(CYT
     /* "gensim/models/word2vec_inner.pyx":717
  *     # release GIL & train on all sentences
  *     if symmetric:
- *         print('symmetric')             # <<<<<<<<<<<<<<
+ *         print('train_batch_cbow symmetric', symmetric)             # <<<<<<<<<<<<<<
  *     else:
- *         print('asymmetric')
+ *         print('train_batch_cbow asymmetric', symmetric)
  */
-    if (__Pyx_PrintOne(0, __pyx_n_s_symmetric) < 0) __PYX_ERR(0, 717, __pyx_L1_error)
+    __pyx_t_14 = __Pyx_PyBool_FromLong(__pyx_v_symmetric); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 717, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_14);
+    __pyx_t_3 = PyTuple_New(2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 717, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __Pyx_INCREF(__pyx_kp_s_train_batch_cbow_symmetric);
+    __Pyx_GIVEREF(__pyx_kp_s_train_batch_cbow_symmetric);
+    PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_kp_s_train_batch_cbow_symmetric);
+    __Pyx_GIVEREF(__pyx_t_14);
+    PyTuple_SET_ITEM(__pyx_t_3, 1, __pyx_t_14);
+    __pyx_t_14 = 0;
+    if (__Pyx_PrintOne(0, __pyx_t_3) < 0) __PYX_ERR(0, 717, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
     /* "gensim/models/word2vec_inner.pyx":716
  * 
  *     # release GIL & train on all sentences
  *     if symmetric:             # <<<<<<<<<<<<<<
- *         print('symmetric')
+ *         print('train_batch_cbow symmetric', symmetric)
  *     else:
  */
     goto __pyx_L22;
   }
 
   /* "gensim/models/word2vec_inner.pyx":719
- *         print('symmetric')
+ *         print('train_batch_cbow symmetric', symmetric)
  *     else:
- *         print('asymmetric')             # <<<<<<<<<<<<<<
+ *         print('train_batch_cbow asymmetric', symmetric)             # <<<<<<<<<<<<<<
  *     with nogil:
  *         for sent_idx in range(effective_sentences):
  */
   /*else*/ {
-    if (__Pyx_PrintOne(0, __pyx_n_s_asymmetric) < 0) __PYX_ERR(0, 719, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyBool_FromLong(__pyx_v_symmetric); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 719, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_14 = PyTuple_New(2); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 719, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_14);
+    __Pyx_INCREF(__pyx_kp_s_train_batch_cbow_asymmetric);
+    __Pyx_GIVEREF(__pyx_kp_s_train_batch_cbow_asymmetric);
+    PyTuple_SET_ITEM(__pyx_t_14, 0, __pyx_kp_s_train_batch_cbow_asymmetric);
+    __Pyx_GIVEREF(__pyx_t_3);
+    PyTuple_SET_ITEM(__pyx_t_14, 1, __pyx_t_3);
+    __pyx_t_3 = 0;
+    if (__Pyx_PrintOne(0, __pyx_t_14) < 0) __PYX_ERR(0, 719, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
   }
   __pyx_L22:;
 
   /* "gensim/models/word2vec_inner.pyx":720
  *     else:
- *         print('asymmetric')
+ *         print('train_batch_cbow asymmetric', symmetric)
  *     with nogil:             # <<<<<<<<<<<<<<
  *         for sent_idx in range(effective_sentences):
  *             idx_start = sentence_idx[sent_idx]
@@ -6569,7 +6595,7 @@ static PyObject *__pyx_pf_6gensim_6models_14word2vec_inner_2train_batch_cbow(CYT
       /*try:*/ {
 
         /* "gensim/models/word2vec_inner.pyx":721
- *         print('asymmetric')
+ *         print('train_batch_cbow asymmetric', symmetric)
  *     with nogil:
  *         for sent_idx in range(effective_sentences):             # <<<<<<<<<<<<<<
  *             idx_start = sentence_idx[sent_idx]
@@ -6777,7 +6803,7 @@ static PyObject *__pyx_pf_6gensim_6models_14word2vec_inner_2train_batch_cbow(CYT
 
       /* "gensim/models/word2vec_inner.pyx":720
  *     else:
- *         print('asymmetric')
+ *         print('train_batch_cbow asymmetric', symmetric)
  *     with nogil:             # <<<<<<<<<<<<<<
  *         for sent_idx in range(effective_sentences):
  *             idx_start = sentence_idx[sent_idx]
@@ -11704,6 +11730,8 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_test, __pyx_k_test, sizeof(__pyx_k_test), 0, 0, 1, 1},
   {&__pyx_n_s_token, __pyx_k_token, sizeof(__pyx_k_token), 0, 0, 1, 1},
   {&__pyx_n_s_train_batch_cbow, __pyx_k_train_batch_cbow, sizeof(__pyx_k_train_batch_cbow), 0, 0, 1, 1},
+  {&__pyx_kp_s_train_batch_cbow_asymmetric, __pyx_k_train_batch_cbow_asymmetric, sizeof(__pyx_k_train_batch_cbow_asymmetric), 0, 0, 1, 0},
+  {&__pyx_kp_s_train_batch_cbow_symmetric, __pyx_k_train_batch_cbow_symmetric, sizeof(__pyx_k_train_batch_cbow_symmetric), 0, 0, 1, 0},
   {&__pyx_n_s_train_batch_sg, __pyx_k_train_batch_sg, sizeof(__pyx_k_train_batch_sg), 0, 0, 1, 1},
   {&__pyx_n_s_trainables, __pyx_k_trainables, sizeof(__pyx_k_trainables), 0, 0, 1, 1},
   {&__pyx_kp_u_unknown_dtype_code_in_numpy_pxd, __pyx_k_unknown_dtype_code_in_numpy_pxd, sizeof(__pyx_k_unknown_dtype_code_in_numpy_pxd), 0, 1, 0, 0},
