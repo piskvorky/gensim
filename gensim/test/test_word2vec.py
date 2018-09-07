@@ -9,18 +9,18 @@ Automated tests for checking transformation algorithms (the models package).
 """
 from __future__ import division
 
-import bz2
 import logging
-import os
-import sys
 import unittest
+import os
+import bz2
+import sys
 
 import numpy as np
-from testfixtures import log_capture
 
 from gensim import utils
 from gensim.models import word2vec, keyedvectors
 from gensim.test.utils import datapath, get_tmpfile, common_texts as sentences
+from testfixtures import log_capture
 
 try:
     from pyemd import emd  # noqa:F401

@@ -576,18 +576,9 @@ class TestFastTextModel(unittest.TestCase):
 
     def testTrainAsymmetric(self):
         """Test training model with symmetric=0, save and load"""
-        asymmetric_sentences = [
-            ['aaa', 'bbb', 'xxx'],
-            ['bbb', 'aaa', 'xxx'],
-            ['ccc', 'ccc', 'yyy', 'aaa', 'hhh', 'jjj'],
-            ['ccc', 'ccc', 'yyy', 'ggg', 'aaa', 'kkk'],
-            ['aaa', 'bbb', 'zzz', 'ooo', 'ppp'],
-            ['bbb', 'aaa', 'zzz', 'lll', 'mmm'],
-        ]
-
         asym_model = FT_gensim(size=10, min_count=1, sg=0, hs=0, negative=5, symmetric=0, window=2)
-        asym_model.build_vocab(asymmetric_sentences)
-        asym_model.train(asymmetric_sentences, total_examples=asym_model.corpus_count, epochs=asym_model.iter)
+        asym_model.build_vocab(sentences)
+        asym_model.train(sentences, total_examples=asym_model.corpus_count, epochs=asym_model.iter)
 
         tmpf = get_tmpfile('gensim_fasttext.tst')
         asym_model.save(tmpf)
