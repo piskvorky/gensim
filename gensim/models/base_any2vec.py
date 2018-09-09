@@ -293,14 +293,14 @@ class BaseAny2VecModel(utils.SaveLoad):
         raise NotImplementedError()
 
     def _log_epoch_end(self, cur_epoch, example_count, total_examples, raw_word_count, total_words,
-                       trained_word_count, elapsed):
+                       trained_word_count, elapsed, is_corpus_file_mode):
         raise NotImplementedError()
 
     def _log_train_end(self, raw_word_count, trained_word_count, total_elapsed, job_tally):
         raise NotImplementedError()
 
     def _log_epoch_progress(self, progress_queue=None, job_queue=None, cur_epoch=0, total_examples=None,
-                            total_words=None, report_delay=1.0):
+                            total_words=None, report_delay=1.0, is_corpus_file_mode=None):
         """Get the progress report for a single training epoch.
 
         Parameters
@@ -325,6 +325,8 @@ class BaseAny2VecModel(utils.SaveLoad):
             words in a corpus. Used to log progress.
         report_delay : float, optional
             Number of seconds between two consecutive progress report messages in the logger.
+        is_corpus_file_mode : bool, optional
+            Whether training is file-based (corpus_file argument) or not.
 
         Returns
         -------
@@ -365,7 +367,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         elapsed = default_timer() - start
         self._log_epoch_end(
             cur_epoch, example_count, total_examples, raw_word_count, total_words,
-            trained_word_count, elapsed)
+            trained_word_count, elapsed, is_corpus_file_mode)
         self.total_train_time += elapsed
         return trained_word_count, raw_word_count, job_tally
 
@@ -428,7 +430,7 @@ class BaseAny2VecModel(utils.SaveLoad):
 
         trained_word_count, raw_word_count, job_tally = self._log_epoch_progress(
             progress_queue=progress_queue, job_queue=None, cur_epoch=cur_epoch,
-            total_examples=total_examples, total_words=total_words)
+            total_examples=total_examples, total_words=total_words, is_corpus_file_mode=True)
 
         return trained_word_count, raw_word_count, job_tally
 
@@ -484,7 +486,7 @@ class BaseAny2VecModel(utils.SaveLoad):
 
         trained_word_count, raw_word_count, job_tally = self._log_epoch_progress(
             progress_queue, job_queue, cur_epoch=cur_epoch, total_examples=total_examples, total_words=total_words,
-            report_delay=report_delay)
+            report_delay=report_delay, is_corpus_file_mode=False)
 
         return trained_word_count, raw_word_count, job_tally
 
@@ -1311,7 +1313,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             )
 
     def _log_epoch_end(self, cur_epoch, example_count, total_examples, raw_word_count, total_words,
-                       trained_word_count, elapsed):
+                       trained_word_count, elapsed, is_corpus_file_mode):
         """Callback used to log the end of a training epoch.
 
         Parameters
@@ -1331,6 +1333,8 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             the sentence length).
         elapsed : int
             Elapsed time since the beginning of training in seconds.
+        is_corpus_file_mode : bool
+            Whether training is file-based (corpus_file argument) or not.
 
         Warnings
         --------
@@ -1341,6 +1345,10 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             "EPOCH - %i : training on %i raw words (%i effective words) took %.1fs, %.0f effective words/s",
             cur_epoch + 1, raw_word_count, trained_word_count, elapsed, trained_word_count / elapsed
         )
+
+        # don't warn if training in file-based mode, because it's expected behavior
+        if is_corpus_file_mode:
+            return
 
         # check that the input corpus hasn't changed during iteration
         if total_examples and total_examples != example_count:
