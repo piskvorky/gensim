@@ -306,11 +306,11 @@ class SparseTermSimilarityMatrix(SaveLoad):
         if not is_corpus_X and not is_corpus_Y:
             X = dict(X)
             Y = dict(Y)
-            word_indices = sorted(set(chain(X, Y)))
+            word_indices = np.array(sorted(set(chain(X, Y))))
             dtype = self.matrix.dtype
             X = np.array([X[i] if i in X else 0 for i in word_indices], dtype=dtype)
             Y = np.array([Y[i] if i in Y else 0 for i in word_indices], dtype=dtype)
-            matrix = self.matrix[word_indices].T[word_indices].T.todense()
+            matrix = self.matrix[word_indices[:, None], word_indices].todense()
 
             result = X.T.dot(matrix).dot(Y)
 
@@ -336,13 +336,13 @@ class SparseTermSimilarityMatrix(SaveLoad):
 
             dtype = self.matrix.dtype
             expanded_X = corpus2csc([X], num_terms=self.matrix.shape[0], dtype=dtype).T.dot(self.matrix)
-            word_indices = sorted(expanded_X.nonzero()[1])
+            word_indices = np.array(sorted(expanded_X.nonzero()[1]))
             del expanded_X
 
             X = dict(X)
             X = np.array([X[i] if i in X else 0 for i in word_indices], dtype=dtype)
             Y = corpus2csc(Y, num_terms=self.matrix.shape[0], dtype=dtype)[word_indices, :].todense()
-            matrix = self.matrix[word_indices].T[word_indices].T.todense()
+            matrix = self.matrix[word_indices[:, None], word_indices].todense()
             if normalized:
                 # use the following equality: np.diag(A.T.dot(B).dot(A)) == A.T.dot(B).multiply(A.T).sum(axis=1).T
                 X_norm = np.multiply(X.T.dot(matrix), X.T).sum(axis=1).T
