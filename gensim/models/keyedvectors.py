@@ -148,6 +148,7 @@ and so on.
 
 from __future__ import division  # py3 "true division"
 
+from collections import deque
 import logging
 
 try:
