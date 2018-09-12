@@ -532,9 +532,9 @@ class FastText(BaseWordEmbeddingsModel):
             buckets = set()
             num_ngrams = 0
             for word in self.wv.vocab:
-                ngrams = _compute_ngrams(word, self.min_n, self.max_n)
+                ngrams = _compute_ngrams(word, self.wv.min_n, self.wv.max_n)
                 num_ngrams += len(ngrams)
-                buckets.update(_ft_hash(ng) % self.bucket for ng in ngrams)
+                buckets.update(_ft_hash(ng) % self.trainables.bucket for ng in ngrams)
             num_buckets = len(buckets)
             report['syn0_ngrams'] = len(buckets) * vec_size
             # A tuple (48 bytes) with num_ngrams_word ints (8 bytes) for each word
