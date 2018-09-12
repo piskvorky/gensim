@@ -284,12 +284,12 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
                 chunk_idx += 1
 
-            logger.info(
-                "Loss (no outliers): {}\tLoss (with outliers): {}".format(
-                    np.linalg.norm(v - self._W.dot(h)),
-                    np.linalg.norm(v - self._W.dot(h) - r),
-                )
+        logger.info(
+            "Loss (no outliers): {}\tLoss (with outliers): {}".format(
+                np.linalg.norm(v - self._W.dot(h)),
+                np.linalg.norm(v - self._W.dot(h) - r),
             )
+        )
 
     def _solve_w(self):
         def error():
