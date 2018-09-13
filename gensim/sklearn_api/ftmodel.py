@@ -48,7 +48,6 @@ class FTTransformer(TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-
         sg : {1, 0}, optional
             Training algorithm: skip-gram if `sg=1`, otherwise CBOW.
         hs : {1,0}, optional
@@ -126,6 +125,7 @@ class FTTransformer(TransformerMixin, BaseEstimator):
             Target size (in words) for batches of examples passed to worker threads (and
             thus cython routines).(Larger batches will be passed if individual
             texts are longer than 10000 words, but the standard cython code truncates to that maximum.)
+
         """
         self.gensim_model = None
         self.sg = sg
