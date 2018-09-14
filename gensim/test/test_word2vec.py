@@ -14,12 +14,13 @@ import unittest
 import os
 import bz2
 import sys
+import six
 
 import numpy as np
 
 from gensim import utils
 from gensim.models import word2vec, keyedvectors
-from gensim.test.utils import datapath, get_tmpfile, common_texts as sentences
+from gensim.test.utils import datapath, get_tmpfile, temporary_file, common_texts as sentences
 from testfixtures import log_capture
 
 try:
@@ -166,20 +167,6 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertEqual(reported_values['num_retained_words'], 4)
         self.assertEqual(model.vocabulary.effective_min_count, 3)
 
-    def testMultiStreamBuildVocab(self):
-        # Expected vocab
-        model = word2vec.Word2Vec(min_count=0)
-        model.build_vocab(sentences)
-        singlestream_vocab = model.vocabulary.raw_vocab
-
-        # Multistream vocab
-        model = word2vec.Word2Vec(min_count=0)
-        input_streams = [sentences[:len(sentences) // 2], sentences[len(sentences) // 2:]]
-        model.build_vocab(input_streams=input_streams, workers=2)
-        multistream_vocab = model.vocabulary.raw_vocab
-
-        self.assertEqual(singlestream_vocab, multistream_vocab)
-
     def testOnlineLearning(self):
         """Test that the algorithm is able to add new words to the
         vocabulary and to a trained model when using a sorted vocabulary"""
@@ -205,6 +192,51 @@ class TestWord2VecModel(unittest.TestCase):
         model_neg.build_vocab(new_sentences, update=True)
         model_neg.train(new_sentences, total_examples=model_neg.corpus_count, epochs=model_neg.iter)
         self.assertEqual(len(model_neg.wv.vocab), 14)
+
+    @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
+    def testOnlineLearningFromFile(self):
+        """Test that the algorithm is able to add new words to the
+        vocabulary and to a trained model when using a sorted vocabulary"""
+        with temporary_file(get_tmpfile('gensim_word2vec1.tst')) as corpus_file,\
+                temporary_file(get_tmpfile('gensim_word2vec2.tst')) as new_corpus_file:
+            utils.save_as_line_sentence(sentences, corpus_file)
+            utils.save_as_line_sentence(new_sentences, new_corpus_file)
+
+            model_hs = word2vec.Word2Vec(corpus_file=corpus_file, size=10, min_count=0, seed=42, hs=1, negative=0)
+            model_neg = word2vec.Word2Vec(corpus_file=corpus_file, size=10, min_count=0, seed=42, hs=0, negative=5)
+            self.assertTrue(len(model_hs.wv.vocab), 12)
+            self.assertTrue(model_hs.wv.vocab['graph'].count, 3)
+            model_hs.build_vocab(corpus_file=new_corpus_file, update=True)
+            model_hs.train(corpus_file=new_corpus_file, total_words=model_hs.corpus_total_words, epochs=model_hs.iter)
+
+            model_neg.build_vocab(corpus_file=new_corpus_file, update=True)
+            model_neg.train(corpus_file=new_corpus_file, total_words=model_hs.corpus_total_words, epochs=model_hs.iter)
+            self.assertTrue(model_hs.wv.vocab['graph'].count, 4)
+            self.assertTrue(model_hs.wv.vocab['artificial'].count, 4)
+            self.assertEqual(len(model_hs.wv.vocab), 14)
+            self.assertEqual(len(model_neg.wv.vocab), 14)
+
+    @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
+    def testOnlineLearningAfterSaveFromFile(self):
+        """Test that the algorithm is able to add new words to the
+        vocabulary and to a trained model when using a sorted vocabulary"""
+        with temporary_file(get_tmpfile('gensim_word2vec1.tst')) as corpus_file,\
+                temporary_file(get_tmpfile('gensim_word2vec2.tst')) as new_corpus_file:
+            utils.save_as_line_sentence(sentences, corpus_file)
+            utils.save_as_line_sentence(new_sentences, new_corpus_file)
+
+            tmpf = get_tmpfile('gensim_word2vec.tst')
+            model_neg = word2vec.Word2Vec(corpus_file=corpus_file, size=10, min_count=0, seed=42, hs=0, negative=5)
+            model_neg.save(tmpf)
+            model_neg = word2vec.Word2Vec.load(tmpf)
+            self.assertTrue(len(model_neg.wv.vocab), 12)
+            # Check that training works on the same data after load without calling build_vocab
+            model_neg.train(corpus_file=corpus_file, total_words=model_neg.corpus_total_words, epochs=model_neg.iter)
+            # Train on new corpus file
+            model_neg.build_vocab(corpus_file=new_corpus_file, update=True)
+            model_neg.train(corpus_file=new_corpus_file, total_words=model_neg.corpus_total_words,
+                            epochs=model_neg.iter)
+            self.assertEqual(len(model_neg.wv.vocab), 14)
 
     def onlineSanity(self, model, trained_model=False):
         terro, others = [], []
@@ -263,6 +295,23 @@ class TestWord2VecModel(unittest.TestCase):
         loaded_wv = keyedvectors.KeyedVectors.load(tmpf)
         self.assertTrue(np.allclose(wv.syn0, loaded_wv.syn0))
         self.assertEqual(len(wv.vocab), len(loaded_wv.vocab))
+
+    @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
+    def testPersistenceFromFile(self):
+        """Test storing/loading the entire model trained with corpus_file argument."""
+        with temporary_file(get_tmpfile('gensim_word2vec.tst')) as corpus_file:
+            utils.save_as_line_sentence(sentences, corpus_file)
+
+            tmpf = get_tmpfile('gensim_word2vec.tst')
+            model = word2vec.Word2Vec(corpus_file=corpus_file, min_count=1)
+            model.save(tmpf)
+            self.models_equal(model, word2vec.Word2Vec.load(tmpf))
+            #  test persistence of the KeyedVectors of a model
+            wv = model.wv
+            wv.save(tmpf)
+            loaded_wv = keyedvectors.KeyedVectors.load(tmpf)
+            self.assertTrue(np.allclose(wv.syn0, loaded_wv.syn0))
+            self.assertEqual(len(wv.vocab), len(loaded_wv.vocab))
 
     def testPersistenceWithConstructorRule(self):
         """Test storing/loading the entire model with a vocab trimming rule passed in the constructor."""
@@ -494,29 +543,28 @@ class TestWord2VecModel(unittest.TestCase):
         model2 = word2vec.Word2Vec(sentences, size=2, min_count=1, hs=1, negative=0)
         self.models_equal(model, model2)
 
-    def testMultistreamTraining(self):
-        """Test word2vec multistream training."""
+    @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
+    def testTrainingFromFile(self):
+        """Test word2vec training with corpus_file argument."""
         # build vocabulary, don't train yet
-        input_streams = [sentences[:len(sentences) // 2], sentences[len(sentences) // 2:]]
-        model = word2vec.Word2Vec(size=2, min_count=1, hs=1, negative=0, workers=1, seed=42)
-        model.build_vocab(input_streams=input_streams)
+        with temporary_file(get_tmpfile('gensim_word2vec.tst')) as tf:
+            utils.save_as_line_sentence(sentences, tf)
 
-        self.assertTrue(model.wv.syn0.shape == (len(model.wv.vocab), 2))
-        self.assertTrue(model.syn1.shape == (len(model.wv.vocab), 2))
+            model = word2vec.Word2Vec(size=2, min_count=1, hs=1, negative=0)
+            model.build_vocab(corpus_file=tf)
 
-        model.train(input_streams=input_streams, total_examples=model.corpus_count, epochs=model.iter)
-        sims = model.most_similar('graph', topn=10)
+            self.assertTrue(model.wv.syn0.shape == (len(model.wv.vocab), 2))
+            self.assertTrue(model.syn1.shape == (len(model.wv.vocab), 2))
 
-        # test querying for "most similar" by vector
-        graph_vector = model.wv.syn0norm[model.wv.vocab['graph'].index]
-        sims2 = model.most_similar(positive=[graph_vector], topn=11)
-        sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
-        self.assertEqual(sims, sims2)
+            model.train(corpus_file=tf, total_words=model.corpus_total_words, epochs=model.iter)
+            sims = model.most_similar('graph', topn=10)
+            # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
 
-        # build vocab and train in one step; must be the same as above
-        model2 = word2vec.Word2Vec(input_streams=input_streams, size=2, min_count=1, hs=1, negative=0,
-                                   workers=1, seed=42)
-        self.models_equal(model, model2)
+            # test querying for "most similar" by vector
+            graph_vector = model.wv.syn0norm[model.wv.vocab['graph'].index]
+            sims2 = model.most_similar(positive=[graph_vector], topn=11)
+            sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
+            self.assertEqual(sims, sims2)
 
     def testScoring(self):
         """Test word2vec scoring."""
@@ -563,13 +611,34 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(0.1 < spearman < 1.0)
         self.assertTrue(0.0 <= oov < 90.0)
 
-    def model_sanity(self, model, train=True):
+    @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
+    def testEvaluateWordPairsFromFile(self):
+        """Test Spearman and Pearson correlation coefficients give sane results on similarity datasets"""
+        with temporary_file(get_tmpfile('gensim_word2vec.tst')) as tf:
+            utils.save_as_line_sentence(word2vec.LineSentence(datapath('head500.noblanks.cor.bz2')), tf)
+
+            model = word2vec.Word2Vec(corpus_file=tf, min_count=3, iter=10)
+            correlation = model.evaluate_word_pairs(datapath('wordsim353.tsv'))
+            pearson = correlation[0][0]
+            spearman = correlation[1][0]
+            oov = correlation[2]
+            self.assertTrue(0.1 < pearson < 1.0)
+            self.assertTrue(0.1 < spearman < 1.0)
+            self.assertTrue(0.0 <= oov < 90.0)
+
+    def model_sanity(self, model, train=True, with_corpus_file=False):
         """Even tiny models trained on LeeCorpus should pass these sanity checks"""
         # run extra before/after training tests if train=True
         if train:
             model.build_vocab(list_corpus)
             orig0 = np.copy(model.wv.syn0[0])
-            model.train(list_corpus, total_examples=model.corpus_count, epochs=model.iter)
+
+            if with_corpus_file:
+                tmpfile = get_tmpfile('gensim_word2vec.tst')
+                utils.save_as_line_sentence(list_corpus, tmpfile)
+                model.train(corpus_file=tmpfile, total_words=model.corpus_total_words, epochs=model.iter)
+            else:
+                model.train(list_corpus, total_examples=model.corpus_count, epochs=model.iter)
             self.assertFalse((orig0 == model.wv.syn0[1]).all())  # vector should vary after training
         sims = model.most_similar('war', topn=len(model.wv.index2word))
         t_rank = [word for word, score in sims].index('terrorism')
@@ -585,10 +654,20 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(sg=1, window=4, hs=1, negative=0, min_count=5, iter=10, workers=2)
         self.model_sanity(model)
 
+    @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
+    def test_sg_hs_fromfile(self):
+        model = word2vec.Word2Vec(sg=1, window=4, hs=1, negative=0, min_count=5, iter=10, workers=2)
+        self.model_sanity(model, with_corpus_file=True)
+
     def test_sg_neg(self):
         """Test skipgram w/ negative sampling"""
         model = word2vec.Word2Vec(sg=1, window=4, hs=0, negative=15, min_count=5, iter=10, workers=2)
         self.model_sanity(model)
+
+    @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
+    def test_sg_neg_fromfile(self):
+        model = word2vec.Word2Vec(sg=1, window=4, hs=0, negative=15, min_count=5, iter=10, workers=2)
+        self.model_sanity(model, with_corpus_file=True)
 
     def test_cbow_hs(self):
         """Test CBOW w/ hierarchical softmax"""
@@ -598,6 +677,14 @@ class TestWord2VecModel(unittest.TestCase):
         )
         self.model_sanity(model)
 
+    @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
+    def test_cbow_hs_fromfile(self):
+        model = word2vec.Word2Vec(
+            sg=0, cbow_mean=1, alpha=0.05, window=8, hs=1, negative=0,
+            min_count=5, iter=10, workers=2, batch_words=1000
+        )
+        self.model_sanity(model, with_corpus_file=True)
+
     def test_cbow_neg(self):
         """Test CBOW w/ negative sampling"""
         model = word2vec.Word2Vec(
@@ -605,6 +692,14 @@ class TestWord2VecModel(unittest.TestCase):
             min_count=5, iter=10, workers=2, sample=0
         )
         self.model_sanity(model)
+
+    @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
+    def test_cbow_neg_fromfile(self):
+        model = word2vec.Word2Vec(
+            sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=15,
+            min_count=5, iter=10, workers=2, sample=0
+        )
+        self.model_sanity(model, with_corpus_file=True)
 
     def test_cosmul(self):
         model = word2vec.Word2Vec(sentences, size=2, min_count=1, hs=1, negative=0)
@@ -838,6 +933,7 @@ class TestWord2VecModel(unittest.TestCase):
         saved_models_dir = datapath('old_w2v_models/w2v_{}.mdl')
         for old_version in old_versions:
             model = word2vec.Word2Vec.load(saved_models_dir.format(old_version))
+            self.assertIsNone(model.corpus_total_words)
             self.assertTrue(len(model.wv.vocab) == 3)
             self.assertTrue(model.wv.vectors.shape == (3, 4))
             # check if similarity search and online training works.
@@ -966,6 +1062,15 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
             sentences = word2vec.LineSentence(datapath('lee_background.cor'))
             for words in sentences:
                 self.assertEqual(words, utils.to_unicode(orig.readline()).split())
+
+    @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
+    def testCythonLineSentenceWorksWithFilename(self):
+        """Does CythonLineSentence work with a filename argument?"""
+        from gensim.models import word2vec_corpusfile
+        with utils.smart_open(datapath('lee_background.cor')) as orig:
+            sentences = word2vec_corpusfile.CythonLineSentence(datapath('lee_background.cor'))
+            for words in sentences:
+                self.assertEqual(words, orig.readline().split())
 
     def testLineSentenceWorksWithCompressedFile(self):
         """Does LineSentence work with a compressed file object argument?"""

@@ -2029,6 +2029,21 @@ def lazy_flatten(nested_list):
             yield el
 
 
+def save_as_line_sentence(corpus, filename):
+    """Save the corpus in LineSentence format, i.e. each sentence on a separate line,
+    tokens are separated by space.
+
+    Parameters
+    ----------
+    corpus : iterable of iterables of strings
+
+    """
+    with smart_open(filename, mode='wb', encoding='utf8') as fout:
+        for sentence in corpus:
+            line = any2unicode(' '.join(sentence) + '\n')
+            fout.write(line)
+
+
 def effective_n_jobs(n_jobs):
     """Determines the number of jobs can run in parallel.
 

@@ -11,6 +11,7 @@ sudo python ./setup.py install
 """
 
 import os
+import platform
 import sys
 import warnings
 import ez_setup
@@ -242,30 +243,65 @@ linux_testenv = win_testenv + [
     'keras >= 2.0.4, <= 2.1.4',
 ]
 
+ext_modules = [
+    Extension('gensim.models.word2vec_inner',
+        sources=['./gensim/models/word2vec_inner.c'],
+        include_dirs=[model_dir]),
+    Extension('gensim.models.doc2vec_inner',
+        sources=['./gensim/models/doc2vec_inner.c'],
+        include_dirs=[model_dir]),
+    Extension('gensim.corpora._mmreader',
+        sources=['./gensim/corpora/_mmreader.c']),
+    Extension('gensim.models.fasttext_inner',
+        sources=['./gensim/models/fasttext_inner.c'],
+        include_dirs=[model_dir]),
+    Extension('gensim.models._utils_any2vec',
+        sources=['./gensim/models/_utils_any2vec.c'],
+        include_dirs=[model_dir]),
+    Extension('gensim._matutils',
+        sources=['./gensim/_matutils.c']),
+]
+
+if not (os.name == 'nt' and sys.version_info[0] < 3):
+    extra_args = []
+    system = platform.system()
+
+    if system == 'Linux':
+        extra_args.append('-std=c++11')
+    elif system == 'Darwin':
+        extra_args.extend(['-stdlib=libc++', '-std=c++11'])
+
+    ext_modules.append(
+        Extension('gensim.models.word2vec_corpusfile',
+                  sources=['./gensim/models/word2vec_corpusfile.cpp'],
+                  language='c++',
+                  extra_compile_args=extra_args,
+                  extra_link_args=extra_args)
+    )
+
+    ext_modules.append(
+        Extension('gensim.models.fasttext_corpusfile',
+                  sources=['./gensim/models/fasttext_corpusfile.cpp'],
+                  language='c++',
+                  extra_compile_args=extra_args,
+                  extra_link_args=extra_args)
+    )
+
+    ext_modules.append(
+        Extension('gensim.models.doc2vec_corpusfile',
+                  sources=['./gensim/models/doc2vec_corpusfile.cpp'],
+                  language='c++',
+                  extra_compile_args=extra_args,
+                  extra_link_args=extra_args)
+    )
+
 setup(
     name='gensim',
     version='3.5.0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
-    ext_modules=[
-        Extension('gensim.models.word2vec_inner',
-            sources=['./gensim/models/word2vec_inner.c'],
-            include_dirs=[model_dir]),
-        Extension('gensim.models.doc2vec_inner',
-            sources=['./gensim/models/doc2vec_inner.c'],
-            include_dirs=[model_dir]),
-        Extension('gensim.corpora._mmreader',
-            sources=['./gensim/corpora/_mmreader.c']),
-        Extension('gensim.models.fasttext_inner',
-            sources=['./gensim/models/fasttext_inner.c'],
-            include_dirs=[model_dir]),
-        Extension('gensim.models._utils_any2vec',
-            sources=['./gensim/models/_utils_any2vec.c'],
-            include_dirs=[model_dir]),
-        Extension('gensim._matutils',
-            sources=['./gensim/_matutils.c']),
-    ],
+    ext_modules=ext_modules,
     cmdclass=cmdclass,
     packages=find_packages(),
 

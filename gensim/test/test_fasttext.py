@@ -6,6 +6,7 @@ import logging
 import unittest
 import os
 import struct
+import six
 
 import numpy as np
 
@@ -15,7 +16,7 @@ from gensim.models.fasttext import FastText as FT_gensim
 from gensim.models.wrappers.fasttext import FastTextKeyedVectors
 from gensim.models.wrappers.fasttext import FastText as FT_wrapper
 from gensim.models.keyedvectors import Word2VecKeyedVectors
-from gensim.test.utils import datapath, get_tmpfile, common_texts as sentences
+from gensim.test.utils import datapath, get_tmpfile, temporary_file, common_texts as sentences
 
 logger = logging.getLogger(__name__)
 
@@ -81,51 +82,36 @@ class TestFastTextModel(unittest.TestCase):
         oov_vec = model['minor']  # oov word
         self.assertEqual(len(oov_vec), 10)
 
-    def test_multistream_training(self):
-        input_streams = [sentences[:len(sentences) // 2], sentences[len(sentences) // 2:]]
-        model = FT_gensim(size=5, min_count=1, hs=1, negative=0, seed=42, workers=1)
-        model.build_vocab(input_streams=input_streams, workers=2)
-        self.model_sanity(model)
+    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
+    def test_training_fromfile(self):
+        with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
+            utils.save_as_line_sentence(sentences, corpus_file)
 
-        model.train(input_streams=input_streams, total_examples=model.corpus_count, epochs=model.iter)
-        sims = model.most_similar('graph', topn=10)
+            model = FT_gensim(size=10, min_count=1, hs=1, negative=0, seed=42, workers=1)
+            model.build_vocab(corpus_file=corpus_file)
+            self.model_sanity(model)
 
-        self.assertEqual(model.wv.syn0.shape, (12, 5))
-        self.assertEqual(len(model.wv.vocab), 12)
-        self.assertEqual(model.wv.syn0_vocab.shape[1], 5)
-        self.assertEqual(model.wv.syn0_ngrams.shape[1], 5)
-        self.model_sanity(model)
+            model.train(corpus_file=corpus_file, total_words=model.corpus_total_words, epochs=model.iter)
+            sims = model.most_similar('graph', topn=10)
 
-        # test querying for "most similar" by vector
-        graph_vector = model.wv.syn0norm[model.wv.vocab['graph'].index]
-        sims2 = model.most_similar(positive=[graph_vector], topn=11)
-        sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
-        self.assertEqual(sims, sims2)
+            self.assertEqual(model.wv.syn0.shape, (12, 10))
+            self.assertEqual(len(model.wv.vocab), 12)
+            self.assertEqual(model.wv.syn0_vocab.shape[1], 10)
+            self.assertEqual(model.wv.syn0_ngrams.shape[1], 10)
+            self.model_sanity(model)
 
-        # build vocab and train in one step; must be the same as above
-        model2 = FT_gensim(input_streams=input_streams, size=5, min_count=1, hs=1, negative=0, seed=42, workers=1)
-        self.models_equal(model, model2)
+            # test querying for "most similar" by vector
+            graph_vector = model.wv.syn0norm[model.wv.vocab['graph'].index]
+            sims2 = model.most_similar(positive=[graph_vector], topn=11)
+            sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
+            self.assertEqual(sims, sims2)
 
-        # verify oov-word vector retrieval
-        invocab_vec = model['minors']  # invocab word
-        self.assertEqual(len(invocab_vec), 5)
+            # verify oov-word vector retrieval
+            invocab_vec = model['minors']  # invocab word
+            self.assertEqual(len(invocab_vec), 10)
 
-        oov_vec = model['minor']  # oov word
-        self.assertEqual(len(oov_vec), 5)
-
-    def test_multistream_build_vocab(self):
-        # Expected vocab
-        model = FT_gensim(size=5, min_count=1, hs=1, negative=0, seed=42)
-        model.build_vocab(list_corpus)
-        singlestream_vocab = model.vocabulary.raw_vocab
-
-        # Multistream vocab
-        model2 = FT_gensim(size=5, min_count=1, hs=1, negative=0, seed=42)
-        input_streams = [list_corpus[:len(list_corpus) // 2], list_corpus[len(list_corpus) // 2:]]
-        model2.build_vocab(input_streams=input_streams, workers=2)
-        multistream_vocab = model2.vocabulary.raw_vocab
-
-        self.assertEqual(singlestream_vocab, multistream_vocab)
+            oov_vec = model['minor']  # oov word
+            self.assertEqual(len(oov_vec), 10)
 
     def models_equal(self, model, model2):
         self.assertEqual(len(model.wv.vocab), len(model2.wv.vocab))
@@ -152,6 +138,23 @@ class TestFastTextModel(unittest.TestCase):
         loaded_wv = FastTextKeyedVectors.load(tmpf)
         self.assertTrue(np.allclose(wv.syn0_ngrams, loaded_wv.syn0_ngrams))
         self.assertEqual(len(wv.vocab), len(loaded_wv.vocab))
+
+    @unittest.skipIf(os.name == 'nt', "corpus_file is not supported for Windows + Py2"
+                                      "and avoid memory error with Appveyor x32")
+    def test_persistence_fromfile(self):
+        with temporary_file(get_tmpfile('gensim_fasttext1.tst')) as corpus_file:
+            utils.save_as_line_sentence(sentences, corpus_file)
+
+            tmpf = get_tmpfile('gensim_fasttext.tst')
+            model = FT_gensim(corpus_file=corpus_file, min_count=1)
+            model.save(tmpf)
+            self.models_equal(model, FT_gensim.load(tmpf))
+            #  test persistence of the KeyedVectors of a model
+            wv = model.wv
+            wv.save(tmpf)
+            loaded_wv = FastTextKeyedVectors.load(tmpf)
+            self.assertTrue(np.allclose(wv.syn0_ngrams, loaded_wv.syn0_ngrams))
+            self.assertEqual(len(wv.vocab), len(loaded_wv.vocab))
 
     @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_norm_vectors_not_saved(self):
@@ -386,6 +389,40 @@ class TestFastTextModel(unittest.TestCase):
         overlap_count = len(set(sims_gensim_words).intersection(expected_sims_words))
         self.assertGreaterEqual(overlap_count, 2)
 
+    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
+    def test_cbow_hs_training_fromfile(self):
+        with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
+            model_gensim = FT_gensim(
+                size=50, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0,
+                min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
+                sorted_vocab=1, workers=1, min_alpha=0.0)
+
+            lee_data = LineSentence(datapath('lee_background.cor'))
+            utils.save_as_line_sentence(lee_data, corpus_file)
+
+            model_gensim.build_vocab(corpus_file=corpus_file)
+            orig0 = np.copy(model_gensim.wv.vectors[0])
+            model_gensim.train(corpus_file=corpus_file,
+                               total_words=model_gensim.corpus_total_words,
+                               epochs=model_gensim.epochs)
+            self.assertFalse((orig0 == model_gensim.wv.vectors[0]).all())  # vector should vary after training
+
+            sims_gensim = model_gensim.wv.most_similar('night', topn=10)
+            sims_gensim_words = [word for (word, distance) in sims_gensim]  # get similar words
+            expected_sims_words = [
+                u'night,',
+                u'night.',
+                u'rights',
+                u'kilometres',
+                u'in',
+                u'eight',
+                u'according',
+                u'flights',
+                u'during',
+                u'comes']
+            overlap_count = len(set(sims_gensim_words).intersection(expected_sims_words))
+            self.assertGreaterEqual(overlap_count, 2)
+
     def test_sg_hs_training(self):
 
         model_gensim = FT_gensim(
@@ -414,6 +451,40 @@ class TestFastTextModel(unittest.TestCase):
             u'flight']
         overlap_count = len(set(sims_gensim_words).intersection(expected_sims_words))
         self.assertGreaterEqual(overlap_count, 2)
+
+    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
+    def test_sg_hs_training_fromfile(self):
+        with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
+            model_gensim = FT_gensim(
+                size=50, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=1, negative=0,
+                min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
+                sorted_vocab=1, workers=1, min_alpha=0.0)
+
+            lee_data = LineSentence(datapath('lee_background.cor'))
+            utils.save_as_line_sentence(lee_data, corpus_file)
+
+            model_gensim.build_vocab(corpus_file=corpus_file)
+            orig0 = np.copy(model_gensim.wv.vectors[0])
+            model_gensim.train(corpus_file=corpus_file,
+                               total_words=model_gensim.corpus_total_words,
+                               epochs=model_gensim.epochs)
+            self.assertFalse((orig0 == model_gensim.wv.vectors[0]).all())  # vector should vary after training
+
+            sims_gensim = model_gensim.wv.most_similar('night', topn=10)
+            sims_gensim_words = [word for (word, distance) in sims_gensim]  # get similar words
+            expected_sims_words = [
+                u'night,',
+                u'night.',
+                u'eight',
+                u'nine',
+                u'overnight',
+                u'crew',
+                u'overnight.',
+                u'manslaughter',
+                u'north',
+                u'flight']
+            overlap_count = len(set(sims_gensim_words).intersection(expected_sims_words))
+            self.assertGreaterEqual(overlap_count, 2)
 
     def test_cbow_neg_training(self):
 
@@ -444,6 +515,40 @@ class TestFastTextModel(unittest.TestCase):
         overlap_count = len(set(sims_gensim_words).intersection(expected_sims_words))
         self.assertGreaterEqual(overlap_count, 2)
 
+    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
+    def test_cbow_neg_training_fromfile(self):
+        with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
+            model_gensim = FT_gensim(
+                size=50, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=5,
+                min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
+                sorted_vocab=1, workers=1, min_alpha=0.0)
+
+            lee_data = LineSentence(datapath('lee_background.cor'))
+            utils.save_as_line_sentence(lee_data, corpus_file)
+
+            model_gensim.build_vocab(corpus_file=corpus_file)
+            orig0 = np.copy(model_gensim.wv.vectors[0])
+            model_gensim.train(corpus_file=corpus_file,
+                               total_words=model_gensim.corpus_total_words,
+                               epochs=model_gensim.epochs)
+            self.assertFalse((orig0 == model_gensim.wv.vectors[0]).all())  # vector should vary after training
+
+            sims_gensim = model_gensim.wv.most_similar('night', topn=10)
+            sims_gensim_words = [word for (word, distance) in sims_gensim]  # get similar words
+            expected_sims_words = [
+                u'night.',
+                u'night,',
+                u'eight',
+                u'fight',
+                u'month',
+                u'hearings',
+                u'Washington',
+                u'remains',
+                u'overnight',
+                u'running']
+            overlap_count = len(set(sims_gensim_words).intersection(expected_sims_words))
+            self.assertGreaterEqual(overlap_count, 2)
+
     def test_sg_neg_training(self):
 
         model_gensim = FT_gensim(
@@ -473,6 +578,40 @@ class TestFastTextModel(unittest.TestCase):
         overlap_count = len(set(sims_gensim_words).intersection(expected_sims_words))
         self.assertGreaterEqual(overlap_count, 2)
 
+    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
+    def test_sg_neg_training_fromfile(self):
+        with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
+            model_gensim = FT_gensim(
+                size=50, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=0, negative=5,
+                min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
+                sorted_vocab=1, workers=1, min_alpha=0.0)
+
+            lee_data = LineSentence(datapath('lee_background.cor'))
+            utils.save_as_line_sentence(lee_data, corpus_file)
+
+            model_gensim.build_vocab(corpus_file=corpus_file)
+            orig0 = np.copy(model_gensim.wv.vectors[0])
+            model_gensim.train(corpus_file=corpus_file,
+                               total_words=model_gensim.corpus_total_words,
+                               epochs=model_gensim.epochs)
+            self.assertFalse((orig0 == model_gensim.wv.vectors[0]).all())  # vector should vary after training
+
+            sims_gensim = model_gensim.wv.most_similar('night', topn=10)
+            sims_gensim_words = [word for (word, distance) in sims_gensim]  # get similar words
+            expected_sims_words = [
+                u'night.',
+                u'night,',
+                u'eight',
+                u'overnight',
+                u'overnight.',
+                u'month',
+                u'land',
+                u'firm',
+                u'singles',
+                u'death']
+            overlap_count = len(set(sims_gensim_words).intersection(expected_sims_words))
+            self.assertGreaterEqual(overlap_count, 2)
+
     def test_online_learning(self):
         model_hs = FT_gensim(sentences, size=10, min_count=1, seed=42, hs=1, negative=0)
         self.assertTrue(len(model_hs.wv.vocab), 12)
@@ -481,6 +620,21 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(len(model_hs.wv.vocab), 14)
         self.assertTrue(model_hs.wv.vocab['graph'].count, 4)
         self.assertTrue(model_hs.wv.vocab['artificial'].count, 4)
+
+    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
+    def test_online_learning_fromfile(self):
+        with temporary_file(get_tmpfile('gensim_fasttext1.tst')) as corpus_file, \
+                temporary_file(get_tmpfile('gensim_fasttext2.tst')) as new_corpus_file:
+            utils.save_as_line_sentence(sentences, corpus_file)
+            utils.save_as_line_sentence(new_sentences, new_corpus_file)
+
+            model_hs = FT_gensim(corpus_file=corpus_file, size=10, min_count=1, seed=42, hs=1, negative=0)
+            self.assertTrue(len(model_hs.wv.vocab), 12)
+            self.assertTrue(model_hs.wv.vocab['graph'].count, 3)
+            model_hs.build_vocab(corpus_file=new_corpus_file, update=True)  # update vocab
+            self.assertEqual(len(model_hs.wv.vocab), 14)
+            self.assertTrue(model_hs.wv.vocab['graph'].count, 4)
+            self.assertTrue(model_hs.wv.vocab['artificial'].count, 4)
 
     def test_online_learning_after_save(self):
         tmpf = get_tmpfile('gensim_fasttext.tst')
@@ -491,6 +645,23 @@ class TestFastTextModel(unittest.TestCase):
         model_neg.build_vocab(new_sentences, update=True)  # update vocab
         model_neg.train(new_sentences, total_examples=model_neg.corpus_count, epochs=model_neg.iter)
         self.assertEqual(len(model_neg.wv.vocab), 14)
+
+    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
+    def test_online_learning_after_save_fromfile(self):
+        with temporary_file(get_tmpfile('gensim_fasttext1.tst')) as corpus_file, \
+                temporary_file(get_tmpfile('gensim_fasttext2.tst')) as new_corpus_file:
+            utils.save_as_line_sentence(sentences, corpus_file)
+            utils.save_as_line_sentence(new_sentences, new_corpus_file)
+
+            tmpf = get_tmpfile('gensim_fasttext.tst')
+            model_neg = FT_gensim(corpus_file=corpus_file, size=10, min_count=0, seed=42, hs=0, negative=5)
+            model_neg.save(tmpf)
+            model_neg = FT_gensim.load(tmpf)
+            self.assertTrue(len(model_neg.wv.vocab), 12)
+            model_neg.build_vocab(corpus_file=new_corpus_file, update=True)  # update vocab
+            model_neg.train(corpus_file=new_corpus_file, total_words=model_neg.corpus_total_words,
+                            epochs=model_neg.iter)
+            self.assertEqual(len(model_neg.wv.vocab), 14)
 
     def online_sanity(self, model):
         terro, others = [], []
@@ -582,6 +753,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertTrue(model.wv.vectors.shape == (12, 100))
         self.assertTrue(len(model.wv.vocab) == 12)
         self.assertTrue(len(model.wv.index2word) == 12)
+        self.assertIsNone(model.corpus_total_words)
         self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
         self.assertTrue(model.trainables.vectors_lockf.shape == (12, ))
         self.assertTrue(model.vocabulary.cum_table.shape == (12, ))
@@ -596,6 +768,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertTrue(model.wv.vectors.shape == (12, 100))
         self.assertTrue(len(model.wv.vocab) == 12)
         self.assertTrue(len(model.wv.index2word) == 12)
+        self.assertIsNone(model.corpus_total_words)
         self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
         self.assertTrue(model.trainables.vectors_lockf.shape == (12, ))
         self.assertTrue(model.vocabulary.cum_table.shape == (12, ))
