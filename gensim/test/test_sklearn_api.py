@@ -1234,18 +1234,37 @@ class TestFastTextWrapper(unittest.TestCase):
         self.assertEqual(matrix.shape[0], 1)
         self.assertEqual(matrix.shape[1], self.model.size)
 
+        # verify oov-word vector retrieval
+        invocab_vec = self.model.transform("computer")  # invocab word
+        self.assertEqual(invocab_vec.shape[0], 1)
+        self.assertEqual(invocab_vec.shape[1], self.model.size)
+
+        oov_vec = self.model.transform('compute')  # oov word
+        self.assertEqual(oov_vec.shape[0], 1)
+        self.assertEqual(oov_vec.shape[1], self.model.size)
+
     def testConsistencyWithGensimModel(self):
         # training a FTTransformer
-        self.model = FTTransformer(size=10, min_count=0, seed=42)
+        self.model = FTTransformer(size=10, min_count=0, seed=42, workers=1)
         self.model.fit(texts)
 
         # training a Gensim FastText model with the same params
-        gensim_ftmodel = models.FastText(texts, size=10, min_count=0, seed=42)
+        gensim_ftmodel = models.FastText(texts, size=10, min_count=0, seed=42,
+                                         workers=1)
 
-        word = texts[0][0]
-        vec_transformer_api = self.model.transform(word)  # vector returned by FTTransformer
-        vec_gensim_model = gensim_ftmodel[word]  # vector returned by FastText
-        passed = numpy.allclose(vec_transformer_api, vec_gensim_model, atol=1e-1)
+        # vectors returned by FTTransformer
+        vecs_transformer_api = self.model.transform(
+                [text for text_list in texts for text in text_list])
+        # vectors returned by FastText
+        vecs_gensim_model = [gensim_ftmodel[text] for text_list in texts for text in text_list]
+        passed = numpy.allclose(vecs_transformer_api, vecs_gensim_model)
+        self.assertTrue(passed)
+
+        # test for out of vocab words
+        oov_words = ["compute", "serve", "sys", "net"]
+        vecs_transformer_api = self.model.transform(oov_words)  # vector returned by FTTransformer
+        vecs_gensim_model = [gensim_ftmodel[word] for word in oov_words]  # vector returned by FastText
+        passed = numpy.allclose(vecs_transformer_api, vecs_gensim_model)
         self.assertTrue(passed)
 
     def testPipeline(self):
