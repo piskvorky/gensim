@@ -1301,15 +1301,16 @@ class TestFastTextWrapper(unittest.TestCase):
         model_dump = pickle.dumps(self.model)
         model_load = pickle.loads(model_dump)
 
-        word = texts[0][0]
-        loaded_transformed_vecs = model_load.transform(word)
+        # pass all words in one list
+        words = [word for text_list in texts for word in text_list]
+        loaded_transformed_vecs = model_load.transform(words)
 
         # sanity check for transformation operation
-        self.assertEqual(loaded_transformed_vecs.shape[0], 1)
+        self.assertEqual(loaded_transformed_vecs.shape[0], len(words))
         self.assertEqual(loaded_transformed_vecs.shape[1], model_load.size)
 
         # comparing the original and loaded models
-        original_transformed_vecs = self.model.transform(word)
+        original_transformed_vecs = self.model.transform(words)
         passed = numpy.allclose(loaded_transformed_vecs, original_transformed_vecs, atol=1e-1)
         self.assertTrue(passed)
 
