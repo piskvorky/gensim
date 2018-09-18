@@ -359,7 +359,7 @@ class Sent2Vec(BaseWordEmbeddingsModel):
     def __init__(self, sentences=None, input_streams=None, size=100, alpha=0.01, epochs=5, min_count=5, negative=10,
                  word_ngrams=2, bucket=2000000, sample=0.0001, dropout_k=2, seed=42,
                  min_alpha=0.001, batch_words=10000, workers=3, max_vocab_size=30000000,
-                 compute_loss=False, callbacks=()):
+                 compute_loss=False, callbacks=(), corpus_file=None):
         """
 
         Parameters
@@ -418,11 +418,15 @@ class Sent2Vec(BaseWordEmbeddingsModel):
         self.corpus_count = 0
         self.callbacks = callbacks
 
+        if(corpus_file is not None):
+            raise RuntimeError(
+                "Aruguement corpus_file is not None.")
+
         super(Sent2Vec, self).__init__(
             sentences=sentences, input_streams=input_streams, workers=workers, vector_size=size, epochs=epochs,
             batch_words=batch_words, alpha=alpha, seed=seed, negative=negative,
             min_alpha=min_alpha, fast_version=FAST_VERSION, compute_loss=compute_loss,
-            callbacks=callbacks)
+            callbacks=callbacks, corpus_file=corpus_file)
 
     def _set_train_params(self, **kwargs):
         if 'compute_loss' in kwargs:
@@ -617,7 +621,7 @@ class Sent2Vec(BaseWordEmbeddingsModel):
         local_token_count, nexamples, loss = _do_train_job_fast(self, sentences, alpha, hidden, grad)
         return nexamples, local_token_count
 
-    def build_vocab(self, sentences, input_streams=None, update=False, trim_rule=None):
+    def build_vocab(self, sentences, input_streams=None, update=False, trim_rule=None, corpus_file=None):
         """Build vocab from `sentences`
 
         Parameters
@@ -628,6 +632,9 @@ class Sent2Vec(BaseWordEmbeddingsModel):
             Update existing vocabulary using input sentences if True
 
         """
+        if(corpus_file is not None):
+            raise RuntimeError(
+                "Aruguement corpus_file is not None.")
         if not update:
             logger.info("Creating dictionary...")
             self.corpus_count = self.vocabulary.read(sentences=sentences, min_count=self.min_count)
@@ -664,7 +671,7 @@ class Sent2Vec(BaseWordEmbeddingsModel):
         self._init_table_negatives(counts=counts, update=update)
 
     def train(self, sentences, input_streams=None, total_examples=None, total_words=None,
-              epochs=None, start_alpha=None, end_alpha=None, word_count=0,
+              epochs=None, start_alpha=None, end_alpha=None, word_count=0, corpus_file=None,
               queue_factor=2, report_delay=1.0, compute_loss=False, callbacks=()):
         """Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
         For Sent2Vec, each sentence must be a list of unicode strings.
@@ -716,12 +723,16 @@ class Sent2Vec(BaseWordEmbeddingsModel):
         >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.epochs)
 
         """
+        if(corpus_file is not None):
+            raise RuntimeError(
+                "Aruguement corpus_file is not None.")
         if FAST_VERSION < 0:
             return do_train_job_slow(self, sentences)
         return super(Sent2Vec, self).train(
             sentences, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
-            queue_factor=queue_factor, report_delay=report_delay, compute_loss=compute_loss, callbacks=callbacks)
+            queue_factor=queue_factor, report_delay=report_delay, compute_loss=compute_loss,
+            callbacks=callbacks, corpus_file=corpus_file)
 
     def __getitem__(self, sentence):
         """Get sentence vector for an input sentence.
