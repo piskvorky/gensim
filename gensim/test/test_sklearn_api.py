@@ -1216,7 +1216,6 @@ class TestPhrasesTransformerCustomScorer(unittest.TestCase):
 
 class TestFastTextWrapper(unittest.TestCase):
     def setUp(self):
-        numpy.random.seed(0)
         self.model = FTTransformer(size=10, min_count=0, seed=42)
         self.model.fit(texts)
 
@@ -1268,7 +1267,6 @@ class TestFastTextWrapper(unittest.TestCase):
         self.assertTrue(passed)
 
     def testPipeline(self):
-        numpy.random.seed(0)  # set fixed seed to get similar values everytime
         model = FTTransformer(size=10, min_count=1)
         model.fit(w2v_texts)
 
