@@ -80,7 +80,7 @@ def word2vec_similarity(segmented_topics, accumulator, with_std=False, with_supp
         >>> dictionary = Dictionary()
         >>> dictionary.id2token = {1: 'fake', 2: 'tokens'}
         >>> accumulator = text_analysis.WordVectorsAccumulator({1, 2}, dictionary)
-        >>> _ = accumulator.accumulate([['fake', 'tokens'],['tokens', 'fake']], 5)
+        >>> _ = accumulator.accumulate([['fake', 'tokens'], ['tokens', 'fake']], 5)
         >>>
         >>> # should be (0.726752426218 0.00695475919227)
         >>> mean, std = indirect_confirmation_measure.word2vec_similarity(segmentation, accumulator, with_std=True)[0]
@@ -220,7 +220,7 @@ class ContextVectorComputer(object):
         >>> dictionary = Dictionary()
         >>> dictionary.id2token = {1: 'fake', 2: 'tokens'}
         >>> accumulator = text_analysis.WordVectorsAccumulator({1, 2}, dictionary)
-        >>> _ = accumulator.accumulate([['fake', 'tokens'],['tokens', 'fake']], 5)
+        >>> _ = accumulator.accumulate([['fake', 'tokens'], ['tokens', 'fake']], 5)
         >>> cont_vect_comp = indirect_confirmation_measure.ContextVectorComputer(measure, topics, accumulator, 1)
         >>> cont_vect_comp.mapping
         {1: 0, 2: 1}

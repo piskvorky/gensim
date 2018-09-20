@@ -180,7 +180,7 @@ class UsesDictionary(BaseAnalyzer):
             >>> from gensim.corpora.dictionary import Dictionary
             >>>
             >>> ids = {1: 'foo', 2: 'bar'}
-            >>> dictionary = Dictionary([['foo','bar','baz'], ['foo','bar','bar','baz']])
+            >>> dictionary = Dictionary([['foo', 'bar', 'baz'], ['foo', 'bar', 'bar', 'baz']])
             >>> udict = text_analysis.UsesDictionary(ids, dictionary)
             >>>
             >>> print(udict.relevant_words)

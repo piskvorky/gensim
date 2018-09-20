@@ -42,7 +42,7 @@ How to use distributed :class:`~gensim.models.ldamodel.LdaModel`
 
 .. sourcecode:: pycon
 
-    >>> from gensim.test.utils import common_corpus,common_dictionary
+    >>> from gensim.test.utils import common_corpus, common_dictionary
     >>> from gensim.models import LdaModel
     >>>
     >>> model = LdaModel(common_corpus, id2word=common_dictionary, distributed=True)

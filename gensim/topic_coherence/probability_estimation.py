@@ -53,8 +53,8 @@ def p_boolean_document(corpus, segmented_topics):
         >>>
         >>> # create segmented_topics
         >>> segmented_topics = [
-        ...     [(w2id['system'], w2id['graph']),(w2id['computer'], w2id['graph']),(w2id['computer'], w2id['system'])],
-        ...     [(w2id['computer'], w2id['graph']),(w2id['user'], w2id['graph']),(w2id['user'], w2id['computer'])]
+        ...     [(w2id['system'], w2id['graph']), (w2id['computer'], w2id['graph']), (w2id['computer'], w2id['system'])],
+        ...     [(w2id['computer'], w2id['graph']), (w2id['user'], w2id['graph']), (w2id['user'], w2id['computer'])]
         ... ]
         >>>
         >>> # create corpus
@@ -123,8 +123,8 @@ def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size, p
         >>>
         >>> # create segmented_topics
         >>> segmented_topics = [
-        ...     [(w2id['system'], w2id['graph']),(w2id['computer'], w2id['graph']),(w2id['computer'], w2id['system'])],
-        ...     [(w2id['computer'], w2id['graph']),(w2id['user'], w2id['graph']),(w2id['user'], w2id['computer'])]
+        ...     [(w2id['system'], w2id['graph']), (w2id['computer'], w2id['graph']), (w2id['computer'], w2id['system'])],
+        ...     [(w2id['computer'], w2id['graph']), (w2id['user'], w2id['graph']), (w2id['user'], w2id['computer'])]
         ... ]
         >>>
         >>> # create corpus
@@ -190,14 +190,14 @@ def p_word2vec(texts, segmented_topics, dictionary, window_size=None, processes=
         >>>
         >>> # create segmented_topics
         >>> segmented_topics = [
-        ...     [(w2id['system'], w2id['graph']),(w2id['computer'], w2id['graph']),(w2id['computer'], w2id['system'])],
-        ...     [(w2id['computer'], w2id['graph']),(w2id['user'], w2id['graph']),(w2id['user'], w2id['computer'])]
+        ...     [(w2id['system'], w2id['graph']), (w2id['computer'], w2id['graph']), (w2id['computer'], w2id['system'])],
+        ...     [(w2id['computer'], w2id['graph']), (w2id['user'], w2id['graph']), (w2id['user'], w2id['computer'])]
         ... ]
         >>>
         >>> # create corpus
         >>> corpus = [dictionary.doc2bow(text) for text in texts]
-        >>> sentences = [['human', 'interface', 'computer'],['survey', 'user', 'computer', 'system', 'response', 'time']]
-        >>> model = word2vec.Word2Vec(sentences, size=100,min_count=1)
+        >>> sentences = [['human', 'interface', 'computer'], ['survey', 'user', 'computer', 'system', 'response', 'time']]
+        >>> model = word2vec.Word2Vec(sentences, size=100, min_count=1)
         >>> accumulator = probability_estimation.p_word2vec(texts, segmented_topics, dictionary, 2, 1, model)
 
     """

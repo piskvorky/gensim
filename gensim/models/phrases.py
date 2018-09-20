@@ -601,7 +601,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
             >>> phrases = Phrases(sentences, min_count=1, threshold=1)
             >>> phraser = Phraser(phrases)  # for speedup
             >>>
-            >>> sent = [[u'trees', u'graph', u'minors'],[u'graph', u'minors']]
+            >>> sent = [[u'trees', u'graph', u'minors'], [u'graph', u'minors']]
             >>> for phrase in phraser[sent]:
             ...     pass
 
@@ -863,7 +863,7 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
             >>> sent = [u'trees', u'graph', u'minors']
             >>> print(phraser_model[sent])
             [u'trees_graph', u'minors']
-            >>> sent = [[u'trees', u'graph', u'minors'],[u'graph', u'minors']]
+            >>> sent = [[u'trees', u'graph', u'minors'], [u'graph', u'minors']]
             >>> for phrase in phraser_model[sent]:
             ...     print(phrase)
             [u'trees_graph', u'minors']
