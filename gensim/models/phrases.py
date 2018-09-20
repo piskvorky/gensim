@@ -470,14 +470,14 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
             >>> from gensim.test.utils import datapath
             >>> from gensim.models.word2vec import Text8Corpus
             >>> from gensim.models.phrases import Phrases
-            >>> #Create corpus and use it for phrase detector
+            >>> # Create corpus and use it for phrase detector
             >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
             >>> phrases = Phrases(sentences)  # train model
             >>> assert len(phrases.vocab) == 37
             >>>
             >>> more_sentences = [
-            ...    [u'the', u'mayor', u'of', u'new', u'york', u'was', u'there'],
-            ...    [u'machine', u'learning', u'can', u'be', u'new', u'york' , u'sometimes']
+            ...     [u'the', u'mayor', u'of', u'new', u'york', u'was', u'there'],
+            ...     [u'machine', u'learning', u'can', u'be', u'new', u'york', u'sometimes']
             ... ]
             >>>
             >>> phrases.add_vocab(more_sentences)  # add new sentences to model

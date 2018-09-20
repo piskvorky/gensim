@@ -112,8 +112,8 @@ class CoherenceModel(interfaces.TransformationABC):
         >>> from gensim.test.utils import common_corpus, common_dictionary
         >>> from gensim.models.coherencemodel import CoherenceModel
         >>> topics = [
-        ...    ['human', 'computer', 'system', 'interface'],
-        ...    ['graph', 'minors', 'trees', 'eps']
+        ...     ['human', 'computer', 'system', 'interface'],
+        ...     ['graph', 'minors', 'trees', 'eps']
         ... ]
         >>>
         >>> cm = CoherenceModel(topics=topics, corpus=common_corpus, dictionary=common_dictionary, coherence='u_mass')

@@ -30,7 +30,7 @@ class IndexedCorpus(interfaces.CorpusABC):
         >>>
         >>> corpus = MmCorpus(datapath('testcorpus.mm'))
         >>> for doc in corpus:
-        ...    pass
+        ...     pass
 
     :class:`~gensim.corpora.indexedcorpus.IndexedCorpus` allows accessing the documents with index
     in :math:`{O}(1)` look-up time.

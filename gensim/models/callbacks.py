@@ -27,6 +27,7 @@ Create a callback to save the training model after each epoch
     >>> from gensim.test.utils import get_tmpfile
     >>> from gensim.models.callbacks import CallbackAny2Vec
     >>>
+    >>>
     >>> class EpochSaver(CallbackAny2Vec):
     ...     '''Callback to save model after each epoch.'''
     ...
@@ -59,7 +60,6 @@ Create a callback to print progress information to the console:
     ...
     >>>
     >>> epoch_logger = EpochLogger()
-    >>>
     >>> w2v_model = Word2Vec(common_texts, iter=5, size=10, min_count=0, seed=42, callbacks=[epoch_logger])
     Epoch #0 start
     Epoch #0 end

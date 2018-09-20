@@ -42,8 +42,8 @@ Example
     >>>
     >>> with temporary_file("serialized") as s_path:
     ...     model = AuthorTopicModel(
-    ...          corpus, author2doc=author2doc, id2word=common_dictionary, num_topics=4,
-    ...          serialized=True, serialization_path=s_path
+    ...         corpus, author2doc=author2doc, id2word=common_dictionary, num_topics=4,
+    ...         serialized=True, serialization_path=s_path
     ...     )
     ...
     ...     model.update(corpus, author2doc)  # update the author-topic model with additional documents
@@ -1139,8 +1139,8 @@ class AuthorTopicModel(LdaModel):
             >>>
             >>> with temporary_file("serialized") as s_path:
             ...     model = AuthorTopicModel(
-            ...          corpus, author2doc=author2doc, id2word=common_dictionary, num_topics=4,
-            ...          serialized=True, serialization_path=s_path
+            ...         corpus, author2doc=author2doc, id2word=common_dictionary, num_topics=4,
+            ...         serialized=True, serialization_path=s_path
             ...     )
             ...
             ...     model.update(corpus, author2doc)  # update the author-topic model with additional documents

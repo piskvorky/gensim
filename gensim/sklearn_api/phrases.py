@@ -17,9 +17,9 @@ Examples
     >>> # Create the model. Make sure no term is ignored and combinations seen 3+ times are captured.
     >>> m = PhrasesTransformer(min_count=1, threshold=3)
     >>> texts = [
-    ...   ['I', 'love', 'computer', 'science'],
-    ...   ['computer', 'science', 'is', 'my', 'passion'],
-    ...   ['I', 'studied', 'computer', 'science']
+    ...     ['I', 'love', 'computer', 'science'],
+    ...     ['computer', 'science', 'is', 'my', 'passion'],
+    ...     ['I', 'studied', 'computer', 'science']
     ... ]
     >>>
     >>> # Use sklearn fit_transform to see the transformation.

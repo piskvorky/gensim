@@ -234,6 +234,7 @@ class TextCorpus(interfaces.CorpusABC):
             ...         self.length = sum(1 for _ in self.get_texts())
             ...         return self.length
             >>>
+            >>>
             >>> corpus = CorpusMiislita(datapath('head500.noblanks.cor.bz2'))
             >>> len(corpus)
             250

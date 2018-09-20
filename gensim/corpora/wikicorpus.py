@@ -132,8 +132,9 @@ def filter_example(elem, text, *args, **kwargs):
 
         >>> import gensim.corpora
         >>> filter_func = gensim.corpora.wikicorpus.filter_example
-        >>> dewiki = gensim.corpora.WikiCorpus('./dewiki-20180520-pages-articles-multistream.xml.bz2',
-                filter_articles=filter_func)
+        >>> dewiki = gensim.corpora.WikiCorpus(
+        ...     './dewiki-20180520-pages-articles-multistream.xml.bz2',
+        ...     filter_articles=filter_func)
 
     """
     # Filter German wikipedia dump for articles that are marked either as
