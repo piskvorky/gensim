@@ -70,15 +70,17 @@ class AnnoyIndexer(object):
 
         Examples
         --------
-        >>> from gensim.similarities.index import AnnoyIndexer
-        >>> from gensim.models import Word2Vec
-        >>>
-        >>> sentences = [['cute', 'cat', 'say', 'meow'], ['cute', 'dog', 'say', 'woof']]
-        >>> model = Word2Vec(sentences, min_count=1, seed=1)
-        >>>
-        >>> indexer = AnnoyIndexer(model, 2)
-        >>> model.most_similar("cat", topn=2, indexer=indexer)
-        [('cat', 1.0), ('dog', 0.32011348009109497)]
+        .. sourcecode:: pycon
+
+            >>> from gensim.similarities.index import AnnoyIndexer
+            >>> from gensim.models import Word2Vec
+            >>>
+            >>> sentences = [['cute', 'cat', 'say', 'meow'], ['cute', 'dog', 'say', 'woof']]
+            >>> model = Word2Vec(sentences, min_count=1, seed=1)
+            >>>
+            >>> indexer = AnnoyIndexer(model, 2)
+            >>> model.most_similar("cat", topn=2, indexer=indexer)
+            [('cat', 1.0), ('dog', 0.32011348009109497)]
 
         """
         self.index = None
@@ -127,20 +129,22 @@ class AnnoyIndexer(object):
 
         Examples
         --------
-        >>> from gensim.similarities.index import AnnoyIndexer
-        >>> from gensim.models import Word2Vec
-        >>> from tempfile import mkstemp
-        >>>
-        >>> sentences = [['cute', 'cat', 'say', 'meow'], ['cute', 'dog', 'say', 'woof']]
-        >>> model = Word2Vec(sentences, min_count=1, seed=1, iter=10)
-        >>>
-        >>> indexer = AnnoyIndexer(model, 2)
-        >>> _, temp_fn = mkstemp()
-        >>> indexer.save(temp_fn)
-        >>>
-        >>> new_indexer = AnnoyIndexer()
-        >>> new_indexer.load(temp_fn)
-        >>> new_indexer.model = model
+        .. sourcecode:: pycon
+
+            >>> from gensim.similarities.index import AnnoyIndexer
+            >>> from gensim.models import Word2Vec
+            >>> from tempfile import mkstemp
+            >>>
+            >>> sentences = [['cute', 'cat', 'say', 'meow'], ['cute', 'dog', 'say', 'woof']]
+            >>> model = Word2Vec(sentences, min_count=1, seed=1, iter=10)
+            >>>
+            >>> indexer = AnnoyIndexer(model, 2)
+            >>> _, temp_fn = mkstemp()
+            >>> indexer.save(temp_fn)
+            >>>
+            >>> new_indexer = AnnoyIndexer()
+            >>> new_indexer.load(temp_fn)
+            >>> new_indexer.model = model
 
         """
         fname_dict = fname + '.d'

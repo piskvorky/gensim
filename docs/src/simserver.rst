@@ -198,9 +198,11 @@ Delete documents with::
 
 When you pass documents that have the same id as some already indexed document,
 the indexed document is overwritten by the new input (=only the latest counts;
-document ids are always unique per service)::
+document ids are always unique per service):
 
-  >>> service.index(corpus[:3]) # overall index size unchanged (just 3 docs overwritten)
+.. code-block:: pycon
+
+    >>> service.index(corpus[:3]) # overall index size unchanged (just 3 docs overwritten)
 
 The index/delete/overwrite calls can be arbitrarily interspersed with queries.
 You don't have to index **all** documents first to start querying, indexing can be incremental.
@@ -212,7 +214,7 @@ There are two types of queries:
 
 1. by id:
 
-   .. code-block:: python
+   .. code-block:: pycon
 
      >>> print(service.find_similar('doc_0'))
      [('doc_0', 1.0, None), ('doc_2', 0.30426699, None), ('doc_1', 0.25648531, None), ('doc_3', 0.25480536, None)]
@@ -228,7 +230,7 @@ There are two types of queries:
 
 2. or by document (using `document['tokens']`; id is ignored in this case):
 
-   .. code-block:: python
+   .. code-block:: pycon
 
      >>> doc = {'tokens': utils.simple_preprocess('Graph and minors and humans and trees.')}
      >>> print(service.find_similar(doc, min_score=0.4, max_results=50))

@@ -11,15 +11,17 @@ Follows scikit-learn API conventions to facilitate using gensim along with sciki
 
 Examples
 --------
->>> from gensim.test.utils import common_corpus, common_dictionary
->>> from gensim.sklearn_api.ldaseqmodel import LdaSeqTransformer
->>>
->>> # Create a sequential LDA transformer to extract 2 topics from the common corpus.
->>> # Divide the work into 3 unequal time slices.
->>> model = LdaSeqTransformer(id2word=common_dictionary, num_topics=2, time_slice=[3, 4, 2], initialize='gensim')
->>>
->>> # Each document almost entirely belongs to one of the two topics.
->>> transformed_corpus = model.fit_transform(common_corpus)
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import common_corpus, common_dictionary
+    >>> from gensim.sklearn_api.ldaseqmodel import LdaSeqTransformer
+    >>>
+    >>> # Create a sequential LDA transformer to extract 2 topics from the common corpus.
+    >>> # Divide the work into 3 unequal time slices.
+    >>> model = LdaSeqTransformer(id2word=common_dictionary, num_topics=2, time_slice=[3, 4, 2], initialize='gensim')
+    >>>
+    >>> # Each document almost entirely belongs to one of the two topics.
+    >>> transformed_corpus = model.fit_transform(common_corpus)
 
 """
 import numpy as np

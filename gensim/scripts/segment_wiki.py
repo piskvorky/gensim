@@ -19,7 +19,9 @@ How to use
 
     python -m gensim.scripts.segment_wiki -i -f enwiki-latest-pages-articles.xml.bz2 -o enwiki-latest.json.gz
 
-#. Read output in simple way
+#. Read output in simple way:
+
+.. sourcecode:: pycon
 
     >>> from smart_open import smart_open
     >>> import json
@@ -300,10 +302,12 @@ class _WikiSectionsCorpus(WikiCorpus):
         etc are ignored).
 
         Note that this iterates over the **texts**; if you want vectors, just use
-        the standard corpus interface instead of this function::
+        the standard corpus interface instead of this function:
 
-        >>> for vec in wiki_corpus:
-        >>>     print(vec)
+        .. sourcecode:: pycon
+
+            >>> for vec in wiki_corpus:
+            >>>     print(vec)
 
         Yields
         ------

@@ -67,9 +67,11 @@ class ShardedCorpus(IndexedCorpus):
     supply the dimension of your data to the corpus. (The dimension of word
     frequency vectors will typically be the size of the vocabulary, etc.)
 
-    >>> corpus = gensim.utils.mock_data()
-    >>> output_prefix = 'mydata.shdat'
-    >>> ShardedCorpus.serialize(output_prefix, corpus, dim=1000)
+    .. sourcecode:: pycon
+
+        >>> corpus = gensim.utils.mock_data()
+        >>> output_prefix = 'mydata.shdat'
+        >>> ShardedCorpus.serialize(output_prefix, corpus, dim=1000)
 
     The `output_prefix` tells the ShardedCorpus where to put the data.
     Shards are saved as `output_prefix.0`, `output_prefix.1`, etc.
@@ -88,15 +90,19 @@ class ShardedCorpus(IndexedCorpus):
 
     To retrieve data, you can load the corpus and use it like a list:
 
-    >>> sh_corpus = ShardedCorpus.load(output_prefix)
-    >>> batch = sh_corpus[100:150]
+    .. sourcecode:: pycon
+
+        >>> sh_corpus = ShardedCorpus.load(output_prefix)
+        >>> batch = sh_corpus[100:150]
 
     This will retrieve a numpy 2-dimensional array of 50 rows and 1000
     columns (1000 was the dimension of the data we supplied to the corpus).
     To retrieve gensim-style sparse vectors, set the `gensim` property:
 
-    >>> sh_corpus.gensim = True
-    >>> batch = sh_corpus[100:150]
+    .. sourcecode:: pycon
+
+        >>> sh_corpus.gensim = True
+        >>> batch = sh_corpus[100:150]
 
     The batch now will be a generator of gensim vectors.
 
@@ -105,8 +111,10 @@ class ShardedCorpus(IndexedCorpus):
     `ShardedCorpus.serialize()`, you can just initialize and use the corpus
     right away:
 
-    >>> corpus = ShardedCorpus(output_prefix, corpus, dim=1000)
-    >>> batch = corpus[100:150]
+    .. sourcecode:: pycon
+
+        >>> corpus = ShardedCorpus(output_prefix, corpus, dim=1000)
+        >>> batch = corpus[100:150]
 
     ShardedCorpus also supports working with scipy sparse matrices, both
     during retrieval and during serialization. If you want to serialize your
@@ -117,15 +125,17 @@ class ShardedCorpus(IndexedCorpus):
     will retrieve numpy ndarrays even if it was serialized into sparse
     matrices.
 
-    >>> sparse_prefix = 'mydata.sparse.shdat'
-    >>> ShardedCorpus.serialize(sparse_prefix, corpus, dim=1000, sparse_serialization=True)
-    >>> sparse_corpus = ShardedCorpus.load(sparse_prefix)
-    >>> batch = sparse_corpus[100:150]
-    >>> type(batch)
-    <type 'numpy.ndarray'>
-    >>> sparse_corpus.sparse_retrieval = True
-    >>> batch = sparse_corpus[100:150]
-    <class 'scipy.sparse.csr.csr_matrix'>
+    .. sourcecode:: pycon
+
+        >>> sparse_prefix = 'mydata.sparse.shdat'
+        >>> ShardedCorpus.serialize(sparse_prefix, corpus, dim=1000, sparse_serialization=True)
+        >>> sparse_corpus = ShardedCorpus.load(sparse_prefix)
+        >>> batch = sparse_corpus[100:150]
+        >>> type(batch)
+        <type 'numpy.ndarray'>
+        >>> sparse_corpus.sparse_retrieval = True
+        >>> batch = sparse_corpus[100:150]
+        <class 'scipy.sparse.csr.csr_matrix'>
 
     While you *can* touch the `sparse_retrieval` attribute during the life
     of a ShardedCorpus object, you should definitely not touch `
