@@ -742,7 +742,7 @@ class Word2Vec(SaveLoad):
         .. sourcecode:: pycon
 
             >>> from gensim.models.word2vec import Word2Vec
-            >>> model= Word2Vec()
+            >>> model = Word2Vec()
             >>> model.build_vocab_from_freq({"Word1": 15, "Word2": 20})
 
         """

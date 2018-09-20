@@ -214,7 +214,7 @@ class ContextVectorComputer(object):
         >>>
         >>> # create measure, topics
         >>> measure = 'nlr'
-        >>> topics =  [np.array([1, 2])]
+        >>> topics = [np.array([1, 2])]
         >>>
         >>> # create accumulator
         >>> dictionary = Dictionary()
