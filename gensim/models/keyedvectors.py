@@ -148,6 +148,7 @@ and so on.
 
 from __future__ import division  # py3 "true division"
 
+from collections import deque
 import logging
 
 try:
@@ -649,16 +650,17 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         num_skipped = 0
         # Decide the order of rows.
         if tfidf is None:
-            word_indices = range(matrix_order)
+            word_indices = deque(sorted(dictionary.keys()))
         else:
             assert max(tfidf.idfs) < matrix_order
-            word_indices = [
+            word_indices = deque([
                 index for index, _
                 in sorted(tfidf.idfs.items(), key=lambda x: (x[1], -x[0]), reverse=True)
-            ]
+            ])
 
         # Traverse rows.
-        for row_number, w1_index in enumerate(word_indices):
+        for row_number, w1_index in enumerate(list(word_indices)):
+            word_indices.popleft()
             if row_number % 1000 == 0:
                 logger.info(
                     "PROGRESS: at %.02f%% rows (%d / %d, %d skipped, %.06f%% density)",
@@ -673,8 +675,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             if matrix_order <= nonzero_limit + 1:  # Traverse all columns.
                 columns = (
                     (w2_index, self.similarity(w1, dictionary[w2_index]))
-                    for w2_index in range(w1_index + 1, matrix_order)
-                    if w1_index != w2_index and dictionary[w2_index] in self.vocab)
+                    for w2_index in word_indices
+                    if dictionary[w2_index] in self.vocab)
             else:  # Traverse only columns corresponding to the embeddings closest to w1.
                 num_nonzero = matrix_nonzero[w1_index] - 1
                 columns = (

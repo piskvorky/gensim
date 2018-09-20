@@ -153,6 +153,7 @@ def load_old_doc2vec(*args, **kwargs):
 
     new_model.train_count = old_model.__dict__.get('train_count', None)
     new_model.corpus_count = old_model.__dict__.get('corpus_count', None)
+    new_model.corpus_total_words = old_model.__dict__.get('corpus_total_words', None)
     new_model.running_training_loss = old_model.__dict__.get('running_training_loss', 0)
     new_model.total_train_time = old_model.__dict__.get('total_train_time', None)
     new_model.min_alpha_yet_reached = old_model.__dict__.get('min_alpha_yet_reached', old_model.alpha)

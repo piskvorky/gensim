@@ -107,6 +107,7 @@ def load_old_fasttext(*args, **kwargs):
 
     new_model.train_count = old_model.train_count
     new_model.corpus_count = old_model.corpus_count
+    new_model.corpus_total_words = old_model.corpus_total_words
     new_model.running_training_loss = old_model.running_training_loss
     new_model.total_train_time = old_model.total_train_time
     new_model.min_alpha_yet_reached = old_model.min_alpha_yet_reached

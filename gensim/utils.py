@@ -33,15 +33,18 @@ import shutil
 import sys
 import subprocess
 import inspect
+import heapq
 
 import numpy as np
 import numbers
 import scipy.sparse
 
-from six import iterkeys, iteritems, u, string_types, unichr
+from six import iterkeys, iteritems, itervalues, u, string_types, unichr
 from six.moves import xrange
 
 from smart_open import smart_open
+
+from multiprocessing import cpu_count
 
 if sys.version_info[0] >= 3:
     unicode = str
@@ -1739,6 +1742,50 @@ def prune_vocab(vocab, min_reduce, trim_rule=None):
     return result
 
 
+def trim_vocab_by_freq(vocab, topk, trim_rule=None):
+    """Retain `topk` most frequent words in `vocab`.
+    If there are more words with the same frequency as `topk`-th one, they will be kept.
+    Modifies `vocab` in place, returns nothing.
+
+    Parameters
+    ----------
+    vocab : dict
+        Input dictionary.
+    topk : int
+        Number of words with highest frequencies to keep.
+    trim_rule : function, optional
+        Function for trimming entities from vocab, default behaviour is `vocab[w] <= min_count`.
+
+    """
+    if topk >= len(vocab):
+        return
+
+    min_count = heapq.nlargest(topk, itervalues(vocab))[-1]
+    prune_vocab(vocab, min_count, trim_rule=trim_rule)
+
+
+def merge_counts(dict1, dict2):
+    """Merge `dict1` of (word, freq1) and `dict2` of (word, freq2) into `dict1` of (word, freq1+freq2).
+    Parameters
+    ----------
+    dict1 : dict of (str, int)
+        First dictionary.
+    dict2 : dict of (str, int)
+        Second dictionary.
+    Returns
+    -------
+    result : dict
+        Merged dictionary with sum of frequencies as values.
+    """
+    for word, freq in iteritems(dict2):
+        if word in dict1:
+            dict1[word] += freq
+        else:
+            dict1[word] = freq
+
+    return dict1
+
+
 def qsize(queue):
     """Get the (approximate) queue size where available.
 
@@ -1980,3 +2027,44 @@ def lazy_flatten(nested_list):
                 yield sub
         else:
             yield el
+
+
+def save_as_line_sentence(corpus, filename):
+    """Save the corpus in LineSentence format, i.e. each sentence on a separate line,
+    tokens are separated by space.
+
+    Parameters
+    ----------
+    corpus : iterable of iterables of strings
+
+    """
+    with smart_open(filename, mode='wb', encoding='utf8') as fout:
+        for sentence in corpus:
+            line = any2unicode(' '.join(sentence) + '\n')
+            fout.write(line)
+
+
+def effective_n_jobs(n_jobs):
+    """Determines the number of jobs can run in parallel.
+
+    Just like in sklearn, passing n_jobs=-1 means using all available
+    CPU cores.
+
+    Parameters
+    ----------
+    n_jobs : int
+        Number of workers requested by caller.
+
+    Returns
+    -------
+    int
+        Number of effective jobs.
+
+    """
+    if n_jobs == 0:
+        raise ValueError('n_jobs == 0 in Parallel has no meaning')
+    elif n_jobs is None:
+        return 1
+    elif n_jobs < 0:
+        n_jobs = max(cpu_count() + 1 + n_jobs, 1)
+    return n_jobs

@@ -145,5 +145,5 @@ That doesn't mean it's perfect though:
   `user stories and general questions <http://groups.google.com/group/gensim/topics>`_.
 
 Gensim has no ambition to become an all-encompassing framework, across all NLP (or even Machine Learning) subfields.
-Its mission is to help NLP practicioners try out popular topic modelling algorithms
+Its mission is to help NLP practitioners try out popular topic modelling algorithms
 on large datasets easily, and to facilitate prototyping of new algorithms for researchers.

@@ -10,7 +10,8 @@ for any two sets of named-vectors where there are some paired-guideposts to lear
 
 Examples
 --------
-**How to make translation between two set of word-vectors**
+How to make translation between two set of word-vectors
+=======================================================
 
 Initialize a word-vector models
 
@@ -47,7 +48,8 @@ Save / load model
 ...     loaded_trans_model = TranslationMatrix.load(fname)  # load model
 
 
-**How to make translation between two :class:`~gensim.models.doc2vec.Doc2Vec` models**
+How to make translation between two :class:`~gensim.models.doc2vec.Doc2Vec` models
+==================================================================================
 
 Prepare data and models
 

@@ -11,6 +11,7 @@ try:
 except ImportError:
     raise unittest.SkipTest("Test requires scikit-learn to be installed, which is not available")
 
+from gensim.sklearn_api.ftmodel import FTTransformer
 from gensim.sklearn_api.rpmodel import RpTransformer
 from gensim.sklearn_api.ldamodel import LdaTransformer
 from gensim.sklearn_api.lsimodel import LsiTransformer
@@ -1211,6 +1212,110 @@ class TestPhrasesTransformerCustomScorer(unittest.TestCase):
     def testModelNotFitted(self):
         phrases_transformer = PhrasesTransformer()
         self.assertRaises(NotFittedError, phrases_transformer.transform, phrases_sentences[0])
+
+
+class TestFastTextWrapper(unittest.TestCase):
+    def setUp(self):
+        self.model = FTTransformer(size=10, min_count=0, seed=42)
+        self.model.fit(texts)
+
+    def testTransform(self):
+        # tranform multiple words
+        words = []
+        words = words + texts[0]
+        matrix = self.model.transform(words)
+        self.assertEqual(matrix.shape[0], 3)
+        self.assertEqual(matrix.shape[1], self.model.size)
+
+        # tranform one word
+        word = texts[0][0]
+        matrix = self.model.transform(word)
+        self.assertEqual(matrix.shape[0], 1)
+        self.assertEqual(matrix.shape[1], self.model.size)
+
+        # verify oov-word vector retrieval
+        invocab_vec = self.model.transform("computer")  # invocab word
+        self.assertEqual(invocab_vec.shape[0], 1)
+        self.assertEqual(invocab_vec.shape[1], self.model.size)
+
+        oov_vec = self.model.transform('compute')  # oov word
+        self.assertEqual(oov_vec.shape[0], 1)
+        self.assertEqual(oov_vec.shape[1], self.model.size)
+
+    def testConsistencyWithGensimModel(self):
+        # training a FTTransformer
+        self.model = FTTransformer(size=10, min_count=0, seed=42, workers=1)
+        self.model.fit(texts)
+
+        # training a Gensim FastText model with the same params
+        gensim_ftmodel = models.FastText(texts, size=10, min_count=0, seed=42,
+                                         workers=1)
+
+        # vectors returned by FTTransformer
+        vecs_transformer_api = self.model.transform(
+                [text for text_list in texts for text in text_list])
+        # vectors returned by FastText
+        vecs_gensim_model = [gensim_ftmodel[text] for text_list in texts for text in text_list]
+        passed = numpy.allclose(vecs_transformer_api, vecs_gensim_model)
+        self.assertTrue(passed)
+
+        # test for out of vocab words
+        oov_words = ["compute", "serve", "sys", "net"]
+        vecs_transformer_api = self.model.transform(oov_words)  # vector returned by FTTransformer
+        vecs_gensim_model = [gensim_ftmodel[word] for word in oov_words]  # vector returned by FastText
+        passed = numpy.allclose(vecs_transformer_api, vecs_gensim_model)
+        self.assertTrue(passed)
+
+    def testPipeline(self):
+        model = FTTransformer(size=10, min_count=1)
+        model.fit(w2v_texts)
+
+        class_dict = {'mathematics': 1, 'physics': 0}
+        train_data = [
+            ('calculus', 'mathematics'), ('mathematical', 'mathematics'),
+            ('geometry', 'mathematics'), ('operations', 'mathematics'),
+            ('curves', 'mathematics'), ('natural', 'physics'), ('nuclear', 'physics'),
+            ('science', 'physics'), ('electromagnetism', 'physics'), ('natural', 'physics')
+        ]
+        train_input = [x[0] for x in train_data]
+        train_target = [class_dict[x[1]] for x in train_data]
+
+        clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
+        clf.fit(model.transform(train_input), train_target)
+        text_ft = Pipeline([('features', model,), ('classifier', clf)])
+        score = text_ft.score(train_input, train_target)
+        self.assertGreater(score, 0.40)
+
+    def testSetGetParams(self):
+        # updating only one param
+        self.model.set_params(negative=20)
+        model_params = self.model.get_params()
+        self.assertEqual(model_params["negative"], 20)
+        # verify that the attributes values are also changed for `gensim_model` after fitting
+        self.model.fit(texts)
+        self.assertEqual(getattr(self.model.gensim_model, 'negative'), 20)
+
+    def testPersistence(self):
+        model_dump = pickle.dumps(self.model)
+        model_load = pickle.loads(model_dump)
+
+        # pass all words in one list
+        words = [word for text_list in texts for word in text_list]
+        loaded_transformed_vecs = model_load.transform(words)
+
+        # sanity check for transformation operation
+        self.assertEqual(loaded_transformed_vecs.shape[0], len(words))
+        self.assertEqual(loaded_transformed_vecs.shape[1], model_load.size)
+
+        # comparing the original and loaded models
+        original_transformed_vecs = self.model.transform(words)
+        passed = numpy.allclose(loaded_transformed_vecs, original_transformed_vecs, atol=1e-1)
+        self.assertTrue(passed)
+
+    def testModelNotFitted(self):
+        ftmodel_wrapper = FTTransformer(size=10, min_count=0, seed=42)
+        word = texts[0][0]
+        self.assertRaises(NotFittedError, ftmodel_wrapper.transform, word)
 
 
 if __name__ == '__main__':

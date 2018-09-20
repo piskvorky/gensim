@@ -13,6 +13,7 @@ for out-of-vocabulary words.
 
 This module contains a fast native C implementation of Fasttext with Python interfaces. It is **not** only a wrapper
 around Facebook's implementation.
+
 For a tutorial see `this noteboook
 <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/FastText_Tutorial.ipynb>`_.
 
@@ -22,14 +23,14 @@ training routines.**
 Usage examples
 --------------
 
-Initialize and train a model
+Initialize and train a model:
 
 >>> from gensim.test.utils import common_texts
 >>> from gensim.models import FastText
 >>>
 >>> model = FastText(common_texts, size=4, window=3, min_count=1, iter=10)
 
-Persist a model to disk with
+Persist a model to disk with:
 
 >>> from gensim.test.utils import get_tmpfile
 >>>
@@ -38,7 +39,7 @@ Persist a model to disk with
 >>> model.save(fname)
 >>> model = FastText.load(fname)  # you can continue training with the loaded model!
 
-Retrieve word-vector for vocab and out-of-vocab word
+Retrieve word-vector for vocab and out-of-vocab word:
 
 >>> existent_word = "computer"
 >>> existent_word in model.wv.vocab
@@ -50,7 +51,7 @@ True
 False
 >>> oov_vec = model.wv[oov_word]  # numpy vector for OOV word
 
-You can perform various NLP word tasks with the model, some of them are already built-in
+You can perform various NLP word tasks with the model, some of them are already built-in:
 
 >>> similarities = model.wv.most_similar(positive=['computer', 'human'], negative=['interface'])
 >>> most_similar = similarities[0]
@@ -62,13 +63,13 @@ You can perform various NLP word tasks with the model, some of them are already 
 >>>
 >>> sim_score = model.wv.similarity('computer', 'human')
 
-Correlation with human opinion on word similarity
+Correlation with human opinion on word similarity:
 
 >>> from gensim.test.utils import datapath
 >>>
 >>> similarities = model.wv.evaluate_word_pairs(datapath('wordsim353.tsv'))
 
-And on word analogies
+And on word analogies:
 
 >>> analogies_result = model.wv.evaluate_word_analogies(datapath('questions-words.txt'))
 
@@ -195,7 +196,7 @@ except ImportError:
                 start = max(0, pos - model.window + reduced_window)
 
                 subwords_indices = (word.index,)
-                subwords_indices += model.wv.buckets_word[word.index]
+                subwords_indices += tuple(model.wv.buckets_word[word.index])
 
                 for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
                     if pos2 != pos:  # don't train on the `word` itself
@@ -203,6 +204,21 @@ except ImportError:
 
             result += len(word_vocabs)
         return result
+
+try:
+    from gensim.models.fasttext_corpusfile import train_epoch_sg, train_epoch_cbow, CORPUSFILE_VERSION
+except ImportError:
+    # file-based fasttext is not supported
+    CORPUSFILE_VERSION = -1
+
+    def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
+                       _work, _neu1):
+        raise RuntimeError("Training with corpus_file argument is not supported")
+
+    def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
+                         _work, _neu1):
+        raise RuntimeError("Training with corpus_file argument is not supported")
+
 
 FASTTEXT_FILEFORMAT_MAGIC = 793712314
 
@@ -240,7 +256,7 @@ class FastText(BaseWordEmbeddingsModel):
         for the internal structure of words, besides their concurrence counts.
 
     """
-    def __init__(self, sentences=None, sg=0, hs=0, size=100, alpha=0.025, window=5, min_count=5,
+    def __init__(self, sentences=None, corpus_file=None, sg=0, hs=0, size=100, alpha=0.025, window=5, min_count=5,
                  max_vocab_size=None, word_ngrams=1, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
                  negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, iter=5, null_word=0, min_n=3, max_n=6,
                  sorted_vocab=1, bucket=2000000, trim_rule=None, batch_words=MAX_WORDS_IN_BATCH, callbacks=()):
@@ -255,6 +271,10 @@ class FastText(BaseWordEmbeddingsModel):
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
             If you don't supply `sentences`, the model is left uninitialized -- use if you plan to initialize it
             in some other way.
+        corpus_file : str, optional
+            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
+            `corpus_file` arguments need to be passed (or none of them).
         min_count : int, optional
             The model ignores all words with total frequency lower than this.
         size : int, optional
@@ -343,8 +363,8 @@ class FastText(BaseWordEmbeddingsModel):
         >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
         >>>
         >>> model = FastText(sentences, min_count=1)
-        >>> say_vector = model['say']  # get vector for a word
-        >>> of_vector = model['of']  # get vector for an out-of-vocab word
+        >>> say_vector = model['say']  # get vector for word
+        >>> of_vector = model['of']  # get vector for out-of-vocab word
 
         """
         self.load = call_on_class_only
@@ -363,9 +383,9 @@ class FastText(BaseWordEmbeddingsModel):
         self.wv.bucket = self.bucket
 
         super(FastText, self).__init__(
-            sentences=sentences, workers=workers, vector_size=size, epochs=iter, callbacks=callbacks,
-            batch_words=batch_words, trim_rule=trim_rule, sg=sg, alpha=alpha, window=window, seed=seed,
-            hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, fast_version=FAST_VERSION)
+            sentences=sentences, corpus_file=corpus_file, workers=workers, vector_size=size, epochs=iter,
+            callbacks=callbacks, batch_words=batch_words, trim_rule=trim_rule, sg=sg, alpha=alpha, window=window,
+            seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, fast_version=FAST_VERSION)
 
     @property
     @deprecated("Attribute will be removed in 4.0.0, use wv.min_n instead")
@@ -417,17 +437,22 @@ class FastText(BaseWordEmbeddingsModel):
     def num_ngram_vectors(self):
         return self.wv.num_ngram_vectors
 
-    def build_vocab(self, sentences, update=False, progress_per=10000, keep_raw_vocab=False, trim_rule=None, **kwargs):
+    def build_vocab(self, sentences=None, corpus_file=None, update=False, progress_per=10000, keep_raw_vocab=False,
+                    trim_rule=None, **kwargs):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
 
         Parameters
         ----------
-        sentences : iterable of list of str
+        sentences : iterable of list of str, optional
             Can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
+        corpus_file : str, optional
+            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
+            `corpus_file` arguments need to be passed (not both of them).
         update : bool
             If true, the new words in `sentences` will be added to model's vocab.
         progress_per : int
@@ -478,7 +503,7 @@ class FastText(BaseWordEmbeddingsModel):
             self.trainables.old_hash2index_len = len(self.wv.hash2index)
 
         return super(FastText, self).build_vocab(
-            sentences, update=update, progress_per=progress_per,
+            sentences=sentences, corpus_file=corpus_file, update=update, progress_per=progress_per,
             keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, **kwargs)
 
     def _set_train_params(self, **kwargs):
@@ -507,9 +532,9 @@ class FastText(BaseWordEmbeddingsModel):
             buckets = set()
             num_ngrams = 0
             for word in self.wv.vocab:
-                ngrams = _compute_ngrams(word, self.min_n, self.max_n)
+                ngrams = _compute_ngrams(word, self.wv.min_n, self.wv.max_n)
                 num_ngrams += len(ngrams)
-                buckets.update(_ft_hash(ng) % self.bucket for ng in ngrams)
+                buckets.update(_ft_hash(ng) % self.trainables.bucket for ng in ngrams)
             num_buckets = len(buckets)
             report['syn0_ngrams'] = len(buckets) * vec_size
             # A tuple (48 bytes) with num_ngrams_word ints (8 bytes) for each word
@@ -526,6 +551,19 @@ class FastText(BaseWordEmbeddingsModel):
             len(self.wv.vocab), num_buckets, self.vector_size, report['total']
         )
         return report
+
+    def _do_train_epoch(self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
+                        total_examples=None, total_words=None, **kwargs):
+        work, neu1 = thread_private_mem
+
+        if self.sg:
+            examples, tally, raw_tally = train_epoch_sg(self, corpus_file, offset, cython_vocab, cur_epoch,
+                                                        total_examples, total_words, work, neu1)
+        else:
+            examples, tally, raw_tally = train_epoch_cbow(self, corpus_file, offset, cython_vocab, cur_epoch,
+                                                          total_examples, total_words, work, neu1)
+
+        return examples, tally, raw_tally
 
     def _do_train_job(self, sentences, alpha, inits):
         """Train a single batch of sentences. Return 2-tuple `(effective word count after
@@ -558,7 +596,7 @@ class FastText(BaseWordEmbeddingsModel):
 
         return tally, self._raw_word_count(sentences)
 
-    def train(self, sentences, total_examples=None, total_words=None,
+    def train(self, sentences=None, corpus_file=None, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None,
               word_count=0, queue_factor=2, report_delay=1.0, callbacks=(), **kwargs):
         """Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
@@ -576,11 +614,15 @@ class FastText(BaseWordEmbeddingsModel):
 
         Parameters
         ----------
-        sentences : iterable of iterables
+        sentences : iterable of list of str, optional
             The `sentences` iterable can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
+        corpus_file : str, optional
+            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            If you use this argument instead of `sentences`, you must provide `total_words` argument as well. Only one
+            of `sentences` or `corpus_file` arguments need to be passed (not both of them).
         total_examples : int
             Count of sentences.
         total_words : int
@@ -619,7 +661,7 @@ class FastText(BaseWordEmbeddingsModel):
 
         """
         super(FastText, self).train(
-            sentences, total_examples=total_examples, total_words=total_words,
+            sentences=sentences, corpus_file=corpus_file, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
             queue_factor=queue_factor, report_delay=report_delay, callbacks=callbacks)
         self.trainables.get_vocab_word_vecs(self.wv)
@@ -963,7 +1005,7 @@ class FastTextTrainables(Word2VecTrainables):
                         wv.hash2index[ngram_hash] = len(ngram_indices)
                         ngram_indices.append(ngram_hash)
                     buckets.append(wv.hash2index[ngram_hash])
-                wv.buckets_word[vocab.index] = tuple(buckets)
+                wv.buckets_word[vocab.index] = np.array(buckets, dtype=np.uint32)
             wv.num_ngram_vectors = len(ngram_indices)
 
             logger.info("Total number of ngrams is %d", wv.num_ngram_vectors)
@@ -982,7 +1024,7 @@ class FastTextTrainables(Word2VecTrainables):
                         wv.hash2index[ngram_hash] = num_new_ngrams + self.old_hash2index_len
                         num_new_ngrams += 1
                     buckets.append(wv.hash2index[ngram_hash])
-                wv.buckets_word[vocab.index] = tuple(buckets)
+                wv.buckets_word[vocab.index] = np.array(buckets, dtype=np.uint32)
 
             wv.num_ngram_vectors += num_new_ngrams
             logger.info("Number of new ngrams is %d", num_new_ngrams)

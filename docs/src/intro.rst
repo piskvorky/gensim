@@ -30,7 +30,7 @@ Features
 
 * **Memory independence** -- there is no need for the whole training corpus to
   reside fully in RAM at any one time (can process large, web-scale corpora).
-* **Memory sharing** -- trained models can be persisted to disk and loaded back via mmap. Multiple processes can share the same data, cutting down RAM footprint.
+* **Memory sharing** -- trained models can be persisted to disk and loaded back via `mmap <https://en.wikipedia.org/wiki/Mmap>`_. Multiple processes can share the same data, cutting down RAM footprint.
 * Efficient implementations for several popular vector space algorithms,
   including :class:`~gensim.models.word2vec.Word2Vec`, :class:`~gensim.models.doc2vec.Doc2Vec`, :class:`~gensim.models.fasttext.FastText`,
   TF-IDF, Latent Semantic Analysis (LSI, LSA, see :class:`~gensim.models.lsimodel.LsiModel`),

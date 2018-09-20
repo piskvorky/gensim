@@ -15,7 +15,7 @@ import numpy as np
 from six import iteritems
 
 from gensim import utils
-from gensim.test.utils import datapath
+from gensim.test.utils import datapath, get_tmpfile
 
 
 class TestIsCorpus(unittest.TestCase):
@@ -120,6 +120,29 @@ class TestSampleDict(unittest.TestCase):
             self.assertTrue(True)
 
 
+class TestTrimVocabByFreq(unittest.TestCase):
+    def test_trim_vocab(self):
+        d = {"word1": 5, "word2": 1, "word3": 2}
+        expected_dict = {"word1": 5, "word3": 2}
+        utils.trim_vocab_by_freq(d, topk=2)
+        self.assertEqual(d, expected_dict)
+
+        d = {"word1": 5, "word2": 2, "word3": 2, "word4": 1}
+        expected_dict = {"word1": 5, "word2": 2, "word3": 2}
+        utils.trim_vocab_by_freq(d, topk=2)
+        self.assertEqual(d, expected_dict)
+
+
+class TestMergeDicts(unittest.TestCase):
+    def test_merge_dicts(self):
+        d1 = {"word1": 5, "word2": 1, "word3": 2}
+        d2 = {"word1": 2, "word3": 3, "word4": 10}
+
+        res_dict = utils.merge_counts(d1, d2)
+        expected_dict = {"word1": 7, "word2": 1, "word3": 5, "word4": 10}
+        self.assertEqual(res_dict, expected_dict)
+
+
 class TestWindowing(unittest.TestCase):
 
     arr10_5 = np.array([
@@ -213,6 +236,27 @@ class TestWindowing(unittest.TestCase):
         not_nested = [1, 2, 3, 4, 5, 6]
         expected = [1, 2, 3, 4, 5, 6]
         self.assertEqual(utils.flatten(not_nested), expected)
+
+
+class TestSaveAsLineSentence(unittest.TestCase):
+    def test_save_as_line_sentence_en(self):
+        corpus_file = get_tmpfile('gensim_utils.tst')
+        ref_sentences = [l.split() for l in utils.any2unicode('hello world\nhow are you').split('\n')]
+
+        utils.save_as_line_sentence(ref_sentences, corpus_file)
+
+        with utils.smart_open(corpus_file, encoding='utf8') as fin:
+            sentences = [line.strip().split() for line in fin.read().strip().split('\n')]
+            self.assertEqual(sentences, ref_sentences)
+
+    def test_save_as_line_sentence_ru(self):
+        corpus_file = get_tmpfile('gensim_utils.tst')
+        ref_sentences = [l.split() for l in utils.any2unicode('привет мир\nкак ты поживаешь').split('\n')]
+        utils.save_as_line_sentence(ref_sentences, corpus_file)
+
+        with utils.smart_open(corpus_file, encoding='utf8') as fin:
+            sentences = [line.strip().split() for line in fin.read().strip().split('\n')]
+            self.assertEqual(sentences, ref_sentences)
 
 
 if __name__ == '__main__':
