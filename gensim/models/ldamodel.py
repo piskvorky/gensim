@@ -67,7 +67,7 @@ Query, the model using new, unseen documents
     >>> other_corpus = [common_dictionary.doc2bow(text) for text in other_texts]
     >>>
     >>> unseen_doc = other_corpus[0]
-    >>> vector = lda[unseen_doc] # get topic probability distribution for a document
+    >>> vector = lda[unseen_doc]  # get topic probability distribution for a document
 
 Update the model by incrementally training on the new corpus
 
@@ -1430,7 +1430,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             >>>
             >>> m1, m2 = LdaMulticore.load(datapath("lda_3_0_1_model")), LdaMulticore.load(datapath("ldamodel_python_3_5"))
             >>> mdiff, annotation = m1.diff(m2)
-            >>> topic_diff = mdiff # get matrix with difference for each topic pair from `m1` and `m2`
+            >>> topic_diff = mdiff  # get matrix with difference for each topic pair from `m1` and `m2`
 
         """
         distances = {

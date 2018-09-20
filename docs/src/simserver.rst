@@ -204,7 +204,7 @@ document ids are always unique per service):
 
 .. code-block:: pycon
 
-    >>> service.index(corpus[:3]) # overall index size unchanged (just 3 docs overwritten)
+    >>> service.index(corpus[:3])  # overall index size unchanged (just 3 docs overwritten)
 
 The index/delete/overwrite calls can be arbitrarily interspersed with queries.
 You don't have to index **all** documents first to start querying, indexing can be incremental.

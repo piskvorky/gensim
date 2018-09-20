@@ -75,10 +75,10 @@ Query, or update the model using new, unseen documents
     >>> other_corpus = [common_dictionary.doc2bow(text) for text in other_texts]
     >>>
     >>> unseen_doc = other_corpus[0]
-    >>> vector = lda[unseen_doc] # get topic probability distribution for a document
+    >>> vector = lda[unseen_doc]  # get topic probability distribution for a document
     >>>
     >>> # Update the model by incrementally training on the new corpus.
-    >>> lda.update(other_corpus) # update the LDA model with additional documents
+    >>> lda.update(other_corpus)  # update the LDA model with additional documents
 
 """
 

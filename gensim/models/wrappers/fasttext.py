@@ -29,7 +29,7 @@ Example:
 
     >>> from gensim.models.wrappers import FastText
     >>> model = FastText.train('/Users/kofola/fastText/fasttext', corpus_file='text8')
-    >>> print model['forests']  # prints vector for given out-of-vocabulary word
+    >>> print(model['forests'])  # prints vector for given out-of-vocabulary word
 
 .. [1] https://github.com/facebookresearch/fastText#enriching-word-vectors-with-subword-information
 

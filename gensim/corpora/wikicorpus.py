@@ -568,8 +568,8 @@ class WikiCorpus(TextCorpus):
         >>> path_to_wiki_dump = datapath("enwiki-latest-pages-articles1.xml-p000000010p000030302-shortened.bz2")
         >>> corpus_path = get_tmpfile("wiki-corpus.mm")
         >>>
-        >>> wiki = WikiCorpus(path_to_wiki_dump) # create word->word_id mapping, ~8h on full wiki
-        >>> MmCorpus.serialize(corpus_path, wiki) # another 8h, creates a file in MatrixMarket format and mapping
+        >>> wiki = WikiCorpus(path_to_wiki_dump)  # create word->word_id mapping, ~8h on full wiki
+        >>> MmCorpus.serialize(corpus_path, wiki)  # another 8h, creates a file in MatrixMarket format and mapping
 
     """
     def __init__(self, fname, processes=None, lemmatize=utils.has_pattern(), dictionary=None,

@@ -922,8 +922,8 @@ class RepeatCorpus(SaveLoad):
 
         >>> from gensim.utils import RepeatCorpus
         >>>
-        >>> corpus = [[(1, 2)], []] # 2 documents
-        >>> list(RepeatCorpus(corpus, 5)) # repeat 2.5 times to get 5 documents
+        >>> corpus = [[(1, 2)], []]  # 2 documents
+        >>> list(RepeatCorpus(corpus, 5))  # repeat 2.5 times to get 5 documents
         [[(1, 2)], [], [(1, 2)], [], [(1, 2)]]
 
     """
@@ -955,7 +955,7 @@ class RepeatCorpusNTimes(SaveLoad):
         >>> from gensim.utils import RepeatCorpusNTimes
         >>>
         >>> corpus = [[(1, 0.5)], []]
-        >>> list(RepeatCorpusNTimes(corpus, 3)) # repeat 3 times
+        >>> list(RepeatCorpusNTimes(corpus, 3))  # repeat 3 times
         [[(1, 0.5)], [], [(1, 0.5)], [], [(1, 0.5)], []]
 
     """

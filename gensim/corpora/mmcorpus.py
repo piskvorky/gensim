@@ -115,7 +115,7 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
             >>>
             >>> corpus = MmCorpus(datapath('test_mmcorpus_with_index.mm'))
             >>>
-            >>> MmCorpus.save_corpus("random", corpus) # Do not do it, use `serialize` instead.
+            >>> MmCorpus.save_corpus("random", corpus)  # Do not do it, use `serialize` instead.
             [97, 121, 169, 201, 225, 249, 258, 276, 303]
 
         """

@@ -37,7 +37,7 @@ class CorpusABC(utils.SaveLoad):
         >>>
         >>> corpus = MmCorpus(datapath("testcorpus.mm"))
         >>> for doc in corpus:
-        ...     pass # do something with the doc...
+        ...     pass  # do something with the doc...
 
     A document represented in bag-of-word (BoW) format, i.e. list of (attr_id, attr_value),
     like ``[(1, 0.2), (4, 0.6), ...]``.
@@ -63,7 +63,7 @@ class CorpusABC(utils.SaveLoad):
         >>> corpus = MmCorpus(datapath("testcorpus.mm"))
         >>> tmp_path = get_tmpfile("temp_corpus.mm")
         >>>
-        >>> MmCorpus.serialize(tmp_path, corpus)  #  serialize corpus to disk in MmCorpus format
+        >>> MmCorpus.serialize(tmp_path, corpus)  # serialize corpus to disk in MmCorpus format
         >>> # MmCorpus.save_corpus(tmp_path, corpus)  # this variant also possible, but if serialize availbe - call it.
         >>> loaded_corpus = MmCorpus(tmp_path)  # load corpus through constructor
         >>> for (doc_1, doc_2) in zip(corpus, loaded_corpus):

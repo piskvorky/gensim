@@ -586,14 +586,14 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
             >>> from gensim.models.word2vec import Text8Corpus
             >>> from gensim.models.phrases import Phrases, Phraser
             >>>
-            >>> #Create corpus
+            >>> # Create corpus
             >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
             >>>
-            >>> #Train the detector with:
+            >>> # Train the detector with:
             >>> phrases = Phrases(sentences, min_count=1, threshold=1)
-            >>> #Input is a list of unicode strings:
+            >>> # Input is a list of unicode strings:
             >>> sent = [u'trees', u'graph', u'minors']
-            >>> #Both of these tokens appear in corpus at least twice, and phrase score is higher, than treshold = 1:
+            >>> # Both of these tokens appear in corpus at least twice, and phrase score is higher, than treshold = 1:
             >>> print(phrases[sent])
             [u'trees_graph', u'minors']
             >>>
@@ -856,7 +856,7 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
             >>>
             >>> sentences = Text8Corpus(datapath('testcorpus.txt'))  # Read corpus
             >>>
-            >>> phrases = Phrases(sentences, min_count=1, threshold=1) # Train model
+            >>> phrases = Phrases(sentences, min_count=1, threshold=1)  # Train model
             >>> # Create a Phraser object to transform any sentence and turn 2 suitable tokens into 1 phrase
             >>> phraser_model = Phraser(phrases)
             >>>

@@ -103,8 +103,8 @@ class IndexedCorpus(interfaces.CorpusABC):
             >>> output_fname = get_tmpfile("test.mm")
             >>>
             >>> MmCorpus.serialize(output_fname, corpus)
-            >>> mm = MmCorpus(output_fname) # `mm` document stream now has random access
-            >>> print(mm[1]) # retrieve document no. 42, etc.
+            >>> mm = MmCorpus(output_fname)  # `mm` document stream now has random access
+            >>> print(mm[1])  # retrieve document no. 42, etc.
             [(1, 0.1)]
 
         """

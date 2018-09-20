@@ -32,8 +32,8 @@ Once the index has been initialized, you can query for document similarity simpl
     >>> index_tmpfile = get_tmpfile("index")
     >>> query = [(1, 2), (6, 1), (7, 2)]
     >>>
-    >>> index = Similarity(index_tmpfile, common_corpus, num_features=len(common_dictionary)) # build the index
-    >>> similarities = index[query] # get similarities between the query and all index documents
+    >>> index = Similarity(index_tmpfile, common_corpus, num_features=len(common_dictionary))  # build the index
+    >>> similarities = index[query]  # get similarities between the query and all index documents
 
 If you have more query documents, you can submit them all at once, in a batch
 .. sourcecode:: pycon
@@ -42,9 +42,9 @@ If you have more query documents, you can submit them all at once, in a batch
     >>>
     >>> index_tmpfile = get_tmpfile("index")
     >>> batch_of_documents = common_corpus[:]  # only as example
-    >>> index = Similarity(index_tmpfile, common_corpus, num_features=len(common_dictionary)) # build the index
+    >>> index = Similarity(index_tmpfile, common_corpus, num_features=len(common_dictionary))  # build the index
     >>>
-    >>> for similarities in index[batch_of_documents]: # the batch is simply an iterable of documents, aka gensim corpus.
+    >>> for similarities in index[batch_of_documents]:  # the batch is simply an iterable of documents, aka gensim corpus.
     ...     pass
 
 The benefit of this batch (aka "chunked") querying is a much better performance.
@@ -59,9 +59,9 @@ uses the faster, batch queries internally and **is ideal for all-vs-all pairwise
     >>> from gensim.test.utils import common_corpus, common_dictionary, get_tmpfile
     >>>
     >>> index_tmpfile = get_tmpfile("index")
-    >>> index = Similarity(index_tmpfile, common_corpus, num_features=len(common_dictionary)) # build the index
+    >>> index = Similarity(index_tmpfile, common_corpus, num_features=len(common_dictionary))  # build the index
     >>>
-    >>> for similarities in index: # yield similarities of the 1st indexed document, then 2nd...
+    >>> for similarities in index:  # yield similarities of the 1st indexed document, then 2nd...
     ...     pass
 
 """
@@ -255,13 +255,13 @@ class Similarity(interfaces.SimilarityABC):
         >>> query = next(iter(corpus))
         >>> result = index[query]  # search similar to `query` in index
         >>>
-        >>> for sims in index[corpus]: # if you have more query documents, you can submit them all at once, in a batch
+        >>> for sims in index[corpus]:  # if you have more query documents, you can submit them all at once, in a batch
         ...     pass
         >>>
         >>> # There is also a special syntax for when you need similarity of documents in the index
         >>> # to the index itself (i.e. queries=indexed documents themselves). This special syntax
         >>> # uses the faster, batch queries internally and **is ideal for all-vs-all pairwise similarities**:
-        >>> for similarities in index: # yield similarities of the 1st indexed document, then 2nd...
+        >>> for similarities in index:  # yield similarities of the 1st indexed document, then 2nd...
         ...     pass
 
     See Also
