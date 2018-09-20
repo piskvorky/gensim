@@ -101,7 +101,7 @@ class BaseAnalyzer(object):
             >>> ids = {1: 'fake', 4: 'cats'}
             >>> base = text_analysis.BaseAnalyzer(ids)
             >>> # should return {1: 'fake', 4: 'cats'} 2 {1: 0, 4: 1} 1000 0
-            >>> print base.relevant_ids, base._vocab_size, base.id2contiguous, base.log_every, base._num_docs
+            >>> print(base.relevant_ids, base._vocab_size, base.id2contiguous, base.log_every, base._num_docs)
             {1: 'fake', 4: 'cats'} 2 {1: 0, 4: 1} 1000 0
 
         """
@@ -183,7 +183,7 @@ class UsesDictionary(BaseAnalyzer):
             >>> dictionary = Dictionary([['foo','bar','baz'], ['foo','bar','bar','baz']])
             >>> udict = text_analysis.UsesDictionary(ids, dictionary)
             >>>
-            >>> print udict.relevant_words
+            >>> print(udict.relevant_words)
             set([u'foo', u'baz'])
 
         """
@@ -234,7 +234,7 @@ class InvertedIndexBased(BaseAnalyzer):
             >>> ids = {1: 'fake', 4: 'cats'}
             >>> ininb = text_analysis.InvertedIndexBased(ids)
             >>>
-            >>> print ininb._inverted_index
+            >>> print(ininb._inverted_index)
             [set([]) set([])]
 
         """

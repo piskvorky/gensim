@@ -162,7 +162,7 @@ def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr',
         >>> # create segmentation
         >>> segmentation = [[(1, np.array([1, 2])), (2, np.array([1, 2]))]]
         >>> obtained = indirect_confirmation_measure.cosine_similarity(segmentation, accumulator, topics, 'nlr', 1)
-        >>> print obtained[0]
+        >>> print(obtained[0])
         0.623018926945
 
     """
