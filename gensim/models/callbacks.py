@@ -24,9 +24,8 @@ To implement a Callback, inherit from this base class and override one or more o
 Create a callback to save the training model after each epoch
 .. sourcecode:: pycon
 
-    >>> from gensim.test.utils import common_corpus, common_texts, get_tmpfile
+    >>> from gensim.test.utils import get_tmpfile
     >>> from gensim.models.callbacks import CallbackAny2Vec
-    >>> from gensim.models import Word2Vec
     >>>
     >>> class EpochSaver(CallbackAny2Vec):
     ...     '''Callback to save model after each epoch.'''

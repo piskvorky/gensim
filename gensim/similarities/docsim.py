@@ -503,7 +503,6 @@ class Similarity(interfaces.SimilarityABC):
             >>> from gensim.corpora.textcorpus import TextCorpus
             >>> from gensim.test.utils import datapath
             >>> from gensim.similarities import Similarity
-            >>> import gensim.downloader as api
             >>>
             >>> corpus = TextCorpus(datapath('testcorpus.txt'))
             >>> index = Similarity('temp', corpus, num_features=400)
@@ -578,7 +577,6 @@ class Similarity(interfaces.SimilarityABC):
             >>> from gensim.corpora.textcorpus import TextCorpus
             >>> from gensim.test.utils import datapath
             >>> from gensim.similarities import Similarity
-            >>> import gensim.downloader as api
             >>>
             >>> # Create index:
             >>> corpus = TextCorpus(datapath('testcorpus.txt'))

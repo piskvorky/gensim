@@ -45,7 +45,6 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
 
         >>> from gensim.corpora.mmcorpus import MmCorpus
         >>> from gensim.test.utils import datapath
-        >>> import gensim.downloader as api
         >>>
         >>> corpus = MmCorpus(datapath('test_mmcorpus_with_index.mm'))
         >>> for document in corpus:
@@ -113,7 +112,6 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
 
             >>> from gensim.corpora.mmcorpus import MmCorpus
             >>> from gensim.test.utils import datapath
-            >>> import gensim.downloader as api
             >>>
             >>> corpus = MmCorpus(datapath('test_mmcorpus_with_index.mm'))
             >>>

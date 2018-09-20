@@ -18,8 +18,7 @@ Initialize a word-vector models
 .. sourcecode:: pycon
 
     >>> from gensim.models import KeyedVectors
-    >>> from gensim.test.utils import datapath, temporary_file
-    >>> from gensim.models import TranslationMatrix
+    >>> from gensim.test.utils import datapath
     >>>
     >>> model_en = KeyedVectors.load_word2vec_format(datapath("EN.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt"))
     >>> model_it = KeyedVectors.load_word2vec_format(datapath("IT.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt"))
@@ -62,7 +61,7 @@ Prepare data and models
 
     >>> from gensim.test.utils import datapath
     >>> from gensim.test.test_translation_matrix import read_sentiment_docs
-    >>> from gensim.models import Doc2Vec, BackMappingTranslationMatrix
+    >>> from gensim.models import Doc2Vec
     >>>
     >>> data = read_sentiment_docs(datapath("alldata-id-10.txt"))[:5]
     >>> src_model = Doc2Vec.load(datapath("small_tag_doc_5_iter50"))
@@ -176,7 +175,7 @@ class TranslationMatrix(utils.SaveLoad):
     .. sourcecode:: pycon
 
         >>> from gensim.models import KeyedVectors
-        >>> from gensim.test.utils import datapath, temporary_file
+        >>> from gensim.test.utils import datapath
         >>>
         >>> model_en = KeyedVectors.load_word2vec_format(datapath("EN.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt"))
         >>> model_it = KeyedVectors.load_word2vec_format(datapath("IT.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt"))

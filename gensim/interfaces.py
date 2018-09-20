@@ -267,7 +267,7 @@ class SimilarityABC(utils.SaveLoad):
     .. sourcecode:: pycon
 
         >>> from gensim.similarities import MatrixSimilarity
-        >>> from gensim.test.utils import common_dictionary, common_corpus
+        >>> from gensim.test.utils import common_corpus
         >>>
         >>> index = MatrixSimilarity(common_corpus)
         >>> similarities = index.get_similarities(common_corpus[1])  # get similarities between query and corpus

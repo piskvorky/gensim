@@ -38,7 +38,7 @@ class MalletCorpus(LowCorpus):
     --------
     .. sourcecode:: pycon
 
-        >>> from gensim.test.utils import datapath, get_tmpfile, common_texts
+        >>> from gensim.test.utils import get_tmpfile, common_texts
         >>> from gensim.corpora import MalletCorpus
         >>> from gensim.corpora import Dictionary
         >>>
