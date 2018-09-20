@@ -33,7 +33,7 @@ def s_one_pre(topics):
     --------
     .. sourcecode:: pycon
 
-    >>> import numpy as np
+        >>> import numpy as np
         >>> from gensim.topic_coherence import segmentation
         >>>
         >>> topics = [np.array([1, 2, 3]), np.array([4, 5, 6])]

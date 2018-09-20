@@ -760,7 +760,7 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
         --------
         .. sourcecode:: pycon
 
-        >>> from gensim.test.utils import datapath
+            >>> from gensim.test.utils import datapath
             >>> from gensim.models.word2vec import Text8Corpus
             >>> from gensim.models.phrases import Phrases, Phraser
             >>>

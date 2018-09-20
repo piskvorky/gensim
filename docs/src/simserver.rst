@@ -192,9 +192,11 @@ Indexing documents
 
 Indexing can happen over any documents, but I'm too lazy to create another example corpus, so we index the same 9 docs used for training.
 
-Delete documents with::
+Delete documents with:
 
-  >>> service.delete(['doc_5', 'doc_8']) # supply a list of document ids to be removed from the index
+.. code-block:: pycon
+
+  >>> service.delete(['doc_5', 'doc_8'])  # supply a list of document ids to be removed from the index
 
 When you pass documents that have the same id as some already indexed document,
 the indexed document is overwritten by the new input (=only the latest counts;
