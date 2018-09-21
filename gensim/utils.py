@@ -450,7 +450,8 @@ class SaveLoad(object):
         for attrib in getattr(self, '__recursive_saveloads', []):
             cfname = '.'.join((fname, attrib))
             logger.info("loading %s recursively from %s.* with mmap=%s", attrib, cfname, mmap)
-            getattr(self, attrib)._load_specials(cfname, mmap, compress, subname)
+            with ignore_deprecation_warning():
+                getattr(self, attrib)._load_specials(cfname, mmap, compress, subname)
 
         for attrib in getattr(self, '__numpys', []):
             logger.info("loading %s from %s with mmap=%s", attrib, subname(fname, attrib), mmap)
@@ -463,7 +464,8 @@ class SaveLoad(object):
             else:
                 val = np.load(subname(fname, attrib), mmap_mode=mmap)
 
-            setattr(self, attrib, val)
+            with ignore_deprecation_warning():
+                setattr(self, attrib, val)
 
         for attrib in getattr(self, '__scipys', []):
             logger.info("loading %s from %s with mmap=%s", attrib, subname(fname, attrib), mmap)
@@ -481,11 +483,13 @@ class SaveLoad(object):
                 sparse.indptr = np.load(subname(fname, attrib, 'indptr'), mmap_mode=mmap)
                 sparse.indices = np.load(subname(fname, attrib, 'indices'), mmap_mode=mmap)
 
-            setattr(self, attrib, sparse)
+            with ignore_deprecation_warning():
+                setattr(self, attrib, sparse)
 
         for attrib in getattr(self, '__ignoreds', []):
             logger.info("setting ignored attribute %s to None", attrib)
-            setattr(self, attrib, None)
+            with ignore_deprecation_warning():
+                setattr(self, attrib, None)
 
     @staticmethod
     def _adapt_by_suffix(fname):
@@ -543,7 +547,8 @@ class SaveLoad(object):
             # restore attribs handled specially
             for obj, asides in restores:
                 for attrib, val in iteritems(asides):
-                    setattr(obj, attrib, val)
+                    with ignore_deprecation_warning():
+                        setattr(obj, attrib, val)
         logger.info("saved %s", fname)
 
     def _save_specials(self, fname, separately, sep_limit, ignore, pickle_protocol, compress, subname):
@@ -584,11 +589,12 @@ class SaveLoad(object):
                 elif isinstance(val, sparse_matrices) and val.nnz >= sep_limit:
                     separately.append(attrib)
 
-        # whatever's in `separately` or `ignore` at this point won't get pickled
-        for attrib in separately + list(ignore):
-            if hasattr(self, attrib):
-                asides[attrib] = getattr(self, attrib)
-                delattr(self, attrib)
+        with ignore_deprecation_warning():
+            # whatever's in `separately` or `ignore` at this point won't get pickled
+            for attrib in separately + list(ignore):
+                if hasattr(self, attrib):
+                    asides[attrib] = getattr(self, attrib)
+                    delattr(self, attrib)
 
         recursive_saveloads = []
         restores = []
@@ -1440,6 +1446,14 @@ def deprecated(reason):
 
     else:
         raise TypeError(repr(type(reason)))
+
+
+@contextmanager
+def ignore_deprecation_warning():
+    """Contextmanager for ignoring DeprecationWarning."""
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
+        yield
 
 
 @deprecated("Function will be removed in 4.0.0")
