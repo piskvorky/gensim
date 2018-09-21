@@ -91,7 +91,7 @@ def load_old_doc2vec(*args, **kwargs):
         'dm_tag_count': old_model.dm_tag_count,
         'docvecs_mapfile': old_model.__dict__.get('docvecs_mapfile', None),
         'comment': old_model.__dict__.get('comment', None),
-        'size': old_model.vector_size,
+        'vector_size': old_model.vector_size,
         'alpha': old_model.alpha,
         'window': old_model.window,
         'min_count': old_model.min_count,
@@ -104,7 +104,7 @@ def load_old_doc2vec(*args, **kwargs):
         'negative': old_model.negative,
         'cbow_mean': old_model.cbow_mean,
         'hashfxn': old_model.hashfxn,
-        'iter': old_model.iter,
+        'epochs': old_model.iter,
         'sorted_vocab': old_model.__dict__.get('sorted_vocab', 1),
         'batch_words': old_model.__dict__.get('batch_words', MAX_WORDS_IN_BATCH),
         'compute_loss': old_model.__dict__.get('compute_loss', None)
