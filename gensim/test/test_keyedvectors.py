@@ -182,7 +182,7 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
 
     def test_wv_property(self):
         """Test that the deprecated `wv` property returns `self`. To be removed in v4.0.0."""
-        self.assertTrue(self.vectors is self.vectors.wv)
+        self.assertTrue(self.vectors is self.vectors)
 
     def test_add_single(self):
         """Test that adding entity in a manual way works correctly."""

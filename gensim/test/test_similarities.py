@@ -602,8 +602,8 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
 
     def assertApproxNeighborsMatchExact(self, model, wv, index):
         vector = wv.vectors_norm[0]
-        approx_neighbors = model.most_similar([vector], topn=5, indexer=index)
-        exact_neighbors = model.most_similar(positive=[vector], topn=5)
+        approx_neighbors = model.wv.most_similar([vector], topn=5, indexer=index)
+        exact_neighbors = model.wv.most_similar(positive=[vector], topn=5)
 
         approx_words = [neighbor[0] for neighbor in approx_neighbors]
         exact_words = [neighbor[0] for neighbor in exact_neighbors]
