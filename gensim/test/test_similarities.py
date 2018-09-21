@@ -450,9 +450,9 @@ class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
         sims = index[query]
         for i, chunk in enumerate(sims):
             expected = i
-            self.assertAlmostEquals(expected, chunk[0][0], places=2)
+            self.assertAlmostEqual(expected, chunk[0][0], places=2)
             expected = 1.0
-            self.assertAlmostEquals(expected, chunk[0][1], places=2)
+            self.assertAlmostEqual(expected, chunk[0][1], places=2)
 
     def testIter(self):
         # Override testIter.
