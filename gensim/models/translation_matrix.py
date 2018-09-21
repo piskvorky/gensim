@@ -176,9 +176,10 @@ class TranslationMatrix(utils.SaveLoad):
 
         >>> from gensim.models import KeyedVectors
         >>> from gensim.test.utils import datapath
-        >>>
-        >>> model_en = KeyedVectors.load_word2vec_format(datapath("EN.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt"))
-        >>> model_it = KeyedVectors.load_word2vec_format(datapath("IT.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt"))
+        >>> en = datapath("EN.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt")
+        >>> it = datapath("IT.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt")
+        >>> model_en = KeyedVectors.load_word2vec_format(en)
+        >>> model_it = KeyedVectors.load_word2vec_format(it)
         >>>
         >>> word_pairs = [
         ...     ("one", "uno"), ("two", "due"), ("three", "tre"), ("four", "quattro"), ("five", "cinque"),

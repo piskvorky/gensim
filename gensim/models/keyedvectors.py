@@ -83,7 +83,7 @@ in the original Google's word2vec C format as a KeyedVectors instance
     >>> from gensim.test.utils import datapath
     >>>
     >>> wv_from_text = KeyedVectors.load_word2vec_format(datapath('word2vec_pre_kv_c'), binary=False)  # C text format
-    >>> wv_from_bin = KeyedVectors.load_word2vec_format(datapath("euclidean_vectors.bin"), binary=True)  # C binary format
+    >>> wv_from_bin = KeyedVectors.load_word2vec_format(datapath("euclidean_vectors.bin"), binary=True)  # C bin format
 
 What can I do with word vectors?
 ================================

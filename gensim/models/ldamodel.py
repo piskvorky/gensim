@@ -1428,7 +1428,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             >>> from gensim.models.ldamulticore import LdaMulticore
             >>> from gensim.test.utils import datapath
             >>>
-            >>> m1, m2 = LdaMulticore.load(datapath("lda_3_0_1_model")), LdaMulticore.load(datapath("ldamodel_python_3_5"))
+            >>> m1 = LdaMulticore.load(datapath("lda_3_0_1_model"))
+            >>> m2 = LdaMulticore.load(datapath("ldamodel_python_3_5"))
             >>> mdiff, annotation = m1.diff(m2)
             >>> topic_diff = mdiff  # get matrix with difference for each topic pair from `m1` and `m2`
 

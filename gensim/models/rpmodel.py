@@ -128,7 +128,9 @@ class RpModel(interfaces.TransformationABC):
             >>> corpus = [dictionary.doc2bow(text) for text in common_texts]  # convert texts to BoW format
             >>>
             >>> model = RpModel(corpus, id2word=dictionary)  # fit model
-            >>> result = model[corpus[0]]  # apply model to document, result is vector in BoW format, i.e. [(1, 0.3), ... ]
+            >>>
+            >>> # apply model to document, result is vector in BoW format, i.e. [(1, 0.3), ... ]
+            >>> result = model[corpus[0]]
 
         """
         # if the input vector is in fact a corpus, return a transformed corpus as result

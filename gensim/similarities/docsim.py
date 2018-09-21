@@ -44,7 +44,8 @@ If you have more query documents, you can submit them all at once, in a batch
     >>> batch_of_documents = common_corpus[:]  # only as example
     >>> index = Similarity(index_tmpfile, common_corpus, num_features=len(common_dictionary))  # build the index
     >>>
-    >>> for similarities in index[batch_of_documents]:  # the batch is simply an iterable of documents, aka gensim corpus.
+    >>> # the batch is simply an iterable of documents, aka gensim corpus:
+    >>> for similarities in index[batch_of_documents]:
     ...     pass
 
 The benefit of this batch (aka "chunked") querying is a much better performance.
