@@ -363,8 +363,8 @@ class FastText(BaseWordEmbeddingsModel):
         >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
         >>>
         >>> model = FastText(sentences, min_count=1)
-        >>> say_vector = model['say']  # get vector for word
-        >>> of_vector = model['of']  # get vector for out-of-vocab word
+        >>> say_vector = model.wv['say']  # get vector for word
+        >>> of_vector = model.wv['of']  # get vector for out-of-vocab word
 
         """
         self.load = call_on_class_only
@@ -380,7 +380,7 @@ class FastText(BaseWordEmbeddingsModel):
             sorted_vocab=bool(sorted_vocab), null_word=null_word, ns_exponent=ns_exponent)
         self.trainables = FastTextTrainables(
             vector_size=size, seed=seed, bucket=bucket, hashfxn=hashfxn)
-        self.wv.bucket = self.bucket
+        self.wv.bucket = self.trainables.bucket
 
         super(FastText, self).__init__(
             sentences=sentences, corpus_file=corpus_file, workers=workers, vector_size=size, epochs=iter,
@@ -487,10 +487,10 @@ class FastText(BaseWordEmbeddingsModel):
         >>>
         >>> model = FastText(min_count=1)
         >>> model.build_vocab(sentences_1)
-        >>> model.train(sentences_1, total_examples=model.corpus_count, epochs=model.iter)
+        >>> model.train(sentences_1, total_examples=model.corpus_count, epochs=model.epochs)
         >>>
         >>> model.build_vocab(sentences_2, update=True)
-        >>> model.train(sentences_2, total_examples=model.corpus_count, epochs=model.iter)
+        >>> model.train(sentences_2, total_examples=model.corpus_count, epochs=model.epochs)
 
         """
         if update:
@@ -519,11 +519,11 @@ class FastText(BaseWordEmbeddingsModel):
     def estimate_memory(self, vocab_size=None, report=None):
         vocab_size = vocab_size or len(self.wv.vocab)
         vec_size = self.vector_size * np.dtype(np.float32).itemsize
-        l1_size = self.layer1_size * np.dtype(np.float32).itemsize
+        l1_size = self.trainables.layer1_size * np.dtype(np.float32).itemsize
         report = report or {}
         report['vocab'] = len(self.wv.vocab) * (700 if self.hs else 500)
         report['syn0_vocab'] = len(self.wv.vocab) * vec_size
-        num_buckets = self.bucket
+        num_buckets = self.trainables.bucket
         if self.hs:
             report['syn1'] = len(self.wv.vocab) * l1_size
         if self.negative:
@@ -657,7 +657,7 @@ class FastText(BaseWordEmbeddingsModel):
         >>>
         >>> model = FastText(min_count=1)
         >>> model.build_vocab(sentences)
-        >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)
+        >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.epochs)
 
         """
         super(FastText, self).train(
