@@ -464,9 +464,9 @@ class DtmModel(utils.SaveLoad):
         for time in chosen_times:
             for i in chosen_topics:
                 if formatted:
-                    topic = self.print_topic(i, time, num_words=num_words)
+                    topic = self.print_topic(i, time, topn=num_words)
                 else:
-                    topic = self.show_topic(i, time, num_words=num_words)
+                    topic = self.show_topic(i, time, topn=num_words)
                 shown.append(topic)
         return shown
 
@@ -529,7 +529,7 @@ class DtmModel(utils.SaveLoad):
             warnings.warn("The parameter `num_words` is deprecated, will be removed in 4.0.0, use `topn` instead.")
             topn = num_words
 
-        return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, time, topn)])
+        return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, time, topn=topn)])
 
     def dtm_vis(self, corpus, time):
         """Get data specified by pyLDAvis format.
