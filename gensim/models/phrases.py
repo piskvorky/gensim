@@ -772,7 +772,7 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
         for bigram, score in phrases_model.export_phrases(corpus, self.delimiter, as_tuples=True):
             if bigram in self.phrasegrams:
                 logger.info('Phraser repeat %s', bigram)
-            self.phrasegrams[bigram] = (phrases_model.vocab[self.delimiter.join(bigram)], score)
+            self.phrasegrams[bigram] = (phrases_model.bigram_count[self.delimiter.join(bigram)], score)
             count += 1
             if not count % 50000:
                 logger.info('Phraser added %i phrasegrams', count)
