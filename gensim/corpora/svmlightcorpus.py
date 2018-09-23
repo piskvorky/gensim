@@ -112,9 +112,8 @@ class SvmLightCorpus(IndexedCorpus):
         """
         logger.info("converting corpus to SVMlight format: %s", fname)
 
-        if type(labels)== np.ndarray:
-            labels= labels.tolist()
-            
+        if type(labels) == np.ndarray:
+            labels = labels.tolist()    
         offsets = []
         with utils.smart_open(fname, 'wb') as fout:
             for docno, doc in enumerate(corpus):
