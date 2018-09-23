@@ -220,5 +220,5 @@ class FTTransformer(TransformerMixin, BaseEstimator):
         # The input as array of array
         if isinstance(words, six.string_types):
             words = [words]
-        vectors = [self.gensim_model[word] for word in words]
+        vectors = [self.gensim_model.wv[word] for word in words]
         return np.reshape(np.array(vectors), (len(words), self.size))

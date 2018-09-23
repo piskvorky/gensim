@@ -43,7 +43,7 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
 
         # checking that thresholding works as expected
         similarity_matrix = self.vectors.similarity_matrix(dictionary, threshold=0.45).todense()
-        self.assertEquals(18, np.sum(similarity_matrix == 0))
+        self.assertEqual(18, np.sum(similarity_matrix == 0))
 
         # checking that exponent works as expected
         similarity_matrix = self.vectors.similarity_matrix(dictionary, exponent=1.0).todense()
@@ -51,10 +51,10 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
 
         # checking that nonzero_limit works as expected
         similarity_matrix = self.vectors.similarity_matrix(dictionary, nonzero_limit=4).todense()
-        self.assertEquals(4, np.sum(similarity_matrix == 0))
+        self.assertEqual(4, np.sum(similarity_matrix == 0))
 
         similarity_matrix = self.vectors.similarity_matrix(dictionary, nonzero_limit=3).todense()
-        self.assertEquals(20, np.sum(similarity_matrix == 0))
+        self.assertEqual(20, np.sum(similarity_matrix == 0))
 
         # check that processing rows in the order given by IDF has desired effect
 
@@ -182,7 +182,7 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
 
     def test_wv_property(self):
         """Test that the deprecated `wv` property returns `self`. To be removed in v4.0.0."""
-        self.assertTrue(self.vectors is self.vectors.wv)
+        self.assertTrue(self.vectors is self.vectors)
 
     def test_add_single(self):
         """Test that adding entity in a manual way works correctly."""

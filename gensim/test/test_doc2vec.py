@@ -111,7 +111,7 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertTrue(len(model.wv.vocab) == 3955)
         self.assertTrue(len(model.wv.index2word) == 3955)
         self.assertIsNone(model.corpus_total_words)
-        self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
+        self.assertTrue(model.trainables.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
         self.assertTrue(model.trainables.vectors_lockf.shape == (3955, ))
         self.assertTrue(model.vocabulary.cum_table.shape == (3955, ))
 
@@ -129,7 +129,7 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertTrue(len(model.wv.vocab) == 3955)
         self.assertTrue(len(model.wv.index2word) == 3955)
         self.assertIsNone(model.corpus_total_words)
-        self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
+        self.assertTrue(model.trainables.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
         self.assertTrue(model.trainables.vectors_lockf.shape == (3955, ))
         self.assertTrue(model.vocabulary.cum_table.shape == (3955, ))
 
@@ -286,7 +286,7 @@ class TestDoc2VecModel(unittest.TestCase):
 
         model = doc2vec.Doc2Vec(min_count=1)
         model.build_vocab(corpus)
-        self.assertEqual(len(model.docvecs.doctag_syn0), 300)
+        self.assertEqual(len(model.docvecs.vectors_docs), 300)
         self.assertEqual(model.docvecs[0].shape, (100,))
         self.assertEqual(model.docvecs[np.int64(0)].shape, (100,))
         self.assertRaises(KeyError, model.__getitem__, '_*0')
@@ -310,7 +310,7 @@ class TestDoc2VecModel(unittest.TestCase):
         model = doc2vec.Doc2Vec(min_count=1)
         model.build_vocab(corpus)
 
-        self.assertEqual(len(model.docvecs.doctag_syn0), 300)
+        self.assertEqual(len(model.docvecs.vectors_docs), 300)
         self.assertEqual(model.docvecs[0].shape, (100,))
         self.assertEqual(model.docvecs['_*0'].shape, (100,))
         self.assertTrue(all(model.docvecs['_*0'] == model.docvecs[0]))
@@ -319,7 +319,7 @@ class TestDoc2VecModel(unittest.TestCase):
             max(
                 model.docvecs._int_index(str_key, model.docvecs.doctags, model.docvecs.max_rawint)
                 for str_key in model.docvecs.doctags.keys())
-            < len(model.docvecs.doctag_syn0)
+            < len(model.docvecs.vectors_docs)
         )
         # verify docvecs.most_similar() returns string doctags rather than indexes
         self.assertEqual(model.docvecs.offset2doctag[0], model.docvecs.most_similar([model.docvecs[0]])[0][0])
@@ -387,20 +387,20 @@ class TestDoc2VecModel(unittest.TestCase):
             tmpf = get_tmpfile('gensim_doc2vec.tst')
             model.save(tmpf)
             loaded = doc2vec.Doc2Vec.load(tmpf)
-            loaded.train(sentences, total_examples=loaded.corpus_count, epochs=loaded.iter)
+            loaded.train(sentences, total_examples=loaded.corpus_count, epochs=loaded.epochs)
 
     def test_training(self):
         """Test doc2vec training."""
         corpus = DocsLeeCorpus()
-        model = doc2vec.Doc2Vec(size=100, min_count=2, iter=20, workers=1)
+        model = doc2vec.Doc2Vec(vector_size=100, min_count=2, epochs=20, workers=1)
         model.build_vocab(corpus)
-        self.assertEqual(model.docvecs.doctag_syn0.shape, (300, 100))
-        model.train(corpus, total_examples=model.corpus_count, epochs=model.iter)
+        self.assertEqual(model.docvecs.vectors_docs.shape, (300, 100))
+        model.train(corpus, total_examples=model.corpus_count, epochs=model.epochs)
 
         self.model_sanity(model)
 
         # build vocab and train in one step; must be the same as above
-        model2 = doc2vec.Doc2Vec(corpus, size=100, min_count=2, iter=20, workers=1)
+        model2 = doc2vec.Doc2Vec(corpus, vector_size=100, min_count=2, epochs=20, workers=1)
         self.models_equal(model, model2)
 
     @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
@@ -409,19 +409,19 @@ class TestDoc2VecModel(unittest.TestCase):
         with temporary_file(get_tmpfile('gensim_word2vec.tst')) as corpus_file:
             save_lee_corpus_as_line_sentence(corpus_file)
 
-            model = doc2vec.Doc2Vec(size=100, min_count=2, iter=20, workers=1)
+            model = doc2vec.Doc2Vec(vector_size=100, min_count=2, epochs=20, workers=1)
             model.build_vocab(corpus_file=corpus_file)
-            self.assertEqual(model.docvecs.doctag_syn0.shape, (300, 100))
-            model.train(corpus_file=corpus_file, total_words=model.corpus_total_words, epochs=model.iter)
+            self.assertEqual(model.docvecs.vectors_docs.shape, (300, 100))
+            model.train(corpus_file=corpus_file, total_words=model.corpus_total_words, epochs=model.epochs)
 
             self.model_sanity(model)
 
-            model = doc2vec.Doc2Vec(corpus_file=corpus_file, size=100, min_count=2, iter=20, workers=1)
+            model = doc2vec.Doc2Vec(corpus_file=corpus_file, vector_size=100, min_count=2, epochs=20, workers=1)
             self.model_sanity(model)
 
     def test_dbow_hs(self):
         """Test DBOW doc2vec training."""
-        model = doc2vec.Doc2Vec(list_corpus, dm=0, hs=1, negative=0, min_count=2, iter=20)
+        model = doc2vec.Doc2Vec(list_corpus, dm=0, hs=1, negative=0, min_count=2, epochs=20)
         self.model_sanity(model)
 
     @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
@@ -429,14 +429,14 @@ class TestDoc2VecModel(unittest.TestCase):
         """Test DBOW doc2vec training."""
         with temporary_file(get_tmpfile('gensim_word2vec.tst')) as corpus_file:
             save_lee_corpus_as_line_sentence(corpus_file)
-            model = doc2vec.Doc2Vec(corpus_file=corpus_file, dm=0, hs=1, negative=0, min_count=2, iter=20)
+            model = doc2vec.Doc2Vec(corpus_file=corpus_file, dm=0, hs=1, negative=0, min_count=2, epochs=20)
             self.model_sanity(model)
 
     def test_dmm_hs(self):
         """Test DM/mean doc2vec training."""
         model = doc2vec.Doc2Vec(
-            list_corpus, dm=1, dm_mean=1, size=24, window=4,
-            hs=1, negative=0, alpha=0.05, min_count=2, iter=20
+            list_corpus, dm=1, dm_mean=1, vector_size=24, window=4,
+            hs=1, negative=0, alpha=0.05, min_count=2, epochs=20
         )
         self.model_sanity(model)
 
@@ -446,16 +446,16 @@ class TestDoc2VecModel(unittest.TestCase):
         with temporary_file(get_tmpfile('gensim_word2vec.tst')) as corpus_file:
             save_lee_corpus_as_line_sentence(corpus_file)
             model = doc2vec.Doc2Vec(
-                list_corpus, dm=1, dm_mean=1, size=24, window=4,
-                hs=1, negative=0, alpha=0.05, min_count=2, iter=20
+                list_corpus, dm=1, dm_mean=1, vector_size=24, window=4,
+                hs=1, negative=0, alpha=0.05, min_count=2, epochs=20
             )
             self.model_sanity(model)
 
     def test_dms_hs(self):
         """Test DM/sum doc2vec training."""
         model = doc2vec.Doc2Vec(
-            list_corpus, dm=1, dm_mean=0, size=24, window=4, hs=1,
-            negative=0, alpha=0.05, min_count=2, iter=20
+            list_corpus, dm=1, dm_mean=0, vector_size=24, window=4, hs=1,
+            negative=0, alpha=0.05, min_count=2, epochs=20
         )
         self.model_sanity(model)
 
@@ -465,16 +465,16 @@ class TestDoc2VecModel(unittest.TestCase):
         with temporary_file(get_tmpfile('gensim_word2vec.tst')) as corpus_file:
             save_lee_corpus_as_line_sentence(corpus_file)
             model = doc2vec.Doc2Vec(
-                list_corpus, dm=1, dm_mean=0, size=24, window=4, hs=1,
-                negative=0, alpha=0.05, min_count=2, iter=20
+                list_corpus, dm=1, dm_mean=0, vector_size=24, window=4, hs=1,
+                negative=0, alpha=0.05, min_count=2, epochs=20
             )
             self.model_sanity(model)
 
     def test_dmc_hs(self):
         """Test DM/concatenate doc2vec training."""
         model = doc2vec.Doc2Vec(
-            list_corpus, dm=1, dm_concat=1, size=24, window=4,
-            hs=1, negative=0, alpha=0.05, min_count=2, iter=20
+            list_corpus, dm=1, dm_concat=1, vector_size=24, window=4,
+            hs=1, negative=0, alpha=0.05, min_count=2, epochs=20
         )
         self.model_sanity(model)
 
@@ -484,14 +484,14 @@ class TestDoc2VecModel(unittest.TestCase):
         with temporary_file(get_tmpfile('gensim_word2vec.tst')) as corpus_file:
             save_lee_corpus_as_line_sentence(corpus_file)
             model = doc2vec.Doc2Vec(
-                list_corpus, dm=1, dm_concat=1, size=24, window=4,
-                hs=1, negative=0, alpha=0.05, min_count=2, iter=20
+                list_corpus, dm=1, dm_concat=1, vector_size=24, window=4,
+                hs=1, negative=0, alpha=0.05, min_count=2, epochs=20
             )
             self.model_sanity(model)
 
     def test_dbow_neg(self):
         """Test DBOW doc2vec training."""
-        model = doc2vec.Doc2Vec(list_corpus, dm=0, hs=0, negative=10, min_count=2, iter=20)
+        model = doc2vec.Doc2Vec(list_corpus, dm=0, hs=0, negative=10, min_count=2, epochs=20)
         self.model_sanity(model)
 
     @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
@@ -499,14 +499,14 @@ class TestDoc2VecModel(unittest.TestCase):
         """Test DBOW doc2vec training."""
         with temporary_file(get_tmpfile('gensim_word2vec.tst')) as corpus_file:
             save_lee_corpus_as_line_sentence(corpus_file)
-            model = doc2vec.Doc2Vec(list_corpus, dm=0, hs=0, negative=10, min_count=2, iter=20)
+            model = doc2vec.Doc2Vec(list_corpus, dm=0, hs=0, negative=10, min_count=2, epochs=20)
             self.model_sanity(model)
 
     def test_dmm_neg(self):
         """Test DM/mean doc2vec training."""
         model = doc2vec.Doc2Vec(
-            list_corpus, dm=1, dm_mean=1, size=24, window=4, hs=0,
-            negative=10, alpha=0.05, min_count=2, iter=20
+            list_corpus, dm=1, dm_mean=1, vector_size=24, window=4, hs=0,
+            negative=10, alpha=0.05, min_count=2, epochs=20
         )
         self.model_sanity(model)
 
@@ -516,16 +516,16 @@ class TestDoc2VecModel(unittest.TestCase):
         with temporary_file(get_tmpfile('gensim_word2vec.tst')) as corpus_file:
             save_lee_corpus_as_line_sentence(corpus_file)
             model = doc2vec.Doc2Vec(
-                list_corpus, dm=1, dm_mean=1, size=24, window=4, hs=0,
-                negative=10, alpha=0.05, min_count=2, iter=20
+                list_corpus, dm=1, dm_mean=1, vector_size=24, window=4, hs=0,
+                negative=10, alpha=0.05, min_count=2, epochs=20
             )
             self.model_sanity(model)
 
     def test_dms_neg(self):
         """Test DM/sum doc2vec training."""
         model = doc2vec.Doc2Vec(
-            list_corpus, dm=1, dm_mean=0, size=24, window=4, hs=0,
-            negative=10, alpha=0.05, min_count=2, iter=20
+            list_corpus, dm=1, dm_mean=0, vector_size=24, window=4, hs=0,
+            negative=10, alpha=0.05, min_count=2, epochs=20
         )
         self.model_sanity(model)
 
@@ -535,16 +535,16 @@ class TestDoc2VecModel(unittest.TestCase):
         with temporary_file(get_tmpfile('gensim_word2vec.tst')) as corpus_file:
             save_lee_corpus_as_line_sentence(corpus_file)
             model = doc2vec.Doc2Vec(
-                list_corpus, dm=1, dm_mean=0, size=24, window=4, hs=0,
-                negative=10, alpha=0.05, min_count=2, iter=20
+                list_corpus, dm=1, dm_mean=0, vector_size=24, window=4, hs=0,
+                negative=10, alpha=0.05, min_count=2, epochs=20
             )
             self.model_sanity(model)
 
     def test_dmc_neg(self):
         """Test DM/concatenate doc2vec training."""
         model = doc2vec.Doc2Vec(
-            list_corpus, dm=1, dm_concat=1, size=24, window=4, hs=0,
-            negative=10, alpha=0.05, min_count=2, iter=20
+            list_corpus, dm=1, dm_concat=1, vector_size=24, window=4, hs=0,
+            negative=10, alpha=0.05, min_count=2, epochs=20
         )
         self.model_sanity(model)
 
@@ -554,8 +554,8 @@ class TestDoc2VecModel(unittest.TestCase):
         with temporary_file(get_tmpfile('gensim_word2vec.tst')) as corpus_file:
             save_lee_corpus_as_line_sentence(corpus_file)
             model = doc2vec.Doc2Vec(
-                list_corpus, dm=1, dm_concat=1, size=24, window=4, hs=0,
-                negative=10, alpha=0.05, min_count=2, iter=20
+                list_corpus, dm=1, dm_concat=1, vector_size=24, window=4, hs=0,
+                negative=10, alpha=0.05, min_count=2, epochs=20
             )
             self.model_sanity(model)
 
@@ -588,31 +588,31 @@ class TestDoc2VecModel(unittest.TestCase):
         """Test doc2vec results identical with identical RNG seed."""
         # bigger, dmc
         model = doc2vec.Doc2Vec(
-            DocsLeeCorpus(), dm=1, dm_concat=1, size=24,
+            DocsLeeCorpus(), dm=1, dm_concat=1, vector_size=24,
             window=4, hs=1, negative=3, seed=42, workers=1
         )
         model2 = doc2vec.Doc2Vec(
-            DocsLeeCorpus(), dm=1, dm_concat=1, size=24,
+            DocsLeeCorpus(), dm=1, dm_concat=1, vector_size=24,
             window=4, hs=1, negative=3, seed=42, workers=1
         )
         self.models_equal(model, model2)
 
     def test_mixed_tag_types(self):
-        """Ensure alternating int/string tags don't share indexes in doctag_syn0"""
+        """Ensure alternating int/string tags don't share indexes in vectors_docs"""
         mixed_tag_corpus = [doc2vec.TaggedDocument(words, [i, words[0]]) for i, words in enumerate(raw_sentences)]
         model = doc2vec.Doc2Vec()
         model.build_vocab(mixed_tag_corpus)
         expected_length = len(sentences) + len(model.docvecs.doctags)  # 9 sentences, 7 unique first tokens
-        self.assertEqual(len(model.docvecs.doctag_syn0), expected_length)
+        self.assertEqual(len(model.docvecs.vectors_docs), expected_length)
 
     def models_equal(self, model, model2):
         # check words/hidden-weights
         self.assertEqual(len(model.wv.vocab), len(model2.wv.vocab))
-        self.assertTrue(np.allclose(model.wv.syn0, model2.wv.syn0))
+        self.assertTrue(np.allclose(model.wv.vectors, model2.wv.vectors))
         if model.hs:
-            self.assertTrue(np.allclose(model.syn1, model2.syn1))
+            self.assertTrue(np.allclose(model.trainables.syn1, model2.trainables.syn1))
         if model.negative:
-            self.assertTrue(np.allclose(model.syn1neg, model2.syn1neg))
+            self.assertTrue(np.allclose(model.trainables.syn1neg, model2.trainables.syn1neg))
         # check docvecs
         self.assertEqual(len(model.docvecs.doctags), len(model2.docvecs.doctags))
         self.assertEqual(len(model.docvecs.offset2doctag), len(model2.docvecs.offset2doctag))
@@ -621,35 +621,35 @@ class TestDoc2VecModel(unittest.TestCase):
         """Test doc2vec model after delete_temporary_training_data"""
         for i in [0, 1]:
             for j in [0, 1]:
-                model = doc2vec.Doc2Vec(sentences, size=5, min_count=1, window=4, hs=i, negative=j)
+                model = doc2vec.Doc2Vec(sentences, vector_size=5, min_count=1, window=4, hs=i, negative=j)
                 if i:
-                    self.assertTrue(hasattr(model, 'syn1'))
+                    self.assertTrue(hasattr(model.trainables, 'syn1'))
                 if j:
-                    self.assertTrue(hasattr(model, 'syn1neg'))
+                    self.assertTrue(hasattr(model.trainables, 'syn1neg'))
                 self.assertTrue(hasattr(model, 'syn0_lockf'))
                 model.delete_temporary_training_data(keep_doctags_vectors=False, keep_inference=False)
                 self.assertTrue(len(model['human']), 10)
                 self.assertTrue(model.wv.vocab['graph'].count, 5)
-                self.assertTrue(not hasattr(model, 'syn1'))
-                self.assertTrue(not hasattr(model, 'syn1neg'))
-                self.assertTrue(not hasattr(model, 'syn0_lockf'))
-                self.assertTrue(model.docvecs and not hasattr(model.docvecs, 'doctag_syn0'))
+                self.assertTrue(not hasattr(model.trainables, 'syn1'))
+                self.assertTrue(not hasattr(model.trainables, 'syn1neg'))
+                self.assertTrue(not hasattr(model.trainables, 'syn0_lockf'))
+                self.assertTrue(model.docvecs and not hasattr(model.docvecs, 'vectors_docs'))
                 self.assertTrue(model.docvecs and not hasattr(model.docvecs, 'doctag_syn0_lockf'))
         model = doc2vec.Doc2Vec(
-            list_corpus, dm=1, dm_mean=1, size=24, window=4, hs=1,
-            negative=0, alpha=0.05, min_count=2, iter=20
+            list_corpus, dm=1, dm_mean=1, vector_size=24, window=4, hs=1,
+            negative=0, alpha=0.05, min_count=2, epochs=20
         )
         model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True)
-        self.assertTrue(model.docvecs and hasattr(model.docvecs, 'doctag_syn0'))
-        self.assertTrue(hasattr(model, 'syn1'))
+        self.assertTrue(model.docvecs and hasattr(model.docvecs, 'vectors_docs'))
+        self.assertTrue(hasattr(model.trainables, 'syn1'))
         self.model_sanity(model, keep_training=False)
         model = doc2vec.Doc2Vec(
-            list_corpus, dm=1, dm_mean=1, size=24, window=4, hs=0,
-            negative=1, alpha=0.05, min_count=2, iter=20
+            list_corpus, dm=1, dm_mean=1, vector_size=24, window=4, hs=0,
+            negative=1, alpha=0.05, min_count=2, epochs=20
         )
         model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True)
         self.model_sanity(model, keep_training=False)
-        self.assertTrue(hasattr(model, 'syn1neg'))
+        self.assertTrue(hasattr(model.trainables, 'syn1neg'))
 
     def test_word_vec_non_writeable(self):
         model = keyedvectors.KeyedVectors.load_word2vec_format(datapath('word2vec_pre_kv_c'))
@@ -673,10 +673,10 @@ class TestDoc2VecModel(unittest.TestCase):
         raw_sentences = [['human'],
                          ['graph', 'trees']]
         sentences = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(raw_sentences)]
-        model = doc2vec.Doc2Vec(alpha=0.025, min_alpha=0.025, min_count=1, workers=8, size=5)
+        model = doc2vec.Doc2Vec(alpha=0.025, min_alpha=0.025, min_count=1, workers=8, vector_size=5)
         model.build_vocab(sentences)
         for epoch in range(10):
-            model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)
+            model.train(sentences, total_examples=model.corpus_count, epochs=model.epochs)
             model.alpha -= 0.002
             model.min_alpha = model.alpha
             if epoch == 5:
