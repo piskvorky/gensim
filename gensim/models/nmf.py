@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.sparse
 import logging
 from scipy.stats import halfnorm
 from gensim import utils
@@ -100,7 +101,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def get_topics(self):
         if self.normalize:
-            return self._W.T / self._W.T.sum(axis=1).reshape(-1, 1)
+            return np.asarray(self._W.T / self._W.T.sum(axis=1).reshape(-1, 1))
 
         return self._W.T
 
@@ -123,7 +124,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             (10 words for top 10 topics, by default).
         """
         # TODO: maybe count sparsity in some other way
-        sparsity = np.count_nonzero(self._W, axis=0)
+        sparsity = self._W.getnnz(axis=0)
 
         if num_topics < 0 or num_topics >= self.num_topics:
             num_topics = self.num_topics
@@ -138,17 +139,24 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         shown = []
 
-        topic = self.get_topics()
-        for i in chosen_topics:
-            topic_ = topic[i]
-            bestn = matutils.argsort(topic_, num_words, reverse=True)
-            topic_ = [(self.id2word[id], topic_[id]) for id in bestn]
-            if formatted:
-                topic_ = " + ".join(['%.3f*"%s"' % (v, k) for k, v in topic_])
+        topics = self.get_topics()
 
-            shown.append((i, topic_))
+        print(topics)
+
+        for i in chosen_topics:
+            topic = topics[i]
+            print(type(topic))
+            print(topic.shape)
+            bestn = matutils.argsort(topic, num_words, reverse=True).ravel()
+            print(type(bestn))
+            print(bestn.shape)
+            topic = [(self.id2word[id], topic[id]) for id in bestn]
+            if formatted:
+                topic = " + ".join(['%.3f*"%s"' % (v, k) for k, v in topic])
+
+            shown.append((i, topic))
             if log:
-                logger.info("topic #%i (%.3f): %s", i, sparsity[i], topic_)
+                logger.info("topic #%i (%.3f): %s", i, sparsity[i], topic)
 
         return shown
 
@@ -210,7 +218,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return values
 
     def get_document_topics(self, bow, minimum_probability=None):
-        v = matutils.corpus2csc([bow], len(self.id2word))
+        v = matutils.corpus2csc([bow], len(self.id2word)).tocsr()
         h, _ = self._solveproj(v, self._W, v_max=np.inf)
 
         if self.normalize:
@@ -234,14 +242,16 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.n_features = first_doc.shape[0]
         avg = np.sqrt(first_doc.mean() / self.n_features)
 
-        self._W = np.abs(
-            avg
-            * halfnorm.rvs(size=(self.n_features, self.num_topics))
-            / np.sqrt(self.num_topics)
+        self._W = scipy.sparse.csc_matrix(
+            np.abs(
+                avg
+                * halfnorm.rvs(size=(self.n_features, self.num_topics))
+                / np.sqrt(self.num_topics)
+            )
         )
 
-        self.A = np.zeros((self.num_topics, self.num_topics))
-        self.B = np.zeros((self.n_features, self.num_topics))
+        self.A = scipy.sparse.csr_matrix((self.num_topics, self.num_topics))
+        self.B = scipy.sparse.csc_matrix((self.n_features, self.num_topics))
         return corpus
 
     def update(self, corpus, chunks_as_numpy=False):
@@ -263,22 +273,22 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             for chunk in utils.grouper(
                 corpus, self.chunksize, as_numpy=chunks_as_numpy
             ):
-                v = matutils.corpus2csc(chunk, len(self.id2word))
+                v = matutils.corpus2csc(chunk, len(self.id2word)).tocsr()
                 self._h, self._r = self._solveproj(v, self._W, r=self._r, h=self._h, v_max=self.v_max)
                 h, r = self._h, self._r
                 self._H.append(h)
                 if self._R is not None:
                     self._R.append(r)
 
-                self.A += np.dot(h, h.T)
-                self.B += np.dot((v - r), h.T)
+                self.A += h.dot(h.T)
+                self.B += (v - r).dot(h.T)
                 self._solve_w()
 
                 if chunk_idx % self.eval_every == 0:
                     logger.info(
                         "Loss (no outliers): {}\tLoss (with outliers): {}".format(
-                            np.linalg.norm(v - self._W.dot(h)),
-                            np.linalg.norm(v - self._W.dot(h) - r),
+                            scipy.sparse.linalg.norm(v - self._W.dot(h)),
+                            scipy.sparse.linalg.norm(v - self._W.dot(h) - r),
                         )
                     )
 
@@ -286,19 +296,25 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         logger.info(
             "Loss (no outliers): {}\tLoss (with outliers): {}".format(
-                np.linalg.norm(v - self._W.dot(h)),
-                np.linalg.norm(v - self._W.dot(h) - r),
+                scipy.sparse.linalg.norm(v - self._W.dot(h)),
+                scipy.sparse.linalg.norm(v - self._W.dot(h) - r),
             )
         )
 
     def _solve_w(self):
         def error():
+            # print(type(self._W))
+            # print(self._W[:5, :5])
+            # print(type(self.A))
+            # print(self.A[:5, :5])
+            # print(type(self.B))
+            # print(self.B[:5, :5])
             return (
-                0.5 * np.trace(self._W.T.dot(self._W).dot(self.A))
-                - np.trace(self._W.T.dot(self.B))
+                0.5 * (self._W.T.dot(self._W).dot(self.A)).diagonal().sum()
+                - (self._W.T.dot(self.B)).diagonal().sum()
             )
 
-        eta = self._kappa / np.linalg.norm(self.A, "fro")
+        eta = self._kappa / scipy.sparse.linalg.norm(self.A)
 
         if not self._w_error:
             self._w_error = error()
@@ -306,7 +322,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         for iter_number in range(self._w_max_iter):
             logger.debug("w_error: %s" % self._w_error)
 
-            self._W -= eta * (np.dot(self._W, self.A) - self.B)
+            self._W -= eta * (self._W.dot(self.A) - self.B)
             self.__transform()
 
             error_ = error()
@@ -317,18 +333,74 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             self._w_error = error_
 
     @staticmethod
-    def __solve_r(r_actual, lambda_, v_max):
-        res = np.abs(r_actual) - lambda_
-        np.maximum(res, 0.0, out=res)
-        res *= np.sign(r_actual)
-        np.clip(res, -v_max, v_max, out=res)
-        return res
+    def __solve_r(r, r_actual, lambda_, v_max):
+        threshold = 1e-1
+
+        r_actual.data *= np.abs(r_actual.data) > threshold
+        r_actual.eliminate_zeros()
+
+        r.indices = r_actual.indices
+        r.indptr = r_actual.indptr
+        r.data = r_actual.data
+
+        np.abs(r_actual.data, out=r.data)
+        r.data -= lambda_
+        np.maximum(r.data, 0.0, out=r.data)
+
+        r_actual.data *= np.abs(r.data) > threshold
+        r_actual.eliminate_zeros()
+        r.data *= np.abs(r.data) > threshold
+        r.eliminate_zeros()
+
+        r.data *= np.sign(r_actual.data)
+
+        np.clip(r.data, -v_max, v_max, out=r.data)
+
+        return scipy.sparse.linalg.norm(r - r_actual)
+
+    @staticmethod
+    def __solve_h(h, Wt_v_minus_r, WtW, eta):
+        threshold = 1e-1
+
+        # print('h')
+        # print(h[:5, :5])
+        grad = (WtW.dot(h) - Wt_v_minus_r) * eta
+        # print('grad')
+        # print(grad[:5, :5])
+        grad = scipy.sparse.csr_matrix(grad)
+        new_h = h - grad
+
+        new_h.data *= np.abs(new_h.data) > threshold
+        new_h.eliminate_zeros()
+        # print('new_h')
+        # print(new_h[:5, :5])
+        np.maximum(new_h.data, 0.0, out=new_h.data)
+        # print('new_h')
+        # print(new_h[:5, :5])
+        new_h.eliminate_zeros()
+        # print('new_h')
+        # print(new_h[:5, :5])
+
+        return new_h, scipy.sparse.linalg.norm(grad)
 
     def __transform(self):
-        np.clip(self._W, 0, self.v_max, out=self._W)
-        sumsq = np.linalg.norm(self._W, axis=0)
+        threshold = 1e-2
+
+        self._W.data *= np.abs(self._W.data) > threshold
+        self._W.eliminate_zeros()
+
+        np.clip(self._W.data, 0, self.v_max, out=self._W.data)
+        self._W.eliminate_zeros()
+        # print(type(self._W))
+        # print(self._W[:5, :5])
+        sumsq = scipy.sparse.linalg.norm(self._W, axis=0)
         np.maximum(sumsq, 1, out=sumsq)
-        self._W /= sumsq
+        self._W = scipy.sparse.csc_matrix(self._W / sumsq)
+
+        self._W.data *= np.abs(self._W.data) > threshold
+        self._W.eliminate_zeros()
+        # print(type(self._W))
+        # print(self._W[:5, :5])
 
     def _solveproj(self, v, W, h=None, r=None, v_max=None):
         m, n = W.shape
@@ -342,14 +414,14 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         hshape = (n, batch_size)
 
         if h is None or h.shape != hshape:
-            h = np.zeros(hshape)
+            h = scipy.sparse.csr_matrix(hshape)
 
         if r is None or r.shape != rshape:
-            r = np.zeros(rshape)
+            r = scipy.sparse.csr_matrix(rshape)
 
         WtW = W.T.dot(W)
 
-        # eta = self._kappa / np.linalg.norm(W, 'fro') ** 2
+        eta = self._kappa / scipy.sparse.linalg.norm(W) ** 2
 
         _h_r_error = None
 
@@ -360,11 +432,15 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             Wt_v_minus_r = W.T.dot(v - r)
 
-            error_ += solve_h(h, Wt_v_minus_r, WtW, self._kappa)
+            # error_ += solve_h(h, Wt_v_minus_r, WtW, self._kappa)
+            h, error_h = self.__solve_h(h, Wt_v_minus_r, WtW, eta)
+            error_ += error_h
 
             if self.use_r:
                 r_actual = v - W.dot(h)
-                error_ += solve_r(r, r_actual, self._lambda_, self.v_max)
+                # error_ += solve_r(r, r_actual, self._lambda_, self.v_max)
+                error_ += self.__solve_r(r, r_actual, self._lambda_, self.v_max)
+                # error_ += solve_r(r, v, self._lambda_, self.v_max)
 
             error_ /= m
 
