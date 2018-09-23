@@ -3,15 +3,11 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """Automatically detect common phrases -- multi-word expressions / word n-grams -- from a stream of sentences.
-
 Inspired by:
-
 * `Mikolov, et. al: "Distributed Representations of Words and Phrases and their Compositionality"
   <https://arxiv.org/abs/1310.4546>`_
 * `"Normalized (Pointwise) Mutual Information in Colocation Extraction" by Gerlof Bouma
   <https://svn.spraakdata.gu.se/repos/gerlof/pub/www/Docs/npmi-pfd.pdf>`_
-
-
 Examples
 --------
 >>> from gensim.test.utils import datapath
@@ -31,7 +27,6 @@ Examples
 >>>
 >>> for sent in bigram[sentences]:  # apply model to text corpus
 ...     pass
-
 """
 
 import sys
@@ -59,20 +54,16 @@ logger = logging.getLogger(__name__)
 
 def _is_single(obj):
     """Check whether `obj` is a single document or an entire corpus.
-
     Parameters
     ----------
     obj : object
-
     Return
     ------
     (bool, object)
         (is_single, new) tuple, where `new` yields the same sequence as `obj`.
-
     Notes
     -----
     `obj` is a single document if it is an iterable of strings. It is a corpus if it is an iterable of documents.
-
     """
     obj_iter = iter(obj)
     temp_iter = obj_iter
@@ -97,7 +88,6 @@ class SentenceAnalyzer(object):
     """Base util class for :class:`~gensim.models.phrases.Phrases` and :class:`~gensim.models.phrases.Phraser`."""
     def score_item(self, worda, wordb, components, scorer):
         """Get bi-gram score statistics.
-
         Parameters
         ----------
         worda : str
@@ -109,12 +99,10 @@ class SentenceAnalyzer(object):
         scorer : function
             Scorer function, as given to :class:`~gensim.models.phrases.Phrases`.
             See :func:`~gensim.models.phrases.npmi_scorer` and :func:`~gensim.models.phrases.original_scorer`.
-
         Returns
         -------
         float
             Score for given bi-gram. If bi-gram not present in dictionary - return -1.
-
         """
         vocab = self.vocab
         if worda in vocab and wordb in vocab:
@@ -128,7 +116,6 @@ class SentenceAnalyzer(object):
 
     def analyze_sentence(self, sentence, threshold, common_terms, scorer):
         """Analyze a sentence, detecting any bigrams that should be concatenated.
-
         Parameters
         ----------
         sentence : iterable of str
@@ -140,13 +127,11 @@ class SentenceAnalyzer(object):
         scorer : function
             Scorer function, as given to :class:`~gensim.models.phrases.Phrases`.
             See :func:`~gensim.models.phrases.npmi_scorer` and :func:`~gensim.models.phrases.original_scorer`.
-
         Yields
         ------
         (str, score)
             If bi-gram detected, a tuple where the first element is a detect bigram, second its score.
             Otherwise, the first tuple element is a single word and second is None.
-
         """
         s = [utils.any2utf8(w) for w in sentence]
         # adding None is a trick that helps getting an automatic happy ending
@@ -194,14 +179,12 @@ class PhrasesTransformation(interfaces.TransformationABC):
         :class:`~gensim.models.phrases.Phraser` class. Handles backwards compatibility from older
         :class:`~gensim.models.phrases.Phrases` / :class:`~gensim.models.phrases.Phraser`
         versions which did not support pluggable scoring functions.
-
         Parameters
         ----------
         args : object
             Sequence of arguments, see :class:`~gensim.utils.SaveLoad.load` for more information.
         kwargs : object
             Sequence of arguments, see :class:`~gensim.utils.SaveLoad.load` for more information.
-
         """
         model = super(PhrasesTransformation, cls).load(*args, **kwargs)
         # update older models
@@ -237,9 +220,8 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
 
     def __init__(self, sentences=None, min_count=5, threshold=10.0,
                  max_vocab_size=40000000, delimiter=b'_', progress_per=10000,
-                 scoring='default', common_terms=frozenset()):
+                 scoring='default', common_terms=frozenset(), doc2vec=False):
         """
-
         Parameters
         ----------
         sentences : iterable of list of str, optional
@@ -263,32 +245,26 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
             Specify how potential phrases are scored. `scoring` can be set with either a string that refers to a
             built-in scoring function, or with a function with the expected parameter names.
             Two built-in scoring functions are available by setting `scoring` to a string:
-
             #. "default" - :func:`~gensim.models.phrases.original_scorer`.
             #. "npmi" - :func:`~gensim.models.phrases.npmi_scorer`.
         common_terms : set of str, optional
             List of "stop words" that won't affect frequency count of expressions containing them.
             Allow to detect expressions like "bank_of_america" or "eye_of_the_beholder".
-
         Notes
         -----
         'npmi' is more robust when dealing with common words that form part of common bigrams, and
         ranges from -1 to 1, but is slower to calculate than the default. The default is the PMI-like scoring
         as described by `Mikolov, et. al: "Distributed Representations of Words and Phrases and their Compositionality"
         <https://arxiv.org/abs/1310.4546>`_.
-
         To use a custom scoring function, pass in a function with the following signature:
-
         * worda_count - number of corpus occurrences in `sentences` of the first token in the bigram being scored
         * wordb_count - number of corpus occurrences in `sentences` of the second token in the bigram being scored
         * bigram_count - number of occurrences in `sentences` of the whole bigram
         * len_vocab - the number of unique tokens in `sentences`
         * min_count - the `min_count` setting of the Phrases class
         * corpus_word_count - the total number of tokens (non-unique) in `sentences`
-
         The scoring function **must accept all these parameters**, even if it doesn't use them in its scoring.
         The scoring function **must be pickleable**.
-
         """
         if min_count <= 0:
             raise ValueError("min_count should be at least 1")
@@ -328,6 +304,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         self.progress_per = progress_per
         self.corpus_word_count = 0
         self.common_terms = frozenset(utils.any2utf8(w) for w in common_terms)
+        self.doc2vec = doc2vec
 
         # ensure picklability of custom scorer
         try:
@@ -346,14 +323,12 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
     def load(cls, *args, **kwargs):
         """Load a previously saved Phrases class.
         Handles backwards compatibility from older Phrases versions which did not support pluggable scoring functions.
-
         Parameters
         ----------
         args : object
             Sequence of arguments, see :class:`~gensim.utils.SaveLoad.load` for more information.
         kwargs : object
             Sequence of arguments, see :class:`~gensim.utils.SaveLoad.load` for more information.
-
         """
         model = super(Phrases, cls).load(*args, **kwargs)
         if not hasattr(model, 'corpus_word_count'):
@@ -371,9 +346,8 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
 
     @staticmethod
     def learn_vocab(sentences, max_vocab_size, delimiter=b'_', progress_per=10000,
-                    common_terms=frozenset()):
+                    common_terms=frozenset(), doc2vec=False):
         """Collect unigram/bigram counts from the `sentences` iterable.
-
         Parameters
         ----------
         sentences : iterable of list of str
@@ -392,12 +366,10 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         common_terms : set of str, optional
             List of "stop words" that won't affect frequency count of expressions containing them.
             Allow to detect expressions like "bank_of_america" or "eye_of_the_beholder".
-
         Return
         ------
         (int, dict of (str, int), int)
             Number of pruned words, counters for each word/bi-gram and total number of words.
-
         Example
         ----------
         >>> from gensim.test.utils import datapath
@@ -412,7 +384,6 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         2
         >>> counters['response_time']
         1
-
         """
         sentence_no = -1
         total_words = 0
@@ -425,6 +396,10 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
                     "PROGRESS: at sentence #%i, processed %i words and %i word types",
                     sentence_no, total_words, len(vocab),
                 )
+            
+            if doc2vec:
+              sentence = sentence.words
+            
             s = [utils.any2utf8(w) for w in sentence]
             last_uncommon = None
             in_between = []
@@ -452,12 +427,10 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
 
     def add_vocab(self, sentences):
         """Update model with new `sentences`.
-
         Parameters
         ----------
         sentences : iterable of list of str
             Text corpus.
-
         Example
         -------
         >>> from gensim.test.utils import datapath
@@ -475,7 +448,6 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         >>>
         >>> phrases.add_vocab(more_sentences)  # add new sentences to model
         >>> assert len(phrases.vocab) == 60
-
         """
         # uses a separate vocab to collect the token counts from `sentences`.
         # this consumes more RAM than merging new sentences into `self.vocab`
@@ -483,7 +455,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         # sufficient counts, before being pruned out by the (large) accummulated
         # counts collected in previous learn_vocab runs.
         min_reduce, vocab, total_words = self.learn_vocab(
-            sentences, self.max_vocab_size, self.delimiter, self.progress_per, self.common_terms)
+            sentences, self.max_vocab_size, self.delimiter, self.progress_per, self.common_terms, self.doc2vec)
 
         self.corpus_word_count += total_words
         if len(self.vocab) > 0:
@@ -502,7 +474,6 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
 
     def export_phrases(self, sentences, out_delimiter=b' ', as_tuples=False):
         """Get all phrases that appear in 'sentences' that pass the bigram threshold.
-
         Parameters
         ----------
         sentences : iterable of list of str
@@ -511,12 +482,10 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
             Delimiter used to "glue" together words that form a bigram phrase.
         as_tuples : bool, optional
             Yield `(tuple(words), score)` instead of `(out_delimiter.join(words), score)`?
-
         Yields
         ------
         ((str, str), float) **or** (str, float)
             Phrases detected in `sentences`. Return type depends on the `as_tuples` parameter.
-
         Example
         -------
         >>> from gensim.test.utils import datapath
@@ -528,7 +497,6 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         >>>
         >>> for phrase, score in phrases.export_phrases(sentences):
         ...     pass
-
         """
         analyze_sentence = ft.partial(
             self.analyze_sentence,
@@ -553,22 +521,18 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
 
     def __getitem__(self, sentence):
         """Convert the input tokens `sentence` into tokens where detected bigrams are joined by a selected delimiter.
-
         If `sentence` is an entire corpus (iterable of sentences rather than a single
         sentence), return an iterable that converts each of the corpus' sentences
         into phrases on the fly, one after another.
-
         Parameters
         ----------
         sentence : {list of str, iterable of list of str}
             Sentence or text corpus.
-
         Returns
         -------
         {list of str, :class:`gensim.interfaces.TransformedCorpus`}
             `sentence` with detected phrase bigrams merged together, or a streamed corpus of such sentences
             if the input was a corpus.
-
         Examples
         ----------
         >>> from gensim.test.utils import datapath
@@ -593,7 +557,6 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         >>> sent = [[u'trees', u'graph', u'minors'],[u'graph', u'minors']]
         >>> for phrase in phraser[sent]:
         ...     pass
-
         """
         warnings.warn("For a faster implementation, use the gensim.models.phrases.Phraser class")
 
@@ -603,6 +566,10 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         if not is_single:
             # if the input is an entire corpus (rather than a single sentence),
             # return an iterable stream.
+            
+            if self.doc2vec:
+                return [sent for sent in sentence]
+
             return self._apply(sentence)
 
         delimiter = self.delimiter
@@ -629,7 +596,6 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
 def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
     """Bigram scoring function, based on the original `Mikolov, et. al: "Distributed Representations
     of Words and Phrases and their Compositionality" <https://arxiv.org/abs/1310.4546>`_.
-
     Parameters
     ----------
     worda_count : int
@@ -644,11 +610,9 @@ def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count
         Minimum collocation count threshold.
     corpus_word_count : int
         Not used in this particular scoring technique.
-
     Notes
     -----
     Formula: :math:`\\frac{(bigram\_count - min\_count) * len\_vocab }{ (worda\_count * wordb\_count)}`.
-
     """
     return (bigram_count - min_count) / worda_count / wordb_count * len_vocab
 
@@ -656,7 +620,6 @@ def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count
 def npmi_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
     """Calculation NPMI score based on `"Normalized (Pointwise) Mutual Information in Colocation Extraction"
     by Gerlof Bouma <https://svn.spraakdata.gu.se/repos/gerlof/pub/www/Docs/npmi-pfd.pdf>`_.
-
     Parameters
     ----------
     worda_count : int
@@ -671,12 +634,10 @@ def npmi_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, co
         Ignore all bigrams with total collected count lower than this value.
     corpus_word_count : int
         Total number of words in the corpus.
-
     Notes
     -----
     Formula: :math:`\\frac{ln(prop(word_a, word_b) / (prop(word_a)*prop(word_b)))}{ -ln(prop(word_a, word_b)}`,
     where :math:`prob(word) = \\frac{word\_count}{corpus\_word\_count}`
-
     """
     if bigram_count >= min_count:
         pa = worda_count / corpus_word_count
@@ -691,7 +652,6 @@ def npmi_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, co
 
 def pseudocorpus(source_vocab, sep, common_terms=frozenset()):
     """Feeds `source_vocab`'s compound keys back to it, to discover phrases.
-
     Parameters
     ----------
     source_vocab : iterable of list of str
@@ -700,12 +660,10 @@ def pseudocorpus(source_vocab, sep, common_terms=frozenset()):
         Separator element.
     common_terms : set, optional
         Immutable set of stopwords.
-
     Yields
     ------
     list of str
         Phrase.
-
     """
     for k in source_vocab:
         if sep not in k:
@@ -724,27 +682,21 @@ def pseudocorpus(source_vocab, sep, common_terms=frozenset()):
 
 class Phraser(SentenceAnalyzer, PhrasesTransformation):
     """Minimal state & functionality exported from :class:`~gensim.models.phrases.Phrases`.
-
     The goal of this class is to cut down memory consumption of `Phrases`, by discarding model state
     not strictly needed for the bigram detection task.
-
     Use this instead of `Phrases` if you do not need to update the bigram statistics with new documents any more.
-
     """
 
     def __init__(self, phrases_model):
         """
-
         Parameters
         ----------
         phrases_model : :class:`~gensim.models.phrases.Phrases`
             Trained phrases instance.
-
         Notes
         -----
         After the one-time initialization, a :class:`~gensim.models.phrases.Phraser` will be much smaller and somewhat
         faster than using the full :class:`~gensim.models.phrases.Phrases` model.
-
         Examples
         --------
         >>> from gensim.test.utils import datapath
@@ -758,7 +710,6 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
         >>> sent = [u'trees', u'graph', u'minors']
         >>> print(bigram[sent])
         [u'trees_graph', u'minors']
-
         """
         self.threshold = phrases_model.threshold
         self.min_count = phrases_model.min_count
@@ -780,23 +731,19 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
 
     def pseudocorpus(self, phrases_model):
         """Alias for :func:`gensim.models.phrases.pseudocorpus`.
-
         Parameters
         ----------
         phrases_model : :class:`~gensim.models.phrases.Phrases`
             Phrases instance.
-
         Return
         ------
         generator
             Generator with phrases.
-
         """
         return pseudocorpus(phrases_model.vocab, phrases_model.delimiter, phrases_model.common_terms)
 
     def score_item(self, worda, wordb, components, scorer):
         """Score a bigram.
-
         Parameters
         ----------
         worda : str
@@ -807,12 +754,10 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
             Contain phrases.
         scorer : {'default', 'npmi'}
             NOT USED.
-
         Returns
         -------
         float
             Score for given bi-gram, if bi-gram not presented in dictionary - return -1.
-
         """
         try:
             return self.phrasegrams[tuple(components)][1]
@@ -822,17 +767,14 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
     def __getitem__(self, sentence):
         """Convert the input sequence of tokens `sentence` into a sequence of tokens where adjacent
         tokens are replaced by a single token if they form a bigram collocation.
-
         Parameters
         ----------
         sentence : {list of str, iterable of list of str}
             Input sentence or a stream of sentences.
-
         Return
         ------
         {list of str, iterable of list of str}
             Sentence or sentences with phrase tokens joined by `self.delimiter` character.
-
         Examples
         ----------
         >>> from gensim.test.utils import datapath
@@ -853,7 +795,6 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
         ...     print(phrase)
         [u'trees_graph', u'minors']
         [u'graph_minors']
-
         """
         is_single, sentence = _is_single(sentence)
         if not is_single:
