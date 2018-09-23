@@ -139,8 +139,8 @@ class TestFastTextModel(unittest.TestCase):
         self.assertTrue(np.allclose(wv.vectors_ngrams, loaded_wv.vectors_ngrams))
         self.assertEqual(len(wv.vocab), len(loaded_wv.vocab))
 
-    @unittest.skipIf(os.name == 'nt', "corpus_file is not supported for Windows + Py2"
-                                      "and avoid memory error with Appveyor x32")
+    @unittest.skipIf(os.name == 'nt',
+        "corpus_file is not supported for Windows + Py2 and avoid memory error with Appveyor x32")
     def test_persistence_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext1.tst')) as corpus_file:
             utils.save_as_line_sentence(sentences, corpus_file)
