@@ -37,7 +37,7 @@ class TestWordrank(unittest.TestCase):
         """Test model successfully loaded from Wordrank format file"""
         model = wordrank.Wordrank.load_wordrank_model(self.wr_file)
         vocab_size, dim = 76, 50
-        self.assertEqual(model.syn0.shape, (vocab_size, dim))
+        self.assertEqual(model.vectors.shape, (vocab_size, dim))
         self.assertEqual(len(model.vocab), vocab_size)
         os.remove(self.wr_file + '.w2vformat')
 

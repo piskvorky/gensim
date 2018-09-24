@@ -674,7 +674,7 @@ class TestWord2VecWrapper(unittest.TestCase):
 
         word = texts[0][0]
         vec_transformer_api = self.model.transform(word)  # vector returned by W2VTransformer
-        vec_gensim_model = gensim_w2vmodel[word]  # vector returned by Word2Vec
+        vec_gensim_model = gensim_w2vmodel.wv[word]  # vector returned by Word2Vec
         passed = numpy.allclose(vec_transformer_api, vec_gensim_model, atol=1e-1)
         self.assertTrue(passed)
 
@@ -1255,14 +1255,14 @@ class TestFastTextWrapper(unittest.TestCase):
         vecs_transformer_api = self.model.transform(
                 [text for text_list in texts for text in text_list])
         # vectors returned by FastText
-        vecs_gensim_model = [gensim_ftmodel[text] for text_list in texts for text in text_list]
+        vecs_gensim_model = [gensim_ftmodel.wv[text] for text_list in texts for text in text_list]
         passed = numpy.allclose(vecs_transformer_api, vecs_gensim_model)
         self.assertTrue(passed)
 
         # test for out of vocab words
         oov_words = ["compute", "serve", "sys", "net"]
         vecs_transformer_api = self.model.transform(oov_words)  # vector returned by FTTransformer
-        vecs_gensim_model = [gensim_ftmodel[word] for word in oov_words]  # vector returned by FastText
+        vecs_gensim_model = [gensim_ftmodel.wv[word] for word in oov_words]  # vector returned by FastText
         passed = numpy.allclose(vecs_transformer_api, vecs_gensim_model)
         self.assertTrue(passed)
 
