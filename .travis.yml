@@ -13,13 +13,10 @@ language: python
 matrix:
   include:
     - python: '2.7'
-      env: TOXENV="flake8,flake8-doc"
+      env: TOXENV="flake8,flake8-docs"
 
     - python: '3.6'
-      env: TOXENV="flake8,flake8-doc"
-
-    - python: '3.6'
-      env: TOXENV="flake8-doc"
+      env: TOXENV="flake8,flake8-docs"
 
     - python: '2.7'
       env: TOXENV="py27-linux"
