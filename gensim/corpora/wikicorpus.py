@@ -90,7 +90,7 @@ IGNORED_NAMESPACES = [
     'MediaWiki', 'User', 'Help', 'Book', 'Draft', 'WikiProject',
     'Special', 'Talk'
 ]
-"""`MediaWiki namespaces <https://www.mediawiki.org/wiki/Manual:Namespace>`_ that ought to be ignored."""
+"""MediaWiki namespaces that ought to be ignored."""
 
 
 def filter_example(elem, text, *args, **kwargs):
