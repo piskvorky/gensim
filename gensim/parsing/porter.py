@@ -154,9 +154,6 @@ class PorterStemmer(object):
             >>> p.j = 3
             >>> p._vowelinstem()
             False
-
-            >>> from gensim.parsing.porter import PorterStemmer
-            >>> p = PorterStemmer()
             >>> p.b = "gensim"
             >>> p.j = 5
             >>> p._vowelinstem()
@@ -187,9 +184,6 @@ class PorterStemmer(object):
             >>> p.j = 3
             >>> p._doublec(3)
             False
-
-            >>> from gensim.parsing.porter import PorterStemmer
-            >>> p = PorterStemmer()
             >>> p.b = "really"
             >>> p.j = 5
             >>> p._doublec(4)
@@ -222,16 +216,10 @@ class PorterStemmer(object):
             >>> p.j = 2
             >>> p._cvc(2)
             True
-
-            >>> from gensim.parsing.porter import PorterStemmer
-            >>> p = PorterStemmer()
             >>> p.b = "dll"
             >>> p.j = 2
             >>> p._cvc(2)
             False
-
-            >>> from gensim.parsing.porter import PorterStemmer
-            >>> p = PorterStemmer()
             >>> p.b = "wow"
             >>> p.j = 2
             >>> p._cvc(2)
