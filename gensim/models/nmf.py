@@ -77,6 +77,10 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.eval_every = eval_every
         self.normalize = normalize
         self.sparse_threshold = sparse_threshold
+
+        self.A = None
+        self.B = None
+
         if store_r:
             self._R = []
         else:
@@ -84,24 +88,6 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         if corpus is not None:
             self.update(corpus)
-
-    @property
-    def A(self):
-        return self._A / len(self._H)
-        # return self._A
-
-    @A.setter
-    def A(self, value):
-        self._A = value
-
-    @property
-    def B(self):
-        return self._B / len(self._H)
-        # return self._B
-
-    @B.setter
-    def B(self, value):
-        self._B = value
 
     def get_topics(self):
         if self.normalize:
@@ -285,7 +271,11 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     self._R.append(r)
 
                 self.A += h.dot(h.T)
+                self.A *= (max(len(self._H) - 1, 1)) / len(self._H)
+
                 self.B += (v - r).dot(h.T)
+                self.B *= (max(len(self._H) - 1, 1)) / len(self._H)
+
                 self._solve_w()
 
                 if chunk_idx % self.eval_every == 0:
