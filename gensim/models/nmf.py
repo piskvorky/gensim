@@ -87,8 +87,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     @property
     def A(self):
-        # return self._A / len(self._H)
-        return self._A
+        return self._A / len(self._H)
+        # return self._A
 
     @A.setter
     def A(self, value):
@@ -96,8 +96,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     @property
     def B(self):
-        # return self._B / len(self._H)
-        return self._B
+        return self._B / len(self._H)
+        # return self._B
 
     @B.setter
     def B(self, value):
