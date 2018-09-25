@@ -34,6 +34,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         eval_every=10,
         v_max=None,
         normalize=True,
+        sparse_threshold=1e-3
     ):
         """
 
@@ -75,6 +76,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.v_max = v_max
         self.eval_every = eval_every
         self.normalize = normalize
+        self.sparse_threshold = sparse_threshold
         if store_r:
             self._R = []
         else:
@@ -85,7 +87,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     @property
     def A(self):
-        return self._A / len(self._H)
+        # return self._A / len(self._H)
+        return self._A
 
     @A.setter
     def A(self, value):
@@ -93,7 +96,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     @property
     def B(self):
-        return self._B / len(self._H)
+        # return self._B / len(self._H)
+        return self._B
 
     @B.setter
     def B(self, value):
@@ -101,9 +105,9 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def get_topics(self):
         if self.normalize:
-            return np.asarray(self._W.T / self._W.T.sum(axis=1).reshape(-1, 1))
+            return self._W.T.toarray() / self._W.T.toarray().sum(axis=1).reshape(-1, 1)
 
-        return self._W.T
+        return self._W.T.toarray()
 
     def __getitem__(self, bow, eps=None):
         return self.get_document_topics(bow, eps)
@@ -141,15 +145,15 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         topics = self.get_topics()
 
-        print(topics)
+        # print(topics)
 
         for i in chosen_topics:
             topic = topics[i]
-            print(type(topic))
-            print(topic.shape)
+            # print(topic)
+            # print(topic.shape)
             bestn = matutils.argsort(topic, num_words, reverse=True).ravel()
-            print(type(bestn))
-            print(bestn.shape)
+            # print(type(bestn))
+            # print(bestn.shape)
             topic = [(self.id2word[id], topic[id]) for id in bestn]
             if formatted:
                 topic = " + ".join(['%.3f*"%s"' % (v, k) for k, v in topic])
@@ -310,8 +314,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             # print(type(self.B))
             # print(self.B[:5, :5])
             return (
-                0.5 * (self._W.T.dot(self._W).dot(self.A)).diagonal().sum()
-                - (self._W.T.dot(self.B)).diagonal().sum()
+                0.5 * self._W.T.dot(self._W).dot(self.A).diagonal().sum()
+                - self._W.T.dot(self.B).diagonal().sum()
             )
 
         eta = self._kappa / scipy.sparse.linalg.norm(self.A)
@@ -334,73 +338,52 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     @staticmethod
     def __solve_r(r, r_actual, lambda_, v_max):
-        threshold = 1e-1
+        r_actual_sign = np.sign(r_actual.data)
 
-        r_actual.data *= np.abs(r_actual.data) > threshold
+        np.abs(r_actual.data, out=r_actual.data)
+        r_actual.data -= lambda_
+        np.maximum(r_actual.data, 0.0, out=r_actual.data)
+
+        r_actual.data *= r_actual_sign
         r_actual.eliminate_zeros()
+
+        np.clip(r_actual.data, -v_max, v_max, out=r_actual.data)
+
+        violation = scipy.sparse.linalg.norm(r - r_actual)
 
         r.indices = r_actual.indices
         r.indptr = r_actual.indptr
         r.data = r_actual.data
 
-        np.abs(r_actual.data, out=r.data)
-        r.data -= lambda_
-        np.maximum(r.data, 0.0, out=r.data)
-
-        r_actual.data *= np.abs(r.data) > threshold
-        r_actual.eliminate_zeros()
-        r.data *= np.abs(r.data) > threshold
-        r.eliminate_zeros()
-
-        r.data *= np.sign(r_actual.data)
-
-        np.clip(r.data, -v_max, v_max, out=r.data)
-
-        return scipy.sparse.linalg.norm(r - r_actual)
+        return violation
 
     @staticmethod
     def __solve_h(h, Wt_v_minus_r, WtW, eta):
-        threshold = 1e-1
-
-        # print('h')
-        # print(h[:5, :5])
         grad = (WtW.dot(h) - Wt_v_minus_r) * eta
-        # print('grad')
-        # print(grad[:5, :5])
         grad = scipy.sparse.csr_matrix(grad)
         new_h = h - grad
 
-        new_h.data *= np.abs(new_h.data) > threshold
-        new_h.eliminate_zeros()
-        # print('new_h')
-        # print(new_h[:5, :5])
         np.maximum(new_h.data, 0.0, out=new_h.data)
-        # print('new_h')
-        # print(new_h[:5, :5])
         new_h.eliminate_zeros()
-        # print('new_h')
-        # print(new_h[:5, :5])
 
         return new_h, scipy.sparse.linalg.norm(grad)
 
     def __transform(self):
-        threshold = 1e-2
-
-        self._W.data *= np.abs(self._W.data) > threshold
-        self._W.eliminate_zeros()
-
         np.clip(self._W.data, 0, self.v_max, out=self._W.data)
         self._W.eliminate_zeros()
-        # print(type(self._W))
-        # print(self._W[:5, :5])
         sumsq = scipy.sparse.linalg.norm(self._W, axis=0)
         np.maximum(sumsq, 1, out=sumsq)
-        self._W = scipy.sparse.csc_matrix(self._W / sumsq)
+        self._W /= sumsq
+        self._W = np.multiply(
+            self._W,
+            (
+                (self._W > self.sparse_threshold)
+                | (self._W < self.sparse_threshold).all(axis=0)
+            )
+        )
 
-        self._W.data *= np.abs(self._W.data) > threshold
+        self._W = scipy.sparse.csc_matrix(self._W)
         self._W.eliminate_zeros()
-        # print(type(self._W))
-        # print(self._W[:5, :5])
 
     def _solveproj(self, v, W, h=None, r=None, v_max=None):
         m, n = W.shape
@@ -421,7 +404,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         WtW = W.T.dot(W)
 
-        eta = self._kappa / scipy.sparse.linalg.norm(W) ** 2
+        # eta = self._kappa / scipy.sparse.linalg.norm(W) ** 2
 
         _h_r_error = None
 
@@ -432,15 +415,17 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             Wt_v_minus_r = W.T.dot(v - r)
 
-            # error_ += solve_h(h, Wt_v_minus_r, WtW, self._kappa)
-            h, error_h = self.__solve_h(h, Wt_v_minus_r, WtW, eta)
-            error_ += error_h
+            h_ = h.toarray()
+            error_ += solve_h(h_, Wt_v_minus_r.toarray(), WtW.toarray(), self._kappa)
+            h = scipy.sparse.csr_matrix(h_)
+            # h, error_h = self.__solve_h(h, Wt_v_minus_r, WtW, eta)
+            # error_ += error_h
 
             if self.use_r:
                 r_actual = v - W.dot(h)
+                # print(r.data.shape)
                 # error_ += solve_r(r, r_actual, self._lambda_, self.v_max)
                 error_ += self.__solve_r(r, r_actual, self._lambda_, self.v_max)
-                # error_ += solve_r(r, v, self._lambda_, self.v_max)
 
             error_ /= m
 
