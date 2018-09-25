@@ -99,7 +99,7 @@ class SvmLightCorpus(IndexedCorpus):
             Corpus in BoW format.
         id2word : dict of (str, str), optional
             Mapping id -> word.
-        labels : list, numpy.ndarray or False
+        labels : list, numpy.ndarray, False
             An SVMlight `<target>` class tags or False if not present.
         metadata : bool
             ARGUMENT WILL BE IGNORED.
@@ -112,8 +112,8 @@ class SvmLightCorpus(IndexedCorpus):
         """
         logger.info("converting corpus to SVMlight format: %s", fname)
 
-        if type(labels) == np.ndarray:
-            labels = labels.tolist()    
+        if isinstance(labels, np.ndarray):
+            labels = labels.tolist()
         offsets = []
         with utils.smart_open(fname, 'wb') as fout:
             for docno, doc in enumerate(corpus):
