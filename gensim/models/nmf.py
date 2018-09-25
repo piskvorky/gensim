@@ -240,8 +240,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             * halfnorm.rvs(size=(self.n_features, self.num_topics))
         )
         self._W *= (
-            (self._W > avg)
-            | (self._W < avg).all(axis=0)
+            (self._W > avg * 3)
+            | (self._W < avg * 3).all(axis=0)
         )
 
         self._W = scipy.sparse.csc_matrix(self._W)
