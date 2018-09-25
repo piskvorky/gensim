@@ -232,13 +232,17 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.n_features = first_doc.shape[0]
         avg = np.sqrt(first_doc.mean() / self.n_features)
 
-        self._W = scipy.sparse.csc_matrix(
-            np.abs(
-                avg
-                * halfnorm.rvs(size=(self.n_features, self.num_topics))
-                / np.sqrt(self.num_topics)
-            )
+        self._W = np.abs(
+            avg
+            * halfnorm.rvs(size=(self.n_features, self.num_topics))
+            / np.sqrt(self.num_topics)
         )
+        self._W *= (
+            (self._W > self.sparse_threshold)
+            | (self._W < self.sparse_threshold).all(axis=0)
+        )
+
+        self._W = scipy.sparse.csc_matrix(self._W)
 
         self.A = scipy.sparse.csr_matrix((self.num_topics, self.num_topics))
         self.B = scipy.sparse.csc_matrix((self.n_features, self.num_topics))
