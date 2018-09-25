@@ -34,7 +34,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         eval_every=10,
         v_max=None,
         normalize=True,
-        sparse_threshold=1e-3
+        sparse_coef=3
     ):
         """
 
@@ -76,10 +76,12 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.v_max = v_max
         self.eval_every = eval_every
         self.normalize = normalize
-        self.sparse_threshold = sparse_threshold
+        self.sparse_coef = sparse_coef
 
         self.A = None
         self.B = None
+
+        self.w_avg = None
 
         if store_r:
             self._R = []
@@ -230,18 +232,18 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         first_doc = next(iter(corpus))
         first_doc = matutils.corpus2csc([first_doc], len(self.id2word))[:, 0]
         self.n_features = first_doc.shape[0]
-        avg = (
+        self.w_avg = (
             np.sqrt(first_doc.mean() / self.n_features)
             / np.sqrt(self.num_topics)
         )
 
         self._W = np.abs(
-            avg
+            self.w_avg
             * halfnorm.rvs(size=(self.n_features, self.num_topics))
         )
         self._W *= (
-            (self._W > avg * 3)
-            | (self._W < avg * 3).all(axis=0)
+            (self._W > self.w_avg * self.sparse_coef)
+            | (self._W < self.w_avg * self.sparse_coef).all(axis=0)
         )
 
         self._W = scipy.sparse.csc_matrix(self._W)
@@ -370,16 +372,28 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         sumsq = scipy.sparse.linalg.norm(self._W, axis=0)
         np.maximum(sumsq, 1, out=sumsq)
         self._W /= sumsq
+
         self._W = np.multiply(
             self._W,
             (
-                (self._W > self.sparse_threshold)
-                | (self._W < self.sparse_threshold).all(axis=0)
+                (self._W > self.w_avg * self.sparse_coef)
+                | (self._W < self.w_avg * self.sparse_coef).all(axis=0)
             )
         )
 
         self._W = scipy.sparse.csc_matrix(self._W)
-        self._W.eliminate_zeros()
+        # self._W = np.multiply(
+        #     self._W,
+        #     self._W >= (
+        #         self._W.mean(axis=0)
+        #         - self.sparse_coef * self._W.std(axis=0))
+        # )
+
+        # stds = ((self._W.power(2)).mean(axis=0) - self._W.mean(axis=0)**2).sqrt()
+        # print(W_stds)
+        # self._W *= self._W >= (self._W.mean(axis=0) - self.sparse_coef * stds)
+
+        # self._W.eliminate_zeros()
 
     def _solveproj(self, v, W, h=None, r=None, v_max=None):
         m, n = W.shape
