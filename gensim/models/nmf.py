@@ -230,8 +230,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def _setup(self, corpus):
         self._h, self._r = None, None
-        corpus, first_doc_it = itertools.tee(corpus)
-        first_doc = next(first_doc_it)
+        first_doc_it = itertools.tee(corpus, 1)
+        first_doc = next(first_doc_it[0])
         first_doc = matutils.corpus2csc([first_doc], len(self.id2word))[:, 0]
         self.n_features = first_doc.shape[0]
         self.w_avg = np.sqrt(
@@ -252,7 +252,6 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         self.A = scipy.sparse.csr_matrix((self.num_topics, self.num_topics))
         self.B = scipy.sparse.csc_matrix((self.n_features, self.num_topics))
-        return corpus
 
     def update(self, corpus, chunks_as_numpy=False):
         """
@@ -265,7 +264,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
 
         if self.n_features is None:
-            corpus = self._setup(corpus)
+            self._setup(corpus)
 
         chunk_idx = 1
 
