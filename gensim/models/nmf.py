@@ -210,7 +210,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return values
 
     def get_document_topics(self, bow, minimum_probability=None):
-        v = matutils.corpus2csc([bow], len(self.id2word))
+        v = matutils.corpus2csc([bow], len(self.id2word)).tocsr()
         h, _ = self._solveproj(v, self._W, v_max=np.inf)
 
         if self.normalize:
@@ -271,7 +271,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             for chunk in utils.grouper(
                 corpus, self.chunksize, as_numpy=chunks_as_numpy
             ):
-                v = matutils.corpus2csc(chunk, len(self.id2word))
+                v = matutils.corpus2csc(chunk, len(self.id2word)).tocsr()
                 self._h, self._r = self._solveproj(v, self._W, r=self._r, h=self._h, v_max=self.v_max)
                 h, r = self._h, self._r
                 self._H.append(h)
@@ -399,10 +399,10 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         hshape = (n, batch_size)
 
         if h is None or h.shape != hshape:
-            h = scipy.sparse.csc_matrix(hshape)
+            h = scipy.sparse.csr_matrix(hshape)
 
         if r is None or r.shape != rshape:
-            r = scipy.sparse.csc_matrix(rshape)
+            r = scipy.sparse.csr_matrix(rshape)
 
         WtW = W.T.dot(W)
 
