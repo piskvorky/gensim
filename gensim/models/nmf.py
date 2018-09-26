@@ -241,10 +241,10 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             self.w_avg
             * halfnorm.rvs(size=(self.n_features, self.num_topics))
         )
-        self._W *= (
-            (self._W > self.w_avg * self.sparse_coef)
-            | (self._W < self.w_avg * self.sparse_coef).all(axis=0)
-        )
+
+        is_great_enough = self._W > self.w_avg * self.sparse_coef
+
+        self._W *= is_great_enough | ~is_great_enough.all(axis=0)
 
         self._W = scipy.sparse.csc_matrix(self._W)
 
@@ -371,29 +371,21 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self._W.eliminate_zeros()
         sumsq = scipy.sparse.linalg.norm(self._W, axis=0)
         np.maximum(sumsq, 1, out=sumsq)
-        self._W /= sumsq
+        sumsq = np.repeat(sumsq, self._W.getnnz(axis=0))
+        self._W.data /= sumsq
 
-        self._W = np.multiply(
-            self._W,
-            (
-                (self._W > self.w_avg * self.sparse_coef)
-                | (self._W < self.w_avg * self.sparse_coef).all(axis=0)
-            )
+        is_great_enough_data = self._W.data > self.w_avg * self.sparse_coef
+        is_great_enough = self._W.toarray() > self.w_avg * self.sparse_coef
+        is_all_too_small = is_great_enough.sum(axis=0) == 0
+        is_all_too_small = np.repeat(
+            is_all_too_small,
+            self._W.getnnz(axis=0)
         )
 
-        self._W = scipy.sparse.csc_matrix(self._W)
-        # self._W = np.multiply(
-        #     self._W,
-        #     self._W >= (
-        #         self._W.mean(axis=0)
-        #         - self.sparse_coef * self._W.std(axis=0))
-        # )
+        is_great_enough_data |= is_all_too_small
 
-        # stds = ((self._W.power(2)).mean(axis=0) - self._W.mean(axis=0)**2).sqrt()
-        # print(W_stds)
-        # self._W *= self._W >= (self._W.mean(axis=0) - self.sparse_coef * stds)
-
-        # self._W.eliminate_zeros()
+        self._W.data *= is_great_enough_data
+        self._W.eliminate_zeros()
 
     def _solveproj(self, v, W, h=None, r=None, v_max=None):
         m, n = W.shape
@@ -433,14 +425,14 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             if self.use_r:
                 r_actual = v - W.dot(h)
-                error_ += solve_r(
-                    r.indptr, r.indices, r.data,
-                    r_actual.indptr, r_actual.indices, r_actual.data,
-                    self._lambda_,
-                    self.v_max
-                )
-                r = r_actual
-                # error_ += self.__solve_r(r, r_actual, self._lambda_, self.v_max)
+                # error_ += solve_r(
+                #     r.indptr, r.indices, r.data,
+                #     r_actual.indptr, r_actual.indices, r_actual.data,
+                #     self._lambda_,
+                #     self.v_max
+                # )
+                # r = r_actual
+                error_ += self.__solve_r(r, r_actual, self._lambda_, self.v_max)
 
             error_ /= m
 
