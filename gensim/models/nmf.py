@@ -7,6 +7,7 @@ from gensim import matutils
 from gensim import interfaces
 from gensim.models import basemodel
 from gensim.models.nmf_pgd import solve_h, solve_r
+import itertools
 
 logger = logging.getLogger(__name__)
 
@@ -229,7 +230,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def _setup(self, corpus):
         self._h, self._r = None, None
-        first_doc = next(iter(corpus))
+        corpus, first_doc_it = itertools.tee(corpus)
+        first_doc = next(first_doc_it)
         first_doc = matutils.corpus2csc([first_doc], len(self.id2word))[:, 0]
         self.n_features = first_doc.shape[0]
         self.w_avg = np.sqrt(
