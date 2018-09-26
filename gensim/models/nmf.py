@@ -6,7 +6,7 @@ from gensim import utils
 from gensim import matutils
 from gensim import interfaces
 from gensim.models import basemodel
-from gensim.models.nmf_pgd import solve_r
+from gensim.models.nmf_pgd import solve_h, solve_r
 
 logger = logging.getLogger(__name__)
 
@@ -248,7 +248,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         self._W = scipy.sparse.csc_matrix(self._W)
 
-        self.A = scipy.sparse.csc_matrix((self.num_topics, self.num_topics))
+        self.A = scipy.sparse.csr_matrix((self.num_topics, self.num_topics))
         self.B = scipy.sparse.csc_matrix((self.n_features, self.num_topics))
         return corpus
 
@@ -358,7 +358,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
     @staticmethod
     def __solve_h(h, Wt_v_minus_r, WtW, eta):
         grad = (WtW.dot(h) - Wt_v_minus_r) * eta
-        grad = scipy.sparse.csc_matrix(grad)
+        grad = scipy.sparse.csr_matrix(grad)
         new_h = h - grad
 
         np.maximum(new_h.data, 0.0, out=new_h.data)
@@ -406,7 +406,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         WtW = W.T.dot(W)
 
-        eta = self._kappa / scipy.sparse.linalg.norm(W) ** 2
+        # eta = self._kappa / scipy.sparse.linalg.norm(W) ** 2
 
         _h_r_error = None
 
@@ -417,11 +417,11 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             Wt_v_minus_r = W.T.dot(v - r)
 
-            # h_ = h.toarray()
-            # error_ += solve_h(h, Wt_v_minus_r.toarray(), WtW.toarray(), self._kappa)
-            # h = scipy.sparse.csr_matrix(h_)
-            h, error_h = self.__solve_h(h, Wt_v_minus_r, WtW, eta)
-            error_ += error_h
+            h_ = h.toarray()
+            error_ += solve_h(h_, Wt_v_minus_r.toarray(), WtW.toarray(), self._kappa)
+            h = scipy.sparse.csr_matrix(h_)
+            # h, error_h = self.__solve_h(h, Wt_v_minus_r, WtW, eta)
+            # error_ += error_h
 
             if self.use_r:
                 r_actual = v - W.dot(h)
