@@ -234,7 +234,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.n_features = first_doc.shape[0]
         self.w_avg = np.sqrt(
             first_doc.mean()
-            / self.n_features * self.num_topics
+            / (self.n_features * self.num_topics)
         )
 
         self._W = np.abs(
