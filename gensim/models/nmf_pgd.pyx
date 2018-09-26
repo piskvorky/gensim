@@ -76,7 +76,7 @@ def solve_r(
         r_col_indices[sample_idx] = 0
         r_actual_col_indices[sample_idx] = 0
 
-        while r_col_indices[sample_idx] < r_col_size and r_actual_col_indices[sample_idx] < r_actual_col_size:
+        while r_col_indices[sample_idx] < r_col_size or r_actual_col_indices[sample_idx] < r_actual_col_size:
             r_col_idx_idx = r_indices[
                 r_indptr[sample_idx]
                 + r_col_indices[sample_idx]
@@ -116,38 +116,44 @@ def solve_r(
                     0
                 )
 
-                r_actual_data[
-                    r_actual_indptr[sample_idx]
-                    + r_actual_col_indices[sample_idx]
-                ] = copysign(
+                if (
+                        r_actual_data[
+                            r_actual_indptr[sample_idx]
+                            + r_actual_col_indices[sample_idx]
+                        ] != 0
+                ):
                     r_actual_data[
                         r_actual_indptr[sample_idx]
                         + r_actual_col_indices[sample_idx]
-                    ],
-                    r_actual_sign
-                )
+                    ] = copysign(
+                        r_actual_data[
+                            r_actual_indptr[sample_idx]
+                            + r_actual_col_indices[sample_idx]
+                        ],
+                        r_actual_sign
+                    )
 
-                r_actual_data[
-                    r_actual_indptr[sample_idx]
-                    + r_actual_col_indices[sample_idx]
-                ] = fmax(
                     r_actual_data[
                         r_actual_indptr[sample_idx]
                         + r_actual_col_indices[sample_idx]
-                    ],
-                    -v_max
-                )
+                    ] = fmax(
+                        r_actual_data[
+                            r_actual_indptr[sample_idx]
+                            + r_actual_col_indices[sample_idx]
+                        ],
+                        -v_max
+                    )
 
-                r_actual_data[
-                    r_actual_indptr[sample_idx]
-                    + r_actual_col_indices[sample_idx]
-                ] = fmin(
                     r_actual_data[
                         r_actual_indptr[sample_idx]
                         + r_actual_col_indices[sample_idx]
-                    ],
-                    v_max
-                )
+                    ] = fmin(
+                        r_actual_data[
+                            r_actual_indptr[sample_idx]
+                            + r_actual_col_indices[sample_idx]
+                        ],
+                        v_max
+                    )
 
                 if r_col_idx_idx == r_actual_col_idx_idx:
                     violation += (
@@ -166,13 +172,19 @@ def solve_r(
                         + r_actual_col_indices[sample_idx]
                     ] ** 2
 
-                r_actual_col_indices[sample_idx] += 1
+                if r_actual_col_indices[sample_idx] < r_actual_col_size:
+                    r_actual_col_indices[sample_idx] += 1
+                else:
+                    r_col_indices[sample_idx] += 1
             else:
                 violation += r_data[
                     r_indptr[sample_idx]
                     + r_col_indices[sample_idx]
                 ] ** 2
 
-                r_col_indices[sample_idx] += 1
+                if r_col_indices[sample_idx] < r_col_size:
+                    r_col_indices[sample_idx] += 1
+                else:
+                    r_actual_col_indices[sample_idx] += 1
 
     return sqrt(violation)

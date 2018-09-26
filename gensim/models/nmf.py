@@ -433,7 +433,6 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             if self.use_r:
                 r_actual = v - W.dot(h)
-                # print(r.data.shape)
                 error_ += solve_r(
                     r.indptr, r.indices, r.data,
                     r_actual.indptr, r_actual.indices, r_actual.data,
