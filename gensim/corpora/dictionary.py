@@ -596,8 +596,7 @@ class Dictionary(utils.SaveLoad, Mapping):
             old_token = self[idx]
             self.token2id[token] = idx
             self.token2id[old_token] = len(self.token2id)
-        if len(self.id2token) == len(self.token2id):
-            self.id2token = {}  # Make sure that id2token is updated according to special tokens.
+        self.id2token = {}  # Make sure that id2token is updated according to special tokens.
 
     @staticmethod
     def load_from_text(fname):
