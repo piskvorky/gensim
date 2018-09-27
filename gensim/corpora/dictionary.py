@@ -571,6 +571,34 @@ class Dictionary(utils.SaveLoad, Mapping):
         import gensim.models
         return gensim.models.VocabTransform(old2new)
 
+    def patch_with_special_tokens(self, special_token_dict):
+        """Patch token2id and id2token using a dictionary of special tokens.
+
+        Parameters
+        ----------
+        special_token_dict : dict of (str, int)
+            dict containing the special tokens as keys and their wanted indices as values.
+
+        Examples
+        --------
+        >>> from gensim.corpora import Dictionary
+        >>>
+        >>> corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
+        >>> dct = Dictionary(corpus)
+        >>> special_tokens = {'pad': 0, 'space': 1}
+        >>> print(dct.token2id)
+        {'maso': 0, 'mele': 1, 'máma': 2, 'ema': 3, 'má': 4}
+        >>> dct.patch_with_special_tokens(special_tokens)
+        >>> print(dct.token2id)
+        {'maso': 6, 'mele': 7, 'máma': 2, 'ema': 3, 'má': 4, 'pad': 0, 'space': 1}
+        """
+        for token, idx in special_token_dict.items():
+            old_token = self[idx]
+            self.token2id[token] = idx
+            self.token2token2id[old_token] = len(self.token2id)
+        if len(self.id2token) == len(self.token2id):
+            self.id2token = {}  # Make sure that id2token is updated according to special tokens.
+
     @staticmethod
     def load_from_text(fname):
         """Load a previously stored :class:`~gensim.corpora.dictionary.Dictionary` from a text file.
