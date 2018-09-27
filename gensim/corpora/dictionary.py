@@ -595,7 +595,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         for token, idx in special_token_dict.items():
             old_token = self[idx]
             self.token2id[token] = idx
-            self.token2token2id[old_token] = len(self.token2id)
+            self.token2id[old_token] = len(self.token2id)
         if len(self.id2token) == len(self.token2id):
             self.id2token = {}  # Make sure that id2token is updated according to special tokens.
 
