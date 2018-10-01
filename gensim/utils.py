@@ -1215,8 +1215,6 @@ class InputQueue(multiprocessing.Process):
 
 
 if os.name == 'nt':
-    warnings.warn("detected Windows; aliasing chunkize to chunkize_serial")
-
     def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
         """Split `corpus` into fixed-sized chunks, using :func:`~gensim.utils.chunkize_serial`.
 
@@ -1237,6 +1235,8 @@ if os.name == 'nt':
             "chunksize"-ed chunks of elements from `corpus`.
 
         """
+        if maxsize > 0:
+            warnings.warn("detected Windows; aliasing chunkize to chunkize_serial")
         for chunk in chunkize_serial(corpus, chunksize, as_numpy=as_numpy):
             yield chunk
 else:
