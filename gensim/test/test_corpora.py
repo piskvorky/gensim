@@ -384,7 +384,7 @@ class TestSvmLightCorpus(CorpusTestCase):
         
     def test_serialization(self):
         path = get_tmpfile("svml.corpus")
-        labels = [1] * len(common_cropus)
+        labels = [1] * len(common_corpus)
         second_corpus = [(0, 1.0), (3, 1.0), (4, 1.0), (5, 1.0), (6, 1.0), (7, 1.0)]
         self.corpus_class.serialize(path, common_corpus, labels=labels)
         serialized_corpus = self.corpus_class(path)
