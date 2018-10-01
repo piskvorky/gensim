@@ -641,7 +641,7 @@ class WordVectorsAccumulator(UsesDictionary):
 
         self.model = Word2Vec(**kwargs)
         self.model.build_vocab(texts)
-        self.model.train(texts, total_examples=self.model.corpus_count, epochs=self.model.iter)
+        self.model.train(texts, total_examples=self.model.corpus_count, epochs=self.model.epochs)
         self.model = self.model.wv  # retain KeyedVectors
         return self
 

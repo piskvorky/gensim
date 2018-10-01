@@ -44,6 +44,8 @@ from six.moves import xrange
 
 from smart_open import smart_open
 
+from multiprocessing import cpu_count
+
 if sys.version_info[0] >= 3:
     unicode = str
 
@@ -448,7 +450,8 @@ class SaveLoad(object):
         for attrib in getattr(self, '__recursive_saveloads', []):
             cfname = '.'.join((fname, attrib))
             logger.info("loading %s recursively from %s.* with mmap=%s", attrib, cfname, mmap)
-            getattr(self, attrib)._load_specials(cfname, mmap, compress, subname)
+            with ignore_deprecation_warning():
+                getattr(self, attrib)._load_specials(cfname, mmap, compress, subname)
 
         for attrib in getattr(self, '__numpys', []):
             logger.info("loading %s from %s with mmap=%s", attrib, subname(fname, attrib), mmap)
@@ -461,7 +464,8 @@ class SaveLoad(object):
             else:
                 val = np.load(subname(fname, attrib), mmap_mode=mmap)
 
-            setattr(self, attrib, val)
+            with ignore_deprecation_warning():
+                setattr(self, attrib, val)
 
         for attrib in getattr(self, '__scipys', []):
             logger.info("loading %s from %s with mmap=%s", attrib, subname(fname, attrib), mmap)
@@ -479,11 +483,13 @@ class SaveLoad(object):
                 sparse.indptr = np.load(subname(fname, attrib, 'indptr'), mmap_mode=mmap)
                 sparse.indices = np.load(subname(fname, attrib, 'indices'), mmap_mode=mmap)
 
-            setattr(self, attrib, sparse)
+            with ignore_deprecation_warning():
+                setattr(self, attrib, sparse)
 
         for attrib in getattr(self, '__ignoreds', []):
             logger.info("setting ignored attribute %s to None", attrib)
-            setattr(self, attrib, None)
+            with ignore_deprecation_warning():
+                setattr(self, attrib, None)
 
     @staticmethod
     def _adapt_by_suffix(fname):
@@ -541,7 +547,8 @@ class SaveLoad(object):
             # restore attribs handled specially
             for obj, asides in restores:
                 for attrib, val in iteritems(asides):
-                    setattr(obj, attrib, val)
+                    with ignore_deprecation_warning():
+                        setattr(obj, attrib, val)
         logger.info("saved %s", fname)
 
     def _save_specials(self, fname, separately, sep_limit, ignore, pickle_protocol, compress, subname):
@@ -582,11 +589,12 @@ class SaveLoad(object):
                 elif isinstance(val, sparse_matrices) and val.nnz >= sep_limit:
                     separately.append(attrib)
 
-        # whatever's in `separately` or `ignore` at this point won't get pickled
-        for attrib in separately + list(ignore):
-            if hasattr(self, attrib):
-                asides[attrib] = getattr(self, attrib)
-                delattr(self, attrib)
+        with ignore_deprecation_warning():
+            # whatever's in `separately` or `ignore` at this point won't get pickled
+            for attrib in separately + list(ignore):
+                if hasattr(self, attrib):
+                    asides[attrib] = getattr(self, attrib)
+                    delattr(self, attrib)
 
         recursive_saveloads = []
         restores = []
@@ -1440,6 +1448,14 @@ def deprecated(reason):
         raise TypeError(repr(type(reason)))
 
 
+@contextmanager
+def ignore_deprecation_warning():
+    """Contextmanager for ignoring DeprecationWarning."""
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
+        yield
+
+
 @deprecated("Function will be removed in 4.0.0")
 def toptexts(query, texts, index, n=10):
     """Debug fnc to help inspect the top `n` most similar documents (according to a similarity index `index`),
@@ -2025,3 +2041,44 @@ def lazy_flatten(nested_list):
                 yield sub
         else:
             yield el
+
+
+def save_as_line_sentence(corpus, filename):
+    """Save the corpus in LineSentence format, i.e. each sentence on a separate line,
+    tokens are separated by space.
+
+    Parameters
+    ----------
+    corpus : iterable of iterables of strings
+
+    """
+    with smart_open(filename, mode='wb', encoding='utf8') as fout:
+        for sentence in corpus:
+            line = any2unicode(' '.join(sentence) + '\n')
+            fout.write(line)
+
+
+def effective_n_jobs(n_jobs):
+    """Determines the number of jobs can run in parallel.
+
+    Just like in sklearn, passing n_jobs=-1 means using all available
+    CPU cores.
+
+    Parameters
+    ----------
+    n_jobs : int
+        Number of workers requested by caller.
+
+    Returns
+    -------
+    int
+        Number of effective jobs.
+
+    """
+    if n_jobs == 0:
+        raise ValueError('n_jobs == 0 in Parallel has no meaning')
+    elif n_jobs is None:
+        return 1
+    elif n_jobs < 0:
+        n_jobs = max(cpu_count() + 1 + n_jobs, 1)
+    return n_jobs

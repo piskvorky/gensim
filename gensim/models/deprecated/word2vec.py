@@ -191,6 +191,7 @@ def load_old_word2vec(*args, **kwargs):
 
     new_model.train_count = old_model.__dict__.get('train_count', None)
     new_model.corpus_count = old_model.__dict__.get('corpus_count', None)
+    new_model.corpus_total_words = old_model.__dict__.get('corpus_total_words', None)
     new_model.running_training_loss = old_model.__dict__.get('running_training_loss', 0)
     new_model.total_train_time = old_model.__dict__.get('total_train_time', None)
     new_model.min_alpha_yet_reached = old_model.__dict__.get('min_alpha_yet_reached', old_model.alpha)
@@ -1622,6 +1623,8 @@ class Word2Vec(SaveLoad):
             model.make_cum_table()  # rebuild cum_table from vocabulary
         if not hasattr(model, 'corpus_count'):
             model.corpus_count = None
+        if not hasattr(model, 'corpus_total_words'):
+            model.corpus_total_words = None
         for v in model.wv.vocab.values():
             if hasattr(v, 'sample_int'):
                 break  # already 0.12.0+ style int probabilities

@@ -56,7 +56,9 @@ class Dictionary(utils.SaveLoad, Mapping):
         documents : iterable of iterable of str, optional
             Documents to be used to initialize the mapping and collect corpus statistics.
         prune_at : int, optional
-            Dictionary will keep no more than `prune_at` words in its mapping, to limit its RAM footprint.
+            Dictionary will try to keep no more than `prune_at` words in its mapping, to limit its RAM
+            footprint, the correctness is not guaranteed.
+            Use :meth:`~gensim.corpora.dictionary.Dictionary.filter_extremes` to perform proper filtering.
 
         Examples
         --------
@@ -172,7 +174,9 @@ class Dictionary(utils.SaveLoad, Mapping):
         documents : iterable of iterable of str
             Input corpus. All tokens should be already **tokenized and normalized**.
         prune_at : int, optional
-            Dictionary will keep no more than `prune_at` words in its mapping, to limit its RAM footprint.
+            Dictionary will try to keep no more than `prune_at` words in its mapping, to limit its RAM
+            footprint, the correctness is not guaranteed.
+            Use :meth:`~gensim.corpora.dictionary.Dictionary.filter_extremes` to perform proper filtering.
 
         Examples
         --------

@@ -10,7 +10,8 @@ for any two sets of named-vectors where there are some paired-guideposts to lear
 
 Examples
 --------
-**How to make translation between two set of word-vectors**
+How to make translation between two set of word-vectors
+=======================================================
 
 Initialize a word-vector models
 
@@ -47,7 +48,8 @@ Save / load model
 ...     loaded_trans_model = TranslationMatrix.load(fname)  # load model
 
 
-**How to make translation between two :class:`~gensim.models.doc2vec.Doc2Vec` models**
+How to make translation between two :class:`~gensim.models.doc2vec.Doc2Vec` models
+==================================================================================
 
 Prepare data and models
 
@@ -134,12 +136,12 @@ class Space(object):
             # if the lexicon is not provided, using the all the Keyedvectors's words as default
             for item in lexicon:
                 words.append(item)
-                mat.append(lang_vec.syn0[lang_vec.vocab[item].index])
+                mat.append(lang_vec.vectors[lang_vec.vocab[item].index])
 
         else:
             for item in lang_vec.vocab.keys():
                 words.append(item)
-                mat.append(lang_vec.syn0[lang_vec.vocab[item].index])
+                mat.append(lang_vec.vectors[lang_vec.vocab[item].index])
 
         return Space(mat, words)
 

@@ -13,7 +13,7 @@ unseen documents, using an (optimized version of) collapsed gibbs sampling from 
 
 Notes
 -----
-MALLET's LDA training requires :math:O(#corpus_words) of memory, keeping the entire corpus in RAM.
+MALLET's LDA training requires :math:`O(corpus\_words)` of memory, keeping the entire corpus in RAM.
 If you find yourself running out of memory, either decrease the `workers` constructor parameter,
 or use :class:`gensim.models.ldamodel.LdaModel` or :class:`gensim.models.ldamulticore.LdaMulticore`
 which needs only :math:`O(1)` memory.
