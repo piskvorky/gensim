@@ -184,11 +184,11 @@ class BaseAny2VecModel(utils.SaveLoad):
         """
         thread_private_mem = self._get_thread_working_mem()
 
-        examples, tally, raw_tally = self._do_train_epoch(
+        examples, tally, raw_tally, effective_samples = self._do_train_epoch(
             corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
             total_examples=total_examples, total_words=total_words, **kwargs)
 
-        progress_queue.put((examples, tally, raw_tally))
+        progress_queue.put((examples, tally, raw_tally, effective_samples))
         progress_queue.put(None)
 
     def _worker_loop(self, job_queue, progress_queue):

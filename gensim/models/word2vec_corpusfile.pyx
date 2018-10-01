@@ -289,6 +289,7 @@ def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expec
 
     cdef int i, j, k
     cdef int effective_words = 0, effective_sentences = 0
+    cdef int effective_samples = 0
     cdef int total_effective_words = 0, total_sentences = 0, total_words = 0
     cdef int sent_idx, idx_start, idx_end
 
@@ -322,6 +323,7 @@ def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expec
                     for j in range(j, k):
                         if j == i:
                             continue
+                        effective_samples += 1
                         if c.hs:
                             w2v_fast_sentence_sg_hs(
                                 c.points[i], c.codes[i], c.codelens[i], c.syn0, c.syn1, c.size, c.indexes[j],
@@ -340,7 +342,7 @@ def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expec
                 expected_examples, expected_words, cur_epoch, num_epochs)
 
     model.running_training_loss = c.running_training_loss
-    return total_sentences, total_effective_words, total_words
+    return total_sentences, total_effective_words, total_words, effective_samples
 
 
 def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work,
@@ -435,7 +437,7 @@ def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _exp
                 expected_examples, expected_words, cur_epoch, num_epochs)
 
     model.running_training_loss = c.running_training_loss
-    return total_sentences, total_effective_words, total_words
+    return total_sentences, total_effective_words, total_words, total_effective_words
 
 
 CORPUSFILE_VERSION = 1

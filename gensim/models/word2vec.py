@@ -778,13 +778,13 @@ class Word2Vec(BaseWordEmbeddingsModel):
         work, neu1 = thread_private_mem
 
         if self.sg:
-            examples, tally, raw_tally = train_epoch_sg(self, corpus_file, offset, cython_vocab, cur_epoch,
-                                                        total_examples, total_words, work, neu1, self.compute_loss)
+            train_fct = train_epoch_sg
         else:
-            examples, tally, raw_tally = train_epoch_cbow(self, corpus_file, offset, cython_vocab, cur_epoch,
-                                                          total_examples, total_words, work, neu1, self.compute_loss)
+            train_fct = train_epoch_cbow
+        examples, tally, raw_tally, effective_samples = train_fct(self, corpus_file, offset, cython_vocab,
+            cur_epoch, total_examples, total_words, work, neu1, self.compute_loss)
 
-        return examples, tally, raw_tally
+        return examples, tally, raw_tally, effective_samples
 
     def _do_train_job(self, sentences, alpha, inits):
         """Train the model on a single batch of sentences.
