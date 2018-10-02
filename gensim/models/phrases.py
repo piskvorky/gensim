@@ -232,27 +232,33 @@ class PhrasesTransformation(interfaces.TransformationABC):
         return model
 
 
-def sentence2token(phrases, sentence):
-    delimiter = phrases.delimiter  # delimiter used for lookup
+def sentence2token(phrase_class, sentence):
+    """ returns tokens after from a sentence by joining the phrases with delimeter.
+    Used by __getitem__ of Phraser and Phrases
+
+    :param phrases: Class Phrases or Phraser
+    :param sentence: sentence to be processed
+    :returns: list of tokens from the sentence, where phrases ae joined with the delimeter."""
+
 
     is_single, sentence = _is_single(sentence)
     if not is_single:
         # if the input is an entire corpus (rather than a single sentence),
         # return an iterable stream.
-        return phrases._apply(sentence)
+        return phrase_class._apply(sentence)
 
-    delimiter = phrases.delimiter
-    bigrams = phrases.analyze_sentence(
-        sentence,
-        threshold=phrases.threshold,
-        common_terms=phrases.common_terms,
-        scorer=ft.partial(
-            phrases.scoring,
-            len_vocab=float(len(phrases.vocab)),
-            min_count=float(phrases.min_count),
-            corpus_word_count=float(phrases.corpus_word_count),
-        ),
-    )
+    delimiter = phrase_class.delimiter
+    if hasattr(phrase_class, 'vocab'):
+        scorer = ft.partial(
+            phrase_class.scoring,
+            len_vocab=float(len(phrase_class.vocab)),
+            min_count=float(phrase_class.min_count),
+            corpus_word_count=float(phrase_class.corpus_word_count))
+    else:
+        scorer = None
+    bigrams = phrase_class.analyze_sentence(sentence, threshold=phrase_class.threshold,
+        common_terms=phrase_class.common_terms, scorer=scorer)
+
     new_s = []
     for words, score in bigrams:
         if score is not None:
