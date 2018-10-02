@@ -1067,8 +1067,12 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         Returns
         -------
-        (float, list of dict of (str, (str, str, str))
-            Overall evaluation score and full lists of correct and incorrect predictions divided by sections.
+        score : float
+            The overall evaluation score on the entire evaluation set
+        sections : list of dict of {str : str or tuple of (str, str, str, str)}
+            Results broken down by each section of the evaluation set. Each dict contains the name of the section
+            under the key 'section', and lists of correctly and incorrectly predicted 4-tuples of words under the
+            keys 'correct' and 'incorrect'.
 
         """
         ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
@@ -1281,9 +1285,13 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         Returns
         -------
-        (float, float, float)
-            Pearson correlation coefficient, Spearman rank-order correlation coefficient between the similarities
-            from the dataset and the similarities produced by the model itself, ratio of pairs with unknown words.
+        pearson : tuple of (float, float)
+            Pearson correlation coefficient with 2-tailed p-value.
+        spearman : tuple of (float, float)
+            Spearman rank-order correlation coefficient between the similarities from the dataset and the
+            similarities produced by the model itself, with 2-tailed p-value.
+        oov_ratio : float
+            The ratio of pairs with unknown words.
 
         """
         ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
