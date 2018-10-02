@@ -310,14 +310,24 @@ class TestDictionary(unittest.TestCase):
             self.assertTrue(isinstance(d.values(), list))
 
     def test_patch_with_special_tokens(self):
-        special_tokens = {'pad': 0, 'space': 1}
+        special_tokens = {'pad': 0, 'space': 1, 'quake': 3}
         corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
         d = Dictionary(corpus)
         self.assertEqual(len(d.token2id), 5)
         d.patch_with_special_tokens(special_tokens)
         self.assertEqual(d.token2id['pad'], 0)
         self.assertEqual(d.token2id['space'], 1)
-        self.assertEqual(len(d.token2id), 7)
+        self.assertEqual(d.token2id['quake'], 3)
+        self.assertEqual(len(d.token2id), 8)
+        corpus_with_special_tokens = [["máma", "mele", "maso"], ["ema", "má", "máma", "space"]]
+        d = Dictionary(corpus_with_special_tokens)
+        self.assertEqual(len(d.token2id), 6)
+        self.assertNotEqual(d.token2id['space'], 1)
+        d.patch_with_special_tokens(special_tokens)
+        self.assertEqual(len(d.token2id), 8)
+        self.assertEqual(max(d.token2id.values()), 7)
+        self.assertEqual(d.token2id['space'], 1)
+
 
 # endclass TestDictionary
 

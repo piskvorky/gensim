@@ -592,10 +592,17 @@ class Dictionary(utils.SaveLoad, Mapping):
         >>> print(dct.token2id)
         {'maso': 6, 'mele': 7, 'máma': 2, 'ema': 3, 'má': 4, 'pad': 0, 'space': 1}
         """
+        possible_ids = []
         for token, idx in special_token_dict.items():
+            if token in self.token2id and self.token2id[token] == idx:
+                continue
+            if token in self.token2id and self.token2id[token] != idx:
+                possible_ids.append(self.token2id[token])
+                del self.token2id[token]
             old_token = self[idx]
             self.token2id[token] = idx
-            self.token2id[old_token] = len(self.token2id)
+            self.token2id[old_token] = possible_ids.pop() if \
+                                       len(possible_ids) > 0 else len(self.token2id) - 1
         self.id2token = {}  # Make sure that id2token is updated according to special tokens.
 
     @staticmethod
