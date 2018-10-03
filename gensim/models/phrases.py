@@ -232,15 +232,25 @@ class PhrasesTransformation(interfaces.TransformationABC):
         return model
 
 
-def sentence2token(phrase_class, sentence):
-    """ returns tokens after from a sentence by joining the phrases with delimeter.
-    Used by __getitem__ of Phraser and Phrases
+def _sentence2token(phrase_class, sentence):
+    """ returns tokens after from a sentence by joining the phrases with delimiter.
 
-    :param phrases: Class Phrases or Phraser
-    :param sentence: sentence to be processed
-    :returns: list of tokens from the sentence, where phrases ae joined with the delimeter."""
+    This function is used by: meth:`~gensim.models.phrases.Phrases.__getitem__` and
+    meth:`~gensim.models.phrases.Phraser.__getitem__`
 
+    Parameters
+    ----------
+    phrase_class :
+        class:`~gensim.models.phrases.Phrases` or :class:`~gensim.models.phrases.Phraser`
+    sentence : {list of str, iterable of list of str}
+            Sentence or text corpus.
 
+    Returns
+    -------
+    {list of str, :class:`gensim.interfaces.TransformedCorpus`}
+        `sentence` with detected phrase bigrams merged together, or a streamed corpus of such sentences
+        if the input was a corpus.
+    """
     is_single, sentence = _is_single(sentence)
     if not is_single:
         # if the input is an entire corpus (rather than a single sentence),
@@ -264,7 +274,7 @@ def sentence2token(phrase_class, sentence):
         if score is not None:
             words = delimiter.join(words)
         new_s.append(words)
-
+        
     return [utils.to_unicode(w) for w in new_s]
 
 
@@ -633,8 +643,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         """
         warnings.warn("For a faster implementation, use the gensim.models.phrases.Phraser class")
 
-        return sentence2token(self, sentence)
-
+        return _sentence2token(self, sentence)
 
 
 def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
@@ -866,8 +875,7 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
         [u'graph_minors']
 
         """
-        
-        return sentence2token(self, sentence)
+        return _sentence2token(self, sentence)
 
 
 if __name__ == '__main__':
