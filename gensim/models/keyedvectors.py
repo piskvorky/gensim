@@ -1069,7 +1069,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         -------
         score : float
             The overall evaluation score on the entire evaluation set
-        sections : list of dict of {str : str or tuple of (str, str, str, str)}
+        sections : list of dict of {str : str or list of tuple of (str, str, str, str)}
             Results broken down by each section of the evaluation set. Each dict contains the name of the section
             under the key 'section', and lists of correctly and incorrectly predicted 4-tuples of words under the
             keys 'correct' and 'incorrect'.
