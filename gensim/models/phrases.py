@@ -274,7 +274,6 @@ def _sentence2token(phrase_class, sentence):
         if score is not None:
             words = delimiter.join(words)
         new_s.append(words)
-        
     return [utils.to_unicode(w) for w in new_s]
 
 
