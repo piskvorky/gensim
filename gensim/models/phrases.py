@@ -232,6 +232,52 @@ class PhrasesTransformation(interfaces.TransformationABC):
         return model
 
 
+def _sentence2token(phrase_class, sentence):
+    """ Convert the input tokens `sentence` into tokens where detected bigrams are joined by a selected delimiter.
+
+    This function is used by: meth:`~gensim.models.phrases.Phrases.__getitem__` and
+    meth:`~gensim.models.phrases.Phraser.__getitem__`
+
+    Parameters
+    ----------
+    phrase_class :
+        class:`~gensim.models.phrases.Phrases` or :class:`~gensim.models.phrases.Phraser`
+    sentence : {list of str, iterable of list of str}
+            Sentence or text corpus.
+
+    Returns
+    -------
+    {list of str, :class:`~gensim.interfaces.TransformedCorpus`}
+        `sentence` with detected phrase bigrams merged together, or a streamed corpus of such sentences
+        if the input was a corpus.
+
+    """
+    is_single, sentence = _is_single(sentence)
+    if not is_single:
+        # if the input is an entire corpus (rather than a single sentence),
+        # return an iterable stream.
+        return phrase_class._apply(sentence)
+
+    delimiter = phrase_class.delimiter
+    if hasattr(phrase_class, 'vocab'):
+        scorer = ft.partial(
+            phrase_class.scoring,
+            len_vocab=float(len(phrase_class.vocab)),
+            min_count=float(phrase_class.min_count),
+            corpus_word_count=float(phrase_class.corpus_word_count))
+    else:
+        scorer = None
+    bigrams = phrase_class.analyze_sentence(sentence, threshold=phrase_class.threshold,
+        common_terms=phrase_class.common_terms, scorer=scorer)
+
+    new_s = []
+    for words, score in bigrams:
+        if score is not None:
+            words = delimiter.join(words)
+        new_s.append(words)
+    return [utils.to_unicode(w) for w in new_s]
+
+
 class Phrases(SentenceAnalyzer, PhrasesTransformation):
     """Detect phrases based on collocation counts."""
 
@@ -597,33 +643,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         """
         warnings.warn("For a faster implementation, use the gensim.models.phrases.Phraser class")
 
-        delimiter = self.delimiter  # delimiter used for lookup
-
-        is_single, sentence = _is_single(sentence)
-        if not is_single:
-            # if the input is an entire corpus (rather than a single sentence),
-            # return an iterable stream.
-            return self._apply(sentence)
-
-        delimiter = self.delimiter
-        bigrams = self.analyze_sentence(
-            sentence,
-            threshold=self.threshold,
-            common_terms=self.common_terms,
-            scorer=ft.partial(
-                self.scoring,
-                len_vocab=float(len(self.vocab)),
-                min_count=float(self.min_count),
-                corpus_word_count=float(self.corpus_word_count),
-            ),
-        )
-        new_s = []
-        for words, score in bigrams:
-            if score is not None:
-                words = delimiter.join(words)
-            new_s.append(words)
-
-        return [utils.to_unicode(w) for w in new_s]
+        return _sentence2token(self, sentence)
 
 
 def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
@@ -855,24 +875,7 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
         [u'graph_minors']
 
         """
-        is_single, sentence = _is_single(sentence)
-        if not is_single:
-            # if the input is an entire corpus (rather than a single sentence),
-            # return an iterable stream.
-            return self._apply(sentence)
-
-        delimiter = self.delimiter
-        bigrams = self.analyze_sentence(
-            sentence,
-            threshold=self.threshold,
-            common_terms=self.common_terms,
-            scorer=None)  # we will use our score_item function redefinition
-        new_s = []
-        for words, score in bigrams:
-            if score is not None:
-                words = delimiter.join(words)
-            new_s.append(words)
-        return [utils.to_unicode(w) for w in new_s]
+        return _sentence2token(self, sentence)
 
 
 if __name__ == '__main__':
