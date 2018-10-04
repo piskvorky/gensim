@@ -27,5 +27,13 @@ matrix:
     - python: '3.6'
       env: TOXENV="py36-linux"
 
+    - python: '3.7'
+      env:
+        - TOXENV="py37-linux"
+        - BOTO_CONFIG="/dev/null"
+      dist: xenial
+      sudo: true
+
+
 install: pip install tox
 script: tox -vv

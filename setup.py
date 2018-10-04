@@ -237,11 +237,14 @@ win_testenv = [
     'Morfessor==2.0.2a4',
 ]
 
-linux_testenv = win_testenv + [
-    'annoy',
-    'tensorflow <= 1.3.0',
-    'keras >= 2.0.4, <= 2.1.4',
-]
+linux_testenv = win_testenv[:]
+
+if sys.version_info < (3, 7):
+    linux_testenv.extend([
+        'tensorflow <= 1.3.0',
+        'keras >= 2.0.4, <= 2.1.4',
+        'annoy',
+    ])
 
 ext_modules = [
     Extension('gensim.models.word2vec_inner',
