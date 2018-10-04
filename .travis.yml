@@ -27,5 +27,11 @@ matrix:
     - python: '3.6'
       env: TOXENV="py36-linux"
 
+    - python: '3.7'
+      env: TOXENV="py37-linux"
+      dist: xenial
+      sudo: true
+
+
 install: pip install tox
 script: tox -vv
