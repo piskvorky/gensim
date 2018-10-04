@@ -233,7 +233,7 @@ class PhrasesTransformation(interfaces.TransformationABC):
 
 
 def _sentence2token(phrase_class, sentence):
-    """ returns tokens after from a sentence by joining the phrases with delimiter.
+    """ Convert the input tokens `sentence` into tokens where detected bigrams are joined by a selected delimiter.
 
     This function is used by: meth:`~gensim.models.phrases.Phrases.__getitem__` and
     meth:`~gensim.models.phrases.Phraser.__getitem__`
@@ -247,9 +247,10 @@ def _sentence2token(phrase_class, sentence):
 
     Returns
     -------
-    {list of str, :class:`gensim.interfaces.TransformedCorpus`}
+    {list of str, :class:`~gensim.interfaces.TransformedCorpus`}
         `sentence` with detected phrase bigrams merged together, or a streamed corpus of such sentences
         if the input was a corpus.
+
     """
     is_single, sentence = _is_single(sentence)
     if not is_single:
