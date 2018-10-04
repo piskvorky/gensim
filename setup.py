@@ -231,6 +231,7 @@ win_testenv = [
     'pytest-rerunfailures',
     'mock',
     'cython',
+    'pyemd',
     'testfixtures',
     'scikit-learn',
     'Morfessor==2.0.2a4',
@@ -242,11 +243,7 @@ if sys.version_info < (3, 7):
     linux_testenv.extend([
         'tensorflow <= 1.3.0',
         'keras >= 2.0.4, <= 2.1.4',
-        'pyemd',
         'annoy',
-    ])
-    win_testenv.extend([
-        'pyemd'
     ])
 
 ext_modules = [
