@@ -12,29 +12,33 @@ Follows scikit-learn API conventions to facilitate using gensim along with sciki
 
 Examples
 --------
->>> from gensim.test.utils import common_texts
->>> from gensim.sklearn_api import FTTransformer
->>>
->>> # Create a model to represent each word by a 10 dimensional vector.
->>> model = FTTransformer(size=10, min_count=1, seed=1)
->>>
->>> # What is the vector representations of the word 'graph' and 'system'?
->>> wordvecs = model.fit(common_texts).transform(['graph', 'system'])
->>> assert wordvecs.shape == (2, 10)
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import common_texts
+    >>> from gensim.sklearn_api import FTTransformer
+    >>>
+    >>> # Create a model to represent each word by a 10 dimensional vector.
+    >>> model = FTTransformer(size=10, min_count=1, seed=1)
+    >>>
+    >>> # What is the vector representations of the word 'graph' and 'system'?
+    >>> wordvecs = model.fit(common_texts).transform(['graph', 'system'])
+    >>> assert wordvecs.shape == (2, 10)
 
 Retrieve word-vector for vocab and out-of-vocab word:
 
->>> existent_word = "system"
->>> existent_word in model.gensim_model.wv.vocab
-True
->>> existent_word_vec = model.transform(existent_word) # numpy vector of a word
->>> assert existent_word_vec.shape == (1, 10)
->>>
->>> oov_word = "sys"
->>> oov_word in model.gensim_model.wv.vocab
-False
->>> oov_word_vec = model.transform(oov_word) # numpy vector of a word
->>> assert oov_word_vec.shape == (1, 10)
+.. sourcecode:: pycon
+
+    >>> existent_word = "system"
+    >>> existent_word in model.gensim_model.wv.vocab
+    True
+    >>> existent_word_vec = model.transform(existent_word)  # numpy vector of a word
+    >>> assert existent_word_vec.shape == (1, 10)
+    >>>
+    >>> oov_word = "sys"
+    >>> oov_word in model.gensim_model.wv.vocab
+    False
+    >>> oov_word_vec = model.transform(oov_word)  # numpy vector of a word
+    >>> assert oov_word_vec.shape == (1, 10)
 
 """
 import numpy as np

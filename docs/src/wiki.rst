@@ -36,17 +36,21 @@ Preparing the corpus
 Latent Semantic Analysis
 --------------------------
 
-First let's load the corpus iterator and dictionary, created in the second step above::
+First let's load the corpus iterator and dictionary, created in the second step above
 
-    >>> import logging, gensim
+.. sourcecode:: pycon
+
+    >>> import logging
+    >>> import gensim
+    >>>
     >>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-
+    >>>
     >>> # load id->word mapping (the dictionary), one of the results of step 2 above
     >>> id2word = gensim.corpora.Dictionary.load_from_text('wiki_en_wordids.txt')
     >>> # load corpus iterator
     >>> mm = gensim.corpora.MmCorpus('wiki_en_tfidf.mm')
     >>> # mm = gensim.corpora.MmCorpus('wiki_en_tfidf.mm.bz2') # use this if you compressed the TFIDF output (recommended)
-
+    >>>
     >>> print(mm)
     MmCorpus(3931787 documents, 100000 features, 756379027 non-zero entries)
 
@@ -54,11 +58,13 @@ We see that our corpus contains 3.9M documents, 100K features (distinct
 tokens) and 0.76G non-zero entries in the sparse TF-IDF matrix. The Wikipedia corpus
 contains about 2.24 billion tokens in total.
 
-Now we're ready to compute LSA of the English Wikipedia::
+Now we're ready to compute LSA of the English Wikipedia:
+
+.. sourcecode:: pycon
 
     >>> # extract 400 LSI topics; use the default one-pass algorithm
     >>> lsi = gensim.models.lsimodel.LsiModel(corpus=mm, id2word=id2word, num_topics=400)
-
+    >>>
     >>> # print the most contributing words (both positively and negatively) for each of the first ten topics
     >>> lsi.print_topics(10)
     topic #0(332.762): 0.425*"utc" + 0.299*"talk" + 0.293*"page" + 0.226*"article" + 0.224*"delete" + 0.216*"discussion" + 0.205*"deletion" + 0.198*"should" + 0.146*"debate" + 0.132*"be"
@@ -91,17 +97,21 @@ or where the cost of storing/iterating over the corpus multiple times is too hig
 Latent Dirichlet Allocation
 ----------------------------
 
-As with Latent Semantic Analysis above, first load the corpus iterator and dictionary::
+As with Latent Semantic Analysis above, first load the corpus iterator and dictionary
 
-    >>> import logging, gensim
+.. sourcecode:: pycon
+
+    >>> import logging
+    >>> import gensim
+    >>>
     >>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-
+    >>>
     >>> # load id->word mapping (the dictionary), one of the results of step 2 above
     >>> id2word = gensim.corpora.Dictionary.load_from_text('wiki_en_wordids.txt')
     >>> # load corpus iterator
     >>> mm = gensim.corpora.MmCorpus('wiki_en_tfidf.mm')
     >>> # mm = gensim.corpora.MmCorpus('wiki_en_tfidf.mm.bz2') # use this if you compressed the TFIDF output
-
+    >>>
     >>> print(mm)
     MmCorpus(3931787 documents, 100000 features, 756379027 non-zero entries)
 
@@ -114,15 +124,19 @@ over the smaller chunks (subcorpora) are pretty good in themselves, so that the
 model estimation converges faster. As a result, we will perhaps only need a single full
 pass over the corpus: if the corpus has 3 million articles, and we update once after
 every 10,000 articles, this means we will have done 300 updates in one pass, quite likely
-enough to have a very accurate topics estimate::
+enough to have a very accurate topics estimate
+
+.. sourcecode:: pycon
 
     >>> # extract 100 LDA topics, using 1 pass and updating once every 1 chunk (10,000 documents)
-    >>> lda = gensim.models.ldamodel.LdaModel(corpus=mm, id2word=id2word, num_topics=100, update_every=1, chunksize=10000, passes=1)
+    >>> lda = gensim.models.ldamodel.LdaModel(corpus=mm, id2word=id2word, num_topics=100, update_every=1, passes=1)
     using serial LDA version on this node
     running online LDA training, 100 topics, 1 passes over the supplied corpus of 3931787 documents, updating model once every 10000 documents
     ...
 
-Unlike LSA, the topics coming from LDA are easier to interpret::
+Unlike LSA, the topics coming from LDA are easier to interpret
+
+.. sourcecode:: pycon
 
     >>> # print the most contributing words for 20 randomly selected topics
     >>> lda.print_topics(20)
@@ -164,13 +178,17 @@ In short, be careful if using LDA to incrementally add new documents to the mode
 over time. **Batch usage of LDA**, where the entire training corpus is either known beforehand or does
 not exhibit topic drift, **is ok and not affected**.
 
-To run batch LDA (not online), train `LdaModel` with::
+To run batch LDA (not online), train `LdaModel` with:
+
+.. sourcecode:: pycon
 
     >>> # extract 100 LDA topics, using 20 full passes, no online updates
     >>> lda = gensim.models.ldamodel.LdaModel(corpus=mm, id2word=id2word, num_topics=100, update_every=0, passes=20)
 
 As usual, a trained model can used be to transform new, unseen documents (plain bag-of-words count vectors)
 into LDA topic distributions:
+
+.. sourcecode:: pycon
 
     >>> doc_lda = lda[doc_bow]
 

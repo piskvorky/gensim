@@ -15,61 +15,71 @@ How to make translation between two set of word-vectors
 
 Initialize a word-vector models
 
->>> from gensim.models import KeyedVectors
->>> from gensim.test.utils import datapath, temporary_file
->>> from gensim.models import TranslationMatrix
->>>
->>> model_en = KeyedVectors.load_word2vec_format(datapath("EN.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt"))
->>> model_it = KeyedVectors.load_word2vec_format(datapath("IT.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt"))
+.. sourcecode:: pycon
+
+    >>> from gensim.models import KeyedVectors
+    >>> from gensim.test.utils import datapath
+    >>>
+    >>> model_en = KeyedVectors.load_word2vec_format(datapath("EN.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt"))
+    >>> model_it = KeyedVectors.load_word2vec_format(datapath("IT.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt"))
 
 Define word pairs (that will be used for construction of translation matrix
+.. sourcecode:: pycon
 
->>> word_pairs = [
-...     ("one", "uno"), ("two", "due"), ("three", "tre"), ("four", "quattro"), ("five", "cinque"),
-...     ("seven", "sette"), ("eight", "otto"),
-...     ("dog", "cane"), ("pig", "maiale"), ("fish", "cavallo"), ("birds", "uccelli"),
-...     ("apple", "mela"), ("orange", "arancione"), ("grape", "acino"), ("banana", "banana")
-... ]
+    >>> word_pairs = [
+    ...     ("one", "uno"), ("two", "due"), ("three", "tre"), ("four", "quattro"), ("five", "cinque"),
+    ...     ("seven", "sette"), ("eight", "otto"),
+    ...     ("dog", "cane"), ("pig", "maiale"), ("fish", "cavallo"), ("birds", "uccelli"),
+    ...     ("apple", "mela"), ("orange", "arancione"), ("grape", "acino"), ("banana", "banana")
+    ... ]
 
 Fit :class:`~gensim.models.translation_matrix.TranslationMatrix`
+.. sourcecode:: pycon
 
->>> trans_model = TranslationMatrix(model_en, model_it, word_pairs=word_pairs)
+    >>> trans_model = TranslationMatrix(model_en, model_it, word_pairs=word_pairs)
 
 Apply model (translate words "dog" and "one")
+.. sourcecode:: pycon
 
->>> trans_model.translate(["dog", "one"], topn=3)
-OrderedDict([('dog', [u'cane', u'gatto', u'cavallo']), ('one', [u'uno', u'due', u'tre'])])
+    >>> trans_model.translate(["dog", "one"], topn=3)
+    OrderedDict([('dog', [u'cane', u'gatto', u'cavallo']), ('one', [u'uno', u'due', u'tre'])])
 
 
 Save / load model
+.. sourcecode:: pycon
 
->>> with temporary_file("model_file") as fname:
-...     trans_model.save(fname)  # save model to file
-...     loaded_trans_model = TranslationMatrix.load(fname)  # load model
+    >>> with temporary_file("model_file") as fname:
+    ...     trans_model.save(fname)  # save model to file
+    ...     loaded_trans_model = TranslationMatrix.load(fname)  # load model
 
 
 How to make translation between two :class:`~gensim.models.doc2vec.Doc2Vec` models
 ==================================================================================
 
 Prepare data and models
+.. sourcecode:: pycon
 
->>> from gensim.test.utils import datapath
->>> from gensim.test.test_translation_matrix import read_sentiment_docs
->>> from gensim.models import Doc2Vec, BackMappingTranslationMatrix
->>>
->>> data = read_sentiment_docs(datapath("alldata-id-10.txt"))[:5]
->>> src_model = Doc2Vec.load(datapath("small_tag_doc_5_iter50"))
->>> dst_model = Doc2Vec.load(datapath("large_tag_doc_10_iter50"))
+    >>> from gensim.test.utils import datapath
+    >>> from gensim.test.test_translation_matrix import read_sentiment_docs
+    >>> from gensim.models import Doc2Vec
+    >>>
+    >>> data = read_sentiment_docs(datapath("alldata-id-10.txt"))[:5]
+    >>> src_model = Doc2Vec.load(datapath("small_tag_doc_5_iter50"))
+    >>> dst_model = Doc2Vec.load(datapath("large_tag_doc_10_iter50"))
 
 Train backward translation
 
->>> model_trans = BackMappingTranslationMatrix(data, src_model, dst_model)
->>> trans_matrix = model_trans.train(data)
+.. sourcecode:: pycon
+
+    >>> model_trans = BackMappingTranslationMatrix(data, src_model, dst_model)
+    >>> trans_matrix = model_trans.train(data)
 
 
 Apply model
 
->>> result = model_trans.infer_vector(dst_model.docvecs[data[3].tags])
+.. sourcecode:: pycon
+
+    >>> result = model_trans.infer_vector(dst_model.docvecs[data[3].tags])
 
 
 References
@@ -161,23 +171,27 @@ class TranslationMatrix(utils.SaveLoad):
 
     Examples
     --------
-    >>> from gensim.models import KeyedVectors
-    >>> from gensim.test.utils import datapath, temporary_file
-    >>>
-    >>> model_en = KeyedVectors.load_word2vec_format(datapath("EN.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt"))
-    >>> model_it = KeyedVectors.load_word2vec_format(datapath("IT.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt"))
-    >>>
-    >>> word_pairs = [
-    ...     ("one", "uno"), ("two", "due"), ("three", "tre"), ("four", "quattro"), ("five", "cinque"),
-    ...     ("seven", "sette"), ("eight", "otto"),
-    ...     ("dog", "cane"), ("pig", "maiale"), ("fish", "cavallo"), ("birds", "uccelli"),
-    ...     ("apple", "mela"), ("orange", "arancione"), ("grape", "acino"), ("banana", "banana")
-    ... ]
-    >>>
-    >>> trans_model = TranslationMatrix(model_en, model_it)
-    >>> trans_model.train(word_pairs)
-    >>> trans_model.translate(["dog", "one"], topn=3)
-    OrderedDict([('dog', [u'cane', u'gatto', u'cavallo']), ('one', [u'uno', u'due', u'tre'])])
+
+    .. sourcecode:: pycon
+
+        >>> from gensim.models import KeyedVectors
+        >>> from gensim.test.utils import datapath
+        >>> en = datapath("EN.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt")
+        >>> it = datapath("IT.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt")
+        >>> model_en = KeyedVectors.load_word2vec_format(en)
+        >>> model_it = KeyedVectors.load_word2vec_format(it)
+        >>>
+        >>> word_pairs = [
+        ...     ("one", "uno"), ("two", "due"), ("three", "tre"), ("four", "quattro"), ("five", "cinque"),
+        ...     ("seven", "sette"), ("eight", "otto"),
+        ...     ("dog", "cane"), ("pig", "maiale"), ("fish", "cavallo"), ("birds", "uccelli"),
+        ...     ("apple", "mela"), ("orange", "arancione"), ("grape", "acino"), ("banana", "banana")
+        ... ]
+        >>>
+        >>> trans_model = TranslationMatrix(model_en, model_it)
+        >>> trans_model.train(word_pairs)
+        >>> trans_model.translate(["dog", "one"], topn=3)
+        OrderedDict([('dog', [u'cane', u'gatto', u'cavallo']), ('one', [u'uno', u'due', u'tre'])])
 
 
     References
@@ -361,18 +375,20 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
 
     Examples
     --------
-    >>> from gensim.test.utils import datapath
-    >>> from gensim.test.test_translation_matrix import read_sentiment_docs
-    >>> from gensim.models import Doc2Vec, BackMappingTranslationMatrix
-    >>>
-    >>> data = read_sentiment_docs(datapath("alldata-id-10.txt"))[:5]
-    >>> src_model = Doc2Vec.load(datapath("small_tag_doc_5_iter50"))
-    >>> dst_model = Doc2Vec.load(datapath("large_tag_doc_10_iter50"))
-    >>>
-    >>> model_trans = BackMappingTranslationMatrix(src_model, dst_model)
-    >>> trans_matrix = model_trans.train(data)
-    >>>
-    >>> result = model_trans.infer_vector(dst_model.docvecs[data[3].tags])
+    .. sourcecode:: pycon
+
+        >>> from gensim.test.utils import datapath
+        >>> from gensim.test.test_translation_matrix import read_sentiment_docs
+        >>> from gensim.models import Doc2Vec, BackMappingTranslationMatrix
+        >>>
+        >>> data = read_sentiment_docs(datapath("alldata-id-10.txt"))[:5]
+        >>> src_model = Doc2Vec.load(datapath("small_tag_doc_5_iter50"))
+        >>> dst_model = Doc2Vec.load(datapath("large_tag_doc_10_iter50"))
+        >>>
+        >>> model_trans = BackMappingTranslationMatrix(src_model, dst_model)
+        >>> trans_matrix = model_trans.train(data)
+        >>>
+        >>> result = model_trans.infer_vector(dst_model.docvecs[data[3].tags])
 
     """
     def __init__(self, source_lang_vec, target_lang_vec, tagged_docs=None, random_state=None):

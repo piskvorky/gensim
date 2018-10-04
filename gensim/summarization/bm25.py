@@ -16,13 +16,16 @@ descibed in [1]_, also you may check Wikipedia page [2]_.
 
 Examples
 --------
->>> from gensim.summarization.bm25 import get_bm25_weights
->>> corpus = [
-...     ["black", "cat", "white", "cat"],
-...     ["cat", "outer", "space"],
-...     ["wag", "dog"]
-... ]
->>> result = get_bm25_weights(corpus, n_jobs=-1)
+
+.. sourcecode:: pycon
+
+    >>> from gensim.summarization.bm25 import get_bm25_weights
+    >>> corpus = [
+    ...     ["black", "cat", "white", "cat"],
+    ...     ["cat", "outer", "space"],
+    ...     ["wag", "dog"]
+    ... ]
+    >>> result = get_bm25_weights(corpus, n_jobs=-1)
 
 
 Data:
@@ -198,13 +201,15 @@ def get_bm25_weights(corpus, n_jobs=1):
 
     Examples
     --------
-    >>> from gensim.summarization.bm25 import get_bm25_weights
-    >>> corpus = [
-    ...     ["black", "cat", "white", "cat"],
-    ...     ["cat", "outer", "space"],
-    ...     ["wag", "dog"]
-    ... ]
-    >>> result = get_bm25_weights(corpus, n_jobs=-1)
+    .. sourcecode:: pycon
+
+        >>> from gensim.summarization.bm25 import get_bm25_weights
+        >>> corpus = [
+        ...     ["black", "cat", "white", "cat"],
+        ...     ["cat", "outer", "space"],
+        ...     ["wag", "dog"]
+        ... ]
+        >>> result = get_bm25_weights(corpus, n_jobs=-1)
 
     """
     bm25 = BM25(corpus)

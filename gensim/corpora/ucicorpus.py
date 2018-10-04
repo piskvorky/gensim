@@ -171,12 +171,14 @@ class UciCorpus(UciReader, IndexedCorpus):
 
         Examples
         --------
-        >>> from gensim.corpora import UciCorpus
-        >>> from gensim.test.utils import datapath
-        >>>
-        >>> corpus = UciCorpus(datapath('testcorpus.uci'))
-        >>> for document in corpus:
-        ...     pass
+        .. sourcecode:: pycon
+
+            >>> from gensim.corpora import UciCorpus
+            >>> from gensim.test.utils import datapath
+            >>>
+            >>> corpus = UciCorpus(datapath('testcorpus.uci'))
+            >>> for document in corpus:
+            ...     pass
 
         """
         IndexedCorpus.__init__(self, fname)
@@ -214,10 +216,13 @@ class UciCorpus(UciReader, IndexedCorpus):
 
         Examples
         --------
-        >>> from gensim.corpora.ucicorpus import UciCorpus
-        >>> from gensim.test.utils import datapath
-        >>> ucc = UciCorpus(datapath('testcorpus.uci'))
-        >>> dictionary = ucc.create_dictionary()
+
+        .. sourcecode:: pycon
+
+            >>> from gensim.corpora.ucicorpus import UciCorpus
+            >>> from gensim.test.utils import datapath
+            >>> ucc = UciCorpus(datapath('testcorpus.uci'))
+            >>> dictionary = ucc.create_dictionary()
 
         """
         dictionary = Dictionary()

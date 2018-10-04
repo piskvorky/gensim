@@ -11,25 +11,31 @@ Examples
 
 Create simple graph with 4 nodes.
 
->>> g = Graph()
->>> g.add_node('Felidae')
->>> g.add_node('Lion')
->>> g.add_node('Tiger')
->>> g.add_node('Wolf')
->>> sorted(g.nodes())
-['Felidae', 'Lion', 'Tiger', 'Wolf']
+.. sourcecode:: pycon
+
+    >>> g = Graph()
+    >>> g.add_node('Felidae')
+    >>> g.add_node('Lion')
+    >>> g.add_node('Tiger')
+    >>> g.add_node('Wolf')
+    >>> sorted(g.nodes())
+    ['Felidae', 'Lion', 'Tiger', 'Wolf']
 
 Add some edges and check neighbours.
 
->>> g.add_edge(("Felidae", "Lion"))
->>> g.add_edge(("Felidae", "Tiger"))
->>> g.neighbors("Felidae")
-['Lion', 'Tiger']
+.. sourcecode:: pycon
+
+    >>> g.add_edge(("Felidae", "Lion"))
+    >>> g.add_edge(("Felidae", "Tiger"))
+    >>> g.neighbors("Felidae")
+    ['Lion', 'Tiger']
 
 One node has no neighbours.
 
->>> g.neighbors("Wolf")
-[]
+.. sourcecode:: pycon
+
+    >>> g.neighbors("Wolf")
+    []
 
 """
 
