@@ -21,16 +21,22 @@ doc2vec training** (70x speedup [blog]_).
 
 Initialize a model with e.g.::
 
->>> model = Doc2Vec(documents, size=100, window=8, min_count=5, workers=4)
+.. sourcecode:: pycon
+
+    >>> model = Doc2Vec(documents, size=100, window=8, min_count=5, workers=4)
 
 Persist a model to disk with::
 
->>> model.save(fname)
->>> model = Doc2Vec.load(fname)  # you can continue training with the loaded model!
+.. sourcecode:: pycon
+
+    >>> model.save(fname)
+    >>> model = Doc2Vec.load(fname)  # you can continue training with the loaded model!
 
 If you're finished training a model (=no more updates, only querying), you can do
 
-  >>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True):
+.. sourcecode:: pycon
+
+    >>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True):
 
 to trim unneeded model memory = use (much) less RAM.
 
@@ -359,11 +365,13 @@ class DocvecsArray(SaveLoad):
     As the 'docvecs' property of a Doc2Vec model, allows access and
     comparison of document vectors.
 
-    >>> docvec = d2v_model.docvecs[99]
-    >>> docvec = d2v_model.docvecs['SENT_99']  # if string tag used in training
-    >>> sims = d2v_model.docvecs.most_similar(99)
-    >>> sims = d2v_model.docvecs.most_similar('SENT_99')
-    >>> sims = d2v_model.docvecs.most_similar(docvec)
+    .. sourcecode:: pycon
+
+        >>> docvec = d2v_model.docvecs[99]
+        >>> docvec = d2v_model.docvecs['SENT_99']  # if string tag used in training
+        >>> sims = d2v_model.docvecs.most_similar(99)
+        >>> sims = d2v_model.docvecs.most_similar('SENT_99')
+        >>> sims = d2v_model.docvecs.most_similar(docvec)
 
     If only plain int tags are presented during training, the dict (of
     string tag -> index) and list (of index -> string tag) stay empty,

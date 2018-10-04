@@ -10,18 +10,21 @@ Examples
 --------
 
 Create simple graph and add edges. Let's take a look at nodes.
+.. sourcecode:: pycon
 
->>> gg = build_graph(['Felidae', 'Lion', 'Tiger', 'Wolf'])
->>> gg.add_edge(("Felidae", "Lion"))
->>> gg.add_edge(("Felidae", "Tiger"))
->>> sorted(gg.nodes())
-['Felidae', 'Lion', 'Tiger', 'Wolf']
+    >>> gg = build_graph(['Felidae', 'Lion', 'Tiger', 'Wolf'])
+    >>> gg.add_edge(("Felidae", "Lion"))
+    >>> gg.add_edge(("Felidae", "Tiger"))
+    >>> sorted(gg.nodes())
+    ['Felidae', 'Lion', 'Tiger', 'Wolf']
 
 Remove nodes with no edges.
 
->>> remove_unreachable_nodes(gg)
->>> sorted(gg.nodes())
-['Felidae', 'Lion', 'Tiger']
+.. sourcecode:: pycon
+
+    >>> remove_unreachable_nodes(gg)
+    >>> sorted(gg.nodes())
+    ['Felidae', 'Lion', 'Tiger']
 
 """
 

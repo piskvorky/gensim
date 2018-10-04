@@ -10,19 +10,21 @@ Follows scikit-learn API conventions to facilitate using gensim along with sciki
 
 Examples
 --------
->>> from gensim.sklearn_api.phrases import PhrasesTransformer
->>>
->>> # Create the model. Make sure no term is ignored and combinations seen 3+ times are captured.
->>> m = PhrasesTransformer(min_count=1, threshold=3)
->>> texts = [
-...   ['I', 'love', 'computer', 'science'],
-...   ['computer', 'science', 'is', 'my', 'passion'],
-...   ['I', 'studied', 'computer', 'science']
-... ]
->>>
->>> # Use sklearn fit_transform to see the transformation.
->>> # Since computer and science were seen together 3+ times they are considered a phrase.
->>> assert ['I', 'love', 'computer_science'] == m.fit_transform(texts)[0]
+.. sourcecode:: pycon
+
+    >>> from gensim.sklearn_api.phrases import PhrasesTransformer
+    >>>
+    >>> # Create the model. Make sure no term is ignored and combinations seen 3+ times are captured.
+    >>> m = PhrasesTransformer(min_count=1, threshold=3)
+    >>> texts = [
+    ...     ['I', 'love', 'computer', 'science'],
+    ...     ['computer', 'science', 'is', 'my', 'passion'],
+    ...     ['I', 'studied', 'computer', 'science']
+    ... ]
+    >>>
+    >>> # Use sklearn fit_transform to see the transformation.
+    >>> # Since computer and science were seen together 3+ times they are considered a phrase.
+    >>> assert ['I', 'love', 'computer_science'] == m.fit_transform(texts)[0]
 
 """
 from six import string_types

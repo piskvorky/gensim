@@ -14,23 +14,26 @@ Inspired by:
 
 Examples
 --------
->>> from gensim.test.utils import datapath
->>> from gensim.models.word2vec import Text8Corpus
->>> from gensim.models.phrases import Phrases, Phraser
->>>
->>> sentences = Text8Corpus(datapath('testcorpus.txt'))
->>> phrases = Phrases(sentences, min_count=1, threshold=1)  # train model
->>> phrases[[u'trees', u'graph', u'minors']]  # apply model to sentence
-[u'trees_graph', u'minors']
->>>
->>> phrases.add_vocab([["hello", "world"], ["meow"]])  # update model with new sentences
->>>
->>> bigram = Phraser(phrases)  # construct faster model (this is only an wrapper)
->>> bigram[[u'trees', u'graph', u'minors']]  # apply model to sentence
-[u'trees_graph', u'minors']
->>>
->>> for sent in bigram[sentences]:  # apply model to text corpus
-...     pass
+
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import datapath
+    >>> from gensim.models.word2vec import Text8Corpus
+    >>> from gensim.models.phrases import Phrases, Phraser
+    >>>
+    >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
+    >>> phrases = Phrases(sentences, min_count=1, threshold=1)  # train model
+    >>> phrases[[u'trees', u'graph', u'minors']]  # apply model to sentence
+    [u'trees_graph', u'minors']
+    >>>
+    >>> phrases.add_vocab([["hello", "world"], ["meow"]])  # update model with new sentences
+    >>>
+    >>> bigram = Phraser(phrases)  # construct faster model (this is only an wrapper)
+    >>> bigram[[u'trees', u'graph', u'minors']]  # apply model to sentence
+    [u'trees_graph', u'minors']
+    >>>
+    >>> for sent in bigram[sentences]:  # apply model to text corpus
+    ...     pass
 
 """
 
@@ -446,18 +449,20 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
 
         Example
         ----------
-        >>> from gensim.test.utils import datapath
-        >>> from gensim.models.word2vec import Text8Corpus
-        >>> from gensim.models.phrases import Phrases
-        >>>
-        >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-        >>> pruned_words, counters, total_words = Phrases.learn_vocab(sentences, 100)
-        >>> (pruned_words, total_words)
-        (1, 29)
-        >>> counters['computer']
-        2
-        >>> counters['response_time']
-        1
+        .. sourcecode:: pycon
+
+            >>> from gensim.test.utils import datapath
+            >>> from gensim.models.word2vec import Text8Corpus
+            >>> from gensim.models.phrases import Phrases
+            >>>
+            >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
+            >>> pruned_words, counters, total_words = Phrases.learn_vocab(sentences, 100)
+            >>> (pruned_words, total_words)
+            (1, 29)
+            >>> counters['computer']
+            2
+            >>> counters['response_time']
+            1
 
         """
         sentence_no = -1
@@ -506,21 +511,23 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
 
         Example
         -------
-        >>> from gensim.test.utils import datapath
-        >>> from gensim.models.word2vec import Text8Corpus
-        >>> from gensim.models.phrases import Phrases
-        >>> #Create corpus and use it for phrase detector
-        >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-        >>> phrases = Phrases(sentences)  # train model
-        >>> assert len(phrases.vocab) == 37
-        >>>
-        >>> more_sentences = [
-        ...    [u'the', u'mayor', u'of', u'new', u'york', u'was', u'there'],
-        ...    [u'machine', u'learning', u'can', u'be', u'new', u'york' , u'sometimes']
-        ... ]
-        >>>
-        >>> phrases.add_vocab(more_sentences)  # add new sentences to model
-        >>> assert len(phrases.vocab) == 60
+        .. sourcecode:: pycon
+
+            >>> from gensim.test.utils import datapath
+            >>> from gensim.models.word2vec import Text8Corpus
+            >>> from gensim.models.phrases import Phrases
+            >>> # Create corpus and use it for phrase detector
+            >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
+            >>> phrases = Phrases(sentences)  # train model
+            >>> assert len(phrases.vocab) == 37
+            >>>
+            >>> more_sentences = [
+            ...     [u'the', u'mayor', u'of', u'new', u'york', u'was', u'there'],
+            ...     [u'machine', u'learning', u'can', u'be', u'new', u'york', u'sometimes']
+            ... ]
+            >>>
+            >>> phrases.add_vocab(more_sentences)  # add new sentences to model
+            >>> assert len(phrases.vocab) == 60
 
         """
         # uses a separate vocab to collect the token counts from `sentences`.
@@ -565,15 +572,17 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
 
         Example
         -------
-        >>> from gensim.test.utils import datapath
-        >>> from gensim.models.word2vec import Text8Corpus
-        >>> from gensim.models.phrases import Phrases
-        >>>
-        >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-        >>> phrases = Phrases(sentences, min_count=1, threshold=0.1)
-        >>>
-        >>> for phrase, score in phrases.export_phrases(sentences):
-        ...     pass
+        .. sourcecode:: pycon
+
+            >>> from gensim.test.utils import datapath
+            >>> from gensim.models.word2vec import Text8Corpus
+            >>> from gensim.models.phrases import Phrases
+            >>>
+            >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
+            >>> phrases = Phrases(sentences, min_count=1, threshold=0.1)
+            >>>
+            >>> for phrase, score in phrases.export_phrases(sentences):
+            ...     pass
 
         """
         analyze_sentence = ft.partial(
@@ -617,28 +626,30 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
 
         Examples
         ----------
-        >>> from gensim.test.utils import datapath
-        >>> from gensim.models.word2vec import Text8Corpus
-        >>> from gensim.models.phrases import Phrases, Phraser
-        >>>
-        >>> #Create corpus
-        >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-        >>>
-        >>> #Train the detector with:
-        >>> phrases = Phrases(sentences, min_count=1, threshold=1)
-        >>> #Input is a list of unicode strings:
-        >>> sent = [u'trees', u'graph', u'minors']
-        >>> #Both of these tokens appear in corpus at least twice, and phrase score is higher, than treshold = 1:
-        >>> print(phrases[sent])
-        [u'trees_graph', u'minors']
-        >>>
-        >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-        >>> phrases = Phrases(sentences, min_count=1, threshold=1)
-        >>> phraser = Phraser(phrases)  # for speedup
-        >>>
-        >>> sent = [[u'trees', u'graph', u'minors'],[u'graph', u'minors']]
-        >>> for phrase in phraser[sent]:
-        ...     pass
+        .. sourcecode:: pycon
+
+            >>> from gensim.test.utils import datapath
+            >>> from gensim.models.word2vec import Text8Corpus
+            >>> from gensim.models.phrases import Phrases, Phraser
+            >>>
+            >>> # Create corpus
+            >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
+            >>>
+            >>> # Train the detector with:
+            >>> phrases = Phrases(sentences, min_count=1, threshold=1)
+            >>> # Input is a list of unicode strings:
+            >>> sent = [u'trees', u'graph', u'minors']
+            >>> # Both of these tokens appear in corpus at least twice, and phrase score is higher, than treshold = 1:
+            >>> print(phrases[sent])
+            [u'trees_graph', u'minors']
+            >>>
+            >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
+            >>> phrases = Phrases(sentences, min_count=1, threshold=1)
+            >>> phraser = Phraser(phrases)  # for speedup
+            >>>
+            >>> sent = [[u'trees', u'graph', u'minors'], [u'graph', u'minors']]
+            >>> for phrase in phraser[sent]:
+            ...     pass
 
         """
         warnings.warn("For a faster implementation, use the gensim.models.phrases.Phraser class")
@@ -767,17 +778,19 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
 
         Examples
         --------
-        >>> from gensim.test.utils import datapath
-        >>> from gensim.models.word2vec import Text8Corpus
-        >>> from gensim.models.phrases import Phrases, Phraser
-        >>>
-        >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-        >>> phrases = Phrases(sentences, min_count=1, threshold=1)
-        >>>
-        >>> bigram = Phraser(phrases)
-        >>> sent = [u'trees', u'graph', u'minors']
-        >>> print(bigram[sent])
-        [u'trees_graph', u'minors']
+        .. sourcecode:: pycon
+
+            >>> from gensim.test.utils import datapath
+            >>> from gensim.models.word2vec import Text8Corpus
+            >>> from gensim.models.phrases import Phrases, Phraser
+            >>>
+            >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
+            >>> phrases = Phrases(sentences, min_count=1, threshold=1)
+            >>>
+            >>> bigram = Phraser(phrases)
+            >>> sent = [u'trees', u'graph', u'minors']
+            >>> print(bigram[sent])
+            [u'trees_graph', u'minors']
 
         """
         self.threshold = phrases_model.threshold
@@ -855,24 +868,26 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
 
         Examples
         ----------
-        >>> from gensim.test.utils import datapath
-        >>> from gensim.models.word2vec import Text8Corpus
-        >>> from gensim.models.phrases import Phrases, Phraser
-        >>>
-        >>> sentences = Text8Corpus(datapath('testcorpus.txt'))  # Read corpus
-        >>>
-        >>> phrases = Phrases(sentences, min_count=1, threshold=1) # Train model
-        >>> # Create a Phraser object to transform any sentence and turn 2 suitable tokens into 1 phrase
-        >>> phraser_model = Phraser(phrases)
-        >>>
-        >>> sent = [u'trees', u'graph', u'minors']
-        >>> print(phraser_model[sent])
-        [u'trees_graph', u'minors']
-        >>> sent = [[u'trees', u'graph', u'minors'],[u'graph', u'minors']]
-        >>> for phrase in phraser_model[sent]:
-        ...     print(phrase)
-        [u'trees_graph', u'minors']
-        [u'graph_minors']
+        .. sourcecode:: pycon
+
+            >>> from gensim.test.utils import datapath
+            >>> from gensim.models.word2vec import Text8Corpus
+            >>> from gensim.models.phrases import Phrases, Phraser
+            >>>
+            >>> sentences = Text8Corpus(datapath('testcorpus.txt'))  # Read corpus
+            >>>
+            >>> phrases = Phrases(sentences, min_count=1, threshold=1)  # Train model
+            >>> # Create a Phraser object to transform any sentence and turn 2 suitable tokens into 1 phrase
+            >>> phraser_model = Phraser(phrases)
+            >>>
+            >>> sent = [u'trees', u'graph', u'minors']
+            >>> print(phraser_model[sent])
+            [u'trees_graph', u'minors']
+            >>> sent = [[u'trees', u'graph', u'minors'], [u'graph', u'minors']]
+            >>> for phrase in phraser_model[sent]:
+            ...     print(phrase)
+            [u'trees_graph', u'minors']
+            [u'graph_minors']
 
         """
         return _sentence2token(self, sentence)

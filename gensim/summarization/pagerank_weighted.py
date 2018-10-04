@@ -13,21 +13,25 @@ Examples
 
 Calculate Pagerank for words
 
->>> from gensim.summarization.keywords import get_graph
->>> from gensim.summarization.pagerank_weighted import pagerank_weighted
->>> graph = get_graph("The road to hell is paved with good intentions.")
->>> # result will looks like {'good': 0.70432858653171504, 'hell': 0.051128871128006126, ...}
->>> result = pagerank_weighted(graph)
+.. sourcecode:: pycon
+
+    >>> from gensim.summarization.keywords import get_graph
+    >>> from gensim.summarization.pagerank_weighted import pagerank_weighted
+    >>> graph = get_graph("The road to hell is paved with good intentions.")
+    >>> # result will looks like {'good': 0.70432858653171504, 'hell': 0.051128871128006126, ...}
+    >>> result = pagerank_weighted(graph)
 
 Build matrix from graph
 
->>> from gensim.summarization.pagerank_weighted import build_adjacency_matrix
->>> build_adjacency_matrix(graph).todense()
-matrix([[ 0.,  0.,  0.,  0.,  0.],
-        [ 0.,  0.,  1.,  0.,  0.],
-        [ 0.,  1.,  0.,  0.,  0.],
-        [ 0.,  0.,  0.,  0.,  0.],
-        [ 0.,  0.,  0.,  0.,  0.]])
+.. sourcecode:: pycon
+
+    >>> from gensim.summarization.pagerank_weighted import build_adjacency_matrix
+    >>> build_adjacency_matrix(graph).todense()
+    matrix([[ 0.,  0.,  0.,  0.,  0.],
+            [ 0.,  0.,  1.,  0.,  0.],
+            [ 0.,  1.,  0.,  0.,  0.],
+            [ 0.,  0.,  0.,  0.,  0.],
+            [ 0.,  0.,  0.,  0.,  0.]])
 
 """
 

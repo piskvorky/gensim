@@ -94,26 +94,30 @@ class CoherenceModel(interfaces.TransformationABC):
     One way of using this feature is through providing a trained topic model. A dictionary has to be explicitly provided
     if the model does not contain a dictionary already
 
-    >>> from gensim.test.utils import common_corpus, common_dictionary
-    >>> from gensim.models.ldamodel import LdaModel
-    >>> from gensim.models.coherencemodel import CoherenceModel
-    >>>
-    >>> model = LdaModel(common_corpus, 5, common_dictionary)
-    >>>
-    >>> cm = CoherenceModel(model=model, corpus=common_corpus, coherence='u_mass')
-    >>> coherence = cm.get_coherence()  # get coherence value
+    .. sourcecode:: pycon
 
-    Another way of using this feature is through providing tokenized topics such as
+        >>> from gensim.test.utils import common_corpus, common_dictionary
+        >>> from gensim.models.ldamodel import LdaModel
+        >>> from gensim.models.coherencemodel import CoherenceModel
+        >>>
+        >>> model = LdaModel(common_corpus, 5, common_dictionary)
+        >>>
+        >>> cm = CoherenceModel(model=model, corpus=common_corpus, coherence='u_mass')
+        >>> coherence = cm.get_coherence()  # get coherence value
 
-    >>> from gensim.test.utils import common_corpus, common_dictionary
-    >>> from gensim.models.coherencemodel import CoherenceModel
-    >>> topics = [
-    ...    ['human', 'computer', 'system', 'interface'],
-    ...    ['graph', 'minors', 'trees', 'eps']
-    ... ]
-    >>>
-    >>> cm = CoherenceModel(topics=topics, corpus=common_corpus, dictionary=common_dictionary, coherence='u_mass')
-    >>> coherence = cm.get_coherence()  # get coherence value
+    Another way of using this feature is through providing tokenized topics such as:
+
+    .. sourcecode:: pycon
+
+        >>> from gensim.test.utils import common_corpus, common_dictionary
+        >>> from gensim.models.coherencemodel import CoherenceModel
+        >>> topics = [
+        ...     ['human', 'computer', 'system', 'interface'],
+        ...     ['graph', 'minors', 'trees', 'eps']
+        ... ]
+        >>>
+        >>> cm = CoherenceModel(topics=topics, corpus=common_corpus, dictionary=common_dictionary, coherence='u_mass')
+        >>> coherence = cm.get_coherence()  # get coherence value
 
     """
     def __init__(self, model=None, topics=None, texts=None, corpus=None, dictionary=None,
@@ -233,14 +237,16 @@ class CoherenceModel(interfaces.TransformationABC):
 
         Example
         -------
-        >>> from gensim.test.utils import common_corpus, common_dictionary
-        >>> from gensim.models.ldamodel import LdaModel
-        >>> from gensim.models.coherencemodel import CoherenceModel
-        >>>
-        >>> m1 = LdaModel(common_corpus, 3, common_dictionary)
-        >>> m2 = LdaModel(common_corpus, 5, common_dictionary)
-        >>>
-        >>> cm = CoherenceModel.for_models([m1, m2], common_dictionary, corpus=common_corpus, coherence='u_mass')
+        .. sourcecode:: pycon
+
+            >>> from gensim.test.utils import common_corpus, common_dictionary
+            >>> from gensim.models.ldamodel import LdaModel
+            >>> from gensim.models.coherencemodel import CoherenceModel
+            >>>
+            >>> m1 = LdaModel(common_corpus, 3, common_dictionary)
+            >>> m2 = LdaModel(common_corpus, 5, common_dictionary)
+            >>>
+            >>> cm = CoherenceModel.for_models([m1, m2], common_dictionary, corpus=common_corpus, coherence='u_mass')
         """
         topics = [cls.top_topics_as_word_lists(model, dictionary, topn) for model in models]
         kwargs['dictionary'] = dictionary

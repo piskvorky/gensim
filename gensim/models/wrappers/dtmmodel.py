@@ -25,14 +25,17 @@ You have 2 ways, how to make binaries:
 
 Examples
 --------
->>> from gensim.test.utils import common_corpus, common_dictionary
->>> from gensim.models.wrappers import DtmModel
->>>
->>> path_to_dtm_binary = "/path/to/dtm/binary"
->>> model = DtmModel(
-...    path_to_dtm_binary, corpus=common_corpus, id2word=common_dictionary,
-...    time_slices=[1] * len(common_corpus)
-... )
+
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import common_corpus, common_dictionary
+    >>> from gensim.models.wrappers import DtmModel
+    >>>
+    >>> path_to_dtm_binary = "/path/to/dtm/binary"
+    >>> model = DtmModel(
+    ...     path_to_dtm_binary, corpus=common_corpus, id2word=common_dictionary,
+    ...     time_slices=[1] * len(common_corpus)
+    ... )
 
 """
 
