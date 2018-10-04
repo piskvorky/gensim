@@ -1181,6 +1181,18 @@ class TestPhrasesTransformerCommonTerms(unittest.TestCase):
         new_phrase_tokens = self.model.transform(doc)[0]
         self.assertEqual(new_phrase_tokens, phrase_tokens)
 
+    def testLoadNew(self):
+        with open(datapath("phrases-transformer-new-v3-5-0.pkl"), "rb") as new_phrases_transformer_pkl:
+            old_phrases_transformer = pickle.load(new_phrases_transformer_pkl)
+        doc = phrases_sentences[-1]
+        phrase_tokens = old_phrases_transformer.transform(doc)[0]
+        expected_phrase_tokens = [u'graph_minors', u'survey', u'human_interface']
+        self.assertEqual(phrase_tokens, expected_phrase_tokens)
+
+        self.model.fit(phrases_sentences)
+        new_phrase_tokens = self.model.transform(doc)[0]
+        self.assertEqual(new_phrase_tokens, phrase_tokens)
+
     def testFitAndTransform(self):
         self.model.fit(phrases_w_common_terms)
 
