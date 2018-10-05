@@ -529,7 +529,7 @@ class FastText(BaseWordEmbeddingsModel):
         self.wv.vectors_norm = None
         self.wv.vectors_vocab_norm = None
         self.wv.vectors_ngrams_norm = None
-        self.wv.buckets_word = None
+        # self.wv.buckets_word = None
 
     def estimate_memory(self, vocab_size=None, report=None):
         vocab_size = vocab_size or len(self.wv.vocab)
@@ -926,7 +926,7 @@ class FastText(BaseWordEmbeddingsModel):
 
         """
         kwargs['ignore'] = kwargs.get(
-            'ignore', ['vectors_norm', 'vectors_vocab_norm', 'vectors_ngrams_norm', 'buckets_word'])
+            'ignore', ['vectors_norm', 'vectors_vocab_norm', 'vectors_ngrams_norm'])  # , 'buckets_word'])
         super(FastText, self).save(*args, **kwargs)
 
     @classmethod
