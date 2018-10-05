@@ -534,7 +534,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
             # these params are read from model file if updating
             cmd.extend([
                 '--lda', str(self.num_topics),
-                '-b', str(_bit_length(self.num_terms)),
+                '-b', str(self.num_terms.bit_length()),
                 '--lda_alpha', str(self.alpha),
                 '--lda_rho', str(self.eta)
             ])
@@ -855,24 +855,6 @@ def _run_vw_command(cmd):
         raise subprocess.CalledProcessError(proc.returncode, ' '.join(cmd), output=output)
 
     return output
-
-
-# if python2.6 support is ever dropped, can change to using int.bit_length()
-def _bit_length(num):
-    """Get number of bits needed to encode given number.
-
-    Parameters
-    ----------
-    num : int
-        Number to encode.
-
-    Returns
-    -------
-    int
-        Number of bits needed to encode given number.
-
-    """
-    return len(bin(num).lstrip('-0b'))
 
 
 def vwmodel2ldamodel(vw_model, iterations=50):
