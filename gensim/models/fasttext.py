@@ -888,6 +888,8 @@ class FastText(BaseWordEmbeddingsModel):
             )
 
         self.trainables.init_ngrams_post_load(self.file_name, self.wv)
+        self.trainables.vectors_vocab_lockf = ones((len(self.wv.vocab), self.wv.vector_size), dtype=REAL)
+        self.trainables.vectors_ngrams_lockf = ones((self.bucket, self.wv.vector_size), dtype=REAL)
         self._clear_post_train()
 
     def struct_unpack(self, file_handle, fmt):
