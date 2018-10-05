@@ -27,7 +27,7 @@ from six.moves import xrange
 import re
 import logging
 
-logger = logging.getLogger('summarizer.preprocessing.cleaner')
+logger = logging.getLogger(__name__)
 
 try:
     from pattern.en import tag

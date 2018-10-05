@@ -59,7 +59,7 @@ else:
 
 user_dir = os.path.expanduser('~')
 base_dir = os.path.join(user_dir, 'gensim-data')
-logger = logging.getLogger('gensim.api')
+logger = logging.getLogger(__name__)
 
 DATA_LIST_URL = "https://raw.githubusercontent.com/RaRe-Technologies/gensim-data/master/list.json"
 DOWNLOAD_BASE_URL = "https://github.com/RaRe-Technologies/gensim-data/releases/download"

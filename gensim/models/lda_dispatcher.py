@@ -74,7 +74,7 @@ from gensim import utils
 from gensim.models.lda_worker import LDA_WORKER_PREFIX
 
 
-logger = logging.getLogger("gensim.models.lda_dispatcher")
+logger = logging.getLogger(__name__)
 
 
 # How many jobs (=chunks of N documents) to keep "pre-fetched" in a queue?

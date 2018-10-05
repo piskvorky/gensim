@@ -69,7 +69,7 @@ import Pyro4
 from gensim.models import ldamodel
 from gensim import utils
 
-logger = logging.getLogger('gensim.models.lda_worker')
+logger = logging.getLogger(__name__)
 
 
 # periodically save intermediate models after every SAVE_DEBUG updates (0 for never)

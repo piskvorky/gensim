@@ -44,7 +44,7 @@ import numpy as np
 from gensim import interfaces, matutils, utils
 
 
-logger = logging.getLogger('gensim.models.rpmodel')
+logger = logging.getLogger(__name__)
 
 
 class RpModel(interfaces.TransformationABC):
