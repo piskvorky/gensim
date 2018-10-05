@@ -1241,8 +1241,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         total = {
             'section': 'total',
-            'correct': sum((s['correct'] for s in sections), []),
-            'incorrect': sum((s['incorrect'] for s in sections), []),
+            'correct': list(chain.from_iterable(s['correct'] for s in sections)),
+            'incorrect': list(chain.from_iterable(s['incorrect'] for s in sections)),
         }
         self.log_accuracy(total)
         sections.append(total)
