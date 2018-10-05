@@ -159,6 +159,7 @@ and so on.
 from __future__ import division  # py3 "true division"
 
 from collections import deque
+from itertools import chain
 import logging
 
 try:
@@ -1144,8 +1145,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         total = {
             'section': 'Total accuracy',
-            'correct': sum((s['correct'] for s in sections), []),
-            'incorrect': sum((s['incorrect'] for s in sections), []),
+            'correct': list(chain.from_iterable(s['correct'] for s in sections)),
+            'incorrect': list(chain.from_iterable(s['incorrect'] for s in sections)),
         }
 
         oov_ratio = float(oov) / quadruplets_no * 100
@@ -1250,8 +1251,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         total = {
             'section': 'total',
-            'correct': sum((s['correct'] for s in sections), []),
-            'incorrect': sum((s['incorrect'] for s in sections), []),
+            'correct': list(chain.from_iterable(s['correct'] for s in sections)),
+            'incorrect': list(chain.from_iterable(s['incorrect'] for s in sections)),
         }
         self.log_accuracy(total)
         sections.append(total)
