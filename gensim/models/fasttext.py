@@ -886,6 +886,8 @@ class FastText(BaseWordEmbeddingsModel):
             .format(
                 self.wv.vectors_ngrams.shape, (self.trainables.bucket + len(self.wv.vocab), self.wv.vector_size)
             )
+        self.trainables.syn1neg = np.fromfile(file_handle, dtype=dtype, count=len(self.wv.vocab) * dim)
+        self.trainables.syn1neg = self.trainables.syn1neg.reshape((dim, len(self.wv.vocab)))
 
         self.trainables.init_ngrams_post_load(self.file_name, self.wv)
         self.trainables.vectors_vocab_lockf = ones((len(self.wv.vocab), self.wv.vector_size), dtype=REAL)
