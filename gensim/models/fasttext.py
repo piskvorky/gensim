@@ -835,8 +835,8 @@ class FastText(BaseWordEmbeddingsModel):
                 char_byte = file_handle.read(1)
             word = word_bytes.decode(encoding)
             count, _ = self.struct_unpack(file_handle, '@qb')
-
-            self.wv.vocab[word] = Vocab(index=i, count=count, sample_int=i)
+            # TODO count sample_int correctly
+            self.wv.vocab[word] = Vocab(index=i, count=count, sample_int=self.random.rand() * 2 ** 32)
             self.wv.index2word.append(word)
 
         assert len(self.wv.vocab) == nwords, (
@@ -853,7 +853,8 @@ class FastText(BaseWordEmbeddingsModel):
             for j in range(pruneidx_size):
                 self.struct_unpack(file_handle, '@2i')
 
-        self.vocabulary.make_cum_table(self.wv)
+        if self.negative:
+            self.vocabulary.make_cum_table(self.wv)
 
     def _load_vectors(self, file_handle):
         """Load word vectors stored in Facebook's native fasttext format from disk.
