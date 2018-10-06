@@ -836,7 +836,7 @@ class FastText(BaseWordEmbeddingsModel):
             word = word_bytes.decode(encoding)
             count, _ = self.struct_unpack(file_handle, '@qb')
 
-            self.wv.vocab[word] = Vocab(index=i, count=count)
+            self.wv.vocab[word] = Vocab(index=i, count=count, sample_int=i)
             self.wv.index2word.append(word)
 
         assert len(self.wv.vocab) == nwords, (
@@ -852,6 +852,8 @@ class FastText(BaseWordEmbeddingsModel):
         if self.new_format:
             for j in range(pruneidx_size):
                 self.struct_unpack(file_handle, '@2i')
+
+        self.vocabulary.make_cum_table(self.wv)
 
     def _load_vectors(self, file_handle):
         """Load word vectors stored in Facebook's native fasttext format from disk.
@@ -885,8 +887,12 @@ class FastText(BaseWordEmbeddingsModel):
             .format(
                 self.wv.vectors_ngrams.shape, (self.trainables.bucket + len(self.wv.vocab), self.wv.vector_size)
             )
-        self.trainables.syn1neg = np.fromfile(file_handle, dtype=dtype, count=len(self.wv.vocab) * dim)
-        self.trainables.syn1neg = self.trainables.syn1neg.reshape((dim, len(self.wv.vocab)))
+
+        arr = np.fromfile(file_handle, dtype=dtype, count=len(self.wv.vocab) * dim).reshape((dim, len(self.wv.vocab)))
+        if self.hs:
+            self.trainables.syn1 = arr
+        if self.negative:
+            self.trainables.syn1neg = arr
 
         self.trainables.init_ngrams_post_load(self.file_name, self.wv)
         self.trainables.vectors_vocab_lockf = ones((len(self.wv.vocab), self.wv.vector_size), dtype=REAL)
