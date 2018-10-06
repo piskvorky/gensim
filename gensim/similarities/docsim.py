@@ -826,7 +826,7 @@ class MatrixSimilarity(interfaces.SimilarityABC):
 
         Parameters
         ----------
-        query : list of (int, number), iterable of list of (int, number), :class:`scipy.sparse.csr_matrix`
+        query : {list of (int, number), iterable of list of (int, number), :class:`scipy.sparse.csr_matrix`}
             Document or collection of documents.
 
         Return
@@ -938,7 +938,7 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
 
         Parameters
         ----------
-        query : list of (int, number), iterable of list of (int, number)
+        query : {list of (int, number), iterable of list of (int, number)}
             Document or collection of documents.
 
         Return
@@ -1058,7 +1058,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
 
         Parameters
         ----------
-        query : list of str, iterable of list of str
+        query : {list of str, iterable of list of str}
             Document or collection of documents.
 
         Return
@@ -1194,7 +1194,7 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
 
         Parameters
         ----------
-        query : list of (int, number), iterable of list of (int, number), :class:`scipy.sparse.csr_matrix`
+        query : {list of (int, number), iterable of list of (int, number), :class:`scipy.sparse.csr_matrix`}
             Document or collection of documents.
 
         Return
