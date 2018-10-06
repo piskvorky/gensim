@@ -826,7 +826,7 @@ class MatrixSimilarity(interfaces.SimilarityABC):
 
         Parameters
         ----------
-        query : {list of (int, number), iterable of list of (int, number), :class:`scipy.sparse.csr_matrix`
+        query : list of (int, number), iterable of list of (int, number), :class:`scipy.sparse.csr_matrix`
             Document or collection of documents.
 
         Return
@@ -938,7 +938,7 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
 
         Parameters
         ----------
-        query : {list of (int, number), iterable of list of (int, number)
+        query : list of (int, number), iterable of list of (int, number)
             Document or collection of documents.
 
         Return
@@ -1018,8 +1018,8 @@ class WmdSimilarity(interfaces.SimilarityABC):
 
         Parameters
         ----------
-        corpus: iterable of list of (int, float)
-            A list of documents in the BoW format.
+        corpus: iterable of list of str
+            A list of documents, each of which is a list of tokens.
         w2v_model: :class:`~gensim.models.word2vec.Word2VecTrainables`
             A trained word2vec model.
         num_best: int, optional
@@ -1058,7 +1058,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
 
         Parameters
         ----------
-        query : {list of (int, number), iterable of list of (int, number)
+        query : list of str, iterable of list of str
             Document or collection of documents.
 
         Return
@@ -1194,7 +1194,7 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
 
         Parameters
         ----------
-        query : {list of (int, number), iterable of list of (int, number), :class:`scipy.sparse.csr_matrix`
+        query : list of (int, number), iterable of list of (int, number), :class:`scipy.sparse.csr_matrix`
             Document or collection of documents.
 
         Return
