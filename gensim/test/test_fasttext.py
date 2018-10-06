@@ -646,9 +646,11 @@ class TestFastTextModel(unittest.TestCase):
         model_neg.save(tmpf)
         model_neg = FT_gensim.load(tmpf)
         self.assertTrue(len(model_neg.wv.vocab), 12)
+        model_neg.train(sentences, total_examples=model_neg.corpus_count, epochs=model_neg.epochs)
         model_neg.build_vocab(new_sentences, update=True)  # update vocab
         model_neg.train(new_sentences, total_examples=model_neg.corpus_count, epochs=model_neg.epochs)
         self.assertEqual(len(model_neg.wv.vocab), 14)
+        model_neg.train(new_sentences, total_examples=model_neg.corpus_count, epochs=model_neg.epochs)
 
     @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
     def test_online_learning_after_save_fromfile(self):
@@ -666,6 +668,8 @@ class TestFastTextModel(unittest.TestCase):
             model_neg.train(corpus_file=new_corpus_file, total_words=model_neg.corpus_total_words,
                             epochs=model_neg.epochs)
             self.assertEqual(len(model_neg.wv.vocab), 14)
+            model_neg.train(corpus_file=new_corpus_file, total_words=model_neg.corpus_total_words,
+                            epochs=model_neg.epochs)
 
     def online_sanity(self, model):
         terro, others = [], []
