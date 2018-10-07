@@ -82,7 +82,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.A = None
         self.B = None
 
-        self.w_avg = None
+        self.w_std = None
 
         if store_r:
             self._R = []
@@ -234,17 +234,17 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         first_doc = next(first_doc_it[0])
         first_doc = matutils.corpus2csc([first_doc], len(self.id2word))[:, 0]
         self.n_features = first_doc.shape[0]
-        self.w_avg = np.sqrt(
+        self.w_std = np.sqrt(
             first_doc.mean()
             / (self.n_features * self.num_topics)
         )
 
         self._W = np.abs(
-            self.w_avg
+            self.w_std
             * halfnorm.rvs(size=(self.n_features, self.num_topics))
         )
 
-        is_great_enough = self._W > self.w_avg * self.sparse_coef
+        is_great_enough = self._W > self.w_std * self.sparse_coef
 
         self._W *= is_great_enough | ~is_great_enough.all(axis=0)
 
@@ -375,8 +375,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         sumsq = np.repeat(sumsq, self._W.getnnz(axis=0))
         self._W.data /= sumsq
 
-        is_great_enough_data = self._W.data > self.w_avg * self.sparse_coef
-        is_great_enough = self._W.toarray() > self.w_avg * self.sparse_coef
+        is_great_enough_data = self._W.data > self.w_std * self.sparse_coef
+        is_great_enough = self._W.toarray() > self.w_std * self.sparse_coef
         is_all_too_small = is_great_enough.sum(axis=0) == 0
         is_all_too_small = np.repeat(
             is_all_too_small,
@@ -407,7 +407,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         WtW = W.T.dot(W)
 
-        # eta = self._kappa / scipy.sparse.linalg.norm(W) ** 2
+        eta = self._kappa / scipy.sparse.linalg.norm(W) ** 2
 
         _h_r_error = None
 
@@ -418,11 +418,11 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             Wt_v_minus_r = W.T.dot(v - r)
 
-            h_ = h.toarray()
-            error_ += solve_h(h_, Wt_v_minus_r.toarray(), WtW.toarray(), self._kappa)
-            h = scipy.sparse.csr_matrix(h_)
-            # h, error_h = self.__solve_h(h, Wt_v_minus_r, WtW, eta)
-            # error_ += error_h
+            # h_ = h.toarray()
+            # error_ += solve_h(h_, Wt_v_minus_r.toarray(), WtW.toarray(), self._kappa)
+            # h = scipy.sparse.csr_matrix(h_)
+            h, error_h = self.__solve_h(h, Wt_v_minus_r, WtW, eta)
+            error_ += error_h
 
             if self.use_r:
                 r_actual = v - W.dot(h)
