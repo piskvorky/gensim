@@ -176,14 +176,14 @@ class UnitvecTestCase(unittest.TestCase):
         unit_vector = matutils.unitvec(input_vector)
         man_unit_vector = manual_unitvec(input_vector)
         self.assertTrue(np.allclose(unit_vector.data, man_unit_vector.data, atol=1e-3))
-        self.assertTrue(np.issubdtype(unit_vector.dtype, float))
+        self.assertTrue(np.issubdtype(unit_vector.dtype, np.floating))
 
     def test_sparse_npint64(self):
         input_vector = sparse.csr_matrix(np.asarray([[1, 0, 0, 0, 3], [0, 0, 4, 3, 0]])).astype(np.int64)
         unit_vector = matutils.unitvec(input_vector)
         man_unit_vector = manual_unitvec(input_vector)
         self.assertTrue(np.allclose(unit_vector.data, man_unit_vector.data, atol=1e-3))
-        self.assertTrue(np.issubdtype(unit_vector.dtype, float))
+        self.assertTrue(np.issubdtype(unit_vector.dtype, np.floating))
 
     def test_dense_npfloat32(self):
         input_vector = np.random.uniform(size=(5,)).astype(np.float32)
@@ -204,14 +204,14 @@ class UnitvecTestCase(unittest.TestCase):
         unit_vector = matutils.unitvec(input_vector)
         man_unit_vector = manual_unitvec(input_vector)
         self.assertTrue(np.allclose(unit_vector, man_unit_vector))
-        self.assertTrue(np.issubdtype(unit_vector.dtype, float))
+        self.assertTrue(np.issubdtype(unit_vector.dtype, np.floating))
 
     def test_dense_npint64(self):
         input_vector = np.random.randint(10, size=5).astype(np.int32)
         unit_vector = matutils.unitvec(input_vector)
         man_unit_vector = manual_unitvec(input_vector)
         self.assertTrue(np.allclose(unit_vector, man_unit_vector))
-        self.assertTrue(np.issubdtype(unit_vector.dtype, float))
+        self.assertTrue(np.issubdtype(unit_vector.dtype, np.floating))
 
     def test_sparse_python_float(self):
         input_vector = sparse.csr_matrix(np.asarray([[1, 0, 0, 0, 3], [0, 0, 4, 3, 0]])).astype(float)
@@ -225,7 +225,7 @@ class UnitvecTestCase(unittest.TestCase):
         unit_vector = matutils.unitvec(input_vector)
         man_unit_vector = manual_unitvec(input_vector)
         self.assertTrue(np.allclose(unit_vector.data, man_unit_vector.data, atol=1e-3))
-        self.assertTrue(np.issubdtype(unit_vector.dtype, float))
+        self.assertTrue(np.issubdtype(unit_vector.dtype, np.floating))
 
     def test_dense_python_float(self):
         input_vector = np.random.uniform(size=(5,)).astype(float)
@@ -239,7 +239,7 @@ class UnitvecTestCase(unittest.TestCase):
         unit_vector = matutils.unitvec(input_vector)
         man_unit_vector = manual_unitvec(input_vector)
         self.assertTrue(np.allclose(unit_vector, man_unit_vector))
-        self.assertTrue(np.issubdtype(unit_vector.dtype, float))
+        self.assertTrue(np.issubdtype(unit_vector.dtype, np.floating))
 
 
 if __name__ == '__main__':

@@ -16,46 +16,58 @@ Common code independent of the way the vectors are trained(Word2Vec, FastText, W
 
 The word vectors are considered read-only in this class.
 
-Initialize the vectors by training e.g. Word2Vec::
+Initialize the vectors by training e.g. Word2Vec:
 
->>> model = Word2Vec(sentences, size=100, window=5, min_count=5, workers=4)
->>> word_vectors = model.wv
+.. sourcecode:: pycon
 
-Persist the word vectors to disk with::
+    >>> model = Word2Vec(sentences, size=100, window=5, min_count=5, workers=4)
+    >>> word_vectors = model.wv
 
->>> word_vectors.save(fname)
->>> word_vectors = KeyedVectors.load(fname)
+Persist the word vectors to disk with:
+
+.. sourcecode:: pycon
+
+    >>> word_vectors.save(fname)
+    >>> word_vectors = KeyedVectors.load(fname)
 
 The vectors can also be instantiated from an existing file on disk
-in the original Google's word2vec C format as a KeyedVectors instance::
+in the original Google's word2vec C format as a KeyedVectors instance:
 
-  >>> from gensim.models.keyedvectors import KeyedVectors
-  >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
-  >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.bin', binary=True)  # C binary format
+.. sourcecode:: pycon
+
+    >>> from gensim.models.keyedvectors import KeyedVectors
+    >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
+    >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.bin', binary=True)  # C binary format
 
 You can perform various syntactic/semantic NLP word tasks with the vectors. Some of them
-are already built-in::
+are already built-in:
 
-  >>> word_vectors.most_similar(positive=['woman', 'king'], negative=['man'])
-  [('queen', 0.50882536), ...]
+.. sourcecode:: pycon
 
-  >>> word_vectors.most_similar_cosmul(positive=['woman', 'king'], negative=['man'])
-  [('queen', 0.71382287), ...]
+    >>> word_vectors.most_similar(positive=['woman', 'king'], negative=['man'])
+    [('queen', 0.50882536), ...]
 
-  >>> word_vectors.doesnt_match("breakfast cereal dinner lunch".split())
-  'cereal'
+    >>> word_vectors.most_similar_cosmul(positive=['woman', 'king'], negative=['man'])
+    [('queen', 0.71382287), ...]
 
-  >>> word_vectors.similarity('woman', 'man')
-  0.73723527
+    >>> word_vectors.doesnt_match("breakfast cereal dinner lunch".split())
+    'cereal'
 
-Correlation with human opinion on word similarity::
+    >>> word_vectors.similarity('woman', 'man')
+    0.73723527
 
-  >>> word_vectors.evaluate_word_pairs(os.path.join(module_path, 'test_data','wordsim353.tsv'))
-  0.51, 0.62, 0.13
+Correlation with human opinion on word similarity:
 
-And on analogies::
+.. sourcecode:: pycon
 
-  >>> word_vectors.accuracy(os.path.join(module_path, 'test_data', 'questions-words.txt'))
+    >>> word_vectors.evaluate_word_pairs(os.path.join(module_path, 'test_data','wordsim353.tsv'))
+    0.51, 0.62, 0.13
+
+And on analogies:
+
+.. sourcecode:: pycon
+
+    >>> word_vectors.accuracy(os.path.join(module_path, 'test_data', 'questions-words.txt'))
 
 and so on.
 
@@ -292,10 +304,12 @@ class KeyedVectorsBase(utils.SaveLoad):
         Accept a single word as input.
         Returns the word's representations in vector space, as a 1D numpy array.
 
-        Example::
+        Example:
 
-          >>> trained_model.word_vec('office')
-          array([ -1.40128313e-02, ...])
+        .. sourcecode:: pycon
+
+            >>> trained_model.word_vec('office')
+            array([ -1.40128313e-02, ...])
 
         """
         if word in self.vocab:
@@ -316,15 +330,17 @@ class KeyedVectorsBase(utils.SaveLoad):
         2d numpy array: #words x #vector_size. Matrix rows are in the same order
         as in input.
 
-        Example::
+        Example:
 
-          >>> trained_model['office']
-          array([ -1.40128313e-02, ...])
+        .. sourcecode:: pycon
 
-          >>> trained_model[['office', 'products']]
-          array([ -1.40128313e-02, ...]
-                [ -1.70425311e-03, ...]
-                 ...)
+            >>> trained_model['office']
+            array([ -1.40128313e-02, ...])
+
+            >>> trained_model[['office', 'products']]
+            array([ -1.40128313e-02, ...]
+                  [ -1.70425311e-03, ...]
+                   ...)
 
         """
         if isinstance(words, string_types):
@@ -349,13 +365,15 @@ class KeyedVectorsBase(utils.SaveLoad):
         Raises:
             KeyError: If w1 or any word in word_list is not in the vocabulary
 
-        Example::
+        Example:
 
-          >>> trained_model.most_similar_to_given('music', ['water', 'sound', 'backpack', 'mouse'])
-          'sound'
+        .. sourcecode:: pycon
 
-          >>> trained_model.most_similar_to_given('snake', ['food', 'pencil', 'animal', 'phone'])
-          'animal'
+            >>> trained_model.most_similar_to_given('music', ['water', 'sound', 'backpack', 'mouse'])
+            'sound'
+
+            >>> trained_model.most_similar_to_given('snake', ['food', 'pencil', 'animal', 'phone'])
+            'animal'
 
         """
         return word_list[argmax([self.similarity(w1, word) for word in word_list])]
@@ -379,8 +397,10 @@ class KeyedVectorsBase(utils.SaveLoad):
         Examples
         --------
 
-        >>> model.words_closer_than('carnivore.n.01', 'mammal.n.01')
-        ['dog.n.01', 'canine.n.02']
+        .. sourcecode:: pycon
+
+            >>> model.words_closer_than('carnivore.n.01', 'mammal.n.01')
+            ['dog.n.01', 'canine.n.02']
 
         """
         all_distances = self.distances(w1)
@@ -408,8 +428,10 @@ class KeyedVectorsBase(utils.SaveLoad):
         Examples
         --------
 
-        >>> model.rank('mammal.n.01', 'carnivore.n.01')
-        3
+        .. sourcecode:: pycon
+
+            >>> model.rank('mammal.n.01', 'carnivore.n.01')
+            3
 
         """
         return len(self.words_closer_than(w1, w2)) + 1
@@ -441,10 +463,12 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
 
         If `use_norm` is True, returns the normalized word vector.
 
-        Example::
+        Example:
 
-          >>> trained_model['office']
-          array([ -1.40128313e-02, ...])
+        .. sourcecode:: pycon
+
+            >>> trained_model['office']
+            array([ -1.40128313e-02, ...])
 
         """
         if word in self.vocab:
@@ -475,10 +499,12 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
         only check the first 10000 word vectors in the vocabulary order. (This may be
         meaningful if you've sorted the vocabulary by descending frequency.)
 
-        Example::
+        Example:
 
-          >>> trained_model.most_similar(positive=['woman', 'king'], negative=['man'])
-          [('queen', 0.50882536), ...]
+        .. sourcecode:: pycon
+
+            >>> trained_model.most_similar(positive=['woman', 'king'], negative=['man'])
+            [('queen', 0.50882536), ...]
 
         """
         if positive is None:
@@ -538,10 +564,12 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
         only check the first 10000 word vectors in the vocabulary order. (This may be
         meaningful if you've sorted the vocabulary by descending frequency.)
 
-        Example::
+        Example:
 
-          >>> trained_model.similar_by_word('graph')
-          [('user', 0.9999163150787354), ...]
+        .. sourcecode:: pycon
+
+            >>> trained_model.similar_by_word('graph')
+            [('user', 0.9999163150787354), ...]
 
         """
         return self.most_similar(positive=[word], topn=topn, restrict_vocab=restrict_vocab)
@@ -580,6 +608,9 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
         This method only works if `pyemd` is installed (can be installed via pip, but requires a C compiler).
 
         Example:
+
+        .. sourcecode:: pycon
+
             >>> # Train word2vec model.
             >>> model = Word2Vec(sentences)
 
@@ -671,10 +702,12 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
         respectively – a potentially sensible but untested extension of the method. (With
         a single positive example, rankings will be the same as in the default most_similar.)
 
-        Example::
+        Example:
 
-          >>> trained_model.most_similar_cosmul(positive=['baghdad', 'england'], negative=['london'])
-          [(u'iraq', 0.8488819003105164), ...]
+        .. sourcecode:: pycon
+
+            >>> trained_model.most_similar_cosmul(positive=['baghdad', 'england'], negative=['london'])
+            [(u'iraq', 0.8488819003105164), ...]
 
         .. [4] Omer Levy and Yoav Goldberg. Linguistic Regularities in Sparse and Explicit Word Representations, 2014.
 
@@ -810,13 +843,15 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
         """
         Compute cosine distance between two words.
 
-        Example::
+        Example:
 
-          >>> trained_model.distance('woman', 'man')
-          0.34
+        .. sourcecode:: pycon
 
-          >>> trained_model.distance('woman', 'woman')
-          0.0
+            >>> trained_model.distance('woman', 'man')
+            0.34
+
+            >>> trained_model.distance('woman', 'woman')
+            0.0
 
         """
         return 1 - self.similarity(w1, w2)
@@ -825,13 +860,15 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
         """
         Compute cosine similarity between two words.
 
-        Example::
+        Example:
 
-          >>> trained_model.similarity('woman', 'man')
-          0.73723527
+        .. sourcecode:: pycon
 
-          >>> trained_model.similarity('woman', 'woman')
-          1.0
+            >>> trained_model.similarity('woman', 'man')
+            0.73723527
+
+            >>> trained_model.similarity('woman', 'woman')
+            1.0
 
         """
         return dot(matutils.unitvec(self[w1]), matutils.unitvec(self[w2]))
@@ -840,16 +877,18 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
         """
         Compute cosine similarity between two sets of words.
 
-        Example::
+        Example:
 
-          >>> trained_model.n_similarity(['sushi', 'shop'], ['japanese', 'restaurant'])
-          0.61540466561049689
+        .. sourcecode:: pycon
 
-          >>> trained_model.n_similarity(['restaurant', 'japanese'], ['japanese', 'restaurant'])
-          1.0000000000000004
+            >>> trained_model.n_similarity(['sushi', 'shop'], ['japanese', 'restaurant'])
+            0.61540466561049689
 
-          >>> trained_model.n_similarity(['sushi'], ['restaurant']) == trained_model.similarity('sushi', 'restaurant')
-          True
+            >>> trained_model.n_similarity(['restaurant', 'japanese'], ['japanese', 'restaurant'])
+            1.0000000000000004
+
+            >>> trained_model.n_similarity(['sushi'], ['restaurant']) == trained_model.similarity('sushi', 'restaurant')
+            True
 
         """
         if not(len(ws1) and len(ws2)):

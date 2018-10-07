@@ -34,47 +34,55 @@ Usage examples
 
 Initialize a model with e.g.:
 
->>> from gensim.test.utils import common_texts, get_tmpfile
->>> from gensim.models import Word2Vec
->>>
->>> path = get_tmpfile("word2vec.model")
->>>
->>> model = Word2Vec(common_texts, size=100, window=5, min_count=1, workers=4)
->>> model.save("word2vec.model")
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import common_texts, get_tmpfile
+    >>> from gensim.models import Word2Vec
+    >>>
+    >>> path = get_tmpfile("word2vec.model")
+    >>>
+    >>> model = Word2Vec(common_texts, size=100, window=5, min_count=1, workers=4)
+    >>> model.save("word2vec.model")
 
 The training is streamed, meaning `sentences` can be a generator, reading input data
 from disk on-the-fly, without loading the entire corpus into RAM.
 
 It also means you can continue training the model later:
+.. sourcecode:: pycon
 
->>> model = Word2Vec.load("word2vec.model")
->>> model.train([["hello", "world"]], total_examples=1, epochs=1)
-(0, 2)
+    >>> model = Word2Vec.load("word2vec.model")
+    >>> model.train([["hello", "world"]], total_examples=1, epochs=1)
+    (0, 2)
 
 The trained word vectors are stored in a :class:`~gensim.models.keyedvectors.KeyedVectors` instance in `model.wv`:
+.. sourcecode:: pycon
 
->>> vector = model.wv['computer']  # numpy vector of a word
+    >>> vector = model.wv['computer']  # numpy vector of a word
 
 The reason for separating the trained vectors into `KeyedVectors` is that if you don't
 need the full model state any more (don't need to continue training), the state can discarded,
 resulting in a much smaller and faster object that can be mmapped for lightning
-fast loading and sharing the vectors in RAM between processes::
+fast loading and sharing the vectors in RAM between processes:
 
->>> from gensim.models import KeyedVectors
->>>
->>> path = get_tmpfile("wordvectors.kv")
->>>
->>> model.wv.save(path)
->>> wv = KeyedVectors.load("model.wv", mmap='r')
->>> vector = wv['computer']  # numpy vector of a word
+.. sourcecode:: pycon
+
+    >>> from gensim.models import KeyedVectors
+    >>>
+    >>> path = get_tmpfile("wordvectors.kv")
+    >>>
+    >>> model.wv.save(path)
+    >>> wv = KeyedVectors.load("model.wv", mmap='r')
+    >>> vector = wv['computer']  # numpy vector of a word
 
 Gensim can also load word vectors in the "word2vec C format", as a
-:class:`~gensim.models.keyedvectors.KeyedVectors` instance::
+:class:`~gensim.models.keyedvectors.KeyedVectors` instance:
 
->>> from gensim.test.utils import datapath
->>>
->>> wv_from_text = KeyedVectors.load_word2vec_format(datapath('word2vec_pre_kv_c'), binary=False)  # C text format
->>> wv_from_bin = KeyedVectors.load_word2vec_format(datapath("euclidean_vectors.bin"), binary=True)  # C binary format
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import datapath
+    >>>
+    >>> wv_from_text = KeyedVectors.load_word2vec_format(datapath('word2vec_pre_kv_c'), binary=False)  # C text format
+    >>> wv_from_bin = KeyedVectors.load_word2vec_format(datapath("euclidean_vectors.bin"), binary=True)  # C bin format
 
 It is impossible to continue training the vectors loaded from the C format because the hidden weights,
 vocabulary frequencies and the binary tree are missing. To continue training, you'll need the
@@ -87,8 +95,10 @@ are already built-in - you can see it in :mod:`gensim.models.keyedvectors`.
 If you're finished training a model (i.e. no more updates, only querying),
 you can switch to the :class:`~gensim.models.keyedvectors.KeyedVectors` instance:
 
->>> word_vectors = model.wv
->>> del model
+.. sourcecode:: pycon
+
+    >>> word_vectors = model.wv
+    >>> del model
 
 to trim unneeded model state = use much less RAM and allow fast loading and memory sharing (mmap).
 
@@ -96,11 +106,13 @@ Note that there is a :mod:`gensim.models.phrases` module which lets you automati
 detect phrases longer than one word. Using phrases, you can learn a word2vec model
 where "words" are actually multiword expressions, such as `new_york_times` or `financial_crisis`:
 
->>> from gensim.test.utils import common_texts
->>> from gensim.models import Phrases
->>>
->>> bigram_transformer = Phrases(common_texts)
->>> model = Word2Vec(bigram_transformer[common_texts], min_count=1)
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import common_texts
+    >>> from gensim.models import Phrases
+    >>>
+    >>> bigram_transformer = Phrases(common_texts)
+    >>> model = Word2Vec(bigram_transformer[common_texts], min_count=1)
 
 """
 
@@ -114,7 +126,6 @@ from timeit import default_timer
 from copy import deepcopy
 from collections import defaultdict
 import threading
-import multiprocessing
 import itertools
 import warnings
 
@@ -137,7 +148,6 @@ from gensim import utils, matutils  # utility fnc for pickling, common scipy ope
 from gensim.utils import deprecated
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
-from functools import reduce
 
 logger = logging.getLogger(__name__)
 
@@ -334,6 +344,20 @@ except ImportError:
             log_prob_sentence += score_cbow_pair(model, word, l1)
 
         return log_prob_sentence
+
+try:
+    from gensim.models.word2vec_corpusfile import train_epoch_sg, train_epoch_cbow, CORPUSFILE_VERSION
+except ImportError:
+    # file-based word2vec is not supported
+    CORPUSFILE_VERSION = -1
+
+    def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
+                       _work, _neu1, compute_loss):
+        raise RuntimeError("Training with corpus_file argument is not supported")
+
+    def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
+                         _work, _neu1, compute_loss):
+        raise RuntimeError("Training with corpus_file argument is not supported")
 
 
 def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_hidden=True,
@@ -630,7 +654,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
     """
 
-    def __init__(self, sentences=None, input_streams=None, size=100, alpha=0.025, window=5, min_count=5,
+    def __init__(self, sentences=None, corpus_file=None, size=100, alpha=0.025, window=5, min_count=5,
                  max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
                  sg=0, hs=0, negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
                  trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False, callbacks=(),
@@ -648,9 +672,10 @@ class Word2Vec(BaseWordEmbeddingsModel):
             <https://rare-technologies.com/data-streaming-in-python-generators-iterators-iterables/>`_.
             If you don't supply `sentences`, the model is left uninitialized -- use if you plan to initialize it
             in some other way.
-        input_streams : list or tuple of iterable of iterables
-            The tuple or list of `sentences`-like arguments. Use it if you have multiple input streams. It is possible
-            to process streams in parallel, using `workers` parameter.
+        corpus_file : str, optional
+            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
+            `corpus_file` arguments need to be passed (or none of them).
         size : int, optional
             Dimensionality of the word vectors.
         window : int, optional
@@ -731,9 +756,11 @@ class Word2Vec(BaseWordEmbeddingsModel):
         --------
         Initialize and train a :class:`~gensim.models.word2vec.Word2Vec` model
 
-        >>> from gensim.models import Word2Vec
-        >>> input_streams = [[["cat", "say", "meow"], ["dog", "say", "woof"]]]
-        >>> model = Word2Vec(input_streams=input_streams, min_count=1)
+        .. sourcecode:: pycon
+
+            >>> from gensim.models import Word2Vec
+            >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
+            >>> model = Word2Vec(sentences, min_count=1)
 
         """
         self.max_final_vocab = max_final_vocab
@@ -748,10 +775,23 @@ class Word2Vec(BaseWordEmbeddingsModel):
         self.trainables = Word2VecTrainables(seed=seed, vector_size=size, hashfxn=hashfxn)
 
         super(Word2Vec, self).__init__(
-            sentences=sentences, input_streams=input_streams, workers=workers, vector_size=size, epochs=iter,
+            sentences=sentences, corpus_file=corpus_file, workers=workers, vector_size=size, epochs=iter,
             callbacks=callbacks, batch_words=batch_words, trim_rule=trim_rule, sg=sg, alpha=alpha, window=window,
             seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, compute_loss=compute_loss,
             fast_version=FAST_VERSION)
+
+    def _do_train_epoch(self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
+                        total_examples=None, total_words=None, **kwargs):
+        work, neu1 = thread_private_mem
+
+        if self.sg:
+            examples, tally, raw_tally = train_epoch_sg(self, corpus_file, offset, cython_vocab, cur_epoch,
+                                                        total_examples, total_words, work, neu1, self.compute_loss)
+        else:
+            examples, tally, raw_tally = train_epoch_cbow(self, corpus_file, offset, cython_vocab, cur_epoch,
+                                                          total_examples, total_words, work, neu1, self.compute_loss)
+
+        return examples, tally, raw_tally
 
     def _do_train_job(self, sentences, alpha, inits):
         """Train the model on a single batch of sentences.
@@ -788,7 +828,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
             self.compute_loss = kwargs['compute_loss']
         self.running_training_loss = 0
 
-    def train(self, sentences=None, input_streams=None, total_examples=None, total_words=None,
+    def train(self, sentences=None, corpus_file=None, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None, word_count=0,
               queue_factor=2, report_delay=1.0, compute_loss=False, callbacks=()):
         """Update the model's neural weights from a sequence of sentences.
@@ -816,9 +856,10 @@ class Word2Vec(BaseWordEmbeddingsModel):
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
             See also the `tutorial on data streaming in Python
             <https://rare-technologies.com/data-streaming-in-python-generators-iterators-iterables/>`_.
-        input_streams : list or tuple of iterable of iterables
-            The tuple or list of `sentences`-like arguments. Use it if you have multiple input streams. It is possible
-            to process streams in parallel, using `workers` parameter.
+        corpus_file : str, optional
+            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
+            `corpus_file` arguments need to be passed (not both of them).
         total_examples : int
             Count of sentences.
         total_words : int
@@ -850,18 +891,19 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
         Examples
         --------
-        >>> from gensim.models import Word2Vec
-        >>> input_streams = [[["cat", "say", "meow"], ["dog", "say", "woof"]]]
-        >>>
-        >>> model = Word2Vec(min_count=1)
-        >>> model.build_vocab(input_streams=input_streams)  # prepare the model vocabulary
-        >>> model.train(input_streams=input_streams,
-        >>>             total_examples=model.corpus_count, epochs=model.iter)  # train word vectors
-        (1, 30)
+        .. sourcecode:: pycon
+
+            >>> from gensim.models import Word2Vec
+            >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
+            >>>
+            >>> model = Word2Vec(min_count=1)
+            >>> model.build_vocab(sentences)  # prepare the model vocabulary
+            >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)  # train word vectors
+            (1, 30)
 
         """
         return super(Word2Vec, self).train(
-            sentences=sentences, input_streams=input_streams, total_examples=total_examples, total_words=total_words,
+            sentences=sentences, corpus_file=corpus_file, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
             queue_factor=queue_factor, report_delay=report_delay, compute_loss=compute_loss, callbacks=callbacks)
 
@@ -1367,10 +1409,13 @@ class LineSentence(object):
 
         Examples
         --------
-        >>> from gensim.test.utils import datapath
-        >>> sentences = LineSentence(datapath('lee_background.cor'))
-        >>> for sentence in sentences:
-        ...     pass
+
+        .. sourcecode:: pycon
+
+            >>> from gensim.test.utils import datapath
+            >>> sentences = LineSentence(datapath('lee_background.cor'))
+            >>> for sentence in sentences:
+            ...     pass
 
         """
         self.source = source
@@ -1505,7 +1550,7 @@ class Word2VecVocab(utils.SaveLoad):
         self.max_final_vocab = max_final_vocab
         self.ns_exponent = ns_exponent
 
-    def _scan_vocab_singlestream(self, sentences, progress_per, trim_rule):
+    def _scan_vocab(self, sentences, progress_per, trim_rule):
         sentence_no = -1
         total_words = 0
         min_reduce = 1
@@ -1537,50 +1582,12 @@ class Word2VecVocab(utils.SaveLoad):
         self.raw_vocab = vocab
         return total_words, corpus_count
 
-    def _scan_vocab_multistream(self, input_streams, workers, trim_rule):
-        manager = multiprocessing.Manager()
-        progress_queue = manager.Queue()
-
-        logger.info("Scanning vocab in %i processes.", min(workers, len(input_streams)))
-
-        workers = min(workers, len(input_streams))
-        pool = multiprocessing.Pool(processes=workers)
-
-        worker_max_vocab_size = self.max_vocab_size // workers if self.max_vocab_size else None
-        results = [
-            pool.apply_async(_scan_vocab_worker,
-                             (stream, progress_queue, worker_max_vocab_size, trim_rule)
-                             ) for stream in input_streams
-        ]
-        pool.close()
-
-        unfinished_tasks = len(results)
-        total_words = 0
-        total_sentences = 0
-        while unfinished_tasks > 0:
-            report = progress_queue.get()
-            if report is None:
-                unfinished_tasks -= 1
-                logger.info("scan vocab task finished, processed %i sentences and %i words;"
-                            " awaiting finish of %i more tasks", total_sentences, total_words, unfinished_tasks)
-            elif isinstance(report, string_types):
-                logger.warning(report)
-            else:
-                num_words, num_sentences = report
-                total_words += num_words
-                total_sentences += num_sentences
-
-        self.raw_vocab = reduce(utils.merge_counts, [res.get() for res in results])
-        if self.max_vocab_size:
-            utils.trim_vocab_by_freq(self.raw_vocab, self.max_vocab_size, trim_rule=trim_rule)
-        return total_words, total_sentences
-
-    def scan_vocab(self, sentences=None, input_streams=None, progress_per=10000, workers=None, trim_rule=None):
+    def scan_vocab(self, sentences=None, corpus_file=None, progress_per=10000, workers=None, trim_rule=None):
         logger.info("collecting all words and their counts")
-        if sentences is not None:
-            total_words, corpus_count = self._scan_vocab_singlestream(sentences, progress_per, trim_rule)
-        else:
-            total_words, corpus_count = self._scan_vocab_multistream(input_streams, workers, trim_rule)
+        if corpus_file:
+            sentences = LineSentence(corpus_file)
+
+        total_words, corpus_count = self._scan_vocab(sentences, progress_per, trim_rule)
 
         logger.info(
             "collected %i word types from a corpus of %i raw words and %i sentences",

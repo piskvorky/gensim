@@ -22,23 +22,31 @@ Examples
 
 Train :class:`~gensim.models.hdpmodel.HdpModel`
 
->>> from gensim.test.utils import common_corpus, common_dictionary
->>> from gensim.models import HdpModel
->>>
->>> hdp = HdpModel(common_corpus, common_dictionary)
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import common_corpus, common_dictionary
+    >>> from gensim.models import HdpModel
+    >>>
+    >>> hdp = HdpModel(common_corpus, common_dictionary)
 
 You can then infer topic distributions on new, unseen documents, with
 
->>> unseen_document = [(1, 3.), (2, 4)]
->>> doc_hdp = hdp[unseen_document]
+.. sourcecode:: pycon
+
+    >>> unseen_document = [(1, 3.), (2, 4)]
+    >>> doc_hdp = hdp[unseen_document]
 
 To print 20 topics with top 10 most probable words.
 
->>> topic_info = hdp.print_topics(num_topics=20, num_words=10)
+.. sourcecode:: pycon
+
+    >>> topic_info = hdp.print_topics(num_topics=20, num_words=10)
 
 The model can be updated (trained) with new documents via
 
->>> hdp.update([[(1, 2)], [(1, 1), (4, 5)]])
+.. sourcecode:: pycon
+
+    >>> hdp.update([[(1, 2)], [(1, 1), (4, 5)]])
 
 """
 from __future__ import with_statement

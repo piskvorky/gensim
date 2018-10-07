@@ -27,26 +27,34 @@ visit http://radimrehurek.com/2014/02/word2vec-tutorial/
 **Make sure you have a C compiler before installing gensim, to use optimized (compiled) word2vec training**
 (70x speedup compared to plain NumPy implementation [3]_).
 
-Initialize a model with e.g.::
+Initialize a model with e.g.:
+
+.. sourcecode:: pycon
 
     >>> model = Word2Vec(sentences, size=100, window=5, min_count=5, workers=4)
 
-Persist a model to disk with::
+Persist a model to disk with:
+
+.. sourcecode:: pycon
 
     >>> model.save(fname)
     >>> model = Word2Vec.load(fname)  # you can continue training with the loaded model!
 
 The word vectors are stored in a KeyedVectors instance in model.wv.
-This separates the read-only word vector lookup operations in KeyedVectors from the training code in Word2Vec::
+This separates the read-only word vector lookup operations in KeyedVectors from the training code in Word2Vec:
 
-  >>> model.wv['computer']  # numpy vector of a word
-  array([-0.00449447, -0.00310097,  0.02421786, ...], dtype=float32)
+.. sourcecode:: pycon
+
+    >>> model.wv['computer']  # numpy vector of a word
+    array([-0.00449447, -0.00310097,  0.02421786, ...], dtype=float32)
 
 The word vectors can also be instantiated from an existing file on disk in the word2vec C format
 as a KeyedVectors instance::
 
     NOTE: It is impossible to continue training the vectors loaded from the C format because hidden weights,
-    vocabulary frequency and the binary tree is missing::
+    vocabulary frequency and the binary tree is missing:
+
+    .. sourcecode:: pycon
 
         >>> from gensim.models.keyedvectors import KeyedVectors
         >>> word_vectors = KeyedVectors.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
@@ -54,48 +62,59 @@ as a KeyedVectors instance::
 
 
 You can perform various NLP word tasks with the model. Some of them
-are already built-in::
+are already built-in:
 
-  >>> model.wv.most_similar(positive=['woman', 'king'], negative=['man'])
-  [('queen', 0.50882536), ...]
+.. sourcecode:: pycon
 
-  >>> model.wv.most_similar_cosmul(positive=['woman', 'king'], negative=['man'])
-  [('queen', 0.71382287), ...]
+    >>> model.wv.most_similar(positive=['woman', 'king'], negative=['man'])
+    [('queen', 0.50882536), ...]
 
+    >>> model.wv.most_similar_cosmul(positive=['woman', 'king'], negative=['man'])
+    [('queen', 0.71382287), ...]
 
-  >>> model.wv.doesnt_match("breakfast cereal dinner lunch".split())
-  'cereal'
+    >>> model.wv.doesnt_match("breakfast cereal dinner lunch".split())
+    'cereal'
 
-  >>> model.wv.similarity('woman', 'man')
-  0.73723527
+    >>> model.wv.similarity('woman', 'man')
+    0.73723527
 
-Probability of a text under the model::
+Probability of a text under the model:
 
-  >>> model.score(["The fox jumped over a lazy dog".split()])
-  0.2158356
+.. sourcecode:: pycon
 
-Correlation with human opinion on word similarity::
+    >>> model.score(["The fox jumped over a lazy dog".split()])
+    0.2158356
 
-  >>> model.wv.evaluate_word_pairs(os.path.join(module_path, 'test_data','wordsim353.tsv'))
-  0.51, 0.62, 0.13
+Correlation with human opinion on word similarity:
 
-And on analogies::
+.. sourcecode:: pycon
 
-  >>> model.wv.accuracy(os.path.join(module_path, 'test_data', 'questions-words.txt'))
+    >>> model.wv.evaluate_word_pairs(os.path.join(module_path, 'test_data','wordsim353.tsv'))
+    0.51, 0.62, 0.13
+
+And on analogies:
+
+.. sourcecode:: pycon
+
+    >>> model.wv.accuracy(os.path.join(module_path, 'test_data', 'questions-words.txt'))
 
 and so on.
 
 If you're finished training a model (i.e. no more updates, only querying),
 then switch to the :mod:`gensim.models.KeyedVectors` instance in wv
 
-  >>> word_vectors = model.wv
-  >>> del model
+.. sourcecode:: pycon
+
+    >>> word_vectors = model.wv
+    >>> del model
 
 to trim unneeded model memory = use much less RAM.
 
 Note that there is a :mod:`gensim.models.phrases` module which lets you automatically
 detect phrases longer than one word. Using phrases, you can learn a word2vec model
 where "words" are actually multiword expressions, such as `new_york_times` or `financial_crisis`:
+
+.. sourcecode:: pycon
 
     >>> bigram_transformer = gensim.models.Phrases(sentences)
     >>> model = Word2Vec(bigram_transformer[sentences], size=100, ...)
@@ -191,6 +210,7 @@ def load_old_word2vec(*args, **kwargs):
 
     new_model.train_count = old_model.__dict__.get('train_count', None)
     new_model.corpus_count = old_model.__dict__.get('corpus_count', None)
+    new_model.corpus_total_words = old_model.__dict__.get('corpus_total_words', None)
     new_model.running_training_loss = old_model.__dict__.get('running_training_loss', 0)
     new_model.total_train_time = old_model.__dict__.get('total_train_time', None)
     new_model.min_alpha_yet_reached = old_model.__dict__.get('min_alpha_yet_reached', old_model.alpha)
@@ -718,9 +738,13 @@ class Word2Vec(SaveLoad):
 
         Examples
         --------
-        >>> from gensim.models.word2vec import Word2Vec
-        >>> model= Word2Vec()
-        >>> model.build_vocab_from_freq({"Word1": 15, "Word2": 20})
+
+        .. sourcecode:: pycon
+
+            >>> from gensim.models.word2vec import Word2Vec
+            >>> model = Word2Vec()
+            >>> model.build_vocab_from_freq({"Word1": 15, "Word2": 20})
+
         """
         logger.info("Processing provided word frequencies")
         # Instead of scanning text, this will assign provided word frequencies dictionary(word_freq)
@@ -1622,6 +1646,8 @@ class Word2Vec(SaveLoad):
             model.make_cum_table()  # rebuild cum_table from vocabulary
         if not hasattr(model, 'corpus_count'):
             model.corpus_count = None
+        if not hasattr(model, 'corpus_total_words'):
+            model.corpus_total_words = None
         for v in model.wv.vocab.values():
             if hasattr(v, 'sample_int'):
                 break  # already 0.12.0+ style int probabilities

@@ -30,38 +30,44 @@ class CorpusABC(utils.SaveLoad):
 
     Corpus is simply an iterable object, where each iteration step yields one document:
 
-    >>> from gensim.corpora import MmCorpus  # this is inheritor of CorpusABC class
-    >>> from gensim.test.utils import datapath
-    >>>
-    >>> corpus = MmCorpus(datapath("testcorpus.mm"))
-    >>> for doc in corpus:
-    ...     pass # do something with the doc...
+    .. sourcecode:: pycon
+
+        >>> from gensim.corpora import MmCorpus  # this is inheritor of CorpusABC class
+        >>> from gensim.test.utils import datapath
+        >>>
+        >>> corpus = MmCorpus(datapath("testcorpus.mm"))
+        >>> for doc in corpus:
+        ...     pass  # do something with the doc...
 
     A document represented in bag-of-word (BoW) format, i.e. list of (attr_id, attr_value),
     like ``[(1, 0.2), (4, 0.6), ...]``.
 
-    >>> from gensim.corpora import MmCorpus  # this is inheritor of CorpusABC class
-    >>> from gensim.test.utils import datapath
-    >>>
-    >>> corpus = MmCorpus(datapath("testcorpus.mm"))
-    >>> doc = next(iter(corpus))
-    >>> print(doc)
-    [(0, 1.0), (1, 1.0), (2, 1.0)]
+    .. sourcecode:: pycon
+
+        >>> from gensim.corpora import MmCorpus  # this is inheritor of CorpusABC class
+        >>> from gensim.test.utils import datapath
+        >>>
+        >>> corpus = MmCorpus(datapath("testcorpus.mm"))
+        >>> doc = next(iter(corpus))
+        >>> print(doc)
+        [(0, 1.0), (1, 1.0), (2, 1.0)]
 
     Remember, that save/load methods save only corpus class (not corpus as data itself),
     for save/load functionality, please use this pattern :
 
-    >>> from gensim.corpora import MmCorpus  # this is inheritor of CorpusABC class
-    >>> from gensim.test.utils import datapath, get_tmpfile
-    >>>
-    >>> corpus = MmCorpus(datapath("testcorpus.mm"))
-    >>> tmp_path = get_tmpfile("temp_corpus.mm")
-    >>>
-    >>> MmCorpus.serialize(tmp_path, corpus)  #  serialize corpus to disk in MmCorpus format
-    >>> # MmCorpus.save_corpus(tmp_path, corpus)  # this variant also possible, but if serialize availbe - call it.
-    >>> loaded_corpus = MmCorpus(tmp_path)  # load corpus through constructor
-    >>> for (doc_1, doc_2) in zip(corpus, loaded_corpus):
-    ...     assert doc_1 == doc_2  # check that corpuses exactly same
+    .. sourcecode:: pycon
+
+        >>> from gensim.corpora import MmCorpus  # this is inheritor of CorpusABC class
+        >>> from gensim.test.utils import datapath, get_tmpfile
+        >>>
+        >>> corpus = MmCorpus(datapath("testcorpus.mm"))
+        >>> tmp_path = get_tmpfile("temp_corpus.mm")
+        >>>
+        >>> MmCorpus.serialize(tmp_path, corpus)  # serialize corpus to disk in MmCorpus format
+        >>> # MmCorpus.save_corpus(tmp_path, corpus)  # this variant also possible, but if serialize availbe - call it.
+        >>> loaded_corpus = MmCorpus(tmp_path)  # load corpus through constructor
+        >>> for (doc_1, doc_2) in zip(corpus, loaded_corpus):
+        ...     assert doc_1 == doc_2  # check that corpuses exactly same
 
 
     See Also
@@ -209,12 +215,14 @@ class TransformationABC(utils.SaveLoad):
     A 'transformation' is any object which accepts document in BoW format via the `__getitem__` (notation `[]`)
     and returns another sparse document in its stead:
 
-    >>> from gensim.models import LsiModel
-    >>> from gensim.test.utils import common_dictionary, common_corpus
-    >>>
-    >>> model = LsiModel(common_corpus, id2word=common_dictionary)
-    >>> bow_vector = model[common_corpus[0]]  # model applied through __getitem__ on one document from corpus.
-    >>> bow_corpus = model[common_corpus]  # also, we can apply model on the full corpus
+    .. sourcecode:: pycon
+
+        >>> from gensim.models import LsiModel
+        >>> from gensim.test.utils import common_dictionary, common_corpus
+        >>>
+        >>> model = LsiModel(common_corpus, id2word=common_dictionary)
+        >>> bow_vector = model[common_corpus[0]]  # model applied through __getitem__ on one document from corpus.
+        >>> bow_corpus = model[common_corpus]  # also, we can apply model on the full corpus
 
     """
     def __getitem__(self, vec):
@@ -256,11 +264,13 @@ class SimilarityABC(utils.SaveLoad):
 
     Examples
     --------
-    >>> from gensim.similarities import MatrixSimilarity
-    >>> from gensim.test.utils import common_dictionary, common_corpus
-    >>>
-    >>> index = MatrixSimilarity(common_corpus)
-    >>> similarities = index.get_similarities(common_corpus[1])  # get similarities between query and corpus
+    .. sourcecode:: pycon
+
+        >>> from gensim.similarities import MatrixSimilarity
+        >>> from gensim.test.utils import common_corpus
+        >>>
+        >>> index = MatrixSimilarity(common_corpus)
+        >>> similarities = index.get_similarities(common_corpus[1])  # get similarities between query and corpus
 
     Notes
     -----

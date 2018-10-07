@@ -21,16 +21,22 @@ doc2vec training** (70x speedup [blog]_).
 
 Initialize a model with e.g.::
 
->>> model = Doc2Vec(documents, size=100, window=8, min_count=5, workers=4)
+.. sourcecode:: pycon
+
+    >>> model = Doc2Vec(documents, size=100, window=8, min_count=5, workers=4)
 
 Persist a model to disk with::
 
->>> model.save(fname)
->>> model = Doc2Vec.load(fname)  # you can continue training with the loaded model!
+.. sourcecode:: pycon
+
+    >>> model.save(fname)
+    >>> model = Doc2Vec.load(fname)  # you can continue training with the loaded model!
 
 If you're finished training a model (=no more updates, only querying), you can do
 
-  >>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True):
+.. sourcecode:: pycon
+
+    >>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True):
 
 to trim unneeded model memory = use (much) less RAM.
 
@@ -91,7 +97,7 @@ def load_old_doc2vec(*args, **kwargs):
         'dm_tag_count': old_model.dm_tag_count,
         'docvecs_mapfile': old_model.__dict__.get('docvecs_mapfile', None),
         'comment': old_model.__dict__.get('comment', None),
-        'size': old_model.vector_size,
+        'vector_size': old_model.vector_size,
         'alpha': old_model.alpha,
         'window': old_model.window,
         'min_count': old_model.min_count,
@@ -104,7 +110,7 @@ def load_old_doc2vec(*args, **kwargs):
         'negative': old_model.negative,
         'cbow_mean': old_model.cbow_mean,
         'hashfxn': old_model.hashfxn,
-        'iter': old_model.iter,
+        'epochs': old_model.iter,
         'sorted_vocab': old_model.__dict__.get('sorted_vocab', 1),
         'batch_words': old_model.__dict__.get('batch_words', MAX_WORDS_IN_BATCH),
         'compute_loss': old_model.__dict__.get('compute_loss', None)
@@ -153,6 +159,7 @@ def load_old_doc2vec(*args, **kwargs):
 
     new_model.train_count = old_model.__dict__.get('train_count', None)
     new_model.corpus_count = old_model.__dict__.get('corpus_count', None)
+    new_model.corpus_total_words = old_model.__dict__.get('corpus_total_words', None)
     new_model.running_training_loss = old_model.__dict__.get('running_training_loss', 0)
     new_model.total_train_time = old_model.__dict__.get('total_train_time', None)
     new_model.min_alpha_yet_reached = old_model.__dict__.get('min_alpha_yet_reached', old_model.alpha)
@@ -358,11 +365,13 @@ class DocvecsArray(SaveLoad):
     As the 'docvecs' property of a Doc2Vec model, allows access and
     comparison of document vectors.
 
-    >>> docvec = d2v_model.docvecs[99]
-    >>> docvec = d2v_model.docvecs['SENT_99']  # if string tag used in training
-    >>> sims = d2v_model.docvecs.most_similar(99)
-    >>> sims = d2v_model.docvecs.most_similar('SENT_99')
-    >>> sims = d2v_model.docvecs.most_similar(docvec)
+    .. sourcecode:: pycon
+
+        >>> docvec = d2v_model.docvecs[99]
+        >>> docvec = d2v_model.docvecs['SENT_99']  # if string tag used in training
+        >>> sims = d2v_model.docvecs.most_similar(99)
+        >>> sims = d2v_model.docvecs.most_similar('SENT_99')
+        >>> sims = d2v_model.docvecs.most_similar(docvec)
 
     If only plain int tags are presented during training, the dict (of
     string tag -> index) and list (of index -> string tag) stay empty,
