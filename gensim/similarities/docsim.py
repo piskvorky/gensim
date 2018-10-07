@@ -978,7 +978,7 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
 
 
 class WmdSimilarity(interfaces.SimilarityABC):
-    """Compute negative WMD similarity against a corpus of documents by storing the index matrix in memory.
+    """Compute negative WMD similarity against a corpus of documents.
 
     See :class:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors` for more information.
     Also, tutorial `notebook
@@ -999,17 +999,14 @@ class WmdSimilarity(interfaces.SimilarityABC):
     .. sourcecode:: pycon
 
         >>> from gensim.test.utils import common_texts
-        >>> from gensim.corpora import Dictionary
         >>> from gensim.models import Word2Vec
         >>> from gensim.similarities import WmdSimilarity
         >>>
         >>> model = Word2Vec(common_texts, size=20, min_count=1)  # train word-vectors
-        >>> dictionary = Dictionary(common_texts)
-        >>> bow_corpus = [dictionary.doc2bow(document) for document in common_texts]
         >>>
-        >>> index = WmdSimilarity(bow_corpus, model)
+        >>> index = WmdSimilarity(common_texts, model)
         >>> # Make query.
-        >>> query = 'trees'
+        >>> query = ['trees']
         >>> sims = index[query]
 
     """
