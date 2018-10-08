@@ -826,7 +826,7 @@ class MatrixSimilarity(interfaces.SimilarityABC):
 
         Parameters
         ----------
-        query : {list of (int, number), iterable of list of (int, number), :class:`scipy.sparse.csr_matrix`
+        query : {list of (int, number), iterable of list of (int, number), :class:`scipy.sparse.csr_matrix`}
             Document or collection of documents.
 
         Return
@@ -938,7 +938,7 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
 
         Parameters
         ----------
-        query : {list of (int, number), iterable of list of (int, number)
+        query : {list of (int, number), iterable of list of (int, number)}
             Document or collection of documents.
 
         Return
@@ -978,7 +978,7 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
 
 
 class WmdSimilarity(interfaces.SimilarityABC):
-    """Compute negative WMD similarity against a corpus of documents by storing the index matrix in memory.
+    """Compute negative WMD similarity against a corpus of documents.
 
     See :class:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors` for more information.
     Also, tutorial `notebook
@@ -999,17 +999,14 @@ class WmdSimilarity(interfaces.SimilarityABC):
     .. sourcecode:: pycon
 
         >>> from gensim.test.utils import common_texts
-        >>> from gensim.corpora import Dictionary
         >>> from gensim.models import Word2Vec
         >>> from gensim.similarities import WmdSimilarity
         >>>
         >>> model = Word2Vec(common_texts, size=20, min_count=1)  # train word-vectors
-        >>> dictionary = Dictionary(common_texts)
-        >>> bow_corpus = [dictionary.doc2bow(document) for document in common_texts]
         >>>
-        >>> index = WmdSimilarity(bow_corpus, model)
+        >>> index = WmdSimilarity(common_texts, model)
         >>> # Make query.
-        >>> query = 'trees'
+        >>> query = ['trees']
         >>> sims = index[query]
 
     """
@@ -1018,8 +1015,8 @@ class WmdSimilarity(interfaces.SimilarityABC):
 
         Parameters
         ----------
-        corpus: iterable of list of (int, float)
-            A list of documents in the BoW format.
+        corpus: iterable of list of str
+            A list of documents, each of which is a list of tokens.
         w2v_model: :class:`~gensim.models.word2vec.Word2VecTrainables`
             A trained word2vec model.
         num_best: int, optional
@@ -1058,7 +1055,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
 
         Parameters
         ----------
-        query : {list of (int, number), iterable of list of (int, number)
+        query : {list of str, iterable of list of str}
             Document or collection of documents.
 
         Return
@@ -1194,7 +1191,7 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
 
         Parameters
         ----------
-        query : {list of (int, number), iterable of list of (int, number), :class:`scipy.sparse.csr_matrix`
+        query : {list of (int, number), iterable of list of (int, number), :class:`scipy.sparse.csr_matrix`}
             Document or collection of documents.
 
         Return
