@@ -78,6 +78,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.eval_every = eval_every
         self.normalize = normalize
         self.w_density = w_density
+        self.sparse_coef = sparse_coef
 
         self.A = None
         self.B = None
@@ -230,19 +231,41 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     @staticmethod
     def _sparsify(csc, density):
-        for col_idx in range(csc.shape[1]):
-            zero_count = csc.shape[0] - csc[:, col_idx].nnz
-            to_eliminate_count = int(csc.shape[0] * (1 - density)) - zero_count
-
-            if to_eliminate_count > 0:
-                indices_to_eliminate = np.argpartition(
-                    csc[:, col_idx].data,
-                    to_eliminate_count
-                )[:to_eliminate_count]
-
-                csc.data[csc.indptr[col_idx] + indices_to_eliminate] = 0
+        zero_count = csc.shape[0] * csc.shape[1] - csc.nnz
+        to_eliminate_count = int(csc.nnz * (1 - density)) - zero_count
+        indices_to_eliminate = np.argpartition(csc.data, to_eliminate_count)[:to_eliminate_count]
+        csc.data[indices_to_eliminate] = 0
 
         csc.eliminate_zeros()
+
+        for col_idx in range(csc.shape[1]):
+            if csc[:, col_idx].nnz == 0:
+                random_index = np.random.randint(csc.shape[0])
+                csc[random_index, col_idx] = 1e-8
+
+        # for col_idx in range(csc.shape[1]):
+        #     zero_count = csc.shape[0] - csc[:, col_idx].nnz
+        #     to_eliminate_count = int(csc.shape[0] * (1 - density)) - zero_count
+        #
+        #     if to_eliminate_count > 0:
+        #         indices_to_eliminate = np.argpartition(
+        #             csc[:, col_idx].data,
+        #             to_eliminate_count
+        #         )[:to_eliminate_count]
+        #
+        #         csc.data[csc.indptr[col_idx] + indices_to_eliminate] = 0
+
+        # for row_idx in range(csc.shape[0]):
+        #     zero_count = csc.shape[1] - csc[row_idx, :].nnz
+        #     to_eliminate_count = int(csc.shape[1] * (1 - density)) - zero_count
+        #
+        #     if to_eliminate_count > 0:
+        #         indices_to_eliminate = np.argpartition(
+        #             csc[row_idx, :].data,
+        #             to_eliminate_count
+        #         )[:to_eliminate_count]
+        #
+        #         csc[row_idx, :].data[indices_to_eliminate] = 0
 
     def _setup(self, corpus):
         self._h, self._r = None, None
@@ -260,12 +283,12 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             * halfnorm.rvs(size=(self.n_features, self.num_topics))
         )
 
-        # is_great_enough = self._W > self.w_std * self.sparse_coef
-        #
-        # self._W *= is_great_enough | ~is_great_enough.all(axis=0)
+        is_great_enough = self._W > self.w_std * self.sparse_coef
+
+        self._W *= is_great_enough | ~is_great_enough.all(axis=0)
 
         self._W = scipy.sparse.csc_matrix(self._W)
-        self._sparsify(self._W, self.w_density)
+        # self._sparsify(self._W, self.w_density)
 
         self.A = scipy.sparse.csr_matrix((self.num_topics, self.num_topics))
         self.B = scipy.sparse.csc_matrix((self.n_features, self.num_topics))
@@ -387,7 +410,21 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         np.maximum(sumsq, 1, out=sumsq)
         sumsq = np.repeat(sumsq, self._W.getnnz(axis=0))
         self._W.data /= sumsq
-        self._sparsify(self._W, self.w_density)
+
+        # self._sparsify(self._W, self.w_density)
+
+        is_great_enough_data = self._W.data > self.w_std * self.sparse_coef
+        is_great_enough = self._W.toarray() > self.w_std * self.sparse_coef
+        is_all_too_small = is_great_enough.sum(axis=0) == 0
+        is_all_too_small = np.repeat(
+            is_all_too_small,
+            self._W.getnnz(axis=0)
+        )
+
+        is_great_enough_data |= is_all_too_small
+
+        self._W.data *= is_great_enough_data
+        self._W.eliminate_zeros()
 
     def _solveproj(self, v, W, h=None, r=None, v_max=None):
         m, n = W.shape
