@@ -35,7 +35,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         eval_every=10,
         v_max=None,
         normalize=True,
-        sparse_coef=3
+        sparse_coef=3,
+        w_density=0.1
     ):
         """
 
@@ -73,11 +74,10 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self._w_stop_condition = w_stop_condition
         self._h_r_max_iter = h_r_max_iter
         self._h_r_stop_condition = h_r_stop_condition
-        self._H = []
         self.v_max = v_max
         self.eval_every = eval_every
         self.normalize = normalize
-        self.sparse_coef = sparse_coef
+        self.w_density = w_density
 
         self.A = None
         self.B = None
@@ -228,6 +228,22 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             if not minimum_probability or proba > minimum_probability
         ]
 
+    @staticmethod
+    def _sparsify(csc, density):
+        for col_idx in range(csc.shape[1]):
+            zero_count = csc.shape[0] - csc[:, col_idx].nnz
+            to_eliminate_count = int(csc.shape[0] * (1 - density)) - zero_count
+
+            if to_eliminate_count > 0:
+                indices_to_eliminate = np.argpartition(
+                    csc[:, col_idx].data,
+                    to_eliminate_count
+                )[:to_eliminate_count]
+
+                csc.data[csc.indptr[col_idx] + indices_to_eliminate] = 0
+
+        csc.eliminate_zeros()
+
     def _setup(self, corpus):
         self._h, self._r = None, None
         first_doc_it = itertools.tee(corpus, 1)
@@ -244,11 +260,12 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             * halfnorm.rvs(size=(self.n_features, self.num_topics))
         )
 
-        is_great_enough = self._W > self.w_std * self.sparse_coef
-
-        self._W *= is_great_enough | ~is_great_enough.all(axis=0)
+        # is_great_enough = self._W > self.w_std * self.sparse_coef
+        #
+        # self._W *= is_great_enough | ~is_great_enough.all(axis=0)
 
         self._W = scipy.sparse.csc_matrix(self._W)
+        self._sparsify(self._W, self.w_density)
 
         self.A = scipy.sparse.csr_matrix((self.num_topics, self.num_topics))
         self.B = scipy.sparse.csc_matrix((self.n_features, self.num_topics))
@@ -275,15 +292,14 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 v = matutils.corpus2csc(chunk, len(self.id2word)).tocsr()
                 self._h, self._r = self._solveproj(v, self._W, r=self._r, h=self._h, v_max=self.v_max)
                 h, r = self._h, self._r
-                self._H.append(h)
                 if self._R is not None:
                     self._R.append(r)
 
                 self.A += h.dot(h.T)
-                self.A *= (max(len(self._H) - 1, 1)) / len(self._H)
+                self.A *= (max(chunk_idx - 1, 1)) / chunk_idx
 
                 self.B += (v - r).dot(h.T)
-                self.B *= (max(len(self._H) - 1, 1)) / len(self._H)
+                self.B *= (max(chunk_idx - 1, 1)) / chunk_idx
 
                 self._solve_w()
 
@@ -337,14 +353,11 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     @staticmethod
     def __solve_r(r, r_actual, lambda_, v_max):
-        r_actual_sign = np.sign(r_actual.data)
-
-        np.abs(r_actual.data, out=r_actual.data)
-        r_actual.data -= lambda_
-        np.maximum(r_actual.data, 0.0, out=r_actual.data)
-
-        r_actual.data *= r_actual_sign
+        r_actual.data *= np.abs(r_actual.data) > lambda_
         r_actual.eliminate_zeros()
+
+        r_actual.data -= (r_actual.data > 0) * lambda_
+        r_actual.data += (r_actual.data < 0) * lambda_
 
         np.clip(r_actual.data, -v_max, v_max, out=r_actual.data)
 
@@ -374,19 +387,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         np.maximum(sumsq, 1, out=sumsq)
         sumsq = np.repeat(sumsq, self._W.getnnz(axis=0))
         self._W.data /= sumsq
-
-        is_great_enough_data = self._W.data > self.w_std * self.sparse_coef
-        is_great_enough = self._W.toarray() > self.w_std * self.sparse_coef
-        is_all_too_small = is_great_enough.sum(axis=0) == 0
-        is_all_too_small = np.repeat(
-            is_all_too_small,
-            self._W.getnnz(axis=0)
-        )
-
-        is_great_enough_data |= is_all_too_small
-
-        self._W.data *= is_great_enough_data
-        self._W.eliminate_zeros()
+        self._sparsify(self._W, self.w_density)
 
     def _solveproj(self, v, W, h=None, r=None, v_max=None):
         m, n = W.shape
