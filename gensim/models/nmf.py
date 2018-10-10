@@ -456,22 +456,22 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             Wt_v_minus_r = W.T.dot(v - r)
 
-            # h_ = h.toarray()
-            # error_ += solve_h(h_, Wt_v_minus_r.toarray(), WtW.toarray(), self._kappa)
-            # h = scipy.sparse.csr_matrix(h_)
-            h, error_h = self.__solve_h(h, Wt_v_minus_r, WtW, eta)
-            error_ = max(error_, error_h)
+            h_ = h.toarray()
+            error_ = max(error_, solve_h(h_, Wt_v_minus_r.toarray(), WtW.toarray(), self._kappa))
+            h = scipy.sparse.csr_matrix(h_)
+            # h, error_h = self.__solve_h(h, Wt_v_minus_r, WtW, eta)
+            # error_ = max(error_, error_h)
 
             if self.use_r:
                 r_actual = v - W.dot(h)
-                # error_ += solve_r(
-                #     r.indptr, r.indices, r.data,
-                #     r_actual.indptr, r_actual.indices, r_actual.data,
-                #     self._lambda_,
-                #     self.v_max
-                # )
-                # r = r_actual
-                error_ = max(error_, self.__solve_r(r, r_actual, self._lambda_, self.v_max))
+                error_ = max(error_, solve_r(
+                    r.indptr, r.indices, r.data,
+                    r_actual.indptr, r_actual.indices, r_actual.data,
+                    self._lambda_,
+                    self.v_max
+                ))
+                r = r_actual
+                # error_ = max(error_, self.__solve_r(r, r_actual, self._lambda_, self.v_max))
 
             error_ /= m
 
