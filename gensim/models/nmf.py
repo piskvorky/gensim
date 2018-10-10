@@ -316,11 +316,11 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 if self._R is not None:
                     self._R.append(r)
 
-                self.A *= chunk_idx - 1
+                self.A *= (chunk_idx - 1)
                 self.A += h.dot(h.T)
                 self.A /= chunk_idx
 
-                self.B *= chunk_idx - 1
+                self.B *= (chunk_idx - 1)
                 self.B += (v - r).dot(h.T)
                 self.B /= chunk_idx
 
