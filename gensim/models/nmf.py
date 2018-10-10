@@ -35,8 +35,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         eval_every=10,
         v_max=None,
         normalize=True,
-        sparse_coef=3,
-        w_density=0.1
+        sparse_coef=3
     ):
         """
 
@@ -77,7 +76,6 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.v_max = v_max
         self.eval_every = eval_every
         self.normalize = normalize
-        self.w_density = w_density
         self.sparse_coef = sparse_coef
 
         self.A = None
@@ -318,11 +316,13 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 if self._R is not None:
                     self._R.append(r)
 
+                self.A *= chunk_idx - 1
                 self.A += h.dot(h.T)
-                self.A *= (max(chunk_idx - 1, 1)) / chunk_idx
+                self.A /= chunk_idx
 
+                self.B *= chunk_idx - 1
                 self.B += (v - r).dot(h.T)
-                self.B *= (max(chunk_idx - 1, 1)) / chunk_idx
+                self.B /= chunk_idx
 
                 self._solve_w()
 
