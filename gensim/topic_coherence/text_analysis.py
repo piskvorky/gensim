@@ -41,15 +41,17 @@ def _ids_to_words(ids, dictionary):
 
     Examples
     --------
-    >>> from gensim.corpora.dictionary import Dictionary
-    >>> from gensim.topic_coherence import text_analysis
-    >>>
-    >>> dictionary = Dictionary()
-    >>> ids = {1: 'fake', 4: 'cats'}
-    >>> dictionary.id2token = {1: 'fake', 2: 'tokens', 3: 'rabbids', 4: 'cats'}
-    >>>
-    >>> text_analysis._ids_to_words(ids, dictionary)
-    set(['cats', 'fake'])
+    .. sourcecode:: pycon
+
+        >>> from gensim.corpora.dictionary import Dictionary
+        >>> from gensim.topic_coherence import text_analysis
+        >>>
+        >>> dictionary = Dictionary()
+        >>> ids = {1: 'fake', 4: 'cats'}
+        >>> dictionary.id2token = {1: 'fake', 2: 'tokens', 3: 'rabbids', 4: 'cats'}
+        >>>
+        >>> text_analysis._ids_to_words(ids, dictionary)
+        set(['cats', 'fake'])
 
     """
     if not dictionary.id2token:  # may not be initialized in the standard gensim.corpora.Dictionary
@@ -93,12 +95,14 @@ class BaseAnalyzer(object):
 
         Examples
         --------
-        >>> from gensim.topic_coherence import text_analysis
-        >>> ids = {1: 'fake', 4: 'cats'}
-        >>> base = text_analysis.BaseAnalyzer(ids)
-        >>> # should return {1: 'fake', 4: 'cats'} 2 {1: 0, 4: 1} 1000 0
-        >>> print base.relevant_ids, base._vocab_size, base.id2contiguous, base.log_every, base._num_docs
-        {1: 'fake', 4: 'cats'} 2 {1: 0, 4: 1} 1000 0
+        .. sourcecode:: pycon
+
+            >>> from gensim.topic_coherence import text_analysis
+            >>> ids = {1: 'fake', 4: 'cats'}
+            >>> base = text_analysis.BaseAnalyzer(ids)
+            >>> # should return {1: 'fake', 4: 'cats'} 2 {1: 0, 4: 1} 1000 0
+            >>> print(base.relevant_ids, base._vocab_size, base.id2contiguous, base.log_every, base._num_docs)
+            {1: 'fake', 4: 'cats'} 2 {1: 0, 4: 1} 1000 0
 
         """
         self.relevant_ids = relevant_ids
@@ -170,15 +174,17 @@ class UsesDictionary(BaseAnalyzer):
 
         Examples
         --------
-        >>> from gensim.topic_coherence import text_analysis
-        >>> from gensim.corpora.dictionary import Dictionary
-        >>>
-        >>> ids = {1: 'foo', 2: 'bar'}
-        >>> dictionary = Dictionary([['foo','bar','baz'], ['foo','bar','bar','baz']])
-        >>> udict = text_analysis.UsesDictionary(ids, dictionary)
-        >>>
-        >>> print udict.relevant_words
-        set([u'foo', u'baz'])
+        .. sourcecode:: pycon
+
+            >>> from gensim.topic_coherence import text_analysis
+            >>> from gensim.corpora.dictionary import Dictionary
+            >>>
+            >>> ids = {1: 'foo', 2: 'bar'}
+            >>> dictionary = Dictionary([['foo', 'bar', 'baz'], ['foo', 'bar', 'bar', 'baz']])
+            >>> udict = text_analysis.UsesDictionary(ids, dictionary)
+            >>>
+            >>> print(udict.relevant_words)
+            set([u'foo', u'baz'])
 
         """
         super(UsesDictionary, self).__init__(relevant_ids)
@@ -221,13 +227,15 @@ class InvertedIndexBased(BaseAnalyzer):
 
         Examples
         --------
-        >>> from gensim.topic_coherence import text_analysis
-        >>>
-        >>> ids = {1: 'fake', 4: 'cats'}
-        >>> ininb = text_analysis.InvertedIndexBased(ids)
-        >>>
-        >>> print ininb._inverted_index
-        [set([]) set([])]
+        .. sourcecode:: pycon
+
+            >>> from gensim.topic_coherence import text_analysis
+            >>>
+            >>> ids = {1: 'fake', 4: 'cats'}
+            >>> ininb = text_analysis.InvertedIndexBased(ids)
+            >>>
+            >>> print(ininb._inverted_index)
+            [set([]) set([])]
 
         """
         super(InvertedIndexBased, self).__init__(*args)

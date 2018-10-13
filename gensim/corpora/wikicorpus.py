@@ -126,12 +126,16 @@ def filter_example(elem, text, *args, **kwargs):
     pageid_path : str
         XPath expression for page id.
 
-    Example:
-    ------
-    >>> import gensim.corpora
-    >>> filter_func = gensim.corpora.wikicorpus.filter_example
-    >>> dewiki = gensim.corpora.WikiCorpus('./dewiki-20180520-pages-articles-multistream.xml.bz2',
-            filter_articles=filter_func)
+    Example
+    -------
+    .. sourcecode:: pycon
+
+        >>> import gensim.corpora
+        >>> filter_func = gensim.corpora.wikicorpus.filter_example
+        >>> dewiki = gensim.corpora.WikiCorpus(
+        ...     './dewiki-20180520-pages-articles-multistream.xml.bz2',
+        ...     filter_articles=filter_func)
+
     """
     # Filter German wikipedia dump for articles that are marked either as
     # Lesenswert (featured) or Exzellent (excellent) by wikipedia editors.
@@ -557,14 +561,16 @@ class WikiCorpus(TextCorpus):
 
     Examples
     --------
-    >>> from gensim.test.utils import datapath, get_tmpfile
-    >>> from gensim.corpora import WikiCorpus, MmCorpus
-    >>>
-    >>> path_to_wiki_dump = datapath("enwiki-latest-pages-articles1.xml-p000000010p000030302-shortened.bz2")
-    >>> corpus_path = get_tmpfile("wiki-corpus.mm")
-    >>>
-    >>> wiki = WikiCorpus(path_to_wiki_dump) # create word->word_id mapping, ~8h on full wiki
-    >>> MmCorpus.serialize(corpus_path, wiki) # another 8h, creates a file in MatrixMarket format and mapping
+    .. sourcecode:: pycon
+
+        >>> from gensim.test.utils import datapath, get_tmpfile
+        >>> from gensim.corpora import WikiCorpus, MmCorpus
+        >>>
+        >>> path_to_wiki_dump = datapath("enwiki-latest-pages-articles1.xml-p000000010p000030302-shortened.bz2")
+        >>> corpus_path = get_tmpfile("wiki-corpus.mm")
+        >>>
+        >>> wiki = WikiCorpus(path_to_wiki_dump)  # create word->word_id mapping, ~8h on full wiki
+        >>> MmCorpus.serialize(corpus_path, wiki)  # another 8h, creates a file in MatrixMarket format and mapping
 
     """
     def __init__(self, fname, processes=None, lemmatize=utils.has_pattern(), dictionary=None,
@@ -643,13 +649,15 @@ class WikiCorpus(TextCorpus):
 
         Examples
         --------
-        >>> from gensim.test.utils import datapath
-        >>> from gensim.corpora import WikiCorpus
-        >>>
-        >>> path_to_wiki_dump = datapath("enwiki-latest-pages-articles1.xml-p000000010p000030302-shortened.bz2")
-        >>>
-        >>> for vec in WikiCorpus(path_to_wiki_dump):
-        ...     pass
+        .. sourcecode:: pycon
+
+            >>> from gensim.test.utils import datapath
+            >>> from gensim.corpora import WikiCorpus
+            >>>
+            >>> path_to_wiki_dump = datapath("enwiki-latest-pages-articles1.xml-p000000010p000030302-shortened.bz2")
+            >>>
+            >>> for vec in WikiCorpus(path_to_wiki_dump):
+            ...     pass
 
         Yields
         ------

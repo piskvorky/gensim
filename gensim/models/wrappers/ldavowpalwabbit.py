@@ -31,40 +31,51 @@ Examples
 --------
 
 Train model
+.. sourcecode:: pycon
 
->>> from gensim.test.utils import common_corpus, common_dictionary
->>> from gensim.models.wrappers import LdaVowpalWabbit
->>>
->>> path_to_wv_binary = "/path/to/vw/binary"
->>> model = LdaVowpalWabbit(path_to_wv_binary, corpus=common_corpus, num_topics=20, id2word=common_dictionary)
+    >>> from gensim.test.utils import common_corpus, common_dictionary
+    >>> from gensim.models.wrappers import LdaVowpalWabbit
+    >>>
+    >>> path_to_wv_binary = "/path/to/vw/binary"
+    >>> model = LdaVowpalWabbit(path_to_wv_binary, corpus=common_corpus, num_topics=20, id2word=common_dictionary)
 
 Update existing model
 
->>> another_corpus = [[(1, 1), (2, 1)], [(3, 5)]]
->>> model.update(another_corpus)
+.. sourcecode:: pycon
+
+    >>> another_corpus = [[(1, 1), (2, 1)], [(3, 5)]]
+    >>> model.update(another_corpus)
 
 Get topic probability distributions for a document
 
->>> document_bow = [(1, 1)]
->>> print(model[document_bow])
+.. sourcecode:: pycon
+
+    >>> document_bow = [(1, 1)]
+    >>> print(model[document_bow])
 
 Print topics
 
->>> print(model.print_topics())
+.. sourcecode:: pycon
+
+    >>> print(model.print_topics())
 
 Save/load the trained model
 
->>> from gensim.test.utils import get_tmpfile
->>>
->>> temp_path = get_tmpfile("vw_lda.model")
->>> model.save(temp_path)
->>>
->>> loaded_lda = LdaVowpalWabbit.load(temp_path)
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import get_tmpfile
+    >>>
+    >>> temp_path = get_tmpfile("vw_lda.model")
+    >>> model.save(temp_path)
+    >>>
+    >>> loaded_lda = LdaVowpalWabbit.load(temp_path)
 
 Calculate log-perplexoty on given corpus
 
->>> another_corpus = [[(1, 1), (2, 1)], [(3, 5)]]
->>> print(model.log_perpexity(another_corpus))
+.. sourcecode:: pycon
+
+    >>> another_corpus = [[(1, 1), (2, 1)], [(3, 5)]]
+    >>> print(model.log_perpexity(another_corpus))
 
 Vowpal Wabbit works on files, so this wrapper maintains a temporary directory while it's around,
 reading/writing there as necessary.
@@ -523,7 +534,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
             # these params are read from model file if updating
             cmd.extend([
                 '--lda', str(self.num_topics),
-                '-b', str(_bit_length(self.num_terms)),
+                '-b', str(self.num_terms.bit_length()),
                 '--lda_alpha', str(self.alpha),
                 '--lda_rho', str(self.eta)
             ])
@@ -844,24 +855,6 @@ def _run_vw_command(cmd):
         raise subprocess.CalledProcessError(proc.returncode, ' '.join(cmd), output=output)
 
     return output
-
-
-# if python2.6 support is ever dropped, can change to using int.bit_length()
-def _bit_length(num):
-    """Get number of bits needed to encode given number.
-
-    Parameters
-    ----------
-    num : int
-        Number to encode.
-
-    Returns
-    -------
-    int
-        Number of bits needed to encode given number.
-
-    """
-    return len(bin(num).lstrip('-0b'))
 
 
 def vwmodel2ldamodel(vw_model, iterations=50):

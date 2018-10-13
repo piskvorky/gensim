@@ -44,36 +44,41 @@ Online Learning for Latent Dirichlet Allocation, NIPS 2010 <http://www.cs.prince
 Usage examples
 --------------
 The constructor estimates Latent Dirichlet Allocation model parameters based on a training corpus
+.. sourcecode:: pycon
 
->>> from gensim.test.utils import common_corpus, common_dictionary
->>>
->>> lda = LdaMulticore(common_corpus, id2word=common_dictionary, num_topics=10)
+    >>> from gensim.test.utils import common_corpus, common_dictionary
+    >>>
+    >>> lda = LdaMulticore(common_corpus, id2word=common_dictionary, num_topics=10)
 
 Save a model to disk, or reload a pre-trained model
 
->>> from gensim.test.utils import datapath
->>>
->>> # Save model to disk.
->>> temp_file = datapath("model")
->>> lda.save(temp_file)
->>>
->>> # Load a potentially pretrained model from disk.
->>> lda = LdaModel.load(temp_file)
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import datapath
+    >>>
+    >>> # Save model to disk.
+    >>> temp_file = datapath("model")
+    >>> lda.save(temp_file)
+    >>>
+    >>> # Load a potentially pretrained model from disk.
+    >>> lda = LdaModel.load(temp_file)
 
 Query, or update the model using new, unseen documents
 
->>> other_texts = [
-...     ['computer', 'time', 'graph'],
-...     ['survey', 'response', 'eps'],
-...     ['human', 'system', 'computer']
-... ]
->>> other_corpus = [common_dictionary.doc2bow(text) for text in other_texts]
->>>
->>> unseen_doc = other_corpus[0]
->>> vector = lda[unseen_doc] # get topic probability distribution for a document
->>>
->>> # Update the model by incrementally training on the new corpus.
->>> lda.update(other_corpus) # update the LDA model with additional documents
+.. sourcecode:: pycon
+
+    >>> other_texts = [
+    ...     ['computer', 'time', 'graph'],
+    ...     ['survey', 'response', 'eps'],
+    ...     ['human', 'system', 'computer']
+    ... ]
+    >>> other_corpus = [common_dictionary.doc2bow(text) for text in other_texts]
+    >>>
+    >>> unseen_doc = other_corpus[0]
+    >>> vector = lda[unseen_doc]  # get topic probability distribution for a document
+    >>>
+    >>> # Update the model by incrementally training on the new corpus.
+    >>> lda.update(other_corpus)  # update the LDA model with additional documents
 
 """
 

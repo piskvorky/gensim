@@ -14,14 +14,11 @@ import os
 import platform
 import sys
 import warnings
-import ez_setup
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
 
 if sys.version_info[:2] < (2, 7) or (sys.version_info[:1] == 3 and sys.version_info[:2] < (3, 5)):
     raise Exception('This version of gensim needs Python 2.7, 3.5 or later.')
-
-ez_setup.use_setuptools()
 
 # the following code is adapted from tornado's setup.py:
 # https://github.com/tornadoweb/tornado/blob/master/setup.py
@@ -237,11 +234,14 @@ win_testenv = [
     'Morfessor==2.0.2a4',
 ]
 
-linux_testenv = win_testenv + [
-    'annoy',
-    'tensorflow <= 1.3.0',
-    'keras >= 2.0.4, <= 2.1.4',
-]
+linux_testenv = win_testenv[:]
+
+if sys.version_info < (3, 7):
+    linux_testenv.extend([
+        'tensorflow <= 1.3.0',
+        'keras >= 2.0.4, <= 2.1.4',
+        'annoy',
+    ])
 
 ext_modules = [
     Extension('gensim.models.word2vec_inner',
@@ -331,6 +331,7 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Scientific/Engineering :: Information Analysis',
         'Topic :: Text Processing :: Linguistic',

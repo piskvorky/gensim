@@ -43,11 +43,13 @@ with dual core Xeon 2.0GHz, 4GB RAM, ATLAS
 
 Examples
 --------
->>> from gensim.test.utils import common_dictionary, common_corpus
->>> from gensim.models import LsiModel
->>>
->>> model = LsiModel(common_corpus, id2word=common_dictionary)
->>> vectorized_corpus = model[common_corpus]  # vectorize input copus in BoW format
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import common_dictionary, common_corpus
+    >>> from gensim.models import LsiModel
+    >>>
+    >>> model = LsiModel(common_corpus, id2word=common_dictionary)
+    >>> vectorized_corpus = model[common_corpus]  # vectorize input copus in BoW format
 
 
 .. [1] The stochastic algo could be distributed too, but most time is already spent
@@ -337,15 +339,17 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     Examples
     --------
-    >>> from gensim.test.utils import common_corpus, common_dictionary, get_tmpfile
-    >>> from gensim.models import LsiModel
-    >>>
-    >>> model = LsiModel(common_corpus[:3], id2word=common_dictionary)  # train model
-    >>> vector = model[common_corpus[4]]  # apply model to BoW document
-    >>> model.add_documents(common_corpus[4:])  # update model with new documents
-    >>> tmp_fname = get_tmpfile("lsi.model")
-    >>> model.save(tmp_fname)  # save model
-    >>> loaded_model = LsiModel.load(tmp_fname)  # load model
+    .. sourcecode:: pycon
+
+        >>> from gensim.test.utils import common_corpus, common_dictionary, get_tmpfile
+        >>> from gensim.models import LsiModel
+        >>>
+        >>> model = LsiModel(common_corpus[:3], id2word=common_dictionary)  # train model
+        >>> vector = model[common_corpus[4]]  # apply model to BoW document
+        >>> model.add_documents(common_corpus[4:])  # update model with new documents
+        >>> tmp_fname = get_tmpfile("lsi.model")
+        >>> model.save(tmp_fname)  # save model
+        >>> loaded_model = LsiModel.load(tmp_fname)  # load model
 
     """
 

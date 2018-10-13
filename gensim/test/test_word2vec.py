@@ -593,12 +593,18 @@ class TestWord2VecModel(unittest.TestCase):
             self.assertFalse((unlocked1 == model.wv.vectors[1]).all())  # unlocked vector should vary
             self.assertTrue((locked0 == model.wv.vectors[0]).all())  # locked vector should not vary
 
-    def testAccuracy(self):
-        """Test Word2Vec accuracy and KeyedVectors accuracy give the same result"""
+    def testEvaluateWordAnalogies(self):
+        """Test that evaluating analogies on KeyedVectors give sane results"""
         model = word2vec.Word2Vec(LeeCorpus())
-        w2v_accuracy = model.wv.evaluate_word_analogies(datapath('questions-words.txt'))
-        kv_accuracy = model.wv.evaluate_word_analogies(datapath('questions-words.txt'))
-        self.assertEqual(w2v_accuracy, kv_accuracy)
+        score, sections = model.wv.evaluate_word_analogies(datapath('questions-words.txt'))
+        self.assertGreaterEqual(score, 0.0)
+        self.assertLessEqual(score, 1.0)
+        self.assertGreater(len(sections), 0)
+        # Check that dict contains the right keys
+        first_section = sections[0]
+        self.assertIn('section', first_section)
+        self.assertIn('correct', first_section)
+        self.assertIn('incorrect', first_section)
 
     def testEvaluateWordPairs(self):
         """Test Spearman and Pearson correlation coefficients give sane results on similarity datasets"""

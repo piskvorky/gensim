@@ -10,12 +10,14 @@
 
 Examples:
 ---------
->>> from gensim.parsing.preprocessing import remove_stopwords
->>> remove_stopwords("Better late than never, but better never late.")
-u'Better late never, better late.'
->>>
->>> preprocess_string("<i>Hel 9lo</i> <b>Wo9 rld</b>! Th3     weather_is really g00d today, isn't it?")
-[u'hel', u'rld', u'weather', u'todai', u'isn']
+.. sourcecode:: pycon
+
+    >>> from gensim.parsing.preprocessing import remove_stopwords
+    >>> remove_stopwords("Better late than never, but better never late.")
+    u'Better late never, better late.'
+    >>>
+    >>> preprocess_string("<i>Hel 9lo</i> <b>Wo9 rld</b>! Th3     weather_is really g00d today, isn't it?")
+    [u'hel', u'rld', u'weather', u'todai', u'isn']
 
 
 Data:
@@ -43,7 +45,7 @@ from gensim.parsing.porter import PorterStemmer
 
 STOPWORDS = frozenset([
     'all', 'six', 'just', 'less', 'being', 'indeed', 'over', 'move', 'anyway', 'four', 'not', 'own', 'through',
-    'using', 'fify', 'where', 'mill', 'only', 'find', 'before', 'one', 'whose', 'system', 'how', 'somewhere',
+    'using', 'fifty', 'where', 'mill', 'only', 'find', 'before', 'one', 'whose', 'system', 'how', 'somewhere',
     'much', 'thick', 'show', 'had', 'enough', 'should', 'to', 'must', 'whom', 'seeming', 'yourselves', 'under',
     'ours', 'two', 'has', 'might', 'thereafter', 'latterly', 'do', 'them', 'his', 'around', 'than', 'get', 'very',
     'de', 'none', 'cannot', 'every', 'un', 'they', 'front', 'during', 'thus', 'now', 'him', 'nor', 'name', 'regarding',
@@ -96,9 +98,11 @@ def remove_stopwords(s):
 
     Examples
     --------
-    >>> from gensim.parsing.preprocessing import remove_stopwords
-    >>> remove_stopwords("Better late than never, but better never late.")
-    u'Better late never, better late.'
+    .. sourcecode:: pycon
+
+        >>> from gensim.parsing.preprocessing import remove_stopwords
+        >>> remove_stopwords("Better late than never, but better never late.")
+        u'Better late never, better late.'
 
     """
     s = utils.to_unicode(s)
@@ -119,9 +123,11 @@ def strip_punctuation(s):
 
     Examples
     --------
-    >>> from gensim.parsing.preprocessing import strip_punctuation
-    >>> strip_punctuation("A semicolon is a stronger break than a comma, but not as much as a full stop!")
-    u'A semicolon is a stronger break than a comma  but not as much as a full stop '
+    .. sourcecode:: pycon
+
+        >>> from gensim.parsing.preprocessing import strip_punctuation
+        >>> strip_punctuation("A semicolon is a stronger break than a comma, but not as much as a full stop!")
+        u'A semicolon is a stronger break than a comma  but not as much as a full stop '
 
     """
     s = utils.to_unicode(s)
@@ -145,9 +151,11 @@ def strip_tags(s):
 
     Examples
     --------
-    >>> from gensim.parsing.preprocessing import strip_tags
-    >>> strip_tags("<i>Hello</i> <b>World</b>!")
-    u'Hello World!'
+    .. sourcecode:: pycon
+
+        >>> from gensim.parsing.preprocessing import strip_tags
+        >>> strip_tags("<i>Hello</i> <b>World</b>!")
+        u'Hello World!'
 
     """
     s = utils.to_unicode(s)
@@ -169,12 +177,14 @@ def strip_short(s, minsize=3):
 
     Examples
     --------
-    >>> from gensim.parsing.preprocessing import strip_short
-    >>> strip_short("salut les amis du 59")
-    u'salut les amis'
-    >>>
-    >>> strip_short("one two three four five six seven eight nine ten", minsize=5)
-    u'three seven eight'
+    .. sourcecode:: pycon
+
+        >>> from gensim.parsing.preprocessing import strip_short
+        >>> strip_short("salut les amis du 59")
+        u'salut les amis'
+        >>>
+        >>> strip_short("one two three four five six seven eight nine ten", minsize=5)
+        u'three seven eight'
 
     """
     s = utils.to_unicode(s)
@@ -195,9 +205,11 @@ def strip_numeric(s):
 
     Examples
     --------
-    >>> from gensim.parsing.preprocessing import strip_numeric
-    >>> strip_numeric("0text24gensim365test")
-    u'textgensimtest'
+    .. sourcecode:: pycon
+
+        >>> from gensim.parsing.preprocessing import strip_numeric
+        >>> strip_numeric("0text24gensim365test")
+        u'textgensimtest'
 
     """
     s = utils.to_unicode(s)
@@ -222,9 +234,11 @@ def strip_non_alphanum(s):
 
     Examples
     --------
-    >>> from gensim.parsing.preprocessing import strip_non_alphanum
-    >>> strip_non_alphanum("if-you#can%read$this&then@this#method^works")
-    u'if you can read this then this method works'
+    .. sourcecode:: pycon
+
+        >>> from gensim.parsing.preprocessing import strip_non_alphanum
+        >>> strip_non_alphanum("if-you#can%read$this&then@this#method^works")
+        u'if you can read this then this method works'
 
     """
     s = utils.to_unicode(s)
@@ -246,9 +260,11 @@ def strip_multiple_whitespaces(s):
 
     Examples
     --------
-    >>> from gensim.parsing.preprocessing import strip_multiple_whitespaces
-    >>> strip_multiple_whitespaces("salut" + '\r' + " les" + '\n' + "         loulous!")
-    u'salut les loulous!'
+    .. sourcecode:: pycon
+
+        >>> from gensim.parsing.preprocessing import strip_multiple_whitespaces
+        >>> strip_multiple_whitespaces("salut" + '\r' + " les" + '\n' + "         loulous!")
+        u'salut les loulous!'
 
     """
     s = utils.to_unicode(s)
@@ -269,9 +285,11 @@ def split_alphanum(s):
 
     Examples
     --------
-    >>> from gensim.parsing.preprocessing import split_alphanum
-    >>> split_alphanum("24.0hours7 days365 a1b2c3")
-    u'24.0 hours 7 days 365 a 1 b 2 c 3'
+    .. sourcecode:: pycon
+
+        >>> from gensim.parsing.preprocessing import split_alphanum
+        >>> split_alphanum("24.0hours7 days365 a1b2c3")
+        u'24.0 hours 7 days 365 a 1 b 2 c 3'
 
     """
     s = utils.to_unicode(s)
@@ -293,9 +311,11 @@ def stem_text(text):
 
     Examples
     --------
-    >>> from gensim.parsing.preprocessing import stem_text
-    >>> stem_text("While it is quite useful to be able to search a large collection of documents almost instantly.")
-    u'while it is quit us to be abl to search a larg collect of document almost instantly.'
+    .. sourcecode:: pycon
+
+        >>> from gensim.parsing.preprocessing import stem_text
+        >>> stem_text("While it is quite useful to be able to search a large collection of documents almost instantly.")
+        u'while it is quit us to be abl to search a larg collect of document almost instantly.'
 
     """
     text = utils.to_unicode(text)
@@ -338,14 +358,16 @@ def preprocess_string(s, filters=DEFAULT_FILTERS):
 
     Examples
     --------
-    >>> from gensim.parsing.preprocessing import preprocess_string
-    >>> preprocess_string("<i>Hel 9lo</i> <b>Wo9 rld</b>! Th3     weather_is really g00d today, isn't it?")
-    [u'hel', u'rld', u'weather', u'todai', u'isn']
-    >>>
-    >>> s = "<i>Hel 9lo</i> <b>Wo9 rld</b>! Th3     weather_is really g00d today, isn't it?"
-    >>> CUSTOM_FILTERS = [lambda x: x.lower(), strip_tags, strip_punctuation]
-    >>> preprocess_string(s, CUSTOM_FILTERS)
-    [u'hel', u'9lo', u'wo9', u'rld', u'th3', u'weather', u'is', u'really', u'g00d', u'today', u'isn', u't', u'it']
+    .. sourcecode:: pycon
+
+        >>> from gensim.parsing.preprocessing import preprocess_string
+        >>> preprocess_string("<i>Hel 9lo</i> <b>Wo9 rld</b>! Th3     weather_is really g00d today, isn't it?")
+        [u'hel', u'rld', u'weather', u'todai', u'isn']
+        >>>
+        >>> s = "<i>Hel 9lo</i> <b>Wo9 rld</b>! Th3     weather_is really g00d today, isn't it?"
+        >>> CUSTOM_FILTERS = [lambda x: x.lower(), strip_tags, strip_punctuation]
+        >>> preprocess_string(s, CUSTOM_FILTERS)
+        [u'hel', u'9lo', u'wo9', u'rld', u'th3', u'weather', u'is', u'really', u'g00d', u'today', u'isn', u't', u'it']
 
     """
     s = utils.to_unicode(s)
@@ -368,9 +390,12 @@ def preprocess_documents(docs):
 
     Examples
     --------
-    >>> from gensim.parsing.preprocessing import preprocess_documents
-    >>> preprocess_documents(["<i>Hel 9lo</i> <b>Wo9 rld</b>!", "Th3     weather_is really g00d today, isn't it?"])
-    [[u'hel', u'rld'], [u'weather', u'todai', u'isn']]
+
+    .. sourcecode:: pycon
+
+        >>> from gensim.parsing.preprocessing import preprocess_documents
+        >>> preprocess_documents(["<i>Hel 9lo</i> <b>Wo9 rld</b>!", "Th3     weather_is really g00d today, isn't it?"])
+        [[u'hel', u'rld'], [u'weather', u'todai', u'isn']]
 
     """
     return [preprocess_string(d) for d in docs]
