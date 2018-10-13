@@ -371,7 +371,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Mapping from word IDs to words. It is used to determine the vocabulary size, as well as for
             debugging and topic printing.
         distributed : bool, optional
-            Whether distributed computing should be used to accerelate training.
+            Whether distributed computing should be used to accerelate training. 
         chunksize :  int, optional
             Number of documents to be used in each training chunk.
         passes : int, optional
@@ -385,7 +385,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Alternatively default prior selecting strategies can be employed by supplying a string:
 
                 * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / topicno`.
-                * 'auto': Learns an asymmetric prior from the corpus.
+                * 'auto': Learns an asymmetric prior from the corpus (not available if `distributed==True`).
         eta : {float, np.array, str}, optional
             A-priori belief on word probability, this can be:
 
