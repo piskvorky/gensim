@@ -1617,13 +1617,11 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         of trained docvecs, or if the documents were originally presented with string tags,
         by the corresponding tags.
 
-        TODO: Accept vectors of out-of-training-set docs, as if from inference.
-
         Parameters
         ----------
-        positive : list of {str, int}, optional
+        positive : list of {str, int, numpy.ndarray}, optional
             List of doctags/indexes that contribute positively.
-        negative : list of {str, int}, optional
+        negative : list of {str, int, numpy.ndarray}, optional
             List of doctags/indexes that contribute negatively.
         topn : int, optional
             Number of top-N similar docvecs to return.
@@ -1634,7 +1632,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
 
         Returns
         -------
-        list of ({str, int}, float)
+        list of ({str, int, numpy.ndarray}, float)
             Sequence of (doctag/index, similarity).
 
         """
@@ -1692,8 +1690,6 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
     def doesnt_match(self, docs):
         """Which document from the given list doesn't go with the others from the training set?
 
-        TODO: Accept vectors of out-of-training-set docs, as if from inference.
-
         Parameters
         ----------
         docs : list of {str, int}
@@ -1720,8 +1716,6 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
     def similarity(self, d1, d2):
         """Compute cosine similarity between two docvecs from the training set.
 
-        TODO: Accept vectors of out-of-training-set docs, as if from inference.
-
         Parameters
         ----------
         d1 : {int, str}
@@ -1739,8 +1733,6 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
 
     def n_similarity(self, ds1, ds2):
         """Compute cosine similarity between two sets of docvecs from the trained set.
-
-        TODO: Accept vectors of out-of-training-set docs, as if from inference.
 
         Parameters
         ----------
@@ -1769,8 +1761,6 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
     # required by base keyed vectors class
     def distances(self, d1, other_docs=()):
         """Compute cosine distances from given `d1` to all documents in `other_docs`.
-
-        TODO: Accept vectors of out-of-training-set docs, as if from inference.
 
         Parameters
         ----------
