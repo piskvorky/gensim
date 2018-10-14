@@ -203,6 +203,7 @@ class TestLdaMallet(unittest.TestCase, basetmtests.TestBaseTopicModel):
                         sorted(matutils.sparse2full(tm2[doc], 2)), 
                         atol=1e-1))
 
+
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
