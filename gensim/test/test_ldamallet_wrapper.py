@@ -158,16 +158,16 @@ class TestLdaMallet(unittest.TestCase, basetmtests.TestBaseTopicModel):
 
     def test_load_model(self):
         if not self.mallet_path:
-            return    
+            return
         # to conduct the test these directories and files should exist
         model_save_path = ".\\test_data\\Mallet_TMP\\"
         model_save_name = model_save_path + "Mallet_pre_rs.mdl"
-        # the saved models temporary files need to be in a common directory, 
+        # the saved models temporary files need to be in a common directory,
         # they are being named according to the model name to minimize conflicts
         prefix = model_save_path + "MTMP\\pre_rs_"
         
         if not (os.path.exists(model_save_name) & os.path.exists(prefix + "corpus.mallet")):
-            logging.warning("Pre-existing model files not found. Skipping test loading of them.")  
+            logging.warning("Pre-existing model files not found. Skipping test loading of them.")
             return
         model = ldamodel.LdaModel.load(model_save_name)
         
@@ -183,24 +183,24 @@ class TestLdaMallet(unittest.TestCase, basetmtests.TestBaseTopicModel):
         
     def test_random_seed(self):
         if not self.mallet_path:
-            return 
+            return
         # test that 2 models created with the same random_seed are equal in their topics treatment
-        SEED = 10 
-        tm1 = ldamallet.LdaMallet(self.mallet_path, 
-                                  corpus=corpus, 
-                                  num_topics=2, 
-                                  id2word=dictionary, 
-                                  random_seed = SEED)
-        tm2 = ldamallet.LdaMallet(self.mallet_path, 
-                                  corpus=corpus, 
-                                  num_topics=2, 
-                                  id2word=dictionary, 
-                                  random_seed = SEED)        
+        SEED = 10
+        tm1 = ldamallet.LdaMallet(self.mallet_path,
+                                  corpus=corpus,
+                                  num_topics=2,
+                                  id2word=dictionary,
+                                  random_seed=SEED)
+        tm2 = ldamallet.LdaMallet(self.mallet_path,
+                                  corpus=corpus,
+                                  num_topics=2,
+                                  id2word=dictionary,
+                                  random_seed=SEED)        
         self.assertTrue(np.allclose(tm1.word_topics, tm2.word_topics))
         for doc in corpus:
             self.assertTrue(np.allclose(
-                        sorted(matutils.sparse2full(tm1[doc], 2)), 
-                        sorted(matutils.sparse2full(tm2[doc], 2)), 
+                        sorted(matutils.sparse2full(tm1[doc], 2)),
+                        sorted(matutils.sparse2full(tm2[doc], 2)),
                         atol=1e-1))
 
 
