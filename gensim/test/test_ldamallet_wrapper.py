@@ -196,12 +196,12 @@ class TestLdaMallet(unittest.TestCase, basetmtests.TestBaseTopicModel):
                                   num_topics=2, 
                                   id2word=dictionary, 
                                   random_seed = SEED)        
-        doc = list(corpus)[0]
-        self.assertTrue(np.allclose(tm1.word_topics, tm2.word_topics)) and \
-        self.assertTrue(np.allclose(
-                    sorted(matutils.sparse2full(tm1[doc], 2)), 
-                    sorted(matutils.sparse2full(tm2[doc], 2)), 
-                    atol=1e-1))
+        self.assertTrue(np.allclose(tm1.word_topics, tm2.word_topics))
+        for doc in corpus:
+            self.assertTrue(np.allclose(
+                        sorted(matutils.sparse2full(tm1[doc], 2)), 
+                        sorted(matutils.sparse2full(tm2[doc], 2)), 
+                        atol=1e-1))
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
