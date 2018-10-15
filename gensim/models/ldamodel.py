@@ -371,7 +371,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Mapping from word IDs to words. It is used to determine the vocabulary size, as well as for
             debugging and topic printing.
         distributed : bool, optional
-            Whether distributed computing should be used to accerelate training. 
+            Whether distributed computing should be used to accerelate training.
         chunksize :  int, optional
             Number of documents to be used in each training chunk.
         passes : int, optional
