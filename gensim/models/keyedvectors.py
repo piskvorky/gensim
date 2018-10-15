@@ -752,8 +752,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             If `pyemd <https://pypi.org/project/pyemd/>`_  isn't installed.
 
         """
-        if not PYEMD_EXT:
-            raise ImportError("Please install pyemd Python package to compute WMD.")
+        from pyemd import emd
 
         # Remove out-of-vocabulary words.
         len_pre_oov1 = len(document1)
@@ -765,9 +764,9 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         if diff1 > 0 or diff2 > 0:
             logger.info('Removed %d and %d OOV words from document 1 and 2 (respectively).', diff1, diff2)
 
-        if len(document1) == 0 or len(document2) == 0:
+        if not len(document1) or not len(document2):
             logger.info(
-                "At least one of the documents had no words that werein the vocabulary. "
+                "At least one of the documents had no words that wherein the vocabulary. "
                 "Aborting (returning inf)."
             )
             return float('inf')
