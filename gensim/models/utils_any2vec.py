@@ -27,6 +27,7 @@ except ImportError:
         return b
 
     if PY2:
+
         def _byte_to_int(b):
             return ord(b)
 
