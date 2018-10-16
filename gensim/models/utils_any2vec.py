@@ -14,6 +14,7 @@ from numpy import zeros, dtype, float32 as REAL, ascontiguousarray, fromstring
 
 from six.moves import xrange
 from six import iteritems
+from six import PY2
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,13 @@ try:
     from gensim.models._utils_any2vec import ft_hash as _ft_hash, compute_ngrams as _compute_ngrams
 except ImportError:
     FAST_VERSION = -1
+
+    def _byte_to_int(b):
+        return b
+
+    if PY2:
+        def _byte_to_int(b):
+            return ord(b)
 
     # failed... fall back to plain python
     def _ft_hash(string):
@@ -41,10 +49,12 @@ except ImportError:
         """
         # Runtime warnings for integer overflow are raised, this is expected behaviour. These warnings are suppressed.
         old_settings = np.seterr(all='ignore')
+
         h = np.uint32(2166136261)
         for c in string:
-            h = h ^ np.uint32(ord(c))
-            h = h * np.uint32(16777619)
+            h = np.uint32(h ^ np.uint32(np.int8(_byte_to_int(c))))
+            h = np.uint32(h * np.uint32(16777619))
+
         np.seterr(**old_settings)
         return h
 
