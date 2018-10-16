@@ -8,10 +8,10 @@ Changes
   New training mode for `*2Vec` models (word2vec, doc2vec, fasttext) that allows model training to scale linearly with the number of cores (full GIL elimination). The result of our Google Summer of Code 2018 project by Dmitry Persiyanov.
 
   **Benchmark**
-  - Dataset: full English Wikipedia
-  - Cloud: GCE
-  - CPU: Intel(R) Xeon(R) CPU @ 2.30GHz 32 cores
-  - BLAS: libblas3 (3.7.1-3ubuntu2)
+  - Dataset: `full English Wikipedia`
+  - Cloud: `GCE`
+  - CPU: `Intel(R) Xeon(R) CPU @ 2.30GHz 32 cores`
+  - BLAS: `MKL`
 
 
   | Model | Queue-based version [sec] | File-based version [sec] | speed up | Accuracy (queue-based) | Accuracy (file-based) |

@@ -209,7 +209,9 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
                     if ch != b'\n':  # ignore newlines in front of words (some binary files have)
                         word.append(ch)
                 word = utils.to_unicode(b''.join(word), encoding=encoding, errors=unicode_errors)
-                weights = fromstring(fin.read(binary_len), dtype=REAL).astype(datatype)
+                with utils.ignore_deprecation_warning():
+                    # TODO use frombuffer or something similar
+                    weights = fromstring(fin.read(binary_len), dtype=REAL).astype(datatype)
                 add_word(word, weights)
         else:
             for line_no in xrange(vocab_size):

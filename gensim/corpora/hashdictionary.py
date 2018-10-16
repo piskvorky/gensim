@@ -50,13 +50,15 @@ class HashDictionary(utils.SaveLoad, dict):
 
     Examples
     --------
-    >>> from gensim.corpora import HashDictionary
-    >>>
-    >>> dct = HashDictionary(debug=False)  # needs no training corpus!
-    >>>
-    >>> texts = [['human', 'interface', 'computer']]
-    >>> dct.doc2bow(texts[0])
-    [(10608, 1), (12466, 1), (31002, 1)]
+    .. sourcecode:: pycon
+
+        >>> from gensim.corpora import HashDictionary
+        >>>
+        >>> dct = HashDictionary(debug=False)  # needs no training corpus!
+        >>>
+        >>> texts = [['human', 'interface', 'computer']]
+        >>> dct.doc2bow(texts[0])
+        [(10608, 1), (12466, 1), (31002, 1)]
 
     """
     def __init__(self, documents=None, id_range=32000, myhash=zlib.adler32, debug=True):
@@ -172,16 +174,18 @@ class HashDictionary(utils.SaveLoad, dict):
         Examples
         --------
 
-        >>> from gensim.corpora import HashDictionary
-        >>>
-        >>> dct = HashDictionary(debug=True)  # needs no training corpus!
-        >>>
-        >>> corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
-        >>> "sparta" in dct.token2id
-        False
-        >>> dct.add_documents([["this", "is", "sparta"], ["just", "joking"]])
-        >>> "sparta" in dct.token2id
-        True
+        .. sourcecode:: pycon
+
+            >>> from gensim.corpora import HashDictionary
+            >>>
+            >>> dct = HashDictionary(debug=True)  # needs no training corpus!
+            >>>
+            >>> corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
+            >>> "sparta" in dct.token2id
+            False
+            >>> dct.add_documents([["this", "is", "sparta"], ["just", "joking"]])
+            >>> "sparta" in dct.token2id
+            True
 
         """
         for docno, document in enumerate(documents):
@@ -222,11 +226,13 @@ class HashDictionary(utils.SaveLoad, dict):
 
         Examples
         --------
-        >>> from gensim.corpora import HashDictionary
-        >>>
-        >>> dct = HashDictionary()
-        >>> dct.doc2bow(["this", "is", "máma"])
-        [(1721, 1), (5280, 1), (22493, 1)]
+        .. sourcecode:: pycon
+
+            >>> from gensim.corpora import HashDictionary
+            >>>
+            >>> dct = HashDictionary()
+            >>> dct.doc2bow(["this", "is", "máma"])
+            [(1721, 1), (5280, 1), (22493, 1)]
 
         """
         result = {}
@@ -325,12 +331,15 @@ class HashDictionary(utils.SaveLoad, dict):
 
         Examples
         --------
-        >>> from gensim.corpora import HashDictionary
-        >>> from gensim.test.utils import get_tmpfile
-        >>>
-        >>> corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
-        >>> data = HashDictionary(corpus)
-        >>> data.save_as_text(get_tmpfile("dictionary_in_text_format"))
+
+        .. sourcecode:: pycon
+
+            >>> from gensim.corpora import HashDictionary
+            >>> from gensim.test.utils import get_tmpfile
+            >>>
+            >>> corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
+            >>> data = HashDictionary(corpus)
+            >>> data.save_as_text(get_tmpfile("dictionary_in_text_format"))
 
         """
         logger.info("saving %s mapping to %s" % (self, fname))

@@ -43,8 +43,8 @@ class TestVarembed(unittest.TestCase):
 
     def model_sanity(self, model):
         """Check vocabulary and vector size"""
-        self.assertEqual(model.syn0.shape, (model.vocab_size, model.vector_size))
-        self.assertTrue(model.syn0.shape[0] == len(model.vocab))
+        self.assertEqual(model.vectors.shape, (model.vocab_size, model.vector_size))
+        self.assertTrue(model.vectors.shape[0] == len(model.vocab))
 
     @unittest.skipIf(sys.version_info < (2, 7), 'Supported only on Python 2.7 and above')
     def testAddMorphemesToEmbeddings(self):
@@ -56,7 +56,7 @@ class TestVarembed(unittest.TestCase):
             vectors=varembed_model_vector_file, morfessor_model=varembed_model_morfessor_file)
         self.model_sanity(model_with_morphemes)
         # Check syn0 is different for both models.
-        self.assertFalse(np.allclose(model.syn0, model_with_morphemes.syn0))
+        self.assertFalse(np.allclose(model.vectors, model_with_morphemes.vectors))
 
     def testLookup(self):
         """Test lookup of vector for a particular word and list"""

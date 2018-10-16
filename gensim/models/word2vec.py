@@ -34,47 +34,55 @@ Usage examples
 
 Initialize a model with e.g.:
 
->>> from gensim.test.utils import common_texts, get_tmpfile
->>> from gensim.models import Word2Vec
->>>
->>> path = get_tmpfile("word2vec.model")
->>>
->>> model = Word2Vec(common_texts, size=100, window=5, min_count=1, workers=4)
->>> model.save("word2vec.model")
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import common_texts, get_tmpfile
+    >>> from gensim.models import Word2Vec
+    >>>
+    >>> path = get_tmpfile("word2vec.model")
+    >>>
+    >>> model = Word2Vec(common_texts, size=100, window=5, min_count=1, workers=4)
+    >>> model.save("word2vec.model")
 
 The training is streamed, meaning `sentences` can be a generator, reading input data
 from disk on-the-fly, without loading the entire corpus into RAM.
 
 It also means you can continue training the model later:
+.. sourcecode:: pycon
 
->>> model = Word2Vec.load("word2vec.model")
->>> model.train([["hello", "world"]], total_examples=1, epochs=1)
-(0, 2)
+    >>> model = Word2Vec.load("word2vec.model")
+    >>> model.train([["hello", "world"]], total_examples=1, epochs=1)
+    (0, 2)
 
 The trained word vectors are stored in a :class:`~gensim.models.keyedvectors.KeyedVectors` instance in `model.wv`:
+.. sourcecode:: pycon
 
->>> vector = model.wv['computer']  # numpy vector of a word
+    >>> vector = model.wv['computer']  # numpy vector of a word
 
 The reason for separating the trained vectors into `KeyedVectors` is that if you don't
 need the full model state any more (don't need to continue training), the state can discarded,
 resulting in a much smaller and faster object that can be mmapped for lightning
-fast loading and sharing the vectors in RAM between processes::
+fast loading and sharing the vectors in RAM between processes:
 
->>> from gensim.models import KeyedVectors
->>>
->>> path = get_tmpfile("wordvectors.kv")
->>>
->>> model.wv.save(path)
->>> wv = KeyedVectors.load("model.wv", mmap='r')
->>> vector = wv['computer']  # numpy vector of a word
+.. sourcecode:: pycon
+
+    >>> from gensim.models import KeyedVectors
+    >>>
+    >>> path = get_tmpfile("wordvectors.kv")
+    >>>
+    >>> model.wv.save(path)
+    >>> wv = KeyedVectors.load("model.wv", mmap='r')
+    >>> vector = wv['computer']  # numpy vector of a word
 
 Gensim can also load word vectors in the "word2vec C format", as a
-:class:`~gensim.models.keyedvectors.KeyedVectors` instance::
+:class:`~gensim.models.keyedvectors.KeyedVectors` instance:
 
->>> from gensim.test.utils import datapath
->>>
->>> wv_from_text = KeyedVectors.load_word2vec_format(datapath('word2vec_pre_kv_c'), binary=False)  # C text format
->>> wv_from_bin = KeyedVectors.load_word2vec_format(datapath("euclidean_vectors.bin"), binary=True)  # C binary format
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import datapath
+    >>>
+    >>> wv_from_text = KeyedVectors.load_word2vec_format(datapath('word2vec_pre_kv_c'), binary=False)  # C text format
+    >>> wv_from_bin = KeyedVectors.load_word2vec_format(datapath("euclidean_vectors.bin"), binary=True)  # C bin format
 
 It is impossible to continue training the vectors loaded from the C format because the hidden weights,
 vocabulary frequencies and the binary tree are missing. To continue training, you'll need the
@@ -87,8 +95,10 @@ are already built-in - you can see it in :mod:`gensim.models.keyedvectors`.
 If you're finished training a model (i.e. no more updates, only querying),
 you can switch to the :class:`~gensim.models.keyedvectors.KeyedVectors` instance:
 
->>> word_vectors = model.wv
->>> del model
+.. sourcecode:: pycon
+
+    >>> word_vectors = model.wv
+    >>> del model
 
 to trim unneeded model state = use much less RAM and allow fast loading and memory sharing (mmap).
 
@@ -96,11 +106,13 @@ Note that there is a :mod:`gensim.models.phrases` module which lets you automati
 detect phrases longer than one word. Using phrases, you can learn a word2vec model
 where "words" are actually multiword expressions, such as `new_york_times` or `financial_crisis`:
 
->>> from gensim.test.utils import common_texts
->>> from gensim.models import Phrases
->>>
->>> bigram_transformer = Phrases(common_texts)
->>> model = Word2Vec(bigram_transformer[common_texts], min_count=1)
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import common_texts
+    >>> from gensim.models import Phrases
+    >>>
+    >>> bigram_transformer = Phrases(common_texts)
+    >>> model = Word2Vec(bigram_transformer[common_texts], min_count=1)
 
 """
 
@@ -744,9 +756,11 @@ class Word2Vec(BaseWordEmbeddingsModel):
         --------
         Initialize and train a :class:`~gensim.models.word2vec.Word2Vec` model
 
-        >>> from gensim.models import Word2Vec
-        >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
-        >>> model = Word2Vec(sentences, min_count=1)
+        .. sourcecode:: pycon
+
+            >>> from gensim.models import Word2Vec
+            >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
+            >>> model = Word2Vec(sentences, min_count=1)
 
         """
         self.max_final_vocab = max_final_vocab
@@ -877,13 +891,15 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
         Examples
         --------
-        >>> from gensim.models import Word2Vec
-        >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
-        >>>
-        >>> model = Word2Vec(min_count=1)
-        >>> model.build_vocab(sentences)  # prepare the model vocabulary
-        >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)  # train word vectors
-        (1, 30)
+        .. sourcecode:: pycon
+
+            >>> from gensim.models import Word2Vec
+            >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
+            >>>
+            >>> model = Word2Vec(min_count=1)
+            >>> model.build_vocab(sentences)  # prepare the model vocabulary
+            >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)  # train word vectors
+            (1, 30)
 
         """
         return super(Word2Vec, self).train(
@@ -1393,10 +1409,13 @@ class LineSentence(object):
 
         Examples
         --------
-        >>> from gensim.test.utils import datapath
-        >>> sentences = LineSentence(datapath('lee_background.cor'))
-        >>> for sentence in sentences:
-        ...     pass
+
+        .. sourcecode:: pycon
+
+            >>> from gensim.test.utils import datapath
+            >>> sentences = LineSentence(datapath('lee_background.cor'))
+            >>> for sentence in sentences:
+            ...     pass
 
         """
         self.source = source
