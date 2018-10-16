@@ -23,13 +23,15 @@ try:
 except ImportError:
     FAST_VERSION = -1
 
-    def _byte_to_int(b):
+    def _byte_to_int_py3(b):
         return b
 
-    if PY2:
+    def _byte_to_int_py2(b):
+        return ord(b)
 
-        def _byte_to_int(b):
-            return ord(b)
+    _byte_to_int = _byte_to_int_py3
+    if PY2:
+        _byte_to_int = _byte_to_int_py2
 
     # failed... fall back to plain python
     def _ft_hash(string):
