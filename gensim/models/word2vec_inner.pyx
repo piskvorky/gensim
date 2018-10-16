@@ -2,13 +2,17 @@
 # cython: boundscheck=False
 # cython: wraparound=False
 # cython: cdivision=True
+# cython: embedsignature=True
 # coding: utf-8
 #
 # Copyright (C) 2013 Radim Rehurek <me@radimrehurek.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
+"""Optimized cython functions for training :class:`~gensim.models.word2vec.Word2Vec` model."""
+
 import cython
 import numpy as np
+
 cimport numpy as np
 
 from libc.math cimport exp
@@ -42,6 +46,7 @@ cdef REAL_t[EXP_TABLE_SIZE] LOG_TABLE
 cdef int ONE = 1
 cdef REAL_t ONEF = <REAL_t>1.0
 
+
 # for when fblas.sdot returns a double
 cdef REAL_t our_dot_double(const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil:
     return <REAL_t>dsdot(N, X, incX, Y, incY)
@@ -66,12 +71,45 @@ cdef void our_saxpy_noblas(const int *N, const float *alpha, const float *X, con
     for i from 0 <= i < N[0] by 1:
         Y[i * (incY[0])] = (alpha[0]) * X[i * (incX[0])] + Y[i * (incY[0])]
 
-
-cdef void fast_sentence_sg_hs(
+cdef void w2v_fast_sentence_sg_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
     REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work, REAL_t *word_locks,
     const int _compute_loss, REAL_t *_running_training_loss_param) nogil:
+    """Train on a single effective word from the current batch, using the Skip-Gram model.
+
+    In this model we are using a given word to predict a context word (a word that is
+    close to the one we are using as training). Hierarchical softmax is used to speed-up
+    training.
+
+    Parameters
+    ----------
+    word_point
+        Vector representation of the current word.
+    word_code
+        ASCII (char == uint8) representation of the current word.
+    codelen
+        Number of characters (length) in the current word.
+    syn0
+        Embeddings for the words in the vocabulary (`model.wv.vectors`)
+    syn1
+        Weights of the hidden layer in the model's trainable neural network.
+    size
+        Length of the embeddings.
+    word2_index
+        Index of the context word in the vocabulary.
+    alpha
+        Learning rate.
+    work
+        Private working memory for each worker.
+    word_locks
+        Lock factors for each word. A value of 0 will block training.
+    _compute_loss
+        Whether or not the loss should be computed at this step.
+    _running_training_loss_param
+        Running loss, used to debug or inspect how training progresses.
+
+    """
 
     cdef long long a, b
     cdef long long row1 = word2_index * size, row2, sgn
@@ -118,13 +156,55 @@ cdef inline unsigned long long random_int32(unsigned long long *next_random) nog
     next_random[0] = (next_random[0] * <unsigned long long>25214903917ULL + 11) & 281474976710655ULL
     return this_random
 
-cdef unsigned long long fast_sentence_sg_neg(
+cdef unsigned long long w2v_fast_sentence_sg_neg(
     const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len,
     REAL_t *syn0, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work,
     unsigned long long next_random, REAL_t *word_locks,
     const int _compute_loss, REAL_t *_running_training_loss_param) nogil:
+    """Train on a single effective word from the current batch, using the Skip-Gram model.
 
+    In this model we are using a given word to predict a context word (a word that is
+    close to the one we are using as training). Negative sampling is used to speed-up
+    training.
+
+    Parameters
+    ----------
+    negative
+        Number of negative words to be sampled.
+    cum_table
+        Cumulative-distribution table using stored vocabulary word counts for
+        drawing random words (with a negative label).
+    cum_table_len
+        Length of the `cum_table`
+    syn0
+        Embeddings for the words in the vocabulary (`model.wv.vectors`)
+    syn1neg
+        Weights of the hidden layer in the model's trainable neural network.
+    size
+        Length of the embeddings.
+    word_index
+        Index of the current training word in the vocabulary.
+    word2_index
+        Index of the context word in the vocabulary.
+    alpha
+        Learning rate.
+    work
+        Private working memory for each worker.
+    next_random
+        Seed to produce the index for the next word to be randomly sampled.
+    word_locks
+        Lock factors for each word. A value of 0 will block training.
+    _compute_loss
+        Whether or not the loss should be computed at this step.
+    _running_training_loss_param
+        Running loss, used to debug or inspect how training progresses.
+
+    Returns
+    -------
+    Seed to draw the training word for the next iteration of the same routine.
+
+    """
     cdef long long a
     cdef long long row1 = word2_index * size, row2
     cdef unsigned long long modulo = 281474976710655ULL
@@ -167,13 +247,56 @@ cdef unsigned long long fast_sentence_sg_neg(
     return next_random
 
 
-cdef void fast_sentence_cbow_hs(
+cdef void w2v_fast_sentence_cbow_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, int codelens[MAX_SENTENCE_LEN],
     REAL_t *neu1, REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
     int i, int j, int k, int cbow_mean, REAL_t *word_locks,
     const int _compute_loss, REAL_t *_running_training_loss_param) nogil:
+    """Train on a single effective word from the current batch, using the CBOW method.
 
+    Using this method we train the trainable neural network by attempting to predict a
+    given word by its context (words surrounding the one we are trying to predict).
+    Hierarchical softmax method is used to speed-up training.
+
+    Parameters
+    ----------
+    word_point
+        Vector representation of the current word.
+    word_code
+        ASCII (char == uint8) representation of the current word.
+    codelens
+        Number of characters (length) for all words in the context.
+    neu1
+        Private working memory for every worker.
+    syn0
+        Embeddings for the words in the vocabulary (`model.wv.vectors`)
+    syn1
+        Weights of the hidden layer in the model's trainable neural network.
+    size
+        Length of the embeddings.
+    word2_index
+        Index of the context word in the vocabulary.
+    alpha
+        Learning rate.
+    work
+        Private working memory for each worker.
+    i
+        Index of the word to be predicted from the context.
+    j
+        Index of the word at the beginning of the context window.
+    k
+        Index of the word at the end of the context window.
+    cbow_mean
+        If 0, use the sum of the context word vectors as the prediction. If 1, use the mean.
+    word_locks
+        Lock factors for each word. A value of 0 will block training.
+    _compute_loss
+        Whether or not the loss should be computed at this step.
+    _running_training_loss_param
+        Running loss, used to debug or inspect how training progresses.
+
+    """
     cdef long long a, b
     cdef long long row2, sgn
     cdef REAL_t f, g, count, inv_count = 1.0, f_dot, lprob
@@ -222,13 +345,61 @@ cdef void fast_sentence_cbow_hs(
             our_saxpy(&size, &word_locks[indexes[m]], work, &ONE, &syn0[indexes[m] * size], &ONE)
 
 
-cdef unsigned long long fast_sentence_cbow_neg(
+cdef unsigned long long w2v_fast_sentence_cbow_neg(
     const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len, int codelens[MAX_SENTENCE_LEN],
     REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
     int i, int j, int k, int cbow_mean, unsigned long long next_random, REAL_t *word_locks,
     const int _compute_loss, REAL_t *_running_training_loss_param) nogil:
+    """Train on a single effective word from the current batch, using the CBOW method.
 
+    Using this method we train the trainable neural network by attempting to predict a
+    given word by its context (words surrounding the one we are trying to predict).
+    Negative sampling is used to speed-up training.
+
+    Parameters
+    ----------
+    negative
+        Number of negative words to be sampled.
+    cum_table
+        Cumulative-distribution table using stored vocabulary word counts for
+        drawing random words (with a negative label).
+    cum_table_len
+        Length of the `cum_table`
+    codelens
+        Number of characters (length) for all words in the context.
+    neu1
+        Private working memory for every worker.
+    syn0
+        Embeddings for the words in the vocabulary (`model.wv.vectors`)
+    syn1neg
+        Weights of the hidden layer in the model's trainable neural network.
+    size
+        Length of the embeddings.
+    indexes
+        Indexes of the context words in the vocabulary.
+    alpha
+        Learning rate.
+    work
+        Private working memory for each worker.
+    i
+        Index of the word to be predicted from the context.
+    j
+        Index of the word at the beginning of the context window.
+    k
+        Index of the word at the end of the context window.
+    cbow_mean
+        If 0, use the sum of the context word vectors as the prediction. If 1, use the mean.
+    next_random
+        Seed for the drawing the predicted word for the next iteration of the same routine.
+    word_locks
+        Lock factors for each word. A value of 0 will block training.
+    _compute_loss
+        Whether or not the loss should be computed at this step.
+    _running_training_loss_param
+        Running loss, used to debug or inspect how training progresses.
+
+    """
     cdef long long a
     cdef long long row2
     cdef unsigned long long modulo = 281474976710655ULL
@@ -293,58 +464,75 @@ cdef unsigned long long fast_sentence_cbow_neg(
     return next_random
 
 
+cdef init_w2v_config(Word2VecConfig *c, model, alpha, compute_loss, _work, _neu1=None):
+    c[0].hs = model.hs
+    c[0].negative = model.negative
+    c[0].sample = (model.vocabulary.sample != 0)
+    c[0].cbow_mean = model.cbow_mean
+    c[0].window = model.window
+    c[0].workers = model.workers
+
+    c[0].compute_loss = (1 if compute_loss else 0)
+    c[0].running_training_loss = model.running_training_loss
+
+    c[0].syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
+    c[0].word_locks = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_lockf))
+    c[0].alpha = alpha
+    c[0].size = model.wv.vector_size
+
+    if c[0].hs:
+        c[0].syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
+
+    if c[0].negative:
+        c[0].syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
+        c[0].cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
+        c[0].cum_table_len = len(model.vocabulary.cum_table)
+    if c[0].negative or c[0].sample:
+        c[0].next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
+
+    # convert Python structures to primitive types, so we can release the GIL
+    c[0].work = <REAL_t *>np.PyArray_DATA(_work)
+
+    if _neu1 is not None:
+        c[0].neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
+
+
 def train_batch_sg(model, sentences, alpha, _work, compute_loss):
-    cdef int hs = model.hs
-    cdef int negative = model.negative
-    cdef int sample = (model.vocabulary.sample != 0)
+    """Update skip-gram model by training on a batch of sentences.
 
-    cdef int _compute_loss = (1 if compute_loss == True else 0)
-    cdef REAL_t _running_training_loss = model.running_training_loss
+    Called internally from :meth:`~gensim.models.word2vec.Word2Vec.train`.
 
-    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
-    cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_lockf))
-    cdef REAL_t *work
-    cdef REAL_t _alpha = alpha
-    cdef int size = model.wv.vector_size
+    Parameters
+    ----------
+    model : :class:`~gensim.models.word2Vec.Word2Vec`
+        The Word2Vec model instance to train.
+    sentences : iterable of list of str
+        The corpus used to train the model.
+    alpha : float
+        The learning rate
+    _work : np.ndarray
+        Private working memory for each worker.
+    compute_loss : bool
+        Whether or not the training loss should be computed in this batch.
 
-    cdef int codelens[MAX_SENTENCE_LEN]
-    cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
-    cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
-    cdef int sentence_idx[MAX_SENTENCE_LEN + 1]
-    cdef int window = model.window
+    Returns
+    -------
+    int
+        Number of words in the vocabulary actually used for training (They already existed in the vocabulary
+        and were not discarded by negative sampling).
 
+    """
+    cdef Word2VecConfig c
     cdef int i, j, k
     cdef int effective_words = 0, effective_sentences = 0
     cdef int sent_idx, idx_start, idx_end
 
-    # For hierarchical softmax
-    cdef REAL_t *syn1
-    cdef np.uint32_t *points[MAX_SENTENCE_LEN]
-    cdef np.uint8_t *codes[MAX_SENTENCE_LEN]
+    init_w2v_config(&c, model, alpha, compute_loss, _work)
 
-    # For negative sampling
-    cdef REAL_t *syn1neg
-    cdef np.uint32_t *cum_table
-    cdef unsigned long long cum_table_len
-    # for sampling (negative and frequent-word downsampling)
-    cdef unsigned long long next_random
-
-    if hs:
-        syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
-
-    if negative:
-        syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
-        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
-        cum_table_len = len(model.vocabulary.cum_table)
-    if negative or sample:
-        next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
-
-    # convert Python structures to primitive types, so we can release the GIL
-    work = <REAL_t *>np.PyArray_DATA(_work)
 
     # prepare C structures so we can go "full C" and release the Python GIL
     vlookup = model.wv.vocab
-    sentence_idx[0] = 0  # indices of the first sentence always start at 0
+    c.sentence_idx[0] = 0  # indices of the first sentence always start at 0
     for sent in sentences:
         if not sent:
             continue  # ignore empty sentences; leave effective_sentences unchanged
@@ -352,13 +540,13 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
             word = vlookup[token] if token in vlookup else None
             if word is None:
                 continue  # leaving `effective_words` unchanged = shortening the sentence = expanding the window
-            if sample and word.sample_int < random_int32(&next_random):
+            if c.sample and word.sample_int < random_int32(&c.next_random):
                 continue
-            indexes[effective_words] = word.index
-            if hs:
-                codelens[effective_words] = <int>len(word.code)
-                codes[effective_words] = <np.uint8_t *>np.PyArray_DATA(word.code)
-                points[effective_words] = <np.uint32_t *>np.PyArray_DATA(word.point)
+            c.indexes[effective_words] = word.index
+            if c.hs:
+                c.codelens[effective_words] = <int>len(word.code)
+                c.codes[effective_words] = <np.uint8_t *>np.PyArray_DATA(word.code)
+                c.points[effective_words] = <np.uint32_t *>np.PyArray_DATA(word.point)
             effective_words += 1
             if effective_words == MAX_SENTENCE_LEN:
                 break  # TODO: log warning, tally overflow?
@@ -367,93 +555,75 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
         # across sentence boundaries.
         # indices of sentence number X are between <sentence_idx[X], sentence_idx[X])
         effective_sentences += 1
-        sentence_idx[effective_sentences] = effective_words
+        c.sentence_idx[effective_sentences] = effective_words
 
         if effective_words == MAX_SENTENCE_LEN:
             break  # TODO: log warning, tally overflow?
 
     # precompute "reduced window" offsets in a single randint() call
-    for i, item in enumerate(model.random.randint(0, window, effective_words)):
-        reduced_windows[i] = item
+    for i, item in enumerate(model.random.randint(0, c.window, effective_words)):
+        c.reduced_windows[i] = item
 
     # release GIL & train on all sentences
     with nogil:
         for sent_idx in range(effective_sentences):
-            idx_start = sentence_idx[sent_idx]
-            idx_end = sentence_idx[sent_idx + 1]
+            idx_start = c.sentence_idx[sent_idx]
+            idx_end = c.sentence_idx[sent_idx + 1]
             for i in range(idx_start, idx_end):
-                j = i - window + reduced_windows[i]
+                j = i - c.window + c.reduced_windows[i]
                 if j < idx_start:
                     j = idx_start
-                k = i + window + 1 - reduced_windows[i]
+                k = i + c.window + 1 - c.reduced_windows[i]
                 if k > idx_end:
                     k = idx_end
                 for j in range(j, k):
                     if j == i:
                         continue
-                    if hs:
-                        fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work, word_locks, _compute_loss, &_running_training_loss)
-                    if negative:
-                        next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random, word_locks, _compute_loss, &_running_training_loss)
+                    if c.hs:
+                        w2v_fast_sentence_sg_hs(c.points[i], c.codes[i], c.codelens[i], c.syn0, c.syn1, c.size, c.indexes[j], c.alpha, c.work, c.word_locks, c.compute_loss, &c.running_training_loss)
+                    if c.negative:
+                        c.next_random = w2v_fast_sentence_sg_neg(c.negative, c.cum_table, c.cum_table_len, c.syn0, c.syn1neg, c.size, c.indexes[i], c.indexes[j], c.alpha, c.work, c.next_random, c.word_locks, c.compute_loss, &c.running_training_loss)
 
-    model.running_training_loss = _running_training_loss
+    model.running_training_loss = c.running_training_loss
     return effective_words
 
 
 def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
-    cdef int hs = model.hs
-    cdef int negative = model.negative
-    cdef int sample = (model.vocabulary.sample != 0)
-    cdef int cbow_mean = model.cbow_mean
+    """Update CBOW model by training on a batch of sentences.
 
-    cdef int _compute_loss = (1 if compute_loss == True else 0)
-    cdef REAL_t _running_training_loss = model.running_training_loss
+    Called internally from :meth:`~gensim.models.word2vec.Word2Vec.train`.
 
-    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
-    cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_lockf))
-    cdef REAL_t *work
-    cdef REAL_t _alpha = alpha
-    cdef int size = model.wv.vector_size
+    Parameters
+    ----------
+    model : :class:`~gensim.models.word2vec.Word2Vec`
+        The Word2Vec model instance to train.
+    sentences : iterable of list of str
+        The corpus used to train the model.
+    alpha : float
+        The learning rate.
+    _work : np.ndarray
+        Private working memory for each worker.
+    _neu1 : np.ndarray
+        Private working memory for each worker.
+    compute_loss : bool
+        Whether or not the training loss should be computed in this batch.
 
-    cdef int codelens[MAX_SENTENCE_LEN]
-    cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
-    cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
-    cdef int sentence_idx[MAX_SENTENCE_LEN + 1]
-    cdef int window = model.window
-
+    Returns
+    -------
+    int
+        Number of words in the vocabulary actually used for training (They already existed in the vocabulary
+        and were not discarded by negative sampling).
+    """
+    cdef Word2VecConfig c
     cdef int i, j, k
     cdef int effective_words = 0, effective_sentences = 0
     cdef int sent_idx, idx_start, idx_end
 
-    # For hierarchical softmax
-    cdef REAL_t *syn1
-    cdef np.uint32_t *points[MAX_SENTENCE_LEN]
-    cdef np.uint8_t *codes[MAX_SENTENCE_LEN]
-
-    # For negative sampling
-    cdef REAL_t *syn1neg
-    cdef np.uint32_t *cum_table
-    cdef unsigned long long cum_table_len
-    # for sampling (negative and frequent-word downsampling)
-    cdef unsigned long long next_random
-
-    if hs:
-        syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
-
-    if negative:
-        syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
-        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
-        cum_table_len = len(model.vocabulary.cum_table)
-    if negative or sample:
-        next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
-
-    # convert Python structures to primitive types, so we can release the GIL
-    work = <REAL_t *>np.PyArray_DATA(_work)
-    neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
+    init_w2v_config(&c, model, alpha, compute_loss, _work, _neu1)
 
     # prepare C structures so we can go "full C" and release the Python GIL
     vlookup = model.wv.vocab
-    sentence_idx[0] = 0  # indices of the first sentence always start at 0
+    c.sentence_idx[0] = 0  # indices of the first sentence always start at 0
     for sent in sentences:
         if not sent:
             continue  # ignore empty sentences; leave effective_sentences unchanged
@@ -461,13 +631,13 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
             word = vlookup[token] if token in vlookup else None
             if word is None:
                 continue  # leaving `effective_words` unchanged = shortening the sentence = expanding the window
-            if sample and word.sample_int < random_int32(&next_random):
+            if c.sample and word.sample_int < random_int32(&c.next_random):
                 continue
-            indexes[effective_words] = word.index
-            if hs:
-                codelens[effective_words] = <int>len(word.code)
-                codes[effective_words] = <np.uint8_t *>np.PyArray_DATA(word.code)
-                points[effective_words] = <np.uint32_t *>np.PyArray_DATA(word.point)
+            c.indexes[effective_words] = word.index
+            if c.hs:
+                c.codelens[effective_words] = <int>len(word.code)
+                c.codes[effective_words] = <np.uint8_t *>np.PyArray_DATA(word.code)
+                c.points[effective_words] = <np.uint32_t *>np.PyArray_DATA(word.point)
             effective_words += 1
             if effective_words == MAX_SENTENCE_LEN:
                 break  # TODO: log warning, tally overflow?
@@ -476,59 +646,73 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
         # across sentence boundaries.
         # indices of sentence number X are between <sentence_idx[X], sentence_idx[X])
         effective_sentences += 1
-        sentence_idx[effective_sentences] = effective_words
+        c.sentence_idx[effective_sentences] = effective_words
 
         if effective_words == MAX_SENTENCE_LEN:
             break  # TODO: log warning, tally overflow?
 
     # precompute "reduced window" offsets in a single randint() call
-    for i, item in enumerate(model.random.randint(0, window, effective_words)):
-        reduced_windows[i] = item
+    for i, item in enumerate(model.random.randint(0, c.window, effective_words)):
+        c.reduced_windows[i] = item
 
     # release GIL & train on all sentences
     with nogil:
         for sent_idx in range(effective_sentences):
-            idx_start = sentence_idx[sent_idx]
-            idx_end = sentence_idx[sent_idx + 1]
+            idx_start = c.sentence_idx[sent_idx]
+            idx_end = c.sentence_idx[sent_idx + 1]
             for i in range(idx_start, idx_end):
-                j = i - window + reduced_windows[i]
+                j = i - c.window + c.reduced_windows[i]
                 if j < idx_start:
                     j = idx_start
-                k = i + window + 1 - reduced_windows[i]
+                k = i + c.window + 1 - c.reduced_windows[i]
                 if k > idx_end:
                     k = idx_end
-                if hs:
-                    fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, j, k, cbow_mean, word_locks, _compute_loss, &_running_training_loss)
-                if negative:
-                    next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random, word_locks, _compute_loss, &_running_training_loss)
+                if c.hs:
+                    w2v_fast_sentence_cbow_hs(c.points[i], c.codes[i], c.codelens, c.neu1, c.syn0, c.syn1, c.size, c.indexes, c.alpha, c.work, i, j, k, c.cbow_mean, c.word_locks, c.compute_loss, &c.running_training_loss)
+                if c.negative:
+                    c.next_random = w2v_fast_sentence_cbow_neg(c.negative, c.cum_table, c.cum_table_len, c.codelens, c.neu1, c.syn0, c.syn1neg, c.size, c.indexes, c.alpha, c.work, i, j, k, c.cbow_mean, c.next_random, c.word_locks, c.compute_loss, &c.running_training_loss)
 
-    model.running_training_loss = _running_training_loss
+    model.running_training_loss = c.running_training_loss
     return effective_words
 
 
-# Score is only implemented for hierarchical softmax
 def score_sentence_sg(model, sentence, _work):
+    """Obtain likelihood score for a single sentence in a fitted skip-gram representation.
 
-    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
-    cdef REAL_t *work
-    cdef int size = model.wv.vector_size
+    Notes
+    -----
+    This scoring function is only implemented for hierarchical softmax (`model.hs == 1`).
+    The model should have been trained using the skip-gram model (`model.sg` == 1`).
 
-    cdef int codelens[MAX_SENTENCE_LEN]
-    cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
-    cdef int sentence_len
-    cdef int window = model.window
+    Parameters
+    ----------
+    model : :class:`~gensim.models.word2vec.Word2Vec`
+        The trained model. It **MUST** have been trained using hierarchical softmax and the skip-gram algorithm.
+    sentence : list of str
+        The words comprising the sentence to be scored.
+    _work : np.ndarray
+        Private working memory for each worker.
+
+    Returns
+    -------
+    float
+        The probability assigned to this sentence by the Skip-Gram model.
+
+    """
+    cdef Word2VecConfig c
+    c.syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
+    c.size = model.wv.vector_size
+
+    c.window = model.window
 
     cdef int i, j, k
     cdef long result = 0
+    cdef int sentence_len
 
-    cdef REAL_t *syn1
-    cdef np.uint32_t *points[MAX_SENTENCE_LEN]
-    cdef np.uint8_t *codes[MAX_SENTENCE_LEN]
-
-    syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
+    c.syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
 
     # convert Python structures to primitive types, so we can release the GIL
-    work = <REAL_t *>np.PyArray_DATA(_work)
+    c.work = <REAL_t *>np.PyArray_DATA(_work)
 
     vlookup = model.wv.vocab
     i = 0
@@ -536,10 +720,10 @@ def score_sentence_sg(model, sentence, _work):
         word = vlookup[token] if token in vlookup else None
         if word is None:
             continue  # should drop the
-        indexes[i] = word.index
-        codelens[i] = <int>len(word.code)
-        codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
-        points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
+        c.indexes[i] = word.index
+        c.codelens[i] = <int>len(word.code)
+        c.codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
+        c.points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
         result += 1
         i += 1
         if i == MAX_SENTENCE_LEN:
@@ -547,24 +731,24 @@ def score_sentence_sg(model, sentence, _work):
     sentence_len = i
 
     # release GIL & train on the sentence
-    work[0] = 0.0
+    c.work[0] = 0.0
 
     with nogil:
         for i in range(sentence_len):
-            if codelens[i] == 0:
+            if c.codelens[i] == 0:
                 continue
-            j = i - window
+            j = i - c.window
             if j < 0:
                 j = 0
-            k = i + window + 1
+            k = i + c.window + 1
             if k > sentence_len:
                 k = sentence_len
             for j in range(j, k):
-                if j == i or codelens[j] == 0:
+                if j == i or c.codelens[j] == 0:
                     continue
-                score_pair_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], work)
+                score_pair_sg_hs(c.points[i], c.codes[i], c.codelens[i], c.syn0, c.syn1, c.size, c.indexes[j], c.work)
 
-    return work[0]
+    return c.work[0]
 
 cdef void score_pair_sg_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
@@ -586,32 +770,45 @@ cdef void score_pair_sg_hs(
         work[0] += f
 
 def score_sentence_cbow(model, sentence, _work, _neu1):
+    """Obtain likelihood score for a single sentence in a fitted CBOW representation.
 
-    cdef int cbow_mean = model.cbow_mean
+    Notes
+    -----
+    This scoring function is only implemented for hierarchical softmax (`model.hs == 1`).
+    The model should have been trained using the skip-gram model (`model.cbow` == 1`).
 
-    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
-    cdef REAL_t *work
-    cdef REAL_t *neu1
-    cdef int size = model.wv.vector_size
+    Parameters
+    ----------
+    model : :class:`~gensim.models.word2vec.Word2Vec`
+        The trained model. It **MUST** have been trained using hierarchical softmax and the CBOW algorithm.
+    sentence : list of str
+        The words comprising the sentence to be scored.
+    _work : np.ndarray
+        Private working memory for each worker.
+    _neu1 : np.ndarray
+        Private working memory for each worker.
 
-    cdef int codelens[MAX_SENTENCE_LEN]
-    cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
-    cdef int sentence_len
-    cdef int window = model.window
+    Returns
+    -------
+    float
+        The probability assigned to this sentence by the Skip-Gram model.
+
+    """
+    cdef Word2VecConfig c
+
+    c.cbow_mean = model.cbow_mean
+    c.syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
+    c.size = model.wv.vector_size
+    c.window = model.window
 
     cdef int i, j, k
     cdef long result = 0
 
-    # For hierarchical softmax
-    cdef REAL_t *syn1
-    cdef np.uint32_t *points[MAX_SENTENCE_LEN]
-    cdef np.uint8_t *codes[MAX_SENTENCE_LEN]
-
-    syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
+    c.syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
 
     # convert Python structures to primitive types, so we can release the GIL
-    work = <REAL_t *>np.PyArray_DATA(_work)
-    neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
+    c.work = <REAL_t *>np.PyArray_DATA(_work)
+    c.neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
 
     vlookup = model.wv.vocab
     i = 0
@@ -619,10 +816,10 @@ def score_sentence_cbow(model, sentence, _work, _neu1):
         word = vlookup[token] if token in vlookup else None
         if word is None:
             continue  # for score, should this be a default negative value?
-        indexes[i] = word.index
-        codelens[i] = <int>len(word.code)
-        codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
-        points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
+        c.indexes[i] = word.index
+        c.codelens[i] = <int>len(word.code)
+        c.codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
+        c.points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
         result += 1
         i += 1
         if i == MAX_SENTENCE_LEN:
@@ -630,20 +827,20 @@ def score_sentence_cbow(model, sentence, _work, _neu1):
     sentence_len = i
 
     # release GIL & train on the sentence
-    work[0] = 0.0
+    c.work[0] = 0.0
     with nogil:
         for i in range(sentence_len):
-            if codelens[i] == 0:
+            if c.codelens[i] == 0:
                 continue
-            j = i - window
+            j = i - c.window
             if j < 0:
                 j = 0
-            k = i + window + 1
+            k = i + c.window + 1
             if k > sentence_len:
                 k = sentence_len
-            score_pair_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, work, i, j, k, cbow_mean)
+            score_pair_cbow_hs(c.points[i], c.codes[i], c.codelens, c.neu1, c.syn0, c.syn1, c.size, c.indexes, c.work, i, j, k, c.cbow_mean)
 
-    return work[0]
+    return c.work[0]
 
 cdef void score_pair_cbow_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, int codelens[MAX_SENTENCE_LEN],
@@ -681,9 +878,15 @@ cdef void score_pair_cbow_hs(
 
 
 def init():
-    """
-    Precompute function `sigmoid(x) = 1 / (1 + exp(-x))`, for x values discretized
-    into table EXP_TABLE.  Also calculate log(sigmoid(x)) into LOG_TABLE.
+    """Precompute function `sigmoid(x) = 1 / (1 + exp(-x))`, for x values discretized into table EXP_TABLE.
+     Also calculate log(sigmoid(x)) into LOG_TABLE.
+
+    Returns
+    -------
+    {0, 1, 2}
+        Enumeration to signify underlying data type returned by the BLAS dot product calculation.
+        0 signifies double, 1 signifies double, and 2 signifies that custom cython loops were used
+        instead of BLAS.
 
     """
     global our_dot
@@ -706,11 +909,11 @@ def init():
     # check whether sdot returns double or float
     d_res = dsdot(&size, x, &ONE, y, &ONE)
     p_res = <float *>&d_res
-    if (abs(d_res - expected) < 0.0001):
+    if abs(d_res - expected) < 0.0001:
         our_dot = our_dot_double
         our_saxpy = saxpy
         return 0  # double
-    elif (abs(p_res[0] - expected) < 0.0001):
+    elif abs(p_res[0] - expected) < 0.0001:
         our_dot = our_dot_float
         our_saxpy = saxpy
         return 1  # float

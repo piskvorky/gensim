@@ -12,19 +12,22 @@ For theoretical background on Random Projections, see [1]_.
 
 Examples
 --------
->>> from gensim.models import RpModel
->>> from gensim.corpora import Dictionary
->>> from gensim.test.utils import common_texts, temporary_file
->>>
->>> dictionary = Dictionary(common_texts)  # fit dictionary
->>> corpus = [dictionary.doc2bow(text) for text in common_texts]  # convert texts to BoW format
->>>
->>> model = RpModel(corpus, id2word=dictionary)  # fit model
->>> result = model[corpus[3]]  # apply model to document, result is vector in BoW format
->>>
->>> with temporary_file("model_file") as fname:
-...     model.save(fname)  # save model to file
-...     loaded_model = RpModel.load(fname)  # load model
+
+.. sourcecode:: pycon
+
+    >>> from gensim.models import RpModel
+    >>> from gensim.corpora import Dictionary
+    >>> from gensim.test.utils import common_texts, temporary_file
+    >>>
+    >>> dictionary = Dictionary(common_texts)  # fit dictionary
+    >>> corpus = [dictionary.doc2bow(text) for text in common_texts]  # convert texts to BoW format
+    >>>
+    >>> model = RpModel(corpus, id2word=dictionary)  # fit model
+    >>> result = model[corpus[3]]  # apply model to document, result is vector in BoW format
+    >>>
+    >>> with temporary_file("model_file") as fname:
+    ...     model.save(fname)  # save model to file
+    ...     loaded_model = RpModel.load(fname)  # load model
 
 
 References
@@ -41,7 +44,7 @@ import numpy as np
 from gensim import interfaces, matutils, utils
 
 
-logger = logging.getLogger('gensim.models.rpmodel')
+logger = logging.getLogger(__name__)
 
 
 class RpModel(interfaces.TransformationABC):
@@ -114,15 +117,20 @@ class RpModel(interfaces.TransformationABC):
 
         Examples
         ----------
-        >>> from gensim.models import RpModel
-        >>> from gensim.corpora import Dictionary
-        >>> from gensim.test.utils import common_texts
-        >>>
-        >>> dictionary = Dictionary(common_texts)  # fit dictionary
-        >>> corpus = [dictionary.doc2bow(text) for text in common_texts]  # convert texts to BoW format
-        >>>
-        >>> model = RpModel(corpus, id2word=dictionary)  # fit model
-        >>> result = model[corpus[0]]  # apply model to document, result is vector in BoW format, i.e. [(1, 0.3), ... ]
+
+        .. sourcecode:: pycon
+
+            >>> from gensim.models import RpModel
+            >>> from gensim.corpora import Dictionary
+            >>> from gensim.test.utils import common_texts
+            >>>
+            >>> dictionary = Dictionary(common_texts)  # fit dictionary
+            >>> corpus = [dictionary.doc2bow(text) for text in common_texts]  # convert texts to BoW format
+            >>>
+            >>> model = RpModel(corpus, id2word=dictionary)  # fit model
+            >>>
+            >>> # apply model to document, result is vector in BoW format, i.e. [(1, 0.3), ... ]
+            >>> result = model[corpus[0]]
 
         """
         # if the input vector is in fact a corpus, return a transformed corpus as result

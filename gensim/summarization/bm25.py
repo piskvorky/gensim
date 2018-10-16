@@ -16,13 +16,16 @@ descibed in [1]_, also you may check Wikipedia page [2]_.
 
 Examples
 --------
->>> from gensim.summarization.bm25 import get_bm25_weights
->>> corpus = [
-...     ["black", "cat", "white", "cat"],
-...     ["cat", "outer", "space"],
-...     ["wag", "dog"]
-... ]
->>> result = get_bm25_weights(corpus)
+
+.. sourcecode:: pycon
+
+    >>> from gensim.summarization.bm25 import get_bm25_weights
+    >>> corpus = [
+    ...     ["black", "cat", "white", "cat"],
+    ...     ["cat", "outer", "space"],
+    ...     ["wag", "dog"]
+    ... ]
+    >>> result = get_bm25_weights(corpus, n_jobs=-1)
 
 
 Data:
@@ -37,7 +40,9 @@ Data:
 import math
 from six import iteritems
 from six.moves import xrange
-
+from functools import partial
+from multiprocessing import Pool
+from ..utils import effective_n_jobs
 
 PARAM_K1 = 1.5
 PARAM_B = 0.75
@@ -152,7 +157,33 @@ class BM25(object):
         return scores
 
 
-def get_bm25_weights(corpus):
+def _get_scores(bm25, document, average_idf):
+    """Helper function for retrieving bm25 scores of given `document` in parallel
+    in relation to every item in corpus.
+
+    Parameters
+    ----------
+    bm25 : BM25 object
+        BM25 object fitted on the corpus where documents are retrieved.
+    document : list of str
+        Document to be scored.
+    average_idf : float
+        Average idf in corpus.
+
+    Returns
+    -------
+    list of float
+        BM25 scores.
+
+    """
+    scores = []
+    for index in xrange(bm25.corpus_size):
+        score = bm25.get_score(document, index, average_idf)
+        scores.append(score)
+    return scores
+
+
+def get_bm25_weights(corpus, n_jobs=1):
     """Returns BM25 scores (weights) of documents in corpus.
     Each document has to be weighted with every document in given corpus.
 
@@ -160,6 +191,8 @@ def get_bm25_weights(corpus):
     ----------
     corpus : list of list of str
         Corpus of documents.
+    n_jobs : int
+        The number of processes to use for computing bm25.
 
     Returns
     -------
@@ -168,21 +201,29 @@ def get_bm25_weights(corpus):
 
     Examples
     --------
-    >>> from gensim.summarization.bm25 import get_bm25_weights
-    >>> corpus = [
-    ...     ["black", "cat", "white", "cat"],
-    ...     ["cat", "outer", "space"],
-    ...     ["wag", "dog"]
-    ... ]
-    >>> result = get_bm25_weights(corpus)
+    .. sourcecode:: pycon
+
+        >>> from gensim.summarization.bm25 import get_bm25_weights
+        >>> corpus = [
+        ...     ["black", "cat", "white", "cat"],
+        ...     ["cat", "outer", "space"],
+        ...     ["wag", "dog"]
+        ... ]
+        >>> result = get_bm25_weights(corpus, n_jobs=-1)
 
     """
     bm25 = BM25(corpus)
     average_idf = sum(float(val) for val in bm25.idf.values()) / len(bm25.idf)
 
-    weights = []
-    for doc in corpus:
-        scores = bm25.get_scores(doc, average_idf)
-        weights.append(scores)
+    n_processes = effective_n_jobs(n_jobs)
+    if n_processes == 1:
+        weights = [bm25.get_scores(doc, average_idf) for doc in corpus]
+        return weights
+
+    get_score = partial(_get_scores, bm25, average_idf=average_idf)
+    pool = Pool(n_processes)
+    weights = pool.map(get_score, corpus)
+    pool.close()
+    pool.join()
 
     return weights

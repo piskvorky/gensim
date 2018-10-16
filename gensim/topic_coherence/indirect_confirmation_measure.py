@@ -66,22 +66,24 @@ def word2vec_similarity(segmented_topics, accumulator, with_std=False, with_supp
 
     Examples
     --------
-    >>> import numpy as np
-    >>> from gensim.corpora.dictionary import Dictionary
-    >>> from gensim.topic_coherence import indirect_confirmation_measure
-    >>> from gensim.topic_coherence import text_analysis
-    >>>
-    >>> # create segmentation
-    >>> segmentation = [[(1, np.array([1, 2])), (2, np.array([1, 2]))]]
-    >>>
-    >>> # create accumulator
-    >>> dictionary = Dictionary()
-    >>> dictionary.id2token = {1: 'fake', 2: 'tokens'}
-    >>> accumulator = text_analysis.WordVectorsAccumulator({1, 2}, dictionary)
-    >>> _ = accumulator.accumulate([['fake', 'tokens'],['tokens', 'fake']], 5)
-    >>>
-    >>> # should be (0.726752426218 0.00695475919227)
-    >>> mean, std = indirect_confirmation_measure.word2vec_similarity(segmentation, accumulator, with_std=True)[0]
+    .. sourcecode:: pycon
+
+        >>> import numpy as np
+        >>> from gensim.corpora.dictionary import Dictionary
+        >>> from gensim.topic_coherence import indirect_confirmation_measure
+        >>> from gensim.topic_coherence import text_analysis
+        >>>
+        >>> # create segmentation
+        >>> segmentation = [[(1, np.array([1, 2])), (2, np.array([1, 2]))]]
+        >>>
+        >>> # create accumulator
+        >>> dictionary = Dictionary()
+        >>> dictionary.id2token = {1: 'fake', 2: 'tokens'}
+        >>> accumulator = text_analysis.WordVectorsAccumulator({1, 2}, dictionary)
+        >>> _ = accumulator.accumulate([['fake', 'tokens'], ['tokens', 'fake']], 5)
+        >>>
+        >>> # should be (0.726752426218 0.00695475919227)
+        >>> mean, std = indirect_confirmation_measure.word2vec_similarity(segmentation, accumulator, with_std=True)[0]
 
     """
     topic_coherences = []
@@ -141,25 +143,27 @@ def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr',
 
     Examples
     --------
-    >>> from gensim.corpora.dictionary import Dictionary
-    >>> from gensim.topic_coherence import indirect_confirmation_measure, text_analysis
-    >>> import numpy as np
-    >>>
-    >>> # create accumulator
-    >>> dictionary = Dictionary()
-    >>> dictionary.id2token = {1: 'fake', 2: 'tokens'}
-    >>> accumulator = text_analysis.InvertedIndexAccumulator({1, 2}, dictionary)
-    >>> accumulator._inverted_index = {0: {2, 3, 4}, 1: {3, 5}}
-    >>> accumulator._num_docs = 5
-    >>>
-    >>> # create topics
-    >>> topics = [np.array([1, 2])]
-    >>>
-    >>> # create segmentation
-    >>> segmentation = [[(1, np.array([1, 2])), (2, np.array([1, 2]))]]
-    >>> obtained = indirect_confirmation_measure.cosine_similarity(segmentation, accumulator, topics, 'nlr', 1)
-    >>> print obtained[0]
-    0.623018926945
+    .. sourcecode:: pycon
+
+        >>> from gensim.corpora.dictionary import Dictionary
+        >>> from gensim.topic_coherence import indirect_confirmation_measure, text_analysis
+        >>> import numpy as np
+        >>>
+        >>> # create accumulator
+        >>> dictionary = Dictionary()
+        >>> dictionary.id2token = {1: 'fake', 2: 'tokens'}
+        >>> accumulator = text_analysis.InvertedIndexAccumulator({1, 2}, dictionary)
+        >>> accumulator._inverted_index = {0: {2, 3, 4}, 1: {3, 5}}
+        >>> accumulator._num_docs = 5
+        >>>
+        >>> # create topics
+        >>> topics = [np.array([1, 2])]
+        >>>
+        >>> # create segmentation
+        >>> segmentation = [[(1, np.array([1, 2])), (2, np.array([1, 2]))]]
+        >>> obtained = indirect_confirmation_measure.cosine_similarity(segmentation, accumulator, topics, 'nlr', 1)
+        >>> print(obtained[0])
+        0.623018926945
 
     """
     context_vectors = ContextVectorComputer(measure, topics, accumulator, gamma)
@@ -202,24 +206,26 @@ class ContextVectorComputer(object):
 
     Example
     -------
-    >>> from gensim.corpora.dictionary import Dictionary
-    >>> from gensim.topic_coherence import indirect_confirmation_measure, text_analysis
-    >>> import numpy as np
-    >>>
-    >>> # create measure, topics
-    >>> measure = 'nlr'
-    >>> topics =  [np.array([1, 2])]
-    >>>
-    >>> # create accumulator
-    >>> dictionary = Dictionary()
-    >>> dictionary.id2token = {1: 'fake', 2: 'tokens'}
-    >>> accumulator = text_analysis.WordVectorsAccumulator({1, 2}, dictionary)
-    >>> _ = accumulator.accumulate([['fake', 'tokens'],['tokens', 'fake']], 5)
-    >>> cont_vect_comp = indirect_confirmation_measure.ContextVectorComputer(measure, topics, accumulator, 1)
-    >>> cont_vect_comp.mapping
-    {1: 0, 2: 1}
-    >>> cont_vect_comp.vocab_size
-    2
+    .. sourcecode:: pycon
+
+        >>> from gensim.corpora.dictionary import Dictionary
+        >>> from gensim.topic_coherence import indirect_confirmation_measure, text_analysis
+        >>> import numpy as np
+        >>>
+        >>> # create measure, topics
+        >>> measure = 'nlr'
+        >>> topics = [np.array([1, 2])]
+        >>>
+        >>> # create accumulator
+        >>> dictionary = Dictionary()
+        >>> dictionary.id2token = {1: 'fake', 2: 'tokens'}
+        >>> accumulator = text_analysis.WordVectorsAccumulator({1, 2}, dictionary)
+        >>> _ = accumulator.accumulate([['fake', 'tokens'], ['tokens', 'fake']], 5)
+        >>> cont_vect_comp = indirect_confirmation_measure.ContextVectorComputer(measure, topics, accumulator, 1)
+        >>> cont_vect_comp.mapping
+        {1: 0, 2: 1}
+        >>> cont_vect_comp.vocab_size
+        2
 
     """
 

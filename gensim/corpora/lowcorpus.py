@@ -60,20 +60,22 @@ class LowCorpus(IndexedCorpus):
 
     Examples
     --------
-    >>> from gensim.test.utils import datapath, get_tmpfile, common_texts
-    >>> from gensim.corpora import LowCorpus
-    >>> from gensim.corpora import Dictionary
-    >>>
-    >>> # Prepare needed data
-    >>> dictionary = Dictionary(common_texts)
-    >>> corpus = [dictionary.doc2bow(doc) for doc in common_texts]
-    >>>
-    >>> # Write corpus in GibbsLda++ format to disk
-    >>> output_fname = get_tmpfile("corpus.low")
-    >>> LowCorpus.serialize(output_fname, corpus, dictionary)
-    >>>
-    >>> # Read corpus
-    >>> loaded_corpus = LowCorpus(output_fname)
+    .. sourcecode:: pycon
+
+        >>> from gensim.test.utils import get_tmpfile, common_texts
+        >>> from gensim.corpora import LowCorpus
+        >>> from gensim.corpora import Dictionary
+        >>>
+        >>> # Prepare needed data
+        >>> dictionary = Dictionary(common_texts)
+        >>> corpus = [dictionary.doc2bow(doc) for doc in common_texts]
+        >>>
+        >>> # Write corpus in GibbsLda++ format to disk
+        >>> output_fname = get_tmpfile("corpus.low")
+        >>> LowCorpus.serialize(output_fname, corpus, dictionary)
+        >>>
+        >>> # Read corpus
+        >>> loaded_corpus = LowCorpus(output_fname)
 
     """
     def __init__(self, fname, id2word=None, line2words=split_on_space):
@@ -263,14 +265,17 @@ class LowCorpus(IndexedCorpus):
 
         Examples
         --------
-        >>> from gensim.test.utils import datapath
-        >>> from gensim.corpora import LowCorpus
-        >>>
-        >>> data = LowCorpus(datapath("testcorpus.low"))
-        >>> data.docbyoffset(1)  # end of first line
-        []
-        >>> data.docbyoffset(2)  # start of second line
-        [(0, 1), (3, 1), (4, 1)]
+
+        .. sourcecode:: pycon
+
+            >>> from gensim.test.utils import datapath
+            >>> from gensim.corpora import LowCorpus
+            >>>
+            >>> data = LowCorpus(datapath("testcorpus.low"))
+            >>> data.docbyoffset(1)  # end of first line
+            []
+            >>> data.docbyoffset(2)  # start of second line
+            [(0, 1), (3, 1), (4, 1)]
 
         """
         with utils.smart_open(self.fname) as f:

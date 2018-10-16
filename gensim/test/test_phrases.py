@@ -13,6 +13,8 @@ import unittest
 
 import six
 
+import numpy as np
+
 from gensim.utils import to_unicode
 from gensim.models.phrases import SentenceAnalyzer, Phrases, Phraser
 from gensim.models.phrases import pseudocorpus, original_scorer
@@ -148,7 +150,7 @@ class PhrasesData:
 
 
 class PhrasesCommon:
-    """ Tests that need to be run for both Prases and Phraser classes."""
+    """ Tests that need to be run for both Phrases and Phraser classes."""
 
     def setUp(self):
         self.bigram = Phrases(
@@ -159,6 +161,16 @@ class PhrasesCommon:
             self.sentences, min_count=1, threshold=1, common_terms=self.common_terms)
         self.bigram_unicode = Phrases(
             self.unicode_sentences, min_count=1, threshold=1, common_terms=self.common_terms)
+
+    def testEmptyPhrasifiedSentencesIterator(self):
+        bigram_phrases = Phrases(self.sentences)
+        bigram_phraser = Phraser(bigram_phrases)
+        trigram_phrases = Phrases(bigram_phraser[self.sentences])
+        trigram_phraser = Phraser(trigram_phrases)
+        trigrams = trigram_phraser[bigram_phraser[self.sentences]]
+        fst, snd = list(trigrams), list(trigrams)
+        self.assertEqual(fst, snd)
+        self.assertNotEqual(snd, [])
 
     def testEmptyInputsOnBigramConstruction(self):
         """Test that empty inputs don't throw errors and return the expected result."""
@@ -212,6 +224,20 @@ class PhrasesCommon:
         bigram2_seen = False
 
         for s in self.bigram[self.gen_sentences()]:
+            if not bigram1_seen and self.bigram1 in s:
+                bigram1_seen = True
+            if not bigram2_seen and self.bigram2 in s:
+                bigram2_seen = True
+            if bigram1_seen and bigram2_seen:
+                break
+        self.assertTrue(bigram1_seen and bigram2_seen)
+
+    def testBigramConstructionFromArray(self):
+        """Test Phrases bigram construction building when corpus is a numpy array"""
+        bigram1_seen = False
+        bigram2_seen = False
+
+        for s in self.bigram[np.array(self.sentences)]:
             if not bigram1_seen and self.bigram1 in s:
                 bigram1_seen = True
             if not bigram2_seen and self.bigram2 in s:

@@ -9,17 +9,19 @@ Author - Vivake Gupta (v@nano.com), optimizations and cleanup of the code by Lar
 
 Examples:
 ---------
->>> from gensim.parsing.porter import PorterStemmer
->>>
->>> p = PorterStemmer()
->>> p.stem("apple")
-'appl'
->>>
->>> p.stem_sentence("Cats and ponies have meeting")
-'cat and poni have meet'
->>>
->>> p.stem_documents(["Cats and ponies", "have meeting"])
-['cat and poni', 'have meet']
+.. sourcecode:: pycon
+
+    >>> from gensim.parsing.porter import PorterStemmer
+    >>>
+    >>> p = PorterStemmer()
+    >>> p.stem("apple")
+    'appl'
+    >>>
+    >>> p.stem_sentence("Cats and ponies have meeting")
+    'cat and poni have meet'
+    >>>
+    >>> p.stem_documents(["Cats and ponies", "have meeting"])
+    ['cat and poni', 'have meet']
 
 .. [1] Porter, 1980, An algorithm for suffix stripping, http://www.cs.odu.edu/~jbollen/IR04/readings/readings5.pdf
 .. [2] http://www.tartarus.org/~martin/PorterStemmer
@@ -62,14 +64,16 @@ class PorterStemmer(object):
 
         Examples
         --------
-        >>> from gensim.parsing.porter import PorterStemmer
-        >>> p = PorterStemmer()
-        >>> p.b = "hi"
-        >>> p._cons(1)
-        False
-        >>> p.b = "meow"
-        >>> p._cons(3)
-        True
+        .. sourcecode:: pycon
+
+            >>> from gensim.parsing.porter import PorterStemmer
+            >>> p = PorterStemmer()
+            >>> p.b = "hi"
+            >>> p._cons(1)
+            False
+            >>> p.b = "meow"
+            >>> p._cons(3)
+            True
 
         """
         ch = self.b[i]
@@ -97,12 +101,14 @@ class PorterStemmer(object):
 
         Examples
         --------
-        >>> from gensim.parsing.porter import PorterStemmer
-        >>> p = PorterStemmer()
-        >>> p.b = "<bm>aobm<ao>"
-        >>> p.j = 11
-        >>> p._m()
-        2
+        .. sourcecode:: pycon
+
+            >>> from gensim.parsing.porter import PorterStemmer
+            >>> p = PorterStemmer()
+            >>> p.b = "<bm>aobm<ao>"
+            >>> p.j = 11
+            >>> p._m()
+            2
 
         """
         i = 0
@@ -140,19 +146,18 @@ class PorterStemmer(object):
 
         Examples
         --------
-        >>> from gensim.parsing.porter import PorterStemmer
-        >>> p = PorterStemmer()
-        >>> p.b = "gnsm"
-        >>> p.j = 3
-        >>> p._vowelinstem()
-        False
+        .. sourcecode:: pycon
 
-        >>> from gensim.parsing.porter import PorterStemmer
-        >>> p = PorterStemmer()
-        >>> p.b = "gensim"
-        >>> p.j = 5
-        >>> p._vowelinstem()
-        True
+            >>> from gensim.parsing.porter import PorterStemmer
+            >>> p = PorterStemmer()
+            >>> p.b = "gnsm"
+            >>> p.j = 3
+            >>> p._vowelinstem()
+            False
+            >>> p.b = "gensim"
+            >>> p.j = 5
+            >>> p._vowelinstem()
+            True
 
         """
         return not all(self._cons(i) for i in xrange(self.j + 1))
@@ -171,19 +176,18 @@ class PorterStemmer(object):
 
         Examples
         --------
-        >>> from gensim.parsing.porter import PorterStemmer
-        >>> p = PorterStemmer()
-        >>> p.b = "real"
-        >>> p.j = 3
-        >>> p._doublec(3)
-        False
+        .. sourcecode:: pycon
 
-        >>> from gensim.parsing.porter import PorterStemmer
-        >>> p = PorterStemmer()
-        >>> p.b = "really"
-        >>> p.j = 5
-        >>> p._doublec(4)
-        True
+            >>> from gensim.parsing.porter import PorterStemmer
+            >>> p = PorterStemmer()
+            >>> p.b = "real"
+            >>> p.j = 3
+            >>> p._doublec(3)
+            False
+            >>> p.b = "really"
+            >>> p.j = 5
+            >>> p._doublec(4)
+            True
 
         """
         return j > 0 and self.b[j] == self.b[j - 1] and self._cons(j)
@@ -204,26 +208,22 @@ class PorterStemmer(object):
 
         Examples
         --------
-        >>> from gensim.parsing.porter import PorterStemmer
-        >>> p = PorterStemmer()
-        >>> p.b = "lib"
-        >>> p.j = 2
-        >>> p._cvc(2)
-        True
+        .. sourcecode:: pycon
 
-        >>> from gensim.parsing.porter import PorterStemmer
-        >>> p = PorterStemmer()
-        >>> p.b = "dll"
-        >>> p.j = 2
-        >>> p._cvc(2)
-        False
-
-        >>> from gensim.parsing.porter import PorterStemmer
-        >>> p = PorterStemmer()
-        >>> p.b = "wow"
-        >>> p.j = 2
-        >>> p._cvc(2)
-        False
+            >>> from gensim.parsing.porter import PorterStemmer
+            >>> p = PorterStemmer()
+            >>> p.b = "lib"
+            >>> p.j = 2
+            >>> p._cvc(2)
+            True
+            >>> p.b = "dll"
+            >>> p.j = 2
+            >>> p._cvc(2)
+            False
+            >>> p.b = "wow"
+            >>> p.j = 2
+            >>> p._cvc(2)
+            False
 
         """
         if i < 2 or not self._cons(i) or self._cons(i - 1) or not self._cons(i - 2):
@@ -243,13 +243,15 @@ class PorterStemmer(object):
 
         Examples
         --------
-        >>> from gensim.parsing.porter import PorterStemmer
-        >>> p = PorterStemmer()
-        >>> p.b = "cowboy"
-        >>> p.j = 5
-        >>> p.k = 2
-        >>> p._ends("cow")
-        True
+        .. sourcecode:: pycon
+
+            >>> from gensim.parsing.porter import PorterStemmer
+            >>> p = PorterStemmer()
+            >>> p.b = "cowboy"
+            >>> p.j = 5
+            >>> p.k = 2
+            >>> p._ends("cow")
+            True
 
         """
         if s[-1] != self.b[self.k]:  # tiny speed-up
@@ -493,10 +495,13 @@ class PorterStemmer(object):
 
         Examples
         --------
-        >>> from gensim.parsing.porter import PorterStemmer
-        >>> p = PorterStemmer()
-        >>> p.stem("ponies")
-        'poni'
+
+        .. sourcecode:: pycon
+
+            >>> from gensim.parsing.porter import PorterStemmer
+            >>> p = PorterStemmer()
+            >>> p.stem("ponies")
+            'poni'
 
         """
         w = w.lower()
@@ -535,10 +540,12 @@ class PorterStemmer(object):
 
         Examples
         --------
-        >>> from gensim.parsing.porter import PorterStemmer
-        >>> p = PorterStemmer()
-        >>> p.stem_sentence("Wow very nice woman with apple")
-        'wow veri nice woman with appl'
+        .. sourcecode:: pycon
+
+            >>> from gensim.parsing.porter import PorterStemmer
+            >>> p = PorterStemmer()
+            >>> p.stem_sentence("Wow very nice woman with apple")
+            'wow veri nice woman with appl'
 
         """
         return " ".join(self.stem(x) for x in txt.split())
@@ -558,10 +565,12 @@ class PorterStemmer(object):
 
         Examples
         --------
-        >>> from gensim.parsing.porter import PorterStemmer
-        >>> p = PorterStemmer()
-        >>> p.stem_documents(["Have a very nice weekend", "Have a very nice weekend"])
-        ['have a veri nice weekend', 'have a veri nice weekend']
+        .. sourcecode:: pycon
+
+            >>> from gensim.parsing.porter import PorterStemmer
+            >>> p = PorterStemmer()
+            >>> p.stem_documents(["Have a very nice weekend", "Have a very nice weekend"])
+            ['have a veri nice weekend', 'have a veri nice weekend']
 
         """
         return [self.stem_sentence(x) for x in docs]

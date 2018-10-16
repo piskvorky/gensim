@@ -95,6 +95,12 @@ class TestKeywordsTest(unittest.TestCase):
         kwds = keywords(text, words=1, split=True)
         self.assertTrue(len(kwds))
 
+    def test_text_keywords_without_graph_edges(self):
+        # regression test, we get graph with no edges on this text
+        text = 'Sitio construcción. Estaremos línea.'
+        kwds = keywords(text, deacc=False, scores=True)
+        self.assertFalse(len(kwds))
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)

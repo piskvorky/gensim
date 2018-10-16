@@ -5,18 +5,47 @@
 # Copyright (C) 2018 RaRe Technologies s.r.o.
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""Contains base classes required for implementing any2vec algorithms."""
+"""This module contains base classes required for implementing \*2vec algorithms.
+
+The class hierarchy is designed to facilitate adding more concrete implementations for creating embeddings.
+In the most general case, the purpose of this class is to transform an arbitrary representation to a numerical vector
+(embedding). This is represented by the base :class:`~gensim.models.base_any2vec.BaseAny2VecModel`. The input space in
+most cases (in the NLP field at least) is plain text. For this reason, we enrich the class hierarchy with the abstract
+:class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel` to be used as a base for models where the input
+space is text.
+
+Notes
+-----
+Even though this is the usual case, not all embeddings transform text, such as the
+:class:`~gensim.models.poincare.PoincareModel` that embeds graphs.
+
+See Also
+--------
+:class:`~gensim.models.word2vec.Word2Vec`.
+    Word2Vec model - embeddings for words.
+:class:`~gensim.models.fasttext.FastText`.
+    FastText model - embeddings for words (ngram-based).
+:class:`~gensim.models.doc2vec.Doc2Vec`.
+    Doc2Vec model - embeddings for documents.
+:class:`~gensim.models.poincare.PoincareModel`
+    Poincare model - embeddings for graphs.
+
+"""
+
 from gensim import utils
 import logging
 from timeit import default_timer
 import threading
 from six.moves import xrange
-from six import itervalues
+from six import itervalues, string_types
 from gensim import matutils
 from numpy import float32 as REAL, ones, random, dtype, zeros
 from types import GeneratorType
 from gensim.utils import deprecated
 import warnings
+import os
+import copy
+
 
 try:
     from queue import Queue
@@ -27,18 +56,40 @@ logger = logging.getLogger(__name__)
 
 
 class BaseAny2VecModel(utils.SaveLoad):
-    """Base class for training, using and evaluating any2vec model.
-    Contains implementation for multi-threaded training.
+    """Base class for training, using and evaluating \*2vec model.
+
+    Contains implementation for multi-threaded training. The purpose of this class is to provide a
+    reference interface for concrete embedding implementations, whether the input space is a corpus
+    of words, documents or anything else. At the same time, functionality that we expect to be common
+    for those implementations is provided here to avoid code duplication.
+
+    In the special but usual case where the input space consists of words, a more specialized layer
+    is provided, consider inheriting from :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
+
+    Notes
+    -----
+    A subclass should initialize the following attributes:
+
+    * self.kv - keyed vectors in model (see :class:`~gensim.models.keyedvectors.Word2VecKeyedVectors` as example)
+    * self.vocabulary - vocabulary (see :class:`~gensim.models.word2vec.Word2VecVocab` as example)
+    * self.trainables - internal matrices (see :class:`~gensim.models.word2vec.Word2VecTrainables` as example)
 
     """
-
     def __init__(self, workers=3, vector_size=100, epochs=5, callbacks=(), batch_words=10000):
-        """Initialize model parameters.
+        """
 
-        A subclass should initialize the following attributes:
-        - self.kv (instance of concrete implementation of `BaseKeyedVectors` interface)
-        - self.vocabulary (instance of concrete implementation of `BaseVocabBuilder` abstract class)
-        - self.trainables (instance of concrete implementation of `BaseTrainables` abstract class)
+        Parameters
+        ----------
+        workers : int, optional
+            Number of working threads, used for multithreading.
+        vector_size : int, optional
+            Dimensionality of the feature vectors.
+        epochs : int, optional
+            Number of iterations (epochs) of training through the corpus.
+        callbacks : list of :class:`~gensim.models.callbacks.CallbackAny2Vec`, optional
+            List of callbacks that need to be executed/run at specific stages during training.
+        batch_words : int, optional
+            Number of words to be processed by a single job.
 
         """
         self.vector_size = int(vector_size)
@@ -55,7 +106,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         raise NotImplementedError()
 
     def _set_train_params(self, **kwargs):
-        """Set model parameters required for training"""
+        """Set model parameters required for training."""
         raise NotImplementedError()
 
     def _update_job_params(self, job_params, epoch_progress, cur_epoch):
@@ -74,6 +125,10 @@ class BaseAny2VecModel(utils.SaveLoad):
         """Resets certain properties of the model post training. eg. `keyedvectors.vectors_norm`."""
         raise NotImplementedError()
 
+    def _do_train_epoch(self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
+                        total_examples=None, total_words=None, **kwargs):
+        raise NotImplementedError()
+
     def _do_train_job(self, data_iterable, job_parameters, thread_private_mem):
         """Train a single batch. Return 2-tuple `(effective word count, total word count)`."""
         raise NotImplementedError()
@@ -82,8 +137,65 @@ class BaseAny2VecModel(utils.SaveLoad):
         """Check that the training parameters provided make sense. e.g. raise error if `epochs` not provided."""
         raise NotImplementedError()
 
+    def _check_input_data_sanity(self, data_iterable=None, corpus_file=None):
+        """Check that only one argument is None."""
+        if not (data_iterable is None) ^ (corpus_file is None):
+            raise ValueError("You must provide only one of singlestream or corpus_file arguments.")
+
+    def _worker_loop_corpusfile(self, corpus_file, thread_id, offset, cython_vocab, progress_queue, cur_epoch=0,
+                                total_examples=None, total_words=None, **kwargs):
+        """Train the model on a `corpus_file` in LineSentence format.
+
+        This function will be called in parallel by multiple workers (threads or processes) to make
+        optimal use of multicore machines.
+
+        Parameters
+        ----------
+        corpus_file : str
+            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+        thread_id : int
+            Thread index starting from 0 to `number of workers - 1`.
+        offset : int
+            Offset (in bytes) in the `corpus_file` for particular worker.
+        cython_vocab : :class:`~gensim.models.word2vec_inner.CythonVocab`
+            Copy of the vocabulary in order to access it without GIL.
+        progress_queue : Queue of (int, int, int)
+            A queue of progress reports. Each report is represented as a tuple of these 3 elements:
+                * Size of data chunk processed, for example number of sentences in the corpus chunk.
+                * Effective word count used in training (after ignoring unknown words and trimming the sentence length).
+                * Total word count used in training.
+        **kwargs : object
+            Additional key word parameters for the specific model inheriting from this class.
+
+        """
+        thread_private_mem = self._get_thread_working_mem()
+
+        examples, tally, raw_tally = self._do_train_epoch(
+            corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
+            total_examples=total_examples, total_words=total_words, **kwargs)
+
+        progress_queue.put((examples, tally, raw_tally))
+        progress_queue.put(None)
+
     def _worker_loop(self, job_queue, progress_queue):
-        """Train the model, lifting lists of data from the job_queue."""
+        """Train the model, lifting batches of data from the queue.
+
+        This function will be called in parallel by multiple workers (threads or processes) to make
+        optimal use of multicore machines.
+
+        Parameters
+        ----------
+        job_queue : Queue of (list of objects, (str, int))
+            A queue of jobs still to be processed. The worker will take up jobs from this queue.
+            Each job is represented by a tuple where the first element is the corpus chunk to be processed and
+            the second is the dictionary of parameters.
+        progress_queue : Queue of (int, int, int)
+            A queue of progress reports. Each report is represented as a tuple of these 3 elements:
+                * Size of data chunk processed, for example number of sentences in the corpus chunk.
+                * Effective word count used in training (after ignoring unknown words and trimming the sentence length).
+                * Total word count used in training.
+
+        """
         thread_private_mem = self._get_thread_working_mem()
         jobs_processed = 0
         while True:
@@ -106,7 +218,30 @@ class BaseAny2VecModel(utils.SaveLoad):
         logger.debug("worker exiting, processed %i jobs", jobs_processed)
 
     def _job_producer(self, data_iterator, job_queue, cur_epoch=0, total_examples=None, total_words=None):
-        """Fill jobs queue using the input `data_iterator`."""
+        """Fill the jobs queue using the data found in the input stream.
+
+        Each job is represented by a tuple where the first element is the corpus chunk to be processed and
+        the second is a dictionary of parameters.
+
+        Parameters
+        ----------
+        data_iterator : iterable of list of objects
+            The input dataset. This will be split in chunks and these chunks will be pushed to the queue.
+        job_queue : Queue of (list of object, dict of (str, int))
+            A queue of jobs still to be processed. The worker will take up jobs from this queue.
+            Each job is represented by a tuple where the first element is the corpus chunk to be processed and
+            the second is the dictionary of parameters.
+        cur_epoch : int, optional
+            The current training epoch, needed to compute the training parameters for each job.
+            For example in many implementations the learning rate would be dropping with the number of epochs.
+        total_examples : int, optional
+            Count of objects in the `data_iterator`. In the usual case this would correspond to the number of sentences
+            in a corpus. Used to log progress.
+        total_words : int, optional
+            Count of total objects in `data_iterator`. In the usual case this would correspond to the number of raw
+            words in a corpus. Used to log progress.
+
+        """
         job_batch, batch_size = [], 0
         pushed_words, pushed_examples = 0, 0
         next_job_params = self._get_job_params(cur_epoch)
@@ -158,14 +293,50 @@ class BaseAny2VecModel(utils.SaveLoad):
         raise NotImplementedError()
 
     def _log_epoch_end(self, cur_epoch, example_count, total_examples, raw_word_count, total_words,
-                       trained_word_count, elapsed):
+                       trained_word_count, elapsed, is_corpus_file_mode):
         raise NotImplementedError()
 
     def _log_train_end(self, raw_word_count, trained_word_count, total_elapsed, job_tally):
         raise NotImplementedError()
 
-    def _log_epoch_progress(self, progress_queue, job_queue, cur_epoch=0, total_examples=None, total_words=None,
-                            report_delay=1.0):
+    def _log_epoch_progress(self, progress_queue=None, job_queue=None, cur_epoch=0, total_examples=None,
+                            total_words=None, report_delay=1.0, is_corpus_file_mode=None):
+        """Get the progress report for a single training epoch.
+
+        Parameters
+        ----------
+        progress_queue : Queue of (int, int, int)
+            A queue of progress reports. Each report is represented as a tuple of these 3 elements:
+                * size of data chunk processed, for example number of sentences in the corpus chunk.
+                * Effective word count used in training (after ignoring unknown words and trimming the sentence length).
+                * Total word count used in training.
+        job_queue : Queue of (list of object, dict of (str, int))
+            A queue of jobs still to be processed. The worker will take up jobs from this queue.
+            Each job is represented by a tuple where the first element is the corpus chunk to be processed and
+            the second is the dictionary of parameters.
+        cur_epoch : int, optional
+            The current training epoch, needed to compute the training parameters for each job.
+            For example in many implementations the learning rate would be dropping with the number of epochs.
+        total_examples : int, optional
+            Count of objects in the `data_iterator`. In the usual case this would correspond to the number of sentences
+            in a corpus. Used to log progress.
+        total_words : int, optional
+            Count of total objects in `data_iterator`. In the usual case this would correspond to the number of raw
+            words in a corpus. Used to log progress.
+        report_delay : float, optional
+            Number of seconds between two consecutive progress report messages in the logger.
+        is_corpus_file_mode : bool, optional
+            Whether training is file-based (corpus_file argument) or not.
+
+        Returns
+        -------
+        (int, int, int)
+            The epoch report consisting of three elements:
+                * size of data chunk processed, for example number of sentences in the corpus chunk.
+                * Effective word count used in training (after ignoring unknown words and trimming the sentence length).
+                * Total word count used in training.
+
+        """
         example_count, trained_word_count, raw_word_count = 0, 0, 0
         start, next_report = default_timer() - 0.00001, 1.0
         job_tally = 0
@@ -196,13 +367,104 @@ class BaseAny2VecModel(utils.SaveLoad):
         elapsed = default_timer() - start
         self._log_epoch_end(
             cur_epoch, example_count, total_examples, raw_word_count, total_words,
-            trained_word_count, elapsed)
+            trained_word_count, elapsed, is_corpus_file_mode)
         self.total_train_time += elapsed
         return trained_word_count, raw_word_count, job_tally
 
-    def _train_epoch(self, data_iterable, cur_epoch=0, total_examples=None,
-                     total_words=None, queue_factor=2, report_delay=1.0):
-        """Train one epoch."""
+    def _train_epoch_corpusfile(self, corpus_file, cur_epoch=0, total_examples=None, total_words=None, **kwargs):
+        """Train the model for a single epoch.
+
+        Parameters
+        ----------
+        corpus_file : str
+            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+        cur_epoch : int, optional
+            The current training epoch, needed to compute the training parameters for each job.
+            For example in many implementations the learning rate would be dropping with the number of epochs.
+        total_examples : int, optional
+            Count of objects in the `data_iterator`. In the usual case this would correspond to the number of sentences
+            in a corpus, used to log progress.
+        total_words : int
+            Count of total objects in `data_iterator`. In the usual case this would correspond to the number of raw
+            words in a corpus, used to log progress. Must be provided in order to seek in `corpus_file`.
+        **kwargs : object
+            Additional key word parameters for the specific model inheriting from this class.
+
+        Returns
+        -------
+        (int, int, int)
+            The training report for this epoch consisting of three elements:
+                * Size of data chunk processed, for example number of sentences in the corpus chunk.
+                * Effective word count used in training (after ignoring unknown words and trimming the sentence length).
+                * Total word count used in training.
+
+        """
+        if not total_words:
+            raise ValueError("total_words must be provided alongside corpus_file argument.")
+
+        from gensim.models.word2vec_corpusfile import CythonVocab
+        from gensim.models.fasttext import FastText
+        cython_vocab = CythonVocab(self.wv, hs=self.hs, fasttext=isinstance(self, FastText))
+
+        progress_queue = Queue()
+
+        corpus_file_size = os.path.getsize(corpus_file)
+
+        thread_kwargs = copy.copy(kwargs)
+        thread_kwargs['cur_epoch'] = cur_epoch
+        thread_kwargs['total_examples'] = total_examples
+        thread_kwargs['total_words'] = total_words
+        workers = [
+            threading.Thread(
+                target=self._worker_loop_corpusfile,
+                args=(
+                    corpus_file, thread_id, corpus_file_size / self.workers * thread_id, cython_vocab, progress_queue
+                ),
+                kwargs=thread_kwargs
+            ) for thread_id in range(self.workers)
+        ]
+
+        for thread in workers:
+            thread.daemon = True
+            thread.start()
+
+        trained_word_count, raw_word_count, job_tally = self._log_epoch_progress(
+            progress_queue=progress_queue, job_queue=None, cur_epoch=cur_epoch,
+            total_examples=total_examples, total_words=total_words, is_corpus_file_mode=True)
+
+        return trained_word_count, raw_word_count, job_tally
+
+    def _train_epoch(self, data_iterable, cur_epoch=0, total_examples=None, total_words=None,
+                     queue_factor=2, report_delay=1.0):
+        """Train the model for a single epoch.
+
+        Parameters
+        ----------
+        data_iterable : iterable of list of object
+            The input corpus. This will be split in chunks and these chunks will be pushed to the queue.
+        cur_epoch : int, optional
+            The current training epoch, needed to compute the training parameters for each job.
+            For example in many implementations the learning rate would be dropping with the number of epochs.
+        total_examples : int, optional
+            Count of objects in the `data_iterator`. In the usual case this would correspond to the number of sentences
+            in a corpus, used to log progress.
+        total_words : int, optional
+            Count of total objects in `data_iterator`. In the usual case this would correspond to the number of raw
+            words in a corpus, used to log progress.
+        queue_factor : int, optional
+            Multiplier for size of queue -> size = number of workers * queue_factor.
+        report_delay : float, optional
+            Number of seconds between two consecutive progress report messages in the logger.
+
+        Returns
+        -------
+        (int, int, int)
+            The training report for this epoch consisting of three elements:
+                * Size of data chunk processed, for example number of sentences in the corpus chunk.
+                * Effective word count used in training (after ignoring unknown words and trimming the sentence length).
+                * Total word count used in training.
+
+        """
         job_queue = Queue(maxsize=queue_factor * self.workers)
         progress_queue = Queue(maxsize=(queue_factor + 1) * self.workers)
 
@@ -224,13 +486,46 @@ class BaseAny2VecModel(utils.SaveLoad):
 
         trained_word_count, raw_word_count, job_tally = self._log_epoch_progress(
             progress_queue, job_queue, cur_epoch=cur_epoch, total_examples=total_examples, total_words=total_words,
-            report_delay=report_delay)
+            report_delay=report_delay, is_corpus_file_mode=False)
 
         return trained_word_count, raw_word_count, job_tally
 
-    def train(self, data_iterable, epochs=None, total_examples=None,
+    def train(self, data_iterable=None, corpus_file=None, epochs=None, total_examples=None,
               total_words=None, queue_factor=2, report_delay=1.0, callbacks=(), **kwargs):
-        """Handle multi-worker training."""
+        """Train the model for multiple epochs using multiple workers.
+
+        Parameters
+        ----------
+        data_iterable : iterable of list of object
+            The input corpus. This will be split in chunks and these chunks will be pushed to the queue.
+        corpus_file : str, optional
+            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            If you use this argument instead of `data_iterable`, you must provide `total_words` argument as well.
+        epochs : int, optional
+            Number of epochs (training iterations over the whole input) of training.
+        total_examples : int, optional
+            Count of objects in the `data_iterator`. In the usual case this would correspond to the number of sentences
+            in a corpus, used to log progress.
+        total_words : int, optional
+            Count of total objects in `data_iterator`. In the usual case this would correspond to the number of raw
+            words in a corpus, used to log progress.
+        queue_factor : int, optional
+            Multiplier for size of queue -> size = number of workers * queue_factor.
+        report_delay : float, optional
+            Number of seconds between two consecutive progress report messages in the logger.
+        callbacks : list of :class:`~gensim.models.callbacks.CallbackAny2Vec`, optional
+            List of callbacks to execute at specific stages during training.
+        **kwargs : object
+            Additional key word parameters for the specific model inheriting from this class.
+
+        Returns
+        -------
+        (int, int)
+            The total training report consisting of two elements:
+                * size of total data processed, for example number of sentences in the whole corpus.
+                * Effective word count used in training (after ignoring unknown words and trimming the sentence length).
+
+        """
         self._set_train_params(**kwargs)
         if callbacks:
             self.callbacks = callbacks
@@ -252,9 +547,14 @@ class BaseAny2VecModel(utils.SaveLoad):
             for callback in self.callbacks:
                 callback.on_epoch_begin(self)
 
-            trained_word_count_epoch, raw_word_count_epoch, job_tally_epoch = self._train_epoch(
-                data_iterable, cur_epoch=cur_epoch, total_examples=total_examples, total_words=total_words,
-                queue_factor=queue_factor, report_delay=report_delay)
+            if data_iterable is not None:
+                trained_word_count_epoch, raw_word_count_epoch, job_tally_epoch = self._train_epoch(
+                    data_iterable, cur_epoch=cur_epoch, total_examples=total_examples,
+                    total_words=total_words, queue_factor=queue_factor, report_delay=report_delay)
+            else:
+                trained_word_count_epoch, raw_word_count_epoch, job_tally_epoch = self._train_epoch_corpusfile(
+                    corpus_file, cur_epoch=cur_epoch, total_examples=total_examples, total_words=total_words, **kwargs)
+
             trained_word_count += trained_word_count_epoch
             raw_word_count += raw_word_count_epoch
             job_tally += job_tally_epoch
@@ -275,19 +575,67 @@ class BaseAny2VecModel(utils.SaveLoad):
 
     @classmethod
     def load(cls, fname_or_handle, **kwargs):
+        """Load a previously saved object (using :meth:`gensim.models.base_any2vec.BaseAny2VecModel.save`) from a file.
+
+        Parameters
+        ----------
+        fname_or_handle : {str, file-like object}
+            Path to file that contains needed object or handle to an open file.
+        **kwargs : object
+            Keyword arguments propagated to :meth:`~gensim.utils.SaveLoad.load`.
+
+        See Also
+        --------
+        :meth:`~gensim.models.base_any2vec.BaseAny2VecModel.save`
+            Method for save a model.
+
+        Returns
+        -------
+        object
+            Object loaded from `fname_or_handle`.
+
+        Raises
+        ------
+        IOError
+            When methods are called on an instance (should be called on a class, this is a class method).
+
+        """
         return super(BaseAny2VecModel, cls).load(fname_or_handle, **kwargs)
 
     def save(self, fname_or_handle, **kwargs):
+        """"Save the object to file.
+
+        Parameters
+        ----------
+        fname_or_handle : {str, file-like object}
+            Path to file where the model will be persisted.
+        **kwargs : object
+            Key word arguments propagated to :meth:`~gensim.utils.SaveLoad.save`.
+
+        See Also
+        --------
+        :meth:`~gensim.models.base_any2vec.BaseAny2VecModel.load`
+            Method for load model after current method.
+
+        """
         super(BaseAny2VecModel, self).save(fname_or_handle, **kwargs)
 
 
 class BaseWordEmbeddingsModel(BaseAny2VecModel):
-    """
-    Base class containing common methods for training, using & evaluating word embeddings learning models.
-    For example - `Word2Vec`, `FastText`, etc.
+    """Base class containing common methods for training, using & evaluating word embeddings learning models.
+
+    See Also
+    --------
+    :class:`~gensim.models.word2vec.Word2Vec`.
+        Word2Vec model - embeddings for words.
+    :class:`~gensim.models.fasttext.FastText`.
+        FastText model - embeddings for words (ngram-based).
+    :class:`~gensim.models.doc2vec.Doc2Vec`.
+        Doc2Vec model - embeddings for documents.
+    :class:`~gensim.models.poincare.PoincareModel`
+        Poincare model - embeddings for graphs.
 
     """
-
     def _clear_post_train(self):
         raise NotImplementedError()
 
@@ -297,9 +645,79 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
     def _set_train_params(self, **kwargs):
         raise NotImplementedError()
 
-    def __init__(self, sentences=None, workers=3, vector_size=100, epochs=5, callbacks=(), batch_words=10000,
-                 trim_rule=None, sg=0, alpha=0.025, window=5, seed=1, hs=0, negative=5, cbow_mean=1,
-                 min_alpha=0.0001, compute_loss=False, fast_version=0, **kwargs):
+    def __init__(self, sentences=None, corpus_file=None, workers=3, vector_size=100, epochs=5, callbacks=(),
+                 batch_words=10000, trim_rule=None, sg=0, alpha=0.025, window=5, seed=1, hs=0, negative=5,
+                 ns_exponent=0.75, cbow_mean=1, min_alpha=0.0001, compute_loss=False, fast_version=0, **kwargs):
+        """
+
+        Parameters
+        ----------
+        sentences : iterable of list of str, optional
+            Can be simply a list of lists of tokens, but for larger corpora,
+            consider an iterable that streams the sentences directly from disk/network.
+            See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
+            or :class:`~gensim.models.word2vec.LineSentence` for such examples.
+        corpus_file : str, optional
+            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
+            `corpus_file` arguments need to be passed (or none of them).
+        workers : int, optional
+            Number of working threads, used for multiprocessing.
+        vector_size : int, optional
+            Dimensionality of the feature vectors.
+        epochs : int, optional
+            Number of iterations (epochs) of training through the corpus.
+        callbacks : list of :class:`~gensim.models.callbacks.CallbackAny2Vec`, optional
+            List of callbacks that need to be executed/run at specific stages during training.
+        batch_words : int, optional
+            Number of words to be processed by a single job.
+        trim_rule : function, optional
+            Vocabulary trimming rule, specifies whether certain words should remain in the vocabulary,
+            be trimmed away, or handled using the default (discard if word count < min_count).
+            Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
+            or a callable that accepts parameters (word, count, min_count) and returns either
+            :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
+            The rule, if given, is only used to prune vocabulary during current method call and is not stored as part
+            of the model.
+
+            The input parameters are of the following types:
+                * `word` (str) - the word we are examining
+                * `count` (int) - the word's frequency count in the corpus
+                * `min_count` (int) - the minimum count threshold.
+
+        sg : {1, 0}, optional
+            Defines the training algorithm. If 1, skip-gram is used, otherwise, CBOW is employed.
+        alpha : float, optional
+            The beginning learning rate. This will linearly reduce with iterations until it reaches `min_alpha`.
+        window : int, optional
+            The maximum distance between the current and predicted word within a sentence.
+        seed : int, optional
+            Seed for the random number generator. Initial vectors for each word are seeded with a hash of
+            the concatenation of word + `str(seed)`.
+            Note that for a fully deterministically-reproducible run, you must also limit the model to a single worker
+            thread (`workers=1`), to eliminate ordering jitter from OS thread scheduling.
+            In Python 3, reproducibility between interpreter launches also requires use of the `PYTHONHASHSEED`
+            environment variable to control hash randomization.
+        hs : {1,0}, optional
+            If 1, hierarchical softmax will be used for model training.
+            If set to 0, and `negative` is non-zero, negative sampling will be used.
+        negative : int, optional
+            If > 0, negative sampling will be used, the int for negative specifies how many "noise words"
+            should be drawn (usually between 5-20).
+            If set to 0, no negative sampling is used.
+        cbow_mean : {1,0}, optional
+            If 0, use the sum of the context word vectors. If 1, use the mean, only applies when cbow is used.
+        min_alpha : float, optional
+            Final learning rate. Drops linearly with the number of iterations from `alpha`.
+        compute_loss : bool, optional
+            If True, loss will be computed while training the Word2Vec model and stored in
+            :attr:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel.running_training_loss` attribute.
+        fast_version : {-1, 1}, optional
+            Whether or not the fast cython implementation of the internal training methods is available. 1 means it is.
+        **kwargs : object
+            Key word arguments needed to allow children classes to accept more arguments.
+
+        """
         self.sg = int(sg)
         if vector_size % 4 != 0:
             logger.warning("consider setting layer size to a multiple of 4 for greater performance")
@@ -309,11 +727,13 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         self.min_alpha = float(min_alpha)
         self.hs = int(hs)
         self.negative = int(negative)
+        self.ns_exponent = ns_exponent
         self.cbow_mean = int(cbow_mean)
         self.compute_loss = bool(compute_loss)
         self.running_training_loss = 0
         self.min_alpha_yet_reached = float(alpha)
         self.corpus_count = 0
+        self.corpus_total_words = 0
 
         super(BaseWordEmbeddingsModel, self).__init__(
             workers=workers, vector_size=vector_size, epochs=epochs, callbacks=callbacks, batch_words=batch_words)
@@ -329,12 +749,17 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
                 self.neg_labels = zeros(self.negative + 1)
                 self.neg_labels[0] = 1.
 
-        if sentences is not None:
-            if isinstance(sentences, GeneratorType):
+        if sentences is not None or corpus_file is not None:
+            self._check_input_data_sanity(data_iterable=sentences, corpus_file=corpus_file)
+            if corpus_file is not None and not isinstance(corpus_file, string_types):
+                raise TypeError("You must pass string as the corpus_file argument.")
+            elif isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
-            self.build_vocab(sentences, trim_rule=trim_rule)
+
+            self.build_vocab(sentences=sentences, corpus_file=corpus_file, trim_rule=trim_rule)
             self.train(
-                sentences, total_examples=self.corpus_count, epochs=self.epochs, start_alpha=self.alpha,
+                sentences=sentences, corpus_file=corpus_file, total_examples=self.corpus_count,
+                total_words=self.corpus_total_words, epochs=self.epochs, start_alpha=self.alpha,
                 end_alpha=self.min_alpha, compute_loss=compute_loss)
         else:
             if trim_rule is not None:
@@ -455,30 +880,62 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         del self.vocabulary.cum_table
 
     def __str__(self):
+        """Get a human readable representation of the object.
+
+        Returns
+        -------
+        str
+            A human readable string containing the class name, as well as the size of dictionary, number of
+            features and starting learning rate used by the object.
+
+        """
         return "%s(vocab=%s, size=%s, alpha=%s)" % (
             self.__class__.__name__, len(self.wv.index2word), self.vector_size, self.alpha
         )
 
-    def build_vocab(self, sentences, update=False, progress_per=10000, keep_raw_vocab=False, trim_rule=None, **kwargs):
+    def build_vocab(self, sentences=None, corpus_file=None, update=False, progress_per=10000,
+                    keep_raw_vocab=False, trim_rule=None, **kwargs):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
-        Each sentence is a iterable of iterables (can simply be a list of unicode strings too).
 
         Parameters
         ----------
-        sentences : iterable of iterables
-            The `sentences` iterable can be simply a list of lists of tokens, but for larger corpora,
+        sentences : iterable of list of str
+            Can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
-            or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
+            or :class:`~gensim.models.word2vec.LineSentence` module for such examples.
+        corpus_file : str, optional
+            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
+            `corpus_file` arguments need to be passed (not both of them).
         update : bool
             If true, the new words in `sentences` will be added to model's vocab.
-        progress_per : int
+        progress_per : int, optional
             Indicates how many words to process before showing/updating the progress.
+        keep_raw_vocab : bool, optional
+            If False, the raw vocabulary will be deleted after the scaling is done to free up RAM.
+        trim_rule : function, optional
+            Vocabulary trimming rule, specifies whether certain words should remain in the vocabulary,
+            be trimmed away, or handled using the default (discard if word count < min_count).
+            Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
+            or a callable that accepts parameters (word, count, min_count) and returns either
+            :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
+            The rule, if given, is only used to prune vocabulary during current method call and is not stored as part
+            of the model.
+
+            The input parameters are of the following types:
+                * `word` (str) - the word we are examining
+                * `count` (int) - the word's frequency count in the corpus
+                * `min_count` (int) - the minimum count threshold.
+
+        **kwargs : object
+            Key word arguments propagated to `self.vocabulary.prepare_vocab`
 
         """
         total_words, corpus_count = self.vocabulary.scan_vocab(
-            sentences, progress_per=progress_per, trim_rule=trim_rule)
+            sentences=sentences, corpus_file=corpus_file, progress_per=progress_per, trim_rule=trim_rule)
         self.corpus_count = corpus_count
+        self.corpus_total_words = total_words
         report_values = self.vocabulary.prepare_vocab(
             self.hs, self.negative, self.wv, update=update, keep_raw_vocab=keep_raw_vocab,
             trim_rule=trim_rule, **kwargs)
@@ -487,34 +944,31 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
     def build_vocab_from_freq(self, word_freq, keep_raw_vocab=False, corpus_count=None, trim_rule=None, update=False):
         """Build vocabulary from a dictionary of word frequencies.
-        Build model vocabulary from a passed dictionary that contains (word,word count).
-        Words must be of type unicode strings.
 
         Parameters
         ----------
-        word_freq : dict
-            Word,Word_Count dictionary.
-        keep_raw_vocab : bool
-            If not true, delete the raw vocabulary after the scaling is done and free up RAM.
-        corpus_count : int
+        word_freq : dict of (str, int)
+            A mapping from a word in the vocabulary to its frequency count.
+        keep_raw_vocab : bool, optional
+            If False, delete the raw vocabulary after the scaling is done to free up RAM.
+        corpus_count : int, optional
             Even if no corpus is provided, this argument can set corpus_count explicitly.
-        trim_rule : function
+        trim_rule : function, optional
             Vocabulary trimming rule, specifies whether certain words should remain in the vocabulary,
             be trimmed away, or handled using the default (discard if word count < min_count).
             Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
             or a callable that accepts parameters (word, count, min_count) and returns either
             :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
-            Note: The rule, if given, is only used to prune vocabulary during build_vocab() and is not stored as part
+            The rule, if given, is only used to prune vocabulary during current method call and is not stored as part
             of the model.
-        update : bool
-            If true, the new provided words in `word_freq` dict will be added to model's vocab.
 
-        Examples
-        --------
-        >>> from gensim.models import Word2Vec
-        >>>
-        >>> model= Word2Vec()
-        >>> model.build_vocab_from_freq({"Word1": 15, "Word2": 20})
+            The input parameters are of the following types:
+                * `word` (str) - the word we are examining
+                * `count` (int) - the word's frequency count in the corpus
+                * `min_count` (int) - the minimum count threshold.
+
+        update : bool, optional
+            If true, the new provided words in `word_freq` dict will be added to model's vocab.
 
         """
         logger.info("Processing provided word frequencies")
@@ -526,7 +980,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             len(raw_vocab), sum(itervalues(raw_vocab))
         )
 
-        # Since no sentences are provided, this is to control the corpus_count
+        # Since no sentences are provided, this is to control the corpus_count.
         self.corpus_count = corpus_count or 0
         self.vocabulary.raw_vocab = raw_vocab
 
@@ -539,7 +993,21 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             self.hs, self.negative, self.wv, update=update, vocabulary=self.vocabulary)  # build tables & arrays
 
     def estimate_memory(self, vocab_size=None, report=None):
-        """Estimate required memory for a model using current settings and provided vocabulary size."""
+        """Estimate required memory for a model using current settings and provided vocabulary size.
+
+        Parameters
+        ----------
+        vocab_size : int, optional
+            Number of unique tokens in the vocabulary
+        report : dict of (str, int), optional
+            A dictionary from string representations of the model's memory consuming members to their size in bytes.
+
+        Returns
+        -------
+        dict of (str, int)
+            A dictionary from string representations of the model's memory consuming members to their size in bytes.
+
+        """
         vocab_size = vocab_size or len(self.wv.vocab)
         report = report or {}
         report['vocab'] = vocab_size * (700 if self.hs else 500)
@@ -555,25 +1023,98 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         )
         return report
 
-    def train(self, sentences, total_examples=None, total_words=None,
+    def train(self, sentences=None, corpus_file=None, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None, word_count=0,
-              queue_factor=2, report_delay=1.0, compute_loss=False, callbacks=()):
+              queue_factor=2, report_delay=1.0, compute_loss=False, callbacks=(), **kwargs):
+        """Train the model. If the hyper-parameters are passed, they override the ones set in the constructor.
+
+        Parameters
+        ----------
+        sentences : iterable of list of str
+            Can be simply a list of lists of tokens, but for larger corpora,
+            consider an iterable that streams the sentences directly from disk/network.
+            See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
+            or :class:`~gensim.models.word2vec.LineSentence` module for such examples.
+        corpus_file : str, optional
+            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
+            `corpus_file` arguments need to be passed (not both of them).
+        total_examples : int, optional
+            Count of sentences.
+        total_words : int, optional
+            Count of raw words in sentences.
+        epochs : int, optional
+            Number of iterations (epochs) over the corpus.
+        start_alpha : float, optional
+            Initial learning rate.
+        end_alpha : float, optional
+            Final learning rate. Drops linearly with the number of iterations from `start_alpha`.
+        word_count : int, optional
+            Count of words already trained. Leave this to 0 for the usual case of training on all words in sentences.
+        queue_factor : int, optional
+            Multiplier for size of queue -> size = number of workers * queue_factor.
+        report_delay : float, optional
+            Seconds to wait before reporting progress.
+        compute_loss : bool, optional
+            If True, loss will be computed while training the Word2Vec model and stored in
+            :attr:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel.running_training_loss`.
+        callbacks : list of :class:`~gensim.models.callbacks.CallbackAny2Vec`, optional
+            List of callbacks that need to be executed/run at specific stages during training.
+        **kwargs : object
+            Additional key word parameters for the specific model inheriting from this class.
+
+        Returns
+        -------
+        (int, int)
+            Tuple of (effective word count after ignoring unknown words and sentence length trimming, total word count).
+
+        """
 
         self.alpha = start_alpha or self.alpha
         self.min_alpha = end_alpha or self.min_alpha
         self.compute_loss = compute_loss
         self.running_training_loss = 0.0
         return super(BaseWordEmbeddingsModel, self).train(
-            sentences, total_examples=total_examples, total_words=total_words,
-            epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
-            queue_factor=queue_factor, report_delay=report_delay, compute_loss=compute_loss, callbacks=callbacks)
+            data_iterable=sentences, corpus_file=corpus_file, total_examples=total_examples,
+            total_words=total_words, epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
+            queue_factor=queue_factor, report_delay=report_delay, compute_loss=compute_loss, callbacks=callbacks,
+            **kwargs)
 
     def _get_job_params(self, cur_epoch):
-        """Get the parameter required for each batch."""
+        """Get the learning rate used in the current epoch.
+
+        Parameters
+        ----------
+        cur_epoch : int
+            Current iteration through the corpus
+
+        Returns
+        -------
+        float
+            The learning rate for this epoch (it is linearly reduced with epochs from `self.alpha` to `self.min_alpha`).
+
+        """
         alpha = self.alpha - ((self.alpha - self.min_alpha) * float(cur_epoch) / self.epochs)
         return alpha
 
     def _update_job_params(self, job_params, epoch_progress, cur_epoch):
+        """Get the correct learning rate for the next iteration.
+
+        Parameters
+        ----------
+        job_params : dict of (str, obj)
+            UNUSED.
+        epoch_progress : float
+            Ratio of finished work in the current epoch.
+        cur_epoch : int
+            Number of current iteration.
+
+        Returns
+        -------
+        float
+            The learning rate to be used in the next training epoch.
+
+        """
         start_alpha = self.alpha
         end_alpha = self.min_alpha
         progress = (cur_epoch + epoch_progress) / self.epochs
@@ -583,15 +1124,60 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         return next_alpha
 
     def _get_thread_working_mem(self):
+        """Computes the memory used per worker thread.
+
+        Returns
+        -------
+        (np.ndarray, np.ndarray)
+            Each worker threads private work memory.
+
+        """
         work = matutils.zeros_aligned(self.trainables.layer1_size, dtype=REAL)  # per-thread private work memory
         neu1 = matutils.zeros_aligned(self.trainables.layer1_size, dtype=REAL)
         return work, neu1
 
     def _raw_word_count(self, job):
-        """Get the number of words in a given job."""
+        """Get the number of words in a given job.
+
+        Parameters
+        ----------
+        job: iterable of list of str
+            The corpus chunk processed in a single batch.
+
+        Returns
+        -------
+        int
+            Number of raw words in the corpus chunk.
+
+        """
         return sum(len(sentence) for sentence in job)
 
     def _check_training_sanity(self, epochs=None, total_examples=None, total_words=None, **kwargs):
+        """Checks whether the training parameters make sense.
+
+        Called right before training starts in :meth:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel.train`
+        and raises warning or errors depending on the severity of the issue in case an inconsistent parameter
+        combination is detected.
+
+        Parameters
+        ----------
+        epochs : int, optional
+            Number of training epochs. Must have a (non None) value.
+        total_examples : int, optional
+            Number of documents in the corpus. Either `total_examples` or `total_words` **must** be supplied.
+        total_words : int, optional
+            Number of words in the corpus. Either `total_examples` or `total_words` **must** be supplied.
+        **kwargs : object
+            Unused. Present to preserve signature among base and inherited implementations.
+
+        Raises
+        ------
+        RuntimeError
+            If one of the required training pre/post processing steps have not been performed.
+        ValueError
+            If the combination of input parameters is inconsistent.
+
+        """
         if self.alpha > self.min_alpha_yet_reached:
             logger.warning("Effective 'alpha' higher than previous training cycles")
         if self.model_trimmed_post_training:
@@ -626,11 +1212,46 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
     @classmethod
     def load(cls, *args, **kwargs):
+        """Load a previously saved object (using :meth:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel.save`) from file.
+
+        Also initializes extra instance attributes in case the loaded model does not include them.
+        `*args` or `**kwargs` **MUST** include the fname argument (path to saved file).
+        See :meth:`~gensim.utils.SaveLoad.load`.
+
+        Parameters
+        ----------
+        *args : object
+            Positional arguments passed to :meth:`~gensim.utils.SaveLoad.load`.
+        **kwargs : object
+            Key word arguments passed to :meth:`~gensim.utils.SaveLoad.load`.
+
+        See Also
+        --------
+        :meth:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel.save`
+            Method for save a model.
+
+        Returns
+        -------
+        :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
+            Model loaded from disk.
+
+        Raises
+        ------
+        IOError
+            When methods are called on instance (should be called from class).
+
+        """
         model = super(BaseWordEmbeddingsModel, cls).load(*args, **kwargs)
+        if not hasattr(model, 'ns_exponent'):
+            model.ns_exponent = 0.75
+        if not hasattr(model.vocabulary, 'ns_exponent'):
+            model.vocabulary.ns_exponent = 0.75
         if model.negative and hasattr(model.wv, 'index2word'):
             model.vocabulary.make_cum_table(model.wv)  # rebuild cum_table from vocabulary
         if not hasattr(model, 'corpus_count'):
             model.corpus_count = None
+        if not hasattr(model, 'corpus_total_words'):
+            model.corpus_total_words = None
         if not hasattr(model.trainables, 'vectors_lockf') and hasattr(model.wv, 'vectors'):
             model.trainables.vectors_lockf = ones(len(model.wv.vectors), dtype=REAL)
         if not hasattr(model, 'random'):
@@ -642,27 +1263,92 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
     def _log_progress(self, job_queue, progress_queue, cur_epoch, example_count, total_examples,
                       raw_word_count, total_words, trained_word_count, elapsed):
+        """Callback used to log progress for long running jobs.
+
+        Parameters
+        ----------
+        job_queue : Queue of (list of object, dict of (str, float))
+            The queue of jobs still to be performed by workers. Each job is represented as a tuple containing
+            the batch of data to be processed and the parameters to be used for the processing as a dict.
+        progress_queue : Queue of (int, int, int)
+            A queue of progress reports. Each report is represented as a tuple of these 3 elements:
+                * size of data chunk processed, for example number of sentences in the corpus chunk.
+                * Effective word count used in training (after ignoring unknown words and trimming the sentence length).
+                * Total word count used in training.
+        cur_epoch : int
+            The current training iteration through the corpus.
+        example_count : int
+            Number of examples (could be sentences for example) processed until now.
+        total_examples : int
+            Number of all examples present in the input corpus.
+        raw_word_count : int
+            Number of words used in training until now.
+        total_words : int
+            Number of all words in the input corpus.
+        trained_word_count : int
+            Number of effective words used in training until now (after ignoring unknown words and trimming
+            the sentence length).
+        elapsed : int
+            Elapsed time since the beginning of training in seconds.
+
+        Notes
+        -----
+        If you train the model via `corpus_file` argument, there is no job_queue, so reported job_queue size will
+        always be equal to -1.
+
+        """
         if total_examples:
             # examples-based progress %
             logger.info(
                 "EPOCH %i - PROGRESS: at %.2f%% examples, %.0f words/s, in_qsize %i, out_qsize %i",
                 cur_epoch + 1, 100.0 * example_count / total_examples, trained_word_count / elapsed,
-                utils.qsize(job_queue), utils.qsize(progress_queue)
+                -1 if job_queue is None else utils.qsize(job_queue), utils.qsize(progress_queue)
             )
         else:
             # words-based progress %
             logger.info(
                 "EPOCH %i - PROGRESS: at %.2f%% words, %.0f words/s, in_qsize %i, out_qsize %i",
                 cur_epoch + 1, 100.0 * raw_word_count / total_words, trained_word_count / elapsed,
-                utils.qsize(job_queue), utils.qsize(progress_queue)
+                -1 if job_queue is None else utils.qsize(job_queue), utils.qsize(progress_queue)
             )
 
     def _log_epoch_end(self, cur_epoch, example_count, total_examples, raw_word_count, total_words,
-                       trained_word_count, elapsed):
+                       trained_word_count, elapsed, is_corpus_file_mode):
+        """Callback used to log the end of a training epoch.
+
+        Parameters
+        ----------
+        cur_epoch : int
+            The current training iteration through the corpus.
+        example_count : int
+            Number of examples (could be sentences for example) processed until now.
+        total_examples : int
+            Number of all examples present in the input corpus.
+        raw_word_count : int
+            Number of words used in training until now.
+        total_words : int
+            Number of all words in the input corpus.
+        trained_word_count : int
+            Number of effective words used in training until now (after ignoring unknown words and trimming
+            the sentence length).
+        elapsed : int
+            Elapsed time since the beginning of training in seconds.
+        is_corpus_file_mode : bool
+            Whether training is file-based (corpus_file argument) or not.
+
+        Warnings
+        --------
+        In case the corpus is changed while the epoch was running.
+
+        """
         logger.info(
             "EPOCH - %i : training on %i raw words (%i effective words) took %.1fs, %.0f effective words/s",
             cur_epoch + 1, raw_word_count, trained_word_count, elapsed, trained_word_count / elapsed
         )
+
+        # don't warn if training in file-based mode, because it's expected behavior
+        if is_corpus_file_mode:
+            return
 
         # check that the input corpus hasn't changed during iteration
         if total_examples and total_examples != example_count:
@@ -677,6 +1363,20 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             )
 
     def _log_train_end(self, raw_word_count, trained_word_count, total_elapsed, job_tally):
+        """Callback to log the end of training.
+
+        Parameters
+        ----------
+        raw_word_count : int
+            Number of words used in the whole training.
+        trained_word_count : int
+            Number of effective words used in training (after ignoring unknown words and trimming the sentence length).
+        total_elapsed : int
+            Total time spent during training in seconds.
+        job_tally : int
+            Total number of jobs processed during training.
+
+        """
         logger.info(
             "training on a %i raw words (%i effective words) took %.1fs, %.0f effective words/s",
             raw_word_count, trained_word_count, total_elapsed, trained_word_count / total_elapsed
@@ -689,73 +1389,84 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
     # for backward compatibility
     @deprecated("Method will be removed in 4.0.0, use self.wv.most_similar() instead")
     def most_similar(self, positive=None, negative=None, topn=10, restrict_vocab=None, indexer=None):
-        """
-        Deprecated. Use self.wv.most_similar() instead.
-        Refer to the documentation for `gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.most_similar`
+        """Deprecated, use self.wv.most_similar() instead.
+
+        Refer to the documentation for :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.most_similar`.
+
         """
         return self.wv.most_similar(positive, negative, topn, restrict_vocab, indexer)
 
     @deprecated("Method will be removed in 4.0.0, use self.wv.wmdistance() instead")
     def wmdistance(self, document1, document2):
-        """
-        Deprecated. Use self.wv.wmdistance() instead.
-        Refer to the documentation for `gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.wmdistance`
+        """Deprecated, use self.wv.wmdistance() instead.
+
+        Refer to the documentation for :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.wmdistance`.
+
         """
         return self.wv.wmdistance(document1, document2)
 
     @deprecated("Method will be removed in 4.0.0, use self.wv.most_similar_cosmul() instead")
     def most_similar_cosmul(self, positive=None, negative=None, topn=10):
-        """
-        Deprecated. Use self.wv.most_similar_cosmul() instead.
-        Refer to the documentation for `gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.most_similar_cosmul`
+        """Deprecated, use self.wv.most_similar_cosmul() instead.
+
+        Refer to the documentation for
+        :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.most_similar_cosmul`.
+
         """
         return self.wv.most_similar_cosmul(positive, negative, topn)
 
     @deprecated("Method will be removed in 4.0.0, use self.wv.similar_by_word() instead")
     def similar_by_word(self, word, topn=10, restrict_vocab=None):
-        """
-        Deprecated. Use self.wv.similar_by_word() instead.
-        Refer to the documentation for `gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similar_by_word`
+        """Deprecated, use self.wv.similar_by_word() instead.
+
+        Refer to the documentation for :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similar_by_word`.
+
         """
         return self.wv.similar_by_word(word, topn, restrict_vocab)
 
     @deprecated("Method will be removed in 4.0.0, use self.wv.similar_by_vector() instead")
     def similar_by_vector(self, vector, topn=10, restrict_vocab=None):
-        """
-        Deprecated. Use self.wv.similar_by_vector() instead.
-        Refer to the documentation for `gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similar_by_vector`
+        """Deprecated, use self.wv.similar_by_vector() instead.
+
+        Refer to the documentation for :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similar_by_vector`.
+
         """
         return self.wv.similar_by_vector(vector, topn, restrict_vocab)
 
     @deprecated("Method will be removed in 4.0.0, use self.wv.doesnt_match() instead")
     def doesnt_match(self, words):
-        """
-        Deprecated. Use self.wv.doesnt_match() instead.
-        Refer to the documentation for `gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.doesnt_match`
+        """Deprecated, use self.wv.doesnt_match() instead.
+
+        Refer to the documentation for :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.doesnt_match`.
+
         """
         return self.wv.doesnt_match(words)
 
     @deprecated("Method will be removed in 4.0.0, use self.wv.similarity() instead")
     def similarity(self, w1, w2):
-        """
-        Deprecated. Use self.wv.similarity() instead.
-        Refer to the documentation for `gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similarity`
+        """Deprecated, use self.wv.similarity() instead.
+
+        Refer to the documentation for :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similarity`.
+
         """
         return self.wv.similarity(w1, w2)
 
     @deprecated("Method will be removed in 4.0.0, use self.wv.n_similarity() instead")
     def n_similarity(self, ws1, ws2):
-        """
-        Deprecated. Use self.wv.n_similarity() instead.
-        Refer to the documentation for `gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.n_similarity`
+        """Deprecated, use self.wv.n_similarity() instead.
+
+        Refer to the documentation for :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.n_similarity`.
+
         """
         return self.wv.n_similarity(ws1, ws2)
 
     @deprecated("Method will be removed in 4.0.0, use self.wv.evaluate_word_pairs() instead")
     def evaluate_word_pairs(self, pairs, delimiter='\t', restrict_vocab=300000,
                             case_insensitive=True, dummy4unknown=False):
-        """
-        Deprecated. Use self.wv.evaluate_word_pairs() instead.
-        Refer to the documentation for `gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.evaluate_word_pairs`
+        """Deprecated, use self.wv.evaluate_word_pairs() instead.
+
+        Refer to the documentation for
+        :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.evaluate_word_pairs`.
+
         """
         return self.wv.evaluate_word_pairs(pairs, delimiter, restrict_vocab, case_insensitive, dummy4unknown)

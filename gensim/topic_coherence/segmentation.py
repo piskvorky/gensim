@@ -31,12 +31,14 @@ def s_one_pre(topics):
 
     Examples
     --------
-    >>> import numpy as np
-    >>> from gensim.topic_coherence import segmentation
-    >>>
-    >>> topics = [np.array([1, 2, 3]), np.array([4, 5, 6])]
-    >>> segmentation.s_one_pre(topics)
-    [[(2, 1), (3, 1), (3, 2)], [(5, 4), (6, 4), (6, 5)]]
+    .. sourcecode:: pycon
+
+        >>> import numpy as np
+        >>> from gensim.topic_coherence import segmentation
+        >>>
+        >>> topics = [np.array([1, 2, 3]), np.array([4, 5, 6])]
+        >>> segmentation.s_one_pre(topics)
+        [[(2, 1), (3, 1), (3, 2)], [(5, 4), (6, 4), (6, 5)]]
 
     """
     s_one_pre_res = []
@@ -68,12 +70,14 @@ def s_one_one(topics):
 
     Examples
     -------
-    >>> import numpy as np
-    >>> from gensim.topic_coherence import segmentation
-    >>>
-    >>> topics = [np.array([1, 2, 3]), np.array([4, 5, 6])]
-    >>> segmentation.s_one_one(topics)
-    [[(1, 2), (1, 3), (2, 1), (2, 3), (3, 1), (3, 2)], [(4, 5), (4, 6), (5, 4), (5, 6), (6, 4), (6, 5)]]
+    .. sourcecode:: pycon
+
+        >>> import numpy as np
+        >>> from gensim.topic_coherence import segmentation
+        >>>
+        >>> topics = [np.array([1, 2, 3]), np.array([4, 5, 6])]
+        >>> segmentation.s_one_one(topics)
+        [[(1, 2), (1, 3), (2, 1), (2, 3), (3, 1), (3, 2)], [(4, 5), (4, 6), (5, 4), (5, 6), (6, 4), (6, 5)]]
 
     """
     s_one_one_res = []
@@ -108,12 +112,14 @@ def s_one_set(topics):
 
     Examples
     --------
-    >>> import numpy as np
-    >>> from gensim.topic_coherence import segmentation
-    >>>
-    >>> topics = [np.array([9, 10, 7])]
-    >>> segmentation.s_one_set(topics)
-    [[(9, array([ 9, 10,  7])), (10, array([ 9, 10,  7])), (7, array([ 9, 10,  7]))]]
+    .. sourcecode:: pycon
+
+        >>> import numpy as np
+        >>> from gensim.topic_coherence import segmentation
+        >>>
+        >>> topics = [np.array([9, 10, 7])]
+        >>> segmentation.s_one_set(topics)
+        [[(9, array([ 9, 10,  7])), (10, array([ 9, 10,  7])), (7, array([ 9, 10,  7]))]]
 
     """
     s_one_set_res = []
