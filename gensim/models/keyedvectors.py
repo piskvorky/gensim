@@ -167,14 +167,6 @@ try:
 except ImportError:
     from Queue import Queue, Empty  # noqa:F401
 
-# If pyemd C extension is available, import it.
-# If pyemd is attempted to be used, but isn't installed, ImportError will be raised in wmdistance
-try:
-    from pyemd import emd
-    PYEMD_EXT = True
-except ImportError:
-    PYEMD_EXT = False
-
 from numpy import dot, float32 as REAL, empty, memmap as np_memmap, \
     double, array, zeros, vstack, sqrt, newaxis, integer, \
     ndarray, sum as np_sum, prod, argmax, divide as np_divide
@@ -764,9 +756,9 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         if diff1 > 0 or diff2 > 0:
             logger.info('Removed %d and %d OOV words from document 1 and 2 (respectively).', diff1, diff2)
 
-        if not len(document1) or not len(document2):
+        if not document1 or not document2:
             logger.info(
-                "At least one of the documents had no words that wherein the vocabulary. "
+                "At least one of the documents had no words that were in the vocabulary. "
                 "Aborting (returning inf)."
             )
             return float('inf')
