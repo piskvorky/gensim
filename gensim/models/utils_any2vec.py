@@ -53,7 +53,7 @@ except ImportError:
         # Runtime warnings for integer overflow are raised, this is expected behaviour. These warnings are suppressed.
         old_settings = np.seterr(all='ignore')
         h = np.uint32(2166136261)
-        string = bytearray((u'<' + string + u'>').encode('utf-8'))
+        string = bytearray(string.encode('utf-8'))
         for c in string:
             h = np.uint32(h ^ np.uint32(np.int8(_byte_to_int(c))))
             h = np.uint32(h * np.uint32(16777619))
