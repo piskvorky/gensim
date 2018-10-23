@@ -80,6 +80,9 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.sparse_coef = sparse_coef
         self.random_state = utils.get_random_state(random_state)
 
+        if self.id2word is None:
+            self.id2word = utils.dict_from_corpus(corpus)
+
         self.A = None
         self.B = None
 
