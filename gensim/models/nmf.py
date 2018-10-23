@@ -35,7 +35,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         eval_every=10,
         v_max=None,
         normalize=True,
-        sparse_coef=3
+        sparse_coef=3,
+        random_state=None
     ):
         """
 
@@ -77,6 +78,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.eval_every = eval_every
         self.normalize = normalize
         self.sparse_coef = sparse_coef
+        self.random_state = utils.get_random_state(random_state)
 
         self.A = None
         self.B = None
@@ -278,7 +280,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         self._W = np.abs(
             self.w_std
-            * halfnorm.rvs(size=(self.n_features, self.num_topics))
+            * halfnorm.rvs(size=(self.n_features, self.num_topics), random_state=self.random_state)
         )
 
         is_great_enough = self._W > self.w_std * self.sparse_coef
@@ -310,6 +312,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             for chunk in utils.grouper(
                 corpus, self.chunksize, as_numpy=chunks_as_numpy
             ):
+                self.random_state.shuffle(chunk)
                 v = matutils.corpus2csc(chunk, len(self.id2word)).tocsr()
                 self._h, self._r = self._solveproj(v, self._W, r=self._r, h=self._h, v_max=self.v_max)
                 h, r = self._h, self._r
