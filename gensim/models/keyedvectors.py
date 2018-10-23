@@ -167,13 +167,6 @@ try:
 except ImportError:
     from Queue import Queue, Empty  # noqa:F401
 
-# If pyemd C extension is available, import it.
-# If pyemd is attempted to be used, but isn't installed, ImportError will be raised in wmdistance
-try:
-    from pyemd import emd
-    PYEMD_EXT = True
-except ImportError:
-    PYEMD_EXT = False
 
 from numpy import dot, float32 as REAL, empty, memmap as np_memmap, \
     double, array, zeros, vstack, sqrt, newaxis, integer, \
@@ -753,8 +746,12 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         """
 
-        # Explicitly import pyemd again if not previously imported
-        from pyemd import emd
+        # If pyemd C extension is available, import it.
+        # If pyemd is attempted to be used, but isn't installed, ImportError will be raised in wmdistance
+        try:
+            from pyemd import emd
+        except ImportError:
+            logger.error('Pyemd not installed')
 
         # Remove out-of-vocabulary words.
         len_pre_oov1 = len(document1)
