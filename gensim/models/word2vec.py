@@ -208,22 +208,18 @@ except ImportError:
                 for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
                     # don't train on the `word` itself
                     if pos2 != pos:
-
                         # handle the sentence using Doc2VecC
-                        if doc2vecc:
-                            doc2vecc_indices = [
-                                w.index for w in random.choice(
-                                    word_vocabs, int(len(word_vocabs) * doc2vecc), replace=True
-                                )
-                            ]
-                            train_sg_pair(
-                                model, model.wv.index2word[word.index], word2.index, alpha,
-                                doc2vecc_constant, doc2vecc_indices, compute_loss=compute_loss
+                        doc2vecc_indices = [
+                            w.index for w in random.choice(
+                                word_vocabs, int(len(word_vocabs) * doc2vecc), replace=True
                             )
-                        else:
-                            train_sg_pair(
-                                model, model.wv.index2word[word.index], word2.index, alpha, compute_loss=compute_loss
-                            )
+                        ] if doc2vecc else None
+
+                        train_sg_pair(
+                            model, model.wv.index2word[word.index], word2.index, alpha,
+                            doc2vecc_constant=doc2vecc_constant, doc2vecc_indices=doc2vecc_indices,
+                            compute_loss=compute_loss
+                        )
 
             result += len(word_vocabs)
         return result
@@ -252,6 +248,8 @@ except ImportError:
             Unused.
         compute_loss : bool, optional
             Whether or not the training loss should be computed in this batch.
+        doc2vecc: float, optional
+            TODO
 
         Returns
         -------
@@ -413,7 +411,7 @@ def train_sg_pair(model, word, context_index, alpha, doc2vecc_constant=None, doc
         Learning rate.
     doc2vecc_constant: float, optional
         TODO
-    doc2vecc_indices: float, optional
+    doc2vecc_indices: list of int, optional
         TODO
     learn_vectors : bool, optional
         Whether the vectors should be updated.
@@ -539,7 +537,7 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, doc2vecc_constan
         Learning rate.
     doc2vecc_constant: float, optional
         TODO
-    doc2vecc_indices: float, optionnal
+    doc2vecc_indices: list of int, optional
         TODO
     learn_vectors : bool, optional
         Whether the vectors should be updated.
