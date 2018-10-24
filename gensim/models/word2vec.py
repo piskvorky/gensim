@@ -183,6 +183,8 @@ except ImportError:
             Unused.
         compute_loss : bool, optional
             Whether or not the training loss should be computed in this batch.
+        doc2vecc: float, optional
+            TODO
 
         Returns
         -------
@@ -265,7 +267,7 @@ except ImportError:
                 model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32
             ]
 
-            # `w` in doc2vecC
+            # `w` in doc2vecc
             corruption_constant = 1.0 / doc2vecc / len(word_vocabs) if word_vocabs and doc2vecc else None
 
             for pos, word in enumerate(word_vocabs):
@@ -276,7 +278,7 @@ except ImportError:
                 l1 = np_sum(model.wv.syn0[word2_indices], axis=0)  # 1 x vector_size
                 word2_indices_count = len(word2_indices)
 
-                # handle the sentence using Doc2VecC
+                # handle the sentence using Doc2Vecc
                 doc2vecc_indices = None
                 if doc2vecc:
                     doc2vecc_indices = [
@@ -409,6 +411,10 @@ def train_sg_pair(model, word, context_index, alpha, doc2vecc_constant=None, doc
         The vocabulary indices of the words in the context.
     alpha : float
         Learning rate.
+    doc2vecc_constant: float, optional
+        TODO
+    doc2vecc_indices: float, optional
+        TODO
     learn_vectors : bool, optional
         Whether the vectors should be updated.
     learn_hidden : bool, optional
@@ -506,7 +512,7 @@ def train_sg_pair(model, word, context_index, alpha, doc2vecc_constant=None, doc
             # learn input -> hidden (mutates model.wv.syn0[word2.index], if that is l1)
             context_vectors[context_index] += neu1e * lock_factor
 
-        # doc2vecC: backprop to the words selected to represent the sentence
+        # doc2vecc: backprop to the words selected to represent the sentence
         if doc2vecc_constant and doc2vecc_indices:
             for i in doc2vecc_indices:
                 context_vectors[i] += neu1e * doc2vecc_constant / 2 * context_locks[i]
@@ -531,6 +537,10 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, doc2vecc_constan
         Vector representation of the label word.
     alpha : float
         Learning rate.
+    doc2vecc_constant: float, optional
+        TODO
+    doc2vecc_indices: float, optionnal
+        TODO
     learn_vectors : bool, optional
         Whether the vectors should be updated.
     learn_hidden : bool, optional
@@ -615,7 +625,7 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, doc2vecc_constan
             for i in input_word_indices:
                 context_vectors[i] += neu1e * context_locks[i]
 
-        # doc2vecC: backprop to the words selected to represent the sentence
+        # doc2vecc: backprop to the words selected to represent the sentence
         if doc2vecc_constant and doc2vecc_indices:
             for i in doc2vecc_indices:
                 context_vectors[i] += neu1e * doc2vecc_constant * context_locks[i]
