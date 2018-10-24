@@ -9,6 +9,7 @@ Unit tests for the `corpora.Dictionary` class.
 
 
 from collections import Mapping
+from itertools import chain
 import logging
 import unittest
 import codecs
@@ -258,7 +259,7 @@ class TestDictionary(unittest.TestCase):
             for document in documents]
 
         # remove words that appear only once
-        all_tokens = sum(texts, [])
+        all_tokens = list(chain.from_iterable(texts))
         tokens_once = set(word for word in set(all_tokens) if all_tokens.count(word) == 1)
         texts = [[word for word in text if word not in tokens_once] for text in texts]
 

@@ -4,9 +4,11 @@ Examples
 --------
 You can use it through python
 
->>> from gensim.scripts.package_info import package_info
->>>
->>> info = package_info()
+.. sourcecode:: pycon
+
+    >>> from gensim.scripts.package_info import package_info
+    >>>
+    >>> info = package_info()
 
 or using CLI interface
 

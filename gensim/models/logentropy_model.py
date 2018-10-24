@@ -43,14 +43,16 @@ class LogEntropyModel(interfaces.TransformationABC):
 
     Examples
     --------
-    >>> from gensim.models import LogEntropyModel
-    >>> from gensim.test.utils import common_texts
-    >>> from gensim.corpora import Dictionary
-    >>>
-    >>> dct = Dictionary(common_texts)  # fit dictionary
-    >>> corpus = [dct.doc2bow(row) for row in common_texts]  # convert to BoW format
-    >>> model = LogEntropyModel(corpus)  # fit model
-    >>> vector = model[corpus[1]]  # apply model to document
+    .. sourcecode:: pycon
+
+        >>> from gensim.models import LogEntropyModel
+        >>> from gensim.test.utils import common_texts
+        >>> from gensim.corpora import Dictionary
+        >>>
+        >>> dct = Dictionary(common_texts)  # fit dictionary
+        >>> corpus = [dct.doc2bow(row) for row in common_texts]  # convert to BoW format
+        >>> model = LogEntropyModel(corpus)  # fit model
+        >>> vector = model[corpus[1]]  # apply model to document
 
     """
 

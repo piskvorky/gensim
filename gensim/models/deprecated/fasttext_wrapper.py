@@ -23,10 +23,11 @@ The wrapped model can NOT be updated with new documents for online training -- u
 `Word2Vec` for that.
 
 Example:
+.. sourcecode:: pycon
 
->>> from gensim.models.wrappers import FastText
->>> model = FastText.train('/Users/kofola/fastText/fasttext', corpus_file='text8')
->>> print model['forests']  # prints vector for given out-of-vocabulary word
+    >>> from gensim.models.wrappers import FastText
+    >>> model = FastText.train('/Users/kofola/fastText/fasttext', corpus_file='text8')
+    >>> print model['forests']  # prints vector for given out-of-vocabulary word
 
 .. [1] https://github.com/facebookresearch/fastText#enriching-word-vectors-with-subword-information
 
@@ -89,10 +90,12 @@ class FastTextKeyedVectors(KeyedVectors):
         The word can be out-of-vocabulary as long as ngrams for the word are present.
         For words with all ngrams absent, a KeyError is raised.
 
-        Example::
+        Example:
 
-          >>> trained_model['office']
-          array([ -1.40128313e-02, ...])
+        .. sourcecode:: pycon
+
+            >>> trained_model['office']
+            array([ -1.40128313e-02, ...])
 
         """
         if word in self.vocab:
@@ -291,7 +294,9 @@ class FastText(Word2Vec):
 
     def load_binary_data(self, encoding='utf8'):
         """Loads data from the output binary file created by FastText training"""
-        with utils.smart_open(self.file_name, 'rb') as f:
+
+        # TODO use smart_open again when https://github.com/RaRe-Technologies/smart_open/issues/207 will be fixed
+        with open(self.file_name, 'rb') as f:
             self.load_model_params(f)
             self.load_dict(f, encoding=encoding)
             self.load_vectors(f)

@@ -9,14 +9,16 @@ Examples
 --------
 Extract keywords from text
 
->>> from gensim.summarization import keywords
->>> text='''Challenges in natural language processing frequently involve
-... speech recognition, natural language understanding, natural language
-... generation (frequently from formal, machine-readable logical forms),
-... connecting language and machine perception, dialog systems, or some
-... combination thereof.'''
->>> keywords(text).split('\\n')
-[u'natural language', u'machine', u'frequently']
+.. sourcecode:: pycon
+
+    >>> from gensim.summarization import keywords
+    >>> text = '''Challenges in natural language processing frequently involve
+    ... speech recognition, natural language understanding, natural language
+    ... generation (frequently from formal, machine-readable logical forms),
+    ... connecting language and machine perception, dialog systems, or some
+    ... combination thereof.'''
+    >>> keywords(text).split('\\n')
+    [u'natural language', u'machine', u'frequently']
 
 
 Notes
@@ -511,6 +513,9 @@ def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=
     del split_text  # It's no longer used
 
     _remove_unreachable_nodes(graph)
+
+    if not graph.edges():
+        return _format_results([], [], split, scores)
 
     # Ranks the tokens using the PageRank algorithm. Returns dict of lemma -> score
     pagerank_scores = _pagerank(graph)

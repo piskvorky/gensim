@@ -33,13 +33,14 @@ Use `official guide <https://github.com/shihaoji/wordrank>`_ or this one
 
 Examples
 --------
+.. sourcecode:: pycon
 
->>> from gensim.models.wrappers import Wordrank
->>>
->>> path_to_wordrank_binary = '/path/to/wordrank/binary'
->>> model = Wordrank.train(path_to_wordrank_binary, corpus_file='text8', out_name='wr_model')
->>>
->>> print model["hello"]  # prints vector for given words
+    >>> from gensim.models.wrappers import Wordrank
+    >>>
+    >>> path_to_wordrank_binary = '/path/to/wordrank/binary'
+    >>> model = Wordrank.train(path_to_wordrank_binary, corpus_file='text8', out_name='wr_model')
+    >>>
+    >>> print(model["hello"])  # prints vector for given words
 
 Warnings
 --------
