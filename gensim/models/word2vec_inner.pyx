@@ -280,8 +280,8 @@ cdef unsigned long long w2v_fast_sentence_sg_neg(
 
     our_saxpy(&size, &word_locks[word2_index], work, &ONE, &syn0[row1], &ONE)
 
-    if doc2vecC > 0:
-        # doc2vecC script error is also divided by 2: syn0[l1] += neu1e * w/2;
+    if doc2vecc > 0:
+        # doc2vecc script error is also divided by 2: syn0[l1] += neu1e * w/2;
         sscal(&size, &inv_count, work, &ONE)
         sscal(&size, &corruption_constant, work, &ONE)
 
@@ -753,7 +753,7 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss, _doc2v
                 if c.hs:
                     w2v_fast_sentence_cbow_hs(c.points[i], c.codes[i], c.codelens, c.neu1, c.syn0, c.syn1, c.size, c.indexes, c.alpha, c.work, i, j, k, c.cbow_mean, c.word_locks, c.compute_loss, &c.running_training_loss)
                 if c.negative:
-                    c.next_random = w2v_fast_sentence_cbow_neg(c.negative, c.cum_table, c.cum_table_len, c.codelens, c.neu1, c.syn0, c.syn1neg, c.size, c.indexes, c.alpha, c.work, i, j, k, c.cbow_mean, c.next_random, c.word_locks, c.compute_loss, doc2vecc, idx_start, idx_end, &c.running_training_loss)
+                    c.next_random = w2v_fast_sentence_cbow_neg(c.negative, c.cum_table, c.cum_table_len, c.codelens, c.neu1, c.syn0, c.syn1neg, c.size, c.indexes, c.alpha, c.work, i, j, k, c.cbow_mean, c.next_random, c.word_locks, c.compute_loss, _doc2vecc, idx_start, idx_end, &c.running_training_loss)
 
     model.running_training_loss = c.running_training_loss
     return effective_words

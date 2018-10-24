@@ -198,7 +198,7 @@ except ImportError:
                            model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
 
             # `w` in doc2vecC
-            doc2vecc_constant = 1.0 / doc2vecc / len(word_vocabs) if word_vocabs and doc2vecc else None
+            doc2vecc_constant = 1.0 / doc2vecc / len(word_vocabs) if word_vocabs and doc2vecc > 0 else None
 
             for pos, word in enumerate(word_vocabs):
                 reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
@@ -213,7 +213,7 @@ except ImportError:
                             w.index for w in random.choice(
                                 word_vocabs, int(len(word_vocabs) * doc2vecc), replace=True
                             )
-                        ] if doc2vecc else None
+                        ] if doc2vecc > 0 else None
 
                         train_sg_pair(
                             model, model.wv.index2word[word.index], word2.index, alpha,
@@ -266,7 +266,7 @@ except ImportError:
             ]
 
             # `w` in doc2vecc
-            corruption_constant = 1.0 / doc2vecc / len(word_vocabs) if word_vocabs and doc2vecc else None
+            corruption_constant = 1.0 / doc2vecc / len(word_vocabs) if word_vocabs and doc2vecc > 0 else None
 
             for pos, word in enumerate(word_vocabs):
                 reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
@@ -278,7 +278,7 @@ except ImportError:
 
                 # handle the sentence using Doc2Vecc
                 doc2vecc_indices = None
-                if doc2vecc:
+                if doc2vecc > 0:
                     doc2vecc_indices = [
                         w.index for w in random.choice(word_vocabs, int(len(word_vocabs) * doc2vecc), replace=True)
                     ]
@@ -511,7 +511,7 @@ def train_sg_pair(model, word, context_index, alpha, doc2vecc_constant=None, doc
             context_vectors[context_index] += neu1e * lock_factor
 
         # doc2vecc: backprop to the words selected to represent the sentence
-        if doc2vecc_constant and doc2vecc_indices:
+        if doc2vecc_constant > 0 and doc2vecc_indices:
             for i in doc2vecc_indices:
                 context_vectors[i] += neu1e * doc2vecc_constant / 2 * context_locks[i]
 
@@ -624,7 +624,7 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, doc2vecc_constan
                 context_vectors[i] += neu1e * context_locks[i]
 
         # doc2vecc: backprop to the words selected to represent the sentence
-        if doc2vecc_constant and doc2vecc_indices:
+        if doc2vecc_constant > 0 and doc2vecc_indices:
             for i in doc2vecc_indices:
                 context_vectors[i] += neu1e * doc2vecc_constant * context_locks[i]
 
@@ -718,7 +718,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
                  max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
                  sg=0, hs=0, negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
                  trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False, callbacks=(),
-                 max_final_vocab=None):
+                 max_final_vocab=None, doc2vecc=None):
         """
 
         Parameters
@@ -811,6 +811,8 @@ class Word2Vec(BaseWordEmbeddingsModel):
             :meth:`~gensim.models.word2vec.Word2Vec.get_latest_training_loss`.
         callbacks : iterable of :class:`~gensim.models.callbacks.CallbackAny2Vec`, optional
             Sequence of callbacks to be executed at specific stages during training.
+        doc2vecc: float, optional
+            TODO
 
         Examples
         --------
@@ -833,6 +835,8 @@ class Word2Vec(BaseWordEmbeddingsModel):
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample, sorted_vocab=bool(sorted_vocab),
             null_word=null_word, max_final_vocab=max_final_vocab, ns_exponent=ns_exponent)
         self.trainables = Word2VecTrainables(seed=seed, vector_size=size, hashfxn=hashfxn)
+
+        self.doc2vecc = doc2vecc
 
         super(Word2Vec, self).__init__(
             sentences=sentences, corpus_file=corpus_file, workers=workers, vector_size=size, epochs=iter,
@@ -874,9 +878,9 @@ class Word2Vec(BaseWordEmbeddingsModel):
         work, neu1 = inits
         tally = 0
         if self.sg:
-            tally += train_batch_sg(self, sentences, alpha, work, self.compute_loss)
+            tally += train_batch_sg(self, sentences, alpha, work, self.compute_loss, self.doc2vecc)
         else:
-            tally += train_batch_cbow(self, sentences, alpha, work, neu1, self.compute_loss)
+            tally += train_batch_cbow(self, sentences, alpha, work, neu1, self.compute_loss, self.doc2vecc)
         return tally, self._raw_word_count(sentences)
 
     def _clear_post_train(self):
@@ -2010,6 +2014,11 @@ if __name__ == "__main__":
         type=int, default=0, choices=[0, 1]
     )
     parser.add_argument("-accuracy", help="Use questions from file ACCURACY to evaluate the model")
+    parser.add_argument(
+        "-doc2vecc", help="Document ratio used to generate document vector while training doc2vecc; default is 0 (off);"
+                          "ratio should be between 0 and 1",
+        type=float, default=None
+    )
 
     args = parser.parse_args()
 
@@ -2023,7 +2032,7 @@ if __name__ == "__main__":
     model = Word2Vec(
         corpus, size=args.size, min_count=args.min_count, workers=args.threads,
         window=args.window, sample=args.sample, sg=skipgram, hs=args.hs,
-        negative=args.negative, cbow_mean=1, iter=args.iter
+        negative=args.negative, cbow_mean=1, iter=args.iter, doc2vecc=args.doc2vecc
     )
 
     if args.output:
