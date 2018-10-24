@@ -610,7 +610,7 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss, _doc2vecc=None)
     cdef REAL_t doc2vecc = (_doc2vecc if _doc2vecc > 0 else 0.0)
     cdef REAL_t *neu1 #neu1 is used whether doc2vec is used or not (as a buffer).
 
-    init_w2v_config(&c, model, alpha, compute_loss, _work, neu1)
+    init_w2v_config(&c, model, alpha, compute_loss, _work)
 
     # prepare C structures so we can go "full C" and release the Python GIL
     vlookup = model.wv.vocab
@@ -664,7 +664,7 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss, _doc2vecc=None)
                     if c.hs:
                         w2v_fast_sentence_sg_hs(c.points[i], c.codes[i], c.codelens[i], c.syn0, c.syn1, c.size, c.indexes[j], c.alpha, c.work, c.word_locks, c.compute_loss, &c.running_training_loss)
                     if c.negative:
-                        c.next_random = w2v_fast_sentence_sg_neg(c.negative, c.cum_table, c.cum_table_len, neu1, c.syn0, c.syn1neg, c.size, c.indexes[i], c.indexes[j], c.alpha, c.work, c.next_random, c.word_locks, c.compute_loss, doc2vecc, idx_start, idx_end, &c.running_training_loss)
+                        c.next_random = w2v_fast_sentence_sg_neg(c.negative, c.cum_table, c.cum_table_len, neu1, c.syn0, c.syn1neg, c.size, c.indexes[i], c.indexes[j], c.indexes, c.alpha, c.work, c.next_random, c.word_locks, c.compute_loss, doc2vecc, idx_start, idx_end, &c.running_training_loss)
 
     model.running_training_loss = c.running_training_loss
     return effective_words
@@ -701,6 +701,7 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss, _doc2v
     cdef int i, j, k
     cdef int effective_words = 0, effective_sentences = 0
     cdef int sent_idx, idx_start, idx_end
+    cdef REAL_t doc2vecc = (_doc2vecc if _doc2vecc > 0 else 0.0)
 
     init_w2v_config(&c, model, alpha, compute_loss, _work, _neu1)
 
@@ -753,7 +754,7 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss, _doc2v
                 if c.hs:
                     w2v_fast_sentence_cbow_hs(c.points[i], c.codes[i], c.codelens, c.neu1, c.syn0, c.syn1, c.size, c.indexes, c.alpha, c.work, i, j, k, c.cbow_mean, c.word_locks, c.compute_loss, &c.running_training_loss)
                 if c.negative:
-                    c.next_random = w2v_fast_sentence_cbow_neg(c.negative, c.cum_table, c.cum_table_len, c.codelens, c.neu1, c.syn0, c.syn1neg, c.size, c.indexes, c.alpha, c.work, i, j, k, c.cbow_mean, c.next_random, c.word_locks, c.compute_loss, _doc2vecc, idx_start, idx_end, &c.running_training_loss)
+                    c.next_random = w2v_fast_sentence_cbow_neg(c.negative, c.cum_table, c.cum_table_len, c.codelens, c.neu1, c.syn0, c.syn1neg, c.size, c.indexes, c.alpha, c.work, i, j, k, c.cbow_mean, c.next_random, c.word_locks, c.compute_loss, doc2vecc, idx_start, idx_end, &c.running_training_loss)
 
     model.running_training_loss = c.running_training_loss
     return effective_words
