@@ -676,6 +676,11 @@ def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count
     corpus_word_count : int
         Not used in this particular scoring technique.
 
+    Returns
+    -------
+    float
+        Score for given bi-gram, greater than or equal to 0.
+
     Notes
     -----
     Formula: :math:`\\frac{(bigram\_count - min\_count) * len\_vocab }{ (worda\_count * wordb\_count)}`.
@@ -702,6 +707,11 @@ def npmi_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, co
         Ignore all bigrams with total collected count lower than this value.
     corpus_word_count : int
         Total number of words in the corpus.
+
+    Returns
+    -------
+    float
+        Score for given bi-gram, in the range -1 to 1.
 
     Notes
     -----
