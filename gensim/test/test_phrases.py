@@ -12,7 +12,6 @@ import logging
 import unittest
 
 import six
-
 import numpy as np
 
 from gensim.utils import to_unicode
