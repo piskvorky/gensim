@@ -289,8 +289,8 @@ def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expec
 
     cdef int i, j, k
     cdef int effective_words = 0, effective_sentences = 0
-    cdef int total_effective_words = 0, total_sentences = 0
-    cdef long long total_words = 0
+    cdef int total_sentences = 0
+    cdef long long total_effective_words = 0, total_words = 0
     cdef int sent_idx, idx_start, idx_end
 
     init_w2v_config(&c, model, _alpha, compute_loss, _work)
@@ -387,8 +387,8 @@ def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _exp
 
     cdef int i, j, k
     cdef int effective_words = 0, effective_sentences = 0
-    cdef int total_effective_words = 0, total_sentences = 0
-    cdef long long total_words = 0
+    cdef int total_sentences = 0
+    cdef long long total_effective_words = 0, total_words = 0
     cdef int sent_idx, idx_start, idx_end
 
     init_w2v_config(&c, model, _alpha, compute_loss, _work, _neu1)
