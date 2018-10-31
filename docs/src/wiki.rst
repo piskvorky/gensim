@@ -42,6 +42,7 @@ First let's load the corpus iterator and dictionary, created in the second step 
 
     >>> import logging
     >>> import gensim
+    >>> import pickle
     >>>
     >>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     >>>
@@ -164,6 +165,8 @@ Unlike LSA, the topics coming from LDA are easier to interpret
     >>> with open("wiki_en_bow.mm.metadata.cpickle", 'rb') as meta_file:
             docno2metadata = pickle.load(meta_file)
     >>>i = 0 # take the first article as an example
+    >>>print("Title: {}".format(docno2metadata[i][1]))
+    Title: Anarchism
     >>>vec = mm[i] # get tf-idf vector
     >>>lda.get_document_topics(vec)
     [(1, 0.028828567), (10, 0.32766217), (36, 0.021675354), (55, 0.2521854), (57, 0.27154338)]
