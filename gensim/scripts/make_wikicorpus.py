@@ -80,7 +80,7 @@ if __name__ == '__main__':
         dictionary.allow_update = True  # start collecting document frequencies
         wiki = WikiCorpus(inp, lemmatize=lemmatize, dictionary=dictionary)
         # ~4h on my macbook pro without lemmatization, 3.1m articles (august 2012)
-        MmCorpus.serialize(outp + '_bow.mm', wiki, progress_cnt=10000)
+        MmCorpus.serialize(outp + '_bow.mm', wiki, progress_cnt=10000, metadata=True)
         # with HashDictionary, the token->id mapping is only fully instantiated now, after `serialize`
         dictionary.filter_extremes(no_below=20, no_above=0.1, keep_n=DEFAULT_DICT_SIZE)
         dictionary.save_as_text(outp + '_wordids.txt.bz2')
@@ -91,7 +91,7 @@ if __name__ == '__main__':
         # only keep the most frequent words (out of total ~8.2m unique tokens)
         wiki.dictionary.filter_extremes(no_below=20, no_above=0.1, keep_n=DEFAULT_DICT_SIZE)
         # save dictionary and bag-of-words (term-document frequency matrix)
-        MmCorpus.serialize(outp + '_bow.mm', wiki, progress_cnt=10000)  # another ~9h
+        MmCorpus.serialize(outp + '_bow.mm', wiki, progress_cnt=10000, metadata=True)  # another ~9h
         wiki.dictionary.save_as_text(outp + '_wordids.txt.bz2')
         # load back the id->word mapping directly from file
         # this seems to save more memory, compared to keeping the wiki.dictionary object from above
