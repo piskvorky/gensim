@@ -756,7 +756,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         if len(document1) == 0 or len(document2) == 0:
             logger.info(
-                "At least one of the documents had no words that werein the vocabulary. "
+                "At least one of the documents had no words that were in the vocabulary. "
                 "Aborting (returning inf)."
             )
             return float('inf')
