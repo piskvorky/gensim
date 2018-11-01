@@ -751,9 +751,10 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         ImportError
             If `pyemd <https://pypi.org/project/pyemd/>`_  isn't installed.
 
-        """
+        
         if not PYEMD_EXT:
             raise ImportError("Please install pyemd Python package to compute WMD.")
+            """
 
         # Remove out-of-vocabulary words.
         len_pre_oov1 = len(document1)
