@@ -557,7 +557,7 @@ class Callback(object):
                 self.log_type.info(statement)
 
         # check for any metric which need model state from previous epoch
-        if isinstance(metric, (DiffMetric, ConvergenceMetric)):
+        if any(isinstance(metric, (DiffMetric, ConvergenceMetric)) for metric in self.metrics):
             self.previous = copy.deepcopy(self.model)
 
         return current_metrics
