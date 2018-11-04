@@ -319,6 +319,8 @@ class TestDictionary(unittest.TestCase):
         self.assertEqual(d.token2id['space'], 1)
         self.assertEqual(d.token2id['quake'], 3)
         self.assertEqual(len(d.token2id), 8)
+        self.assertNotIn((0, 1), d.doc2bow(corpus[0]))
+        self.assertIn((0, 1), d.doc2bow(['pad'] + corpus[0]))
         corpus_with_special_tokens = [["máma", "mele", "maso"], ["ema", "má", "máma", "space"]]
         d = Dictionary(corpus_with_special_tokens)
         self.assertEqual(len(d.token2id), 6)
@@ -327,6 +329,8 @@ class TestDictionary(unittest.TestCase):
         self.assertEqual(len(d.token2id), 8)
         self.assertEqual(max(d.token2id.values()), 7)
         self.assertEqual(d.token2id['space'], 1)
+        self.assertNotIn((1, 1), d.doc2bow(corpus_with_special_tokens[0]))
+        self.assertIn((1, 1), d.doc2bow(corpus_with_special_tokens[1]))
 
 
 # endclass TestDictionary
