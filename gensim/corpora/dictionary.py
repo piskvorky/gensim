@@ -574,6 +574,14 @@ class Dictionary(utils.SaveLoad, Mapping):
     def patch_with_special_tokens(self, special_token_dict):
         """Patch token2id and id2token using a dictionary of special tokens.
 
+        Use case
+        --------
+        When doing sequence modeling (e.g. named entity recognition), one may
+        want to specify special tokens that behave differently than others.
+        One example is the "unknown" token, and another is the padding token.
+        It is usual to set the padding token to have index `0`, and patching
+        the dictionary with `{'<PAD>': 0}` would be one way to specify this.
+
         Parameters
         ----------
         special_token_dict : dict of (str, int)
