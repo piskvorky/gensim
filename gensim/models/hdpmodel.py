@@ -510,13 +510,13 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         return (
             # chunk limit reached
-            (self.max_chunks and chunks_processed == self.max_chunks) or
+            (self.max_chunks and chunks_processed == self.max_chunks)
 
             # time limit reached
-            (self.max_time and time.clock() - start_time > self.max_time) or
+            or (self.max_time and time.clock() - start_time > self.max_time)
 
             # no limits and whole corpus has been processed once
-            (not self.max_chunks and not self.max_time and docs_processed >= self.m_D))
+            or (not self.max_chunks and not self.max_time and docs_processed >= self.m_D))
 
     def update_chunk(self, chunk, update=True, opt_o=True):
         """Performs lazy update on necessary columns of lambda and variational inference for documents in the chunk.
