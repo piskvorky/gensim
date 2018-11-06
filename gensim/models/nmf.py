@@ -7,6 +7,7 @@ from gensim import matutils
 from gensim import interfaces
 from gensim.models import basemodel
 from gensim.models.nmf_pgd import solve_h, solve_r
+from gensim.interfaces import TransformedCorpus
 import itertools
 
 logger = logging.getLogger(__name__)
@@ -17,26 +18,26 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
     """
 
     def __init__(
-        self,
-        corpus=None,
-        num_topics=100,
-        id2word=None,
-        chunksize=2000,
-        passes=1,
-        lambda_=1.,
-        kappa=1.,
-        minimum_probability=0.01,
-        use_r=False,
-        store_r=False,
-        w_max_iter=200,
-        w_stop_condition=1e-4,
-        h_r_max_iter=50,
-        h_r_stop_condition=1e-3,
-        eval_every=10,
-        v_max=None,
-        normalize=True,
-        sparse_coef=3,
-        random_state=None
+            self,
+            corpus=None,
+            num_topics=100,
+            id2word=None,
+            chunksize=2000,
+            passes=1,
+            lambda_=1.,
+            kappa=1.,
+            minimum_probability=0.01,
+            use_r=False,
+            store_r=False,
+            w_max_iter=200,
+            w_stop_condition=1e-4,
+            h_r_max_iter=50,
+            h_r_stop_condition=1e-3,
+            eval_every=10,
+            v_max=None,
+            normalize=True,
+            sparse_coef=3,
+            random_state=None
     ):
         """
 
@@ -131,7 +132,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             sorted_topics = list(matutils.argsort(sparsity))
             chosen_topics = (
-                sorted_topics[: num_topics // 2] + sorted_topics[-num_topics // 2:]
+                    sorted_topics[: num_topics // 2] + sorted_topics[-num_topics // 2:]
             )
 
         shown = []
@@ -215,21 +216,30 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return values
 
     def get_document_topics(self, bow, minimum_probability=None):
-        v = matutils.corpus2csc([bow], len(self.id2word)).tocsr()
-        h, _ = self._solveproj(v, self._W, v_max=np.inf)
-
-        if self.normalize:
-            h /= h.sum(axis=0)
-
         if minimum_probability is None:
             minimum_probability = self.minimum_probability
         minimum_probability = max(minimum_probability, 1e-8)
 
+        # if the input vector is a corpus, return a transformed corpus
+        is_corpus, corpus = utils.is_corpus(bow)
+
+        if is_corpus:
+            kwargs = dict(
+                minimum_probability=minimum_probability,
+            )
+            return self._apply(corpus, **kwargs)
+
+        v = matutils.corpus2csc([bow], len(self.id2word)).tocsr()
+        h, _ = self._solveproj(v, self._W, v_max=np.inf)
+
+        if self.normalize:
+            h.data /= h.sum()
+
         return [
-            (idx, proba)
+            (idx, proba.toarray()[0, 0])
             for idx, proba
             in enumerate(h[:, 0])
-            if not minimum_probability or proba > minimum_probability
+            if not minimum_probability or proba.toarray()[0, 0] > minimum_probability
         ]
 
     @staticmethod
@@ -313,7 +323,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         for _ in range(self.passes):
             for chunk in utils.grouper(
-                corpus, self.chunksize, as_numpy=chunks_as_numpy
+                    corpus, self.chunksize, as_numpy=chunks_as_numpy
             ):
                 self.random_state.shuffle(chunk)
                 v = matutils.corpus2csc(chunk, len(self.id2word)).tocsr()
@@ -358,8 +368,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             # print(type(self.B))
             # print(self.B[:5, :5])
             return (
-                0.5 * self._W.T.dot(self._W).dot(self.A).diagonal().sum()
-                - self._W.T.dot(self.B).diagonal().sum()
+                    0.5 * self._W.T.dot(self._W).dot(self.A).diagonal().sum()
+                    - self._W.T.dot(self.B).diagonal().sum()
             )
 
         eta = self._kappa / scipy.sparse.linalg.norm(self.A)
@@ -371,7 +381,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             logger.debug("w_error: %s" % self._w_error)
 
             self._W -= eta * (self._W.dot(self.A) - self.B)
-            self.__transform()
+            self._transform()
 
             error_ = error()
 
@@ -380,8 +390,26 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             self._w_error = error_
 
+    def _apply(self, corpus, chunksize=None, **kwargs):
+        """Apply the transformation to a whole corpus and get the result as another corpus.
+
+        Parameters
+        ----------
+        corpus : iterable of list of (int, number)
+            Corpus in sparse Gensim bag-of-words format.
+        chunksize : int, optional
+            If provided, a more effective processing will performed.
+
+        Returns
+        -------
+        :class:`~gensim.interfaces.TransformedCorpus`
+            Transformed corpus.
+
+        """
+        return TransformedCorpus(self, corpus, chunksize, **kwargs)
+
     @staticmethod
-    def __solve_r(r, r_actual, lambda_, v_max):
+    def _solve_r(r, r_actual, lambda_, v_max):
         r_actual.data *= np.abs(r_actual.data) > lambda_
         r_actual.eliminate_zeros()
 
@@ -399,7 +427,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return violation
 
     @staticmethod
-    def __solve_h(h, Wt_v_minus_r, WtW, eta):
+    def _solve_h(h, Wt_v_minus_r, WtW, eta):
         grad = (WtW.dot(h) - Wt_v_minus_r) * eta
         grad = scipy.sparse.csr_matrix(grad)
         new_h = h - grad
@@ -409,7 +437,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         return new_h, scipy.sparse.linalg.norm(grad)
 
-    def __transform(self):
+    def _transform(self):
         np.clip(self._W.data, 0, self.v_max, out=self._W.data)
         self._W.eliminate_zeros()
         sumsq = scipy.sparse.linalg.norm(self._W, axis=0)
