@@ -674,7 +674,6 @@ class TestFastTextModel(unittest.TestCase):
                 terro.append(l)
             else:
                 others.append(l)
-        self.assertTrue(all(['terrorism' not in l for l in others]))
         model.build_vocab(others)
         model.train(others, total_examples=model.corpus_count, epochs=model.epochs)
         # checks that `vectors` is different from `vectors_vocab`

@@ -246,7 +246,6 @@ class TestWord2VecModel(unittest.TestCase):
                 terro.append(l)
             else:
                 others.append(l)
-        self.assertTrue(all(['terrorism' not in l for l in others]))
         model.build_vocab(others, update=trained_model)
         model.train(others, total_examples=model.corpus_count, epochs=model.epochs)
         self.assertFalse('terrorism' in model.wv.vocab)

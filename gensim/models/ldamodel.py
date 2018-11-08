@@ -567,15 +567,18 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if isinstance(prior, six.string_types):
             if prior == 'symmetric':
                 logger.info("using symmetric %s at %s", name, 1.0 / self.num_topics)
-                init_prior = np.asarray([1.0 / self.num_topics for i in xrange(prior_shape)], dtype=self.dtype)
+                init_prior = np.fromiter((1.0 / self.num_topics for i in xrange(prior_shape)),
+                                            dtype=self.dtype, count=prior_shape)
             elif prior == 'asymmetric':
                 init_prior = \
-                    np.asarray([1.0 / (i + np.sqrt(prior_shape)) for i in xrange(prior_shape)], dtype=self.dtype)
+                    np.fromiter((1.0 / (i + np.sqrt(prior_shape)) for i in xrange(prior_shape)),
+                                dtype=self.dtype, count=prior_shape)
                 init_prior /= init_prior.sum()
                 logger.info("using asymmetric %s %s", name, list(init_prior))
             elif prior == 'auto':
                 is_auto = True
-                init_prior = np.asarray([1.0 / self.num_topics for i in xrange(prior_shape)], dtype=self.dtype)
+                init_prior = np.fromiter((1.0 / self.num_topics for i in xrange(prior_shape)),
+                                            dtype=self.dtype, count=prior_shape)
                 if name == 'alpha':
                     logger.info("using autotuned %s, starting with %s", name, list(init_prior))
             else:
@@ -584,8 +587,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             init_prior = np.asarray(prior, dtype=self.dtype)
         elif isinstance(prior, np.ndarray):
             init_prior = prior.astype(self.dtype, copy=False)
-        elif isinstance(prior, np.number) or isinstance(prior, numbers.Real):
-            init_prior = np.asarray([prior] * prior_shape, dtype=self.dtype)
+        elif isinstance(prior, (np.number, numbers.Real)):
+            init_prior = np.fromiter((prior for i in xrange(prior_shape)), dtype=self.dtype)
         else:
             raise ValueError("%s must be either a np array of scalars, list of scalars, or scalar" % name)
 
@@ -672,7 +675,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 ids = [int(idx) for idx, _ in doc]
             else:
                 ids = [idx for idx, _ in doc]
-            cts = np.array([cnt for _, cnt in doc], dtype=self.dtype)
+            cts = np.fromiter((cnt for _, cnt in doc), dtype=self.dtype, count=len(doc))
             gammad = gamma[d, :]
             Elogthetad = Elogtheta[d, :]
             expElogthetad = expElogtheta[d, :]
@@ -1162,7 +1165,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             bestn = matutils.argsort(topic_, num_words, reverse=True)
             topic_ = [(self.id2word[id], topic_[id]) for id in bestn]
             if formatted:
-                topic_ = ' + '.join(['%.3f*"%s"' % (v, k) for k, v in topic_])
+                topic_ = ' + '.join('%.3f*"%s"' % (v, k) for k, v in topic_)
 
             shown.append((i, topic_))
             if log:

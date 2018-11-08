@@ -79,19 +79,18 @@ class BM25(object):
 
         """
         self.corpus_size = len(corpus)
-        self.avgdl = sum(float(len(x)) for x in corpus) / self.corpus_size
+        self.doc_len = [len(x) for x in corpus]
+        self.avgdl = float(sum(self.doc_len)) / self.corpus_size
         self.corpus = corpus
         self.f = []
         self.df = {}
         self.idf = {}
-        self.doc_len = []
         self.initialize()
 
     def initialize(self):
         """Calculates frequencies of terms in documents and in corpus. Also computes inverse document frequencies."""
         for document in self.corpus:
             frequencies = {}
-            self.doc_len.append(len(document))
             for word in document:
                 if word not in frequencies:
                     frequencies[word] = 0
@@ -213,7 +212,7 @@ def get_bm25_weights(corpus, n_jobs=1):
 
     """
     bm25 = BM25(corpus)
-    average_idf = sum(float(val) for val in bm25.idf.values()) / len(bm25.idf)
+    average_idf = float(sum(val for val in bm25.idf.values())) / len(bm25.idf)
 
     n_processes = effective_n_jobs(n_jobs)
     if n_processes == 1:
