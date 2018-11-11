@@ -81,7 +81,7 @@ from gensim.utils import call_on_class_only
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.models.word2vec import Word2VecKeyedVectors, Word2VecVocab, Word2VecTrainables, train_cbow_pair,\
     train_sg_pair, train_batch_sg
-from six.moves import xrange
+from six.moves import range
 from six import string_types, integer_types, itervalues
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 from gensim.models.keyedvectors import Doc2VecKeyedVectors
@@ -1450,7 +1450,7 @@ class Doc2VecTrainables(Word2VecTrainables):
             docvecs.vectors_docs = empty((length, docvecs.vector_size), dtype=REAL)
             self.vectors_docs_lockf = ones((length,), dtype=REAL)  # zeros suppress learning
 
-        for i in xrange(length):
+        for i in range(length):
             # construct deterministic seed from index AND model seed
             seed = "%d %s" % (
                 self.seed, Doc2VecKeyedVectors._index_to_doctag(i, docvecs.offset2doctag, docvecs.max_rawint))

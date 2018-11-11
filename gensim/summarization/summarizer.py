@@ -61,7 +61,7 @@ from gensim.summarization.commons import remove_unreachable_nodes as _remove_unr
 from gensim.summarization.bm25 import get_bm25_weights as _bm25_weights
 from gensim.corpora import Dictionary
 from math import log10 as _log10
-from six.moves import xrange
+from six.moves import range
 
 
 INPUT_MIN_LENGTH = 10
@@ -84,8 +84,8 @@ def _set_graph_edge_weights(graph):
     documents = graph.nodes()
     weights = _bm25_weights(documents)
 
-    for i in xrange(len(documents)):
-        for j in xrange(len(documents)):
+    for i in range(len(documents)):
+        for j in range(len(documents)):
             if i == j or weights[i][j] < WEIGHT_THRESHOLD:
                 continue
 
@@ -117,8 +117,8 @@ def _create_valid_graph(graph):
     """
     nodes = graph.nodes()
 
-    for i in xrange(len(nodes)):
-        for j in xrange(len(nodes)):
+    for i in range(len(nodes)):
+        for j in range(len(nodes)):
             if i == j:
                 continue
 

@@ -17,7 +17,7 @@ from gensim.corpora import Dictionary
 from gensim.corpora import IndexedCorpus
 from gensim.matutils import MmReader
 from gensim.matutils import MmWriter
-from six.moves import xrange
+from six.moves import range
 
 
 logger = logging.getLogger(__name__)
@@ -285,7 +285,7 @@ class UciCorpus(UciReader, IndexedCorpus):
         fname_vocab = utils.smart_extension(fname, '.vocab')
         logger.info("saving vocabulary of %i words to %s", num_terms, fname_vocab)
         with utils.smart_open(fname_vocab, 'wb') as fout:
-            for featureid in xrange(num_terms):
+            for featureid in range(num_terms):
                 fout.write(utils.to_utf8("%s\n" % id2word.get(featureid, '---')))
 
         logger.info("storing corpus in UCI Bag-of-Words format: %s", fname)

@@ -41,7 +41,7 @@ from numpy import empty as empty_matrix
 from scipy.linalg import eig
 from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import eigs
-from six.moves import xrange
+from six.moves import range
 
 
 def pagerank_weighted(graph, damping=0.85):
@@ -91,10 +91,10 @@ def build_adjacency_matrix(graph):
     nodes = graph.nodes()
     length = len(nodes)
 
-    for i in xrange(length):
+    for i in range(length):
         current_node = nodes[i]
         neighbors_sum = sum(graph.edge_weight((current_node, neighbor)) for neighbor in graph.neighbors(current_node))
-        for j in xrange(length):
+        for j in range(length):
             edge_weight = float(graph.edge_weight((current_node, nodes[j])))
             if i != j and edge_weight != 0.0:
                 row.append(i)

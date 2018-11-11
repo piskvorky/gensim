@@ -71,7 +71,7 @@ from gensim.matutils import dirichlet_expectation
 from gensim.corpora import MmCorpus
 from itertools import chain
 from scipy.special import gammaln  # gamma function utils
-from six.moves import xrange
+from six.moves import range
 import six
 
 logger = logging.getLogger(__name__)
@@ -482,7 +482,7 @@ class AuthorTopicModel(LdaModel):
             phinorm = self.compute_phinorm(expElogthetad, expElogbetad)
 
             # Iterate between gamma and phi until convergence
-            for _ in xrange(self.iterations):
+            for _ in range(self.iterations):
                 lastgamma = tilde_gamma.copy()
 
                 # Update gamma.
@@ -699,7 +699,7 @@ class AuthorTopicModel(LdaModel):
             # Just keep training on the already available data.
             # Assumes self.update() has been called before with input documents and corresponding authors.
             assert self.total_docs > 0, 'update() was called with no documents to train on.'
-            train_corpus_idx = [d for d in xrange(self.total_docs)]
+            train_corpus_idx = [d for d in range(self.total_docs)]
             num_input_authors = len(self.author2doc)
         else:
             if doc2author is None and author2doc is None:
@@ -816,7 +816,7 @@ class AuthorTopicModel(LdaModel):
         def rho():
             return pow(offset + pass_ + (self.num_updates / chunksize), -decay)
 
-        for pass_ in xrange(passes):
+        for pass_ in range(passes):
             if self.dispatcher:
                 logger.info('initializing %s workers', self.numworkers)
                 self.dispatcher.reset(self.state)

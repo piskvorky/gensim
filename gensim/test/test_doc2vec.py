@@ -16,7 +16,7 @@ import unittest
 import os
 import six
 
-from six.moves import zip as izip
+from six.moves import zip, range
 from collections import namedtuple
 from testfixtures import log_capture
 
@@ -776,7 +776,7 @@ def read_su_sentiment_rotten_tomatoes(dirname, lowercase=True):
         with open(os.path.join(dirname, 'datasetSplit.txt'), 'r') as splits:
             next(sentences)  # legend
             next(splits)     # legend
-            for sentence_line, split_line in izip(sentences, splits):
+            for sentence_line, split_line in zip(sentences, splits):
                 (id, text) = sentence_line.split('\t')
                 id = int(id)
                 text = text.rstrip()

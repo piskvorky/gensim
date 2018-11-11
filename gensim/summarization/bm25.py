@@ -39,7 +39,7 @@ Data:
 
 import math
 from six import iteritems
-from six.moves import xrange
+from six.moves import range
 from functools import partial
 from multiprocessing import Pool
 from ..utils import effective_n_jobs
@@ -151,7 +151,7 @@ class BM25(object):
 
         """
         scores = []
-        for index in xrange(self.corpus_size):
+        for index in range(self.corpus_size):
             score = self.get_score(document, index, average_idf)
             scores.append(score)
         return scores
@@ -177,7 +177,7 @@ def _get_scores(bm25, document, average_idf):
 
     """
     scores = []
-    for index in xrange(bm25.corpus_size):
+    for index in range(bm25.corpus_size):
         score = bm25.get_score(document, index, average_idf)
         scores.append(score)
     return scores

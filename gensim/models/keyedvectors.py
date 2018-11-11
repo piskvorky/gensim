@@ -182,7 +182,7 @@ import numpy as np
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.corpora.dictionary import Dictionary
 from six import string_types, integer_types
-from six.moves import xrange, zip
+from six.moves import zip, range
 from scipy import sparse, stats
 from gensim.utils import deprecated
 from gensim.models.utils_any2vec import _save_word2vec_format, _load_word2vec_format, _compute_ngrams, _ft_hash
@@ -1378,7 +1378,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         if getattr(self, 'vectors_norm', None) is None or replace:
             logger.info("precomputing L2-norms of word weight vectors")
             if replace:
-                for i in xrange(self.vectors.shape[0]):
+                for i in range(self.vectors.shape[0]):
                     self.vectors[i, :] /= sqrt((self.vectors[i, :] ** 2).sum(-1))
                 self.vectors_norm = self.vectors
             else:
@@ -1595,7 +1595,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         if getattr(self, 'vectors_docs_norm', None) is None or replace:
             logger.info("precomputing L2-norms of doc weight vectors")
             if replace:
-                for i in xrange(self.vectors_docs.shape[0]):
+                for i in range(self.vectors_docs.shape[0]):
                     self.vectors_docs[i, :] /= sqrt((self.vectors_docs[i, :] ** 2).sum(-1))
                 self.vectors_docs_norm = self.vectors_docs
             else:
