@@ -1,14 +1,16 @@
+import itertools
+
+import logging
 import numpy as np
 import scipy.sparse
-import logging
 from scipy.stats import halfnorm
-from gensim import utils
-from gensim import matutils
+
 from gensim import interfaces
+from gensim import matutils
+from gensim import utils
+from gensim.interfaces import TransformedCorpus
 from gensim.models import basemodel
 from gensim.models.nmf_pgd import solve_h, solve_r
-from gensim.interfaces import TransformedCorpus
-import itertools
 
 logger = logging.getLogger(__name__)
 
@@ -18,48 +20,66 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
     """
 
     def __init__(
-            self,
-            corpus=None,
-            num_topics=100,
-            id2word=None,
-            chunksize=2000,
-            passes=1,
-            lambda_=1.,
-            kappa=1.,
-            minimum_probability=0.01,
-            use_r=False,
-            store_r=False,
-            w_max_iter=200,
-            w_stop_condition=1e-4,
-            h_r_max_iter=50,
-            h_r_stop_condition=1e-3,
-            eval_every=10,
-            v_max=None,
-            normalize=True,
-            sparse_coef=3,
-            random_state=None
+        self,
+        corpus=None,
+        num_topics=100,
+        id2word=None,
+        chunksize=2000,
+        passes=1,
+        lambda_=1.0,
+        kappa=1.0,
+        minimum_probability=0.01,
+        use_r=False,
+        store_r=False,
+        w_max_iter=200,
+        w_stop_condition=1e-4,
+        h_r_max_iter=50,
+        h_r_stop_condition=1e-3,
+        eval_every=10,
+        v_max=None,
+        normalize=True,
+        sparse_coef=3,
+        random_state=None,
     ):
         """
 
         Parameters
         ----------
-        corpus : Corpus
-            Training corpus
+        corpus : iterable of list of (int, float), optional
+            Training corpus. If not given, model is left untrained.
         num_topics : int
-            Number of components in resulting matrices.
-        id2word: Dict[int, str]
-            Token id to word mapping
-        chunksize: int
-            Number of documents in a chunk
-        passes: int
-            Number of full passes over the training corpus
-        lambda_ : float
-            Weight of the residuals regularizer
-        kappa : float
-            Optimization step size
-        store_r : bool
-            Whether to save residuals during training
-        normalize
+            Number of topics to extract.
+        id2word: Dict[int, str], optional
+            Mapping from token id to token. If not set words get replaced with word ids.
+        chunksize: int, optional
+            Number of documents to be used in each training chunk.
+        passes: int, optioanl
+            Number of full passes over the training corpus.
+        lambda_ : float, optional
+            Residuals regularizer coefficient. Increasing it helps prevent ovefitting. Has no effect if `use_r` is set
+            to False.
+        kappa : float, optional
+            Optimizer step coefficient. Increaing it makes model train faster, but adds a risk that it won't converge.
+        store_r : bool, optional
+            Whether to save residuals during training.
+        w_max_iter: int, optional
+            Maximum number of iterations to train W matrix per each batch.
+        w_stop_condition: float, optional
+            If error difference gets less than that, training of matrix ``W`` stops for current batch.
+        h_r_max_iter: int, optional
+            Maximum number of iterations to train h and r matrices per each batch.
+        h_r_stop_condition: float
+            If error difference gets less than that, training of matrices ``h`` and ``r`` stops for current batch.
+        eval_every: int, optional
+            Number of batches after which model will be evaluated.
+        v_max: int, optional
+            Maximum number of word occurrences in the corpora. Inferred if not set. Rarely needs to be set explicitly.
+        normalize: bool, optional
+            Whether to normalize results. Offers "kind-of-probabilistic" result.
+        sparse_coef: float, optional
+            The more it is, the more sparse are matrices. Significantly increases performance.
+        random_state: {np.random.RandomState, int}, optional
+            Seed for random generator. Useful for reproducibility.
         """
         self._w_error = None
         self.n_features = None
@@ -132,7 +152,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             sorted_topics = list(matutils.argsort(sparsity))
             chosen_topics = (
-                    sorted_topics[: num_topics // 2] + sorted_topics[-num_topics // 2:]
+                sorted_topics[: num_topics // 2] + sorted_topics[-num_topics // 2 :]
             )
 
         shown = []
@@ -224,9 +244,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         is_corpus, corpus = utils.is_corpus(bow)
 
         if is_corpus:
-            kwargs = dict(
-                minimum_probability=minimum_probability,
-            )
+            kwargs = dict(minimum_probability=minimum_probability)
             return self._apply(corpus, **kwargs)
 
         v = matutils.corpus2csc([bow], len(self.id2word)).tocsr()
@@ -237,8 +255,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         return [
             (idx, proba.toarray()[0, 0])
-            for idx, proba
-            in enumerate(h[:, 0])
+            for idx, proba in enumerate(h[:, 0])
             if not minimum_probability or proba.toarray()[0, 0] > minimum_probability
         ]
 
@@ -246,7 +263,9 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
     def _sparsify(csc, density):
         zero_count = csc.shape[0] * csc.shape[1] - csc.nnz
         to_eliminate_count = int(csc.nnz * (1 - density)) - zero_count
-        indices_to_eliminate = np.argpartition(csc.data, to_eliminate_count)[:to_eliminate_count]
+        indices_to_eliminate = np.argpartition(csc.data, to_eliminate_count)[
+            :to_eliminate_count
+        ]
         csc.data[indices_to_eliminate] = 0
 
         csc.eliminate_zeros()
@@ -286,14 +305,13 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         first_doc = next(first_doc_it[0])
         first_doc = matutils.corpus2csc([first_doc], len(self.id2word))[:, 0]
         self.n_features = first_doc.shape[0]
-        self.w_std = np.sqrt(
-            first_doc.mean()
-            / (self.n_features * self.num_topics)
-        )
+        self.w_std = np.sqrt(first_doc.mean() / (self.n_features * self.num_topics))
 
         self._W = np.abs(
             self.w_std
-            * halfnorm.rvs(size=(self.n_features, self.num_topics), random_state=self.random_state)
+            * halfnorm.rvs(
+                size=(self.n_features, self.num_topics), random_state=self.random_state
+            )
         )
 
         is_great_enough = self._W > self.w_std * self.sparse_coef
@@ -323,20 +341,22 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         for _ in range(self.passes):
             for chunk in utils.grouper(
-                    corpus, self.chunksize, as_numpy=chunks_as_numpy
+                corpus, self.chunksize, as_numpy=chunks_as_numpy
             ):
                 self.random_state.shuffle(chunk)
                 v = matutils.corpus2csc(chunk, len(self.id2word)).tocsr()
-                self._h, self._r = self._solveproj(v, self._W, r=self._r, h=self._h, v_max=self.v_max)
+                self._h, self._r = self._solveproj(
+                    v, self._W, r=self._r, h=self._h, v_max=self.v_max
+                )
                 h, r = self._h, self._r
                 if self._R is not None:
                     self._R.append(r)
 
-                self.A *= (chunk_idx - 1)
+                self.A *= chunk_idx - 1
                 self.A += h.dot(h.T)
                 self.A /= chunk_idx
 
-                self.B *= (chunk_idx - 1)
+                self.B *= chunk_idx - 1
                 self.B += (v - r).dot(h.T)
                 self.B /= chunk_idx
 
@@ -368,8 +388,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             # print(type(self.B))
             # print(self.B[:5, :5])
             return (
-                    0.5 * self._W.T.dot(self._W).dot(self.A).diagonal().sum()
-                    - self._W.T.dot(self.B).diagonal().sum()
+                0.5 * self._W.T.dot(self._W).dot(self.A).diagonal().sum()
+                - self._W.T.dot(self.B).diagonal().sum()
             )
 
         eta = self._kappa / scipy.sparse.linalg.norm(self.A)
@@ -385,7 +405,10 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             error_ = error()
 
-            if np.abs((error_ - self._w_error) / self._w_error) < self._w_stop_condition:
+            if (
+                np.abs((error_ - self._w_error) / self._w_error)
+                < self._w_stop_condition
+            ):
                 break
 
             self._w_error = error_
@@ -450,10 +473,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         is_great_enough_data = self._W.data > self.w_std * self.sparse_coef
         is_great_enough = self._W.toarray() > self.w_std * self.sparse_coef
         is_all_too_small = is_great_enough.sum(axis=0) == 0
-        is_all_too_small = np.repeat(
-            is_all_too_small,
-            self._W.getnnz(axis=0)
-        )
+        is_all_too_small = np.repeat(is_all_too_small, self._W.getnnz(axis=0))
 
         is_great_enough_data |= is_all_too_small
 
@@ -491,19 +511,28 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Wt_v_minus_r = W.T.dot(v - r)
 
             h_ = h.toarray()
-            error_ = max(error_, solve_h(h_, Wt_v_minus_r.toarray(), WtW.toarray(), self._kappa))
+            error_ = max(
+                error_, solve_h(h_, Wt_v_minus_r.toarray(), WtW.toarray(), self._kappa)
+            )
             h = scipy.sparse.csr_matrix(h_)
             # h, error_h = self.__solve_h(h, Wt_v_minus_r, WtW, eta)
             # error_ = max(error_, error_h)
 
             if self.use_r:
                 r_actual = v - W.dot(h)
-                error_ = max(error_, solve_r(
-                    r.indptr, r.indices, r.data,
-                    r_actual.indptr, r_actual.indices, r_actual.data,
-                    self._lambda_,
-                    self.v_max
-                ))
+                error_ = max(
+                    error_,
+                    solve_r(
+                        r.indptr,
+                        r.indices,
+                        r.data,
+                        r_actual.indptr,
+                        r_actual.indices,
+                        r_actual.data,
+                        self._lambda_,
+                        self.v_max,
+                    ),
+                )
                 r = r_actual
                 # error_ = max(error_, self.__solve_r(r, r_actual, self._lambda_, self.v_max))
 
