@@ -385,7 +385,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Alternatively default prior selecting strategies can be employed by supplying a string:
 
                 * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / topicno`.
-                * 'auto': Learns an asymmetric prior from the corpus.
+                * 'auto': Learns an asymmetric prior from the corpus (not available if `distributed==True`).
         eta : {float, np.array, str}, optional
             A-priori belief on word probability, this can be:
 
