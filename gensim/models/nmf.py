@@ -180,15 +180,9 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         topics = self.get_topics()
 
-        # print(topics)
-
         for i in chosen_topics:
             topic = topics[i]
-            # print(topic)
-            # print(topic.shape)
             bestn = matutils.argsort(topic, num_words, reverse=True).ravel()
-            # print(type(bestn))
-            # print(bestn.shape)
             topic = [(self.id2word[id], topic[id]) for id in bestn]
             if formatted:
                 topic = " + ".join(['%.3f*"%s"' % (v, k) for k, v in topic])
@@ -409,6 +403,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def _solve_w(self):
         """Update W matrix."""
+
         def error():
             return (
                 0.5 * self._W.T.dot(self._W).dot(self.A).diagonal().sum()
