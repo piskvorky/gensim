@@ -126,10 +126,11 @@ class MalletCorpus(LowCorpus):
             [(3, 1), (4, 1)]
 
         """
-        splited_line = [word for word in utils.to_unicode(line).strip().split(' ') if word]
-        docid, doclang, words = splited_line[0], splited_line[1], splited_line[2:]
+        split_line = utils.to_unicode(line).strip().split(None, 2)
+        docid, doclang = split_line[0], split_line[1]
+        words = split_line[2] if len(split_line) >= 3 else ''
 
-        doc = super(MalletCorpus, self).line2doc(' '.join(words))
+        doc = super(MalletCorpus, self).line2doc(words)
 
         if self.metadata:
             return doc, (docid, doclang)
