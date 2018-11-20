@@ -60,7 +60,7 @@ The trained word vectors are stored in a :class:`~gensim.models.keyedvectors.Key
     >>> vector = model.wv['computer']  # numpy vector of a word
 
 The reason for separating the trained vectors into `KeyedVectors` is that if you don't
-need the full model state any more (don't need to continue training), the state can discarded,
+need the full model state any more (don't need to continue training), the state can be discarded,
 resulting in a much smaller and faster object that can be mmapped for lightning
 fast loading and sharing the vectors in RAM between processes:
 
@@ -648,7 +648,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
     trainables : :class:`~gensim.models.word2vec.Word2VecTrainables`
         This object represents the inner shallow neural network used to train the embeddings. The semantics of the
-        network differ slightly in the two available training modes (CBOW or SG) but you can think of it as a NN with
+        network differ slightly in the two available training modes (CBOW or SG) but you can think of it as an NN with
         a single projection and hidden layer which we train on the corpus. The weights are then used as our embeddings
         (which means that the size of the hidden layer is equal to the number of features `self.size`).
 
@@ -674,14 +674,14 @@ class Word2Vec(BaseWordEmbeddingsModel):
             in some other way.
         corpus_file : str, optional
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
-            You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
+            You may use this argument instead of `sentences` to get a performance boost. Only one of `sentences` or
             `corpus_file` arguments need to be passed (or none of them).
         size : int, optional
             Dimensionality of the word vectors.
         window : int, optional
             Maximum distance between the current and predicted word within a sentence.
         min_count : int, optional
-            Ignores all words with total frequency lower than this.
+            Ignores all words with a total frequency lower than this.
         workers : int, optional
             Use these many worker threads to train the model (=faster training with multicore machines).
         sg : {0, 1}, optional
@@ -709,8 +709,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
             Seed for the random number generator. Initial vectors for each word are seeded with a hash of
             the concatenation of word + `str(seed)`. Note that for a fully deterministically-reproducible run,
             you must also limit the model to a single worker thread (`workers=1`), to eliminate ordering jitter
-            from OS thread scheduling. (In Python 3, reproducibility between interpreter launches also requires
-            use of the `PYTHONHASHSEED` environment variable to control hash randomization).
+            from OS thread scheduling. (In Python 3, reproducibility between interpreter launches also requires the use of the `PYTHONHASHSEED` environment variable to control hash randomization).
         max_vocab_size : int, optional
             Limits the RAM during vocabulary building; if there are more unique
             words than this, then prune the infrequent ones. Every 10 million word types need about 1GB of RAM.
@@ -858,7 +857,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
             <https://rare-technologies.com/data-streaming-in-python-generators-iterators-iterables/>`_.
         corpus_file : str, optional
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
-            You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
+            You may use this argument instead of `sentences` to get a performance boost. Only one of `sentences` or
             `corpus_file` arguments need to be passed (not both of them).
         total_examples : int
             Count of sentences.
@@ -1070,7 +1069,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
         encoding : str, optional
             Encoding of `text` for `unicode` function (python2 only).
         unicode_errors : str, optional
-            Error handling behaviour, used as parameter for `unicode` function (python2 only).
+            Error handling behaviour, used as a parameter for `unicode` function (python2 only).
 
         """
         overlap_count = 0
@@ -1467,7 +1466,7 @@ class PathLineSentences(object):
         source : str
             Path to the directory.
         limit : int or None
-            Read only the first `limit` lines from each file. Read all if limit is None (the default).
+            Read only the first `limit` lines from each file. Read all if the limit is None (the default).
 
         """
         self.source = source
