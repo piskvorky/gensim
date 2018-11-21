@@ -161,7 +161,7 @@ except ImportError:
     FAST_VERSION = -1
     MAX_WORDS_IN_BATCH = 10000
 
-    def train_batch_sg(model, sentences, alpha, work=None, compute_loss=False, doc2vecc=None):
+    def train_batch_sg(model, sentences, alpha, work=None, neu1=None, compute_loss=False, doc2vecc=None):
         """Update skip-gram model by training on a sequence of sentences.
 
         Called internally from :meth:`~gensim.models.word2vec.Word2Vec.train`.
@@ -878,7 +878,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
         work, neu1 = inits
         tally = 0
         if self.sg:
-            tally += train_batch_sg(self, sentences, alpha, work, self.compute_loss, self.doc2vecc)
+            tally += train_batch_sg(self, sentences, alpha, work, neu1, self.compute_loss, self.doc2vecc)
         else:
             tally += train_batch_cbow(self, sentences, alpha, work, neu1, self.compute_loss, self.doc2vecc)
         return tally, self._raw_word_count(sentences)
