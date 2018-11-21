@@ -1396,6 +1396,10 @@ class Word2Vec(BaseWordEmbeddingsModel):
                 model.max_final_vocab = None
                 model.vocabulary.max_final_vocab = None
 
+            # for backward compatibility for `doc2vecc` feature
+            if not hasattr(model, 'doc2vecc'):
+                model.doc2vecc = None
+
             return model
         except AttributeError:
             logger.info('Model saved using code from earlier Gensim Version. Re-loading old model in a compatible way.')
