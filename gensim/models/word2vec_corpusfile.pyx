@@ -329,8 +329,8 @@ def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expec
                         if c.negative:
                             c.next_random = w2v_fast_sentence_sg_neg(
                                 c.negative, c.cum_table, c.cum_table_len, c.syn0, c.syn1neg, c.size,
-                                c.indexes[i], c.indexes[j], c.alpha, c.work, c.next_random, c.word_locks,
-                                c.compute_loss, &c.running_training_loss)
+                                c.indexes[i], c.indexes[j], c.indexes, c.alpha, c.work, c.next_random, c.word_locks,
+                                c.compute_loss, doc2vecc, idx_start, idx_end, &c.running_training_loss)
 
             total_sentences += sentences.size()
             total_effective_words += effective_words
@@ -425,7 +425,9 @@ def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _exp
                         c.next_random = w2v_fast_sentence_cbow_neg(
                             c.negative, c.cum_table, c.cum_table_len, c.codelens, c.neu1, c.syn0,
                             c.syn1neg, c.size, c.indexes, c.alpha, c.work, i, j, k, c.cbow_mean,
-                            c.next_random, c.word_locks, c.compute_loss, &c.running_training_loss)
+                            c.next_random, c.word_locks, c.compute_loss, doc2vecc, idx_start, idx_end,
+                            &c.running_training_loss
+                        )
 
             total_sentences += sentences.size()
             total_effective_words += effective_words
