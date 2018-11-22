@@ -184,7 +184,8 @@ except ImportError:
         compute_loss : bool, optional
             Whether or not the training loss should be computed in this batch.
         doc2vecc: float, optional
-            TODO
+            Percentage of the document to be randomly sampled, used to construct a document vector for
+            doc2vecCorruption.
 
         Returns
         -------
@@ -249,7 +250,8 @@ except ImportError:
         compute_loss : bool, optional
             Whether or not the training loss should be computed in this batch.
         doc2vecc: float, optional
-            TODO
+            Percentage of the document to be randomly sampled, used to construct a document vector for
+            doc2vecCorruption.
 
         Returns
         -------
@@ -410,9 +412,9 @@ def train_sg_pair(model, word, context_index, alpha, doc2vecc_constant=None, doc
     alpha : float
         Learning rate.
     doc2vecc_constant: float, optional
-        TODO
+        Reciprocal of the doc2vecCorruption value.
     doc2vecc_indices: list of int, optional
-        TODO
+        Indices of words used to construct the document vector in doc2vecCorruption.
     learn_vectors : bool, optional
         Whether the vectors should be updated.
     learn_hidden : bool, optional
@@ -536,9 +538,9 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, doc2vecc_constan
     alpha : float
         Learning rate.
     doc2vecc_constant: float, optional
-        TODO
+        Reciprocal of the doc2vecCorruption value.
     doc2vecc_indices: list of int, optional
-        TODO
+        Indices of words used to construct the document vector in doc2vecCorruption.
     learn_vectors : bool, optional
         Whether the vectors should be updated.
     learn_hidden : bool, optional
@@ -812,7 +814,8 @@ class Word2Vec(BaseWordEmbeddingsModel):
         callbacks : iterable of :class:`~gensim.models.callbacks.CallbackAny2Vec`, optional
             Sequence of callbacks to be executed at specific stages during training.
         doc2vecc: float, optional
-            TODO
+            Percentage of words in a document to be randomly sampled, used to construct a document vector for
+            doc2vecCorruption.
 
         Examples
         --------

@@ -178,7 +178,7 @@ cdef unsigned long long w2v_fast_sentence_sg_neg(
     cum_table_len
         Length of the `cum_table`
     neu1
-        TODO
+        Private working memory for every worker.
     syn0
         Embeddings for the words in the vocabulary (`model.wv.vectors`)
     syn1neg
@@ -200,11 +200,11 @@ cdef unsigned long long w2v_fast_sentence_sg_neg(
     _compute_loss
         Whether or not the loss should be computed at this step.
     doc2vecc
-        TODO
+        Percentage of the document to be randomly sampled, used to construct a document vector for doc2vecCorruption.
     idx_start
-        TODO
+        Index of the word at the beginning of the document.
     idx_end
-        TODO
+        Index of the word at the end of the document.
     _running_training_loss_param
         Running loss, used to debug or inspect how training progresses.
 
@@ -441,11 +441,11 @@ cdef unsigned long long w2v_fast_sentence_cbow_neg(
     _compute_loss
         Whether or not the loss should be computed at this step.
     doc2vecc
-        TODO
+        Percentage of the document to be randomly sampled, used to construct a document vector for doc2vecCorruption.
     idx_start
-        TODO
+        Index of the word at the beginning of the document.
     idx_end
-        TODO
+        Index of the word at the end of the document.
     _running_training_loss_param
         Running loss, used to debug or inspect how training progresses.
     """
@@ -595,7 +595,7 @@ def train_batch_sg(model, sentences, alpha, _work, _neu1, compute_loss, _doc2vec
     compute_loss : bool
         Whether or not the training loss should be computed in this batch.
     doc2vecc
-        TODO
+        Percentage of the document to be randomly sampled, used to construct a document vector for doc2vecCorruption.
 
     Returns
     -------
