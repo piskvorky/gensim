@@ -848,10 +848,11 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
 
         """
         try:
-            if list(self.phrasegrams.values())[0].__class__ is tuple:
-                return self.phrasegrams[tuple(components)][-1]
+            score = self.phrasegrams[tuple(components)]
+            if isinstance(score, tuple):
+                return score[1]
             else:
-                return self.phrasegrams[tuple(components)]
+                return score
         except KeyError:
             return -1
 
