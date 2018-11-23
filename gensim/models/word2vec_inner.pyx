@@ -608,8 +608,7 @@ def train_batch_sg(model, sentences, alpha, _work, _neu1, compute_loss, _doc2vec
     cdef int i, j, k
     cdef int effective_words = 0, effective_sentences = 0
     cdef int sent_idx, idx_start, idx_end
-
-    cdef REAL_t doc2vecc = (_doc2vecc if _doc2vecc > 0 else 0.0)
+    cdef REAL_t doc2vecc = (_doc2vecc if _doc2vecc and _doc2vecc > 0 else 0.0)
 
     init_w2v_config(&c, model, alpha, compute_loss, _work, _neu1)
 
@@ -702,7 +701,7 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss, _doc2v
     cdef int i, j, k
     cdef int effective_words = 0, effective_sentences = 0
     cdef int sent_idx, idx_start, idx_end
-    cdef REAL_t doc2vecc = (_doc2vecc if _doc2vecc > 0 else 0.0)
+    cdef REAL_t doc2vecc = (_doc2vecc if _doc2vecc and _doc2vecc > 0 else 0.0)
 
     init_w2v_config(&c, model, alpha, compute_loss, _work, _neu1)
 
