@@ -852,11 +852,7 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
 
         """
         try:
-            score = self.phrasegrams[tuple(components)]
-            if isinstance(score, tuple):
-                return score[1]
-            else:
-                return score
+            return self.phrasegrams[tuple(components)]
         except KeyError:
             return -1
 
