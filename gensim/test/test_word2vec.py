@@ -284,6 +284,14 @@ class TestWord2VecModel(unittest.TestCase):
         )
         self.onlineSanity(model)
 
+    def test_doc2vecc_online(self):
+        """Test Doc2vecC Corruption model"""
+        model = word2vec.Word2Vec(
+            sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=15,
+            min_count=5, iter=10, seed=42, workers=2, sample=0, doc2vecc=0.5
+        )
+        self.onlineSanity(model)
+
     def testPersistence(self):
         """Test storing/loading the entire model."""
         tmpf = get_tmpfile('gensim_word2vec.tst')
@@ -708,6 +716,21 @@ class TestWord2VecModel(unittest.TestCase):
         )
         self.model_sanity(model, with_corpus_file=True)
 
+    def test_doc2vecc(self):
+        model = word2vec.Word2Vec(
+            sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=15,
+            min_count=5, iter=10, workers=2, sample=0, doc2vecc=0.5
+        )
+        self.model_sanity(model)
+
+    @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
+    def test_doc2vecc_from_file(self):
+        model = word2vec.Word2Vec(
+            sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=15,
+            min_count=5, iter=10, workers=2, sample=0, doc2vecc=0.5
+        )
+        self.model_sanity(model, with_corpus_file=True)
+
     def test_cosmul(self):
         model = word2vec.Word2Vec(sentences, size=2, min_count=1, hs=1, negative=0)
         sims = model.wv.most_similar_cosmul('graph', topn=10)
@@ -786,6 +809,29 @@ class TestWord2VecModel(unittest.TestCase):
 
         # build vocab and train in one step; must be the same as above
         model2 = word2vec.Word2Vec(sentences, size=2, min_count=1, sg=0, hs=0, negative=2)
+        self.models_equal(model, model2)
+
+    def testTrainingdoc2vecc(self):
+        """Test doc2vecc (Corruption model) training."""
+        # to test training, make the corpus larger by repeating its sentences over and over
+        # build vocabulary, don't train yet
+        model = word2vec.Word2Vec(size=2, min_count=1, sg=1, hs=0, negative=2, doc2vecc=0.5)
+        model.build_vocab(sentences)
+        self.assertTrue(model.wv.vectors.shape == (len(model.wv.vocab), 2))
+        self.assertTrue(model.trainables.syn1neg.shape == (len(model.wv.vocab), 2))
+
+        model.train(sentences, total_examples=model.corpus_count, epochs=model.epochs)
+        sims = model.wv.most_similar('graph', topn=10)
+        # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
+
+        # test querying for "most similar" by vector
+        graph_vector = model.wv.vectors_norm[model.wv.vocab['graph'].index]
+        sims2 = model.wv.most_similar(positive=[graph_vector], topn=11)
+        sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
+        self.assertEqual(sims, sims2)
+
+        # build vocab and train in one step; must be the same as above
+        model2 = word2vec.Word2Vec(sentences, size=2, min_count=1, sg=1, hs=0, negative=2, doc2vecc=0.5)
         self.models_equal(model, model2)
 
     def testSimilarities(self):
