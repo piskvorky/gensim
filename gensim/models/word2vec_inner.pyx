@@ -278,11 +278,12 @@ cdef unsigned long long w2v_fast_sentence_sg_neg(
         our_saxpy(&size, &g, &syn1neg[row2], &ONE, work, &ONE)
         our_saxpy(&size, &g, neu1, &ONE, &syn1neg[row2], &ONE)
 
+    if doc2vecc > 0:
+        sscal(&size, &inv_count, work, &ONE)
+
     our_saxpy(&size, &word_locks[word2_index], work, &ONE, &syn0[row1], &ONE)
 
     if doc2vecc > 0:
-        # doc2vecc script error is also divided by 2: syn0[l1] += neu1e * w/2;
-        sscal(&size, &inv_count, work, &ONE)
         sscal(&size, &corruption_constant, work, &ONE)
 
         for m in range(already_sampled):
