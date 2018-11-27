@@ -493,7 +493,7 @@ cdef unsigned long long w2v_fast_sentence_cbow_neg(
 
     if count > (<REAL_t>0.5):
         inv_count = ONEF/count
-    if cbow_mean:
+    if cbow_mean or doc2vecc > 0:
         sscal(&size, &inv_count, neu1, &ONE)  # (does this need BLAS-variants like saxpy?)
 
     memset(work, 0, size * cython.sizeof(REAL_t))
