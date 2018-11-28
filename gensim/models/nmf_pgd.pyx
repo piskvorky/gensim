@@ -4,6 +4,7 @@
 # cython: boundscheck=False
 # cython: wraparound=False
 # cython: nonecheck=False
+# cython: embedsignature=True
 
 cimport cython
 from libc.math cimport sqrt, fabs, fmin, fmax, copysign
