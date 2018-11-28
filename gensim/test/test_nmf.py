@@ -25,12 +25,6 @@ dictionary = common_dictionary
 corpus = common_corpus
 
 
-def testRandomState():
-    testcases = [np.random.seed(0), None, np.random.RandomState(0), 0]
-    for testcase in testcases:
-        assert (isinstance(utils.get_random_state(testcase), np.random.RandomState))
-
-
 class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
