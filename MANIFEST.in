@@ -33,3 +33,6 @@ include gensim/corpora/_mmreader.c
 include gensim/corpora/_mmreader.pyx
 include gensim/_matutils.c
 include gensim/_matutils.pyx
+
+include gensim/models/nmf_pgd.c
+include gensim/models/nmf_pgd.pyx
