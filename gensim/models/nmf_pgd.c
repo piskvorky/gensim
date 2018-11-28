@@ -990,9 +990,8 @@ static CYTHON_INLINE int __pyx_sub_acquisition_count_locked(
 static CYTHON_INLINE void __Pyx_INC_MEMVIEW(__Pyx_memviewslice *, int, int);
 static CYTHON_INLINE void __Pyx_XDEC_MEMVIEW(__Pyx_memviewslice *, int, int);
 
-/* ArgTypeTest.proto */
-static CYTHON_INLINE int __Pyx_ArgTypeTest(PyObject *obj, PyTypeObject *type, int none_allowed,
-    const char *name, int exact);
+/* GetModuleGlobalName.proto */
+static CYTHON_INLINE PyObject *__Pyx_GetModuleGlobalName(PyObject *name);
 
 /* PyObjectCall.proto */
 #if CYTHON_COMPILING_IN_CPYTHON
@@ -1000,6 +999,10 @@ static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg
 #else
 #define __Pyx_PyObject_Call(func, arg, kw) PyObject_Call(func, arg, kw)
 #endif
+
+/* ArgTypeTest.proto */
+static CYTHON_INLINE int __Pyx_ArgTypeTest(PyObject *obj, PyTypeObject *type, int none_allowed,
+    const char *name, int exact);
 
 /* PyThreadStateGet.proto */
 #if CYTHON_FAST_THREAD_STATE
@@ -1307,6 +1310,12 @@ static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_d_dc_d
 /* ObjectToMemviewSlice.proto */
 static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_dsds_double(PyObject *);
 
+/* ObjectToMemviewSlice.proto */
+static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_dc_int(PyObject *);
+
+/* ObjectToMemviewSlice.proto */
+static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_dc_double(PyObject *);
+
 /* MemviewSliceCopyTemplate.proto */
 static __Pyx_memviewslice
 __pyx_memoryview_copy_new_contig(const __Pyx_memviewslice *from_mvs,
@@ -1329,6 +1338,9 @@ static CYTHON_INLINE char __Pyx_PyInt_As_char(PyObject *);
 /* CIntFromPy.proto */
 static CYTHON_INLINE long __Pyx_PyInt_As_long(PyObject *);
 
+/* ObjectToMemviewSlice.proto */
+static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_ds_Py_ssize_t(PyObject *);
+
 /* CheckBinaryVersion.proto */
 static int __Pyx_check_binary_version(void);
 
@@ -1345,6 +1357,10 @@ static PyObject *__pyx_memoryview_convert_item_to_object(struct __pyx_memoryview
 static PyObject *__pyx_memoryview_assign_item_from_object(struct __pyx_memoryview_obj *__pyx_v_self, char *__pyx_v_itemp, PyObject *__pyx_v_value); /* proto*/
 static PyObject *__pyx_memoryviewslice_convert_item_to_object(struct __pyx_memoryviewslice_obj *__pyx_v_self, char *__pyx_v_itemp); /* proto*/
 static PyObject *__pyx_memoryviewslice_assign_item_from_object(struct __pyx_memoryviewslice_obj *__pyx_v_self, char *__pyx_v_itemp, PyObject *__pyx_v_value); /* proto*/
+
+/* Module declarations from 'cython.view' */
+
+/* Module declarations from 'cython' */
 
 /* Module declarations from 'libc.math' */
 
@@ -1393,6 +1409,8 @@ static void __pyx_memoryview_refcount_objects_in_slice(char *, Py_ssize_t *, Py_
 static void __pyx_memoryview_slice_assign_scalar(__Pyx_memviewslice *, int, size_t, void *, int); /*proto*/
 static void __pyx_memoryview__slice_assign_scalar(char *, Py_ssize_t *, Py_ssize_t *, int, size_t, void *); /*proto*/
 static __Pyx_TypeInfo __Pyx_TypeInfo_double = { "double", NULL, sizeof(double), { 0 }, 0, 'R', 0, 0 };
+static __Pyx_TypeInfo __Pyx_TypeInfo_int = { "int", NULL, sizeof(int), { 0 }, 0, IS_UNSIGNED(int) ? 'U' : 'I', IS_UNSIGNED(int), 0 };
+static __Pyx_TypeInfo __Pyx_TypeInfo_Py_ssize_t = { "Py_ssize_t", NULL, sizeof(Py_ssize_t), { 0 }, 0, IS_UNSIGNED(Py_ssize_t) ? 'U' : 'I', IS_UNSIGNED(Py_ssize_t), 0 };
 #define __Pyx_MODULE_NAME "gensim.models.nmf_pgd"
 int __pyx_module_is_main_gensim__models__nmf_pgd = 0;
 
@@ -1409,10 +1427,12 @@ static const char __pyx_k_O[] = "O";
 static const char __pyx_k_c[] = "c";
 static const char __pyx_k_h[] = "h";
 static const char __pyx_k_id[] = "id";
+static const char __pyx_k_np[] = "np";
 static const char __pyx_k_WtW[] = "WtW";
 static const char __pyx_k_obj[] = "obj";
 static const char __pyx_k_base[] = "base";
 static const char __pyx_k_grad[] = "grad";
+static const char __pyx_k_intp[] = "intp";
 static const char __pyx_k_main[] = "__main__";
 static const char __pyx_k_mode[] = "mode";
 static const char __pyx_k_name[] = "name";
@@ -1424,42 +1444,61 @@ static const char __pyx_k_stop[] = "stop";
 static const char __pyx_k_test[] = "__test__";
 static const char __pyx_k_ASCII[] = "ASCII";
 static const char __pyx_k_class[] = "__class__";
+static const char __pyx_k_dtype[] = "dtype";
 static const char __pyx_k_error[] = "error";
 static const char __pyx_k_flags[] = "flags";
 static const char __pyx_k_kappa[] = "kappa";
+static const char __pyx_k_numpy[] = "numpy";
 static const char __pyx_k_range[] = "range";
 static const char __pyx_k_shape[] = "shape";
 static const char __pyx_k_start[] = "start";
+static const char __pyx_k_v_max[] = "v_max";
+static const char __pyx_k_zeros[] = "zeros";
 static const char __pyx_k_encode[] = "encode";
 static const char __pyx_k_format[] = "format";
 static const char __pyx_k_import[] = "__import__";
+static const char __pyx_k_lambda[] = "lambda_";
 static const char __pyx_k_name_2[] = "__name__";
+static const char __pyx_k_r_data[] = "r_data";
 static const char __pyx_k_struct[] = "struct";
 static const char __pyx_k_unpack[] = "unpack";
 static const char __pyx_k_fortran[] = "fortran";
 static const char __pyx_k_hessian[] = "hessian";
 static const char __pyx_k_memview[] = "memview";
 static const char __pyx_k_solve_h[] = "solve_h";
+static const char __pyx_k_solve_r[] = "solve_r";
 static const char __pyx_k_Ellipsis[] = "Ellipsis";
 static const char __pyx_k_itemsize[] = "itemsize";
+static const char __pyx_k_r_indptr[] = "r_indptr";
 static const char __pyx_k_TypeError[] = "TypeError";
 static const char __pyx_k_enumerate[] = "enumerate";
 static const char __pyx_k_n_samples[] = "n_samples";
+static const char __pyx_k_r_indices[] = "r_indices";
 static const char __pyx_k_violation[] = "violation";
 static const char __pyx_k_IndexError[] = "IndexError";
 static const char __pyx_k_ValueError[] = "ValueError";
 static const char __pyx_k_pyx_vtable[] = "__pyx_vtable__";
+static const char __pyx_k_r_col_size[] = "r_col_size";
 static const char __pyx_k_sample_idx[] = "sample_idx";
 static const char __pyx_k_MemoryError[] = "MemoryError";
 static const char __pyx_k_Wt_v_minus_r[] = "Wt_v_minus_r";
 static const char __pyx_k_n_components[] = "n_components";
 static const char __pyx_k_pyx_getbuffer[] = "__pyx_getbuffer";
+static const char __pyx_k_r_actual_data[] = "r_actual_data";
+static const char __pyx_k_r_actual_sign[] = "r_actual_sign";
+static const char __pyx_k_r_col_idx_idx[] = "r_col_idx_idx";
+static const char __pyx_k_r_col_indices[] = "r_col_indices";
 static const char __pyx_k_projected_grad[] = "projected_grad";
 static const char __pyx_k_allocate_buffer[] = "allocate_buffer";
 static const char __pyx_k_component_idx_1[] = "component_idx_1";
 static const char __pyx_k_component_idx_2[] = "component_idx_2";
 static const char __pyx_k_dtype_is_object[] = "dtype_is_object";
+static const char __pyx_k_r_actual_indptr[] = "r_actual_indptr";
+static const char __pyx_k_r_actual_indices[] = "r_actual_indices";
+static const char __pyx_k_r_actual_col_size[] = "r_actual_col_size";
 static const char __pyx_k_strided_and_direct[] = "<strided and direct>";
+static const char __pyx_k_r_actual_col_idx_idx[] = "r_actual_col_idx_idx";
+static const char __pyx_k_r_actual_col_indices[] = "r_actual_col_indices";
 static const char __pyx_k_strided_and_indirect[] = "<strided and indirect>";
 static const char __pyx_k_contiguous_and_direct[] = "<contiguous and direct>";
 static const char __pyx_k_gensim_models_nmf_pgd[] = "gensim.models.nmf_pgd";
@@ -1510,6 +1549,7 @@ static PyObject *__pyx_n_s_component_idx_1;
 static PyObject *__pyx_n_s_component_idx_2;
 static PyObject *__pyx_kp_s_contiguous_and_direct;
 static PyObject *__pyx_kp_s_contiguous_and_indirect;
+static PyObject *__pyx_n_s_dtype;
 static PyObject *__pyx_n_s_dtype_is_object;
 static PyObject *__pyx_n_s_encode;
 static PyObject *__pyx_n_s_enumerate;
@@ -1526,9 +1566,11 @@ static PyObject *__pyx_n_s_hessian;
 static PyObject *__pyx_kp_s_home_anotherbugmaster_Documents;
 static PyObject *__pyx_n_s_id;
 static PyObject *__pyx_n_s_import;
+static PyObject *__pyx_n_s_intp;
 static PyObject *__pyx_n_s_itemsize;
 static PyObject *__pyx_kp_s_itemsize_0_for_cython_array;
 static PyObject *__pyx_n_s_kappa;
+static PyObject *__pyx_n_s_lambda;
 static PyObject *__pyx_n_s_main;
 static PyObject *__pyx_n_s_memview;
 static PyObject *__pyx_n_s_mode;
@@ -1537,16 +1579,32 @@ static PyObject *__pyx_n_s_n_samples;
 static PyObject *__pyx_n_s_name;
 static PyObject *__pyx_n_s_name_2;
 static PyObject *__pyx_n_s_ndim;
+static PyObject *__pyx_n_s_np;
+static PyObject *__pyx_n_s_numpy;
 static PyObject *__pyx_n_s_obj;
 static PyObject *__pyx_n_s_pack;
 static PyObject *__pyx_n_s_projected_grad;
 static PyObject *__pyx_n_s_pyx_getbuffer;
 static PyObject *__pyx_n_s_pyx_vtable;
+static PyObject *__pyx_n_s_r_actual_col_idx_idx;
+static PyObject *__pyx_n_s_r_actual_col_indices;
+static PyObject *__pyx_n_s_r_actual_col_size;
+static PyObject *__pyx_n_s_r_actual_data;
+static PyObject *__pyx_n_s_r_actual_indices;
+static PyObject *__pyx_n_s_r_actual_indptr;
+static PyObject *__pyx_n_s_r_actual_sign;
+static PyObject *__pyx_n_s_r_col_idx_idx;
+static PyObject *__pyx_n_s_r_col_indices;
+static PyObject *__pyx_n_s_r_col_size;
+static PyObject *__pyx_n_s_r_data;
+static PyObject *__pyx_n_s_r_indices;
+static PyObject *__pyx_n_s_r_indptr;
 static PyObject *__pyx_n_s_range;
 static PyObject *__pyx_n_s_sample_idx;
 static PyObject *__pyx_n_s_shape;
 static PyObject *__pyx_n_s_size;
 static PyObject *__pyx_n_s_solve_h;
+static PyObject *__pyx_n_s_solve_r;
 static PyObject *__pyx_n_s_start;
 static PyObject *__pyx_n_s_step;
 static PyObject *__pyx_n_s_stop;
@@ -1558,8 +1616,11 @@ static PyObject *__pyx_n_s_test;
 static PyObject *__pyx_kp_s_unable_to_allocate_array_data;
 static PyObject *__pyx_kp_s_unable_to_allocate_shape_and_str;
 static PyObject *__pyx_n_s_unpack;
+static PyObject *__pyx_n_s_v_max;
 static PyObject *__pyx_n_s_violation;
+static PyObject *__pyx_n_s_zeros;
 static PyObject *__pyx_pf_6gensim_6models_7nmf_pgd_solve_h(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_h, __Pyx_memviewslice __pyx_v_Wt_v_minus_r, __Pyx_memviewslice __pyx_v_WtW, double __pyx_v_kappa); /* proto */
+static PyObject *__pyx_pf_6gensim_6models_7nmf_pgd_2solve_r(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_r_indptr, __Pyx_memviewslice __pyx_v_r_indices, __Pyx_memviewslice __pyx_v_r_data, __Pyx_memviewslice __pyx_v_r_actual_indptr, __Pyx_memviewslice __pyx_v_r_actual_indices, __Pyx_memviewslice __pyx_v_r_actual_data, double __pyx_v_lambda_, double __pyx_v_v_max); /* proto */
 static int __pyx_array___pyx_pf_15View_dot_MemoryView_5array___cinit__(struct __pyx_array_obj *__pyx_v_self, PyObject *__pyx_v_shape, Py_ssize_t __pyx_v_itemsize, PyObject *__pyx_v_format, PyObject *__pyx_v_mode, int __pyx_v_allocate_buffer); /* proto */
 static int __pyx_array___pyx_pf_15View_dot_MemoryView_5array_2__getbuffer__(struct __pyx_array_obj *__pyx_v_self, Py_buffer *__pyx_v_info, int __pyx_v_flags); /* proto */
 static void __pyx_array___pyx_pf_15View_dot_MemoryView_5array_4__dealloc__(struct __pyx_array_obj *__pyx_v_self); /* proto */
@@ -1614,14 +1675,16 @@ static PyObject *__pyx_slice__12;
 static PyObject *__pyx_tuple__13;
 static PyObject *__pyx_tuple__14;
 static PyObject *__pyx_tuple__16;
-static PyObject *__pyx_tuple__17;
 static PyObject *__pyx_tuple__18;
 static PyObject *__pyx_tuple__19;
 static PyObject *__pyx_tuple__20;
+static PyObject *__pyx_tuple__21;
+static PyObject *__pyx_tuple__22;
 static PyObject *__pyx_codeobj__15;
+static PyObject *__pyx_codeobj__17;
 
-/* "gensim/models/nmf_pgd.pyx":11
- * from cython.parallel import prange
+/* "gensim/models/nmf_pgd.pyx":57
+ * #     return sqrt(violation)
  * 
  * def solve_h(double[:, ::1] h, double[:, :] Wt_v_minus_r, double[:, ::1] WtW, double kappa):             # <<<<<<<<<<<<<<
  *     cdef Py_ssize_t n_components = h.shape[0]
@@ -1661,21 +1724,21 @@ static PyObject *__pyx_pw_6gensim_6models_7nmf_pgd_1solve_h(PyObject *__pyx_self
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_Wt_v_minus_r)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("solve_h", 1, 4, 4, 1); __PYX_ERR(0, 11, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("solve_h", 1, 4, 4, 1); __PYX_ERR(0, 57, __pyx_L3_error)
         }
         case  2:
         if (likely((values[2] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_WtW)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("solve_h", 1, 4, 4, 2); __PYX_ERR(0, 11, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("solve_h", 1, 4, 4, 2); __PYX_ERR(0, 57, __pyx_L3_error)
         }
         case  3:
         if (likely((values[3] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_kappa)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("solve_h", 1, 4, 4, 3); __PYX_ERR(0, 11, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("solve_h", 1, 4, 4, 3); __PYX_ERR(0, 57, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "solve_h") < 0)) __PYX_ERR(0, 11, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "solve_h") < 0)) __PYX_ERR(0, 57, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 4) {
       goto __pyx_L5_argtuple_error;
@@ -1685,14 +1748,14 @@ static PyObject *__pyx_pw_6gensim_6models_7nmf_pgd_1solve_h(PyObject *__pyx_self
       values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
       values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
     }
-    __pyx_v_h = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(values[0]); if (unlikely(!__pyx_v_h.memview)) __PYX_ERR(0, 11, __pyx_L3_error)
-    __pyx_v_Wt_v_minus_r = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(values[1]); if (unlikely(!__pyx_v_Wt_v_minus_r.memview)) __PYX_ERR(0, 11, __pyx_L3_error)
-    __pyx_v_WtW = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(values[2]); if (unlikely(!__pyx_v_WtW.memview)) __PYX_ERR(0, 11, __pyx_L3_error)
-    __pyx_v_kappa = __pyx_PyFloat_AsDouble(values[3]); if (unlikely((__pyx_v_kappa == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 11, __pyx_L3_error)
+    __pyx_v_h = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(values[0]); if (unlikely(!__pyx_v_h.memview)) __PYX_ERR(0, 57, __pyx_L3_error)
+    __pyx_v_Wt_v_minus_r = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(values[1]); if (unlikely(!__pyx_v_Wt_v_minus_r.memview)) __PYX_ERR(0, 57, __pyx_L3_error)
+    __pyx_v_WtW = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(values[2]); if (unlikely(!__pyx_v_WtW.memview)) __PYX_ERR(0, 57, __pyx_L3_error)
+    __pyx_v_kappa = __pyx_PyFloat_AsDouble(values[3]); if (unlikely((__pyx_v_kappa == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 57, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("solve_h", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 11, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("solve_h", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 57, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("gensim.models.nmf_pgd.solve_h", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -1742,7 +1805,7 @@ static PyObject *__pyx_pf_6gensim_6models_7nmf_pgd_solve_h(CYTHON_UNUSED PyObjec
   PyObject *__pyx_t_23 = NULL;
   __Pyx_RefNannySetupContext("solve_h", 0);
 
-  /* "gensim/models/nmf_pgd.pyx":12
+  /* "gensim/models/nmf_pgd.pyx":58
  * 
  * def solve_h(double[:, ::1] h, double[:, :] Wt_v_minus_r, double[:, ::1] WtW, double kappa):
  *     cdef Py_ssize_t n_components = h.shape[0]             # <<<<<<<<<<<<<<
@@ -1751,7 +1814,7 @@ static PyObject *__pyx_pf_6gensim_6models_7nmf_pgd_solve_h(CYTHON_UNUSED PyObjec
  */
   __pyx_v_n_components = (__pyx_v_h.shape[0]);
 
-  /* "gensim/models/nmf_pgd.pyx":13
+  /* "gensim/models/nmf_pgd.pyx":59
  * def solve_h(double[:, ::1] h, double[:, :] Wt_v_minus_r, double[:, ::1] WtW, double kappa):
  *     cdef Py_ssize_t n_components = h.shape[0]
  *     cdef Py_ssize_t n_samples = h.shape[1]             # <<<<<<<<<<<<<<
@@ -1760,7 +1823,7 @@ static PyObject *__pyx_pf_6gensim_6models_7nmf_pgd_solve_h(CYTHON_UNUSED PyObjec
  */
   __pyx_v_n_samples = (__pyx_v_h.shape[1]);
 
-  /* "gensim/models/nmf_pgd.pyx":14
+  /* "gensim/models/nmf_pgd.pyx":60
  *     cdef Py_ssize_t n_components = h.shape[0]
  *     cdef Py_ssize_t n_samples = h.shape[1]
  *     cdef double violation = 0             # <<<<<<<<<<<<<<
@@ -1769,7 +1832,7 @@ static PyObject *__pyx_pf_6gensim_6models_7nmf_pgd_solve_h(CYTHON_UNUSED PyObjec
  */
   __pyx_v_violation = 0.0;
 
-  /* "gensim/models/nmf_pgd.pyx":16
+  /* "gensim/models/nmf_pgd.pyx":62
  *     cdef double violation = 0
  *     cdef double grad, projected_grad, hessian
  *     cdef Py_ssize_t sample_idx = 0             # <<<<<<<<<<<<<<
@@ -1778,7 +1841,7 @@ static PyObject *__pyx_pf_6gensim_6models_7nmf_pgd_solve_h(CYTHON_UNUSED PyObjec
  */
   __pyx_v_sample_idx = 0;
 
-  /* "gensim/models/nmf_pgd.pyx":17
+  /* "gensim/models/nmf_pgd.pyx":63
  *     cdef double grad, projected_grad, hessian
  *     cdef Py_ssize_t sample_idx = 0
  *     cdef Py_ssize_t component_idx_1 = 0             # <<<<<<<<<<<<<<
@@ -1787,7 +1850,7 @@ static PyObject *__pyx_pf_6gensim_6models_7nmf_pgd_solve_h(CYTHON_UNUSED PyObjec
  */
   __pyx_v_component_idx_1 = 0;
 
-  /* "gensim/models/nmf_pgd.pyx":18
+  /* "gensim/models/nmf_pgd.pyx":64
  *     cdef Py_ssize_t sample_idx = 0
  *     cdef Py_ssize_t component_idx_1 = 0
  *     cdef Py_ssize_t component_idx_2 = 0             # <<<<<<<<<<<<<<
@@ -1796,7 +1859,7 @@ static PyObject *__pyx_pf_6gensim_6models_7nmf_pgd_solve_h(CYTHON_UNUSED PyObjec
  */
   __pyx_v_component_idx_2 = 0;
 
-  /* "gensim/models/nmf_pgd.pyx":20
+  /* "gensim/models/nmf_pgd.pyx":66
  *     cdef Py_ssize_t component_idx_2 = 0
  * 
  *     for sample_idx in prange(n_samples, nogil=True):             # <<<<<<<<<<<<<<
@@ -1838,7 +1901,7 @@ static PyObject *__pyx_pf_6gensim_6models_7nmf_pgd_solve_h(CYTHON_UNUSED PyObjec
                             __pyx_v_hessian = ((double)__PYX_NAN());
                             __pyx_v_projected_grad = ((double)__PYX_NAN());
 
-                            /* "gensim/models/nmf_pgd.pyx":21
+                            /* "gensim/models/nmf_pgd.pyx":67
  * 
  *     for sample_idx in prange(n_samples, nogil=True):
  *         for component_idx_1 in range(n_components):             # <<<<<<<<<<<<<<
@@ -1849,7 +1912,7 @@ static PyObject *__pyx_pf_6gensim_6models_7nmf_pgd_solve_h(CYTHON_UNUSED PyObjec
                             for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=1) {
                               __pyx_v_component_idx_1 = __pyx_t_5;
 
-                              /* "gensim/models/nmf_pgd.pyx":23
+                              /* "gensim/models/nmf_pgd.pyx":69
  *         for component_idx_1 in range(n_components):
  * 
  *             grad = -Wt_v_minus_r[component_idx_1, sample_idx]             # <<<<<<<<<<<<<<
@@ -1860,7 +1923,7 @@ static PyObject *__pyx_pf_6gensim_6models_7nmf_pgd_solve_h(CYTHON_UNUSED PyObjec
                               __pyx_t_7 = __pyx_v_sample_idx;
                               __pyx_v_grad = (-(*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_Wt_v_minus_r.data + __pyx_t_6 * __pyx_v_Wt_v_minus_r.strides[0]) ) + __pyx_t_7 * __pyx_v_Wt_v_minus_r.strides[1]) ))));
 
-                              /* "gensim/models/nmf_pgd.pyx":25
+                              /* "gensim/models/nmf_pgd.pyx":71
  *             grad = -Wt_v_minus_r[component_idx_1, sample_idx]
  * 
  *             for component_idx_2 in range(n_components):             # <<<<<<<<<<<<<<
@@ -1871,7 +1934,7 @@ static PyObject *__pyx_pf_6gensim_6models_7nmf_pgd_solve_h(CYTHON_UNUSED PyObjec
                               for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_8; __pyx_t_9+=1) {
                                 __pyx_v_component_idx_2 = __pyx_t_9;
 
-                                /* "gensim/models/nmf_pgd.pyx":26
+                                /* "gensim/models/nmf_pgd.pyx":72
  * 
  *             for component_idx_2 in range(n_components):
  *                 grad += WtW[component_idx_1, component_idx_2] * h[component_idx_2, sample_idx]             # <<<<<<<<<<<<<<
@@ -1885,7 +1948,7 @@ static PyObject *__pyx_pf_6gensim_6models_7nmf_pgd_solve_h(CYTHON_UNUSED PyObjec
                                 __pyx_v_grad = (__pyx_v_grad + ((*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_WtW.data + __pyx_t_10 * __pyx_v_WtW.strides[0]) )) + __pyx_t_11)) ))) * (*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_h.data + __pyx_t_12 * __pyx_v_h.strides[0]) )) + __pyx_t_13)) )))));
                               }
 
-                              /* "gensim/models/nmf_pgd.pyx":28
+                              /* "gensim/models/nmf_pgd.pyx":74
  *                 grad += WtW[component_idx_1, component_idx_2] * h[component_idx_2, sample_idx]
  * 
  *             hessian = WtW[component_idx_1, component_idx_1]             # <<<<<<<<<<<<<<
@@ -1896,7 +1959,7 @@ static PyObject *__pyx_pf_6gensim_6models_7nmf_pgd_solve_h(CYTHON_UNUSED PyObjec
                               __pyx_t_15 = __pyx_v_component_idx_1;
                               __pyx_v_hessian = (*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_WtW.data + __pyx_t_14 * __pyx_v_WtW.strides[0]) )) + __pyx_t_15)) )));
 
-                              /* "gensim/models/nmf_pgd.pyx":30
+                              /* "gensim/models/nmf_pgd.pyx":76
  *             hessian = WtW[component_idx_1, component_idx_1]
  * 
  *             grad = grad * kappa / hessian             # <<<<<<<<<<<<<<
@@ -1905,7 +1968,7 @@ static PyObject *__pyx_pf_6gensim_6models_7nmf_pgd_solve_h(CYTHON_UNUSED PyObjec
  */
                               __pyx_v_grad = ((__pyx_v_grad * __pyx_v_kappa) / __pyx_v_hessian);
 
-                              /* "gensim/models/nmf_pgd.pyx":32
+                              /* "gensim/models/nmf_pgd.pyx":78
  *             grad = grad * kappa / hessian
  * 
  *             projected_grad = fmin(0, grad) if h[component_idx_1, sample_idx] == 0 else grad             # <<<<<<<<<<<<<<
@@ -1921,7 +1984,7 @@ static PyObject *__pyx_pf_6gensim_6models_7nmf_pgd_solve_h(CYTHON_UNUSED PyObjec
                               }
                               __pyx_v_projected_grad = __pyx_t_16;
 
-                              /* "gensim/models/nmf_pgd.pyx":34
+                              /* "gensim/models/nmf_pgd.pyx":80
  *             projected_grad = fmin(0, grad) if h[component_idx_1, sample_idx] == 0 else grad
  * 
  *             violation += projected_grad * projected_grad             # <<<<<<<<<<<<<<
@@ -1930,7 +1993,7 @@ static PyObject *__pyx_pf_6gensim_6models_7nmf_pgd_solve_h(CYTHON_UNUSED PyObjec
  */
                               __pyx_v_violation = (__pyx_v_violation + (__pyx_v_projected_grad * __pyx_v_projected_grad));
 
-                              /* "gensim/models/nmf_pgd.pyx":36
+                              /* "gensim/models/nmf_pgd.pyx":82
  *             violation += projected_grad * projected_grad
  * 
  *             h[component_idx_1, sample_idx] = fmax(h[component_idx_1, sample_idx] - grad, 0.)             # <<<<<<<<<<<<<<
@@ -1956,7 +2019,7 @@ static PyObject *__pyx_pf_6gensim_6models_7nmf_pgd_solve_h(CYTHON_UNUSED PyObjec
         #endif
       }
 
-      /* "gensim/models/nmf_pgd.pyx":20
+      /* "gensim/models/nmf_pgd.pyx":66
  *     cdef Py_ssize_t component_idx_2 = 0
  * 
  *     for sample_idx in prange(n_samples, nogil=True):             # <<<<<<<<<<<<<<
@@ -1974,20 +2037,22 @@ static PyObject *__pyx_pf_6gensim_6models_7nmf_pgd_solve_h(CYTHON_UNUSED PyObjec
       }
   }
 
-  /* "gensim/models/nmf_pgd.pyx":38
+  /* "gensim/models/nmf_pgd.pyx":84
  *             h[component_idx_1, sample_idx] = fmax(h[component_idx_1, sample_idx] - grad, 0.)
  * 
  *     return sqrt(violation)             # <<<<<<<<<<<<<<
+ * 
+ * def solve_r(
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_23 = PyFloat_FromDouble(sqrt(__pyx_v_violation)); if (unlikely(!__pyx_t_23)) __PYX_ERR(0, 38, __pyx_L1_error)
+  __pyx_t_23 = PyFloat_FromDouble(sqrt(__pyx_v_violation)); if (unlikely(!__pyx_t_23)) __PYX_ERR(0, 84, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_23);
   __pyx_r = __pyx_t_23;
   __pyx_t_23 = 0;
   goto __pyx_L0;
 
-  /* "gensim/models/nmf_pgd.pyx":11
- * from cython.parallel import prange
+  /* "gensim/models/nmf_pgd.pyx":57
+ * #     return sqrt(violation)
  * 
  * def solve_h(double[:, ::1] h, double[:, :] Wt_v_minus_r, double[:, ::1] WtW, double kappa):             # <<<<<<<<<<<<<<
  *     cdef Py_ssize_t n_components = h.shape[0]
@@ -2003,6 +2068,1201 @@ static PyObject *__pyx_pf_6gensim_6models_7nmf_pgd_solve_h(CYTHON_UNUSED PyObjec
   __PYX_XDEC_MEMVIEW(&__pyx_v_h, 1);
   __PYX_XDEC_MEMVIEW(&__pyx_v_Wt_v_minus_r, 1);
   __PYX_XDEC_MEMVIEW(&__pyx_v_WtW, 1);
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "gensim/models/nmf_pgd.pyx":86
+ *     return sqrt(violation)
+ * 
+ * def solve_r(             # <<<<<<<<<<<<<<
+ *         int[::1] r_indptr,
+ *         int[::1] r_indices,
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_6gensim_6models_7nmf_pgd_3solve_r(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_6gensim_6models_7nmf_pgd_3solve_r = {"solve_r", (PyCFunction)__pyx_pw_6gensim_6models_7nmf_pgd_3solve_r, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_6gensim_6models_7nmf_pgd_3solve_r(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+  __Pyx_memviewslice __pyx_v_r_indptr = { 0, 0, { 0 }, { 0 }, { 0 } };
+  __Pyx_memviewslice __pyx_v_r_indices = { 0, 0, { 0 }, { 0 }, { 0 } };
+  __Pyx_memviewslice __pyx_v_r_data = { 0, 0, { 0 }, { 0 }, { 0 } };
+  __Pyx_memviewslice __pyx_v_r_actual_indptr = { 0, 0, { 0 }, { 0 }, { 0 } };
+  __Pyx_memviewslice __pyx_v_r_actual_indices = { 0, 0, { 0 }, { 0 }, { 0 } };
+  __Pyx_memviewslice __pyx_v_r_actual_data = { 0, 0, { 0 }, { 0 }, { 0 } };
+  double __pyx_v_lambda_;
+  double __pyx_v_v_max;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("solve_r (wrapper)", 0);
+  {
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_r_indptr,&__pyx_n_s_r_indices,&__pyx_n_s_r_data,&__pyx_n_s_r_actual_indptr,&__pyx_n_s_r_actual_indices,&__pyx_n_s_r_actual_data,&__pyx_n_s_lambda,&__pyx_n_s_v_max,0};
+    PyObject* values[8] = {0,0,0,0,0,0,0,0};
+    if (unlikely(__pyx_kwds)) {
+      Py_ssize_t kw_args;
+      const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
+      switch (pos_args) {
+        case  8: values[7] = PyTuple_GET_ITEM(__pyx_args, 7);
+        case  7: values[6] = PyTuple_GET_ITEM(__pyx_args, 6);
+        case  6: values[5] = PyTuple_GET_ITEM(__pyx_args, 5);
+        case  5: values[4] = PyTuple_GET_ITEM(__pyx_args, 4);
+        case  4: values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
+        case  3: values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
+        case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+      kw_args = PyDict_Size(__pyx_kwds);
+      switch (pos_args) {
+        case  0:
+        if (likely((values[0] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_r_indptr)) != 0)) kw_args--;
+        else goto __pyx_L5_argtuple_error;
+        case  1:
+        if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_r_indices)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("solve_r", 1, 8, 8, 1); __PYX_ERR(0, 86, __pyx_L3_error)
+        }
+        case  2:
+        if (likely((values[2] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_r_data)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("solve_r", 1, 8, 8, 2); __PYX_ERR(0, 86, __pyx_L3_error)
+        }
+        case  3:
+        if (likely((values[3] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_r_actual_indptr)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("solve_r", 1, 8, 8, 3); __PYX_ERR(0, 86, __pyx_L3_error)
+        }
+        case  4:
+        if (likely((values[4] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_r_actual_indices)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("solve_r", 1, 8, 8, 4); __PYX_ERR(0, 86, __pyx_L3_error)
+        }
+        case  5:
+        if (likely((values[5] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_r_actual_data)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("solve_r", 1, 8, 8, 5); __PYX_ERR(0, 86, __pyx_L3_error)
+        }
+        case  6:
+        if (likely((values[6] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_lambda)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("solve_r", 1, 8, 8, 6); __PYX_ERR(0, 86, __pyx_L3_error)
+        }
+        case  7:
+        if (likely((values[7] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_v_max)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("solve_r", 1, 8, 8, 7); __PYX_ERR(0, 86, __pyx_L3_error)
+        }
+      }
+      if (unlikely(kw_args > 0)) {
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "solve_r") < 0)) __PYX_ERR(0, 86, __pyx_L3_error)
+      }
+    } else if (PyTuple_GET_SIZE(__pyx_args) != 8) {
+      goto __pyx_L5_argtuple_error;
+    } else {
+      values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+      values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+      values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
+      values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
+      values[4] = PyTuple_GET_ITEM(__pyx_args, 4);
+      values[5] = PyTuple_GET_ITEM(__pyx_args, 5);
+      values[6] = PyTuple_GET_ITEM(__pyx_args, 6);
+      values[7] = PyTuple_GET_ITEM(__pyx_args, 7);
+    }
+    __pyx_v_r_indptr = __Pyx_PyObject_to_MemoryviewSlice_dc_int(values[0]); if (unlikely(!__pyx_v_r_indptr.memview)) __PYX_ERR(0, 87, __pyx_L3_error)
+    __pyx_v_r_indices = __Pyx_PyObject_to_MemoryviewSlice_dc_int(values[1]); if (unlikely(!__pyx_v_r_indices.memview)) __PYX_ERR(0, 88, __pyx_L3_error)
+    __pyx_v_r_data = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[2]); if (unlikely(!__pyx_v_r_data.memview)) __PYX_ERR(0, 89, __pyx_L3_error)
+    __pyx_v_r_actual_indptr = __Pyx_PyObject_to_MemoryviewSlice_dc_int(values[3]); if (unlikely(!__pyx_v_r_actual_indptr.memview)) __PYX_ERR(0, 90, __pyx_L3_error)
+    __pyx_v_r_actual_indices = __Pyx_PyObject_to_MemoryviewSlice_dc_int(values[4]); if (unlikely(!__pyx_v_r_actual_indices.memview)) __PYX_ERR(0, 91, __pyx_L3_error)
+    __pyx_v_r_actual_data = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[5]); if (unlikely(!__pyx_v_r_actual_data.memview)) __PYX_ERR(0, 92, __pyx_L3_error)
+    __pyx_v_lambda_ = __pyx_PyFloat_AsDouble(values[6]); if (unlikely((__pyx_v_lambda_ == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 93, __pyx_L3_error)
+    __pyx_v_v_max = __pyx_PyFloat_AsDouble(values[7]); if (unlikely((__pyx_v_v_max == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 94, __pyx_L3_error)
+  }
+  goto __pyx_L4_argument_unpacking_done;
+  __pyx_L5_argtuple_error:;
+  __Pyx_RaiseArgtupleInvalid("solve_r", 1, 8, 8, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 86, __pyx_L3_error)
+  __pyx_L3_error:;
+  __Pyx_AddTraceback("gensim.models.nmf_pgd.solve_r", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_RefNannyFinishContext();
+  return NULL;
+  __pyx_L4_argument_unpacking_done:;
+  __pyx_r = __pyx_pf_6gensim_6models_7nmf_pgd_2solve_r(__pyx_self, __pyx_v_r_indptr, __pyx_v_r_indices, __pyx_v_r_data, __pyx_v_r_actual_indptr, __pyx_v_r_actual_indices, __pyx_v_r_actual_data, __pyx_v_lambda_, __pyx_v_v_max);
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_6gensim_6models_7nmf_pgd_2solve_r(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_r_indptr, __Pyx_memviewslice __pyx_v_r_indices, __Pyx_memviewslice __pyx_v_r_data, __Pyx_memviewslice __pyx_v_r_actual_indptr, __Pyx_memviewslice __pyx_v_r_actual_indices, __Pyx_memviewslice __pyx_v_r_actual_data, double __pyx_v_lambda_, double __pyx_v_v_max) {
+  Py_ssize_t __pyx_v_n_samples;
+  double __pyx_v_violation;
+  double __pyx_v_r_actual_sign;
+  Py_ssize_t __pyx_v_sample_idx;
+  Py_ssize_t __pyx_v_r_col_size;
+  Py_ssize_t __pyx_v_r_actual_col_size;
+  Py_ssize_t __pyx_v_r_col_idx_idx;
+  Py_ssize_t __pyx_v_r_actual_col_idx_idx;
+  __Pyx_memviewslice __pyx_v_r_col_indices = { 0, 0, { 0 }, { 0 }, { 0 } };
+  __Pyx_memviewslice __pyx_v_r_actual_col_indices = { 0, 0, { 0 }, { 0 }, { 0 } };
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  PyObject *__pyx_t_2 = NULL;
+  PyObject *__pyx_t_3 = NULL;
+  PyObject *__pyx_t_4 = NULL;
+  PyObject *__pyx_t_5 = NULL;
+  __Pyx_memviewslice __pyx_t_6 = { 0, 0, { 0 }, { 0 }, { 0 } };
+  Py_ssize_t __pyx_t_7;
+  Py_ssize_t __pyx_t_8;
+  Py_ssize_t __pyx_t_9;
+  Py_ssize_t __pyx_t_10;
+  Py_ssize_t __pyx_t_11;
+  Py_ssize_t __pyx_t_12;
+  Py_ssize_t __pyx_t_13;
+  Py_ssize_t __pyx_t_14;
+  Py_ssize_t __pyx_t_15;
+  int __pyx_t_16;
+  Py_ssize_t __pyx_t_17;
+  int __pyx_t_18;
+  Py_ssize_t __pyx_t_19;
+  Py_ssize_t __pyx_t_20;
+  Py_ssize_t __pyx_t_21;
+  Py_ssize_t __pyx_t_22;
+  Py_ssize_t __pyx_t_23;
+  Py_ssize_t __pyx_t_24;
+  Py_ssize_t __pyx_t_25;
+  Py_ssize_t __pyx_t_26;
+  Py_ssize_t __pyx_t_27;
+  Py_ssize_t __pyx_t_28;
+  Py_ssize_t __pyx_t_29;
+  Py_ssize_t __pyx_t_30;
+  Py_ssize_t __pyx_t_31;
+  Py_ssize_t __pyx_t_32;
+  Py_ssize_t __pyx_t_33;
+  Py_ssize_t __pyx_t_34;
+  Py_ssize_t __pyx_t_35;
+  Py_ssize_t __pyx_t_36;
+  Py_ssize_t __pyx_t_37;
+  Py_ssize_t __pyx_t_38;
+  Py_ssize_t __pyx_t_39;
+  Py_ssize_t __pyx_t_40;
+  Py_ssize_t __pyx_t_41;
+  Py_ssize_t __pyx_t_42;
+  Py_ssize_t __pyx_t_43;
+  Py_ssize_t __pyx_t_44;
+  Py_ssize_t __pyx_t_45;
+  Py_ssize_t __pyx_t_46;
+  Py_ssize_t __pyx_t_47;
+  Py_ssize_t __pyx_t_48;
+  Py_ssize_t __pyx_t_49;
+  Py_ssize_t __pyx_t_50;
+  Py_ssize_t __pyx_t_51;
+  Py_ssize_t __pyx_t_52;
+  Py_ssize_t __pyx_t_53;
+  Py_ssize_t __pyx_t_54;
+  Py_ssize_t __pyx_t_55;
+  Py_ssize_t __pyx_t_56;
+  Py_ssize_t __pyx_t_57;
+  Py_ssize_t __pyx_t_58;
+  Py_ssize_t __pyx_t_59;
+  Py_ssize_t __pyx_t_60;
+  Py_ssize_t __pyx_t_61;
+  Py_ssize_t __pyx_t_62;
+  Py_ssize_t __pyx_t_63;
+  Py_ssize_t __pyx_t_64;
+  Py_ssize_t __pyx_t_65;
+  Py_ssize_t __pyx_t_66;
+  Py_ssize_t __pyx_t_67;
+  Py_ssize_t __pyx_t_68;
+  Py_ssize_t __pyx_t_69;
+  Py_ssize_t __pyx_t_70;
+  Py_ssize_t __pyx_t_71;
+  Py_ssize_t __pyx_t_72;
+  Py_ssize_t __pyx_t_73;
+  Py_ssize_t __pyx_t_74;
+  Py_ssize_t __pyx_t_75;
+  Py_ssize_t __pyx_t_76;
+  Py_ssize_t __pyx_t_77;
+  Py_ssize_t __pyx_t_78;
+  Py_ssize_t __pyx_t_79;
+  __Pyx_RefNannySetupContext("solve_r", 0);
+
+  /* "gensim/models/nmf_pgd.pyx":96
+ *         double v_max
+ *     ):
+ *     cdef Py_ssize_t n_samples = r_actual_indptr.shape[0] - 1             # <<<<<<<<<<<<<<
+ *     cdef double violation = 0
+ *     cdef double r_actual_sign = 1.0
+ */
+  __pyx_v_n_samples = ((__pyx_v_r_actual_indptr.shape[0]) - 1);
+
+  /* "gensim/models/nmf_pgd.pyx":97
+ *     ):
+ *     cdef Py_ssize_t n_samples = r_actual_indptr.shape[0] - 1
+ *     cdef double violation = 0             # <<<<<<<<<<<<<<
+ *     cdef double r_actual_sign = 1.0
+ *     cdef Py_ssize_t sample_idx
+ */
+  __pyx_v_violation = 0.0;
+
+  /* "gensim/models/nmf_pgd.pyx":98
+ *     cdef Py_ssize_t n_samples = r_actual_indptr.shape[0] - 1
+ *     cdef double violation = 0
+ *     cdef double r_actual_sign = 1.0             # <<<<<<<<<<<<<<
+ *     cdef Py_ssize_t sample_idx
+ * 
+ */
+  __pyx_v_r_actual_sign = 1.0;
+
+  /* "gensim/models/nmf_pgd.pyx":101
+ *     cdef Py_ssize_t sample_idx
+ * 
+ *     cdef Py_ssize_t r_col_size = 0             # <<<<<<<<<<<<<<
+ *     cdef Py_ssize_t r_actual_col_size = 0
+ *     cdef Py_ssize_t r_col_idx_idx = 0
+ */
+  __pyx_v_r_col_size = 0;
+
+  /* "gensim/models/nmf_pgd.pyx":102
+ * 
+ *     cdef Py_ssize_t r_col_size = 0
+ *     cdef Py_ssize_t r_actual_col_size = 0             # <<<<<<<<<<<<<<
+ *     cdef Py_ssize_t r_col_idx_idx = 0
+ *     cdef Py_ssize_t r_actual_col_idx_idx
+ */
+  __pyx_v_r_actual_col_size = 0;
+
+  /* "gensim/models/nmf_pgd.pyx":103
+ *     cdef Py_ssize_t r_col_size = 0
+ *     cdef Py_ssize_t r_actual_col_size = 0
+ *     cdef Py_ssize_t r_col_idx_idx = 0             # <<<<<<<<<<<<<<
+ *     cdef Py_ssize_t r_actual_col_idx_idx
+ * 
+ */
+  __pyx_v_r_col_idx_idx = 0;
+
+  /* "gensim/models/nmf_pgd.pyx":106
+ *     cdef Py_ssize_t r_actual_col_idx_idx
+ * 
+ *     cdef Py_ssize_t [:] r_col_indices = np.zeros(n_samples, dtype=np.intp)             # <<<<<<<<<<<<<<
+ *     cdef Py_ssize_t [:] r_actual_col_indices = np.zeros(n_samples, dtype=np.intp)
+ * 
+ */
+  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 106, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 106, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_1 = PyInt_FromSsize_t(__pyx_v_n_samples); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 106, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 106, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_GIVEREF(__pyx_t_1);
+  PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_1);
+  __pyx_t_1 = 0;
+  __pyx_t_1 = PyDict_New(); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 106, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_4 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 106, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_intp); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 106, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_dtype, __pyx_t_5) < 0) __PYX_ERR(0, 106, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 106, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_6 = __Pyx_PyObject_to_MemoryviewSlice_ds_Py_ssize_t(__pyx_t_5);
+  if (unlikely(!__pyx_t_6.memview)) __PYX_ERR(0, 106, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  __pyx_v_r_col_indices = __pyx_t_6;
+  __pyx_t_6.memview = NULL;
+  __pyx_t_6.data = NULL;
+
+  /* "gensim/models/nmf_pgd.pyx":107
+ * 
+ *     cdef Py_ssize_t [:] r_col_indices = np.zeros(n_samples, dtype=np.intp)
+ *     cdef Py_ssize_t [:] r_actual_col_indices = np.zeros(n_samples, dtype=np.intp)             # <<<<<<<<<<<<<<
+ * 
+ *     for sample_idx in prange(n_samples, nogil=True):
+ */
+  __pyx_t_5 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 107, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_zeros); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 107, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  __pyx_t_5 = PyInt_FromSsize_t(__pyx_v_n_samples); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 107, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 107, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_GIVEREF(__pyx_t_5);
+  PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_5);
+  __pyx_t_5 = 0;
+  __pyx_t_5 = PyDict_New(); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 107, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 107, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_intp); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 107, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  if (PyDict_SetItem(__pyx_t_5, __pyx_n_s_dtype, __pyx_t_4) < 0) __PYX_ERR(0, 107, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_3, __pyx_t_5); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 107, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  __pyx_t_6 = __Pyx_PyObject_to_MemoryviewSlice_ds_Py_ssize_t(__pyx_t_4);
+  if (unlikely(!__pyx_t_6.memview)) __PYX_ERR(0, 107, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  __pyx_v_r_actual_col_indices = __pyx_t_6;
+  __pyx_t_6.memview = NULL;
+  __pyx_t_6.data = NULL;
+
+  /* "gensim/models/nmf_pgd.pyx":109
+ *     cdef Py_ssize_t [:] r_actual_col_indices = np.zeros(n_samples, dtype=np.intp)
+ * 
+ *     for sample_idx in prange(n_samples, nogil=True):             # <<<<<<<<<<<<<<
+ *         r_col_size = r_indptr[sample_idx + 1] - r_indptr[sample_idx]
+ *         r_actual_col_size = r_actual_indptr[sample_idx + 1] - r_actual_indptr[sample_idx]
+ */
+  {
+      #ifdef WITH_THREAD
+      PyThreadState *_save;
+      Py_UNBLOCK_THREADS
+      #endif
+      /*try:*/ {
+        __pyx_t_7 = __pyx_v_n_samples;
+        if (1 == 0) abort();
+        {
+            #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
+                #undef likely
+                #undef unlikely
+                #define likely(x)   (x)
+                #define unlikely(x) (x)
+            #endif
+            __pyx_t_9 = (__pyx_t_7 - 0 + 1 - 1/abs(1)) / 1;
+            if (__pyx_t_9 > 0)
+            {
+                #ifdef _OPENMP
+                #pragma omp parallel reduction(+:__pyx_v_violation) private(__pyx_t_10, __pyx_t_11, __pyx_t_12, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_t_16, __pyx_t_17, __pyx_t_18, __pyx_t_19, __pyx_t_20, __pyx_t_21, __pyx_t_22, __pyx_t_23, __pyx_t_24, __pyx_t_25, __pyx_t_26, __pyx_t_27, __pyx_t_28, __pyx_t_29, __pyx_t_30, __pyx_t_31, __pyx_t_32, __pyx_t_33, __pyx_t_34, __pyx_t_35, __pyx_t_36, __pyx_t_37, __pyx_t_38, __pyx_t_39, __pyx_t_40, __pyx_t_41, __pyx_t_42, __pyx_t_43, __pyx_t_44, __pyx_t_45, __pyx_t_46, __pyx_t_47, __pyx_t_48, __pyx_t_49, __pyx_t_50, __pyx_t_51, __pyx_t_52, __pyx_t_53, __pyx_t_54, __pyx_t_55, __pyx_t_56, __pyx_t_57, __pyx_t_58, __pyx_t_59, __pyx_t_60, __pyx_t_61, __pyx_t_62, __pyx_t_63, __pyx_t_64, __pyx_t_65, __pyx_t_66, __pyx_t_67, __pyx_t_68, __pyx_t_69, __pyx_t_70, __pyx_t_71, __pyx_t_72, __pyx_t_73, __pyx_t_74, __pyx_t_75, __pyx_t_76, __pyx_t_77, __pyx_t_78, __pyx_t_79)
+                #endif /* _OPENMP */
+                {
+                    #ifdef _OPENMP
+                    #pragma omp for lastprivate(__pyx_v_r_actual_col_idx_idx) lastprivate(__pyx_v_r_actual_col_size) lastprivate(__pyx_v_r_actual_sign) lastprivate(__pyx_v_r_col_idx_idx) lastprivate(__pyx_v_r_col_size) firstprivate(__pyx_v_sample_idx) lastprivate(__pyx_v_sample_idx)
+                    #endif /* _OPENMP */
+                    for (__pyx_t_8 = 0; __pyx_t_8 < __pyx_t_9; __pyx_t_8++){
+                        {
+                            __pyx_v_sample_idx = (Py_ssize_t)(0 + 1 * __pyx_t_8);
+                            /* Initialize private variables to invalid values */
+                            __pyx_v_r_actual_col_idx_idx = ((Py_ssize_t)0xbad0bad0);
+                            __pyx_v_r_actual_col_size = ((Py_ssize_t)0xbad0bad0);
+                            __pyx_v_r_actual_sign = ((double)__PYX_NAN());
+                            __pyx_v_r_col_idx_idx = ((Py_ssize_t)0xbad0bad0);
+                            __pyx_v_r_col_size = ((Py_ssize_t)0xbad0bad0);
+
+                            /* "gensim/models/nmf_pgd.pyx":110
+ * 
+ *     for sample_idx in prange(n_samples, nogil=True):
+ *         r_col_size = r_indptr[sample_idx + 1] - r_indptr[sample_idx]             # <<<<<<<<<<<<<<
+ *         r_actual_col_size = r_actual_indptr[sample_idx + 1] - r_actual_indptr[sample_idx]
+ * 
+ */
+                            __pyx_t_10 = (__pyx_v_sample_idx + 1);
+                            __pyx_t_11 = __pyx_v_sample_idx;
+                            __pyx_v_r_col_size = ((*((int *) ( /* dim=0 */ ((char *) (((int *) __pyx_v_r_indptr.data) + __pyx_t_10)) ))) - (*((int *) ( /* dim=0 */ ((char *) (((int *) __pyx_v_r_indptr.data) + __pyx_t_11)) ))));
+
+                            /* "gensim/models/nmf_pgd.pyx":111
+ *     for sample_idx in prange(n_samples, nogil=True):
+ *         r_col_size = r_indptr[sample_idx + 1] - r_indptr[sample_idx]
+ *         r_actual_col_size = r_actual_indptr[sample_idx + 1] - r_actual_indptr[sample_idx]             # <<<<<<<<<<<<<<
+ * 
+ *         r_col_indices[sample_idx] = 0
+ */
+                            __pyx_t_12 = (__pyx_v_sample_idx + 1);
+                            __pyx_t_13 = __pyx_v_sample_idx;
+                            __pyx_v_r_actual_col_size = ((*((int *) ( /* dim=0 */ ((char *) (((int *) __pyx_v_r_actual_indptr.data) + __pyx_t_12)) ))) - (*((int *) ( /* dim=0 */ ((char *) (((int *) __pyx_v_r_actual_indptr.data) + __pyx_t_13)) ))));
+
+                            /* "gensim/models/nmf_pgd.pyx":113
+ *         r_actual_col_size = r_actual_indptr[sample_idx + 1] - r_actual_indptr[sample_idx]
+ * 
+ *         r_col_indices[sample_idx] = 0             # <<<<<<<<<<<<<<
+ *         r_actual_col_indices[sample_idx] = 0
+ * 
+ */
+                            __pyx_t_14 = __pyx_v_sample_idx;
+                            *((Py_ssize_t *) ( /* dim=0 */ (__pyx_v_r_col_indices.data + __pyx_t_14 * __pyx_v_r_col_indices.strides[0]) )) = 0;
+
+                            /* "gensim/models/nmf_pgd.pyx":114
+ * 
+ *         r_col_indices[sample_idx] = 0
+ *         r_actual_col_indices[sample_idx] = 0             # <<<<<<<<<<<<<<
+ * 
+ *         while r_col_indices[sample_idx] < r_col_size or r_actual_col_indices[sample_idx] < r_actual_col_size:
+ */
+                            __pyx_t_15 = __pyx_v_sample_idx;
+                            *((Py_ssize_t *) ( /* dim=0 */ (__pyx_v_r_actual_col_indices.data + __pyx_t_15 * __pyx_v_r_actual_col_indices.strides[0]) )) = 0;
+
+                            /* "gensim/models/nmf_pgd.pyx":116
+ *         r_actual_col_indices[sample_idx] = 0
+ * 
+ *         while r_col_indices[sample_idx] < r_col_size or r_actual_col_indices[sample_idx] < r_actual_col_size:             # <<<<<<<<<<<<<<
+ *             r_col_idx_idx = r_indices[
+ *                 r_indptr[sample_idx]
+ */
+                            while (1) {
+                              __pyx_t_17 = __pyx_v_sample_idx;
+                              __pyx_t_18 = (((*((Py_ssize_t *) ( /* dim=0 */ (__pyx_v_r_col_indices.data + __pyx_t_17 * __pyx_v_r_col_indices.strides[0]) ))) < __pyx_v_r_col_size) != 0);
+                              if (!__pyx_t_18) {
+                              } else {
+                                __pyx_t_16 = __pyx_t_18;
+                                goto __pyx_L12_bool_binop_done;
+                              }
+                              __pyx_t_19 = __pyx_v_sample_idx;
+                              __pyx_t_18 = (((*((Py_ssize_t *) ( /* dim=0 */ (__pyx_v_r_actual_col_indices.data + __pyx_t_19 * __pyx_v_r_actual_col_indices.strides[0]) ))) < __pyx_v_r_actual_col_size) != 0);
+                              __pyx_t_16 = __pyx_t_18;
+                              __pyx_L12_bool_binop_done:;
+                              if (!__pyx_t_16) break;
+
+                              /* "gensim/models/nmf_pgd.pyx":118
+ *         while r_col_indices[sample_idx] < r_col_size or r_actual_col_indices[sample_idx] < r_actual_col_size:
+ *             r_col_idx_idx = r_indices[
+ *                 r_indptr[sample_idx]             # <<<<<<<<<<<<<<
+ *                 + r_col_indices[sample_idx]
+ *             ]
+ */
+                              __pyx_t_20 = __pyx_v_sample_idx;
+
+                              /* "gensim/models/nmf_pgd.pyx":119
+ *             r_col_idx_idx = r_indices[
+ *                 r_indptr[sample_idx]
+ *                 + r_col_indices[sample_idx]             # <<<<<<<<<<<<<<
+ *             ]
+ *             r_actual_col_idx_idx = r_actual_indices[
+ */
+                              __pyx_t_21 = __pyx_v_sample_idx;
+
+                              /* "gensim/models/nmf_pgd.pyx":117
+ * 
+ *         while r_col_indices[sample_idx] < r_col_size or r_actual_col_indices[sample_idx] < r_actual_col_size:
+ *             r_col_idx_idx = r_indices[             # <<<<<<<<<<<<<<
+ *                 r_indptr[sample_idx]
+ *                 + r_col_indices[sample_idx]
+ */
+                              __pyx_t_22 = ((*((int *) ( /* dim=0 */ ((char *) (((int *) __pyx_v_r_indptr.data) + __pyx_t_20)) ))) + (*((Py_ssize_t *) ( /* dim=0 */ (__pyx_v_r_col_indices.data + __pyx_t_21 * __pyx_v_r_col_indices.strides[0]) ))));
+                              __pyx_v_r_col_idx_idx = (*((int *) ( /* dim=0 */ ((char *) (((int *) __pyx_v_r_indices.data) + __pyx_t_22)) )));
+
+                              /* "gensim/models/nmf_pgd.pyx":122
+ *             ]
+ *             r_actual_col_idx_idx = r_actual_indices[
+ *                 r_actual_indptr[sample_idx]             # <<<<<<<<<<<<<<
+ *                 + r_actual_col_indices[sample_idx]
+ *             ]
+ */
+                              __pyx_t_23 = __pyx_v_sample_idx;
+
+                              /* "gensim/models/nmf_pgd.pyx":123
+ *             r_actual_col_idx_idx = r_actual_indices[
+ *                 r_actual_indptr[sample_idx]
+ *                 + r_actual_col_indices[sample_idx]             # <<<<<<<<<<<<<<
+ *             ]
+ * 
+ */
+                              __pyx_t_24 = __pyx_v_sample_idx;
+
+                              /* "gensim/models/nmf_pgd.pyx":121
+ *                 + r_col_indices[sample_idx]
+ *             ]
+ *             r_actual_col_idx_idx = r_actual_indices[             # <<<<<<<<<<<<<<
+ *                 r_actual_indptr[sample_idx]
+ *                 + r_actual_col_indices[sample_idx]
+ */
+                              __pyx_t_25 = ((*((int *) ( /* dim=0 */ ((char *) (((int *) __pyx_v_r_actual_indptr.data) + __pyx_t_23)) ))) + (*((Py_ssize_t *) ( /* dim=0 */ (__pyx_v_r_actual_col_indices.data + __pyx_t_24 * __pyx_v_r_actual_col_indices.strides[0]) ))));
+                              __pyx_v_r_actual_col_idx_idx = (*((int *) ( /* dim=0 */ ((char *) (((int *) __pyx_v_r_actual_indices.data) + __pyx_t_25)) )));
+
+                              /* "gensim/models/nmf_pgd.pyx":126
+ *             ]
+ * 
+ *             if r_col_idx_idx >= r_actual_col_idx_idx:             # <<<<<<<<<<<<<<
+ *                 r_actual_sign = copysign(
+ *                     r_actual_sign,
+ */
+                              __pyx_t_16 = ((__pyx_v_r_col_idx_idx >= __pyx_v_r_actual_col_idx_idx) != 0);
+                              if (__pyx_t_16) {
+
+                                /* "gensim/models/nmf_pgd.pyx":130
+ *                     r_actual_sign,
+ *                     r_actual_data[
+ *                         r_actual_indptr[sample_idx]             # <<<<<<<<<<<<<<
+ *                         + r_actual_col_indices[sample_idx]
+ *                     ]
+ */
+                                __pyx_t_26 = __pyx_v_sample_idx;
+
+                                /* "gensim/models/nmf_pgd.pyx":131
+ *                     r_actual_data[
+ *                         r_actual_indptr[sample_idx]
+ *                         + r_actual_col_indices[sample_idx]             # <<<<<<<<<<<<<<
+ *                     ]
+ *                 )
+ */
+                                __pyx_t_27 = __pyx_v_sample_idx;
+
+                                /* "gensim/models/nmf_pgd.pyx":129
+ *                 r_actual_sign = copysign(
+ *                     r_actual_sign,
+ *                     r_actual_data[             # <<<<<<<<<<<<<<
+ *                         r_actual_indptr[sample_idx]
+ *                         + r_actual_col_indices[sample_idx]
+ */
+                                __pyx_t_28 = ((*((int *) ( /* dim=0 */ ((char *) (((int *) __pyx_v_r_actual_indptr.data) + __pyx_t_26)) ))) + (*((Py_ssize_t *) ( /* dim=0 */ (__pyx_v_r_actual_col_indices.data + __pyx_t_27 * __pyx_v_r_actual_col_indices.strides[0]) ))));
+
+                                /* "gensim/models/nmf_pgd.pyx":127
+ * 
+ *             if r_col_idx_idx >= r_actual_col_idx_idx:
+ *                 r_actual_sign = copysign(             # <<<<<<<<<<<<<<
+ *                     r_actual_sign,
+ *                     r_actual_data[
+ */
+                                __pyx_v_r_actual_sign = copysign(__pyx_v_r_actual_sign, (*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_r_actual_data.data) + __pyx_t_28)) ))));
+
+                                /* "gensim/models/nmf_pgd.pyx":140
+ *                 ] = fabs(
+ *                     r_actual_data[
+ *                         r_actual_indptr[sample_idx]             # <<<<<<<<<<<<<<
+ *                         + r_actual_col_indices[sample_idx]
+ *                     ]
+ */
+                                __pyx_t_29 = __pyx_v_sample_idx;
+
+                                /* "gensim/models/nmf_pgd.pyx":141
+ *                     r_actual_data[
+ *                         r_actual_indptr[sample_idx]
+ *                         + r_actual_col_indices[sample_idx]             # <<<<<<<<<<<<<<
+ *                     ]
+ *                 ) - lambda_
+ */
+                                __pyx_t_30 = __pyx_v_sample_idx;
+
+                                /* "gensim/models/nmf_pgd.pyx":139
+ *                     + r_actual_col_indices[sample_idx]
+ *                 ] = fabs(
+ *                     r_actual_data[             # <<<<<<<<<<<<<<
+ *                         r_actual_indptr[sample_idx]
+ *                         + r_actual_col_indices[sample_idx]
+ */
+                                __pyx_t_31 = ((*((int *) ( /* dim=0 */ ((char *) (((int *) __pyx_v_r_actual_indptr.data) + __pyx_t_29)) ))) + (*((Py_ssize_t *) ( /* dim=0 */ (__pyx_v_r_actual_col_indices.data + __pyx_t_30 * __pyx_v_r_actual_col_indices.strides[0]) ))));
+
+                                /* "gensim/models/nmf_pgd.pyx":136
+ * 
+ *                 r_actual_data[
+ *                     r_actual_indptr[sample_idx]             # <<<<<<<<<<<<<<
+ *                     + r_actual_col_indices[sample_idx]
+ *                 ] = fabs(
+ */
+                                __pyx_t_32 = __pyx_v_sample_idx;
+
+                                /* "gensim/models/nmf_pgd.pyx":137
+ *                 r_actual_data[
+ *                     r_actual_indptr[sample_idx]
+ *                     + r_actual_col_indices[sample_idx]             # <<<<<<<<<<<<<<
+ *                 ] = fabs(
+ *                     r_actual_data[
+ */
+                                __pyx_t_33 = __pyx_v_sample_idx;
+                                __pyx_t_34 = ((*((int *) ( /* dim=0 */ ((char *) (((int *) __pyx_v_r_actual_indptr.data) + __pyx_t_32)) ))) + (*((Py_ssize_t *) ( /* dim=0 */ (__pyx_v_r_actual_col_indices.data + __pyx_t_33 * __pyx_v_r_actual_col_indices.strides[0]) ))));
+                                *((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_r_actual_data.data) + __pyx_t_34)) )) = (fabs((*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_r_actual_data.data) + __pyx_t_31)) )))) - __pyx_v_lambda_);
+
+                                /* "gensim/models/nmf_pgd.pyx":150
+ *                 ] = fmax(
+ *                     r_actual_data[
+ *                         r_actual_indptr[sample_idx]             # <<<<<<<<<<<<<<
+ *                         + r_actual_col_indices[sample_idx]
+ *                     ],
+ */
+                                __pyx_t_35 = __pyx_v_sample_idx;
+
+                                /* "gensim/models/nmf_pgd.pyx":151
+ *                     r_actual_data[
+ *                         r_actual_indptr[sample_idx]
+ *                         + r_actual_col_indices[sample_idx]             # <<<<<<<<<<<<<<
+ *                     ],
+ *                     0
+ */
+                                __pyx_t_36 = __pyx_v_sample_idx;
+
+                                /* "gensim/models/nmf_pgd.pyx":149
+ *                     + r_actual_col_indices[sample_idx]
+ *                 ] = fmax(
+ *                     r_actual_data[             # <<<<<<<<<<<<<<
+ *                         r_actual_indptr[sample_idx]
+ *                         + r_actual_col_indices[sample_idx]
+ */
+                                __pyx_t_37 = ((*((int *) ( /* dim=0 */ ((char *) (((int *) __pyx_v_r_actual_indptr.data) + __pyx_t_35)) ))) + (*((Py_ssize_t *) ( /* dim=0 */ (__pyx_v_r_actual_col_indices.data + __pyx_t_36 * __pyx_v_r_actual_col_indices.strides[0]) ))));
+
+                                /* "gensim/models/nmf_pgd.pyx":146
+ * 
+ *                 r_actual_data[
+ *                     r_actual_indptr[sample_idx]             # <<<<<<<<<<<<<<
+ *                     + r_actual_col_indices[sample_idx]
+ *                 ] = fmax(
+ */
+                                __pyx_t_38 = __pyx_v_sample_idx;
+
+                                /* "gensim/models/nmf_pgd.pyx":147
+ *                 r_actual_data[
+ *                     r_actual_indptr[sample_idx]
+ *                     + r_actual_col_indices[sample_idx]             # <<<<<<<<<<<<<<
+ *                 ] = fmax(
+ *                     r_actual_data[
+ */
+                                __pyx_t_39 = __pyx_v_sample_idx;
+                                __pyx_t_40 = ((*((int *) ( /* dim=0 */ ((char *) (((int *) __pyx_v_r_actual_indptr.data) + __pyx_t_38)) ))) + (*((Py_ssize_t *) ( /* dim=0 */ (__pyx_v_r_actual_col_indices.data + __pyx_t_39 * __pyx_v_r_actual_col_indices.strides[0]) ))));
+                                *((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_r_actual_data.data) + __pyx_t_40)) )) = fmax((*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_r_actual_data.data) + __pyx_t_37)) ))), 0.0);
+
+                                /* "gensim/models/nmf_pgd.pyx":158
+ *                 if (
+ *                         r_actual_data[
+ *                             r_actual_indptr[sample_idx]             # <<<<<<<<<<<<<<
+ *                             + r_actual_col_indices[sample_idx]
+ *                         ] != 0
+ */
+                                __pyx_t_41 = __pyx_v_sample_idx;
+
+                                /* "gensim/models/nmf_pgd.pyx":159
+ *                         r_actual_data[
+ *                             r_actual_indptr[sample_idx]
+ *                             + r_actual_col_indices[sample_idx]             # <<<<<<<<<<<<<<
+ *                         ] != 0
+ *                 ):
+ */
+                                __pyx_t_42 = __pyx_v_sample_idx;
+
+                                /* "gensim/models/nmf_pgd.pyx":157
+ * 
+ *                 if (
+ *                         r_actual_data[             # <<<<<<<<<<<<<<
+ *                             r_actual_indptr[sample_idx]
+ *                             + r_actual_col_indices[sample_idx]
+ */
+                                __pyx_t_43 = ((*((int *) ( /* dim=0 */ ((char *) (((int *) __pyx_v_r_actual_indptr.data) + __pyx_t_41)) ))) + (*((Py_ssize_t *) ( /* dim=0 */ (__pyx_v_r_actual_col_indices.data + __pyx_t_42 * __pyx_v_r_actual_col_indices.strides[0]) ))));
+
+                                /* "gensim/models/nmf_pgd.pyx":160
+ *                             r_actual_indptr[sample_idx]
+ *                             + r_actual_col_indices[sample_idx]
+ *                         ] != 0             # <<<<<<<<<<<<<<
+ *                 ):
+ *                     r_actual_data[
+ */
+                                __pyx_t_16 = (((*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_r_actual_data.data) + __pyx_t_43)) ))) != 0.0) != 0);
+
+                                /* "gensim/models/nmf_pgd.pyx":156
+ *                 )
+ * 
+ *                 if (             # <<<<<<<<<<<<<<
+ *                         r_actual_data[
+ *                             r_actual_indptr[sample_idx]
+ */
+                                if (__pyx_t_16) {
+
+                                  /* "gensim/models/nmf_pgd.pyx":167
+ *                     ] = copysign(
+ *                         r_actual_data[
+ *                             r_actual_indptr[sample_idx]             # <<<<<<<<<<<<<<
+ *                             + r_actual_col_indices[sample_idx]
+ *                         ],
+ */
+                                  __pyx_t_44 = __pyx_v_sample_idx;
+
+                                  /* "gensim/models/nmf_pgd.pyx":168
+ *                         r_actual_data[
+ *                             r_actual_indptr[sample_idx]
+ *                             + r_actual_col_indices[sample_idx]             # <<<<<<<<<<<<<<
+ *                         ],
+ *                         r_actual_sign
+ */
+                                  __pyx_t_45 = __pyx_v_sample_idx;
+
+                                  /* "gensim/models/nmf_pgd.pyx":166
+ *                         + r_actual_col_indices[sample_idx]
+ *                     ] = copysign(
+ *                         r_actual_data[             # <<<<<<<<<<<<<<
+ *                             r_actual_indptr[sample_idx]
+ *                             + r_actual_col_indices[sample_idx]
+ */
+                                  __pyx_t_46 = ((*((int *) ( /* dim=0 */ ((char *) (((int *) __pyx_v_r_actual_indptr.data) + __pyx_t_44)) ))) + (*((Py_ssize_t *) ( /* dim=0 */ (__pyx_v_r_actual_col_indices.data + __pyx_t_45 * __pyx_v_r_actual_col_indices.strides[0]) ))));
+
+                                  /* "gensim/models/nmf_pgd.pyx":163
+ *                 ):
+ *                     r_actual_data[
+ *                         r_actual_indptr[sample_idx]             # <<<<<<<<<<<<<<
+ *                         + r_actual_col_indices[sample_idx]
+ *                     ] = copysign(
+ */
+                                  __pyx_t_47 = __pyx_v_sample_idx;
+
+                                  /* "gensim/models/nmf_pgd.pyx":164
+ *                     r_actual_data[
+ *                         r_actual_indptr[sample_idx]
+ *                         + r_actual_col_indices[sample_idx]             # <<<<<<<<<<<<<<
+ *                     ] = copysign(
+ *                         r_actual_data[
+ */
+                                  __pyx_t_48 = __pyx_v_sample_idx;
+                                  __pyx_t_49 = ((*((int *) ( /* dim=0 */ ((char *) (((int *) __pyx_v_r_actual_indptr.data) + __pyx_t_47)) ))) + (*((Py_ssize_t *) ( /* dim=0 */ (__pyx_v_r_actual_col_indices.data + __pyx_t_48 * __pyx_v_r_actual_col_indices.strides[0]) ))));
+                                  *((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_r_actual_data.data) + __pyx_t_49)) )) = copysign((*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_r_actual_data.data) + __pyx_t_46)) ))), __pyx_v_r_actual_sign);
+
+                                  /* "gensim/models/nmf_pgd.pyx":178
+ *                     ] = fmax(
+ *                         r_actual_data[
+ *                             r_actual_indptr[sample_idx]             # <<<<<<<<<<<<<<
+ *                             + r_actual_col_indices[sample_idx]
+ *                         ],
+ */
+                                  __pyx_t_50 = __pyx_v_sample_idx;
+
+                                  /* "gensim/models/nmf_pgd.pyx":179
+ *                         r_actual_data[
+ *                             r_actual_indptr[sample_idx]
+ *                             + r_actual_col_indices[sample_idx]             # <<<<<<<<<<<<<<
+ *                         ],
+ *                         -v_max
+ */
+                                  __pyx_t_51 = __pyx_v_sample_idx;
+
+                                  /* "gensim/models/nmf_pgd.pyx":177
+ *                         + r_actual_col_indices[sample_idx]
+ *                     ] = fmax(
+ *                         r_actual_data[             # <<<<<<<<<<<<<<
+ *                             r_actual_indptr[sample_idx]
+ *                             + r_actual_col_indices[sample_idx]
+ */
+                                  __pyx_t_52 = ((*((int *) ( /* dim=0 */ ((char *) (((int *) __pyx_v_r_actual_indptr.data) + __pyx_t_50)) ))) + (*((Py_ssize_t *) ( /* dim=0 */ (__pyx_v_r_actual_col_indices.data + __pyx_t_51 * __pyx_v_r_actual_col_indices.strides[0]) ))));
+
+                                  /* "gensim/models/nmf_pgd.pyx":174
+ * 
+ *                     r_actual_data[
+ *                         r_actual_indptr[sample_idx]             # <<<<<<<<<<<<<<
+ *                         + r_actual_col_indices[sample_idx]
+ *                     ] = fmax(
+ */
+                                  __pyx_t_53 = __pyx_v_sample_idx;
+
+                                  /* "gensim/models/nmf_pgd.pyx":175
+ *                     r_actual_data[
+ *                         r_actual_indptr[sample_idx]
+ *                         + r_actual_col_indices[sample_idx]             # <<<<<<<<<<<<<<
+ *                     ] = fmax(
+ *                         r_actual_data[
+ */
+                                  __pyx_t_54 = __pyx_v_sample_idx;
+                                  __pyx_t_55 = ((*((int *) ( /* dim=0 */ ((char *) (((int *) __pyx_v_r_actual_indptr.data) + __pyx_t_53)) ))) + (*((Py_ssize_t *) ( /* dim=0 */ (__pyx_v_r_actual_col_indices.data + __pyx_t_54 * __pyx_v_r_actual_col_indices.strides[0]) ))));
+                                  *((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_r_actual_data.data) + __pyx_t_55)) )) = fmax((*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_r_actual_data.data) + __pyx_t_52)) ))), (-__pyx_v_v_max));
+
+                                  /* "gensim/models/nmf_pgd.pyx":189
+ *                     ] = fmin(
+ *                         r_actual_data[
+ *                             r_actual_indptr[sample_idx]             # <<<<<<<<<<<<<<
+ *                             + r_actual_col_indices[sample_idx]
+ *                         ],
+ */
+                                  __pyx_t_56 = __pyx_v_sample_idx;
+
+                                  /* "gensim/models/nmf_pgd.pyx":190
+ *                         r_actual_data[
+ *                             r_actual_indptr[sample_idx]
+ *                             + r_actual_col_indices[sample_idx]             # <<<<<<<<<<<<<<
+ *                         ],
+ *                         v_max
+ */
+                                  __pyx_t_57 = __pyx_v_sample_idx;
+
+                                  /* "gensim/models/nmf_pgd.pyx":188
+ *                         + r_actual_col_indices[sample_idx]
+ *                     ] = fmin(
+ *                         r_actual_data[             # <<<<<<<<<<<<<<
+ *                             r_actual_indptr[sample_idx]
+ *                             + r_actual_col_indices[sample_idx]
+ */
+                                  __pyx_t_58 = ((*((int *) ( /* dim=0 */ ((char *) (((int *) __pyx_v_r_actual_indptr.data) + __pyx_t_56)) ))) + (*((Py_ssize_t *) ( /* dim=0 */ (__pyx_v_r_actual_col_indices.data + __pyx_t_57 * __pyx_v_r_actual_col_indices.strides[0]) ))));
+
+                                  /* "gensim/models/nmf_pgd.pyx":185
+ * 
+ *                     r_actual_data[
+ *                         r_actual_indptr[sample_idx]             # <<<<<<<<<<<<<<
+ *                         + r_actual_col_indices[sample_idx]
+ *                     ] = fmin(
+ */
+                                  __pyx_t_59 = __pyx_v_sample_idx;
+
+                                  /* "gensim/models/nmf_pgd.pyx":186
+ *                     r_actual_data[
+ *                         r_actual_indptr[sample_idx]
+ *                         + r_actual_col_indices[sample_idx]             # <<<<<<<<<<<<<<
+ *                     ] = fmin(
+ *                         r_actual_data[
+ */
+                                  __pyx_t_60 = __pyx_v_sample_idx;
+                                  __pyx_t_61 = ((*((int *) ( /* dim=0 */ ((char *) (((int *) __pyx_v_r_actual_indptr.data) + __pyx_t_59)) ))) + (*((Py_ssize_t *) ( /* dim=0 */ (__pyx_v_r_actual_col_indices.data + __pyx_t_60 * __pyx_v_r_actual_col_indices.strides[0]) ))));
+                                  *((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_r_actual_data.data) + __pyx_t_61)) )) = fmin((*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_r_actual_data.data) + __pyx_t_58)) ))), __pyx_v_v_max);
+
+                                  /* "gensim/models/nmf_pgd.pyx":156
+ *                 )
+ * 
+ *                 if (             # <<<<<<<<<<<<<<
+ *                         r_actual_data[
+ *                             r_actual_indptr[sample_idx]
+ */
+                                }
+
+                                /* "gensim/models/nmf_pgd.pyx":195
+ *                     )
+ * 
+ *                 if r_col_idx_idx == r_actual_col_idx_idx:             # <<<<<<<<<<<<<<
+ *                     violation += (
+ *                         r_data[
+ */
+                                __pyx_t_16 = ((__pyx_v_r_col_idx_idx == __pyx_v_r_actual_col_idx_idx) != 0);
+                                if (__pyx_t_16) {
+
+                                  /* "gensim/models/nmf_pgd.pyx":198
+ *                     violation += (
+ *                         r_data[
+ *                             r_indptr[sample_idx]             # <<<<<<<<<<<<<<
+ *                             + r_col_indices[sample_idx]
+ *                         ]
+ */
+                                  __pyx_t_62 = __pyx_v_sample_idx;
+
+                                  /* "gensim/models/nmf_pgd.pyx":199
+ *                         r_data[
+ *                             r_indptr[sample_idx]
+ *                             + r_col_indices[sample_idx]             # <<<<<<<<<<<<<<
+ *                         ]
+ *                         - r_actual_data[
+ */
+                                  __pyx_t_63 = __pyx_v_sample_idx;
+
+                                  /* "gensim/models/nmf_pgd.pyx":197
+ *                 if r_col_idx_idx == r_actual_col_idx_idx:
+ *                     violation += (
+ *                         r_data[             # <<<<<<<<<<<<<<
+ *                             r_indptr[sample_idx]
+ *                             + r_col_indices[sample_idx]
+ */
+                                  __pyx_t_64 = ((*((int *) ( /* dim=0 */ ((char *) (((int *) __pyx_v_r_indptr.data) + __pyx_t_62)) ))) + (*((Py_ssize_t *) ( /* dim=0 */ (__pyx_v_r_col_indices.data + __pyx_t_63 * __pyx_v_r_col_indices.strides[0]) ))));
+
+                                  /* "gensim/models/nmf_pgd.pyx":202
+ *                         ]
+ *                         - r_actual_data[
+ *                             r_actual_indptr[sample_idx]             # <<<<<<<<<<<<<<
+ *                             + r_actual_col_indices[sample_idx]
+ *                         ]
+ */
+                                  __pyx_t_65 = __pyx_v_sample_idx;
+
+                                  /* "gensim/models/nmf_pgd.pyx":203
+ *                         - r_actual_data[
+ *                             r_actual_indptr[sample_idx]
+ *                             + r_actual_col_indices[sample_idx]             # <<<<<<<<<<<<<<
+ *                         ]
+ *                     ) ** 2
+ */
+                                  __pyx_t_66 = __pyx_v_sample_idx;
+
+                                  /* "gensim/models/nmf_pgd.pyx":201
+ *                             + r_col_indices[sample_idx]
+ *                         ]
+ *                         - r_actual_data[             # <<<<<<<<<<<<<<
+ *                             r_actual_indptr[sample_idx]
+ *                             + r_actual_col_indices[sample_idx]
+ */
+                                  __pyx_t_67 = ((*((int *) ( /* dim=0 */ ((char *) (((int *) __pyx_v_r_actual_indptr.data) + __pyx_t_65)) ))) + (*((Py_ssize_t *) ( /* dim=0 */ (__pyx_v_r_actual_col_indices.data + __pyx_t_66 * __pyx_v_r_actual_col_indices.strides[0]) ))));
+
+                                  /* "gensim/models/nmf_pgd.pyx":196
+ * 
+ *                 if r_col_idx_idx == r_actual_col_idx_idx:
+ *                     violation += (             # <<<<<<<<<<<<<<
+ *                         r_data[
+ *                             r_indptr[sample_idx]
+ */
+                                  __pyx_v_violation = (__pyx_v_violation + pow(((*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_r_data.data) + __pyx_t_64)) ))) - (*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_r_actual_data.data) + __pyx_t_67)) )))), 2.0));
+
+                                  /* "gensim/models/nmf_pgd.pyx":195
+ *                     )
+ * 
+ *                 if r_col_idx_idx == r_actual_col_idx_idx:             # <<<<<<<<<<<<<<
+ *                     violation += (
+ *                         r_data[
+ */
+                                  goto __pyx_L16;
+                                }
+
+                                /* "gensim/models/nmf_pgd.pyx":207
+ *                     ) ** 2
+ *                 else:
+ *                     violation += r_actual_data[             # <<<<<<<<<<<<<<
+ *                         r_actual_indptr[sample_idx]
+ *                         + r_actual_col_indices[sample_idx]
+ */
+                                /*else*/ {
+
+                                  /* "gensim/models/nmf_pgd.pyx":208
+ *                 else:
+ *                     violation += r_actual_data[
+ *                         r_actual_indptr[sample_idx]             # <<<<<<<<<<<<<<
+ *                         + r_actual_col_indices[sample_idx]
+ *                     ] ** 2
+ */
+                                  __pyx_t_68 = __pyx_v_sample_idx;
+
+                                  /* "gensim/models/nmf_pgd.pyx":209
+ *                     violation += r_actual_data[
+ *                         r_actual_indptr[sample_idx]
+ *                         + r_actual_col_indices[sample_idx]             # <<<<<<<<<<<<<<
+ *                     ] ** 2
+ * 
+ */
+                                  __pyx_t_69 = __pyx_v_sample_idx;
+
+                                  /* "gensim/models/nmf_pgd.pyx":207
+ *                     ) ** 2
+ *                 else:
+ *                     violation += r_actual_data[             # <<<<<<<<<<<<<<
+ *                         r_actual_indptr[sample_idx]
+ *                         + r_actual_col_indices[sample_idx]
+ */
+                                  __pyx_t_70 = ((*((int *) ( /* dim=0 */ ((char *) (((int *) __pyx_v_r_actual_indptr.data) + __pyx_t_68)) ))) + (*((Py_ssize_t *) ( /* dim=0 */ (__pyx_v_r_actual_col_indices.data + __pyx_t_69 * __pyx_v_r_actual_col_indices.strides[0]) ))));
+
+                                  /* "gensim/models/nmf_pgd.pyx":210
+ *                         r_actual_indptr[sample_idx]
+ *                         + r_actual_col_indices[sample_idx]
+ *                     ] ** 2             # <<<<<<<<<<<<<<
+ * 
+ *                 if r_actual_col_indices[sample_idx] < r_actual_col_size:
+ */
+                                  __pyx_v_violation = (__pyx_v_violation + pow((*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_r_actual_data.data) + __pyx_t_70)) ))), 2.0));
+                                }
+                                __pyx_L16:;
+
+                                /* "gensim/models/nmf_pgd.pyx":212
+ *                     ] ** 2
+ * 
+ *                 if r_actual_col_indices[sample_idx] < r_actual_col_size:             # <<<<<<<<<<<<<<
+ *                     r_actual_col_indices[sample_idx] += 1
+ *                 else:
+ */
+                                __pyx_t_71 = __pyx_v_sample_idx;
+                                __pyx_t_16 = (((*((Py_ssize_t *) ( /* dim=0 */ (__pyx_v_r_actual_col_indices.data + __pyx_t_71 * __pyx_v_r_actual_col_indices.strides[0]) ))) < __pyx_v_r_actual_col_size) != 0);
+                                if (__pyx_t_16) {
+
+                                  /* "gensim/models/nmf_pgd.pyx":213
+ * 
+ *                 if r_actual_col_indices[sample_idx] < r_actual_col_size:
+ *                     r_actual_col_indices[sample_idx] += 1             # <<<<<<<<<<<<<<
+ *                 else:
+ *                     r_col_indices[sample_idx] += 1
+ */
+                                  __pyx_t_72 = __pyx_v_sample_idx;
+                                  *((Py_ssize_t *) ( /* dim=0 */ (__pyx_v_r_actual_col_indices.data + __pyx_t_72 * __pyx_v_r_actual_col_indices.strides[0]) )) += 1;
+
+                                  /* "gensim/models/nmf_pgd.pyx":212
+ *                     ] ** 2
+ * 
+ *                 if r_actual_col_indices[sample_idx] < r_actual_col_size:             # <<<<<<<<<<<<<<
+ *                     r_actual_col_indices[sample_idx] += 1
+ *                 else:
+ */
+                                  goto __pyx_L17;
+                                }
+
+                                /* "gensim/models/nmf_pgd.pyx":215
+ *                     r_actual_col_indices[sample_idx] += 1
+ *                 else:
+ *                     r_col_indices[sample_idx] += 1             # <<<<<<<<<<<<<<
+ *             else:
+ *                 violation += r_data[
+ */
+                                /*else*/ {
+                                  __pyx_t_73 = __pyx_v_sample_idx;
+                                  *((Py_ssize_t *) ( /* dim=0 */ (__pyx_v_r_col_indices.data + __pyx_t_73 * __pyx_v_r_col_indices.strides[0]) )) += 1;
+                                }
+                                __pyx_L17:;
+
+                                /* "gensim/models/nmf_pgd.pyx":126
+ *             ]
+ * 
+ *             if r_col_idx_idx >= r_actual_col_idx_idx:             # <<<<<<<<<<<<<<
+ *                 r_actual_sign = copysign(
+ *                     r_actual_sign,
+ */
+                                goto __pyx_L14;
+                              }
+
+                              /* "gensim/models/nmf_pgd.pyx":217
+ *                     r_col_indices[sample_idx] += 1
+ *             else:
+ *                 violation += r_data[             # <<<<<<<<<<<<<<
+ *                     r_indptr[sample_idx]
+ *                     + r_col_indices[sample_idx]
+ */
+                              /*else*/ {
+
+                                /* "gensim/models/nmf_pgd.pyx":218
+ *             else:
+ *                 violation += r_data[
+ *                     r_indptr[sample_idx]             # <<<<<<<<<<<<<<
+ *                     + r_col_indices[sample_idx]
+ *                 ] ** 2
+ */
+                                __pyx_t_74 = __pyx_v_sample_idx;
+
+                                /* "gensim/models/nmf_pgd.pyx":219
+ *                 violation += r_data[
+ *                     r_indptr[sample_idx]
+ *                     + r_col_indices[sample_idx]             # <<<<<<<<<<<<<<
+ *                 ] ** 2
+ * 
+ */
+                                __pyx_t_75 = __pyx_v_sample_idx;
+
+                                /* "gensim/models/nmf_pgd.pyx":217
+ *                     r_col_indices[sample_idx] += 1
+ *             else:
+ *                 violation += r_data[             # <<<<<<<<<<<<<<
+ *                     r_indptr[sample_idx]
+ *                     + r_col_indices[sample_idx]
+ */
+                                __pyx_t_76 = ((*((int *) ( /* dim=0 */ ((char *) (((int *) __pyx_v_r_indptr.data) + __pyx_t_74)) ))) + (*((Py_ssize_t *) ( /* dim=0 */ (__pyx_v_r_col_indices.data + __pyx_t_75 * __pyx_v_r_col_indices.strides[0]) ))));
+
+                                /* "gensim/models/nmf_pgd.pyx":220
+ *                     r_indptr[sample_idx]
+ *                     + r_col_indices[sample_idx]
+ *                 ] ** 2             # <<<<<<<<<<<<<<
+ * 
+ *                 if r_col_indices[sample_idx] < r_col_size:
+ */
+                                __pyx_v_violation = (__pyx_v_violation + pow((*((double *) ( /* dim=0 */ ((char *) (((double *) __pyx_v_r_data.data) + __pyx_t_76)) ))), 2.0));
+
+                                /* "gensim/models/nmf_pgd.pyx":222
+ *                 ] ** 2
+ * 
+ *                 if r_col_indices[sample_idx] < r_col_size:             # <<<<<<<<<<<<<<
+ *                     r_col_indices[sample_idx] += 1
+ *                 else:
+ */
+                                __pyx_t_77 = __pyx_v_sample_idx;
+                                __pyx_t_16 = (((*((Py_ssize_t *) ( /* dim=0 */ (__pyx_v_r_col_indices.data + __pyx_t_77 * __pyx_v_r_col_indices.strides[0]) ))) < __pyx_v_r_col_size) != 0);
+                                if (__pyx_t_16) {
+
+                                  /* "gensim/models/nmf_pgd.pyx":223
+ * 
+ *                 if r_col_indices[sample_idx] < r_col_size:
+ *                     r_col_indices[sample_idx] += 1             # <<<<<<<<<<<<<<
+ *                 else:
+ *                     r_actual_col_indices[sample_idx] += 1
+ */
+                                  __pyx_t_78 = __pyx_v_sample_idx;
+                                  *((Py_ssize_t *) ( /* dim=0 */ (__pyx_v_r_col_indices.data + __pyx_t_78 * __pyx_v_r_col_indices.strides[0]) )) += 1;
+
+                                  /* "gensim/models/nmf_pgd.pyx":222
+ *                 ] ** 2
+ * 
+ *                 if r_col_indices[sample_idx] < r_col_size:             # <<<<<<<<<<<<<<
+ *                     r_col_indices[sample_idx] += 1
+ *                 else:
+ */
+                                  goto __pyx_L18;
+                                }
+
+                                /* "gensim/models/nmf_pgd.pyx":225
+ *                     r_col_indices[sample_idx] += 1
+ *                 else:
+ *                     r_actual_col_indices[sample_idx] += 1             # <<<<<<<<<<<<<<
+ * 
+ *     return sqrt(violation)
+ */
+                                /*else*/ {
+                                  __pyx_t_79 = __pyx_v_sample_idx;
+                                  *((Py_ssize_t *) ( /* dim=0 */ (__pyx_v_r_actual_col_indices.data + __pyx_t_79 * __pyx_v_r_actual_col_indices.strides[0]) )) += 1;
+                                }
+                                __pyx_L18:;
+                              }
+                              __pyx_L14:;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
+            #undef likely
+            #undef unlikely
+            #define likely(x)   __builtin_expect(!!(x), 1)
+            #define unlikely(x) __builtin_expect(!!(x), 0)
+        #endif
+      }
+
+      /* "gensim/models/nmf_pgd.pyx":109
+ *     cdef Py_ssize_t [:] r_actual_col_indices = np.zeros(n_samples, dtype=np.intp)
+ * 
+ *     for sample_idx in prange(n_samples, nogil=True):             # <<<<<<<<<<<<<<
+ *         r_col_size = r_indptr[sample_idx + 1] - r_indptr[sample_idx]
+ *         r_actual_col_size = r_actual_indptr[sample_idx + 1] - r_actual_indptr[sample_idx]
+ */
+      /*finally:*/ {
+        /*normal exit:*/{
+          #ifdef WITH_THREAD
+          Py_BLOCK_THREADS
+          #endif
+          goto __pyx_L5;
+        }
+        __pyx_L5:;
+      }
+  }
+
+  /* "gensim/models/nmf_pgd.pyx":227
+ *                     r_actual_col_indices[sample_idx] += 1
+ * 
+ *     return sqrt(violation)             # <<<<<<<<<<<<<<
+ */
+  __Pyx_XDECREF(__pyx_r);
+  __pyx_t_4 = PyFloat_FromDouble(sqrt(__pyx_v_violation)); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 227, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  __pyx_r = __pyx_t_4;
+  __pyx_t_4 = 0;
+  goto __pyx_L0;
+
+  /* "gensim/models/nmf_pgd.pyx":86
+ *     return sqrt(violation)
+ * 
+ * def solve_r(             # <<<<<<<<<<<<<<
+ *         int[::1] r_indptr,
+ *         int[::1] r_indices,
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_2);
+  __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_XDECREF(__pyx_t_4);
+  __Pyx_XDECREF(__pyx_t_5);
+  __PYX_XDEC_MEMVIEW(&__pyx_t_6, 1);
+  __Pyx_AddTraceback("gensim.models.nmf_pgd.solve_r", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __PYX_XDEC_MEMVIEW(&__pyx_v_r_col_indices, 1);
+  __PYX_XDEC_MEMVIEW(&__pyx_v_r_actual_col_indices, 1);
+  __PYX_XDEC_MEMVIEW(&__pyx_v_r_indptr, 1);
+  __PYX_XDEC_MEMVIEW(&__pyx_v_r_indices, 1);
+  __PYX_XDEC_MEMVIEW(&__pyx_v_r_data, 1);
+  __PYX_XDEC_MEMVIEW(&__pyx_v_r_actual_indptr, 1);
+  __PYX_XDEC_MEMVIEW(&__pyx_v_r_actual_indices, 1);
+  __PYX_XDEC_MEMVIEW(&__pyx_v_r_actual_data, 1);
   __Pyx_XGIVEREF(__pyx_r);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
@@ -14379,6 +15639,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_component_idx_2, __pyx_k_component_idx_2, sizeof(__pyx_k_component_idx_2), 0, 0, 1, 1},
   {&__pyx_kp_s_contiguous_and_direct, __pyx_k_contiguous_and_direct, sizeof(__pyx_k_contiguous_and_direct), 0, 0, 1, 0},
   {&__pyx_kp_s_contiguous_and_indirect, __pyx_k_contiguous_and_indirect, sizeof(__pyx_k_contiguous_and_indirect), 0, 0, 1, 0},
+  {&__pyx_n_s_dtype, __pyx_k_dtype, sizeof(__pyx_k_dtype), 0, 0, 1, 1},
   {&__pyx_n_s_dtype_is_object, __pyx_k_dtype_is_object, sizeof(__pyx_k_dtype_is_object), 0, 0, 1, 1},
   {&__pyx_n_s_encode, __pyx_k_encode, sizeof(__pyx_k_encode), 0, 0, 1, 1},
   {&__pyx_n_s_enumerate, __pyx_k_enumerate, sizeof(__pyx_k_enumerate), 0, 0, 1, 1},
@@ -14395,9 +15656,11 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_kp_s_home_anotherbugmaster_Documents, __pyx_k_home_anotherbugmaster_Documents, sizeof(__pyx_k_home_anotherbugmaster_Documents), 0, 0, 1, 0},
   {&__pyx_n_s_id, __pyx_k_id, sizeof(__pyx_k_id), 0, 0, 1, 1},
   {&__pyx_n_s_import, __pyx_k_import, sizeof(__pyx_k_import), 0, 0, 1, 1},
+  {&__pyx_n_s_intp, __pyx_k_intp, sizeof(__pyx_k_intp), 0, 0, 1, 1},
   {&__pyx_n_s_itemsize, __pyx_k_itemsize, sizeof(__pyx_k_itemsize), 0, 0, 1, 1},
   {&__pyx_kp_s_itemsize_0_for_cython_array, __pyx_k_itemsize_0_for_cython_array, sizeof(__pyx_k_itemsize_0_for_cython_array), 0, 0, 1, 0},
   {&__pyx_n_s_kappa, __pyx_k_kappa, sizeof(__pyx_k_kappa), 0, 0, 1, 1},
+  {&__pyx_n_s_lambda, __pyx_k_lambda, sizeof(__pyx_k_lambda), 0, 0, 1, 1},
   {&__pyx_n_s_main, __pyx_k_main, sizeof(__pyx_k_main), 0, 0, 1, 1},
   {&__pyx_n_s_memview, __pyx_k_memview, sizeof(__pyx_k_memview), 0, 0, 1, 1},
   {&__pyx_n_s_mode, __pyx_k_mode, sizeof(__pyx_k_mode), 0, 0, 1, 1},
@@ -14406,16 +15669,32 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_name, __pyx_k_name, sizeof(__pyx_k_name), 0, 0, 1, 1},
   {&__pyx_n_s_name_2, __pyx_k_name_2, sizeof(__pyx_k_name_2), 0, 0, 1, 1},
   {&__pyx_n_s_ndim, __pyx_k_ndim, sizeof(__pyx_k_ndim), 0, 0, 1, 1},
+  {&__pyx_n_s_np, __pyx_k_np, sizeof(__pyx_k_np), 0, 0, 1, 1},
+  {&__pyx_n_s_numpy, __pyx_k_numpy, sizeof(__pyx_k_numpy), 0, 0, 1, 1},
   {&__pyx_n_s_obj, __pyx_k_obj, sizeof(__pyx_k_obj), 0, 0, 1, 1},
   {&__pyx_n_s_pack, __pyx_k_pack, sizeof(__pyx_k_pack), 0, 0, 1, 1},
   {&__pyx_n_s_projected_grad, __pyx_k_projected_grad, sizeof(__pyx_k_projected_grad), 0, 0, 1, 1},
   {&__pyx_n_s_pyx_getbuffer, __pyx_k_pyx_getbuffer, sizeof(__pyx_k_pyx_getbuffer), 0, 0, 1, 1},
   {&__pyx_n_s_pyx_vtable, __pyx_k_pyx_vtable, sizeof(__pyx_k_pyx_vtable), 0, 0, 1, 1},
+  {&__pyx_n_s_r_actual_col_idx_idx, __pyx_k_r_actual_col_idx_idx, sizeof(__pyx_k_r_actual_col_idx_idx), 0, 0, 1, 1},
+  {&__pyx_n_s_r_actual_col_indices, __pyx_k_r_actual_col_indices, sizeof(__pyx_k_r_actual_col_indices), 0, 0, 1, 1},
+  {&__pyx_n_s_r_actual_col_size, __pyx_k_r_actual_col_size, sizeof(__pyx_k_r_actual_col_size), 0, 0, 1, 1},
+  {&__pyx_n_s_r_actual_data, __pyx_k_r_actual_data, sizeof(__pyx_k_r_actual_data), 0, 0, 1, 1},
+  {&__pyx_n_s_r_actual_indices, __pyx_k_r_actual_indices, sizeof(__pyx_k_r_actual_indices), 0, 0, 1, 1},
+  {&__pyx_n_s_r_actual_indptr, __pyx_k_r_actual_indptr, sizeof(__pyx_k_r_actual_indptr), 0, 0, 1, 1},
+  {&__pyx_n_s_r_actual_sign, __pyx_k_r_actual_sign, sizeof(__pyx_k_r_actual_sign), 0, 0, 1, 1},
+  {&__pyx_n_s_r_col_idx_idx, __pyx_k_r_col_idx_idx, sizeof(__pyx_k_r_col_idx_idx), 0, 0, 1, 1},
+  {&__pyx_n_s_r_col_indices, __pyx_k_r_col_indices, sizeof(__pyx_k_r_col_indices), 0, 0, 1, 1},
+  {&__pyx_n_s_r_col_size, __pyx_k_r_col_size, sizeof(__pyx_k_r_col_size), 0, 0, 1, 1},
+  {&__pyx_n_s_r_data, __pyx_k_r_data, sizeof(__pyx_k_r_data), 0, 0, 1, 1},
+  {&__pyx_n_s_r_indices, __pyx_k_r_indices, sizeof(__pyx_k_r_indices), 0, 0, 1, 1},
+  {&__pyx_n_s_r_indptr, __pyx_k_r_indptr, sizeof(__pyx_k_r_indptr), 0, 0, 1, 1},
   {&__pyx_n_s_range, __pyx_k_range, sizeof(__pyx_k_range), 0, 0, 1, 1},
   {&__pyx_n_s_sample_idx, __pyx_k_sample_idx, sizeof(__pyx_k_sample_idx), 0, 0, 1, 1},
   {&__pyx_n_s_shape, __pyx_k_shape, sizeof(__pyx_k_shape), 0, 0, 1, 1},
   {&__pyx_n_s_size, __pyx_k_size, sizeof(__pyx_k_size), 0, 0, 1, 1},
   {&__pyx_n_s_solve_h, __pyx_k_solve_h, sizeof(__pyx_k_solve_h), 0, 0, 1, 1},
+  {&__pyx_n_s_solve_r, __pyx_k_solve_r, sizeof(__pyx_k_solve_r), 0, 0, 1, 1},
   {&__pyx_n_s_start, __pyx_k_start, sizeof(__pyx_k_start), 0, 0, 1, 1},
   {&__pyx_n_s_step, __pyx_k_step, sizeof(__pyx_k_step), 0, 0, 1, 1},
   {&__pyx_n_s_stop, __pyx_k_stop, sizeof(__pyx_k_stop), 0, 0, 1, 1},
@@ -14427,11 +15706,13 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_kp_s_unable_to_allocate_array_data, __pyx_k_unable_to_allocate_array_data, sizeof(__pyx_k_unable_to_allocate_array_data), 0, 0, 1, 0},
   {&__pyx_kp_s_unable_to_allocate_shape_and_str, __pyx_k_unable_to_allocate_shape_and_str, sizeof(__pyx_k_unable_to_allocate_shape_and_str), 0, 0, 1, 0},
   {&__pyx_n_s_unpack, __pyx_k_unpack, sizeof(__pyx_k_unpack), 0, 0, 1, 1},
+  {&__pyx_n_s_v_max, __pyx_k_v_max, sizeof(__pyx_k_v_max), 0, 0, 1, 1},
   {&__pyx_n_s_violation, __pyx_k_violation, sizeof(__pyx_k_violation), 0, 0, 1, 1},
+  {&__pyx_n_s_zeros, __pyx_k_zeros, sizeof(__pyx_k_zeros), 0, 0, 1, 1},
   {0, 0, 0, 0, 0, 0, 0}
 };
 static int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 21, __pyx_L1_error)
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 67, __pyx_L1_error)
   __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) __PYX_ERR(1, 131, __pyx_L1_error)
   __pyx_builtin_MemoryError = __Pyx_GetBuiltinName(__pyx_n_s_MemoryError); if (!__pyx_builtin_MemoryError) __PYX_ERR(1, 146, __pyx_L1_error)
   __pyx_builtin_enumerate = __Pyx_GetBuiltinName(__pyx_n_s_enumerate); if (!__pyx_builtin_enumerate) __PYX_ERR(1, 149, __pyx_L1_error)
@@ -14594,17 +15875,29 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__13);
   __Pyx_GIVEREF(__pyx_tuple__13);
 
-  /* "gensim/models/nmf_pgd.pyx":11
- * from cython.parallel import prange
+  /* "gensim/models/nmf_pgd.pyx":57
+ * #     return sqrt(violation)
  * 
  * def solve_h(double[:, ::1] h, double[:, :] Wt_v_minus_r, double[:, ::1] WtW, double kappa):             # <<<<<<<<<<<<<<
  *     cdef Py_ssize_t n_components = h.shape[0]
  *     cdef Py_ssize_t n_samples = h.shape[1]
  */
-  __pyx_tuple__14 = PyTuple_Pack(13, __pyx_n_s_h, __pyx_n_s_Wt_v_minus_r, __pyx_n_s_WtW, __pyx_n_s_kappa, __pyx_n_s_n_components, __pyx_n_s_n_samples, __pyx_n_s_violation, __pyx_n_s_grad, __pyx_n_s_projected_grad, __pyx_n_s_hessian, __pyx_n_s_sample_idx, __pyx_n_s_component_idx_1, __pyx_n_s_component_idx_2); if (unlikely(!__pyx_tuple__14)) __PYX_ERR(0, 11, __pyx_L1_error)
+  __pyx_tuple__14 = PyTuple_Pack(13, __pyx_n_s_h, __pyx_n_s_Wt_v_minus_r, __pyx_n_s_WtW, __pyx_n_s_kappa, __pyx_n_s_n_components, __pyx_n_s_n_samples, __pyx_n_s_violation, __pyx_n_s_grad, __pyx_n_s_projected_grad, __pyx_n_s_hessian, __pyx_n_s_sample_idx, __pyx_n_s_component_idx_1, __pyx_n_s_component_idx_2); if (unlikely(!__pyx_tuple__14)) __PYX_ERR(0, 57, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__14);
   __Pyx_GIVEREF(__pyx_tuple__14);
-  __pyx_codeobj__15 = (PyObject*)__Pyx_PyCode_New(4, 0, 13, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__14, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_anotherbugmaster_Documents, __pyx_n_s_solve_h, 11, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__15)) __PYX_ERR(0, 11, __pyx_L1_error)
+  __pyx_codeobj__15 = (PyObject*)__Pyx_PyCode_New(4, 0, 13, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__14, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_anotherbugmaster_Documents, __pyx_n_s_solve_h, 57, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__15)) __PYX_ERR(0, 57, __pyx_L1_error)
+
+  /* "gensim/models/nmf_pgd.pyx":86
+ *     return sqrt(violation)
+ * 
+ * def solve_r(             # <<<<<<<<<<<<<<
+ *         int[::1] r_indptr,
+ *         int[::1] r_indices,
+ */
+  __pyx_tuple__16 = PyTuple_Pack(18, __pyx_n_s_r_indptr, __pyx_n_s_r_indices, __pyx_n_s_r_data, __pyx_n_s_r_actual_indptr, __pyx_n_s_r_actual_indices, __pyx_n_s_r_actual_data, __pyx_n_s_lambda, __pyx_n_s_v_max, __pyx_n_s_n_samples, __pyx_n_s_violation, __pyx_n_s_r_actual_sign, __pyx_n_s_sample_idx, __pyx_n_s_r_col_size, __pyx_n_s_r_actual_col_size, __pyx_n_s_r_col_idx_idx, __pyx_n_s_r_actual_col_idx_idx, __pyx_n_s_r_col_indices, __pyx_n_s_r_actual_col_indices); if (unlikely(!__pyx_tuple__16)) __PYX_ERR(0, 86, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__16);
+  __Pyx_GIVEREF(__pyx_tuple__16);
+  __pyx_codeobj__17 = (PyObject*)__Pyx_PyCode_New(8, 0, 18, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__16, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_anotherbugmaster_Documents, __pyx_n_s_solve_r, 86, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__17)) __PYX_ERR(0, 86, __pyx_L1_error)
 
   /* "View.MemoryView":282
  *         return self.name
@@ -14613,9 +15906,9 @@ static int __Pyx_InitCachedConstants(void) {
  * cdef strided = Enum("<strided and direct>") # default
  * cdef indirect = Enum("<strided and indirect>")
  */
-  __pyx_tuple__16 = PyTuple_Pack(1, __pyx_kp_s_strided_and_direct_or_indirect); if (unlikely(!__pyx_tuple__16)) __PYX_ERR(1, 282, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__16);
-  __Pyx_GIVEREF(__pyx_tuple__16);
+  __pyx_tuple__18 = PyTuple_Pack(1, __pyx_kp_s_strided_and_direct_or_indirect); if (unlikely(!__pyx_tuple__18)) __PYX_ERR(1, 282, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__18);
+  __Pyx_GIVEREF(__pyx_tuple__18);
 
   /* "View.MemoryView":283
  * 
@@ -14624,9 +15917,9 @@ static int __Pyx_InitCachedConstants(void) {
  * cdef indirect = Enum("<strided and indirect>")
  * 
  */
-  __pyx_tuple__17 = PyTuple_Pack(1, __pyx_kp_s_strided_and_direct); if (unlikely(!__pyx_tuple__17)) __PYX_ERR(1, 283, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__17);
-  __Pyx_GIVEREF(__pyx_tuple__17);
+  __pyx_tuple__19 = PyTuple_Pack(1, __pyx_kp_s_strided_and_direct); if (unlikely(!__pyx_tuple__19)) __PYX_ERR(1, 283, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__19);
+  __Pyx_GIVEREF(__pyx_tuple__19);
 
   /* "View.MemoryView":284
  * cdef generic = Enum("<strided and direct or indirect>")
@@ -14635,9 +15928,9 @@ static int __Pyx_InitCachedConstants(void) {
  * 
  * 
  */
-  __pyx_tuple__18 = PyTuple_Pack(1, __pyx_kp_s_strided_and_indirect); if (unlikely(!__pyx_tuple__18)) __PYX_ERR(1, 284, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__18);
-  __Pyx_GIVEREF(__pyx_tuple__18);
+  __pyx_tuple__20 = PyTuple_Pack(1, __pyx_kp_s_strided_and_indirect); if (unlikely(!__pyx_tuple__20)) __PYX_ERR(1, 284, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__20);
+  __Pyx_GIVEREF(__pyx_tuple__20);
 
   /* "View.MemoryView":287
  * 
@@ -14646,9 +15939,9 @@ static int __Pyx_InitCachedConstants(void) {
  * cdef indirect_contiguous = Enum("<contiguous and indirect>")
  * 
  */
-  __pyx_tuple__19 = PyTuple_Pack(1, __pyx_kp_s_contiguous_and_direct); if (unlikely(!__pyx_tuple__19)) __PYX_ERR(1, 287, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__19);
-  __Pyx_GIVEREF(__pyx_tuple__19);
+  __pyx_tuple__21 = PyTuple_Pack(1, __pyx_kp_s_contiguous_and_direct); if (unlikely(!__pyx_tuple__21)) __PYX_ERR(1, 287, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__21);
+  __Pyx_GIVEREF(__pyx_tuple__21);
 
   /* "View.MemoryView":288
  * 
@@ -14657,9 +15950,9 @@ static int __Pyx_InitCachedConstants(void) {
  * 
  * 
  */
-  __pyx_tuple__20 = PyTuple_Pack(1, __pyx_kp_s_contiguous_and_indirect); if (unlikely(!__pyx_tuple__20)) __PYX_ERR(1, 288, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__20);
-  __Pyx_GIVEREF(__pyx_tuple__20);
+  __pyx_tuple__22 = PyTuple_Pack(1, __pyx_kp_s_contiguous_and_indirect); if (unlikely(!__pyx_tuple__22)) __PYX_ERR(1, 288, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__22);
+  __Pyx_GIVEREF(__pyx_tuple__22);
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -14813,15 +16106,39 @@ PyMODINIT_FUNC PyInit_nmf_pgd(void)
   #endif
 
   /* "gensim/models/nmf_pgd.pyx":11
+ * from libc.math cimport sqrt, fabs, fmin, fmax, copysign
  * from cython.parallel import prange
+ * import numpy as np             # <<<<<<<<<<<<<<
+ * 
+ * # def solve_h_sparse(h, Wt_v_minus_r, WtW, double kappa):
+ */
+  __pyx_t_1 = __Pyx_Import(__pyx_n_s_numpy, 0, -1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 11, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_np, __pyx_t_1) < 0) __PYX_ERR(0, 11, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+
+  /* "gensim/models/nmf_pgd.pyx":57
+ * #     return sqrt(violation)
  * 
  * def solve_h(double[:, ::1] h, double[:, :] Wt_v_minus_r, double[:, ::1] WtW, double kappa):             # <<<<<<<<<<<<<<
  *     cdef Py_ssize_t n_components = h.shape[0]
  *     cdef Py_ssize_t n_samples = h.shape[1]
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_6gensim_6models_7nmf_pgd_1solve_h, NULL, __pyx_n_s_gensim_models_nmf_pgd); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 11, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_6gensim_6models_7nmf_pgd_1solve_h, NULL, __pyx_n_s_gensim_models_nmf_pgd); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 57, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_solve_h, __pyx_t_1) < 0) __PYX_ERR(0, 11, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_solve_h, __pyx_t_1) < 0) __PYX_ERR(0, 57, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+
+  /* "gensim/models/nmf_pgd.pyx":86
+ *     return sqrt(violation)
+ * 
+ * def solve_r(             # <<<<<<<<<<<<<<
+ *         int[::1] r_indptr,
+ *         int[::1] r_indices,
+ */
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_6gensim_6models_7nmf_pgd_3solve_r, NULL, __pyx_n_s_gensim_models_nmf_pgd); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 86, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_solve_r, __pyx_t_1) < 0) __PYX_ERR(0, 86, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "gensim/models/nmf_pgd.pyx":1
@@ -14854,7 +16171,7 @@ PyMODINIT_FUNC PyInit_nmf_pgd(void)
  * cdef strided = Enum("<strided and direct>") # default
  * cdef indirect = Enum("<strided and indirect>")
  */
-  __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)__pyx_MemviewEnum_type), __pyx_tuple__16, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 282, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)__pyx_MemviewEnum_type), __pyx_tuple__18, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 282, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_XGOTREF(generic);
   __Pyx_DECREF_SET(generic, __pyx_t_1);
@@ -14868,7 +16185,7 @@ PyMODINIT_FUNC PyInit_nmf_pgd(void)
  * cdef indirect = Enum("<strided and indirect>")
  * 
  */
-  __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)__pyx_MemviewEnum_type), __pyx_tuple__17, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 283, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)__pyx_MemviewEnum_type), __pyx_tuple__19, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 283, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_XGOTREF(strided);
   __Pyx_DECREF_SET(strided, __pyx_t_1);
@@ -14882,7 +16199,7 @@ PyMODINIT_FUNC PyInit_nmf_pgd(void)
  * 
  * 
  */
-  __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)__pyx_MemviewEnum_type), __pyx_tuple__18, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 284, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)__pyx_MemviewEnum_type), __pyx_tuple__20, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 284, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_XGOTREF(indirect);
   __Pyx_DECREF_SET(indirect, __pyx_t_1);
@@ -14896,7 +16213,7 @@ PyMODINIT_FUNC PyInit_nmf_pgd(void)
  * cdef indirect_contiguous = Enum("<contiguous and indirect>")
  * 
  */
-  __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)__pyx_MemviewEnum_type), __pyx_tuple__19, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 287, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)__pyx_MemviewEnum_type), __pyx_tuple__21, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 287, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_XGOTREF(contiguous);
   __Pyx_DECREF_SET(contiguous, __pyx_t_1);
@@ -14910,7 +16227,7 @@ PyMODINIT_FUNC PyInit_nmf_pgd(void)
  * 
  * 
  */
-  __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)__pyx_MemviewEnum_type), __pyx_tuple__20, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 288, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_Call(((PyObject *)__pyx_MemviewEnum_type), __pyx_tuple__22, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 288, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_XGOTREF(indirect_contiguous);
   __Pyx_DECREF_SET(indirect_contiguous, __pyx_t_1);
@@ -15858,8 +17175,46 @@ static CYTHON_INLINE void __Pyx_XDEC_MEMVIEW(__Pyx_memviewslice *memslice,
     }
 }
 
+/* GetModuleGlobalName */
+  static CYTHON_INLINE PyObject *__Pyx_GetModuleGlobalName(PyObject *name) {
+    PyObject *result;
+#if !CYTHON_AVOID_BORROWED_REFS
+    result = PyDict_GetItem(__pyx_d, name);
+    if (likely(result)) {
+        Py_INCREF(result);
+    } else {
+#else
+    result = PyObject_GetItem(__pyx_d, name);
+    if (!result) {
+        PyErr_Clear();
+#endif
+        result = __Pyx_GetBuiltinName(name);
+    }
+    return result;
+}
+
+/* PyObjectCall */
+    #if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg, PyObject *kw) {
+    PyObject *result;
+    ternaryfunc call = func->ob_type->tp_call;
+    if (unlikely(!call))
+        return PyObject_Call(func, arg, kw);
+    if (unlikely(Py_EnterRecursiveCall((char*)" while calling a Python object")))
+        return NULL;
+    result = (*call)(func, arg, kw);
+    Py_LeaveRecursiveCall();
+    if (unlikely(!result) && unlikely(!PyErr_Occurred())) {
+        PyErr_SetString(
+            PyExc_SystemError,
+            "NULL result without error in PyObject_Call");
+    }
+    return result;
+}
+#endif
+
 /* ArgTypeTest */
-  static void __Pyx_RaiseArgumentTypeInvalid(const char* name, PyObject *obj, PyTypeObject *type) {
+    static void __Pyx_RaiseArgumentTypeInvalid(const char* name, PyObject *obj, PyTypeObject *type) {
     PyErr_Format(PyExc_TypeError,
         "Argument '%.200s' has incorrect type (expected %.200s, got %.200s)",
         name, type->tp_name, Py_TYPE(obj)->tp_name);
@@ -15885,28 +17240,8 @@ static CYTHON_INLINE int __Pyx_ArgTypeTest(PyObject *obj, PyTypeObject *type, in
     return 0;
 }
 
-/* PyObjectCall */
-  #if CYTHON_COMPILING_IN_CPYTHON
-static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg, PyObject *kw) {
-    PyObject *result;
-    ternaryfunc call = func->ob_type->tp_call;
-    if (unlikely(!call))
-        return PyObject_Call(func, arg, kw);
-    if (unlikely(Py_EnterRecursiveCall((char*)" while calling a Python object")))
-        return NULL;
-    result = (*call)(func, arg, kw);
-    Py_LeaveRecursiveCall();
-    if (unlikely(!result) && unlikely(!PyErr_Occurred())) {
-        PyErr_SetString(
-            PyExc_SystemError,
-            "NULL result without error in PyObject_Call");
-    }
-    return result;
-}
-#endif
-
 /* PyErrFetchRestore */
-  #if CYTHON_FAST_THREAD_STATE
+    #if CYTHON_FAST_THREAD_STATE
 static CYTHON_INLINE void __Pyx_ErrRestoreInState(PyThreadState *tstate, PyObject *type, PyObject *value, PyObject *tb) {
     PyObject *tmp_type, *tmp_value, *tmp_tb;
     tmp_type = tstate->curexc_type;
@@ -15930,7 +17265,7 @@ static CYTHON_INLINE void __Pyx_ErrFetchInState(PyThreadState *tstate, PyObject 
 #endif
 
 /* RaiseException */
-  #if PY_MAJOR_VERSION < 3
+    #if PY_MAJOR_VERSION < 3
 static void __Pyx_Raise(PyObject *type, PyObject *value, PyObject *tb,
                         CYTHON_UNUSED PyObject *cause) {
     __Pyx_PyThreadState_declare
@@ -16093,7 +17428,7 @@ bad:
 #endif
 
 /* BytesEquals */
-    static CYTHON_INLINE int __Pyx_PyBytes_Equals(PyObject* s1, PyObject* s2, int equals) {
+      static CYTHON_INLINE int __Pyx_PyBytes_Equals(PyObject* s1, PyObject* s2, int equals) {
 #if CYTHON_COMPILING_IN_PYPY
     return PyObject_RichCompareBool(s1, s2, equals);
 #else
@@ -16131,7 +17466,7 @@ bad:
 }
 
 /* UnicodeEquals */
-    static CYTHON_INLINE int __Pyx_PyUnicode_Equals(PyObject* s1, PyObject* s2, int equals) {
+      static CYTHON_INLINE int __Pyx_PyUnicode_Equals(PyObject* s1, PyObject* s2, int equals) {
 #if CYTHON_COMPILING_IN_PYPY
     return PyObject_RichCompareBool(s1, s2, equals);
 #else
@@ -16215,7 +17550,7 @@ return_ne:
 }
 
 /* GetAttr */
-    static CYTHON_INLINE PyObject *__Pyx_GetAttr(PyObject *o, PyObject *n) {
+      static CYTHON_INLINE PyObject *__Pyx_GetAttr(PyObject *o, PyObject *n) {
 #if CYTHON_COMPILING_IN_CPYTHON
 #if PY_MAJOR_VERSION >= 3
     if (likely(PyUnicode_Check(n)))
@@ -16228,7 +17563,7 @@ return_ne:
 }
 
 /* decode_c_string */
-    static CYTHON_INLINE PyObject* __Pyx_decode_c_string(
+      static CYTHON_INLINE PyObject* __Pyx_decode_c_string(
          const char* cstring, Py_ssize_t start, Py_ssize_t stop,
          const char* encoding, const char* errors,
          PyObject* (*decode_func)(const char *s, Py_ssize_t size, const char *errors)) {
@@ -16261,25 +17596,25 @@ return_ne:
 }
 
 /* RaiseTooManyValuesToUnpack */
-    static CYTHON_INLINE void __Pyx_RaiseTooManyValuesError(Py_ssize_t expected) {
+      static CYTHON_INLINE void __Pyx_RaiseTooManyValuesError(Py_ssize_t expected) {
     PyErr_Format(PyExc_ValueError,
                  "too many values to unpack (expected %" CYTHON_FORMAT_SSIZE_T "d)", expected);
 }
 
 /* RaiseNeedMoreValuesToUnpack */
-    static CYTHON_INLINE void __Pyx_RaiseNeedMoreValuesError(Py_ssize_t index) {
+      static CYTHON_INLINE void __Pyx_RaiseNeedMoreValuesError(Py_ssize_t index) {
     PyErr_Format(PyExc_ValueError,
                  "need more than %" CYTHON_FORMAT_SSIZE_T "d value%.1s to unpack",
                  index, (index == 1) ? "" : "s");
 }
 
 /* RaiseNoneIterError */
-    static CYTHON_INLINE void __Pyx_RaiseNoneNotIterableError(void) {
+      static CYTHON_INLINE void __Pyx_RaiseNoneNotIterableError(void) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not iterable");
 }
 
 /* ExtTypeTest */
-    static CYTHON_INLINE int __Pyx_TypeTest(PyObject *obj, PyTypeObject *type) {
+      static CYTHON_INLINE int __Pyx_TypeTest(PyObject *obj, PyTypeObject *type) {
     if (unlikely(!type)) {
         PyErr_SetString(PyExc_SystemError, "Missing type object");
         return 0;
@@ -16292,7 +17627,7 @@ return_ne:
 }
 
 /* SaveResetException */
-    #if CYTHON_FAST_THREAD_STATE
+      #if CYTHON_FAST_THREAD_STATE
 static CYTHON_INLINE void __Pyx__ExceptionSave(PyThreadState *tstate, PyObject **type, PyObject **value, PyObject **tb) {
     *type = tstate->exc_type;
     *value = tstate->exc_value;
@@ -16316,7 +17651,7 @@ static CYTHON_INLINE void __Pyx__ExceptionReset(PyThreadState *tstate, PyObject 
 #endif
 
 /* PyErrExceptionMatches */
-    #if CYTHON_FAST_THREAD_STATE
+      #if CYTHON_FAST_THREAD_STATE
 static CYTHON_INLINE int __Pyx_PyErr_ExceptionMatchesInState(PyThreadState* tstate, PyObject* err) {
     PyObject *exc_type = tstate->curexc_type;
     if (exc_type == err) return 1;
@@ -16326,7 +17661,7 @@ static CYTHON_INLINE int __Pyx_PyErr_ExceptionMatchesInState(PyThreadState* tsta
 #endif
 
 /* GetException */
-    #if CYTHON_FAST_THREAD_STATE
+      #if CYTHON_FAST_THREAD_STATE
 static int __Pyx__GetException(PyThreadState *tstate, PyObject **type, PyObject **value, PyObject **tb) {
 #else
 static int __Pyx_GetException(PyObject **type, PyObject **value, PyObject **tb) {
@@ -16387,7 +17722,7 @@ bad:
 }
 
 /* SwapException */
-      #if CYTHON_FAST_THREAD_STATE
+        #if CYTHON_FAST_THREAD_STATE
 static CYTHON_INLINE void __Pyx__ExceptionSwap(PyThreadState *tstate, PyObject **type, PyObject **value, PyObject **tb) {
     PyObject *tmp_type, *tmp_value, *tmp_tb;
     tmp_type = tstate->exc_type;
@@ -16412,7 +17747,7 @@ static CYTHON_INLINE void __Pyx_ExceptionSwap(PyObject **type, PyObject **value,
 #endif
 
 /* Import */
-      static PyObject *__Pyx_Import(PyObject *name, PyObject *from_list, int level) {
+        static PyObject *__Pyx_Import(PyObject *name, PyObject *from_list, int level) {
     PyObject *empty_list = 0;
     PyObject *module = 0;
     PyObject *global_dict = 0;
@@ -16486,7 +17821,7 @@ bad:
 }
 
 /* PyFunctionFastCall */
-      #if CYTHON_FAST_PYCALL
+        #if CYTHON_FAST_PYCALL
 #include "frameobject.h"
 static PyObject* __Pyx_PyFunction_FastCallNoKw(PyCodeObject *co, PyObject **args, Py_ssize_t na,
                                                PyObject *globals) {
@@ -16606,7 +17941,7 @@ done:
 #endif  // CYTHON_FAST_PYCALL
 
 /* PyCFunctionFastCall */
-      #if CYTHON_FAST_PYCCALL
+        #if CYTHON_FAST_PYCCALL
 static CYTHON_INLINE PyObject * __Pyx_PyCFunction_FastCall(PyObject *func_obj, PyObject **args, Py_ssize_t nargs) {
     PyCFunctionObject *func = (PyCFunctionObject*)func_obj;
     PyCFunction meth = PyCFunction_GET_FUNCTION(func);
@@ -16624,7 +17959,7 @@ static CYTHON_INLINE PyObject * __Pyx_PyCFunction_FastCall(PyObject *func_obj, P
 #endif  // CYTHON_FAST_PYCCALL
 
 /* GetItemInt */
-      static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Generic(PyObject *o, PyObject* j) {
+        static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Generic(PyObject *o, PyObject* j) {
     PyObject *r;
     if (!j) return NULL;
     r = PyObject_GetItem(o, j);
@@ -16705,7 +18040,7 @@ static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Fast(PyObject *o, Py_ssize_t i, 
 }
 
 /* PyIntBinop */
-      #if !CYTHON_COMPILING_IN_PYPY
+        #if !CYTHON_COMPILING_IN_PYPY
 static PyObject* __Pyx_PyInt_AddObjC(PyObject *op1, PyObject *op2, CYTHON_UNUSED long intval, CYTHON_UNUSED int inplace) {
     #if PY_MAJOR_VERSION < 3
     if (likely(PyInt_CheckExact(op1))) {
@@ -16821,12 +18156,12 @@ static PyObject* __Pyx_PyInt_AddObjC(PyObject *op1, PyObject *op2, CYTHON_UNUSED
 #endif
 
 /* None */
-      static CYTHON_INLINE void __Pyx_RaiseUnboundLocalError(const char *varname) {
+        static CYTHON_INLINE void __Pyx_RaiseUnboundLocalError(const char *varname) {
     PyErr_Format(PyExc_UnboundLocalError, "local variable '%s' referenced before assignment", varname);
 }
 
 /* WriteUnraisableException */
-      static void __Pyx_WriteUnraisable(const char *name, CYTHON_UNUSED int clineno,
+        static void __Pyx_WriteUnraisable(const char *name, CYTHON_UNUSED int clineno,
                                   CYTHON_UNUSED int lineno, CYTHON_UNUSED const char *filename,
                                   int full_traceback, CYTHON_UNUSED int nogil) {
     PyObject *old_exc, *old_val, *old_tb;
@@ -16868,7 +18203,7 @@ static PyObject* __Pyx_PyInt_AddObjC(PyObject *op1, PyObject *op2, CYTHON_UNUSED
 }
 
 /* PyObjectCallMethO */
-      #if CYTHON_COMPILING_IN_CPYTHON
+        #if CYTHON_COMPILING_IN_CPYTHON
 static CYTHON_INLINE PyObject* __Pyx_PyObject_CallMethO(PyObject *func, PyObject *arg) {
     PyObject *self, *result;
     PyCFunction cfunc;
@@ -16888,7 +18223,7 @@ static CYTHON_INLINE PyObject* __Pyx_PyObject_CallMethO(PyObject *func, PyObject
 #endif
 
 /* PyObjectCallOneArg */
-      #if CYTHON_COMPILING_IN_CPYTHON
+        #if CYTHON_COMPILING_IN_CPYTHON
 static PyObject* __Pyx__PyObject_CallOneArg(PyObject *func, PyObject *arg) {
     PyObject *result;
     PyObject *args = PyTuple_New(1);
@@ -16932,7 +18267,7 @@ static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObjec
 #endif
 
 /* SetVTable */
-        static int __Pyx_SetVtable(PyObject *dict, void *vtable) {
+          static int __Pyx_SetVtable(PyObject *dict, void *vtable) {
 #if PY_VERSION_HEX >= 0x02070000
     PyObject *ob = PyCapsule_New(vtable, 0, 0);
 #else
@@ -16950,7 +18285,7 @@ bad:
 }
 
 /* CodeObjectCache */
-        static int __pyx_bisect_code_objects(__Pyx_CodeObjectCacheEntry* entries, int count, int code_line) {
+          static int __pyx_bisect_code_objects(__Pyx_CodeObjectCacheEntry* entries, int count, int code_line) {
     int start = 0, mid = 0, end = count - 1;
     if (end >= 0 && code_line > entries[end].code_line) {
         return count;
@@ -17030,7 +18365,7 @@ static void __pyx_insert_code_object(int code_line, PyCodeObject* code_object) {
 }
 
 /* AddTraceback */
-        #include "compile.h"
+          #include "compile.h"
 #include "frameobject.h"
 #include "traceback.h"
 static PyCodeObject* __Pyx_CreateCodeObjectForTraceback(
@@ -17131,8 +18466,8 @@ static void __Pyx_ReleaseBuffer(Py_buffer *view) {
 #endif
 
 
-        /* MemviewSliceIsContig */
-        static int
+          /* MemviewSliceIsContig */
+          static int
 __pyx_memviewslice_is_contig(const __Pyx_memviewslice mvs,
                              char order, int ndim)
 {
@@ -17155,7 +18490,7 @@ __pyx_memviewslice_is_contig(const __Pyx_memviewslice mvs,
 }
 
 /* OverlappingSlices */
-        static void
+          static void
 __pyx_get_array_memory_extents(__Pyx_memviewslice *slice,
                                void **out_start, void **out_end,
                                int ndim, size_t itemsize)
@@ -17191,7 +18526,7 @@ __pyx_slices_overlap(__Pyx_memviewslice *slice1,
 }
 
 /* Capsule */
-        static CYTHON_INLINE PyObject *
+          static CYTHON_INLINE PyObject *
 __pyx_capsule_create(void *p, CYTHON_UNUSED const char *sig)
 {
     PyObject *cobj;
@@ -17204,7 +18539,7 @@ __pyx_capsule_create(void *p, CYTHON_UNUSED const char *sig)
 }
 
 /* TypeInfoCompare */
-        static int
+          static int
 __pyx_typeinfo_cmp(__Pyx_TypeInfo *a, __Pyx_TypeInfo *b)
 {
     int i;
@@ -17245,7 +18580,7 @@ __pyx_typeinfo_cmp(__Pyx_TypeInfo *a, __Pyx_TypeInfo *b)
 }
 
 /* MemviewSliceValidateAndInit */
-        static int
+          static int
 __pyx_check_strides(Py_buffer *buf, int dim, int ndim, int spec)
 {
     if (buf->shape[dim] <= 1)
@@ -17427,7 +18762,7 @@ no_fail:
 }
 
 /* ObjectToMemviewSlice */
-        static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(PyObject *obj) {
+          static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(PyObject *obj) {
     __Pyx_memviewslice result = { 0, 0, { 0 }, { 0 }, { 0 } };
     __Pyx_BufFmt_StackElem stack[1];
     int axes_specs[] = { (__Pyx_MEMVIEW_DIRECT | __Pyx_MEMVIEW_FOLLOW), (__Pyx_MEMVIEW_DIRECT | __Pyx_MEMVIEW_CONTIG) };
@@ -17450,7 +18785,7 @@ __pyx_fail:
 }
 
 /* ObjectToMemviewSlice */
-        static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_dsds_double(PyObject *obj) {
+          static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_dsds_double(PyObject *obj) {
     __Pyx_memviewslice result = { 0, 0, { 0 }, { 0 }, { 0 } };
     __Pyx_BufFmt_StackElem stack[1];
     int axes_specs[] = { (__Pyx_MEMVIEW_DIRECT | __Pyx_MEMVIEW_STRIDED), (__Pyx_MEMVIEW_DIRECT | __Pyx_MEMVIEW_STRIDED) };
@@ -17472,8 +18807,54 @@ __pyx_fail:
     return result;
 }
 
+/* ObjectToMemviewSlice */
+          static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_dc_int(PyObject *obj) {
+    __Pyx_memviewslice result = { 0, 0, { 0 }, { 0 }, { 0 } };
+    __Pyx_BufFmt_StackElem stack[1];
+    int axes_specs[] = { (__Pyx_MEMVIEW_DIRECT | __Pyx_MEMVIEW_CONTIG) };
+    int retcode;
+    if (obj == Py_None) {
+        result.memview = (struct __pyx_memoryview_obj *) Py_None;
+        return result;
+    }
+    retcode = __Pyx_ValidateAndInit_memviewslice(axes_specs, __Pyx_IS_C_CONTIG,
+                                                 (PyBUF_C_CONTIGUOUS | PyBUF_FORMAT | PyBUF_WRITABLE), 1,
+                                                 &__Pyx_TypeInfo_int, stack,
+                                                 &result, obj);
+    if (unlikely(retcode == -1))
+        goto __pyx_fail;
+    return result;
+__pyx_fail:
+    result.memview = NULL;
+    result.data = NULL;
+    return result;
+}
+
+/* ObjectToMemviewSlice */
+          static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_dc_double(PyObject *obj) {
+    __Pyx_memviewslice result = { 0, 0, { 0 }, { 0 }, { 0 } };
+    __Pyx_BufFmt_StackElem stack[1];
+    int axes_specs[] = { (__Pyx_MEMVIEW_DIRECT | __Pyx_MEMVIEW_CONTIG) };
+    int retcode;
+    if (obj == Py_None) {
+        result.memview = (struct __pyx_memoryview_obj *) Py_None;
+        return result;
+    }
+    retcode = __Pyx_ValidateAndInit_memviewslice(axes_specs, __Pyx_IS_C_CONTIG,
+                                                 (PyBUF_C_CONTIGUOUS | PyBUF_FORMAT | PyBUF_WRITABLE), 1,
+                                                 &__Pyx_TypeInfo_double, stack,
+                                                 &result, obj);
+    if (unlikely(retcode == -1))
+        goto __pyx_fail;
+    return result;
+__pyx_fail:
+    result.memview = NULL;
+    result.data = NULL;
+    return result;
+}
+
 /* MemviewSliceCopyTemplate */
-        static __Pyx_memviewslice
+          static __Pyx_memviewslice
 __pyx_memoryview_copy_new_contig(const __Pyx_memviewslice *from_mvs,
                                  const char *mode, int ndim,
                                  size_t sizeof_dtype, int contig_flag,
@@ -17540,7 +18921,7 @@ no_fail:
 }
 
 /* CIntFromPyVerify */
-        #define __PYX_VERIFY_RETURN_INT(target_type, func_type, func_value)\
+          #define __PYX_VERIFY_RETURN_INT(target_type, func_type, func_value)\
     __PYX__VERIFY_RETURN_INT(target_type, func_type, func_value, 0)
 #define __PYX_VERIFY_RETURN_INT_EXC(target_type, func_type, func_value)\
     __PYX__VERIFY_RETURN_INT(target_type, func_type, func_value, 1)
@@ -17562,7 +18943,7 @@ no_fail:
     }
 
 /* CIntFromPy */
-        static CYTHON_INLINE int __Pyx_PyInt_As_int(PyObject *x) {
+          static CYTHON_INLINE int __Pyx_PyInt_As_int(PyObject *x) {
     const int neg_one = (int) -1, const_zero = (int) 0;
     const int is_unsigned = neg_one > const_zero;
 #if PY_MAJOR_VERSION < 3
@@ -17751,7 +19132,7 @@ raise_neg_overflow:
 }
 
 /* CIntToPy */
-        static CYTHON_INLINE PyObject* __Pyx_PyInt_From_int(int value) {
+          static CYTHON_INLINE PyObject* __Pyx_PyInt_From_int(int value) {
     const int neg_one = (int) -1, const_zero = (int) 0;
     const int is_unsigned = neg_one > const_zero;
     if (is_unsigned) {
@@ -17782,7 +19163,7 @@ raise_neg_overflow:
 }
 
 /* CIntToPy */
-        static CYTHON_INLINE PyObject* __Pyx_PyInt_From_long(long value) {
+          static CYTHON_INLINE PyObject* __Pyx_PyInt_From_long(long value) {
     const long neg_one = (long) -1, const_zero = (long) 0;
     const int is_unsigned = neg_one > const_zero;
     if (is_unsigned) {
@@ -17813,7 +19194,7 @@ raise_neg_overflow:
 }
 
 /* CIntFromPy */
-        static CYTHON_INLINE char __Pyx_PyInt_As_char(PyObject *x) {
+          static CYTHON_INLINE char __Pyx_PyInt_As_char(PyObject *x) {
     const char neg_one = (char) -1, const_zero = (char) 0;
     const int is_unsigned = neg_one > const_zero;
 #if PY_MAJOR_VERSION < 3
@@ -18002,7 +19383,7 @@ raise_neg_overflow:
 }
 
 /* CIntFromPy */
-        static CYTHON_INLINE long __Pyx_PyInt_As_long(PyObject *x) {
+          static CYTHON_INLINE long __Pyx_PyInt_As_long(PyObject *x) {
     const long neg_one = (long) -1, const_zero = (long) 0;
     const int is_unsigned = neg_one > const_zero;
 #if PY_MAJOR_VERSION < 3
@@ -18190,8 +19571,31 @@ raise_neg_overflow:
     return (long) -1;
 }
 
+/* ObjectToMemviewSlice */
+          static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_ds_Py_ssize_t(PyObject *obj) {
+    __Pyx_memviewslice result = { 0, 0, { 0 }, { 0 }, { 0 } };
+    __Pyx_BufFmt_StackElem stack[1];
+    int axes_specs[] = { (__Pyx_MEMVIEW_DIRECT | __Pyx_MEMVIEW_STRIDED) };
+    int retcode;
+    if (obj == Py_None) {
+        result.memview = (struct __pyx_memoryview_obj *) Py_None;
+        return result;
+    }
+    retcode = __Pyx_ValidateAndInit_memviewslice(axes_specs, 0,
+                                                 PyBUF_RECORDS, 1,
+                                                 &__Pyx_TypeInfo_Py_ssize_t, stack,
+                                                 &result, obj);
+    if (unlikely(retcode == -1))
+        goto __pyx_fail;
+    return result;
+__pyx_fail:
+    result.memview = NULL;
+    result.data = NULL;
+    return result;
+}
+
 /* CheckBinaryVersion */
-        static int __Pyx_check_binary_version(void) {
+          static int __Pyx_check_binary_version(void) {
     char ctversion[4], rtversion[4];
     PyOS_snprintf(ctversion, 4, "%d.%d", PY_MAJOR_VERSION, PY_MINOR_VERSION);
     PyOS_snprintf(rtversion, 4, "%s", Py_GetVersion());
@@ -18207,7 +19611,7 @@ raise_neg_overflow:
 }
 
 /* InitStrings */
-        static int __Pyx_InitStrings(__Pyx_StringTabEntry *t) {
+          static int __Pyx_InitStrings(__Pyx_StringTabEntry *t) {
     while (t->p) {
         #if PY_MAJOR_VERSION < 3
         if (t->is_unicode) {
