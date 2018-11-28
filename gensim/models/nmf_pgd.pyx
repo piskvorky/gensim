@@ -11,6 +11,21 @@ from cython.parallel import prange
 import numpy as np
 
 def solve_h(double[:, ::1] h, double[:, :] Wt_v_minus_r, double[:, ::1] WtW, double kappa):
+    """Find optimal dense vector representation for current W and r matrices.
+
+    Parameters
+    ----------
+    h : matrix
+        Dense representation of documents in current batch.
+    Wt_v_minus_r : matrix
+    WtW : matrix
+
+    Returns
+    -------
+    float
+        Cumulative difference between previous and current h vectors.
+    """
+
     cdef Py_ssize_t n_components = h.shape[0]
     cdef Py_ssize_t n_samples = h.shape[1]
     cdef double violation = 0
@@ -49,6 +64,25 @@ def solve_r(
         double lambda_,
         double v_max
     ):
+    """Bound new residuals.
+
+    Parameters
+    ----------
+    r_indptr : vector
+    r_indices : vector
+    r_data : vector
+    r_actual_indptr : vector
+    r_actual_indices : vector
+    r_actual_data : vector
+    lambda_ : double
+    v_max : double
+
+    Returns
+    -------
+    float
+        Cumulative difference between previous and current residuals vectors.
+    """
+
     cdef Py_ssize_t n_samples = r_actual_indptr.shape[0] - 1
     cdef double violation = 0
     cdef double r_actual_sign = 1.0
