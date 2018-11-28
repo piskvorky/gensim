@@ -15,14 +15,14 @@ import numbers
 import six
 import numpy as np
 
-from gensim.corpora import mmcorpus, Dictionary
+from gensim.corpora import mmcorpus
 from gensim.models import nmf
 from gensim import matutils, utils
 from gensim.test import basetmtests
-from gensim.test.utils import datapath, get_tmpfile, common_texts
+from gensim.test.utils import datapath, get_tmpfile, common_corpus, common_dictionary
 
-dictionary = Dictionary(common_texts)
-corpus = [dictionary.doc2bow(text) for text in common_texts]
+dictionary = common_dictionary
+corpus = common_corpus
 
 
 def testRandomState():
@@ -283,9 +283,6 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         topics = model[test_doc]
         self.assertTrue(np.allclose(expected_topics, topics))
 
-
-# endclass TestNmf
-
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     unittest.main()
