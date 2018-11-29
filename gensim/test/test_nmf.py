@@ -43,7 +43,7 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         vec = matutils.sparse2full(transformed, 2)  # convert to dense vector, for easier equality tests
         expected = [0., 1.]
         # must contain the same values, up to re-ordering
-        self.assertTrue(np.allclose(sorted(vec), sorted(expected), atol=1e-1))
+        self.assertTrue(np.allclose(sorted(vec), sorted(expected), atol=1e-8))
 
     @unittest.skip('top topics is not implemented')
     def testTopTopics(self):
