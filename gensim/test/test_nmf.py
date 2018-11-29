@@ -45,7 +45,6 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         # must contain the same values, up to re-ordering
         self.assertTrue(np.allclose(sorted(vec), sorted(expected), atol=1e-8))
 
-    @unittest.skip('top topics is not implemented')
     def testTopTopics(self):
         top_topics = self.model.top_topics(self.corpus)
 
