@@ -17,7 +17,7 @@ import numpy as np
 
 from gensim.corpora import mmcorpus
 from gensim.models import nmf
-from gensim import matutils, utils
+from gensim import matutils
 from gensim.test import basetmtests
 from gensim.test.utils import datapath, get_tmpfile, common_corpus, common_dictionary
 
@@ -276,6 +276,7 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         # and test it on a predefined document
         topics = model[test_doc]
         self.assertTrue(np.allclose(expected_topics, topics))
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
