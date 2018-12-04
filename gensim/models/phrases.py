@@ -209,12 +209,12 @@ class PhrasesTransformation(interfaces.TransformationABC):
         model = super(PhrasesTransformation, cls).load(*args, **kwargs)
         # update older models
         # if value in phrasegrams dict is a tuple, load only the scores.
-        try:
-            for components, scores in model.__dict__['phrasegrams'].items():
-                if isinstance(scores, tuple):
-                    model.__dict__['phrasegrams'][components] = scores[1]
-        except KeyError:
-            pass
+        if model.phrasegrams:
+            components = model.phrasegrams.keys()
+            for component in components:
+                score = model.phrasegrams[component]
+                if isinstance(score, tuple):
+                    model.phrasegrams[component] = score[1]
 
         # if no scoring parameter, use default scoring
         if not hasattr(model, 'scoring'):
