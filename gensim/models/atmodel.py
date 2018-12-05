@@ -67,7 +67,7 @@ from os import remove
 from gensim import utils
 from gensim.models import LdaModel
 from gensim.models.ldamodel import LdaState
-from gensim.matutils import dirichlet_expectation
+from gensim.matutils import dirichlet_expectation, mean_absolute_difference
 from gensim.corpora import MmCorpus
 from itertools import chain
 from scipy.special import gammaln  # gamma function utils
@@ -505,7 +505,7 @@ class AuthorTopicModel(LdaModel):
 
                 # Check for convergence.
                 # Criterion is mean change in "local" gamma.
-                meanchange_gamma = np.mean(abs(tilde_gamma - lastgamma))
+                meanchange_gamma = mean_absolute_difference(tilde_gamma.ravel(), lastgamma.ravel())
                 gamma_condition = meanchange_gamma < self.gamma_threshold
                 if gamma_condition:
                     converged += 1
