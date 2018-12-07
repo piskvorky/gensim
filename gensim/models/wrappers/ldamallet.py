@@ -588,9 +588,11 @@ def malletmodel2ldamodel(mallet_model, gamma_threshold=0.001, iterations=50):
     """
     model_gensim = LdaModel(
         id2word=mallet_model.id2word, num_topics=mallet_model.num_topics,
-        alpha=mallet_model.alpha, iterations=iterations,
+        alpha=mallet_model.alpha, eta=0,
+        iterations=iterations,
         gamma_threshold=gamma_threshold,
         dtype=numpy.float64  # don't loose precision when converting from MALLET
     )
-    model_gensim.expElogbeta[:] = mallet_model.wordtopics
+    model_gensim.state.sstats[...] = mallet_model.wordtopics
+    model_gensim.sync_state()
     return model_gensim
