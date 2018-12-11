@@ -108,8 +108,8 @@ class SaveLoad(object):
         """
         def mmap_error(obj, filename):
             return IOError(
-                'Cannot mmap compressed object %s in file %s. ' % (obj, filename) +
-                'Use `load(fname, mmap=None)` or uncompress files manually.'
+                'Cannot mmap compressed object %s in file %s. ' % (obj, filename)
+                + 'Use `load(fname, mmap=None)` or uncompress files manually.'
             )
 
         for attrib in getattr(self, '__recursive_saveloads', []):

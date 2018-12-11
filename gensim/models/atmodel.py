@@ -376,14 +376,14 @@ class AuthorTopicModel(LdaModel):
             self.corpus.extend(corpus)
 
     def compute_phinorm(self, expElogthetad, expElogbetad):
-        """Efficiently computes the normalizing factor in phi.
+        r"""Efficiently computes the normalizing factor in phi.
 
         Parameters
         ----------
         expElogthetad: numpy.ndarray
             Value of variational distribution :math:`q(\theta|\gamma)`.
         expElogbetad: numpy.ndarray
-            Value of variational distribution :math:`q(\\beta|\lambda)`.
+            Value of variational distribution :math:`q(\beta|\lambda)`.
 
         Returns
         -------
@@ -888,7 +888,7 @@ class AuthorTopicModel(LdaModel):
                 del other
 
     def bound(self, chunk, chunk_doc_idx=None, subsample_ratio=1.0, author2doc=None, doc2author=None):
-        """Estimate the variational bound of documents from `corpus`.
+        r"""Estimate the variational bound of documents from `corpus`.
 
         :math:`\mathbb{E_{q}}[\log p(corpus)] - \mathbb{E_{q}}[\log q(corpus)]`
 

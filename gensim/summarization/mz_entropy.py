@@ -98,9 +98,9 @@ def __marginal_prob(blocksize, n_words):
            occurring m times in a given block"""
 
         return numpy.exp(
-            __log_combinations(n, m) +
-            __log_combinations(n_words - n, blocksize - m) -
-            __log_combinations(n_words, blocksize)
+            __log_combinations(n, m)
+            + __log_combinations(n_words - n, blocksize - m)
+            - __log_combinations(n_words, blocksize)
         )
 
     return numpy.frompyfunc(marginal_prob, 2, 1)
