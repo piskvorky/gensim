@@ -81,7 +81,7 @@ RE_P16 = re.compile(r'\[{2}(.*?)\]{2}', re.UNICODE)
 """Capture interlinks text and article linked"""
 RE_P17 = re.compile(
     r'(\n.{0,4}((bgcolor)|(\d{0,1}[ ]?colspan)|(rowspan)|(style=)|(class=)|(align=)|(scope=))(.*))|'
-    '(^.{0,2}((bgcolor)|(\d{0,1}[ ]?colspan)|(rowspan)|(style=)|(class=)|(align=))(.*))',
+    r'(^.{0,2}((bgcolor)|(\d{0,1}[ ]?colspan)|(rowspan)|(style=)|(class=)|(align=))(.*))',
     re.UNICODE
 )
 """Table markup"""
@@ -143,8 +143,8 @@ def filter_example(elem, text, *args, **kwargs):
     # regex is in the function call so that we do not pollute the wikicorpus
     # namespace do not do this in production as this function is called for
     # every element in the wiki dump
-    _regex_de_excellent = re.compile('.*\{\{(Exzellent.*?)\}\}[\s]*', flags=re.DOTALL)
-    _regex_de_featured = re.compile('.*\{\{(Lesenswert.*?)\}\}[\s]*', flags=re.DOTALL)
+    _regex_de_excellent = re.compile(r'.*\{\{(Exzellent.*?)\}\}[\s]*', flags=re.DOTALL)
+    _regex_de_featured = re.compile(r'.*\{\{(Lesenswert.*?)\}\}[\s]*', flags=re.DOTALL)
 
     if text is None:
         return False

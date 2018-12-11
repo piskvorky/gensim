@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 class LogEntropyModel(interfaces.TransformationABC):
-    """Objects of this class realize the transformation between word-document co-occurrence matrix (int)
+    r"""Objects of this class realize the transformation between word-document co-occurrence matrix (int)
     into a locally/globally weighted matrix (positive floats).
 
     This is done by a log entropy normalization, optionally normalizing the resulting documents to unit length.
@@ -35,9 +35,9 @@ class LogEntropyModel(interfaces.TransformationABC):
 
         local\_weight_{i,j} = log(frequency_{i,j} + 1)
 
-        P_{i,j} = \\frac{frequency_{i,j}}{\sum_j frequency_{i,j}}
+        P_{i,j} = \frac{frequency_{i,j}}{\sum_j frequency_{i,j}}
 
-        global\_weight_i = 1 + \\frac{\sum_j P_{i,j} * log(P_{i,j})}{log(number\_of\_documents + 1)}
+        global\_weight_i = 1 + \frac{\sum_j P_{i,j} * log(P_{i,j})}{log(number\_of\_documents + 1)}
 
         final\_weight_{i,j} = local\_weight_{i,j} * global\_weight_i
 
