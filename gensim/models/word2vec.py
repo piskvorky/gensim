@@ -193,8 +193,8 @@ except ImportError:
         """
         result = 0
         for sentence in sentences:
-            word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
-                           model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
+            word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab
+                           and model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
             for pos, word in enumerate(word_vocabs):
                 reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
 
@@ -245,8 +245,8 @@ except ImportError:
         result = 0
         for sentence in sentences:
             word_vocabs = [
-                model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
-                model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32
+                model.wv.vocab[w] for w in sentence if w in model.wv.vocab
+                and model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32
             ]
             for pos, word in enumerate(word_vocabs):
                 reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code

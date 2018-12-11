@@ -786,7 +786,7 @@ class TestTextDirectoryCorpus(unittest.TestCase):
 
     def test_filename_filtering(self):
         dirpath = self.write_one_level('test1.log', 'test1.txt', 'test2.log', 'other1.log')
-        corpus = textcorpus.TextDirectoryCorpus(dirpath, pattern="test.*\.log")
+        corpus = textcorpus.TextDirectoryCorpus(dirpath, pattern=r"test.*\.log")
         filenames = list(corpus.iter_filepaths())
         expected = [os.path.join(dirpath, name) for name in ('test1.log', 'test2.log')]
         self.assertEqual(sorted(expected), sorted(filenames))

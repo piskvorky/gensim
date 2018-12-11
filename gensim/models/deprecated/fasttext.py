@@ -148,8 +148,8 @@ def train_batch_cbow(model, sentences, alpha, work=None, neu1=None):
     """
     result = 0
     for sentence in sentences:
-        word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
-                       model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
+        word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab
+                       and model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
         for pos, word in enumerate(word_vocabs):
             reduced_window = model.random.randint(model.window)
             start = max(0, pos - model.window + reduced_window)
@@ -211,8 +211,8 @@ def train_batch_sg(model, sentences, alpha, work=None, neu1=None):
     """
     result = 0
     for sentence in sentences:
-        word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
-                       model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
+        word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab
+                       and model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
         for pos, word in enumerate(word_vocabs):
             reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
             # now go over all words from the (reduced) window, predicting each one in turn
