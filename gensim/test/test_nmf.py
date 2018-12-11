@@ -28,12 +28,11 @@ corpus = common_corpus
 class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
-        self.class_ = nmf.Nmf
-        self.model = self.class_(corpus, id2word=dictionary, num_topics=2, passes=100)
+        self.model = nmf.Nmf(corpus, id2word=dictionary, num_topics=2, passes=100)
 
     def testTransform(self):
         # create the transformation model
-        model = self.class_(id2word=dictionary, num_topics=2, passes=100)
+        model = nmf.Nmf(id2word=dictionary, num_topics=2, passes=100)
         model.update(self.corpus)
 
         # transform one document
@@ -65,7 +64,7 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
 
     def testGetDocumentTopics(self):
 
-        model = self.class_(
+        model = nmf.Nmf(
             self.corpus, id2word=dictionary, num_topics=2, passes=100, random_state=np.random.seed(0)
         )
 
@@ -88,15 +87,9 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
                 self.assertTrue(isinstance(k, numbers.Integral))
                 self.assertTrue(np.issubdtype(v, float))
 
-        # FIXME: Fails on osx and win
-        # expected_word = 0
-        # self.assertEqual(word_topics[0][0], expected_word)
-        # self.assertTrue(0 in word_topics[0][1])
-
     def testTermTopics(self):
-
-        model = self.class_(
-            self.corpus, id2word=dictionary, num_topics=2, passes=100, random_state=np.random.seed(0)
+        model = nmf.Nmf(
+            self.corpus, id2word=dictionary, num_topics=2, passes=100, random_state=np.random.seed(0), sparse_coef=0,
         )
 
         # check with word_type
@@ -105,9 +98,9 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
             self.assertTrue(isinstance(topic_no, int))
             self.assertTrue(np.issubdtype(probability, float))
 
+        # FIXME: result is empty
         # checks if topic '1' is in the result list
-        # FIXME: Fails on osx and win
-        # self.assertTrue(1 in result[0])
+        self.assertTrue(1 in result[0])
 
         # if user has entered word instead, check with word
         result = model.get_term_topics(str(model.id2word[2]))
@@ -115,86 +108,24 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
             self.assertTrue(isinstance(topic_no, int))
             self.assertTrue(np.issubdtype(probability, float))
 
+        # FIXME: result is empty
         # checks if topic '1' is in the result list
-        # FIXME: Fails on osx and win
-        # self.assertTrue(1 in result[0])
-
-    @unittest.skip("There's no offset member")
-    def testPasses(self):
-        # long message includes the original error message with a custom one
-        self.longMessage = True
-        # construct what we expect when passes aren't involved
-        test_rhots = list()
-        model = self.class_(id2word=dictionary, chunksize=1, num_topics=2)
-
-        def final_rhot(model):
-            return pow(model.offset + (1 * model.num_updates) / model.chunksize, -model.decay)
-
-        # generate 5 updates to test rhot on
-        for x in range(5):
-            model.update(self.corpus)
-            test_rhots.append(final_rhot(model))
-
-        for passes in [1, 5, 10, 50, 100]:
-            model = self.class_(id2word=dictionary, chunksize=1, num_topics=2, passes=passes)
-            self.assertEqual(final_rhot(model), 1.0)
-            # make sure the rhot matches the test after each update
-            for test_rhot in test_rhots:
-                model.update(self.corpus)
-
-                msg = ", ".join(str(x) for x in [passes, model.num_updates, model.state.numdocs])
-                self.assertAlmostEqual(final_rhot(model), test_rhot, msg=msg)
-
-            self.assertEqual(model.state.numdocs, len(corpus) * len(test_rhots))
-            self.assertEqual(model.num_updates, len(corpus) * len(test_rhots))
-
-    # def testTopicSeeding(self):
-    #     for topic in range(2):
-    #         passed = False
-    #         for i in range(5):  # restart at most this many times, to mitigate LDA randomness
-    #             # try seeding it both ways round, check you get the same
-    #             # topics out but with which way round they are depending
-    #             # on the way round they're seeded
-    #             eta = np.ones((2, len(dictionary))) * 0.5
-    #             system = dictionary.token2id[u'system']
-    #             trees = dictionary.token2id[u'trees']
-
-    #             # aggressively seed the word 'system', in one of the
-    #             # two topics, 10 times higher than the other words
-    #             eta[topic, system] *= 10.0
-
-    #             model = self.class_(id2word=dictionary, num_topics=2, passes=200, eta=eta)
-    #             model.update(self.corpus)
-
-    #             topics = [{word: p for p, word in model.show_topic(j, topn=None)} for j in range(2)]
-
-    #             # check that the word 'system' in the topic we seeded got a high weight,
-    #             # and the word 'trees' (the main word in the other topic) a low weight --
-    #             # and vice versa for the other topic (which we didn't seed with 'system')
-    #             passed = (
-    #                 (topics[topic][u'system'] > topics[topic][u'trees'])
-    #                 and
-    #                 (topics[1 - topic][u'system'] < topics[1 - topic][u'trees'])
-    #             )
-    #             if passed:
-    #                 break
-    #             logging.warning("LDA failed to converge on attempt %i (got %s)", i, topics)
-    #         self.assertTrue(passed)
+        self.assertTrue(1 in result[0])
 
     def testPersistence(self):
         fname = get_tmpfile('gensim_models_nmf.tst')
         model = self.model
         model.save(fname)
-        model2 = self.class_.load(fname)
+        model2 = nmf.Nmf.load(fname)
         tstvec = []
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
 
     @unittest.skip("There're no pickled models")
     def testModelCompatibilityWithPythonVersions(self):
         fname_model_2_7 = datapath('nmf_python_2_7')
-        model_2_7 = self.class_.load(fname_model_2_7)
+        model_2_7 = nmf.Nmf.load(fname_model_2_7)
         fname_model_3_5 = datapath('nmf_python_3_5')
-        model_3_5 = self.class_.load(fname_model_3_5)
+        model_3_5 = nmf.Nmf.load(fname_model_3_5)
         self.assertEqual(model_2_7.num_topics, model_3_5.num_topics)
         self.assertTrue(np.allclose(model_2_7.expElogbeta, model_3_5.expElogbeta))
         tstvec = []
@@ -207,7 +138,7 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         fname = get_tmpfile('gensim_models_nmf.tst.gz')
         model = self.model
         model.save(fname)
-        model2 = self.class_.load(fname, mmap=None)
+        model2 = nmf.Nmf.load(fname, mmap=None)
         self.assertEqual(model.num_topics, model2.num_topics)
         tstvec = []
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
@@ -220,7 +151,7 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         model.save(fname, sep_limit=0)
 
         # test loading the large model arrays with mmap
-        model2 = self.class_.load(fname, mmap='r')
+        model2 = nmf.Nmf.load(fname, mmap='r')
         self.assertEqual(model.num_topics, model2.num_topics)
         tstvec = []
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
@@ -233,13 +164,13 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         model.save(fname, sep_limit=0)
 
         # test loading the large model arrays with mmap
-        self.assertRaises(IOError, self.class_.load, fname, mmap='r')
+        self.assertRaises(IOError, nmf.Nmf.load, fname, mmap='r')
 
     @unittest.skip("NMF has no state")
     def testRandomStateBackwardCompatibility(self):
         # load a model saved using a pre-0.13.2 version of Gensim
         pre_0_13_2_fname = datapath('pre_0_13_2_model')
-        model_pre_0_13_2 = self.class_.load(pre_0_13_2_fname)
+        model_pre_0_13_2 = nmf.Nmf.load(pre_0_13_2_fname)
 
         # set `num_topics` less than `model_pre_0_13_2.num_topics` so that `model_pre_0_13_2.random_state` is used
         model_topics = model_pre_0_13_2.print_topics(num_topics=2, num_words=3)
@@ -253,7 +184,7 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         model_pre_0_13_2.save(post_0_13_2_fname)
 
         # load a model saved using a post-0.13.2 version of Gensim
-        model_post_0_13_2 = self.class_.load(post_0_13_2_fname)
+        model_post_0_13_2 = nmf.Nmf.load(post_0_13_2_fname)
         model_topics_new = model_post_0_13_2.print_topics(num_topics=2, num_words=3)
 
         for i in model_topics_new:
@@ -270,7 +201,7 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.model.save(nmf_3_6_0_fname)
 
         # load a model saved using a 3.0.1 version of Gensim
-        model = self.class_.load(nmf_3_6_0_fname)
+        model = nmf.Nmf.load(nmf_3_6_0_fname)
 
         # and test it on a predefined document
         topics = model[test_doc]
