@@ -84,7 +84,7 @@ class BM25(object):
     def _initialize(self, corpus):
         """Calculates frequencies of terms in documents and in corpus. Also computes inverse document frequencies."""
 
-        nd = {} # word -> number of documents with word
+        nd = {}  # word -> number of documents with word
         for document in corpus:
             self.doc_len.append(len(document))
             frequencies = {}
