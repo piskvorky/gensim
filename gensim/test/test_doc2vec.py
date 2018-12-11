@@ -340,8 +340,8 @@ class TestDoc2VecModel(unittest.TestCase):
         model = doc2vec.Doc2Vec(min_count=1)
         model.build_vocab(corpus)
         self.assertTrue(
-            model.docvecs.similarity_unseen_docs(model, rome_str, rome_str) >
-            model.docvecs.similarity_unseen_docs(model, rome_str, car_str)
+            model.docvecs.similarity_unseen_docs(model, rome_str, rome_str)
+            > model.docvecs.similarity_unseen_docs(model, rome_str, car_str)
         )
 
     def model_sanity(self, model, keep_training=True):
