@@ -60,7 +60,7 @@ from scipy.special import gammaln, psi  # gamma function utils
 from six.moves import xrange
 
 from gensim import interfaces, utils, matutils
-from gensim.matutils import dirichlet_expectation
+from gensim.matutils import dirichlet_expectation, mean_absolute_difference
 from gensim.models import basemodel, ldamodel
 
 from gensim.utils import deprecated
@@ -130,7 +130,7 @@ def lda_e_step(doc_word_ids, doc_word_counts, alpha, beta, max_iter=100):
         Elogtheta = dirichlet_expectation(gamma)
         expElogtheta = np.exp(Elogtheta)
         phinorm = np.dot(expElogtheta, betad) + 1e-100
-        meanchange = np.mean(abs(gamma - lastgamma))
+        meanchange = mean_absolute_difference(gamma, lastgamma)
         if meanchange < meanchangethresh:
             break
 
