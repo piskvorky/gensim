@@ -5,7 +5,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""Python wrapper for `Latent Dirichlet Allocation (LDA) <https://en.wikipedia.org/wiki/Latent_Dirichlet_allocation>`_
+r"""Python wrapper for `Latent Dirichlet Allocation (LDA) <https://en.wikipedia.org/wiki/Latent_Dirichlet_allocation>`_
 from `MALLET, the Java topic modelling toolkit <http://mallet.cs.umass.edu/>`_
 
 This module allows both LDA model estimation from a training corpus and inference of topic distribution on new,
@@ -250,7 +250,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         cmd = \
             self.mallet_path + \
             " import-file --preserve-case --keep-sequence " \
-            "--remove-stopwords --token-regex \"\S+\" --input %s --output %s"
+            "--remove-stopwords --token-regex \"\\S+\" --input %s --output %s"
         if infer:
             cmd += ' --use-pipe-from ' + self.fcorpusmallet()
             cmd = cmd % (self.fcorpustxt(), self.fcorpusmallet() + '.infer')
