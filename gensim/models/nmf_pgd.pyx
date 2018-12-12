@@ -7,9 +7,15 @@
 # cython: embedsignature=True
 
 cimport cython
-from libc.math cimport sqrt, fabs, fmin, fmax, copysign
+from libc.math cimport sqrt, fabs, copysign
 from cython.parallel import prange
 import numpy as np
+
+cdef double fmin(double x, double y) nogil:
+    return x if x < y else y
+
+cdef double fmax(double x, double y) nogil:
+    return x if x > y else y
 
 def solve_h(double[:, ::1] h, double[:, :] Wt_v_minus_r, double[:, ::1] WtW, double kappa):
     """Find optimal dense vector representation for current W and r matrices.
