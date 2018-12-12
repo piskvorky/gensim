@@ -321,6 +321,10 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             if word_coef >= minimum_probability:
                 values.append((topic_id, word_coef))
 
+        if self.normalize:
+            factor_sum = sum(factor for topic_id, factor in values)
+            values = [(topic_id, factor / factor_sum) for topic_id, factor in values]
+
         return values
 
     def get_document_topics(self, bow, minimum_probability=None):

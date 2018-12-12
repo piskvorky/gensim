@@ -44,6 +44,15 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         # must contain the same values, up to re-ordering
         self.assertTrue(np.allclose(sorted(vec), sorted(expected), atol=1e-8))
 
+        # transform one word
+        word = 5
+        transformed = model.get_term_topics(word)
+
+        vec = matutils.sparse2full(transformed, 2)
+        expected = [0., 1.]
+        # must contain the same values, up to re-ordering
+        self.assertTrue(np.allclose(sorted(vec), sorted(expected), atol=1e-8))
+
     def testTopTopics(self):
         top_topics = self.model.top_topics(self.corpus)
 
