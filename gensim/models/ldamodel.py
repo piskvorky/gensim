@@ -145,11 +145,11 @@ def update_dir_prior(prior, N, logphat, rho):
 
     dprior = -(gradf - b) / q
 
-    if all(rho * dprior + prior > 0):
-        prior += rho * dprior
+    updated_prior = rho * dprior + prior
+    if all(updated_prior > 0):
+        prior = updated_prior
     else:
-        logger.warning("updated prior not positive")
-
+        logger.warning("updated prior is not positive")
     return prior
 
 
@@ -665,8 +665,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # Inference code copied from Hoffman's `onlineldavb.py` (esp. the
         # Lee&Seung trick which speeds things up by an order of magnitude, compared
         # to Blei's original LDA-C code, cool!).
+        integer_types = six.integer_types + (np.integer,)
         for d, doc in enumerate(chunk):
-            if len(doc) > 0 and not isinstance(doc[0][0], six.integer_types + (np.integer,)):
+            if len(doc) > 0 and not isinstance(doc[0][0], integer_types):
                 # make sure the term IDs are ints, otherwise np will get upset
                 ids = [int(idx) for idx, _ in doc]
             else:
