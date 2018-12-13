@@ -443,7 +443,7 @@ if __name__ == '__main__':
     )
     parser = argparse.ArgumentParser(
         description="Gensim console API",
-        usage="python -m gensim.api.downloader  [-h] [-d data_name | -i data_name | -c]"
+        usage="python -m gensim.api.downloader  [-h] [-d data_name | -i data_name]"
     )
 
     group = parser.add_mutually_exclusive_group()
