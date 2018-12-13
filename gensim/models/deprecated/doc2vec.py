@@ -242,8 +242,8 @@ def train_document_dm(model, doc_words, doctag_indexes, alpha, work=None, neu1=N
     if doctag_locks is None:
         doctag_locks = model.docvecs.doctag_syn0_lockf
 
-    word_vocabs = [model.wv.vocab[w] for w in doc_words if w in model.wv.vocab and
-                   model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
+    word_vocabs = [model.wv.vocab[w] for w in doc_words if w in model.wv.vocab
+                   and model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
 
     for pos, word in enumerate(word_vocabs):
         reduced_window = model.random.randint(model.window)  # `b` in the original doc2vec code
@@ -298,8 +298,8 @@ def train_document_dm_concat(model, doc_words, doctag_indexes, alpha, work=None,
     if doctag_locks is None:
         doctag_locks = model.docvecs.doctag_syn0_lockf
 
-    word_vocabs = [model.wv.vocab[w] for w in doc_words if w in model.wv.vocab and
-                   model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
+    word_vocabs = [model.wv.vocab[w] for w in doc_words if w in model.wv.vocab
+                   and model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
     doctag_len = len(doctag_indexes)
     if doctag_len != model.dm_tag_count:
         return 0  # skip doc without expected number of doctag(s) (TODO: warn/pad?)

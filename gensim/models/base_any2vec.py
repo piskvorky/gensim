@@ -5,7 +5,7 @@
 # Copyright (C) 2018 RaRe Technologies s.r.o.
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""This module contains base classes required for implementing \*2vec algorithms.
+r"""This module contains base classes required for implementing \*2vec algorithms.
 
 The class hierarchy is designed to facilitate adding more concrete implementations for creating embeddings.
 In the most general case, the purpose of this class is to transform an arbitrary representation to a numerical vector
@@ -56,7 +56,7 @@ logger = logging.getLogger(__name__)
 
 
 class BaseAny2VecModel(utils.SaveLoad):
-    """Base class for training, using and evaluating \*2vec model.
+    r"""Base class for training, using and evaluating \*2vec model.
 
     Contains implementation for multi-threaded training. The purpose of this class is to provide a
     reference interface for concrete embedding implementations, whether the input space is a corpus
