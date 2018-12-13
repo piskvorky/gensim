@@ -1019,6 +1019,21 @@ class TestWord2VecModel(unittest.TestCase):
         training_loss_val = model.get_latest_training_loss()
         self.assertTrue(training_loss_val > 0.0)
 
+    def test_most_similiar_uses_newly_trained_vectors(self):
+        """Test if the word2vec model deletes the normalized vectors that are used by most similar
+        when it is retrained"""
+        model = word2vec.Word2Vec(size=2, min_count=1, hs=1, negative=0)
+        model.build_vocab(sentences)
+
+        model.train(sentences, total_examples=model.corpus_count, epochs=1, start_alpha=0.1, end_alpha=0.1)
+        model.wv.most_similar('graph', topn=10)
+        vecs = np.copy(model.wv.vectors_norm)
+
+        model.train(sentences, total_examples=model.corpus_count, epochs=1, start_alpha=0.1, end_alpha=0.1)
+        model.wv.most_similar('graph', topn=10)
+
+        self.assertNotEqual(np.sum(model.wv.vectors_norm - vecs), 0)
+
 
 # endclass TestWord2VecModel
 

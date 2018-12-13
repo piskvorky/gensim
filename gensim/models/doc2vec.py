@@ -649,6 +649,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         """Resets the current word vectors. """
         self.wv.vectors_norm = None
         self.wv.vectors_docs_norm = None
+        self.docvecs.vectors_docs_norm = None
 
     def reset_from(self, other_model):
         """Copy shareable data structures from another (possibly pre-trained) model.
@@ -791,7 +792,6 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
         """
         kwargs = {}
-        self.docvecs.vectors_docs_norm = None
         if corpus_file is not None:
             # Calculate offsets for each worker along with initial doctags (doctag ~ document/line number in a file)
             offsets, start_doctags = self._get_offsets_and_start_doctags_for_corpusfile(corpus_file, self.workers)
