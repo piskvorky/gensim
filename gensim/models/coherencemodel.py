@@ -460,9 +460,9 @@ class CoherenceModel(interfaces.TransformationABC):
         return not self._accumulator.relevant_ids.issuperset(new_set)
 
     def _topics_differ(self, new_topics):
-        return (new_topics is not None and
-                self._topics is not None and
-                not np.array_equal(new_topics, self._topics))
+        return (new_topics is not None
+                and self._topics is not None
+                and not np.array_equal(new_topics, self._topics))
 
     def _get_topics(self):
         """Internal helper function to return topics from a trained topic model."""
