@@ -180,9 +180,11 @@ def deaccent(text):
 
     Examples
     --------
-    >>> from gensim.utils import deaccent
-    >>> deaccent("Šéf chomutovských komunistů dostal poštou bílý prášek")
-    u'Sef chomutovskych komunistu dostal postou bily prasek'
+    .. sourcecode:: pycon
+
+        >>> from gensim.utils import deaccent
+        >>> deaccent("Šéf chomutovských komunistů dostal poštou bílý prášek")
+        u'Sef chomutovskych komunistu dostal postou bily prasek'
 
     """
     if not isinstance(text, unicode):
@@ -243,9 +245,11 @@ def tokenize(text, lowercase=False, deacc=False, encoding='utf8', errors="strict
 
     Examples
     --------
-    >>> from gensim.utils import tokenize
-    >>> list(tokenize('Nic nemůže letět rychlostí vyšší, než 300 tisíc kilometrů za sekundu!', deacc=True))
-    [u'Nic', u'nemuze', u'letet', u'rychlosti', u'vyssi', u'nez', u'tisic', u'kilometru', u'za', u'sekundu']
+    .. sourcecode:: pycon
+
+        >>> from gensim.utils import tokenize
+        >>> list(tokenize('Nic nemůže letět rychlostí vyšší, než 300 tisíc kilometrů za sekundu!', deacc=True))
+        [u'Nic', u'nemuze', u'letet', u'rychlosti', u'vyssi', u'nez', u'tisic', u'kilometru', u'za', u'sekundu']
 
     """
     lowercase = lowercase or to_lower or lower
@@ -443,14 +447,15 @@ class SaveLoad(object):
         """
         def mmap_error(obj, filename):
             return IOError(
-                'Cannot mmap compressed object %s in file %s. ' % (obj, filename) +
-                'Use `load(fname, mmap=None)` or uncompress files manually.'
+                'Cannot mmap compressed object %s in file %s. ' % (obj, filename)
+                + 'Use `load(fname, mmap=None)` or uncompress files manually.'
             )
 
         for attrib in getattr(self, '__recursive_saveloads', []):
             cfname = '.'.join((fname, attrib))
             logger.info("loading %s recursively from %s.* with mmap=%s", attrib, cfname, mmap)
-            getattr(self, attrib)._load_specials(cfname, mmap, compress, subname)
+            with ignore_deprecation_warning():
+                getattr(self, attrib)._load_specials(cfname, mmap, compress, subname)
 
         for attrib in getattr(self, '__numpys', []):
             logger.info("loading %s from %s with mmap=%s", attrib, subname(fname, attrib), mmap)
@@ -463,7 +468,8 @@ class SaveLoad(object):
             else:
                 val = np.load(subname(fname, attrib), mmap_mode=mmap)
 
-            setattr(self, attrib, val)
+            with ignore_deprecation_warning():
+                setattr(self, attrib, val)
 
         for attrib in getattr(self, '__scipys', []):
             logger.info("loading %s from %s with mmap=%s", attrib, subname(fname, attrib), mmap)
@@ -481,11 +487,13 @@ class SaveLoad(object):
                 sparse.indptr = np.load(subname(fname, attrib, 'indptr'), mmap_mode=mmap)
                 sparse.indices = np.load(subname(fname, attrib, 'indices'), mmap_mode=mmap)
 
-            setattr(self, attrib, sparse)
+            with ignore_deprecation_warning():
+                setattr(self, attrib, sparse)
 
         for attrib in getattr(self, '__ignoreds', []):
             logger.info("setting ignored attribute %s to None", attrib)
-            setattr(self, attrib, None)
+            with ignore_deprecation_warning():
+                setattr(self, attrib, None)
 
     @staticmethod
     def _adapt_by_suffix(fname):
@@ -543,7 +551,8 @@ class SaveLoad(object):
             # restore attribs handled specially
             for obj, asides in restores:
                 for attrib, val in iteritems(asides):
-                    setattr(obj, attrib, val)
+                    with ignore_deprecation_warning():
+                        setattr(obj, attrib, val)
         logger.info("saved %s", fname)
 
     def _save_specials(self, fname, separately, sep_limit, ignore, pickle_protocol, compress, subname):
@@ -584,11 +593,12 @@ class SaveLoad(object):
                 elif isinstance(val, sparse_matrices) and val.nnz >= sep_limit:
                     separately.append(attrib)
 
-        # whatever's in `separately` or `ignore` at this point won't get pickled
-        for attrib in separately + list(ignore):
-            if hasattr(self, attrib):
-                asides[attrib] = getattr(self, attrib)
-                delattr(self, attrib)
+        with ignore_deprecation_warning():
+            # whatever's in `separately` or `ignore` at this point won't get pickled
+            for attrib in separately + list(ignore):
+                if hasattr(self, attrib):
+                    asides[attrib] = getattr(self, attrib)
+                    delattr(self, attrib)
 
         recursive_saveloads = []
         restores = []
@@ -722,7 +732,8 @@ def get_max_id(corpus):
     """
     maxid = -1
     for document in corpus:
-        maxid = max(maxid, max([-1] + [fieldid for fieldid, _ in document]))  # [-1] to avoid exceptions from max(empty)
+        if document:
+            maxid = max(maxid, max(fieldid for fieldid, _ in document))
     return maxid
 
 
@@ -834,9 +845,11 @@ def is_corpus(obj):
 
     Examples
     --------
-    >>> from gensim.utils import is_corpus
-    >>> corpus = [[(1, 1.0)], [(2, -0.3), (3, 0.12)]]
-    >>> corpus_or_not, corpus = is_corpus(corpus)
+    .. sourcecode:: pycon
+
+        >>> from gensim.utils import is_corpus
+        >>> corpus = [[(1, 1.0)], [(2, -0.3), (3, 0.12)]]
+        >>> corpus_or_not, corpus = is_corpus(corpus)
 
     Warnings
     --------
@@ -912,11 +925,13 @@ class RepeatCorpus(SaveLoad):
 
     Examples
     --------
-    >>> from gensim.utils import RepeatCorpus
-    >>>
-    >>> corpus = [[(1, 2)], []] # 2 documents
-    >>> list(RepeatCorpus(corpus, 5)) # repeat 2.5 times to get 5 documents
-    [[(1, 2)], [], [(1, 2)], [], [(1, 2)]]
+    .. sourcecode:: pycon
+
+        >>> from gensim.utils import RepeatCorpus
+        >>>
+        >>> corpus = [[(1, 2)], []]  # 2 documents
+        >>> list(RepeatCorpus(corpus, 5))  # repeat 2.5 times to get 5 documents
+        [[(1, 2)], [], [(1, 2)], [], [(1, 2)]]
 
     """
     def __init__(self, corpus, reps):
@@ -942,11 +957,13 @@ class RepeatCorpusNTimes(SaveLoad):
 
     Examples
     --------
-    >>> from gensim.utils import RepeatCorpusNTimes
-    >>>
-    >>> corpus = [[(1, 0.5)], []]
-    >>> list(RepeatCorpusNTimes(corpus, 3)) # repeat 3 times
-    [[(1, 0.5)], [], [(1, 0.5)], [], [(1, 0.5)], []]
+    .. sourcecode:: pycon
+
+        >>> from gensim.utils import RepeatCorpusNTimes
+        >>>
+        >>> corpus = [[(1, 0.5)], []]
+        >>> list(RepeatCorpusNTimes(corpus, 3))  # repeat 3 times
+        [[(1, 0.5)], [], [(1, 0.5)], [], [(1, 0.5)], []]
 
     """
     def __init__(self, corpus, n):
@@ -1078,15 +1095,17 @@ def decode_htmlentities(text):
 
     Examples
     --------
-    >>> from gensim.utils import decode_htmlentities
-    >>>
-    >>> u = u'E tu vivrai nel terrore - L&#x27;aldil&#xE0; (1981)'
-    >>> print(decode_htmlentities(u).encode('UTF-8'))
-    E tu vivrai nel terrore - L'aldilà (1981)
-    >>> print(decode_htmlentities("l&#39;eau"))
-    l'eau
-    >>> print(decode_htmlentities("foo &lt; bar"))
-    foo < bar
+    .. sourcecode:: pycon
+
+        >>> from gensim.utils import decode_htmlentities
+        >>>
+        >>> u = u'E tu vivrai nel terrore - L&#x27;aldil&#xE0; (1981)'
+        >>> print(decode_htmlentities(u).encode('UTF-8'))
+        E tu vivrai nel terrore - L'aldilà (1981)
+        >>> print(decode_htmlentities("l&#39;eau"))
+        l'eau
+        >>> print(decode_htmlentities("foo &lt; bar"))
+        foo < bar
 
     """
     def substitute_entity(match):
@@ -1135,8 +1154,10 @@ def chunkize_serial(iterable, chunksize, as_numpy=False, dtype=np.float32):
 
     Examples
     --------
-    >>> print(list(grouper(range(10), 3)))
-    [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
+    .. sourcecode:: pycon
+
+        >>> print(list(grouper(range(10), 3)))
+        [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
 
     """
     it = iter(iterable)
@@ -1209,8 +1230,6 @@ class InputQueue(multiprocessing.Process):
 
 
 if os.name == 'nt':
-    warnings.warn("detected Windows; aliasing chunkize to chunkize_serial")
-
     def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
         """Split `corpus` into fixed-sized chunks, using :func:`~gensim.utils.chunkize_serial`.
 
@@ -1231,6 +1250,8 @@ if os.name == 'nt':
             "chunksize"-ed chunks of elements from `corpus`.
 
         """
+        if maxsize > 0:
+            warnings.warn("detected Windows; aliasing chunkize to chunkize_serial")
         for chunk in chunkize_serial(corpus, chunksize, as_numpy=as_numpy):
             yield chunk
 else:
@@ -1308,9 +1329,11 @@ def smart_extension(fname, ext):
     Examples
     --------
 
-    >>> from gensim.utils import smart_extension
-    >>> smart_extension("my_file.pkl.gz", ".vectors")
-    'my_file.pkl.vectors.gz'
+    .. sourcecode:: pycon
+
+        >>> from gensim.utils import smart_extension
+        >>> smart_extension("my_file.pkl.gz", ".vectors")
+        'my_file.pkl.vectors.gz'
 
     """
     fname, oext = os.path.splitext(fname)
@@ -1382,10 +1405,12 @@ def revdict(d):
 
     Examples
     --------
-    >>> from gensim.utils import revdict
-    >>> d = {1: 2, 3: 4}
-    >>> revdict(d)
-    {2: 1, 4: 3}
+    .. sourcecode:: pycon
+
+        >>> from gensim.utils import revdict
+        >>> d = {1: 2, 3: 4}
+        >>> revdict(d)
+        {2: 1, 4: 3}
 
     """
     return {v: k for (k, v) in iteritems(dict(d))}
@@ -1440,6 +1465,14 @@ def deprecated(reason):
 
     else:
         raise TypeError(repr(type(reason)))
+
+
+@contextmanager
+def ignore_deprecation_warning():
+    """Contextmanager for ignoring DeprecationWarning."""
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
+        yield
 
 
 @deprecated("Function will be removed in 4.0.0")
@@ -1623,17 +1656,21 @@ def lemmatize(content, allowed_tags=re.compile(r'(NN|VB|JJ|RB)'), light=False,
 
     Examples
     --------
-    >>> from gensim.utils import lemmatize
-    >>> lemmatize('Hello World! How is it going?! Nonexistentword, 21')
-    ['world/NN', 'be/VB', 'go/VB', 'nonexistentword/NN']
+    .. sourcecode:: pycon
+
+        >>> from gensim.utils import lemmatize
+        >>> lemmatize('Hello World! How is it going?! Nonexistentword, 21')
+        ['world/NN', 'be/VB', 'go/VB', 'nonexistentword/NN']
 
     Note the context-dependent part-of-speech tags between these two examples:
 
-    >>> lemmatize('The study ranks high.')
-    ['study/NN', 'rank/VB', 'high/JJ']
+    .. sourcecode:: pycon
 
-    >>> lemmatize('The ranks study hard.')
-    ['rank/NN', 'study/VB', 'hard/RB']
+        >>> lemmatize('The study ranks high.')
+        ['study/NN', 'rank/VB', 'high/JJ']
+
+        >>> lemmatize('The ranks study hard.')
+        ['rank/NN', 'study/VB', 'hard/RB']
 
     """
     if not has_pattern():
@@ -1855,9 +1892,11 @@ def check_output(stdout=subprocess.PIPE, *popenargs, **kwargs):
 
     Examples
     --------
-    >>> from gensim.utils import check_output
-    >>> check_output(args=['echo', '1'])
-    '1\n'
+    .. sourcecode:: pycon
+
+        >>> from gensim.utils import check_output
+        >>> check_output(args=['echo', '1'])
+        '1\n'
 
     Raises
     ------
@@ -1924,19 +1963,22 @@ def strided_windows(ndarray, window_size):
 
     Examples
     --------
-    >>> from gensim.utils import strided_windows
-    >>> strided_windows(np.arange(5), 2)
-    array([[0, 1],
-           [1, 2],
-           [2, 3],
-           [3, 4]])
-    >>> strided_windows(np.arange(10), 5)
-    array([[0, 1, 2, 3, 4],
-           [1, 2, 3, 4, 5],
-           [2, 3, 4, 5, 6],
-           [3, 4, 5, 6, 7],
-           [4, 5, 6, 7, 8],
-           [5, 6, 7, 8, 9]])
+
+    .. sourcecode:: pycon
+
+        >>> from gensim.utils import strided_windows
+        >>> strided_windows(np.arange(5), 2)
+        array([[0, 1],
+               [1, 2],
+               [2, 3],
+               [3, 4]])
+        >>> strided_windows(np.arange(10), 5)
+        array([[0, 1, 2, 3, 4],
+               [1, 2, 3, 4, 5],
+               [2, 3, 4, 5, 6],
+               [3, 4, 5, 6, 7],
+               [4, 5, 6, 7, 8],
+               [5, 6, 7, 8, 9]])
 
     """
     ndarray = np.asarray(ndarray)

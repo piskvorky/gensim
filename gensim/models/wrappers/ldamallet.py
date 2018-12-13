@@ -5,7 +5,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""Python wrapper for `Latent Dirichlet Allocation (LDA) <https://en.wikipedia.org/wiki/Latent_Dirichlet_allocation>`_
+r"""Python wrapper for `Latent Dirichlet Allocation (LDA) <https://en.wikipedia.org/wiki/Latent_Dirichlet_allocation>`_
 from `MALLET, the Java topic modelling toolkit <http://mallet.cs.umass.edu/>`_
 
 This module allows both LDA model estimation from a training corpus and inference of topic distribution on new,
@@ -32,12 +32,15 @@ Use `official guide <http://mallet.cs.umass.edu/download.php>`_ or this one ::
 
 Examples
 --------
->>> from gensim.test.utils import common_corpus, common_dictionary
->>> from gensim.models.wrappers import LdaMallet
->>>
->>> path_to_mallet_binary = "/path/to/mallet/binary"
->>> model = LdaMallet(path_to_mallet_binary, corpus=common_corpus, num_topics=20, id2word=common_dictionary)
->>> vector = model[common_corpus[0]]  # LDA topics of a documents
+
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import common_corpus, common_dictionary
+    >>> from gensim.models.wrappers import LdaMallet
+    >>>
+    >>> path_to_mallet_binary = "/path/to/mallet/binary"
+    >>> model = LdaMallet(path_to_mallet_binary, corpus=common_corpus, num_topics=20, id2word=common_dictionary)
+    >>> vector = model[common_corpus[0]]  # LDA topics of a documents
 
 """
 
@@ -49,6 +52,7 @@ import warnings
 import tempfile
 import xml.etree.ElementTree as et
 import zipfile
+from itertools import chain
 
 import numpy
 from smart_open import smart_open
@@ -219,9 +223,9 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         """
         for docno, doc in enumerate(corpus):
             if self.id2word:
-                tokens = sum(([self.id2word[tokenid]] * int(cnt) for tokenid, cnt in doc), [])
+                tokens = chain.from_iterable([self.id2word[tokenid]] * int(cnt) for tokenid, cnt in doc)
             else:
-                tokens = sum(([str(tokenid)] * int(cnt) for tokenid, cnt in doc), [])
+                tokens = chain.from_iterable([str(tokenid)] * int(cnt) for tokenid, cnt in doc)
             file_like.write(utils.to_utf8("%s 0 %s\n" % (docno, ' '.join(tokens))))
 
     def convert_input(self, corpus, infer=False, serialize_corpus=True):
@@ -246,7 +250,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         cmd = \
             self.mallet_path + \
             " import-file --preserve-case --keep-sequence " \
-            "--remove-stopwords --token-regex \"\S+\" --input %s --output %s"
+            "--remove-stopwords --token-regex \"\\S+\" --input %s --output %s"
         if infer:
             cmd += ' --use-pipe-from ' + self.fcorpusmallet()
             cmd = cmd % (self.fcorpustxt(), self.fcorpusmallet() + '.infer')

@@ -21,16 +21,22 @@ doc2vec training** (70x speedup [blog]_).
 
 Initialize a model with e.g.::
 
->>> model = Doc2Vec(documents, size=100, window=8, min_count=5, workers=4)
+.. sourcecode:: pycon
+
+    >>> model = Doc2Vec(documents, size=100, window=8, min_count=5, workers=4)
 
 Persist a model to disk with::
 
->>> model.save(fname)
->>> model = Doc2Vec.load(fname)  # you can continue training with the loaded model!
+.. sourcecode:: pycon
+
+    >>> model.save(fname)
+    >>> model = Doc2Vec.load(fname)  # you can continue training with the loaded model!
 
 If you're finished training a model (=no more updates, only querying), you can do
 
-  >>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True):
+.. sourcecode:: pycon
+
+    >>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True):
 
 to trim unneeded model memory = use (much) less RAM.
 
@@ -91,7 +97,7 @@ def load_old_doc2vec(*args, **kwargs):
         'dm_tag_count': old_model.dm_tag_count,
         'docvecs_mapfile': old_model.__dict__.get('docvecs_mapfile', None),
         'comment': old_model.__dict__.get('comment', None),
-        'size': old_model.vector_size,
+        'vector_size': old_model.vector_size,
         'alpha': old_model.alpha,
         'window': old_model.window,
         'min_count': old_model.min_count,
@@ -104,7 +110,7 @@ def load_old_doc2vec(*args, **kwargs):
         'negative': old_model.negative,
         'cbow_mean': old_model.cbow_mean,
         'hashfxn': old_model.hashfxn,
-        'iter': old_model.iter,
+        'epochs': old_model.iter,
         'sorted_vocab': old_model.__dict__.get('sorted_vocab', 1),
         'batch_words': old_model.__dict__.get('batch_words', MAX_WORDS_IN_BATCH),
         'compute_loss': old_model.__dict__.get('compute_loss', None)
@@ -236,8 +242,8 @@ def train_document_dm(model, doc_words, doctag_indexes, alpha, work=None, neu1=N
     if doctag_locks is None:
         doctag_locks = model.docvecs.doctag_syn0_lockf
 
-    word_vocabs = [model.wv.vocab[w] for w in doc_words if w in model.wv.vocab and
-                   model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
+    word_vocabs = [model.wv.vocab[w] for w in doc_words if w in model.wv.vocab
+                   and model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
 
     for pos, word in enumerate(word_vocabs):
         reduced_window = model.random.randint(model.window)  # `b` in the original doc2vec code
@@ -292,8 +298,8 @@ def train_document_dm_concat(model, doc_words, doctag_indexes, alpha, work=None,
     if doctag_locks is None:
         doctag_locks = model.docvecs.doctag_syn0_lockf
 
-    word_vocabs = [model.wv.vocab[w] for w in doc_words if w in model.wv.vocab and
-                   model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
+    word_vocabs = [model.wv.vocab[w] for w in doc_words if w in model.wv.vocab
+                   and model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
     doctag_len = len(doctag_indexes)
     if doctag_len != model.dm_tag_count:
         return 0  # skip doc without expected number of doctag(s) (TODO: warn/pad?)
@@ -359,11 +365,13 @@ class DocvecsArray(SaveLoad):
     As the 'docvecs' property of a Doc2Vec model, allows access and
     comparison of document vectors.
 
-    >>> docvec = d2v_model.docvecs[99]
-    >>> docvec = d2v_model.docvecs['SENT_99']  # if string tag used in training
-    >>> sims = d2v_model.docvecs.most_similar(99)
-    >>> sims = d2v_model.docvecs.most_similar('SENT_99')
-    >>> sims = d2v_model.docvecs.most_similar(docvec)
+    .. sourcecode:: pycon
+
+        >>> docvec = d2v_model.docvecs[99]
+        >>> docvec = d2v_model.docvecs['SENT_99']  # if string tag used in training
+        >>> sims = d2v_model.docvecs.most_similar(99)
+        >>> sims = d2v_model.docvecs.most_similar('SENT_99')
+        >>> sims = d2v_model.docvecs.most_similar(docvec)
 
     If only plain int tags are presented during training, the dict (of
     string tag -> index) and list (of index -> string tag) stay empty,

@@ -29,48 +29,58 @@ Usage examples
 
 Train an LDA model using a Gensim corpus
 
->>> from gensim.test.utils import common_texts
->>> from gensim.corpora.dictionary import Dictionary
->>>
->>> # Create a corpus from a list of texts
->>> common_dictionary = Dictionary(common_texts)
->>> common_corpus = [common_dictionary.doc2bow(text) for text in common_texts]
->>>
->>> # Train the model on the corpus.
->>> lda = LdaModel(common_corpus, num_topics=10)
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import common_texts
+    >>> from gensim.corpora.dictionary import Dictionary
+    >>>
+    >>> # Create a corpus from a list of texts
+    >>> common_dictionary = Dictionary(common_texts)
+    >>> common_corpus = [common_dictionary.doc2bow(text) for text in common_texts]
+    >>>
+    >>> # Train the model on the corpus.
+    >>> lda = LdaModel(common_corpus, num_topics=10)
 
 Save a model to disk, or reload a pre-trained model
 
->>> from gensim.test.utils import datapath
->>>
->>> # Save model to disk.
->>> temp_file = datapath("model")
->>> lda.save(temp_file)
->>>
->>> # Load a potentially pretrained model from disk.
->>> lda = LdaModel.load(temp_file)
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import datapath
+    >>>
+    >>> # Save model to disk.
+    >>> temp_file = datapath("model")
+    >>> lda.save(temp_file)
+    >>>
+    >>> # Load a potentially pretrained model from disk.
+    >>> lda = LdaModel.load(temp_file)
 
 Query, the model using new, unseen documents
 
->>> # Create a new corpus, made of previously unseen documents.
->>> other_texts = [
-...     ['computer', 'time', 'graph'],
-...     ['survey', 'response', 'eps'],
-...     ['human', 'system', 'computer']
-... ]
->>> other_corpus = [common_dictionary.doc2bow(text) for text in other_texts]
->>>
->>> unseen_doc = other_corpus[0]
->>> vector = lda[unseen_doc] # get topic probability distribution for a document
+.. sourcecode:: pycon
+
+    >>> # Create a new corpus, made of previously unseen documents.
+    >>> other_texts = [
+    ...     ['computer', 'time', 'graph'],
+    ...     ['survey', 'response', 'eps'],
+    ...     ['human', 'system', 'computer']
+    ... ]
+    >>> other_corpus = [common_dictionary.doc2bow(text) for text in other_texts]
+    >>>
+    >>> unseen_doc = other_corpus[0]
+    >>> vector = lda[unseen_doc]  # get topic probability distribution for a document
 
 Update the model by incrementally training on the new corpus
 
->>> lda.update(other_corpus)
->>> vector = lda[unseen_doc]
+.. sourcecode:: pycon
+
+    >>> lda.update(other_corpus)
+    >>> vector = lda[unseen_doc]
 
 A lot of parameters can be tuned to optimize training for your specific case
 
->>> lda = LdaModel(common_corpus, num_topics=50, alpha='auto', eval_every=5)  # learn asymmetric alpha from data
+.. sourcecode:: pycon
+
+    >>> lda = LdaModel(common_corpus, num_topics=50, alpha='auto', eval_every=5)  # learn asymmetric alpha from data
 
 """
 
@@ -135,11 +145,11 @@ def update_dir_prior(prior, N, logphat, rho):
 
     dprior = -(gradf - b) / q
 
-    if all(rho * dprior + prior > 0):
-        prior += rho * dprior
+    updated_prior = rho * dprior + prior
+    if all(updated_prior > 0):
+        prior = updated_prior
     else:
-        logger.warning("updated prior not positive")
-
+        logger.warning("updated prior is not positive")
     return prior
 
 
@@ -315,21 +325,27 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     -------
     Initialize a model using a Gensim corpus
 
-    >>> from gensim.test.utils import common_corpus
-    >>>
-    >>> lda = LdaModel(common_corpus, num_topics=10)
+    .. sourcecode:: pycon
+
+        >>> from gensim.test.utils import common_corpus
+        >>>
+        >>> lda = LdaModel(common_corpus, num_topics=10)
 
     You can then infer topic distributions on new, unseen documents.
 
-    >>> doc_bow = [(1, 0.3), (2, 0.1), (0, 0.09)]
-    >>> doc_lda = lda[doc_bow]
+    .. sourcecode:: pycon
+
+        >>> doc_bow = [(1, 0.3), (2, 0.1), (0, 0.09)]
+        >>> doc_lda = lda[doc_bow]
 
     The model can be updated (trained) with new documents.
 
-    >>> # In practice (corpus =/= initial training corpus), but we use the same here for simplicity.
-    >>> other_corpus = common_corpus
-    >>>
-    >>> lda.update(other_corpus)
+    .. sourcecode:: pycon
+
+        >>> # In practice (corpus =/= initial training corpus), but we use the same here for simplicity.
+        >>> other_corpus = common_corpus
+        >>>
+        >>> lda.update(other_corpus)
 
     Model persistency is achieved through :meth:`~gensim.models.ldamodel.LdaModel.load` and
     :meth:`~gensim.models.ldamodel.LdaModel.save` methods.
@@ -369,7 +385,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Alternatively default prior selecting strategies can be employed by supplying a string:
 
                 * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / topicno`.
-                * 'auto': Learns an asymmetric prior from the corpus.
+                * 'auto': Learns an asymmetric prior from the corpus (not available if `distributed==True`).
         eta : {float, np.array, str}, optional
             A-priori belief on word probability, this can be:
 
@@ -649,8 +665,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # Inference code copied from Hoffman's `onlineldavb.py` (esp. the
         # Lee&Seung trick which speeds things up by an order of magnitude, compared
         # to Blei's original LDA-C code, cool!).
+        integer_types = six.integer_types + (np.integer,)
         for d, doc in enumerate(chunk):
-            if len(doc) > 0 and not isinstance(doc[0][0], six.integer_types + (np.integer,)):
+            if len(doc) > 0 and not isinstance(doc[0][0], integer_types):
                 # make sure the term IDs are ints, otherwise np will get upset
                 ids = [int(idx) for idx, _ in doc]
             else:
@@ -1407,12 +1424,15 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         --------
         Get the differences between each pair of topics inferred by two models
 
-        >>> from gensim.models.ldamulticore import LdaMulticore
-        >>> from gensim.test.utils import datapath
-        >>>
-        >>> m1, m2 = LdaMulticore.load(datapath("lda_3_0_1_model")), LdaMulticore.load(datapath("ldamodel_python_3_5"))
-        >>> mdiff, annotation = m1.diff(m2)
-        >>> topic_diff = mdiff # get matrix with difference for each topic pair from `m1` and `m2`
+        .. sourcecode:: pycon
+
+            >>> from gensim.models.ldamulticore import LdaMulticore
+            >>> from gensim.test.utils import datapath
+            >>>
+            >>> m1 = LdaMulticore.load(datapath("lda_3_0_1_model"))
+            >>> m2 = LdaMulticore.load(datapath("ldamodel_python_3_5"))
+            >>> mdiff, annotation = m1.diff(m2)
+            >>> topic_diff = mdiff  # get matrix with difference for each topic pair from `m1` and `m2`
 
         """
         distances = {
@@ -1604,10 +1624,12 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         --------
         Large arrays can be memmap'ed back as read-only (shared memory) by setting `mmap='r'`:
 
-        >>> from gensim.test.utils import datapath
-        >>>
-        >>> fname = datapath("lda_3_0_1_model")
-        >>> lda = LdaModel.load(fname, mmap='r')
+        .. sourcecode:: pycon
+
+            >>> from gensim.test.utils import datapath
+            >>>
+            >>> fname = datapath("lda_3_0_1_model")
+            >>> lda = LdaModel.load(fname, mmap='r')
 
         """
         kwargs['mmap'] = kwargs.get('mmap', None)

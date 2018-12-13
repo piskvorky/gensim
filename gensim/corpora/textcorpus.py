@@ -216,26 +216,29 @@ class TextCorpus(interfaces.CorpusABC):
 
         Examples
         --------
-        >>> from gensim.corpora.textcorpus import TextCorpus
-        >>> from gensim.test.utils import datapath
-        >>> from gensim import utils
-        >>>
-        >>>
-        >>> class CorpusMiislita(TextCorpus):
-        ...     stopwords = set('for a of the and to in on'.split())
-        ...
-        ...     def get_texts(self):
-        ...         for doc in self.getstream():
-        ...             yield [word for word in utils.to_unicode(doc).lower().split() if word not in self.stopwords]
-        ...
-        ...     def __len__(self):
-        ...         self.length = sum(1 for _ in self.get_texts())
-        ...         return self.length
-        >>>
-        >>> corpus = CorpusMiislita(datapath('head500.noblanks.cor.bz2'))
-        >>> len(corpus)
-        250
-        >>> document = next(iter(corpus.get_texts()))
+        .. sourcecode:: pycon
+
+            >>> from gensim.corpora.textcorpus import TextCorpus
+            >>> from gensim.test.utils import datapath
+            >>> from gensim import utils
+            >>>
+            >>>
+            >>> class CorpusMiislita(TextCorpus):
+            ...     stopwords = set('for a of the and to in on'.split())
+            ...
+            ...     def get_texts(self):
+            ...         for doc in self.getstream():
+            ...             yield [word for word in utils.to_unicode(doc).lower().split() if word not in self.stopwords]
+            ...
+            ...     def __len__(self):
+            ...         self.length = sum(1 for _ in self.get_texts())
+            ...         return self.length
+            >>>
+            >>>
+            >>> corpus = CorpusMiislita(datapath('head500.noblanks.cor.bz2'))
+            >>> len(corpus)
+            250
+            >>> document = next(iter(corpus.get_texts()))
 
         """
         self.input = input

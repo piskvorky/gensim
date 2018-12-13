@@ -14,14 +14,11 @@ import os
 import platform
 import sys
 import warnings
-import ez_setup
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
 
 if sys.version_info[:2] < (2, 7) or (sys.version_info[:1] == 3 and sys.version_info[:2] < (3, 5)):
     raise Exception('This version of gensim needs Python 2.7, 3.5 or later.')
-
-ez_setup.use_setuptools()
 
 # the following code is adapted from tornado's setup.py:
 # https://github.com/tornadoweb/tornado/blob/master/setup.py
@@ -237,11 +234,14 @@ win_testenv = [
     'Morfessor==2.0.2a4',
 ]
 
-linux_testenv = win_testenv + [
-    'annoy',
-    'tensorflow <= 1.3.0',
-    'keras >= 2.0.4, <= 2.1.4',
-]
+linux_testenv = win_testenv[:]
+
+if sys.version_info < (3, 7):
+    linux_testenv.extend([
+        'tensorflow <= 1.3.0',
+        'keras >= 2.0.4, <= 2.1.4',
+        'annoy',
+    ])
 
 ext_modules = [
     Extension('gensim.models.word2vec_inner',
@@ -301,7 +301,7 @@ if not (os.name == 'nt' and sys.version_info[0] < 3):
 
 setup(
     name='gensim',
-    version='3.5.0',
+    version='3.6.0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
@@ -335,6 +335,7 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Scientific/Engineering :: Information Analysis',
         'Topic :: Text Processing :: Linguistic',
@@ -355,7 +356,7 @@ setup(
         'distributed': distributed_env,
         'test-win': win_testenv,
         'test': linux_testenv,
-        'docs': linux_testenv + distributed_env + ['sphinx', 'sphinxcontrib-napoleon', 'plotly', 'pattern', 'sphinxcontrib.programoutput'],
+        'docs': linux_testenv + distributed_env + ['sphinx', 'sphinxcontrib-napoleon', 'plotly', 'pattern <= 2.6', 'sphinxcontrib.programoutput'],
     },
 
     include_package_data=True,

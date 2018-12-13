@@ -22,63 +22,67 @@ Usage examples
 To implement a Callback, inherit from this base class and override one or more of its methods.
 
 Create a callback to save the training model after each epoch
+.. sourcecode:: pycon
 
->>> from gensim.test.utils import common_corpus, common_texts, get_tmpfile
->>> from gensim.models.callbacks import CallbackAny2Vec
->>> from gensim.models import Word2Vec
->>>
->>> class EpochSaver(CallbackAny2Vec):
-...     '''Callback to save model after each epoch.'''
-...
-...     def __init__(self, path_prefix):
-...         self.path_prefix = path_prefix
-...         self.epoch = 0
-...
-...     def on_epoch_end(self, model):
-...         output_path = get_tmpfile('{}_epoch{}.model'.format(self.path_prefix, self.epoch))
-...         model.save(output_path)
-...         self.epoch += 1
-...
+    >>> from gensim.test.utils import get_tmpfile
+    >>> from gensim.models.callbacks import CallbackAny2Vec
+    >>>
+    >>>
+    >>> class EpochSaver(CallbackAny2Vec):
+    ...     '''Callback to save model after each epoch.'''
+    ...
+    ...     def __init__(self, path_prefix):
+    ...         self.path_prefix = path_prefix
+    ...         self.epoch = 0
+    ...
+    ...     def on_epoch_end(self, model):
+    ...         output_path = get_tmpfile('{}_epoch{}.model'.format(self.path_prefix, self.epoch))
+    ...         model.save(output_path)
+    ...         self.epoch += 1
+    ...
 
-Create a callback to print progress information to the console
+Create a callback to print progress information to the console:
 
->>> class EpochLogger(CallbackAny2Vec):
-...     '''Callback to log information about training'''
-...
-...     def __init__(self):
-...         self.epoch = 0
-...
-...     def on_epoch_begin(self, model):
-...         print("Epoch #{} start".format(self.epoch))
-...
-...     def on_epoch_end(self, model):
-...         print("Epoch #{} end".format(self.epoch))
-...         self.epoch += 1
-...
->>>
->>> epoch_logger = EpochLogger()
->>>
->>> w2v_model = Word2Vec(common_texts, iter=5, size=10, min_count=0, seed=42, callbacks=[epoch_logger])
-Epoch #0 start
-Epoch #0 end
-Epoch #1 start
-Epoch #1 end
-Epoch #2 start
-Epoch #2 end
-Epoch #3 start
-Epoch #3 end
-Epoch #4 start
-Epoch #4 end
+.. sourcecode:: pycon
 
-Create and bind a callback to a topic model. This callback will log the perplexity metric in real time
+    >>> class EpochLogger(CallbackAny2Vec):
+    ...     '''Callback to log information about training'''
+    ...
+    ...     def __init__(self):
+    ...         self.epoch = 0
+    ...
+    ...     def on_epoch_begin(self, model):
+    ...         print("Epoch #{} start".format(self.epoch))
+    ...
+    ...     def on_epoch_end(self, model):
+    ...         print("Epoch #{} end".format(self.epoch))
+    ...         self.epoch += 1
+    ...
+    >>>
+    >>> epoch_logger = EpochLogger()
+    >>> w2v_model = Word2Vec(common_texts, iter=5, size=10, min_count=0, seed=42, callbacks=[epoch_logger])
+    Epoch #0 start
+    Epoch #0 end
+    Epoch #1 start
+    Epoch #1 end
+    Epoch #2 start
+    Epoch #2 end
+    Epoch #3 start
+    Epoch #3 end
+    Epoch #4 start
+    Epoch #4 end
 
->>> from gensim.models.callbacks import PerplexityMetric
->>> from gensim.models.ldamodel import LdaModel
->>> from gensim.test.utils import common_corpus, common_dictionary
->>>
->>> # Log the perplexity score at the end of each epoch.
->>> perplexity_logger = PerplexityMetric(corpus=common_corpus, logger='shell')
->>> lda = LdaModel(common_corpus, id2word=common_dictionary, num_topics=5, callbacks=[perplexity_logger])
+Create and bind a callback to a topic model. This callback will log the perplexity metric in real time:
+
+.. sourcecode:: pycon
+
+    >>> from gensim.models.callbacks import PerplexityMetric
+    >>> from gensim.models.ldamodel import LdaModel
+    >>> from gensim.test.utils import common_corpus, common_dictionary
+    >>>
+    >>> # Log the perplexity score at the end of each epoch.
+    >>> perplexity_logger = PerplexityMetric(corpus=common_corpus, logger='shell')
+    >>> lda = LdaModel(common_corpus, id2word=common_dictionary, num_topics=5, callbacks=[perplexity_logger])
 
 """
 

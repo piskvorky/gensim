@@ -25,28 +25,31 @@ insight on the subject knowledge of an author.
 
 Example
 -------
->>> from gensim.models import AuthorTopicModel
->>> from gensim.corpora import mmcorpus
->>> from gensim.test.utils import common_dictionary, datapath, temporary_file
 
->>> author2doc = {
-...     'john': [0, 1, 2, 3, 4, 5, 6],
-...     'jane': [2, 3, 4, 5, 6, 7, 8],
-...     'jack': [0, 2, 4, 6, 8]
-... }
->>>
->>> corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
->>>
->>> with temporary_file("serialized") as s_path:
-...     model = AuthorTopicModel(
-...          corpus, author2doc=author2doc, id2word=common_dictionary, num_topics=4,
-...          serialized=True, serialization_path=s_path
-...     )
-...
-...     model.update(corpus, author2doc)  # update the author-topic model with additional documents
->>>
->>> # construct vectors for authors
->>> author_vecs = [model.get_author_topics(author) for author in model.id2author.values()]
+.. sourcecode:: pycon
+
+    >>> from gensim.models import AuthorTopicModel
+    >>> from gensim.corpora import mmcorpus
+    >>> from gensim.test.utils import common_dictionary, datapath, temporary_file
+
+    >>> author2doc = {
+    ...     'john': [0, 1, 2, 3, 4, 5, 6],
+    ...     'jane': [2, 3, 4, 5, 6, 7, 8],
+    ...     'jack': [0, 2, 4, 6, 8]
+    ... }
+    >>>
+    >>> corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
+    >>>
+    >>> with temporary_file("serialized") as s_path:
+    ...     model = AuthorTopicModel(
+    ...         corpus, author2doc=author2doc, id2word=common_dictionary, num_topics=4,
+    ...         serialized=True, serialization_path=s_path
+    ...     )
+    ...
+    ...     model.update(corpus, author2doc)  # update the author-topic model with additional documents
+    >>>
+    >>> # construct vectors for authors
+    >>> author_vecs = [model.get_author_topics(author) for author in model.id2author.values()]
 
 """
 # TODO: this class inherits LdaModel and overwrites some methods. There is some code
@@ -64,7 +67,7 @@ from os import remove
 from gensim import utils
 from gensim.models import LdaModel
 from gensim.models.ldamodel import LdaState
-from gensim.matutils import dirichlet_expectation
+from gensim.matutils import dirichlet_expectation, mean_absolute_difference
 from gensim.corpora import MmCorpus
 from itertools import chain
 from scipy.special import gammaln  # gamma function utils
@@ -373,14 +376,14 @@ class AuthorTopicModel(LdaModel):
             self.corpus.extend(corpus)
 
     def compute_phinorm(self, expElogthetad, expElogbetad):
-        """Efficiently computes the normalizing factor in phi.
+        r"""Efficiently computes the normalizing factor in phi.
 
         Parameters
         ----------
         expElogthetad: numpy.ndarray
             Value of variational distribution :math:`q(\theta|\gamma)`.
         expElogbetad: numpy.ndarray
-            Value of variational distribution :math:`q(\\beta|\lambda)`.
+            Value of variational distribution :math:`q(\beta|\lambda)`.
 
         Returns
         -------
@@ -502,7 +505,7 @@ class AuthorTopicModel(LdaModel):
 
                 # Check for convergence.
                 # Criterion is mean change in "local" gamma.
-                meanchange_gamma = np.mean(abs(tilde_gamma - lastgamma))
+                meanchange_gamma = mean_absolute_difference(tilde_gamma.ravel(), lastgamma.ravel())
                 gamma_condition = meanchange_gamma < self.gamma_threshold
                 if gamma_condition:
                     converged += 1
@@ -885,7 +888,7 @@ class AuthorTopicModel(LdaModel):
                 del other
 
     def bound(self, chunk, chunk_doc_idx=None, subsample_ratio=1.0, author2doc=None, doc2author=None):
-        """Estimate the variational bound of documents from `corpus`.
+        r"""Estimate the variational bound of documents from `corpus`.
 
         :math:`\mathbb{E_{q}}[\log p(corpus)] - \mathbb{E_{q}}[\log q(corpus)]`
 
@@ -1120,28 +1123,30 @@ class AuthorTopicModel(LdaModel):
 
         Example
         -------
-        >>> from gensim.models import AuthorTopicModel
-        >>> from gensim.corpora import mmcorpus
-        >>> from gensim.test.utils import common_dictionary, datapath, temporary_file
+        .. sourcecode:: pycon
 
-        >>> author2doc = {
-        ...     'john': [0, 1, 2, 3, 4, 5, 6],
-        ...     'jane': [2, 3, 4, 5, 6, 7, 8],
-        ...     'jack': [0, 2, 4, 6, 8]
-        ... }
-        >>>
-        >>> corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
-        >>>
-        >>> with temporary_file("serialized") as s_path:
-        ...     model = AuthorTopicModel(
-        ...          corpus, author2doc=author2doc, id2word=common_dictionary, num_topics=4,
-        ...          serialized=True, serialization_path=s_path
-        ...     )
-        ...
-        ...     model.update(corpus, author2doc)  # update the author-topic model with additional documents
-        >>>
-        >>> # construct vectors for authors
-        >>> author_vecs = [model.get_author_topics(author) for author in model.id2author.values()]
+            >>> from gensim.models import AuthorTopicModel
+            >>> from gensim.corpora import mmcorpus
+            >>> from gensim.test.utils import common_dictionary, datapath, temporary_file
+
+            >>> author2doc = {
+            ...     'john': [0, 1, 2, 3, 4, 5, 6],
+            ...     'jane': [2, 3, 4, 5, 6, 7, 8],
+            ...     'jack': [0, 2, 4, 6, 8]
+            ... }
+            >>>
+            >>> corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
+            >>>
+            >>> with temporary_file("serialized") as s_path:
+            ...     model = AuthorTopicModel(
+            ...         corpus, author2doc=author2doc, id2word=common_dictionary, num_topics=4,
+            ...         serialized=True, serialization_path=s_path
+            ...     )
+            ...
+            ...     model.update(corpus, author2doc)  # update the author-topic model with additional documents
+            >>>
+            >>> # construct vectors for authors
+            >>> author_vecs = [model.get_author_topics(author) for author in model.id2author.values()]
 
         """
         author_id = self.author2id[author_name]
