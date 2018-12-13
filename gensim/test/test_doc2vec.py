@@ -687,6 +687,22 @@ class TestDoc2VecModel(unittest.TestCase):
     def testLoadOnClassError(self):
         """Test if exception is raised when loading doc2vec model on instance"""
         self.assertRaises(AttributeError, load_on_instance)
+
+    def test_most_similiar_uses_newly_trained_vectors(self):
+        """Test if the doc2vec model deletes the normalized vectors that are used by most similar
+        when it is retrained"""
+        corpus = DocsLeeCorpus()
+        model = doc2vec.Doc2Vec(vector_size=10, min_count=1, workers=1)
+        model.build_vocab(corpus)
+
+        model.train(corpus, total_examples=model.corpus_count, epochs=1, start_alpha=0.1, end_alpha=0.1)
+        model.docvecs.most_similar(1)
+        vecs = np.copy(model.docvecs.vectors_docs_norm)
+
+        model.train(corpus, total_examples=model.corpus_count, epochs=1, start_alpha=0.1, end_alpha=0.1)
+        model.docvecs.most_similar(1)
+
+        self.assertNotEqual(np.sum(model.docvecs.vectors_docs_norm - vecs), 0)
 # endclass TestDoc2VecModel
 
 
