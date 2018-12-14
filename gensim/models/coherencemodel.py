@@ -444,7 +444,7 @@ class CoherenceModel(interfaces.TransformationABC):
         try:
             return np.array([self.dictionary.token2id[token] for token in topic])
         except KeyError:  # might be a list of token ids already, but let's verify all in dict
-            topic = [self.dictionary.id2token[_id] for _id in topic]
+            topic = (self.dictionary.id2token[_id] for _id in topic)
             return np.array([self.dictionary.token2id[token] for token in topic])
 
     def _update_accumulator(self, new_topics):

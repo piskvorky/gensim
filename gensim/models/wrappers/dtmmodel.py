@@ -532,7 +532,7 @@ class DtmModel(utils.SaveLoad):
             warnings.warn("The parameter `num_words` is deprecated, will be removed in 4.0.0, use `topn` instead.")
             topn = num_words
 
-        return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, time, topn=topn)])
+        return ' + '.join('%.3f*%s' % v for v in self.show_topic(topicid, time, topn=topn))
 
     def dtm_vis(self, corpus, time):
         """Get data specified by pyLDAvis format.
