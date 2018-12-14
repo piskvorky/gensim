@@ -568,7 +568,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             if prior == 'symmetric':
                 logger.info("using symmetric %s at %s", name, 1.0 / self.num_topics)
                 init_prior = np.fromiter((1.0 / self.num_topics for i in xrange(prior_shape)),
-                                            dtype=self.dtype, count=prior_shape)
+                                         dtype=self.dtype, count=prior_shape)
             elif prior == 'asymmetric':
                 init_prior = \
                     np.fromiter((1.0 / (i + np.sqrt(prior_shape)) for i in xrange(prior_shape)),
@@ -578,7 +578,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             elif prior == 'auto':
                 is_auto = True
                 init_prior = np.fromiter((1.0 / self.num_topics for i in xrange(prior_shape)),
-                                            dtype=self.dtype, count=prior_shape)
+                                         dtype=self.dtype, count=prior_shape)
                 if name == 'alpha':
                     logger.info("using autotuned %s, starting with %s", name, list(init_prior))
             else:
