@@ -526,7 +526,7 @@ cdef unsigned long long w2v_fast_sentence_cbow_neg(
         our_saxpy(&size, &g, &syn1neg[row2], &ONE, work, &ONE)
         our_saxpy(&size, &g, neu1, &ONE, &syn1neg[row2], &ONE)
 
-    if not cbow_mean:  # divide error over summed window vectors
+    if not cbow_mean or doc2vecc > 0:  # divide error over summed window vectors
         sscal(&size, &inv_count, work, &ONE)  # (does this need BLAS-variants like saxpy?)
 
     for m in range(j,k):

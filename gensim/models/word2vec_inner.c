@@ -4406,7 +4406,7 @@ static unsigned PY_LONG_LONG __pyx_f_6gensim_6models_14word2vec_inner_w2v_fast_s
  *         our_saxpy(&size, &g, &syn1neg[row2], &ONE, work, &ONE)
  *         our_saxpy(&size, &g, neu1, &ONE, &syn1neg[row2], &ONE)             # <<<<<<<<<<<<<<
  * 
- *     if not cbow_mean:  # divide error over summed window vectors
+ *     if not cbow_mean or doc2vecc > 0:  # divide error over summed window vectors
  */
     __pyx_v_6gensim_6models_14word2vec_inner_our_saxpy((&__pyx_v_size), (&__pyx_v_g), __pyx_v_neu1, (&__pyx_v_6gensim_6models_14word2vec_inner_ONE), (&(__pyx_v_syn1neg[__pyx_v_row2])), (&__pyx_v_6gensim_6models_14word2vec_inner_ONE));
     __pyx_L15_continue:;
@@ -4415,16 +4415,24 @@ static unsigned PY_LONG_LONG __pyx_f_6gensim_6models_14word2vec_inner_w2v_fast_s
   /* "gensim/models/word2vec_inner.pyx":529
  *         our_saxpy(&size, &g, neu1, &ONE, &syn1neg[row2], &ONE)
  * 
- *     if not cbow_mean:  # divide error over summed window vectors             # <<<<<<<<<<<<<<
+ *     if not cbow_mean or doc2vecc > 0:  # divide error over summed window vectors             # <<<<<<<<<<<<<<
  *         sscal(&size, &inv_count, work, &ONE)  # (does this need BLAS-variants like saxpy?)
  * 
  */
-  __pyx_t_5 = ((!(__pyx_v_cbow_mean != 0)) != 0);
+  __pyx_t_6 = ((!(__pyx_v_cbow_mean != 0)) != 0);
+  if (!__pyx_t_6) {
+  } else {
+    __pyx_t_5 = __pyx_t_6;
+    goto __pyx_L27_bool_binop_done;
+  }
+  __pyx_t_6 = ((__pyx_v_doc2vecc > 0.0) != 0);
+  __pyx_t_5 = __pyx_t_6;
+  __pyx_L27_bool_binop_done:;
   if (__pyx_t_5) {
 
     /* "gensim/models/word2vec_inner.pyx":530
  * 
- *     if not cbow_mean:  # divide error over summed window vectors
+ *     if not cbow_mean or doc2vecc > 0:  # divide error over summed window vectors
  *         sscal(&size, &inv_count, work, &ONE)  # (does this need BLAS-variants like saxpy?)             # <<<<<<<<<<<<<<
  * 
  *     for m in range(j,k):
@@ -4434,7 +4442,7 @@ static unsigned PY_LONG_LONG __pyx_f_6gensim_6models_14word2vec_inner_w2v_fast_s
     /* "gensim/models/word2vec_inner.pyx":529
  *         our_saxpy(&size, &g, neu1, &ONE, &syn1neg[row2], &ONE)
  * 
- *     if not cbow_mean:  # divide error over summed window vectors             # <<<<<<<<<<<<<<
+ *     if not cbow_mean or doc2vecc > 0:  # divide error over summed window vectors             # <<<<<<<<<<<<<<
  *         sscal(&size, &inv_count, work, &ONE)  # (does this need BLAS-variants like saxpy?)
  * 
  */
@@ -4469,7 +4477,7 @@ static unsigned PY_LONG_LONG __pyx_f_6gensim_6models_14word2vec_inner_w2v_fast_s
  *         else:
  *             our_saxpy(&size, &word_locks[indexes[m]], work, &ONE, &syn0[indexes[m]*size], &ONE)
  */
-      goto __pyx_L27_continue;
+      goto __pyx_L29_continue;
 
       /* "gensim/models/word2vec_inner.pyx":533
  * 
@@ -4490,7 +4498,7 @@ static unsigned PY_LONG_LONG __pyx_f_6gensim_6models_14word2vec_inner_w2v_fast_s
     /*else*/ {
       __pyx_v_6gensim_6models_14word2vec_inner_our_saxpy((&__pyx_v_size), (&(__pyx_v_word_locks[(__pyx_v_indexes[__pyx_v_m])])), __pyx_v_work, (&__pyx_v_6gensim_6models_14word2vec_inner_ONE), (&(__pyx_v_syn0[((__pyx_v_indexes[__pyx_v_m]) * __pyx_v_size)])), (&__pyx_v_6gensim_6models_14word2vec_inner_ONE));
     }
-    __pyx_L27_continue:;
+    __pyx_L29_continue:;
   }
 
   /* "gensim/models/word2vec_inner.pyx":538
