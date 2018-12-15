@@ -61,7 +61,7 @@ The trained word vectors are stored in a :class:`~gensim.models.keyedvectors.Key
 
 The reason for separating the trained vectors into `KeyedVectors` is that if you don't
 need the full model state any more (don't need to continue training), the state can discarded,
-resulting in a much smaller and faster object that can be mmapped for lightning
+resulting in a much smaller and faster object that can be mapped for lightning
 fast loading and sharing the vectors in RAM between processes:
 
 .. sourcecode:: pycon
