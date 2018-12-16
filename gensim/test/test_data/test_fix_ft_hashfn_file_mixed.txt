@@ -1,3 +1,0 @@
-This file contains some unicode sentences like привет as provided by Ivan Menshikh. I will also include some others like : é é and ααααααα
-αα α ααα α
-Let's hope this works.
