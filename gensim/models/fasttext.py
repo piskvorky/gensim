@@ -973,17 +973,30 @@ def _load_matrix(file_handle, new_format=True, expected_vector_size=None):
     """Load a matrix from fastText native format.
 
     Interprets the matrix dimensions and type from the file stream.
-    See the `Matrix::save <https://github.com/facebookresearch/fastText/blob/master/src/matrix.cc>`__
-    function for more info.
 
-    :param file file_handle: A file handle opened for reading.
-    :param boolean new_format: True if the quant_input variable precedes
+    Parameters
+    ----------
+    file_handle : file
+        A file handle opened for reading.
+    new_format : boolean
+        True if the quant_input variable precedes
         the matrix declaration.  Should be True for newer versions of fastText.
-    :param int expected_vector_size: The expected dimensionality of each vector.
+    expected_vector_size : int
+        The expected dimensionality of each vector.
         If you specify this and the matrix's dimensionality is different,
         will raise an assertion.
-    :returns: The vectors
-    :rtype: numpy.array
+
+    Returns
+    -------
+    :class:`numpy.array`
+        The vectors as an array.
+        Each vector will be a row in the array.
+        The number of columns of the array will correspond to the vector size.
+
+    See Also
+    --------
+    https://github.com/facebookresearch/fastText/blob/master/src/matrix.cc
+
     """
     if new_format:
         _struct_unpack(file_handle, '@?')  # bool quant_input in fasttext.cc
