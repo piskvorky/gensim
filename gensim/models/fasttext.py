@@ -999,6 +999,8 @@ def _load_matrix(file_handle, new_format=True, expected_vector_size=None):
         dtype = np.dtype(np.float32)
     elif float_size == 8:
         dtype = np.dtype(np.float64)
+    else:
+        raise ValueError("Incompatible float size: %r" % float_size)
 
     matrix = np.fromfile(file_handle, dtype=dtype, count=num_vectors * dim)
     matrix = matrix.reshape((num_vectors, dim))
