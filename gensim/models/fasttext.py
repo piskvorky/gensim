@@ -863,32 +863,30 @@ class FastText(BaseWordEmbeddingsModel):
             Open file handle to persisted vectors.
 
         """
-        if self.new_format:
-            self.struct_unpack(file_handle, '@?')  # bool quant_input in fasttext.cc
-        num_vectors, dim = self.struct_unpack(file_handle, '@2q')
-        # Vectors stored by [Matrix::save](https://github.com/facebookresearch/fastText/blob/master/src/matrix.cc)
-        assert self.wv.vector_size == dim, (
-            'mismatch between vector size in model params ({}) and model vectors ({})'
-            .format(self.wv.vector_size, dim)
+        self.wv.vectors_ngrams = _load_matrix(
+            file_handle,
+            new_format=self.new_format,
+            expected_vector_size=self.wv.vector_size
         )
-        float_size = struct.calcsize('@f')
-        if float_size == 4:
-            dtype = np.dtype(np.float32)
-        elif float_size == 8:
-            dtype = np.dtype(np.float64)
+        self.num_original_vectors = self.wv.vectors_ngrams.shape[0]
 
-        self.num_original_vectors = num_vectors
-        self.wv.vectors_ngrams = np.fromfile(file_handle, dtype=dtype, count=num_vectors * dim)
-        self.wv.vectors_ngrams = self.wv.vectors_ngrams.reshape((num_vectors, dim))
-        assert self.wv.vectors_ngrams.shape == (
-            self.trainables.bucket + len(self.wv.vocab), self.wv.vector_size), \
-            'mismatch between actual weight matrix shape {} and expected shape {}'\
-            .format(
-                self.wv.vectors_ngrams.shape, (self.trainables.bucket + len(self.wv.vocab), self.wv.vector_size)
+        expected_shape = (self.trainables.bucket + len(self.wv.vocab), self.wv.vector_size)
+        assert self.wv.vectors_ngrams.shape == expected_shape, \
+            'mismatch between actual weight matrix shape {} and expected shape {}'.format(
+                self.wv.vectors_ngrams.shape, expected_shape
             )
 
         self.trainables.init_ngrams_post_load(self.file_name, self.wv)
         self._clear_post_train()
+
+        #
+        # FIXME: not sure what to do with this yet, but we will need it.
+        #
+        hidden_output = _load_matrix(
+            file_handle,
+            new_format=self.new_format,
+            expected_vector_size=self.wv.vector_size
+        )
 
     def struct_unpack(self, file_handle, fmt):
         """Read a single object from an open file.
@@ -906,8 +904,7 @@ class FastText(BaseWordEmbeddingsModel):
             Unpacked structure.
 
         """
-        num_bytes = struct.calcsize(fmt)
-        return struct.unpack(fmt, file_handle.read(num_bytes))
+        return _struct_unpack(file_handle, fmt)
 
     def save(self, *args, **kwargs):
         """Save the Fasttext model. This saved model can be loaded again using
@@ -965,6 +962,47 @@ class FastText(BaseWordEmbeddingsModel):
     def accuracy(self, questions, restrict_vocab=30000, most_similar=None, case_insensitive=True):
         most_similar = most_similar or FastTextKeyedVectors.most_similar
         return self.wv.accuracy(questions, restrict_vocab, most_similar, case_insensitive)
+
+
+def _struct_unpack(file_handle, fmt):
+    num_bytes = struct.calcsize(fmt)
+    return struct.unpack(fmt, file_handle.read(num_bytes))
+
+
+def _load_matrix(file_handle, new_format=True, expected_vector_size=None):
+    """Load a matrix from fastText native format.
+
+    Interprets the matrix dimensions and type from the file stream.
+    See the `Matrix::save <https://github.com/facebookresearch/fastText/blob/master/src/matrix.cc>`__
+    function for more info.
+
+    :param file file_handle: A file handle opened for reading.
+    :param boolean new_format: True if the quant_input variable precedes
+        the matrix declaration.  Should be True for newer versions of fastText.
+    :param int expected_vector_size: The expected dimensionality of each vector.
+        If you specify this and the matrix's dimensionality is different,
+        will raise an assertion.
+    :returns: The vectors
+    :rtype: numpy.array
+    """
+    if new_format:
+        _struct_unpack(file_handle, '@?')  # bool quant_input in fasttext.cc
+
+    num_vectors, dim = _struct_unpack(file_handle, '@2q')
+    assert expected_vector_size is None or expected_vector_size == dim, (
+        'mismatch between vector size in model params ({}) and model vectors ({})'
+        .format(expected_vector_size, dim)
+    )
+
+    float_size = struct.calcsize('@f')
+    if float_size == 4:
+        dtype = np.dtype(np.float32)
+    elif float_size == 8:
+        dtype = np.dtype(np.float64)
+
+    matrix = np.fromfile(file_handle, dtype=dtype, count=num_vectors * dim)
+    matrix = matrix.reshape((num_vectors, dim))
+    return matrix
 
 
 class FastTextVocab(Word2VecVocab):
