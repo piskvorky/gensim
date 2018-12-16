@@ -97,7 +97,7 @@ def _get_words_for_graph(tokens, pos_filter=None):
     for word, unit in iteritems(tokens):
         if exclude_filters and unit.tag in exclude_filters:
             continue
-        if (include_filters and unit.tag in include_filters) or not include_filters or not unit.tag:
+        if not include_filters or not unit.tag or unit.tag in include_filters:
             result.append(unit.token)
     return result
 

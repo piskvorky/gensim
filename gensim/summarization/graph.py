@@ -218,7 +218,7 @@ class Graph(IGraph):
         """Initializes object."""
 
         # Metadata about edges
-        # Mapping: Edge -> Dict mapping, lablel-> str, wt->num
+        # Mapping: Edge -> Dict mapping, label-> str, wt->num
         self.edge_properties = {}
         # Key value pairs: (Edge -> Attributes)
         self.edge_attr = {}
@@ -228,6 +228,10 @@ class Graph(IGraph):
         self.node_attr = {}
         # Pairing: Node -> Neighbors
         self.node_neighbors = {}
+
+    def __len__(self):
+        """Returns number of nodes in graph"""
+        return len(self.node_neighbors)
 
     def has_edge(self, edge):
         """Returns whether an edge exists.
@@ -260,7 +264,7 @@ class Graph(IGraph):
             Edge weight.
 
         """
-        return self.get_edge_properties(edge).setdefault(self.WEIGHT_ATTRIBUTE_NAME, self.DEFAULT_WEIGHT)
+        return self.get_edge_properties(edge).get(self.WEIGHT_ATTRIBUTE_NAME, self.DEFAULT_WEIGHT)
 
     def neighbors(self, node):
         """Returns all nodes that are directly accessible from given node.
@@ -314,6 +318,9 @@ class Graph(IGraph):
             If `edge` already exists in graph.
 
         """
+        if wt == 0.0:
+            # empty edge is similar to no edge at all
+            return
         if attrs is None:
             attrs = []
         u, v = edge
@@ -366,7 +373,7 @@ class Graph(IGraph):
             Nodes of graph.
 
         """
-        return list(self.node_neighbors.keys())
+        return list(self.node_neighbors)
 
     def edges(self):
         """Returns all edges of the graph.
@@ -377,7 +384,7 @@ class Graph(IGraph):
             Edges of graph.
 
         """
-        return [a for a in self.edge_properties.keys()]
+        return [a for a in self.edge_properties]
 
     def del_node(self, node):
         """Removes given node and its edges from the graph.
@@ -409,7 +416,7 @@ class Graph(IGraph):
             Properties of graph.
 
         """
-        return self.edge_properties.setdefault(edge, {})
+        return self.edge_properties.get(edge, {})
 
     def add_edge_attributes(self, edge, attrs):
         """Adds attributes `attrs` to given edge, order of nodes in edge doesn't matter.
