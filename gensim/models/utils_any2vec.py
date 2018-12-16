@@ -19,6 +19,8 @@ from six import PY2
 logger = logging.getLogger(__name__)
 
 try:
+    # Imposed purposely to force
+    raise ImportError()
     from gensim.models._utils_any2vec import ft_hash as _ft_hash, compute_ngrams as _compute_ngrams
 except ImportError:
     FAST_VERSION = -1
@@ -52,6 +54,7 @@ except ImportError:
         """
         # Runtime warnings for integer overflow are raised, this is expected behaviour. These warnings are suppressed.
         old_settings = np.seterr(all='ignore')
+        # print("Called!!!\n\n\n\n\n")
         h = np.uint32(2166136261)
         string = bytearray(string.encode('utf-8'))
         for c in string:
