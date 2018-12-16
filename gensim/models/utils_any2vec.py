@@ -19,7 +19,8 @@ from six import PY2
 logger = logging.getLogger(__name__)
 
 try:
-    # Imposed purposely to force
+    # Imposed purposely to force use of python hash function instead of Cython
+    # Once tests pass, cython will be changed
     raise ImportError()
     from gensim.models._utils_any2vec import ft_hash as _ft_hash, compute_ngrams as _compute_ngrams
 except ImportError:

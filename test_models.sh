@@ -55,7 +55,7 @@ echo "Checking Only Unicode file for малинка"
 echo "FB FastText vector for 'малинка': "
 cat only_unicode_ft_model.vec | grep "малинка "
 echo "Gensim recreated vector for 'малинка': "
-python3 check_ft_model.py only_unicode_ft_model.bin малинка
+python check_ft_model.py only_unicode_ft_model.bin малинка
 echo "------------------------------"
 echo ""
 
@@ -64,7 +64,7 @@ echo "Checking Mixed file for малинка"
 echo "FB FastText vector for 'малинка': "
 cat mix_unicode_ft_model.vec | grep "малинка "
 echo "Gensim recreated vector for 'малинка': "
-python3 check_ft_model.py only_unicode_ft_model.bin малинка
+python check_ft_model.py only_unicode_ft_model.bin малинка
 echo "------------------------------"
 echo ""
 
@@ -73,6 +73,6 @@ echo "Checking Mixed file for chained"
 echo "FB FastText vector for 'chained': "
 cat mix_unicode_ft_model.vec | grep "chained"
 echo "Gensim recreated vector for 'chained': "
-python3 check_ft_model.py mix_unicode_ft_model.bin chained
+python check_ft_model.py mix_unicode_ft_model.bin chained
 echo "------------------------------"
 echo ""
