@@ -145,7 +145,7 @@ def _get_doc_length(doc):
         Length of document.
 
     """
-    return sum([item[1] for item in doc])
+    return sum(item[1] for item in doc)
 
 
 @deprecated("Function will be removed in 4.0.0")
@@ -303,7 +303,7 @@ def _format_results(extracted_sentences, split):
     """
     if split:
         return [sentence.text for sentence in extracted_sentences]
-    return "\n".join([sentence.text for sentence in extracted_sentences])
+    return "\n".join(sentence.text for sentence in extracted_sentences)
 
 
 def _build_hasheable_corpus(corpus):

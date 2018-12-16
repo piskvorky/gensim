@@ -25,7 +25,7 @@ class TestShardedCorpus(unittest.TestCase):
     #     cls.dim = 1000
     #     cls.data = mock_data(dim=cls.dim)
     #
-    #     random_string = ''.join([random.choice('1234567890') for _ in range(8)])
+    #     random_string = ''.join(random.choice('1234567890') for _ in range(8))
     #
     #     cls.tmp_dir = 'test-temp-' + random_string
     #     os.makedirs(cls.tmp_dir)
@@ -39,7 +39,7 @@ class TestShardedCorpus(unittest.TestCase):
 
     def setUp(self):
         self.dim = 1000
-        self.random_string = ''.join([random.choice('1234567890') for _ in range(8)])
+        self.random_string = ''.join(random.choice('1234567890') for _ in range(8))
         self.tmp_dir = 'test-temp-' + self.random_string
         os.makedirs(self.tmp_dir)
 
@@ -157,7 +157,7 @@ class TestShardedCorpus(unittest.TestCase):
         self.assertTrue(isinstance(dslice, sparse.csr_matrix))
         self.assertEqual(dslice.shape, (4, corpus.dim))
 
-        expected_nnz = sum([len(self.data[i]) for i in range(2, 6)])
+        expected_nnz = sum(len(self.data[i]) for i in range(2, 6))
         self.assertEqual(dslice.getnnz(), expected_nnz)
 
         ilist = corpus[[2, 3, 4, 5]]

@@ -60,7 +60,7 @@ from scipy.special import gammaln, psi  # gamma function utils
 from six.moves import zip, range
 
 from gensim import interfaces, utils, matutils
-from gensim.matutils import dirichlet_expectation
+from gensim.matutils import dirichlet_expectation, mean_absolute_difference
 from gensim.models import basemodel, ldamodel
 
 from gensim.utils import deprecated
@@ -130,7 +130,7 @@ def lda_e_step(doc_word_ids, doc_word_counts, alpha, beta, max_iter=100):
         Elogtheta = dirichlet_expectation(gamma)
         expElogtheta = np.exp(Elogtheta)
         phinorm = np.dot(expElogtheta, betad) + 1e-100
-        meanchange = np.mean(abs(gamma - lastgamma))
+        meanchange = mean_absolute_difference(gamma, lastgamma)
         if meanchange < meanchangethresh:
             break
 
@@ -1042,14 +1042,12 @@ class HdpTopicFormatter(object):
 
         """
         shown = []
-        if num_topics < 0:
-            num_topics = len(self.data)
-
+        num_topics = max(num_topics, 0)
         num_topics = min(num_topics, len(self.data))
 
         for k in range(num_topics):
-            lambdak = list(self.data[k, :])
-            lambdak = lambdak / sum(lambdak)
+            lambdak = self.data[k, :]
+            lambdak = lambdak / lambdak.sum()
 
             temp = zip(lambdak, range(len(lambdak)))
             temp = sorted(temp, key=lambda x: x[0], reverse=True)
@@ -1131,8 +1129,8 @@ class HdpTopicFormatter(object):
             )
             topn = num_words
 
-        lambdak = list(self.data[topic_id, :])
-        lambdak = lambdak / sum(lambdak)
+        lambdak = self.data[topic_id, :]
+        lambdak = lambdak / lambdak.sum()
 
         temp = zip(lambdak, range(len(lambdak)))
         temp = sorted(temp, key=lambda x: x[0], reverse=True)
@@ -1186,9 +1184,9 @@ class HdpTopicFormatter(object):
 
         """
         if self.STYLE_GENSIM == self.style:
-            fmt = ' + '.join(['%.3f*%s' % (weight, word) for (word, weight) in topic_terms])
+            fmt = ' + '.join('%.3f*%s' % (weight, word) for (word, weight) in topic_terms)
         else:
-            fmt = '\n'.join(['    %20s    %.8f' % (word, weight) for (word, weight) in topic_terms])
+            fmt = '\n'.join('    %20s    %.8f' % (word, weight) for (word, weight) in topic_terms)
 
         fmt = (topic_id, fmt)
         return fmt

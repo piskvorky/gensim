@@ -143,8 +143,10 @@ class BleiCorpus(IndexedCorpus):
             logger.info("no word id mapping provided; initializing from corpus")
             id2word = utils.dict_from_corpus(corpus)
             num_terms = len(id2word)
+        elif id2word:
+            num_terms = 1 + max(id2word)
         else:
-            num_terms = 1 + max([-1] + id2word.keys())
+            num_terms = 0
 
         logger.info("storing corpus in Blei's LDA-C format into %s", fname)
         with utils.smart_open(fname, 'wb') as fout:

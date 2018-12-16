@@ -152,8 +152,8 @@ def corpus2csc(corpus, num_terms=None, dtype=np.float64, num_docs=None, num_nnz=
         for docno, doc in enumerate(corpus):
             if printprogress and docno % printprogress == 0:
                 logger.info("PROGRESS: at document #%i", docno)
-            indices.extend([feature_id for feature_id, _ in doc])
-            data.extend([feature_weight for _, feature_weight in doc])
+            indices.extend(feature_id for feature_id, _ in doc)
+            data.extend(feature_weight for _, feature_weight in doc)
             num_nnz += len(doc)
             indptr.append(num_nnz)
         if num_terms is None:
@@ -850,8 +850,8 @@ def softcossim(vec1, vec2, similarity_matrix):
     vec2 = dict(vec2)
     word_indices = sorted(set(chain(vec1, vec2)))
     dtype = similarity_matrix.dtype
-    vec1 = np.array([vec1[i] if i in vec1 else 0 for i in word_indices], dtype=dtype)
-    vec2 = np.array([vec2[i] if i in vec2 else 0 for i in word_indices], dtype=dtype)
+    vec1 = np.fromiter((vec1[i] if i in vec1 else 0 for i in word_indices), dtype=dtype, count=len(word_indices))
+    vec2 = np.fromiter((vec2[i] if i in vec2 else 0 for i in word_indices), dtype=dtype, count=len(word_indices))
     dense_matrix = similarity_matrix[[[i] for i in word_indices], word_indices].todense()
     vec1len = vec1.T.dot(dense_matrix).dot(vec1)[0, 0]
     vec2len = vec2.T.dot(dense_matrix).dot(vec2)[0, 0]

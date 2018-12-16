@@ -333,7 +333,7 @@ class Similarity(interfaces.SimilarityABC):
 
     def __len__(self):
         """Get length of index."""
-        return len(self.fresh_docs) + sum([len(shard) for shard in self.shards])
+        return len(self.fresh_docs) + sum(len(shard) for shard in self.shards)
 
     def __str__(self):
         return "Similarity index with %i documents in %i shards (stored under %s)" % (
@@ -467,11 +467,11 @@ class Similarity(interfaces.SimilarityABC):
             Query results.
 
         """
-        args = zip([query] * len(self.shards), self.shards)
+        args = izip([query] * len(self.shards), self.shards)
         if PARALLEL_SHARDS and PARALLEL_SHARDS > 1:
             logger.debug("spawning %i query processes", PARALLEL_SHARDS)
             pool = multiprocessing.Pool(PARALLEL_SHARDS)
-            result = pool.imap(query_shard, args, chunksize=1 + len(list(args)) / PARALLEL_SHARDS)
+            result = pool.imap(query_shard, args, chunksize=1 + len(self.shards) / PARALLEL_SHARDS)
         else:
             # serial processing, one shard after another
             pool = None

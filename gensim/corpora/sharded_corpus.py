@@ -766,13 +766,12 @@ class ShardedCorpus(IndexedCorpus):
         """
         # Can we save to a different file than output_prefix? Well, why not?
         if len(args) == 0:
-            args = tuple([self.output_prefix])
+            args = (self.output_prefix,)
 
         attrs_to_ignore = ['current_shard', 'current_shard_n', 'current_offset']
-        if 'ignore' not in kwargs:
-            kwargs['ignore'] = frozenset(attrs_to_ignore)
-        else:
-            kwargs['ignore'] = frozenset([v for v in kwargs['ignore']] + attrs_to_ignore)
+        if 'ignore' in kwargs:
+            attrs_to_ignore.extend(kwargs['ignore'])
+        kwargs['ignore'] = frozenset(attrs_to_ignore)
         super(ShardedCorpus, self).save(*args, **kwargs)
 
     @classmethod
