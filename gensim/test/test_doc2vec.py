@@ -717,7 +717,7 @@ class ConcatenatedDoc2Vec(object):
 
     def __str__(self):
         """Abbreviated name, built from submodels' names"""
-        return "+".join([str(model) for model in self.models])
+        return "+".join(str(model) for model in self.models)
 
     @property
     def epochs(self):
@@ -812,11 +812,11 @@ def read_su_sentiment_rotten_tomatoes(dirname, lowercase=True):
             split = [None, 'train', 'test', 'dev'][split_i]
             phrases[id] = SentimentPhrase(words, [id], split, sentiment, sentence_id)
 
-    assert len([phrase for phrase in phrases if phrase.sentence_id is not None]) == len(info_by_sentence)  # all
+    assert sum(1 for phrase in phrases if phrase.sentence_id is not None) == len(info_by_sentence)  # all
     # counts don't match 8544, 2210, 1101 because 13 TRAIN and 1 DEV sentences are duplicates
-    assert len([phrase for phrase in phrases if phrase.split == 'train']) == 8531  # 'train'
-    assert len([phrase for phrase in phrases if phrase.split == 'test']) == 2210  # 'test'
-    assert len([phrase for phrase in phrases if phrase.split == 'dev']) == 1100  # 'dev'
+    assert sum(1 for phrase in phrases if phrase.split == 'train') == 8531  # 'train'
+    assert sum(1 for phrase in phrases if phrase.split == 'test') == 2210  # 'test'
+    assert sum(1 for phrase in phrases if phrase.split == 'dev') == 1100  # 'dev'
 
     logging.info(
         "loaded corpus with %i sentences and %i phrases from %s",

@@ -340,7 +340,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
 
         with utils.smart_open(self.fstate()) as fin:
             _ = next(fin)  # header
-            self.alpha = numpy.array([float(val) for val in next(fin).split()[2:]])
+            self.alpha = numpy.fromiter(next(fin).split()[2:], dtype=float)
             assert len(self.alpha) == self.num_topics, "mismatch between MALLET vs. requested topics"
             _ = next(fin)  # noqa:F841 beta
             for lineno, line in enumerate(fin):
@@ -560,7 +560,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
 
                 if renorm:
                     # explicitly normalize weights to sum up to 1.0, just to be sure...
-                    total_weight = float(sum([weight for _, weight in doc]))
+                    total_weight = float(sum(weight for _, weight in doc))
                     if total_weight:
                         doc = [(id_, float(weight) / total_weight) for id_, weight in doc]
                 yield doc

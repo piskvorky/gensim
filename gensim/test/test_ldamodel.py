@@ -272,7 +272,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
                     word_phi_count_na += 1
 
         self.assertTrue(model.state.numdocs > doc_topic_count_na)
-        self.assertTrue(sum([len(i) for i in corpus]) > word_phi_count_na)
+        self.assertTrue(sum(len(i) for i in corpus) > word_phi_count_na)
 
         doc_topics, word_topics, word_phis = model.get_document_topics(self.corpus[1], per_word_topics=True)
 
