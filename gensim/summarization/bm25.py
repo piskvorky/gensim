@@ -119,7 +119,6 @@ class BM25(object):
         for word in negative_idfs:
             self.idf[word] = eps
 
-
     def get_score(self, document, index):
         """Computes BM25 score of given `document` in relation to item of corpus selected by `index`.
 
