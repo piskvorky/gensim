@@ -467,7 +467,7 @@ class Similarity(interfaces.SimilarityABC):
             Query results.
 
         """
-        args = izip([query] * len(self.shards), self.shards)
+        args = zip([query] * len(self.shards), self.shards)
         if PARALLEL_SHARDS and PARALLEL_SHARDS > 1:
             logger.debug("spawning %i query processes", PARALLEL_SHARDS)
             pool = multiprocessing.Pool(PARALLEL_SHARDS)
