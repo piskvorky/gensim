@@ -278,8 +278,10 @@ class UciCorpus(UciReader, IndexedCorpus):
             logger.info("no word id mapping provided; initializing from corpus")
             id2word = utils.dict_from_corpus(corpus)
             num_terms = len(id2word)
+        elif id2word:
+            num_terms = 1 + max(id2word)
         else:
-            num_terms = 1 + max([-1] + list(id2word))
+            num_terms = 0
 
         # write out vocabulary
         fname_vocab = utils.smart_extension(fname, '.vocab')

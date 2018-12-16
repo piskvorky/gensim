@@ -194,8 +194,8 @@ class PoincareModel(utils.SaveLoad):
         logger.info("loaded %d relations from train data, %d nodes", len(all_relations), len(vocab))
         self.kv.vocab = vocab
         self.kv.index2word = index2word
-        self.indices_set = set((range(len(index2word))))  # Set of all node indices
-        self.indices_array = np.array(range(len(index2word)))  # Numpy array of all node indices
+        self.indices_set = set(range(len(index2word)))  # Set of all node indices
+        self.indices_array = np.fromiter(range(len(index2word)), dtype=int)  # Numpy array of all node indices
         self.all_relations = all_relations
         self.node_relations = node_relations
         self._init_node_probabilities()
@@ -209,11 +209,11 @@ class PoincareModel(utils.SaveLoad):
 
     def _init_node_probabilities(self):
         """Initialize a-priori probabilities."""
-        counts = np.array([
+        counts = np.fromiter((
                 self.kv.vocab[self.kv.index2word[i]].count
                 for i in range(len(self.kv.index2word))
-            ],
-            dtype=np.float64)
+            ),
+            dtype=np.float64, count=len(self.kv.index2word))
         self._node_counts_cumsum = np.cumsum(counts)
         self._node_probabilities = counts / counts.sum()
 
@@ -475,8 +475,8 @@ class PoincareModel(utils.SaveLoad):
 
         Parameters
         ----------
-        nodes : list of int
-            List of node indices for which negative samples are to be returned.
+        nodes : iterable of int
+            Iterable of node indices for which negative samples are to be returned.
 
         Returns
         -------
@@ -503,7 +503,7 @@ class PoincareModel(utils.SaveLoad):
             The batch that was just trained on, contains computed loss for the batch.
 
         """
-        all_negatives = self._sample_negatives_batch([relation[0] for relation in relations])
+        all_negatives = self._sample_negatives_batch(relation[0] for relation in relations)
         batch = self._prepare_training_batch(relations, all_negatives, check_gradients)
         self._update_vectors_batch(batch)
         return batch

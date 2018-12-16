@@ -5,7 +5,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""Python wrapper for `Latent Dirichlet Allocation (LDA) <https://en.wikipedia.org/wiki/Latent_Dirichlet_allocation>`_
+r"""Python wrapper for `Latent Dirichlet Allocation (LDA) <https://en.wikipedia.org/wiki/Latent_Dirichlet_allocation>`_
 from `MALLET, the Java topic modelling toolkit <http://mallet.cs.umass.edu/>`_
 
 This module allows both LDA model estimation from a training corpus and inference of topic distribution on new,
@@ -250,7 +250,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         cmd = \
             self.mallet_path + \
             " import-file --preserve-case --keep-sequence " \
-            "--remove-stopwords --token-regex \"\S+\" --input %s --output %s"
+            "--remove-stopwords --token-regex \"\\S+\" --input %s --output %s"
         if infer:
             cmd += ' --use-pipe-from ' + self.fcorpusmallet()
             cmd = cmd % (self.fcorpustxt(), self.fcorpusmallet() + '.infer')
@@ -340,7 +340,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
 
         with utils.smart_open(self.fstate()) as fin:
             _ = next(fin)  # header
-            self.alpha = numpy.array([float(val) for val in next(fin).split()[2:]])
+            self.alpha = numpy.fromiter(next(fin).split()[2:], dtype=float)
             assert len(self.alpha) == self.num_topics, "mismatch between MALLET vs. requested topics"
             _ = next(fin)  # noqa:F841 beta
             for lineno, line in enumerate(fin):
@@ -560,7 +560,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
 
                 if renorm:
                     # explicitly normalize weights to sum up to 1.0, just to be sure...
-                    total_weight = float(sum([weight for _, weight in doc]))
+                    total_weight = float(sum(weight for _, weight in doc))
                     if total_weight:
                         doc = [(id_, float(weight) / total_weight) for id_, weight in doc]
                 yield doc

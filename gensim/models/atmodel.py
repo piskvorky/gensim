@@ -67,7 +67,7 @@ from os import remove
 from gensim import utils
 from gensim.models import LdaModel
 from gensim.models.ldamodel import LdaState
-from gensim.matutils import dirichlet_expectation
+from gensim.matutils import dirichlet_expectation, mean_absolute_difference
 from gensim.corpora import MmCorpus
 from itertools import chain
 from scipy.special import gammaln  # gamma function utils
@@ -376,14 +376,14 @@ class AuthorTopicModel(LdaModel):
             self.corpus.extend(corpus)
 
     def compute_phinorm(self, expElogthetad, expElogbetad):
-        """Efficiently computes the normalizing factor in phi.
+        r"""Efficiently computes the normalizing factor in phi.
 
         Parameters
         ----------
         expElogthetad: numpy.ndarray
             Value of variational distribution :math:`q(\theta|\gamma)`.
         expElogbetad: numpy.ndarray
-            Value of variational distribution :math:`q(\\beta|\lambda)`.
+            Value of variational distribution :math:`q(\beta|\lambda)`.
 
         Returns
         -------
@@ -465,10 +465,10 @@ class AuthorTopicModel(LdaModel):
             else:
                 ids = [idx for idx, _ in doc]
             ids = np.array(ids, dtype=np.int)
-            cts = np.array([cnt for _, cnt in doc], dtype=np.int)
+            cts = np.fromiter((cnt for _, cnt in doc), dtype=np.int, count=len(doc))
 
             # Get all authors in current document, and convert the author names to integer IDs.
-            authors_d = np.array([self.author2id[a] for a in self.doc2author[doc_no]], dtype=np.int)
+            authors_d = np.fromiter((self.author2id[a] for a in self.doc2author[doc_no]), dtype=np.int)
 
             gammad = self.state.gamma[authors_d, :]  # gamma of document d before update.
             tilde_gamma = gammad.copy()  # gamma that will be updated.
@@ -505,7 +505,7 @@ class AuthorTopicModel(LdaModel):
 
                 # Check for convergence.
                 # Criterion is mean change in "local" gamma.
-                meanchange_gamma = np.mean(abs(tilde_gamma - lastgamma))
+                meanchange_gamma = mean_absolute_difference(tilde_gamma.ravel(), lastgamma.ravel())
                 gamma_condition = meanchange_gamma < self.gamma_threshold
                 if gamma_condition:
                     converged += 1
@@ -888,7 +888,7 @@ class AuthorTopicModel(LdaModel):
                 del other
 
     def bound(self, chunk, chunk_doc_idx=None, subsample_ratio=1.0, author2doc=None, doc2author=None):
-        """Estimate the variational bound of documents from `corpus`.
+        r"""Estimate the variational bound of documents from `corpus`.
 
         :math:`\mathbb{E_{q}}[\log p(corpus)] - \mathbb{E_{q}}[\log q(corpus)]`
 
@@ -976,9 +976,9 @@ class AuthorTopicModel(LdaModel):
             else:
                 doc_no = d
             # Get all authors in current document, and convert the author names to integer IDs.
-            authors_d = np.array([self.author2id[a] for a in self.doc2author[doc_no]], dtype=np.int)
-            ids = np.array([id for id, _ in doc], dtype=np.int)  # Word IDs in doc.
-            cts = np.array([cnt for _, cnt in doc], dtype=np.int)  # Word counts.
+            authors_d = np.fromiter((self.author2id[a] for a in self.doc2author[doc_no]), dtype=np.int)
+            ids = np.fromiter((id for id, _ in doc), dtype=np.int, count=len(doc))  # Word IDs in doc.
+            cts = np.fromiter((cnt for _, cnt in doc), dtype=np.int, count=len(doc))  # Word counts.
 
             if d % self.chunksize == 0:
                 logger.debug("bound: at document #%i in chunk", d)

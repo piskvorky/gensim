@@ -302,10 +302,10 @@ class WindowedTextsAnalyzer(UsesDictionary):
         dtype = np.uint16 if np.iinfo(np.uint16).max >= self._vocab_size else np.uint32
         for text in texts:
             if self.text_is_relevant(text):
-                yield np.array([
+                yield np.fromiter((
                     self.id2contiguous[self.token2id[w]] if w in self.relevant_words
                     else self._none_token
-                    for w in text], dtype=dtype)
+                    for w in text), dtype=dtype, count=len(text))
 
     def text_is_relevant(self, text):
         """Check if the text has any relevant words."""

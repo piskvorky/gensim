@@ -426,11 +426,8 @@ def _get_average_score(concept, _keywords):
 
     """
     word_list = concept.split()
-    word_counter = 0
-    total = 0
-    for word in word_list:
-        total += _keywords[word]
-        word_counter += 1
+    word_counter = len(word_list)
+    total = float(sum(_keywords[word] for word in word_list))
     return total / word_counter
 
 
