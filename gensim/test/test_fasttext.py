@@ -842,6 +842,33 @@ class TestFastTextModel(unittest.TestCase):
         self.compare_with_wrapper(model_gensim, model_wrapper)
 
 
+class NativeTrainingContinuationTest(unittest.TestCase):
+    def test(self):
+
+        def train_gensim():
+            path = datapath('toy-data.txt')
+            with open(path) as fin:
+                words = fin.read().strip().split(' ')
+
+            model = FT_gensim()
+            model.build_vocab(words)
+            model.train(words, total_examples=len(words), epochs=model.epochs)
+            return model
+
+        def load_native():
+            path = datapath('toy-model.bin')
+            model = FT_gensim.load_fasttext_format(path)
+            # model.build_vocab(common_texts, update=True)  # this doesn't work, but should. See also https://github.com/RaRe-Technologies/gensim/issues/2139
+            return model
+
+        trained = train_gensim()
+        native = load_native()
+
+        #
+        # For now, having this test not crash is good enough.
+        #
+
+
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
