@@ -52,6 +52,7 @@ from collections import defaultdict, Counter
 from numpy import random as np_random
 from scipy.stats import spearmanr
 from six import string_types
+from six.moves import zip, range
 from smart_open import smart_open
 
 from gensim import utils, matutils

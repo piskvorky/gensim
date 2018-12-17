@@ -36,7 +36,7 @@ from gensim import utils
 import logging
 from timeit import default_timer
 import threading
-from six.moves import xrange
+from six.moves import range
 from six import itervalues, string_types
 from gensim import matutils
 from numpy import float32 as REAL, ones, random, dtype, zeros
@@ -284,7 +284,7 @@ class BaseAny2VecModel(utils.SaveLoad):
             )
 
         # give the workers heads up that they can finish -- no more work!
-        for _ in xrange(self.workers):
+        for _ in range(self.workers):
             job_queue.put(None)
         logger.debug("job loop exiting, total %i jobs", job_no)
 
@@ -472,7 +472,7 @@ class BaseAny2VecModel(utils.SaveLoad):
             threading.Thread(
                 target=self._worker_loop,
                 args=(job_queue, progress_queue,))
-            for _ in xrange(self.workers)
+            for _ in range(self.workers)
         ]
 
         workers.append(threading.Thread(
