@@ -24,7 +24,7 @@ from scipy.linalg.special_matrices import triu
 from scipy.special import psi  # gamma function utils
 
 from six import iteritems, itervalues, string_types
-from six.moves import xrange, zip as izip
+from six.moves import zip, range
 
 
 logger = logging.getLogger(__name__)
@@ -586,7 +586,7 @@ class Sparse2Corpus(object):
             Document in BoW format.
 
         """
-        for indprev, indnow in izip(self.sparse.indptr, self.sparse.indptr[1:]):
+        for indprev, indnow in zip(self.sparse.indptr, self.sparse.indptr[1:]):
             yield list(zip(self.sparse.indices[indprev:indnow], self.sparse.data[indprev:indnow]))
 
     def __len__(self):
@@ -1516,7 +1516,7 @@ except ImportError:
 
                         # return implicit (empty) documents between previous id and new id
                         # too, to keep consistent document numbering and corpus length
-                        for previd in xrange(previd + 1, docid):
+                        for previd in range(previd + 1, docid):
                             yield previd, []
 
                         # from now on start adding fields to a new document, with a new id
@@ -1531,7 +1531,7 @@ except ImportError:
 
             # return empty documents between the last explicit document and the number
             # of documents as specified in the header
-            for previd in xrange(previd + 1, self.num_docs):
+            for previd in range(previd + 1, self.num_docs):
                 yield previd, []
 
         def docbyoffset(self, offset):

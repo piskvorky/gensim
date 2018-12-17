@@ -81,7 +81,7 @@ from gensim.models.doc2vec import Doc2Vec as NewDoc2Vec
 from gensim.models.deprecated.old_saveload import SaveLoad
 
 from gensim import matutils  # utility fnc for pickling, common scipy operations etc
-from six.moves import xrange, zip
+from six.moves import zip, range
 from six import string_types, integer_types
 
 logger = logging.getLogger(__name__)
@@ -490,7 +490,7 @@ class DocvecsArray(SaveLoad):
             self.doctag_syn0 = empty((length, model.vector_size), dtype=REAL)
             self.doctag_syn0_lockf = ones((length,), dtype=REAL)  # zeros suppress learning
 
-        for i in xrange(length):
+        for i in range(length):
             # construct deterministic seed from index AND model seed
             seed = "%d %s" % (model.seed, self.index_to_doctag(i))
             self.doctag_syn0[i] = model.seeded_vector(seed)
@@ -510,7 +510,7 @@ class DocvecsArray(SaveLoad):
         if getattr(self, 'doctag_syn0norm', None) is None or replace:
             logger.info("precomputing L2-norms of doc weight vectors")
             if replace:
-                for i in xrange(self.doctag_syn0.shape[0]):
+                for i in range(self.doctag_syn0.shape[0]):
                     self.doctag_syn0[i, :] /= sqrt((self.doctag_syn0[i, :] ** 2).sum(-1))
                 self.doctag_syn0norm = self.doctag_syn0
             else:

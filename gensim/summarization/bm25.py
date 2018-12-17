@@ -39,7 +39,7 @@ Data:
 
 import math
 from six import iteritems
-from six.moves import xrange
+from six.moves import range
 from functools import partial
 from multiprocessing import Pool
 from ..utils import effective_n_jobs
@@ -159,7 +159,7 @@ class BM25(object):
             BM25 scores.
 
         """
-        scores = [self.get_score(document, index) for index in xrange(self.corpus_size)]
+        scores = [self.get_score(document, index) for index in range(self.corpus_size)]
         return scores
 
 

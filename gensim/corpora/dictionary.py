@@ -16,8 +16,7 @@ import itertools
 from gensim import utils
 
 from six import PY3, iteritems, iterkeys, itervalues, string_types
-from six.moves import xrange
-from six.moves import zip as izip
+from six.moves import zip, range
 
 if sys.version_info[0] >= 3:
     unicode = str
@@ -466,7 +465,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         logger.debug("rebuilding dictionary, shrinking gaps")
 
         # build mapping from old id -> new id
-        idmap = dict(izip(sorted(itervalues(self.token2id)), xrange(len(self.token2id))))
+        idmap = dict(zip(sorted(itervalues(self.token2id)), range(len(self.token2id))))
 
         # reassign mappings to new ids
         self.token2id = {token: idmap[tokenid] for token, tokenid in iteritems(self.token2id)}
@@ -703,7 +702,7 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         if id2word is None:
             # make sure length(result) == get_max_id(corpus) + 1
-            result.token2id = {unicode(i): i for i in xrange(max_id + 1)}
+            result.token2id = {unicode(i): i for i in range(max_id + 1)}
         else:
             # id=>word mapping given: simply copy it
             result.token2id = {utils.to_unicode(token): idx for idx, token in iteritems(id2word)}

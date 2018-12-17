@@ -92,7 +92,7 @@ import numpy as np
 import six
 from scipy.special import gammaln, psi  # gamma function utils
 from scipy.special import polygamma
-from six.moves import xrange
+from six.moves import range
 from collections import defaultdict
 
 from gensim import interfaces, utils, matutils
@@ -567,18 +567,17 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if isinstance(prior, six.string_types):
             if prior == 'symmetric':
                 logger.info("using symmetric %s at %s", name, 1.0 / self.num_topics)
-                init_prior = np.fromiter((1.0 / self.num_topics for i in xrange(prior_shape)),
-                                         dtype=self.dtype, count=prior_shape)
+                init_prior = np.fromiter((1.0 / self.num_topics for i in range(prior_shape)),
+                    dtype=self.dtype, count=prior_shape)
             elif prior == 'asymmetric':
-                init_prior = \
-                    np.fromiter((1.0 / (i + np.sqrt(prior_shape)) for i in xrange(prior_shape)),
-                                dtype=self.dtype, count=prior_shape)
+                init_prior = np.fromiter((1.0 / (i + np.sqrt(prior_shape)) for i in range(prior_shape)),
+                    dtype=self.dtype, count=prior_shape)
                 init_prior /= init_prior.sum()
                 logger.info("using asymmetric %s %s", name, list(init_prior))
             elif prior == 'auto':
                 is_auto = True
-                init_prior = np.fromiter((1.0 / self.num_topics for i in xrange(prior_shape)),
-                                         dtype=self.dtype, count=prior_shape)
+                init_prior = np.fromiter((1.0 / self.num_topics for i in range(prior_shape)),
+                    dtype=self.dtype, count=prior_shape)
                 if name == 'alpha':
                     logger.info("using autotuned %s, starting with %s", name, list(init_prior))
             else:
@@ -588,7 +587,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         elif isinstance(prior, np.ndarray):
             init_prior = prior.astype(self.dtype, copy=False)
         elif isinstance(prior, (np.number, numbers.Real)):
-            init_prior = np.fromiter((prior for i in xrange(prior_shape)), dtype=self.dtype)
+            init_prior = np.fromiter((prior for i in range(prior_shape)), dtype=self.dtype)
         else:
             raise ValueError("%s must be either a np array of scalars, list of scalars, or scalar" % name)
 
@@ -688,7 +687,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             phinorm = np.dot(expElogthetad, expElogbetad) + eps
 
             # Iterate between gamma and phi until convergence
-            for _ in xrange(self.iterations):
+            for _ in range(self.iterations):
                 lastgamma = gammad
                 # We represent phi implicitly to save memory and time.
                 # Substituting the value of the optimal phi back into
@@ -951,7 +950,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             # initialize metrics list to store metric values after every epoch
             self.metrics = defaultdict(list)
 
-        for pass_ in xrange(passes):
+        for pass_ in range(passes):
             if self.dispatcher:
                 logger.info('initializing %s workers', self.numworkers)
                 self.dispatcher.reset(self.state)
@@ -1457,8 +1456,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         t1_size, t2_size = d1.shape[0], d2.shape[0]
         annotation_terms = None
 
-        fst_topics = [{w for (w, _) in self.show_topic(topic, topn=num_words)} for topic in xrange(t1_size)]
-        snd_topics = [{w for (w, _) in other.show_topic(topic, topn=num_words)} for topic in xrange(t2_size)]
+        fst_topics = [{w for (w, _) in self.show_topic(topic, topn=num_words)} for topic in range(t1_size)]
+        snd_topics = [{w for (w, _) in other.show_topic(topic, topn=num_words)} for topic in range(t2_size)]
 
         if distance == "jaccard":
             d1, d2 = fst_topics, snd_topics
