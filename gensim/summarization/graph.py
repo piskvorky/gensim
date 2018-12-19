@@ -319,7 +319,9 @@ class Graph(IGraph):
 
         """
         if wt == 0.0:
-            # empty edge is similar to no edge at all
+            # empty edge is similar to no edge at all or removing it
+            if self.has_edge(edge):
+                self.del_edge(edge)
             return
         if attrs is None:
             attrs = []
