@@ -41,7 +41,8 @@ from numpy import empty as empty_matrix
 from scipy.linalg import eig
 from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import eigs
-from six.moves import xrange
+from six.moves import range
+
 from gensim.utils import deprecated
 
 
@@ -97,7 +98,7 @@ def build_adjacency_matrix(graph, coeff=1):
     nodes2id = {v: i for i, v in enumerate(nodes)}
     length = len(nodes)
 
-    for i in xrange(length):
+    for i in range(length):
         current_node = nodes[i]
         neighbors = graph.neighbors(current_node)
         neighbors_sum = sum(graph.edge_weight((current_node, neighbor)) for neighbor in neighbors)
