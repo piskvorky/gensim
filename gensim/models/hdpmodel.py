@@ -57,10 +57,10 @@ import warnings
 
 import numpy as np
 from scipy.special import gammaln, psi  # gamma function utils
-from six.moves import xrange
+from six.moves import zip, range
 
 from gensim import interfaces, utils, matutils
-from gensim.matutils import dirichlet_expectation
+from gensim.matutils import dirichlet_expectation, mean_absolute_difference
 from gensim.models import basemodel, ldamodel
 
 from gensim.utils import deprecated
@@ -72,7 +72,7 @@ rhot_bound = 0.0
 
 
 def expect_log_sticks(sticks):
-    """For stick-breaking hdp, get the :math:`\mathbb{E}[log(sticks)]`.
+    r"""For stick-breaking hdp, get the :math:`\mathbb{E}[log(sticks)]`.
 
     Parameters
     ----------
@@ -97,7 +97,7 @@ def expect_log_sticks(sticks):
 
 
 def lda_e_step(doc_word_ids, doc_word_counts, alpha, beta, max_iter=100):
-    """Performs EM-iteration on a single document for calculation of likelihood for a maximum iteration of `max_iter`.
+    r"""Performs EM-iteration on a single document for calculation of likelihood for a maximum iteration of `max_iter`.
 
     Parameters
     ----------
@@ -115,7 +115,7 @@ def lda_e_step(doc_word_ids, doc_word_counts, alpha, beta, max_iter=100):
     Returns
     -------
     (numpy.ndarray, numpy.ndarray)
-        Computed (:math:`likelihood`, :math:`\\gamma`).
+        Computed (:math:`likelihood`, :math:`\gamma`).
 
     """
     gamma = np.ones(len(alpha))
@@ -123,14 +123,14 @@ def lda_e_step(doc_word_ids, doc_word_counts, alpha, beta, max_iter=100):
     betad = beta[:, doc_word_ids]
     phinorm = np.dot(expElogtheta, betad) + 1e-100
     counts = np.array(doc_word_counts)
-    for _ in xrange(max_iter):
+    for _ in range(max_iter):
         lastgamma = gamma
 
         gamma = alpha + expElogtheta * np.dot(counts / phinorm, betad.T)
         Elogtheta = dirichlet_expectation(gamma)
         expElogtheta = np.exp(Elogtheta)
         phinorm = np.dot(expElogtheta, betad) + 1e-100
-        meanchange = np.mean(abs(gamma - lastgamma))
+        meanchange = mean_absolute_difference(gamma, lastgamma)
         if meanchange < meanchangethresh:
             break
 
@@ -172,7 +172,7 @@ class SuffStats(object):
 
 
 class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
-    """`Hierarchical Dirichlet Process model <http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_
+    r"""`Hierarchical Dirichlet Process model <http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_
 
     Topic models promise to help summarize and organize large archives of texts that cannot be easily analyzed by hand.
     Hierarchical Dirichlet process (HDP) is a powerful mixed-membership model for the unsupervised analysis of grouped
@@ -194,7 +194,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     For this assume that there is a restaurant franchise (`corpus`) which has a large number of restaurants
     (`documents`, `j`) under it. They have a global menu of dishes (`topics`, :math:`\Phi_{k}`) which they serve.
     Also, a single dish (`topic`, :math:`\Phi_{k}`) is only served at a single table `t` for all the customers
-    (`words`, :math:`\\theta_{j,i}`) who sit at that table.
+    (`words`, :math:`\theta_{j,i}`) who sit at that table.
     So, when a customer enters the restaurant he/she has the choice to make where he/she wants to sit.
     He/she can choose to sit at a table where some customers are already sitting , or he/she can choose to sit
     at a new table. Here the probability of choosing each option is not same.
@@ -213,14 +213,14 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     share the same set of atoms, :math:`\Phi_{k}`, and only the atom weights :math:`\pi _{jt}` differs.
 
     There will be multiple document-level atoms :math:`\psi_{jt}` which map to the same corpus-level atom
-    :math:`\Phi_{k}`. Here, the :math:`\\beta` signify the weights given to each of the topics globally. Also, each
-    factor :math:`\\theta_{j,i}` is distributed according to :math:`G_{j}`, i.e., it takes on the value of
+    :math:`\Phi_{k}`. Here, the :math:`\beta` signify the weights given to each of the topics globally. Also, each
+    factor :math:`\theta_{j,i}` is distributed according to :math:`G_{j}`, i.e., it takes on the value of
     :math:`\Phi_{k}` with probability :math:`\pi _{jt}`. :math:`C_{j,t}` is an indicator variable whose value `k`
     signifies the index of :math:`\Phi`. This helps to map :math:`\psi_{jt}` to :math:`\Phi_{k}`.
 
-    The top level (`corpus` level) stick proportions correspond the values of :math:`\\beta`,
+    The top level (`corpus` level) stick proportions correspond the values of :math:`\beta`,
     bottom level (`document` level) stick proportions correspond to the values of :math:`\pi`.
-    The truncation level for the corpus (`K`) and document (`T`) corresponds to the number of :math:`\\beta`
+    The truncation level for the corpus (`K`) and document (`T`) corresponds to the number of :math:`\beta`
     and :math:`\pi` which are in existence.
 
     Now, whenever coordinate ascent updates are to be performed, they happen at two level. The document level as well
@@ -228,7 +228,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     At document level, we update the following:
 
-    #. The parameters to the document level sticks, i.e, a and b parameters of :math:`\\beta` distribution of the
+    #. The parameters to the document level sticks, i.e, a and b parameters of :math:`\beta` distribution of the
        variable :math:`\pi _{jt}`.
     #. The parameters to per word topic indicators, :math:`Z_{j,n}`. Here :math:`Z_{j,n}` selects topic parameter
        :math:`\psi_{jt}`.
@@ -236,8 +236,8 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     At corpus level, we update the following:
 
-    #. The parameters to the top level sticks, i.e., the parameters of the :math:`\\beta` distribution for the
-       corpus level :math:`\\beta`, which signify the topic distribution at corpus level.
+    #. The parameters to the top level sticks, i.e., the parameters of the :math:`\beta` distribution for the
+       corpus level :math:`\beta`, which signify the topic distribution at corpus level.
     #. The parameters to the topics :math:`\Phi_{k}`.
 
     Now coming on to the steps involved, procedure for online variational inference for the Hdp model is as follows:
@@ -261,14 +261,14 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     Attributes
     ----------
     lda_alpha : numpy.ndarray
-        Same as :math:`\\alpha` from :class:`gensim.models.ldamodel.LdaModel`.
+        Same as :math:`\alpha` from :class:`gensim.models.ldamodel.LdaModel`.
     lda_beta : numpy.ndarray
-        Same as :math:`\\beta` from from :class:`gensim.models.ldamodel.LdaModel`.
+        Same as :math:`\beta` from from :class:`gensim.models.ldamodel.LdaModel`.
     m_D : int
         Number of documents in the corpus.
     m_Elogbeta : numpy.ndarray:
-        Stores value of dirichlet expectation, i.e., compute :math:`E[log \\theta]` for a vector
-        :math:`\\theta \sim Dir(\\alpha)`.
+        Stores value of dirichlet expectation, i.e., compute :math:`E[log \theta]` for a vector
+        :math:`\theta \sim Dir(\alpha)`.
     m_lambda : {numpy.ndarray, float}
         Drawn samples from the parameterized gamma distribution.
     m_lambda_sum : {numpy.ndarray, float}
@@ -280,7 +280,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     m_rhot : float
         Assigns weight to the information obtained from the mini-chunk and its value it between 0 and 1.
     m_status_up_to_date : bool
-        Flag to indicate whether `lambda `and :math:`E[log \\theta]` have been updated if True, otherwise - not.
+        Flag to indicate whether `lambda `and :math:`E[log \theta]` have been updated if True, otherwise - not.
     m_timestamp : numpy.ndarray
         Helps to keep track and perform lazy updates on lambda.
     m_updatect : int
@@ -510,13 +510,13 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         return (
             # chunk limit reached
-            (self.max_chunks and chunks_processed == self.max_chunks) or
+            (self.max_chunks and chunks_processed == self.max_chunks)
 
             # time limit reached
-            (self.max_time and time.clock() - start_time > self.max_time) or
+            or (self.max_time and time.clock() - start_time > self.max_time)
 
             # no limits and whole corpus has been processed once
-            (not self.max_chunks and not self.max_time and docs_processed >= self.m_D))
+            or (not self.max_chunks and not self.max_time and docs_processed >= self.m_D))
 
     def update_chunk(self, chunk, update=True, opt_o=True):
         """Performs lazy update on necessary columns of lambda and variational inference for documents in the chunk.
@@ -740,7 +740,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         print out the topics we've learned we'll get the correct behavior.
 
         """
-        for w in xrange(self.m_W):
+        for w in range(self.m_W):
             self.m_lambda[:, w] *= np.exp(self.m_r[-1] - self.m_r[self.m_timestamp[w]])
         self.m_Elogbeta = \
             psi(self.m_eta + self.m_lambda) - psi(self.m_W * self.m_eta + self.m_lambda_sum[:, np.newaxis])
@@ -889,7 +889,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         sticks = self.m_var_sticks[0] / (self.m_var_sticks[0] + self.m_var_sticks[1])
         alpha = np.zeros(self.m_T)
         left = 1.0
-        for i in xrange(0, self.m_T - 1):
+        for i in range(0, self.m_T - 1):
             alpha[i] = sticks[i] * left
             left = left - alpha[i]
         alpha[self.m_T - 1] = left
@@ -1042,16 +1042,14 @@ class HdpTopicFormatter(object):
 
         """
         shown = []
-        if num_topics < 0:
-            num_topics = len(self.data)
-
+        num_topics = max(num_topics, 0)
         num_topics = min(num_topics, len(self.data))
 
-        for k in xrange(num_topics):
-            lambdak = list(self.data[k, :])
-            lambdak = lambdak / sum(lambdak)
+        for k in range(num_topics):
+            lambdak = self.data[k, :]
+            lambdak = lambdak / lambdak.sum()
 
-            temp = zip(lambdak, xrange(len(lambdak)))
+            temp = zip(lambdak, range(len(lambdak)))
             temp = sorted(temp, key=lambda x: x[0], reverse=True)
 
             topic_terms = self.show_topic_terms(temp, num_words)
@@ -1131,10 +1129,10 @@ class HdpTopicFormatter(object):
             )
             topn = num_words
 
-        lambdak = list(self.data[topic_id, :])
-        lambdak = lambdak / sum(lambdak)
+        lambdak = self.data[topic_id, :]
+        lambdak = lambdak / lambdak.sum()
 
-        temp = zip(lambdak, xrange(len(lambdak)))
+        temp = zip(lambdak, range(len(lambdak)))
         temp = sorted(temp, key=lambda x: x[0], reverse=True)
 
         topic_terms = self.show_topic_terms(temp, topn)
@@ -1186,9 +1184,9 @@ class HdpTopicFormatter(object):
 
         """
         if self.STYLE_GENSIM == self.style:
-            fmt = ' + '.join(['%.3f*%s' % (weight, word) for (word, weight) in topic_terms])
+            fmt = ' + '.join('%.3f*%s' % (weight, word) for (word, weight) in topic_terms)
         else:
-            fmt = '\n'.join(['    %20s    %.8f' % (word, weight) for (word, weight) in topic_terms])
+            fmt = '\n'.join('    %20s    %.8f' % (word, weight) for (word, weight) in topic_terms)
 
         fmt = (topic_id, fmt)
         return fmt

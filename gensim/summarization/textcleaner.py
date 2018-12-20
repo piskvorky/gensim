@@ -23,7 +23,7 @@ Data
 from gensim.summarization.syntactic_unit import SyntacticUnit
 from gensim.parsing.preprocessing import preprocess_documents
 from gensim.utils import tokenize
-from six.moves import xrange
+from six.moves import range
 import re
 import logging
 
@@ -201,7 +201,7 @@ def merge_syntactic_units(original_units, filtered_units, tags=None):
 
     """
     units = []
-    for i in xrange(len(original_units)):
+    for i in range(len(original_units)):
         if filtered_units[i] == '':
             continue
 

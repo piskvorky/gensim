@@ -5,7 +5,7 @@
 # Copyright (C) 2018 RaRe Technologies s.r.o.
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""This module contains base classes required for implementing \*2vec algorithms.
+r"""This module contains base classes required for implementing \*2vec algorithms.
 
 The class hierarchy is designed to facilitate adding more concrete implementations for creating embeddings.
 In the most general case, the purpose of this class is to transform an arbitrary representation to a numerical vector
@@ -36,7 +36,7 @@ from gensim import utils
 import logging
 from timeit import default_timer
 import threading
-from six.moves import xrange
+from six.moves import range
 from six import itervalues, string_types
 from gensim import matutils
 from numpy import float32 as REAL, ones, random, dtype, zeros
@@ -56,7 +56,7 @@ logger = logging.getLogger(__name__)
 
 
 class BaseAny2VecModel(utils.SaveLoad):
-    """Base class for training, using and evaluating \*2vec model.
+    r"""Base class for training, using and evaluating \*2vec model.
 
     Contains implementation for multi-threaded training. The purpose of this class is to provide a
     reference interface for concrete embedding implementations, whether the input space is a corpus
@@ -284,7 +284,7 @@ class BaseAny2VecModel(utils.SaveLoad):
             )
 
         # give the workers heads up that they can finish -- no more work!
-        for _ in xrange(self.workers):
+        for _ in range(self.workers):
             job_queue.put(None)
         logger.debug("job loop exiting, total %i jobs", job_no)
 
@@ -472,7 +472,7 @@ class BaseAny2VecModel(utils.SaveLoad):
             threading.Thread(
                 target=self._worker_loop,
                 args=(job_queue, progress_queue,))
-            for _ in xrange(self.workers)
+            for _ in range(self.workers)
         ]
 
         workers.append(threading.Thread(

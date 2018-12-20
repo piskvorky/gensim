@@ -26,7 +26,7 @@ import numpy
 import scipy.sparse as sparse
 import time
 
-from six.moves import xrange
+from six.moves import range
 
 import gensim
 from gensim.corpora import IndexedCorpus
@@ -432,7 +432,7 @@ class ShardedCorpus(IndexedCorpus):
         new_shard_names = []
         new_offsets = [0]
 
-        for new_shard_idx in xrange(n_new_shards):
+        for new_shard_idx in range(n_new_shards):
             new_start = shardsize * new_shard_idx
             new_stop = new_start + shardsize
 
@@ -461,7 +461,7 @@ class ShardedCorpus(IndexedCorpus):
 
         # Move old shard files out, new ones in. Complicated due to possibility
         # of exceptions.
-        old_shard_names = [self._shard_name(n) for n in xrange(self.n_shards)]
+        old_shard_names = [self._shard_name(n) for n in range(self.n_shards)]
         try:
             for old_shard_n, old_shard_name in enumerate(old_shard_names):
                 os.remove(old_shard_name)
@@ -644,7 +644,7 @@ class ShardedCorpus(IndexedCorpus):
             s_result = self.__add_to_slice(s_result, result_start, result_stop, shard_start, shard_stop)
 
             # First and last get special treatment, these are in between
-            for shard_n in xrange(first_shard + 1, last_shard):
+            for shard_n in range(first_shard + 1, last_shard):
                 self.load_shard(shard_n)
 
                 result_start = result_stop
@@ -735,7 +735,7 @@ class ShardedCorpus(IndexedCorpus):
             g_row = [(col_idx, csr_matrix[row_idx, col_idx]) for col_idx in indices]
             return g_row
 
-        output = (row_sparse2gensim(i, result) for i in xrange(result.shape[0]))
+        output = (row_sparse2gensim(i, result) for i in range(result.shape[0]))
 
         return output
 
@@ -745,7 +745,7 @@ class ShardedCorpus(IndexedCorpus):
             output = gensim.matutils.full2sparse(result)
         else:
             output = (gensim.matutils.full2sparse(result[i])
-                      for i in xrange(result.shape[0]))
+                      for i in range(result.shape[0]))
         return output
 
     # Overriding the IndexedCorpus and other corpus superclass methods
@@ -754,7 +754,7 @@ class ShardedCorpus(IndexedCorpus):
         Yield dataset items one by one (generator).
 
         """
-        for i in xrange(len(self)):
+        for i in range(len(self)):
             yield self[i]
 
     def save(self, *args, **kwargs):
@@ -766,13 +766,12 @@ class ShardedCorpus(IndexedCorpus):
         """
         # Can we save to a different file than output_prefix? Well, why not?
         if len(args) == 0:
-            args = tuple([self.output_prefix])
+            args = (self.output_prefix,)
 
         attrs_to_ignore = ['current_shard', 'current_shard_n', 'current_offset']
-        if 'ignore' not in kwargs:
-            kwargs['ignore'] = frozenset(attrs_to_ignore)
-        else:
-            kwargs['ignore'] = frozenset([v for v in kwargs['ignore']] + attrs_to_ignore)
+        if 'ignore' in kwargs:
+            attrs_to_ignore.extend(kwargs['ignore'])
+        kwargs['ignore'] = frozenset(attrs_to_ignore)
         super(ShardedCorpus, self).save(*args, **kwargs)
 
     @classmethod

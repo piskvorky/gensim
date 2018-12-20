@@ -81,7 +81,7 @@ from gensim.utils import call_on_class_only
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.models.word2vec import Word2VecKeyedVectors, Word2VecVocab, Word2VecTrainables, train_cbow_pair,\
     train_sg_pair, train_batch_sg
-from six.moves import xrange
+from six.moves import range
 from six import string_types, integer_types, itervalues
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 from gensim.models.keyedvectors import Doc2VecKeyedVectors
@@ -227,8 +227,8 @@ except ImportError:
         if doctag_locks is None:
             doctag_locks = model.docvecs.doctag_syn0_lockf
 
-        word_vocabs = [model.wv.vocab[w] for w in doc_words if w in model.wv.vocab and
-                       model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
+        word_vocabs = [model.wv.vocab[w] for w in doc_words if w in model.wv.vocab
+                       and model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
 
         for pos, word in enumerate(word_vocabs):
             reduced_window = model.random.randint(model.window)  # `b` in the original doc2vec code
@@ -314,8 +314,8 @@ except ImportError:
         if doctag_locks is None:
             doctag_locks = model.docvecs.doctag_syn0_lockf
 
-        word_vocabs = [model.wv.vocab[w] for w in doc_words if w in model.wv.vocab and
-                       model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
+        word_vocabs = [model.wv.vocab[w] for w in doc_words if w in model.wv.vocab
+                       and model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
         doctag_len = len(doctag_indexes)
         if doctag_len != model.dm_tag_count:
             return 0  # skip doc without expected number of doctag(s) (TODO: warn/pad?)
@@ -1450,7 +1450,7 @@ class Doc2VecTrainables(Word2VecTrainables):
             docvecs.vectors_docs = empty((length, docvecs.vector_size), dtype=REAL)
             self.vectors_docs_lockf = ones((length,), dtype=REAL)  # zeros suppress learning
 
-        for i in xrange(length):
+        for i in range(length):
             # construct deterministic seed from index AND model seed
             seed = "%d %s" % (
                 self.seed, Doc2VecKeyedVectors._index_to_doctag(i, docvecs.offset2doctag, docvecs.max_rawint))
