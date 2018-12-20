@@ -64,9 +64,9 @@ class TestLdaCallback(unittest.TestCase):
 
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
-        self.ch_umass = CoherenceMetric(corpus=self.corpus, 
-                                        coherence="u_mass", 
-                                        logger="visdom", 
+        self.ch_umass = CoherenceMetric(corpus=self.corpus,
+                                        coherence="u_mass",
+                                        logger="visdom",
                                         title="Coherence (u_mass)")
         self.callback = [self.ch_umass]
         self.class_ = ldamodel.LdaModel
