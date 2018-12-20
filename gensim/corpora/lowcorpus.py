@@ -14,7 +14,6 @@ from collections import Counter
 
 from gensim import utils
 from gensim.corpora import IndexedCorpus
-from six import iterkeys
 from six.moves import zip, range
 
 
