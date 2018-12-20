@@ -34,13 +34,20 @@ DEFAULT_HOSTNAME = "http://localhost"
 ##########
 # use easydict if argparse doesn't work
 ##########
-import easydict
+# import easydict
 
-FLAGS = easydict.EasyDict({
-        'port': DEFAULT_PORT,
-        'server': DEFAULT_HOSTNAME
-})
+# FLAGS = easydict.EasyDict({
+#         'port': DEFAULT_PORT,
+#         'server': DEFAULT_HOSTNAME
+# })
 
+
+class ARGS():
+    def __init__(self, port=DEFAULT_PORT, server=DEFAULT_HOSTNAME):
+        self.port = port
+        self.server = server
+
+FLAGS = ARGS()
 
 class TestVisdomAPI(unittest.TestCase):
 
