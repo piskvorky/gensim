@@ -17,7 +17,7 @@ from gensim.corpora import mmcorpus, Dictionary
 from gensim.models.callbacks import CoherenceMetric
 
 from visdom import Visdom
-import numpy as np
+# import numpy as np
 import subprocess
 import time
 
@@ -53,6 +53,7 @@ class ARGS():
         self.port = port
         self.server = server
 
+
 FLAGS = ARGS()
 
 
@@ -63,7 +64,10 @@ class TestLdaCallback(unittest.TestCase):
 
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
-        self.ch_umass = CoherenceMetric(corpus=self.corpus, coherence="u_mass", logger="visdom", title="Coherence (u_mass)")
+        self.ch_umass = CoherenceMetric(corpus=self.corpus, 
+                                        coherence="u_mass", 
+                                        logger="visdom", 
+                                        title="Coherence (u_mass)")
         self.callback = [self.ch_umass]
         self.class_ = ldamodel.LdaModel
         self.model = self.class_(id2word=dictionary, num_topics=2, passes=10, callbacks=self.callback)
@@ -135,7 +139,7 @@ class TestLdaCallback(unittest.TestCase):
         # test callback's update graph function
         try:
             self.model.update(self.corpus)
-            #raise AttributeError("test")
+            # raise AttributeError("test")
         except Exception as e:
             print(e)
             # kill visdom.server
@@ -155,6 +159,6 @@ class TestLdaCallback(unittest.TestCase):
         proc.kill()
         print('server killed')
 
+
 if __name__ == '__main__':
     unittest.main()
-
