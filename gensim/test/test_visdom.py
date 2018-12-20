@@ -21,25 +21,25 @@ DEFAULT_HOSTNAME = "http://localhost"
 ##########
 # use argparse to parse commandline arguments
 ##########
-import argparse
+# import argparse
 
-parser = argparse.ArgumentParser(description='Demo arguments')
-parser.add_argument('-port', metavar='port', type=int, default=DEFAULT_PORT,
-                    help='port the visdom server is running on.')
-parser.add_argument('-server', metavar='server', type=str,
-                    default=DEFAULT_HOSTNAME,
-                    help='Server address of the target to run the demo on.')
-FLAGS = parser.parse_args()
+# parser = argparse.ArgumentParser(description='Demo arguments')
+# parser.add_argument('-port', metavar='port', type=int, default=DEFAULT_PORT,
+#                     help='port the visdom server is running on.')
+# parser.add_argument('-server', metavar='server', type=str,
+#                     default=DEFAULT_HOSTNAME,
+#                     help='Server address of the target to run the demo on.')
+# FLAGS = parser.parse_args()
 
 ##########
 # use easydict if argparse doesn't work
 ##########
-# import easydict
-#
-# FLAGS = easydict.EasyDict({
-#         'port': DEFAULT_PORT,
-#         'server': DEFAULT_HOSTNAME
-# })
+import easydict
+
+FLAGS = easydict.EasyDict({
+        'port': DEFAULT_PORT,
+        'server': DEFAULT_HOSTNAME
+})
 
 
 class TestVisdomAPI(unittest.TestCase):
