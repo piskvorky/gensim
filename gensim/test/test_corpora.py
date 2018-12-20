@@ -726,7 +726,7 @@ class TestWikiCorpus(TestTextCorpus):
             return False
         corpus = self.corpus_class(self.enwiki, filter_articles=reject_all)
         texts = corpus.get_texts()
-        self.assertTrue(all([not t for t in texts]))
+        self.assertFalse(any(texts))
 
         def keep_some(elem, title, *args, **kwargs):
             return title[0] == 'C'
@@ -847,7 +847,7 @@ class TestTextDirectoryCorpus(unittest.TestCase):
 
         corpus = textcorpus.TextDirectoryCorpus(dirpath)
         filenames = list(corpus.iter_filepaths())
-        base_names = sorted([name[len(dirpath) + 1:] for name in filenames])
+        base_names = sorted(name[len(dirpath) + 1:] for name in filenames)
         expected = sorted([
             '0.txt',
             'a_folder/1.txt',
