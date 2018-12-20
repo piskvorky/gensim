@@ -111,7 +111,7 @@ class TestLdaMallet(unittest.TestCase, basetmtests.TestBaseTopicModel):
 
     def testMallet2ModelOn20NewsGroups(self):
         # select five quite distinct categories from the 20 newsgroups
-        cat = ['soc.religion.christian', 'comp.graphics', 'rec.motorcycles', 
+        cat = ['soc.religion.christian', 'comp.graphics', 'rec.motorcycles',
             'sci.space', 'talk.politics.guns']
 
         # keep and use only the main text
@@ -123,7 +123,7 @@ class TestLdaMallet(unittest.TestCase, basetmtests.TestBaseTopicModel):
         corpus = [dictionary.doc2bow(text) for text in tokenized]
 
         lda_mallet_model = ldamallet.LdaMallet(
-            self.mallet_path, corpus=corpus, 
+            self.mallet_path, corpus=corpus,
             num_topics=5, id2word=dictionary, iterations=1000)
 
         lda_gensim_model = ldamallet.malletmodel2ldamodel(lda_mallet_model, iterations=1000)
