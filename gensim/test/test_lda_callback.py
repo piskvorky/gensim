@@ -143,12 +143,17 @@ class TestLdaCallback(unittest.TestCase):
             print('server killed')
             self.assertTrue(0)
 
+        # # kill visdom.server
+        # try:
+        #     proc.wait(timeout=3)
+        # except subprocess.TimeoutExpired:
+        #     proc.kill()
+        #     print('server killed')
+
         # kill visdom.server
-        try:
-            proc.wait(timeout=3)
-        except subprocess.TimeoutExpired:
-            proc.kill()
-            print('server killed')
+        time.sleep(3)
+        proc.kill()
+        print('server killed')
 
 if __name__ == '__main__':
     unittest.main()
