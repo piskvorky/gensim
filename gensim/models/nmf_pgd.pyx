@@ -9,13 +9,17 @@
 cimport cython
 from libc.math cimport sqrt, fabs, copysign
 from cython.parallel import prange
-import numpy as np
 
 cdef double fmin(double x, double y) nogil:
     return x if x < y else y
 
 cdef double fmax(double x, double y) nogil:
     return x if x > y else y
+
+cdef double clip(double a, double a_min, double a_max) nogil:
+    a = fmin(a, a_max)
+    a = fmax(a, a_min)
+    return a
 
 def solve_h(double[:, ::1] h, double[:, :] Wt_v_minus_r, double[:, ::1] WtW, double kappa):
     """Find optimal dense vector representation for current W and r matrices.
@@ -62,12 +66,8 @@ def solve_h(double[:, ::1] h, double[:, :] Wt_v_minus_r, double[:, ::1] WtW, dou
     return sqrt(violation)
 
 def solve_r(
-        int[::1] r_indptr,
-        int[::1] r_indices,
-        double[::1] r_data,
-        int[::1] r_actual_indptr,
-        int[::1] r_actual_indices,
-        double[::1] r_actual_data,
+        r,
+        r_actual,
         double lambda_,
         double v_max
     ):
@@ -75,12 +75,8 @@ def solve_r(
 
     Parameters
     ----------
-    r_indptr : vector
-    r_indices : vector
-    r_data : vector
-    r_actual_indptr : vector
-    r_actual_indices : vector
-    r_actual_data : vector
+    r: sparse matrix
+    r_actual: sparse matrix
     lambda_ : double
     v_max : double
 
@@ -90,135 +86,80 @@ def solve_r(
         Cumulative difference between previous and current residuals vectors.
     """
 
-    cdef Py_ssize_t n_samples = r_actual_indptr.shape[0] - 1
-    cdef double violation = 0
-    cdef double r_actual_sign = 1.0
-    cdef Py_ssize_t sample_idx
+    cdef int[::1] r_indptr = r.indptr
+    cdef int[::1] r_indices = r.indices
+    cdef double[::1] r_data = r.data
+    cdef int[::1] r_actual_indptr = r_actual.indptr
+    cdef int[::1] r_actual_indices = r_actual.indices
+    cdef double[::1] r_actual_data = r_actual.data
 
     cdef Py_ssize_t r_col_size = 0
     cdef Py_ssize_t r_actual_col_size = 0
-    cdef Py_ssize_t r_col_idx_idx = 0
-    cdef Py_ssize_t r_actual_col_idx_idx
+    cdef Py_ssize_t r_col_indptr
+    cdef Py_ssize_t r_actual_col_indptr
+    cdef Py_ssize_t r_col_idx
+    cdef Py_ssize_t r_actual_col_idx
+    cdef double* r_element
+    cdef double* r_actual_element
 
-    cdef Py_ssize_t [:] r_col_indices = np.zeros(n_samples, dtype=np.intp)
-    cdef Py_ssize_t [:] r_actual_col_indices = np.zeros(n_samples, dtype=np.intp)
+    cdef double r_actual_sign = 1.0
+
+    cdef Py_ssize_t n_samples = r_actual_indptr.shape[0] - 1
+    cdef Py_ssize_t sample_idx
+
+    cdef double violation = 0
 
     for sample_idx in prange(n_samples, nogil=True):
         r_col_size = r_indptr[sample_idx + 1] - r_indptr[sample_idx]
         r_actual_col_size = r_actual_indptr[sample_idx + 1] - r_actual_indptr[sample_idx]
 
-        r_col_indices[sample_idx] = 0
-        r_actual_col_indices[sample_idx] = 0
+        r_col_idx = 0
+        r_actual_col_idx = 0
 
-        while r_col_indices[sample_idx] < r_col_size or r_actual_col_indices[sample_idx] < r_actual_col_size:
-            r_col_idx_idx = r_indices[
+        while r_col_idx < r_col_size or r_actual_col_idx < r_actual_col_size:
+            r_col_indptr = r_indices[
                 r_indptr[sample_idx]
-                + r_col_indices[sample_idx]
+                + r_col_idx
             ]
-            r_actual_col_idx_idx = r_actual_indices[
+            r_actual_col_indptr = r_actual_indices[
                 r_actual_indptr[sample_idx]
-                + r_actual_col_indices[sample_idx]
+                + r_actual_col_idx
             ]
 
-            if r_col_idx_idx >= r_actual_col_idx_idx:
-                r_actual_sign = copysign(
-                    r_actual_sign,
-                    r_actual_data[
-                        r_actual_indptr[sample_idx]
-                        + r_actual_col_indices[sample_idx]
-                    ]
-                )
+            r_element = &r_data[
+                r_indptr[sample_idx]
+                + r_col_idx
+            ]
+            r_actual_element = &r_actual_data[
+                r_actual_indptr[sample_idx]
+                + r_actual_col_idx
+            ]
 
-                r_actual_data[
-                    r_actual_indptr[sample_idx]
-                    + r_actual_col_indices[sample_idx]
-                ] = fabs(
-                    r_actual_data[
-                        r_actual_indptr[sample_idx]
-                        + r_actual_col_indices[sample_idx]
-                    ]
-                ) - lambda_
+            if r_col_indptr >= r_actual_col_indptr:
+                r_actual_sign = copysign(r_actual_sign, r_actual_element[0])
 
-                r_actual_data[
-                    r_actual_indptr[sample_idx]
-                    + r_actual_col_indices[sample_idx]
-                ] = fmax(
-                    r_actual_data[
-                        r_actual_indptr[sample_idx]
-                        + r_actual_col_indices[sample_idx]
-                    ],
-                    0
-                )
+                r_actual_element[0] = fabs(r_actual_element[0]) - lambda_
+                r_actual_element[0] = fmax(r_actual_element[0], 0)
 
-                if (
-                        r_actual_data[
-                            r_actual_indptr[sample_idx]
-                            + r_actual_col_indices[sample_idx]
-                        ] != 0
-                ):
-                    r_actual_data[
-                        r_actual_indptr[sample_idx]
-                        + r_actual_col_indices[sample_idx]
-                    ] = copysign(
-                        r_actual_data[
-                            r_actual_indptr[sample_idx]
-                            + r_actual_col_indices[sample_idx]
-                        ],
-                        r_actual_sign
-                    )
+                if r_actual_element[0] != 0:
+                    r_actual_element[0] = copysign(r_actual_element[0], r_actual_sign)
+                    r_actual_element[0] = clip(r_actual_element[0], -v_max, v_max)
 
-                    r_actual_data[
-                        r_actual_indptr[sample_idx]
-                        + r_actual_col_indices[sample_idx]
-                    ] = fmax(
-                        r_actual_data[
-                            r_actual_indptr[sample_idx]
-                            + r_actual_col_indices[sample_idx]
-                        ],
-                        -v_max
-                    )
-
-                    r_actual_data[
-                        r_actual_indptr[sample_idx]
-                        + r_actual_col_indices[sample_idx]
-                    ] = fmin(
-                        r_actual_data[
-                            r_actual_indptr[sample_idx]
-                            + r_actual_col_indices[sample_idx]
-                        ],
-                        v_max
-                    )
-
-                if r_col_idx_idx == r_actual_col_idx_idx:
-                    violation += (
-                        r_data[
-                            r_indptr[sample_idx]
-                            + r_col_indices[sample_idx]
-                        ]
-                        - r_actual_data[
-                            r_actual_indptr[sample_idx]
-                            + r_actual_col_indices[sample_idx]
-                        ]
-                    ) ** 2
+                if r_col_indptr == r_actual_col_indptr:
+                    violation += (r_element[0] - r_actual_element[0]) ** 2
                 else:
-                    violation += r_actual_data[
-                        r_actual_indptr[sample_idx]
-                        + r_actual_col_indices[sample_idx]
-                    ] ** 2
+                    violation += r_actual_element[0] ** 2
 
-                if r_actual_col_indices[sample_idx] < r_actual_col_size:
-                    r_actual_col_indices[sample_idx] += 1
+                if r_actual_col_idx < r_actual_col_size:
+                    r_actual_col_idx = r_actual_col_idx + 1
                 else:
-                    r_col_indices[sample_idx] += 1
+                    r_col_idx = r_col_idx + 1
             else:
-                violation += r_data[
-                    r_indptr[sample_idx]
-                    + r_col_indices[sample_idx]
-                ] ** 2
+                violation += r_element[0] ** 2
 
-                if r_col_indices[sample_idx] < r_col_size:
-                    r_col_indices[sample_idx] += 1
+                if r_col_idx < r_col_size:
+                    r_col_idx = r_col_idx + 1
                 else:
-                    r_actual_col_indices[sample_idx] += 1
+                    r_actual_col_idx = r_actual_col_idx + 1
 
     return sqrt(violation)

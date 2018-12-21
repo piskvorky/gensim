@@ -315,15 +315,16 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         values = []
 
+        word_topics = self._W[word_id]
+
+        if self.normalize:
+            word_topics /= word_topics.sum()
+
         for topic_id in range(0, self.num_topics):
-            word_coef = self._W[word_id, topic_id]
+            word_coef = word_topics[topic_id]
 
             if word_coef >= minimum_probability:
                 values.append((topic_id, word_coef))
-
-        if self.normalize:
-            factor_sum = sum(factor for topic_id, factor in values)
-            values = [(topic_id, factor / factor_sum) for topic_id, factor in values]
 
         return values
 
@@ -600,7 +601,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         for iter_number in range(self._h_r_max_iter):
             logger.debug("h_r_error: %s" % _h_r_error)
 
-            error_ = 0
+            error_ = 0.
 
             Wt_v_minus_r = W.T.dot(v - r)
 
@@ -614,16 +615,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 r_actual = v - W.dot(h)
                 error_ = max(
                     error_,
-                    solve_r(
-                        r.indptr,
-                        r.indices,
-                        r.data,
-                        r_actual.indptr,
-                        r_actual.indices,
-                        r_actual.data,
-                        self._lambda_,
-                        self.v_max,
-                    ),
+                    solve_r(r, r_actual, self._lambda_, self.v_max)
                 )
                 r = r_actual
 
