@@ -57,10 +57,10 @@ import warnings
 
 import numpy as np
 from scipy.special import gammaln, psi  # gamma function utils
-from six.moves import xrange
+from six.moves import zip, range
 
 from gensim import interfaces, utils, matutils
-from gensim.matutils import dirichlet_expectation
+from gensim.matutils import dirichlet_expectation, mean_absolute_difference
 from gensim.models import basemodel, ldamodel
 
 from gensim.utils import deprecated
@@ -123,14 +123,14 @@ def lda_e_step(doc_word_ids, doc_word_counts, alpha, beta, max_iter=100):
     betad = beta[:, doc_word_ids]
     phinorm = np.dot(expElogtheta, betad) + 1e-100
     counts = np.array(doc_word_counts)
-    for _ in xrange(max_iter):
+    for _ in range(max_iter):
         lastgamma = gamma
 
         gamma = alpha + expElogtheta * np.dot(counts / phinorm, betad.T)
         Elogtheta = dirichlet_expectation(gamma)
         expElogtheta = np.exp(Elogtheta)
         phinorm = np.dot(expElogtheta, betad) + 1e-100
-        meanchange = np.mean(abs(gamma - lastgamma))
+        meanchange = mean_absolute_difference(gamma, lastgamma)
         if meanchange < meanchangethresh:
             break
 
@@ -740,7 +740,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         print out the topics we've learned we'll get the correct behavior.
 
         """
-        for w in xrange(self.m_W):
+        for w in range(self.m_W):
             self.m_lambda[:, w] *= np.exp(self.m_r[-1] - self.m_r[self.m_timestamp[w]])
         self.m_Elogbeta = \
             psi(self.m_eta + self.m_lambda) - psi(self.m_W * self.m_eta + self.m_lambda_sum[:, np.newaxis])
@@ -889,7 +889,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         sticks = self.m_var_sticks[0] / (self.m_var_sticks[0] + self.m_var_sticks[1])
         alpha = np.zeros(self.m_T)
         left = 1.0
-        for i in xrange(0, self.m_T - 1):
+        for i in range(0, self.m_T - 1):
             alpha[i] = sticks[i] * left
             left = left - alpha[i]
         alpha[self.m_T - 1] = left
@@ -1042,16 +1042,14 @@ class HdpTopicFormatter(object):
 
         """
         shown = []
-        if num_topics < 0:
-            num_topics = len(self.data)
-
+        num_topics = max(num_topics, 0)
         num_topics = min(num_topics, len(self.data))
 
-        for k in xrange(num_topics):
-            lambdak = list(self.data[k, :])
-            lambdak = lambdak / sum(lambdak)
+        for k in range(num_topics):
+            lambdak = self.data[k, :]
+            lambdak = lambdak / lambdak.sum()
 
-            temp = zip(lambdak, xrange(len(lambdak)))
+            temp = zip(lambdak, range(len(lambdak)))
             temp = sorted(temp, key=lambda x: x[0], reverse=True)
 
             topic_terms = self.show_topic_terms(temp, num_words)
@@ -1131,10 +1129,10 @@ class HdpTopicFormatter(object):
             )
             topn = num_words
 
-        lambdak = list(self.data[topic_id, :])
-        lambdak = lambdak / sum(lambdak)
+        lambdak = self.data[topic_id, :]
+        lambdak = lambdak / lambdak.sum()
 
-        temp = zip(lambdak, xrange(len(lambdak)))
+        temp = zip(lambdak, range(len(lambdak)))
         temp = sorted(temp, key=lambda x: x[0], reverse=True)
 
         topic_terms = self.show_topic_terms(temp, topn)
@@ -1186,9 +1184,9 @@ class HdpTopicFormatter(object):
 
         """
         if self.STYLE_GENSIM == self.style:
-            fmt = ' + '.join(['%.3f*%s' % (weight, word) for (word, weight) in topic_terms])
+            fmt = ' + '.join('%.3f*%s' % (weight, word) for (word, weight) in topic_terms)
         else:
-            fmt = '\n'.join(['    %20s    %.8f' % (word, weight) for (word, weight) in topic_terms])
+            fmt = '\n'.join('    %20s    %.8f' % (word, weight) for (word, weight) in topic_terms)
 
         fmt = (topic_id, fmt)
         return fmt

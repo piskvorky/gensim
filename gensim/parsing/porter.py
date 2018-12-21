@@ -29,7 +29,7 @@ Examples:
 """
 
 
-from six.moves import xrange
+from six.moves import range
 
 
 class PorterStemmer(object):
@@ -160,7 +160,7 @@ class PorterStemmer(object):
             True
 
         """
-        return not all(self._cons(i) for i in xrange(self.j + 1))
+        return not all(self._cons(i) for i in range(self.j + 1))
 
     def _doublec(self, j):
         """Check if b[j - 1: j + 1] contain a double consonant letter.

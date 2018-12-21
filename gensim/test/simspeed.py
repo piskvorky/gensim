@@ -119,7 +119,7 @@ if __name__ == '__main__':
             unchunksizeed = sims
         else:
             queries = math.ceil(1.0 * len(corpus_dense) / chunksize)
-            diff = np.mean(np.abs(unchunksizeed - sims))
+            diff = gensim.matutils.mean_absolute_difference(unchunksizeed, sims)
             logging.info(
                 "chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s), meandiff=%.3e",
                 chunksize, taken, len(corpus_dense) / taken, queries / taken, diff
@@ -161,7 +161,7 @@ if __name__ == '__main__':
             unchunksizeed = sims
         else:
             queries = math.ceil(1.0 * len(corpus_sparse) / chunksize)
-            diff = np.mean(np.abs(unchunksizeed - sims))
+            diff = gensim.matutils.mean_absolute_difference(unchunksizeed, sims)
             logging.info(
                 "chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s), meandiff=%.3e",
                 chunksize, taken, len(corpus_sparse) / taken, queries / taken, diff
