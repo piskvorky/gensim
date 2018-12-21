@@ -42,7 +42,7 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         vec = matutils.sparse2full(transformed, 2)  # convert to dense vector, for easier equality tests
         expected = [0., 1.]
         # must contain the same values, up to re-ordering
-        self.assertTrue(np.allclose(sorted(vec), sorted(expected), atol=1e-8))
+        self.assertTrue(np.allclose(sorted(vec), sorted(expected), atol=1e-2))
 
         # transform one word
         word = 5
@@ -51,7 +51,7 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         vec = matutils.sparse2full(transformed, 2)
         expected = [0., 1.]
         # must contain the same values, up to re-ordering
-        self.assertTrue(np.allclose(sorted(vec), sorted(expected), atol=1e-8))
+        self.assertTrue(np.allclose(sorted(vec), sorted(expected), atol=1e-2))
 
     def testTopTopics(self):
         top_topics = self.model.top_topics(self.corpus)

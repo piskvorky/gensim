@@ -49,9 +49,9 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         ----------
         corpus : iterable of list of (int, float), optional
             Training corpus. If not given, model is left untrained.
-        num_topics : int
+        num_topics : int, optional
             Number of topics to extract.
-        id2word: Dict[int, str], optional
+        id2word: gensim.corpora.Dictionary, optional
             Mapping from token id to token. If not set words get replaced with word ids.
         chunksize: int, optional
             Number of documents to be used in each training chunk.
@@ -315,13 +315,13 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         values = []
 
-        word_topics = self._W[word_id]
+        word_topics = self._W.getrow(word_id)
 
         if self.normalize:
             word_topics /= word_topics.sum()
 
         for topic_id in range(0, self.num_topics):
-            word_coef = word_topics[topic_id]
+            word_coef = word_topics[0, topic_id]
 
             if word_coef >= minimum_probability:
                 values.append((topic_id, word_coef))
