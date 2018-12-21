@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
     """Online Non-Negative Matrix Factorization.
 
-    `Renbo Zhao, Vincent Y. F. Tan :"Online Nonnegative Matrix Factorization with Outliers" <https://arxiv.org/abs/1604.02634>`_
+    `Renbo Zhao et al :"Online Nonnegative Matrix Factorization with Outliers" <https://arxiv.org/abs/1604.02634>`_
 
     """
 
