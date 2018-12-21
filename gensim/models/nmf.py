@@ -32,7 +32,6 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         kappa=1.0,
         minimum_probability=0.01,
         use_r=False,
-        store_r=False,
         w_max_iter=200,
         w_stop_condition=1e-4,
         h_r_max_iter=50,
@@ -62,8 +61,6 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             to False.
         kappa : float, optional
             Optimizer step coefficient. Increaing it makes model train faster, but adds a risk that it won't converge.
-        store_r : bool, optional
-            Whether to save residuals during training.
         w_max_iter: int, optional
             Maximum number of iterations to train W matrix per each batch.
         w_stop_condition: float, optional
@@ -110,11 +107,6 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.B = None
 
         self.w_std = None
-
-        if store_r:
-            self._R = []
-        else:
-            self._R = None
 
         if corpus is not None:
             self.update(corpus)
@@ -428,8 +420,6 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     v, self._W, r=self._r, h=self._h, v_max=self.v_max
                 )
                 h, r = self._h, self._r
-                if self._R is not None:
-                    self._R.append(r)
 
                 self.A *= chunk_idx - 1
                 self.A += h.dot(h.T)
