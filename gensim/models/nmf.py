@@ -79,6 +79,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             The more it is, the more sparse are matrices. Significantly increases performance.
         random_state: {np.random.RandomState, int}, optional
             Seed for random generator. Useful for reproducibility.
+
         """
         self._w_error = None
         self.n_features = None
@@ -403,6 +404,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Whether each chunk passed to the inference step should be a numpy.ndarray or not. Numpy can in some settings
             turn the term IDs into floats, these will be converted back into integers in inference, which incurs a
             performance hit. For distributed computing it may be desirable to keep the chunks as `numpy.ndarray`.
+
         """
 
         if self.n_features is None:
@@ -567,6 +569,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Residuals matrix.
         v_max : float
             Maximum possible value in matrices.
+
         """
         m, n = W.shape
         if v_max is not None:

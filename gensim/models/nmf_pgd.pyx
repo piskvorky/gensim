@@ -6,7 +6,6 @@
 # cython: nonecheck=False
 # cython: embedsignature=True
 
-cimport cython
 from libc.math cimport sqrt, fabs, copysign
 from cython.parallel import prange
 
@@ -35,6 +34,7 @@ def solve_h(double[:, ::1] h, double[:, :] Wt_v_minus_r, double[:, ::1] WtW, dou
     -------
     float
         Cumulative difference between previous and current h vectors.
+
     """
 
     cdef Py_ssize_t n_components = h.shape[0]
@@ -84,6 +84,7 @@ def solve_r(
     -------
     float
         Cumulative difference between previous and current residuals vectors.
+
     """
 
     cdef int[::1] r_indptr = r.indptr
