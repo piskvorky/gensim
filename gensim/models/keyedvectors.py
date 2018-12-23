@@ -1384,7 +1384,42 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             else:
                 self.vectors_norm = (self.vectors / sqrt((self.vectors ** 2).sum(-1))[..., newaxis]).astype(REAL)
 
+          def relative_cosine_similarity(self, wa, wb, topn=10):
+        """Compute the relative cosine similarity between two words given top-n similar words,
+        proposed by Artuur Leeuwenberg,Mihaela Vela,Jon Dehdari,Josef van Genabith
+        "A Minimally Supervised Approach for Synonym Extraction with Word Embeddings"
+        <https://ufal.mff.cuni.cz/pbml/105/art-leeuwenberg-et-al.pdf>.
+        To calculate relative cosine similarity between two words, equation (1) of the paper is used.
+        For WordNet synonyms, if rcs(topn=10) is greater than 0.10 than wa and wb are more similar than
+        any arbitrary word pairs.
+        Parameters
+        ----------
+        wa: str
+         word for which we have to look top-n similar word.
+        wb: str
+         word for which we evaluating relative cosine similarity with wa.
+        topn: int, optional
+         Number of top-n similar words to look with respect to wa.
+        Returns
+        -------
+        numpy.float64
+            relative cosine similarity between wa and wb.
+        """
 
+        result = self.similar_by_word(wa, topn)
+        topn_words = []
+        topn_cosine = []
+        for i in range(topn):
+            topn_words.append(result[i][0])
+            topn_cosine.append(result[i][1])
+
+        topn_cosine = np.array(topn_cosine)
+
+        norm = np.sum(topn_cosine)
+
+        rcs = (self.similarity(wa, wb)) / norm
+
+        return rcs
 class Word2VecKeyedVectors(WordEmbeddingsKeyedVectors):
     """Mapping between words and vectors for the :class:`~gensim.models.Word2Vec` model.
     Used to perform operations on the vectors such as vector lookup, distance, similarity etc.
