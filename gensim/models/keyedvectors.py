@@ -1384,7 +1384,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             else:
                 self.vectors_norm = (self.vectors / sqrt((self.vectors ** 2).sum(-1))[..., newaxis]).astype(REAL)
 
-          def relative_cosine_similarity(self, wa, wb, topn=10):
+    def relative_cosine_similarity(self, wa, wb, topn=10):
         """Compute the relative cosine similarity between two words given top-n similar words,
         proposed by Artuur Leeuwenberg,Mihaela Vela,Jon Dehdari,Josef van Genabith
         "A Minimally Supervised Approach for Synonym Extraction with Word Embeddings"
