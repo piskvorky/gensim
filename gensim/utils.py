@@ -381,7 +381,26 @@ def call_on_class_only(*args, **kwargs):
     raise AttributeError('This method should be called on a class object.')
 
 
-class SaveLoad(object):
+class Tracker(object):
+    def __setattr__(self, attr, value):
+        import traceback
+        def scrub(x):
+            return x.replace('<', '{').replace('>', '}')
+
+        repr_self = scrub(repr(self))
+        repr_value = scrub(repr(value))
+        trace = scrub(''.join(traceback.format_stack()))
+
+        print('<setattr>')
+        print('<self>%s</self>' % repr_self)
+        print('<attr>%r</attr>' % attr)
+        print('<value>%s</value>' % repr_value)
+        print('<stack>%s</stack>' % trace)
+        print('</setattr>')
+        object.__setattr__(self, attr, value)
+
+
+class SaveLoad(Tracker):
     """Serialize/deserialize object from disk, by equipping objects with the save()/load() methods.
 
     Warnings

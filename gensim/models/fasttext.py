@@ -97,7 +97,7 @@ from gensim.models.keyedvectors import Vocab, FastTextKeyedVectors
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 from gensim.models.utils_any2vec import _compute_ngrams, _ft_hash
 
-from gensim.utils import deprecated, call_on_class_only
+from gensim.utils import deprecated, call_on_class_only, Tracker
 
 logger = logging.getLogger(__name__)
 
@@ -879,14 +879,20 @@ class FastText(BaseWordEmbeddingsModel):
         self.trainables.init_ngrams_post_load(self.file_name, self.wv)
         self._clear_post_train()
 
-        #
-        # FIXME: not sure what to do with this yet, but we will need it.
-        #
         hidden_output = _load_matrix(
             file_handle,
             new_format=self.new_format,
             expected_vector_size=self.wv.vector_size
         )
+        print('<hidden_output>')
+        print(repr(hidden_output))
+        print('</hidden_output>')
+
+        #
+        # FIXME: this seems to be sufficient to get the test to pass, but the
+        # test isn't particularly strict.  I'm not sure if this is correct.
+        #
+        # self.trainables.syn1neg = self.wv.vector_vocab = hidden_output
 
     def struct_unpack(self, file_handle, fmt):
         """Read a single object from an open file.
@@ -1020,7 +1026,7 @@ def _load_matrix(file_handle, new_format=True, expected_vector_size=None):
     return matrix
 
 
-class FastTextVocab(Word2VecVocab):
+class FastTextVocab(Word2VecVocab, Tracker):
     """Vocabulary used by :class:`~gensim.models.fasttext.FastText`."""
     def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0, ns_exponent=0.75):
         super(FastTextVocab, self).__init__(
@@ -1035,7 +1041,7 @@ class FastTextVocab(Word2VecVocab):
         return report_values
 
 
-class FastTextTrainables(Word2VecTrainables):
+class FastTextTrainables(Word2VecTrainables, Tracker):
     """Represents the inner shallow neural network used to train :class:`~gensim.models.fasttext.FastText`."""
     def __init__(self, vector_size=100, seed=1, hashfxn=hash, bucket=2000000):
         super(FastTextTrainables, self).__init__(
