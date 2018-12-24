@@ -656,7 +656,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # Lee&Seung trick which speeds things up by an order of magnitude, compared
         # to Blei's original LDA-C code, cool!).
         integer_types = six.integer_types + (np.integer,)
-        epsilon = np.finfo(self.ftype).eps
+        epsilon = np.finfo(self.dtype).eps
         for d, doc in enumerate(chunk):
             if len(doc) > 0 and not isinstance(doc[0][0], integer_types):
                 # make sure the term IDs are ints, otherwise np will get upset
