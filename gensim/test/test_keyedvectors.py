@@ -103,7 +103,14 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
 
         predicted = self.vectors.most_similar('war', topn=None)
         self.assertEqual(len(predicted), len(self.vectors.vocab))
-
+        
+    def test_relative_cosine_similarity(self):
+        """Test relative_cosine_similarity returns expected results with an input of a word pair and topn"""
+        rcs = self.vectors.relative_cosine_similarity("begin", "start")
+        self.assertTrue(rcs > 0.10)
+        rcs = self.vectors.relative_cosine_similarity("test", "test")
+        self.assertTrue(rcs > 0.11)
+        
     def test_most_similar_raises_keyerror(self):
         """Test most_similar raises KeyError when input is out of vocab."""
         with self.assertRaises(KeyError):
