@@ -805,6 +805,6 @@ class TorontoCorpus(object):
             for line in utils.smart_open(fname):
                 if line not in ['\n', '\r\n']:
                     sentence = list(tokenize(line))
-                if not sentence:  # don't bother sending out empty sentences
+                if not sentence:
                     continue
                 yield sentence

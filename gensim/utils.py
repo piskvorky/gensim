@@ -40,7 +40,7 @@ import numbers
 import scipy.sparse
 
 from six import iterkeys, iteritems, itervalues, u, string_types, unichr
-from six.moves import xrange
+from six.moves import range
 
 from smart_open import smart_open
 
@@ -773,7 +773,7 @@ class FakeDict(object):
             Pair of (id, token).
 
         """
-        for i in xrange(self.num_terms):
+        for i in range(self.num_terms):
             yield i, str(i)
 
     def keys(self):
@@ -981,7 +981,7 @@ class RepeatCorpusNTimes(SaveLoad):
         self.n = n
 
     def __iter__(self):
-        for _ in xrange(self.n):
+        for _ in range(self.n):
             for document in self.corpus:
                 yield document
 
@@ -1719,7 +1719,7 @@ def mock_data_row(dim=1000, prob_nnz=0.5, lam=1.0):
 
     """
     nnz = np.random.uniform(size=(dim,))
-    return [(i, float(np.random.poisson(lam=lam) + 1.0)) for i in xrange(dim) if nnz[i] < prob_nnz]
+    return [(i, float(np.random.poisson(lam=lam) + 1.0)) for i in range(dim) if nnz[i] < prob_nnz]
 
 
 def mock_data(n_items=1000, dim=1000, prob_nnz=0.5, lam=1.0):
@@ -1743,7 +1743,7 @@ def mock_data(n_items=1000, dim=1000, prob_nnz=0.5, lam=1.0):
         Gensim-style corpus.
 
     """
-    return [mock_data_row(dim=dim, prob_nnz=prob_nnz, lam=lam) for _ in xrange(n_items)]
+    return [mock_data_row(dim=dim, prob_nnz=prob_nnz, lam=lam) for _ in range(n_items)]
 
 
 def prune_vocab(vocab, min_reduce, trim_rule=None):

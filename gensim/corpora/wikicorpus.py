@@ -289,10 +289,10 @@ def remove_template(s):
     # Find the start and end position of each template by finding the opening
     # '{{' and closing '}}'
     n_open, n_close = 0, 0
-    starts, ends = [], []
+    starts, ends = [], [-1]
     in_template = False
     prev_c = None
-    for i, c in enumerate(iter(s)):
+    for i, c in enumerate(s):
         if not in_template:
             if c == '{' and c == prev_c:
                 starts.append(i - 1)
@@ -310,7 +310,8 @@ def remove_template(s):
         prev_c = c
 
     # Remove all the templates
-    return ''.join([s[end + 1:start] for start, end in zip(starts + [None], [-1] + ends)])
+    starts.append(None)
+    return ''.join(s[end + 1:start] for end, start in zip(ends, starts))
 
 
 def remove_file(s):

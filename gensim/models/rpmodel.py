@@ -85,8 +85,10 @@ class RpModel(interfaces.TransformationABC):
             logger.info("no word id mapping provided; initializing from corpus, assuming identity")
             self.id2word = utils.dict_from_corpus(corpus)
             self.num_terms = len(self.id2word)
+        elif self.id2word:
+            self.num_terms = 1 + max(self.id2word)
         else:
-            self.num_terms = 1 + max([-1] + self.id2word.keys())
+            self.num_terms = 0
 
         shape = self.num_topics, self.num_terms
         logger.info("constructing %s random matrix", str(shape))

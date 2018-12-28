@@ -376,7 +376,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
             Topic `topicid` in text representation.
 
         """
-        return ' + '.join(['{0:.3f}*{1}'.format(v[0], v[1]) for v in self.show_topic(topicid, topn)])
+        return ' + '.join('{0:.3f}*{1}'.format(v[0], v[1]) for v in self.show_topic(topicid, topn))
 
     def show_topic(self, topicid, topn=10):
         """Get `num_words` most probable words for the given `topicid`.

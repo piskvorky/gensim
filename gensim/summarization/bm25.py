@@ -39,7 +39,7 @@ Data:
 
 import math
 from six import iteritems
-from six.moves import xrange
+from six.moves import range
 from functools import partial
 from multiprocessing import Pool
 from ..utils import effective_n_jobs
@@ -79,7 +79,7 @@ class BM25(object):
 
         """
         self.corpus_size = len(corpus)
-        self.avgdl = sum(float(len(x)) for x in corpus) / self.corpus_size
+        self.avgdl = 0
         self.corpus = corpus
         self.f = []
         self.df = {}
@@ -89,9 +89,12 @@ class BM25(object):
 
     def initialize(self):
         """Calculates frequencies of terms in documents and in corpus. Also computes inverse document frequencies."""
+        num_doc = 0
         for document in self.corpus:
-            frequencies = {}
+            num_doc += len(document)
             self.doc_len.append(len(document))
+
+            frequencies = {}
             for word in document:
                 if word not in frequencies:
                     frequencies[word] = 0
@@ -102,6 +105,8 @@ class BM25(object):
                 if word not in self.df:
                     self.df[word] = 0
                 self.df[word] += 1
+
+        self.avgdl = float(num_doc) / self.corpus_size
 
         for word, freq in iteritems(self.df):
             self.idf[word] = math.log(self.corpus_size - freq + 0.5) - math.log(freq + 0.5)
@@ -151,7 +156,7 @@ class BM25(object):
 
         """
         scores = []
-        for index in xrange(self.corpus_size):
+        for index in range(self.corpus_size):
             score = self.get_score(document, index, average_idf)
             scores.append(score)
         return scores
@@ -177,7 +182,7 @@ def _get_scores(bm25, document, average_idf):
 
     """
     scores = []
-    for index in xrange(bm25.corpus_size):
+    for index in range(bm25.corpus_size):
         score = bm25.get_score(document, index, average_idf)
         scores.append(score)
     return scores
@@ -213,7 +218,7 @@ def get_bm25_weights(corpus, n_jobs=1):
 
     """
     bm25 = BM25(corpus)
-    average_idf = sum(float(val) for val in bm25.idf.values()) / len(bm25.idf)
+    average_idf = float(sum(val for val in bm25.idf.values())) / len(bm25.idf)
 
     n_processes = effective_n_jobs(n_jobs)
     if n_processes == 1:
