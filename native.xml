@@ -1,10 +1,14 @@
 <?xml version="1.0"?>
 <log>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'token2id'</attr>
     <value>{}</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -20,10 +24,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'id2token'</attr>
     <value>{}</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -39,10 +47,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'dfs'</attr>
     <value>{}</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -58,10 +70,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'num_docs'</attr>
     <value>0</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -77,10 +93,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'num_pos'</attr>
     <value>0</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -96,10 +116,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'num_nnz'</attr>
     <value>0</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -115,10 +139,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'num_docs'</attr>
     <value>1</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -138,10 +166,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'num_pos'</attr>
     <value>3</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -161,10 +193,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'num_nnz'</attr>
     <value>3</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -184,10 +220,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'num_docs'</attr>
     <value>2</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -207,10 +247,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'num_pos'</attr>
     <value>9</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -230,10 +274,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'num_nnz'</attr>
     <value>9</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -253,10 +301,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'num_docs'</attr>
     <value>3</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -276,10 +328,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'num_pos'</attr>
     <value>13</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -299,10 +355,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'num_nnz'</attr>
     <value>13</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -322,10 +382,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'num_docs'</attr>
     <value>4</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -345,10 +409,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'num_pos'</attr>
     <value>17</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -368,10 +436,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'num_nnz'</attr>
     <value>16</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -391,10 +463,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'num_docs'</attr>
     <value>5</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -414,10 +490,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'num_pos'</attr>
     <value>20</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -437,10 +517,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'num_nnz'</attr>
     <value>19</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -460,10 +544,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'num_docs'</attr>
     <value>6</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -483,10 +571,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'num_pos'</attr>
     <value>21</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -506,10 +598,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'num_nnz'</attr>
     <value>20</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -529,10 +625,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'num_docs'</attr>
     <value>7</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -552,10 +652,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'num_pos'</attr>
     <value>23</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -575,10 +679,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'num_nnz'</attr>
     <value>22</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -598,10 +706,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'num_docs'</attr>
     <value>8</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -621,10 +733,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'num_pos'</attr>
     <value>26</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -644,10 +760,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'num_nnz'</attr>
     <value>25</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -667,10 +787,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'num_docs'</attr>
     <value>9</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -690,10 +814,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'num_pos'</attr>
     <value>29</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -713,10 +841,14 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.corpora.dictionary.Dictionary object at 0x7f874532c3c8}</self>
+    <self>{gensim.corpora.dictionary.Dictionary object at 0x7efd6b434400}</self>
     <attr>'num_nnz'</attr>
     <value>28</value>
-    <stack>  File "trigger.py", line 2, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 26, in load_native
     from gensim.test.utils import datapath, common_texts as sentences
   File "{frozen importlib._bootstrap}", line 983, in _find_and_load
   File "{frozen importlib._bootstrap}", line 967, in _find_and_load_unlocked
@@ -736,16 +868,16 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'load'</attr>
-    <value>{function call_on_class_only at 0x7f8761bfde18}</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <value>{function call_on_class_only at 0x7efd87d05ea0}</value>
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 383, in __init__
     self.load = call_on_class_only
@@ -754,16 +886,16 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'load_fasttext_format'</attr>
-    <value>{function call_on_class_only at 0x7f8761bfde18}</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <value>{function call_on_class_only at 0x7efd87d05ea0}</value>
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 384, in __init__
     self.load_fasttext_format = call_on_class_only
@@ -772,16 +904,16 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'callbacks'</attr>
     <value>()</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 385, in __init__
     self.callbacks = callbacks
@@ -790,16 +922,16 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'word_ngrams'</attr>
     <value>1</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 386, in __init__
     self.word_ngrams = int(word_ngrams)
@@ -808,16 +940,16 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</self>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
     <attr>'vectors'</attr>
     <value>array([], shape=(0, 100), dtype=float64)</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 390, in __init__
     self.wv = FastTextKeyedVectors(size, min_n, max_n)
@@ -832,16 +964,16 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</self>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
     <attr>'vocab'</attr>
     <value>{}</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 390, in __init__
     self.wv = FastTextKeyedVectors(size, min_n, max_n)
@@ -856,16 +988,16 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</self>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
     <attr>'vector_size'</attr>
     <value>100</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 390, in __init__
     self.wv = FastTextKeyedVectors(size, min_n, max_n)
@@ -880,16 +1012,16 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</self>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
     <attr>'index2entity'</attr>
     <value>[]</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 390, in __init__
     self.wv = FastTextKeyedVectors(size, min_n, max_n)
@@ -904,16 +1036,16 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</self>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
     <attr>'index2word'</attr>
     <value>[]</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 390, in __init__
     self.wv = FastTextKeyedVectors(size, min_n, max_n)
@@ -932,16 +1064,16 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</self>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
     <attr>'vectors_norm'</attr>
     <value>None</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 390, in __init__
     self.wv = FastTextKeyedVectors(size, min_n, max_n)
@@ -954,16 +1086,16 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</self>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
     <attr>'index2word'</attr>
     <value>[]</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 390, in __init__
     self.wv = FastTextKeyedVectors(size, min_n, max_n)
@@ -976,16 +1108,16 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</self>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
     <attr>'vectors_vocab'</attr>
     <value>None</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 390, in __init__
     self.wv = FastTextKeyedVectors(size, min_n, max_n)
@@ -996,16 +1128,16 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</self>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
     <attr>'vectors_vocab_norm'</attr>
     <value>None</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 390, in __init__
     self.wv = FastTextKeyedVectors(size, min_n, max_n)
@@ -1016,16 +1148,16 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</self>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
     <attr>'vectors_ngrams'</attr>
     <value>None</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 390, in __init__
     self.wv = FastTextKeyedVectors(size, min_n, max_n)
@@ -1036,16 +1168,16 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</self>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
     <attr>'vectors_ngrams_norm'</attr>
     <value>None</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 390, in __init__
     self.wv = FastTextKeyedVectors(size, min_n, max_n)
@@ -1056,16 +1188,16 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</self>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
     <attr>'buckets_word'</attr>
     <value>None</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 390, in __init__
     self.wv = FastTextKeyedVectors(size, min_n, max_n)
@@ -1076,16 +1208,16 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</self>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
     <attr>'hash2index'</attr>
     <value>{}</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 390, in __init__
     self.wv = FastTextKeyedVectors(size, min_n, max_n)
@@ -1096,16 +1228,16 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</self>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
     <attr>'min_n'</attr>
     <value>3</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 390, in __init__
     self.wv = FastTextKeyedVectors(size, min_n, max_n)
@@ -1116,16 +1248,16 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</self>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
     <attr>'max_n'</attr>
     <value>6</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 390, in __init__
     self.wv = FastTextKeyedVectors(size, min_n, max_n)
@@ -1136,16 +1268,16 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</self>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
     <attr>'num_ngram_vectors'</attr>
     <value>0</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 390, in __init__
     self.wv = FastTextKeyedVectors(size, min_n, max_n)
@@ -1156,16 +1288,16 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'wv'</attr>
-    <value>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <value>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</value>
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 390, in __init__
     self.wv = FastTextKeyedVectors(size, min_n, max_n)
@@ -1174,20 +1306,20 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastTextVocab object at 0x7f874532c470}</self>
+    <self>{gensim.models.fasttext.FastTextVocab object at 0x7efd6b434a20}</self>
     <attr>'max_vocab_size'</attr>
     <value>None</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 393, in __init__
     sorted_vocab=bool(sorted_vocab), null_word=null_word, ns_exponent=ns_exponent)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1034, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1035, in __init__
     sorted_vocab=sorted_vocab, null_word=null_word, ns_exponent=ns_exponent)
   File "/home/misha/git/gensim/gensim/models/word2vec.py", line 1543, in __init__
     self.max_vocab_size = max_vocab_size
@@ -1196,20 +1328,20 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastTextVocab object at 0x7f874532c470}</self>
+    <self>{gensim.models.fasttext.FastTextVocab object at 0x7efd6b434a20}</self>
     <attr>'min_count'</attr>
     <value>5</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 393, in __init__
     sorted_vocab=bool(sorted_vocab), null_word=null_word, ns_exponent=ns_exponent)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1034, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1035, in __init__
     sorted_vocab=sorted_vocab, null_word=null_word, ns_exponent=ns_exponent)
   File "/home/misha/git/gensim/gensim/models/word2vec.py", line 1544, in __init__
     self.min_count = min_count
@@ -1218,20 +1350,20 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastTextVocab object at 0x7f874532c470}</self>
+    <self>{gensim.models.fasttext.FastTextVocab object at 0x7efd6b434a20}</self>
     <attr>'sample'</attr>
     <value>0.001</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 393, in __init__
     sorted_vocab=bool(sorted_vocab), null_word=null_word, ns_exponent=ns_exponent)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1034, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1035, in __init__
     sorted_vocab=sorted_vocab, null_word=null_word, ns_exponent=ns_exponent)
   File "/home/misha/git/gensim/gensim/models/word2vec.py", line 1545, in __init__
     self.sample = sample
@@ -1240,20 +1372,20 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastTextVocab object at 0x7f874532c470}</self>
+    <self>{gensim.models.fasttext.FastTextVocab object at 0x7efd6b434a20}</self>
     <attr>'sorted_vocab'</attr>
     <value>True</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 393, in __init__
     sorted_vocab=bool(sorted_vocab), null_word=null_word, ns_exponent=ns_exponent)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1034, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1035, in __init__
     sorted_vocab=sorted_vocab, null_word=null_word, ns_exponent=ns_exponent)
   File "/home/misha/git/gensim/gensim/models/word2vec.py", line 1546, in __init__
     self.sorted_vocab = sorted_vocab
@@ -1262,20 +1394,20 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastTextVocab object at 0x7f874532c470}</self>
+    <self>{gensim.models.fasttext.FastTextVocab object at 0x7efd6b434a20}</self>
     <attr>'null_word'</attr>
     <value>0</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 393, in __init__
     sorted_vocab=bool(sorted_vocab), null_word=null_word, ns_exponent=ns_exponent)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1034, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1035, in __init__
     sorted_vocab=sorted_vocab, null_word=null_word, ns_exponent=ns_exponent)
   File "/home/misha/git/gensim/gensim/models/word2vec.py", line 1547, in __init__
     self.null_word = null_word
@@ -1284,20 +1416,20 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastTextVocab object at 0x7f874532c470}</self>
+    <self>{gensim.models.fasttext.FastTextVocab object at 0x7efd6b434a20}</self>
     <attr>'cum_table'</attr>
     <value>None</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 393, in __init__
     sorted_vocab=bool(sorted_vocab), null_word=null_word, ns_exponent=ns_exponent)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1034, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1035, in __init__
     sorted_vocab=sorted_vocab, null_word=null_word, ns_exponent=ns_exponent)
   File "/home/misha/git/gensim/gensim/models/word2vec.py", line 1548, in __init__
     self.cum_table = None  # for negative sampling
@@ -1306,20 +1438,20 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastTextVocab object at 0x7f874532c470}</self>
+    <self>{gensim.models.fasttext.FastTextVocab object at 0x7efd6b434a20}</self>
     <attr>'raw_vocab'</attr>
     <value>None</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 393, in __init__
     sorted_vocab=bool(sorted_vocab), null_word=null_word, ns_exponent=ns_exponent)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1034, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1035, in __init__
     sorted_vocab=sorted_vocab, null_word=null_word, ns_exponent=ns_exponent)
   File "/home/misha/git/gensim/gensim/models/word2vec.py", line 1549, in __init__
     self.raw_vocab = None
@@ -1328,20 +1460,20 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastTextVocab object at 0x7f874532c470}</self>
+    <self>{gensim.models.fasttext.FastTextVocab object at 0x7efd6b434a20}</self>
     <attr>'max_final_vocab'</attr>
     <value>None</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 393, in __init__
     sorted_vocab=bool(sorted_vocab), null_word=null_word, ns_exponent=ns_exponent)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1034, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1035, in __init__
     sorted_vocab=sorted_vocab, null_word=null_word, ns_exponent=ns_exponent)
   File "/home/misha/git/gensim/gensim/models/word2vec.py", line 1550, in __init__
     self.max_final_vocab = max_final_vocab
@@ -1350,20 +1482,20 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastTextVocab object at 0x7f874532c470}</self>
+    <self>{gensim.models.fasttext.FastTextVocab object at 0x7efd6b434a20}</self>
     <attr>'ns_exponent'</attr>
     <value>0.75</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 393, in __init__
     sorted_vocab=bool(sorted_vocab), null_word=null_word, ns_exponent=ns_exponent)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1034, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1035, in __init__
     sorted_vocab=sorted_vocab, null_word=null_word, ns_exponent=ns_exponent)
   File "/home/misha/git/gensim/gensim/models/word2vec.py", line 1551, in __init__
     self.ns_exponent = ns_exponent
@@ -1372,16 +1504,16 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'vocabulary'</attr>
-    <value>{gensim.models.fasttext.FastTextVocab object at 0x7f874532c470}</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <value>{gensim.models.fasttext.FastTextVocab object at 0x7efd6b434a20}</value>
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 393, in __init__
     sorted_vocab=bool(sorted_vocab), null_word=null_word, ns_exponent=ns_exponent)
@@ -1390,20 +1522,20 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastTextTrainables object at 0x7f874532ca58}</self>
+    <self>{gensim.models.fasttext.FastTextTrainables object at 0x7efd6b4344a8}</self>
     <attr>'hashfxn'</attr>
     <value>{built-in function hash}</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 395, in __init__
     vector_size=size, seed=seed, bucket=bucket, hashfxn=hashfxn)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1048, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1049, in __init__
     vector_size=vector_size, seed=seed, hashfxn=hashfxn)
   File "/home/misha/git/gensim/gensim/models/word2vec.py", line 1833, in __init__
     self.hashfxn = hashfxn
@@ -1412,20 +1544,20 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastTextTrainables object at 0x7f874532ca58}</self>
+    <self>{gensim.models.fasttext.FastTextTrainables object at 0x7efd6b4344a8}</self>
     <attr>'layer1_size'</attr>
     <value>100</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 395, in __init__
     vector_size=size, seed=seed, bucket=bucket, hashfxn=hashfxn)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1048, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1049, in __init__
     vector_size=vector_size, seed=seed, hashfxn=hashfxn)
   File "/home/misha/git/gensim/gensim/models/word2vec.py", line 1834, in __init__
     self.layer1_size = vector_size
@@ -1434,20 +1566,20 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastTextTrainables object at 0x7f874532ca58}</self>
+    <self>{gensim.models.fasttext.FastTextTrainables object at 0x7efd6b4344a8}</self>
     <attr>'seed'</attr>
     <value>1</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 395, in __init__
     vector_size=size, seed=seed, bucket=bucket, hashfxn=hashfxn)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1048, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1049, in __init__
     vector_size=vector_size, seed=seed, hashfxn=hashfxn)
   File "/home/misha/git/gensim/gensim/models/word2vec.py", line 1835, in __init__
     self.seed = seed
@@ -1456,36 +1588,36 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastTextTrainables object at 0x7f874532ca58}</self>
+    <self>{gensim.models.fasttext.FastTextTrainables object at 0x7efd6b4344a8}</self>
     <attr>'bucket'</attr>
     <value>2000000</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 395, in __init__
     vector_size=size, seed=seed, bucket=bucket, hashfxn=hashfxn)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1049, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1050, in __init__
     self.bucket = int(bucket)
   File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
     trace = scrub(''.join(traceback.format_stack()))
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'trainables'</attr>
-    <value>{gensim.models.fasttext.FastTextTrainables object at 0x7f874532ca58}</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <value>{gensim.models.fasttext.FastTextTrainables object at 0x7efd6b4344a8}</value>
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 395, in __init__
     vector_size=size, seed=seed, bucket=bucket, hashfxn=hashfxn)
@@ -1494,36 +1626,342 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</self>
-    <attr>'bucket'</attr>
-    <value>2000000</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
+    <attr>'vectors'</attr>
+    <value>array([], shape=(0, 100), dtype=float32)</value>
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
   File "/home/misha/git/gensim/gensim/models/fasttext.py", line 396, in __init__
+    self.trainables.prepare_weights(hs, negative, self.wv, update=False, vocabulary=self.vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1053, in prepare_weights
+    super(FastTextTrainables, self).prepare_weights(hs, negative, wv, update=update, vocabulary=vocabulary)
+  File "/home/misha/git/gensim/gensim/models/word2vec.py", line 1841, in prepare_weights
+    self.reset_weights(hs, negative, wv)
+  File "/home/misha/git/gensim/gensim/models/word2vec.py", line 1854, in reset_weights
+    wv.vectors = empty((len(wv.vocab), wv.vector_size), dtype=REAL)
+  File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
+    trace = scrub(''.join(traceback.format_stack()))
+</stack>
+  </setattr>
+  <setattr>
+    <self>{gensim.models.fasttext.FastTextTrainables object at 0x7efd6b4344a8}</self>
+    <attr>'syn1neg'</attr>
+    <value>array([], shape=(0, 100), dtype=float32)</value>
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
+    model = FT_gensim.load_fasttext_format(path)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
+    model = cls()
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 396, in __init__
+    self.trainables.prepare_weights(hs, negative, self.wv, update=False, vocabulary=self.vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1053, in prepare_weights
+    super(FastTextTrainables, self).prepare_weights(hs, negative, wv, update=update, vocabulary=vocabulary)
+  File "/home/misha/git/gensim/gensim/models/word2vec.py", line 1841, in prepare_weights
+    self.reset_weights(hs, negative, wv)
+  File "/home/misha/git/gensim/gensim/models/word2vec.py", line 1862, in reset_weights
+    self.syn1neg = zeros((len(wv.vocab), self.layer1_size), dtype=REAL)
+  File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
+    trace = scrub(''.join(traceback.format_stack()))
+</stack>
+  </setattr>
+  <setattr>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
+    <attr>'vectors_norm'</attr>
+    <value>None</value>
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
+    model = FT_gensim.load_fasttext_format(path)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
+    model = cls()
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 396, in __init__
+    self.trainables.prepare_weights(hs, negative, self.wv, update=False, vocabulary=self.vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1053, in prepare_weights
+    super(FastTextTrainables, self).prepare_weights(hs, negative, wv, update=update, vocabulary=vocabulary)
+  File "/home/misha/git/gensim/gensim/models/word2vec.py", line 1841, in prepare_weights
+    self.reset_weights(hs, negative, wv)
+  File "/home/misha/git/gensim/gensim/models/word2vec.py", line 1863, in reset_weights
+    wv.vectors_norm = None
+  File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
+    trace = scrub(''.join(traceback.format_stack()))
+</stack>
+  </setattr>
+  <setattr>
+    <self>{gensim.models.fasttext.FastTextTrainables object at 0x7efd6b4344a8}</self>
+    <attr>'vectors_lockf'</attr>
+    <value>array([], dtype=float32)</value>
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
+    model = FT_gensim.load_fasttext_format(path)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
+    model = cls()
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 396, in __init__
+    self.trainables.prepare_weights(hs, negative, self.wv, update=False, vocabulary=self.vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1053, in prepare_weights
+    super(FastTextTrainables, self).prepare_weights(hs, negative, wv, update=update, vocabulary=vocabulary)
+  File "/home/misha/git/gensim/gensim/models/word2vec.py", line 1841, in prepare_weights
+    self.reset_weights(hs, negative, wv)
+  File "/home/misha/git/gensim/gensim/models/word2vec.py", line 1865, in reset_weights
+    self.vectors_lockf = ones(len(wv.vocab), dtype=REAL)  # zeros suppress learning
+  File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
+    trace = scrub(''.join(traceback.format_stack()))
+</stack>
+  </setattr>
+  <setattr>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
+    <attr>'vectors_vocab'</attr>
+    <value>array([], shape=(0, 100), dtype=float32)</value>
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
+    model = FT_gensim.load_fasttext_format(path)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
+    model = cls()
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 396, in __init__
+    self.trainables.prepare_weights(hs, negative, self.wv, update=False, vocabulary=self.vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1054, in prepare_weights
+    self.init_ngrams_weights(wv, update=update, vocabulary=vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1068, in init_ngrams_weights
+    wv.vectors_vocab = empty((len(wv.vocab), wv.vector_size), dtype=REAL)
+  File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
+    trace = scrub(''.join(traceback.format_stack()))
+</stack>
+  </setattr>
+  <setattr>
+    <self>{gensim.models.fasttext.FastTextTrainables object at 0x7efd6b4344a8}</self>
+    <attr>'vectors_vocab_lockf'</attr>
+    <value>array([], shape=(0, 100), dtype=float32)</value>
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
+    model = FT_gensim.load_fasttext_format(path)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
+    model = cls()
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 396, in __init__
+    self.trainables.prepare_weights(hs, negative, self.wv, update=False, vocabulary=self.vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1054, in prepare_weights
+    self.init_ngrams_weights(wv, update=update, vocabulary=vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1069, in init_ngrams_weights
+    self.vectors_vocab_lockf = ones((len(wv.vocab), wv.vector_size), dtype=REAL)
+  File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
+    trace = scrub(''.join(traceback.format_stack()))
+</stack>
+  </setattr>
+  <setattr>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
+    <attr>'vectors_ngrams'</attr>
+    <value>array([[0., 0., 0., ..., 0., 0., 0.],
+       [0., 0., 0., ..., 0., 0., 0.],
+       [0., 0., 0., ..., 0., 0., 0.],
+       ...,
+       [0., 0., 0., ..., 0., 0., 0.],
+       [0., 0., 0., ..., 0., 0., 0.],
+       [0., 0., 0., ..., 0., 0., 0.]], dtype=float32)</value>
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
+    model = FT_gensim.load_fasttext_format(path)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
+    model = cls()
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 396, in __init__
+    self.trainables.prepare_weights(hs, negative, self.wv, update=False, vocabulary=self.vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1054, in prepare_weights
+    self.init_ngrams_weights(wv, update=update, vocabulary=vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1071, in init_ngrams_weights
+    wv.vectors_ngrams = empty((self.bucket, wv.vector_size), dtype=REAL)
+  File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
+    trace = scrub(''.join(traceback.format_stack()))
+</stack>
+  </setattr>
+  <setattr>
+    <self>{gensim.models.fasttext.FastTextTrainables object at 0x7efd6b4344a8}</self>
+    <attr>'vectors_ngrams_lockf'</attr>
+    <value>array([[1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.],
+       ...,
+       [1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.],
+       [1., 1., 1., ..., 1., 1., 1.]], dtype=float32)</value>
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
+    model = FT_gensim.load_fasttext_format(path)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
+    model = cls()
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 396, in __init__
+    self.trainables.prepare_weights(hs, negative, self.wv, update=False, vocabulary=self.vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1054, in prepare_weights
+    self.init_ngrams_weights(wv, update=update, vocabulary=vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1072, in init_ngrams_weights
+    self.vectors_ngrams_lockf = ones((self.bucket, wv.vector_size), dtype=REAL)
+  File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
+    trace = scrub(''.join(traceback.format_stack()))
+</stack>
+  </setattr>
+  <setattr>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
+    <attr>'hash2index'</attr>
+    <value>{}</value>
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
+    model = FT_gensim.load_fasttext_format(path)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
+    model = cls()
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 396, in __init__
+    self.trainables.prepare_weights(hs, negative, self.wv, update=False, vocabulary=self.vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1054, in prepare_weights
+    self.init_ngrams_weights(wv, update=update, vocabulary=vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1074, in init_ngrams_weights
+    wv.hash2index = {}
+  File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
+    trace = scrub(''.join(traceback.format_stack()))
+</stack>
+  </setattr>
+  <setattr>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
+    <attr>'buckets_word'</attr>
+    <value>{}</value>
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
+    model = FT_gensim.load_fasttext_format(path)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
+    model = cls()
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 396, in __init__
+    self.trainables.prepare_weights(hs, negative, self.wv, update=False, vocabulary=self.vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1054, in prepare_weights
+    self.init_ngrams_weights(wv, update=update, vocabulary=vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1075, in init_ngrams_weights
+    wv.buckets_word = {}
+  File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
+    trace = scrub(''.join(traceback.format_stack()))
+</stack>
+  </setattr>
+  <setattr>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
+    <attr>'num_ngram_vectors'</attr>
+    <value>0</value>
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
+    model = FT_gensim.load_fasttext_format(path)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
+    model = cls()
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 396, in __init__
+    self.trainables.prepare_weights(hs, negative, self.wv, update=False, vocabulary=self.vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1054, in prepare_weights
+    self.init_ngrams_weights(wv, update=update, vocabulary=vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1086, in init_ngrams_weights
+    wv.num_ngram_vectors = len(ngram_indices)
+  File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
+    trace = scrub(''.join(traceback.format_stack()))
+</stack>
+  </setattr>
+  <setattr>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
+    <attr>'vectors_ngrams'</attr>
+    <value>array([], shape=(0, 100), dtype=float32)</value>
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
+    model = FT_gensim.load_fasttext_format(path)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
+    model = cls()
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 396, in __init__
+    self.trainables.prepare_weights(hs, negative, self.wv, update=False, vocabulary=self.vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1054, in prepare_weights
+    self.init_ngrams_weights(wv, update=update, vocabulary=vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1090, in init_ngrams_weights
+    wv.vectors_ngrams = wv.vectors_ngrams.take(ngram_indices, axis=0)
+  File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
+    trace = scrub(''.join(traceback.format_stack()))
+</stack>
+  </setattr>
+  <setattr>
+    <self>{gensim.models.fasttext.FastTextTrainables object at 0x7efd6b4344a8}</self>
+    <attr>'vectors_ngrams_lockf'</attr>
+    <value>array([], shape=(0, 100), dtype=float32)</value>
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
+    model = FT_gensim.load_fasttext_format(path)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
+    model = cls()
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 396, in __init__
+    self.trainables.prepare_weights(hs, negative, self.wv, update=False, vocabulary=self.vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1054, in prepare_weights
+    self.init_ngrams_weights(wv, update=update, vocabulary=vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1091, in init_ngrams_weights
+    self.vectors_ngrams_lockf = self.vectors_ngrams_lockf.take(ngram_indices, axis=0)
+  File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
+    trace = scrub(''.join(traceback.format_stack()))
+</stack>
+  </setattr>
+  <setattr>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
+    <attr>'bucket'</attr>
+    <value>2000000</value>
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
+    model = FT_gensim.load_fasttext_format(path)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
+    model = cls()
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 397, in __init__
     self.wv.bucket = self.trainables.bucket
   File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
     trace = scrub(''.join(traceback.format_stack()))
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'sg'</attr>
     <value>0</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 401, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 402, in __init__
     seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, fast_version=FAST_VERSION)
   File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 721, in __init__
     self.sg = int(sg)
@@ -1532,18 +1970,18 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'alpha'</attr>
     <value>0.025</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 401, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 402, in __init__
     seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, fast_version=FAST_VERSION)
   File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 724, in __init__
     self.alpha = float(alpha)
@@ -1552,18 +1990,18 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'window'</attr>
     <value>5</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 401, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 402, in __init__
     seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, fast_version=FAST_VERSION)
   File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 725, in __init__
     self.window = int(window)
@@ -1572,18 +2010,18 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'random'</attr>
-    <value>{mtrand.RandomState object at 0x7f87452e4a20}</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <value>{mtrand.RandomState object at 0x7efd6b3635a0}</value>
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 401, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 402, in __init__
     seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, fast_version=FAST_VERSION)
   File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 726, in __init__
     self.random = random.RandomState(seed)
@@ -1592,18 +2030,18 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'min_alpha'</attr>
     <value>0.0001</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 401, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 402, in __init__
     seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, fast_version=FAST_VERSION)
   File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 727, in __init__
     self.min_alpha = float(min_alpha)
@@ -1612,18 +2050,18 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'hs'</attr>
     <value>0</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 401, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 402, in __init__
     seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, fast_version=FAST_VERSION)
   File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 728, in __init__
     self.hs = int(hs)
@@ -1632,18 +2070,18 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'negative'</attr>
     <value>5</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 401, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 402, in __init__
     seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, fast_version=FAST_VERSION)
   File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 729, in __init__
     self.negative = int(negative)
@@ -1652,18 +2090,18 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'ns_exponent'</attr>
     <value>0.75</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 401, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 402, in __init__
     seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, fast_version=FAST_VERSION)
   File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 730, in __init__
     self.ns_exponent = ns_exponent
@@ -1672,18 +2110,18 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'cbow_mean'</attr>
     <value>1</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 401, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 402, in __init__
     seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, fast_version=FAST_VERSION)
   File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 731, in __init__
     self.cbow_mean = int(cbow_mean)
@@ -1692,18 +2130,18 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'compute_loss'</attr>
     <value>False</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 401, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 402, in __init__
     seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, fast_version=FAST_VERSION)
   File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 732, in __init__
     self.compute_loss = bool(compute_loss)
@@ -1712,18 +2150,18 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'running_training_loss'</attr>
     <value>0</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 401, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 402, in __init__
     seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, fast_version=FAST_VERSION)
   File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 733, in __init__
     self.running_training_loss = 0
@@ -1732,18 +2170,18 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'min_alpha_yet_reached'</attr>
     <value>0.025</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 401, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 402, in __init__
     seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, fast_version=FAST_VERSION)
   File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 734, in __init__
     self.min_alpha_yet_reached = float(alpha)
@@ -1752,18 +2190,18 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'corpus_count'</attr>
     <value>0</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 401, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 402, in __init__
     seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, fast_version=FAST_VERSION)
   File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 735, in __init__
     self.corpus_count = 0
@@ -1772,18 +2210,18 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'corpus_total_words'</attr>
     <value>0</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 401, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 402, in __init__
     seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, fast_version=FAST_VERSION)
   File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 736, in __init__
     self.corpus_total_words = 0
@@ -1792,18 +2230,18 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'vector_size'</attr>
     <value>100</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 401, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 402, in __init__
     seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, fast_version=FAST_VERSION)
   File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 739, in __init__
     workers=workers, vector_size=vector_size, epochs=epochs, callbacks=callbacks, batch_words=batch_words)
@@ -1814,18 +2252,18 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'workers'</attr>
     <value>3</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 401, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 402, in __init__
     seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, fast_version=FAST_VERSION)
   File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 739, in __init__
     workers=workers, vector_size=vector_size, epochs=epochs, callbacks=callbacks, batch_words=batch_words)
@@ -1836,18 +2274,18 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'epochs'</attr>
     <value>5</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 401, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 402, in __init__
     seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, fast_version=FAST_VERSION)
   File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 739, in __init__
     workers=workers, vector_size=vector_size, epochs=epochs, callbacks=callbacks, batch_words=batch_words)
@@ -1858,18 +2296,18 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'train_count'</attr>
     <value>0</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 401, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 402, in __init__
     seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, fast_version=FAST_VERSION)
   File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 739, in __init__
     workers=workers, vector_size=vector_size, epochs=epochs, callbacks=callbacks, batch_words=batch_words)
@@ -1880,18 +2318,18 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'total_train_time'</attr>
     <value>0</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 401, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 402, in __init__
     seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, fast_version=FAST_VERSION)
   File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 739, in __init__
     workers=workers, vector_size=vector_size, epochs=epochs, callbacks=callbacks, batch_words=batch_words)
@@ -1902,18 +2340,18 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'batch_words'</attr>
     <value>10000</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 401, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 402, in __init__
     seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, fast_version=FAST_VERSION)
   File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 739, in __init__
     workers=workers, vector_size=vector_size, epochs=epochs, callbacks=callbacks, batch_words=batch_words)
@@ -1924,18 +2362,18 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'model_trimmed_post_training'</attr>
     <value>False</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 401, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 402, in __init__
     seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, fast_version=FAST_VERSION)
   File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 739, in __init__
     workers=workers, vector_size=vector_size, epochs=epochs, callbacks=callbacks, batch_words=batch_words)
@@ -1946,18 +2384,18 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'callbacks'</attr>
     <value>()</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 753, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 754, in load_fasttext_format
     model = cls()
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 401, in __init__
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 402, in __init__
     seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, fast_version=FAST_VERSION)
   File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 739, in __init__
     workers=workers, vector_size=vector_size, epochs=epochs, callbacks=callbacks, batch_words=batch_words)
@@ -1968,303 +2406,303 @@
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'file_name'</attr>
     <value>'/home/misha/git/gensim/gensim/test/test_data/toy-model.bin'</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 756, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 757, in load_fasttext_format
     model.file_name = model_file
   File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
     trace = scrub(''.join(traceback.format_stack()))
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'new_format'</attr>
     <value>True</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 757, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 758, in load_fasttext_format
     model.load_binary_data(encoding=encoding)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 772, in load_binary_data
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 773, in load_binary_data
     self._load_model_params(f)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 787, in _load_model_params
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 788, in _load_model_params
     self.new_format = True
   File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
     trace = scrub(''.join(traceback.format_stack()))
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</self>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
     <attr>'vector_size'</attr>
     <value>100</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 757, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 758, in load_fasttext_format
     model.load_binary_data(encoding=encoding)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 772, in load_binary_data
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 773, in load_binary_data
     self._load_model_params(f)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 796, in _load_model_params
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 797, in _load_model_params
     self.wv.vector_size = dim
   File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
     trace = scrub(''.join(traceback.format_stack()))
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'vector_size'</attr>
     <value>100</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 757, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 758, in load_fasttext_format
     model.load_binary_data(encoding=encoding)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 772, in load_binary_data
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 773, in load_binary_data
     self._load_model_params(f)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 797, in _load_model_params
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 798, in _load_model_params
     self.vector_size = dim
   File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
     trace = scrub(''.join(traceback.format_stack()))
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'window'</attr>
     <value>5</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 757, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 758, in load_fasttext_format
     model.load_binary_data(encoding=encoding)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 772, in load_binary_data
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 773, in load_binary_data
     self._load_model_params(f)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 798, in _load_model_params
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 799, in _load_model_params
     self.window = ws
   File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
     trace = scrub(''.join(traceback.format_stack()))
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'epochs'</attr>
     <value>5</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 757, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 758, in load_fasttext_format
     model.load_binary_data(encoding=encoding)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 772, in load_binary_data
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 773, in load_binary_data
     self._load_model_params(f)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 799, in _load_model_params
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 800, in _load_model_params
     self.epochs = epoch
   File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
     trace = scrub(''.join(traceback.format_stack()))
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastTextVocab object at 0x7f874532c470}</self>
+    <self>{gensim.models.fasttext.FastTextVocab object at 0x7efd6b434a20}</self>
     <attr>'min_count'</attr>
     <value>5</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 757, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 758, in load_fasttext_format
     model.load_binary_data(encoding=encoding)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 772, in load_binary_data
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 773, in load_binary_data
     self._load_model_params(f)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 800, in _load_model_params
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 801, in _load_model_params
     self.vocabulary.min_count = min_count
   File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
     trace = scrub(''.join(traceback.format_stack()))
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'negative'</attr>
     <value>5</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 757, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 758, in load_fasttext_format
     model.load_binary_data(encoding=encoding)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 772, in load_binary_data
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 773, in load_binary_data
     self._load_model_params(f)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 801, in _load_model_params
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 802, in _load_model_params
     self.negative = neg
   File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
     trace = scrub(''.join(traceback.format_stack()))
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'hs'</attr>
     <value>False</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 757, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 758, in load_fasttext_format
     model.load_binary_data(encoding=encoding)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 772, in load_binary_data
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 773, in load_binary_data
     self._load_model_params(f)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 802, in _load_model_params
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 803, in _load_model_params
     self.hs = loss == 1
   File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
     trace = scrub(''.join(traceback.format_stack()))
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'sg'</attr>
     <value>True</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 757, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 758, in load_fasttext_format
     model.load_binary_data(encoding=encoding)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 772, in load_binary_data
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 773, in load_binary_data
     self._load_model_params(f)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 803, in _load_model_params
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 804, in _load_model_params
     self.sg = model == 2
   File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
     trace = scrub(''.join(traceback.format_stack()))
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastTextTrainables object at 0x7f874532ca58}</self>
+    <self>{gensim.models.fasttext.FastTextTrainables object at 0x7efd6b4344a8}</self>
     <attr>'bucket'</attr>
     <value>100</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 757, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 758, in load_fasttext_format
     model.load_binary_data(encoding=encoding)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 772, in load_binary_data
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 773, in load_binary_data
     self._load_model_params(f)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 804, in _load_model_params
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 805, in _load_model_params
     self.trainables.bucket = bucket
   File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
     trace = scrub(''.join(traceback.format_stack()))
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</self>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
     <attr>'bucket'</attr>
     <value>100</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 757, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 758, in load_fasttext_format
     model.load_binary_data(encoding=encoding)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 772, in load_binary_data
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 773, in load_binary_data
     self._load_model_params(f)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 805, in _load_model_params
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 806, in _load_model_params
     self.wv.bucket = bucket
   File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
     trace = scrub(''.join(traceback.format_stack()))
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</self>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
     <attr>'min_n'</attr>
     <value>3</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 757, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 758, in load_fasttext_format
     model.load_binary_data(encoding=encoding)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 772, in load_binary_data
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 773, in load_binary_data
     self._load_model_params(f)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 806, in _load_model_params
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 807, in _load_model_params
     self.wv.min_n = minn
   File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
     trace = scrub(''.join(traceback.format_stack()))
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</self>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
     <attr>'max_n'</attr>
     <value>6</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 757, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 758, in load_fasttext_format
     model.load_binary_data(encoding=encoding)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 772, in load_binary_data
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 773, in load_binary_data
     self._load_model_params(f)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 807, in _load_model_params
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 808, in _load_model_params
     self.wv.max_n = maxn
   File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
     trace = scrub(''.join(traceback.format_stack()))
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastTextVocab object at 0x7f874532c470}</self>
+    <self>{gensim.models.fasttext.FastTextVocab object at 0x7efd6b434a20}</self>
     <attr>'sample'</attr>
     <value>0.0001</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 757, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 758, in load_fasttext_format
     model.load_binary_data(encoding=encoding)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 772, in load_binary_data
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 773, in load_binary_data
     self._load_model_params(f)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 808, in _load_model_params
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 809, in _load_model_params
     self.vocabulary.sample = t
   File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
     trace = scrub(''.join(traceback.format_stack()))
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</self>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
     <attr>'vectors_ngrams'</attr>
     <value>array([[ 0.0289605 ,  0.03503621,  0.01985699, ...,  0.03016648,
         -0.00798164, -0.05169105],
@@ -2279,44 +2717,44 @@
         -0.00776232, -0.05247942],
        [ 0.13397884,  0.08995576,  0.09023027, ...,  0.06839848,
         -0.00452151, -0.17016166]], dtype=float32)</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 757, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 758, in load_fasttext_format
     model.load_binary_data(encoding=encoding)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 774, in load_binary_data
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 775, in load_binary_data
     self._load_vectors(f)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 869, in _load_vectors
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 870, in _load_vectors
     expected_vector_size=self.wv.vector_size
   File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
     trace = scrub(''.join(traceback.format_stack()))
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'num_original_vectors'</attr>
     <value>122</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 757, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 758, in load_fasttext_format
     model.load_binary_data(encoding=encoding)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 774, in load_binary_data
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 775, in load_binary_data
     self._load_vectors(f)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 871, in _load_vectors
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 872, in _load_vectors
     self.num_original_vectors = self.wv.vectors_ngrams.shape[0]
   File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
     trace = scrub(''.join(traceback.format_stack()))
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</self>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
     <attr>'vectors'</attr>
     <value>array([[0., 0., 0., ..., 0., 0., 0.],
        [0., 0., 0., ..., 0., 0., 0.],
@@ -2325,70 +2763,70 @@
        [0., 0., 0., ..., 0., 0., 0.],
        [0., 0., 0., ..., 0., 0., 0.],
        [0., 0., 0., ..., 0., 0., 0.]], dtype=float32)</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 757, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 758, in load_fasttext_format
     model.load_binary_data(encoding=encoding)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 774, in load_binary_data
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 775, in load_binary_data
     self._load_vectors(f)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 879, in _load_vectors
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 880, in _load_vectors
     self.trainables.init_ngrams_post_load(self.file_name, self.wv)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1162, in init_ngrams_post_load
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1163, in init_ngrams_post_load
     wv.vectors = np.zeros((len(wv.vocab), wv.vector_size), dtype=REAL)
   File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
     trace = scrub(''.join(traceback.format_stack()))
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</self>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
     <attr>'num_ngram_vectors'</attr>
     <value>0</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 757, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 758, in load_fasttext_format
     model.load_binary_data(encoding=encoding)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 774, in load_binary_data
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 775, in load_binary_data
     self._load_vectors(f)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 879, in _load_vectors
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 880, in _load_vectors
     self.trainables.init_ngrams_post_load(self.file_name, self.wv)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1168, in init_ngrams_post_load
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1169, in init_ngrams_post_load
     wv.num_ngram_vectors = 0
   File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
     trace = scrub(''.join(traceback.format_stack()))
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</self>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
     <attr>'num_ngram_vectors'</attr>
     <value>85</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 757, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 758, in load_fasttext_format
     model.load_binary_data(encoding=encoding)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 774, in load_binary_data
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 775, in load_binary_data
     self._load_vectors(f)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 879, in _load_vectors
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 880, in _load_vectors
     self.trainables.init_ngrams_post_load(self.file_name, self.wv)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1176, in init_ngrams_post_load
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1177, in init_ngrams_post_load
     wv.num_ngram_vectors = len(ngram_indices)
   File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
     trace = scrub(''.join(traceback.format_stack()))
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</self>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
     <attr>'vectors_ngrams'</attr>
     <value>array([[ 1.0871379e-01,  8.0477141e-02,  6.7821659e-02, ...,
          6.5764144e-02, -6.9929552e-03, -1.4957841e-01],
@@ -2403,107 +2841,107 @@
          9.5035955e-03, -2.2368440e-03, -1.7787755e-02],
        [ 2.4318080e-02,  1.6961092e-02,  1.5611401e-02, ...,
          1.4766653e-02,  2.5972601e-03, -3.9959569e-02]], dtype=float32)</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 757, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 758, in load_fasttext_format
     model.load_binary_data(encoding=encoding)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 774, in load_binary_data
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 775, in load_binary_data
     self._load_vectors(f)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 879, in _load_vectors
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 880, in _load_vectors
     self.trainables.init_ngrams_post_load(self.file_name, self.wv)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1177, in init_ngrams_post_load
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1178, in init_ngrams_post_load
     wv.vectors_ngrams = wv.vectors_ngrams.take(ngram_indices, axis=0)
   File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
     trace = scrub(''.join(traceback.format_stack()))
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</self>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
     <attr>'vectors_norm'</attr>
     <value>None</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 757, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 758, in load_fasttext_format
     model.load_binary_data(encoding=encoding)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 774, in load_binary_data
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 775, in load_binary_data
     self._load_vectors(f)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 880, in _load_vectors
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 881, in _load_vectors
     self._clear_post_train()
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 529, in _clear_post_train
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 530, in _clear_post_train
     self.wv.vectors_norm = None
   File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
     trace = scrub(''.join(traceback.format_stack()))
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</self>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
     <attr>'vectors_vocab_norm'</attr>
     <value>None</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 757, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 758, in load_fasttext_format
     model.load_binary_data(encoding=encoding)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 774, in load_binary_data
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 775, in load_binary_data
     self._load_vectors(f)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 880, in _load_vectors
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 881, in _load_vectors
     self._clear_post_train()
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 530, in _clear_post_train
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 531, in _clear_post_train
     self.wv.vectors_vocab_norm = None
   File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
     trace = scrub(''.join(traceback.format_stack()))
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</self>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
     <attr>'vectors_ngrams_norm'</attr>
     <value>None</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 757, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 758, in load_fasttext_format
     model.load_binary_data(encoding=encoding)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 774, in load_binary_data
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 775, in load_binary_data
     self._load_vectors(f)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 880, in _load_vectors
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 881, in _load_vectors
     self._clear_post_train()
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 531, in _clear_post_train
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 532, in _clear_post_train
     self.wv.vectors_ngrams_norm = None
   File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
     trace = scrub(''.join(traceback.format_stack()))
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</self>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
     <attr>'buckets_word'</attr>
     <value>None</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 18, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 29, in load_native
     model = FT_gensim.load_fasttext_format(path)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 757, in load_fasttext_format
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 758, in load_fasttext_format
     model.load_binary_data(encoding=encoding)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 774, in load_binary_data
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 775, in load_binary_data
     self._load_vectors(f)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 880, in _load_vectors
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 881, in _load_vectors
     self._clear_post_train()
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 532, in _clear_post_train
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 533, in _clear_post_train
     self.wv.buckets_word = None
   File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
     trace = scrub(''.join(traceback.format_stack()))
@@ -2525,48 +2963,48 @@ array([[-0.0831745 , -0.06219532, -0.05683682, ..., -0.04464203,
          0.00182096,  0.04270054]], dtype=float32)
 </hidden_output>
   <setattr>
-    <self>{gensim.models.fasttext.FastTextVocab object at 0x7f874532c470}</self>
+    <self>{gensim.models.fasttext.FastTextVocab object at 0x7efd6b434a20}</self>
     <attr>'old_vocab_len'</attr>
     <value>22</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 19, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 30, in load_native
     model.build_vocab(sentences, update=True)  # this doesn't work, but should. See also https://github.com/RaRe-Technologies/gensim/issues/2139
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 517, in build_vocab
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 518, in build_vocab
     self.vocabulary.old_vocab_len = len(self.wv.vocab)
   File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
     trace = scrub(''.join(traceback.format_stack()))
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastTextTrainables object at 0x7f874532ca58}</self>
+    <self>{gensim.models.fasttext.FastTextTrainables object at 0x7efd6b4344a8}</self>
     <attr>'old_hash2index_len'</attr>
     <value>85</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 19, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 30, in load_native
     model.build_vocab(sentences, update=True)  # this doesn't work, but should. See also https://github.com/RaRe-Technologies/gensim/issues/2139
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 518, in build_vocab
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 519, in build_vocab
     self.trainables.old_hash2index_len = len(self.wv.hash2index)
   File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
     trace = scrub(''.join(traceback.format_stack()))
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastTextVocab object at 0x7f874532c470}</self>
+    <self>{gensim.models.fasttext.FastTextVocab object at 0x7efd6b434a20}</self>
     <attr>'raw_vocab'</attr>
     <value>defaultdict({class 'int'}, {'human': 2, 'interface': 2, 'computer': 2, 'survey': 2, 'user': 3, 'system': 4, 'response': 2, 'time': 2, 'eps': 2, 'trees': 3, 'graph': 3, 'minors': 2})</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 19, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 30, in load_native
     model.build_vocab(sentences, update=True)  # this doesn't work, but should. See also https://github.com/RaRe-Technologies/gensim/issues/2139
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 522, in build_vocab
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 523, in build_vocab
     keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, **kwargs)
   File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 936, in build_vocab
     sentences=sentences, corpus_file=corpus_file, progress_per=progress_per, trim_rule=trim_rule)
@@ -2579,16 +3017,16 @@ array([[-0.0831745 , -0.06219532, -0.05683682, ..., -0.04464203,
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'corpus_count'</attr>
     <value>9</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 19, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 30, in load_native
     model.build_vocab(sentences, update=True)  # this doesn't work, but should. See also https://github.com/RaRe-Technologies/gensim/issues/2139
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 522, in build_vocab
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 523, in build_vocab
     keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, **kwargs)
   File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 937, in build_vocab
     self.corpus_count = corpus_count
@@ -2597,16 +3035,16 @@ array([[-0.0831745 , -0.06219532, -0.05683682, ..., -0.04464203,
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastText object at 0x7f87682b7d30}</self>
+    <self>{gensim.models.fasttext.FastText object at 0x7efd6bd42438}</self>
     <attr>'corpus_total_words'</attr>
     <value>29</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 19, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 30, in load_native
     model.build_vocab(sentences, update=True)  # this doesn't work, but should. See also https://github.com/RaRe-Technologies/gensim/issues/2139
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 522, in build_vocab
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 523, in build_vocab
     keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, **kwargs)
   File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 938, in build_vocab
     self.corpus_total_words = total_words
@@ -2615,20 +3053,20 @@ array([[-0.0831745 , -0.06219532, -0.05683682, ..., -0.04464203,
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastTextVocab object at 0x7f874532c470}</self>
+    <self>{gensim.models.fasttext.FastTextVocab object at 0x7efd6b434a20}</self>
     <attr>'effective_min_count'</attr>
     <value>5</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 19, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 30, in load_native
     model.build_vocab(sentences, update=True)  # this doesn't work, but should. See also https://github.com/RaRe-Technologies/gensim/issues/2139
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 522, in build_vocab
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 523, in build_vocab
     keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, **kwargs)
   File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 941, in build_vocab
     trim_rule=trim_rule, **kwargs)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1040, in prepare_vocab
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1041, in prepare_vocab
     min_count=min_count, sample=sample, dry_run=dry_run)
   File "/home/misha/git/gensim/gensim/models/word2vec.py", line 1627, in prepare_vocab
     self.effective_min_count = min_count
@@ -2637,20 +3075,20 @@ array([[-0.0831745 , -0.06219532, -0.05683682, ..., -0.04464203,
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastTextVocab object at 0x7f874532c470}</self>
+    <self>{gensim.models.fasttext.FastTextVocab object at 0x7efd6b434a20}</self>
     <attr>'raw_vocab'</attr>
     <value>defaultdict({class 'int'}, {})</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 19, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 30, in load_native
     model.build_vocab(sentences, update=True)  # this doesn't work, but should. See also https://github.com/RaRe-Technologies/gensim/issues/2139
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 522, in build_vocab
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 523, in build_vocab
     keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, **kwargs)
   File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 941, in build_vocab
     trim_rule=trim_rule, **kwargs)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1040, in prepare_vocab
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1041, in prepare_vocab
     min_count=min_count, sample=sample, dry_run=dry_run)
   File "/home/misha/git/gensim/gensim/models/word2vec.py", line 1735, in prepare_vocab
     self.raw_vocab = defaultdict(int)
@@ -2659,21 +3097,21 @@ array([[-0.0831745 , -0.06219532, -0.05683682, ..., -0.04464203,
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.fasttext.FastTextVocab object at 0x7f874532c470}</self>
+    <self>{gensim.models.fasttext.FastTextVocab object at 0x7efd6b434a20}</self>
     <attr>'cum_table'</attr>
     <value>array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       dtype=uint32)</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 19, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 30, in load_native
     model.build_vocab(sentences, update=True)  # this doesn't work, but should. See also https://github.com/RaRe-Technologies/gensim/issues/2139
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 522, in build_vocab
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 523, in build_vocab
     keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, **kwargs)
   File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 941, in build_vocab
     trim_rule=trim_rule, **kwargs)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1040, in prepare_vocab
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1041, in prepare_vocab
     min_count=min_count, sample=sample, dry_run=dry_run)
   File "/home/misha/git/gensim/gensim/models/word2vec.py", line 1761, in prepare_vocab
     self.make_cum_table(wv)
@@ -2684,7 +3122,7 @@ array([[-0.0831745 , -0.06219532, -0.05683682, ..., -0.04464203,
 </stack>
   </setattr>
   <setattr>
-    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7f87682bd710}</self>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
     <attr>'vectors'</attr>
     <value>array([[ 0.11795133,  0.09115099,  0.08095811, ...,  0.06826429,
         -0.01155455, -0.16212074],
@@ -2699,22 +3137,239 @@ array([[-0.0831745 , -0.06219532, -0.05683682, ..., -0.04464203,
         -0.01476395, -0.1725243 ],
        [ 0.0711512 ,  0.05198111,  0.04575286, ...,  0.03506007,
         -0.00020315, -0.09464949]], dtype=float32)</value>
-    <stack>  File "trigger.py", line 29, in {module}
+    <stack>  File "trigger.py", line 45, in {module}
     main()
-  File "trigger.py", line 25, in main
-    native = load_native()
-  File "trigger.py", line 19, in load_native
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 30, in load_native
     model.build_vocab(sentences, update=True)  # this doesn't work, but should. See also https://github.com/RaRe-Technologies/gensim/issues/2139
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 522, in build_vocab
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 523, in build_vocab
     keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, **kwargs)
   File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 943, in build_vocab
     self.trainables.prepare_weights(self.hs, self.negative, self.wv, update=update, vocabulary=self.vocabulary)
-  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1052, in prepare_weights
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1053, in prepare_weights
     super(FastTextTrainables, self).prepare_weights(hs, negative, wv, update=update, vocabulary=vocabulary)
   File "/home/misha/git/gensim/gensim/models/word2vec.py", line 1843, in prepare_weights
     self.update_weights(hs, negative, wv)
   File "/home/misha/git/gensim/gensim/models/word2vec.py", line 1885, in update_weights
     wv.vectors = vstack([wv.vectors, newvectors])
+  File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
+    trace = scrub(''.join(traceback.format_stack()))
+</stack>
+  </setattr>
+  <setattr>
+    <self>{gensim.models.fasttext.FastTextTrainables object at 0x7efd6b4344a8}</self>
+    <attr>'syn1neg'</attr>
+    <value>array([], shape=(0, 100), dtype=float32)</value>
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 30, in load_native
+    model.build_vocab(sentences, update=True)  # this doesn't work, but should. See also https://github.com/RaRe-Technologies/gensim/issues/2139
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 523, in build_vocab
+    keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, **kwargs)
+  File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 943, in build_vocab
+    self.trainables.prepare_weights(self.hs, self.negative, self.wv, update=update, vocabulary=self.vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1053, in prepare_weights
+    super(FastTextTrainables, self).prepare_weights(hs, negative, wv, update=update, vocabulary=vocabulary)
+  File "/home/misha/git/gensim/gensim/models/word2vec.py", line 1843, in prepare_weights
+    self.update_weights(hs, negative, wv)
+  File "/home/misha/git/gensim/gensim/models/word2vec.py", line 1890, in update_weights
+    self.syn1neg = vstack([self.syn1neg, zeros((gained_vocab, self.layer1_size), dtype=REAL)])
+  File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
+    trace = scrub(''.join(traceback.format_stack()))
+</stack>
+  </setattr>
+  <setattr>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
+    <attr>'vectors_norm'</attr>
+    <value>None</value>
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 30, in load_native
+    model.build_vocab(sentences, update=True)  # this doesn't work, but should. See also https://github.com/RaRe-Technologies/gensim/issues/2139
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 523, in build_vocab
+    keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, **kwargs)
+  File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 943, in build_vocab
+    self.trainables.prepare_weights(self.hs, self.negative, self.wv, update=update, vocabulary=self.vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1053, in prepare_weights
+    super(FastTextTrainables, self).prepare_weights(hs, negative, wv, update=update, vocabulary=vocabulary)
+  File "/home/misha/git/gensim/gensim/models/word2vec.py", line 1843, in prepare_weights
+    self.update_weights(hs, negative, wv)
+  File "/home/misha/git/gensim/gensim/models/word2vec.py", line 1891, in update_weights
+    wv.vectors_norm = None
+  File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
+    trace = scrub(''.join(traceback.format_stack()))
+</stack>
+  </setattr>
+  <setattr>
+    <self>{gensim.models.fasttext.FastTextTrainables object at 0x7efd6b4344a8}</self>
+    <attr>'vectors_lockf'</attr>
+    <value>array([1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.,
+       1., 1., 1., 1., 1.], dtype=float32)</value>
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 30, in load_native
+    model.build_vocab(sentences, update=True)  # this doesn't work, but should. See also https://github.com/RaRe-Technologies/gensim/issues/2139
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 523, in build_vocab
+    keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, **kwargs)
+  File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 943, in build_vocab
+    self.trainables.prepare_weights(self.hs, self.negative, self.wv, update=update, vocabulary=self.vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1053, in prepare_weights
+    super(FastTextTrainables, self).prepare_weights(hs, negative, wv, update=update, vocabulary=vocabulary)
+  File "/home/misha/git/gensim/gensim/models/word2vec.py", line 1843, in prepare_weights
+    self.update_weights(hs, negative, wv)
+  File "/home/misha/git/gensim/gensim/models/word2vec.py", line 1894, in update_weights
+    self.vectors_lockf = ones(len(wv.vocab), dtype=REAL)  # zeros suppress learning
+  File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
+    trace = scrub(''.join(traceback.format_stack()))
+</stack>
+  </setattr>
+  <setattr>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
+    <attr>'buckets_word'</attr>
+    <value>{}</value>
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 30, in load_native
+    model.build_vocab(sentences, update=True)  # this doesn't work, but should. See also https://github.com/RaRe-Technologies/gensim/issues/2139
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 523, in build_vocab
+    keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, **kwargs)
+  File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 943, in build_vocab
+    self.trainables.prepare_weights(self.hs, self.negative, self.wv, update=update, vocabulary=self.vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1054, in prepare_weights
+    self.init_ngrams_weights(wv, update=update, vocabulary=vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1094, in init_ngrams_weights
+    wv.buckets_word = {}
+  File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
+    trace = scrub(''.join(traceback.format_stack()))
+</stack>
+  </setattr>
+  <setattr>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
+    <attr>'num_ngram_vectors'</attr>
+    <value>85</value>
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 30, in load_native
+    model.build_vocab(sentences, update=True)  # this doesn't work, but should. See also https://github.com/RaRe-Technologies/gensim/issues/2139
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 523, in build_vocab
+    keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, **kwargs)
+  File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 943, in build_vocab
+    self.trainables.prepare_weights(self.hs, self.negative, self.wv, update=update, vocabulary=self.vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1054, in prepare_weights
+    self.init_ngrams_weights(wv, update=update, vocabulary=vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1106, in init_ngrams_weights
+    wv.num_ngram_vectors += num_new_ngrams
+  File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
+    trace = scrub(''.join(traceback.format_stack()))
+</stack>
+  </setattr>
+  <setattr>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
+    <attr>'vectors_vocab'</attr>
+    <value>array([], shape=(0, 100), dtype=float32)</value>
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 30, in load_native
+    model.build_vocab(sentences, update=True)  # this doesn't work, but should. See also https://github.com/RaRe-Technologies/gensim/issues/2139
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 523, in build_vocab
+    keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, **kwargs)
+  File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 943, in build_vocab
+    self.trainables.prepare_weights(self.hs, self.negative, self.wv, update=update, vocabulary=self.vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1054, in prepare_weights
+    self.init_ngrams_weights(wv, update=update, vocabulary=vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1124, in init_ngrams_weights
+    wv.vectors_vocab = vstack([wv.vectors_vocab, new_vocab_rows])
+  File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
+    trace = scrub(''.join(traceback.format_stack()))
+</stack>
+  </setattr>
+  <setattr>
+    <self>{gensim.models.fasttext.FastTextTrainables object at 0x7efd6b4344a8}</self>
+    <attr>'vectors_vocab_lockf'</attr>
+    <value>array([], shape=(0, 100), dtype=float32)</value>
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 30, in load_native
+    model.build_vocab(sentences, update=True)  # this doesn't work, but should. See also https://github.com/RaRe-Technologies/gensim/issues/2139
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 523, in build_vocab
+    keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, **kwargs)
+  File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 943, in build_vocab
+    self.trainables.prepare_weights(self.hs, self.negative, self.wv, update=update, vocabulary=self.vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1054, in prepare_weights
+    self.init_ngrams_weights(wv, update=update, vocabulary=vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1125, in init_ngrams_weights
+    self.vectors_vocab_lockf = vstack([self.vectors_vocab_lockf, new_vocab_lockf_rows])
+  File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
+    trace = scrub(''.join(traceback.format_stack()))
+</stack>
+  </setattr>
+  <setattr>
+    <self>{gensim.models.keyedvectors.FastTextKeyedVectors object at 0x7efd8e3cd518}</self>
+    <attr>'vectors_ngrams'</attr>
+    <value>array([[ 1.0871379e-01,  8.0477141e-02,  6.7821659e-02, ...,
+         6.5764144e-02, -6.9929552e-03, -1.4957841e-01],
+       [ 2.2013138e-01,  1.6743004e-01,  1.5558679e-01, ...,
+         1.3343975e-01, -2.1446653e-02, -3.0642036e-01],
+       [ 6.4621657e-02,  6.1310168e-02,  4.4673949e-02, ...,
+         3.0817932e-02, -6.6397819e-03, -9.1693528e-02],
+       ...,
+       [ 1.1472188e-02,  8.5214706e-06,  8.0970936e-03, ...,
+         3.7619702e-03, -7.9291258e-03, -1.0479237e-02],
+       [ 2.2768346e-03,  1.5202723e-02,  1.4132119e-02, ...,
+         9.5035955e-03, -2.2368440e-03, -1.7787755e-02],
+       [ 2.4318080e-02,  1.6961092e-02,  1.5611401e-02, ...,
+         1.4766653e-02,  2.5972601e-03, -3.9959569e-02]], dtype=float32)</value>
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 30, in load_native
+    model.build_vocab(sentences, update=True)  # this doesn't work, but should. See also https://github.com/RaRe-Technologies/gensim/issues/2139
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 523, in build_vocab
+    keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, **kwargs)
+  File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 943, in build_vocab
+    self.trainables.prepare_weights(self.hs, self.negative, self.wv, update=update, vocabulary=self.vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1054, in prepare_weights
+    self.init_ngrams_weights(wv, update=update, vocabulary=vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1126, in init_ngrams_weights
+    wv.vectors_ngrams = vstack([wv.vectors_ngrams, new_ngram_rows])
+  File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
+    trace = scrub(''.join(traceback.format_stack()))
+</stack>
+  </setattr>
+  <setattr>
+    <self>{gensim.models.fasttext.FastTextTrainables object at 0x7efd6b4344a8}</self>
+    <attr>'vectors_ngrams_lockf'</attr>
+    <value>array([], shape=(0, 100), dtype=float32)</value>
+    <stack>  File "trigger.py", line 45, in {module}
+    main()
+  File "trigger.py", line 37, in main
+    model = load_native()
+  File "trigger.py", line 30, in load_native
+    model.build_vocab(sentences, update=True)  # this doesn't work, but should. See also https://github.com/RaRe-Technologies/gensim/issues/2139
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 523, in build_vocab
+    keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, **kwargs)
+  File "/home/misha/git/gensim/gensim/models/base_any2vec.py", line 943, in build_vocab
+    self.trainables.prepare_weights(self.hs, self.negative, self.wv, update=update, vocabulary=self.vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1054, in prepare_weights
+    self.init_ngrams_weights(wv, update=update, vocabulary=vocabulary)
+  File "/home/misha/git/gensim/gensim/models/fasttext.py", line 1127, in init_ngrams_weights
+    self.vectors_ngrams_lockf = vstack([self.vectors_ngrams_lockf, new_ngram_lockf_rows])
   File "/home/misha/git/gensim/gensim/utils.py", line 392, in __setattr__
     trace = scrub(''.join(traceback.format_stack()))
 </stack>

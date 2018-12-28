@@ -858,11 +858,14 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         def load_native():
             path = datapath('toy-model.bin')
             model = FT_gensim.load_fasttext_format(path)
-            # model.build_vocab(common_texts, update=True)  # this doesn't work, but should. See also https://github.com/RaRe-Technologies/gensim/issues/2139
+            model.build_vocab(sentences, update=True)  # this doesn't work, but should. See also https://github.com/RaRe-Technologies/gensim/issues/2139
             return model
 
         trained = train_gensim()
         native = load_native()
+
+        trained.save('gitignore/trained.gensim')
+        native.save('gitignore/native.gensim')
 
         #
         # For now, having this test not crash is good enough.
