@@ -860,7 +860,10 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         def load_native():
             path = datapath('toy-model.bin')
             model = FT_gensim.load_fasttext_format(path)
-            model.build_vocab(sentences, update=True)  # this doesn't work, but should. See also https://github.com/RaRe-Technologies/gensim/issues/2139
+            words = []
+            for s in sentences:
+                words += s
+            model.build_vocab(words, update=True)
             return model
 
         trained = train_gensim()
