@@ -251,7 +251,7 @@ class FastText(BaseWordEmbeddingsModel):
         computed in the :class:`~gensim.models.word2vec.Word2Vec`, however here we also include vectors for n-grams.
         This allows the model to compute embeddings even for **unseen** words (that do not exist in the vocabulary),
         as the aggregate of the n-grams included in the word. After training the model, this attribute can be used
-        directly to query those embeddings in various ways. Check the module level docstring from some examples.
+        directly to query those embeddings in various ways. Check the module level docstring for some examples.
     vocabulary : :class:`~gensim.models.fasttext.FastTextVocab`
         This object represents the vocabulary of the model.
         Besides keeping track of all unique words, this object provides extra functionality, such as
@@ -1059,10 +1059,15 @@ class FastTextTrainables(Word2VecTrainables, Tracker):
 
         Parameters
         ----------
+        wv : :class:`~gensim.models.keyedvectors.FastTextKeyedVectors`
+            Contains the mapping between the words and embeddings.
+            The vectors for the computed ngrams will go here.
         update : bool
             If True, the new vocab words and their new ngrams word vectors are initialized
             with random uniform distribution and updated/added to the existing vocab word and ngram vectors.
-
+        vocabulary : :class:`~gensim.models.fasttext.FastTextVocab`
+            This object represents the vocabulary of the model.
+            If update is True, then vocabulary may not be None.
         """
         if not update:
             wv.vectors_vocab = empty((len(wv.vocab), wv.vector_size), dtype=REAL)
