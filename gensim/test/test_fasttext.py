@@ -852,7 +852,7 @@ class NativeTrainingContinuationTest(unittest.TestCase):
             with open(path) as fin:
                 words = fin.read().strip().split(' ')
 
-            model = FT_gensim()
+            model = FT_gensim(bucket=100)
             model.build_vocab(words)
             model.train(words, total_examples=len(words), epochs=model.epochs)
             return model
