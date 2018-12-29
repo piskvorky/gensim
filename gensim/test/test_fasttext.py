@@ -843,6 +843,8 @@ class TestFastTextModel(unittest.TestCase):
 
 
 class NativeTrainingContinuationTest(unittest.TestCase):
+    maxDiff = None
+
     def test(self):
 
         def train_gensim():
@@ -864,8 +866,23 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         trained = train_gensim()
         native = load_native()
 
-        trained.save('gitignore/trained.gensim')
-        native.save('gitignore/native.gensim')
+        trained_vocab = {key: value.count for (key, value) in trained.wv.vocab.items()}
+        native_vocab = {key: value.count for (key, value) in native.wv.vocab.items()}
+        self.assertEqual(trained_vocab, native_vocab)
+
+        #
+        # Ensure the neural networks are identical for both cases.
+        #
+        trained_nn, native_nn = trained.trainables, native.trainables
+        self.assertEqual(trained_nn.syn1neg.shape, native_nn.syn1neg.shape)
+        self.assertEqual(trained_nn.syn1neg, native_nn.syn1neg)
+        self.assertEqual(trained_nn.vectors_lockf, native_nn.vectors_lockf)
+        self.assertEqual(trained_nn.vectors_vocab_lockf, native_nn.vectors_vocab_lockf)
+        self.assertEqual(trained_nn.vectors_ngrams_lockf, native_nn.vectors_ngrams_lockf)
+
+
+        # trained.save('gitignore/trained.gensim')
+        # native.save('gitignore/native.gensim')
 
         #
         # For now, having this test not crash is good enough.
