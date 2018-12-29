@@ -885,15 +885,24 @@ class FastText(BaseWordEmbeddingsModel):
             new_format=self.new_format,
             expected_vector_size=self.wv.vector_size
         )
-        print('<hidden_output>')
-        print(repr(hidden_output))
-        print('</hidden_output>')
+
+        if False:
+            print('<hidden_output_shape>%r</hidden_output_shape>' % repr(hidden_output.shape))
+            print('<hidden_output>')
+            print(repr(hidden_output))
+            print('</hidden_output>')
+
+        assert not file_handle.read(), 'expected to have reached EOF'
 
         #
-        # FIXME: this seems to be sufficient to get the test to pass, but the
-        # test isn't particularly strict.  I'm not sure if this is correct.
+        # TODO: still not 100% sure what to do with this new matrix.
+        # The shape matches the expected shape (compared with gensim training),
+        # but the values don't.
         #
-        # self.trainables.syn1neg = self.wv.vector_vocab = hidden_output
+        self.trainables.syn1neg = hidden_output
+        self.trainables.vectors_vocab_lockf = ones(hidden_output.shape, dtype=REAL)
+        self.trainables.vectors_ngram_lockf = ones(hidden_output.shape, dtype=REAL)
+        # self.trainables.vectors_ngrams_lockf = ones(hidden_output.shape[0], dtype=REAL)
 
     def struct_unpack(self, file_handle, fmt):
         """Read a single object from an open file.
@@ -1027,7 +1036,7 @@ def _load_matrix(file_handle, new_format=True, expected_vector_size=None):
     return matrix
 
 
-class FastTextVocab(Word2VecVocab, Tracker):
+class FastTextVocab(Word2VecVocab):
     """Vocabulary used by :class:`~gensim.models.fasttext.FastText`."""
     def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0, ns_exponent=0.75):
         super(FastTextVocab, self).__init__(

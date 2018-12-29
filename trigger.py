@@ -14,8 +14,9 @@ def train_gensim():
     path = datapath('toy-data.txt')
     with open(path) as fin:
         words = fin.read().strip().split(' ')
+    sent = [[w] for w in words]
 
-    model = FT_gensim()
+    model = FT_gensim(bucket=100)
     model.build_vocab(words)
     model.train(words, total_examples=len(words), epochs=model.epochs)
     return model
@@ -38,8 +39,8 @@ def main():
     else:
         model = train_gensim()
     print('</log>')
-    del model
+    return model
 
 
 if __name__ == '__main__':
-    main()
+    model = main()
