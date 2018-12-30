@@ -284,6 +284,20 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         scored_topics = zip(str_topics, coherence_scores)
         return sorted(scored_topics, key=lambda tup: tup[1], reverse=True)
 
+    def log_perplexity(self, corpus):
+        W = self.get_topics().T
+
+        H = np.zeros((W.shape[1], len(corpus)))
+        for bow_id, bow in enumerate(corpus):
+            for topic_id, proba in self[bow]:
+                H[topic_id, bow_id] = proba
+
+        dense_corpus = matutils.corpus2dense(corpus, W.shape[0])
+
+        pred_factors = W.dot(H)
+
+        return -(np.log(pred_factors, where=pred_factors > 0) * dense_corpus).sum() / dense_corpus.sum()
+
     def get_term_topics(self, word_id, minimum_probability=None):
         """Get the most relevant topics to the given word.
 
@@ -313,7 +327,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         word_topics = self._W.getrow(word_id)
 
-        if self.normalize:
+        if self.normalize and word_topics.sum() > 0:
             word_topics /= word_topics.sum()
 
         for topic_id in range(0, self.num_topics):
