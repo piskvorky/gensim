@@ -1,8 +1,6 @@
 FastText Notes
 ==============
 
-The gensim FastText implementation consists of several key classes:
-
 The implementation is split across several submodules:
 
 - models.fasttext
@@ -25,6 +23,44 @@ Inherits from models.word2vec.Word2VecVocab, adding no new functionality.
 
 FastTextKeyedVectors
 --------------------
+
+Inheritance hierarchy:
+
+1. FastTextKeyedVectors
+2. WordEmbeddingsKeyedVectors.  Implements word similarity e.g. cosine similarity, WMD, etc.
+3. BaseKeyedVectors (abstract base class)
+4. utils.SaveLoad
+
+There are many attributes.
+
+Inherited from BaseKeyedVectors:
+
+- vectors: a 2D numpy array.  Flexible number of rows (0 by default).  Number of columns equals vector dimensionality.
+- vocab
+- vector_size (dimensionality)
+- index2entity
+
+Inherited from WordEmbeddingsKeyedVectors:
+
+- vectors_norm
+- index2word
+
+Added by FastTextKeyedVectors:
+
+- vectors_vocab: 2D array.  Rows are vectors.  Columns correspond to vector dimensions.  Initialized in FastTextTrainables.init_ngrams_weights.
+- vectors_vocab_norm: looks unused, see _clear_post_train method.
+- vectors_ngrams: 2D array.  Initialized in init_ngrams_weights function.  Initialized in _load_vectors method when reading from native FB binary.  Modified in reset_ngrams_weights method.
+- vectors_ngrams_norm: looks unused, see _clear_post_train method.
+- buckets_word: looks unused, see _clear_post_train method.
+- hash2index: A hashmap.  Keys are hashes of ngrams.  Values are the number of ngrams (?).  Initialized in init_ngrams_weights function.
+- min_n: minimum ngram length
+- max_n: maximum ngram length
+- num_ngram_vectors: initialized in the init_ngrams_weights function
+
+The above attributes are initialized to None in the FastTextKeyedVectors class constructor.
+Unfortunately, their real initialization happens in an entirely different module, models.fasttext - another indication of poor separation of concerns.
+
+
 
 FastTextTrainables
 ------------------

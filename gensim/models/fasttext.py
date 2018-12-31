@@ -1069,6 +1069,11 @@ class FastTextTrainables(Word2VecTrainables, Tracker):
         self.hs = hs
         self.negative = negative
 
+    #
+    # FIXME: this method appears to be temporally coupled to the constructor.
+    # There's little point instantiating a FastTextTrainables without calling
+    # this method.
+    #
     def prepare_weights(self, hs, negative, wv, update=False, vocabulary=None):
         super(FastTextTrainables, self).prepare_weights(hs, negative, wv, update=update, vocabulary=vocabulary)
         self.init_ngrams_weights(wv, update=update, vocabulary=vocabulary)
@@ -1123,6 +1128,9 @@ class FastTextTrainables(Word2VecTrainables, Tracker):
             self.vectors_ngrams_lockf = self.vectors_ngrams_lockf.take(ngram_indices, axis=0)
             self.reset_ngrams_weights(wv)
         else:
+            #
+            # NB. The loop structure looks similar to the above code.
+            #
             wv.buckets_word = {}
             num_new_ngrams = 0
             for word, vocab in wv.vocab.items():
