@@ -522,6 +522,9 @@ class FastText(BaseWordEmbeddingsModel):
             sentences=sentences, corpus_file=corpus_file, update=update, progress_per=progress_per,
             keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, **kwargs)
 
+    #
+    # FIXME: Here to override the superclass method that raises NotImplementedError
+    #
     def _set_train_params(self, **kwargs):
         pass
 
@@ -1043,6 +1046,11 @@ class FastTextVocab(Word2VecVocab):
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
             sorted_vocab=sorted_vocab, null_word=null_word, ns_exponent=ns_exponent)
 
+    #
+    # FIXME: why is this method even necessary?  It just passes the buck
+    # to the superclass and adds nothing new.  The same thing can be said
+    # about this entire class.  Why is it even here?
+    #
     def prepare_vocab(self, hs, negative, wv, update=False, keep_raw_vocab=False, trim_rule=None,
                       min_count=None, sample=None, dry_run=False):
         report_values = super(FastTextVocab, self).prepare_vocab(
@@ -1053,15 +1061,24 @@ class FastTextVocab(Word2VecVocab):
 
 class FastTextTrainables(Word2VecTrainables, Tracker):
     """Represents the inner shallow neural network used to train :class:`~gensim.models.fasttext.FastText`."""
-    def __init__(self, vector_size=100, seed=1, hashfxn=hash, bucket=2000000):
+    def __init__(self, vector_size=100, seed=1, hashfxn=hash, bucket=2000000, hs=0, negative=5):
         super(FastTextTrainables, self).__init__(
             vector_size=vector_size, seed=seed, hashfxn=hashfxn)
         self.bucket = int(bucket)
+
+        #
+        # These are relevant implementation details for the NN
+        #
+        self.hs = hs
+        self.negative = negative
 
     def prepare_weights(self, hs, negative, wv, update=False, vocabulary=None):
         super(FastTextTrainables, self).prepare_weights(hs, negative, wv, update=update, vocabulary=vocabulary)
         self.init_ngrams_weights(wv, update=update, vocabulary=vocabulary)
 
+    #
+    # FIXME: this looks like an internal method
+    #
     def init_ngrams_weights(self, wv, update=False, vocabulary=None):
         """Compute ngrams of all words present in vocabulary and stores vectors for only those ngrams.
         Vectors for other ngrams are initialized with a random uniform distribution in FastText.
@@ -1080,6 +1097,10 @@ class FastTextTrainables(Word2VecTrainables, Tracker):
         """
         if not update:
             wv.vectors_vocab = empty((len(wv.vocab), wv.vector_size), dtype=REAL)
+            #
+            # FIXME: Why is this being initialized as a 2D array here, whereas it is
+            # a 1D array when initialized in the load function?
+            #
             self.vectors_vocab_lockf = ones((len(wv.vocab), wv.vector_size), dtype=REAL)
 
             wv.vectors_ngrams = empty((self.bucket, wv.vector_size), dtype=REAL)
@@ -1156,6 +1177,11 @@ class FastTextTrainables(Word2VecTrainables, Tracker):
                 -1.0 / wv.vector_size, 1.0 / wv.vector_size, wv.vector_size
             ).astype(REAL)
 
+    #
+    # FIXME: the name is misleading.  Also, this seems to be an internal method.
+    # Looks like it doesn't even belong in this class, as it doesn't rely on any
+    # attributes other than self.bucket.
+    #
     def get_vocab_word_vecs(self, wv):
         """Calculate vectors for words in vocabulary and stores them in `vectors`."""
         for w, v in wv.vocab.items():

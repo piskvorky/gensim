@@ -643,6 +643,10 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         raise NotImplementedError()
 
     def _set_train_params(self, **kwargs):
+        #
+        # Is it necessary to raise anything here?  Moreover, this method
+        # doesn't seem to actually get called anywhere.
+        #
         raise NotImplementedError()
 
     def __init__(self, sentences=None, corpus_file=None, workers=3, vector_size=100, epochs=5, callbacks=(),
