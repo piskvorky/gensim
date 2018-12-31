@@ -103,7 +103,7 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
 
         predicted = self.vectors.most_similar('war', topn=None)
         self.assertEqual(len(predicted), len(self.vectors.vocab))
-    
+
     def test_relative_cosine_similarity(self):
         """Test relative_cosine_similarity returns expected results with an input of a word pair and topn"""
         wordnet_syn = ['good', 'goodness', 'commodity', 'trade_good', 'full', 'estimable', 'honorable',
@@ -115,7 +115,7 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
         for i in range(len(wordnet_syn)):
             if wordnet_syn[i] in self.vectors.vocab:
                 cos_sim.append(self.vectors.similarity("good", wordnet_syn[i]))
-        cos_sim = sorted(cos_sim, reverse=True) # cosine_similarity of "good" with wordnet_syn in decreasing order
+        cos_sim = sorted(cos_sim, reverse=True)  # cosine_similarity of "good" with wordnet_syn in decreasing order
         # computing relative_cosine_similarity of two similar words
         rcs_wordnet = self.vectors.similarity("good", "nice") / sum(cos_sim[i] for i in range(10))
         rcs = self.vectors.relative_cosine_similarity("good", "nice", 10)
@@ -124,7 +124,7 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
         # computing relative_cosine_similarity for two non-similar words
         rcs = self.vectors.relative_cosine_similarity("good", "worst", 10)
         self.assertTrue(rcs < 0.10)
-        
+
     def test_most_similar_raises_keyerror(self):
         """Test most_similar raises KeyError when input is out of vocab."""
         with self.assertRaises(KeyError):
