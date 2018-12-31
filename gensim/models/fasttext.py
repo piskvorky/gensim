@@ -797,7 +797,6 @@ class FastText(BaseWordEmbeddingsModel):
             ws = version
             epoch, min_count, neg, _, loss, model, bucket, minn, maxn, _, t = self.struct_unpack(file_handle, '@10i1d')
         # Parameters stored by [Args::save](https://github.com/facebookresearch/fastText/blob/master/src/args.cc)
-        self.wv.vector_size = dim
         self.vector_size = dim
         self.window = ws
         self.epochs = epoch
@@ -806,10 +805,15 @@ class FastText(BaseWordEmbeddingsModel):
         self.hs = loss == 1
         self.sg = model == 2
         self.trainables.bucket = bucket
+        self.vocabulary.sample = t
+
+        #
+        # Update wv properties.  This should really be a function in wv.
+        #
+        self.wv.vector_size = dim
         self.wv.bucket = bucket
         self.wv.min_n = minn
         self.wv.max_n = maxn
-        self.vocabulary.sample = t
 
     def _load_dict(self, file_handle, encoding='utf8'):
         """Load a previously saved dictionary from disk, stored in Facebook's native fasttext format.
@@ -897,15 +901,8 @@ class FastText(BaseWordEmbeddingsModel):
 
         assert not file_handle.read(), 'expected to have reached EOF'
 
-        #
-        # TODO: still not 100% sure what to do with this new matrix.
-        # The shape matches the expected shape (compared with gensim training),
-        # but the values don't.
-        #
-        self.trainables.syn1neg = hidden_output
-        self.trainables.vectors_vocab_lockf = ones(hidden_output.shape, dtype=REAL)
-        self.trainables.vectors_ngram_lockf = ones(hidden_output.shape, dtype=REAL)
-        # self.trainables.vectors_ngrams_lockf = ones(hidden_output.shape[0], dtype=REAL)
+        self.trainables.init_post_load(self.wv, hidden_output)
+
 
     def struct_unpack(self, file_handle, fmt):
         """Read a single object from an open file.
@@ -1192,6 +1189,38 @@ class FastTextTrainables(Word2VecTrainables, Tracker):
                 word_vec += ngram_weights[wv.hash2index[_ft_hash(ngram) % self.bucket]]
             word_vec /= (len(ngrams) + 1)
             wv.vectors[v.index] = word_vec
+
+    def init_post_load(self, wv, hidden_output):
+        num_vectors = len(wv.vectors)
+        vocab_size = len(wv.vocab)
+        vector_size = wv.vector_size
+
+        assert num_vectors > 0, 'expected num_vectors to be initialized already'
+        assert vocab_size > 0, 'expected vocab_size to be initialized already'
+
+        self.vectors_lockf = ones(num_vectors, dtype=REAL)
+        self.vectors_ngrams_lockf = ones((num_vectors, vector_size), dtype=REAL)
+        # FIXME: not sure if this has to be a 1D or 2D matrix, it's
+        # initialized differently in different places
+        # self.trainables.vectors_vocab_lockf = ones(len(wv.vectors), dtype=REAL)
+        logger.critical('len(self.wv.vocab): %r', vocab_size)
+        logger.critical('self.wv.vector_size: %r', vector_size)
+        self.vectors_vocab_lockf = ones((vocab_size, vector_size), dtype=REAL)
+
+        #
+        # TODO: still not 100% sure what to do with this new matrix.
+        # The shape matches the expected shape (compared with gensim training),
+        # but the values don't.
+        #
+        # TODO: is self.hs and self.negative mutually exclusive?
+        #
+        if self.hs:
+            self.syn1 = hidden_output
+        if self.negative:
+            self.syn1neg = hidden_output
+
+        self.layer1_size = vector_size
+
 
     def init_ngrams_post_load(self, file_name, wv):
         """Compute ngrams of all words present in vocabulary, and store vectors for only those ngrams.

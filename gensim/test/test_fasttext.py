@@ -842,36 +842,43 @@ class TestFastTextModel(unittest.TestCase):
         self.compare_with_wrapper(model_gensim, model_wrapper)
 
 
+with open(datapath('toy-data.txt')) as fin:
+    TOY_SENTENCES = [fin.read().strip().split(' ')]
+
+
+def train_gensim():
+    model = FT_gensim(bucket=100, size=5)
+    model.build_vocab(TOY_SENTENCES)
+    model.train(TOY_SENTENCES, total_examples=1, epochs=model.epochs)
+    return model
+
+
+def load_native():
+    #
+    # trained using:
+    #
+    # ./fasttext cbow -input toy-data.txt -output toy-model -bucket 100 -dim 5
+    #
+    path = datapath('toy-model.bin')
+    model = FT_gensim.load_fasttext_format(path)
+    return model
+
+
 class NativeTrainingContinuationTest(unittest.TestCase):
     maxDiff = None
 
-    def test(self):
-        path = datapath('toy-data.txt')
-        with open(path) as fin:
-            words = fin.read().strip().split(' ')
-        sent = [words]
-
-        def train_gensim():
-            model = FT_gensim(bucket=100)
-            model.build_vocab(sent)
-            model.train(sent, total_examples=len(words), epochs=model.epochs)
-            return model
-
-        def load_native():
-            path = datapath('toy-model.bin')
-            model = FT_gensim.load_fasttext_format(path)
-            model.build_vocab(sentences, update=True)
-            #
-            # The line below hangs the test
-            #
-            # model.train(sent, total_examples=len(words), epochs=model.epochs)
-            return model
-
+    def test_sanity(self):
+        """Compare models trained on toy data.  They should be equal."""
         trained = train_gensim()
         native = load_native()
 
+        self.assertEqual(trained.bucket, native.bucket)
+
         trained_vocab = {key: value.count for (key, value) in trained.wv.vocab.items()}
         native_vocab = {key: value.count for (key, value) in native.wv.vocab.items()}
+        print('comparing vocab')
+        print(trained_vocab)
+        print(native_vocab)
         self.assertEqual(trained_vocab, native_vocab)
 
         #
@@ -879,20 +886,54 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         #
         trained_nn, native_nn = trained.trainables, native.trainables
 
-        self.assertEqual(trained_nn.syn1neg.shape, native_nn.syn1neg.shape)
         #
         # FIXME: Not sure why the values don't match
         #
-        # self.assertTrue(np.array_equal(trained_nn.syn1neg, native_nn.syn1neg))
+        print_array(trained_nn.syn1neg, "trained.syn1neg")
+        print_array(native_nn.syn1neg, "native.syn1neg")
+        self.assertEqual(trained_nn.syn1neg.shape, native_nn.syn1neg.shape)
+        #self.assertTrue(np.array_equal(trained_nn.syn1neg, native_nn.syn1neg))
 
+        print_array(trained_nn.vectors_lockf, "trained_nn.vectors_lockf")
+        print_array(native_nn.vectors_lockf, "native_nn.vectors_lockf")
         self.assertEqual(trained_nn.vectors_lockf.shape, native_nn.vectors_lockf.shape)
         self.assertTrue(np.array_equal(trained_nn.vectors_lockf, native_nn.vectors_lockf))
 
+        print_array(trained_nn.vectors_vocab_lockf, "trained_nn.vectors_vocab_lockf")
+        print_array(native_nn.vectors_vocab_lockf, "native_nn.vectors_vocab_lockf")
         self.assertEqual(trained_nn.vectors_vocab_lockf.shape, native_nn.vectors_vocab_lockf.shape)
+        self.assertTrue(np.array_equal(trained_nn.vectors_vocab_lockf, native_nn.vectors_vocab_lockf))
+
         #
         # FIXME: Not sure why the values don't match
         #
+        print_array(trained_nn.vectors_ngrams_lockf, "trained_nn.vectors_ngrams_lockf")
+        print_array(native_nn.vectors_ngrams_lockf, "native_nn.vectors_ngrams_lockf")
+        # self.assertEqual(trained_nn.vectors_ngrams_lockf.shape, native_nn.vectors_ngrams_lockf.shape)
         # self.assertTrue(np.array_equal(trained_nn.vectors_ngrams_lockf, native_nn.vectors_ngrams_lockf))
+
+    def test_continuation(self):
+        native = load_native()
+        native.build_vocab(TOY_SENTENCES, update=True)
+        native.train(TOY_SENTENCES, total_examples=1, epochs=model.epochs)
+
+
+def print_array(a, name=None):
+    print('name: %r shape: %s' % (name, repr(a.shape)))
+
+    if len(a.shape) == 1:
+        for i in range(a.shape[0]):
+            print('%s%.8f' % (' ' if a[i] >= 0 else '', a[i]), end=' ')
+        print()
+    elif len(a.shape) == 2:
+        rows, columns = a.shape
+        for i in range(rows):
+            for j in range(columns):
+                print('%s%.8f' % (' ' if a[i,j] >= 0 else '', a[i,j]), end=' ')
+            print()
+    else:
+        assert False
+    print()
 
 
 if __name__ == '__main__':

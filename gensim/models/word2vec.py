@@ -1887,7 +1887,9 @@ class Word2VecTrainables(utils.SaveLoad):
         if hs:
             self.syn1 = vstack([self.syn1, zeros((gained_vocab, self.layer1_size), dtype=REAL)])
         if negative:
-            self.syn1neg = vstack([self.syn1neg, zeros((gained_vocab, self.layer1_size), dtype=REAL)])
+            pad = zeros((gained_vocab, self.layer1_size), dtype=REAL)
+            logger.critical('syn1neg.shape: %r pad.shape: %r', repr(self.syn1neg.shape), repr(pad.shape))
+            self.syn1neg = vstack([self.syn1neg, pad])
         wv.vectors_norm = None
 
         # do not suppress learning for already learned words
