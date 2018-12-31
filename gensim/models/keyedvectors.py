@@ -1392,23 +1392,24 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         proposed by Artuur Leeuwenberg, Mihaela Vela, Jon Dehdari, Josef van Genabith
         "A Minimally Supervised Approach for Synonym Extraction with Word Embeddings"
         <https://ufal.mff.cuni.cz/pbml/105/art-leeuwenberg-et-al.pdf>.
+
         To calculate relative cosine similarity between two words, equation (1) of the paper is used.
         For WordNet synonyms, if rcs(topn=10) is greater than 0.10 then wa and wb are more similar than
         any arbitrary word pairs.
+
         Parameters
         ----------
         wa: str
-         word for which we have to look top-n similar word.
+            word for which we have to look top-n similar word.
         wb: str
-         word for which we evaluating relative cosine similarity with wa.
+            word for which we evaluating relative cosine similarity with wa.
         topn: int, optional
-         Number of top-n similar words to look with respect to wa.
+            Number of top-n similar words to look with respect to wa.
         Returns
         -------
         numpy.float64
             relative cosine similarity between wa and wb.
         """
-
         sims = self.similar_by_word(wa, topn)
         rcs = (self.similarity(wa, wb)) / (sum(result[1] for result in sims))
 
