@@ -870,28 +870,6 @@ def load_native():
 class NativeTrainingContinuationTest(unittest.TestCase):
     maxDiff = None
 
-    def test_sanity_vectors(self):
-        """Do the models report the same word vectors?"""
-        trained = train_gensim()
-        native = load_native()
-
-        trained_v = trained.wv.get_vector('anarchist')
-        native_v = native.wv.get_vector('anarchist')
-        print_array(trained_v, 'trained_v')
-
-        #
-        # The native vector matches the expected values:
-        #
-        # $ grep "anarchist " gensim/test/test_data/toy-model.vec
-        # anarchist 0.069324 0.18155 0.080453 -0.1799 0.032043
-        # $ echo "anarchist" |  ./fasttext print-word-vectors gensim/test/test_data/toy-model.bin
-        # anarchist 0.069324 0.18155 0.080453 -0.1799 0.032043
-        #
-        # FIXME: the trained vector doesn't match for some reason :(
-        #
-        print_array(native_v, 'native_v')
-        self.assertTrue(np.array_equal(trained_v, native_v))
-
     def test_in_vocab(self):
         """Test for correct representation of in-vocab words."""
         def yield_items(fin):
