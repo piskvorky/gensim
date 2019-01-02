@@ -850,7 +850,7 @@ def train_gensim():
     #
     # Set parameters to match those in the load_native function
     #
-    model = FT_gensim(bucket=100, size=5, alpha=0.05, workers=1, sample=0.0001)
+    model = FT_gensim(bucket=100, size=5, alpha=0.05, workers=1, sample=0.0001, min_count=0)
     model.build_vocab(TOY_SENTENCES)
     model.train(TOY_SENTENCES, total_examples=1, epochs=model.epochs)
     return model
