@@ -815,6 +815,10 @@ class FastText(BaseWordEmbeddingsModel):
         self.wv.min_n = minn
         self.wv.max_n = maxn
 
+    #
+    # This should really be a method of FastTextKeyedVectors.
+    # It populates members of that class from a file handle to a native binary.
+    #
     def _load_dict(self, file_handle, encoding='utf8'):
         """Load a previously saved dictionary from disk, stored in Facebook's native fasttext format.
 
@@ -862,6 +866,12 @@ class FastText(BaseWordEmbeddingsModel):
             for j in range(pruneidx_size):
                 self.struct_unpack(file_handle, '@2i')
 
+    #
+    # This should be split into two methods:
+    #
+    # 1. A method of FastTextKeyedVectors that populates .vectors_ngrams
+    # 2. A method of FastTextTrainables that populates the hidden output layer
+    #
     def _load_vectors(self, file_handle):
         """Load word vectors stored in Facebook's native fasttext format from disk.
 
@@ -900,6 +910,8 @@ class FastText(BaseWordEmbeddingsModel):
             print('</hidden_output>')
 
         assert not file_handle.read(), 'expected to have reached EOF'
+
+        self.wv.init_vectors_vocab()
 
         self.trainables.init_post_load(self.wv, hidden_output)
 
@@ -1206,13 +1218,6 @@ class FastTextTrainables(Word2VecTrainables, Tracker):
         assert num_vectors > 0, 'expected num_vectors to be initialized already'
         assert vocab_size > 0, 'expected vocab_size to be initialized already'
 
-        #
-        # These are vectors for the words that were used to train the original
-        # model.  This is not available at this time, because we have no
-        # access to the original dataset.  We initialize the column number to
-        # the vector dimensionality to allow training continuation.
-        #
-        wv.vectors_vocab = empty((0, wv.vector_size), dtype=REAL)
 
         self.vectors_lockf = ones(num_vectors, dtype=REAL)
         self.vectors_ngrams_lockf = ones((num_vectors, vector_size), dtype=REAL)

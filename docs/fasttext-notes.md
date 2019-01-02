@@ -36,7 +36,7 @@ There are many attributes.
 Inherited from BaseKeyedVectors:
 
 - vectors: a 2D numpy array.  Flexible number of rows (0 by default).  Number of columns equals vector dimensionality.
-- vocab
+- vocab: a dictionary.  Keys are words.  Items are Vocab instances: these are essentially namedtuples that contain an index and a count.  The former is the index of a term in the entire vocab.  The latter is the number of times the term occurs.
 - vector_size (dimensionality)
 - index2entity
 
@@ -47,7 +47,7 @@ Inherited from WordEmbeddingsKeyedVectors:
 
 Added by FastTextKeyedVectors:
 
-- vectors_vocab: 2D array.  Rows are vectors.  Columns correspond to vector dimensions.  Initialized in FastTextTrainables.init_ngrams_weights.  Reset in reset_ngrams_weights.  Referred to as syn0_vocab in fasttext_inner.pyx - this could be vectors for the input text.  I think this is available at training time only.
+- vectors_vocab: 2D array.  Rows are vectors.  Columns correspond to vector dimensions.  Initialized in FastTextTrainables.init_ngrams_weights.  Reset in reset_ngrams_weights.  Referred to as syn0_vocab in fasttext_inner.pyx.  These are vectors for every word in the vocabulary.
 - vectors_vocab_norm: looks unused, see _clear_post_train method.
 - vectors_ngrams: 2D array.  Each row is a bucket.  Columns correspond to vector dimensions.  Initialized in init_ngrams_weights function.  Initialized in _load_vectors method when reading from native FB binary.  Modified in reset_ngrams_weights method.  This is the first matrix loaded from the native binary files.
 - vectors_ngrams_norm: looks unused, see _clear_post_train method.
@@ -66,7 +66,11 @@ Unfortunately, their real initialization happens in an entirely different module
 Some questions:
 
 - What is the x_lockf stuff?  Why is it used only by the fast C implementation?
-- How are vectos_vocab and vectors ngrams different?
+- How are vectors_vocab and vectors_ngrams different?
+
+vectors_vocab contains vectors for entire vocabulary.
+vectors_ngrams contains vectors for each _bucket_.
+
 
 FastTextTrainables
 ------------------

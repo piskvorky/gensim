@@ -2056,3 +2056,9 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         # from gensim.models.word2vec import save_word2vec_format
         _save_word2vec_format(
             fname, self.vocab, self.vectors, fvocab=fvocab, binary=binary, total_vec=total_vec)
+
+    def init_vectors_vocab(self):
+        """Initialize the .vectors_vocab member based on the existing vocab."""
+        self.vectors_vocab = empty((len(self.vocab), self.vector_size), dtype=REAL)
+        for word, vocab in self.vocab.items():
+            self.vectors_vocab[vocab.index] = self.get_vector(word)

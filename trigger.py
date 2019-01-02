@@ -14,11 +14,12 @@ def train_gensim():
     path = datapath('toy-data.txt')
     with open(path) as fin:
         words = fin.read().strip().split(' ')
-    sent = [[w] for w in words]
+
+    sent = [words]
 
     model = FT_gensim(bucket=100)
-    model.build_vocab(words)
-    model.train(words, total_examples=len(words), epochs=model.epochs)
+    model.build_vocab(sent)
+    model.train(sent, total_examples=len(sent), epochs=model.epochs)
     return model
 
 
@@ -29,6 +30,7 @@ def load_native():
     path = datapath('toy-model.bin')
     model = FT_gensim.load_fasttext_format(path)
     model.build_vocab(sentences, update=True)  # this doesn't work, but should. See also https://github.com/RaRe-Technologies/gensim/issues/2139
+    model.train(sentences, total_examples=len(sentences), epochs=model.epochs)
     return model
 
 
