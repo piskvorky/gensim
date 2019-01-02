@@ -982,6 +982,19 @@ class NativeTrainingContinuationTest(unittest.TestCase):
 
         self.assertNotEqual(old_vector, new_vector)
 
+    def test_continuation_gensim(self):
+        """Ensure that continued training has had a measurable effect."""
+        model = train_gensim()
+
+        word = 'human'
+        old_vector = model.wv.word_vec(word).tolist()
+
+        model.train(new_sentences, total_examples=len(new_sentences), epochs=model.epochs)
+
+        new_vector = model.wv.word_vec(word).tolist()
+
+        self.assertNotEqual(old_vector, new_vector)
+
 
 def print_array(a, name=None):
     print('name: %r shape: %s' % (name, repr(a.shape)))
