@@ -847,7 +847,10 @@ with open(datapath('toy-data.txt')) as fin:
 
 
 def train_gensim():
-    model = FT_gensim(bucket=100, size=5)
+    #
+    # Set parameters to match those in the load_native function
+    #
+    model = FT_gensim(bucket=100, size=5, alpha=0.05, workers=1, sample=0.0001)
     model.build_vocab(TOY_SENTENCES)
     model.train(TOY_SENTENCES, total_examples=1, epochs=model.epochs)
     return model
@@ -867,6 +870,28 @@ def load_native():
 class NativeTrainingContinuationTest(unittest.TestCase):
     maxDiff = None
 
+    def test_sanity_vectors(self):
+        """Do the models report the same word vectors?"""
+        trained = train_gensim()
+        native = load_native()
+
+        trained_v = trained.wv.get_vector('anarchist')
+        native_v = native.wv.get_vector('anarchist')
+        print_array(trained_v, 'trained_v')
+
+        #
+        # The native vector matches the expected values:
+        #
+        # $ grep "anarchist " gensim/test/test_data/toy-model.vec
+        # anarchist 0.069324 0.18155 0.080453 -0.1799 0.032043
+        # $ echo "anarchist" |  ./fasttext print-word-vectors gensim/test/test_data/toy-model.bin
+        # anarchist 0.069324 0.18155 0.080453 -0.1799 0.032043
+        #
+        # FIXME: the trained vector doesn't match for some reason :(
+        #
+        print_array(native_v, 'native_v')
+        self.assertTrue(np.array_equal(trained_v, native_v))
+
     def test_sanity(self):
         """Compare models trained on toy data.  They should be equal."""
         trained = train_gensim()
@@ -881,11 +906,10 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         print(native_vocab)
         self.assertEqual(trained_vocab, native_vocab)
 
-        #
-        # The column counts must match, because we'll be stacking matrices
-        # later on.
-        #
-        self.assertEqual(trained.wv.vectors_vocab.shape[1], native.wv.vectors_vocab.shape[1])
+        print_array(trained.wv.vectors_vocab, "trained.wv.vectors_vocab")
+        print_array(native.wv.vectors_vocab, "native.wv.vectors_vocab")
+        self.assertEqual(trained.wv.vectors_vocab.shape, native.wv.vectors_vocab.shape)
+        self.assertTrue(np.array_equal(trained.wv.vectors_vocab, native.wv.vectors_vocab))
 
         #
         # Ensure the neural networks are identical for both cases.
@@ -924,8 +948,7 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         native.train(TOY_SENTENCES, total_examples=1, epochs=native.epochs)
 
         #
-        # WIP: Not crashing is a success for this test.
-        # Currently, we segfault :(
+        # WIP: Not crashing is a success for this test.  Currently, we segfault :(
         #
 
 
