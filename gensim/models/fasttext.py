@@ -911,7 +911,7 @@ class FastText(BaseWordEmbeddingsModel):
 
         assert not file_handle.read(), 'expected to have reached EOF'
 
-        self.wv.init_vectors_vocab()
+        self.wv.init_post_load()
 
         self.trainables.init_post_load(self.wv, hidden_output)
 

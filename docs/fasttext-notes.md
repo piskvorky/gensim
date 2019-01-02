@@ -51,7 +51,7 @@ Added by FastTextKeyedVectors:
 - vectors_vocab_norm: looks unused, see _clear_post_train method.
 - vectors_ngrams: 2D array.  Each row is a bucket.  Columns correspond to vector dimensions.  Initialized in init_ngrams_weights function.  Initialized in _load_vectors method when reading from native FB binary.  Modified in reset_ngrams_weights method.  This is the first matrix loaded from the native binary files.
 - vectors_ngrams_norm: looks unused, see _clear_post_train method.
-- buckets_word: looks unused, see _clear_post_train method.
+- buckets_word: A hashmap.  Keyed by the index of a term in the vocab.  Each value is an array, where each element is an integer that corresponds to a bucket.  Initialized in init_ngrams_weights function
 - hash2index: A hashmap.  Keys are hashes of ngrams.  Values are the number of ngrams (?).  Initialized in init_ngrams_weights function.
 - min_n: minimum ngram length
 - max_n: maximum ngram length
