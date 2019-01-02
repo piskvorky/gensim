@@ -882,6 +882,12 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         self.assertEqual(trained_vocab, native_vocab)
 
         #
+        # The column counts must match, because we'll be stacking matrices
+        # later on.
+        #
+        self.assertEqual(trained.wv.vectors_vocab.shape[1], native.wv.vectors_vocab.shape[1])
+
+        #
         # Ensure the neural networks are identical for both cases.
         #
         trained_nn, native_nn = trained.trainables, native.trainables
@@ -915,7 +921,12 @@ class NativeTrainingContinuationTest(unittest.TestCase):
     def test_continuation(self):
         native = load_native()
         native.build_vocab(TOY_SENTENCES, update=True)
-        native.train(TOY_SENTENCES, total_examples=1, epochs=model.epochs)
+        native.train(TOY_SENTENCES, total_examples=1, epochs=native.epochs)
+
+        #
+        # WIP: Not crashing is a success for this test.
+        # Currently, we segfault :(
+        #
 
 
 def print_array(a, name=None):

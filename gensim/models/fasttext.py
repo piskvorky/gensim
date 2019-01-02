@@ -1206,6 +1206,14 @@ class FastTextTrainables(Word2VecTrainables, Tracker):
         assert num_vectors > 0, 'expected num_vectors to be initialized already'
         assert vocab_size > 0, 'expected vocab_size to be initialized already'
 
+        #
+        # These are vectors for the words that were used to train the original
+        # model.  This is not available at this time, because we have no
+        # access to the original dataset.  We initialize the column number to
+        # the vector dimensionality to allow training continuation.
+        #
+        wv.vectors_vocab = empty((0, wv.vector_size), dtype=REAL)
+
         self.vectors_lockf = ones(num_vectors, dtype=REAL)
         self.vectors_ngrams_lockf = ones((num_vectors, vector_size), dtype=REAL)
         # FIXME: not sure if this has to be a 1D or 2D matrix, it's
