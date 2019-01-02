@@ -47,9 +47,9 @@ Inherited from WordEmbeddingsKeyedVectors:
 
 Added by FastTextKeyedVectors:
 
-- vectors_vocab: 2D array.  Rows are vectors.  Columns correspond to vector dimensions.  Initialized in FastTextTrainables.init_ngrams_weights.
+- vectors_vocab: 2D array.  Rows are vectors.  Columns correspond to vector dimensions.  Initialized in FastTextTrainables.init_ngrams_weights.  Reset in reset_ngrams_weights.  Referred to as syn0_vocab in fasttext_inner.pyx - this could be vectors for the input text.  I think this is available at training time only.
 - vectors_vocab_norm: looks unused, see _clear_post_train method.
-- vectors_ngrams: 2D array.  Initialized in init_ngrams_weights function.  Initialized in _load_vectors method when reading from native FB binary.  Modified in reset_ngrams_weights method.
+- vectors_ngrams: 2D array.  Each row is a bucket.  Columns correspond to vector dimensions.  Initialized in init_ngrams_weights function.  Initialized in _load_vectors method when reading from native FB binary.  Modified in reset_ngrams_weights method.  This is the first matrix loaded from the native binary files.
 - vectors_ngrams_norm: looks unused, see _clear_post_train method.
 - buckets_word: looks unused, see _clear_post_train method.
 - hash2index: A hashmap.  Keys are hashes of ngrams.  Values are the number of ngrams (?).  Initialized in init_ngrams_weights function.
@@ -57,10 +57,16 @@ Added by FastTextKeyedVectors:
 - max_n: maximum ngram length
 - num_ngram_vectors: initialized in the init_ngrams_weights function
 
+The init_ngrams_method looks like an internal method of FastTextTrainables.
+It gets called as part of the prepare_weights method, which is effectively part of the FastModel constructor.
+
 The above attributes are initialized to None in the FastTextKeyedVectors class constructor.
 Unfortunately, their real initialization happens in an entirely different module, models.fasttext - another indication of poor separation of concerns.
 
+Some questions:
 
+- What is the x_lockf stuff?  Why is it used only by the fast C implementation?
+- How are vectos_vocab and vectors ngrams different?
 
 FastTextTrainables
 ------------------
@@ -133,7 +139,6 @@ From BaseWordEmbeddingModel:
 FastText attributes:
 
 - wv: FastTextWordVectors.  Used instead of .kv
-- 
 
 Logging
 -------
