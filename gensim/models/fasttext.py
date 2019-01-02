@@ -785,6 +785,7 @@ class FastText(BaseWordEmbeddingsModel):
         with open(self.file_name, 'rb') as f:
             self._load_model_params(f, encoding=encoding)
             self._load_vectors(f)
+            self._load_trainables(f)
 
     def _load_model_params(self, file_handle, encoding='utf-8'):
         """Load model parameters from Facebook's native fasttext file.
@@ -812,6 +813,7 @@ class FastText(BaseWordEmbeddingsModel):
         self.negative = neg
         self.hs = loss == 1
         self.sg = model == 2
+
         self.trainables.bucket = bucket
 
         self.wv = FastTextKeyedVectors(dim, minn, maxn, bucket)
@@ -836,12 +838,6 @@ class FastText(BaseWordEmbeddingsModel):
                 len(self.wv.vocab), vocabulary.vocab_size
             )
 
-    #
-    # This should be split into two methods:
-    #
-    # 1. A method of FastTextKeyedVectors that populates .vectors_ngrams
-    # 2. A method of FastTextTrainables that populates the hidden output layer
-    #
     def _load_vectors(self, file_handle):
         """Load word vectors stored in Facebook's native fasttext format from disk.
 
@@ -864,8 +860,8 @@ class FastText(BaseWordEmbeddingsModel):
                 self.wv.vectors_ngrams.shape, expected_shape
             )
 
+    def _load_trainables(self, file_handle):
         self.trainables.init_ngrams_post_load(self.file_name, self.wv)
-        self._clear_post_train()
 
         hidden_output = _load_matrix(
             file_handle,
@@ -882,7 +878,7 @@ class FastText(BaseWordEmbeddingsModel):
         assert not file_handle.read(), 'expected to have reached EOF'
 
         self.wv.init_vectors_vocab()
-        self.trainables.init_post_load(self.wv, hidden_output)
+        self.trainables.init_post_load(self, hidden_output)
 
 
     def struct_unpack(self, file_handle, fmt):
@@ -1094,16 +1090,10 @@ def _load_vocab(file_handle, new_format, sample, min_count, encoding='utf-8'):
 
 class FastTextTrainables(Word2VecTrainables, Tracker):
     """Represents the inner shallow neural network used to train :class:`~gensim.models.fasttext.FastText`."""
-    def __init__(self, vector_size=100, seed=1, hashfxn=hash, bucket=2000000, hs=0, negative=5):
+    def __init__(self, vector_size=100, seed=1, hashfxn=hash, bucket=2000000):
         super(FastTextTrainables, self).__init__(
             vector_size=vector_size, seed=seed, hashfxn=hashfxn)
         self.bucket = int(bucket)
-
-        #
-        # These are relevant implementation details for the NN
-        #
-        self.hs = hs
-        self.negative = negative
 
     #
     # FIXME: this method appears to be temporally coupled to the constructor.
@@ -1234,14 +1224,13 @@ class FastTextTrainables(Word2VecTrainables, Tracker):
             word_vec /= (len(ngrams) + 1)
             wv.vectors[v.index] = word_vec
 
-    def init_post_load(self, wv, hidden_output):
-        num_vectors = len(wv.vectors)
-        vocab_size = len(wv.vocab)
-        vector_size = wv.vector_size
+    def init_post_load(self, model, hidden_output):
+        num_vectors = len(model.wv.vectors)
+        vocab_size = len(model.wv.vocab)
+        vector_size = model.wv.vector_size
 
         assert num_vectors > 0, 'expected num_vectors to be initialized already'
         assert vocab_size > 0, 'expected vocab_size to be initialized already'
-
 
         self.vectors_lockf = ones(num_vectors, dtype=REAL)
         self.vectors_ngrams_lockf = ones((num_vectors, vector_size), dtype=REAL)
@@ -1259,13 +1248,12 @@ class FastTextTrainables(Word2VecTrainables, Tracker):
         #
         # TODO: is self.hs and self.negative mutually exclusive?
         #
-        if self.hs:
+        if model.hs:
             self.syn1 = hidden_output
-        if self.negative:
+        if model.negative:
             self.syn1neg = hidden_output
 
         self.layer1_size = vector_size
-
 
     def init_ngrams_post_load(self, file_name, wv):
         """Compute ngrams of all words present in vocabulary, and store vectors for only those ngrams.
