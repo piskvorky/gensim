@@ -960,13 +960,27 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         # self.assertTrue(np.array_equal(trained_nn.vectors_ngrams_lockf, native_nn.vectors_ngrams_lockf))
 
     def test_continuation(self):
+        """Ensure that training has had a measurable effect."""
         native = load_native()
-        native.build_vocab(TOY_SENTENCES, update=True)
-        native.train(TOY_SENTENCES, total_examples=1, epochs=native.epochs)
 
         #
-        # WIP: Not crashing is a success for this test.
+        # FIXME: Should this line be necessary?  The test hangs without it.
         #
+        native.build_vocab(TOY_SENTENCES, update=True)
+
+        #
+        # Pick a word that's is in both corpuses.
+        # Its vectors should be different between training runs.
+        #
+        word = 'human'
+        assert word in TOY_SENTENCES[0] and word in new_sentences[2]
+        old_vector = native.wv.word_vec(word).tolist()
+
+        native.train(new_sentences, total_examples=len(new_sentences), epochs=native.epochs)
+
+        new_vector = native.wv.word_vec(word).tolist()
+
+        self.assertNotEqual(old_vector, new_vector)
 
 
 def print_array(a, name=None):
