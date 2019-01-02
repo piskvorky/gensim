@@ -763,10 +763,12 @@ class FastText(BaseWordEmbeddingsModel):
 
         """
         model = cls()
+
         if not model_file.endswith('.bin'):
             model_file += '.bin'
         model.file_name = model_file
         model.load_binary_data(encoding=encoding)
+
         return model
 
     def load_binary_data(self, encoding='utf8'):
@@ -847,6 +849,8 @@ class FastText(BaseWordEmbeddingsModel):
         self.struct_unpack(file_handle, '@1q')  # number of tokens
         if self.new_format:
             pruneidx_size, = self.struct_unpack(file_handle, '@q')
+
+        self.vocabulary.raw_vocab = {}
         for i in range(vocab_size):
             word_bytes = b''
             char_byte = file_handle.read(1)
@@ -856,9 +860,9 @@ class FastText(BaseWordEmbeddingsModel):
                 char_byte = file_handle.read(1)
             word = word_bytes.decode(encoding)
             count, _ = self.struct_unpack(file_handle, '@qb')
+            self.vocabulary.raw_vocab[word] = count
 
-            self.wv.vocab[word] = Vocab(index=i, count=count)
-            self.wv.index2word.append(word)
+        self.vocabulary.prepare_vocab(self.hs, self.negative, self.wv, update=True, min_count=0)
 
         assert len(self.wv.vocab) == nwords, (
             'mismatch between final vocab size ({} words), '
@@ -919,8 +923,7 @@ class FastText(BaseWordEmbeddingsModel):
 
         assert not file_handle.read(), 'expected to have reached EOF'
 
-        self.wv.init_post_load()
-
+        self.wv.init_vectors_vocab()
         self.trainables.init_post_load(self.wv, hidden_output)
 
 
