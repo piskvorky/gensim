@@ -948,7 +948,7 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         native.train(TOY_SENTENCES, total_examples=1, epochs=native.epochs)
 
         #
-        # WIP: Not crashing is a success for this test.  Currently, we segfault :(
+        # WIP: Not crashing is a success for this test.
         #
 
 
