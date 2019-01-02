@@ -783,11 +783,10 @@ class FastText(BaseWordEmbeddingsModel):
 
         # TODO use smart_open again when https://github.com/RaRe-Technologies/smart_open/issues/207 will be fixed
         with open(self.file_name, 'rb') as f:
-            self._load_model_params(f)
-            self._load_dict(f, encoding=encoding)
+            self._load_model_params(f, encoding=encoding)
             self._load_vectors(f)
 
-    def _load_model_params(self, file_handle):
+    def _load_model_params(self, file_handle, encoding='utf-8'):
         """Load model parameters from Facebook's native fasttext file.
 
         Parameters
@@ -810,67 +809,32 @@ class FastText(BaseWordEmbeddingsModel):
         self.vector_size = dim
         self.window = ws
         self.epochs = epoch
-        self.vocabulary.min_count = min_count
         self.negative = neg
         self.hs = loss == 1
         self.sg = model == 2
         self.trainables.bucket = bucket
-        self.vocabulary.sample = t
 
         self.wv = FastTextKeyedVectors(dim, minn, maxn, bucket)
+        self.vocabulary = _load_vocab(file_handle, self.new_format, t, min_count, encoding=encoding)
+        self.vocabulary.prepare_vocab(self.hs, self.negative, self.wv,
+                                      update=True, min_count=min_count)
 
-    #
-    # This should really be a method of FastTextKeyedVectors.
-    # It populates members of that class from a file handle to a native binary.
-    #
-    def _load_dict(self, file_handle, encoding='utf8'):
-        """Load a previously saved dictionary from disk, stored in Facebook's native fasttext format.
-
-        Parameters
-        ----------
-        file_handle : file-like object
-            The opened file handle to the persisted dictionary.
-        encoding : str
-            Specifies the encoding.
-
-        """
-        vocab_size, nwords, nlabels = self.struct_unpack(file_handle, '@3i')
-        # Vocab stored by [Dictionary::save](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
-        if nlabels > 0:
-            raise NotImplementedError("Supervised fastText models are not supported")
-        logger.info("loading %s words for fastText model from %s", vocab_size, self.file_name)
-
-        self.struct_unpack(file_handle, '@1q')  # number of tokens
-        if self.new_format:
-            pruneidx_size, = self.struct_unpack(file_handle, '@q')
-
-        self.vocabulary.raw_vocab = {}
-        for i in range(vocab_size):
-            word_bytes = b''
-            char_byte = file_handle.read(1)
-            # Read vocab word
-            while char_byte != b'\x00':
-                word_bytes += char_byte
-                char_byte = file_handle.read(1)
-            word = word_bytes.decode(encoding)
-            count, _ = self.struct_unpack(file_handle, '@qb')
-            self.vocabulary.raw_vocab[word] = count
-
-        self.vocabulary.prepare_vocab(self.hs, self.negative, self.wv, update=True, min_count=0)
-
-        assert len(self.wv.vocab) == nwords, (
+        #
+        # These checks only make sense after both the vocabulary and keyed
+        # vectors are completely loaded and initialized.
+        #
+        assert len(self.wv.vocab) == self.vocabulary.nwords, (
             'mismatch between final vocab size ({} words), '
-            'and expected number of words ({} words)'.format(len(self.wv.vocab), nwords))
-        if len(self.wv.vocab) != vocab_size:
+            'and expected number of words ({} words)'.format(
+                len(self.wv.vocab), self.vocabulary.nwords
+            )
+        )
+        if len(self.wv.vocab) != self.vocabulary.vocab_size:
             # expecting to log this warning only for pretrained french vector, wiki.fr
             logger.warning(
                 "mismatch between final vocab size (%s words), and expected vocab size (%s words)",
-                len(self.wv.vocab), vocab_size
+                len(self.wv.vocab), vocabulary.vocab_size
             )
-
-        if self.new_format:
-            for j in range(pruneidx_size):
-                self.struct_unpack(file_handle, '@2i')
 
     #
     # This should be split into two methods:
@@ -1071,6 +1035,61 @@ class FastTextVocab(Word2VecVocab):
             hs, negative, wv, update=update, keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule,
             min_count=min_count, sample=sample, dry_run=dry_run)
         return report_values
+
+
+def _load_vocab(file_handle, new_format, sample, min_count, encoding='utf-8'):
+    """Load a vocabulary from a FB binary.
+
+    Before the vocab is ready for use, call the prepare_vocab function and pass
+    in the relevant parameters from the model.
+
+    Parameters
+    ----------
+    file_handle : file
+        An open file pointer to the binary.
+    new_format: boolean
+        True if the binary is of the newer format.
+    sample : int
+        From the previous section of the binary.
+    min_count : int
+        Ignore all words with total frequency lower than this.
+    encoding : str
+        The encoding to use when decoding binary data into words.
+
+    Returns
+    -------
+    FastTextVocab
+        The loaded vocabulary.
+    """
+    v = FastTextVocab(sample=sample, min_count=min_count)
+    v.vocab_size, v.nwords, nlabels = _struct_unpack(file_handle, '@3i')
+
+    # Vocab stored by [Dictionary::save](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
+    if nlabels > 0:
+        raise NotImplementedError("Supervised fastText models are not supported")
+    logger.info("loading %s words for fastText model from %s", v.vocab_size, file_handle.name)
+
+    _struct_unpack(file_handle, '@1q')  # number of tokens
+    if new_format:
+        pruneidx_size, = _struct_unpack(file_handle, '@q')
+
+    v.raw_vocab = {}
+    for i in range(v.vocab_size):
+        word_bytes = b''
+        char_byte = file_handle.read(1)
+        # Read vocab word
+        while char_byte != b'\x00':
+            word_bytes += char_byte
+            char_byte = file_handle.read(1)
+        word = word_bytes.decode(encoding)
+        count, _ = _struct_unpack(file_handle, '@qb')
+        v.raw_vocab[word] = count
+
+    if new_format:
+        for j in range(pruneidx_size):
+            _struct_unpack(file_handle, '@2i')
+
+    return v
 
 
 class FastTextTrainables(Word2VecTrainables, Tracker):
