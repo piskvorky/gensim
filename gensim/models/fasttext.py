@@ -522,11 +522,19 @@ class FastText(BaseWordEmbeddingsModel):
             sentences=sentences, corpus_file=corpus_file, update=update, progress_per=progress_per,
             keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, **kwargs)
 
-    #
-    # FIXME: Here to override the superclass method that raises NotImplementedError
-    #
     def _set_train_params(self, **kwargs):
-        pass
+        #
+        # We need the wv.buckets_word member to be initialized in order to
+        # continue training.  The _clear_post_train method destroys this
+        # variable, so we reinitialize it here, if needed.
+        #
+        # The .old_vocab_len and .old_hash2index_len members are set only to
+        # keep the init_ngrams_weights method happy.
+        #
+        if self.wv.buckets_word is None:
+            self.vocabulary.old_vocab_len = len(self.wv.vocab)
+            self.trainables.old_hash2index_len = len(self.wv.hash2index)
+            self.trainables.init_ngrams_weights(self.wv, update=True, vocabulary=self.vocabulary)
 
     def _clear_post_train(self):
         """Clear the model's internal structures after training has finished to free up RAM."""
