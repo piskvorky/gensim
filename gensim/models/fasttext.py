@@ -387,7 +387,7 @@ class FastText(BaseWordEmbeddingsModel):
         if self.word_ngrams <= 1 and max_n == 0:
             bucket = 0
 
-        self.wv = FastTextKeyedVectors(size, min_n, max_n)
+        self.wv = FastTextKeyedVectors(size, min_n, max_n, bucket)
         self.vocabulary = FastTextVocab(
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
             sorted_vocab=bool(sorted_vocab), null_word=null_word, ns_exponent=ns_exponent)
@@ -817,13 +817,7 @@ class FastText(BaseWordEmbeddingsModel):
         self.trainables.bucket = bucket
         self.vocabulary.sample = t
 
-        #
-        # Update wv properties.  This should really be a function in wv.
-        #
-        self.wv.vector_size = dim
-        self.wv.bucket = bucket
-        self.wv.min_n = minn
-        self.wv.max_n = maxn
+        self.wv = FastTextKeyedVectors(dim, minn, maxn, bucket)
 
     #
     # This should really be a method of FastTextKeyedVectors.

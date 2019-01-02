@@ -1895,7 +1895,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
 
 class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
     """Vectors and vocab for :class:`~gensim.models.fasttext.FastText`."""
-    def __init__(self, vector_size, min_n, max_n):
+    def __init__(self, vector_size, min_n, max_n, bucket):
         super(FastTextKeyedVectors, self).__init__(vector_size=vector_size)
         self.vectors_vocab = None
         self.vectors_vocab_norm = None
@@ -1905,6 +1905,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         self.hash2index = {}
         self.min_n = min_n
         self.max_n = max_n
+        self.bucket = bucket
         self.num_ngram_vectors = 0
 
     @property
