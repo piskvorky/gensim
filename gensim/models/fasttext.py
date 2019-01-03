@@ -97,7 +97,7 @@ from gensim.models.keyedvectors import Vocab, FastTextKeyedVectors
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 from gensim.models.utils_any2vec import _compute_ngrams, _ft_hash
 
-from gensim.utils import deprecated, call_on_class_only, Tracker
+from gensim.utils import deprecated, call_on_class_only
 
 logger = logging.getLogger(__name__)
 
@@ -1088,7 +1088,7 @@ def _load_vocab(file_handle, new_format, sample, min_count, encoding='utf-8'):
     return v
 
 
-class FastTextTrainables(Word2VecTrainables, Tracker):
+class FastTextTrainables(Word2VecTrainables):
     """Represents the inner shallow neural network used to train :class:`~gensim.models.fasttext.FastText`."""
     def __init__(self, vector_size=100, seed=1, hashfxn=hash, bucket=2000000):
         super(FastTextTrainables, self).__init__(
