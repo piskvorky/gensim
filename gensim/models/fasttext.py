@@ -1098,9 +1098,6 @@ class FastTextTrainables(Word2VecTrainables):
         super(FastTextTrainables, self).prepare_weights(hs, negative, wv, update=update, vocabulary=vocabulary)
         self.init_ngrams_weights(wv, update=update, vocabulary=vocabulary)
 
-    #
-    # FIXME: this looks like an internal method
-    #
     def init_ngrams_weights(self, wv, update=False, vocabulary=None):
         """Compute ngrams of all words present in vocabulary and stores vectors for only those ngrams.
         Vectors for other ngrams are initialized with a random uniform distribution in FastText.
