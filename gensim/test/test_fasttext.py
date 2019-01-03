@@ -918,48 +918,26 @@ class NativeTrainingContinuationTest(unittest.TestCase):
 
         trained_vocab = {key: value.count for (key, value) in trained.wv.vocab.items()}
         native_vocab = {key: value.count for (key, value) in native.wv.vocab.items()}
-        print('comparing vocab\ntrained:')
-        print(trained_vocab)
-        print('native:')
-        print(native_vocab)
         self.assertEqual(trained_vocab, native_vocab)
 
         #
         # We do not compare most matrices directly, because they will never
         # be equal unless many conditions are strictly controlled.
         #
-        print_array(trained.wv.vectors_vocab, "trained.wv.vectors_vocab")
-        print_array(native.wv.vectors_vocab, "native.wv.vectors_vocab")
         self.assertEqual(trained.wv.vectors_vocab.shape, native.wv.vectors_vocab.shape)
-        # self.assertTrue(np.array_equal(trained.wv.vectors_vocab, native.wv.vectors_vocab))
 
         #
         # Ensure the neural networks are identical for both cases.
         #
         trained_nn, native_nn = trained.trainables, native.trainables
 
-        print_array(trained_nn.syn1neg, "trained.syn1neg")
-        print_array(native_nn.syn1neg, "native.syn1neg")
         self.assertEqual(trained_nn.syn1neg.shape, native_nn.syn1neg.shape)
-        #self.assertTrue(np.array_equal(trained_nn.syn1neg, native_nn.syn1neg))
 
-        print_array(trained_nn.vectors_lockf, "trained_nn.vectors_lockf")
-        print_array(native_nn.vectors_lockf, "native_nn.vectors_lockf")
         self.assertEqual(trained_nn.vectors_lockf.shape, native_nn.vectors_lockf.shape)
         self.assertTrue(np.array_equal(trained_nn.vectors_lockf, native_nn.vectors_lockf))
 
-        print_array(trained_nn.vectors_vocab_lockf, "trained_nn.vectors_vocab_lockf")
-        print_array(native_nn.vectors_vocab_lockf, "native_nn.vectors_vocab_lockf")
         self.assertEqual(trained_nn.vectors_vocab_lockf.shape, native_nn.vectors_vocab_lockf.shape)
         self.assertTrue(np.array_equal(trained_nn.vectors_vocab_lockf, native_nn.vectors_vocab_lockf))
-
-        #
-        # FIXME: Not sure why the values don't match
-        #
-        print_array(trained_nn.vectors_ngrams_lockf, "trained_nn.vectors_ngrams_lockf")
-        print_array(native_nn.vectors_ngrams_lockf, "native_nn.vectors_ngrams_lockf")
-        # self.assertEqual(trained_nn.vectors_ngrams_lockf.shape, native_nn.vectors_ngrams_lockf.shape)
-        # self.assertTrue(np.array_equal(trained_nn.vectors_ngrams_lockf, native_nn.vectors_ngrams_lockf))
 
     def test_continuation_native(self):
         """Ensure that training has had a measurable effect."""
@@ -992,24 +970,6 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         new_vector = model.wv.word_vec(word).tolist()
 
         self.assertNotEqual(old_vector, new_vector)
-
-
-def print_array(a, name=None):
-    print('name: %r shape: %s' % (name, repr(a.shape)))
-
-    if len(a.shape) == 1:
-        for i in range(a.shape[0]):
-            print('%s%.8f' % (' ' if a[i] >= 0 else '', a[i]), end=' ')
-        print()
-    elif len(a.shape) == 2:
-        rows, columns = a.shape
-        for i in range(rows):
-            for j in range(columns):
-                print('%s%.8f' % (' ' if a[i,j] >= 0 else '', a[i,j]), end=' ')
-            print()
-    else:
-        assert False
-    print()
 
 
 if __name__ == '__main__':
