@@ -1410,7 +1410,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         numpy.float64
             relative cosine similarity between wa and wb.
         """
-        assert len(self.vocab) > topn,"Cannot find topn most similar words"
+        assert len(self.vocab) > topn, "Cannot find topn most similar words"
         sims = self.similar_by_word(wa, topn)
         rcs = (self.similarity(wa, wb)) / (sum(result[1] for result in sims))
 
