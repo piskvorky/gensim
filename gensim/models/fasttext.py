@@ -1050,6 +1050,7 @@ def _load_vocab(file_handle, new_format, sample, min_count, encoding='utf-8'):
     -------
     FastTextVocab
         The loaded vocabulary.
+
     """
     v = FastTextVocab(sample=sample, min_count=min_count)
     v.vocab_size, v.nwords, nlabels = _struct_unpack(file_handle, '@3i')
@@ -1113,6 +1114,7 @@ class FastTextTrainables(Word2VecTrainables):
         vocabulary : :class:`~gensim.models.fasttext.FastTextVocab`
             This object represents the vocabulary of the model.
             If update is True, then vocabulary may not be None.
+
         """
         if not update:
             wv.vectors_vocab = empty((len(wv.vocab), wv.vector_size), dtype=REAL)
