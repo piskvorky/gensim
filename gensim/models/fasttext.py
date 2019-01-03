@@ -965,10 +965,10 @@ def _load_matrix(file_handle, new_format=True, expected_vector_size=None):
     ----------
     file_handle : file
         A file handle opened for reading.
-    new_format : boolean
+    new_format : bool, optional
         True if the quant_input variable precedes
         the matrix declaration.  Should be True for newer versions of fastText.
-    expected_vector_size : int
+    expected_vector_size : int, optional
         The expected dimensionality of each vector.
         If you specify this and the matrix's dimensionality is different,
         will raise an assertion.
@@ -982,7 +982,7 @@ def _load_matrix(file_handle, new_format=True, expected_vector_size=None):
 
     See Also
     --------
-    https://github.com/facebookresearch/fastText/blob/master/src/matrix.cc
+    `FB Implementation <https://github.com/facebookresearch/fastText/blob/master/src/matrix.cc>`_.
 
     """
     if new_format:
