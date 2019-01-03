@@ -869,12 +869,6 @@ class FastText(BaseWordEmbeddingsModel):
             expected_vector_size=self.wv.vector_size
         )
 
-        if False:
-            print('<hidden_output_shape>%r</hidden_output_shape>' % repr(hidden_output.shape))
-            print('<hidden_output>')
-            print(repr(hidden_output))
-            print('</hidden_output>')
-
         assert not file_handle.read(), 'expected to have reached EOF'
 
         self.wv.init_vectors_vocab()
