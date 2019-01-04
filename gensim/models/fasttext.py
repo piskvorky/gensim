@@ -1262,13 +1262,11 @@ class FastTextTrainables(Word2VecTrainables):
 
         ngram_indices = []
         wv.num_ngram_vectors = 0
-        for word in wv.vocab.keys():
-            for ngram in _compute_ngrams(word, wv.min_n, wv.max_n):
-                ngram_hash = _ft_hash(ngram) % self.bucket
-                if ngram_hash in wv.hash2index:
-                    continue
-                wv.hash2index[ngram_hash] = len(ngram_indices)
-                ngram_indices.append(len(wv.vocab) + ngram_hash)
+        for hashval in range(self.bucket):
+            wv.hash2index[hashval] = len(ngram_indices)
+            ngram_indices.append(len(wv.vocab) + hashval)
+
+
         wv.num_ngram_vectors = len(ngram_indices)
         wv.vectors_ngrams = wv.vectors_ngrams.take(ngram_indices, axis=0)
 
