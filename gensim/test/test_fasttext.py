@@ -972,6 +972,32 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         self.assertNotEqual(old_vector, new_vector)
 
 
+class LoadFastTextFormatTest(unittest.TestCase):
+    def test(self):
+        """Ensure the new load function yields the same result as the old one."""
+        import gensim.models.fasttext
+        test_model_file = datapath('lee_fasttext')
+        old = FT_gensim.load_fasttext_format(test_model_file)
+        new = FT_gensim.load_fasttext_format(test_model_file)
+
+        self.assertEqual(old.wv.min_n, new.wv.min_n)
+        self.assertEqual(old.wv.max_n, new.wv.max_n)
+        self.assertEqual(old.trainables.bucket, new.trainables.bucket)
+        self.assertEqual(old.num_ngram_vectors, new.num_ngram_vectors)
+        self.assertEqual(old.vector_size, new.vector_size)
+        self.assertEqual(old.window, new.window)
+        self.assertEqual(old.epochs, new.epochs)
+        self.assertEqual(old.negative, new.negative)
+        self.assertEqual(old.hs, new.hs)
+        self.assertEqual(old.sg, new.sg)
+        self.assertEqual(old.num_original_vectors, new.num_original_vectors)
+        self.assertTrue(np.array_equal(old.wv['hello'], new.wv['hello']))
+        self.assertTrue(np.array_equal(old.wv['world'], new.wv['world']))
+
+        self.assertTrue(np.array_equal(old.wv.vectors_ngrams, new.wv.vectors_ngrams))
+        self.assertTrue(np.array_equal(old.trainables.syn1neg, new.trainables.syn1neg))
+
+
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
