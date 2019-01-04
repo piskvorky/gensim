@@ -7,6 +7,20 @@
 
 """General functions used for any2vec models."""
 
+from six import PY2
+import numpy as np
+cimport numpy as np
+
+
+cdef _byte_to_int_py3(b):
+    return b
+
+cdef _byte_to_int_py2(b):
+    return ord(b)
+
+_byte_to_int = _byte_to_int_py2 if PY2 else _byte_to_int_py3
+
+
 cpdef ft_hash(unicode string):
     """Calculate hash based on `string`.
     Reproduce `hash method from Facebook fastText implementation
@@ -24,9 +38,9 @@ cpdef ft_hash(unicode string):
 
     """
     cdef unsigned int h = 2166136261
-    for c in string:
-        h ^= ord(c)
-        h *= 16777619
+    for c in string.encode("utf-8"):
+        h = np.uint32(h ^ np.uint32(np.int8(_byte_to_int(c))))
+        h = np.uint32(h * np.uint32(16777619))
     return h
 
 
