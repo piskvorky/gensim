@@ -298,7 +298,7 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
         # Override factoryMethod.
         return self.cls(texts, self.w2v_model)
 
-    @unittest.skipIf(PYEMD_EXT == False, "pyemd not installed or have some issues")
+    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed or have some issues")
     def testFull(self, num_best=None):
         # Override testFull.
 
@@ -317,7 +317,7 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
             self.assertTrue(numpy.alltrue(sims[1:] > 0.0))
             self.assertTrue(numpy.alltrue(sims[1:] < 1.0))
 
-    @unittest.skipIf(PYEMD_EXT == False, "pyemd not installed or have some issues")
+    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed or have some issues")
     def testNonIncreasing(self):
         ''' Check that similarities are non-increasing when `num_best` is not
         `None`.'''
@@ -333,7 +333,7 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
         cond = sum(numpy.diff(sims2) < 0) == len(sims2) - 1
         self.assertTrue(cond)
 
-    @unittest.skipIf(PYEMD_EXT == False, "pyemd not installed or have some issues")
+    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed or have some issues")
     def testChunking(self):
         # Override testChunking.
 
@@ -352,7 +352,7 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
                 self.assertTrue(numpy.alltrue(sim > 0.0))
                 self.assertTrue(numpy.alltrue(sim <= 1.0))
 
-    @unittest.skipIf(PYEMD_EXT == False, "pyemd not installed or have some issues")
+    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed or have some issues")
     def testIter(self):
         # Override testIter.
 
