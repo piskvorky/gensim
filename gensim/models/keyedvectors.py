@@ -1411,7 +1411,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             relative cosine similarity between wa and wb.
         """
         sims = self.similar_by_word(wa, topn)
-        assert sims, "Cannot generate similar words"
+        assert sims, "Failed code invariant: list of similar words must never be empty."
         rcs = (self.similarity(wa, wb)) / (sum(result[1] for result in sims))
 
         return rcs
