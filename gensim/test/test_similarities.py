@@ -78,7 +78,6 @@ class _TestSimilarityABC(object):
             index.destroy()
 
     def testNumBest(self):
-
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
             self.skipTest("pyemd not installed or have some issues")
 
@@ -110,6 +109,9 @@ class _TestSimilarityABC(object):
 
     def testEmptyQuery(self):
         index = self.factoryMethod()
+        if isintance(index, similarities.WmdSimilarity) and not PYEMD_EXT:
+            self.skipTest("pyemd not installed or have some issues")
+
         query = []
         try:
             sims = index[query]
