@@ -228,7 +228,10 @@ win_testenv = [
     'pytest-rerunfailures',
     'mock',
     'cython',
-    'pyemd',
+    # Disable pyemd, something wrong with compilation
+    # See https://github.com/RaRe-Technologies/gensim/issues/2309#issuecomment-450046496
+    #
+    # 'pyemd',
     'testfixtures',
     'scikit-learn',
     'Morfessor==2.0.2a4',
