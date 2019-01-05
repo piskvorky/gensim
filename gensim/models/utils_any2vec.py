@@ -91,11 +91,12 @@ try:
         compute_ngrams as _compute_ngrams
     )
     _ft_hash = _ft_hash_cy
+    _ft_hash_broken = _ft_hash_cy_broken
 except ImportError:
-    raise
     FAST_VERSION = -1
 
     _ft_hash = _ft_hash_py
+    _ft_hash_broken = _ft_hash_py_broken
 
     # failed... fall back to plain python
     def _compute_ngrams(word, min_n, max_n):
