@@ -1027,6 +1027,15 @@ class HashTest(unittest.TestCase):
         actual = self.model.wv[word]
         self.assertTrue(np.allclose(expected, actual, atol=1e-5))
 
+    def test_out_of_vocab(self):
+        expected = {
+            'steamtrain': np.array([0.031988, 0.022966, 0.059483, 0.094547, 0.062693]),
+            'паровоз': np.array([-0.0033987, 0.056236, 0.036073, 0.094008, 0.00085222]),
+        }
+        actual = {w: self.model.wv[w] for w in expected}
+        self.assertTrue(np.allclose(expected['steamtrain'], actual['steamtrain'], atol=1e-5))
+        self.assertTrue(np.allclose(expected['паровоз'], actual['паровоз'], atol=1e-5))
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
