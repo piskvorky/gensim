@@ -886,7 +886,7 @@ class NativeTrainingContinuationTest(unittest.TestCase):
 
         for word, expected_vector in expected.items():
             actual_vector = native.wv.word_vec(word)
-            self.assertTrue(np.allclose(expected_vector, actual_vector, atol=1e-4))
+            self.assertTrue(np.allclose(expected_vector, actual_vector, atol=1e-5))
 
     def test_out_of_vocab(self):
         """Test for correct representation of out-of-vocab words."""
@@ -907,7 +907,7 @@ class NativeTrainingContinuationTest(unittest.TestCase):
 
         for word, expected_vector in expected.items():
             actual_vector = native.wv.word_vec(word)
-            self.assertTrue(np.allclose(expected_vector, actual_vector, atol=1e-1))
+            self.assertTrue(np.allclose(expected_vector, actual_vector, atol=1e-5))
 
     def test_sanity(self):
         """Compare models trained on toy data.  They should be equal."""
