@@ -1895,7 +1895,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
 
 class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
     """Vectors and vocab for :class:`~gensim.models.fasttext.FastText`."""
-    def __init__(self, vector_size, min_n, max_n, bucket):
+    def __init__(self, vector_size, min_n, max_n, bucket, compatible_hash):
         super(FastTextKeyedVectors, self).__init__(vector_size=vector_size)
         self.vectors_vocab = None
         self.vectors_vocab_norm = None
@@ -1907,6 +1907,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         self.max_n = max_n
         self.bucket = bucket
         self.num_ngram_vectors = 0
+        self.compatible_hash = compatible_hash
 
     @property
     @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors_vocab instead")
@@ -1946,8 +1947,9 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         if word in self.vocab:
             return True
         else:
+            hash_fn = _ft_hash if self.compatible_hash else _ft_hash_broken
             char_ngrams = _compute_ngrams(word, self.min_n, self.max_n)
-            return any(_ft_hash(ng) % self.bucket in self.hash2index for ng in char_ngrams)
+            return any(hash_fn(ng) % self.bucket in self.hash2index for ng in char_ngrams)
 
     def save(self, *args, **kwargs):
         """Save object.
@@ -1989,6 +1991,8 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
             If word and all ngrams not in vocabulary.
 
         """
+        hash_fn = _ft_hash if self.compatible_hash else _ft_hash_broken
+
         if word in self.vocab:
             return super(FastTextKeyedVectors, self).word_vec(word, use_norm)
         else:
@@ -2001,7 +2005,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
                 ngram_weights = self.vectors_ngrams
             ngrams_found = 0
             for ngram in ngrams:
-                ngram_hash = _ft_hash(ngram) % self.bucket
+                ngram_hash = hash_fn(ngram) % self.bucket
                 if ngram_hash in self.hash2index:
                     word_vec += ngram_weights[self.hash2index[ngram_hash]]
                     ngrams_found += 1

@@ -999,6 +999,16 @@ class LoadFastTextFormatTest(unittest.TestCase):
         self.assertTrue(np.array_equal(old.trainables.syn1neg, new.trainables.syn1neg))
 
 
+class HashCompatibilityTest(unittest.TestCase):
+    def test_compatibility_true(self):
+        m = FT_gensim.load(datapath('compatible-hash-true.model'))
+        self.assertTrue(m.compatible_hash)
+
+    def test_compatibility_false(self):
+        m = FT_gensim.load(datapath('compatible-hash-false.model'))
+        self.assertFalse(m.compatible_hash)
+
+
 class HashTest(unittest.TestCase):
     """Loosely based on the test described here:
 

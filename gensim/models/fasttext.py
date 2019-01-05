@@ -95,7 +95,7 @@ from numpy import ones, vstack, empty, float32 as REAL, sum as np_sum
 from gensim.models.word2vec import Word2VecVocab, Word2VecTrainables, train_sg_pair, train_cbow_pair
 from gensim.models.keyedvectors import Vocab, FastTextKeyedVectors
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
-from gensim.models.utils_any2vec import _compute_ngrams, _ft_hash
+from gensim.models.utils_any2vec import _compute_ngrams, _ft_hash, _ft_hash_broken
 
 from gensim.utils import deprecated, call_on_class_only
 
@@ -270,7 +270,8 @@ class FastText(BaseWordEmbeddingsModel):
     def __init__(self, sentences=None, corpus_file=None, sg=0, hs=0, size=100, alpha=0.025, window=5, min_count=5,
                  max_vocab_size=None, word_ngrams=1, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
                  negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, iter=5, null_word=0, min_n=3, max_n=6,
-                 sorted_vocab=1, bucket=2000000, trim_rule=None, batch_words=MAX_WORDS_IN_BATCH, callbacks=()):
+                 sorted_vocab=1, bucket=2000000, trim_rule=None, batch_words=MAX_WORDS_IN_BATCH, callbacks=(),
+                 compatible_hash=True):
         """
 
         Parameters
@@ -366,6 +367,12 @@ class FastText(BaseWordEmbeddingsModel):
         callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`, optional
             List of callbacks that need to be executed/run at specific stages during training.
 
+        compatible_hash: bool, optional
+            By default, newer versions of Gensim's FastText use a hash function
+            that is 100% compatible with the Facebook's FastText.
+            Older versions were not 100% compatible due to a bug.
+            To use the older, incompatible hash function, set this to False.
+
         Examples
         --------
         Initialize and train a `FastText` model:
@@ -387,14 +394,16 @@ class FastText(BaseWordEmbeddingsModel):
         if self.word_ngrams <= 1 and max_n == 0:
             bucket = 0
 
-        self.wv = FastTextKeyedVectors(size, min_n, max_n, bucket)
+        self.wv = FastTextKeyedVectors(size, min_n, max_n, bucket, compatible_hash)
         self.vocabulary = FastTextVocab(
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
             sorted_vocab=bool(sorted_vocab), null_word=null_word, ns_exponent=ns_exponent)
         self.trainables = FastTextTrainables(
-            vector_size=size, seed=seed, bucket=bucket, hashfxn=hashfxn)
+            vector_size=size, seed=seed, bucket=bucket,
+            hashfxn=hashfxn, compatible_hash=compatible_hash)
         self.trainables.prepare_weights(hs, negative, self.wv, update=False, vocabulary=self.vocabulary)
         self.wv.bucket = self.trainables.bucket
+        self.compatible_hash = compatible_hash
 
         super(FastText, self).__init__(
             sentences=sentences, corpus_file=corpus_file, workers=workers, vector_size=size, epochs=iter,
@@ -544,6 +553,8 @@ class FastText(BaseWordEmbeddingsModel):
         self.wv.buckets_word = None
 
     def estimate_memory(self, vocab_size=None, report=None):
+        hash_fn = _ft_hash if self.compatible_hash else _ft_hash_broken
+
         vocab_size = vocab_size or len(self.wv.vocab)
         vec_size = self.vector_size * np.dtype(np.float32).itemsize
         l1_size = self.trainables.layer1_size * np.dtype(np.float32).itemsize
@@ -561,7 +572,7 @@ class FastText(BaseWordEmbeddingsModel):
             for word in self.wv.vocab:
                 ngrams = _compute_ngrams(word, self.wv.min_n, self.wv.max_n)
                 num_ngrams += len(ngrams)
-                buckets.update(_ft_hash(ng) % self.trainables.bucket for ng in ngrams)
+                buckets.update(hash_fn(ng) % self.trainables.bucket for ng in ngrams)
             num_buckets = len(buckets)
             report['syn0_ngrams'] = len(buckets) * vec_size
             # A tuple (48 bytes) with num_ngrams_word ints (8 bytes) for each word
@@ -816,7 +827,7 @@ class FastText(BaseWordEmbeddingsModel):
 
         self.trainables.bucket = bucket
 
-        self.wv = FastTextKeyedVectors(dim, minn, maxn, bucket)
+        self.wv = FastTextKeyedVectors(dim, minn, maxn, bucket, True)
         self.vocabulary = _load_vocab(file_handle, self.new_format, t, min_count, encoding=encoding)
         self.vocabulary.prepare_vocab(self.hs, self.negative, self.wv,
                                       update=True, min_count=min_count)
@@ -939,6 +950,15 @@ class FastText(BaseWordEmbeddingsModel):
                 model.trainables.vectors_vocab_lockf = ones(len(model.trainables.vectors), dtype=REAL)
             if not hasattr(model.trainables, 'vectors_ngrams_lockf') and hasattr(model.wv, 'vectors_ngrams'):
                 model.trainables.vectors_ngrams_lockf = ones(len(model.trainables.vectors), dtype=REAL)
+
+            if not hasattr(model, 'compatible_hash'):
+                logger.warning(
+                    "this older model was trained with a buggy hash function, ",
+                    "please consider retraining"
+                )
+                model.compatible_hash = False
+                model.wv.compatible_hash = False
+                model.trainables_compatible_hash = False
             return model
         except AttributeError:
             logger.info('Model saved using code from earlier Gensim Version. Re-loading old model in a compatible way.')
@@ -1085,10 +1105,11 @@ def _load_vocab(file_handle, new_format, sample, min_count, encoding='utf-8'):
 
 class FastTextTrainables(Word2VecTrainables):
     """Represents the inner shallow neural network used to train :class:`~gensim.models.fasttext.FastText`."""
-    def __init__(self, vector_size=100, seed=1, hashfxn=hash, bucket=2000000):
+    def __init__(self, vector_size=100, seed=1, hashfxn=hash, bucket=2000000, compatible_hash=True):
         super(FastTextTrainables, self).__init__(
             vector_size=vector_size, seed=seed, hashfxn=hashfxn)
         self.bucket = int(bucket)
+        self.compatible_hash = compatible_hash
 
     #
     # FIXME: this method appears to be temporally coupled to the constructor.
@@ -1116,6 +1137,8 @@ class FastTextTrainables(Word2VecTrainables):
             If update is True, then vocabulary may not be None.
 
         """
+        hash_fn = _ft_hash if self.compatible_hash else _ft_hash_broken
+
         if not update:
             wv.vectors_vocab = empty((len(wv.vocab), wv.vector_size), dtype=REAL)
             #
@@ -1133,7 +1156,7 @@ class FastTextTrainables(Word2VecTrainables):
             for word, vocab in wv.vocab.items():
                 buckets = []
                 for ngram in _compute_ngrams(word, wv.min_n, wv.max_n):
-                    ngram_hash = _ft_hash(ngram) % self.bucket
+                    ngram_hash = hash_fn(ngram) % self.bucket
                     if ngram_hash not in wv.hash2index:
                         wv.hash2index[ngram_hash] = len(ngram_indices)
                         ngram_indices.append(ngram_hash)
@@ -1155,7 +1178,7 @@ class FastTextTrainables(Word2VecTrainables):
             for word, vocab in wv.vocab.items():
                 buckets = []
                 for ngram in _compute_ngrams(word, wv.min_n, wv.max_n):
-                    ngram_hash = _ft_hash(ngram) % self.bucket
+                    ngram_hash = hash_fn(ngram) % self.bucket
                     if ngram_hash not in wv.hash2index:
                         wv.hash2index[ngram_hash] = num_new_ngrams + self.old_hash2index_len
                         num_new_ngrams += 1
@@ -1208,12 +1231,14 @@ class FastTextTrainables(Word2VecTrainables):
     #
     def get_vocab_word_vecs(self, wv):
         """Calculate vectors for words in vocabulary and stores them in `vectors`."""
+        hash_fn = _ft_hash if self.compatible_hash else _ft_hash_broken
+
         for w, v in wv.vocab.items():
             word_vec = np.copy(wv.vectors_vocab[v.index])
             ngrams = _compute_ngrams(w, wv.min_n, wv.max_n)
             ngram_weights = wv.vectors_ngrams
             for ngram in ngrams:
-                word_vec += ngram_weights[wv.hash2index[_ft_hash(ngram) % self.bucket]]
+                word_vec += ngram_weights[wv.hash2index[hash_fn(ngram) % self.bucket]]
             word_vec /= (len(ngrams) + 1)
             wv.vectors[v.index] = word_vec
 
@@ -1255,6 +1280,8 @@ class FastTextTrainables(Word2VecTrainables):
         vectors are discarded here to save space.
 
         """
+        hash_fn = _ft_hash if self.compatible_hash else _ft_hash_broken
+
         wv.vectors = np.zeros((len(wv.vocab), wv.vector_size), dtype=REAL)
 
         for w, vocab in wv.vocab.items():
@@ -1280,7 +1307,7 @@ class FastTextTrainables(Word2VecTrainables):
         for w, vocab in wv.vocab.items():
             word_ngrams = _compute_ngrams(w, wv.min_n, wv.max_n)
             for word_ngram in word_ngrams:
-                vec_idx = wv.hash2index[_ft_hash(word_ngram) % self.bucket]
+                vec_idx = wv.hash2index[hash_fn(word_ngram) % self.bucket]
                 wv.vectors[vocab.index] += np.array(ngram_weights[vec_idx])
 
             wv.vectors[vocab.index] /= (len(word_ngrams) + 1)
