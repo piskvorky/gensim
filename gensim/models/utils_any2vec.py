@@ -13,41 +13,91 @@ from gensim import utils
 from numpy import zeros, dtype, float32 as REAL, ascontiguousarray, fromstring
 
 from six.moves import xrange
-from six import iteritems
+from six import iteritems, PY2
 
 logger = logging.getLogger(__name__)
 
+
+def _byte_to_int_py3(b):
+    return b
+
+def _byte_to_int_py2(b):
+    return ord(b)
+
+_byte_to_int = _byte_to_int_py2 if PY2 else _byte_to_int_py3
+
+
+#
+# Define this here so we can unittest here.  Only use this function if the
+# faster C version fails to import.
+#
+def _ft_hash_py(string):
+    """Calculate hash based on `string`.
+    Reproduce `hash method from Facebook fastText implementation
+    <https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc>`_.
+
+    Parameters
+    ----------
+    string : str
+        The string whose hash needs to be calculated.
+
+    Returns
+    -------
+    int
+        The hash of the string.
+
+    """
+    old_settings = np.seterr(all='ignore')
+    h = np.uint32(2166136261)
+    for c in string.encode('utf-8'):
+        h = h ^ np.uint32(np.int8(_byte_to_int(c)))
+        h = h * np.uint32(16777619)
+    np.seterr(**old_settings)
+    return h
+
+
+def _ft_hash_py_broken(string):
+    """Calculate hash based on `string`.
+    Reproduce `hash method from Facebook fastText implementation
+    <https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc>`_.
+
+    This implementation is broken, see https://github.com/RaRe-Technologies/gensim/issues/2059.
+
+    Parameters
+    ----------
+    string : str
+        The string whose hash needs to be calculated.
+
+    Returns
+    -------
+    int
+        The hash of the string.
+
+    """
+    # Runtime warnings for integer overflow are raised, this is expected behaviour. These warnings are suppressed.
+    old_settings = np.seterr(all='ignore')
+    h = np.uint32(2166136261)
+    for c in string:
+        h = h ^ np.uint32(ord(c))
+        h = h * np.uint32(16777619)
+    np.seterr(**old_settings)
+    return h
+
+
 try:
-    from gensim.models._utils_any2vec import ft_hash as _ft_hash, compute_ngrams as _compute_ngrams
+    from gensim.models._utils_any2vec import (
+        ft_hash as _ft_hash_cy,
+        ft_hash_broken as _ft_hash_cy_broken,
+        compute_ngrams as _compute_ngrams
+    )
+    _ft_hash = _ft_hash_cy
 except ImportError:
+    raise
     FAST_VERSION = -1
 
+    _ft_hash = _ft_hash_py
+
     # failed... fall back to plain python
-    def _ft_hash(string):
-        """Calculate hash based on `string`.
-        Reproduce `hash method from Facebook fastText implementation
-        <https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc>`_.
-
-        Parameters
-        ----------
-        string : str
-            The string whose hash needs to be calculated.
-
-        Returns
-        -------
-        int
-            The hash of the string.
-
-        """
-        # Runtime warnings for integer overflow are raised, this is expected behaviour. These warnings are suppressed.
-        old_settings = np.seterr(all='ignore')
-        h = np.uint32(2166136261)
-        for c in string:
-            h = h ^ np.uint32(ord(c))
-            h = h * np.uint32(16777619)
-        np.seterr(**old_settings)
-        return h
-
     def _compute_ngrams(word, min_n, max_n):
         """Get the list of all possible ngrams for a given word.
 

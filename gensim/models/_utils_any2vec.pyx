@@ -44,6 +44,31 @@ cpdef ft_hash(unicode string):
     return h
 
 
+cpdef ft_hash_broken(unicode string):
+    """Calculate hash based on `string`.
+    Reproduce `hash method from Facebook fastText implementation
+    <https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc>`_.
+
+    This implementation is broken, see https://github.com/RaRe-Technologies/gensim/issues/2059.
+
+    Parameters
+    ----------
+    string : unicode
+        The string whose hash needs to be calculated.
+
+    Returns
+    -------
+    unsigned int
+        The hash of the string.
+
+    """
+    cdef unsigned int h = 2166136261
+    for c in string:
+        h = np.uint32(h ^ np.uint32(ord(c)))
+        h = np.uint32(h * np.uint32(16777619))
+    return h
+
+
 cpdef compute_ngrams(word, unsigned int min_n, unsigned int max_n):
     """Get the list of all possible ngrams for a given word.
 

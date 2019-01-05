@@ -17,6 +17,8 @@ from six import iteritems
 from gensim import utils
 from gensim.test.utils import datapath, get_tmpfile
 
+import gensim.models.utils_any2vec
+
 
 class TestIsCorpus(unittest.TestCase):
     def test_None(self):
@@ -257,6 +259,44 @@ class TestSaveAsLineSentence(unittest.TestCase):
         with utils.smart_open(corpus_file, encoding='utf8') as fin:
             sentences = [line.strip().split() for line in fin.read().strip().split('\n')]
             self.assertEqual(sentences, ref_sentences)
+
+
+class HashTest(unittest.TestCase):
+    def setUp(self):
+        self.expected = {
+            'команда': 1725507386,
+            'маленьких': 3011324125,
+            'друзей': 737001801,
+            'возит': 4225261911,
+            'грузы': 1301826944,
+            'всех': 706328732,
+            'быстрей': 1379730754
+        }
+        self.expected_broken = {
+            'команда': 962806708,
+            'маленьких': 3633597485,
+            'друзей': 214728041,
+            'возит': 3590926132,
+            'грузы': 3674544745,
+            'всех': 3931012458,
+            'быстрей': 822471432,
+        }
+
+    def test_python(self):
+        actual = {k: gensim.models.utils_any2vec._ft_hash_py(k) for k in self.expected}
+        self.assertEqual(self.expected, actual)
+
+    def test_cython(self):
+        actual = {k: gensim.models.utils_any2vec._ft_hash_cy(k) for k in self.expected}
+        self.assertEqual(self.expected, actual)
+
+    def test_python_broken(self):
+        actual = {k: gensim.models.utils_any2vec._ft_hash_py_broken(k) for k in self.expected}
+        self.assertEqual(self.expected_broken, actual)
+
+    def test_cython_broken(self):
+        actual = {k: gensim.models.utils_any2vec._ft_hash_cy_broken(k) for k in self.expected}
+        self.assertEqual(self.expected_broken, actual)
 
 
 if __name__ == '__main__':
