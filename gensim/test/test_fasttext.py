@@ -867,22 +867,23 @@ def load_native():
     return model
 
 
+def load_vec(fin):
+    fin.readline()  # array shape
+    for line in fin:
+        columns = line.strip().split(' ')
+        word = columns.pop(0)
+        vector = [float(c) for c in columns]
+        yield word, np.array(vector, dtype=np.float32)
+
+
 class NativeTrainingContinuationTest(unittest.TestCase):
     maxDiff = None
 
     def test_in_vocab(self):
         """Test for correct representation of in-vocab words."""
-        def yield_items(fin):
-            fin.readline()  # array shape
-            for line in fin:
-                columns = line.strip().split(' ')
-                word = columns.pop(0)
-                vector = [float(c) for c in columns]
-                yield word, np.array(vector, dtype=np.float32)
-
         native = load_native()
         with open(datapath('toy-model.vec')) as fin:
-            expected = dict(yield_items(fin))
+            expected = dict(load_vec(fin))
 
         for word, expected_vector in expected.items():
             actual_vector = native.wv.word_vec(word)
@@ -996,6 +997,35 @@ class LoadFastTextFormatTest(unittest.TestCase):
 
         self.assertTrue(np.array_equal(old.wv.vectors_ngrams, new.wv.vectors_ngrams))
         self.assertTrue(np.array_equal(old.trainables.syn1neg, new.trainables.syn1neg))
+
+
+class HashTest(unittest.TestCase):
+    """Loosely based on the test described here:
+
+    https://github.com/RaRe-Technologies/gensim/issues/2059#issuecomment-432300777
+
+    With a broken hash, vectors for non-ASCII keywords don't match when loaded
+    from a native model.
+    """
+    def setUp(self):
+        #
+        # ./fasttext skipgram -minCount 0 -bucket 100 -input crime-and-punishment.txt -output crime-and-punishment -dim 5
+        #
+        self.model = FT_gensim.load_fasttext_format(datapath('crime-and-punishment.bin'))
+        with open(datapath('crime-and-punishment.vec')) as fin:
+            self.expected = dict(load_vec(fin))
+
+    def test_ascii(self):
+        word = 'landlady'
+        expected = self.expected[word]
+        actual = self.model.wv[word]
+        self.assertTrue(np.allclose(expected, actual, atol=1e-5))
+
+    def test_unicode(self):
+        word = 'хозяйка'
+        expected = self.expected[word]
+        actual = self.model.wv[word]
+        self.assertTrue(np.allclose(expected, actual, atol=1e-5))
 
 
 if __name__ == '__main__':
