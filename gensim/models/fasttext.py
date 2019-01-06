@@ -369,7 +369,7 @@ class FastText(BaseWordEmbeddingsModel):
 
         compatible_hash: bool, optional
             By default, newer versions of Gensim's FastText use a hash function
-            that is 100% compatible with the Facebook's FastText.
+            that is 100% compatible with Facebook's FastText.
             Older versions were not 100% compatible due to a bug.
             To use the older, incompatible hash function, set this to False.
 
