@@ -1176,8 +1176,6 @@ class FastTextTrainables(Word2VecTrainables):
         # FIXME: not sure if this has to be a 1D or 2D matrix, it's
         # initialized differently in different places
         # self.trainables.vectors_vocab_lockf = ones(len(wv.vectors), dtype=REAL)
-        logger.critical('len(self.wv.vocab): %r', vocab_size)
-        logger.critical('self.wv.vector_size: %r', vector_size)
         self.vectors_vocab_lockf = ones((vocab_size, vector_size), dtype=REAL)
 
         #
