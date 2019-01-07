@@ -185,7 +185,13 @@ from six import string_types, integer_types
 from six.moves import zip, range
 from scipy import sparse, stats
 from gensim.utils import deprecated
-from gensim.models.utils_any2vec import _save_word2vec_format, _load_word2vec_format, _compute_ngrams, _ft_hash
+from gensim.models.utils_any2vec import (
+    _save_word2vec_format,
+    _load_word2vec_format,
+    _compute_ngrams,
+    _ft_hash,
+    _ft_hash_broken
+)
 
 logger = logging.getLogger(__name__)
 

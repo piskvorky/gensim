@@ -893,7 +893,7 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         """Test for correct representation of out-of-vocab words."""
         native = load_native()
         #
-        # $ echo "quick brown fox jumps over lazy dog" | ./fasttext print-word-vectors gensim/test/test_data/toy-model.bin
+        # $ echo "quick brown fox jumps over lazy dog" | ./fasttext print-word-vectors gensim/test/test_data/toy-model.bin  # noqa: E501
         #
         expected = {
             "quick": [0.023393, 0.11499, 0.11684, -0.13349, 0.022543],
@@ -976,7 +976,6 @@ class NativeTrainingContinuationTest(unittest.TestCase):
 class LoadFastTextFormatTest(unittest.TestCase):
     def test(self):
         """Ensure the new load function yields the same result as the old one."""
-        import gensim.models.fasttext
         test_model_file = datapath('lee_fasttext')
         old = FT_gensim.load_fasttext_format(test_model_file)
         new = FT_gensim.load_fasttext_format(test_model_file)
@@ -1021,7 +1020,7 @@ class HashTest(unittest.TestCase):
     """
     def setUp(self):
         #
-        # ./fasttext skipgram -minCount 0 -bucket 100 -input crime-and-punishment.txt -output crime-and-punishment -dim 5
+        # ./fasttext skipgram -minCount 0 -bucket 100 -input crime-and-punishment.txt -output crime-and-punishment -dim 5  # noqa: E501
         #
         self.model = FT_gensim.load_fasttext_format(datapath('crime-and-punishment.bin'))
         with open(datapath('crime-and-punishment.vec')) as fin:

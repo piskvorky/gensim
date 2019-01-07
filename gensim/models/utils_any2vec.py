@@ -21,8 +21,10 @@ logger = logging.getLogger(__name__)
 def _byte_to_int_py3(b):
     return b
 
+
 def _byte_to_int_py2(b):
     return ord(b)
+
 
 _byte_to_int = _byte_to_int_py2 if PY2 else _byte_to_int_py3
 

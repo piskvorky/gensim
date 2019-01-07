@@ -90,10 +90,10 @@ import logging
 import struct
 
 import numpy as np
-from numpy import ones, vstack, empty, float32 as REAL, sum as np_sum
+from numpy import ones, vstack, float32 as REAL, sum as np_sum
 
 from gensim.models.word2vec import Word2VecVocab, Word2VecTrainables, train_sg_pair, train_cbow_pair
-from gensim.models.keyedvectors import Vocab, FastTextKeyedVectors
+from gensim.models.keyedvectors import FastTextKeyedVectors
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 from gensim.models.utils_any2vec import _compute_ngrams, _ft_hash, _ft_hash_broken
 
@@ -845,7 +845,7 @@ class FastText(BaseWordEmbeddingsModel):
             # expecting to log this warning only for pretrained french vector, wiki.fr
             logger.warning(
                 "mismatch between final vocab size (%s words), and expected vocab size (%s words)",
-                len(self.wv.vocab), vocabulary.vocab_size
+                len(self.wv.vocab), self.vocabulary.vocab_size
             )
 
     def _load_vectors(self, file_handle):
@@ -1207,7 +1207,6 @@ def _pad_ones(m, new_rows):
     return vstack([m, suffix])
 
 
-
 def _load_fasttext_format(model_file, encoding='utf-8'):
     """Load the input-hidden weight matrix from Facebook's native fasttext `.bin` and `.vec` output files.
 
@@ -1290,5 +1289,5 @@ def _check_model(m):
         # expecting to log this warning only for pretrained french vector, wiki.fr
         logger.warning(
             "mismatch between final vocab size (%s words), and expected vocab size (%s words)",
-            len(m.wv.vocab), vocabulary.vocab_size
+            len(m.wv.vocab), m.vocabulary.vocab_size
         )
