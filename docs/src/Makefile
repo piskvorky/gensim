@@ -5,7 +5,7 @@
 # pip3 install sphinx sphinxcontrib-napoleon
 
 # You can set these variables from the command line.
-SPHINXOPTS    = -T -vv
+SPHINXOPTS    = -W
 SPHINXBUILD   = sphinx-build
 PAPER         =
 BUILDDIR      = _build
