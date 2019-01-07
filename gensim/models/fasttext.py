@@ -1218,11 +1218,11 @@ def _load_fasttext_format(model_file, encoding='utf-8'):
     :class: `~gensim.models.fasttext.FastText`
         The loaded model.
     """
-    import gensim.models.fasttext_bin
+    import gensim.models._fasttext_bin
     if not model_file.endswith('.bin'):
         model_file += '.bin'
     with open(model_file, 'rb') as fin:
-        m = gensim.models.fasttext_bin.load(fin, encoding=encoding)
+        m = gensim.models._fasttext_bin.load(fin, encoding=encoding)
 
     model = FastText(
         size=m.dim,
