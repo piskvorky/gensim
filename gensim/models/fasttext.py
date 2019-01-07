@@ -1141,33 +1141,13 @@ class FastTextTrainables(Word2VecTrainables):
         hash_fn = _ft_hash if self.compatible_hash else _ft_hash_broken
 
         if not update:
-            wv.vectors_vocab = empty((len(wv.vocab), wv.vector_size), dtype=REAL)
+            ngram_indices = wv.init_ngrams_weights()
             #
             # FIXME: Why is this being initialized as a 2D array here, whereas it is
             # a 1D array when initialized in the load function?
             #
             self.vectors_vocab_lockf = ones((len(wv.vocab), wv.vector_size), dtype=REAL)
-
-            wv.vectors_ngrams = empty((self.bucket, wv.vector_size), dtype=REAL)
             self.vectors_ngrams_lockf = ones((self.bucket, wv.vector_size), dtype=REAL)
-
-            wv.hash2index = {}
-            wv.buckets_word = {}
-            ngram_indices = []
-            for word, vocab in wv.vocab.items():
-                buckets = []
-                for ngram in _compute_ngrams(word, wv.min_n, wv.max_n):
-                    ngram_hash = hash_fn(ngram) % self.bucket
-                    if ngram_hash not in wv.hash2index:
-                        wv.hash2index[ngram_hash] = len(ngram_indices)
-                        ngram_indices.append(ngram_hash)
-                    buckets.append(wv.hash2index[ngram_hash])
-                wv.buckets_word[vocab.index] = np.array(buckets, dtype=np.uint32)
-            wv.num_ngram_vectors = len(ngram_indices)
-
-            logger.info("Total number of ngrams is %d", wv.num_ngram_vectors)
-
-            wv.vectors_ngrams = wv.vectors_ngrams.take(ngram_indices, axis=0)
             self.vectors_ngrams_lockf = self.vectors_ngrams_lockf.take(ngram_indices, axis=0)
             self.reset_ngrams_weights(wv)
         else:
