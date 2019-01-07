@@ -1138,8 +1138,6 @@ class FastTextTrainables(Word2VecTrainables):
             If update is True, then vocabulary may not be None.
 
         """
-        hash_fn = _ft_hash if self.compatible_hash else _ft_hash_broken
-
         if not update:
             ngram_indices = wv.init_ngrams_weights()
             #
@@ -1151,23 +1149,7 @@ class FastTextTrainables(Word2VecTrainables):
             self.vectors_ngrams_lockf = self.vectors_ngrams_lockf.take(ngram_indices, axis=0)
             self.reset_ngrams_weights(wv)
         else:
-            #
-            # NB. The loop structure looks similar to the above code.
-            #
-            wv.buckets_word = {}
-            num_new_ngrams = 0
-            for word, vocab in wv.vocab.items():
-                buckets = []
-                for ngram in _compute_ngrams(word, wv.min_n, wv.max_n):
-                    ngram_hash = hash_fn(ngram) % self.bucket
-                    if ngram_hash not in wv.hash2index:
-                        wv.hash2index[ngram_hash] = num_new_ngrams + self.old_hash2index_len
-                        num_new_ngrams += 1
-                    buckets.append(wv.hash2index[ngram_hash])
-                wv.buckets_word[vocab.index] = np.array(buckets, dtype=np.uint32)
-
-            wv.num_ngram_vectors += num_new_ngrams
-            logger.info("Number of new ngrams is %d", num_new_ngrams)
+            wv.update_ngrams_weights()
 
             rand_obj = np.random
             rand_obj.seed(self.seed)
