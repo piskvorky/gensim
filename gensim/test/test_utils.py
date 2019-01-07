@@ -19,6 +19,8 @@ from gensim.test.utils import datapath, get_tmpfile
 
 import gensim.models.utils_any2vec
 
+DISABLE_CYTHON_TESTS = getattr(gensim.models.utils_any2vec, 'FAST_VERSION', None) == -1
+
 
 class TestIsCorpus(unittest.TestCase):
     def test_None(self):
@@ -286,6 +288,7 @@ class HashTest(unittest.TestCase):
         actual = {k: gensim.models.utils_any2vec._ft_hash_py(k) for k in self.expected}
         self.assertEqual(self.expected, actual)
 
+    @unittest.skipIf(DISABLE_CYTHON_TESTS, 'Cython tests are currently disabled')
     def test_cython(self):
         actual = {k: gensim.models.utils_any2vec._ft_hash_cy(k) for k in self.expected}
         self.assertEqual(self.expected, actual)
@@ -294,6 +297,7 @@ class HashTest(unittest.TestCase):
         actual = {k: gensim.models.utils_any2vec._ft_hash_py_broken(k) for k in self.expected}
         self.assertEqual(self.expected_broken, actual)
 
+    @unittest.skipIf(DISABLE_CYTHON_TESTS, 'Cython tests are currently disabled')
     def test_cython_broken(self):
         actual = {k: gensim.models.utils_any2vec._ft_hash_cy_broken(k) for k in self.expected}
         self.assertEqual(self.expected_broken, actual)
