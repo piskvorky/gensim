@@ -704,7 +704,7 @@ class FastText(BaseWordEmbeddingsModel):
             sentences=sentences, corpus_file=corpus_file, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
             queue_factor=queue_factor, report_delay=report_delay, callbacks=callbacks)
-        self.trainables.get_vocab_word_vecs(self.wv)
+        self.wv.calculate_vectors()
 
     def init_sims(self, replace=False):
         """
@@ -1163,24 +1163,6 @@ class FastTextTrainables(Word2VecTrainables):
 
             new_ngrams = len(wv.hash2index) - old_hash2index_len
             self.vectors_ngrams_lockf = _pad_ones(self.vectors_ngrams_lockf, new_ngrams)
-
-    #
-    # FIXME: the name is misleading.  Also, this seems to be an internal method.
-    # Looks like it doesn't even belong in this class, as it doesn't rely on any
-    # attributes other than self.bucket.
-    #
-    def get_vocab_word_vecs(self, wv):
-        """Calculate vectors for words in vocabulary and stores them in `vectors`."""
-        hash_fn = _ft_hash if self.compatible_hash else _ft_hash_broken
-
-        for w, v in wv.vocab.items():
-            word_vec = np.copy(wv.vectors_vocab[v.index])
-            ngrams = _compute_ngrams(w, wv.min_n, wv.max_n)
-            ngram_weights = wv.vectors_ngrams
-            for ngram in ngrams:
-                word_vec += ngram_weights[wv.hash2index[hash_fn(ngram) % self.bucket]]
-            word_vec /= (len(ngrams) + 1)
-            wv.vectors[v.index] = word_vec
 
     def init_post_load(self, model, hidden_output):
         num_vectors = len(model.wv.vectors)

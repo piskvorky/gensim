@@ -2171,6 +2171,19 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
             self.vectors.shape, file_name
         )
 
+    def calculate_vectors(self):
+        """Calculate vectors for words in vocabulary and stores them in `vectors`."""
+        hash_fn = _ft_hash if self.compatible_hash else _ft_hash_broken
+
+        for w, v in self.vocab.items():
+            word_vec = np.copy(self.vectors_vocab[v.index])
+            ngrams = _compute_ngrams(w, self.min_n, self.max_n)
+            ngram_weights = self.vectors_ngrams
+            for ngram in ngrams:
+                word_vec += ngram_weights[self.hash2index[hash_fn(ngram) % self.bucket]]
+            word_vec /= (len(ngrams) + 1)
+            self.vectors[v.index] = word_vec
+
 
 def _pad_random(m, new_rows, rand):
     """Pad a matrix with additional rows filled with random values."""

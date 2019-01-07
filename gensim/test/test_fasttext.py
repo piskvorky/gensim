@@ -718,7 +718,7 @@ class TestFastTextModel(unittest.TestCase):
         model = FT_gensim(size=10, min_count=1, seed=42)
         model.build_vocab(sentences)
         original_syn0_vocab = np.copy(model.wv.vectors_vocab)
-        model.trainables.get_vocab_word_vecs(model.wv)
+        model.wv.calculate_vectors()
         self.assertTrue(np.all(np.equal(model.wv.vectors_vocab, original_syn0_vocab)))
 
     def test_persistence_word2vec_format(self):
