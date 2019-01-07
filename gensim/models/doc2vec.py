@@ -488,7 +488,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
             You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
             `corpus_file` arguments need to be passed (or none of them). Documents' tags are assigned automatically
-            based on line number, as in :class:`~gensim.models.doc2vec.TaggedLineDocument`.
+            and are equal to line number, as in :class:`~gensim.models.doc2vec.TaggedLineDocument`.
         dm : {1,0}, optional
             Defines the training algorithm. If `dm=1`, 'distributed memory' (PV-DM) is used.
             Otherwise, `distributed bag of words` (PV-DBOW) is employed.
@@ -763,7 +763,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
             You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
             `corpus_file` arguments need to be passed (not both of them). Documents' tags are assigned automatically
-            based on line number, as in :class:`~gensim.models.doc2vec.TaggedLineDocument`.
+            and are equal to line number, as in :class:`~gensim.models.doc2vec.TaggedLineDocument`.
         total_examples : int, optional
             Count of sentences.
         total_words : int, optional
@@ -1143,7 +1143,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
             You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
             `corpus_file` arguments need to be passed (not both of them). Documents' tags are assigned automatically
-            based on line number, as in :class:`~gensim.models.doc2vec.TaggedLineDocument`.
+            and are equal to a line number, as in :class:`~gensim.models.doc2vec.TaggedLineDocument`.
         update : bool
             If true, the new words in `sentences` will be added to model's vocab.
         progress_per : int
