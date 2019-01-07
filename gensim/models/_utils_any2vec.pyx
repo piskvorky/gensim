@@ -46,10 +46,9 @@ cpdef ft_hash(unicode string):
 
 cpdef ft_hash_broken(unicode string):
     """Calculate hash based on `string`.
-    Reproduce `hash method from Facebook fastText implementation
-    <https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc>`_.
 
     This implementation is broken, see https://github.com/RaRe-Technologies/gensim/issues/2059.
+    It is here only for maintaining backwards compatibility with older models.
 
     Parameters
     ----------
