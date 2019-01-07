@@ -807,16 +807,16 @@ class FastText(BaseWordEmbeddingsModel):
             Handle to an open file.
 
         """
-        magic, version = self.struct_unpack(file_handle, '@2i')
+        magic, version = _struct_unpack(file_handle, '@2i')
         if magic == FASTTEXT_FILEFORMAT_MAGIC:  # newer format
             self.new_format = True
             dim, ws, epoch, min_count, neg, _, loss, model, bucket, minn, maxn, _, t = \
-                self.struct_unpack(file_handle, '@12i1d')
+                _struct_unpack(file_handle, '@12i1d')
         else:  # older format
             self.new_format = False
             dim = magic
             ws = version
-            epoch, min_count, neg, _, loss, model, bucket, minn, maxn, _, t = self.struct_unpack(file_handle, '@10i1d')
+            epoch, min_count, neg, _, loss, model, bucket, minn, maxn, _, t = _struct_unpack(file_handle, '@10i1d')
         # Parameters stored by [Args::save](https://github.com/facebookresearch/fastText/blob/master/src/args.cc)
         self.vector_size = dim
         self.window = ws
@@ -886,6 +886,7 @@ class FastText(BaseWordEmbeddingsModel):
         self.trainables.init_post_load(self, hidden_output)
 
 
+    @deprecated("Method will be removed in 4.0.0, use _struct_unpack instead")
     def struct_unpack(self, file_handle, fmt):
         """Read a single object from an open file.
 
