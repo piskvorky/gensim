@@ -545,6 +545,7 @@ class FastText(BaseWordEmbeddingsModel):
     def _clear_post_train(self):
         """Clear the model's internal structures after training has finished to free up RAM."""
         self.wv.vectors_norm = None
+        self.wv.vectors_vocab_norm = None
         self.wv.vectors_ngrams_norm = None
         self.wv.buckets_word = None
 
@@ -917,7 +918,7 @@ class FastText(BaseWordEmbeddingsModel):
 
         """
         kwargs['ignore'] = kwargs.get(
-            'ignore', ['vectors_norm', 'vectors_ngrams_norm', 'buckets_word'])
+            'ignore', ['vectors_norm', 'vectors_vocab_norm', 'vectors_ngrams_norm', 'buckets_word'])
         super(FastText, self).save(*args, **kwargs)
 
     @classmethod

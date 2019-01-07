@@ -1904,6 +1904,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
     def __init__(self, vector_size, min_n, max_n, bucket, compatible_hash):
         super(FastTextKeyedVectors, self).__init__(vector_size=vector_size)
         self.vectors_vocab = None
+        self.vectors_vocab_norm = None
         self.vectors_ngrams = None
         self.vectors_ngrams_norm = None
         self.buckets_word = None
@@ -1920,9 +1921,9 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         return self.vectors_vocab
 
     @property
-    @deprecated("Attribute will be removed in 4.0.0")
+    @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors_vocab_norm instead")
     def syn0_vocab_norm(self):
-        return None
+        return self.vectors_vocab_norm
 
     @property
     @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors_ngrams instead")
@@ -1972,7 +1973,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         """
         # don't bother storing the cached normalized vectors
         kwargs['ignore'] = kwargs.get(
-            'ignore', ['vectors_norm', 'vectors_ngrams_norm', 'buckets_word'])
+            'ignore', ['vectors_norm', 'vectors_vocab_norm', 'vectors_ngrams_norm', 'buckets_word'])
         super(FastTextKeyedVectors, self).save(*args, **kwargs)
 
     def word_vec(self, word, use_norm=False):
