@@ -86,7 +86,7 @@ except ImportError:
 try:
     from pyemd import emd
     PYEMD_EXT = True
-except ImportError:
+except (ImportError, ValueError):
     PYEMD_EXT = False
 
 from numpy import dot, zeros, dtype, float32 as REAL,\

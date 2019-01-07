@@ -18,6 +18,13 @@ from gensim.models.wrappers.fasttext import FastText as FT_wrapper
 from gensim.models.keyedvectors import Word2VecKeyedVectors
 from gensim.test.utils import datapath, get_tmpfile, temporary_file, common_texts as sentences
 
+
+try:
+    from pyemd import emd  # noqa:F401
+    PYEMD_EXT = True
+except (ImportError, ValueError):
+    PYEMD_EXT = False
+
 logger = logging.getLogger(__name__)
 
 IS_WIN32 = (os.name == "nt") and (struct.calcsize('P') * 8 == 32)
@@ -357,6 +364,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertFalse('nights' in self.test_model.wv.vocab)
         self.assertTrue('nights' in self.test_model.wv)
 
+    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed or have some issues")
     def test_wm_distance(self):
         doc = ['night', 'payment']
         oov_doc = ['nights', 'forests', 'payments']
