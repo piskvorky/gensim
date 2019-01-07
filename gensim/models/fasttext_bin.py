@@ -3,15 +3,18 @@
 Examples
 --------
 
+Load a model from a binary file:
 .. sourcecode:: pycon
+
     >>> from gensim.models.fasttext_bin import load
     >>> with open('/path/to/model.bin', 'rb') as fin:
-            model = load(fin)
+    ...     model = load(fin)
 
 See Also
 --------
 
 FB Implementation <https://github.com/facebookresearch/fastText/blob/master/src/matrix.cc>`_.
+
 """
 
 import collections
