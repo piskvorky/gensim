@@ -1001,12 +1001,12 @@ class LoadFastTextFormatTest(unittest.TestCase):
 class HashCompatibilityTest(unittest.TestCase):
     def test_compatibility_true(self):
         m = FT_gensim.load(datapath('compatible-hash-true.model'))
-        self.assertTrue(m.compatible_hash)
+        self.assertTrue(m.wv.compatible_hash)
         self.assertEqual(m.trainables.bucket, m.wv.bucket)
 
     def test_compatibility_false(self):
         m = FT_gensim.load(datapath('compatible-hash-false.model'))
-        self.assertFalse(m.compatible_hash)
+        self.assertFalse(m.wv.compatible_hash)
         self.assertEqual(m.trainables.bucket, m.wv.bucket)
 
 

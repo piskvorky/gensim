@@ -398,12 +398,9 @@ class FastText(BaseWordEmbeddingsModel):
         self.vocabulary = FastTextVocab(
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
             sorted_vocab=bool(sorted_vocab), null_word=null_word, ns_exponent=ns_exponent)
-        self.trainables = FastTextTrainables(
-            vector_size=size, seed=seed, bucket=bucket,
-            hashfxn=hashfxn, compatible_hash=compatible_hash)
+        self.trainables = FastTextTrainables(vector_size=size, seed=seed, bucket=bucket, hashfxn=hashfxn)
         self.trainables.prepare_weights(hs, negative, self.wv, update=False, vocabulary=self.vocabulary)
         self.wv.bucket = self.trainables.bucket
-        self.compatible_hash = compatible_hash
 
         super(FastText, self).__init__(
             sentences=sentences, corpus_file=corpus_file, workers=workers, vector_size=size, epochs=iter,
@@ -552,7 +549,7 @@ class FastText(BaseWordEmbeddingsModel):
         self.wv.buckets_word = None
 
     def estimate_memory(self, vocab_size=None, report=None):
-        hash_fn = _ft_hash if self.compatible_hash else _ft_hash_broken
+        hash_fn = _ft_hash if self.wv.compatible_hash else _ft_hash_broken
 
         vocab_size = vocab_size or len(self.wv.vocab)
         vec_size = self.vector_size * np.dtype(np.float32).itemsize
@@ -950,15 +947,13 @@ class FastText(BaseWordEmbeddingsModel):
             if not hasattr(model.trainables, 'vectors_ngrams_lockf') and hasattr(model.wv, 'vectors_ngrams'):
                 model.trainables.vectors_ngrams_lockf = ones(len(model.trainables.vectors), dtype=REAL)
 
-            if not hasattr(model, 'compatible_hash'):
+            if not hasattr(model.wv, 'compatible_hash'):
                 logger.warning(
                     "This older model was trained with a buggy hash function.  ",
                     "The model will continue to work, but consider training it "
                     "from scratch."
                 )
-                model.compatible_hash = False
                 model.wv.compatible_hash = False
-                model.trainables_compatible_hash = False
 
             if not hasattr(model.wv, 'bucket'):
                 model.wv.bucket = model.trainables.bucket
@@ -1109,11 +1104,10 @@ def _load_vocab(file_handle, new_format, sample, min_count, encoding='utf-8'):
 
 class FastTextTrainables(Word2VecTrainables):
     """Represents the inner shallow neural network used to train :class:`~gensim.models.fasttext.FastText`."""
-    def __init__(self, vector_size=100, seed=1, hashfxn=hash, bucket=2000000, compatible_hash=True):
+    def __init__(self, vector_size=100, seed=1, hashfxn=hash, bucket=2000000):
         super(FastTextTrainables, self).__init__(
             vector_size=vector_size, seed=seed, hashfxn=hashfxn)
         self.bucket = int(bucket)
-        self.compatible_hash = compatible_hash
 
     #
     # FIXME: this method appears to be temporally coupled to the constructor.
