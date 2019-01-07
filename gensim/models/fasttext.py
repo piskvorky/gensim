@@ -1213,14 +1213,10 @@ class FastTextTrainables(Word2VecTrainables):
         """
         rand_obj = np.random
         rand_obj.seed(self.seed)
-        for index in range(len(wv.vocab)):
-            wv.vectors_vocab[index] = rand_obj.uniform(
-                -1.0 / wv.vector_size, 1.0 / wv.vector_size, wv.vector_size
-            ).astype(REAL)
-        for index in range(len(wv.hash2index)):
-            wv.vectors_ngrams[index] = rand_obj.uniform(
-                -1.0 / wv.vector_size, 1.0 / wv.vector_size, wv.vector_size
-            ).astype(REAL)
+
+        lo, hi = -1.0 / wv.vector_size, 1.0 / wv.vector_size
+        wv.vectors_vocab = rand_obj.uniform(lo, hi, wv.vectors_vocab.shape).astype(REAL)
+        wv.vectors_ngrams = rand_obj.uniform(lo, hi, wv.vectors_ngrams.shape).astype(REAL)
 
     #
     # FIXME: the name is misleading.  Also, this seems to be an internal method.
