@@ -872,7 +872,7 @@ class FastText(BaseWordEmbeddingsModel):
             )
 
     def _load_trainables(self, file_handle):
-        self.trainables.init_ngrams_post_load(self.file_name, self.wv)
+        self.wv.init_ngrams_post_load(self.file_name)
 
         hidden_output = _load_matrix(
             file_handle,
@@ -884,7 +884,6 @@ class FastText(BaseWordEmbeddingsModel):
 
         self.wv.init_vectors_vocab()
         self.trainables.init_post_load(self, hidden_output)
-
 
     @deprecated("Method will be removed in 4.0.0, use _struct_unpack instead")
     def struct_unpack(self, file_handle, fmt):
@@ -1214,49 +1213,6 @@ class FastTextTrainables(Word2VecTrainables):
 
         self.layer1_size = vector_size
 
-    def init_ngrams_post_load(self, file_name, wv):
-        """Compute ngrams of all words present in vocabulary, and store vectors for only those ngrams.
-
-        Vectors for other ngrams are initialized with a random uniform distribution in FastText. These
-        vectors are discarded here to save space.
-
-        """
-        hash_fn = _ft_hash if self.compatible_hash else _ft_hash_broken
-
-        wv.vectors = np.zeros((len(wv.vocab), wv.vector_size), dtype=REAL)
-
-        for w, vocab in wv.vocab.items():
-            wv.vectors[vocab.index] += np.array(wv.vectors_ngrams[vocab.index])
-
-        ngram_indices = []
-        wv.num_ngram_vectors = 0
-        for hashval in range(self.bucket):
-            wv.hash2index[hashval] = len(ngram_indices)
-            ngram_indices.append(len(wv.vocab) + hashval)
-
-
-        wv.num_ngram_vectors = len(ngram_indices)
-        wv.vectors_ngrams = wv.vectors_ngrams.take(ngram_indices, axis=0)
-
-        ngram_weights = wv.vectors_ngrams
-
-        logger.info(
-            "loading weights for %s words for fastText model from %s",
-            len(wv.vocab), file_name
-        )
-
-        for w, vocab in wv.vocab.items():
-            word_ngrams = _compute_ngrams(w, wv.min_n, wv.max_n)
-            for word_ngram in word_ngrams:
-                vec_idx = wv.hash2index[hash_fn(word_ngram) % self.bucket]
-                wv.vectors[vocab.index] += np.array(ngram_weights[vec_idx])
-
-            wv.vectors[vocab.index] /= (len(word_ngrams) + 1)
-        logger.info(
-            "loaded %s weight matrix for fastText model from %s",
-            wv.vectors.shape, file_name
-        )
-
 
 def _pad_ones(m, new_rows):
     """Pad a matrix with additional rows filled with ones."""
@@ -1319,10 +1275,7 @@ def _load_fasttext_format(model_file, encoding='utf-8'):
     #
     _check_model(model)
 
-    #
-    # TODO: this post-load stuff can be a single method
-    #
-    model.trainables.init_ngrams_post_load(fin.name, model.wv)
+    model.wv.init_ngrams_post_load(fin.name)
     model.trainables.init_post_load(model, m.hidden_output)
 
     return model

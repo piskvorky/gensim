@@ -2132,6 +2132,45 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         new_ngrams = len(self.hash2index) - old_hash2index_len
         self.vectors_ngrams = _pad_random(self.vectors_ngrams, new_ngrams, rand_obj)
 
+    def init_ngrams_post_load(self, file_name):
+        """Compute ngrams of all words present in vocabulary, and store vectors for only those ngrams.
+
+        Vectors for other ngrams are initialized with a random uniform distribution in FastText. These
+        vectors are discarded here to save space.
+
+        """
+        hash_fn = _ft_hash if self.compatible_hash else _ft_hash_broken
+
+        self.vectors = np.zeros((len(self.vocab), self.vector_size), dtype=REAL)
+        for w, vocab in self.vocab.items():
+            self.vectors[vocab.index] += np.array(self.vectors_ngrams[vocab.index])
+
+        ngram_indices = []
+        self.num_ngram_vectors = 0
+        for hashval in range(self.bucket):
+            self.hash2index[hashval] = len(ngram_indices)
+            ngram_indices.append(len(self.vocab) + hashval)
+
+        self.num_ngram_vectors = len(ngram_indices)
+        self.vectors_ngrams = self.vectors_ngrams.take(ngram_indices, axis=0)
+
+        logger.info(
+            "loading weights for %s words for fastText model from %s",
+            len(self.vocab), file_name
+        )
+
+        for w, vocab in self.vocab.items():
+            word_ngrams = _compute_ngrams(w, self.min_n, self.max_n)
+            for word_ngram in word_ngrams:
+                vec_idx = self.hash2index[hash_fn(word_ngram) % self.bucket]
+                self.vectors[vocab.index] += np.array(self.vectors_ngrams[vec_idx])
+
+            self.vectors[vocab.index] /= (len(word_ngrams) + 1)
+        logger.info(
+            "loaded %s weight matrix for fastText model from %s",
+            self.vectors.shape, file_name
+        )
+
 
 def _pad_random(m, new_rows, rand):
     """Pad a matrix with additional rows filled with random values."""
