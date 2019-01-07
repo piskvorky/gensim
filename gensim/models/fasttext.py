@@ -1190,23 +1190,21 @@ class FastTextTrainables(Word2VecTrainables):
 
             rand_obj = np.random
             rand_obj.seed(self.seed)
-            new_vocab_rows = rand_obj.uniform(
-                -1.0 / wv.vector_size, 1.0 / wv.vector_size,
-                (len(wv.vocab) - vocabulary.old_vocab_len, wv.vector_size)
-            ).astype(REAL)
-            new_vocab_lockf_rows = ones(
-                (len(wv.vocab) - vocabulary.old_vocab_len, wv.vector_size), dtype=REAL)
-            new_ngram_rows = rand_obj.uniform(
-                -1.0 / wv.vector_size, 1.0 / wv.vector_size,
-                (len(wv.hash2index) - self.old_hash2index_len, wv.vector_size)
-            ).astype(REAL)
-            new_ngram_lockf_rows = ones(
-                (len(wv.hash2index) - self.old_hash2index_len, wv.vector_size), dtype=REAL)
 
-            wv.vectors_vocab = vstack([wv.vectors_vocab, new_vocab_rows])
-            self.vectors_vocab_lockf = vstack([self.vectors_vocab_lockf, new_vocab_lockf_rows])
-            wv.vectors_ngrams = vstack([wv.vectors_ngrams, new_ngram_rows])
-            self.vectors_ngrams_lockf = vstack([self.vectors_ngrams_lockf, new_ngram_lockf_rows])
+            #
+            # FIXME:
+            #
+            # It looks like vectors_vocab_lockf and vectors_ngrams_lockf
+            # should really be part of FastTextKeyedVectors, as they are
+            # essentially coupled to wv.vectors_vocab and wv.vector_ngrams.
+            #
+            new_vocab = len(wv.vocab) - vocabulary.old_vocab_len
+            wv.vectors_vocab = _pad_random(wv.vectors_vocab, new_vocab, rand_obj)
+            self.vectors_vocab_lockf = _pad_ones(self.vectors_vocab_lockf, new_vocab)
+
+            new_ngrams = len(wv.hash2index) - self.old_hash2index_len
+            wv.vectors_ngrams = _pad_random(wv.vectors_ngrams, new_ngrams, rand_obj)
+            self.vectors_ngrams_lockf = _pad_ones(self.vectors_ngrams_lockf, new_ngrams)
 
     def reset_ngrams_weights(self, wv):
         """Reset all projection weights to an initial (untrained) state,
@@ -1315,6 +1313,22 @@ class FastTextTrainables(Word2VecTrainables):
             "loaded %s weight matrix for fastText model from %s",
             wv.vectors.shape, file_name
         )
+
+
+def _pad_random(m, new_rows, rand):
+    """Pad a matrix with additional rows filled with random values."""
+    rows, columns = m.shape
+    low, high = -1.0 / columns, 1.0 / columns
+    suffix = rand.uniform(low, high, (new_rows, columns)).astype(REAL)
+    return vstack([m, suffix])
+
+
+def _pad_ones(m, new_rows):
+    """Pad a matrix with additional rows filled with ones."""
+    rows, columns = m.shape
+    suffix = ones((new_rows, columns), dtype=REAL)
+    return vstack([m, suffix])
+
 
 
 def _load_fasttext_format(model_file, encoding='utf-8'):
