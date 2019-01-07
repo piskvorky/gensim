@@ -958,6 +958,10 @@ class FastText(BaseWordEmbeddingsModel):
                 model.compatible_hash = False
                 model.wv.compatible_hash = False
                 model.trainables_compatible_hash = False
+
+            if not hasattr(model.wv, 'bucket'):
+                model.wv.bucket = model.trainables.bucket
+
             return model
         except AttributeError:
             logger.info('Model saved using code from earlier Gensim Version. Re-loading old model in a compatible way.')
