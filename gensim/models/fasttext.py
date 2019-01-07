@@ -1139,7 +1139,7 @@ class FastTextTrainables(Word2VecTrainables):
 
         """
         if not update:
-            ngram_indices = wv.init_ngrams_weights()
+            ngram_indices = wv.init_ngrams_weights(self.seed)
             #
             # FIXME: Why is this being initialized as a 2D array here, whereas it is
             # a 1D array when initialized in the load function?
@@ -1147,7 +1147,6 @@ class FastTextTrainables(Word2VecTrainables):
             self.vectors_vocab_lockf = ones((len(wv.vocab), wv.vector_size), dtype=REAL)
             self.vectors_ngrams_lockf = ones((self.bucket, wv.vector_size), dtype=REAL)
             self.vectors_ngrams_lockf = self.vectors_ngrams_lockf.take(ngram_indices, axis=0)
-            self.reset_ngrams_weights(wv)
         else:
             wv.update_ngrams_weights()
 
@@ -1168,18 +1167,6 @@ class FastTextTrainables(Word2VecTrainables):
             new_ngrams = len(wv.hash2index) - self.old_hash2index_len
             wv.vectors_ngrams = _pad_random(wv.vectors_ngrams, new_ngrams, rand_obj)
             self.vectors_ngrams_lockf = _pad_ones(self.vectors_ngrams_lockf, new_ngrams)
-
-    def reset_ngrams_weights(self, wv):
-        """Reset all projection weights to an initial (untrained) state,
-        but keep the existing vocabulary and their ngrams.
-
-        """
-        rand_obj = np.random
-        rand_obj.seed(self.seed)
-
-        lo, hi = -1.0 / wv.vector_size, 1.0 / wv.vector_size
-        wv.vectors_vocab = rand_obj.uniform(lo, hi, wv.vectors_vocab.shape).astype(REAL)
-        wv.vectors_ngrams = rand_obj.uniform(lo, hi, wv.vectors_ngrams.shape).astype(REAL)
 
     #
     # FIXME: the name is misleading.  Also, this seems to be an internal method.

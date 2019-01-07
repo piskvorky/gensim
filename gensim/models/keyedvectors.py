@@ -2068,7 +2068,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         for word, vocab in self.vocab.items():
             self.vectors_vocab[vocab.index] = self.get_vector(word)
 
-    def init_ngrams_weights(self):
+    def init_ngrams_weights(self, seed):
         hash_fn = _ft_hash if self.compatible_hash else _ft_hash_broken
 
         self.vectors_vocab = empty((len(self.vocab), self.vector_size), dtype=REAL)
@@ -2090,6 +2090,14 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
 
         logger.info("Total number of ngrams is %d", self.num_ngram_vectors)
         self.vectors_ngrams = self.vectors_ngrams.take(ngram_indices, axis=0)
+
+        rand_obj = np.random
+        rand_obj.seed(seed)
+
+        lo, hi = -1.0 / self.vector_size, 1.0 / self.vector_size
+        self.vectors_vocab = rand_obj.uniform(lo, hi, self.vectors_vocab.shape).astype(REAL)
+        self.vectors_ngrams = rand_obj.uniform(lo, hi, self.vectors_ngrams.shape).astype(REAL)
+
         return ngram_indices
 
     def update_ngrams_weights(self):
