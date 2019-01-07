@@ -6,14 +6,21 @@ Examples
 Load a model from a binary file:
 .. sourcecode:: pycon
 
+    >>> from gensim.test.utils import datapath
     >>> from gensim.models.fasttext_bin import load
-    >>> with open('/path/to/model.bin', 'rb') as fin:
+    >>> with open(datapath('crime-and-punishment.bin'), 'rb') as fin:
     ...     model = load(fin)
+    >>> model.nwords
+    291
+    >>> model.vectors_ngrams.shape
+    (391, 5)
+    >>> sorted(model.raw_vocab, key=lambda w: len(w), reverse=True)[:5]
+    ['останавливаться', 'изворачиваться,', 'раздражительном', 'exceptionally', 'проскользнуть']
 
 See Also
 --------
 
-FB Implementation <https://github.com/facebookresearch/fastText/blob/master/src/matrix.cc>`_.
+`FB Implementation <https://github.com/facebookresearch/fastText/blob/master/src/matrix.cc>`_.
 
 """
 
