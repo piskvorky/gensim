@@ -483,7 +483,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         """
         return super(WordEmbeddingsKeyedVectors, self).closer_than(w1, w2)
 
-    def most_similar(self, positive=None, negative=None, topn=10, restrict_vocab=None, indexer=None):
+    def most_similar(self, positive=None, negative=None, last=None, topn=10, restrict_vocab=None, indexer=None):
         """Find the top-N most similar words.
         Positive words contribute positively towards the similarity, negative words negatively.
 
@@ -500,6 +500,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             List of words that contribute negatively.
         topn : int, optional
             Number of top-N similar words to return.
+		last: Only for set-Based analogy. The word which belongs in the same pair as the expected word. 
         restrict_vocab : int, optional
             Optional integer which limits the range of vectors which
             are searched for most-similar values. For example, restrict_vocab=10000 would
@@ -544,7 +545,12 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                     all_words.add(self.vocab[word].index)
         if not mean:
             raise ValueError("cannot compute similarity with no input")
-        mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
+        if last is None:
+            mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
+        else:
+            if (len(positive)+len(negative))%2 !=0:
+                raise ValueError("wrong input word analogies.. one or more words are missing..")			
+            mean = matutils.unitvec(array(mean).mean(axis=0)/2).astype(REAL)+self.word_vec(last, use_norm=True)
 
         if indexer is not None:
             return indexer.most_similar(mean, topn)
@@ -557,6 +563,121 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         # ignore (don't return) words from the input
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
+		
+    def evaluate_word_analogies_setBased(self, analogies, restrict_vocab=300000, case_insensitive=True, dummy4unknown=False, topk=1):
+        """Compute performance of the model on an analogy test set.
+
+        This is modern variant of :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.accuracy`, see
+        `discussion on GitHub #1935 <https://github.com/RaRe-Technologies/gensim/pull/1935>`_.
+
+        The accuracy is reported (printed to log and returned as a score) for each section separately,
+        plus there's one aggregate summary at the end.
+
+        This method corresponds to the `compute-accuracy` script of the original C word2vec.
+        See also `Analogy (State of the art) <https://aclweb.org/aclwiki/Analogy_(State_of_the_art)>`_.
+
+        Parameters
+        ----------
+        analogies : str
+            Path to file, where lines are tuples of words, split into sections by ": SECTION NAME" lines.
+            See `gensim/test/test_data/questions-words.txt` as example.
+        restrict_vocab : int, optional
+            Ignore all tuples containing a word not in the first `restrict_vocab` words.
+            This may be meaningful if you've sorted the model vocabulary by descending frequency (which is standard
+            in modern word embedding models).
+        case_insensitive : bool, optional
+            If True - convert all words to their uppercase form before evaluating the performance.
+            Useful to handle case-mismatch between training tokens and words in the test set.
+            In case of multiple case variants of a single word, the vector for the first occurrence
+            (also the most frequent if vocabulary is sorted) is taken.
+        dummy4unknown : bool, optional
+            If True - produce zero accuracies for tuples with out-of-vocabulary words.
+            Otherwise, these tuples are skipped entirely and not used in the evaluation.
+		topk: int, optional
+			Number of the top similar words we can consider for a successful prediction.
+
+        Returns
+        -------
+        (float, list of dict of (str, (str, str, str))
+            Overall evaluation score and full lists of correct and incorrect predictions divided by sections.
+
+        """
+        ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
+        ok_vocab = {w.upper(): v for w, v in reversed(ok_vocab)} if case_insensitive else dict(ok_vocab)
+        oov = 0
+        logger.info("Evaluating word analogies for top %i words in the model on %s", restrict_vocab, analogies)
+        sections, section = [], None
+        tuples = 0
+        for line_no, line in enumerate(utils.smart_open(analogies)):
+            line = utils.to_unicode(line)
+            if line.startswith(': '):
+                # a new section starts => store the old section
+                if section:
+                    sections.append(section)
+                    self._log_evaluate_word_analogies(section)
+                section = {'section': line.lstrip(': ').strip(), 'correct': [], 'incorrect': []}
+            else:
+                if not section:
+                    raise ValueError("Missing section header before line #%i in %s" % (line_no, analogies))
+                try:
+                    if case_insensitive:
+                        terms = [word.upper() for word in line.split()]
+                    else:
+                        terms = [word for word in line.split()]
+                except ValueError:
+                    logger.info("Skipping invalid line #%i in %s", line_no, analogies)
+                    continue
+                tuples += 1
+                if any(term not in ok_vocab for term in terms):
+                    oov += 1
+                    if dummy4unknown:
+                        logger.debug('Zero accuracy for line #%d with OOV words: %s', line_no, line.strip())
+                        section['incorrect'].append(terms)
+                    else:
+                        logger.debug("Skipping line #%i with OOV words: %s", line_no, line.strip())
+                    continue
+                original_vocab = self.vocab
+                self.vocab = ok_vocab
+                ignore = terms[0:len(words)-1]  # input words to be ignored
+                predicted = None
+                # find the most likely prediction using 3CosAvg set based vector offset) method
+                # Implementation of the set-based method for solving analogies
+                sims = self.most_similar(positive=terms[0:len(terms)-2:2], negative=terms[0:len(terms)-2:2], last=terms[len(terms)-1], topn=topk, restrict_vocab=restrict_vocab)
+                expected = terms[len(terms)-1]
+                for element in sims:                  
+                    predicted = element[0].upper() if case_insensitive else element[0]
+                    if predicted in ok_vocab and predicted not in ignore:
+                        if predicted != expected:
+                            logger.debug("%s: expected %s, predicted %s", line.strip(), expected, predicted)
+                        if predicted == expected:
+                            break
+  
+                if predicted == expected:
+                    section['correct'].append(terms)
+                else:
+                    section['incorrect'].append(terms)
+        if section:
+            # store the last section, too
+            sections.append(section)
+            self._log_evaluate_word_analogies(section)
+
+        total = {
+            'section': 'Total accuracy',
+            'correct': sum((s['correct'] for s in sections), []),
+            'incorrect': sum((s['incorrect'] for s in sections), []),
+        }
+
+        oov_ratio = float(oov) / tuples * 100
+        logger.info('Quadruplets with out-of-vocabulary words: %.1f%%', oov_ratio)
+        if not dummy4unknown:
+            logger.info(
+                'NB: analogies containing OOV words were skipped from evaluation! '
+                'To change this behavior, use "dummy4unknown=True"'
+            )
+        analogies_score = self._log_evaluate_word_analogies(total)
+        sections.append(total)
+        # Return the overall score and the full lists of correct and incorrect analogies
+        return analogies_score, sections			
 
     def similar_by_word(self, word, topn=10, restrict_vocab=None):
         """Find the top-N most similar words.
@@ -812,7 +933,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         # Compute WMD.
         return emd(d1, d2, distance_matrix)
 
-    def most_similar_cosmul(self, positive=None, negative=None, topn=10):
+    def most_similar_cosmul(self, positive=None, negative=None, topn=10, restrict_vocab=None):
         """Find the top-N most similar words, using the multiplicative combination objective,
         proposed by `Omer Levy and Yoav Goldberg "Linguistic Regularities in Sparse and Explicit Word Representations"
         <http://www.aclweb.org/anthology/W14-1618>`_. Positive words still contribute positively towards the similarity,
@@ -833,6 +954,11 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             List of words that contribute negatively.
         topn : int, optional
             Number of top-N similar words to return.
+        restrict_vocab : int, optional
+            Optional integer which limits the range of vectors which
+            are searched for most-similar values. For example, restrict_vocab=10000 would
+            only check the first 10000 word vectors in the vocabulary order. (This may be
+            meaningful if you've sorted the vocabulary by descending frequency.)			
 
         Returns
         -------
@@ -864,14 +990,14 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             self.word_vec(word, use_norm=True) if isinstance(word, string_types) else word
             for word in negative
         ]
-
+        limited = self.vectors_norm if restrict_vocab is None else self.vectors_norm[:restrict_vocab]
         if not positive:
             raise ValueError("cannot compute similarity with no input")
 
         # equation (4) of Levy & Goldberg "Linguistic Regularities...",
         # with distances shifted to [0,1] per footnote (7)
-        pos_dists = [((1 + dot(self.vectors_norm, term)) / 2) for term in positive]
-        neg_dists = [((1 + dot(self.vectors_norm, term)) / 2) for term in negative]
+        pos_dists = [((1 + dot(limited, term)) / 2) for term in positive]
+        neg_dists = [((1 + dot(limited, term)) / 2) for term in negative]
         dists = prod(pos_dists, axis=0) / (prod(neg_dists, axis=0) + 0.000001)
 
         if not topn:
@@ -880,6 +1006,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         # ignore (don't return) words from the input
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
+
 
     def doesnt_match(self, words):
         """Which word from the given list doesn't go with the others?
@@ -1046,7 +1173,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             logger.info("%s: %.1f%% (%i/%i)", section['section'], 100.0 * score, correct, correct + incorrect)
             return score
 
-    def evaluate_word_analogies(self, analogies, restrict_vocab=300000, case_insensitive=True, dummy4unknown=False):
+    def evaluate_word_analogies(self, analogies, restrict_vocab=300000, case_insensitive=True, dummy4unknown=False, topk=1, method='3CosAdd'):
         """Compute performance of the model on an analogy test set.
 
         This is modern variant of :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.accuracy`, see
@@ -1075,6 +1202,10 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         dummy4unknown : bool, optional
             If True - produce zero accuracies for 4-tuples with out-of-vocabulary words.
             Otherwise, these tuples are skipped entirely and not used in the evaluation.
+		topk: int, optional
+			Number of the top similar words we can consider for a successful prediction.
+		method: str, by default equal to 3CosAdd.
+			The name of the corresponding method for solving the analogies.
 
         Returns
         -------
@@ -1083,7 +1214,9 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         sections : list of dict of {str : str or list of tuple of (str, str, str, str)}
             Results broken down by each section of the evaluation set. Each dict contains the name of the section
             under the key 'section', and lists of correctly and incorrectly predicted 4-tuples of words under the
-            keys 'correct' and 'incorrect'.
+            keys 'correct' and 'incorrect'.		
+        (float, list of dict of (str, (str, str, str))
+            Overall evaluation score and full lists of correct and incorrect predictions divided by sections.
 
         """
         ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
@@ -1124,16 +1257,22 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                 self.vocab = ok_vocab
                 ignore = {a, b, c}  # input words to be ignored
                 predicted = None
-                # find the most likely prediction using 3CosAdd (vector offset) method
-                # TODO: implement 3CosMul and set-based methods for solving analogies
-                sims = self.most_similar(positive=[b, c], negative=[a], topn=5, restrict_vocab=restrict_vocab)
+                # find the most likely prediction using 3CosAdd (vector offset) method or 3CosMul
+
+                if method == '3CosAdd':
+                    sims = self.most_similar(positive=[b, c], negative=[a], topn=topk, restrict_vocab=restrict_vocab)	
+                if method == '3CosMul':
+                    sims = self.most_similar_cosmul(positive=[b, c], negative=[a], topn=topk, restrict_vocab=restrict_vocab)					
                 self.vocab = original_vocab
-                for element in sims:
+
+                for element in sims:                  
                     predicted = element[0].upper() if case_insensitive else element[0]
                     if predicted in ok_vocab and predicted not in ignore:
                         if predicted != expected:
                             logger.debug("%s: expected %s, predicted %s", line.strip(), expected, predicted)
-                        break
+                        if predicted == expected:
+                            break
+  
                 if predicted == expected:
                     section['correct'].append((a, b, c, expected))
                 else:
