@@ -63,8 +63,8 @@ cpdef ft_hash_broken(unicode string):
     """
     cdef unsigned int h = 2166136261
     for c in string:
-        h = np.uint32(h ^ np.uint32(ord(c)))
-        h = np.uint32(h * np.uint32(16777619))
+        h ^= ord(c)
+        h *= 16777619
     return h
 
 
