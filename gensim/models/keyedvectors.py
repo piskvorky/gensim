@@ -2100,7 +2100,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
 
         return ngram_indices
 
-    def update_ngrams_weights(self):
+    def update_ngrams_weights(self, seed, old_vocab_len):
         hash_fn = _ft_hash if self.compatible_hash else _ft_hash_broken
 
         old_hash2index_len = len(self.hash2index)
@@ -2122,3 +2122,20 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
 
         self.num_ngram_vectors += num_new_ngrams
         logger.info("Number of new ngrams is %d", num_new_ngrams)
+
+        rand_obj = np.random
+        rand_obj.seed(seed)
+
+        new_vocab = len(self.vocab) - old_vocab_len
+        self.vectors_vocab = _pad_random(self.vectors_vocab, new_vocab, rand_obj)
+
+        new_ngrams = len(self.hash2index) - old_hash2index_len
+        self.vectors_ngrams = _pad_random(self.vectors_ngrams, new_ngrams, rand_obj)
+
+
+def _pad_random(m, new_rows, rand):
+    """Pad a matrix with additional rows filled with random values."""
+    rows, columns = m.shape
+    low, high = -1.0 / columns, 1.0 / columns
+    suffix = rand.uniform(low, high, (new_rows, columns)).astype(REAL)
+    return vstack([m, suffix])

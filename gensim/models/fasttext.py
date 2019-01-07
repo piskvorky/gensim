@@ -1148,10 +1148,9 @@ class FastTextTrainables(Word2VecTrainables):
             self.vectors_ngrams_lockf = ones((self.bucket, wv.vector_size), dtype=REAL)
             self.vectors_ngrams_lockf = self.vectors_ngrams_lockf.take(ngram_indices, axis=0)
         else:
-            wv.update_ngrams_weights()
+            old_hash2index_len = len(wv.hash2index)
 
-            rand_obj = np.random
-            rand_obj.seed(self.seed)
+            wv.update_ngrams_weights(self.seed, vocabulary.old_vocab_len)
 
             #
             # FIXME:
@@ -1161,11 +1160,9 @@ class FastTextTrainables(Word2VecTrainables):
             # essentially coupled to wv.vectors_vocab and wv.vector_ngrams.
             #
             new_vocab = len(wv.vocab) - vocabulary.old_vocab_len
-            wv.vectors_vocab = _pad_random(wv.vectors_vocab, new_vocab, rand_obj)
             self.vectors_vocab_lockf = _pad_ones(self.vectors_vocab_lockf, new_vocab)
 
-            new_ngrams = len(wv.hash2index) - self.old_hash2index_len
-            wv.vectors_ngrams = _pad_random(wv.vectors_ngrams, new_ngrams, rand_obj)
+            new_ngrams = len(wv.hash2index) - old_hash2index_len
             self.vectors_ngrams_lockf = _pad_ones(self.vectors_ngrams_lockf, new_ngrams)
 
     #
@@ -1259,14 +1256,6 @@ class FastTextTrainables(Word2VecTrainables):
             "loaded %s weight matrix for fastText model from %s",
             wv.vectors.shape, file_name
         )
-
-
-def _pad_random(m, new_rows, rand):
-    """Pad a matrix with additional rows filled with random values."""
-    rows, columns = m.shape
-    low, high = -1.0 / columns, 1.0 / columns
-    suffix = rand.uniform(low, high, (new_rows, columns)).astype(REAL)
-    return vstack([m, suffix])
 
 
 def _pad_ones(m, new_rows):
