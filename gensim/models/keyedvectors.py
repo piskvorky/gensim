@@ -1181,6 +1181,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         plus there's one aggregate summary at the end.
         This method corresponds to the `compute-accuracy` script of the original C word2vec.
         See also `Analogy (State of the art) <https://aclweb.org/aclwiki/Analogy_(State_of_the_art)>`_.
+		
+
         Parameters
         ----------
         analogies : str
@@ -1201,7 +1203,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         topk: int, optional
             Number of the top similar words we can consider for a successful prediction.
         method: str, by default equal to 3CosAdd.
-           The name of the corresponding method for solving the analogies.		
+           The name of the corresponding method for solving the analogies.
+		   
         Returns
         -------
         score : float
