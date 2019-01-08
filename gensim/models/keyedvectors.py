@@ -1174,39 +1174,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             return score
 
     def evaluate_word_analogies(self, analogies, restrict_vocab=300000, case_insensitive=True, dummy4unknown=False, topk=1, method='3CosAdd'):
-        """Compute performance of the model on an analogy test set.
-        This is modern variant of :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.accuracy`, see
-        `discussion on GitHub #1935 <https://github.com/RaRe-Technologies/gensim/pull/1935>`_.
-        The accuracy is reported (printed to log and returned as a score) for each section separately,
-        plus there's one aggregate summary at the end.
-        This method corresponds to the `compute-accuracy` script of the original C word2vec.
-        See also `Analogy (State of the art) <https://aclweb.org/aclwiki/Analogy_(State_of_the_art)>`_.
-        Parameters
-        ----------
-        analogies : str
-            Path to file, where lines are 4-tuples of words, split into sections by ": SECTION NAME" lines.
-            See `gensim/test/test_data/questions-words.txt` as example.
-        restrict_vocab : int, optional
-            Ignore all 4-tuples containing a word not in the first `restrict_vocab` words.
-            This may be meaningful if you've sorted the model vocabulary by descending frequency (which is standard
-            in modern word embedding models).
-        case_insensitive : bool, optional
-            If True - convert all words to their uppercase form before evaluating the performance.
-            Useful to handle case-mismatch between training tokens and words in the test set.
-            In case of multiple case variants of a single word, the vector for the first occurrence
-            (also the most frequent if vocabulary is sorted) is taken.
-        dummy4unknown : bool, optional
-            If True - produce zero accuracies for 4-tuples with out-of-vocabulary words.
-            Otherwise, these tuples are skipped entirely and not used in the evaluation.
-        Returns
-        -------
-        score : float
-            The overall evaluation score on the entire evaluation set
-        sections : list of dict of {str : str or list of tuple of (str, str, str, str)}
-            Results broken down by each section of the evaluation set. Each dict contains the name of the section
-            under the key 'section', and lists of correctly and incorrectly predicted 4-tuples of words under the
-            keys 'correct' and 'incorrect'.
-        """
+
         ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
         ok_vocab = {w.upper(): v for w, v in reversed(ok_vocab)} if case_insensitive else dict(ok_vocab)
         oov = 0
