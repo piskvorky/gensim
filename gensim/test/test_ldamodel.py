@@ -201,14 +201,14 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
 
             for v, k in topic:
                 self.assertTrue(isinstance(k, six.string_types))
-                self.assertTrue(np.issubdtype(v, float))
+                self.assertTrue(np.issubdtype(v, np.floating))
 
     def testGetTopicTerms(self):
         topic_terms = self.model.get_topic_terms(1)
 
         for k, v in topic_terms:
             self.assertTrue(isinstance(k, numbers.Integral))
-            self.assertTrue(np.issubdtype(v, float))
+            self.assertTrue(np.issubdtype(v, np.floating))
 
     def testGetDocumentTopics(self):
 
@@ -222,7 +222,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             self.assertTrue(isinstance(topic, list))
             for k, v in topic:
                 self.assertTrue(isinstance(k, numbers.Integral))
-                self.assertTrue(np.issubdtype(v, float))
+                self.assertTrue(np.issubdtype(v, np.floating))
 
         # Test case to use the get_document_topic function for the corpus
         all_topics = model.get_document_topics(self.corpus, per_word_topics=True)
@@ -233,7 +233,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             self.assertTrue(isinstance(topic, tuple))
             for k, v in topic[0]:  # list of doc_topics
                 self.assertTrue(isinstance(k, numbers.Integral))
-                self.assertTrue(np.issubdtype(v, float))
+                self.assertTrue(np.issubdtype(v, np.floating))
 
             for w, topic_list in topic[1]:  # list of word_topics
                 self.assertTrue(isinstance(w, numbers.Integral))
@@ -257,7 +257,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             self.assertTrue(isinstance(topic, tuple))
             for k, v in topic[0]:  # list of doc_topics
                 self.assertTrue(isinstance(k, numbers.Integral))
-                self.assertTrue(np.issubdtype(v, float))
+                self.assertTrue(np.issubdtype(v, np.floating))
                 if len(topic[0]) != 0:
                     doc_topic_count_na += 1
 
@@ -278,7 +278,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
 
         for k, v in doc_topics:
             self.assertTrue(isinstance(k, numbers.Integral))
-            self.assertTrue(np.issubdtype(v, float))
+            self.assertTrue(np.issubdtype(v, np.floating))
 
         for w, topic_list in word_topics:
             self.assertTrue(isinstance(w, numbers.Integral))
@@ -306,7 +306,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         result = model.get_term_topics(2)
         for topic_no, probability in result:
             self.assertTrue(isinstance(topic_no, int))
-            self.assertTrue(np.issubdtype(probability, float))
+            self.assertTrue(np.issubdtype(probability, np.floating))
 
         # checks if topic '1' is in the result list
         # FIXME: Fails on osx and win
@@ -316,7 +316,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         result = model.get_term_topics(str(model.id2word[2]))
         for topic_no, probability in result:
             self.assertTrue(isinstance(topic_no, int))
-            self.assertTrue(np.issubdtype(probability, float))
+            self.assertTrue(np.issubdtype(probability, np.floating))
 
         # checks if topic '1' is in the result list
         # FIXME: Fails on osx and win

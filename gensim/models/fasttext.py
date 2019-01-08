@@ -24,54 +24,65 @@ Usage examples
 --------------
 
 Initialize and train a model:
+.. sourcecode:: pycon
 
->>> from gensim.test.utils import common_texts
->>> from gensim.models import FastText
->>>
->>> model = FastText(common_texts, size=4, window=3, min_count=1, iter=10)
+    >>> from gensim.test.utils import common_texts
+    >>> from gensim.models import FastText
+    >>>
+    >>> model = FastText(common_texts, size=4, window=3, min_count=1, iter=10)
 
 Persist a model to disk with:
 
->>> from gensim.test.utils import get_tmpfile
->>>
->>> fname = get_tmpfile("fasttext.model")
->>>
->>> model.save(fname)
->>> model = FastText.load(fname)  # you can continue training with the loaded model!
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import get_tmpfile
+    >>>
+    >>> fname = get_tmpfile("fasttext.model")
+    >>>
+    >>> model.save(fname)
+    >>> model = FastText.load(fname)  # you can continue training with the loaded model!
 
 Retrieve word-vector for vocab and out-of-vocab word:
 
->>> existent_word = "computer"
->>> existent_word in model.wv.vocab
-True
->>> computer_vec = model.wv[existent_word]  # numpy vector of a word
->>>
->>> oov_word = "graph-out-of-vocab"
->>> oov_word in model.wv.vocab
-False
->>> oov_vec = model.wv[oov_word]  # numpy vector for OOV word
+.. sourcecode:: pycon
+
+    >>> existent_word = "computer"
+    >>> existent_word in model.wv.vocab
+    True
+    >>> computer_vec = model.wv[existent_word]  # numpy vector of a word
+    >>>
+    >>> oov_word = "graph-out-of-vocab"
+    >>> oov_word in model.wv.vocab
+    False
+    >>> oov_vec = model.wv[oov_word]  # numpy vector for OOV word
 
 You can perform various NLP word tasks with the model, some of them are already built-in:
 
->>> similarities = model.wv.most_similar(positive=['computer', 'human'], negative=['interface'])
->>> most_similar = similarities[0]
->>>
->>> similarities = model.wv.most_similar_cosmul(positive=['computer', 'human'], negative=['interface'])
->>> most_similar = similarities[0]
->>>
->>> not_matching = model.wv.doesnt_match("human computer interface tree".split())
->>>
->>> sim_score = model.wv.similarity('computer', 'human')
+.. sourcecode:: pycon
+
+    >>> similarities = model.wv.most_similar(positive=['computer', 'human'], negative=['interface'])
+    >>> most_similar = similarities[0]
+    >>>
+    >>> similarities = model.wv.most_similar_cosmul(positive=['computer', 'human'], negative=['interface'])
+    >>> most_similar = similarities[0]
+    >>>
+    >>> not_matching = model.wv.doesnt_match("human computer interface tree".split())
+    >>>
+    >>> sim_score = model.wv.similarity('computer', 'human')
 
 Correlation with human opinion on word similarity:
 
->>> from gensim.test.utils import datapath
->>>
->>> similarities = model.wv.evaluate_word_pairs(datapath('wordsim353.tsv'))
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import datapath
+    >>>
+    >>> similarities = model.wv.evaluate_word_pairs(datapath('wordsim353.tsv'))
 
 And on word analogies:
 
->>> analogies_result = model.wv.evaluate_word_analogies(datapath('questions-words.txt'))
+.. sourcecode:: pycon
+
+    >>> analogies_result = model.wv.evaluate_word_analogies(datapath('questions-words.txt'))
 
 """
 
@@ -357,14 +368,16 @@ class FastText(BaseWordEmbeddingsModel):
 
         Examples
         --------
-        Initialize and train a `FastText` model::
+        Initialize and train a `FastText` model:
 
-        >>> from gensim.models import FastText
-        >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
-        >>>
-        >>> model = FastText(sentences, min_count=1)
-        >>> say_vector = model['say']  # get vector for word
-        >>> of_vector = model['of']  # get vector for out-of-vocab word
+        .. sourcecode:: pycon
+
+            >>> from gensim.models import FastText
+            >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
+            >>>
+            >>> model = FastText(sentences, min_count=1)
+            >>> say_vector = model.wv['say']  # get vector for word
+            >>> of_vector = model.wv['of']  # get vector for out-of-vocab word
 
         """
         self.load = call_on_class_only
@@ -380,7 +393,7 @@ class FastText(BaseWordEmbeddingsModel):
             sorted_vocab=bool(sorted_vocab), null_word=null_word, ns_exponent=ns_exponent)
         self.trainables = FastTextTrainables(
             vector_size=size, seed=seed, bucket=bucket, hashfxn=hashfxn)
-        self.wv.bucket = self.bucket
+        self.wv.bucket = self.trainables.bucket
 
         super(FastText, self).__init__(
             sentences=sentences, corpus_file=corpus_file, workers=workers, vector_size=size, epochs=iter,
@@ -479,18 +492,20 @@ class FastText(BaseWordEmbeddingsModel):
 
         Examples
         --------
-        Train a model and update vocab for online training
+        Train a model and update vocab for online training:
 
-        >>> from gensim.models import FastText
-        >>> sentences_1 = [["cat", "say", "meow"], ["dog", "say", "woof"]]
-        >>> sentences_2 = [["dude", "say", "wazzup!"]]
-        >>>
-        >>> model = FastText(min_count=1)
-        >>> model.build_vocab(sentences_1)
-        >>> model.train(sentences_1, total_examples=model.corpus_count, epochs=model.iter)
-        >>>
-        >>> model.build_vocab(sentences_2, update=True)
-        >>> model.train(sentences_2, total_examples=model.corpus_count, epochs=model.iter)
+        .. sourcecode:: pycon
+
+            >>> from gensim.models import FastText
+            >>> sentences_1 = [["cat", "say", "meow"], ["dog", "say", "woof"]]
+            >>> sentences_2 = [["dude", "say", "wazzup!"]]
+            >>>
+            >>> model = FastText(min_count=1)
+            >>> model.build_vocab(sentences_1)
+            >>> model.train(sentences_1, total_examples=model.corpus_count, epochs=model.epochs)
+            >>>
+            >>> model.build_vocab(sentences_2, update=True)
+            >>> model.train(sentences_2, total_examples=model.corpus_count, epochs=model.epochs)
 
         """
         if update:
@@ -519,11 +534,11 @@ class FastText(BaseWordEmbeddingsModel):
     def estimate_memory(self, vocab_size=None, report=None):
         vocab_size = vocab_size or len(self.wv.vocab)
         vec_size = self.vector_size * np.dtype(np.float32).itemsize
-        l1_size = self.layer1_size * np.dtype(np.float32).itemsize
+        l1_size = self.trainables.layer1_size * np.dtype(np.float32).itemsize
         report = report or {}
         report['vocab'] = len(self.wv.vocab) * (700 if self.hs else 500)
         report['syn0_vocab'] = len(self.wv.vocab) * vec_size
-        num_buckets = self.bucket
+        num_buckets = self.trainables.bucket
         if self.hs:
             report['syn1'] = len(self.wv.vocab) * l1_size
         if self.negative:
@@ -652,12 +667,14 @@ class FastText(BaseWordEmbeddingsModel):
 
         Examples
         --------
-        >>> from gensim.models import FastText
-        >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
-        >>>
-        >>> model = FastText(min_count=1)
-        >>> model.build_vocab(sentences)
-        >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)
+        .. sourcecode:: pycon
+
+            >>> from gensim.models import FastText
+            >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
+            >>>
+            >>> model = FastText(min_count=1)
+            >>> model.build_vocab(sentences)
+            >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.epochs)
 
         """
         super(FastText, self).train(

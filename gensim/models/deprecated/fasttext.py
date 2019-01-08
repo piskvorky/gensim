@@ -328,13 +328,14 @@ class FastText(Word2Vec):
         --------
         Initialize and train a `FastText` model
 
-        >>> from gensim.models import FastText
-        >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
-        >>>
-        >>> model = FastText(sentences, min_count=1)
-        >>> say_vector = model['say']  # get vector for word
-        >>> of_vector = model['of']  # get vector for out-of-vocab word
+        .. sourcecode:: pycon
 
+            >>> from gensim.models import FastText
+            >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
+            >>>
+            >>> model = FastText(sentences, min_count=1)
+            >>> say_vector = model['say']  # get vector for word
+            >>> of_vector = model['of']  # get vector for out-of-vocab word
 
         """
         # fastText specific params
@@ -387,15 +388,17 @@ class FastText(Word2Vec):
         -------
         Train a model and update vocab for online training
 
-        >>> from gensim.models import FastText
-        >>> sentences_1 = [["cat", "say", "meow"], ["dog", "say", "woof"]]
-        >>> sentences_2 = [["dude", "say", "wazzup!"]]
-        >>>
-        >>> model = FastText(min_count=1)
-        >>> model.build_vocab(sentences_1)
-        >>> model.train(sentences_1, total_examples=model.corpus_count, epochs=model.iter)
-        >>> model.build_vocab(sentences_2, update=True)
-        >>> model.train(sentences_2, total_examples=model.corpus_count, epochs=model.iter)
+        .. sourcecode:: pycon
+
+            >>> from gensim.models import FastText
+            >>> sentences_1 = [["cat", "say", "meow"], ["dog", "say", "woof"]]
+            >>> sentences_2 = [["dude", "say", "wazzup!"]]
+            >>>
+            >>> model = FastText(min_count=1)
+            >>> model.build_vocab(sentences_1)
+            >>> model.train(sentences_1, total_examples=model.corpus_count, epochs=model.iter)
+            >>> model.build_vocab(sentences_2, update=True)
+            >>> model.train(sentences_2, total_examples=model.corpus_count, epochs=model.iter)
 
         """
         if update:
@@ -585,12 +588,15 @@ class FastText(Word2Vec):
 
         Examples
         --------
-        >>> from gensim.models import FastText
-        >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
-        >>>
-        >>> model = FastText(min_count=1)
-        >>> model.build_vocab(sentences)
-        >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)
+
+        .. sourcecode:: pycon
+
+            >>> from gensim.models import FastText
+            >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
+            >>>
+            >>> model = FastText(min_count=1)
+            >>> model.build_vocab(sentences)
+            >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)
 
         """
         self.neg_labels = []
@@ -624,11 +630,13 @@ class FastText(Word2Vec):
 
         Example
         -------
-        >>> from gensim.models import FastText
-        >>> from gensim.test.utils import datapath
-        >>>
-        >>> trained_model = FastText.load_fasttext_format(datapath('lee_fasttext'))
-        >>> meow_vector = trained_model['hello']  # get vector for word
+        .. sourcecode:: pycon
+
+            >>> from gensim.models import FastText
+            >>> from gensim.test.utils import datapath
+            >>>
+            >>> trained_model = FastText.load_fasttext_format(datapath('lee_fasttext'))
+            >>> meow_vector = trained_model['hello']  # get vector for word
 
         """
         return self.word_vec(word)
@@ -666,11 +674,13 @@ class FastText(Word2Vec):
 
         Example
         -------
-        >>> from gensim.models import FastText
-        >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
-        >>>
-        >>> model = FastText(sentences, min_count=1)
-        >>> meow_vector = model.word_vec('meow')  # get vector for word
+        .. sourcecode:: pycon
+
+            >>> from gensim.models import FastText
+            >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
+            >>>
+            >>> model = FastText(sentences, min_count=1)
+            >>> meow_vector = model.word_vec('meow')  # get vector for word
 
         """
         return FastTextKeyedVectors.word_vec(self.wv, word, use_norm=use_norm)

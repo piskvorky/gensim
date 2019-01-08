@@ -58,16 +58,20 @@ ____________
 So let's test our setup and run one computation of distributed LSA. Open a Python
 shell on one of the five machines (again, this can be done on any computer
 in the same `broadcast domain <http://en.wikipedia.org/wiki/Broadcast_domain>`_,
-our choice is incidental) and try::
+our choice is incidental) and try:
 
-    >>> from gensim import corpora, models, utils
+.. sourcecode:: pycon
+
+    >>> from gensim import corpora, models
     >>> import logging
+    >>>
     >>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-
-    >>> corpus = corpora.MmCorpus('/tmp/deerwester.mm') # load a corpus of nine documents, from the Tutorials
+    >>>
+    >>> corpus = corpora.MmCorpus('/tmp/deerwester.mm')  # load a corpus of nine documents, from the Tutorials
     >>> id2word = corpora.Dictionary.load('/tmp/deerwester.dict')
-
-    >>> lsi = models.LsiModel(corpus, id2word=id2word, num_topics=200, chunksize=1, distributed=True) # run distributed LSA on nine documents
+    >>>
+    >>> # run distributed LSA on nine documents
+    >>> lsi = models.LsiModel(corpus, id2word=id2word, num_topics=200, chunksize=1, distributed=True)
 
 This uses the corpus and feature-token mapping created in the :doc:`tut1` tutorial.
 If you look at the log in your Python session, you should see a line similar to::
@@ -76,7 +80,9 @@ If you look at the log in your Python session, you should see a line similar to:
 
 which means all went well. You can also check the logs coming from your worker and dispatcher
 processes --- this is especially helpful in case of problems.
-To check the LSA results, let's print the first two latent topics::
+To check the LSA results, let's print the first two latent topics:
+
+.. sourcecode:: pycon
 
     >>> lsi.print_topics(num_topics=2, num_words=5)
     topic #0(3.341): 0.644*"system" + 0.404*"user" + 0.301*"eps" + 0.265*"time" + 0.265*"response"
@@ -86,13 +92,15 @@ Success! But a corpus of nine documents is no challenge for our powerful cluster
 In fact, we had to lower the job size (`chunksize` parameter above) to a single document
 at a time, otherwise all documents would be processed by a single worker all at once.
 
-So let's run LSA on **one million documents** instead::
+So let's run LSA on **one million documents** instead
+
+.. sourcecode:: pycon
 
     >>> # inflate the corpus to 1M documents, by repeating its documents over&over
     >>> corpus1m = utils.RepeatCorpus(corpus, 1000000)
     >>> # run distributed LSA on 1 million documents
     >>> lsi1m = models.LsiModel(corpus1m, id2word=id2word, num_topics=200, chunksize=10000, distributed=True)
-
+    >>>
     >>> lsi1m.print_topics(num_topics=2, num_words=5)
     topic #0(1113.628): 0.644*"system" + 0.404*"user" + 0.301*"eps" + 0.265*"time" + 0.265*"response"
     topic #1(847.233): 0.623*"graph" + 0.490*"trees" + 0.451*"minors" + 0.274*"survey" + -0.167*"system"
@@ -118,25 +126,31 @@ Distributed LSA on Wikipedia
 ++++++++++++++++++++++++++++++
 
 First, download and prepare the Wikipedia corpus as per :doc:`wiki`, then load
-the corpus iterator with::
+the corpus iterator with
 
-    >>> import logging, gensim
+.. sourcecode:: pycon
+
+    >>> import logging
+    >>> import gensim
+    >>>
     >>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-
+    >>>
     >>> # load id->word mapping (the dictionary)
     >>> id2word = gensim.corpora.Dictionary.load_from_text('wiki_en_wordids.txt')
     >>> # load corpus iterator
     >>> mm = gensim.corpora.MmCorpus('wiki_en_tfidf.mm')
     >>> # mm = gensim.corpora.MmCorpus('wiki_en_tfidf.mm.bz2') # use this if you compressed the TFIDF output
-
+    >>>
     >>> print(mm)
     MmCorpus(3199665 documents, 100000 features, 495547400 non-zero entries)
 
-Now we're ready to run distributed LSA on the English Wikipedia::
+Now we're ready to run distributed LSA on the English Wikipedia:
+
+.. sourcecode:: pycon
 
     >>> # extract 400 LSI topics, using a cluster of nodes
     >>> lsi = gensim.models.lsimodel.LsiModel(corpus=mm, id2word=id2word, num_topics=400, chunksize=20000, distributed=True)
-
+    >>>
     >>> # print the most contributing words (both positively and negatively) for each of the first ten topics
     >>> lsi.print_topics(10)
     2010-11-03 16:08:27,602 : INFO : topic #0(200.990): -0.475*"delete" + -0.383*"deletion" + -0.275*"debate" + -0.223*"comments" + -0.220*"edits" + -0.213*"modify" + -0.208*"appropriate" + -0.194*"subsequent" + -0.155*"wp" + -0.117*"notability"

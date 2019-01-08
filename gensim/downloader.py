@@ -3,27 +3,31 @@ This module is an API for downloading, getting information and loading datasets/
 
 Give information about available models/datasets:
 
->>> import gensim.downloader as api
->>>
->>> api.info()  # return dict with info about available models/datasets
->>> api.info("text8")  # return dict with info about "text8" dataset
+.. sourcecode:: pycon
+
+    >>> import gensim.downloader as api
+    >>>
+    >>> api.info()  # return dict with info about available models/datasets
+    >>> api.info("text8")  # return dict with info about "text8" dataset
 
 
 Model example:
+.. sourcecode:: pycon
 
->>> import gensim.downloader as api
->>>
->>> model = api.load("glove-twitter-25")  # load glove vectors
->>> model.most_similar("cat")  # show words that similar to word 'cat'
+    >>> import gensim.downloader as api
+    >>>
+    >>> model = api.load("glove-twitter-25")  # load glove vectors
+    >>> model.most_similar("cat")  # show words that similar to word 'cat'
 
 
 Dataset example:
+.. sourcecode:: pycon
 
->>> import gensim.downloader as api
->>> from gensim.models import Word2Vec
->>>
->>> dataset = api.load("text8")  # load dataset as iterable
->>> model = Word2Vec(dataset)  # train w2v model
+    >>> import gensim.downloader as api
+    >>> from gensim.models import Word2Vec
+    >>>
+    >>> dataset = api.load("text8")  # load dataset as iterable
+    >>> model = Word2Vec(dataset)  # train w2v model
 
 
 Also, this API available via CLI::
@@ -55,7 +59,7 @@ else:
 
 user_dir = os.path.expanduser('~')
 base_dir = os.path.join(user_dir, 'gensim-data')
-logger = logging.getLogger('gensim.api')
+logger = logging.getLogger(__name__)
 
 DATA_LIST_URL = "https://raw.githubusercontent.com/RaRe-Technologies/gensim-data/master/list.json"
 DOWNLOAD_BASE_URL = "https://github.com/RaRe-Technologies/gensim-data/releases/download"
@@ -182,15 +186,17 @@ def info(name=None, show_only_latest=True, name_only=False):
 
     Examples
     --------
-    >>> import gensim.downloader as api
-    >>> api.info("text8")  # retrieve information about text8 dataset
-    {u'checksum': u'68799af40b6bda07dfa47a32612e5364',
-     u'description': u'Cleaned small sample from wikipedia',
-     u'file_name': u'text8.gz',
-     u'parts': 1,
-     u'source': u'http://mattmahoney.net/dc/text8.zip'}
-    >>>
-    >>> api.info()  # retrieve information about all available datasets and models
+    .. sourcecode:: pycon
+
+        >>> import gensim.downloader as api
+        >>> api.info("text8")  # retrieve information about text8 dataset
+        {u'checksum': u'68799af40b6bda07dfa47a32612e5364',
+         u'description': u'Cleaned small sample from wikipedia',
+         u'file_name': u'text8.gz',
+         u'parts': 1,
+         u'source': u'http://mattmahoney.net/dc/text8.zip'}
+        >>>
+        >>> api.info()  # retrieve information about all available datasets and models
 
     """
     information = json.loads(urlopen(DATA_LIST_URL).read().decode("utf-8"))
@@ -388,23 +394,30 @@ def load(name, return_path=False):
     --------
     Model example:
 
-    >>> import gensim.downloader as api
-    >>>
-    >>> model = api.load("glove-twitter-25")  # load glove vectors
-    >>> model.most_similar("cat")  # show words that similar to word 'cat'
+    .. sourcecode:: pycon
+
+        >>> import gensim.downloader as api
+        >>>
+        >>> model = api.load("glove-twitter-25")  # load glove vectors
+        >>> model.most_similar("cat")  # show words that similar to word 'cat'
 
     Dataset example:
 
-    >>> import gensim.downloader as api
-    >>>
-    >>> wiki = api.load("wiki-en")  # load extracted Wikipedia dump, around 6 Gb
-    >>> for article in wiki:  # iterate over all wiki script
-    >>>     ...
+    .. sourcecode:: pycon
 
-    Download only example
-    >>> import gensim.downloader as api
-    >>>
-    >>> print(api.load("wiki-en", return_path=True))  # output: /home/user/gensim-data/wiki-en/wiki-en.gz
+        >>> import gensim.downloader as api
+        >>>
+        >>> wiki = api.load("wiki-en")  # load extracted Wikipedia dump, around 6 Gb
+        >>> for article in wiki:  # iterate over all wiki script
+        >>>     pass
+
+    Download only example:
+
+    .. sourcecode:: pycon
+
+        >>> import gensim.downloader as api
+        >>>
+        >>> print(api.load("wiki-en", return_path=True))  # output: /home/user/gensim-data/wiki-en/wiki-en.gz
 
     """
     _create_base_dir()

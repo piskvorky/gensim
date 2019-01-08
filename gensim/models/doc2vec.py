@@ -28,28 +28,36 @@ Usage examples
 
 Initialize & train a model:
 
->>> from gensim.test.utils import common_texts
->>> from gensim.models.doc2vec import Doc2Vec, TaggedDocument
->>>
->>> documents = [TaggedDocument(doc, [i]) for i, doc in enumerate(common_texts)]
->>> model = Doc2Vec(documents, vector_size=5, window=2, min_count=1, workers=4)
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import common_texts
+    >>> from gensim.models.doc2vec import Doc2Vec, TaggedDocument
+    >>>
+    >>> documents = [TaggedDocument(doc, [i]) for i, doc in enumerate(common_texts)]
+    >>> model = Doc2Vec(documents, vector_size=5, window=2, min_count=1, workers=4)
 
 Persist a model to disk:
 
->>> from gensim.test.utils import get_tmpfile
->>>
->>> fname = get_tmpfile("my_doc2vec_model")
->>>
->>> model.save(fname)
->>> model = Doc2Vec.load(fname)  # you can continue training with the loaded model!
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import get_tmpfile
+    >>>
+    >>> fname = get_tmpfile("my_doc2vec_model")
+    >>>
+    >>> model.save(fname)
+    >>> model = Doc2Vec.load(fname)  # you can continue training with the loaded model!
 
 If you're finished training a model (=no more updates, only querying, reduce memory usage), you can do:
 
->>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True)
+.. sourcecode:: pycon
+
+    >>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True)
 
 Infer vector for a new document:
 
->>> vector = model.infer_vector(["system", "response"])
+.. sourcecode:: pycon
+
+    >>> vector = model.infer_vector(["system", "response"])
 
 """
 
@@ -1511,11 +1519,13 @@ class TaggedLineDocument(object):
 
         Examples
         --------
-        >>> from gensim.test.utils import datapath
-        >>> from gensim.models.doc2vec import TaggedLineDocument
-        >>>
-        >>> for document in TaggedLineDocument(datapath("head500.noblanks.cor")):
-        ...     pass
+        .. sourcecode:: pycon
+
+            >>> from gensim.test.utils import datapath
+            >>> from gensim.models.doc2vec import TaggedLineDocument
+            >>>
+            >>> for document in TaggedLineDocument(datapath("head500.noblanks.cor")):
+            ...     pass
 
         """
         self.source = source
