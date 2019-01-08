@@ -1137,14 +1137,13 @@ class FastTextTrainables(Word2VecTrainables):
 
         """
         if not update:
-            ngram_indices = wv.init_ngrams_weights(self.seed)
+            wv.init_ngrams_weights(self.seed)
             #
             # FIXME: Why is this being initialized as a 2D array here, whereas it is
             # a 1D array when initialized in the load function?
             #
-            self.vectors_vocab_lockf = ones((len(wv.vocab), wv.vector_size), dtype=REAL)
-            self.vectors_ngrams_lockf = ones((self.bucket, wv.vector_size), dtype=REAL)
-            self.vectors_ngrams_lockf = self.vectors_ngrams_lockf.take(ngram_indices, axis=0)
+            self.vectors_vocab_lockf = ones(wv.vectors_vocab.shape, dtype=REAL)
+            self.vectors_ngrams_lockf = ones(wv.vectors_ngrams.shape, dtype=REAL)
         else:
             old_hash2index_len = len(wv.hash2index)
 
