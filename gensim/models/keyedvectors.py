@@ -602,6 +602,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             Overall evaluation score and full lists of correct and incorrect predictions divided by sections.
 
         """
+		
         ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
         ok_vocab = {w.upper(): v for w, v in reversed(ok_vocab)} if case_insensitive else dict(ok_vocab)
         oov = 0
