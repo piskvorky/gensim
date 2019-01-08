@@ -1170,7 +1170,6 @@ class FastTextTrainables(Word2VecTrainables):
         assert num_vectors > 0, 'expected num_vectors to be initialized already'
         assert vocab_size > 0, 'expected vocab_size to be initialized already'
 
-        self.vectors_lockf = ones(num_vectors, dtype=REAL)
         self.vectors_ngrams_lockf = ones((num_vectors, vector_size), dtype=REAL)
         # FIXME: not sure if this has to be a 1D or 2D matrix, it's
         # initialized differently in different places
