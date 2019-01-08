@@ -24,6 +24,7 @@ from gensim.utils import simple_preprocess
 from gensim.models import ldamodel
 from gensim.test import basetmtests
 from gensim.test.utils import datapath, get_tmpfile, common_texts
+import gensim.downloader as api
 
 dictionary = Dictionary(common_texts)
 corpus = [dictionary.doc2bow(text) for text in common_texts]
@@ -110,25 +111,17 @@ class TestLdaMallet(unittest.TestCase, basetmtests.TestBaseTopicModel):
             logging.debug('%s %s', tm1[document][1], tm2[document][1])
 
     def testMallet2ModelOn20NewsGroups(self):
-        # select five quite distinct categories from the 20 newsgroups
-        cat = ['soc.religion.christian', 'comp.graphics', 'rec.motorcycles',
-            'sci.space', 'talk.politics.guns']
+        corpus = [simple_preprocess(doc["data"]) for doc in api.load("20-newsgroups")]
+        dictionary = Dictionary(corpus)
 
-        # keep and use only the main text
-        newsgroups_train = fetch_20newsgroups(subset='all', categories=cat,
-                                            remove=('headers', 'footers', 'quotes'))
-
-        tokenized = [simple_preprocess(doc) for doc in newsgroups_train.data]
-        dictionary = Dictionary(tokenized)
-        corpus = [dictionary.doc2bow(text) for text in tokenized]
+        corpus = [dictionary.doc2bow(text) for text in corpus]
 
         lda_mallet_model = ldamallet.LdaMallet(
             self.mallet_path, corpus=corpus,
-            num_topics=5, id2word=dictionary, iterations=1000)
+            num_topics=20, id2word=dictionary, iterations=500)
 
         lda_gensim_model = ldamallet.malletmodel2ldamodel(lda_mallet_model, iterations=1000)
-
-        self.assertEqual(lda_mallet_model.show_topics(5, 10), lda_gensim_model.show_topics(5, 10))
+        self.assertEqual(lda_mallet_model.show_topics(20, 50), lda_gensim_model.show_topics(20, 50))
 
     def testPersistence(self):
         if not self.mallet_path:
