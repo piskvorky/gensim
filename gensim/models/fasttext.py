@@ -1168,8 +1168,6 @@ class FastTextTrainables(Word2VecTrainables):
             self.vectors_vocab_lockf = ones(wv.vectors_vocab.shape, dtype=REAL)
             self.vectors_ngrams_lockf = ones(wv.vectors_ngrams.shape, dtype=REAL)
         else:
-            old_hash2index_len = len(wv.hash2index)
-
             wv.update_ngrams_weights(self.seed, vocabulary.old_vocab_len)
 
             #
@@ -1179,11 +1177,8 @@ class FastTextTrainables(Word2VecTrainables):
             # should really be part of FastTextKeyedVectors, as they are
             # essentially coupled to wv.vectors_vocab and wv.vector_ngrams.
             #
-            new_vocab = len(wv.vocab) - vocabulary.old_vocab_len
-            self.vectors_vocab_lockf = _pad_ones(self.vectors_vocab_lockf, new_vocab)
-
-            new_ngrams = len(wv.hash2index) - old_hash2index_len
-            self.vectors_ngrams_lockf = _pad_ones(self.vectors_ngrams_lockf, new_ngrams)
+            self.vectors_vocab_lockf = _pad_ones(self.vectors_vocab_lockf, wv.vectors_vocab.shape)
+            self.vectors_ngrams_lockf = _pad_ones(self.vectors_ngrams_lockf, wv.vectors_ngrams.shape)
 
     def init_post_load(self, model, hidden_output):
         num_vectors = len(model.wv.vectors)
@@ -1214,10 +1209,14 @@ class FastTextTrainables(Word2VecTrainables):
         self.layer1_size = vector_size
 
 
-def _pad_ones(m, new_rows):
+def _pad_ones(m, new_shape):
     """Pad a matrix with additional rows filled with ones."""
-    rows, columns = m.shape
-    suffix = ones((new_rows, columns), dtype=REAL)
+    assert m.shape[0] <= new_shape[0], 'the new number of rows must be greater'
+    assert m.shape[1] == new_shape[1], 'the number of columns must match'
+    new_rows = new_shape[0] - m.shape[0]
+    if new_rows == 0:
+        return m
+    suffix = ones((new_rows, m.shape[1]), dtype=REAL)
     return vstack([m, suffix])
 
 
