@@ -81,7 +81,7 @@ from gensim.utils import call_on_class_only
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.models.word2vec import Word2VecKeyedVectors, Word2VecVocab, Word2VecTrainables, train_cbow_pair,\
     train_sg_pair, train_batch_sg
-from six.moves import xrange
+from six.moves import range
 from six import string_types, integer_types, itervalues
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 from gensim.models.keyedvectors import Doc2VecKeyedVectors
@@ -487,7 +487,8 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         corpus_file : str, optional
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
             You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
-            `corpus_file` arguments need to be passed (or none of them).
+            `corpus_file` arguments need to be passed (or none of them). Documents' tags are assigned automatically
+            and are equal to line number, as in :class:`~gensim.models.doc2vec.TaggedLineDocument`.
         dm : {1,0}, optional
             Defines the training algorithm. If `dm=1`, 'distributed memory' (PV-DM) is used.
             Otherwise, `distributed bag of words` (PV-DBOW) is employed.
@@ -761,7 +762,8 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         corpus_file : str, optional
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
             You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
-            `corpus_file` arguments need to be passed (not both of them).
+            `corpus_file` arguments need to be passed (not both of them). Documents' tags are assigned automatically
+            and are equal to line number, as in :class:`~gensim.models.doc2vec.TaggedLineDocument`.
         total_examples : int, optional
             Count of sentences.
         total_words : int, optional
@@ -1140,7 +1142,8 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         corpus_file : str, optional
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
             You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
-            `corpus_file` arguments need to be passed (not both of them).
+            `corpus_file` arguments need to be passed (not both of them). Documents' tags are assigned automatically
+            and are equal to a line number, as in :class:`~gensim.models.doc2vec.TaggedLineDocument`.
         update : bool
             If true, the new words in `sentences` will be added to model's vocab.
         progress_per : int
@@ -1450,7 +1453,7 @@ class Doc2VecTrainables(Word2VecTrainables):
             docvecs.vectors_docs = empty((length, docvecs.vector_size), dtype=REAL)
             self.vectors_docs_lockf = ones((length,), dtype=REAL)  # zeros suppress learning
 
-        for i in xrange(length):
+        for i in range(length):
             # construct deterministic seed from index AND model seed
             seed = "%d %s" % (
                 self.seed, Doc2VecKeyedVectors._index_to_doctag(i, docvecs.offset2doctag, docvecs.max_rawint))
