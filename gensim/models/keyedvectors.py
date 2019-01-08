@@ -638,11 +638,11 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                     continue
                 original_vocab = self.vocab
                 self.vocab = ok_vocab
-                ignore = terms[0:len(words)-1]  # input words to be ignored
+                ignore = terms[0:len(words)-2]  # input words to be ignored
                 predicted = None
                 # find the most likely prediction using 3CosAvg set based vector offset) method
                 # Implementation of the set-based method for solving analogies
-                sims = self.most_similar(positive=terms[0:len(terms)-2:2], negative=terms[0:len(terms)-2:2], last=terms[len(terms)-1], topn=topk, restrict_vocab=restrict_vocab)
+                sims = self.most_similar(positive=terms[0:len(terms)-2:2], negative=terms[1:len(terms)-2:2], last=terms[len(terms)-2], topn=topk, restrict_vocab=restrict_vocab)
                 expected = terms[len(terms)-1]
                 for element in sims:                  
                     predicted = element[0].upper() if case_insensitive else element[0]
@@ -663,12 +663,12 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         total = {
             'section': 'Total accuracy',
-            'correct': sum((s['correct'] for s in sections), []),
-            'incorrect': sum((s['incorrect'] for s in sections), []),
+            'correct': list(chain.from_iterable(s['correct'] for s in sections)),
+            'incorrect': list(chain.from_iterable(s['incorrect'] for s in sections)),
         }
 
         oov_ratio = float(oov) / tuples * 100
-        logger.info('Quadruplets with out-of-vocabulary words: %.1f%%', oov_ratio)
+        logger.info('Tuples with out-of-vocabulary words: %.1f%%', oov_ratio)
         if not dummy4unknown:
             logger.info(
                 'NB: analogies containing OOV words were skipped from evaluation! '
@@ -1158,7 +1158,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         Parameters
         ----------
-        section : dict of (str, (str, str, str, str))
+        section : dict of (str, list(str, str, str, str...))
             Section given from evaluation.
 
         Returns
