@@ -944,9 +944,9 @@ class FastText(BaseWordEmbeddingsModel):
         try:
             model = super(FastText, cls).load(*args, **kwargs)
             if not hasattr(model.trainables, 'vectors_vocab_lockf') and hasattr(model.wv, 'vectors_vocab'):
-                model.trainables.vectors_vocab_lockf = ones(len(model.trainables.vectors), dtype=REAL)
+                model.trainables.vectors_vocab_lockf = ones(model.wv.vectors_vocab.shape, dtype=REAL)
             if not hasattr(model.trainables, 'vectors_ngrams_lockf') and hasattr(model.wv, 'vectors_ngrams'):
-                model.trainables.vectors_ngrams_lockf = ones(len(model.trainables.vectors), dtype=REAL)
+                model.trainables.vectors_ngrams_lockf = ones(models.wv.vectors_ngrams.shape, dtype=REAL)
 
             if not hasattr(model.wv, 'compatible_hash'):
                 logger.warning(
@@ -1109,6 +1109,29 @@ class FastTextTrainables(Word2VecTrainables):
         super(FastTextTrainables, self).__init__(
             vector_size=vector_size, seed=seed, hashfxn=hashfxn)
         self.bucket = int(bucket)
+
+        #
+        # There are also two "hidden" attributes that get initialized outside
+        # this constructor:
+        #
+        #   1. vectors_vocab_lockf
+        #   2. vectors_ngrams_lockf
+        #
+        # These are both 2D matrices of shapes equal to the shapes of
+        # wv.vectors_vocab and wv.vectors_ngrams.  So, each row corresponds to
+        # a vector, and each column corresponds to a dimension within that
+        # vector.
+        #
+        # Lockf stands for "lock factor": zero values suppress learning, one
+        # values enable it.  Interestingly, the vectors_vocab_lockf and
+        # vectors_ngrams_lockf seem to be used only by the C code in
+        # fasttext_inner.pyx.
+        #
+        # The word2vec implementation also uses vectors_lockf: in that case,
+        # it's a 1D array, with a real number for each vector.  The FastText
+        # implementation inherits this vectors_lockf attribute but doesn't
+        # appear to use it.
+        #
 
     #
     # FIXME: this method appears to be temporally coupled to the constructor.
