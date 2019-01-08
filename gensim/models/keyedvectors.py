@@ -500,7 +500,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             List of words that contribute negatively.
         topn : int, optional
             Number of top-N similar words to return.
-		last: Only for set-Based analogy. The word which belongs in the same pair as the expected word. 
+        last: Only for set-Based analogy. The word which belongs in the same pair as the expected word. 
         restrict_vocab : int, optional
             Optional integer which limits the range of vectors which
             are searched for most-similar values. For example, restrict_vocab=10000 would
@@ -549,7 +549,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
         else:
             if (len(positive)+len(negative))%2 !=0:
-                raise ValueError("wrong input word analogies.. one or more words are missing..")			
+                raise ValueError("wrong input word analogies.. one or more words are missing..")            
             mean = matutils.unitvec(array(mean).mean(axis=0)/2).astype(REAL)+self.word_vec(last, use_norm=True)
 
         if indexer is not None:
@@ -563,7 +563,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         # ignore (don't return) words from the input
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
-		
+        
     def evaluate_word_analogies_setBased(self, analogies, restrict_vocab=300000, case_insensitive=True, dummy4unknown=False, topk=1):
         """Compute performance of the model on an analogy test set.
         This is modern variant of :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.accuracy`, see
@@ -590,8 +590,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         dummy4unknown : bool, optional
             If True - produce zero accuracies for tuples with out-of-vocabulary words.
             Otherwise, these tuples are skipped entirely and not used in the evaluation.
-		topk: int, optional
-			Number of the top similar words we can consider for a successful prediction.
+        topk: int, optional
+            Number of the top similar words we can consider for a successful prediction.
 
         Returns
         -------
@@ -675,7 +675,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         analogies_score = self._log_evaluate_word_analogies(total)
         sections.append(total)
         # Return the overall score and the full lists of correct and incorrect analogies
-        return analogies_score, sections			
+        return analogies_score, sections            
 
     def similar_by_word(self, word, topn=10, restrict_vocab=None):
         """Find the top-N most similar words.
@@ -956,7 +956,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             Optional integer which limits the range of vectors which
             are searched for most-similar values. For example, restrict_vocab=10000 would
             only check the first 10000 word vectors in the vocabulary order. (This may be
-            meaningful if you've sorted the vocabulary by descending frequency.)			
+            meaningful if you've sorted the vocabulary by descending frequency.)            
 
         Returns
         -------
@@ -1197,20 +1197,20 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         dummy4unknown : bool, optional
             If True - produce zero accuracies for 4-tuples with out-of-vocabulary words.
             Otherwise, these tuples are skipped entirely and not used in the evaluation.
-		topk: int, optional
-			Number of the top similar words we can consider for a successful prediction.
-		method: str, by default equal to 3CosAdd.
-			The name of the corresponding method for solving the analogies.
+        topk: int, optional
+            Number of the top similar words we can consider for a successful prediction.
+        method: str, by default equal to 3CosAdd.
+            The name of the corresponding method for solving the analogies.
 
         Returns
         -------
         score : float
-            The overall evaluation score on the entire evaluation set		
+            The overall evaluation score on the entire evaluation set        
         (float, list of dict of (str, (str, str, str))
             Overall evaluation score and full lists of correct and incorrect predictions divided by sections.
 
         """
-		
+        
         ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
         ok_vocab = {w.upper(): v for w, v in reversed(ok_vocab)} if case_insensitive else dict(ok_vocab)
         oov = 0
@@ -1252,9 +1252,9 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                 # find the most likely prediction using 3CosAdd (vector offset) method or 3CosMul
 
                 if method == '3CosAdd':
-                    sims = self.most_similar(positive=[b, c], negative=[a], topn=topk, restrict_vocab=restrict_vocab)	
+                    sims = self.most_similar(positive=[b, c], negative=[a], topn=topk, restrict_vocab=restrict_vocab)    
                 if method == '3CosMul':
-                    sims = self.most_similar_cosmul(positive=[b, c], negative=[a], topn=topk, restrict_vocab=restrict_vocab)					
+                    sims = self.most_similar_cosmul(positive=[b, c], negative=[a], topn=topk, restrict_vocab=restrict_vocab)                    
                 self.vocab = original_vocab
 
                 for element in sims:                  
@@ -2187,3 +2187,4 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         # from gensim.models.word2vec import save_word2vec_format
         _save_word2vec_format(
             fname, self.vocab, self.vectors, fvocab=fvocab, binary=binary, total_vec=total_vec)
+
