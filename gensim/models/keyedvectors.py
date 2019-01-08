@@ -638,7 +638,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                     continue
                 original_vocab = self.vocab
                 self.vocab = ok_vocab
-                ignore = terms[0:len(words)-2]  # input words to be ignored
+                ignore = terms[0:len(terms)-2]  # input words to be ignored
                 predicted = None
                 # find the most likely prediction using 3CosAvg set based vector offset) method
                 # Implementation of the set-based method for solving analogies
