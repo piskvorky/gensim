@@ -1236,7 +1236,8 @@ def _load_fasttext_format(model_file, encoding='utf-8'):
         max_n=m.maxn,
     )
 
-    model.wv.vectors_ngrams = model.num_original_vectors = m.vectors_ngrams
+    model.num_original_vectors = m.vectors_ngrams.shape[0]
+    model.wv.vectors_ngrams = m.vectors_ngrams
     model.wv.init_vectors_vocab()
 
     model.vocabulary.raw_vocab = m.raw_vocab
