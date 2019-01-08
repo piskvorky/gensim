@@ -910,7 +910,7 @@ class AuthorTopicModel(LdaModel):
             Assigns the value for document index.
         subsample_ratio : float, optional
             Used for calculation of word score for estimation of variational bound.
-        author2doc : dict of (str, list of int), optinal
+        author2doc : dict of (str, list of int), optional
             A dictionary where keys are the names of authors and values are lists of documents that the author
             contributes to.
         doc2author : dict of (int, list of str), optional
@@ -1094,7 +1094,7 @@ class AuthorTopicModel(LdaModel):
         gamma_new = self.random_state.gamma(100., 1. / 100., (num_new_authors, self.num_topics))
         self.state.gamma = np.vstack([self.state.gamma, gamma_new])
 
-        # Should not record the sstats, as we are goint to delete the new author after calculated.
+        # Should not record the sstats, as we are going to delete the new author after calculated.
         try:
             gammat, _ = self.inference(
                 corpus, self.author2doc, self.doc2author, rho(),
