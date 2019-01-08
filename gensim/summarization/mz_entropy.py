@@ -136,14 +136,16 @@ def __analytic_entropy(blocksize, n_blocks, n_words):
 
     def analytic_entropy(n):
         """Predicted entropy for a word that occurs n times in the document"""
-        if int(n) in cache:
+        n = int(n)
+        if n in cache:
             return cache[n]
         m = np.arange(1, min(blocksize, n) + 1, dtype=np.double)
         p = m / n
+        # m >= 1, so p > 0 and np.log2(p) != nan
         elements = (p * np.log2(p)) * marginal(n, m)
         result = -n_blocks * elements.sum()
 
-        cache[int(n)] = result
+        cache[n] = result
         return result
 
     return np.frompyfunc(analytic_entropy, 1, 1)
