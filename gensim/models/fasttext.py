@@ -1161,22 +1161,10 @@ class FastTextTrainables(Word2VecTrainables):
         """
         if not update:
             wv.init_ngrams_weights(self.seed)
-            #
-            # FIXME: Why is this being initialized as a 2D array here, whereas it is
-            # a 1D array when initialized in the load function?
-            #
             self.vectors_vocab_lockf = ones(wv.vectors_vocab.shape, dtype=REAL)
             self.vectors_ngrams_lockf = ones(wv.vectors_ngrams.shape, dtype=REAL)
         else:
             wv.update_ngrams_weights(self.seed, vocabulary.old_vocab_len)
-
-            #
-            # FIXME:
-            #
-            # It looks like vectors_vocab_lockf and vectors_ngrams_lockf
-            # should really be part of FastTextKeyedVectors, as they are
-            # essentially coupled to wv.vectors_vocab and wv.vector_ngrams.
-            #
             self.vectors_vocab_lockf = _pad_ones(self.vectors_vocab_lockf, wv.vectors_vocab.shape)
             self.vectors_ngrams_lockf = _pad_ones(self.vectors_ngrams_lockf, wv.vectors_ngrams.shape)
 
