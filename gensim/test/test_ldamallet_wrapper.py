@@ -15,7 +15,6 @@ import os
 import os.path
 
 import numpy as np
-from sklearn.datasets import fetch_20newsgroups
 
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models.wrappers import ldamallet
