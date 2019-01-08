@@ -946,8 +946,8 @@ class NativeTrainingContinuationTest(unittest.TestCase):
 
         self.assertEqual(trained_nn.syn1neg.shape, native_nn.syn1neg.shape)
 
-        self.assertEqual(trained_nn.vectors_lockf.shape, native_nn.vectors_lockf.shape)
-        self.assertTrue(np.allclose(trained_nn.vectors_lockf, native_nn.vectors_lockf))
+        self.assertEqual(trained_nn.vectors_ngrams_lockf.shape, native_nn.vectors_ngrams_lockf.shape)
+        self.assertTrue(np.allclose(trained_nn.vectors_ngrams_lockf, native_nn.vectors_ngrams_lockf))
 
         self.assertEqual(trained_nn.vectors_vocab_lockf.shape, native_nn.vectors_vocab_lockf.shape)
         self.assertTrue(np.allclose(trained_nn.vectors_vocab_lockf, native_nn.vectors_vocab_lockf))
