@@ -206,7 +206,8 @@ class TestFastTextModel(unittest.TestCase):
             0.23418,
             0.060007
         ]  # obtained using ./fasttext print-word-vectors lee_fasttext_new.bin
-        self.assertTrue(np.allclose(model.wv["hundred"], expected_vec, atol=1e-4))
+        actual_vec = model.wv["hundred"]
+        self.assertTrue(np.allclose(actual_vec, expected_vec, atol=1e-4))
 
         # vector for oov words are slightly different from original FastText due to discarding unused ngrams
         # obtained using a modified version of ./fasttext print-word-vectors lee_fasttext_new.bin
@@ -222,7 +223,8 @@ class TestFastTextModel(unittest.TestCase):
             0.53203,
             0.77568
         ]
-        self.assertTrue(np.allclose(model.wv["rejection"], expected_vec_oov, atol=1e-4))
+        actual_vec_oov = model.wv["rejection"]
+        self.assertTrue(np.allclose(actual_vec_oov, expected_vec_oov, atol=1e-4))
 
         self.assertEqual(model.vocabulary.min_count, 5)
         self.assertEqual(model.window, 5)
@@ -257,7 +259,8 @@ class TestFastTextModel(unittest.TestCase):
             -0.19685,
             -0.13179
         ]  # obtained using ./fasttext print-word-vectors lee_fasttext_new.bin
-        self.assertTrue(np.allclose(new_model.wv["hundred"], expected_vec, atol=1e-4))
+        actual_vec = new_model.wv["hundred"]
+        self.assertTrue(np.allclose(actual_vec, expected_vec, atol=1e-4))
 
         # vector for oov words are slightly different from original FastText due to discarding unused ngrams
         # obtained using a modified version of ./fasttext print-word-vectors lee_fasttext_new.bin
@@ -273,7 +276,8 @@ class TestFastTextModel(unittest.TestCase):
             -0.17856,
             0.19815
         ]
-        self.assertTrue(np.allclose(new_model.wv["rejection"], expected_vec_oov, atol=1e-4))
+        actual_vec_oov = new_model.wv["rejection"]
+        self.assertTrue(np.allclose(actual_vec_oov, expected_vec_oov, atol=1e-4))
 
         self.assertEqual(new_model.vocabulary.min_count, 5)
         self.assertEqual(new_model.window, 5)
