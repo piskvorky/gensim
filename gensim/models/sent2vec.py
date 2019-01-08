@@ -24,7 +24,7 @@ Or
 
 The sentence vectors are stored in a numpy array
 
->>> vector = model[['computer', 'interface']] # vector of a sentence
+>>> vector = model[['computer', 'interface']]  # vector of a sentence
 
 You can perform the NLP similarity task with the model
 
@@ -51,9 +51,8 @@ except ImportError:
     FAST_VERSION = -1
 
     def do_train_job_slow(model, sentences):
-        """Train on a batch of input sentences with plain python/numpy.
+        """Train on a batch of input sentences with plain python/numpy."""
 
-        """
         ntokens = model.vocabulary.ntokens
         token_count = 0
         nexamples = 0
@@ -92,9 +91,8 @@ logger = logging.getLogger(__name__)
 
 
 class Entry(object):
-    """Class for populating Sent2Vec's dictionary.
+    """Class for populating Sent2Vec's dictionary."""
 
-    """
     def __init__(self, word=None, count=0):
         """
 
@@ -111,10 +109,8 @@ class Entry(object):
 
 
 class Sent2VecVocab(object):
-    """Class for maintaining Sent2Vec vocbulary. Provides functionality for storing and training
-    word ngrams.
+    """Class for maintaining Sent2Vec vocbulary. Provides functionality for storing and training word ngrams."""
 
-    """
     def __init__(self, sample, bucket, max_vocab_size, min_count=5, max_line_size=1024):
         """
 
@@ -150,6 +146,7 @@ class Sent2VecVocab(object):
         ----------
         word : str
             Actual vocabulary word.
+
         Returns
         -------
         int
@@ -202,6 +199,7 @@ class Sent2VecVocab(object):
 
     def read(self, sentences, min_count):
         """Process all words present in sentences.
+
         Initialize discard table to downsampled higher frequency words according to given sampling threshold.
         Threshold lower frequency words if their count is less than a given value `min_count`.
 
@@ -248,9 +246,7 @@ class Sent2VecVocab(object):
             self.size += 1
 
     def init_table_discard(self):
-        """Downsample higher frequency words. Initializing discard table according to given sampling threshold.
-
-        """
+        """Downsample higher frequency words. Initializing discard table according to given sampling threshold."""
         for i in range(self.size):
             f = self.words[i].count / self.ntokens
             self.pdiscard.append(((self.sample / f) ** 0.5) + (self.sample / f))
@@ -353,9 +349,8 @@ class Sent2VecVocab(object):
 
 
 class Sent2Vec(BaseWordEmbeddingsModel):
-    """Class for training and using neural networks.
+    """Sent2Vec Model."""
 
-    """
     def __init__(self, sentences=None, input_streams=None, size=100, alpha=0.01, epochs=5, min_count=5, negative=10,
                  word_ngrams=2, bucket=2000000, sample=0.0001, dropout_k=2, seed=42,
                  min_alpha=0.001, batch_words=10000, workers=3, max_vocab_size=30000000,
@@ -433,15 +428,11 @@ class Sent2Vec(BaseWordEmbeddingsModel):
             self.compute_loss = kwargs['compute_loss']
 
     def _clear_post_train(self):
-        """Resets certain properties of the model, post training.
-
-        """
+        """Resets certain properties of the model, post training."""
         # Avoid NotImplementedError
 
     def _check_training_sanity(self, epochs=None, total_examples=None, total_words=None, **kwargs):
-        """Check that the training parameters provided make sense. e.g. raise error if `epochs` not provided.
-
-        """
+        """Check that the training parameters provided make sense. e.g. raise error if `epochs` not provided."""
         if self.alpha > self.min_alpha_yet_reached:
             logger.warning("Effective 'alpha' higher than previous training cycles")
 
@@ -471,9 +462,7 @@ class Sent2Vec(BaseWordEmbeddingsModel):
             self.workers, self.vocabulary.size, self.vector_size, self.sample, self.negative)
 
     def _get_thread_working_mem(self):
-        """Get private working memory per thread.
-
-        """
+        """Get private working memory per thread."""
         hidden = np.zeros(self.vector_size, dtype=np.float32)  # per-thread private work memory
         grad = np.zeros(self.vector_size, dtype=np.float32)
         return hidden, grad
@@ -622,7 +611,7 @@ class Sent2Vec(BaseWordEmbeddingsModel):
         return nexamples, local_token_count
 
     def build_vocab(self, sentences, input_streams=None, update=False, trim_rule=None, corpus_file=None):
-        """Build vocab from `sentences`
+        """Build vocab from `sentences`.
 
         Parameters
         ----------
@@ -783,9 +772,7 @@ class Sent2Vec(BaseWordEmbeddingsModel):
 
 
 class TorontoCorpus(object):
-    """Iterate over sentences from the Toronto Book Corpus.
-
-    """
+    """Iterate over sentences from the Toronto Book Corpus."""
     def __init__(self, dirname):
         """
 
