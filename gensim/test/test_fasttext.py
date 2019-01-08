@@ -943,10 +943,10 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         self.assertEqual(trained_nn.syn1neg.shape, native_nn.syn1neg.shape)
 
         self.assertEqual(trained_nn.vectors_lockf.shape, native_nn.vectors_lockf.shape)
-        self.assertTrue(np.array_equal(trained_nn.vectors_lockf, native_nn.vectors_lockf))
+        self.assertTrue(np.allclose(trained_nn.vectors_lockf, native_nn.vectors_lockf))
 
         self.assertEqual(trained_nn.vectors_vocab_lockf.shape, native_nn.vectors_vocab_lockf.shape)
-        self.assertTrue(np.array_equal(trained_nn.vectors_vocab_lockf, native_nn.vectors_vocab_lockf))
+        self.assertTrue(np.allclose(trained_nn.vectors_vocab_lockf, native_nn.vectors_vocab_lockf))
 
     def test_continuation_native(self):
         """Ensure that training has had a measurable effect."""
@@ -975,7 +975,7 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         model.train(list_corpus, total_examples=len(list_corpus), epochs=model.epochs)
 
         vectors_ngrams_after = np.copy(model.wv.vectors_ngrams)
-        self.assertFalse(np.array_equal(vectors_ngrams_before, vectors_ngrams_after))
+        self.assertFalse(np.allclose(vectors_ngrams_before, vectors_ngrams_after))
         new_vector = model.wv.word_vec(word).tolist()
 
         self.assertNotEqual(old_vector, new_vector)
@@ -999,11 +999,11 @@ class LoadFastTextFormatTest(unittest.TestCase):
         self.assertEqual(old.hs, new.hs)
         self.assertEqual(old.sg, new.sg)
         self.assertEqual(old.num_original_vectors, new.num_original_vectors)
-        self.assertTrue(np.array_equal(old.wv['hello'], new.wv['hello']))
-        self.assertTrue(np.array_equal(old.wv['world'], new.wv['world']))
+        self.assertTrue(np.allclose(old.wv['hello'], new.wv['hello']))
+        self.assertTrue(np.allclose(old.wv['world'], new.wv['world']))
 
-        self.assertTrue(np.array_equal(old.wv.vectors_ngrams, new.wv.vectors_ngrams))
-        self.assertTrue(np.array_equal(old.trainables.syn1neg, new.trainables.syn1neg))
+        self.assertTrue(np.allclose(old.wv.vectors_ngrams, new.wv.vectors_ngrams))
+        self.assertTrue(np.allclose(old.trainables.syn1neg, new.trainables.syn1neg))
 
 
 class HashCompatibilityTest(unittest.TestCase):
