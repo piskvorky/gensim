@@ -29,7 +29,7 @@ from gensim.test.utils import (datapath, get_tmpfile,
 try:
     from pyemd import emd  # noqa:F401
     PYEMD_EXT = True
-except ImportError:
+except (ImportError, ValueError):
     PYEMD_EXT = False
 
 sentences = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(texts)]
@@ -78,9 +78,8 @@ class _TestSimilarityABC(object):
             index.destroy()
 
     def testNumBest(self):
-
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
-            return
+            self.skipTest("pyemd not installed or have some issues")
 
         for num_best in [None, 0, 1, 9, 1000]:
             self.testFull(num_best=num_best)
@@ -110,6 +109,9 @@ class _TestSimilarityABC(object):
 
     def testEmptyQuery(self):
         index = self.factoryMethod()
+        if isinstance(index, similarities.WmdSimilarity) and not PYEMD_EXT:
+            self.skipTest("pyemd not installed or have some issues")
+
         query = []
         try:
             sims = index[query]
@@ -166,7 +168,7 @@ class _TestSimilarityABC(object):
 
     def testPersistency(self):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
-            return
+            self.skipTest("pyemd not installed or have some issues")
 
         fname = get_tmpfile('gensim_similarities.tst.pkl')
         index = self.factoryMethod()
@@ -186,7 +188,7 @@ class _TestSimilarityABC(object):
 
     def testPersistencyCompressed(self):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
-            return
+            self.skipTest("pyemd not installed or have some issues")
 
         fname = get_tmpfile('gensim_similarities.tst.pkl.gz')
         index = self.factoryMethod()
@@ -206,7 +208,7 @@ class _TestSimilarityABC(object):
 
     def testLarge(self):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
-            return
+            self.skipTest("pyemd not installed or have some issues")
 
         fname = get_tmpfile('gensim_similarities.tst.pkl')
         index = self.factoryMethod()
@@ -228,7 +230,7 @@ class _TestSimilarityABC(object):
 
     def testLargeCompressed(self):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
-            return
+            self.skipTest("pyemd not installed or have some issues")
 
         fname = get_tmpfile('gensim_similarities.tst.pkl.gz')
         index = self.factoryMethod()
@@ -250,7 +252,7 @@ class _TestSimilarityABC(object):
 
     def testMmap(self):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
-            return
+            self.skipTest("pyemd not installed or have some issues")
 
         fname = get_tmpfile('gensim_similarities.tst.pkl')
         index = self.factoryMethod()
@@ -273,7 +275,7 @@ class _TestSimilarityABC(object):
 
     def testMmapCompressed(self):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
-            return
+            self.skipTest("pyemd not installed or have some issues")
 
         fname = get_tmpfile('gensim_similarities.tst.pkl.gz')
         index = self.factoryMethod()
@@ -298,11 +300,9 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
         # Override factoryMethod.
         return self.cls(texts, self.w2v_model)
 
+    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed or have some issues")
     def testFull(self, num_best=None):
         # Override testFull.
-
-        if not PYEMD_EXT:
-            return
 
         index = self.cls(texts, self.w2v_model)
         index.num_best = num_best
@@ -319,14 +319,12 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
             self.assertTrue(numpy.alltrue(sims[1:] > 0.0))
             self.assertTrue(numpy.alltrue(sims[1:] < 1.0))
 
+    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed or have some issues")
     def testNonIncreasing(self):
         ''' Check that similarities are non-increasing when `num_best` is not
         `None`.'''
         # NOTE: this could be implemented for other similarities as well (i.e.
         # in _TestSimilarityABC).
-
-        if not PYEMD_EXT:
-            return
 
         index = self.cls(texts, self.w2v_model, num_best=3)
         query = texts[0]
@@ -337,11 +335,9 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
         cond = sum(numpy.diff(sims2) < 0) == len(sims2) - 1
         self.assertTrue(cond)
 
+    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed or have some issues")
     def testChunking(self):
         # Override testChunking.
-
-        if not PYEMD_EXT:
-            return
 
         index = self.cls(texts, self.w2v_model)
         query = texts[:3]
@@ -358,11 +354,9 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
                 self.assertTrue(numpy.alltrue(sim > 0.0))
                 self.assertTrue(numpy.alltrue(sim <= 1.0))
 
+    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed or have some issues")
     def testIter(self):
         # Override testIter.
-
-        if not PYEMD_EXT:
-            return
 
         index = self.cls(texts, self.w2v_model)
         for sims in index:

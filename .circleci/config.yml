@@ -30,7 +30,7 @@ jobs:
           name: Build documentation
           command: |
             source venv/bin/activate
-            tox -e docs -vv
+            tox -e compile,docs -vv
 
       - store_artifacts:
           path:  docs/src/_build
