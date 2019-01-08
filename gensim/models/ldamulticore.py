@@ -90,7 +90,7 @@ from gensim import utils
 from gensim.models.ldamodel import LdaModel, LdaState
 
 import six
-from six.moves import queue, xrange
+from six.moves import queue, range
 from multiprocessing import Pool, Queue, cpu_count
 
 logger = logging.getLogger(__name__)
@@ -258,7 +258,7 @@ class LdaMulticore(LdaModel):
 
         logger.info("training LDA model using %i processes", self.workers)
         pool = Pool(self.workers, worker_e_step, (job_queue, result_queue,))
-        for pass_ in xrange(self.passes):
+        for pass_ in range(self.passes):
             queue_size, reallen = [0], 0
             other = LdaState(self.eta, self.state.sstats.shape)
 
