@@ -548,7 +548,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         if last is None:
             mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
         else:
-            if (len(positive)+len(negative))%2 !=0:
+            if (len(positive)+len(negative))%2 != 0:
                 raise ValueError("wrong input word analogies.. one or more words are missing..")            
             mean = matutils.unitvec(array(mean).mean(axis=0)/2).astype(REAL)+self.word_vec(last, use_norm=True)
 
