@@ -396,22 +396,22 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         self.index2word = value
 
     @property
-    @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors instead")
+    @deprecated("Attribute will be removed in 4.0.0, use self.vectors instead")
     def syn0(self):
         return self.vectors
 
     @syn0.setter
-    @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors instead")
+    @deprecated("Attribute will be removed in 4.0.0, use self.vectors instead")
     def syn0(self, value):
         self.vectors = value
 
     @property
-    @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors_norm instead")
+    @deprecated("Attribute will be removed in 4.0.0, use self.vectors_norm instead")
     def syn0norm(self):
         return self.vectors_norm
 
     @syn0norm.setter
-    @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors_norm instead")
+    @deprecated("Attribute will be removed in 4.0.0, use self.vectors_norm instead")
     def syn0norm(self, value):
         self.vectors_norm = value
 
@@ -1916,22 +1916,22 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         self.compatible_hash = compatible_hash
 
     @property
-    @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors_vocab instead")
+    @deprecated("Attribute will be removed in 4.0.0, use self.vectors_vocab instead")
     def syn0_vocab(self):
         return self.vectors_vocab
 
     @property
-    @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors_vocab_norm instead")
+    @deprecated("Attribute will be removed in 4.0.0, use self.vectors_vocab_norm instead")
     def syn0_vocab_norm(self):
         return self.vectors_vocab_norm
 
     @property
-    @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors_ngrams instead")
+    @deprecated("Attribute will be removed in 4.0.0, use self.vectors_ngrams instead")
     def syn0_ngrams(self):
         return self.vectors_ngrams
 
     @property
-    @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors_ngrams_norm instead")
+    @deprecated("Attribute will be removed in 4.0.0, use self.vectors_ngrams_norm instead")
     def syn0_ngrams_norm(self):
         return self.vectors_ngrams_norm
 
