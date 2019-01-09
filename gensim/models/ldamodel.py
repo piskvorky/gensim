@@ -364,7 +364,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Mapping from word IDs to words. It is used to determine the vocabulary size, as well as for
             debugging and topic printing.
         distributed : bool, optional
-            Whether distributed computing should be used to accerelate training.
+            Whether distributed computing should be used to accelerate training.
         chunksize :  int, optional
             Number of documents to be used in each training chunk.
         passes : int, optional
@@ -1089,7 +1089,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             score += gammaln(np.sum(self.alpha)) - gammaln(np.sum(gammad))
 
         # Compensate likelihood for when `corpus` above is only a sample of the whole corpus. This ensures
-        # that the likelihood is always rougly on the same scale.
+        # that the likelihood is always roughly on the same scale.
         score *= subsample_ratio
 
         # E[log p(beta | eta) - log q (beta | lambda)]; assumes eta is a scalar
@@ -1291,7 +1291,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Most probable topics per word. Each element in the list is a pair of a word's id, and a list of
             topics sorted by their relevance to this word. Only returned if `per_word_topics` was set to True.
         list of (int, list of float), optional
-            Phi relevance values, multipled by the feature length, for each word-topic combination.
+            Phi relevance values, multiplied by the feature length, for each word-topic combination.
             Each element in the list is a pair of a word's id and a list of the phi values between this word and
             each topic. Only returned if `per_word_topics` was set to True.
 
