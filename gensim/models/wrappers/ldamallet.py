@@ -278,7 +278,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
 
         if self.random_seed is not None:
             cmd += ' --random-seed ' + str(self.random_seed)
-        
+
         cmd = cmd % (
             self.fcorpusmallet(), self.num_topics, self.alpha, self.optimize_interval,
             self.workers, self.fstate(), self.fdoctopics(), self.ftopickeys(), self.iterations,
@@ -580,7 +580,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         model = super(LdaMallet, cls).load(*args, **kwargs)
         if not hasattr(model, 'random_seed'):
             model.random_seed = None
-        
+
         return model
 
 
