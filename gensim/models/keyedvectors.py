@@ -1384,11 +1384,10 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         if getattr(self, 'vectors_norm', None) is None or replace:
             logger.info("precomputing L2-norms of word weight vectors")
             if replace:
-                for i in range(self.vectors.shape[0]):
-                    self.vectors[i, :] /= sqrt((self.vectors[i, :] ** 2).sum(-1))
+                _l2_norm_inplace(self.vectors)
                 self.vectors_norm = self.vectors
             else:
-                self.vectors_norm = (self.vectors / sqrt((self.vectors ** 2).sum(-1))[..., newaxis]).astype(REAL)
+                self.vectors_norm = _l2_norm(self.vectors)
 
 
 class Word2VecKeyedVectors(WordEmbeddingsKeyedVectors):
@@ -1601,8 +1600,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         if getattr(self, 'vectors_docs_norm', None) is None or replace:
             logger.info("precomputing L2-norms of doc weight vectors")
             if replace:
-                for i in range(self.vectors_docs.shape[0]):
-                    self.vectors_docs[i, :] /= sqrt((self.vectors_docs[i, :] ** 2).sum(-1))
+                _l2_norm_inplace(self.vectors_docs)
                 self.vectors_docs_norm = self.vectors_docs
             else:
                 if self.mapfile_path:
@@ -1610,9 +1608,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
                         self.mapfile_path + '.vectors_docs_norm', dtype=REAL,
                         mode='w+', shape=self.vectors_docs.shape)
                 else:
-                    self.vectors_docs_norm = empty(self.vectors_docs.shape, dtype=REAL)
-                np_divide(
-                    self.vectors_docs, sqrt((self.vectors_docs ** 2).sum(-1))[..., newaxis], self.vectors_docs_norm)
+                    self.vectors_docs_norm = _l2_norm(self.vectors_docs)
 
     def most_similar(self, positive=None, negative=None, topn=10, clip_start=0, clip_end=None, indexer=None):
         """Find the top-N most similar docvecs from the training set.
@@ -2093,12 +2089,10 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         if getattr(self, 'vectors_ngrams_norm', None) is None or replace:
             logger.info("precomputing L2-norms of ngram weight vectors")
             if replace:
-                for i in range(self.vectors_ngrams.shape[0]):
-                    self.vectors_ngrams[i, :] /= sqrt((self.vectors_ngrams[i, :] ** 2).sum(-1))
+                _l2_norm_inplace(self.vectors_ngrams)
                 self.vectors_ngrams_norm = self.vectors_ngrams
             else:
-                self.vectors_ngrams_norm = \
-                    (self.vectors_ngrams / sqrt((self.vectors_ngrams ** 2).sum(-1))[..., newaxis]).astype(REAL)
+                self.vectors_ngrams_norm = _l2_norm(self.vectors_ngrams)
 
     def save_word2vec_format(self, fname, fvocab=None, binary=False, total_vec=None):
         """Store the input-hidden weight matrix in the same format used by the original
@@ -2246,3 +2240,14 @@ def _pad_random(m, new_rows, rand):
     low, high = -1.0 / columns, 1.0 / columns
     suffix = rand.uniform(low, high, (new_rows, columns)).astype(REAL)
     return vstack([m, suffix])
+
+
+def _l2_norm(m):
+    """Return an L2-normalized version of a matrix."""
+    return (m / sqrt((m ** 2).sum(-1))[..., newaxis]).astype(REAL)
+
+
+def _l2_norm_inplace(m):
+    """Perform L2 normalization on a matrix in-place."""
+    for i in range(m.shape[0]):
+        m[i, :] /= sqrt((m[i, :] ** 2).sum(-1))
