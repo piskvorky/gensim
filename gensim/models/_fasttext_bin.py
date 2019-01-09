@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Load models from the native binary format released by Facebook.
 
 Examples
@@ -118,7 +119,7 @@ def _load_vocab(fin, new_format, encoding='utf-8'):
     if new_format:
         pruneidx_size, = _struct_unpack(fin, '@q')
 
-    raw_vocab = {}
+    raw_vocab = collections.OrderedDict()
     for i in range(vocab_size):
         word_bytes = b''
         char_byte = fin.read(1)
