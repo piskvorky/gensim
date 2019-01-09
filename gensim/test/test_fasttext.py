@@ -881,7 +881,7 @@ def load_native():
 def load_vec(fin):
     fin.readline()  # array shape
     for line in fin:
-        columns = line.strip().split(' ')
+        columns = line.strip().split(u' ')
         word = columns.pop(0)
         vector = [float(c) for c in columns]
         yield word, np.array(vector, dtype=np.float32)
@@ -892,8 +892,9 @@ class NativeTrainingContinuationTest(unittest.TestCase):
 
     def test_in_vocab(self):
         """Test for correct representation of in-vocab words."""
+        import codecs
         native = load_native()
-        with open(datapath('toy-model.vec')) as fin:
+        with codecs.open(datapath('toy-model.vec'), 'r', 'utf-8') as fin:
             expected = dict(load_vec(fin))
 
         for word, expected_vector in expected.items():
