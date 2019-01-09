@@ -6,8 +6,10 @@ Topics and Transformations
 
 Don't forget to set
 
->>> import logging
->>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+.. sourcecode:: pycon
+
+  >>> import logging
+  >>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 if you want to see logging events.
 
@@ -17,15 +19,18 @@ Transformation interface
 In the previous tutorial on :doc:`tut1`, we created a corpus of documents represented
 as a stream of vectors. To continue, let's fire up gensim and use that corpus:
 
->>> from gensim import corpora, models, similarities
->>> if (os.path.exists("/tmp/deerwester.dict")):
->>>    dictionary = corpora.Dictionary.load('/tmp/deerwester.dict')
->>>    corpus = corpora.MmCorpus('/tmp/deerwester.mm')
->>>    print("Used files generated from first tutorial")
->>> else:
->>>    print("Please run first tutorial to generate data set")
+.. sourcecode:: pycon
 
-MmCorpus(9 documents, 12 features, 28 non-zero entries)
+  >>> from gensim import corpora
+  >>>
+  >>> if (os.path.exists("/tmp/deerwester.dict")):
+  >>>     dictionary = corpora.Dictionary.load('/tmp/deerwester.dict')
+  >>>     corpus = corpora.MmCorpus('/tmp/deerwester.mm')
+  >>>     print("Used files generated from first tutorial")
+  >>> else:
+  >>>     print("Please run first tutorial to generate data set")
+
+  MmCorpus(9 documents, 12 features, 28 non-zero entries)
 
 In this tutorial, I will show how to transform documents from one vector representation
 into another. This process serves two goals:
@@ -43,7 +48,9 @@ Creating a transformation
 The transformations are standard Python objects, typically initialized by means of
 a :dfn:`training corpus`:
 
->>> tfidf = models.TfidfModel(corpus) # step 1 -- initialize a model
+.. sourcecode:: pycon
+
+  >>> tfidf = models.TfidfModel(corpus)  # step 1 -- initialize a model
 
 We used our old corpus from tutorial 1 to initialize (train) the transformation model. Different
 transformations may require different initialization parameters; in case of TfIdf, the
@@ -69,24 +76,28 @@ From now on, ``tfidf`` is treated as a read-only object that can be used to conv
 any vector from the old representation (bag-of-words integer counts) to the new representation
 (TfIdf real-valued weights):
 
->>> doc_bow = [(0, 1), (1, 1)]
->>> print(tfidf[doc_bow]) # step 2 -- use the model to transform vectors
-[(0, 0.70710678), (1, 0.70710678)]
+.. sourcecode:: pycon
+
+  >>> doc_bow = [(0, 1), (1, 1)]
+  >>> print(tfidf[doc_bow])  # step 2 -- use the model to transform vectors
+  [(0, 0.70710678), (1, 0.70710678)]
 
 Or to apply a transformation to a whole corpus:
 
->>> corpus_tfidf = tfidf[corpus]
->>> for doc in corpus_tfidf:
-...     print(doc)
-[(0, 0.57735026918962573), (1, 0.57735026918962573), (2, 0.57735026918962573)]
-[(0, 0.44424552527467476), (3, 0.44424552527467476), (4, 0.44424552527467476), (5, 0.32448702061385548), (6, 0.44424552527467476), (7, 0.32448702061385548)]
-[(2, 0.5710059809418182), (5, 0.41707573620227772), (7, 0.41707573620227772), (8, 0.5710059809418182)]
-[(1, 0.49182558987264147), (5, 0.71848116070837686), (8, 0.49182558987264147)]
-[(3, 0.62825804686700459), (6, 0.62825804686700459), (7, 0.45889394536615247)]
-[(9, 1.0)]
-[(9, 0.70710678118654746), (10, 0.70710678118654746)]
-[(9, 0.50804290089167492), (10, 0.50804290089167492), (11, 0.69554641952003704)]
-[(4, 0.62825804686700459), (10, 0.45889394536615247), (11, 0.62825804686700459)]
+.. sourcecode:: pycon
+
+  >>> corpus_tfidf = tfidf[corpus]
+  >>> for doc in corpus_tfidf:
+  ...     print(doc)
+  [(0, 0.57735026918962573), (1, 0.57735026918962573), (2, 0.57735026918962573)]
+  [(0, 0.44424552527467476), (3, 0.44424552527467476), (4, 0.44424552527467476), (5, 0.32448702061385548), (6, 0.44424552527467476), (7, 0.32448702061385548)]
+  [(2, 0.5710059809418182), (5, 0.41707573620227772), (7, 0.41707573620227772), (8, 0.5710059809418182)]
+  [(1, 0.49182558987264147), (5, 0.71848116070837686), (8, 0.49182558987264147)]
+  [(3, 0.62825804686700459), (6, 0.62825804686700459), (7, 0.45889394536615247)]
+  [(9, 1.0)]
+  [(9, 0.70710678118654746), (10, 0.70710678118654746)]
+  [(9, 0.50804290089167492), (10, 0.50804290089167492), (11, 0.69554641952003704)]
+  [(4, 0.62825804686700459), (10, 0.45889394536615247), (11, 0.62825804686700459)]
 
 In this particular case, we are transforming the same corpus that we used
 for training, but this is only incidental. Once the transformation model has been initialized,
@@ -105,12 +116,16 @@ folding-in for LSA, by topic inference for LDA etc.
 
 Transformations can also be serialized, one on top of another, in a sort of chain:
 
->>> lsi = models.LsiModel(corpus_tfidf, id2word=dictionary, num_topics=2) # initialize an LSI transformation
->>> corpus_lsi = lsi[corpus_tfidf] # create a double wrapper over the original corpus: bow->tfidf->fold-in-lsi
+.. sourcecode:: pycon
+
+  >>> lsi = models.LsiModel(corpus_tfidf, id2word=dictionary, num_topics=2)  # initialize an LSI transformation
+  >>> corpus_lsi = lsi[corpus_tfidf]  # create a double wrapper over the original corpus: bow->tfidf->fold-in-lsi
 
 Here we transformed our Tf-Idf corpus via `Latent Semantic Indexing <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_
 into a latent 2-D space (2-D because we set ``num_topics=2``). Now you're probably wondering: what do these two latent
 dimensions stand for? Let's inspect with :func:`models.LsiModel.print_topics`:
+
+.. sourcecode:: pycon
 
   >>> lsi.print_topics(2)
   topic #0(1.594): -0.703*"trees" + -0.538*"graph" + -0.402*"minors" + -0.187*"survey" + -0.061*"system" + -0.060*"response" + -0.060*"time" + -0.058*"user" + -0.049*"computer" + -0.035*"interface"
@@ -125,23 +140,27 @@ second topic practically concerns itself with all the other words. As expected,
 the first five documents are more strongly related to the second topic while the
 remaining four documents to the first topic:
 
->>> for doc in corpus_lsi: # both bow->tfidf and tfidf->lsi transformations are actually executed here, on the fly
-...     print(doc)
-[(0, -0.066), (1, 0.520)] # "Human machine interface for lab abc computer applications"
-[(0, -0.197), (1, 0.761)] # "A survey of user opinion of computer system response time"
-[(0, -0.090), (1, 0.724)] # "The EPS user interface management system"
-[(0, -0.076), (1, 0.632)] # "System and human system engineering testing of EPS"
-[(0, -0.102), (1, 0.574)] # "Relation of user perceived response time to error measurement"
-[(0, -0.703), (1, -0.161)] # "The generation of random binary unordered trees"
-[(0, -0.877), (1, -0.168)] # "The intersection graph of paths in trees"
-[(0, -0.910), (1, -0.141)] # "Graph minors IV Widths of trees and well quasi ordering"
-[(0, -0.617), (1, 0.054)] # "Graph minors A survey"
+.. sourcecode:: pycon
+
+  >>> for doc in corpus_lsi:  # both bow->tfidf and tfidf->lsi transformations are actually executed here, on the fly
+  ...     print(doc)
+  [(0, -0.066), (1, 0.520)] # "Human machine interface for lab abc computer applications"
+  [(0, -0.197), (1, 0.761)] # "A survey of user opinion of computer system response time"
+  [(0, -0.090), (1, 0.724)] # "The EPS user interface management system"
+  [(0, -0.076), (1, 0.632)] # "System and human system engineering testing of EPS"
+  [(0, -0.102), (1, 0.574)] # "Relation of user perceived response time to error measurement"
+  [(0, -0.703), (1, -0.161)] # "The generation of random binary unordered trees"
+  [(0, -0.877), (1, -0.168)] # "The intersection graph of paths in trees"
+  [(0, -0.910), (1, -0.141)] # "Graph minors IV Widths of trees and well quasi ordering"
+  [(0, -0.617), (1, 0.054)] # "Graph minors A survey"
 
 
 Model persistency is achieved with the :func:`save` and :func:`load` functions:
 
->>> lsi.save('/tmp/model.lsi') # same for tfidf, lda, ...
->>> lsi = models.LsiModel.load('/tmp/model.lsi')
+.. sourcecode:: pycon
+
+  >>> lsi.save('/tmp/model.lsi')  # same for tfidf, lda, ...
+  >>> lsi = models.LsiModel.load('/tmp/model.lsi')
 
 
 The next question might be: just how exactly similar are those documents to each other?
@@ -165,7 +184,9 @@ Gensim implements several popular Vector Space Model algorithms:
   the number of dimensions intact. It can also optionally normalize the resulting
   vectors to (Euclidean) unit length.
 
-  >>> model = models.TfidfModel(corpus, normalize=True)
+  .. sourcecode:: pycon
+
+    >>> model = models.TfidfModel(corpus, normalize=True)
 
 * `Latent Semantic Indexing, LSI (or sometimes LSA) <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_
   transforms documents from either bag-of-words or (preferrably) TfIdf-weighted space into
@@ -173,7 +194,9 @@ Gensim implements several popular Vector Space Model algorithms:
   2 latent dimensions, but on real corpora, target dimensionality of 200--500 is recommended
   as a "golden standard" [1]_.
 
-  >>> model = models.LsiModel(tfidf_corpus, id2word=dictionary, num_topics=300)
+  .. sourcecode:: pycon
+
+    >>> model = models.LsiModel(tfidf_corpus, id2word=dictionary, num_topics=300)
 
   LSI training is unique in that we can continue "training" at any point, simply
   by providing more training documents. This is done by incremental updates to
@@ -181,12 +204,13 @@ Gensim implements several popular Vector Space Model algorithms:
   input document stream may even be infinite -- just keep feeding LSI new documents
   as they arrive, while using the computed transformation model as read-only in the meanwhile!
 
-  >>> model.add_documents(another_tfidf_corpus) # now LSI has been trained on tfidf_corpus + another_tfidf_corpus
-  >>> lsi_vec = model[tfidf_vec] # convert some new document into the LSI space, without affecting the model
-  >>> ...
-  >>> model.add_documents(more_documents) # tfidf_corpus + another_tfidf_corpus + more_documents
-  >>> lsi_vec = model[tfidf_vec]
-  >>> ...
+  .. sourcecode:: pycon
+
+    >>> model.add_documents(another_tfidf_corpus)  # now LSI has been trained on tfidf_corpus + another_tfidf_corpus
+    >>> lsi_vec = model[tfidf_vec]  # convert some new document into the LSI space, without affecting the model
+    >>> 
+    >>> model.add_documents(more_documents)  # tfidf_corpus + another_tfidf_corpus + more_documents
+    >>> lsi_vec = model[tfidf_vec]
 
   See the :mod:`gensim.models.lsimodel` documentation for details on how to make
   LSI gradually "forget" old observations in infinite streams. If you want to get dirty,
@@ -205,7 +229,9 @@ Gensim implements several popular Vector Space Model algorithms:
   CPU-friendly) approach to approximating TfIdf distances between documents, by throwing in a little randomness.
   Recommended target dimensionality is again in the hundreds/thousands, depending on your dataset.
 
-  >>> model = models.RpModel(tfidf_corpus, num_topics=500)
+  .. sourcecode:: pycon
+
+    >>> model = models.RpModel(tfidf_corpus, num_topics=500)
 
 * `Latent Dirichlet Allocation, LDA <http://en.wikipedia.org/wiki/Latent_Dirichlet_allocation>`_
   is yet another transformation from bag-of-words counts into a topic space of lower
@@ -214,7 +240,9 @@ Gensim implements several popular Vector Space Model algorithms:
   just like with LSA, inferred automatically from a training corpus. Documents
   are in turn interpreted as a (soft) mixture of these topics (again, just like with LSA).
 
-  >>> model = models.LdaModel(corpus, id2word=dictionary, num_topics=100)
+  .. sourcecode:: pycon
+
+    >>> model = models.LdaModel(corpus, id2word=dictionary, num_topics=100)
 
   `gensim` uses a fast implementation of online LDA parameter estimation based on [2]_,
   modified to run in :doc:`distributed mode <distributed>` on a cluster of computers.
@@ -222,7 +250,9 @@ Gensim implements several popular Vector Space Model algorithms:
 * `Hierarchical Dirichlet Process, HDP <http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_
   is a non-parametric bayesian method (note the missing number of requested topics):
 
-  >>> model = models.HdpModel(corpus, id2word=dictionary)
+  .. sourcecode:: pycon
+
+    >>> model = models.HdpModel(corpus, id2word=dictionary)
 
   `gensim` uses a fast, online implementation based on [3]_.
   The HDP model is a new addition to `gensim`, and still rough around its academic edges -- use with care.

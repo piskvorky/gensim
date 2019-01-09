@@ -38,17 +38,17 @@ Quick Example
 
 First, let's import gensim and create a small corpus of nine documents and twelve features [1]_:
 
->>> from gensim import corpora, models, similarities
->>>
->>> corpus = [[(0, 1.0), (1, 1.0), (2, 1.0)],
->>>           [(2, 1.0), (3, 1.0), (4, 1.0), (5, 1.0), (6, 1.0), (8, 1.0)],
->>>           [(1, 1.0), (3, 1.0), (4, 1.0), (7, 1.0)],
->>>           [(0, 1.0), (4, 2.0), (7, 1.0)],
->>>           [(3, 1.0), (5, 1.0), (6, 1.0)],
->>>           [(9, 1.0)],
->>>           [(9, 1.0), (10, 1.0)],
->>>           [(9, 1.0), (10, 1.0), (11, 1.0)],
->>>           [(8, 1.0), (10, 1.0), (11, 1.0)]]
+.. sourcecode:: pycon
+
+  >>> corpus = [[(0, 1.0), (1, 1.0), (2, 1.0)],
+  >>>           [(2, 1.0), (3, 1.0), (4, 1.0), (5, 1.0), (6, 1.0), (8, 1.0)],
+  >>>           [(1, 1.0), (3, 1.0), (4, 1.0), (7, 1.0)],
+  >>>           [(0, 1.0), (4, 2.0), (7, 1.0)],
+  >>>           [(3, 1.0), (5, 1.0), (6, 1.0)],
+  >>>           [(9, 1.0)],
+  >>>           [(9, 1.0), (10, 1.0)],
+  >>>           [(9, 1.0), (10, 1.0), (11, 1.0)],
+  >>>           [(8, 1.0), (10, 1.0), (11, 1.0)]]
 
 In `gensim` a :dfn:`corpus` is simply an object which, when iterated over, returns its documents represented
 as sparse vectors. In this case we're using a list of list of tuples. If you're not familiar with the `vector space model <http://en.wikipedia.org/wiki/Vector_space_model>`_, we'll bridge the gap between **raw strings**, **corpora** and **sparse vectors** in the next tutorial on :doc:`tut1`.
@@ -67,13 +67,19 @@ has major impact on the quality of any subsequent applications.
 
 Next, let's initialize a :dfn:`transformation`:
 
->>> tfidf = models.TfidfModel(corpus)
+.. sourcecode:: pycon
+
+  >>> from gensim import models
+  >>>
+  >>> tfidf = models.TfidfModel(corpus)
 
 A transformation is used to convert documents from one vector representation into another:
 
->>> vec = [(0, 1), (4, 1)]
->>> print(tfidf[vec])
-[(0, 0.8075244), (4, 0.5898342)]
+.. sourcecode:: pycon
+
+  >>> vec = [(0, 1), (4, 1)]
+  >>> print(tfidf[vec])
+  [(0, 0.8075244), (4, 0.5898342)]
 
 Here, we used `Tf-Idf <http://en.wikipedia.org/wiki/Tf%E2%80%93idf>`_, a simple
 transformation which takes documents represented as bag-of-words counts and applies
@@ -84,13 +90,19 @@ Transformations are covered in detail in the tutorial on :doc:`tut2`.
 
 To transform the whole corpus via TfIdf and index it, in preparation for similarity queries:
 
->>> index = similarities.SparseMatrixSimilarity(tfidf[corpus], num_features=12)
+.. sourcecode:: pycon
+
+  >>> from gensim import similarities
+  >>>
+  >>> index = similarities.SparseMatrixSimilarity(tfidf[corpus], num_features=12)
 
 and to query the similarity of our query vector ``vec`` against every document in the corpus:
 
->>> sims = index[tfidf[vec]]
->>> print(list(enumerate(sims)))
-[(0, 0.4662244), (1, 0.19139354), (2, 0.24600551), (3, 0.82094586), (4, 0.0), (5, 0.0), (6, 0.0), (7, 0.0), (8, 0.0)]
+.. sourcecode:: pycon
+
+  >>> sims = index[tfidf[vec]]
+  >>> print(list(enumerate(sims)))
+  [(0, 0.4662244), (1, 0.19139354), (2, 0.24600551), (3, 0.82094586), (4, 0.0), (5, 0.0), (6, 0.0), (7, 0.0), (8, 0.0)]
 
 How to read this output? Document number zero (the first document) has a similarity score of 0.466=46.6\%,
 the second document has a similarity score of 19.1\% etc.

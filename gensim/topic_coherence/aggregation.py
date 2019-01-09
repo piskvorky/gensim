@@ -29,9 +29,11 @@ def arithmetic_mean(confirmed_measures):
 
     Examples
     --------
-    >>> from gensim.topic_coherence.aggregation import arithmetic_mean
-    >>> arithmetic_mean([1.1, 2.2, 3.3, 4.4])
-    2.75
+    .. sourcecode:: pycon
+
+        >>> from gensim.topic_coherence.aggregation import arithmetic_mean
+        >>> arithmetic_mean([1.1, 2.2, 3.3, 4.4])
+        2.75
 
     """
     return np.mean(confirmed_measures)

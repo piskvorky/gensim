@@ -77,15 +77,11 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
 
         documents = [[u"government", u"denied", u"holiday"], [u"holiday", u"slowing", u"hollingworth"]]
         dictionary = Dictionary(documents)
-
-        # checking symmetry
         similarity_matrix = self.vectors.similarity_matrix(dictionary).todense()
-        self.assertTrue((similarity_matrix.T == similarity_matrix).all())
 
         # checking the existence of ones on the main diagonal
         self.assertTrue(
-            (np.diag(similarity_matrix) ==
-             np.ones(similarity_matrix.shape[0])).all())
+            (np.diag(similarity_matrix) == np.ones(similarity_matrix.shape[0])).all())
 
     def test_most_similar(self):
         """Test most_similar returns expected results."""
@@ -184,7 +180,7 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
 
     def test_wv_property(self):
         """Test that the deprecated `wv` property returns `self`. To be removed in v4.0.0."""
-        self.assertTrue(self.vectors is self.vectors.wv)
+        self.assertTrue(self.vectors is self.vectors)
 
     def test_add_single(self):
         """Test that adding entity in a manual way works correctly."""

@@ -20,4 +20,5 @@ from .d2vmodel import D2VTransformer  # noqa: F401
 from .text2bow import Text2BowTransformer  # noqa: F401
 from .tfidf import TfIdfTransformer  # noqa: F401
 from .hdp import HdpTransformer  # noqa: F401
+from .ftmodel import FTTransformer  # noqa: F401
 from .phrases import PhrasesTransformer  # noqa: F401

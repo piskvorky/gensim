@@ -23,18 +23,22 @@ class IndexedCorpus(interfaces.CorpusABC):
     While the standard corpus interface in gensim allows iterating over corpus,
     we'll show it with :class:`~gensim.corpora.mmcorpus.MmCorpus`.
 
-    >>> from gensim.corpora import MmCorpus
-    >>> from gensim.test.utils import datapath
-    >>>
-    >>> corpus = MmCorpus(datapath('testcorpus.mm'))
-    >>> for doc in corpus:
-    ...    pass
+    .. sourcecode:: pycon
+
+        >>> from gensim.corpora import MmCorpus
+        >>> from gensim.test.utils import datapath
+        >>>
+        >>> corpus = MmCorpus(datapath('testcorpus.mm'))
+        >>> for doc in corpus:
+        ...     pass
 
     :class:`~gensim.corpora.indexedcorpus.IndexedCorpus` allows accessing the documents with index
     in :math:`{O}(1)` look-up time.
 
-    >>> document_index = 3
-    >>> doc = corpus[document_index]
+    .. sourcecode:: pycon
+
+        >>> document_index = 3
+        >>> doc = corpus[document_index]
 
     Notes
     -----
@@ -89,16 +93,19 @@ class IndexedCorpus(interfaces.CorpusABC):
 
         Examples
         --------
-        >>> from gensim.corpora import MmCorpus
-        >>> from gensim.test.utils import get_tmpfile
-        >>>
-        >>> corpus = [[(1, 0.3), (2, 0.1)], [(1, 0.1)], [(2, 0.3)]]
-        >>> output_fname = get_tmpfile("test.mm")
-        >>>
-        >>> MmCorpus.serialize(output_fname, corpus)
-        >>> mm = MmCorpus(output_fname) # `mm` document stream now has random access
-        >>> print(mm[1]) # retrieve document no. 42, etc.
-        [(1, 0.1)]
+
+        .. sourcecode:: pycon
+
+            >>> from gensim.corpora import MmCorpus
+            >>> from gensim.test.utils import get_tmpfile
+            >>>
+            >>> corpus = [[(1, 0.3), (2, 0.1)], [(1, 0.1)], [(2, 0.3)]]
+            >>> output_fname = get_tmpfile("test.mm")
+            >>>
+            >>> MmCorpus.serialize(output_fname, corpus)
+            >>> mm = MmCorpus(output_fname)  # `mm` document stream now has random access
+            >>> print(mm[1])  # retrieve document no. 42, etc.
+            [(1, 0.1)]
 
         """
         if getattr(corpus, 'fname', None) == fname:

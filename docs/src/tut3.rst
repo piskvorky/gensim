@@ -6,8 +6,10 @@ Similarity Queries
 
 Don't forget to set
 
->>> import logging
->>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+.. sourcecode:: pycon
+
+  >>> import logging
+  >>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 if you want to see logging events.
 
@@ -25,16 +27,21 @@ previous examples (which really originally comes from Deerwester et al.'s
 `"Indexing by Latent Semantic Analysis" <http://www.cs.bham.ac.uk/~pxt/IDA/lsa_ind.pdf>`_
 seminal 1990 article):
 
->>> from gensim import corpora, models, similarities
->>> dictionary = corpora.Dictionary.load('/tmp/deerwester.dict')
->>> corpus = corpora.MmCorpus('/tmp/deerwester.mm') # comes from the first tutorial, "From strings to vectors"
->>> print(corpus)
-MmCorpus(9 documents, 12 features, 28 non-zero entries)
+.. sourcecode:: pycon
+
+  >>> from gensim import corpora
+  >>> dictionary = corpora.Dictionary.load('/tmp/deerwester.dict')
+  >>> corpus = corpora.MmCorpus('/tmp/deerwester.mm')  # comes from the first tutorial, "From strings to vectors"
+  >>> print(corpus)
+  MmCorpus(9 documents, 12 features, 28 non-zero entries)
 
 To follow Deerwester's example, we first use this tiny corpus to define a 2-dimensional
 LSI space:
 
->>> lsi = models.LsiModel(corpus, id2word=dictionary, num_topics=2)
+.. sourcecode:: pycon
+
+  >>> from gensim import models
+  >>> lsi = models.LsiModel(corpus, id2word=dictionary, num_topics=2)
 
 Now suppose a user typed in the query `"Human computer interaction"`. We would
 like to sort our nine corpus documents in decreasing order of relevance to this query.
@@ -42,11 +49,13 @@ Unlike modern search engines, here we only concentrate on a single aspect of pos
 similarities---on apparent semantic relatedness of their texts (words). No hyperlinks,
 no random-walk static ranks, just a semantic extension over the boolean keyword match:
 
->>> doc = "Human computer interaction"
->>> vec_bow = dictionary.doc2bow(doc.lower().split())
->>> vec_lsi = lsi[vec_bow] # convert the query to LSI space
->>> print(vec_lsi)
-[(0, -0.461821), (1, 0.070028)]
+.. sourcecode:: pycon
+
+  >>> doc = "Human computer interaction"
+  >>> vec_bow = dictionary.doc2bow(doc.lower().split())
+  >>> vec_lsi = lsi[vec_bow]  # convert the query to LSI space
+  >>> print(vec_lsi)
+  [(0, -0.461821), (1, 0.070028)]
 
 In addition, we will be considering `cosine similarity <http://en.wikipedia.org/wiki/Cosine_similarity>`_
 to determine the similarity of two vectors. Cosine similarity is a standard measure
@@ -62,7 +71,9 @@ to compare against subsequent queries. In our case, they are the same nine docum
 used for training LSI, converted to 2-D LSA space. But that's only incidental, we
 might also be indexing a different corpus altogether.
 
->>> index = similarities.MatrixSimilarity(lsi[corpus]) # transform corpus to LSI space and index it
+.. sourcecode:: pycon
+
+  >>> index = similarities.MatrixSimilarity(lsi[corpus])  # transform corpus to LSI space and index it
 
 .. warning::
   The class :class:`similarities.MatrixSimilarity` is only appropriate when the whole
@@ -76,8 +87,10 @@ might also be indexing a different corpus altogether.
 
 Index persistency is handled via the standard :func:`save` and :func:`load` functions:
 
->>> index.save('/tmp/deerwester.index')
->>> index = similarities.MatrixSimilarity.load('/tmp/deerwester.index')
+.. sourcecode:: pycon
+
+  >>> index.save('/tmp/deerwester.index')
+  >>> index = similarities.MatrixSimilarity.load('/tmp/deerwester.index')
 
 This is true for all similarity indexing classes (:class:`similarities.Similarity`,
 :class:`similarities.MatrixSimilarity` and :class:`similarities.SparseMatrixSimilarity`).
@@ -90,10 +103,12 @@ Performing queries
 
 To obtain similarities of our query document against the nine indexed documents:
 
->>> sims = index[vec_lsi] # perform a similarity query against the corpus
->>> print(list(enumerate(sims))) # print (document_number, document_similarity) 2-tuples
-[(0, 0.99809301), (1, 0.93748635), (2, 0.99844527), (3, 0.9865886), (4, 0.90755945),
-(5, -0.12416792), (6, -0.1063926), (7, -0.098794639), (8, 0.05004178)]
+.. sourcecode:: pycon
+
+  >>> sims = index[vec_lsi]  # perform a similarity query against the corpus
+  >>> print(list(enumerate(sims)))  # print (document_number, document_similarity) 2-tuples
+  [(0, 0.99809301), (1, 0.93748635), (2, 0.99844527), (3, 0.9865886), (4, 0.90755945),
+  (5, -0.12416792), (6, -0.1063926), (7, -0.098794639), (8, 0.05004178)]
 
 Cosine measure returns similarities in the range `<-1, 1>` (the greater, the more similar),
 so that the first document has a score of 0.99809301 etc.
@@ -101,17 +116,19 @@ so that the first document has a score of 0.99809301 etc.
 With some standard Python magic we sort these similarities into descending
 order, and obtain the final answer to the query `"Human computer interaction"`:
 
->>> sims = sorted(enumerate(sims), key=lambda item: -item[1])
->>> print(sims) # print sorted (document number, similarity score) 2-tuples
-[(2, 0.99844527), # The EPS user interface management system
-(0, 0.99809301), # Human machine interface for lab abc computer applications
-(3, 0.9865886), # System and human system engineering testing of EPS
-(1, 0.93748635), # A survey of user opinion of computer system response time
-(4, 0.90755945), # Relation of user perceived response time to error measurement
-(8, 0.050041795), # Graph minors A survey
-(7, -0.098794639), # Graph minors IV Widths of trees and well quasi ordering
-(6, -0.1063926), # The intersection graph of paths in trees
-(5, -0.12416792)] # The generation of random binary unordered trees
+.. sourcecode:: pycon
+
+  >>> sims = sorted(enumerate(sims), key=lambda item: -item[1])
+  >>> print(sims)  # print sorted (document number, similarity score) 2-tuples
+  [(2, 0.99844527), # The EPS user interface management system
+  (0, 0.99809301), # Human machine interface for lab abc computer applications
+  (3, 0.9865886), # System and human system engineering testing of EPS
+  (1, 0.93748635), # A survey of user opinion of computer system response time
+  (4, 0.90755945), # Relation of user perceived response time to error measurement
+  (8, 0.050041795), # Graph minors A survey
+  (7, -0.098794639), # Graph minors IV Widths of trees and well quasi ordering
+  (6, -0.1063926), # The intersection graph of paths in trees
+  (5, -0.12416792)] # The generation of random binary unordered trees
 
 (I added the original documents in their "string form" to the output comments, to
 improve clarity.)
@@ -145,5 +162,5 @@ That doesn't mean it's perfect though:
   `user stories and general questions <http://groups.google.com/group/gensim/topics>`_.
 
 Gensim has no ambition to become an all-encompassing framework, across all NLP (or even Machine Learning) subfields.
-Its mission is to help NLP practicioners try out popular topic modelling algorithms
+Its mission is to help NLP practitioners try out popular topic modelling algorithms
 on large datasets easily, and to facilitate prototyping of new algorithms for researchers.

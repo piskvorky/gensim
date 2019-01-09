@@ -95,14 +95,14 @@ class VarEmbed(KeyedVectors):
             counts[word] = counts.get(word, 0) + 1
         self.vocab_size = len(counts)
         self.vector_size = word_embeddings.shape[1]
-        self.syn0 = np.zeros((self.vocab_size, self.vector_size))
+        self.vectors = np.zeros((self.vocab_size, self.vector_size))
         self.index2word = [None] * self.vocab_size
         logger.info("Corpus has %i words", len(self.vocab))
         for word_id, word in enumerate(counts):
             self.vocab[word] = Vocab(index=word_id, count=counts[word])
-            self.syn0[word_id] = word_embeddings[word_to_ix[word]]
+            self.vectors[word_id] = word_embeddings[word_to_ix[word]]
             self.index2word[word_id] = word
-        assert((len(self.vocab), self.vector_size) == self.syn0.shape)
+        assert((len(self.vocab), self.vector_size) == self.vectors.shape)
         logger.info("Loaded matrix of %d size and %d dimensions", self.vocab_size, self.vector_size)
 
     def add_morphemes_to_embeddings(self, morfessor_model, morpho_embeddings, morpho_to_ix):
@@ -125,5 +125,5 @@ class VarEmbed(KeyedVectors):
                     for m in morfessor_model.viterbi_segment(word)[0]
                 ]
             ).sum(axis=0)
-            self.syn0[self.vocab[word].index] += morpheme_embedding
+            self.vectors[self.vocab[word].index] += morpheme_embedding
         logger.info("Added morphemes to word vectors")

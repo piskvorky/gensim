@@ -83,8 +83,8 @@ def resolve_weights(smartirs):
 
 
 def df2idf(docfreq, totaldocs, log_base=2.0, add=0.0):
-    """Compute inverse-document-frequency for a term with the given document frequency `docfreq`:
-    :math:`idf = add + log_{log\_base} \\frac{totaldocs}{docfreq}`
+    r"""Compute inverse-document-frequency for a term with the given document frequency `docfreq`:
+    :math:`idf = add + log_{log\_base} \frac{totaldocs}{docfreq}`
 
     Parameters
     ----------
@@ -223,25 +223,27 @@ class TfidfModel(interfaces.TransformationABC):
 
     Examples
     --------
-    >>> import gensim.downloader as api
-    >>> from gensim.models import TfidfModel
-    >>> from gensim.corpora import Dictionary
-    >>>
-    >>> dataset = api.load("text8")
-    >>> dct = Dictionary(dataset)  # fit dictionary
-    >>> corpus = [dct.doc2bow(line) for line in dataset]  # convert corpus to BoW format
-    >>>
-    >>> model = TfidfModel(corpus)  # fit model
-    >>> vector = model[corpus[0]]  # apply model to the first corpus document
+    .. sourcecode:: pycon
+
+        >>> import gensim.downloader as api
+        >>> from gensim.models import TfidfModel
+        >>> from gensim.corpora import Dictionary
+        >>>
+        >>> dataset = api.load("text8")
+        >>> dct = Dictionary(dataset)  # fit dictionary
+        >>> corpus = [dct.doc2bow(line) for line in dataset]  # convert corpus to BoW format
+        >>>
+        >>> model = TfidfModel(corpus)  # fit model
+        >>> vector = model[corpus[0]]  # apply model to the first corpus document
 
     """
     def __init__(self, corpus=None, id2word=None, dictionary=None, wlocal=utils.identity,
                  wglobal=df2idf, normalize=True, smartirs=None, pivot=None, slope=0.65):
-        """Compute TF-IDF by multiplying a local component (term frequency) with a global component
+        r"""Compute TF-IDF by multiplying a local component (term frequency) with a global component
         (inverse document frequency), and normalizing the resulting documents to unit length.
         Formula for non-normalized weight of term :math:`i` in document :math:`j` in a corpus of :math:`D` documents
 
-        .. math:: weight_{i,j} = frequency_{i,j} * log_2 \\frac{D}{document\_freq_{i}}
+        .. math:: weight_{i,j} = frequency_{i,j} * log_2 \frac{D}{document\_freq_{i}}
 
         or, more generally
 

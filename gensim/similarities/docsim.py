@@ -25,24 +25,28 @@ support adding new document to the index dynamically.
 
 Once the index has been initialized, you can query for document similarity simply by
 
->>> from gensim.test.utils import common_corpus, common_dictionary, get_tmpfile
->>>
->>> index_tmpfile = get_tmpfile("index")
->>> query = [(1, 2), (6, 1), (7, 2)]
->>>
->>> index = Similarity(index_tmpfile, common_corpus, num_features=len(common_dictionary)) # build the index
->>> similarities = index[query] # get similarities between the query and all index documents
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import common_corpus, common_dictionary, get_tmpfile
+    >>>
+    >>> index_tmpfile = get_tmpfile("index")
+    >>> query = [(1, 2), (6, 1), (7, 2)]
+    >>>
+    >>> index = Similarity(index_tmpfile, common_corpus, num_features=len(common_dictionary))  # build the index
+    >>> similarities = index[query]  # get similarities between the query and all index documents
 
 If you have more query documents, you can submit them all at once, in a batch
+.. sourcecode:: pycon
 
->>> from gensim.test.utils import common_corpus, common_dictionary, get_tmpfile
->>>
->>> index_tmpfile = get_tmpfile("index")
->>> batch_of_documents = common_corpus[:]  # only as example
->>> index = Similarity(index_tmpfile, common_corpus, num_features=len(common_dictionary)) # build the index
->>>
->>> for similarities in index[batch_of_documents]: # the batch is simply an iterable of documents, aka gensim corpus.
-...     pass
+    >>> from gensim.test.utils import common_corpus, common_dictionary, get_tmpfile
+    >>>
+    >>> index_tmpfile = get_tmpfile("index")
+    >>> batch_of_documents = common_corpus[:]  # only as example
+    >>> index = Similarity(index_tmpfile, common_corpus, num_features=len(common_dictionary))  # build the index
+    >>>
+    >>> # the batch is simply an iterable of documents, aka gensim corpus:
+    >>> for similarities in index[batch_of_documents]:
+    ...     pass
 
 The benefit of this batch (aka "chunked") querying is a much better performance.
 To see the speed-up on your machine, run ``python -m gensim.test.simspeed``
@@ -51,14 +55,15 @@ To see the speed-up on your machine, run ``python -m gensim.test.simspeed``
 There is also a special syntax for when you need similarity of documents in the index
 to the index itself (i.e. queries = the indexed documents themselves). This special syntax
 uses the faster, batch queries internally and **is ideal for all-vs-all pairwise similarities**:
+.. sourcecode:: pycon
 
->>> from gensim.test.utils import common_corpus, common_dictionary, get_tmpfile
->>>
->>> index_tmpfile = get_tmpfile("index")
->>> index = Similarity(index_tmpfile, common_corpus, num_features=len(common_dictionary)) # build the index
->>>
->>> for similarities in index: # yield similarities of the 1st indexed document, then 2nd...
-...     pass
+    >>> from gensim.test.utils import common_corpus, common_dictionary, get_tmpfile
+    >>>
+    >>> index_tmpfile = get_tmpfile("index")
+    >>> index = Similarity(index_tmpfile, common_corpus, num_features=len(common_dictionary))  # build the index
+    >>>
+    >>> for similarities in index:  # yield similarities of the 1st indexed document, then 2nd...
+    ...     pass
 
 """
 
@@ -72,7 +77,7 @@ import scipy.sparse
 
 from gensim import interfaces, utils, matutils
 from .termsim import SparseTermSimilarityMatrix
-from six.moves import map as imap, xrange, zip as izip
+from six.moves import map, range, zip
 
 
 logger = logging.getLogger(__name__)
@@ -239,25 +244,27 @@ class Similarity(interfaces.SimilarityABC):
 
     Examples
     --------
-    >>> from gensim.corpora.textcorpus import TextCorpus
-    >>> from gensim.test.utils import datapath, get_tmpfile
-    >>> from gensim.similarities import Similarity
-    >>>
-    >>> corpus = TextCorpus(datapath('testcorpus.mm'))
-    >>> index_temp = get_tmpfile("index")
-    >>> index = Similarity(index_temp, corpus, num_features=400)  # create index
-    >>>
-    >>> query = next(iter(corpus))
-    >>> result = index[query]  # search similar to `query` in index
-    >>>
-    >>> for sims in index[corpus]: # if you have more query documents, you can submit them all at once, in a batch
-    ...     pass
-    >>>
-    >>> # There is also a special syntax for when you need similarity of documents in the index
-    >>> # to the index itself (i.e. queries=indexed documents themselves). This special syntax
-    >>> # uses the faster, batch queries internally and **is ideal for all-vs-all pairwise similarities**:
-    >>> for similarities in index: # yield similarities of the 1st indexed document, then 2nd...
-    ...     pass
+    .. sourcecode:: pycon
+
+        >>> from gensim.corpora.textcorpus import TextCorpus
+        >>> from gensim.test.utils import datapath, get_tmpfile
+        >>> from gensim.similarities import Similarity
+        >>>
+        >>> corpus = TextCorpus(datapath('testcorpus.mm'))
+        >>> index_temp = get_tmpfile("index")
+        >>> index = Similarity(index_temp, corpus, num_features=400)  # create index
+        >>>
+        >>> query = next(iter(corpus))
+        >>> result = index[query]  # search similar to `query` in index
+        >>>
+        >>> for sims in index[corpus]:  # if you have more query documents, you can submit them all at once, in a batch
+        ...     pass
+        >>>
+        >>> # There is also a special syntax for when you need similarity of documents in the index
+        >>> # to the index itself (i.e. queries=indexed documents themselves). This special syntax
+        >>> # uses the faster, batch queries internally and **is ideal for all-vs-all pairwise similarities**:
+        >>> for similarities in index:  # yield similarities of the 1st indexed document, then 2nd...
+        ...     pass
 
     See Also
     --------
@@ -325,7 +332,7 @@ class Similarity(interfaces.SimilarityABC):
 
     def __len__(self):
         """Get length of index."""
-        return len(self.fresh_docs) + sum([len(shard) for shard in self.shards])
+        return len(self.fresh_docs) + sum(len(shard) for shard in self.shards)
 
     def __str__(self):
         return "Similarity index with %i documents in %i shards (stored under %s)" % (
@@ -347,16 +354,18 @@ class Similarity(interfaces.SimilarityABC):
 
         Examples
         --------
-        >>> from gensim.corpora.textcorpus import TextCorpus
-        >>> from gensim.test.utils import datapath, get_tmpfile
-        >>> from gensim.similarities import Similarity
-        >>>
-        >>> corpus = TextCorpus(datapath('testcorpus.mm'))
-        >>> index_temp = get_tmpfile("index")
-        >>> index = Similarity(index_temp, corpus, num_features=400)  # create index
-        >>>
-        >>> one_more_corpus = TextCorpus(datapath('testcorpus.txt'))
-        >>> index.add_documents(one_more_corpus)  # add more documents in corpus
+        .. sourcecode:: pycon
+
+            >>> from gensim.corpora.textcorpus import TextCorpus
+            >>> from gensim.test.utils import datapath, get_tmpfile
+            >>> from gensim.similarities import Similarity
+            >>>
+            >>> corpus = TextCorpus(datapath('testcorpus.mm'))
+            >>> index_temp = get_tmpfile("index")
+            >>> index = Similarity(index_temp, corpus, num_features=400)  # create index
+            >>>
+            >>> one_more_corpus = TextCorpus(datapath('testcorpus.txt'))
+            >>> index.add_documents(one_more_corpus)  # add more documents in corpus
 
         """
         min_ratio = 1.0  # 0.5 to only reopen shards that are <50% complete
@@ -461,11 +470,11 @@ class Similarity(interfaces.SimilarityABC):
         if PARALLEL_SHARDS and PARALLEL_SHARDS > 1:
             logger.debug("spawning %i query processes", PARALLEL_SHARDS)
             pool = multiprocessing.Pool(PARALLEL_SHARDS)
-            result = pool.imap(query_shard, args, chunksize=1 + len(list(args)) / PARALLEL_SHARDS)
+            result = pool.imap(query_shard, args, chunksize=1 + len(self.shards) / PARALLEL_SHARDS)
         else:
             # serial processing, one shard after another
             pool = None
-            result = imap(query_shard, args)
+            result = map(query_shard, args)
         return pool, result
 
     def __getitem__(self, query):
@@ -489,14 +498,15 @@ class Similarity(interfaces.SimilarityABC):
 
         Examples
         --------
-        >>> from gensim.corpora.textcorpus import TextCorpus
-        >>> from gensim.test.utils import datapath
-        >>> from gensim.similarities import Similarity
-        >>> import gensim.downloader as api
-        >>>
-        >>> corpus = TextCorpus(datapath('testcorpus.txt'))
-        >>> index = Similarity('temp', corpus, num_features=400)
-        >>> result = index[corpus]  # pairwise similarities of each document against each document
+        .. sourcecode:: pycon
+
+            >>> from gensim.corpora.textcorpus import TextCorpus
+            >>> from gensim.test.utils import datapath
+            >>> from gensim.similarities import Similarity
+            >>>
+            >>> corpus = TextCorpus(datapath('testcorpus.txt'))
+            >>> index = Similarity('temp', corpus, num_features=400)
+            >>> result = index[corpus]  # pairwise similarities of each document against each document
 
         """
         self.close_shard()  # no-op if no documents added to index since last query
@@ -536,7 +546,7 @@ class Similarity(interfaces.SimilarityABC):
                     shard_result = [convert(shard_no, doc) for doc in result]
                     results.append(shard_result)
                 result = []
-                for parts in izip(*results):
+                for parts in zip(*results):
                     merged = heapq.nlargest(self.num_best, itertools.chain(*parts), key=lambda item: item[1])
                     result.append(merged)
         if pool:
@@ -561,15 +571,17 @@ class Similarity(interfaces.SimilarityABC):
 
         Examples
         --------
-        >>> from gensim.corpora.textcorpus import TextCorpus
-        >>> from gensim.test.utils import datapath
-        >>> from gensim.similarities import Similarity
-        >>> import gensim.downloader as api
-        >>>
-        >>> # Create index:
-        >>> corpus = TextCorpus(datapath('testcorpus.txt'))
-        >>> index = Similarity('temp', corpus, num_features=400)
-        >>> vector = index.vector_by_id(1)
+
+        .. sourcecode:: pycon
+
+            >>> from gensim.corpora.textcorpus import TextCorpus
+            >>> from gensim.test.utils import datapath
+            >>> from gensim.similarities import Similarity
+            >>>
+            >>> # Create index:
+            >>> corpus = TextCorpus(datapath('testcorpus.txt'))
+            >>> index = Similarity('temp', corpus, num_features=400)
+            >>> vector = index.vector_by_id(1)
 
         """
         self.close_shard()  # no-op if no documents added to index since last query
@@ -598,13 +610,16 @@ class Similarity(interfaces.SimilarityABC):
 
         Examples
         --------
-        >>> from gensim.corpora.textcorpus import TextCorpus
-        >>> from gensim.test.utils import datapath
-        >>> from gensim.similarities import Similarity
-        >>>
-        >>> corpus = TextCorpus(datapath('testcorpus.txt'))
-        >>> index = Similarity('temp', corpus, num_features=400)
-        >>> similarities = index.similarity_by_id(1)
+
+        .. sourcecode:: pycon
+
+            >>> from gensim.corpora.textcorpus import TextCorpus
+            >>> from gensim.test.utils import datapath
+            >>> from gensim.similarities import Similarity
+            >>>
+            >>> corpus = TextCorpus(datapath('testcorpus.txt'))
+            >>> index = Similarity('temp', corpus, num_features=400)
+            >>> similarities = index.similarity_by_id(1)
 
         """
         query = self.vector_by_id(docpos)
@@ -658,7 +673,7 @@ class Similarity(interfaces.SimilarityABC):
 
         for shard in self.shards:
             query = shard.get_index().index
-            for chunk_start in xrange(0, query.shape[0], chunksize):
+            for chunk_start in range(0, query.shape[0], chunksize):
                 # scipy.sparse doesn't allow slicing beyond real size of the matrix
                 # (unlike numpy). so, clip the end of the chunk explicitly to make
                 # scipy.sparse happy
@@ -691,18 +706,21 @@ class Similarity(interfaces.SimilarityABC):
 
         Examples
         --------
-        >>> from gensim.corpora.textcorpus import TextCorpus
-        >>> from gensim.test.utils import datapath, get_tmpfile
-        >>> from gensim.similarities import Similarity
-        >>>
-        >>> temp_fname = get_tmpfile("index")
-        >>> output_fname = get_tmpfile("saved_index")
-        >>>
-        >>> corpus = TextCorpus(datapath('testcorpus.txt'))
-        >>> index = Similarity(output_fname, corpus, num_features=400)
-        >>>
-        >>> index.save(output_fname)
-        >>> loaded_index = index.load(output_fname)
+
+        .. sourcecode:: pycon
+
+            >>> from gensim.corpora.textcorpus import TextCorpus
+            >>> from gensim.test.utils import datapath, get_tmpfile
+            >>> from gensim.similarities import Similarity
+            >>>
+            >>> temp_fname = get_tmpfile("index")
+            >>> output_fname = get_tmpfile("saved_index")
+            >>>
+            >>> corpus = TextCorpus(datapath('testcorpus.txt'))
+            >>> index = Similarity(output_fname, corpus, num_features=400)
+            >>>
+            >>> index.save(output_fname)
+            >>> loaded_index = index.load(output_fname)
 
         """
         self.close_shard()
@@ -725,12 +743,15 @@ class MatrixSimilarity(interfaces.SimilarityABC):
 
     Examples
     --------
-    >>> from gensim.test.utils import common_corpus, common_dictionary
-    >>> from gensim.similarities import MatrixSimilarity
-    >>>
-    >>> query = [(1, 2), (5, 4)]
-    >>> index = MatrixSimilarity(common_corpus, num_features=len(common_dictionary))
-    >>> sims = index[query]
+
+    .. sourcecode:: pycon
+
+        >>> from gensim.test.utils import common_corpus, common_dictionary
+        >>> from gensim.similarities import MatrixSimilarity
+        >>>
+        >>> query = [(1, 2), (5, 4)]
+        >>> index = MatrixSimilarity(common_corpus, num_features=len(common_dictionary))
+        >>> sims = index[query]
 
     """
     def __init__(self, corpus, num_best=None, dtype=numpy.float32, num_features=None, chunksize=256, corpus_len=None):
@@ -804,7 +825,7 @@ class MatrixSimilarity(interfaces.SimilarityABC):
 
         Parameters
         ----------
-        query : {list of (int, number), iterable of list of (int, number), :class:`scipy.sparse.csr_matrix`
+        query : {list of (int, number), iterable of list of (int, number), :class:`scipy.sparse.csr_matrix`}
             Document or collection of documents.
 
         Return
@@ -843,20 +864,23 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
 
     Examples
     --------
-    >>> from gensim.test.utils import common_texts
-    >>> from gensim.corpora import Dictionary
-    >>> from gensim.models import Word2Vec, WordEmbeddingSimilarityIndex
-    >>> from gensim.similarities import SoftCosineSimilarity, TermSimilarityMatrix
-    >>>
-    >>> model = Word2Vec(common_texts, size=20, min_count=1)  # train word-vectors
-    >>> termsim_index = WordEmbeddingSimilarityIndex(model)
-    >>> dictionary = Dictionary(common_texts)
-    >>> bow_corpus = [dictionary.doc2bow(document) for document in common_texts]
-    >>> similarity_matrix = TermSimilarityMatrix(termsim_index, dictionary)  # construct similarity matrix
-    >>> docsim_index = SoftCosineSimilarity(bow_corpus, similarity_matrix, num_best=10)
-    >>>
-    >>> query = 'graph trees computer'.split()  # make a query
-    >>> sims = docsim_index[dictionary.doc2bow(query)]  # calculate similarity of query to each doc from bow_corpus
+
+    .. sourcecode:: pycon
+
+        >>> from gensim.test.utils import common_texts
+        >>> from gensim.corpora import Dictionary
+        >>> from gensim.models import Word2Vec, WordEmbeddingSimilarityIndex
+        >>> from gensim.similarities import SoftCosineSimilarity, TermSimilarityMatrix
+        >>>
+        >>> model = Word2Vec(common_texts, size=20, min_count=1)  # train word-vectors
+        >>> termsim_index = WordEmbeddingSimilarityIndex(model)
+        >>> dictionary = Dictionary(common_texts)
+        >>> bow_corpus = [dictionary.doc2bow(document) for document in common_texts]
+        >>> similarity_matrix = TermSimilarityMatrix(termsim_index, dictionary)  # construct similarity matrix
+        >>> docsim_index = SoftCosineSimilarity(bow_corpus, similarity_matrix, num_best=10)
+        >>>
+        >>> query = 'graph trees computer'.split()  # make a query
+        >>> sims = docsim_index[dictionary.doc2bow(query)]  # calculate similarity of query to each doc from bow_corpus
 
     Check out `Tutorial Notebook
     <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/soft_cosine_tutorial.ipynb>`_
@@ -919,8 +943,8 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
 
         Parameters
         ----------
-        query : list of (int, number) or iterable of list of (int, number)
-            Document or a corpus of documents.
+        query : {list of (int, number), iterable of list of (int, number)}
+            Document or collection of documents.
 
         Return
         ------
@@ -947,7 +971,7 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
 
 
 class WmdSimilarity(interfaces.SimilarityABC):
-    """Compute negative WMD similarity against a corpus of documents by storing the index matrix in memory.
+    """Compute negative WMD similarity against a corpus of documents.
 
     See :class:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors` for more information.
     Also, tutorial `notebook
@@ -964,19 +988,19 @@ class WmdSimilarity(interfaces.SimilarityABC):
 
     Example
     -------
-    >>> from gensim.test.utils import common_texts
-    >>> from gensim.corpora import Dictionary
-    >>> from gensim.models import Word2Vec
-    >>> from gensim.similarities import WmdSimilarity
-    >>>
-    >>> model = Word2Vec(common_texts, size=20, min_count=1)  # train word-vectors
-    >>> dictionary = Dictionary(common_texts)
-    >>> bow_corpus = [dictionary.doc2bow(document) for document in common_texts]
-    >>>
-    >>> index = WmdSimilarity(bow_corpus, model)
-    >>> # Make query.
-    >>> query = 'trees'
-    >>> sims = index[query]
+
+    .. sourcecode:: pycon
+
+        >>> from gensim.test.utils import common_texts
+        >>> from gensim.models import Word2Vec
+        >>> from gensim.similarities import WmdSimilarity
+        >>>
+        >>> model = Word2Vec(common_texts, size=20, min_count=1)  # train word-vectors
+        >>>
+        >>> index = WmdSimilarity(common_texts, model)
+        >>> # Make query.
+        >>> query = ['trees']
+        >>> sims = index[query]
 
     """
     def __init__(self, corpus, w2v_model, num_best=None, normalize_w2v_and_replace=True, chunksize=256):
@@ -984,8 +1008,8 @@ class WmdSimilarity(interfaces.SimilarityABC):
 
         Parameters
         ----------
-        corpus: iterable of list of (int, float)
-            A list of documents in the BoW format.
+        corpus: iterable of list of str
+            A list of documents, each of which is a list of tokens.
         w2v_model: :class:`~gensim.models.word2vec.Word2VecTrainables`
             A trained word2vec model.
         num_best: int, optional
@@ -1024,7 +1048,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
 
         Parameters
         ----------
-        query : {list of (int, number), iterable of list of (int, number)
+        query : {list of str, iterable of list of str}
             Document or collection of documents.
 
         Return
@@ -1044,7 +1068,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
         result = []
         for qidx in range(n_queries):
             # Compute similarity for each query.
-            qresult = [self.w2v_model.wmdistance(document, query[qidx]) for document in self.corpus]
+            qresult = [self.w2v_model.wv.wmdistance(document, query[qidx]) for document in self.corpus]
             qresult = numpy.array(qresult)
             qresult = 1. / (1. + qresult)  # Similarity is the negative of the distance.
 
@@ -1160,7 +1184,7 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
 
         Parameters
         ----------
-        query : {list of (int, number), iterable of list of (int, number), :class:`scipy.sparse.csr_matrix`
+        query : {list of (int, number), iterable of list of (int, number), :class:`scipy.sparse.csr_matrix`}
             Document or collection of documents.
 
         Return
