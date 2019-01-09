@@ -2200,12 +2200,8 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         self.vectors = np.array(vectors[:vocab_words,:])
         self.vectors_vocab = np.array(vectors[:vocab_words,:])
         self.vectors_ngrams = np.array(vectors[vocab_words:,:])
-
-        ngram_indices = []
         self.num_ngram_vectors = self.bucket
-        for hashval in range(self.bucket):
-            self.hash2index[hashval] = len(ngram_indices)
-            ngram_indices.append(len(self.vocab) + hashval)
+        self.hash2index = {i: i for i in range(self.bucket)}
 
         hash_fn = _ft_hash if self.compatible_hash else _ft_hash_broken
         for w, vocab in self.vocab.items():
@@ -2216,6 +2212,10 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
 
             self.vectors[vocab.index] /= (len(word_ngrams) + 1)
 
+        #
+        # Leave this to be initialized later (by init_ngrams_weights or
+        # update_ngrams_weights)
+        #
         self.buckets_word = None
 
     def calculate_vectors(self):
