@@ -91,6 +91,7 @@ import struct
 
 import numpy as np
 from numpy import ones, vstack, float32 as REAL, sum as np_sum
+import six
 
 from gensim.models.word2vec import Word2VecVocab, Word2VecTrainables, train_sg_pair, train_cbow_pair
 from gensim.models.keyedvectors import FastTextKeyedVectors
@@ -849,7 +850,7 @@ class FastText(BaseWordEmbeddingsModel):
             if not hasattr(model.trainables, 'vectors_vocab_lockf') and hasattr(model.wv, 'vectors_vocab'):
                 model.trainables.vectors_vocab_lockf = ones(model.wv.vectors_vocab.shape, dtype=REAL)
             if not hasattr(model.trainables, 'vectors_ngrams_lockf') and hasattr(model.wv, 'vectors_ngrams'):
-                model.trainables.vectors_ngrams_lockf = ones(models.wv.vectors_ngrams.shape, dtype=REAL)
+                model.trainables.vectors_ngrams_lockf = ones(model.wv.vectors_ngrams.shape, dtype=REAL)
 
             if not hasattr(model.wv, 'compatible_hash'):
                 logger.warning(

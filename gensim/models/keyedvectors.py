@@ -175,9 +175,9 @@ try:
 except (ImportError, ValueError):
     PYEMD_EXT = False
 
-from numpy import dot, float32 as REAL, empty, memmap as np_memmap, \
+from numpy import dot, float32 as REAL, memmap as np_memmap, \
     double, array, zeros, vstack, sqrt, newaxis, integer, \
-    ndarray, sum as np_sum, prod, argmax, divide as np_divide
+    ndarray, sum as np_sum, prod, argmax
 import numpy as np
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.corpora.dictionary import Dictionary
@@ -2197,9 +2197,9 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         # ngrams.  We split them into two separate matrices, because our
         # implementation treats them differently.
         #
-        self.vectors = np.array(vectors[:vocab_words,:])
-        self.vectors_vocab = np.array(vectors[:vocab_words,:])
-        self.vectors_ngrams = np.array(vectors[vocab_words:,:])
+        self.vectors = np.array(vectors[:vocab_words, :])
+        self.vectors_vocab = np.array(vectors[:vocab_words, :])
+        self.vectors_ngrams = np.array(vectors[vocab_words:, :])
         self.num_ngram_vectors = self.bucket
         self.hash2index = {i: i for i in range(self.bucket)}
 

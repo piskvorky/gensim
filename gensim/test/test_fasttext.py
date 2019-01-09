@@ -18,8 +18,6 @@ from gensim.models.wrappers.fasttext import FastText as FT_wrapper
 from gensim.models.keyedvectors import Word2VecKeyedVectors
 from gensim.test.utils import datapath, get_tmpfile, temporary_file, common_texts as sentences
 
-import gensim.models.fasttext
-
 try:
     from pyemd import emd  # noqa:F401
     PYEMD_EXT = True
