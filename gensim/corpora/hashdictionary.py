@@ -303,7 +303,7 @@ class HashDictionary(utils.SaveLoad, dict):
             tokenid: {token for token in tokens if token in self.dfs_debug}
             for tokenid, tokens in iteritems(self.id2token)
         }
-        self.dfs = {tokenid: freq for tokenid, freq in iteritems(self.dfs) if self.id2token.get(tokenid, set())}
+        self.dfs = {tokenid: freq for tokenid, freq in iteritems(self.dfs) if self.id2token.get(tokenid, False)}
 
         # for word->document frequency
         logger.info(

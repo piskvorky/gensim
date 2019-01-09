@@ -19,9 +19,11 @@ import numpy as np
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models.wrappers import ldamallet
 from gensim import matutils
+from gensim.utils import simple_preprocess
 from gensim.models import ldamodel
 from gensim.test import basetmtests
 from gensim.test.utils import datapath, get_tmpfile, common_texts
+import gensim.downloader as api
 
 dictionary = Dictionary(common_texts)
 corpus = [dictionary.doc2bow(text) for text in common_texts]
@@ -90,6 +92,10 @@ class TestLdaMallet(unittest.TestCase, basetmtests.TestBaseTopicModel):
 
         tm1 = ldamallet.LdaMallet(self.mallet_path, corpus=corpus, num_topics=2, id2word=dictionary)
         tm2 = ldamallet.malletmodel2ldamodel(tm1)
+
+        # set num_topics=-1 to exclude random influence
+        self.assertEqual(tm1.show_topics(-1, 10), tm2.show_topics(-1, 10))
+
         for document in corpus:
             element1_1, element1_2 = tm1[document][0]
             element2_1, element2_2 = tm2[document][0]
@@ -101,7 +107,20 @@ class TestLdaMallet(unittest.TestCase, basetmtests.TestBaseTopicModel):
             self.assertAlmostEqual(element1_2, element2_2, 1)
             logging.debug('%d %d', element1_1, element2_1)
             logging.debug('%d %d', element1_2, element2_2)
-            logging.debug('%d %d', tm1[document][1], tm2[document][1])
+            logging.debug('%s %s', tm1[document][1], tm2[document][1])
+
+    def testMallet2ModelOn20NewsGroups(self):
+        corpus = [simple_preprocess(doc["data"]) for doc in api.load("20-newsgroups")]
+        dictionary = Dictionary(corpus)
+
+        corpus = [dictionary.doc2bow(text) for text in corpus]
+
+        lda_mallet_model = ldamallet.LdaMallet(
+            self.mallet_path, corpus=corpus,
+            num_topics=20, id2word=dictionary, iterations=500)
+
+        lda_gensim_model = ldamallet.malletmodel2ldamodel(lda_mallet_model, iterations=1000)
+        self.assertEqual(lda_mallet_model.show_topics(20, 50), lda_gensim_model.show_topics(20, 50))
 
     def testPersistence(self):
         if not self.mallet_path:

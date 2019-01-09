@@ -280,7 +280,7 @@ class TranslationMatrix(utils.SaveLoad):
         source_words : {str, list of str}
             Single word or a list of words to be translated
         topn : int, optional
-            Number of words than will be returned as translation for each `source_words`
+            Number of words that will be returned as translation for each `source_words`
         gc : int, optional
             Define translation algorithm, if `gc == 0` - use standard NN retrieval,
             otherwise, use globally corrected neighbour retrieval method (as described in [1]_).
