@@ -1051,14 +1051,9 @@ def _load_fasttext_format(model_file, encoding='utf-8'):
     model.num_original_vectors = m.vectors_ngrams.shape[0]
 
     model.wv.init_post_load(m.vectors_ngrams)
-
-    #
-    # This check needs to happen here, because init_ngrams_post_load will
-    # modify wv.vectors_ngrams and its shape will change.
-    #
-    _check_model(model)
-
     model.trainables.init_post_load(model, m.hidden_output)
+
+    _check_model(model)
 
     logger.info("loaded %s weight matrix for fastText model from %s", m.vectors_ngrams.shape, fin.name)
     return model
