@@ -995,31 +995,6 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         self.assertNotEqual(old_vector, new_vector)
 
 
-class LoadFastTextFormatTest(unittest.TestCase):
-    def test(self):
-        """Ensure the new load function yields the same result as the old one."""
-        test_model_file = datapath('lee_fasttext')
-        old = FT_gensim.load_fasttext_format(test_model_file)
-        new = FT_gensim.load_fasttext_format(test_model_file)
-
-        self.assertEqual(old.wv.min_n, new.wv.min_n)
-        self.assertEqual(old.wv.max_n, new.wv.max_n)
-        self.assertEqual(old.trainables.bucket, new.trainables.bucket)
-        self.assertEqual(old.num_ngram_vectors, new.num_ngram_vectors)
-        self.assertEqual(old.vector_size, new.vector_size)
-        self.assertEqual(old.window, new.window)
-        self.assertEqual(old.epochs, new.epochs)
-        self.assertEqual(old.negative, new.negative)
-        self.assertEqual(old.hs, new.hs)
-        self.assertEqual(old.sg, new.sg)
-        self.assertEqual(old.num_original_vectors, new.num_original_vectors)
-        self.assertTrue(np.allclose(old.wv['hello'], new.wv['hello']))
-        self.assertTrue(np.allclose(old.wv['world'], new.wv['world']))
-
-        self.assertTrue(np.allclose(old.wv.vectors_ngrams, new.wv.vectors_ngrams))
-        self.assertTrue(np.allclose(old.trainables.syn1neg, new.trainables.syn1neg))
-
-
 class HashCompatibilityTest(unittest.TestCase):
     def test_compatibility_true(self):
         m = FT_gensim.load(datapath('compatible-hash-true.model'))
@@ -1068,14 +1043,6 @@ class HashTest(unittest.TestCase):
         actual = {w: self.model.wv[w] for w in expected}
         self.assertTrue(np.allclose(expected['steamtrain'], actual['steamtrain'], atol=1e-5))
         self.assertTrue(np.allclose(expected['паровоз'], actual['паровоз'], atol=1e-5))
-
-
-class LoadFastTextFormatTest(unittest.TestCase):
-    def test(self):
-        old = load_native()
-        new = gensim.models.fasttext._load_fasttext_format(datapath('toy-model.bin'))
-
-        self.assertEquals(old.wv.buckets_word, new.wv.buckets_word)
 
 
 if __name__ == '__main__':
