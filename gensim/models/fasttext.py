@@ -701,7 +701,7 @@ class FastText(BaseWordEmbeddingsModel):
             sentences=sentences, corpus_file=corpus_file, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
             queue_factor=queue_factor, report_delay=report_delay, callbacks=callbacks)
-        self.wv.calculate_vectors()
+        self.wv.adjust_vectors()
 
     def init_sims(self, replace=False):
         """

@@ -2203,14 +2203,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         self.num_ngram_vectors = self.bucket
         self.hash2index = {i: i for i in range(self.bucket)}
 
-        hash_fn = _ft_hash if self.compatible_hash else _ft_hash_broken
-        for w, vocab in self.vocab.items():
-            word_ngrams = _compute_ngrams(w, self.min_n, self.max_n)
-            for word_ngram in word_ngrams:
-                vec_idx = self.hash2index[hash_fn(word_ngram) % self.bucket]
-                self.vectors[vocab.index] += np.array(self.vectors_ngrams[vec_idx])
-
-            self.vectors[vocab.index] /= (len(word_ngrams) + 1)
+        self.adjust_vectors()
 
         #
         # Leave this to be initialized later (by init_ngrams_weights or
@@ -2218,17 +2211,22 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         #
         self.buckets_word = None
 
-    def calculate_vectors(self):
-        """Calculate vectors for words in vocabulary and stores them in `vectors`."""
+    def adjust_vectors(self):
+        """Adjust the vectors for words in the vocabulary.
+
+        The adjustment relies on the vectors of the ngrams making up each
+        individual word.
+
+        """
         hash_fn = _ft_hash if self.compatible_hash else _ft_hash_broken
 
         for w, v in self.vocab.items():
             word_vec = np.copy(self.vectors_vocab[v.index])
             ngrams = _compute_ngrams(w, self.min_n, self.max_n)
-            ngram_weights = self.vectors_ngrams
             for ngram in ngrams:
-                word_vec += ngram_weights[self.hash2index[hash_fn(ngram) % self.bucket]]
-            word_vec /= (len(ngrams) + 1)
+                ngram_index = self.hash2index[hash_fn(ngram) % self.bucket]
+                word_vec += self.vectors_ngrams[ngram_index]
+            word_vec /= len(ngrams) + 1
             self.vectors[v.index] = word_vec
 
 
