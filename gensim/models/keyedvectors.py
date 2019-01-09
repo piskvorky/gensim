@@ -2186,16 +2186,19 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         self.vectors = np.array(vectors[:vocab_words, :])
         self.vectors_vocab = np.array(vectors[:vocab_words, :])
         self.vectors_ngrams = np.array(vectors[vocab_words:, :])
-        self.num_ngram_vectors = self.bucket
-        self.hash2index = {i: i for i in range(self.bucket)}
+
+        self.hash2index = {}
+        ngram_indices, self.buckets_word = _process_fasttext_vocab(
+            self.vocab.items(),
+            self.min_n,
+            self.max_n,
+            self.bucket,
+            _ft_hash if self.compatible_hash else _ft_hash_broken,
+            self.hash2index
+        )
+        self.num_ngram_vectors = len(ngram_indices)
 
         self.adjust_vectors()
-
-        #
-        # Leave this to be initialized later (by init_ngrams_weights or
-        # update_ngrams_weights)
-        #
-        self.buckets_word = None
 
     def adjust_vectors(self):
         """Adjust the vectors for words in the vocabulary.

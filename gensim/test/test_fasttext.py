@@ -929,6 +929,7 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         native = load_native()
 
         self.assertEqual(trained.bucket, native.bucket)
+        self.assertEqual(trained.num_ngram_vectors, native.num_ngram_vectors)
 
         trained_vocab = {key: value.count for (key, value) in trained.wv.vocab.items()}
         native_vocab = {key: value.count for (key, value) in native.wv.vocab.items()}
