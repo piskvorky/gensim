@@ -922,7 +922,10 @@ def compare_wv(a, b, t):
     t.assertEqual(a.vectors_vocab.shape, b.vectors_vocab.shape)
     # t.assertTrue(np.allclose(a.vectors_vocab, b.vectors_vocab))
 
-    t.assertEqual(a.vectors_ngrams.shape, b.vectors_ngrams.shape)
+    #
+    # Only if match_gensim=True in init_post_load
+    #
+    # t.assertEqual(a.vectors_ngrams.shape, b.vectors_ngrams.shape)
 
 
 def compare_nn(a, b, t):
@@ -931,11 +934,14 @@ def compare_nn(a, b, t):
     #
     t.assertEqual(a.syn1neg.shape, b.syn1neg.shape)
 
-    t.assertEqual(a.vectors_ngrams_lockf.shape, b.vectors_ngrams_lockf.shape)
-    t.assertTrue(np.allclose(a.vectors_ngrams_lockf, b.vectors_ngrams_lockf))
+    #
+    # Only if match_gensim=True in init_post_load
+    #
+    # t.assertEqual(a.vectors_ngrams_lockf.shape, b.vectors_ngrams_lockf.shape)
+    # t.assertTrue(np.allclose(a.vectors_ngrams_lockf, b.vectors_ngrams_lockf))
 
-    t.assertEqual(a.vectors_vocab_lockf.shape, b.vectors_vocab_lockf.shape)
-    t.assertTrue(np.allclose(a.vectors_vocab_lockf, b.vectors_vocab_lockf))
+    # t.assertEqual(a.vectors_vocab_lockf.shape, b.vectors_vocab_lockf.shape)
+    # t.assertTrue(np.allclose(a.vectors_vocab_lockf, b.vectors_vocab_lockf))
 
 
 def compare_vocabulary(a, b, t):
@@ -953,6 +959,24 @@ def compare_vocabulary(a, b, t):
 class NativeTrainingContinuationTest(unittest.TestCase):
     maxDiff = None
 
+    def setUp(self):
+        #
+        # $ echo "quick brown fox jumps over lazy dog" | ./fasttext print-word-vectors gensim/test/test_data/toy-model.bin  # noqa: E501
+        #
+        expected = {
+            u"quick": [0.023393, 0.11499, 0.11684, -0.13349, 0.022543],
+            u"brown": [0.015288, 0.050404, -0.041395, -0.090371, 0.06441],
+            u"fox": [0.061692, 0.082914, 0.020081, -0.039159, 0.03296],
+            u"jumps": [0.070107, 0.081465, 0.051763, 0.012084, 0.0050402],
+            u"over": [0.055023, 0.03465, 0.01648, -0.11129, 0.094555],
+            u"lazy": [-0.022103, -0.020126, -0.033612, -0.049473, 0.0054174],
+            u"dog": [0.084983, 0.09216, 0.020204, -0.13616, 0.01118],
+        }
+        self.oov_expected = {
+            word: np.array(arr, dtype=np.float32)
+            for word, arr in expected.items()
+        }
+
     def test_in_vocab(self):
         """Test for correct representation of in-vocab words."""
         native = load_native()
@@ -966,22 +990,21 @@ class NativeTrainingContinuationTest(unittest.TestCase):
     def test_out_of_vocab(self):
         """Test for correct representation of out-of-vocab words."""
         native = load_native()
-        #
-        # $ echo "quick brown fox jumps over lazy dog" | ./fasttext print-word-vectors gensim/test/test_data/toy-model.bin  # noqa: E501
-        #
-        expected = {
-            u"quick": [0.023393, 0.11499, 0.11684, -0.13349, 0.022543],
-            u"brown": [0.015288, 0.050404, -0.041395, -0.090371, 0.06441],
-            u"fox": [0.061692, 0.082914, 0.020081, -0.039159, 0.03296],
-            u"jumps": [0.070107, 0.081465, 0.051763, 0.012084, 0.0050402],
-            u"over": [0.055023, 0.03465, 0.01648, -0.11129, 0.094555],
-            u"lazy": [-0.022103, -0.020126, -0.033612, -0.049473, 0.0054174],
-            u"dog": [0.084983, 0.09216, 0.020204, -0.13616, 0.01118],
-        }
-        expected = {word: np.array(arr, dtype=np.float32) for word, arr in expected.items()}
 
-        for word, expected_vector in expected.items():
+        for word, expected_vector in self.oov_expected.items():
             actual_vector = native.wv.word_vec(word)
+            self.assertTrue(np.allclose(expected_vector, actual_vector, atol=1e-5))
+
+    @unittest.skip('this test does not pass currently, I suspect a bug in our FT implementation')
+    def test_out_of_vocab_gensim(self):
+        """Test whether gensim gives similar results to FB for OOV words.
+
+        Seems to be broken for our toy model.
+        """
+        model = train_gensim()
+
+        for word, expected_vector in self.oov_expected.items():
+            actual_vector = model.wv.word_vec(word)
             self.assertTrue(np.allclose(expected_vector, actual_vector, atol=1e-5))
 
     def test_sanity(self):
@@ -990,7 +1013,10 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         native = load_native()
 
         self.assertEqual(trained.bucket, native.bucket)
-        self.assertEqual(trained.num_ngram_vectors, native.num_ngram_vectors)
+        #
+        # Only if match_gensim=True in init_post_load
+        #
+        # self.assertEqual(trained.num_ngram_vectors, native.num_ngram_vectors)
 
         compare_wv(trained.wv, native.wv, self)
         compare_vocabulary(trained.vocabulary, native.vocabulary, self)
