@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def s_one_pre(topics):
-    """Performs segmentation on a list of topics.
+    r"""Performs segmentation on a list of topics.
 
     Notes
     -----
@@ -54,9 +54,9 @@ def s_one_pre(topics):
 
 
 def s_one_one(topics):
-    """Perform segmentation on a list of topics.
+    r"""Perform segmentation on a list of topics.
     Segmentation is defined as
-    :math:`s_{one} = {(W', W^{*}) | W' = {w_i}; W^{*} = {w_j}; w_{i}, w_{j} \in W; i \\neq j}`.
+    :math:`s_{one} = {(W', W^{*}) | W' = {w_i}; W^{*} = {w_j}; w_{i}, w_{j} \in W; i \neq j}`.
 
     Parameters
     ----------
@@ -96,7 +96,7 @@ def s_one_one(topics):
 
 
 def s_one_set(topics):
-    """Perform s_one_set segmentation on a list of topics.
+    r"""Perform s_one_set segmentation on a list of topics.
     Segmentation is defined as
     :math:`s_{set} = {(W', W^{*}) | W' = {w_i}; w_{i} \in W; W^{*} = W}`
 

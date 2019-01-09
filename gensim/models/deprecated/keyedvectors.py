@@ -86,7 +86,7 @@ except ImportError:
 try:
     from pyemd import emd
     PYEMD_EXT = True
-except ImportError:
+except (ImportError, ValueError):
     PYEMD_EXT = False
 
 from numpy import dot, zeros, dtype, float32 as REAL,\
@@ -98,7 +98,7 @@ import numpy as np
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.corpora.dictionary import Dictionary
 from six import string_types, iteritems
-from six.moves import xrange
+from six.moves import range
 from scipy import stats
 
 
@@ -239,7 +239,7 @@ class KeyedVectorsBase(utils.SaveLoad):
 
             if binary:
                 binary_len = dtype(REAL).itemsize * vector_size
-                for _ in xrange(vocab_size):
+                for _ in range(vocab_size):
                     # mixed text and binary: read text first, then binary
                     word = []
                     while True:
@@ -254,7 +254,7 @@ class KeyedVectorsBase(utils.SaveLoad):
                     weights = fromstring(fin.read(binary_len), dtype=REAL)
                     add_word(word, weights)
             else:
-                for line_no in xrange(vocab_size):
+                for line_no in range(vocab_size):
                     line = fin.readline()
                     if line == b'':
                         raise EOFError("unexpected end of input; is count incorrect or file otherwise damaged?")
@@ -1084,7 +1084,7 @@ class EuclideanKeyedVectors(KeyedVectorsBase):
         if getattr(self, 'syn0norm', None) is None or replace:
             logger.info("precomputing L2-norms of word weight vectors")
             if replace:
-                for i in xrange(self.syn0.shape[0]):
+                for i in range(self.syn0.shape[0]):
                     self.syn0[i, :] /= sqrt((self.syn0[i, :] ** 2).sum(-1))
                 self.syn0norm = self.syn0
             else:
