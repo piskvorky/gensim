@@ -1052,10 +1052,7 @@ def _load_fasttext_format(model_file, encoding='utf-8'):
 
     model.num_original_vectors = m.vectors_ngrams.shape[0]
 
-    model.wv.vectors_ngrams = m.vectors_ngrams
-    model.wv.init_ngrams_post_load(fin.name)
-    model.wv.init_vectors_vocab()
-    model.wv.buckets_word = None
+    model.wv.init_post_load(m.vectors_ngrams)
 
     #
     # This check needs to happen here, because init_ngrams_post_load will
@@ -1065,6 +1062,7 @@ def _load_fasttext_format(model_file, encoding='utf-8'):
 
     model.trainables.init_post_load(model, m.hidden_output)
 
+    logger.info("loaded %s weight matrix for fastText model from %s", m.vectors_ngrams.shape, fin.name)
     return model
 
 
