@@ -11,12 +11,14 @@ Follows scikit-learn API conventions to facilitate using gensim along with sciki
 
 Examples
 --------
->>> from gensim.test.utils import common_corpus, common_dictionary
->>> from gensim.sklearn_api import LdaTransformer
->>>
->>> # Reduce each document to 2 dimensions (topics) using the sklearn interface.
->>> model = LdaTransformer(num_topics=2, id2word=common_dictionary, iterations=20, random_state=1)
->>> docvecs = model.fit_transform(common_corpus)
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import common_corpus, common_dictionary
+    >>> from gensim.sklearn_api import LdaTransformer
+    >>>
+    >>> # Reduce each document to 2 dimensions (topics) using the sklearn interface.
+    >>> model = LdaTransformer(num_topics=2, id2word=common_dictionary, iterations=20, random_state=1)
+    >>> docvecs = model.fit_transform(common_corpus)
 
 """
 import numpy as np
@@ -60,8 +62,8 @@ class LdaTransformer(TransformerMixin, BaseEstimator):
             our a-priori belief for the each topics' probability.
             Alternatively default prior selecting strategies can be employed by supplying a string:
 
-                * 'asymmetric': Uses a fixed normalized assymetric prior of `1.0 / topicno`.
-                * 'default': Learns an assymetric prior from the corpus.
+                * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / topicno`.
+                * 'auto': Learns an asymmetric prior from the corpus.
         eta : {float, np.array, str}, optional
             A-priori belief on word probability, this can be:
 

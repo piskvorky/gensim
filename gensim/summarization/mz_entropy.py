@@ -6,7 +6,7 @@
 
 from gensim.summarization.textcleaner import tokenize_by_word as _tokenize_by_word
 from gensim.utils import to_unicode
-import numpy
+import numpy as np
 import scipy
 
 
@@ -57,20 +57,15 @@ def mz_keywords(text, blocksize=1024, scores=False, split=False, weighted=True, 
     text = to_unicode(text)
     words = [word for word in _tokenize_by_word(text)]
     vocab = sorted(set(words))
-    word_counts = numpy.array(
-        [
-            [words[i:i + blocksize].count(word) for word in vocab]
-            for i in range(0, len(words), blocksize)
-        ]
-    ).astype('d')
+    word_counts = count_freqs_by_blocks(words, vocab, blocksize)
     n_blocks = word_counts.shape[0]
     totals = word_counts.sum(axis=0)
     n_words = totals.sum()
     p = word_counts / totals
-    log_p = numpy.log2(p)
-    h = numpy.nan_to_num(p * log_p).sum(axis=0)
+    log_p = np.log2(p)
+    h = np.nan_to_num(p * log_p).sum(axis=0)
     analytic = __analytic_entropy(blocksize, n_blocks, n_words)
-    h += analytic(totals).astype('d')
+    h += analytic(totals).astype('d', copy=False)
     if weighted:
         h *= totals / n_words
     if threshold == 'auto':
@@ -83,12 +78,41 @@ def mz_keywords(text, blocksize=1024, scores=False, split=False, weighted=True, 
     return result
 
 
+def count_freqs_by_blocks(words, vocab, blocksize):
+    """Count word frequencies in chunks
+
+    Parameters
+    ----------
+    words: list(str)
+        List of all words.
+    vocab: list(str)
+        List of words in vocabulary.
+    blocksize: int
+        Size of blocks to use for count.
+
+    Returns
+    -------
+    results: numpy.array(list(double))
+        Array of list of word frequencies in one chunk.
+        The order of word frequencies is the same as words in vocab.
+    """
+    word2ind = {word: i for i, word in enumerate(vocab)}
+
+    word_counts = []
+    for i in range(0, len(words), blocksize):
+        counts = [0] * len(vocab)
+        for word in words[i: i + blocksize]:
+            counts[word2ind[word]] += 1
+        word_counts.append(counts)
+    return np.array(word_counts, dtype=np.double)
+
+
 def __log_combinations_inner(n, m):
     """Calculates the logarithm of n!/m!(n-m)!"""
-    return -(numpy.log(n + 1) + scipy.special.betaln(n - m + 1, m + 1))
+    return -(np.log(n + 1) + scipy.special.betaln(n - m + 1, m + 1))
 
 
-__log_combinations = numpy.frompyfunc(__log_combinations_inner, 2, 1)
+__log_combinations = np.frompyfunc(__log_combinations_inner, 2, 1)
 
 
 def __marginal_prob(blocksize, n_words):
@@ -97,23 +121,31 @@ def __marginal_prob(blocksize, n_words):
         """Marginal probability of a word that occurs n times in the document
            occurring m times in a given block"""
 
-        return numpy.exp(
-            __log_combinations(n, m) +
-            __log_combinations(n_words - n, blocksize - m) -
-            __log_combinations(n_words, blocksize)
+        return np.exp(
+            __log_combinations(n, m)
+            + __log_combinations(n_words - n, blocksize - m)
+            - __log_combinations(n_words, blocksize)
         )
 
-    return numpy.frompyfunc(marginal_prob, 2, 1)
+    return np.frompyfunc(marginal_prob, 2, 1)
 
 
 def __analytic_entropy(blocksize, n_blocks, n_words):
     marginal = __marginal_prob(blocksize, n_words)
+    cache = {1: 0.0}  # special case
 
     def analytic_entropy(n):
         """Predicted entropy for a word that occurs n times in the document"""
-        m = numpy.arange(1, min(blocksize, n) + 1).astype('d')
+        n = int(n)
+        if n in cache:
+            return cache[n]
+        m = np.arange(1, min(blocksize, n) + 1, dtype=np.double)
         p = m / n
-        elements = numpy.nan_to_num(p * numpy.log2(p)) * marginal(n, m)
-        return -n_blocks * elements.sum()
+        # m >= 1, so p > 0 and np.log2(p) != nan
+        elements = (p * np.log2(p)) * marginal(n, m)
+        result = -n_blocks * elements.sum()
 
-    return numpy.frompyfunc(analytic_entropy, 1, 1)
+        cache[n] = result
+        return result
+
+    return np.frompyfunc(analytic_entropy, 1, 1)

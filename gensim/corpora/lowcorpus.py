@@ -14,7 +14,7 @@ import logging
 from gensim import utils
 from gensim.corpora import IndexedCorpus
 from six import iterkeys
-from six.moves import xrange, zip as izip
+from six.moves import zip, range
 
 
 logger = logging.getLogger(__name__)
@@ -60,20 +60,22 @@ class LowCorpus(IndexedCorpus):
 
     Examples
     --------
-    >>> from gensim.test.utils import datapath, get_tmpfile, common_texts
-    >>> from gensim.corpora import LowCorpus
-    >>> from gensim.corpora import Dictionary
-    >>>
-    >>> # Prepare needed data
-    >>> dictionary = Dictionary(common_texts)
-    >>> corpus = [dictionary.doc2bow(doc) for doc in common_texts]
-    >>>
-    >>> # Write corpus in GibbsLda++ format to disk
-    >>> output_fname = get_tmpfile("corpus.low")
-    >>> LowCorpus.serialize(output_fname, corpus, dictionary)
-    >>>
-    >>> # Read corpus
-    >>> loaded_corpus = LowCorpus(output_fname)
+    .. sourcecode:: pycon
+
+        >>> from gensim.test.utils import get_tmpfile, common_texts
+        >>> from gensim.corpora import LowCorpus
+        >>> from gensim.corpora import Dictionary
+        >>>
+        >>> # Prepare needed data
+        >>> dictionary = Dictionary(common_texts)
+        >>> corpus = [dictionary.doc2bow(doc) for doc in common_texts]
+        >>>
+        >>> # Write corpus in GibbsLda++ format to disk
+        >>> output_fname = get_tmpfile("corpus.low")
+        >>> LowCorpus.serialize(output_fname, corpus, dictionary)
+        >>>
+        >>> # Read corpus
+        >>> loaded_corpus = LowCorpus(output_fname)
 
     """
     def __init__(self, fname, id2word=None, line2words=split_on_space):
@@ -107,7 +109,7 @@ class LowCorpus(IndexedCorpus):
                 all_terms.update(word for word, wordCnt in doc)
             all_terms = sorted(all_terms)  # sort the list of all words; rank in that list = word's integer id
             # build a mapping of word id(int) -> word (string)
-            self.id2word = dict(izip(xrange(len(all_terms)), all_terms))
+            self.id2word = dict(zip(range(len(all_terms)), all_terms))
         else:
             logger.info("using provided word mapping (%i ids)", len(id2word))
             self.id2word = id2word
@@ -263,14 +265,17 @@ class LowCorpus(IndexedCorpus):
 
         Examples
         --------
-        >>> from gensim.test.utils import datapath
-        >>> from gensim.corpora import LowCorpus
-        >>>
-        >>> data = LowCorpus(datapath("testcorpus.low"))
-        >>> data.docbyoffset(1)  # end of first line
-        []
-        >>> data.docbyoffset(2)  # start of second line
-        [(0, 1), (3, 1), (4, 1)]
+
+        .. sourcecode:: pycon
+
+            >>> from gensim.test.utils import datapath
+            >>> from gensim.corpora import LowCorpus
+            >>>
+            >>> data = LowCorpus(datapath("testcorpus.low"))
+            >>> data.docbyoffset(1)  # end of first line
+            []
+            >>> data.docbyoffset(2)  # start of second line
+            [(0, 1), (3, 1), (4, 1)]
 
         """
         with utils.smart_open(self.fname) as f:

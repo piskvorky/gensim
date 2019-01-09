@@ -29,48 +29,58 @@ Usage examples
 
 Train an LDA model using a Gensim corpus
 
->>> from gensim.test.utils import common_texts
->>> from gensim.corpora.dictionary import Dictionary
->>>
->>> # Create a corpus from a list of texts
->>> common_dictionary = Dictionary(common_texts)
->>> common_corpus = [common_dictionary.doc2bow(text) for text in common_texts]
->>>
->>> # Train the model on the corpus.
->>> lda = LdaModel(common_corpus, num_topics=10)
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import common_texts
+    >>> from gensim.corpora.dictionary import Dictionary
+    >>>
+    >>> # Create a corpus from a list of texts
+    >>> common_dictionary = Dictionary(common_texts)
+    >>> common_corpus = [common_dictionary.doc2bow(text) for text in common_texts]
+    >>>
+    >>> # Train the model on the corpus.
+    >>> lda = LdaModel(common_corpus, num_topics=10)
 
 Save a model to disk, or reload a pre-trained model
 
->>> from gensim.test.utils import datapath
->>>
->>> # Save model to disk.
->>> temp_file = datapath("model")
->>> lda.save(temp_file)
->>>
->>> # Load a potentially pretrained model from disk.
->>> lda = LdaModel.load(temp_file)
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import datapath
+    >>>
+    >>> # Save model to disk.
+    >>> temp_file = datapath("model")
+    >>> lda.save(temp_file)
+    >>>
+    >>> # Load a potentially pretrained model from disk.
+    >>> lda = LdaModel.load(temp_file)
 
 Query, the model using new, unseen documents
 
->>> # Create a new corpus, made of previously unseen documents.
->>> other_texts = [
-...     ['computer', 'time', 'graph'],
-...     ['survey', 'response', 'eps'],
-...     ['human', 'system', 'computer']
-... ]
->>> other_corpus = [common_dictionary.doc2bow(text) for text in other_texts]
->>>
->>> unseen_doc = other_corpus[0]
->>> vector = lda[unseen_doc] # get topic probability distribution for a document
+.. sourcecode:: pycon
+
+    >>> # Create a new corpus, made of previously unseen documents.
+    >>> other_texts = [
+    ...     ['computer', 'time', 'graph'],
+    ...     ['survey', 'response', 'eps'],
+    ...     ['human', 'system', 'computer']
+    ... ]
+    >>> other_corpus = [common_dictionary.doc2bow(text) for text in other_texts]
+    >>>
+    >>> unseen_doc = other_corpus[0]
+    >>> vector = lda[unseen_doc]  # get topic probability distribution for a document
 
 Update the model by incrementally training on the new corpus
 
->>> lda.update(other_corpus)
->>> vector = lda[unseen_doc]
+.. sourcecode:: pycon
+
+    >>> lda.update(other_corpus)
+    >>> vector = lda[unseen_doc]
 
 A lot of parameters can be tuned to optimize training for your specific case
 
->>> lda = LdaModel(common_corpus, num_topics=50, alpha='auto', eval_every=5)  # learn asymmetric alpha from data
+.. sourcecode:: pycon
+
+    >>> lda = LdaModel(common_corpus, num_topics=50, alpha='auto', eval_every=5)  # learn asymmetric alpha from data
 
 """
 
@@ -82,7 +92,7 @@ import numpy as np
 import six
 from scipy.special import gammaln, psi  # gamma function utils
 from scipy.special import polygamma
-from six.moves import xrange
+from six.moves import range
 from collections import defaultdict
 
 from gensim import interfaces, utils, matutils
@@ -95,13 +105,6 @@ from gensim.models.callbacks import Callback
 
 
 logger = logging.getLogger(__name__)
-
-# Epsilon (very small) values used by each expected data type instead of 0, to avoid Arithmetic Errors.
-DTYPE_TO_EPS = {
-    np.float16: 1e-5,
-    np.float32: 1e-35,
-    np.float64: 1e-100,
-}
 
 
 def update_dir_prior(prior, N, logphat, rho):
@@ -135,11 +138,11 @@ def update_dir_prior(prior, N, logphat, rho):
 
     dprior = -(gradf - b) / q
 
-    if all(rho * dprior + prior > 0):
-        prior += rho * dprior
+    updated_prior = rho * dprior + prior
+    if all(updated_prior > 0):
+        prior = updated_prior
     else:
-        logger.warning("updated prior not positive")
-
+        logger.warning("updated prior is not positive")
     return prior
 
 
@@ -315,21 +318,27 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     -------
     Initialize a model using a Gensim corpus
 
-    >>> from gensim.test.utils import common_corpus
-    >>>
-    >>> lda = LdaModel(common_corpus, num_topics=10)
+    .. sourcecode:: pycon
+
+        >>> from gensim.test.utils import common_corpus
+        >>>
+        >>> lda = LdaModel(common_corpus, num_topics=10)
 
     You can then infer topic distributions on new, unseen documents.
 
-    >>> doc_bow = [(1, 0.3), (2, 0.1), (0, 0.09)]
-    >>> doc_lda = lda[doc_bow]
+    .. sourcecode:: pycon
+
+        >>> doc_bow = [(1, 0.3), (2, 0.1), (0, 0.09)]
+        >>> doc_lda = lda[doc_bow]
 
     The model can be updated (trained) with new documents.
 
-    >>> # In practice (corpus =/= initial training corpus), but we use the same here for simplicity.
-    >>> other_corpus = common_corpus
-    >>>
-    >>> lda.update(other_corpus)
+    .. sourcecode:: pycon
+
+        >>> # In practice (corpus =/= initial training corpus), but we use the same here for simplicity.
+        >>> other_corpus = common_corpus
+        >>>
+        >>> lda.update(other_corpus)
 
     Model persistency is achieved through :meth:`~gensim.models.ldamodel.LdaModel.load` and
     :meth:`~gensim.models.ldamodel.LdaModel.save` methods.
@@ -355,7 +364,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Mapping from word IDs to words. It is used to determine the vocabulary size, as well as for
             debugging and topic printing.
         distributed : bool, optional
-            Whether distributed computing should be used to accerelate training.
+            Whether distributed computing should be used to accelerate training.
         chunksize :  int, optional
             Number of documents to be used in each training chunk.
         passes : int, optional
@@ -369,7 +378,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Alternatively default prior selecting strategies can be employed by supplying a string:
 
                 * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / topicno`.
-                * 'default': Learns an asymmetric prior from the corpus.
+                * 'auto': Learns an asymmetric prior from the corpus (not available if `distributed==True`).
         eta : {float, np.array, str}, optional
             A-priori belief on word probability, this can be:
 
@@ -410,12 +419,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Data-type to use during calculations inside model. All inputs are also converted.
 
         """
-        if dtype not in DTYPE_TO_EPS:
-            raise ValueError(
-                "Incorrect 'dtype', please choose one of {}".format(
-                    ", ".join("numpy.{}".format(tp.__name__) for tp in sorted(DTYPE_TO_EPS))))
-
-        self.dtype = dtype
+        self.dtype = np.finfo(dtype).dtype
 
         # store user-supplied parameters
         self.id2word = id2word
@@ -530,8 +534,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             If `name` == 'alpha', then the prior can be:
 
                 * an 1D array of length equal to the number of expected topics,
-                * 'asymmetric': Uses a fixed normalized assymetric prior of `1.0 / topicno`.
-                * 'default': Learns an assymetric prior from the corpus.
+                * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / topicno`.
+                * 'auto': Learns an asymmetric prior from the corpus.
         name : {'alpha', 'eta'}
             Whether the `prior` is parameterized by the alpha vector (1 parameter per topic)
             or by the eta (1 parameter per unique term in the vocabulary).
@@ -551,15 +555,17 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if isinstance(prior, six.string_types):
             if prior == 'symmetric':
                 logger.info("using symmetric %s at %s", name, 1.0 / self.num_topics)
-                init_prior = np.asarray([1.0 / self.num_topics for i in xrange(prior_shape)], dtype=self.dtype)
+                init_prior = np.fromiter((1.0 / self.num_topics for i in range(prior_shape)),
+                    dtype=self.dtype, count=prior_shape)
             elif prior == 'asymmetric':
-                init_prior = \
-                    np.asarray([1.0 / (i + np.sqrt(prior_shape)) for i in xrange(prior_shape)], dtype=self.dtype)
+                init_prior = np.fromiter((1.0 / (i + np.sqrt(prior_shape)) for i in range(prior_shape)),
+                    dtype=self.dtype, count=prior_shape)
                 init_prior /= init_prior.sum()
                 logger.info("using asymmetric %s %s", name, list(init_prior))
             elif prior == 'auto':
                 is_auto = True
-                init_prior = np.asarray([1.0 / self.num_topics for i in xrange(prior_shape)], dtype=self.dtype)
+                init_prior = np.fromiter((1.0 / self.num_topics for i in range(prior_shape)),
+                    dtype=self.dtype, count=prior_shape)
                 if name == 'alpha':
                     logger.info("using autotuned %s, starting with %s", name, list(init_prior))
             else:
@@ -568,8 +574,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             init_prior = np.asarray(prior, dtype=self.dtype)
         elif isinstance(prior, np.ndarray):
             init_prior = prior.astype(self.dtype, copy=False)
-        elif isinstance(prior, np.number) or isinstance(prior, numbers.Real):
-            init_prior = np.asarray([prior] * prior_shape, dtype=self.dtype)
+        elif isinstance(prior, (np.number, numbers.Real)):
+            init_prior = np.fromiter((prior for i in range(prior_shape)), dtype=self.dtype)
         else:
             raise ValueError("%s must be either a np array of scalars, list of scalars, or scalar" % name)
 
@@ -649,13 +655,15 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # Inference code copied from Hoffman's `onlineldavb.py` (esp. the
         # Lee&Seung trick which speeds things up by an order of magnitude, compared
         # to Blei's original LDA-C code, cool!).
+        integer_types = six.integer_types + (np.integer,)
+        epsilon = np.finfo(self.dtype).eps
         for d, doc in enumerate(chunk):
-            if len(doc) > 0 and not isinstance(doc[0][0], six.integer_types + (np.integer,)):
+            if len(doc) > 0 and not isinstance(doc[0][0], integer_types):
                 # make sure the term IDs are ints, otherwise np will get upset
                 ids = [int(idx) for idx, _ in doc]
             else:
                 ids = [idx for idx, _ in doc]
-            cts = np.array([cnt for _, cnt in doc], dtype=self.dtype)
+            cts = np.fromiter((cnt for _, cnt in doc), dtype=self.dtype, count=len(doc))
             gammad = gamma[d, :]
             Elogthetad = Elogtheta[d, :]
             expElogthetad = expElogtheta[d, :]
@@ -664,11 +672,10 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             # The optimal phi_{dwk} is proportional to expElogthetad_k * expElogbetad_w.
             # phinorm is the normalizer.
             # TODO treat zeros explicitly, instead of adding epsilon?
-            eps = DTYPE_TO_EPS[self.dtype]
-            phinorm = np.dot(expElogthetad, expElogbetad) + eps
+            phinorm = np.dot(expElogthetad, expElogbetad) + epsilon
 
             # Iterate between gamma and phi until convergence
-            for _ in xrange(self.iterations):
+            for _ in range(self.iterations):
                 lastgamma = gammad
                 # We represent phi implicitly to save memory and time.
                 # Substituting the value of the optimal phi back into
@@ -676,7 +683,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 gammad = self.alpha + expElogthetad * np.dot(cts / phinorm, expElogbetad.T)
                 Elogthetad = dirichlet_expectation(gammad)
                 expElogthetad = np.exp(Elogthetad)
-                phinorm = np.dot(expElogthetad, expElogbetad) + eps
+                phinorm = np.dot(expElogthetad, expElogbetad) + epsilon
                 # If gamma hasn't changed much, we're done.
                 meanchange = mean_absolute_difference(gammad, lastgamma)
                 if meanchange < self.gamma_threshold:
@@ -931,7 +938,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             # initialize metrics list to store metric values after every epoch
             self.metrics = defaultdict(list)
 
-        for pass_ in xrange(passes):
+        for pass_ in range(passes):
             if self.dispatcher:
                 logger.info('initializing %s workers', self.numworkers)
                 self.dispatcher.reset(self.state)
@@ -1074,7 +1081,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             assert Elogthetad.dtype == self.dtype
 
             # E[log p(doc | theta, beta)]
-            score += np.sum(cnt * logsumexp(Elogthetad + Elogbeta[:, int(id)]) for id, cnt in doc)
+            score += sum(cnt * logsumexp(Elogthetad + Elogbeta[:, int(id)]) for id, cnt in doc)
 
             # E[log p(theta | alpha) - log q(theta | gamma)]; assumes alpha is a vector
             score += np.sum((self.alpha - gammad) * Elogthetad)
@@ -1082,7 +1089,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             score += gammaln(np.sum(self.alpha)) - gammaln(np.sum(gammad))
 
         # Compensate likelihood for when `corpus` above is only a sample of the whole corpus. This ensures
-        # that the likelihood is always rougly on the same scale.
+        # that the likelihood is always roughly on the same scale.
         score *= subsample_ratio
 
         # E[log p(beta | eta) - log q (beta | lambda)]; assumes eta is a scalar
@@ -1145,7 +1152,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             bestn = matutils.argsort(topic_, num_words, reverse=True)
             topic_ = [(self.id2word[id], topic_[id]) for id in bestn]
             if formatted:
-                topic_ = ' + '.join(['%.3f*"%s"' % (v, k) for k, v in topic_])
+                topic_ = ' + '.join('%.3f*"%s"' % (v, k) for k, v in topic_)
 
             shown.append((i, topic_))
             if log:
@@ -1270,7 +1277,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         minimum_probability : float
             Topics with an assigned probability lower than this threshold will be discarded.
         minimum_phi_value : float
-            f `per_word_topics` is True, this represents a lower bound on the term probabilities that are included.
+            If `per_word_topics` is True, this represents a lower bound on the term probabilities that are included.
              If set to None, a value of 1e-8 is used to prevent 0s.
         per_word_topics : bool
             If True, this function will also return two extra lists as explained in the "Returns" section.
@@ -1284,7 +1291,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Most probable topics per word. Each element in the list is a pair of a word's id, and a list of
             topics sorted by their relevance to this word. Only returned if `per_word_topics` was set to True.
         list of (int, list of float), optional
-            Phi relevance values, multipled by the feature length, for each word-topic combination.
+            Phi relevance values, multiplied by the feature length, for each word-topic combination.
             Each element in the list is a pair of a word's id and a list of the phi values between this word and
             each topic. Only returned if `per_word_topics` was set to True.
 
@@ -1407,12 +1414,15 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         --------
         Get the differences between each pair of topics inferred by two models
 
-        >>> from gensim.models.ldamulticore import LdaMulticore
-        >>> from gensim.test.utils import datapath
-        >>>
-        >>> m1, m2 = LdaMulticore.load(datapath("lda_3_0_1_model")), LdaMulticore.load(datapath("ldamodel_python_3_5"))
-        >>> mdiff, annotation = m1.diff(m2)
-        >>> topic_diff = mdiff # get matrix with difference for each topic pair from `m1` and `m2`
+        .. sourcecode:: pycon
+
+            >>> from gensim.models.ldamulticore import LdaMulticore
+            >>> from gensim.test.utils import datapath
+            >>>
+            >>> m1 = LdaMulticore.load(datapath("lda_3_0_1_model"))
+            >>> m2 = LdaMulticore.load(datapath("ldamodel_python_3_5"))
+            >>> mdiff, annotation = m1.diff(m2)
+            >>> topic_diff = mdiff  # get matrix with difference for each topic pair from `m1` and `m2`
 
         """
         distances = {
@@ -1434,8 +1444,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         t1_size, t2_size = d1.shape[0], d2.shape[0]
         annotation_terms = None
 
-        fst_topics = [{w for (w, _) in self.show_topic(topic, topn=num_words)} for topic in xrange(t1_size)]
-        snd_topics = [{w for (w, _) in other.show_topic(topic, topn=num_words)} for topic in xrange(t2_size)]
+        fst_topics = [{w for (w, _) in self.show_topic(topic, topn=num_words)} for topic in range(t1_size)]
+        snd_topics = [{w for (w, _) in other.show_topic(topic, topn=num_words)} for topic in range(t2_size)]
 
         if distance == "jaccard":
             d1, d2 = fst_topics, snd_topics
@@ -1604,10 +1614,12 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         --------
         Large arrays can be memmap'ed back as read-only (shared memory) by setting `mmap='r'`:
 
-        >>> from gensim.test.utils import datapath
-        >>>
-        >>> fname = datapath("lda_3_0_1_model")
-        >>> lda = LdaModel.load(fname, mmap='r')
+        .. sourcecode:: pycon
+
+            >>> from gensim.test.utils import datapath
+            >>>
+            >>> fname = datapath("lda_3_0_1_model")
+            >>> lda = LdaModel.load(fname, mmap='r')
 
         """
         kwargs['mmap'] = kwargs.get('mmap', None)

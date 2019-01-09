@@ -15,7 +15,7 @@ class BaseTopicModel(object):
             String representation of topic, like '-0.340 * "category" + 0.298 * "$M$" + 0.183 * "algebra" + ... '.
 
         """
-        return ' + '.join(['%.3f*"%s"' % (v, k) for k, v in self.show_topic(topicno, topn)])
+        return ' + '.join('%.3f*"%s"' % (v, k) for k, v in self.show_topic(topicno, topn))
 
     def print_topics(self, num_topics=20, num_words=10):
         """Get the most significant topics (alias for `show_topics()` method).

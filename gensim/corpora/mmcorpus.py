@@ -41,13 +41,14 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
 
     Example
     --------
-    >>> from gensim.corpora.mmcorpus import MmCorpus
-    >>> from gensim.test.utils import datapath
-    >>> import gensim.downloader as api
-    >>>
-    >>> corpus = MmCorpus(datapath('test_mmcorpus_with_index.mm'))
-    >>> for document in corpus:
-    ...     pass
+    .. sourcecode:: pycon
+
+        >>> from gensim.corpora.mmcorpus import MmCorpus
+        >>> from gensim.test.utils import datapath
+        >>>
+        >>> corpus = MmCorpus(datapath('test_mmcorpus_with_index.mm'))
+        >>> for document in corpus:
+        ...     pass
 
     """
     def __init__(self, fname):
@@ -107,14 +108,15 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
 
         Example
         -------
-        >>> from gensim.corpora.mmcorpus import MmCorpus
-        >>> from gensim.test.utils import datapath
-        >>> import gensim.downloader as api
-        >>>
-        >>> corpus = MmCorpus(datapath('test_mmcorpus_with_index.mm'))
-        >>>
-        >>> MmCorpus.save_corpus("random", corpus) # Do not do it, use `serialize` instead.
-        [97, 121, 169, 201, 225, 249, 258, 276, 303]
+        .. sourcecode:: pycon
+
+            >>> from gensim.corpora.mmcorpus import MmCorpus
+            >>> from gensim.test.utils import datapath
+            >>>
+            >>> corpus = MmCorpus(datapath('test_mmcorpus_with_index.mm'))
+            >>>
+            >>> MmCorpus.save_corpus("random", corpus)  # Do not do it, use `serialize` instead.
+            [97, 121, 169, 201, 225, 249, 258, 276, 303]
 
         """
         logger.info("storing corpus in Matrix Market format to %s", fname)
