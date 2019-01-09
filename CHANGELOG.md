@@ -304,7 +304,7 @@ Apart from the **massive overhaul of all Gensim documentation** (including docst
     - `gensim.parsing.*` ➡ `gensim.utils.text_utils`
 
 
-## 3.3.0, 2018-01-02
+## 3.3.0, 2018-02-02
 
 :star2: New features:
 * Re-designed all "*2vec" implementations (__[@manneshiva](https://github.com/manneshiva)__, [#1777](https://github.com/RaRe-Technologies/gensim/pull/1777))

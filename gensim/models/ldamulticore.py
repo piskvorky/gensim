@@ -90,7 +90,7 @@ from gensim import utils
 from gensim.models.ldamodel import LdaModel, LdaState
 
 import six
-from six.moves import queue, xrange
+from six.moves import queue, range
 from multiprocessing import Pool, Queue, cpu_count
 
 logger = logging.getLogger(__name__)
@@ -134,7 +134,6 @@ class LdaMulticore(LdaModel):
             Alternatively default prior selecting strategies can be employed by supplying a string:
 
                 * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / topicno`.
-                * 'auto': Learns an asymmetric prior from the corpus.
         eta : {float, np.array, str}, optional
             A-priori belief on word probability, this can be:
 
@@ -259,7 +258,7 @@ class LdaMulticore(LdaModel):
 
         logger.info("training LDA model using %i processes", self.workers)
         pool = Pool(self.workers, worker_e_step, (job_queue, result_queue,))
-        for pass_ in xrange(self.passes):
+        for pass_ in range(self.passes):
             queue_size, reallen = [0], 0
             other = LdaState(self.eta, self.state.sstats.shape)
 
@@ -277,9 +276,9 @@ class LdaMulticore(LdaModel):
                 if (force and merged_new and queue_size[0] == 0) or (not self.batch and (other.numdocs >= updateafter)):
                     self.do_mstep(rho(), other, pass_ > 0)
                     other.reset()
-                    if self.eval_every is not None and \
-                            ((force and queue_size[0] == 0) or
-                                 (self.eval_every != 0 and (self.num_updates / updateafter) % self.eval_every == 0)):
+                    if self.eval_every is not None \
+                            and ((force and queue_size[0] == 0)
+                            or (self.eval_every != 0 and (self.num_updates / updateafter) % self.eval_every == 0)):
                         self.log_perplexity(chunk, total_docs=lencorpus)
 
             chunk_stream = utils.grouper(corpus, self.chunksize, as_numpy=chunks_as_numpy)
