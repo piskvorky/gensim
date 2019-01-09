@@ -2116,22 +2116,16 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
             fname, self.vocab, self.vectors, fvocab=fvocab, binary=binary, total_vec=total_vec)
 
     def init_ngrams_weights(self, seed):
-        hash_fn = _ft_hash if self.compatible_hash else _ft_hash_broken
-
         self.hash2index = {}
-        self.buckets_word = {}
-        ngram_indices = []
-        for word, vocab in self.vocab.items():
-            buckets = []
-            for ngram in _compute_ngrams(word, self.min_n, self.max_n):
-                ngram_hash = hash_fn(ngram) % self.bucket
-                if ngram_hash not in self.hash2index:
-                    self.hash2index[ngram_hash] = len(ngram_indices)
-                    ngram_indices.append(ngram_hash)
-                buckets.append(self.hash2index[ngram_hash])
-            self.buckets_word[vocab.index] = np.array(buckets, dtype=np.uint32)
+        ngram_indices, self.buckets_word = _process_fasttext_vocab(
+            self.vocab.items(),
+            self.min_n,
+            self.max_n,
+            self.bucket,
+            _ft_hash if self.compatible_hash else _ft_hash_broken,
+            self.hash2index
+        )
         self.num_ngram_vectors = len(ngram_indices)
-
         logger.info("Total number of ngrams is %d", self.num_ngram_vectors)
 
         rand_obj = np.random
@@ -2144,25 +2138,17 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         self.vectors_ngrams = rand_obj.uniform(lo, hi, ngrams_shape).astype(REAL)
 
     def update_ngrams_weights(self, seed, old_vocab_len):
-        hash_fn = _ft_hash if self.compatible_hash else _ft_hash_broken
-
         old_hash2index_len = len(self.hash2index)
 
-        #
-        # NB. The loop structure looks similar to the above code.
-        #
-        self.buckets_word = {}
-        num_new_ngrams = 0
-        for word, vocab in self.vocab.items():
-            buckets = []
-            for ngram in _compute_ngrams(word, self.min_n, self.max_n):
-                ngram_hash = hash_fn(ngram) % self.bucket
-                if ngram_hash not in self.hash2index:
-                    self.hash2index[ngram_hash] = num_new_ngrams + old_hash2index_len
-                    num_new_ngrams += 1
-                buckets.append(self.hash2index[ngram_hash])
-            self.buckets_word[vocab.index] = np.array(buckets, dtype=np.uint32)
-
+        new_ngram_hashes, self.buckets_word = _process_fasttext_vocab(
+            self.vocab.items(),
+            self.min_n,
+            self.max_n,
+            self.bucket,
+            _ft_hash if self.compatible_hash else _ft_hash_broken,
+            self.hash2index
+        )
+        num_new_ngrams = len(new_ngram_hashes)
         self.num_ngram_vectors += num_new_ngrams
         logger.info("Number of new ngrams is %d", num_new_ngrams)
 
@@ -2228,6 +2214,40 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
                 word_vec += self.vectors_ngrams[ngram_index]
             word_vec /= len(ngrams) + 1
             self.vectors[v.index] = word_vec
+
+
+def _process_fasttext_vocab(iterable, min_n, max_n, num_buckets, hash_fn, hash2index):
+    #
+    # Performs a common operation for FastText weight initialization and
+    # updates: scan the vocabulary, calculate ngrams and their hashes, keep
+    # track of new ngrams, the buckets that each word relates to via its
+    # ngrams, etc.
+    #
+    # hash2index : dict
+    #   Updated in place.
+    # word_indices : dict
+    #   Keys are indices of entities in the vocabulary (words).  Values are
+    #   arrays containing indices into vectors_ngrams for each ngram of the
+    #   word.
+    # new_ngram_hashes : list
+    #   A list of hashes for newly encountered ngrams.  Each hash is modulo
+    #   num_buckets.
+    #
+    old_hash2index_len = len(hash2index)
+    word_indices = {}
+    new_ngram_hashes = []
+
+    for word, vocab in iterable:
+        wi = []
+        for ngram in _compute_ngrams(word, min_n, max_n):
+            ngram_hash = hash_fn(ngram) % num_buckets
+            if ngram_hash not in hash2index:
+                hash2index[ngram_hash] = old_hash2index_len + len(new_ngram_hashes)
+                new_ngram_hashes.append(ngram_hash)
+            wi.append(hash2index[ngram_hash])
+        word_indices[vocab.index] = np.array(wi, dtype=np.uint32)
+
+    return new_ngram_hashes, word_indices
 
 
 def _pad_random(m, new_rows, rand):
