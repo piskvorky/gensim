@@ -26,7 +26,7 @@ from testfixtures import log_capture
 try:
     from pyemd import emd  # noqa:F401
     PYEMD_EXT = True
-except ImportError:
+except (ImportError, ValueError):
     PYEMD_EXT = False
 
 
@@ -246,7 +246,7 @@ class TestWord2VecModel(unittest.TestCase):
                 terro.append(l)
             else:
                 others.append(l)
-        self.assertTrue(all(['terrorism' not in l for l in others]))
+        self.assertTrue(all('terrorism' not in l for l in others))
         model.build_vocab(others, update=trained_model)
         model.train(others, total_examples=model.corpus_count, epochs=model.epochs)
         self.assertFalse('terrorism' in model.wv.vocab)
@@ -593,12 +593,18 @@ class TestWord2VecModel(unittest.TestCase):
             self.assertFalse((unlocked1 == model.wv.vectors[1]).all())  # unlocked vector should vary
             self.assertTrue((locked0 == model.wv.vectors[0]).all())  # locked vector should not vary
 
-    def testAccuracy(self):
-        """Test Word2Vec accuracy and KeyedVectors accuracy give the same result"""
+    def testEvaluateWordAnalogies(self):
+        """Test that evaluating analogies on KeyedVectors give sane results"""
         model = word2vec.Word2Vec(LeeCorpus())
-        w2v_accuracy = model.wv.evaluate_word_analogies(datapath('questions-words.txt'))
-        kv_accuracy = model.wv.evaluate_word_analogies(datapath('questions-words.txt'))
-        self.assertEqual(w2v_accuracy, kv_accuracy)
+        score, sections = model.wv.evaluate_word_analogies(datapath('questions-words.txt'))
+        self.assertGreaterEqual(score, 0.0)
+        self.assertLessEqual(score, 1.0)
+        self.assertGreater(len(sections), 0)
+        # Check that dict contains the right keys
+        first_section = sections[0]
+        self.assertIn('section', first_section)
+        self.assertIn('correct', first_section)
+        self.assertIn('incorrect', first_section)
 
     def testEvaluateWordPairs(self):
         """Test Spearman and Pearson correlation coefficients give sane results on similarity datasets"""
@@ -1017,11 +1023,10 @@ class TestWord2VecModel(unittest.TestCase):
 # endclass TestWord2VecModel
 
 class TestWMD(unittest.TestCase):
+
+    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed or have some issues")
     def testNonzero(self):
         '''Test basic functionality with a test sentence.'''
-
-        if not PYEMD_EXT:
-            return
 
         model = word2vec.Word2Vec(sentences, min_count=2, seed=42, workers=1)
         sentence1 = ['human', 'interface', 'computer']
@@ -1031,11 +1036,9 @@ class TestWMD(unittest.TestCase):
         # Check that distance is non-zero.
         self.assertFalse(distance == 0.0)
 
+    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed or have some issues")
     def testSymmetry(self):
         '''Check that distance is symmetric.'''
-
-        if not PYEMD_EXT:
-            return
 
         model = word2vec.Word2Vec(sentences, min_count=2, seed=42, workers=1)
         sentence1 = ['human', 'interface', 'computer']
@@ -1044,11 +1047,9 @@ class TestWMD(unittest.TestCase):
         distance2 = model.wv.wmdistance(sentence2, sentence1)
         self.assertTrue(np.allclose(distance1, distance2))
 
+    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed or have some issues")
     def testIdenticalSentences(self):
         '''Check that the distance from a sentence to itself is zero.'''
-
-        if not PYEMD_EXT:
-            return
 
         model = word2vec.Word2Vec(sentences, min_count=1)
         sentence = ['survey', 'user', 'computer', 'system', 'response', 'time']

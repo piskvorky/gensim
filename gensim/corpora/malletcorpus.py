@@ -36,20 +36,22 @@ class MalletCorpus(LowCorpus):
 
     Examples
     --------
-    >>> from gensim.test.utils import datapath, get_tmpfile, common_texts
-    >>> from gensim.corpora import MalletCorpus
-    >>> from gensim.corpora import Dictionary
-    >>>
-    >>> # Prepare needed data
-    >>> dictionary = Dictionary(common_texts)
-    >>> corpus = [dictionary.doc2bow(doc) for doc in common_texts]
-    >>>
-    >>> # Write corpus in Mallet format to disk
-    >>> output_fname = get_tmpfile("corpus.mallet")
-    >>> MalletCorpus.serialize(output_fname, corpus, dictionary)
-    >>>
-    >>> # Read corpus
-    >>> loaded_corpus = MalletCorpus(output_fname)
+    .. sourcecode:: pycon
+
+        >>> from gensim.test.utils import get_tmpfile, common_texts
+        >>> from gensim.corpora import MalletCorpus
+        >>> from gensim.corpora import Dictionary
+        >>>
+        >>> # Prepare needed data
+        >>> dictionary = Dictionary(common_texts)
+        >>> corpus = [dictionary.doc2bow(doc) for doc in common_texts]
+        >>>
+        >>> # Write corpus in Mallet format to disk
+        >>> output_fname = get_tmpfile("corpus.mallet")
+        >>> MalletCorpus.serialize(output_fname, corpus, dictionary)
+        >>>
+        >>> # Read corpus
+        >>> loaded_corpus = MalletCorpus(output_fname)
 
     """
     def __init__(self, fname, id2word=None, metadata=False):
@@ -113,12 +115,15 @@ class MalletCorpus(LowCorpus):
 
         Examples
         --------
-        >>> from gensim.test.utils import datapath
-        >>> from gensim.corpora import MalletCorpus
-        >>>
-        >>> corpus = MalletCorpus(datapath("testcorpus.mallet"))
-        >>> corpus.line2doc("en computer human interface")
-        [(3, 1), (4, 1)]
+
+        .. sourcecode:: pycon
+
+            >>> from gensim.test.utils import datapath
+            >>> from gensim.corpora import MalletCorpus
+            >>>
+            >>> corpus = MalletCorpus(datapath("testcorpus.mallet"))
+            >>> corpus.line2doc("en computer human interface")
+            [(3, 1), (4, 1)]
 
         """
         splited_line = [word for word in utils.to_unicode(line).strip().split(' ') if word]
@@ -214,14 +219,16 @@ class MalletCorpus(LowCorpus):
 
         Examples
         --------
-        >>> from gensim.test.utils import datapath
-        >>> from gensim.corpora import MalletCorpus
-        >>>
-        >>> data = MalletCorpus(datapath("testcorpus.mallet"))
-        >>> data.docbyoffset(1)  # end of first line
-        [(3, 1), (4, 1)]
-        >>> data.docbyoffset(4)  # start of second line
-        [(4, 1)]
+        .. sourcecode:: pycon
+
+            >>> from gensim.test.utils import datapath
+            >>> from gensim.corpora import MalletCorpus
+            >>>
+            >>> data = MalletCorpus(datapath("testcorpus.mallet"))
+            >>> data.docbyoffset(1)  # end of first line
+            [(3, 1), (4, 1)]
+            >>> data.docbyoffset(4)  # start of second line
+            [(4, 1)]
 
         """
         with utils.smart_open(self.fname) as f:

@@ -14,7 +14,7 @@ import logging
 
 from gensim import utils
 from gensim.corpora import IndexedCorpus
-from six.moves import xrange
+from six.moves import range
 
 
 logger = logging.getLogger(__name__)
@@ -143,8 +143,10 @@ class BleiCorpus(IndexedCorpus):
             logger.info("no word id mapping provided; initializing from corpus")
             id2word = utils.dict_from_corpus(corpus)
             num_terms = len(id2word)
+        elif id2word:
+            num_terms = 1 + max(id2word)
         else:
-            num_terms = 1 + max([-1] + id2word.keys())
+            num_terms = 0
 
         logger.info("storing corpus in Blei's LDA-C format into %s", fname)
         with utils.smart_open(fname, 'wb') as fout:
@@ -159,7 +161,7 @@ class BleiCorpus(IndexedCorpus):
         fname_vocab = utils.smart_extension(fname, '.vocab')
         logger.info("saving vocabulary of %i words to %s", num_terms, fname_vocab)
         with utils.smart_open(fname_vocab, 'wb') as fout:
-            for featureid in xrange(num_terms):
+            for featureid in range(num_terms):
                 fout.write(utils.to_utf8("%s\n" % id2word.get(featureid, '---')))
 
         return offsets

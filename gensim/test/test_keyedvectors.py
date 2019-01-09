@@ -38,8 +38,7 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
         similarity_matrix = self.vectors.similarity_matrix(dictionary).todense()
         self.assertTrue((similarity_matrix.T == similarity_matrix).all())
         self.assertTrue(
-            (np.diag(similarity_matrix) ==
-             np.ones(similarity_matrix.shape[0])).all())
+            (np.diag(similarity_matrix) == np.ones(similarity_matrix.shape[0])).all())
 
         # checking that thresholding works as expected
         similarity_matrix = self.vectors.similarity_matrix(dictionary, threshold=0.45).todense()

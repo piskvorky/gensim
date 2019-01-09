@@ -34,33 +34,41 @@ def p_boolean_document(corpus, segmented_topics):
 
     Examples
     ---------
-    >>> from gensim.topic_coherence import probability_estimation
-    >>> from gensim.corpora.hashdictionary import HashDictionary
-    >>>
-    >>>
-    >>> texts = [
-    ...     ['human', 'interface', 'computer'],
-    ...     ['eps', 'user', 'interface', 'system'],
-    ...     ['system', 'human', 'system', 'eps'],
-    ...     ['user', 'response', 'time'],
-    ...     ['trees'],
-    ...     ['graph', 'trees']
-    ... ]
-    >>> dictionary = HashDictionary(texts)
-    >>> w2id = dictionary.token2id
-    >>>
-    >>> # create segmented_topics
-    >>> segmented_topics = [
-    ...     [(w2id['system'], w2id['graph']),(w2id['computer'], w2id['graph']),(w2id['computer'], w2id['system'])],
-    ...     [(w2id['computer'], w2id['graph']),(w2id['user'], w2id['graph']),(w2id['user'], w2id['computer'])]
-    ... ]
-    >>>
-    >>> # create corpus
-    >>> corpus = [dictionary.doc2bow(text) for text in texts]
-    >>>
-    >>> result = probability_estimation.p_boolean_document(corpus, segmented_topics)
-    >>> result.index_to_dict()
-    {10608: set([0]), 12736: set([1, 3]), 18451: set([5]), 5798: set([1, 2])}
+    .. sourcecode:: pycon
+
+        >>> from gensim.topic_coherence import probability_estimation
+        >>> from gensim.corpora.hashdictionary import HashDictionary
+        >>>
+        >>>
+        >>> texts = [
+        ...     ['human', 'interface', 'computer'],
+        ...     ['eps', 'user', 'interface', 'system'],
+        ...     ['system', 'human', 'system', 'eps'],
+        ...     ['user', 'response', 'time'],
+        ...     ['trees'],
+        ...     ['graph', 'trees']
+        ... ]
+        >>> dictionary = HashDictionary(texts)
+        >>> w2id = dictionary.token2id
+        >>>
+        >>> # create segmented_topics
+        >>> segmented_topics = [
+        ...     [
+        ...         (w2id['system'], w2id['graph']),
+        ...         (w2id['computer'], w2id['graph']),
+        ...         (w2id['computer'], w2id['system'])
+        ...     ],
+        ...     [
+        ...         (w2id['computer'], w2id['graph']),
+        ...         (w2id['user'], w2id['graph']),
+        ...         (w2id['user'], w2id['computer'])]
+        ... ]
+        >>> # create corpus
+        >>> corpus = [dictionary.doc2bow(text) for text in texts]
+        >>>
+        >>> result = probability_estimation.p_boolean_document(corpus, segmented_topics)
+        >>> result.index_to_dict()
+        {10608: set([0]), 12736: set([1, 3]), 18451: set([5]), 5798: set([1, 2])}
 
     """
     top_ids = unique_ids_from_segments(segmented_topics)
@@ -101,34 +109,42 @@ def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size, p
 
     Examples
     ---------
-    >>> from gensim.topic_coherence import probability_estimation
-    >>> from gensim.corpora.hashdictionary import HashDictionary
-    >>>
-    >>>
-    >>> texts = [
-    ...     ['human', 'interface', 'computer'],
-    ...     ['eps', 'user', 'interface', 'system'],
-    ...     ['system', 'human', 'system', 'eps'],
-    ...     ['user', 'response', 'time'],
-    ...     ['trees'],
-    ...     ['graph', 'trees']
-    ... ]
-    >>> dictionary = HashDictionary(texts)
-    >>> w2id = dictionary.token2id
+    .. sourcecode:: pycon
 
-    >>>
-    >>> # create segmented_topics
-    >>> segmented_topics = [
-    ...     [(w2id['system'], w2id['graph']),(w2id['computer'], w2id['graph']),(w2id['computer'], w2id['system'])],
-    ...     [(w2id['computer'], w2id['graph']),(w2id['user'], w2id['graph']),(w2id['user'], w2id['computer'])]
-    ... ]
-    >>>
-    >>> # create corpus
-    >>> corpus = [dictionary.doc2bow(text) for text in texts]
-    >>> accumulator = probability_estimation.p_boolean_sliding_window(texts, segmented_topics, dictionary, 2)
-    >>>
-    >>> (accumulator[w2id['computer']], accumulator[w2id['user']], accumulator[w2id['system']])
-    (1, 3, 4)
+        >>> from gensim.topic_coherence import probability_estimation
+        >>> from gensim.corpora.hashdictionary import HashDictionary
+        >>>
+        >>>
+        >>> texts = [
+        ...     ['human', 'interface', 'computer'],
+        ...     ['eps', 'user', 'interface', 'system'],
+        ...     ['system', 'human', 'system', 'eps'],
+        ...     ['user', 'response', 'time'],
+        ...     ['trees'],
+        ...     ['graph', 'trees']
+        ... ]
+        >>> dictionary = HashDictionary(texts)
+        >>> w2id = dictionary.token2id
+
+        >>>
+        >>> # create segmented_topics
+        >>> segmented_topics = [
+        ...     [
+        ...         (w2id['system'], w2id['graph']),
+        ...         (w2id['computer'], w2id['graph']),
+        ...         (w2id['computer'], w2id['system'])
+        ...     ],
+        ...     [
+        ...         (w2id['computer'], w2id['graph']),
+        ...         (w2id['user'], w2id['graph']),
+        ...         (w2id['user'], w2id['computer'])]
+        ... ]
+        >>> # create corpus
+        >>> corpus = [dictionary.doc2bow(text) for text in texts]
+        >>> accumulator = probability_estimation.p_boolean_sliding_window(texts, segmented_topics, dictionary, 2)
+        >>>
+        >>> (accumulator[w2id['computer']], accumulator[w2id['user']], accumulator[w2id['system']])
+        (1, 3, 4)
 
     """
     top_ids = unique_ids_from_segments(segmented_topics)
@@ -166,33 +182,44 @@ def p_word2vec(texts, segmented_topics, dictionary, window_size=None, processes=
 
     Examples
     --------
-    >>> from gensim.topic_coherence import probability_estimation
-    >>> from gensim.corpora.hashdictionary import HashDictionary
-    >>> from gensim.models import word2vec
-    >>>
-    >>> texts = [
-    ...     ['human', 'interface', 'computer'],
-    ...     ['eps', 'user', 'interface', 'system'],
-    ...     ['system', 'human', 'system', 'eps'],
-    ...     ['user', 'response', 'time'],
-    ...     ['trees'],
-    ...     ['graph', 'trees']
-    ... ]
-    >>> dictionary = HashDictionary(texts)
-    >>> w2id = dictionary.token2id
+    .. sourcecode:: pycon
 
-    >>>
-    >>> # create segmented_topics
-    >>> segmented_topics = [
-    ...     [(w2id['system'], w2id['graph']),(w2id['computer'], w2id['graph']),(w2id['computer'], w2id['system'])],
-    ...     [(w2id['computer'], w2id['graph']),(w2id['user'], w2id['graph']),(w2id['user'], w2id['computer'])]
-    ... ]
-    >>>
-    >>> # create corpus
-    >>> corpus = [dictionary.doc2bow(text) for text in texts]
-    >>> sentences = [['human', 'interface', 'computer'],['survey', 'user', 'computer', 'system', 'response', 'time']]
-    >>> model = word2vec.Word2Vec(sentences, size=100,min_count=1)
-    >>> accumulator = probability_estimation.p_word2vec(texts, segmented_topics, dictionary, 2, 1, model)
+        >>> from gensim.topic_coherence import probability_estimation
+        >>> from gensim.corpora.hashdictionary import HashDictionary
+        >>> from gensim.models import word2vec
+        >>>
+        >>> texts = [
+        ...     ['human', 'interface', 'computer'],
+        ...     ['eps', 'user', 'interface', 'system'],
+        ...     ['system', 'human', 'system', 'eps'],
+        ...     ['user', 'response', 'time'],
+        ...     ['trees'],
+        ...     ['graph', 'trees']
+        ... ]
+        >>> dictionary = HashDictionary(texts)
+        >>> w2id = dictionary.token2id
+
+        >>>
+        >>> # create segmented_topics
+        >>> segmented_topics = [
+        ...     [
+        ...         (w2id['system'], w2id['graph']),
+        ...         (w2id['computer'], w2id['graph']),
+        ...         (w2id['computer'], w2id['system'])
+        ...     ],
+        ...     [
+        ...         (w2id['computer'], w2id['graph']),
+        ...         (w2id['user'], w2id['graph']),
+        ...         (w2id['user'], w2id['computer'])]
+        ... ]
+        >>> # create corpus
+        >>> corpus = [dictionary.doc2bow(text) for text in texts]
+        >>> sentences = [
+        ...     ['human', 'interface', 'computer'],
+        ...     ['survey', 'user', 'computer', 'system', 'response', 'time']
+        ... ]
+        >>> model = word2vec.Word2Vec(sentences, size=100, min_count=1)
+        >>> accumulator = probability_estimation.p_word2vec(texts, segmented_topics, dictionary, 2, 1, model)
 
     """
     top_ids = unique_ids_from_segments(segmented_topics)
@@ -216,11 +243,14 @@ def unique_ids_from_segments(segmented_topics):
 
     Example
     -------
-    >>> from gensim.topic_coherence import probability_estimation
-    >>>
-    >>> segmentation = [[(1, 2)]]
-    >>> probability_estimation.unique_ids_from_segments(segmentation)
-    set([1, 2])
+
+    .. sourcecode:: pycon
+
+        >>> from gensim.topic_coherence import probability_estimation
+        >>>
+        >>> segmentation = [[(1, 2)]]
+        >>> probability_estimation.unique_ids_from_segments(segmentation)
+        set([1, 2])
 
     """
     unique_ids = set()  # is a set of all the unique ids contained in topics.
