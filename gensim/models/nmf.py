@@ -296,7 +296,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         pred_factors = W.dot(H)
 
-        return -(np.log(pred_factors, where=pred_factors > 0) * dense_corpus).sum() / dense_corpus.sum()
+        return (np.log(pred_factors, where=pred_factors > 0) * dense_corpus).sum() / dense_corpus.sum()
 
     def get_term_topics(self, word_id, minimum_probability=None):
         """Get the most relevant topics to the given word.
