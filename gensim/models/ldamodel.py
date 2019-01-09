@@ -106,13 +106,6 @@ from gensim.models.callbacks import Callback
 
 logger = logging.getLogger(__name__)
 
-# Epsilon (very small) values used by each expected data type instead of 0, to avoid Arithmetic Errors.
-DTYPE_TO_EPS = {
-    np.float16: 1e-5,
-    np.float32: 1e-35,
-    np.float64: 1e-100,
-}
-
 
 def update_dir_prior(prior, N, logphat, rho):
     """Update a given prior using Newton's method, described in
@@ -426,12 +419,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Data-type to use during calculations inside model. All inputs are also converted.
 
         """
-        if dtype not in DTYPE_TO_EPS:
-            raise ValueError(
-                "Incorrect 'dtype', please choose one of {}".format(
-                    ", ".join("numpy.{}".format(tp.__name__) for tp in sorted(DTYPE_TO_EPS))))
-
-        self.dtype = dtype
+        self.dtype = np.finfo(dtype).dtype
 
         # store user-supplied parameters
         self.id2word = id2word
@@ -668,6 +656,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # Lee&Seung trick which speeds things up by an order of magnitude, compared
         # to Blei's original LDA-C code, cool!).
         integer_types = six.integer_types + (np.integer,)
+        epsilon = np.finfo(self.dtype).eps
         for d, doc in enumerate(chunk):
             if len(doc) > 0 and not isinstance(doc[0][0], integer_types):
                 # make sure the term IDs are ints, otherwise np will get upset
@@ -683,8 +672,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             # The optimal phi_{dwk} is proportional to expElogthetad_k * expElogbetad_w.
             # phinorm is the normalizer.
             # TODO treat zeros explicitly, instead of adding epsilon?
-            eps = DTYPE_TO_EPS[self.dtype]
-            phinorm = np.dot(expElogthetad, expElogbetad) + eps
+            phinorm = np.dot(expElogthetad, expElogbetad) + epsilon
 
             # Iterate between gamma and phi until convergence
             for _ in range(self.iterations):
@@ -695,7 +683,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 gammad = self.alpha + expElogthetad * np.dot(cts / phinorm, expElogbetad.T)
                 Elogthetad = dirichlet_expectation(gammad)
                 expElogthetad = np.exp(Elogthetad)
-                phinorm = np.dot(expElogthetad, expElogbetad) + eps
+                phinorm = np.dot(expElogthetad, expElogbetad) + epsilon
                 # If gamma hasn't changed much, we're done.
                 meanchange = mean_absolute_difference(gammad, lastgamma)
                 if meanchange < self.gamma_threshold:
@@ -1289,7 +1277,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         minimum_probability : float
             Topics with an assigned probability lower than this threshold will be discarded.
         minimum_phi_value : float
-            f `per_word_topics` is True, this represents a lower bound on the term probabilities that are included.
+            If `per_word_topics` is True, this represents a lower bound on the term probabilities that are included.
              If set to None, a value of 1e-8 is used to prevent 0s.
         per_word_topics : bool
             If True, this function will also return two extra lists as explained in the "Returns" section.
