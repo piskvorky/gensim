@@ -18,6 +18,7 @@ from gensim.models.wrappers.fasttext import FastText as FT_wrapper
 from gensim.models.keyedvectors import Word2VecKeyedVectors
 from gensim.test.utils import datapath, get_tmpfile, temporary_file, common_texts as sentences
 
+import gensim.models.fasttext
 
 try:
     from pyemd import emd  # noqa:F401
@@ -1067,6 +1068,14 @@ class HashTest(unittest.TestCase):
         actual = {w: self.model.wv[w] for w in expected}
         self.assertTrue(np.allclose(expected['steamtrain'], actual['steamtrain'], atol=1e-5))
         self.assertTrue(np.allclose(expected['паровоз'], actual['паровоз'], atol=1e-5))
+
+
+class LoadFastTextFormatTest(unittest.TestCase):
+    def test(self):
+        old = load_native()
+        new = gensim.models.fasttext._load_fasttext_format(datapath('toy-model.bin'))
+
+        self.assertEquals(old.wv.buckets_word, new.wv.buckets_word)
 
 
 if __name__ == '__main__':

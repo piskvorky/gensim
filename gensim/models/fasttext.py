@@ -1246,15 +1246,18 @@ def _load_fasttext_format(model_file, encoding='utf-8'):
         max_n=m.maxn,
     )
 
-    model.num_original_vectors = m.vectors_ngrams.shape[0]
-    model.wv.vectors_ngrams = m.vectors_ngrams
-    model.wv.init_vectors_vocab()
-
     model.vocabulary.raw_vocab = m.raw_vocab
     model.vocabulary.nwords = m.nwords
     model.vocabulary.vocab_size = m.vocab_size
     model.vocabulary.prepare_vocab(model.hs, model.negative, model.wv,
                                    update=True, min_count=model.min_count)
+
+    model.num_original_vectors = m.vectors_ngrams.shape[0]
+
+    model.wv.vectors_ngrams = m.vectors_ngrams
+    model.wv.init_ngrams_post_load(fin.name)
+    model.wv.init_vectors_vocab()
+    model.wv.buckets_word = None
 
     #
     # This check needs to happen here, because init_ngrams_post_load will
@@ -1262,7 +1265,6 @@ def _load_fasttext_format(model_file, encoding='utf-8'):
     #
     _check_model(model)
 
-    model.wv.init_ngrams_post_load(fin.name)
     model.trainables.init_post_load(model, m.hidden_output)
 
     return model
