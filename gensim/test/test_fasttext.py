@@ -889,6 +889,67 @@ def load_vec(fin):
         yield word, np.array(vector, dtype=np.float32)
 
 
+def compare_wv(a, b, t):
+    a_count = {key: value.count for (key, value) in a.vocab.items()}
+    b_count = {key: value.count for (key, value) in b.vocab.items()}
+    t.assertEqual(a_count, b_count)
+
+    #
+    # We don't compare indices because they depend on several things we
+    # cannot control during testing:
+    #
+    # 1. The order in which ties are broken when sorting the vocabulary
+    #    in prepare_vocab
+    # 2. The order in which vocab terms are added to vocab_raw
+    #
+    if False:
+        a_indices = {key: value.index for (key, value) in a.vocab.items()}
+        b_indices = {key: value.index for (key, value) in b.vocab.items()}
+        a_words = [k for k in sorted(a_indices, key=lambda x: a_indices[x])]
+        b_words = [k for k in sorted(b_indices, key=lambda x: b_indices[x])]
+        t.assertEqual(a_words, b_words)
+
+        t.assertEqual(a.index2word, b.index2word)
+        t.assertEqual(a.hash2index, b.hash2index)
+
+    #
+    # We do not compare most matrices directly, because they will never
+    # be equal unless many conditions are strictly controlled.
+    #
+    t.assertEqual(a.vectors.shape, b.vectors.shape)
+    # t.assertTrue(np.allclose(a.vectors, b.vectors))
+
+    t.assertEqual(a.vectors_vocab.shape, b.vectors_vocab.shape)
+    # t.assertTrue(np.allclose(a.vectors_vocab, b.vectors_vocab))
+
+    t.assertEqual(a.vectors_ngrams.shape, b.vectors_ngrams.shape)
+
+
+def compare_nn(a, b, t):
+    #
+    # Ensure the neural networks are identical for both cases.
+    #
+    t.assertEqual(a.syn1neg.shape, b.syn1neg.shape)
+
+    t.assertEqual(a.vectors_ngrams_lockf.shape, b.vectors_ngrams_lockf.shape)
+    t.assertTrue(np.allclose(a.vectors_ngrams_lockf, b.vectors_ngrams_lockf))
+
+    t.assertEqual(a.vectors_vocab_lockf.shape, b.vectors_vocab_lockf.shape)
+    t.assertTrue(np.allclose(a.vectors_vocab_lockf, b.vectors_vocab_lockf))
+
+
+def compare_vocabulary(a, b, t):
+    t.assertEqual(a.max_vocab_size, b.max_vocab_size)
+    t.assertEqual(a.min_count, b.min_count)
+    t.assertEqual(a.sample, b.sample)
+    t.assertEqual(a.sorted_vocab, b.sorted_vocab)
+    t.assertEqual(a.null_word, b.null_word)
+    t.assertTrue(np.allclose(a.cum_table, b.cum_table))
+    t.assertEqual(a.raw_vocab, b.raw_vocab)
+    t.assertEqual(a.max_final_vocab, b.max_final_vocab)
+    t.assertEqual(a.ns_exponent, b.ns_exponent)
+
+
 class NativeTrainingContinuationTest(unittest.TestCase):
     maxDiff = None
 
@@ -931,37 +992,9 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         self.assertEqual(trained.bucket, native.bucket)
         self.assertEqual(trained.num_ngram_vectors, native.num_ngram_vectors)
 
-        trained_vocab = {key: value.count for (key, value) in trained.wv.vocab.items()}
-        native_vocab = {key: value.count for (key, value) in native.wv.vocab.items()}
-        self.assertEqual(trained_vocab, native_vocab)
-
-        #
-        # We do not compare most matrices directly, because they will never
-        # be equal unless many conditions are strictly controlled.
-        #
-        self.assertEqual(trained.wv.vectors_vocab.shape, native.wv.vectors_vocab.shape)
-
-        #
-        # Ensure the neural networks are identical for both cases.
-        #
-        trained_nn, native_nn = trained.trainables, native.trainables
-
-        self.assertEqual(trained_nn.syn1neg.shape, native_nn.syn1neg.shape)
-
-        if False:
-            #
-            # FIXME: Currently disabling these assertions because the code
-            # between the native and the gensim matrices differs (see 07f34e23
-            # for more info).  We will need to reconcile these differences
-            # somehow.
-            #
-            self.assertEqual(trained.wv.vectors_ngrams.shape, native.wv.vectors_ngrams.shape)
-
-            self.assertEqual(trained_nn.vectors_ngrams_lockf.shape, native_nn.vectors_ngrams_lockf.shape)
-            self.assertTrue(np.allclose(trained_nn.vectors_ngrams_lockf, native_nn.vectors_ngrams_lockf))
-
-            self.assertEqual(trained_nn.vectors_vocab_lockf.shape, native_nn.vectors_vocab_lockf.shape)
-            self.assertTrue(np.allclose(trained_nn.vectors_vocab_lockf, native_nn.vectors_vocab_lockf))
+        compare_wv(trained.wv, native.wv, self)
+        compare_vocabulary(trained.vocabulary, native.vocabulary, self)
+        compare_nn(trained.trainables, native.trainables, self)
 
     def test_continuation_native(self):
         """Ensure that training has had a measurable effect."""

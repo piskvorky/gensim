@@ -2161,7 +2161,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         new_ngrams = len(self.hash2index) - old_hash2index_len
         self.vectors_ngrams = _pad_random(self.vectors_ngrams, new_ngrams, rand_obj)
 
-    def init_post_load(self, vectors):
+    def init_post_load(self, vectors, match_gensim=False):
         """Perform initialization after loading a native Facebook model.
 
         Expects that the vocabulary (self.vocab) has already been initialized.
@@ -2173,6 +2173,11 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
             and ngrams.  This comes directly from the binary model.
             The order of the vectors must correspond to the indices in
             the vocabulary.
+        match_gensim : boolean, optional
+            Match the behavior of gensim's FastText implementation and take a
+            subset of vectors_ngrams.  This behavior appears to be incompatible
+            with Facebook's implementation.
+
         """
         vocab_words = len(self.vocab)
         assert vectors.shape[0] == vocab_words + self.bucket, 'unexpected number of vectors'
@@ -2186,17 +2191,31 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         self.vectors = np.array(vectors[:vocab_words, :])
         self.vectors_vocab = np.array(vectors[:vocab_words, :])
         self.vectors_ngrams = np.array(vectors[vocab_words:, :])
+        self.hash2index = {i: i for i in range(self.bucket)}
+        self.buckets_word = None  # This can get initialized later
+        self.num_ngram_vectors = self.bucket
 
-        self.hash2index = {}
-        ngram_indices, self.buckets_word = _process_fasttext_vocab(
-            self.vocab.items(),
-            self.min_n,
-            self.max_n,
-            self.bucket,
-            _ft_hash if self.compatible_hash else _ft_hash_broken,
-            self.hash2index
-        )
-        self.num_ngram_vectors = len(ngram_indices)
+        if match_gensim:
+            #
+            # This gives us the same shape for vectors_ngrams, and we can
+            # satisfy our unit tests when running gensim vs native comparisons,
+            # but because we're discarding some ngrams, the accuracy of the
+            # model suffers.
+            #
+            ngram_hashes, _ = _process_fasttext_vocab(
+                self.vocab.items(),
+                self.min_n,
+                self.max_n,
+                self.bucket,
+                _ft_hash if self.compatible_hash else _ft_hash_broken,
+                dict(),  # we don't care what goes here in this case
+            )
+            ngram_hashes = sorted(set(ngram_hashes))
+
+            keep_indices = [self.hash2index[h] for h in self.hash2index if h in ngram_hashes]
+            self.num_ngram_vectors = len(keep_indices)
+            self.vectors_ngrams = self.vectors_ngrams.take(keep_indices, axis=0)
+            self.hash2index = {hsh: idx for (idx, hsh) in enumerate(ngram_hashes)}
 
         self.adjust_vectors()
 
@@ -2245,6 +2264,9 @@ def _process_fasttext_vocab(iterable, min_n, max_n, num_buckets, hash_fn, hash2i
         for ngram in _compute_ngrams(word, min_n, max_n):
             ngram_hash = hash_fn(ngram) % num_buckets
             if ngram_hash not in hash2index:
+                #
+                # This is a new ngram.  Reserve a new index in hash2index.
+                #
                 hash2index[ngram_hash] = old_hash2index_len + len(new_ngram_hashes)
                 new_ngram_hashes.append(ngram_hash)
             wi.append(hash2index[ngram_hash])
