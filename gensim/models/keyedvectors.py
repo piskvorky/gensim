@@ -1900,7 +1900,60 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
 
 
 class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
-    """Vectors and vocab for :class:`~gensim.models.fasttext.FastText`."""
+    """Vectors and vocab for :class:`~gensim.models.fasttext.FastText`.
+
+    Implements significant parts of the FastText algorithm.  For example,
+    the :func:`word_vec` calculates vectors for out-of-vocabulary (OOV)
+    entities.  FastText achieves this by keeping vectors for ngrams:
+    adding the vectors for the ngrams of an entity yields the vector for the
+    entity.
+
+    Similar to a hashmap, this class keeps a fixed number of buckets, and
+    maps all ngrams to buckets using a hash function.
+
+    This class also provides an abstraction over the hash functions used by
+    Gensim's FastText implementation over time.  The hash function connects
+    ngrams to buckets.  Originally, the hash function was broken and
+    incompatible with Facebook's implementation.
+
+    Parameters
+    ----------
+    vector_size : int
+        The dimensionality of all vectors.
+    min_n : int
+        The minimum number of characters in an ngram
+    max_n : int
+        The maximum number of characters in an ngram
+    bucket : int
+        The number of buckets.
+    compatible_hash : boolean
+        If True, uses the Facebook-compatible hash function instead of the
+        Gensim backwards-compatible hash function.
+
+    Attributes
+    ----------
+    vectors_vocab : np.array
+        A vector for each entity in the vocabulary.
+    vectors_vocab_norm : np.array
+        Same as vectors_vocab, but the vectors are L2 normalized.
+    vectors_ngrams : np.array
+        A vector for each ngram across all entities in the vocabulary.
+    vectors_ngrams_norm : np.array
+        Same as vectors_ngrams, but the vectors are L2 normalized.
+        Under some conditions, may actually be the same matrix as
+        vectors_ngrams, e.g. if :func:`init_sims` was called with
+        replace=True.
+    buckets_word : dict
+        Maps vocabulary items (by their index) to the buckets they occur in.
+    hash2index : dict
+        Maps bucket numbers to an index within vectors_ngrams.  So, given an
+        ngram, you can get its vector by determining its bucket, mapping the
+        bucket to an index, and then indexing into vectors_ngrams (in other
+        words, vectors_ngrams[hash2index[hash_fn(ngram) % bucket]].
+    num_ngram_vectors : int
+        TODO
+
+    """
     def __init__(self, vector_size, min_n, max_n, bucket, compatible_hash):
         super(FastTextKeyedVectors, self).__init__(vector_size=vector_size)
         self.vectors_vocab = None
