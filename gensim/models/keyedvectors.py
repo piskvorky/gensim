@@ -2198,6 +2198,11 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         )
         self.num_ngram_vectors = len(ngram_indices)
 
+        #
+        # Not sure why this is necessary, but it keeps the unit tests happy.
+        #
+        self.vectors_ngrams = self.vectors_ngrams.take(ngram_indices, axis=0)
+
         self.adjust_vectors()
 
     def adjust_vectors(self):
