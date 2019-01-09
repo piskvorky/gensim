@@ -2175,25 +2175,31 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         new_ngrams = len(self.hash2index) - old_hash2index_len
         self.vectors_ngrams = _pad_random(self.vectors_ngrams, new_ngrams, rand_obj)
 
-    def init_post_load(self, vectors_ngrams):
+    def init_post_load(self, vectors):
         """Perform initialization after loading a native Facebook model.
 
         Expects that the vocabulary (self.vocab) has already been initialized.
 
         Parameters
         ----------
-        vectors_ngrams : np.array
-            A matrix containing vectors for all the ngrams.  This comes
-            directly from the binary model.  The order of the vectors must
-            correspond to the indices in the vocabulary.
+        vectors : np.array
+            A matrix containing vectors for all the entities, including words
+            and ngrams.  This comes directly from the binary model.
+            The order of the vectors must correspond to the indices in
+            the vocabulary.
         """
-        hash_fn = _ft_hash if self.compatible_hash else _ft_hash_broken
+        vocab_words = len(self.vocab)
+        assert vectors.shape[0] == vocab_words + self.bucket, 'unexpected number of vectors'
+        assert vectors.shape[1] == self.vector_size, 'unexpected vector dimensionality'
 
-        self.vectors_ngrams = vectors_ngrams
-
-        self.vectors = np.zeros((len(self.vocab), self.vector_size), dtype=REAL)
-        for w, vocab in self.vocab.items():
-            self.vectors[vocab.index] += np.array(self.vectors_ngrams[vocab.index])
+        #
+        # The incoming vectors contain vectors for both words AND
+        # ngrams.  We split them into two separate matrices, because our
+        # implementation treats them differently.
+        #
+        self.vectors = np.array(vectors[:vocab_words,:])
+        self.vectors_vocab = np.array(vectors[:vocab_words,:])
+        self.vectors_ngrams = np.array(vectors[vocab_words:,:])
 
         ngram_indices = []
         self.num_ngram_vectors = self.bucket
@@ -2201,8 +2207,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
             self.hash2index[hashval] = len(ngram_indices)
             ngram_indices.append(len(self.vocab) + hashval)
 
-        self.vectors_ngrams = self.vectors_ngrams.take(ngram_indices, axis=0)
-
+        hash_fn = _ft_hash if self.compatible_hash else _ft_hash_broken
         for w, vocab in self.vocab.items():
             word_ngrams = _compute_ngrams(w, self.min_n, self.max_n)
             for word_ngram in word_ngrams:
@@ -2210,10 +2215,6 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
                 self.vectors[vocab.index] += np.array(self.vectors_ngrams[vec_idx])
 
             self.vectors[vocab.index] /= (len(word_ngrams) + 1)
-
-        self.vectors_vocab = empty((len(self.vocab), self.vector_size), dtype=REAL)
-        for word, vocab in self.vocab.items():
-            self.vectors_vocab[vocab.index] = self.get_vector(word)
 
         self.buckets_word = None
 
