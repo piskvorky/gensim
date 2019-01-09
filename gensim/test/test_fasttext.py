@@ -907,13 +907,13 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         # $ echo "quick brown fox jumps over lazy dog" | ./fasttext print-word-vectors gensim/test/test_data/toy-model.bin  # noqa: E501
         #
         expected = {
-            "quick": [0.023393, 0.11499, 0.11684, -0.13349, 0.022543],
-            "brown": [0.015288, 0.050404, -0.041395, -0.090371, 0.06441],
-            "fox": [0.061692, 0.082914, 0.020081, -0.039159, 0.03296],
-            "jumps": [0.070107, 0.081465, 0.051763, 0.012084, 0.0050402],
-            "over": [0.055023, 0.03465, 0.01648, -0.11129, 0.094555],
-            "lazy": [-0.022103, -0.020126, -0.033612, -0.049473, 0.0054174],
-            "dog": [0.084983, 0.09216, 0.020204, -0.13616, 0.01118],
+            u"quick": [0.023393, 0.11499, 0.11684, -0.13349, 0.022543],
+            u"brown": [0.015288, 0.050404, -0.041395, -0.090371, 0.06441],
+            u"fox": [0.061692, 0.082914, 0.020081, -0.039159, 0.03296],
+            u"jumps": [0.070107, 0.081465, 0.051763, 0.012084, 0.0050402],
+            u"over": [0.055023, 0.03465, 0.01648, -0.11129, 0.094555],
+            u"lazy": [-0.022103, -0.020126, -0.033612, -0.049473, 0.0054174],
+            u"dog": [0.084983, 0.09216, 0.020204, -0.13616, 0.01118],
         }
         expected = {word: np.array(arr, dtype=np.float32) for word, arr in expected.items()}
 
@@ -1022,25 +1022,25 @@ class HashTest(unittest.TestCase):
             self.expected = dict(load_vec(fin))
 
     def test_ascii(self):
-        word = 'landlady'
+        word = u'landlady'
         expected = self.expected[word]
         actual = self.model.wv[word]
         self.assertTrue(np.allclose(expected, actual, atol=1e-5))
 
     def test_unicode(self):
-        word = 'хозяйка'
+        word = u'хозяйка'
         expected = self.expected[word]
         actual = self.model.wv[word]
         self.assertTrue(np.allclose(expected, actual, atol=1e-5))
 
     def test_out_of_vocab(self):
         expected = {
-            'steamtrain': np.array([0.031988, 0.022966, 0.059483, 0.094547, 0.062693]),
-            'паровоз': np.array([-0.0033987, 0.056236, 0.036073, 0.094008, 0.00085222]),
+            u'steamtrain': np.array([0.031988, 0.022966, 0.059483, 0.094547, 0.062693]),
+            u'паровоз': np.array([-0.0033987, 0.056236, 0.036073, 0.094008, 0.00085222]),
         }
         actual = {w: self.model.wv[w] for w in expected}
-        self.assertTrue(np.allclose(expected['steamtrain'], actual['steamtrain'], atol=1e-5))
-        self.assertTrue(np.allclose(expected['паровоз'], actual['паровоз'], atol=1e-5))
+        self.assertTrue(np.allclose(expected[u'steamtrain'], actual[u'steamtrain'], atol=1e-5))
+        self.assertTrue(np.allclose(expected[u'паровоз'], actual[u'паровоз'], atol=1e-5))
 
 
 if __name__ == '__main__':
