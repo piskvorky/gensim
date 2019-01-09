@@ -770,14 +770,7 @@ class FastText(BaseWordEmbeddingsModel):
             The loaded model.
 
         """
-        model = cls()
-
-        if not model_file.endswith('.bin'):
-            model_file += '.bin'
-        model.file_name = model_file
-        model.load_binary_data(encoding=encoding)
-
-        return model
+        return _load_fasttext_format(model_file, encoding=encoding)
 
     def load_binary_data(self, encoding='utf8'):
         """Load data from a binary file created by Facebook's native FastText.
@@ -788,99 +781,9 @@ class FastText(BaseWordEmbeddingsModel):
             Specifies the encoding.
 
         """
-
-        # TODO use smart_open again when https://github.com/RaRe-Technologies/smart_open/issues/207 will be fixed
-        with open(self.file_name, 'rb') as f:
-            self._load_model_params(f, encoding=encoding)
-            self._load_vectors(f)
-            self._load_trainables(f)
-
-    def _load_model_params(self, file_handle, encoding='utf-8'):
-        """Load model parameters from Facebook's native fasttext file.
-
-        Parameters
-        ----------
-        file_handle : file-like object
-            Handle to an open file.
-
-        """
-        magic, version = _struct_unpack(file_handle, '@2i')
-        if magic == FASTTEXT_FILEFORMAT_MAGIC:  # newer format
-            self.new_format = True
-            dim, ws, epoch, min_count, neg, _, loss, model, bucket, minn, maxn, _, t = \
-                _struct_unpack(file_handle, '@12i1d')
-        else:  # older format
-            self.new_format = False
-            dim = magic
-            ws = version
-            epoch, min_count, neg, _, loss, model, bucket, minn, maxn, _, t = _struct_unpack(file_handle, '@10i1d')
-        # Parameters stored by [Args::save](https://github.com/facebookresearch/fastText/blob/master/src/args.cc)
-        self.vector_size = dim
-        self.window = ws
-        self.epochs = epoch
-        self.negative = neg
-        self.hs = loss == 1
-        self.sg = model == 2
-
-        self.trainables.bucket = bucket
-
-        self.wv = FastTextKeyedVectors(dim, minn, maxn, bucket, True)
-        self.vocabulary = _load_vocab(file_handle, self.new_format, t, min_count, encoding=encoding)
-        self.vocabulary.prepare_vocab(self.hs, self.negative, self.wv,
-                                      update=True, min_count=min_count)
-
-        #
-        # These checks only make sense after both the vocabulary and keyed
-        # vectors are completely loaded and initialized.
-        #
-        assert len(self.wv.vocab) == self.vocabulary.nwords, (
-            'mismatch between final vocab size ({} words), '
-            'and expected number of words ({} words)'.format(
-                len(self.wv.vocab), self.vocabulary.nwords
-            )
-        )
-        if len(self.wv.vocab) != self.vocabulary.vocab_size:
-            # expecting to log this warning only for pretrained french vector, wiki.fr
-            logger.warning(
-                "mismatch between final vocab size (%s words), and expected vocab size (%s words)",
-                len(self.wv.vocab), self.vocabulary.vocab_size
-            )
-
-    def _load_vectors(self, file_handle):
-        """Load word vectors stored in Facebook's native fasttext format from disk.
-
-        Parameters
-        ----------
-        file_handle : file-like object
-            Open file handle to persisted vectors.
-
-        """
-        self.wv.vectors_ngrams = _load_matrix(
-            file_handle,
-            new_format=self.new_format,
-            expected_vector_size=self.wv.vector_size
-        )
-        self.num_original_vectors = self.wv.vectors_ngrams.shape[0]
-
-        expected_shape = (self.trainables.bucket + len(self.wv.vocab), self.wv.vector_size)
-        assert self.wv.vectors_ngrams.shape == expected_shape, \
-            'mismatch between actual weight matrix shape {} and expected shape {}'.format(
-                self.wv.vectors_ngrams.shape, expected_shape
-            )
-
-    def _load_trainables(self, file_handle):
-        self.wv.init_ngrams_post_load(self.file_name)
-
-        hidden_output = _load_matrix(
-            file_handle,
-            new_format=self.new_format,
-            expected_vector_size=self.wv.vector_size
-        )
-
-        assert not file_handle.read(), 'expected to have reached EOF'
-
-        self.wv.init_vectors_vocab()
-        self.trainables.init_post_load(self, hidden_output)
+        m = _load_fasttext_format(self.file_name, encoding=encoding)
+        for attr, val in six.iteritems(m.__dict__):
+            setattr(self, attr, val)
 
     @deprecated("Method will be removed in 4.0.0, use _struct_unpack instead")
     def struct_unpack(self, file_handle, fmt):
@@ -976,57 +879,6 @@ def _struct_unpack(file_handle, fmt):
     return struct.unpack(fmt, file_handle.read(num_bytes))
 
 
-def _load_matrix(file_handle, new_format=True, expected_vector_size=None):
-    """Load a matrix from fastText native format.
-
-    Interprets the matrix dimensions and type from the file stream.
-
-    Parameters
-    ----------
-    file_handle : file
-        A file handle opened for reading.
-    new_format : bool, optional
-        True if the quant_input variable precedes
-        the matrix declaration.  Should be True for newer versions of fastText.
-    expected_vector_size : int, optional
-        The expected dimensionality of each vector.
-        If you specify this and the matrix's dimensionality is different,
-        will raise an assertion.
-
-    Returns
-    -------
-    :class:`numpy.array`
-        The vectors as an array.
-        Each vector will be a row in the array.
-        The number of columns of the array will correspond to the vector size.
-
-    See Also
-    --------
-    `FB Implementation <https://github.com/facebookresearch/fastText/blob/master/src/matrix.cc>`_.
-
-    """
-    if new_format:
-        _struct_unpack(file_handle, '@?')  # bool quant_input in fasttext.cc
-
-    num_vectors, dim = _struct_unpack(file_handle, '@2q')
-    assert expected_vector_size is None or expected_vector_size == dim, (
-        'mismatch between vector size in model params ({}) and model vectors ({})'
-        .format(expected_vector_size, dim)
-    )
-
-    float_size = struct.calcsize('@f')
-    if float_size == 4:
-        dtype = np.dtype(np.float32)
-    elif float_size == 8:
-        dtype = np.dtype(np.float64)
-    else:
-        raise ValueError("Incompatible float size: %r" % float_size)
-
-    matrix = np.fromfile(file_handle, dtype=dtype, count=num_vectors * dim)
-    matrix = matrix.reshape((num_vectors, dim))
-    return matrix
-
-
 class FastTextVocab(Word2VecVocab):
     """Vocabulary used by :class:`~gensim.models.fasttext.FastText`."""
     def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0, ns_exponent=0.75):
@@ -1045,62 +897,6 @@ class FastTextVocab(Word2VecVocab):
             hs, negative, wv, update=update, keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule,
             min_count=min_count, sample=sample, dry_run=dry_run)
         return report_values
-
-
-def _load_vocab(file_handle, new_format, sample, min_count, encoding='utf-8'):
-    """Load a vocabulary from a FB binary.
-
-    Before the vocab is ready for use, call the prepare_vocab function and pass
-    in the relevant parameters from the model.
-
-    Parameters
-    ----------
-    file_handle : file
-        An open file pointer to the binary.
-    new_format: boolean
-        True if the binary is of the newer format.
-    sample : int
-        From the previous section of the binary.
-    min_count : int
-        Ignore all words with total frequency lower than this.
-    encoding : str
-        The encoding to use when decoding binary data into words.
-
-    Returns
-    -------
-    FastTextVocab
-        The loaded vocabulary.
-
-    """
-    v = FastTextVocab(sample=sample, min_count=min_count)
-    v.vocab_size, v.nwords, nlabels = _struct_unpack(file_handle, '@3i')
-
-    # Vocab stored by [Dictionary::save](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
-    if nlabels > 0:
-        raise NotImplementedError("Supervised fastText models are not supported")
-    logger.info("loading %s words for fastText model from %s", v.vocab_size, file_handle.name)
-
-    _struct_unpack(file_handle, '@1q')  # number of tokens
-    if new_format:
-        pruneidx_size, = _struct_unpack(file_handle, '@q')
-
-    v.raw_vocab = {}
-    for i in range(v.vocab_size):
-        word_bytes = b''
-        char_byte = file_handle.read(1)
-        # Read vocab word
-        while char_byte != b'\x00':
-            word_bytes += char_byte
-            char_byte = file_handle.read(1)
-        word = word_bytes.decode(encoding)
-        count, _ = _struct_unpack(file_handle, '@qb')
-        v.raw_vocab[word] = count
-
-    if new_format:
-        for j in range(pruneidx_size):
-            _struct_unpack(file_handle, '@2i')
-
-    return v
 
 
 class FastTextTrainables(Word2VecTrainables):
@@ -1226,6 +1022,8 @@ def _load_fasttext_format(model_file, encoding='utf-8'):
     :class: `~gensim.models.fasttext.FastText`
         The loaded model.
     """
+    # TODO use smart_open again when https://github.com/RaRe-Technologies/smart_open/issues/207 will be fixed
+
     import gensim.models._fasttext_bin
     if not model_file.endswith('.bin'):
         model_file += '.bin'
