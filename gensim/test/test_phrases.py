@@ -648,11 +648,17 @@ class TestPhraserModelCommonTerms(CommonTermsPhrasesData, TestPhraserModel):
 class TestPhraserModelCompatibilty(unittest.TestCase):
 
     def testCompatibilty(self):
-        bigram_loaded = Phraser.load(datapath("phraser_model_3dot6"))
-        test_sentences = [u'trees', u'graph', u'minors']
-        prev_ver = bigram_loaded[test_sentences]
-        expected_res = ['trees_graph', 'minors']
-        self.assertEqual(prev_ver, expected_res)
+        phr = Phraser.load(datapath("phraser-3.6.0.model"))
+        model = Phrases.load(datapath("phrases-3.6.0.model"))
+
+        test_sentences = ['trees', 'graph', 'minors']
+        expected_res = ['trees', 'graph_minors']
+
+        phr_out = phr[test_sentences]
+        model_out = model[test_sentences]
+
+        self.assertEqual(phr_out, expected_res)
+        self.assertEqual(model_out, expected_res)
 
 
 if __name__ == '__main__':
