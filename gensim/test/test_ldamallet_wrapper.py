@@ -175,31 +175,6 @@ class TestLdaMallet(unittest.TestCase, basetmtests.TestBaseTopicModel):
         # test loading the large model arrays with mmap
         self.assertRaises(IOError, ldamodel.LdaModel.load, fname, mmap='r')
 
-    def test_load_model(self):
-        if not self.mallet_path:
-            return
-        # to conduct the test these directories and files should exist
-        model_save_path = ".\\test_data\\Mallet_TMP\\"
-        model_save_name = model_save_path + "Mallet_pre_rs.mdl"
-        # the saved models temporary files need to be in a common directory,
-        # they are being named according to the model name to minimize conflicts
-        prefix = model_save_path + "MTMP\\pre_rs_"
-
-        if not (os.path.exists(model_save_name) & os.path.exists(prefix + "corpus.mallet")):
-            logging.warning("Pre-existing model files not found. Skipping test loading of them.")
-            return
-        model = ldamodel.LdaModel.load(model_save_name)
-
-        # Test loaded model works on a new corpus, made of previously unseen documents.
-        other_texts = [['computer', 'time', 'graph'],
-                       ['survey', 'response', 'eps'],
-                       ['human', 'system', 'computer']]
-        other_corpus = [dictionary.doc2bow(text) for text in other_texts]
-
-        unseen_doc = other_corpus[0]
-        vector = model[unseen_doc]  # get topic probability distribution for a document
-        self.assertTrue(sum(n for _, n in vector) == 1)
-
     def test_random_seed(self):
         if not self.mallet_path:
             return
