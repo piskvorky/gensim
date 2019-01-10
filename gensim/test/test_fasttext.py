@@ -1054,6 +1054,20 @@ class NativeTrainingContinuationTest(unittest.TestCase):
 
         self.assertNotEqual(old_vector, new_vector)
 
+    def test_continuation_load_gensim(self):
+        #
+        # This is a model from 3.6.0
+        #
+        model = FT_gensim.load(datapath('compatible-hash-false.model'))
+        vectors_ngrams_before = np.copy(model.wv.vectors_ngrams)
+        old_vector = model.wv.word_vec('human').tolist()
+
+        model.train(list_corpus, total_examples=len(list_corpus), epochs=model.epochs)
+        new_vector = model.wv.word_vec('human').tolist()
+
+        self.assertFalse(np.allclose(vectors_ngrams_before, model.wv.vectors_ngrams))
+        self.assertNotEqual(old_vector, new_vector)
+
 
 def _train_and_save(path=datapath('compatible-hash-false.model.tmp')):
     model = train_gensim()
