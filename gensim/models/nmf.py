@@ -286,6 +286,21 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return sorted(scored_topics, key=lambda tup: tup[1], reverse=True)
 
     def log_perplexity(self, corpus):
+        """Calculate perplexity bound on the specified corpus.
+
+        Perplexity = e^(-bound).
+
+        Parameters
+        ----------
+        corpus : list of list of (int, float)
+            The corpus on which the perplexity is computed.
+
+        Returns
+        -------
+        float
+            The perplexity bound.
+
+        """
         W = self.get_topics().T
 
         H = np.zeros((W.shape[1], len(corpus)))
