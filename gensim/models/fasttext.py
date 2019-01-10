@@ -93,6 +93,9 @@ import numpy as np
 from numpy import ones, vstack, float32 as REAL, sum as np_sum
 import six
 
+# TODO use smart_open again when https://github.com/RaRe-Technologies/smart_open/issues/207 will be fixed
+import gensim.models._fasttext_bin
+
 from gensim.models.word2vec import Word2VecVocab, Word2VecTrainables, train_sg_pair, train_cbow_pair
 from gensim.models.keyedvectors import FastTextKeyedVectors
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
@@ -1007,9 +1010,6 @@ def _load_fasttext_format(model_file, encoding='utf-8'):
     :class: `~gensim.models.fasttext.FastText`
         The loaded model.
     """
-    # TODO use smart_open again when https://github.com/RaRe-Technologies/smart_open/issues/207 will be fixed
-
-    import gensim.models._fasttext_bin
     if not model_file.endswith('.bin'):
         model_file += '.bin'
     with open(model_file, 'rb') as fin:
