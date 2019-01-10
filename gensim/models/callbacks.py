@@ -22,6 +22,7 @@ Usage examples
 To implement a Callback, inherit from this base class and override one or more of its methods.
 
 Create a callback to save the training model after each epoch
+
 .. sourcecode:: pycon
 
     >>> from gensim.test.utils import get_tmpfile

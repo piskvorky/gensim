@@ -1963,7 +1963,6 @@ def strided_windows(ndarray, window_size):
 
     Examples
     --------
-
     .. sourcecode:: pycon
 
         >>> from gensim.utils import strided_windows

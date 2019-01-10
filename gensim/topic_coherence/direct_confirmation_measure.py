@@ -41,7 +41,6 @@ def log_conditional_probability(segmented_topics, accumulator, with_std=False, w
 
     Examples
     --------
-
     .. sourcecode:: pycon
 
         >>> from gensim.topic_coherence import direct_confirmation_measure, text_analysis
@@ -160,7 +159,6 @@ def log_ratio_measure(segmented_topics, accumulator, normalize=False, with_std=F
 
     Examples
     --------
-
     .. sourcecode:: pycon
 
         >>> from gensim.topic_coherence import direct_confirmation_measure, text_analysis

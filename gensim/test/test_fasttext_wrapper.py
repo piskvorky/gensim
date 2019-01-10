@@ -18,6 +18,14 @@ from gensim.models.wrappers import fasttext
 from gensim.models import keyedvectors
 from gensim.test.utils import datapath, get_tmpfile
 
+
+try:
+    from pyemd import emd  # noqa:F401
+    PYEMD_EXT = True
+except (ImportError, ValueError):
+    PYEMD_EXT = False
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -311,6 +319,7 @@ class TestFastText(unittest.TestCase):
         self.assertFalse('a!@' in self.test_model.wv.vocab)
         self.assertFalse('a!@' in self.test_model)
 
+    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed or have some issues")
     def testWmdistance(self):
         """Tests wmdistance for docs with in-vocab and out-of-vocab words"""
         doc = ['night', 'payment']

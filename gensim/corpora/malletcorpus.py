@@ -115,7 +115,6 @@ class MalletCorpus(LowCorpus):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.test.utils import datapath

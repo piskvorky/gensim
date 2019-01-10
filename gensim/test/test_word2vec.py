@@ -26,7 +26,7 @@ from testfixtures import log_capture
 try:
     from pyemd import emd  # noqa:F401
     PYEMD_EXT = True
-except ImportError:
+except (ImportError, ValueError):
     PYEMD_EXT = False
 
 
@@ -1023,11 +1023,10 @@ class TestWord2VecModel(unittest.TestCase):
 # endclass TestWord2VecModel
 
 class TestWMD(unittest.TestCase):
+
+    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed or have some issues")
     def testNonzero(self):
         '''Test basic functionality with a test sentence.'''
-
-        if not PYEMD_EXT:
-            return
 
         model = word2vec.Word2Vec(sentences, min_count=2, seed=42, workers=1)
         sentence1 = ['human', 'interface', 'computer']
@@ -1037,11 +1036,9 @@ class TestWMD(unittest.TestCase):
         # Check that distance is non-zero.
         self.assertFalse(distance == 0.0)
 
+    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed or have some issues")
     def testSymmetry(self):
         '''Check that distance is symmetric.'''
-
-        if not PYEMD_EXT:
-            return
 
         model = word2vec.Word2Vec(sentences, min_count=2, seed=42, workers=1)
         sentence1 = ['human', 'interface', 'computer']
@@ -1050,11 +1047,9 @@ class TestWMD(unittest.TestCase):
         distance2 = model.wv.wmdistance(sentence2, sentence1)
         self.assertTrue(np.allclose(distance1, distance2))
 
+    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed or have some issues")
     def testIdenticalSentences(self):
         '''Check that the distance from a sentence to itself is zero.'''
-
-        if not PYEMD_EXT:
-            return
 
         model = word2vec.Word2Vec(sentences, min_count=1)
         sentence = ['survey', 'user', 'computer', 'system', 'response', 'time']

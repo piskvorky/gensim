@@ -63,7 +63,6 @@ def split_sentences(text):
 
     Example
     -------
-
     .. sourcecode:: pycon
 
         >>> from gensim.summarization.textcleaner import split_sentences
@@ -94,7 +93,6 @@ def replace_abbreviations(text):
 
     Example
     -------
-
     .. sourcecode:: pycon
 
         >>> replace_abbreviations("God bless you, please, Mrs. Robinson")
@@ -167,7 +165,6 @@ def get_sentences(text):
 
     Example
     -------
-
     .. sourcecode:: pycon
 
         >>> text = "Does this text contains two sentences? Yes, it does."
