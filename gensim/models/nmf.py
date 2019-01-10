@@ -478,24 +478,22 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         eta = self._kappa / scipy.sparse.linalg.norm(self.A)
 
-        if not self._w_error:
-            self._w_error = error()
-
         for iter_number in range(self._w_max_iter):
             logger.debug("w_error: %s" % self._w_error)
-
-            self._W -= eta * (self._W.dot(self.A) - self.B)
-            self._transform()
 
             error_ = error()
 
             if (
+                self._w_error and
                 np.abs((error_ - self._w_error) / self._w_error)
                 < self._w_stop_condition
             ):
                 break
 
             self._w_error = error_
+
+            self._W -= eta * (self._W.dot(self.A) - self.B)
+            self._transform()
 
     def _apply(self, corpus, chunksize=None, **kwargs):
         """Apply the transformation to a whole corpus and get the result as another corpus.
@@ -594,11 +592,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             error_ /= m
 
-            if not _h_r_error:
-                _h_r_error = error_
-                continue
-
-            if np.abs(_h_r_error - error_) < self._h_r_stop_condition:
+            if _h_r_error and np.abs(_h_r_error - error_) < self._h_r_stop_condition:
                 break
 
             _h_r_error = error_
