@@ -78,7 +78,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
 
     """
     def __init__(self, mallet_path, corpus=None, num_topics=100, alpha=50, id2word=None, workers=4, prefix=None,
-                 optimize_interval=0, iterations=1000, topic_threshold=0.0, random_seed=None):
+                 optimize_interval=0, iterations=1000, topic_threshold=0.0, random_seed=0):
         """
 
         Parameters
@@ -105,7 +105,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         topic_threshold : float, optional
             Threshold of the probability above which we consider a topic.
         random_seed: int, optional
-            Random seed to ensure consistent results.
+            Random seed to ensure consistent results, if 0 - use system clock.
 
         """
         self.mallet_path = mallet_path
@@ -265,7 +265,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
     def train(self, corpus):
         """Train Mallet LDA.
 
-        Parameters
+        Parameterstrain-topics
         ----------
         corpus : iterable of iterable of (int, int)
             Corpus in BoW format
@@ -274,15 +274,12 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         self.convert_input(corpus, infer=False)
         cmd = self.mallet_path + ' train-topics --input %s --num-topics %s  --alpha %s --optimize-interval %s '\
             '--num-threads %s --output-state %s --output-doc-topics %s --output-topic-keys %s '\
-            '--num-iterations %s --inferencer-filename %s --doc-topics-threshold %s'
-
-        if self.random_seed is not None:
-            cmd += ' --random-seed ' + str(self.random_seed)
+            '--num-iterations %s --inferencer-filename %s --doc-topics-threshold %s  --random-seed %s'
 
         cmd = cmd % (
             self.fcorpusmallet(), self.num_topics, self.alpha, self.optimize_interval,
             self.workers, self.fstate(), self.fdoctopics(), self.ftopickeys(), self.iterations,
-            self.finferencer(), self.topic_threshold
+            self.finferencer(), self.topic_threshold, str(self.random_seed)
         )
         # NOTE "--keep-sequence-bigrams" / "--use-ngrams true" poorer results + runs out of memory
         logger.info("training MALLET LDA with %s", cmd)
@@ -319,10 +316,10 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         self.convert_input(bow, infer=True)
         cmd = \
             self.mallet_path + ' infer-topics --input %s --inferencer %s ' \
-                               '--output-doc-topics %s --num-iterations %s --doc-topics-threshold %s'
+                               '--output-doc-topics %s --num-iterations %s --doc-topics-threshold %s --random-seed %s'
         cmd = cmd % (
             self.fcorpusmallet() + '.infer', self.finferencer(),
-            self.fdoctopics() + '.infer', iterations, self.topic_threshold
+            self.fdoctopics() + '.infer', iterations, self.topic_threshold, str(self.random_seed)
         )
         logger.info("inferring topics with MALLET LDA '%s'", cmd)
         check_output(args=cmd, shell=True)
