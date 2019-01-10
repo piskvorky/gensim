@@ -533,7 +533,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         # uses a separate vocab to collect the token counts from `sentences`.
         # this consumes more RAM than merging new sentences into `self.vocab`
         # directly, but gives the new sentences a fighting chance to collect
-        # sufficient counts, before being pruned out by the (large) accummulated
+        # sufficient counts, before being pruned out by the (large) accumulated
         # counts collected in previous learn_vocab runs.
         min_reduce, vocab, total_words = self.learn_vocab(
             sentences, self.max_vocab_size, self.delimiter, self.progress_per, self.common_terms)

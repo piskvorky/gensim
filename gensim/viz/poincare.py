@@ -59,7 +59,7 @@ def poincare_2d_visualization(model, tree, figure_title, num_nodes=50, show_node
         mode='markers',
         marker=dict(color='rgb(30, 100, 200)'),
         text=node_labels,
-        textposition='bottom'
+        textposition='bottom center'
     )
 
     nodes_x, nodes_y, node_labels = [], [], []
@@ -73,7 +73,7 @@ def poincare_2d_visualization(model, tree, figure_title, num_nodes=50, show_node
         mode='markers+text',
         marker=dict(color='rgb(200, 100, 200)'),
         text=node_labels,
-        textposition='bottom'
+        textposition='bottom center'
     )
 
     node_out_degrees = Counter(hypernym_pair[1] for hypernym_pair in tree)
@@ -92,7 +92,7 @@ def poincare_2d_visualization(model, tree, figure_title, num_nodes=50, show_node
         edges_x += [vector_u[0], vector_v[0], None]
         edges_y += [vector_u[1], vector_v[1], None]
     edges = go.Scatter(
-        x=edges_x, y=edges_y, mode="line", hoverinfo=False,
+        x=edges_x, y=edges_y, mode="lines", hoverinfo='none',
         line=dict(color='rgb(50,50,50)', width=1))
 
     layout = go.Layout(
