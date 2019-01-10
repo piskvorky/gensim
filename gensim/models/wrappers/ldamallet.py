@@ -265,7 +265,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
     def train(self, corpus):
         """Train Mallet LDA.
 
-        Parameterstrain-topics
+        Parameters
         ----------
         corpus : iterable of iterable of (int, int)
             Corpus in BoW format
