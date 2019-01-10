@@ -1383,11 +1383,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         """
         if getattr(self, 'vectors_norm', None) is None or replace:
             logger.info("precomputing L2-norms of word weight vectors")
-            if replace:
-                _l2_norm_inplace(self.vectors)
-                self.vectors_norm = self.vectors
-            else:
-                self.vectors_norm = _l2_norm(self.vectors)
+            self.vectors_norm = _l2_norm(self.vectors, replace=replace)
 
 
 class Word2VecKeyedVectors(WordEmbeddingsKeyedVectors):
@@ -1599,16 +1595,12 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         """
         if getattr(self, 'vectors_docs_norm', None) is None or replace:
             logger.info("precomputing L2-norms of doc weight vectors")
-            if replace:
-                _l2_norm_inplace(self.vectors_docs)
-                self.vectors_docs_norm = self.vectors_docs
+            if not replace and self.mapfile_path:
+                self.vectors_docs_norm = np_memmap(
+                    self.mapfile_path + '.vectors_docs_norm', dtype=REAL,
+                    mode='w+', shape=self.vectors_docs.shape)
             else:
-                if self.mapfile_path:
-                    self.vectors_docs_norm = np_memmap(
-                        self.mapfile_path + '.vectors_docs_norm', dtype=REAL,
-                        mode='w+', shape=self.vectors_docs.shape)
-                else:
-                    self.vectors_docs_norm = _l2_norm(self.vectors_docs)
+                self.vectors_docs_norm = _l2_norm(self.vectors_docs, replace=replace)
 
     def most_similar(self, positive=None, negative=None, topn=10, clip_start=0, clip_end=None, indexer=None):
         """Find the top-N most similar docvecs from the training set.
@@ -2088,11 +2080,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         super(FastTextKeyedVectors, self).init_sims(replace)
         if getattr(self, 'vectors_ngrams_norm', None) is None or replace:
             logger.info("precomputing L2-norms of ngram weight vectors")
-            if replace:
-                _l2_norm_inplace(self.vectors_ngrams)
-                self.vectors_ngrams_norm = self.vectors_ngrams
-            else:
-                self.vectors_ngrams_norm = _l2_norm(self.vectors_ngrams)
+            self.vectors_ngrams_norm = _l2_norm(self.vectors_ngrams, replace=replace)
 
     def save_word2vec_format(self, fname, fvocab=None, binary=False, total_vec=None):
         """Store the input-hidden weight matrix in the same format used by the original
@@ -2283,12 +2271,24 @@ def _pad_random(m, new_rows, rand):
     return vstack([m, suffix])
 
 
-def _l2_norm(m):
-    """Return an L2-normalized version of a matrix."""
-    return (m / sqrt((m ** 2).sum(-1))[..., newaxis]).astype(REAL)
+def _l2_norm(m, replace=False):
+    """Return an L2-normalized version of a matrix.
 
+    Parameters
+    ----------
+    m : np.array
+        The matrix to normalize.
+    replace : boolean, optional
+        If True, modifies the existing matrix.
 
-def _l2_norm_inplace(m):
-    """Perform L2 normalization on a matrix in-place."""
-    for i in range(m.shape[0]):
-        m[i, :] /= sqrt((m[i, :] ** 2).sum(-1))
+    Returns
+    -------
+    The normalized matrix.  If replace=True, this will be the same as m.
+
+    """
+    dist = sqrt((m ** 2).sum(-1))[..., newaxis]
+    if replace:
+        m /= dist
+        return m
+    else:
+        return (m / dist).astype(REAL)
