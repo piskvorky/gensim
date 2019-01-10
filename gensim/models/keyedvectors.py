@@ -2227,22 +2227,40 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
 
 
 def _process_fasttext_vocab(iterable, min_n, max_n, num_buckets, hash_fn, hash2index):
-    #
-    # Performs a common operation for FastText weight initialization and
-    # updates: scan the vocabulary, calculate ngrams and their hashes, keep
-    # track of new ngrams, the buckets that each word relates to via its
-    # ngrams, etc.
-    #
-    # hash2index : dict
-    #   Updated in place.
-    # word_indices : dict
-    #   Keys are indices of entities in the vocabulary (words).  Values are
-    #   arrays containing indices into vectors_ngrams for each ngram of the
-    #   word.
-    # new_ngram_hashes : list
-    #   A list of hashes for newly encountered ngrams.  Each hash is modulo
-    #   num_buckets.
-    #
+    """
+    Performs a common operation for FastText weight initialization and
+    updates: scan the vocabulary, calculate ngrams and their hashes, keep
+    track of new ngrams, the buckets that each word relates to via its
+    ngrams, etc.
+
+    Parameters
+    ----------
+    iterable : list
+        A list of (word, :class:`Vocab`) tuples.
+    min_n : int
+        The minimum length of ngrams.
+    max_n : int
+        The maximum length of ngrams.
+    num_buckets : int
+        The number of buckets used by the model.
+    hash_fn : callable
+        Used to hash ngrams to buckets.
+    hash2index : dict
+        Updated in-place.
+
+    Returns
+    -------
+    A tuple of two elements.
+
+    word_indices : dict
+        Keys are indices of entities in the vocabulary (words).  Values are
+        arrays containing indices into vectors_ngrams for each ngram of the
+        word.
+    new_ngram_hashes : list
+        A list of hashes for newly encountered ngrams.  Each hash is modulo
+        num_buckets.
+
+    """
     old_hash2index_len = len(hash2index)
     word_indices = {}
     new_ngram_hashes = []
