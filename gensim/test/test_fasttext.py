@@ -859,11 +859,11 @@ with open(datapath('toy-data.txt')) as fin:
     TOY_SENTENCES = [fin.read().strip().split(' ')]
 
 
-def train_gensim(min_count=5):
+def train_gensim(bucket=100, min_count=5):
     #
     # Set parameters to match those in the load_native function
     #
-    model = FT_gensim(bucket=100, size=5, alpha=0.05, workers=1, sample=0.0001, min_count=min_count)
+    model = FT_gensim(bucket=bucket, size=5, alpha=0.05, workers=1, sample=0.0001, min_count=min_count)
     model.build_vocab(TOY_SENTENCES)
     model.train(TOY_SENTENCES, total_examples=len(TOY_SENTENCES), epochs=model.epochs)
     return model
@@ -1128,6 +1128,16 @@ class HashTest(unittest.TestCase):
         self.assertTrue(np.allclose(expected[u'steamtrain'], actual[u'steamtrain'], atol=1e-5))
         self.assertTrue(np.allclose(expected[u'паровоз'], actual[u'паровоз'], atol=1e-5))
         self.assertTrue(np.allclose(expected[longword], actual[longword], atol=1e-5))
+
+
+class ZeroBucketTest(unittest.TestCase):
+    def test_in_vocab(self):
+        model = train_gensim(bucket=0)
+        self.assertIsNotNone(model.wv['anarchist'])
+
+    def test_out_of_vocab(self):
+        model = train_gensim(bucket=0)
+        self.assertRaises(KeyError, model.wv.word_vec, 'streamtrain')
 
 
 if __name__ == '__main__':

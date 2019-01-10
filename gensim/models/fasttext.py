@@ -567,14 +567,17 @@ class FastText(BaseWordEmbeddingsModel):
         if self.negative:
             report['syn1neg'] = len(self.wv.vocab) * l1_size
         if self.word_ngrams > 0 and self.wv.vocab:
-            buckets = set()
-            num_ngrams = 0
-            for word in self.wv.vocab:
-                ngrams = _compute_ngrams(word, self.wv.min_n, self.wv.max_n)
-                num_ngrams += len(ngrams)
-                buckets.update(hash_fn(ng) % self.trainables.bucket for ng in ngrams)
-            num_buckets = len(buckets)
-            report['syn0_ngrams'] = len(buckets) * vec_size
+            num_buckets = num_ngrams = 0
+
+            if self.trainables.bucket:
+                buckets = set()
+                num_ngrams = 0
+                for word in self.wv.vocab:
+                    ngrams = _compute_ngrams(word, self.wv.min_n, self.wv.max_n)
+                    num_ngrams += len(ngrams)
+                    buckets.update(hash_fn(ng) % self.trainables.bucket for ng in ngrams)
+                num_buckets = len(buckets)
+            report['syn0_ngrams'] = num_buckets * vec_size
             # A tuple (48 bytes) with num_ngrams_word ints (8 bytes) for each word
             # Only used during training, not stored with the model
             report['buckets_word'] = 48 * len(self.wv.vocab) + 8 * num_ngrams

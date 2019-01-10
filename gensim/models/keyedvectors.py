@@ -2037,6 +2037,8 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
 
         if word in self.vocab:
             return super(FastTextKeyedVectors, self).word_vec(word, use_norm)
+        elif self.bucket == 0:
+            raise KeyError('cannot calculate vector for OOV word without ngrams')
         else:
             # from gensim.models.fasttext import compute_ngrams
             word_vec = np.zeros(self.vectors_ngrams.shape[1], dtype=np.float32)
@@ -2209,6 +2211,9 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         individual word.
 
         """
+        if self.bucket == 0:
+            return
+
         hash_fn = _ft_hash if self.compatible_hash else _ft_hash_broken
 
         for w, v in self.vocab.items():
@@ -2259,6 +2264,9 @@ def _process_fasttext_vocab(iterable, min_n, max_n, num_buckets, hash_fn, hash2i
     old_hash2index_len = len(hash2index)
     word_indices = {}
     new_ngram_hashes = []
+
+    if num_buckets == 0:
+        return [], {v.index: np.array([], dtype=np.uint32) for w, v in iterable}
 
     for word, vocab in iterable:
         wi = []
