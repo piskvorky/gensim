@@ -515,43 +515,6 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         return TransformedCorpus(self, corpus, chunksize, **kwargs)
 
-    @staticmethod
-    def _solve_r(r, r_actual, lambda_, v_max):
-        """Update residuals matrix.
-
-        Parameters
-        ----------
-        r : scipy.sparse.csr_matrix
-            Previous residuals.
-        r_actual : scipy.sparse.csr_matrix(rshape)
-            Actual residuals (v - Wh)
-        lambda_ : float
-            Regularization coefficient.
-        v_max : float
-            Residuals max and min boundary.
-
-        Returns
-        -------
-        float
-            Error between previous and current residuals.
-
-        """
-        r_actual.data *= np.abs(r_actual.data) > lambda_
-        r_actual.eliminate_zeros()
-
-        r_actual.data -= (r_actual.data > 0) * lambda_
-        r_actual.data += (r_actual.data < 0) * lambda_
-
-        np.clip(r_actual.data, -v_max, v_max, out=r_actual.data)
-
-        violation = scipy.sparse.linalg.norm(r - r_actual)
-
-        r.indices = r_actual.indices
-        r.indptr = r_actual.indptr
-        r.data = r_actual.data
-
-        return violation
-
     def _transform(self):
         """Apply boundaries on W."""
         np.clip(self._W.data, 0, self.v_max, out=self._W.data)
