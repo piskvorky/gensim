@@ -125,10 +125,11 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             The probability for each word in each topic, shape (`num_topics`, `vocabulary_size`).
 
         """
+        dense_topics = self._W.T.toarray()
         if self.normalize:
-            return self._W.T.toarray() / self._W.T.toarray().sum(axis=1).reshape(-1, 1)
+            return dense_topics / dense_topics.sum(axis=1).reshape(-1, 1)
 
-        return self._W.T.toarray()
+        return dense_topics
 
     def __getitem__(self, bow, eps=None):
         return self.get_document_topics(bow, eps)
