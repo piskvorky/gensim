@@ -1066,6 +1066,11 @@ class HashCompatibilityTest(unittest.TestCase):
         self.assertFalse(m.wv.compatible_hash)
         self.assertEqual(m.trainables.bucket, m.wv.bucket)
 
+    def test_hash_native(self):
+        m = load_native()
+        self.assertTrue(m.wv.compatible_hash)
+        self.assertEqual(m.trainables.bucket, m.wv.bucket)
+
 
 class HashTest(unittest.TestCase):
     """Loosely based on the test described here:
