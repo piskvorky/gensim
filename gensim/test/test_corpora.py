@@ -436,13 +436,13 @@ class TestLowCorpus(CorpusTestCase):
         corpus.use_wordids = False
         self.assertEqual(
             sorted(corpus.line2doc(self.CORPUS_LINE)),
-            [('mom', 1), ('was', 1), ('wash', 1), ('washed', 1), ('window', 2),])
+            [('mom', 1), ('was', 1), ('wash', 1), ('washed', 1), ('window', 2)])
 
         # should return words in word2id
         corpus.use_wordids = True
         self.assertEqual(
             sorted(corpus.line2doc(self.CORPUS_LINE)),
-            [(1, 1), (2, 2),])
+            [(1, 1), (2, 2)])
 
 
 class TestUciCorpus(CorpusTestCase):
@@ -496,7 +496,7 @@ class TestMalletCorpus(TestLowCorpus):
         self.assertEqual(doclang, 'lang')
         self.assertEqual(
             sorted(doc),
-            [('mom', 1), ('was', 1), ('wash', 1), ('washed', 1), ('window', 2),])
+            [('mom', 1), ('was', 1), ('wash', 1), ('washed', 1), ('window', 2)])
 
         # should return words in word2id
         corpus.use_wordids = True
@@ -506,7 +506,8 @@ class TestMalletCorpus(TestLowCorpus):
         self.assertEqual(doclang, 'lang')
         self.assertEqual(
             sorted(doc),
-            [(1, 1), (2, 2),])
+            [(1, 1), (2, 2)])
+
 
 class TestTextCorpus(CorpusTestCase):
 
