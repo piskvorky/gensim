@@ -37,12 +37,14 @@ class VocabTransform(interfaces.TransformationABC):
     `VocabTransform[corpus]` returns the same vectors but with the new ids.
 
     Old features that have no counterpart in the new ids are discarded. This
-    can be used to filter vocabulary of a corpus "online"::
+    can be used to filter vocabulary of a corpus "online":
 
-    >>> old2new = {oldid: newid for newid, oldid in enumerate(ids_you_want_to_keep)}
-    >>> vt = VocabTransform(old2new)
-    >>> for vec_with_new_ids in vt[corpus_with_old_ids]:
-    >>>     ...
+    .. sourcecode:: pycon
+
+        >>> old2new = {oldid: newid for newid, oldid in enumerate(ids_you_want_to_keep)}
+        >>> vt = VocabTransform(old2new)
+        >>> for vec_with_new_ids in vt[corpus_with_old_ids]:
+        >>>     pass
 
     """
 

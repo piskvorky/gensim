@@ -9,6 +9,7 @@ Unit tests for the `corpora.Dictionary` class.
 
 
 from collections import Mapping
+from itertools import chain
 import logging
 import unittest
 import codecs
@@ -126,6 +127,20 @@ class TestDictionary(unittest.TestCase):
         d = Dictionary(self.texts)
         d.filter_extremes(no_below=3, no_above=1.0, keep_tokens=['unknown_token'])
         expected = {'graph', 'trees', 'system', 'user'}
+        self.assertEqual(set(d.token2id.keys()), expected)
+
+    def testFilterKeepTokens_keepn(self):
+        # keep_tokens should also work if the keep_n parameter is used, but only
+        # to keep a maximum of n (so if keep_n < len(keep_n) the tokens to keep are
+        # still getting removed to reduce the size to keep_n!)
+        d = Dictionary(self.texts)
+        # Note: there are four tokens with freq 3, all the others have frequence 2
+        # in self.texts. In order to make the test result deterministic, we add
+        # 2 tokens of frequency one
+        d.add_documents([['worda'], ['wordb']])
+        # this should keep the 3 tokens with freq 3 and the one we want to keep
+        d.filter_extremes(keep_n=5, no_below=0, no_above=1.0, keep_tokens=['worda'])
+        expected = {'graph', 'trees', 'system', 'user', 'worda'}
         self.assertEqual(set(d.token2id.keys()), expected)
 
     def testFilterMostFrequent(self):
@@ -258,7 +273,7 @@ class TestDictionary(unittest.TestCase):
             for document in documents]
 
         # remove words that appear only once
-        all_tokens = sum(texts, [])
+        all_tokens = list(chain.from_iterable(texts))
         tokens_once = set(word for word in set(all_tokens) if all_tokens.count(word) == 1)
         texts = [[word for word in text if word not in tokens_once] for text in texts]
 

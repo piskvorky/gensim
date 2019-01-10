@@ -20,33 +20,35 @@ Data
 Example
 -------
 
->>> from gensim.summarization.summarizer import summarize
->>> text = '''Rice Pudding - Poem by Alan Alexander Milne
-... What is the matter with Mary Jane?
-... She's crying with all her might and main,
-... And she won't eat her dinner - rice pudding again -
-... What is the matter with Mary Jane?
-... What is the matter with Mary Jane?
-... I've promised her dolls and a daisy-chain,
-... And a book about animals - all in vain -
-... What is the matter with Mary Jane?
-... What is the matter with Mary Jane?
-... She's perfectly well, and she hasn't a pain;
-... But, look at her, now she's beginning again! -
-... What is the matter with Mary Jane?
-... What is the matter with Mary Jane?
-... I've promised her sweets and a ride in the train,
-... And I've begged her to stop for a bit and explain -
-... What is the matter with Mary Jane?
-... What is the matter with Mary Jane?
-... She's perfectly well and she hasn't a pain,
-... And it's lovely rice pudding for dinner again!
-... What is the matter with Mary Jane?'''
->>> print(summarize(text))
-And she won't eat her dinner - rice pudding again -
-I've promised her dolls and a daisy-chain,
-I've promised her sweets and a ride in the train,
-And it's lovely rice pudding for dinner again!
+.. sourcecode:: pycon
+
+    >>> from gensim.summarization.summarizer import summarize
+    >>> text = '''Rice Pudding - Poem by Alan Alexander Milne
+    ... What is the matter with Mary Jane?
+    ... She's crying with all her might and main,
+    ... And she won't eat her dinner - rice pudding again -
+    ... What is the matter with Mary Jane?
+    ... What is the matter with Mary Jane?
+    ... I've promised her dolls and a daisy-chain,
+    ... And a book about animals - all in vain -
+    ... What is the matter with Mary Jane?
+    ... What is the matter with Mary Jane?
+    ... She's perfectly well, and she hasn't a pain;
+    ... But, look at her, now she's beginning again! -
+    ... What is the matter with Mary Jane?
+    ... What is the matter with Mary Jane?
+    ... I've promised her sweets and a ride in the train,
+    ... And I've begged her to stop for a bit and explain -
+    ... What is the matter with Mary Jane?
+    ... What is the matter with Mary Jane?
+    ... She's perfectly well and she hasn't a pain,
+    ... And it's lovely rice pudding for dinner again!
+    ... What is the matter with Mary Jane?'''
+    >>> print(summarize(text))
+    And she won't eat her dinner - rice pudding again -
+    I've promised her dolls and a daisy-chain,
+    I've promised her sweets and a ride in the train,
+    And it's lovely rice pudding for dinner again!
 
 """
 
@@ -59,7 +61,7 @@ from gensim.summarization.commons import remove_unreachable_nodes as _remove_unr
 from gensim.summarization.bm25 import get_bm25_weights as _bm25_weights
 from gensim.corpora import Dictionary
 from math import log10 as _log10
-from six.moves import xrange
+from six.moves import range
 
 
 INPUT_MIN_LENGTH = 10
@@ -82,8 +84,8 @@ def _set_graph_edge_weights(graph):
     documents = graph.nodes()
     weights = _bm25_weights(documents)
 
-    for i in xrange(len(documents)):
-        for j in xrange(len(documents)):
+    for i in range(len(documents)):
+        for j in range(len(documents)):
             if i == j or weights[i][j] < WEIGHT_THRESHOLD:
                 continue
 
@@ -115,8 +117,8 @@ def _create_valid_graph(graph):
     """
     nodes = graph.nodes()
 
-    for i in xrange(len(nodes)):
-        for j in xrange(len(nodes)):
+    for i in range(len(nodes)):
+        for j in range(len(nodes)):
             if i == j:
                 continue
 
@@ -143,7 +145,7 @@ def _get_doc_length(doc):
         Length of document.
 
     """
-    return sum([item[1] for item in doc])
+    return sum(item[1] for item in doc)
 
 
 @deprecated("Function will be removed in 4.0.0")
@@ -301,7 +303,7 @@ def _format_results(extracted_sentences, split):
     """
     if split:
         return [sentence.text for sentence in extracted_sentences]
-    return "\n".join([sentence.text for sentence in extracted_sentences])
+    return "\n".join(sentence.text for sentence in extracted_sentences)
 
 
 def _build_hasheable_corpus(corpus):

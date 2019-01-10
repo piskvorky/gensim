@@ -16,7 +16,7 @@ The structure is called "KeyedVectors" and is essentially a mapping between *ent
 and *vectors*. Each entity is identified by its string id, so this is a mapping between {str => 1D numpy array}.
 
 The entity typically corresponds to a word (so the mapping maps words to 1D vectors),
-but for some models, they key can also correspond to a document, a graph node etc. To generalize
+but for some models, the key can also correspond to a document, a graph node etc. To generalize
 over different use-cases, this module calls the keys **entities**. Each entity is
 always represented by its string id, no matter whether the entity is a word, a document or a graph node.
 
@@ -57,90 +57,100 @@ How to obtain word vectors?
 Train a full model, then access its `model.wv` property, which holds the standalone keyed vectors.
 For example, using the Word2Vec algorithm to train the vectors
 
->>> from gensim.test.utils import common_texts
->>> from gensim.models import Word2Vec
->>>
->>> model = Word2Vec(common_texts, size=100, window=5, min_count=1, workers=4)
->>> word_vectors = model.wv
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import common_texts
+    >>> from gensim.models import Word2Vec
+    >>>
+    >>> model = Word2Vec(common_texts, size=100, window=5, min_count=1, workers=4)
+    >>> word_vectors = model.wv
 
 Persist the word vectors to disk with
+.. sourcecode:: pycon
 
->>> from gensim.test.utils import get_tmpfile
->>> from gensim.models import KeyedVectors
->>>
->>> fname = get_tmpfile("vectors.kv")
->>> word_vectors.save(fname)
->>> word_vectors = KeyedVectors.load(fname, mmap='r')
+    >>> from gensim.test.utils import get_tmpfile
+    >>> from gensim.models import KeyedVectors
+    >>>
+    >>> fname = get_tmpfile("vectors.kv")
+    >>> word_vectors.save(fname)
+    >>> word_vectors = KeyedVectors.load(fname, mmap='r')
 
 The vectors can also be instantiated from an existing file on disk
 in the original Google's word2vec C format as a KeyedVectors instance
 
->>> from gensim.test.utils import datapath
->>>
->>> wv_from_text = KeyedVectors.load_word2vec_format(datapath('word2vec_pre_kv_c'), binary=False)  # C text format
->>> wv_from_bin = KeyedVectors.load_word2vec_format(datapath("euclidean_vectors.bin"), binary=True)  # C binary format
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import datapath
+    >>>
+    >>> wv_from_text = KeyedVectors.load_word2vec_format(datapath('word2vec_pre_kv_c'), binary=False)  # C text format
+    >>> wv_from_bin = KeyedVectors.load_word2vec_format(datapath("euclidean_vectors.bin"), binary=True)  # C bin format
 
 What can I do with word vectors?
 ================================
 
 You can perform various syntactic/semantic NLP word tasks with the trained vectors.
 Some of them are already built-in
+.. sourcecode:: pycon
 
->>> import gensim.downloader as api
->>>
->>> word_vectors = api.load("glove-wiki-gigaword-100")  # load pre-trained word-vectors from gensim-data
->>>
->>> result = word_vectors.most_similar(positive=['woman', 'king'], negative=['man'])
->>> print("{}: {:.4f}".format(*result[0]))
-queen: 0.7699
->>>
->>> result = word_vectors.most_similar_cosmul(positive=['woman', 'king'], negative=['man'])
->>> print("{}: {:.4f}".format(*result[0]))
-queen: 0.8965
->>>
->>> print(word_vectors.doesnt_match("breakfast cereal dinner lunch".split()))
-cereal
->>>
->>> similarity = word_vectors.similarity('woman', 'man')
->>> similarity > 0.8
-True
->>>
->>> result = word_vectors.similar_by_word("cat")
->>> print("{}: {:.4f}".format(*result[0]))
-dog: 0.8798
->>>
->>> sentence_obama = 'Obama speaks to the media in Illinois'.lower().split()
->>> sentence_president = 'The president greets the press in Chicago'.lower().split()
->>>
->>> similarity = word_vectors.wmdistance(sentence_obama, sentence_president)
->>> print("{:.4f}".format(similarity))
-3.4893
->>>
->>> distance = word_vectors.distance("media", "media")
->>> print("{:.1f}".format(distance))
-0.0
->>>
->>> sim = word_vectors.n_similarity(['sushi', 'shop'], ['japanese', 'restaurant'])
->>> print("{:.4f}".format(sim))
-0.7067
->>>
->>> vector = word_vectors['computer']  # numpy vector of a word
->>> vector.shape
-(100,)
->>>
->>> vector = word_vectors.wv.word_vec('office', use_norm=True)
->>> vector.shape
-(100,)
+    >>> import gensim.downloader as api
+    >>>
+    >>> word_vectors = api.load("glove-wiki-gigaword-100")  # load pre-trained word-vectors from gensim-data
+    >>>
+    >>> result = word_vectors.most_similar(positive=['woman', 'king'], negative=['man'])
+    >>> print("{}: {:.4f}".format(*result[0]))
+    queen: 0.7699
+    >>>
+    >>> result = word_vectors.most_similar_cosmul(positive=['woman', 'king'], negative=['man'])
+    >>> print("{}: {:.4f}".format(*result[0]))
+    queen: 0.8965
+    >>>
+    >>> print(word_vectors.doesnt_match("breakfast cereal dinner lunch".split()))
+    cereal
+    >>>
+    >>> similarity = word_vectors.similarity('woman', 'man')
+    >>> similarity > 0.8
+    True
+    >>>
+    >>> result = word_vectors.similar_by_word("cat")
+    >>> print("{}: {:.4f}".format(*result[0]))
+    dog: 0.8798
+    >>>
+    >>> sentence_obama = 'Obama speaks to the media in Illinois'.lower().split()
+    >>> sentence_president = 'The president greets the press in Chicago'.lower().split()
+    >>>
+    >>> similarity = word_vectors.wmdistance(sentence_obama, sentence_president)
+    >>> print("{:.4f}".format(similarity))
+    3.4893
+    >>>
+    >>> distance = word_vectors.distance("media", "media")
+    >>> print("{:.1f}".format(distance))
+    0.0
+    >>>
+    >>> sim = word_vectors.n_similarity(['sushi', 'shop'], ['japanese', 'restaurant'])
+    >>> print("{:.4f}".format(sim))
+    0.7067
+    >>>
+    >>> vector = word_vectors['computer']  # numpy vector of a word
+    >>> vector.shape
+    (100,)
+    >>>
+    >>> vector = word_vectors.wv.word_vec('office', use_norm=True)
+    >>> vector.shape
+    (100,)
 
 Correlation with human opinion on word similarity
 
->>> from gensim.test.utils import datapath
->>>
->>> similarities = model.wv.evaluate_word_pairs(datapath('wordsim353.tsv'))
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import datapath
+    >>>
+    >>> similarities = model.wv.evaluate_word_pairs(datapath('wordsim353.tsv'))
 
 And on word analogies
 
->>> analogy_scores = model.wv.evaluate_word_analogies(datapath('questions-words.txt'))
+.. sourcecode:: pycon
+
+    >>> analogy_scores = model.wv.evaluate_word_analogies(datapath('questions-words.txt'))
 
 and so on.
 
@@ -149,20 +159,13 @@ and so on.
 from __future__ import division  # py3 "true division"
 
 from collections import deque
+from itertools import chain
 import logging
 
 try:
     from queue import Queue, Empty
 except ImportError:
     from Queue import Queue, Empty  # noqa:F401
-
-# If pyemd C extension is available, import it.
-# If pyemd is attempted to be used, but isn't installed, ImportError will be raised in wmdistance
-try:
-    from pyemd import emd
-    PYEMD_EXT = True
-except ImportError:
-    PYEMD_EXT = False
 
 from numpy import dot, float32 as REAL, empty, memmap as np_memmap, \
     double, array, zeros, vstack, sqrt, newaxis, integer, \
@@ -171,7 +174,7 @@ import numpy as np
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.corpora.dictionary import Dictionary
 from six import string_types, integer_types
-from six.moves import xrange, zip
+from six.moves import zip, range
 from scipy import sparse, stats
 from gensim.utils import deprecated
 from gensim.models.utils_any2vec import _save_word2vec_format, _load_word2vec_format, _compute_ngrams, _ft_hash
@@ -741,8 +744,10 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             If `pyemd <https://pypi.org/project/pyemd/>`_  isn't installed.
 
         """
-        if not PYEMD_EXT:
-            raise ImportError("Please install pyemd Python package to compute WMD.")
+
+        # If pyemd C extension is available, import it.
+        # If pyemd is attempted to be used, but isn't installed, ImportError will be raised in wmdistance
+        from pyemd import emd
 
         # Remove out-of-vocabulary words.
         len_pre_oov1 = len(document1)
@@ -754,9 +759,9 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         if diff1 > 0 or diff2 > 0:
             logger.info('Removed %d and %d OOV words from document 1 and 2 (respectively).', diff1, diff2)
 
-        if len(document1) == 0 or len(document2) == 0:
+        if not document1 or not document2:
             logger.info(
-                "At least one of the documents had no words that werein the vocabulary. "
+                "At least one of the documents had no words that were in the vocabulary. "
                 "Aborting (returning inf)."
             )
             return float('inf')
@@ -1067,8 +1072,12 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         Returns
         -------
-        (float, list of dict of (str, (str, str, str))
-            Overall evaluation score and full lists of correct and incorrect predictions divided by sections.
+        score : float
+            The overall evaluation score on the entire evaluation set
+        sections : list of dict of {str : str or list of tuple of (str, str, str, str)}
+            Results broken down by each section of the evaluation set. Each dict contains the name of the section
+            under the key 'section', and lists of correctly and incorrectly predicted 4-tuples of words under the
+            keys 'correct' and 'incorrect'.
 
         """
         ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
@@ -1130,8 +1139,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         total = {
             'section': 'Total accuracy',
-            'correct': sum((s['correct'] for s in sections), []),
-            'incorrect': sum((s['incorrect'] for s in sections), []),
+            'correct': list(chain.from_iterable(s['correct'] for s in sections)),
+            'incorrect': list(chain.from_iterable(s['incorrect'] for s in sections)),
         }
 
         oov_ratio = float(oov) / quadruplets_no * 100
@@ -1236,8 +1245,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         total = {
             'section': 'total',
-            'correct': sum((s['correct'] for s in sections), []),
-            'incorrect': sum((s['incorrect'] for s in sections), []),
+            'correct': list(chain.from_iterable(s['correct'] for s in sections)),
+            'incorrect': list(chain.from_iterable(s['incorrect'] for s in sections)),
         }
         self.log_accuracy(total)
         sections.append(total)
@@ -1281,9 +1290,13 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         Returns
         -------
-        (float, float, float)
-            Pearson correlation coefficient, Spearman rank-order correlation coefficient between the similarities
-            from the dataset and the similarities produced by the model itself, ratio of pairs with unknown words.
+        pearson : tuple of (float, float)
+            Pearson correlation coefficient with 2-tailed p-value.
+        spearman : tuple of (float, float)
+            Spearman rank-order correlation coefficient between the similarities from the dataset and the
+            similarities produced by the model itself, with 2-tailed p-value.
+        oov_ratio : float
+            The ratio of pairs with unknown words.
 
         """
         ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
@@ -1359,7 +1372,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         if getattr(self, 'vectors_norm', None) is None or replace:
             logger.info("precomputing L2-norms of word weight vectors")
             if replace:
-                for i in xrange(self.vectors.shape[0]):
+                for i in range(self.vectors.shape[0]):
                     self.vectors[i, :] /= sqrt((self.vectors[i, :] ** 2).sum(-1))
                 self.vectors_norm = self.vectors
             else:
@@ -1382,7 +1395,7 @@ class Word2VecKeyedVectors(WordEmbeddingsKeyedVectors):
         fvocab : str, optional
             Optional file path used to save the vocabulary
         binary : bool, optional
-            If True, the data wil be saved in binary word2vec format, else it will be saved in plain text.
+            If True, the data will be saved in binary word2vec format, else it will be saved in plain text.
         total_vec : int, optional
             Optional parameter to explicitly specify total no. of vectors
             (in case word vectors are appended with document vectors afterwards).
@@ -1576,7 +1589,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         if getattr(self, 'vectors_docs_norm', None) is None or replace:
             logger.info("precomputing L2-norms of doc weight vectors")
             if replace:
-                for i in xrange(self.vectors_docs.shape[0]):
+                for i in range(self.vectors_docs.shape[0]):
                     self.vectors_docs[i, :] /= sqrt((self.vectors_docs[i, :] ** 2).sum(-1))
                 self.vectors_docs_norm = self.vectors_docs
             else:
@@ -1820,7 +1833,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
             Explicitly specify total no. of vectors
             (in case word vectors are appended with document vectors afterwards)
         binary : bool, optional
-            If True, the data wil be saved in binary word2vec format, else it will be saved in plain text.
+            If True, the data will be saved in binary word2vec format, else it will be saved in plain text.
         write_first_line : bool, optional
             Whether to print the first line in the file. Useful when saving doc-vectors after word-vectors.
 

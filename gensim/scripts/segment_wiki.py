@@ -19,22 +19,24 @@ How to use
 
     python -m gensim.scripts.segment_wiki -i -f enwiki-latest-pages-articles.xml.bz2 -o enwiki-latest.json.gz
 
-#. Read output in simple way
+#. Read output in simple way:
+
+.. sourcecode:: pycon
 
     >>> from smart_open import smart_open
     >>> import json
     >>>
     >>> # iterate over the plain text data we just created
     >>> for line in smart_open('enwiki-latest.json.gz'):
-    >>>    # decode each JSON line into a Python dictionary object
-    >>>    article = json.loads(line)
+    >>>     # decode each JSON line into a Python dictionary object
+    >>>     article = json.loads(line)
     >>>
-    >>>    # each article has a "title", a mapping of interlinks and a list of "section_titles" and "section_texts".
-    >>>    print("Article title: %s" % article['title'])
-    >>>    print("Interlinks: %s" + article['interlinks'])
-    >>>    for section_title, section_text in zip(article['section_titles'], article['section_texts']):
-    >>>        print("Section title: %s" % section_title)
-    >>>        print("Section text: %s" % section_text)
+    >>>     # each article has a "title", a mapping of interlinks and a list of "section_titles" and "section_texts".
+    >>>     print("Article title: %s" % article['title'])
+    >>>     print("Interlinks: %s" + article['interlinks'])
+    >>>     for section_title, section_text in zip(article['section_titles'], article['section_texts']):
+    >>>         print("Section title: %s" % section_title)
+    >>>         print("Section text: %s" % section_text)
 
 
 Notes
@@ -300,10 +302,12 @@ class _WikiSectionsCorpus(WikiCorpus):
         etc are ignored).
 
         Note that this iterates over the **texts**; if you want vectors, just use
-        the standard corpus interface instead of this function::
+        the standard corpus interface instead of this function:
 
-        >>> for vec in wiki_corpus:
-        >>>     print(vec)
+        .. sourcecode:: pycon
+
+            >>> for vec in wiki_corpus:
+            >>>     print(vec)
 
         Yields
         ------

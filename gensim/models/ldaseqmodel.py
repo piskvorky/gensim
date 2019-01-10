@@ -23,26 +23,32 @@ Examples
 
 Set up a model using have 30 documents, with 5 in the first time-slice, 10 in the second, and 15 in the third
 
->>> from gensim.test.utils import common_corpus
->>> from gensim.models import LdaSeqModel
->>>
->>> ldaseq = LdaSeqModel(corpus=common_corpus, time_slice=[2, 4, 3], num_topics=2, chunksize=1)
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import common_corpus
+    >>> from gensim.models import LdaSeqModel
+    >>>
+    >>> ldaseq = LdaSeqModel(corpus=common_corpus, time_slice=[2, 4, 3], num_topics=2, chunksize=1)
 
 Persist a model to disk and reload it later
 
->>> from gensim.test.utils import datapath
->>>
->>> temp_file = datapath("model")
->>> ldaseq.save(temp_file)
->>>
->>> # Load a potentially pre-trained model from disk.
->>> ldaseq = LdaSeqModel.load(temp_file)
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import datapath
+    >>>
+    >>> temp_file = datapath("model")
+    >>> ldaseq.save(temp_file)
+    >>>
+    >>> # Load a potentially pre-trained model from disk.
+    >>> ldaseq = LdaSeqModel.load(temp_file)
 
 Access the document embeddings generated from the DTM
 
->>> doc = common_corpus[1]
->>>
->>> embedding = ldaseq[doc]
+.. sourcecode:: pycon
+
+    >>> doc = common_corpus[1]
+    >>>
+    >>> embedding = ldaseq[doc]
 
 """
 
@@ -735,7 +741,7 @@ class sslm(utils.SaveLoad):
         return self.zeta
 
     def compute_post_variance(self, word, chain_variance):
-        """Get the variance, based on the `Variational Kalman Filtering approach for Approximate Inference (section 3.1)
+        r"""Get the variance, based on the `Variational Kalman Filtering approach for Approximate Inference (section 3.1)
         <https://mimno.infosci.cornell.edu/info6150/readings/dynamic_topic_models.pdf>`_.
 
         This function accepts the word to compute variance for, along with the associated sslm class object,

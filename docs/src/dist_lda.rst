@@ -19,7 +19,9 @@ Running LDA
 ____________
 
 Run LDA like you normally would, but turn on the `distributed=True` constructor
-parameter::
+parameter
+
+.. sourcecode:: pycon
 
     >>> # extract 100 LDA topics, using default parameters
     >>> lda = LdaModel(corpus=mm, id2word=id2word, num_topics=100, distributed=True)
@@ -34,7 +36,9 @@ In distributed mode with four workers (Linux, Xeons of 2Ghz, 4GB RAM
 with `ATLAS <http://math-atlas.sourceforge.net/>`_), the wallclock time taken drops to 3h20m.
 
 To run standard batch LDA (no online updates of mini-batches) instead, you would similarly
-call::
+call
+
+.. sourcecode:: pycon
 
     >>> lda = LdaModel(corpus=mm, id2word=id2token, num_topics=100, update_every=0, passes=20, distributed=True)
     using distributed version with 4 workers
@@ -50,7 +54,7 @@ and then, some two days later::
     iteration 19, dispatching documents up to #3199665/3199665
     reached the end of input; now waiting for all remaining jobs to finish
 
-::
+.. sourcecode:: pycon
 
     >>> lda.print_topics(20)
     topic #0: 0.007*disease + 0.006*medical + 0.005*treatment + 0.005*cells + 0.005*cell + 0.005*cancer + 0.005*health + 0.005*blood + 0.004*patients + 0.004*drug

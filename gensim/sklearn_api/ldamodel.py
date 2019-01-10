@@ -11,12 +11,14 @@ Follows scikit-learn API conventions to facilitate using gensim along with sciki
 
 Examples
 --------
->>> from gensim.test.utils import common_corpus, common_dictionary
->>> from gensim.sklearn_api import LdaTransformer
->>>
->>> # Reduce each document to 2 dimensions (topics) using the sklearn interface.
->>> model = LdaTransformer(num_topics=2, id2word=common_dictionary, iterations=20, random_state=1)
->>> docvecs = model.fit_transform(common_corpus)
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import common_corpus, common_dictionary
+    >>> from gensim.sklearn_api import LdaTransformer
+    >>>
+    >>> # Reduce each document to 2 dimensions (topics) using the sklearn interface.
+    >>> model = LdaTransformer(num_topics=2, id2word=common_dictionary, iterations=20, random_state=1)
+    >>> docvecs = model.fit_transform(common_corpus)
 
 """
 import numpy as np

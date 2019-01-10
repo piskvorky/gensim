@@ -287,6 +287,14 @@ phrases_sentences = common_texts + [
     ['graph', 'minors', 'survey', 'human', 'interface']
 ]
 
+common_terms = ["of", "the", "was", "are"]
+phrases_w_common_terms = [
+    [u'the', u'mayor', u'of', u'new', u'york', u'was', u'there'],
+    [u'the', u'mayor', u'of', u'new', u'orleans', u'was', u'there'],
+    [u'the', u'bank', u'of', u'america', u'offices', u'are', u'open'],
+    [u'the', u'bank', u'of', u'america', u'offices', u'are', u'closed']
+]
+
 
 class TestLdaWrapper(unittest.TestCase):
     def setUp(self):
@@ -1150,6 +1158,81 @@ class TestPhrasesTransformer(unittest.TestCase):
     def testModelNotFitted(self):
         phrases_transformer = PhrasesTransformer()
         self.assertRaises(NotFittedError, phrases_transformer.transform, phrases_sentences[0])
+
+
+class TestPhrasesTransformerCommonTerms(unittest.TestCase):
+    def setUp(self):
+        self.model = PhrasesTransformer(min_count=1, threshold=1, common_terms=common_terms)
+        self.expected_transformations = [
+            [u'the', u'mayor_of_new', u'york', u'was', u'there'],
+            [u'the', u'mayor_of_new', u'orleans', u'was', u'there'],
+            [u'the', u'bank_of_america', u'offices', u'are', u'open'],
+            [u'the', u'bank_of_america', u'offices', u'are', u'closed']
+        ]
+
+    def testCompareToOld(self):
+        with open(datapath("phrases-transformer-v3-5-0.pkl"), "rb") as old_phrases_transformer_pkl:
+            old_phrases_transformer = pickle.load(old_phrases_transformer_pkl)
+        doc = phrases_sentences[-1]
+        phrase_tokens = old_phrases_transformer.transform(doc)[0]
+        expected_phrase_tokens = [u'graph_minors', u'survey', u'human_interface']
+        self.assertEqual(phrase_tokens, expected_phrase_tokens)
+
+        self.model.fit(phrases_sentences)
+        new_phrase_tokens = self.model.transform(doc)[0]
+        self.assertEqual(new_phrase_tokens, phrase_tokens)
+
+    def testLoadNew(self):
+        with open(datapath("phrases-transformer-new-v3-5-0.pkl"), "rb") as new_phrases_transformer_pkl:
+            old_phrases_transformer = pickle.load(new_phrases_transformer_pkl)
+        doc = phrases_sentences[-1]
+        phrase_tokens = old_phrases_transformer.transform(doc)[0]
+        expected_phrase_tokens = [u'graph_minors', u'survey', u'human_interface']
+        self.assertEqual(phrase_tokens, expected_phrase_tokens)
+
+        self.model.fit(phrases_sentences)
+        new_phrase_tokens = self.model.transform(doc)[0]
+        self.assertEqual(new_phrase_tokens, phrase_tokens)
+
+    def testFitAndTransform(self):
+        self.model.fit(phrases_w_common_terms)
+
+        transformed = self.model.transform(phrases_w_common_terms)
+        self.assertEqual(transformed, self.expected_transformations)
+
+    def testFitTransform(self):
+        transformed = self.model.fit_transform(phrases_w_common_terms)
+        self.assertEqual(transformed, self.expected_transformations)
+
+    def testPartialFit(self):
+        # fit half of the sentences
+        self.model.fit(phrases_w_common_terms[:2])
+
+        expected_transformations_0 = [
+            [u'the', u'mayor_of_new', u'york', u'was', u'there'],
+            [u'the', u'mayor_of_new', u'orleans', u'was', u'there'],
+            [u'the', u'bank', u'of', u'america', u'offices', u'are', u'open'],
+            [u'the', u'bank', u'of', u'america', u'offices', u'are', u'closed']
+        ]
+        # transform all sentences, second half should be same as original
+        transformed_0 = self.model.transform(phrases_w_common_terms)
+        self.assertEqual(transformed_0, expected_transformations_0)
+
+        # fit remaining sentences, result should be the same as in the other tests
+        self.model.partial_fit(phrases_w_common_terms[2:])
+        transformed_1 = self.model.fit_transform(phrases_w_common_terms)
+        self.assertEqual(transformed_1, self.expected_transformations)
+
+        new_phrases = [[u'offices', u'are', u'open'], [u'offices', u'are', u'closed']]
+        self.model.partial_fit(new_phrases)
+        expected_transformations_2 = [
+            [u'the', u'mayor_of_new', u'york', u'was', u'there'],
+            [u'the', u'mayor_of_new', u'orleans', u'was', u'there'],
+            [u'the', u'bank_of_america', u'offices_are_open'],
+            [u'the', u'bank_of_america', u'offices_are_closed']
+        ]
+        transformed_2 = self.model.transform(phrases_w_common_terms)
+        self.assertEqual(transformed_2, expected_transformations_2)
 
 
 # specifically test pluggable scoring in Phrases, because possible pickling issues with function parameter

@@ -11,21 +11,23 @@ Follows scikit-learn API conventions to facilitate using gensim along with sciki
 
 Examples
 --------
->>> from gensim.test.utils import common_texts, common_dictionary, common_corpus
->>> from gensim.sklearn_api.atmodel import AuthorTopicTransformer
->>>
->>> # Pass a mapping from authors to the documents they contributed to.
->>> author2doc = {
-...     'john': [0, 1, 2, 3, 4, 5, 6],
-...     'jane': [2, 3, 4, 5, 6, 7, 8],
-...     'jack': [0, 2, 4, 6, 8]
-... }
->>>
->>> # Lets use the model to discover 2 different topics.
->>> model = AuthorTopicTransformer(id2word=common_dictionary, author2doc=author2doc, num_topics=2, passes=100)
->>>
->>> # In which of those 2 topics does jack mostly contribute to?
->>> topic_dist = model.fit(common_corpus).transform('jack')
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import common_dictionary, common_corpus
+    >>> from gensim.sklearn_api.atmodel import AuthorTopicTransformer
+    >>>
+    >>> # Pass a mapping from authors to the documents they contributed to.
+    >>> author2doc = {
+    ...     'john': [0, 1, 2, 3, 4, 5, 6],
+    ...     'jane': [2, 3, 4, 5, 6, 7, 8],
+    ...     'jack': [0, 2, 4, 6, 8]
+    ... }
+    >>>
+    >>> # Lets use the model to discover 2 different topics.
+    >>> model = AuthorTopicTransformer(id2word=common_dictionary, author2doc=author2doc, num_topics=2, passes=100)
+    >>>
+    >>> # In which of those 2 topics does jack mostly contribute to?
+    >>> topic_dist = model.fit(common_corpus).transform('jack')
 
 """
 import numpy as np
