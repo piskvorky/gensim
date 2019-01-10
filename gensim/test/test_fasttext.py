@@ -7,6 +7,7 @@ import unittest
 import os
 import struct
 import six
+import tempfile
 
 import numpy as np
 
@@ -1067,6 +1068,16 @@ class NativeTrainingContinuationTest(unittest.TestCase):
 
         self.assertFalse(np.allclose(vectors_ngrams_before, model.wv.vectors_ngrams))
         self.assertNotEqual(old_vector, new_vector)
+
+    def test_save_load(self):
+        """Test that serialization works end-to-end.  Not crashing is a success."""
+        with tempfile.NamedTemporaryFile(delete=True) as tmp:
+            train_gensim().save(tmp.name)
+
+            model = FT_gensim.load(tmp.name)
+            model.train(list_corpus, total_examples=len(list_corpus), epochs=model.epochs)
+
+            model.save(tmp.name)
 
 
 class HashCompatibilityTest(unittest.TestCase):
