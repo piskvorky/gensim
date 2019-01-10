@@ -203,28 +203,36 @@ class TestLdaMallet(unittest.TestCase, basetmtests.TestBaseTopicModel):
     def test_random_seed(self):
         if not self.mallet_path:
             return
+
         # test that 2 models created with the same random_seed are equal in their topics treatment
         SEED = 10
+        NUM_TOPICS = 10
+        ITER = 500
+
         tm1 = ldamallet.LdaMallet(
             self.mallet_path,
             corpus=corpus,
-            num_topics=2,
+            num_topics=NUM_TOPICS,
             id2word=dictionary,
-            random_seed=SEED
+            random_seed=SEED,
+            iterations=ITER,
         )
+
         tm2 = ldamallet.LdaMallet(
             self.mallet_path,
             corpus=corpus,
-            num_topics=2,
+            num_topics=NUM_TOPICS,
             id2word=dictionary,
-            random_seed=SEED
+            random_seed=SEED,
+            iterations=ITER,
         )
         self.assertTrue(np.allclose(tm1.word_topics, tm2.word_topics))
+
         for doc in corpus:
-            self.assertTrue(np.allclose(
-                        sorted(matutils.sparse2full(tm1[doc], 2)),
-                        sorted(matutils.sparse2full(tm2[doc], 2)),
-                        atol=1e-1))
+            tm1_vector = matutils.sparse2full(tm1[doc], NUM_TOPICS)
+            tm2_vector = matutils.sparse2full(tm2[doc], NUM_TOPICS)
+
+            self.assertTrue(np.allclose(tm1_vector, tm2_vector))
 
 
 if __name__ == '__main__':
