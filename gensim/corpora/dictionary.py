@@ -597,13 +597,12 @@ class Dictionary(utils.SaveLoad, Mapping):
     def patch_with_special_tokens(self, special_token_dict):
         """Patch token2id and id2token using a dictionary of special tokens.
 
-        Use case
-        --------
-        When doing sequence modeling (e.g. named entity recognition), one may
-        want to specify special tokens that behave differently than others.
+
+        **Usecase:** when doing sequence modeling (e.g. named entity recognition), one may  want to specify
+        special tokens that behave differently than others.
         One example is the "unknown" token, and another is the padding token.
-        It is usual to set the padding token to have index `0`, and patching
-        the dictionary with `{'<PAD>': 0}` would be one way to specify this.
+        It is usual to set the padding token to have index `0`, and patching the dictionary with `{'<PAD>': 0}`
+        would be one way to specify this.
 
         Parameters
         ----------
@@ -612,16 +611,21 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Examples
         --------
-        >>> from gensim.corpora import Dictionary
-        >>>
-        >>> corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
-        >>> dct = Dictionary(corpus)
-        >>> special_tokens = {'pad': 0, 'space': 1}
-        >>> print(dct.token2id)
-        {'maso': 0, 'mele': 1, 'máma': 2, 'ema': 3, 'má': 4}
-        >>> dct.patch_with_special_tokens(special_tokens)
-        >>> print(dct.token2id)
-        {'maso': 6, 'mele': 7, 'máma': 2, 'ema': 3, 'má': 4, 'pad': 0, 'space': 1}
+        .. sourcecode:: pycon
+
+            >>> from gensim.corpora import Dictionary
+            >>>
+            >>> corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
+            >>> dct = Dictionary(corpus)
+            >>>
+            >>> special_tokens = {'pad': 0, 'space': 1}
+            >>> print(dct.token2id)
+            {'maso': 0, 'mele': 1, 'máma': 2, 'ema': 3, 'má': 4}
+            >>>
+            >>> dct.patch_with_special_tokens(special_tokens)
+            >>> print(dct.token2id)
+            {'maso': 6, 'mele': 7, 'máma': 2, 'ema': 3, 'má': 4, 'pad': 0, 'space': 1}
+
         """
         possible_ids = []
         for token, idx in special_token_dict.items():
