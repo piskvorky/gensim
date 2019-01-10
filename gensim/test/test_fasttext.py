@@ -1055,6 +1055,11 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         self.assertNotEqual(old_vector, new_vector)
 
 
+def _train_and_save(path=datapath('compatible-hash-false.model.tmp')):
+    model = train_gensim()
+    model.save(path)
+
+
 class HashCompatibilityTest(unittest.TestCase):
     def test_compatibility_true(self):
         m = FT_gensim.load(datapath('compatible-hash-true.model'))
@@ -1062,6 +1067,19 @@ class HashCompatibilityTest(unittest.TestCase):
         self.assertEqual(m.trainables.bucket, m.wv.bucket)
 
     def test_compatibility_false(self):
+        #
+        # Originally obtained by running the _train_and_save function using
+        # and older version of gensim (e.g. 3.6.0):
+        #
+        # $ git checkout 3.6.0
+        # $ git co attrs gensim/test/{test_fasttext.py,test_data/toy-data.txt}
+        # $ python -c 'import gensim.test.test_fasttext as T;T._train_and_save()'
+        # $ git checkout attrs
+        # $ mv gensim/test/test_data/compatible-hash-true.model{.tmp,}
+        # $ pytest gensim/test/test_testfasttext.py -k test_compatibility_false
+        #
+        # where attrs is the current branch.
+        #
         m = FT_gensim.load(datapath('compatible-hash-false.model'))
         self.assertFalse(m.wv.compatible_hash)
         self.assertEqual(m.trainables.bucket, m.wv.bucket)
