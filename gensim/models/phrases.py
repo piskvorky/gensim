@@ -14,7 +14,6 @@ Inspired by:
 
 Examples
 --------
-
 .. sourcecode:: pycon
 
     >>> from gensim.test.utils import datapath

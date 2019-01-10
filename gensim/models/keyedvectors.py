@@ -66,6 +66,7 @@ For example, using the Word2Vec algorithm to train the vectors
     >>> word_vectors = model.wv
 
 Persist the word vectors to disk with
+
 .. sourcecode:: pycon
 
     >>> from gensim.test.utils import get_tmpfile
@@ -90,6 +91,7 @@ What can I do with word vectors?
 
 You can perform various syntactic/semantic NLP word tasks with the trained vectors.
 Some of them are already built-in
+
 .. sourcecode:: pycon
 
     >>> import gensim.downloader as api

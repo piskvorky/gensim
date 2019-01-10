@@ -231,7 +231,6 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.corpora import Dictionary
@@ -339,7 +338,6 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.corpora import Dictionary
@@ -392,7 +390,6 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.corpora import Dictionary
@@ -431,7 +428,6 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.corpora import Dictionary
@@ -556,7 +552,6 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.corpora import Dictionary
@@ -612,7 +607,6 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.corpora import Dictionary
@@ -677,7 +671,6 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.corpora import Dictionary

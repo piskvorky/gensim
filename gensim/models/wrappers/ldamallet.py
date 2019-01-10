@@ -32,7 +32,6 @@ Use `official guide <http://mallet.cs.umass.edu/download.php>`_ or this one ::
 
 Examples
 --------
-
 .. sourcecode:: pycon
 
     >>> from gensim.test.utils import common_corpus, common_dictionary
