@@ -1902,7 +1902,8 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
     This class also provides an abstraction over the hash functions used by
     Gensim's FastText implementation over time.  The hash function connects
     ngrams to buckets.  Originally, the hash function was broken and
-    incompatible with Facebook's implementation.
+    incompatible with Facebook's implementation.  The current hash is fully
+    compatible.
 
     Parameters
     ----------
