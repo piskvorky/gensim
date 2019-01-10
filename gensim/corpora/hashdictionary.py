@@ -173,7 +173,6 @@ class HashDictionary(utils.SaveLoad, dict):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.corpora import HashDictionary
@@ -331,7 +330,6 @@ class HashDictionary(utils.SaveLoad, dict):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.corpora import HashDictionary

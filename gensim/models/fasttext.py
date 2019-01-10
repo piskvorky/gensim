@@ -24,6 +24,7 @@ Usage examples
 --------------
 
 Initialize and train a model:
+
 .. sourcecode:: pycon
 
     >>> from gensim.test.utils import common_texts

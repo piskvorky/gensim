@@ -12,7 +12,6 @@ For theoretical background on Random Projections, see [1]_.
 
 Examples
 --------
-
 .. sourcecode:: pycon
 
     >>> from gensim.models import RpModel
@@ -119,7 +118,6 @@ class RpModel(interfaces.TransformationABC):
 
         Examples
         ----------
-
         .. sourcecode:: pycon
 
             >>> from gensim.models import RpModel

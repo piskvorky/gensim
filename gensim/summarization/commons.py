@@ -10,6 +10,7 @@ Examples
 --------
 
 Create simple graph and add edges. Let's take a look at nodes.
+
 .. sourcecode:: pycon
 
     >>> gg = build_graph(['Felidae', 'Lion', 'Tiger', 'Wolf'])
