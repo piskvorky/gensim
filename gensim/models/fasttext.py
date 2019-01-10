@@ -880,24 +880,11 @@ def _struct_unpack(file_handle, fmt):
     return struct.unpack(fmt, file_handle.read(num_bytes))
 
 
+#
+# Keep for backward compatibility.
+#
 class FastTextVocab(Word2VecVocab):
-    """Vocabulary used by :class:`~gensim.models.fasttext.FastText`."""
-    def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0, ns_exponent=0.75):
-        super(FastTextVocab, self).__init__(
-            max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
-            sorted_vocab=sorted_vocab, null_word=null_word, ns_exponent=ns_exponent)
-
-    #
-    # FIXME: why is this method even necessary?  It just passes the buck
-    # to the superclass and adds nothing new.  The same thing can be said
-    # about this entire class.  Why is it even here?
-    #
-    def prepare_vocab(self, hs, negative, wv, update=False, keep_raw_vocab=False, trim_rule=None,
-                      min_count=None, sample=None, dry_run=False):
-        report_values = super(FastTextVocab, self).prepare_vocab(
-            hs, negative, wv, update=update, keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule,
-            min_count=min_count, sample=sample, dry_run=dry_run)
-        return report_values
+    pass
 
 
 class FastTextTrainables(Word2VecTrainables):
