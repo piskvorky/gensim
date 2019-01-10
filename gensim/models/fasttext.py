@@ -87,7 +87,6 @@ And on word analogies:
 """
 
 import logging
-import struct
 
 import numpy as np
 from numpy import ones, vstack, float32 as REAL, sum as np_sum
@@ -789,25 +788,6 @@ class FastText(BaseWordEmbeddingsModel):
         for attr, val in six.iteritems(m.__dict__):
             setattr(self, attr, val)
 
-    @deprecated("Method will be removed in 4.0.0, use _struct_unpack instead")
-    def struct_unpack(self, file_handle, fmt):
-        """Read a single object from an open file.
-
-        Parameters
-        ----------
-        file_handle : file_like object
-            Handle to an open file
-        fmt : str
-            Byte format in which the structure is saved.
-
-        Returns
-        -------
-        Tuple of (str)
-            Unpacked structure.
-
-        """
-        return _struct_unpack(file_handle, fmt)
-
     def save(self, *args, **kwargs):
         """Save the Fasttext model. This saved model can be loaded again using
         :meth:`~gensim.models.fasttext.FastText.load`, which supports incremental training
@@ -876,11 +856,6 @@ class FastText(BaseWordEmbeddingsModel):
     def accuracy(self, questions, restrict_vocab=30000, most_similar=None, case_insensitive=True):
         most_similar = most_similar or FastTextKeyedVectors.most_similar
         return self.wv.accuracy(questions, restrict_vocab, most_similar, case_insensitive)
-
-
-def _struct_unpack(file_handle, fmt):
-    num_bytes = struct.calcsize(fmt)
-    return struct.unpack(fmt, file_handle.read(num_bytes))
 
 
 #
