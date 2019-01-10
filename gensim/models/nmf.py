@@ -500,9 +500,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             error_ = error()
 
             if (
-                self._w_error and
-                np.abs((error_ - self._w_error) / self._w_error)
-                < self._w_stop_condition
+                self._w_error
+                and np.abs((error_ - self._w_error) / self._w_error) < self._w_stop_condition
             ):
                 break
 

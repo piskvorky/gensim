@@ -104,7 +104,7 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
 
     def testPersistence(self):
         fname = get_tmpfile('gensim_models_nmf.tst')
-        
+
         self.model.save(fname)
         model2 = nmf.Nmf.load(fname)
         tstvec = []
@@ -124,7 +124,6 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
 
     def testLargeMmapCompressed(self):
         fname = get_tmpfile('gensim_models_nmf.tst.gz')
-        
 
         # simulate storing large arrays separately
         self.model.save(fname, sep_limit=0)
