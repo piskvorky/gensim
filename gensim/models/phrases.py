@@ -541,7 +541,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         # uses a separate vocab to collect the token counts from `sentences`.
         # this consumes more RAM than merging new sentences into `self.vocab`
         # directly, but gives the new sentences a fighting chance to collect
-        # sufficient counts, before being pruned out by the (large) accummulated
+        # sufficient counts, before being pruned out by the (large) accumulated
         # counts collected in previous learn_vocab runs.
         min_reduce, vocab, total_words = self.learn_vocab(
             sentences, self.max_vocab_size, self.delimiter, self.progress_per, self.common_terms)
@@ -666,7 +666,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
 
 
 def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
-    """Bigram scoring function, based on the original `Mikolov, et. al: "Distributed Representations
+    r"""Bigram scoring function, based on the original `Mikolov, et. al: "Distributed Representations
     of Words and Phrases and their Compositionality" <https://arxiv.org/abs/1310.4546>`_.
 
     Parameters
@@ -684,16 +684,21 @@ def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count
     corpus_word_count : int
         Not used in this particular scoring technique.
 
+    Returns
+    -------
+    float
+        Score for given bi-gram, greater than or equal to 0.
+
     Notes
     -----
-    Formula: :math:`\\frac{(bigram\_count - min\_count) * len\_vocab }{ (worda\_count * wordb\_count)}`.
+    Formula: :math:`\frac{(bigram\_count - min\_count) * len\_vocab }{ (worda\_count * wordb\_count)}`.
 
     """
     return (bigram_count - min_count) / worda_count / wordb_count * len_vocab
 
 
 def npmi_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
-    """Calculation NPMI score based on `"Normalized (Pointwise) Mutual Information in Colocation Extraction"
+    r"""Calculation NPMI score based on `"Normalized (Pointwise) Mutual Information in Colocation Extraction"
     by Gerlof Bouma <https://svn.spraakdata.gu.se/repos/gerlof/pub/www/Docs/npmi-pfd.pdf>`_.
 
     Parameters
@@ -711,10 +716,15 @@ def npmi_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, co
     corpus_word_count : int
         Total number of words in the corpus.
 
+    Returns
+    -------
+    float
+        Score for given bi-gram, in the range -1 to 1.
+
     Notes
     -----
-    Formula: :math:`\\frac{ln(prop(word_a, word_b) / (prop(word_a)*prop(word_b)))}{ -ln(prop(word_a, word_b)}`,
-    where :math:`prob(word) = \\frac{word\_count}{corpus\_word\_count}`
+    Formula: :math:`\frac{ln(prop(word_a, word_b) / (prop(word_a)*prop(word_b)))}{ -ln(prop(word_a, word_b)}`,
+    where :math:`prob(word) = \frac{word\_count}{corpus\_word\_count}`
 
     """
     if bigram_count >= min_count:
