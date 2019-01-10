@@ -966,13 +966,6 @@ class FastTextTrainables(Word2VecTrainables):
         self.vectors_ngrams_lockf = ones(model.wv.vectors_ngrams.shape, dtype=REAL)
         self.vectors_vocab_lockf = ones(model.wv.vectors_vocab.shape, dtype=REAL)
 
-        #
-        # TODO: still not 100% sure what to do with this new matrix.
-        # The shape matches the expected shape (compared with gensim training),
-        # but the values don't.
-        #
-        # TODO: is self.hs and self.negative mutually exclusive?
-        #
         if model.hs:
             self.syn1 = hidden_output
         if model.negative:
