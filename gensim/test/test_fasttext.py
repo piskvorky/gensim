@@ -1119,13 +1119,16 @@ class HashTest(unittest.TestCase):
         self.assertTrue(np.allclose(expected, actual, atol=1e-5))
 
     def test_out_of_vocab(self):
+        longword = u'rechtsschutzversicherungsgesellschaften'  # many ngrams
         expected = {
             u'steamtrain': np.array([0.031988, 0.022966, 0.059483, 0.094547, 0.062693]),
             u'паровоз': np.array([-0.0033987, 0.056236, 0.036073, 0.094008, 0.00085222]),
+            longword: np.array([-0.012889, 0.029756, 0.018020, 0.099077, 0.041939]),
         }
         actual = {w: self.model.wv[w] for w in expected}
         self.assertTrue(np.allclose(expected[u'steamtrain'], actual[u'steamtrain'], atol=1e-5))
         self.assertTrue(np.allclose(expected[u'паровоз'], actual[u'паровоз'], atol=1e-5))
+        self.assertTrue(np.allclose(expected[longword], actual[longword], atol=1e-5))
 
 
 if __name__ == '__main__':
