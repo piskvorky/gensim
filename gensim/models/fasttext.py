@@ -920,11 +920,6 @@ class FastTextTrainables(Word2VecTrainables):
         # appear to use it.
         #
 
-    #
-    # FIXME: this method appears to be temporally coupled to the constructor.
-    # There's little point instantiating a FastTextTrainables without calling
-    # this method.
-    #
     def prepare_weights(self, hs, negative, wv, update=False, vocabulary=None):
         super(FastTextTrainables, self).prepare_weights(hs, negative, wv, update=update, vocabulary=vocabulary)
         self.init_ngrams_weights(wv, update=update, vocabulary=vocabulary)
