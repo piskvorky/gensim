@@ -444,7 +444,7 @@ class CoherenceModel(interfaces.TransformationABC):
         try:
             return np.array([self.dictionary.token2id[token] for token in topic])
         except KeyError:  # might be a list of token ids already, but let's verify all in dict
-            topic = [self.dictionary.id2token[_id] for _id in topic]
+            topic = (self.dictionary.id2token[_id] for _id in topic)
             return np.array([self.dictionary.token2id[token] for token in topic])
 
     def _update_accumulator(self, new_topics):
@@ -460,9 +460,9 @@ class CoherenceModel(interfaces.TransformationABC):
         return not self._accumulator.relevant_ids.issuperset(new_set)
 
     def _topics_differ(self, new_topics):
-        return (new_topics is not None and
-                self._topics is not None and
-                not np.array_equal(new_topics, self._topics))
+        return (new_topics is not None
+                and self._topics is not None
+                and not np.array_equal(new_topics, self._topics))
 
     def _get_topics(self):
         """Internal helper function to return topics from a trained topic model."""

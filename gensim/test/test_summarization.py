@@ -19,6 +19,30 @@ import unittest
 from gensim import utils
 from gensim.corpora import Dictionary
 from gensim.summarization import summarize, summarize_corpus, keywords, mz_keywords
+from gensim.summarization.commons import remove_unreachable_nodes, build_graph
+
+
+class TestCommons(unittest.TestCase):
+
+    def _build_graph(self):
+        graph = build_graph(['a', 'b', 'c', 'd'])
+        graph.add_edge(('a', 'b'))
+        graph.add_edge(('b', 'c'))
+        graph.add_edge(('c', 'a'))
+        return graph
+
+    def test_remove_unreachable_nodes(self):
+        graph = self._build_graph()
+        self.assertTrue(graph.has_node('d'))
+        remove_unreachable_nodes(graph)
+        self.assertFalse(graph.has_node('d'))
+
+        graph = self._build_graph()
+        graph.add_edge(('d', 'a'), wt=0.0)
+        graph.add_edge(('b', 'd'), wt=0)
+        self.assertTrue(graph.has_node('d'))
+        remove_unreachable_nodes(graph)
+        self.assertFalse(graph.has_node('d'))
 
 
 class TestSummarizationTest(unittest.TestCase):

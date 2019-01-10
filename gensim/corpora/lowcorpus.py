@@ -14,7 +14,7 @@ import logging
 from gensim import utils
 from gensim.corpora import IndexedCorpus
 from six import iterkeys
-from six.moves import xrange, zip as izip
+from six.moves import zip, range
 
 
 logger = logging.getLogger(__name__)
@@ -109,7 +109,7 @@ class LowCorpus(IndexedCorpus):
                 all_terms.update(word for word, wordCnt in doc)
             all_terms = sorted(all_terms)  # sort the list of all words; rank in that list = word's integer id
             # build a mapping of word id(int) -> word (string)
-            self.id2word = dict(izip(xrange(len(all_terms)), all_terms))
+            self.id2word = dict(zip(range(len(all_terms)), all_terms))
         else:
             logger.info("using provided word mapping (%i ids)", len(id2word))
             self.id2word = id2word

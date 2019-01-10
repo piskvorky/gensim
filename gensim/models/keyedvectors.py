@@ -16,7 +16,7 @@ The structure is called "KeyedVectors" and is essentially a mapping between *ent
 and *vectors*. Each entity is identified by its string id, so this is a mapping between {str => 1D numpy array}.
 
 The entity typically corresponds to a word (so the mapping maps words to 1D vectors),
-but for some models, they key can also correspond to a document, a graph node etc. To generalize
+but for some models, the key can also correspond to a document, a graph node etc. To generalize
 over different use-cases, this module calls the keys **entities**. Each entity is
 always represented by its string id, no matter whether the entity is a word, a document or a graph node.
 
@@ -167,14 +167,6 @@ try:
 except ImportError:
     from Queue import Queue, Empty  # noqa:F401
 
-# If pyemd C extension is available, import it.
-# If pyemd is attempted to be used, but isn't installed, ImportError will be raised in wmdistance
-try:
-    from pyemd import emd
-    PYEMD_EXT = True
-except ImportError:
-    PYEMD_EXT = False
-
 from numpy import dot, float32 as REAL, empty, memmap as np_memmap, \
     double, array, zeros, vstack, sqrt, newaxis, integer, \
     ndarray, sum as np_sum, prod, argmax, divide as np_divide
@@ -182,7 +174,7 @@ import numpy as np
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.corpora.dictionary import Dictionary
 from six import string_types, integer_types
-from six.moves import xrange, zip
+from six.moves import zip, range
 from scipy import sparse, stats
 from gensim.utils import deprecated
 from gensim.models.utils_any2vec import _save_word2vec_format, _load_word2vec_format, _compute_ngrams, _ft_hash
@@ -752,8 +744,10 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             If `pyemd <https://pypi.org/project/pyemd/>`_  isn't installed.
 
         """
-        if not PYEMD_EXT:
-            raise ImportError("Please install pyemd Python package to compute WMD.")
+
+        # If pyemd C extension is available, import it.
+        # If pyemd is attempted to be used, but isn't installed, ImportError will be raised in wmdistance
+        from pyemd import emd
 
         # Remove out-of-vocabulary words.
         len_pre_oov1 = len(document1)
@@ -765,9 +759,9 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         if diff1 > 0 or diff2 > 0:
             logger.info('Removed %d and %d OOV words from document 1 and 2 (respectively).', diff1, diff2)
 
-        if len(document1) == 0 or len(document2) == 0:
+        if not document1 or not document2:
             logger.info(
-                "At least one of the documents had no words that werein the vocabulary. "
+                "At least one of the documents had no words that were in the vocabulary. "
                 "Aborting (returning inf)."
             )
             return float('inf')
@@ -1378,7 +1372,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         if getattr(self, 'vectors_norm', None) is None or replace:
             logger.info("precomputing L2-norms of word weight vectors")
             if replace:
-                for i in xrange(self.vectors.shape[0]):
+                for i in range(self.vectors.shape[0]):
                     self.vectors[i, :] /= sqrt((self.vectors[i, :] ** 2).sum(-1))
                 self.vectors_norm = self.vectors
             else:
@@ -1401,7 +1395,7 @@ class Word2VecKeyedVectors(WordEmbeddingsKeyedVectors):
         fvocab : str, optional
             Optional file path used to save the vocabulary
         binary : bool, optional
-            If True, the data wil be saved in binary word2vec format, else it will be saved in plain text.
+            If True, the data will be saved in binary word2vec format, else it will be saved in plain text.
         total_vec : int, optional
             Optional parameter to explicitly specify total no. of vectors
             (in case word vectors are appended with document vectors afterwards).
@@ -1595,7 +1589,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         if getattr(self, 'vectors_docs_norm', None) is None or replace:
             logger.info("precomputing L2-norms of doc weight vectors")
             if replace:
-                for i in xrange(self.vectors_docs.shape[0]):
+                for i in range(self.vectors_docs.shape[0]):
                     self.vectors_docs[i, :] /= sqrt((self.vectors_docs[i, :] ** 2).sum(-1))
                 self.vectors_docs_norm = self.vectors_docs
             else:
@@ -1839,7 +1833,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
             Explicitly specify total no. of vectors
             (in case word vectors are appended with document vectors afterwards)
         binary : bool, optional
-            If True, the data wil be saved in binary word2vec format, else it will be saved in plain text.
+            If True, the data will be saved in binary word2vec format, else it will be saved in plain text.
         write_first_line : bool, optional
             Whether to print the first line in the file. Useful when saving doc-vectors after word-vectors.
 

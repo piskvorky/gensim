@@ -76,7 +76,7 @@ import numpy
 import scipy.sparse
 
 from gensim import interfaces, utils, matutils
-from six.moves import map as imap, xrange, zip as izip
+from six.moves import map, range, zip
 
 
 logger = logging.getLogger(__name__)
@@ -333,7 +333,7 @@ class Similarity(interfaces.SimilarityABC):
 
     def __len__(self):
         """Get length of index."""
-        return len(self.fresh_docs) + sum([len(shard) for shard in self.shards])
+        return len(self.fresh_docs) + sum(len(shard) for shard in self.shards)
 
     def __str__(self):
         return "Similarity index with %i documents in %i shards (stored under %s)" % (
@@ -471,11 +471,11 @@ class Similarity(interfaces.SimilarityABC):
         if PARALLEL_SHARDS and PARALLEL_SHARDS > 1:
             logger.debug("spawning %i query processes", PARALLEL_SHARDS)
             pool = multiprocessing.Pool(PARALLEL_SHARDS)
-            result = pool.imap(query_shard, args, chunksize=1 + len(list(args)) / PARALLEL_SHARDS)
+            result = pool.imap(query_shard, args, chunksize=1 + len(self.shards) / PARALLEL_SHARDS)
         else:
             # serial processing, one shard after another
             pool = None
-            result = imap(query_shard, args)
+            result = map(query_shard, args)
         return pool, result
 
     def __getitem__(self, query):
@@ -547,7 +547,7 @@ class Similarity(interfaces.SimilarityABC):
                     shard_result = [convert(shard_no, doc) for doc in result]
                     results.append(shard_result)
                 result = []
-                for parts in izip(*results):
+                for parts in zip(*results):
                     merged = heapq.nlargest(self.num_best, itertools.chain(*parts), key=lambda item: item[1])
                     result.append(merged)
         if pool:
@@ -674,7 +674,7 @@ class Similarity(interfaces.SimilarityABC):
 
         for shard in self.shards:
             query = shard.get_index().index
-            for chunk_start in xrange(0, query.shape[0], chunksize):
+            for chunk_start in range(0, query.shape[0], chunksize):
                 # scipy.sparse doesn't allow slicing beyond real size of the matrix
                 # (unlike numpy). so, clip the end of the chunk explicitly to make
                 # scipy.sparse happy

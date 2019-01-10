@@ -23,7 +23,7 @@ from gensim.corpora import (bleicorpus, mmcorpus, lowcorpus, svmlightcorpus,
                             ucicorpus, malletcorpus, textcorpus, indexedcorpus, wikicorpus)
 from gensim.interfaces import TransformedCorpus
 from gensim.utils import to_unicode
-from gensim.test.utils import datapath, get_tmpfile
+from gensim.test.utils import datapath, get_tmpfile, common_corpus
 
 
 class DummyTransformer(object):
@@ -382,6 +382,17 @@ class TestSvmLightCorpus(CorpusTestCase):
         self.corpus_class = svmlightcorpus.SvmLightCorpus
         self.file_extension = '.svmlight'
 
+    def test_serialization(self):
+        path = get_tmpfile("svml.corpus")
+        labels = [1] * len(common_corpus)
+        second_corpus = [(0, 1.0), (3, 1.0), (4, 1.0), (5, 1.0), (6, 1.0), (7, 1.0)]
+        self.corpus_class.serialize(path, common_corpus, labels=labels)
+        serialized_corpus = self.corpus_class(path)
+        self.assertEqual(serialized_corpus[1], second_corpus)
+        self.corpus_class.serialize(path, common_corpus, labels=np.array(labels))
+        serialized_corpus = self.corpus_class(path)
+        self.assertEqual(serialized_corpus[1], second_corpus)
+
 
 class TestBleiCorpus(CorpusTestCase):
     def setUp(self):
@@ -726,7 +737,7 @@ class TestWikiCorpus(TestTextCorpus):
             return False
         corpus = self.corpus_class(self.enwiki, filter_articles=reject_all)
         texts = corpus.get_texts()
-        self.assertTrue(all([not t for t in texts]))
+        self.assertFalse(any(texts))
 
         def keep_some(elem, title, *args, **kwargs):
             return title[0] == 'C'
@@ -786,7 +797,7 @@ class TestTextDirectoryCorpus(unittest.TestCase):
 
     def test_filename_filtering(self):
         dirpath = self.write_one_level('test1.log', 'test1.txt', 'test2.log', 'other1.log')
-        corpus = textcorpus.TextDirectoryCorpus(dirpath, pattern="test.*\.log")
+        corpus = textcorpus.TextDirectoryCorpus(dirpath, pattern=r"test.*\.log")
         filenames = list(corpus.iter_filepaths())
         expected = [os.path.join(dirpath, name) for name in ('test1.log', 'test2.log')]
         self.assertEqual(sorted(expected), sorted(filenames))
@@ -847,7 +858,7 @@ class TestTextDirectoryCorpus(unittest.TestCase):
 
         corpus = textcorpus.TextDirectoryCorpus(dirpath)
         filenames = list(corpus.iter_filepaths())
-        base_names = sorted([name[len(dirpath) + 1:] for name in filenames])
+        base_names = sorted(name[len(dirpath) + 1:] for name in filenames)
         expected = sorted([
             '0.txt',
             'a_folder/1.txt',
