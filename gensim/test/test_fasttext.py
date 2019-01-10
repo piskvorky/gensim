@@ -1079,6 +1079,16 @@ class NativeTrainingContinuationTest(unittest.TestCase):
 
             model.save(tmp.name)
 
+    def test_save_load_native(self):
+        """Test that serialization works end-to-end.  Not crashing is a success."""
+        with tempfile.NamedTemporaryFile(delete=True) as tmp:
+            load_native().save(tmp.name)
+
+            model = FT_gensim.load(tmp.name)
+            model.train(list_corpus, total_examples=len(list_corpus), epochs=model.epochs)
+
+            model.save(tmp.name)
+
 
 class HashCompatibilityTest(unittest.TestCase):
     def test_compatibility_true(self):
