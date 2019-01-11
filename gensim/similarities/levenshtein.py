@@ -90,7 +90,7 @@ def levsim(t1, t2, alpha=1.8, beta=5.0, min_similarity=0.0):
     assert beta >= 0
 
     max_lengths = max(len(t1), len(t2))
-    if max_lengths == 0.0:
+    if max_lengths == 0:
         return 1.0
 
     min_similarity = float(max(min(min_similarity, 1.0), 0.0))
