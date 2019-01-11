@@ -111,6 +111,9 @@ class SvmLightCorpus(IndexedCorpus):
         """
         logger.info("converting corpus to SVMlight format: %s", fname)
 
+        if labels is not False:
+            # Cast any sequence (incl. a numpy array) to a list, to simplify the processing below.
+            labels = list(labels)
         offsets = []
         with utils.smart_open(fname, 'wb') as fout:
             for docno, doc in enumerate(corpus):

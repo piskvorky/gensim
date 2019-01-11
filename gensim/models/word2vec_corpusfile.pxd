@@ -65,5 +65,5 @@ cdef class CythonVocab:
 
 
 cdef REAL_t get_alpha(REAL_t alpha, REAL_t end_alpha, int cur_epoch, int num_epochs) nogil
-cdef REAL_t get_next_alpha(REAL_t start_alpha, REAL_t end_alpha, int total_examples, int total_words,
-                           int expected_examples, int expected_words, int cur_epoch, int num_epochs) nogil
+cdef REAL_t get_next_alpha(REAL_t start_alpha, REAL_t end_alpha, int total_examples, long long total_words,
+                           int expected_examples, long long expected_words, int cur_epoch, int num_epochs) nogil

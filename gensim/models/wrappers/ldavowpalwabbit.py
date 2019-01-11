@@ -31,6 +31,7 @@ Examples
 --------
 
 Train model
+
 .. sourcecode:: pycon
 
     >>> from gensim.test.utils import common_corpus, common_dictionary

@@ -25,7 +25,6 @@ insight on the subject knowledge of an author.
 
 Example
 -------
-
 .. sourcecode:: pycon
 
     >>> from gensim.models import AuthorTopicModel
