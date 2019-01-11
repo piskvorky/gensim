@@ -170,6 +170,7 @@ class SentenceAnalyzer(object):
                     common = []
                 else:
                     # release words individually
+                    common.pop()
                     for w in common:
                         yield (w, None)
                     common = [word]
@@ -599,7 +600,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         for sentence in sentences:
             bigrams = analyze_sentence(sentence)
             # keeps only not None scores
-            for words, score in filtered:
+            for words, score in bigrams:
                 if score is None:
                     continue
                 if as_tuples:
