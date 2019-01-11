@@ -15,15 +15,15 @@ class NormModel(interfaces.TransformationABC):
     """Objects of this class realize the explicit normalization of vectors (l1 and l2)."""
 
     def __init__(self, corpus=None, norm='l2'):
-        """Compute the l1 or l2 normalization by normalizing separately for each document in a corpus.
+        r"""Compute the l1 or l2 normalization by normalizing separately for each document in a corpus.
 
         If :math:`v_{i,j}` is the 'i'th component of the vector representing document 'j', the l1 normalization is
 
-        .. math:: l1_{i, j} = \\frac{v_{i,j}}{\sum_k |v_{k,j}|}
+        .. math:: l1_{i, j} = \frac{v_{i,j}}{\sum_k |v_{k,j}|}
 
         the l2 normalization is
 
-        .. math:: l2_{i, j} = \\frac{v_{i,j}}{\sqrt{\sum_k v_{k,j}^2}}
+        .. math:: l2_{i, j} = \frac{v_{i,j}}{\sqrt{\sum_k v_{k,j}^2}}
 
 
         Parameters

@@ -16,8 +16,7 @@ import itertools
 from gensim import utils
 
 from six import PY3, iteritems, iterkeys, itervalues, string_types
-from six.moves import xrange
-from six.moves import zip as izip
+from six.moves import zip, range
 
 if sys.version_info[0] >= 3:
     unicode = str
@@ -232,7 +231,6 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.corpora import Dictionary
@@ -340,7 +338,6 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.corpora import Dictionary
@@ -358,17 +355,18 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         # determine which tokens to keep
         if keep_tokens:
-            keep_ids = [self.token2id[v] for v in keep_tokens if v in self.token2id]
-            good_ids = (
+            keep_ids = {self.token2id[v] for v in keep_tokens if v in self.token2id}
+            good_ids = [
                 v for v in itervalues(self.token2id)
                 if no_below <= self.dfs.get(v, 0) <= no_above_abs or v in keep_ids
-            )
+            ]
+            good_ids.sort(key=lambda x: self.num_docs if x in keep_ids else self.dfs.get(x, 0), reverse=True)
         else:
-            good_ids = (
+            good_ids = [
                 v for v in itervalues(self.token2id)
                 if no_below <= self.dfs.get(v, 0) <= no_above_abs
-            )
-        good_ids = sorted(good_ids, key=self.dfs.get, reverse=True)
+            ]
+            good_ids.sort(key=self.dfs.get, reverse=True)
         if keep_n is not None:
             good_ids = good_ids[:keep_n]
         bad_words = [(self[idx], self.dfs.get(idx, 0)) for idx in set(self).difference(good_ids)]
@@ -392,7 +390,6 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.corpora import Dictionary
@@ -431,7 +428,6 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.corpora import Dictionary
@@ -465,7 +461,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         logger.debug("rebuilding dictionary, shrinking gaps")
 
         # build mapping from old id -> new id
-        idmap = dict(izip(sorted(itervalues(self.token2id)), xrange(len(self.token2id))))
+        idmap = dict(zip(sorted(itervalues(self.token2id)), range(len(self.token2id))))
 
         # reassign mappings to new ids
         self.token2id = {token: idmap[tokenid] for token, tokenid in iteritems(self.token2id)}
@@ -556,7 +552,6 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.corpora import Dictionary
@@ -612,7 +607,6 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.corpora import Dictionary
@@ -677,7 +671,6 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.corpora import Dictionary
@@ -702,7 +695,7 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         if id2word is None:
             # make sure length(result) == get_max_id(corpus) + 1
-            result.token2id = {unicode(i): i for i in xrange(max_id + 1)}
+            result.token2id = {unicode(i): i for i in range(max_id + 1)}
         else:
             # id=>word mapping given: simply copy it
             result.token2id = {utils.to_unicode(token): idx for idx, token in iteritems(id2word)}

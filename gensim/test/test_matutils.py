@@ -60,7 +60,7 @@ def mean_absolute_difference(a, b):
 
 
 def dirichlet_expectation(alpha):
-    """For a vector :math:`\\theta \sim Dir(\\alpha)`, compute :math:`E[log \\theta]`.
+    r"""For a vector :math:`\theta \sim Dir(\alpha)`, compute :math:`E[log \theta]`.
 
     Parameters
     ----------
@@ -70,7 +70,7 @@ def dirichlet_expectation(alpha):
     Returns
     -------
     numpy.ndarray:
-        :math:`E[log \\theta]`
+        :math:`E[log \theta]`
 
     """
     if len(alpha.shape) == 1:
