@@ -54,7 +54,7 @@ cdef int ONE = 1
 cdef REAL_t ONEF = <REAL_t>1.0
 
 
-cdef void prepare_c_structures_for_batch(vector[string] &doc_words, int sample, int hs, int window, int *total_words,
+cdef void prepare_c_structures_for_batch(vector[string] &doc_words, int sample, int hs, int window, long long *total_words,
                                          int *effective_words, unsigned long long *next_random, cvocab_t *vocab,
                                          np.uint32_t *indexes, int *codelens, np.uint8_t **codes, np.uint32_t **points,
                                          np.uint32_t *reduced_windows, int *document_len, int train_words,
@@ -143,7 +143,7 @@ def d2v_train_epoch_dbow(model, corpus_file, offset, start_doctag, _cython_vocab
     cdef int cur_epoch = _cur_epoch
     cdef int num_epochs = model.epochs
     cdef int expected_examples = (-1 if _expected_examples is None else _expected_examples)
-    cdef int expected_words = (-1 if _expected_words is None else _expected_words)
+    cdef long long expected_words = (-1 if _expected_words is None else _expected_words)
     cdef REAL_t start_alpha = model.alpha
     cdef REAL_t end_alpha = model.min_alpha
     cdef REAL_t _alpha = get_alpha(model.alpha, end_alpha, cur_epoch, num_epochs)
@@ -153,7 +153,8 @@ def d2v_train_epoch_dbow(model, corpus_file, offset, start_doctag, _cython_vocab
 
     cdef int i, j, document_len
     cdef int effective_words = 0
-    cdef int total_effective_words = 0, total_documents = 0, total_words = 0
+    cdef int total_documents = 0
+    cdef long long total_effective_words = 0, total_words = 0
     cdef int sent_idx, idx_start, idx_end
 
     cdef vector[string] doc_words
@@ -277,7 +278,7 @@ def d2v_train_epoch_dm(model, corpus_file, offset, start_doctag, _cython_vocab, 
     cdef int cur_epoch = _cur_epoch
     cdef int num_epochs = model.epochs
     cdef int expected_examples = (-1 if _expected_examples is None else _expected_examples)
-    cdef int expected_words = (-1 if _expected_words is None else _expected_words)
+    cdef long long expected_words = (-1 if _expected_words is None else _expected_words)
     cdef REAL_t start_alpha = model.alpha
     cdef REAL_t end_alpha = model.min_alpha
     cdef REAL_t _alpha = get_alpha(model.alpha, end_alpha, cur_epoch, num_epochs)
@@ -287,7 +288,8 @@ def d2v_train_epoch_dm(model, corpus_file, offset, start_doctag, _cython_vocab, 
 
     cdef int i, j, k, m, document_len
     cdef int effective_words = 0
-    cdef int total_effective_words = 0, total_documents = 0, total_words = 0
+    cdef int total_documents = 0
+    cdef long long total_effective_words = 0, total_words = 0
     cdef int sent_idx, idx_start, idx_end
     cdef REAL_t count, inv_count = 1.0
 
@@ -425,7 +427,7 @@ def d2v_train_epoch_dm_concat(model, corpus_file, offset, start_doctag, _cython_
     cdef int cur_epoch = _cur_epoch
     cdef int num_epochs = model.epochs
     cdef int expected_examples = (-1 if _expected_examples is None else _expected_examples)
-    cdef int expected_words = (-1 if _expected_words is None else _expected_words)
+    cdef long long expected_words = (-1 if _expected_words is None else _expected_words)
     cdef REAL_t start_alpha = model.alpha
     cdef REAL_t end_alpha = model.min_alpha
     cdef REAL_t _alpha = get_alpha(model.alpha, end_alpha, cur_epoch, num_epochs)
@@ -435,7 +437,8 @@ def d2v_train_epoch_dm_concat(model, corpus_file, offset, start_doctag, _cython_
 
     cdef int i, j, k, m, n, document_len
     cdef int effective_words = 0
-    cdef int total_effective_words = 0, total_documents = 0, total_words = 0
+    cdef int total_documents = 0
+    cdef long long total_effective_words = 0, total_words = 0
     cdef int sent_idx, idx_start, idx_end
 
     cdef vector[string] doc_words
