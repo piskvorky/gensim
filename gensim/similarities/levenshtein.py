@@ -11,14 +11,6 @@ This module provides a namespace for functions that use the Levenshtein distance
 import logging
 from math import floor
 
-# If python-Levenshtein is available, import it.
-# If python-Levenshtein is unavailable, ImportError will be raised in levdist.
-try:
-    import Levenshtein
-    LEVENSHTEIN_EXT = True
-except ImportError:
-    LEVENSHTEIN_EXT = False
-
 from gensim.similarities.termsim import TermSimilarityIndex
 
 logger = logging.getLogger(__name__)
@@ -50,8 +42,7 @@ def levdist(t1, t2, max_distance=float("inf")):
         The Levenshtein distance between `t1` and `t2`.
 
     """
-    if not LEVENSHTEIN_EXT:
-        raise ImportError("Please install python-Levenshtein Python package to compute the Levenshtein distance.")
+    import Levenshtein
 
     distance = Levenshtein.distance(t1, t2)
     if distance > max_distance:
