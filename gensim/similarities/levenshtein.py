@@ -139,11 +139,15 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
         super(LevenshteinSimilarityIndex, self).__init__()
 
     def most_similar(self, t1, topn=10):
-        for _, (t2, similarity) in zip(range(topn), (
-                (t2, similarity) for similarity, t2 in sorted(
-                    (
-                        (levsim(t1, t2, self.alpha, self.beta, self.threshold), t2)
-                        for t2 in self.dictionary.values() if t1 != t2
-                    ), reverse=True)
-                if similarity > 0)):
+        similarities = (
+            (levsim(t1, t2, self.alpha, self.beta, self.threshold), t2)
+            for t2 in self.dictionary.values()
+            if t1 != t2
+        )
+        most_similar = (
+            (t2, similarity)
+            for (similarity, t2) in sorted(similarities, reverse=True)
+            if similarity > 0
+        )
+        for _, (t2, similarity) in zip(range(topn), most_similar):
             yield (t2, similarity)
