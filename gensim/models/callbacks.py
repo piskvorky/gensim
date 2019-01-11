@@ -549,8 +549,12 @@ class Callback(object):
                         )
                         self.diff_mat.put(diff_mat)
                     else:
-                        self.viz.updateTrace(
-                            Y=np.array([value]), X=np.array([epoch]), env=metric.viz_env, win=self.windows[i]
+                        self.viz.line(
+                            Y=np.array([value]),
+                            X=np.array([epoch]),
+                            env=metric.viz_env,
+                            win=self.windows[i],
+                            update='append'
                         )
 
             if metric.logger == "shell":
