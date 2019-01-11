@@ -14,7 +14,7 @@ for out-of-vocabulary words.
 This module contains a fast native C implementation of Fasttext with Python interfaces. It is **not** only a wrapper
 around Facebook's implementation.
 
-For a tutorial see `this noteboook
+For a tutorial see `this notebook
 <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/FastText_Tutorial.ipynb>`_.
 
 **Make sure you have a C compiler before installing Gensim, to use the optimized (compiled) Fasttext
@@ -24,6 +24,7 @@ Usage examples
 --------------
 
 Initialize and train a model:
+
 .. sourcecode:: pycon
 
     >>> from gensim.test.utils import common_texts
@@ -140,8 +141,8 @@ except ImportError:
         """
         result = 0
         for sentence in sentences:
-            word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
-                           model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
+            word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab
+                           and model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
             for pos, word in enumerate(word_vocabs):
                 reduced_window = model.random.randint(model.window)
                 start = max(0, pos - model.window + reduced_window)
@@ -199,8 +200,8 @@ except ImportError:
         """
         result = 0
         for sentence in sentences:
-            word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
-                           model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
+            word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab
+                           and model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
             for pos, word in enumerate(word_vocabs):
                 reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
                 # now go over all words from the (reduced) window, predicting each one in turn

@@ -48,6 +48,7 @@ The training is streamed, meaning `sentences` can be a generator, reading input 
 from disk on-the-fly, without loading the entire corpus into RAM.
 
 It also means you can continue training the model later:
+
 .. sourcecode:: pycon
 
     >>> model = Word2Vec.load("word2vec.model")
@@ -55,6 +56,7 @@ It also means you can continue training the model later:
     (0, 2)
 
 The trained word vectors are stored in a :class:`~gensim.models.keyedvectors.KeyedVectors` instance in `model.wv`:
+
 .. sourcecode:: pycon
 
     >>> vector = model.wv['computer']  # numpy vector of a word
@@ -147,7 +149,7 @@ from scipy.special import expit
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.utils import deprecated
 from six import iteritems, itervalues, string_types
-from six.moves import xrange
+from six.moves import range
 
 logger = logging.getLogger(__name__)
 
@@ -193,8 +195,8 @@ except ImportError:
         """
         result = 0
         for sentence in sentences:
-            word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
-                           model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
+            word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab
+                           and model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
             for pos, word in enumerate(word_vocabs):
                 reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
 
@@ -245,8 +247,8 @@ except ImportError:
         result = 0
         for sentence in sentences:
             word_vocabs = [
-                model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
-                model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32
+                model.wv.vocab[w] for w in sentence if w in model.wv.vocab
+                and model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32
             ]
             for pos, word in enumerate(word_vocabs):
                 reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
@@ -986,7 +988,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
         job_queue = Queue(maxsize=queue_factor * self.workers)
         progress_queue = Queue(maxsize=(queue_factor + 1) * self.workers)
 
-        workers = [threading.Thread(target=worker_loop) for _ in xrange(self.workers)]
+        workers = [threading.Thread(target=worker_loop) for _ in range(self.workers)]
         for thread in workers:
             thread.daemon = True  # make interrupting the process with ctrl+c easier
             thread.start()
@@ -1013,7 +1015,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
                 job_queue.put(items)
             except StopIteration:
                 logger.info("reached end of input; waiting to finish %i outstanding jobs", job_no - done_jobs + 1)
-                for _ in xrange(self.workers):
+                for _ in range(self.workers):
                     job_queue.put(None)  # give the workers heads up that they can finish -- no more work!
                 push_done = True
             try:
@@ -1083,7 +1085,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
                 # TOCONSIDER: maybe mismatched vectors still useful enough to merge (truncating/padding)?
             if binary:
                 binary_len = dtype(REAL).itemsize * vector_size
-                for _ in xrange(vocab_size):
+                for _ in range(vocab_size):
                     # mixed text and binary: read text first, then binary
                     word = []
                     while True:
@@ -1409,7 +1411,6 @@ class LineSentence(object):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.test.utils import datapath
@@ -1779,7 +1780,7 @@ class Word2VecVocab(utils.SaveLoad):
         # build the huffman tree
         heap = list(itervalues(wv.vocab))
         heapq.heapify(heap)
-        for i in xrange(len(wv.vocab) - 1):
+        for i in range(len(wv.vocab) - 1):
             min1, min2 = heapq.heappop(heap), heapq.heappop(heap)
             heapq.heappush(
                 heap, Vocab(count=min1.count + min2.count, index=i + len(wv.vocab), left=min1, right=min2)
@@ -1817,10 +1818,10 @@ class Word2VecVocab(utils.SaveLoad):
         self.cum_table = zeros(vocab_size, dtype=uint32)
         # compute sum of all power (Z in paper)
         train_words_pow = 0.0
-        for word_index in xrange(vocab_size):
+        for word_index in range(vocab_size):
             train_words_pow += wv.vocab[wv.index2word[word_index]].count**self.ns_exponent
         cumulative = 0.0
-        for word_index in xrange(vocab_size):
+        for word_index in range(vocab_size):
             cumulative += wv.vocab[wv.index2word[word_index]].count**self.ns_exponent
             self.cum_table[word_index] = round(cumulative / train_words_pow * domain)
         if len(self.cum_table) > 0:
@@ -1853,7 +1854,7 @@ class Word2VecTrainables(utils.SaveLoad):
         logger.info("resetting layer weights")
         wv.vectors = empty((len(wv.vocab), wv.vector_size), dtype=REAL)
         # randomize weights vector by vector, rather than materializing a huge random matrix in RAM at once
-        for i in xrange(len(wv.vocab)):
+        for i in range(len(wv.vocab)):
             # construct deterministic seed from word AND seed argument
             wv.vectors[i] = self.seeded_vector(wv.index2word[i] + str(self.seed), wv.vector_size)
         if hs:
@@ -1871,7 +1872,7 @@ class Word2VecTrainables(utils.SaveLoad):
         newvectors = empty((gained_vocab, wv.vector_size), dtype=REAL)
 
         # randomize the remaining words
-        for i in xrange(len(wv.vectors), len(wv.vocab)):
+        for i in range(len(wv.vectors), len(wv.vocab)):
             # construct deterministic seed from word AND seed argument
             newvectors[i - len(wv.vectors)] = self.seeded_vector(wv.index2word[i] + str(self.seed), wv.vector_size)
 
