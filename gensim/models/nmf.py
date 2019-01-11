@@ -85,7 +85,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         """
         self._w_error = None
-        self.n_features = None
+        self.n_tokens = None
         self.num_topics = num_topics
         self.id2word = id2word
         self.chunksize = chunksize
@@ -107,10 +107,16 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if self.id2word is None:
             self.id2word = utils.dict_from_corpus(corpus)
 
+        self.n_tokens = len(self.id2word)
+
         self.A = None
         self.B = None
 
+        self._W = None
         self.w_std = None
+
+        self._h = None
+        self._r = None
 
         if corpus is not None:
             self.update(corpus)
@@ -230,6 +236,10 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         """
         topic = self._W.getcol(topicid).toarray()[0]
+
+        if self.normalize:
+            topic /= topic.sum()
+
         bestn = matutils.argsort(topic, topn, reverse=True)
         return [(idx, topic[idx]) for idx in bestn]
 
@@ -407,13 +417,12 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         first_doc_it = itertools.tee(corpus, 1)
         first_doc = next(first_doc_it[0])
         first_doc = matutils.corpus2csc([first_doc], len(self.id2word))[:, 0]
-        self.n_features = first_doc.shape[0]
-        self.w_std = np.sqrt(first_doc.mean() / (self.n_features * self.num_topics))
+        self.w_std = np.sqrt(first_doc.mean() / (self.n_tokens * self.num_topics))
 
         self._W = np.abs(
             self.w_std
             * halfnorm.rvs(
-                size=(self.n_features, self.num_topics), random_state=self.random_state
+                size=(self.n_tokens, self.num_topics), random_state=self.random_state
             )
         )
 
@@ -424,7 +433,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self._W = scipy.sparse.csc_matrix(self._W)
 
         self.A = scipy.sparse.csr_matrix((self.num_topics, self.num_topics))
-        self.B = scipy.sparse.csc_matrix((self.n_features, self.num_topics))
+        self.B = scipy.sparse.csc_matrix((self.n_tokens, self.num_topics))
 
     def update(self, corpus, chunks_as_numpy=False):
         """Train the model with new documents.
@@ -440,7 +449,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         """
 
-        if self.n_features is None:
+        if self._W is None:
             self._setup(corpus)
 
         chunk_idx = 1
