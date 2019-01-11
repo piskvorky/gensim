@@ -121,9 +121,13 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if corpus is not None:
             self.update(corpus)
 
-    def get_topics(self):
+    def get_topics(self, normalize=self.normalize):
         """Get the term-topic matrix learned during inference.
 
+        Parameters
+        ----------
+        normalize : bool, optional
+            Whether to normalize an output vector.
 
         Returns
         -------
@@ -132,7 +136,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         """
         dense_topics = self._W.T.toarray()
-        if self.normalize:
+        if normalize:
             return dense_topics / dense_topics.sum(axis=1).reshape(-1, 1)
 
         return dense_topics
@@ -140,7 +144,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
     def __getitem__(self, bow, eps=None):
         return self.get_document_topics(bow, eps)
 
-    def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True):
+    def show_topics(self, num_topics=10, num_words=10, log=False,
+                    formatted=True, normalize=self.normalize):
         """Get a representation for selected topics.
 
         Parameters
@@ -157,6 +162,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         formatted : bool, optional
             Whether the topic representations should be formatted as strings. If False, they are returned as
             2 tuples of (word, probability).
+        normalize : bool, optional
+            Whether to normalize an output vector.
 
         Returns
         -------
@@ -181,7 +188,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         shown = []
 
-        topics = self.get_topics()
+        topics = self.get_topics(normalize=normalize)
 
         for i in chosen_topics:
             topic = topics[i]
@@ -196,7 +203,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         return shown
 
-    def show_topic(self, topicid, topn=10):
+    def show_topic(self, topicid, topn=10, normalize=self.normalize):
         """Get the representation for a single topic. Words here are the actual strings, in constrast to
         :meth:`~gensim.models.nmf.Nmf.get_topic_terms` that represents words by their vocabulary ID.
 
@@ -206,6 +213,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             The ID of the topic to be returned
         topn : int, optional
             Number of the most significant words that are associated with the topic.
+        normalize : bool, optional
+            Whether to normalize an output vector.
 
         Returns
         -------
@@ -215,10 +224,11 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         return [
             (self.id2word[id], value)
-            for id, value in self.get_topic_terms(topicid, topn)
+            for id, value in self.get_topic_terms(topicid, topn,
+                                                  normalize=normalize)
         ]
 
-    def get_topic_terms(self, topicid, topn=10):
+    def get_topic_terms(self, topicid, topn=10, normalize=self.normalize):
         """Get the representation for a single topic. Words the integer IDs, in constrast to
         :meth:`~gensim.models.nmf.Nmf.show_topic` that represents words by the actual strings.
 
@@ -228,6 +238,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             The ID of the topic to be returned
         topn : int, optional
             Number of the most significant words that are associated with the topic.
+        normalize : bool, optional
+            Whether to normalize an output vector.
 
         Returns
         -------
@@ -237,7 +249,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         topic = self._W.getcol(topicid).toarray()[0]
 
-        if self.normalize:
+        if normalize:
             topic /= topic.sum()
 
         bestn = matutils.argsort(topic, topn, reverse=True)
@@ -324,7 +336,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         return (np.log(pred_factors, where=pred_factors > 0) * dense_corpus).sum() / dense_corpus.sum()
 
-    def get_term_topics(self, word_id, minimum_probability=None):
+    def get_term_topics(self, word_id, minimum_probability=None,
+                        normalize=self.normalize):
         """Get the most relevant topics to the given word.
 
         Parameters
@@ -333,6 +346,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             The word for which the topic distribution will be computed.
         minimum_probability : float, optional
             Topics with an assigned probability below this threshold will be discarded.
+        normalize : bool, optional
+            Whether to normalize an output vector.
 
         Returns
         -------
@@ -364,7 +379,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         return values
 
-    def get_document_topics(self, bow, minimum_probability=None):
+    def get_document_topics(self, bow, minimum_probability=None,
+                            normalize=self.normalize):
         """Get the topic distribution for the given document.
 
         Parameters
@@ -373,6 +389,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             The document in BOW format.
         minimum_probability : float
             Topics with an assigned probability lower than this threshold will be discarded.
+        normalize : bool, optional
+            Whether to normalize an output vector.
 
         Returns
         -------
@@ -416,7 +434,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self._h, self._r = None, None
         first_doc_it = itertools.tee(corpus, 1)
         first_doc = next(first_doc_it[0])
-        first_doc = matutils.corpus2csc([first_doc], len(self.id2word))[:, 0]
+        first_doc = matutils.corpus2csc([first_doc], len(self.id2word))
         self.w_std = np.sqrt(first_doc.mean() / (self.num_tokens * self.num_topics))
 
         self._W = np.abs(
