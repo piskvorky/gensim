@@ -45,7 +45,6 @@ import functools as ft
 import itertools as it
 from math import log
 import pickle
-import six
 
 from six import iteritems, string_types, PY2, next
 
@@ -154,35 +153,32 @@ class SentenceAnalyzer(object):
         # adding None is a trick that helps getting an automatic happy ending
         # as it won't be a common_word, nor score
         s.append(None)
-        last_uncommon = None
-        in_between = []
+        common = []
         for word in s:
             is_common = word in common_terms
-            if not is_common and last_uncommon:
-                chain = [last_uncommon] + in_between + [word]
+            if not is_common and common:
+                common.append(word)
                 # test between last_uncommon
                 score = self.score_item(
-                    worda=last_uncommon,
+                    worda=common[0],
                     wordb=word,
-                    components=chain,
+                    components=common,
                     scorer=scorer,
                 )
                 if score > threshold:
-                    yield (chain, score)
-                    last_uncommon = None
-                    in_between = []
+                    yield (common, score)
+                    common = []
                 else:
                     # release words individually
-                    for w in it.chain([last_uncommon], in_between):
+                    for w in common:
                         yield (w, None)
-                    in_between = []
-                    last_uncommon = word
+                    common = [word]
             elif not is_common:
-                last_uncommon = word
+                common.append(word)
             else:  # common term
-                if last_uncommon:
+                if common:
                     # wait for uncommon resolution
-                    in_between.append(word)
+                    common.append(word)
                 else:
                     yield (word, None)
 
@@ -221,7 +217,7 @@ class PhrasesTransformation(interfaces.TransformationABC):
             model.scoring = original_scorer
         # if there is a scoring parameter, and it's a text value, load the proper scoring function
         if hasattr(model, 'scoring'):
-            if isinstance(model.scoring, six.string_types):
+            if isinstance(model.scoring, string_types):
                 if model.scoring == 'default':
                     logger.info('older version of %s loaded with "default" scoring parameter', cls.__name__)
                     logger.info('setting scoring method to original_scorer pluggable scoring method for compatibility')
@@ -242,7 +238,7 @@ class PhrasesTransformation(interfaces.TransformationABC):
 
 
 def _sentence2token(phrase_class, sentence):
-    """ Convert the input tokens `sentence` into tokens where detected bigrams are joined by a selected delimiter.
+    """Convert the input tokens `sentence` into tokens where detected bigrams are joined by a selected delimiter.
 
     This function is used by: meth:`~gensim.models.phrases.Phrases.__getitem__` and
     meth:`~gensim.models.phrases.Phraser.__getitem__`
@@ -279,12 +275,12 @@ def _sentence2token(phrase_class, sentence):
     bigrams = phrase_class.analyze_sentence(sentence, threshold=phrase_class.threshold,
         common_terms=phrase_class.common_terms, scorer=scorer)
 
-    new_s = []
+    tokens = []
     for words, score in bigrams:
         if score is not None:
             words = delimiter.join(words)
-        new_s.append(words)
-    return [utils.to_unicode(w) for w in new_s]
+        tokens.append(utils.to_unicode(words))
+    return tokens
 
 
 class Phrases(SentenceAnalyzer, PhrasesTransformation):
@@ -357,7 +353,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         # intentially override the value of the scoring parameter rather than set self.scoring here,
         # to still run the check of scoring function parameters in the next code block
 
-        if isinstance(scoring, six.string_types):
+        if isinstance(scoring, string_types):
             if scoring == 'default':
                 scoring = original_scorer
             elif scoring == 'npmi':
@@ -482,19 +478,17 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
                     "PROGRESS: at sentence #%i, processed %i words and %i word types",
                     sentence_no, total_words, len(vocab),
                 )
-            s = [utils.any2utf8(w) for w in sentence]
-            last_uncommon = None
-            in_between = []
-            for word in s:
+            common = []
+            for word in sentence:
+                word = utils.any2utf8(word)
                 if word not in common_terms:
                     vocab[word] += 1
-                    if last_uncommon is not None:
-                        components = it.chain([last_uncommon], in_between, [word])
-                        vocab[delimiter.join(components)] += 1
-                    last_uncommon = word
-                    in_between = []
-                elif last_uncommon is not None:
-                    in_between.append(word)
+                    if common:
+                        common.append(word)
+                        vocab[delimiter.join(common)] += 1
+                    common = [word]
+                elif common:
+                    common.append(word)
                 total_words += 1
 
             if len(vocab) > max_vocab_size:
@@ -545,7 +539,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
             sentences, self.max_vocab_size, self.delimiter, self.progress_per, self.common_terms)
 
         self.corpus_word_count += total_words
-        if len(self.vocab) > 0:
+        if self.vocab:
             logger.info("merging %i counts into %s", len(vocab), self)
             self.min_reduce = max(self.min_reduce, min_reduce)
             for word, count in iteritems(vocab):
@@ -605,8 +599,9 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         for sentence in sentences:
             bigrams = analyze_sentence(sentence)
             # keeps only not None scores
-            filtered = ((words, score) for words, score in bigrams if score is not None)
             for words, score in filtered:
+                if score is None:
+                    continue
                 if as_tuples:
                     yield (tuple(words), score)
                 else:
@@ -759,14 +754,15 @@ def pseudocorpus(source_vocab, sep, common_terms=frozenset()):
             continue
         unigrams = k.split(sep)
         for i in range(1, len(unigrams)):
-            if unigrams[i - 1] not in common_terms:
-                # do not join common terms
-                cterms = list(it.takewhile(lambda w: w in common_terms, unigrams[i:]))
-                tail = unigrams[i + len(cterms):]
-                components = [sep.join(unigrams[:i])] + cterms
-                if tail:
-                    components.append(sep.join(tail))
-                yield components
+            if unigrams[i - 1] in common_terms:
+                continue
+            components = [sep.join(unigrams[:i])]
+            # do not join common terms
+            components.extend(it.takewhile(lambda w: w in common_terms, unigrams[i:]))
+            tail = unigrams[i + len(components) - 1:]
+            if tail:
+                components.append(sep.join(tail))
+            yield components
 
 
 class Phraser(SentenceAnalyzer, PhrasesTransformation):
