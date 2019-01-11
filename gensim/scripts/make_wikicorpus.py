@@ -12,7 +12,7 @@ USAGE: %(program)s WIKI_XML_DUMP OUTPUT_PREFIX [VOCABULARY_SIZE]
 Convert articles from a Wikipedia dump to (sparse) vectors. The input is a
 bz2-compressed dump of Wikipedia articles, in XML format.
 
-This actually creates three files:
+This actually creates several files:
 
 * `OUTPUT_PREFIX_wordids.txt.bz2`: mapping between words and their integer ids
 * `OUTPUT_PREFIX_bow.mm`: bag-of-words (word counts) representation in Matrix Market format
