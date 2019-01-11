@@ -1068,7 +1068,7 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         self.assertFalse(np.allclose(vectors_ngrams_before, model.wv.vectors_ngrams))
         self.assertNotEqual(old_vector, new_vector)
 
-    def test_save_load(self):
+    def test_save_load_gensim(self):
         """Test that serialization works end-to-end.  Not crashing is a success."""
         #
         # This is a workaround for a problem with temporary files on AppVeyor:
@@ -1076,23 +1076,28 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         # - https://bugs.python.org/issue14243 (problem discussion)
         # - https://github.com/dropbox/pyannotate/pull/48/files (workaround source code)
         #
-        with temporary_file('model') as tmp:
-            train_gensim().save(tmp.name)
+        model_name = 'test_ft_saveload_native.model'
 
-            model = FT_gensim.load(tmp.name)
+        with temporary_file(model_name):
+            train_gensim().save(model_name)
+
+            model = FT_gensim.load(model_name)
             model.train(list_corpus, total_examples=len(list_corpus), epochs=model.epochs)
 
-            model.save(tmp.name)
+            model.save(model_name)
 
     def test_save_load_native(self):
         """Test that serialization works end-to-end.  Not crashing is a success."""
-        with temporary_file('model') as tmp:
-            load_native().save(tmp.name)
 
-            model = FT_gensim.load(tmp.name)
+        model_name = 'test_ft_saveload_fb.model'
+
+        with temporary_file(model_name):
+            load_native().save(model_name)
+
+            model = FT_gensim.load(model_name)
             model.train(list_corpus, total_examples=len(list_corpus), epochs=model.epochs)
 
-            model.save(tmp.name)
+            model.save(model_name)
 
 
 class HashCompatibilityTest(unittest.TestCase):
