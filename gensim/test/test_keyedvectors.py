@@ -106,11 +106,13 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
 
     def test_relative_cosine_similarity(self):
         """Test relative_cosine_similarity returns expected results with an input of a word pair and topn"""
-        wordnet_syn = ['good', 'goodness', 'commodity', 'trade_good', 'full', 'estimable', 'honorable',
-        'respectable', 'beneficial', 'just', 'upright', 'adept', 'expert', 'practiced', 'proficient',
-        'skillful', 'skilful', 'dear', 'near', 'dependable', 'safe', 'secure', 'right', 'ripe', 'well',
-         'effective', 'in_effect', 'in_force', 'serious', 'sound', 'salutary', 'honest', 'undecomposed',
-          'unspoiled', 'unspoilt', 'thoroughly', 'soundly']   # synonyms for "good" as per wordnet
+        wordnet_syn = [
+            'good', 'goodness', 'commodity', 'trade_good', 'full', 'estimable', 'honorable',
+            'respectable', 'beneficial', 'just', 'upright', 'adept', 'expert', 'practiced', 'proficient',
+            'skillful', 'skilful', 'dear', 'near', 'dependable', 'safe', 'secure', 'right', 'ripe', 'well',
+            'effective', 'in_effect', 'in_force', 'serious', 'sound', 'salutary', 'honest', 'undecomposed',
+            'unspoiled', 'unspoilt', 'thoroughly', 'soundly'
+        ]   # synonyms for "good" as per wordnet
         cos_sim = []
         for i in range(len(wordnet_syn)):
             if wordnet_syn[i] in self.vectors.vocab:
