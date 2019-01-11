@@ -195,7 +195,6 @@ class Vocab(object):
     and for constructing binary trees (incl. both word leaves and inner nodes).
 
     """
-
     def __init__(self, **kwargs):
         self.count = 0
         self.__dict__.update(kwargs)
@@ -210,7 +209,6 @@ class Vocab(object):
 
 class BaseKeyedVectors(utils.SaveLoad):
     """Abstract base class / interface for various types of word vectors."""
-
     def __init__(self, vector_size):
         self.vectors = zeros((0, vector_size))
         self.vocab = {}
@@ -373,7 +371,6 @@ class BaseKeyedVectors(utils.SaveLoad):
 
 class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
     """Class containing common methods for operations over word vectors."""
-
     def __init__(self, vector_size):
         super(WordEmbeddingsKeyedVectors, self).__init__(vector_size=vector_size)
         self.vectors_norm = None
@@ -1389,8 +1386,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
     def relative_cosine_similarity(self, wa, wb, topn=10):
         """Compute the relative cosine similarity between two words given top-n similar words,
-        proposed by Artuur Leeuwenberg, Mihaela Vela, Jon Dehdari, Josef van Genabith
-        "A Minimally Supervised Approach for Synonym Extraction with Word Embeddings"
+        by Artuur Leeuwenberg, ... "A Minimally Supervised Approach for Synonym Extraction with Word Embeddings"
         <https://ufal.mff.cuni.cz/pbml/105/art-leeuwenberg-et-al.pdf>.
 
         To calculate relative cosine similarity between two words, equation (1) of the paper is used.
@@ -1400,19 +1396,21 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         Parameters
         ----------
         wa: str
-            word for which we have to look top-n similar word.
+            Word for which we have to look top-n similar word.
         wb: str
-            word for which we evaluating relative cosine similarity with wa.
+            Word for which we evaluating relative cosine similarity with wa.
         topn: int, optional
             Number of top-n similar words to look with respect to wa.
+
         Returns
         -------
         numpy.float64
-            relative cosine similarity between wa and wb.
+            Relative cosine similarity between wa and wb.
+
         """
         sims = self.similar_by_word(wa, topn)
         assert sims, "Failed code invariant: list of similar words must never be empty."
-        rcs = (self.similarity(wa, wb)) / (sum(result[1] for result in sims))
+        rcs = float(self.similarity(wa, wb)) / (sum(sim for _, sim in sims))
 
         return rcs
 
@@ -1422,7 +1420,6 @@ class Word2VecKeyedVectors(WordEmbeddingsKeyedVectors):
     Used to perform operations on the vectors such as vector lookup, distance, similarity etc.
 
     """
-
     def save_word2vec_format(self, fname, fvocab=None, binary=False, total_vec=None):
         """Store the input-hidden weight matrix in the same format used by the original
         C word2vec-tool, for compatibility.
@@ -1928,7 +1925,6 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
 
 class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
     """Vectors and vocab for :class:`~gensim.models.fasttext.FastText`."""
-
     def __init__(self, vector_size, min_n, max_n):
         super(FastTextKeyedVectors, self).__init__(vector_size=vector_size)
         self.vectors_vocab = None
