@@ -7,157 +7,53 @@
 """
 Automated tests for checking visdom API
 """
-from __future__ import print_function
-
 import unittest
-
-from gensim.models import ldamodel
-from gensim.test.utils import datapath, common_texts
-from gensim.corpora import mmcorpus, Dictionary
-from gensim.models.callbacks import CoherenceMetric
-
-from visdom import Visdom
-# import numpy as np
 import subprocess
 import time
 
-DEFAULT_PORT = 8097
-DEFAULT_HOSTNAME = "http://localhost"
+from gensim.models import LdaModel
+from gensim.test.utils import datapath, common_dictionary
+from gensim.corpora import MmCorpus
+from gensim.models.callbacks import CoherenceMetric
 
-##########
-# use argparse to parse commandline arguments
-##########
-# import argparse
-
-# parser = argparse.ArgumentParser(description='Demo arguments')
-# parser.add_argument('-port', metavar='port', type=int, default=DEFAULT_PORT,
-#                     help='port the visdom server is running on.')
-# parser.add_argument('-server', metavar='server', type=str,
-#                     default=DEFAULT_HOSTNAME,
-#                     help='Server address of the target to run the demo on.')
-# FLAGS = parser.parse_args()
-
-##########
-# use easydict if argparse doesn't work
-##########
-# import easydict
-
-# FLAGS = easydict.EasyDict({
-#         'port': DEFAULT_PORT,
-#         'server': DEFAULT_HOSTNAME
-# })
+try:
+    from visdom import Visdom
+    VISDOM_INSTALLED = True
+except ImportError:
+    VISDOM_INSTALLED = False
 
 
-class ARGS():
-    def __init__(self, port=DEFAULT_PORT, server=DEFAULT_HOSTNAME):
-        self.port = port
-        self.server = server
-
-
-FLAGS = ARGS()
-
-
-dictionary = Dictionary(common_texts)
-
-
+@unittest.skipIf(VISDOM_INSTALLED is False, "Visdom not installed")
 class TestLdaCallback(unittest.TestCase):
 
     def setUp(self):
-        self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
-        self.ch_umass = CoherenceMetric(corpus=self.corpus,
-                                        coherence="u_mass",
-                                        logger="visdom",
-                                        title="Coherence (u_mass)")
+        self.corpus = MmCorpus(datapath('testcorpus.mm'))
+        self.ch_umass = CoherenceMetric(corpus=self.corpus, coherence="u_mass", logger="visdom", title="Coherence")
         self.callback = [self.ch_umass]
-        self.class_ = ldamodel.LdaModel
-        self.model = self.class_(id2word=dictionary, num_topics=2, passes=10, callbacks=self.callback)
+        self.model = LdaModel(id2word=common_dictionary, num_topics=2, passes=10, callbacks=self.callback)
+
+        self.host = "http://localhost"
+        self.port = 8097
 
     def testCallbackUpdateGraph(self):
 
-        # create a new process for visdom.server
-        proc = subprocess.Popen(['python', '-m', 'visdom.server'])
-
-        # wait for visdom server startup
-        time.sleep(3)
-
-        # create visdom object
-        print(FLAGS.port)
-        print(FLAGS.server)
-        viz = Visdom(port=FLAGS.port, server=FLAGS.server)
-
-        # check connection
-        assert viz.check_connection()
-
-        # clear screen
-        viz.close()
-
-        # ## create a window
-        # win=viz.line(
-        #     X=np.array([0,1]),
-        #     Y=np.array([0,1]),
-        #     opts=dict(
-        #         xtickmin=-2,
-        #         xtickmax=10,
-        #         xtickstep=1,
-        #         ytickmin=-1,
-        #         ytickmax=10,
-        #         ytickstep=1,
-        #         markersymbol='dot',
-        #         markersize=5,
-        #     ),
-        #     name="1"
-        # )
-
-        # # loop for update line
-        # for a in range(10):
-        #     try:
-        #         # #old API
-        #         # viz.updateTrace(
-        #         #     X=np.array([a]),
-        #         #     Y=np.array([a]),
-        #         #     win=win,
-        #         #     name="1"
-        #         # )
-
-        #         # new API
-        #         viz.line(
-        #             X=np.array([a]),
-        #             Y=np.array([a]),
-        #             win=win,
-        #             name="1",
-        #             update = 'append'
-        #         )
-
-        #         time.sleep(1)
-
-        #     except Exception as e:
-        #         print(e)
-        #         proc.kill()
-        #         print('server killed')
-        #         self.assertTrue(0)
-
-        # test callback's update graph function
+        # Popen have no context-manager in 2.7, for this reason - try/finally.
         try:
+            # spawn visdom.server
+            proc = subprocess.Popen(['python', '-m', 'visdom.server', '-port', str(self.port)])
+
+            # wait for visdom server startup (any better way?)
+            time.sleep(3)
+
+            viz = Visdom(server=self.host, port=self.port)
+            assert viz.check_connection()
+
+            # clear screen
+            viz.close()
+
             self.model.update(self.corpus)
-            # raise AttributeError("test")
-        except Exception as e:
-            print(e)
-            # kill visdom.server
+        finally:
             proc.kill()
-            print('server killed')
-            self.assertTrue(0)
-
-        # # kill visdom.server
-        # try:
-        #     proc.wait(timeout=3)
-        # except subprocess.TimeoutExpired:
-        #     proc.kill()
-        #     print('server killed')
-
-        # kill visdom.server
-        time.sleep(3)
-        proc.kill()
-        print('server killed')
 
 
 if __name__ == '__main__':
