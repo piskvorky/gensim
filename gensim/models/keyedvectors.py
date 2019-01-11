@@ -2188,3 +2188,216 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         _save_word2vec_format(
             fname, self.vocab, self.vectors, fvocab=fvocab, binary=binary, total_vec=total_vec)
 
+    def init_ngrams_weights(self, seed):
+        self.hash2index = {}
+        ngram_indices, self.buckets_word = _process_fasttext_vocab(
+            self.vocab.items(),
+            self.min_n,
+            self.max_n,
+            self.bucket,
+            _ft_hash if self.compatible_hash else _ft_hash_broken,
+            self.hash2index
+        )
+        self.num_ngram_vectors = len(ngram_indices)
+        logger.info("Total number of ngrams is %d", self.num_ngram_vectors)
+
+        rand_obj = np.random
+        rand_obj.seed(seed)
+
+        lo, hi = -1.0 / self.vector_size, 1.0 / self.vector_size
+        vocab_shape = (len(self.vocab), self.vector_size)
+        ngrams_shape = (len(ngram_indices), self.vector_size)
+        self.vectors_vocab = rand_obj.uniform(lo, hi, vocab_shape).astype(REAL)
+        self.vectors_ngrams = rand_obj.uniform(lo, hi, ngrams_shape).astype(REAL)
+
+    def update_ngrams_weights(self, seed, old_vocab_len):
+        old_hash2index_len = len(self.hash2index)
+
+        new_ngram_hashes, self.buckets_word = _process_fasttext_vocab(
+            self.vocab.items(),
+            self.min_n,
+            self.max_n,
+            self.bucket,
+            _ft_hash if self.compatible_hash else _ft_hash_broken,
+            self.hash2index
+        )
+        num_new_ngrams = len(new_ngram_hashes)
+        self.num_ngram_vectors += num_new_ngrams
+        logger.info("Number of new ngrams is %d", num_new_ngrams)
+
+        rand_obj = np.random
+        rand_obj.seed(seed)
+
+        new_vocab = len(self.vocab) - old_vocab_len
+        self.vectors_vocab = _pad_random(self.vectors_vocab, new_vocab, rand_obj)
+
+        new_ngrams = len(self.hash2index) - old_hash2index_len
+        self.vectors_ngrams = _pad_random(self.vectors_ngrams, new_ngrams, rand_obj)
+
+    def init_post_load(self, vectors, match_gensim=False):
+        """Perform initialization after loading a native Facebook model.
+
+        Expects that the vocabulary (self.vocab) has already been initialized.
+
+        Parameters
+        ----------
+        vectors : np.array
+            A matrix containing vectors for all the entities, including words
+            and ngrams.  This comes directly from the binary model.
+            The order of the vectors must correspond to the indices in
+            the vocabulary.
+        match_gensim : boolean, optional
+            Match the behavior of gensim's FastText implementation and take a
+            subset of vectors_ngrams.  This behavior appears to be incompatible
+            with Facebook's implementation.
+
+        """
+        vocab_words = len(self.vocab)
+        assert vectors.shape[0] == vocab_words + self.bucket, 'unexpected number of vectors'
+        assert vectors.shape[1] == self.vector_size, 'unexpected vector dimensionality'
+
+        #
+        # The incoming vectors contain vectors for both words AND
+        # ngrams.  We split them into two separate matrices, because our
+        # implementation treats them differently.
+        #
+        self.vectors = np.array(vectors[:vocab_words, :])
+        self.vectors_vocab = np.array(vectors[:vocab_words, :])
+        self.vectors_ngrams = np.array(vectors[vocab_words:, :])
+        self.hash2index = {i: i for i in range(self.bucket)}
+        self.buckets_word = None  # This can get initialized later
+        self.num_ngram_vectors = self.bucket
+
+        if match_gensim:
+            #
+            # This gives us the same shape for vectors_ngrams, and we can
+            # satisfy our unit tests when running gensim vs native comparisons,
+            # but because we're discarding some ngrams, the accuracy of the
+            # model suffers.
+            #
+            ngram_hashes, _ = _process_fasttext_vocab(
+                self.vocab.items(),
+                self.min_n,
+                self.max_n,
+                self.bucket,
+                _ft_hash if self.compatible_hash else _ft_hash_broken,
+                dict(),  # we don't care what goes here in this case
+            )
+            ngram_hashes = sorted(set(ngram_hashes))
+
+            keep_indices = [self.hash2index[h] for h in self.hash2index if h in ngram_hashes]
+            self.num_ngram_vectors = len(keep_indices)
+            self.vectors_ngrams = self.vectors_ngrams.take(keep_indices, axis=0)
+            self.hash2index = {hsh: idx for (idx, hsh) in enumerate(ngram_hashes)}
+
+        self.adjust_vectors()
+
+    def adjust_vectors(self):
+        """Adjust the vectors for words in the vocabulary.
+
+        The adjustment relies on the vectors of the ngrams making up each
+        individual word.
+
+        """
+        if self.bucket == 0:
+            return
+
+        hash_fn = _ft_hash if self.compatible_hash else _ft_hash_broken
+
+        for w, v in self.vocab.items():
+            word_vec = np.copy(self.vectors_vocab[v.index])
+            ngrams = _compute_ngrams(w, self.min_n, self.max_n)
+            for ngram in ngrams:
+                ngram_index = self.hash2index[hash_fn(ngram) % self.bucket]
+                word_vec += self.vectors_ngrams[ngram_index]
+            word_vec /= len(ngrams) + 1
+            self.vectors[v.index] = word_vec
+
+
+def _process_fasttext_vocab(iterable, min_n, max_n, num_buckets, hash_fn, hash2index):
+    """
+    Performs a common operation for FastText weight initialization and
+    updates: scan the vocabulary, calculate ngrams and their hashes, keep
+    track of new ngrams, the buckets that each word relates to via its
+    ngrams, etc.
+
+    Parameters
+    ----------
+    iterable : list
+        A list of (word, :class:`Vocab`) tuples.
+    min_n : int
+        The minimum length of ngrams.
+    max_n : int
+        The maximum length of ngrams.
+    num_buckets : int
+        The number of buckets used by the model.
+    hash_fn : callable
+        Used to hash ngrams to buckets.
+    hash2index : dict
+        Updated in-place.
+
+    Returns
+    -------
+    A tuple of two elements.
+
+    word_indices : dict
+        Keys are indices of entities in the vocabulary (words).  Values are
+        arrays containing indices into vectors_ngrams for each ngram of the
+        word.
+    new_ngram_hashes : list
+        A list of hashes for newly encountered ngrams.  Each hash is modulo
+        num_buckets.
+
+    """
+    old_hash2index_len = len(hash2index)
+    word_indices = {}
+    new_ngram_hashes = []
+
+    if num_buckets == 0:
+        return [], {v.index: np.array([], dtype=np.uint32) for w, v in iterable}
+
+    for word, vocab in iterable:
+        wi = []
+        for ngram in _compute_ngrams(word, min_n, max_n):
+            ngram_hash = hash_fn(ngram) % num_buckets
+            if ngram_hash not in hash2index:
+                #
+                # This is a new ngram.  Reserve a new index in hash2index.
+                #
+                hash2index[ngram_hash] = old_hash2index_len + len(new_ngram_hashes)
+                new_ngram_hashes.append(ngram_hash)
+            wi.append(hash2index[ngram_hash])
+        word_indices[vocab.index] = np.array(wi, dtype=np.uint32)
+
+    return new_ngram_hashes, word_indices
+
+
+def _pad_random(m, new_rows, rand):
+    """Pad a matrix with additional rows filled with random values."""
+    rows, columns = m.shape
+    low, high = -1.0 / columns, 1.0 / columns
+    suffix = rand.uniform(low, high, (new_rows, columns)).astype(REAL)
+    return vstack([m, suffix])
+
+
+def _l2_norm(m, replace=False):
+    """Return an L2-normalized version of a matrix.
+
+    Parameters
+    ----------
+    m : np.array
+        The matrix to normalize.
+    replace : boolean, optional
+        If True, modifies the existing matrix.
+
+    Returns
+    -------
+    The normalized matrix.  If replace=True, this will be the same as m.
+
+    """
+    dist = sqrt((m ** 2).sum(-1))[..., newaxis]
+    if replace:
+        m /= dist
+        return m
+    else:
+        return (m / dist).astype(REAL)
