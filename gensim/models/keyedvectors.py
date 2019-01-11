@@ -782,11 +782,15 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         # Compute distance matrix.
         distance_matrix = zeros((vocab_len, vocab_len), dtype=double)
         for i, t1 in dictionary.items():
+            if t1 not in docset1:
+                continue
+
             for j, t2 in dictionary.items():
-                if t1 not in docset1 or t2 not in docset2:
+                if t2 not in docset2 or distance_matrix[i, j] != 0.0:
                     continue
+
                 # Compute Euclidean distance between word vectors.
-                distance_matrix[i, j] = sqrt(np_sum((self[t1] - self[t2])**2))
+                distance_matrix[i, j] = distance_matrix[j, i] = sqrt(np_sum((self[t1] - self[t2])**2))
 
         if np_sum(distance_matrix) == 0.0:
             # `emd` gets stuck if the distance matrix contains only zeros.
