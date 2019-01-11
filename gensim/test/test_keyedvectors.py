@@ -18,6 +18,8 @@ from gensim.corpora import Dictionary
 from gensim.models import KeyedVectors as EuclideanKeyedVectors, TfidfModel
 from gensim.test.utils import datapath
 
+import gensim.models.keyedvectors
+
 
 logger = logging.getLogger(__name__)
 
@@ -277,6 +279,18 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
         self.assertEqual(len(self.vectors.vocab), vocab_size + 2)
         for ent, vector in zip(entities, vectors):
             self.assertTrue(np.allclose(self.vectors[ent], vector))
+
+
+class L2NormTest(unittest.TestCase):
+    def test(self):
+        m = np.array(range(1, 10), dtype=np.float32)
+        m.shape = (3, 3)
+
+        norm = gensim.models.keyedvectors._l2_norm(m)
+        self.assertFalse(np.allclose(m, norm))
+
+        gensim.models.keyedvectors._l2_norm(m, replace=True)
+        self.assertTrue(np.allclose(m, norm))
 
 
 if __name__ == '__main__':

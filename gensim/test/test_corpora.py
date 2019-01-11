@@ -23,7 +23,7 @@ from gensim.corpora import (bleicorpus, mmcorpus, lowcorpus, svmlightcorpus,
                             ucicorpus, malletcorpus, textcorpus, indexedcorpus, wikicorpus)
 from gensim.interfaces import TransformedCorpus
 from gensim.utils import to_unicode
-from gensim.test.utils import datapath, get_tmpfile
+from gensim.test.utils import datapath, get_tmpfile, common_corpus
 
 
 class DummyTransformer(object):
@@ -382,6 +382,17 @@ class TestSvmLightCorpus(CorpusTestCase):
         self.corpus_class = svmlightcorpus.SvmLightCorpus
         self.file_extension = '.svmlight'
 
+    def test_serialization(self):
+        path = get_tmpfile("svml.corpus")
+        labels = [1] * len(common_corpus)
+        second_corpus = [(0, 1.0), (3, 1.0), (4, 1.0), (5, 1.0), (6, 1.0), (7, 1.0)]
+        self.corpus_class.serialize(path, common_corpus, labels=labels)
+        serialized_corpus = self.corpus_class(path)
+        self.assertEqual(serialized_corpus[1], second_corpus)
+        self.corpus_class.serialize(path, common_corpus, labels=np.array(labels))
+        serialized_corpus = self.corpus_class(path)
+        self.assertEqual(serialized_corpus[1], second_corpus)
+
 
 class TestBleiCorpus(CorpusTestCase):
     def setUp(self):
@@ -409,10 +420,29 @@ class TestBleiCorpus(CorpusTestCase):
 
 class TestLowCorpus(CorpusTestCase):
     TEST_CORPUS = [[(1, 1)], [], [(0, 2), (2, 1)], []]
+    CORPUS_LINE = 'mom  wash  window window was washed'
 
     def setUp(self):
         self.corpus_class = lowcorpus.LowCorpus
         self.file_extension = '.low'
+
+    def test_line2doc(self):
+        fname = datapath('testcorpus.' + self.file_extension.lstrip('.'))
+        id2word = {1: 'mom', 2: 'window'}
+
+        corpus = self.corpus_class(fname, id2word=id2word)
+
+        # should return all words in doc
+        corpus.use_wordids = False
+        self.assertEqual(
+            sorted(corpus.line2doc(self.CORPUS_LINE)),
+            [('mom', 1), ('was', 1), ('wash', 1), ('washed', 1), ('window', 2)])
+
+        # should return words in word2id
+        corpus.use_wordids = True
+        self.assertEqual(
+            sorted(corpus.line2doc(self.CORPUS_LINE)),
+            [(1, 1), (2, 2)])
 
 
 class TestUciCorpus(CorpusTestCase):
@@ -427,8 +457,9 @@ class TestUciCorpus(CorpusTestCase):
         pass
 
 
-class TestMalletCorpus(CorpusTestCase):
+class TestMalletCorpus(TestLowCorpus):
     TEST_CORPUS = [[(1, 1)], [], [(0, 2), (2, 1)], []]
+    CORPUS_LINE = '#3  lang mom  wash  window window was washed'
 
     def setUp(self):
         self.corpus_class = malletcorpus.MalletCorpus
@@ -447,6 +478,35 @@ class TestMalletCorpus(CorpusTestCase):
             doc, metadata = docmeta
             self.assertEqual(metadata[0], str(i + 1))
             self.assertEqual(metadata[1], 'en')
+
+    def test_line2doc(self):
+        # case with metadata=False (by default)
+        super(TestMalletCorpus, self).test_line2doc()
+
+        # case with metadata=True
+        fname = datapath('testcorpus.' + self.file_extension.lstrip('.'))
+        id2word = {1: 'mom', 2: 'window'}
+
+        corpus = self.corpus_class(fname, id2word=id2word, metadata=True)
+
+        # should return all words in doc
+        corpus.use_wordids = False
+        doc, (docid, doclang) = corpus.line2doc(self.CORPUS_LINE)
+        self.assertEqual(docid, '#3')
+        self.assertEqual(doclang, 'lang')
+        self.assertEqual(
+            sorted(doc),
+            [('mom', 1), ('was', 1), ('wash', 1), ('washed', 1), ('window', 2)])
+
+        # should return words in word2id
+        corpus.use_wordids = True
+        doc, (docid, doclang) = corpus.line2doc(self.CORPUS_LINE)
+
+        self.assertEqual(docid, '#3')
+        self.assertEqual(doclang, 'lang')
+        self.assertEqual(
+            sorted(doc),
+            [(1, 1), (2, 2)])
 
 
 class TestTextCorpus(CorpusTestCase):
