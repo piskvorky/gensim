@@ -14,11 +14,13 @@ bz2-compressed dump of Wikipedia articles, in XML format.
 
 This actually creates three files:
 
-* `OUTPUT_PREFIX_wordids.txt`: mapping between words and their integer ids
-* `OUTPUT_PREFIX_bow.mm`: bag-of-words (word counts) representation, in
-  Matrix Matrix format
-* `OUTPUT_PREFIX_tfidf.mm`: TF-IDF representation
-* `OUTPUT_PREFIX.tfidf_model`: TF-IDF model dump
+* `OUTPUT_PREFIX_wordids.txt.bz2`: mapping between words and their integer ids
+* `OUTPUT_PREFIX_bow.mm`: bag-of-words (word counts) representation in Matrix Market format
+* `OUTPUT_PREFIX_bow.mm.index`: index for `OUTPUT_PREFIX_bow.mm`
+* `OUTPUT_PREFIX_bow.mm.metadata.cpickle`: titles of documents
+* `OUTPUT_PREFIX_tfidf.mm`: TF-IDF representation in Matix Market format
+* `OUTPUT_PREFIX_tfidf.mm.index`: index for `OUTPUT_PREFIX_tfidf.mm`
+* `OUTPUT_PREFIX.tfidf_model`: TF-IDF model
 
 The output Matrix Market files can then be compressed (e.g., by bzip2) to save
 disk space; gensim's corpus iterators can work with compressed input, too.
