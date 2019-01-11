@@ -1,6 +1,9 @@
 """
 This module is an API for downloading, getting information and loading datasets/models.
 
+See `RaRe-Technologies/gensim-data <https://github.com/RaRe-Technologies/gensim-data>`_ repo
+for more information about models/datasets/how-to-add-new/etc.
+
 Give information about available models/datasets:
 
 .. sourcecode:: pycon
@@ -12,6 +15,7 @@ Give information about available models/datasets:
 
 
 Model example:
+
 .. sourcecode:: pycon
 
     >>> import gensim.downloader as api
@@ -21,6 +25,7 @@ Model example:
 
 
 Dataset example:
+
 .. sourcecode:: pycon
 
     >>> import gensim.downloader as api

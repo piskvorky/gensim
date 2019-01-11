@@ -14,7 +14,7 @@ for out-of-vocabulary words.
 This module contains a fast native C implementation of Fasttext with Python interfaces. It is **not** only a wrapper
 around Facebook's implementation.
 
-For a tutorial see `this noteboook
+For a tutorial see `this notebook
 <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/FastText_Tutorial.ipynb>`_.
 
 **Make sure you have a C compiler before installing Gensim, to use the optimized (compiled) Fasttext
@@ -24,6 +24,7 @@ Usage examples
 --------------
 
 Initialize and train a model:
+
 .. sourcecode:: pycon
 
     >>> from gensim.test.utils import common_texts

@@ -21,7 +21,6 @@ csv-like format, or from a Python iterable of relations.
 
 Examples
 --------
-
 Initialize and train a model from a list
 
 .. sourcecode:: pycon
@@ -32,6 +31,7 @@ Initialize and train a model from a list
     >>> model.train(epochs=50)
 
 Initialize and train a model from a file containing one relation per line
+
 .. sourcecode:: pycon
 
     >>> from gensim.models.poincare import PoincareModel, PoincareRelations
@@ -851,7 +851,6 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.test.utils import datapath
@@ -1308,7 +1307,6 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.test.utils import datapath
@@ -1351,7 +1349,6 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.test.utils import datapath

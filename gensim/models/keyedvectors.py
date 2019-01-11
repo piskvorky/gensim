@@ -66,6 +66,7 @@ For example, using the Word2Vec algorithm to train the vectors
     >>> word_vectors = model.wv
 
 Persist the word vectors to disk with
+
 .. sourcecode:: pycon
 
     >>> from gensim.test.utils import get_tmpfile
@@ -90,6 +91,7 @@ What can I do with word vectors?
 
 You can perform various syntactic/semantic NLP word tasks with the trained vectors.
 Some of them are already built-in
+
 .. sourcecode:: pycon
 
     >>> import gensim.downloader as api
@@ -166,14 +168,6 @@ try:
     from queue import Queue, Empty
 except ImportError:
     from Queue import Queue, Empty  # noqa:F401
-
-# If pyemd C extension is available, import it.
-# If pyemd is attempted to be used, but isn't installed, ImportError will be raised in wmdistance
-try:
-    from pyemd import emd
-    PYEMD_EXT = True
-except ImportError:
-    PYEMD_EXT = False
 
 from numpy import dot, float32 as REAL, empty, memmap as np_memmap, \
     double, array, zeros, vstack, sqrt, newaxis, integer, \
@@ -752,8 +746,10 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             If `pyemd <https://pypi.org/project/pyemd/>`_  isn't installed.
 
         """
-        if not PYEMD_EXT:
-            raise ImportError("Please install pyemd Python package to compute WMD.")
+
+        # If pyemd C extension is available, import it.
+        # If pyemd is attempted to be used, but isn't installed, ImportError will be raised in wmdistance
+        from pyemd import emd
 
         # Remove out-of-vocabulary words.
         len_pre_oov1 = len(document1)
@@ -765,7 +761,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         if diff1 > 0 or diff2 > 0:
             logger.info('Removed %d and %d OOV words from document 1 and 2 (respectively).', diff1, diff2)
 
-        if len(document1) == 0 or len(document2) == 0:
+        if not document1 or not document2:
             logger.info(
                 "At least one of the documents had no words that were in the vocabulary. "
                 "Aborting (returning inf)."
@@ -786,11 +782,15 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         # Compute distance matrix.
         distance_matrix = zeros((vocab_len, vocab_len), dtype=double)
         for i, t1 in dictionary.items():
+            if t1 not in docset1:
+                continue
+
             for j, t2 in dictionary.items():
-                if t1 not in docset1 or t2 not in docset2:
+                if t2 not in docset2 or distance_matrix[i, j] != 0.0:
                     continue
+
                 # Compute Euclidean distance between word vectors.
-                distance_matrix[i, j] = sqrt(np_sum((self[t1] - self[t2])**2))
+                distance_matrix[i, j] = distance_matrix[j, i] = sqrt(np_sum((self[t1] - self[t2])**2))
 
         if np_sum(distance_matrix) == 0.0:
             # `emd` gets stuck if the distance matrix contains only zeros.

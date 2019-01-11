@@ -22,6 +22,7 @@ Usage examples
 To implement a Callback, inherit from this base class and override one or more of its methods.
 
 Create a callback to save the training model after each epoch
+
 .. sourcecode:: pycon
 
     >>> from gensim.test.utils import get_tmpfile
@@ -561,7 +562,7 @@ class Callback(object):
                 self.log_type.info(statement)
 
         # check for any metric which need model state from previous epoch
-        if isinstance(metric, (DiffMetric, ConvergenceMetric)):
+        if any(isinstance(metric, (DiffMetric, ConvergenceMetric)) for metric in self.metrics):
             self.previous = copy.deepcopy(self.model)
 
         return current_metrics

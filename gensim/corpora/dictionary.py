@@ -231,7 +231,6 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.corpora import Dictionary
@@ -339,7 +338,6 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.corpora import Dictionary
@@ -357,18 +355,18 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         # determine which tokens to keep
         if keep_tokens:
-            keep_ids = [self.token2id[v] for v in keep_tokens if v in self.token2id]
-            good_ids = (
+            keep_ids = {self.token2id[v] for v in keep_tokens if v in self.token2id}
+            good_ids = [
                 v for v in itervalues(self.token2id)
                 if no_below <= self.dfs.get(v, 0) <= no_above_abs or v in keep_ids
-            )
-            good_ids = sorted(good_ids, key=lambda x: self.num_docs if x in keep_ids else self.dfs.get(x), reverse=True)
+            ]
+            good_ids.sort(key=lambda x: self.num_docs if x in keep_ids else self.dfs.get(x, 0), reverse=True)
         else:
-            good_ids = (
+            good_ids = [
                 v for v in itervalues(self.token2id)
                 if no_below <= self.dfs.get(v, 0) <= no_above_abs
-            )
-            good_ids = sorted(good_ids, key=self.dfs.get, reverse=True)
+            ]
+            good_ids.sort(key=self.dfs.get, reverse=True)
         if keep_n is not None:
             good_ids = good_ids[:keep_n]
         bad_words = [(self[idx], self.dfs.get(idx, 0)) for idx in set(self).difference(good_ids)]
@@ -392,7 +390,6 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.corpora import Dictionary
@@ -431,7 +428,6 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.corpora import Dictionary
@@ -556,7 +552,6 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.corpora import Dictionary
@@ -612,7 +607,6 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.corpora import Dictionary
@@ -677,7 +671,6 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.corpora import Dictionary

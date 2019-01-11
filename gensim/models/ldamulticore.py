@@ -44,6 +44,7 @@ Online Learning for Latent Dirichlet Allocation, NIPS 2010 <http://www.cs.prince
 Usage examples
 --------------
 The constructor estimates Latent Dirichlet Allocation model parameters based on a training corpus
+
 .. sourcecode:: pycon
 
     >>> from gensim.test.utils import common_corpus, common_dictionary
