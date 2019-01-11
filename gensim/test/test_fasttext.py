@@ -7,7 +7,6 @@ import unittest
 import os
 import struct
 import six
-import tempfile
 
 import numpy as np
 
@@ -1071,7 +1070,13 @@ class NativeTrainingContinuationTest(unittest.TestCase):
 
     def test_save_load(self):
         """Test that serialization works end-to-end.  Not crashing is a success."""
-        with tempfile.NamedTemporaryFile(delete=True) as tmp:
+        #
+        # This is a workaround for a problem with temporary files on AppVeyor:
+        #
+        # - https://bugs.python.org/issue14243 (problem discussion)
+        # - https://github.com/dropbox/pyannotate/pull/48/files (workaround source code)
+        #
+        with temporary_file('model') as tmp:
             train_gensim().save(tmp.name)
 
             model = FT_gensim.load(tmp.name)
@@ -1081,7 +1086,7 @@ class NativeTrainingContinuationTest(unittest.TestCase):
 
     def test_save_load_native(self):
         """Test that serialization works end-to-end.  Not crashing is a success."""
-        with tempfile.NamedTemporaryFile(delete=True) as tmp:
+        with temporary_file('model') as tmp:
             load_native().save(tmp.name)
 
             model = FT_gensim.load(tmp.name)
