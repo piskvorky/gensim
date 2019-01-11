@@ -12,7 +12,6 @@ import logging
 import unittest
 
 import six
-
 import numpy as np
 
 from gensim.utils import to_unicode
@@ -644,6 +643,22 @@ class TestPhraserModelCommonTerms(CommonTermsPhrasesData, TestPhraserModel):
 
         transformed = ' '.join(self.bigram_utf8[self.sentences[1]])
         self.assertTrue(isinstance(transformed, six.text_type))
+
+
+class TestPhraserModelCompatibilty(unittest.TestCase):
+
+    def testCompatibilty(self):
+        phr = Phraser.load(datapath("phraser-3.6.0.model"))
+        model = Phrases.load(datapath("phrases-3.6.0.model"))
+
+        test_sentences = ['trees', 'graph', 'minors']
+        expected_res = ['trees', 'graph_minors']
+
+        phr_out = phr[test_sentences]
+        model_out = model[test_sentences]
+
+        self.assertEqual(phr_out, expected_res)
+        self.assertEqual(model_out, expected_res)
 
 
 if __name__ == '__main__':
