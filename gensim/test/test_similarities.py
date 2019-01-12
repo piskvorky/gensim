@@ -1032,6 +1032,11 @@ class TestLevenshteinSimilarityIndex(unittest.TestCase):
         self.assertLess(1, len(results))
         self.assertGreaterEqual(4, len(results))
 
+        # check the order of the results
+        results = index.most_similar(u"holiday", topn=4)
+        terms, _ = tuple(zip(*results))
+        self.assertEqual((u"hollingworth", u"slowing", u"denied", u"government"), terms)
+
         # check that the term itself is not returned
         index = LevenshteinSimilarityIndex(self.dictionary)
         terms = [term for term, similarity in index.most_similar(u"holiday", topn=len(self.dictionary))]
