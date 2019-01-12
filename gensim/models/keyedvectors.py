@@ -1367,9 +1367,8 @@ class WordEmbeddingSimilarityIndex(TermSimilarityIndex):
         if t1 not in self.keyedvectors.vocab:
             logger.debug('an out-of-dictionary term "%s"', t1)
         else:
-            for _, (t2, similarity) in zip(
-                    range(topn), self.keyedvectors.most_similar(
-                        positive=[t1], topn=topn, **self.kwargs)):
+            most_similar = self.keyedvectors.most_similar(positive=[t1], topn=topn, **self.kwargs)
+            for t2, similarity in most_similar:
                 if similarity > self.threshold:
                     yield (t2, similarity**self.exponent)
 
