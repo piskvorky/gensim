@@ -48,6 +48,7 @@ The training is streamed, meaning `sentences` can be a generator, reading input 
 from disk on-the-fly, without loading the entire corpus into RAM.
 
 It also means you can continue training the model later:
+
 .. sourcecode:: pycon
 
     >>> model = Word2Vec.load("word2vec.model")
@@ -55,6 +56,7 @@ It also means you can continue training the model later:
     (0, 2)
 
 The trained word vectors are stored in a :class:`~gensim.models.keyedvectors.KeyedVectors` instance in `model.wv`:
+
 .. sourcecode:: pycon
 
     >>> vector = model.wv['computer']  # numpy vector of a word
@@ -1409,7 +1411,6 @@ class LineSentence(object):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.test.utils import datapath
@@ -1887,7 +1888,8 @@ class Word2VecTrainables(utils.SaveLoad):
         if hs:
             self.syn1 = vstack([self.syn1, zeros((gained_vocab, self.layer1_size), dtype=REAL)])
         if negative:
-            self.syn1neg = vstack([self.syn1neg, zeros((gained_vocab, self.layer1_size), dtype=REAL)])
+            pad = zeros((gained_vocab, self.layer1_size), dtype=REAL)
+            self.syn1neg = vstack([self.syn1neg, pad])
         wv.vectors_norm = None
 
         # do not suppress learning for already learned words

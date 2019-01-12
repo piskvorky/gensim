@@ -25,7 +25,6 @@ You have 2 ways, how to make binaries:
 
 Examples
 --------
-
 .. sourcecode:: pycon
 
     >>> from gensim.test.utils import common_corpus, common_dictionary

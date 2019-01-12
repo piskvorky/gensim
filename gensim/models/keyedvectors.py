@@ -66,6 +66,7 @@ For example, using the Word2Vec algorithm to train the vectors
     >>> word_vectors = model.wv
 
 Persist the word vectors to disk with
+
 .. sourcecode:: pycon
 
     >>> from gensim.test.utils import get_tmpfile
@@ -90,6 +91,7 @@ What can I do with word vectors?
 
 You can perform various syntactic/semantic NLP word tasks with the trained vectors.
 Some of them are already built-in
+
 .. sourcecode:: pycon
 
     >>> import gensim.downloader as api
@@ -167,17 +169,9 @@ try:
 except ImportError:
     from Queue import Queue, Empty  # noqa:F401
 
-# If pyemd C extension is available, import it.
-# If pyemd is attempted to be used, but isn't installed, ImportError will be raised in wmdistance
-try:
-    from pyemd import emd
-    PYEMD_EXT = True
-except ImportError:
-    PYEMD_EXT = False
-
-from numpy import dot, float32 as REAL, empty, memmap as np_memmap, \
+from numpy import dot, float32 as REAL, memmap as np_memmap, \
     double, array, zeros, vstack, sqrt, newaxis, integer, \
-    ndarray, sum as np_sum, prod, argmax, divide as np_divide
+    ndarray, sum as np_sum, prod, argmax
 import numpy as np
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.corpora.dictionary import Dictionary
@@ -185,7 +179,13 @@ from six import string_types, integer_types
 from six.moves import zip, range
 from scipy import sparse, stats
 from gensim.utils import deprecated
-from gensim.models.utils_any2vec import _save_word2vec_format, _load_word2vec_format, _compute_ngrams, _ft_hash
+from gensim.models.utils_any2vec import (
+    _save_word2vec_format,
+    _load_word2vec_format,
+    _compute_ngrams,
+    _ft_hash,
+    _ft_hash_broken
+)
 
 logger = logging.getLogger(__name__)
 
@@ -390,22 +390,22 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         self.index2word = value
 
     @property
-    @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors instead")
+    @deprecated("Attribute will be removed in 4.0.0, use self.vectors instead")
     def syn0(self):
         return self.vectors
 
     @syn0.setter
-    @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors instead")
+    @deprecated("Attribute will be removed in 4.0.0, use self.vectors instead")
     def syn0(self, value):
         self.vectors = value
 
     @property
-    @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors_norm instead")
+    @deprecated("Attribute will be removed in 4.0.0, use self.vectors_norm instead")
     def syn0norm(self):
         return self.vectors_norm
 
     @syn0norm.setter
-    @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors_norm instead")
+    @deprecated("Attribute will be removed in 4.0.0, use self.vectors_norm instead")
     def syn0norm(self, value):
         self.vectors_norm = value
 
@@ -752,8 +752,10 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             If `pyemd <https://pypi.org/project/pyemd/>`_  isn't installed.
 
         """
-        if not PYEMD_EXT:
-            raise ImportError("Please install pyemd Python package to compute WMD.")
+
+        # If pyemd C extension is available, import it.
+        # If pyemd is attempted to be used, but isn't installed, ImportError will be raised in wmdistance
+        from pyemd import emd
 
         # Remove out-of-vocabulary words.
         len_pre_oov1 = len(document1)
@@ -765,7 +767,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         if diff1 > 0 or diff2 > 0:
             logger.info('Removed %d and %d OOV words from document 1 and 2 (respectively).', diff1, diff2)
 
-        if len(document1) == 0 or len(document2) == 0:
+        if not document1 or not document2:
             logger.info(
                 "At least one of the documents had no words that were in the vocabulary. "
                 "Aborting (returning inf)."
@@ -786,11 +788,15 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         # Compute distance matrix.
         distance_matrix = zeros((vocab_len, vocab_len), dtype=double)
         for i, t1 in dictionary.items():
+            if t1 not in docset1:
+                continue
+
             for j, t2 in dictionary.items():
-                if t1 not in docset1 or t2 not in docset2:
+                if t2 not in docset2 or distance_matrix[i, j] != 0.0:
                     continue
+
                 # Compute Euclidean distance between word vectors.
-                distance_matrix[i, j] = sqrt(np_sum((self[t1] - self[t2])**2))
+                distance_matrix[i, j] = distance_matrix[j, i] = sqrt(np_sum((self[t1] - self[t2])**2))
 
         if np_sum(distance_matrix) == 0.0:
             # `emd` gets stuck if the distance matrix contains only zeros.
@@ -1377,12 +1383,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         """
         if getattr(self, 'vectors_norm', None) is None or replace:
             logger.info("precomputing L2-norms of word weight vectors")
-            if replace:
-                for i in range(self.vectors.shape[0]):
-                    self.vectors[i, :] /= sqrt((self.vectors[i, :] ** 2).sum(-1))
-                self.vectors_norm = self.vectors
-            else:
-                self.vectors_norm = (self.vectors / sqrt((self.vectors ** 2).sum(-1))[..., newaxis]).astype(REAL)
+            self.vectors_norm = _l2_norm(self.vectors, replace=replace)
 
 
 class Word2VecKeyedVectors(WordEmbeddingsKeyedVectors):
@@ -1594,19 +1595,12 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         """
         if getattr(self, 'vectors_docs_norm', None) is None or replace:
             logger.info("precomputing L2-norms of doc weight vectors")
-            if replace:
-                for i in range(self.vectors_docs.shape[0]):
-                    self.vectors_docs[i, :] /= sqrt((self.vectors_docs[i, :] ** 2).sum(-1))
-                self.vectors_docs_norm = self.vectors_docs
+            if not replace and self.mapfile_path:
+                self.vectors_docs_norm = np_memmap(
+                    self.mapfile_path + '.vectors_docs_norm', dtype=REAL,
+                    mode='w+', shape=self.vectors_docs.shape)
             else:
-                if self.mapfile_path:
-                    self.vectors_docs_norm = np_memmap(
-                        self.mapfile_path + '.vectors_docs_norm', dtype=REAL,
-                        mode='w+', shape=self.vectors_docs.shape)
-                else:
-                    self.vectors_docs_norm = empty(self.vectors_docs.shape, dtype=REAL)
-                np_divide(
-                    self.vectors_docs, sqrt((self.vectors_docs ** 2).sum(-1))[..., newaxis], self.vectors_docs_norm)
+                self.vectors_docs_norm = _l2_norm(self.vectors_docs, replace=replace)
 
     def most_similar(self, positive=None, negative=None, topn=10, clip_start=0, clip_end=None, indexer=None):
         """Find the top-N most similar docvecs from the training set.
@@ -1894,8 +1888,62 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
 
 
 class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
-    """Vectors and vocab for :class:`~gensim.models.fasttext.FastText`."""
-    def __init__(self, vector_size, min_n, max_n):
+    """Vectors and vocab for :class:`~gensim.models.fasttext.FastText`.
+
+    Implements significant parts of the FastText algorithm.  For example,
+    the :func:`word_vec` calculates vectors for out-of-vocabulary (OOV)
+    entities.  FastText achieves this by keeping vectors for ngrams:
+    adding the vectors for the ngrams of an entity yields the vector for the
+    entity.
+
+    Similar to a hashmap, this class keeps a fixed number of buckets, and
+    maps all ngrams to buckets using a hash function.
+
+    This class also provides an abstraction over the hash functions used by
+    Gensim's FastText implementation over time.  The hash function connects
+    ngrams to buckets.  Originally, the hash function was broken and
+    incompatible with Facebook's implementation.  The current hash is fully
+    compatible.
+
+    Parameters
+    ----------
+    vector_size : int
+        The dimensionality of all vectors.
+    min_n : int
+        The minimum number of characters in an ngram
+    max_n : int
+        The maximum number of characters in an ngram
+    bucket : int
+        The number of buckets.
+    compatible_hash : boolean
+        If True, uses the Facebook-compatible hash function instead of the
+        Gensim backwards-compatible hash function.
+
+    Attributes
+    ----------
+    vectors_vocab : np.array
+        A vector for each entity in the vocabulary.
+    vectors_vocab_norm : np.array
+        Same as vectors_vocab, but the vectors are L2 normalized.
+    vectors_ngrams : np.array
+        A vector for each ngram across all entities in the vocabulary.
+    vectors_ngrams_norm : np.array
+        Same as vectors_ngrams, but the vectors are L2 normalized.
+        Under some conditions, may actually be the same matrix as
+        vectors_ngrams, e.g. if :func:`init_sims` was called with
+        replace=True.
+    buckets_word : dict
+        Maps vocabulary items (by their index) to the buckets they occur in.
+    hash2index : dict
+        Maps bucket numbers to an index within vectors_ngrams.  So, given an
+        ngram, you can get its vector by determining its bucket, mapping the
+        bucket to an index, and then indexing into vectors_ngrams (in other
+        words, vectors_ngrams[hash2index[hash_fn(ngram) % bucket]].
+    num_ngram_vectors : int
+        TODO
+
+    """
+    def __init__(self, vector_size, min_n, max_n, bucket, compatible_hash):
         super(FastTextKeyedVectors, self).__init__(vector_size=vector_size)
         self.vectors_vocab = None
         self.vectors_vocab_norm = None
@@ -1905,25 +1953,27 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         self.hash2index = {}
         self.min_n = min_n
         self.max_n = max_n
+        self.bucket = bucket
         self.num_ngram_vectors = 0
+        self.compatible_hash = compatible_hash
 
     @property
-    @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors_vocab instead")
+    @deprecated("Attribute will be removed in 4.0.0, use self.vectors_vocab instead")
     def syn0_vocab(self):
         return self.vectors_vocab
 
     @property
-    @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors_vocab_norm instead")
+    @deprecated("Attribute will be removed in 4.0.0, use self.vectors_vocab_norm instead")
     def syn0_vocab_norm(self):
         return self.vectors_vocab_norm
 
     @property
-    @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors_ngrams instead")
+    @deprecated("Attribute will be removed in 4.0.0, use self.vectors_ngrams instead")
     def syn0_ngrams(self):
         return self.vectors_ngrams
 
     @property
-    @deprecated("Attribute will be removed in 4.0.0, use self.wv.vectors_ngrams_norm instead")
+    @deprecated("Attribute will be removed in 4.0.0, use self.vectors_ngrams_norm instead")
     def syn0_ngrams_norm(self):
         return self.vectors_ngrams_norm
 
@@ -1945,8 +1995,9 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         if word in self.vocab:
             return True
         else:
+            hash_fn = _ft_hash if self.compatible_hash else _ft_hash_broken
             char_ngrams = _compute_ngrams(word, self.min_n, self.max_n)
-            return any(_ft_hash(ng) % self.bucket in self.hash2index for ng in char_ngrams)
+            return any(hash_fn(ng) % self.bucket in self.hash2index for ng in char_ngrams)
 
     def save(self, *args, **kwargs):
         """Save object.
@@ -1988,8 +2039,12 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
             If word and all ngrams not in vocabulary.
 
         """
+        hash_fn = _ft_hash if self.compatible_hash else _ft_hash_broken
+
         if word in self.vocab:
             return super(FastTextKeyedVectors, self).word_vec(word, use_norm)
+        elif self.bucket == 0:
+            raise KeyError('cannot calculate vector for OOV word without ngrams')
         else:
             # from gensim.models.fasttext import compute_ngrams
             word_vec = np.zeros(self.vectors_ngrams.shape[1], dtype=np.float32)
@@ -2000,7 +2055,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
                 ngram_weights = self.vectors_ngrams
             ngrams_found = 0
             for ngram in ngrams:
-                ngram_hash = _ft_hash(ngram) % self.bucket
+                ngram_hash = hash_fn(ngram) % self.bucket
                 if ngram_hash in self.hash2index:
                     word_vec += ngram_weights[self.hash2index[ngram_hash]]
                     ngrams_found += 1
@@ -2028,13 +2083,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         super(FastTextKeyedVectors, self).init_sims(replace)
         if getattr(self, 'vectors_ngrams_norm', None) is None or replace:
             logger.info("precomputing L2-norms of ngram weight vectors")
-            if replace:
-                for i in range(self.vectors_ngrams.shape[0]):
-                    self.vectors_ngrams[i, :] /= sqrt((self.vectors_ngrams[i, :] ** 2).sum(-1))
-                self.vectors_ngrams_norm = self.vectors_ngrams
-            else:
-                self.vectors_ngrams_norm = \
-                    (self.vectors_ngrams / sqrt((self.vectors_ngrams ** 2).sum(-1))[..., newaxis]).astype(REAL)
+            self.vectors_ngrams_norm = _l2_norm(self.vectors_ngrams, replace=replace)
 
     def save_word2vec_format(self, fname, fvocab=None, binary=False, total_vec=None):
         """Store the input-hidden weight matrix in the same format used by the original
@@ -2056,3 +2105,217 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         # from gensim.models.word2vec import save_word2vec_format
         _save_word2vec_format(
             fname, self.vocab, self.vectors, fvocab=fvocab, binary=binary, total_vec=total_vec)
+
+    def init_ngrams_weights(self, seed):
+        self.hash2index = {}
+        ngram_indices, self.buckets_word = _process_fasttext_vocab(
+            self.vocab.items(),
+            self.min_n,
+            self.max_n,
+            self.bucket,
+            _ft_hash if self.compatible_hash else _ft_hash_broken,
+            self.hash2index
+        )
+        self.num_ngram_vectors = len(ngram_indices)
+        logger.info("Total number of ngrams is %d", self.num_ngram_vectors)
+
+        rand_obj = np.random
+        rand_obj.seed(seed)
+
+        lo, hi = -1.0 / self.vector_size, 1.0 / self.vector_size
+        vocab_shape = (len(self.vocab), self.vector_size)
+        ngrams_shape = (len(ngram_indices), self.vector_size)
+        self.vectors_vocab = rand_obj.uniform(lo, hi, vocab_shape).astype(REAL)
+        self.vectors_ngrams = rand_obj.uniform(lo, hi, ngrams_shape).astype(REAL)
+
+    def update_ngrams_weights(self, seed, old_vocab_len):
+        old_hash2index_len = len(self.hash2index)
+
+        new_ngram_hashes, self.buckets_word = _process_fasttext_vocab(
+            self.vocab.items(),
+            self.min_n,
+            self.max_n,
+            self.bucket,
+            _ft_hash if self.compatible_hash else _ft_hash_broken,
+            self.hash2index
+        )
+        num_new_ngrams = len(new_ngram_hashes)
+        self.num_ngram_vectors += num_new_ngrams
+        logger.info("Number of new ngrams is %d", num_new_ngrams)
+
+        rand_obj = np.random
+        rand_obj.seed(seed)
+
+        new_vocab = len(self.vocab) - old_vocab_len
+        self.vectors_vocab = _pad_random(self.vectors_vocab, new_vocab, rand_obj)
+
+        new_ngrams = len(self.hash2index) - old_hash2index_len
+        self.vectors_ngrams = _pad_random(self.vectors_ngrams, new_ngrams, rand_obj)
+
+    def init_post_load(self, vectors, match_gensim=False):
+        """Perform initialization after loading a native Facebook model.
+
+        Expects that the vocabulary (self.vocab) has already been initialized.
+
+        Parameters
+        ----------
+        vectors : np.array
+            A matrix containing vectors for all the entities, including words
+            and ngrams.  This comes directly from the binary model.
+            The order of the vectors must correspond to the indices in
+            the vocabulary.
+        match_gensim : boolean, optional
+            Match the behavior of gensim's FastText implementation and take a
+            subset of vectors_ngrams.  This behavior appears to be incompatible
+            with Facebook's implementation.
+
+        """
+        vocab_words = len(self.vocab)
+        assert vectors.shape[0] == vocab_words + self.bucket, 'unexpected number of vectors'
+        assert vectors.shape[1] == self.vector_size, 'unexpected vector dimensionality'
+
+        #
+        # The incoming vectors contain vectors for both words AND
+        # ngrams.  We split them into two separate matrices, because our
+        # implementation treats them differently.
+        #
+        self.vectors = np.array(vectors[:vocab_words, :])
+        self.vectors_vocab = np.array(vectors[:vocab_words, :])
+        self.vectors_ngrams = np.array(vectors[vocab_words:, :])
+        self.hash2index = {i: i for i in range(self.bucket)}
+        self.buckets_word = None  # This can get initialized later
+        self.num_ngram_vectors = self.bucket
+
+        if match_gensim:
+            #
+            # This gives us the same shape for vectors_ngrams, and we can
+            # satisfy our unit tests when running gensim vs native comparisons,
+            # but because we're discarding some ngrams, the accuracy of the
+            # model suffers.
+            #
+            ngram_hashes, _ = _process_fasttext_vocab(
+                self.vocab.items(),
+                self.min_n,
+                self.max_n,
+                self.bucket,
+                _ft_hash if self.compatible_hash else _ft_hash_broken,
+                dict(),  # we don't care what goes here in this case
+            )
+            ngram_hashes = sorted(set(ngram_hashes))
+
+            keep_indices = [self.hash2index[h] for h in self.hash2index if h in ngram_hashes]
+            self.num_ngram_vectors = len(keep_indices)
+            self.vectors_ngrams = self.vectors_ngrams.take(keep_indices, axis=0)
+            self.hash2index = {hsh: idx for (idx, hsh) in enumerate(ngram_hashes)}
+
+        self.adjust_vectors()
+
+    def adjust_vectors(self):
+        """Adjust the vectors for words in the vocabulary.
+
+        The adjustment relies on the vectors of the ngrams making up each
+        individual word.
+
+        """
+        if self.bucket == 0:
+            return
+
+        hash_fn = _ft_hash if self.compatible_hash else _ft_hash_broken
+
+        for w, v in self.vocab.items():
+            word_vec = np.copy(self.vectors_vocab[v.index])
+            ngrams = _compute_ngrams(w, self.min_n, self.max_n)
+            for ngram in ngrams:
+                ngram_index = self.hash2index[hash_fn(ngram) % self.bucket]
+                word_vec += self.vectors_ngrams[ngram_index]
+            word_vec /= len(ngrams) + 1
+            self.vectors[v.index] = word_vec
+
+
+def _process_fasttext_vocab(iterable, min_n, max_n, num_buckets, hash_fn, hash2index):
+    """
+    Performs a common operation for FastText weight initialization and
+    updates: scan the vocabulary, calculate ngrams and their hashes, keep
+    track of new ngrams, the buckets that each word relates to via its
+    ngrams, etc.
+
+    Parameters
+    ----------
+    iterable : list
+        A list of (word, :class:`Vocab`) tuples.
+    min_n : int
+        The minimum length of ngrams.
+    max_n : int
+        The maximum length of ngrams.
+    num_buckets : int
+        The number of buckets used by the model.
+    hash_fn : callable
+        Used to hash ngrams to buckets.
+    hash2index : dict
+        Updated in-place.
+
+    Returns
+    -------
+    A tuple of two elements.
+
+    word_indices : dict
+        Keys are indices of entities in the vocabulary (words).  Values are
+        arrays containing indices into vectors_ngrams for each ngram of the
+        word.
+    new_ngram_hashes : list
+        A list of hashes for newly encountered ngrams.  Each hash is modulo
+        num_buckets.
+
+    """
+    old_hash2index_len = len(hash2index)
+    word_indices = {}
+    new_ngram_hashes = []
+
+    if num_buckets == 0:
+        return [], {v.index: np.array([], dtype=np.uint32) for w, v in iterable}
+
+    for word, vocab in iterable:
+        wi = []
+        for ngram in _compute_ngrams(word, min_n, max_n):
+            ngram_hash = hash_fn(ngram) % num_buckets
+            if ngram_hash not in hash2index:
+                #
+                # This is a new ngram.  Reserve a new index in hash2index.
+                #
+                hash2index[ngram_hash] = old_hash2index_len + len(new_ngram_hashes)
+                new_ngram_hashes.append(ngram_hash)
+            wi.append(hash2index[ngram_hash])
+        word_indices[vocab.index] = np.array(wi, dtype=np.uint32)
+
+    return new_ngram_hashes, word_indices
+
+
+def _pad_random(m, new_rows, rand):
+    """Pad a matrix with additional rows filled with random values."""
+    rows, columns = m.shape
+    low, high = -1.0 / columns, 1.0 / columns
+    suffix = rand.uniform(low, high, (new_rows, columns)).astype(REAL)
+    return vstack([m, suffix])
+
+
+def _l2_norm(m, replace=False):
+    """Return an L2-normalized version of a matrix.
+
+    Parameters
+    ----------
+    m : np.array
+        The matrix to normalize.
+    replace : boolean, optional
+        If True, modifies the existing matrix.
+
+    Returns
+    -------
+    The normalized matrix.  If replace=True, this will be the same as m.
+
+    """
+    dist = sqrt((m ** 2).sum(-1))[..., newaxis]
+    if replace:
+        m /= dist
+        return m
+    else:
+        return (m / dist).astype(REAL)

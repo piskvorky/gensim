@@ -10,6 +10,7 @@ Examples
 --------
 
 Create simple graph and add edges. Let's take a look at nodes.
+
 .. sourcecode:: pycon
 
     >>> gg = build_graph(['Felidae', 'Lion', 'Tiger', 'Wolf'])
@@ -63,5 +64,5 @@ def remove_unreachable_nodes(graph):
     """
 
     for node in graph.nodes():
-        if sum(graph.edge_weight((node, other)) for other in graph.neighbors(node)) == 0:
+        if all(graph.edge_weight((node, other)) == 0 for other in graph.neighbors(node)):
             graph.del_node(node)

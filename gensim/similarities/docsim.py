@@ -36,6 +36,7 @@ Once the index has been initialized, you can query for document similarity simpl
     >>> similarities = index[query]  # get similarities between the query and all index documents
 
 If you have more query documents, you can submit them all at once, in a batch
+
 .. sourcecode:: pycon
 
     >>> from gensim.test.utils import common_corpus, common_dictionary, get_tmpfile
@@ -55,6 +56,7 @@ To see the speed-up on your machine, run ``python -m gensim.test.simspeed``
 There is also a special syntax for when you need similarity of documents in the index
 to the index itself (i.e. queries = the indexed documents themselves). This special syntax
 uses the faster, batch queries internally and **is ideal for all-vs-all pairwise similarities**:
+
 .. sourcecode:: pycon
 
     >>> from gensim.test.utils import common_corpus, common_dictionary, get_tmpfile
@@ -66,7 +68,6 @@ uses the faster, batch queries internally and **is ideal for all-vs-all pairwise
     ...     pass
 
 """
-
 import logging
 import itertools
 import os
@@ -572,7 +573,6 @@ class Similarity(interfaces.SimilarityABC):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.corpora.textcorpus import TextCorpus
@@ -611,7 +611,6 @@ class Similarity(interfaces.SimilarityABC):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.corpora.textcorpus import TextCorpus
@@ -707,7 +706,6 @@ class Similarity(interfaces.SimilarityABC):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.corpora.textcorpus import TextCorpus
@@ -744,7 +742,6 @@ class MatrixSimilarity(interfaces.SimilarityABC):
 
     Examples
     --------
-
     .. sourcecode:: pycon
 
         >>> from gensim.test.utils import common_corpus, common_dictionary
@@ -865,7 +862,6 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
 
     Examples
     --------
-
     .. sourcecode:: pycon
 
         >>> from gensim.test.utils import common_texts
@@ -995,7 +991,6 @@ class WmdSimilarity(interfaces.SimilarityABC):
 
     Example
     -------
-
     .. sourcecode:: pycon
 
         >>> from gensim.test.utils import common_texts
