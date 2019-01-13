@@ -251,7 +251,7 @@ def iter_bm25_bow(corpus, n_jobs=1):
         ...     ["cat", "outer", "space"],
         ...     ["wag", "dog"]
         ... ]
-        >>> result = get_bm25_weights(corpus, n_jobs=-1)
+        >>> result = iter_bm25_weights(corpus, n_jobs=-1)
 
     """
     bm25 = BM25(corpus)

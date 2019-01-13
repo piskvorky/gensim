@@ -82,9 +82,10 @@ def _set_graph_edge_weights(graph):
 
     """
     documents = graph.nodes()
-    weights = list(_bm25_weights(documents))
+    weights = _bm25_weights(documents)
 
     for i, doc_bow in enumerate(weights):
+        print('i', i, 'doc_bow:', len(doc_bow), len(documents))
         for j, weight in doc_bow:
             if i == j or weight < WEIGHT_THRESHOLD:
                 continue
@@ -352,8 +353,11 @@ def summarize_corpus(corpus, ratio=0.2):
     if len(corpus) < INPUT_MIN_LENGTH:
         logger.warning("Input corpus is expected to have at least %d documents.", INPUT_MIN_LENGTH)
 
+    logger.info('start build graph')
     graph = _build_graph(hashable_corpus)
+    logger.info('start set edge weights')
     _set_graph_edge_weights(graph)
+    logger.info('start _remove_unreachable_nodes')
     _remove_unreachable_nodes(graph)
 
     # Cannot calculate eigenvectors if number of unique documents in corpus < 3.
@@ -362,7 +366,9 @@ def summarize_corpus(corpus, ratio=0.2):
         logger.warning("Please add more sentences to the text. The number of reachable nodes is below 3")
         return []
 
+    logger.info('start _pagerank')
     pagerank_scores = _pagerank(graph)
+    logger.info('start sort')
 
     hashable_corpus.sort(key=lambda doc: pagerank_scores.get(doc, 0), reverse=True)
 
