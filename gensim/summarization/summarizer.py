@@ -85,7 +85,6 @@ def _set_graph_edge_weights(graph):
     weights = _bm25_weights(documents)
 
     for i, doc_bow in enumerate(weights):
-        print('i', i, 'doc_bow:', len(doc_bow), len(documents))
         for j, weight in doc_bow:
             if i == j or weight < WEIGHT_THRESHOLD:
                 continue
@@ -97,7 +96,7 @@ def _set_graph_edge_weights(graph):
 
     # Handles the case in which all similarities are zero.
     # The resultant summary will consist of random sentences.
-    if all(graph.edge_weight(edge) == 0 for edge in graph.edges()):
+    if all(graph.edge_weight(edge) == 0 for edge in graph.iter_edges()):
         _create_valid_graph(graph)
 
 

@@ -65,8 +65,8 @@ def pagerank_weighted(graph, damping=0.85):
     coeff_adjacency_matrix = build_adjacency_matrix(graph, coeff=damping)
     probabilities = (1 - damping) / float(len(graph))
 
-    # trying to minimize memory allocations
     pagerank_matrix = coeff_adjacency_matrix.toarray()
+    # trying to minimize memory allocations
     pagerank_matrix += probabilities
 
     vec = principal_eigenvector(pagerank_matrix.T)

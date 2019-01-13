@@ -388,6 +388,17 @@ class Graph(IGraph):
         """
         return [a for a in self.edge_properties]
 
+    def iter_edges(self):
+        """Returns iterator of all edges of the graph.
+
+        Returns
+        -------
+        iterator of (hashable, hashable)
+            Edges of graph.
+
+        """
+        return iter(self.edge_properties)
+
     def del_node(self, node):
         """Removes given node and its edges from the graph.
 
