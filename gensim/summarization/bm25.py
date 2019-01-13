@@ -184,6 +184,7 @@ class BM25(object):
                 scores.append((index, score))
         return scores
 
+
 def _get_scores_bow(bm25, document):
     """Helper function for retrieving bm25 scores of given `document` in parallel
     in relation to every item in corpus.
@@ -202,6 +203,7 @@ def _get_scores_bow(bm25, document):
 
     """
     return bm25.get_scores_bow(document)
+
 
 def _get_scores(bm25, document):
     """Helper function for retrieving bm25 scores of given `document` in parallel
@@ -261,9 +263,12 @@ def iter_bm25_bow(corpus, n_jobs=1):
         return
 
     get_score = partial(_get_scores_bow, bm25)
-    with Pool(n_processes) as pool:
-        for bow in pool.imap(get_score, corpus):
-            yield bow
+    pool = Pool(n_processes)
+
+    for bow in pool.imap(get_score, corpus):
+        yield bow
+    pool.close()
+    pool.join()
 
 
 def get_bm25_weights(corpus, n_jobs=1):
@@ -303,5 +308,8 @@ def get_bm25_weights(corpus, n_jobs=1):
         return weights
 
     get_score = partial(_get_scores, bm25)
-    with Pool(n_processes) as pool:
-        return pool.map(get_score, corpus)
+    pool = Pool(n_processes)
+    weights = pool.map(get_score, corpus)
+    pool.close()
+    pool.join()
+    return weights
