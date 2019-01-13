@@ -58,7 +58,7 @@ from gensim.summarization.pagerank_weighted import pagerank_weighted as _pageran
 from gensim.summarization.textcleaner import clean_text_by_sentences as _clean_text_by_sentences
 from gensim.summarization.commons import build_graph as _build_graph
 from gensim.summarization.commons import remove_unreachable_nodes as _remove_unreachable_nodes
-from gensim.summarization.bm25 import get_bm25_weights as _bm25_weights
+from gensim.summarization.bm25 import iter_bm25_bow as _bm25_weights
 from gensim.corpora import Dictionary
 from math import log10 as _log10
 from six.moves import range
@@ -82,23 +82,17 @@ def _set_graph_edge_weights(graph):
 
     """
     documents = graph.nodes()
-    weights = _bm25_weights(documents)
+    weights = list(_bm25_weights(documents))
 
-    for i in range(len(documents)):
-        for j in range(len(documents)):
-            if i == j or weights[i][j] < WEIGHT_THRESHOLD:
+    for i, doc_bow in enumerate(weights):
+        for j, weight in doc_bow:
+            if i == j or weight < WEIGHT_THRESHOLD:
                 continue
 
-            sentence_1 = documents[i]
-            sentence_2 = documents[j]
+            edge = (documents[i], documents[j])
 
-            edge_1 = (sentence_1, sentence_2)
-            edge_2 = (sentence_2, sentence_1)
-
-            if not graph.has_edge(edge_1):
-                graph.add_edge(edge_1, weights[i][j])
-            if not graph.has_edge(edge_2):
-                graph.add_edge(edge_2, weights[j][i])
+            if not graph.has_edge(edge):
+                graph.add_edge(edge, weight)
 
     # Handles the case in which all similarities are zero.
     # The resultant summary will consist of random sentences.
