@@ -352,11 +352,11 @@ def summarize_corpus(corpus, ratio=0.2):
     if len(corpus) < INPUT_MIN_LENGTH:
         logger.warning("Input corpus is expected to have at least %d documents.", INPUT_MIN_LENGTH)
 
-    logger.info('start build graph')
+    logger.info('Building graph')
     graph = _build_graph(hashable_corpus)
-    logger.info('start set edge weights')
+    logger.info('Filing graph')
     _set_graph_edge_weights(graph)
-    logger.info('start _remove_unreachable_nodes')
+    logger.info('Removing unreachable nodes of graph')
     _remove_unreachable_nodes(graph)
 
     # Cannot calculate eigenvectors if number of unique documents in corpus < 3.
@@ -365,9 +365,9 @@ def summarize_corpus(corpus, ratio=0.2):
         logger.warning("Please add more sentences to the text. The number of reachable nodes is below 3")
         return []
 
-    logger.info('start _pagerank')
+    logger.info('Pagerank graph')
     pagerank_scores = _pagerank(graph)
-    logger.info('start sort')
+    logger.info('Sorting pagerank scores')
 
     hashable_corpus.sort(key=lambda doc: pagerank_scores.get(doc, 0), reverse=True)
 
