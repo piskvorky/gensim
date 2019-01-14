@@ -160,7 +160,6 @@ and so on.
 
 from __future__ import division  # py3 "true division"
 
-from collections import deque
 from itertools import chain
 import logging
 
@@ -173,11 +172,12 @@ from numpy import dot, float32 as REAL, memmap as np_memmap, \
     double, array, zeros, vstack, sqrt, newaxis, integer, \
     ndarray, sum as np_sum, prod, argmax
 import numpy as np
+
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.corpora.dictionary import Dictionary
 from six import string_types, integer_types
 from six.moves import zip, range
-from scipy import sparse, stats
+from scipy import stats
 from gensim.utils import deprecated
 from gensim.models.utils_any2vec import (
     _save_word2vec_format,
@@ -186,6 +186,7 @@ from gensim.models.utils_any2vec import (
     _ft_hash,
     _ft_hash_broken
 )
+from gensim.similarities.termsim import TermSimilarityIndex, SparseTermSimilarityMatrix
 
 logger = logging.getLogger(__name__)
 
@@ -606,6 +607,9 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         """
         return self.most_similar(positive=[vector], topn=topn, restrict_vocab=restrict_vocab)
 
+    @deprecated(
+        "Method will be removed in 4.0.0, use "
+        "gensim.models.keyedvectors.WordEmbeddingSimilarityIndex instead")
     def similarity_matrix(self, dictionary, tfidf=None, threshold=0.0, exponent=2.0, nonzero_limit=100, dtype=REAL):
         """Construct a term similarity matrix for computing Soft Cosine Measure.
 
@@ -615,24 +619,21 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         Parameters
         ----------
         dictionary : :class:`~gensim.corpora.dictionary.Dictionary`
-            A dictionary that specifies a mapping between words and the indices of rows and columns
-            of the resulting term similarity matrix.
-        tfidf : :class:`gensim.models.tfidfmodel.TfidfModel`, optional
-            A model that specifies the relative importance of the terms in the dictionary. The rows
-            of the term similarity matrix will be build in a decreasing order of importance of terms,
-            or in the order of term identifiers if None.
+            A dictionary that specifies the considered terms.
+        tfidf : :class:`gensim.models.tfidfmodel.TfidfModel` or None, optional
+            A model that specifies the relative importance of the terms in the dictionary. The
+            columns of the term similarity matrix will be build in a decreasing order of importance
+            of terms, or in the order of term identifiers if None.
         threshold : float, optional
-            Only pairs of words whose embeddings are more similar than `threshold` are considered
-            when building the sparse term similarity matrix.
+            Only embeddings more similar than `threshold` are considered when retrieving word
+            embeddings closest to a given word embedding.
         exponent : float, optional
-            The exponent applied to the similarity between two word embeddings when building the term similarity matrix.
+            Take the word embedding similarities larger than `threshold` to the power of `exponent`.
         nonzero_limit : int, optional
-            The maximum number of non-zero elements outside the diagonal in a single row or column
-            of the term similarity matrix. Setting `nonzero_limit` to a constant ensures that the
-            time complexity of computing the Soft Cosine Measure will be linear in the document
-            length rather than quadratic.
+            The maximum number of non-zero elements outside the diagonal in a single column of the
+            sparse term similarity matrix.
         dtype : numpy.dtype, optional
-            Data-type of the term similarity matrix.
+            Data-type of the sparse term similarity matrix.
 
         Returns
         -------
@@ -654,66 +655,10 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         <http://www.aclweb.org/anthology/S/S17/S17-2051.pdf>`_.
 
         """
-        logger.info("constructing a term similarity matrix")
-        matrix_order = len(dictionary)
-        matrix_nonzero = [1] * matrix_order
-        matrix = sparse.identity(matrix_order, dtype=dtype, format="dok")
-        num_skipped = 0
-        # Decide the order of rows.
-        if tfidf is None:
-            word_indices = deque(sorted(dictionary.keys()))
-        else:
-            assert max(tfidf.idfs) < matrix_order
-            word_indices = deque([
-                index for index, _
-                in sorted(tfidf.idfs.items(), key=lambda x: (x[1], -x[0]), reverse=True)
-            ])
-
-        # Traverse rows.
-        for row_number, w1_index in enumerate(list(word_indices)):
-            word_indices.popleft()
-            if row_number % 1000 == 0:
-                logger.info(
-                    "PROGRESS: at %.02f%% rows (%d / %d, %d skipped, %.06f%% density)",
-                    100.0 * (row_number + 1) / matrix_order, row_number + 1, matrix_order,
-                    num_skipped, 100.0 * matrix.getnnz() / matrix_order**2)
-            w1 = dictionary[w1_index]
-            if w1 not in self.vocab:
-                num_skipped += 1
-                continue  # A word from the dictionary is not present in the word2vec model.
-
-            # Traverse upper triangle columns.
-            if matrix_order <= nonzero_limit + 1:  # Traverse all columns.
-                columns = (
-                    (w2_index, self.similarity(w1, dictionary[w2_index]))
-                    for w2_index in word_indices
-                    if dictionary[w2_index] in self.vocab)
-            else:  # Traverse only columns corresponding to the embeddings closest to w1.
-                num_nonzero = matrix_nonzero[w1_index] - 1
-                columns = (
-                    (dictionary.token2id[w2], similarity)
-                    for _, (w2, similarity)
-                    in zip(
-                        range(nonzero_limit - num_nonzero),
-                        self.most_similar(positive=[w1], topn=nonzero_limit - num_nonzero)
-                    )
-                    if w2 in dictionary.token2id
-                )
-                columns = sorted(columns, key=lambda x: x[0])
-
-            for w2_index, similarity in columns:
-                # Ensure that we don't exceed `nonzero_limit` by mirroring the upper triangle.
-                if similarity > threshold and matrix_nonzero[w2_index] <= nonzero_limit:
-                    element = similarity**exponent
-                    matrix[w1_index, w2_index] = element
-                    matrix_nonzero[w1_index] += 1
-                    matrix[w2_index, w1_index] = element
-                    matrix_nonzero[w2_index] += 1
-        logger.info(
-            "constructed a term similarity matrix with %0.6f %% nonzero elements",
-            100.0 * matrix.getnnz() / matrix_order**2
-        )
-        return matrix.tocsc()
+        index = WordEmbeddingSimilarityIndex(self, threshold=threshold, exponent=exponent)
+        similarity_matrix = SparseTermSimilarityMatrix(
+            index, dictionary, tfidf=tfidf, nonzero_limit=nonzero_limit, dtype=dtype)
+        return similarity_matrix.matrix
 
     def wmdistance(self, document1, document2):
         """Compute the Word Mover's Distance between two documents.
@@ -1384,6 +1329,48 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         if getattr(self, 'vectors_norm', None) is None or replace:
             logger.info("precomputing L2-norms of word weight vectors")
             self.vectors_norm = _l2_norm(self.vectors, replace=replace)
+
+
+class WordEmbeddingSimilarityIndex(TermSimilarityIndex):
+    """
+    Computes cosine similarities between word embeddings and retrieves the closest word embeddings
+    by cosine similarity for a given word embedding.
+
+    Parameters
+    ----------
+    keyedvectors : :class:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors`
+        The word embeddings.
+    threshold : float, optional
+        Only embeddings more similar than `threshold` are considered when retrieving word embeddings
+        closest to a given word embedding.
+    exponent : float, optional
+        Take the word embedding similarities larger than `threshold` to the power of `exponent`.
+    kwargs : dict or None
+        A dict with keyword arguments that will be passed to the `keyedvectors.most_similar` method
+        when retrieving the word embeddings closest to a given word embedding.
+
+    See Also
+    --------
+    :class:`~gensim.similarities.termsim.SparseTermSimilarityMatrix`
+        Build a term similarity matrix and compute the Soft Cosine Measure.
+
+    """
+    def __init__(self, keyedvectors, threshold=0.0, exponent=2.0, kwargs=None):
+        assert isinstance(keyedvectors, WordEmbeddingsKeyedVectors)
+        self.keyedvectors = keyedvectors
+        self.threshold = threshold
+        self.exponent = exponent
+        self.kwargs = kwargs or {}
+        super(WordEmbeddingSimilarityIndex, self).__init__()
+
+    def most_similar(self, t1, topn=10):
+        if t1 not in self.keyedvectors.vocab:
+            logger.debug('an out-of-dictionary term "%s"', t1)
+        else:
+            most_similar = self.keyedvectors.most_similar(positive=[t1], topn=topn, **self.kwargs)
+            for t2, similarity in most_similar:
+                if similarity > self.threshold:
+                    yield (t2, similarity**self.exponent)
 
 
 class Word2VecKeyedVectors(WordEmbeddingsKeyedVectors):
