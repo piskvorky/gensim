@@ -1043,7 +1043,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         fvocab : str, optional
             Optional file path used to save the vocabulary.
         binary : bool, optional
-            If True, the data wil be saved in binary word2vec format, otherwise - will be saved in plain text.
+            If True, the data will be saved in binary word2vec format, otherwise - will be saved in plain text.
 
         """
         total_vec = len(self.wv.vocab) + len(self.docvecs)
@@ -1265,7 +1265,7 @@ class Doc2VecVocab(Word2VecVocab):
             if there are more unique words than this, then prune the infrequent ones.
             Every 10 million word types need about 1GB of RAM, set to `None` for no limit.
         min_count : int
-            Words with frequency lower than this limit will be discarded form the vocabulary.
+            Words with frequency lower than this limit will be discarded from the vocabulary.
         sample : float, optional
             The threshold for configuring which higher-frequency words are randomly downsampled,
             useful range is (0, 1e-5).

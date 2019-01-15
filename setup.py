@@ -232,6 +232,8 @@ win_testenv = [
     'testfixtures',
     'scikit-learn',
     'Morfessor==2.0.2a4',
+    'python-Levenshtein >= 0.10.2',
+    'visdom >= 0.1.8, <= 0.1.8.6',
 ]
 
 linux_testenv = win_testenv[:]

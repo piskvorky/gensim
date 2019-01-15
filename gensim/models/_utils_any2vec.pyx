@@ -7,10 +7,48 @@
 
 """General functions used for any2vec models."""
 
+from six import PY2
+import numpy as np
+cimport numpy as np
+
+
+cdef _byte_to_int_py3(b):
+    return b
+
+cdef _byte_to_int_py2(b):
+    return ord(b)
+
+_byte_to_int = _byte_to_int_py2 if PY2 else _byte_to_int_py3
+
+
 cpdef ft_hash(unicode string):
     """Calculate hash based on `string`.
     Reproduce `hash method from Facebook fastText implementation
     <https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc>`_.
+
+    Parameters
+    ----------
+    string : unicode
+        The string whose hash needs to be calculated.
+
+    Returns
+    -------
+    unsigned int
+        The hash of the string.
+
+    """
+    cdef unsigned int h = 2166136261
+    for c in string.encode("utf-8"):
+        h = np.uint32(h ^ np.uint32(np.int8(_byte_to_int(c))))
+        h = np.uint32(h * np.uint32(16777619))
+    return h
+
+
+cpdef ft_hash_broken(unicode string):
+    """Calculate hash based on `string`.
+
+    This implementation is broken, see https://github.com/RaRe-Technologies/gensim/issues/2059.
+    It is here only for maintaining backwards compatibility with older models.
 
     Parameters
     ----------

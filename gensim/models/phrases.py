@@ -14,7 +14,6 @@ Inspired by:
 
 Examples
 --------
-
 .. sourcecode:: pycon
 
     >>> from gensim.test.utils import datapath
@@ -40,7 +39,6 @@ Examples
 import sys
 import os
 import logging
-import warnings
 from collections import defaultdict
 import functools as ft
 import itertools as it
@@ -208,6 +206,13 @@ class PhrasesTransformation(interfaces.TransformationABC):
         """
         model = super(PhrasesTransformation, cls).load(*args, **kwargs)
         # update older models
+        # if value in phrasegrams dict is a tuple, load only the scores.
+
+        for component, score in getattr(model, "phrasegrams", {}).items():
+            if isinstance(score, tuple):
+                frequency, score_val = score
+                model.phrasegrams[component] = score_val
+
         # if no scoring parameter, use default scoring
         if not hasattr(model, 'scoring'):
             logger.info('older version of %s loaded without scoring function', cls.__name__)
@@ -533,7 +538,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         # uses a separate vocab to collect the token counts from `sentences`.
         # this consumes more RAM than merging new sentences into `self.vocab`
         # directly, but gives the new sentences a fighting chance to collect
-        # sufficient counts, before being pruned out by the (large) accummulated
+        # sufficient counts, before being pruned out by the (large) accumulated
         # counts collected in previous learn_vocab runs.
         min_reduce, vocab, total_words = self.learn_vocab(
             sentences, self.max_vocab_size, self.delimiter, self.progress_per, self.common_terms)
@@ -652,8 +657,6 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
             ...     pass
 
         """
-        warnings.warn("For a faster implementation, use the gensim.models.phrases.Phraser class")
-
         return _sentence2token(self, sentence)
 
 
@@ -815,7 +818,7 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
         for bigram, score in phrases_model.export_phrases(corpus, self.delimiter, as_tuples=True):
             if bigram in self.phrasegrams:
                 logger.info('Phraser repeat %s', bigram)
-            self.phrasegrams[bigram] = (phrases_model.vocab[self.delimiter.join(bigram)], score)
+            self.phrasegrams[bigram] = score
             count += 1
             if not count % 50000:
                 logger.info('Phraser added %i phrasegrams', count)
@@ -858,7 +861,7 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
 
         """
         try:
-            return self.phrasegrams[tuple(components)][1]
+            return self.phrasegrams[tuple(components)]
         except KeyError:
             return -1
 

@@ -160,6 +160,20 @@ Unlike LSA, the topics coming from LDA are easier to interpret
     topic #17: 0.049*indonesia + 0.042*indonesian + 0.031*malaysia + 0.024*singapore + 0.022*greek + 0.021*jakarta + 0.016*greece + 0.015*dord + 0.014*athens + 0.011*malaysian
     topic #18: 0.031*stakes + 0.029*webs + 0.018*futsal + 0.014*whitish + 0.013*hyun + 0.012*thoroughbred + 0.012*dnf + 0.012*jockey + 0.011*medalists + 0.011*racehorse
     topic #19: 0.119*oblast + 0.034*uploaded + 0.034*uploads + 0.033*nordland + 0.025*selsoviet + 0.023*raion + 0.022*krai + 0.018*okrug + 0.015*hålogaland + 0.015*russiae + 0.020*manga + 0.017*dragon + 0.012*theme + 0.011*dvd + 0.011*super + 0.011*hunter + 0.009*ash + 0.009*dream + 0.009*angel
+    >>>
+    >>> import pickle  # noqa: E402
+    >>>
+    >>> # Get an article and its topic distribution
+    >>> with open("wiki_en_bow.mm.metadata.cpickle", 'rb') as meta_file:
+    ...     docno2metadata = pickle.load(meta_file)
+    >>>
+    >>> doc_num = 0
+    >>> print("Title: {}".format(docno2metadata[doc_num][1]))  # take the first article as an example
+    Title: Anarchism
+    >>>
+    >>> vec = mm[doc_num]  # get tf-idf vector
+    >>> lda.get_document_topics(vec)
+    [(1, 0.028828567), (10, 0.32766217), (36, 0.021675354), (55, 0.2521854), (57, 0.27154338)]
 
 Creating this LDA model of Wikipedia takes about 6 hours and 20 minutes on my laptop [1]_.
 If you need your results faster, consider running :doc:`dist_lda` on a cluster of
