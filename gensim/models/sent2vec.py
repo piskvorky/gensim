@@ -41,6 +41,7 @@ from numpy import dot
 from gensim import utils, matutils
 from gensim.utils import tokenize
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
+from gensim.models.utils_any2vec import _ft_hash
 from scipy.stats import logistic
 import os
 
@@ -138,27 +139,6 @@ class Sent2VecVocab(object):
         self.bucket = bucket
         self.min_count = min_count
 
-    @staticmethod
-    def hash_(word):
-        """Compute hash of given word.
-
-        Parameters
-        ----------
-        word : str
-            Actual vocabulary word.
-
-        Returns
-        -------
-        int
-            Hash of the given word.
-
-        """
-        h = 2166136261
-        for i in range(len(word)):
-            h = h ^ ord(word[i])
-            h = h * 16777619
-        return h
-
     def find(self, word):
         """Find hash of given word. The word may or may not be present in the vocabulary.
 
@@ -173,7 +153,7 @@ class Sent2VecVocab(object):
             Hash of the given word.
 
         """
-        h = self.hash_(word) % self.max_vocab_size
+        h = _ft_hash(word) % self.max_vocab_size
         while self.word2int[h] != -1 and self.words[self.word2int[h]].word != word:
             h = (h + 1) % self.max_vocab_size
         return h
