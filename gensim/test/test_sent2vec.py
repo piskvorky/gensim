@@ -80,7 +80,12 @@ class TestSent2VecModel(unittest.TestCase):
         model.build_vocab(new_sentences, update=True)  # update vocab
         self.assertEqual(model.vocabulary.size, 14)
         self.assertTrue(model.vocabulary.words[model.vocabulary.word2int[model.vocabulary.find(u'graph')]].count, 4)
-        self.assertTrue(model.vocabulary.words[model.vocabulary.word2int[model.vocabulary.find(u'artificial')]].count, 3)
+        self.assertTrue(
+            model.vocabulary.words[model.vocabulary.word2int[model.vocabulary.find(u'artificial')]].count, 3)
+
+    def test_online_learning2(self):
+        model = Sent2Vec(sentences, size=5, min_count=1, seed=42, negative=5, workers=1, max_vocab_size=100)
+        model.train(new_sentences, total_examples=len(new_sentences), epochs=1)
 
     def test_online_learning_after_save(self):
         tmpf = get_tmpfile('gensim_sent2vec.tst')
@@ -88,6 +93,7 @@ class TestSent2VecModel(unittest.TestCase):
         model.save(tmpf)
         model = Sent2Vec.load(tmpf)
         self.assertTrue(model.vocabulary.size, 12)
+        model.train(new_sentences, total_examples=len(new_sentences), epochs=model.epochs)
         model.build_vocab(new_sentences, update=True)  # update vocab
         model.train(new_sentences, total_examples=model.corpus_count, epochs=model.epochs)
         self.assertEqual(model.vocabulary.size, 14)
