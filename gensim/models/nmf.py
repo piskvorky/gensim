@@ -336,12 +336,13 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         H = np.zeros((W.shape[1], len(corpus)))
         for bow_id, bow in enumerate(corpus):
-            for topic_id, proba in self[bow]:
-                H[topic_id, bow_id] = proba
+            for topic_id, factor in self[bow]:
+                H[topic_id, bow_id] = factor
 
         dense_corpus = matutils.corpus2dense(corpus, W.shape[0])
 
         pred_factors = W.dot(H)
+        pred_factors /= pred_factors.sum(axis=0)
 
         return (np.log(pred_factors, where=pred_factors > 0) * dense_corpus).sum() / dense_corpus.sum()
 
