@@ -31,7 +31,7 @@ sentences = [
     [u'human', u'interface', u'computer'],
     [u'survey', u'user', u'computer', u'system', u'response', u'time'],
     [u'eps', u'user', u'interface', u'system'],
-    [u'system', u'human', u'system',u'eps'],
+    [u'system', u'human', u'system', u'eps'],
     [u'user', u'response', u'time'],
     [u'trees'],
     [u'graph', u'trees'],

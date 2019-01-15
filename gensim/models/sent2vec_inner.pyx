@@ -2,9 +2,9 @@
 # cython: boundscheck=False
 # cython: wraparound=False
 # cython: cdivision=True
+# cython: embedsignature=True
 # coding: utf-8
-# distutils : language = c++
-# cython : embedsignature = True
+# distutils: language=c++
 
 import cython
 import numpy as np
@@ -34,9 +34,9 @@ cdef REAL_t ONEF = <REAL_t>1.0
 cdef int EXP_TABLE_SIZE = 1000
 cdef int MAX_EXP = 6
 
-cdef REAL_t negative_sampling(const int target, const REAL_t lr, REAL_t *grad, REAL_t *wo,
-                              REAL_t *hidden, const int vector_size, const int neg, int *negatives,
-                              int *negpos, const int negatives_len)nogil:
+cdef REAL_t negative_sampling(const int target, const REAL_t lr, REAL_t *grad, REAL_t *wo, REAL_t *hidden,
+                              const int vector_size, const int neg, int *negatives, int *negpos, const
+                              int negatives_len) nogil:
     """Get loss using negative sampling.
 
     Pararmeters
@@ -81,7 +81,7 @@ cdef REAL_t negative_sampling(const int target, const REAL_t lr, REAL_t *grad, R
     return loss
 
 
-cdef REAL_t sigmoid(const REAL_t val)nogil:
+cdef REAL_t sigmoid(const REAL_t val) nogil:
     """Get value of sigmoid function for input.
 
     Parameters
@@ -103,7 +103,7 @@ cdef REAL_t sigmoid(const REAL_t val)nogil:
         return EXP_TABLE[temp]
     
 
-cdef REAL_t log(const REAL_t val)nogil:
+cdef REAL_t log(const REAL_t val) nogil:
     """Compute log value for given input.
 
     Parameters
@@ -122,9 +122,8 @@ cdef REAL_t log(const REAL_t val)nogil:
         return LOG_TABLE[<int>(val * EXP_TABLE_SIZE)]
 
 
-cdef REAL_t binary_logistic(const int target, const int label, const REAL_t lr,
-                            const int vector_size, REAL_t *wo, REAL_t *grad,
-                            REAL_t *hidden)nogil:
+cdef REAL_t binary_logistic(const int target, const int label, const REAL_t lr, const int vector_size, REAL_t *wo,
+                            REAL_t *grad, REAL_t *hidden) nogil:
     """Compute loss for given target, label and learning rate using binary logistic regression.
 
     Pararmeters
@@ -160,8 +159,7 @@ cdef REAL_t binary_logistic(const int target, const int label, const REAL_t lr,
         return -log(ONEF - score)
     
 
-cdef int get_negative(const int target, int *negatives,
-                              int *negpos, const int negatives_len)nogil:
+cdef int get_negative(const int target, int *negatives, int *negpos, const int negatives_len) nogil:
     """Get a negative from the list of negatives for caluculating nagtive sampling loss.
 
     Pararmeters
@@ -191,10 +189,10 @@ cdef int get_negative(const int target, int *negatives,
 
 cdef REAL_t update(vector[int] &context, int target, REAL_t lr, REAL_t *hidden, REAL_t *grad,
                   int vector_size, int *negpos, int neg, int negatives_len,
-                  REAL_t *wi, REAL_t *wo, int *negatives)nogil:
+                  REAL_t *wi, REAL_t *wo, int *negatives) nogil:
     """Update model's neural weights for given context, target word and learning rate.
 
-    Pararmeters
+    Parameters
     -----------
     context : vector[int]
         Vector of word ids of context words.
@@ -243,7 +241,7 @@ cdef REAL_t update(vector[int] &context, int target, REAL_t lr, REAL_t *hidden, 
     return loss
 
 
-cdef REAL_t random_uniform()nogil:
+cdef REAL_t random_uniform() nogil:
     """Generate random real number between 0 and 1.
 
     Returns
@@ -255,7 +253,7 @@ cdef REAL_t random_uniform()nogil:
     return rand() / (RAND_MAX + 1.0)
 
 
-cdef int random_range(int a, int b)nogil:
+cdef int random_range(int a, int b) nogil:
     """Generate random integer for given input range.
 
     Parameters
@@ -273,7 +271,7 @@ cdef int random_range(int a, int b)nogil:
     return a + <int>(rand() % ((b - a) + 1))
 
 
-cdef int get_line(vector[int] &wids, vector[int] &words, int max_line_size)nogil:
+cdef int get_line(vector[int] &wids, vector[int] &words, int max_line_size) nogil:
     """Converting sentence to a list of word ids inferred from the dictionary.
 
     Parameters
@@ -303,7 +301,7 @@ cdef int get_line(vector[int] &wids, vector[int] &words, int max_line_size)nogil
     return ntokens
 
 
-cdef void add_ngrams_train(vector[int] &line, int n, int k, int bucket, int size)nogil:
+cdef void add_ngrams_train(vector[int] &line, int n, int k, int bucket, int size) nogil:
     """Training word ngrams for a given context and target word.
 
     Parameters
@@ -349,10 +347,8 @@ cdef void add_ngrams_train(vector[int] &line, int n, int k, int bucket, int size
 cdef (int, int, REAL_t) _do_train_job_util(vector[vector[int]] &word_ids, REAL_t *pdiscard, int max_line_size,
                              int word_ngrams, int dropout_k, REAL_t lr, REAL_t *hidden, REAL_t *grad,
                              int vector_size, int *negpos, int neg, int negatives_len,
-                             REAL_t *wi, REAL_t *wo, int *negatives, int bucket, int size)nogil:
-    """Utility cython nogil function to train a batch of input sentences.
-
-    """
+                             REAL_t *wi, REAL_t *wo, int *negatives, int bucket, int size) nogil:
+    """Utility cython nogil function to train a batch of input sentences."""
     cdef int local_token_count = 0
     cdef int nexamples = 0
     cdef REAL_t loss = <REAL_t> 0.0
@@ -415,11 +411,11 @@ def _do_train_job_fast(model, sentences_, lr_, hidden_, grad_):
     cdef REAL_t *hidden = <REAL_t *> np.PyArray_DATA(hidden_)
     cdef REAL_t *grad = <REAL_t *> np.PyArray_DATA(grad_)
     cdef REAL_t *pdiscard = <REAL_t *> np.PyArray_DATA(np.array(model.vocabulary.pdiscard))
-    cdef int max_line_size = <int> (model.vocabulary.max_line_size)
-    cdef int size = <int> (model.vocabulary.size)
-    cdef int bucket = <int> (model.vocabulary.bucket)
-    cdef int word_ngrams = <int> (model.word_ngrams)
-    cdef int dropout_k = <int> (model.dropout_k)
+    cdef int max_line_size = <int> model.vocabulary.max_line_size
+    cdef int size = <int> model.vocabulary.size
+    cdef int bucket = <int> model.vocabulary.bucket
+    cdef int word_ngrams = <int> model.word_ngrams
+    cdef int dropout_k = <int> model.dropout_k
     srand(model.seed)
 
     cdef vector[vector[int]] word_ids
@@ -435,11 +431,9 @@ def _do_train_job_fast(model, sentences_, lr_, hidden_, grad_):
         ids.clear()
 
     with nogil:
-        local_token_count, nexamples, loss = _do_train_job_util(word_ids, pdiscard,
-                                                                max_line_size, word_ngrams,
-                                                                dropout_k, lr, hidden,
-                                                                grad, vector_size, &negpos,
-                                                                neg, negatives_len, wi, wo,
-                                                                negatives, bucket, size)
+        local_token_count, nexamples, loss = _do_train_job_util(
+            word_ids, pdiscard, max_line_size, word_ngrams, dropout_k, lr, hidden,
+            grad, vector_size, &negpos, neg, negatives_len, wi, wo, negatives, bucket, size
+        )
     model.negpos = negpos
     return local_token_count, nexamples, loss

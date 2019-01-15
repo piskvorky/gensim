@@ -11,26 +11,36 @@ Examples
 --------
 Initialize a model with e.g.
 
->>> from gensim.models import Sent2Vec
->>> from gensim.test.utils import common_texts
->>>
->>> model = Sent2Vec(common_texts, size=100, min_count=1)
+.. sourcecode:: pycon
+
+    >>> from gensim.models import Sent2Vec
+    >>> from gensim.test.utils import common_texts
+    >>>
+    >>> model = Sent2Vec(common_texts, size=100, min_count=1)
 
 Or
 
->>> model = Sent2Vec(size=100, min_count=1)
->>> model.build_vocab(common_texts)
->>> model.train(common_texts)
+.. sourcecode:: pycon
+
+    >>> model = Sent2Vec(size=100, min_count=1)
+    >>> model.build_vocab(common_texts)
+    >>> model.train(common_texts)
 
 The sentence vectors are stored in a numpy array
 
->>> vector = model[['computer', 'interface']]  # vector of a sentence
+.. sourcecode:: pycon
+
+    >>> vector = model[['computer', 'interface']]  # vector of a sentence
 
 You can perform the NLP similarity task with the model
 
->>> similarity = model.similarity(['graph', 'minors', 'trees'], ['eps', 'user', 'interface', 'system'])
+.. sourcecode:: pycon
 
-`Unsupervised Learning of Sentence Embeddings using Compositional n-Gram Features. <https://arxiv.org/abs/1703.02507>`_
+    >>> similarity = model.similarity(['graph', 'minors', 'trees'], ['eps', 'user', 'interface', 'system'])
+
+See also
+--------
+`Unsupervised Learning of Sentence Embeddings using Compositional n-Gram Features <https://arxiv.org/abs/1703.02507>`_
 `Sent2Vec C++ implementation. <https://github.com/epfml/sent2vec>`_
 
 """
@@ -684,12 +694,14 @@ class Sent2Vec(BaseWordEmbeddingsModel):
 
         Examples
         --------
-        >>> from gensim.models import Sent2Vec
-        >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
-        >>>
-        >>> model = Sent2Vec(min_count=1)
-        >>> model.build_vocab(sentences)
-        >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.epochs)
+        .. sourcecode:: pycon
+
+            >>> from gensim.models import Sent2Vec
+            >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
+            >>>
+            >>> model = Sent2Vec(min_count=1)
+            >>> model.build_vocab(sentences)
+            >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.epochs)
 
         """
         if(corpus_file is not None):
