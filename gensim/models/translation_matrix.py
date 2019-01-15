@@ -24,6 +24,7 @@ Initialize a word-vector models
     >>> model_it = KeyedVectors.load_word2vec_format(datapath("IT.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt"))
 
 Define word pairs (that will be used for construction of translation matrix
+
 .. sourcecode:: pycon
 
     >>> word_pairs = [
@@ -34,11 +35,13 @@ Define word pairs (that will be used for construction of translation matrix
     ... ]
 
 Fit :class:`~gensim.models.translation_matrix.TranslationMatrix`
+
 .. sourcecode:: pycon
 
     >>> trans_model = TranslationMatrix(model_en, model_it, word_pairs=word_pairs)
 
 Apply model (translate words "dog" and "one")
+
 .. sourcecode:: pycon
 
     >>> trans_model.translate(["dog", "one"], topn=3)
@@ -46,6 +49,7 @@ Apply model (translate words "dog" and "one")
 
 
 Save / load model
+
 .. sourcecode:: pycon
 
     >>> with temporary_file("model_file") as fname:
@@ -57,6 +61,7 @@ How to make translation between two :class:`~gensim.models.doc2vec.Doc2Vec` mode
 ==================================================================================
 
 Prepare data and models
+
 .. sourcecode:: pycon
 
     >>> from gensim.test.utils import datapath
@@ -171,7 +176,6 @@ class TranslationMatrix(utils.SaveLoad):
 
     Examples
     --------
-
     .. sourcecode:: pycon
 
         >>> from gensim.models import KeyedVectors

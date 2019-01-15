@@ -17,6 +17,10 @@ from six import iteritems
 from gensim import utils
 from gensim.test.utils import datapath, get_tmpfile
 
+import gensim.models.utils_any2vec
+
+DISABLE_CYTHON_TESTS = getattr(gensim.models.utils_any2vec, 'FAST_VERSION', None) == -1
+
 
 class TestIsCorpus(unittest.TestCase):
     def test_None(self):
@@ -257,6 +261,91 @@ class TestSaveAsLineSentence(unittest.TestCase):
         with utils.smart_open(corpus_file, encoding='utf8') as fin:
             sentences = [line.strip().split() for line in fin.read().strip().split('\n')]
             self.assertEqual(sentences, ref_sentences)
+
+
+def hash_main(alg):
+    """Generate hash values for test from standard input."""
+    import sys
+    import six
+
+    assert six.PY3, 'this only works under Py3'
+
+    hashmap = {
+        'py': gensim.models.utils_any2vec._ft_hash_py,
+        'py_broken': gensim.models.utils_any2vec._ft_hash_py_broken,
+        'cy': gensim.models.utils_any2vec._ft_hash_py,
+        'cy_broken': gensim.models.utils_any2vec._ft_hash_py_broken,
+    }
+    try:
+        fun = hashmap[alg]
+    except KeyError:
+        raise KeyError('invalid alg: %r expected one of %r' % (alg, sorted(hashmap)))
+
+    for line in sys.stdin:
+        for word in line.rstrip().split(' '):
+            print('u%r: %r,' % (word, fun(word)))
+
+
+class HashTest(unittest.TestCase):
+    def setUp(self):
+        #
+        # I obtained these expected values using:
+        #
+        # $ echo word1 ... wordN | python -c 'from gensim.test.test_utils import hash_main;hash_main("alg")'  # noqa: E501
+        #
+        # where alg is one of py, py_broken, cy, cy_broken.
+
+        #
+        self.expected = {
+            u'команда': 1725507386,
+            u'маленьких': 3011324125,
+            u'друзей': 737001801,
+            u'возит': 4225261911,
+            u'грузы': 1301826944,
+            u'всех': 706328732,
+            u'быстрей': 1379730754,
+            u'mysterious': 1903186891,
+            u'asteroid': 1988297200,
+            u'odyssey': 310195777,
+            u'introduction': 2848265721,
+            u'北海道': 4096045468,
+            u'札幌': 3909947444,
+            u'西区': 3653372632,
+        }
+        self.expected_broken = {
+            u'команда': 962806708,
+            u'маленьких': 3633597485,
+            u'друзей': 214728041,
+            u'возит': 3590926132,
+            u'грузы': 3674544745,
+            u'всех': 3931012458,
+            u'быстрей': 822471432,
+            u'mysterious': 1903186891,
+            u'asteroid': 1988297200,
+            u'odyssey': 310195777,
+            u'introduction': 2848265721,
+            u'北海道': 4017049120,
+            u'札幌': 1706980764,
+            u'西区': 1113327900,
+        }
+
+    def test_python(self):
+        actual = {k: gensim.models.utils_any2vec._ft_hash_py(k) for k in self.expected}
+        self.assertEqual(self.expected, actual)
+
+    @unittest.skipIf(DISABLE_CYTHON_TESTS, 'Cython functions are not properly compiled')
+    def test_cython(self):
+        actual = {k: gensim.models.utils_any2vec._ft_hash_cy(k) for k in self.expected}
+        self.assertEqual(self.expected, actual)
+
+    def test_python_broken(self):
+        actual = {k: gensim.models.utils_any2vec._ft_hash_py_broken(k) for k in self.expected}
+        self.assertEqual(self.expected_broken, actual)
+
+    @unittest.skipIf(DISABLE_CYTHON_TESTS, 'Cython functions are not properly compiled')
+    def test_cython_broken(self):
+        actual = {k: gensim.models.utils_any2vec._ft_hash_cy_broken(k) for k in self.expected}
+        self.assertEqual(self.expected_broken, actual)
 
 
 if __name__ == '__main__':

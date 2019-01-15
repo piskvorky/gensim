@@ -10,6 +10,8 @@ import six
 
 import numpy as np
 
+import smart_open
+
 from gensim import utils
 from gensim.models.word2vec import LineSentence
 from gensim.models.fasttext import FastText as FT_gensim
@@ -17,7 +19,6 @@ from gensim.models.wrappers.fasttext import FastTextKeyedVectors
 from gensim.models.wrappers.fasttext import FastText as FT_wrapper
 from gensim.models.keyedvectors import Word2VecKeyedVectors
 from gensim.test.utils import datapath, get_tmpfile, temporary_file, common_texts as sentences
-
 
 try:
     from pyemd import emd  # noqa:F401
@@ -206,7 +207,8 @@ class TestFastTextModel(unittest.TestCase):
             0.23418,
             0.060007
         ]  # obtained using ./fasttext print-word-vectors lee_fasttext_new.bin
-        self.assertTrue(np.allclose(model.wv["hundred"], expected_vec, atol=1e-4))
+        actual_vec = model.wv["hundred"]
+        self.assertTrue(np.allclose(actual_vec, expected_vec, atol=1e-4))
 
         # vector for oov words are slightly different from original FastText due to discarding unused ngrams
         # obtained using a modified version of ./fasttext print-word-vectors lee_fasttext_new.bin
@@ -222,7 +224,8 @@ class TestFastTextModel(unittest.TestCase):
             0.53203,
             0.77568
         ]
-        self.assertTrue(np.allclose(model.wv["rejection"], expected_vec_oov, atol=1e-4))
+        actual_vec_oov = model.wv["rejection"]
+        self.assertTrue(np.allclose(actual_vec_oov, expected_vec_oov, atol=1e-4))
 
         self.assertEqual(model.vocabulary.min_count, 5)
         self.assertEqual(model.window, 5)
@@ -257,7 +260,8 @@ class TestFastTextModel(unittest.TestCase):
             -0.19685,
             -0.13179
         ]  # obtained using ./fasttext print-word-vectors lee_fasttext_new.bin
-        self.assertTrue(np.allclose(new_model.wv["hundred"], expected_vec, atol=1e-4))
+        actual_vec = new_model.wv["hundred"]
+        self.assertTrue(np.allclose(actual_vec, expected_vec, atol=1e-4))
 
         # vector for oov words are slightly different from original FastText due to discarding unused ngrams
         # obtained using a modified version of ./fasttext print-word-vectors lee_fasttext_new.bin
@@ -273,7 +277,8 @@ class TestFastTextModel(unittest.TestCase):
             -0.17856,
             0.19815
         ]
-        self.assertTrue(np.allclose(new_model.wv["rejection"], expected_vec_oov, atol=1e-4))
+        actual_vec_oov = new_model.wv["rejection"]
+        self.assertTrue(np.allclose(actual_vec_oov, expected_vec_oov, atol=1e-4))
 
         self.assertEqual(new_model.vocabulary.min_count, 5)
         self.assertEqual(new_model.window, 5)
@@ -726,7 +731,7 @@ class TestFastTextModel(unittest.TestCase):
         model = FT_gensim(size=10, min_count=1, seed=42)
         model.build_vocab(sentences)
         original_syn0_vocab = np.copy(model.wv.vectors_vocab)
-        model.trainables.get_vocab_word_vecs(model.wv)
+        model.wv.adjust_vectors()
         self.assertTrue(np.all(np.equal(model.wv.vectors_vocab, original_syn0_vocab)))
 
     def test_persistence_word2vec_format(self):
@@ -848,6 +853,322 @@ class TestFastTextModel(unittest.TestCase):
         model_gensim.train(lee_data, total_examples=model_gensim.corpus_count, epochs=model_gensim.epochs)
         self.assertFalse((orig0 == model_gensim.wv.vectors[0]).all())  # vector should vary after training
         self.compare_with_wrapper(model_gensim, model_wrapper)
+
+
+with open(datapath('toy-data.txt')) as fin:
+    TOY_SENTENCES = [fin.read().strip().split(' ')]
+
+
+def train_gensim(bucket=100, min_count=5):
+    #
+    # Set parameters to match those in the load_native function
+    #
+    model = FT_gensim(bucket=bucket, size=5, alpha=0.05, workers=1, sample=0.0001, min_count=min_count)
+    model.build_vocab(TOY_SENTENCES)
+    model.train(TOY_SENTENCES, total_examples=len(TOY_SENTENCES), epochs=model.epochs)
+    return model
+
+
+def load_native():
+    #
+    # trained using:
+    #
+    # ./fasttext cbow -input toy-data.txt -output toy-model -bucket 100 -dim 5
+    #
+    path = datapath('toy-model.bin')
+    model = FT_gensim.load_fasttext_format(path)
+    return model
+
+
+def load_vec(fin):
+    fin.readline()  # array shape
+    for line in fin:
+        columns = line.strip().split(u' ')
+        word = columns.pop(0)
+        vector = [float(c) for c in columns]
+        yield word, np.array(vector, dtype=np.float32)
+
+
+def compare_wv(a, b, t):
+    a_count = {key: value.count for (key, value) in a.vocab.items()}
+    b_count = {key: value.count for (key, value) in b.vocab.items()}
+    t.assertEqual(a_count, b_count)
+
+    #
+    # We don't compare indices because they depend on several things we
+    # cannot control during testing:
+    #
+    # 1. The order in which ties are broken when sorting the vocabulary
+    #    in prepare_vocab
+    # 2. The order in which vocab terms are added to vocab_raw
+    #
+    if False:
+        a_indices = {key: value.index for (key, value) in a.vocab.items()}
+        b_indices = {key: value.index for (key, value) in b.vocab.items()}
+        a_words = [k for k in sorted(a_indices, key=lambda x: a_indices[x])]
+        b_words = [k for k in sorted(b_indices, key=lambda x: b_indices[x])]
+        t.assertEqual(a_words, b_words)
+
+        t.assertEqual(a.index2word, b.index2word)
+        t.assertEqual(a.hash2index, b.hash2index)
+
+    #
+    # We do not compare most matrices directly, because they will never
+    # be equal unless many conditions are strictly controlled.
+    #
+    t.assertEqual(a.vectors.shape, b.vectors.shape)
+    # t.assertTrue(np.allclose(a.vectors, b.vectors))
+
+    t.assertEqual(a.vectors_vocab.shape, b.vectors_vocab.shape)
+    # t.assertTrue(np.allclose(a.vectors_vocab, b.vectors_vocab))
+
+    #
+    # Only if match_gensim=True in init_post_load
+    #
+    # t.assertEqual(a.vectors_ngrams.shape, b.vectors_ngrams.shape)
+
+
+def compare_nn(a, b, t):
+    #
+    # Ensure the neural networks are identical for both cases.
+    #
+    t.assertEqual(a.syn1neg.shape, b.syn1neg.shape)
+
+    #
+    # Only if match_gensim=True in init_post_load
+    #
+    # t.assertEqual(a.vectors_ngrams_lockf.shape, b.vectors_ngrams_lockf.shape)
+    # t.assertTrue(np.allclose(a.vectors_ngrams_lockf, b.vectors_ngrams_lockf))
+
+    # t.assertEqual(a.vectors_vocab_lockf.shape, b.vectors_vocab_lockf.shape)
+    # t.assertTrue(np.allclose(a.vectors_vocab_lockf, b.vectors_vocab_lockf))
+
+
+def compare_vocabulary(a, b, t):
+    t.assertEqual(a.max_vocab_size, b.max_vocab_size)
+    t.assertEqual(a.min_count, b.min_count)
+    t.assertEqual(a.sample, b.sample)
+    t.assertEqual(a.sorted_vocab, b.sorted_vocab)
+    t.assertEqual(a.null_word, b.null_word)
+    t.assertTrue(np.allclose(a.cum_table, b.cum_table))
+    t.assertEqual(a.raw_vocab, b.raw_vocab)
+    t.assertEqual(a.max_final_vocab, b.max_final_vocab)
+    t.assertEqual(a.ns_exponent, b.ns_exponent)
+
+
+class NativeTrainingContinuationTest(unittest.TestCase):
+    maxDiff = None
+
+    def setUp(self):
+        #
+        # $ echo "quick brown fox jumps over lazy dog" | ./fasttext print-word-vectors gensim/test/test_data/toy-model.bin  # noqa: E501
+        #
+        expected = {
+            u"quick": [0.023393, 0.11499, 0.11684, -0.13349, 0.022543],
+            u"brown": [0.015288, 0.050404, -0.041395, -0.090371, 0.06441],
+            u"fox": [0.061692, 0.082914, 0.020081, -0.039159, 0.03296],
+            u"jumps": [0.070107, 0.081465, 0.051763, 0.012084, 0.0050402],
+            u"over": [0.055023, 0.03465, 0.01648, -0.11129, 0.094555],
+            u"lazy": [-0.022103, -0.020126, -0.033612, -0.049473, 0.0054174],
+            u"dog": [0.084983, 0.09216, 0.020204, -0.13616, 0.01118],
+        }
+        self.oov_expected = {
+            word: np.array(arr, dtype=np.float32)
+            for word, arr in expected.items()
+        }
+
+    def test_in_vocab(self):
+        """Test for correct representation of in-vocab words."""
+        native = load_native()
+        with smart_open.smart_open(datapath('toy-model.vec'), 'r', encoding='utf-8') as fin:
+            expected = dict(load_vec(fin))
+
+        for word, expected_vector in expected.items():
+            actual_vector = native.wv.word_vec(word)
+            self.assertTrue(np.allclose(expected_vector, actual_vector, atol=1e-5))
+
+    def test_out_of_vocab(self):
+        """Test for correct representation of out-of-vocab words."""
+        native = load_native()
+
+        for word, expected_vector in self.oov_expected.items():
+            actual_vector = native.wv.word_vec(word)
+            self.assertTrue(np.allclose(expected_vector, actual_vector, atol=1e-5))
+
+    @unittest.skip('this test does not pass currently, I suspect a bug in our FT implementation')
+    def test_out_of_vocab_gensim(self):
+        """Test whether gensim gives similar results to FB for OOV words.
+
+        Seems to be broken for our toy model.
+        """
+        model = train_gensim()
+
+        for word, expected_vector in self.oov_expected.items():
+            actual_vector = model.wv.word_vec(word)
+            self.assertTrue(np.allclose(expected_vector, actual_vector, atol=1e-5))
+
+    def test_sanity(self):
+        """Compare models trained on toy data.  They should be equal."""
+        trained = train_gensim()
+        native = load_native()
+
+        self.assertEqual(trained.bucket, native.bucket)
+        #
+        # Only if match_gensim=True in init_post_load
+        #
+        # self.assertEqual(trained.num_ngram_vectors, native.num_ngram_vectors)
+
+        compare_wv(trained.wv, native.wv, self)
+        compare_vocabulary(trained.vocabulary, native.vocabulary, self)
+        compare_nn(trained.trainables, native.trainables, self)
+
+    def test_continuation_native(self):
+        """Ensure that training has had a measurable effect."""
+        native = load_native()
+
+        #
+        # Pick a word that's is in both corpuses.
+        # Its vectors should be different between training runs.
+        #
+        word = 'human'
+        old_vector = native.wv.word_vec(word).tolist()
+
+        native.train(list_corpus, total_examples=len(list_corpus), epochs=native.epochs)
+
+        new_vector = native.wv.word_vec(word).tolist()
+        self.assertNotEqual(old_vector, new_vector)
+
+    def test_continuation_gensim(self):
+        """Ensure that continued training has had a measurable effect."""
+        model = train_gensim(min_count=0)
+        vectors_ngrams_before = np.copy(model.wv.vectors_ngrams)
+
+        word = 'human'
+        old_vector = model.wv.word_vec(word).tolist()
+
+        model.train(list_corpus, total_examples=len(list_corpus), epochs=model.epochs)
+
+        vectors_ngrams_after = np.copy(model.wv.vectors_ngrams)
+        self.assertFalse(np.allclose(vectors_ngrams_before, vectors_ngrams_after))
+        new_vector = model.wv.word_vec(word).tolist()
+
+        self.assertNotEqual(old_vector, new_vector)
+
+    def test_continuation_load_gensim(self):
+        #
+        # This is a model from 3.6.0
+        #
+        model = FT_gensim.load(datapath('compatible-hash-false.model'))
+        vectors_ngrams_before = np.copy(model.wv.vectors_ngrams)
+        old_vector = model.wv.word_vec('human').tolist()
+
+        model.train(list_corpus, total_examples=len(list_corpus), epochs=model.epochs)
+        new_vector = model.wv.word_vec('human').tolist()
+
+        self.assertFalse(np.allclose(vectors_ngrams_before, model.wv.vectors_ngrams))
+        self.assertNotEqual(old_vector, new_vector)
+
+    def test_save_load_gensim(self):
+        """Test that serialization works end-to-end.  Not crashing is a success."""
+        #
+        # This is a workaround for a problem with temporary files on AppVeyor:
+        #
+        # - https://bugs.python.org/issue14243 (problem discussion)
+        # - https://github.com/dropbox/pyannotate/pull/48/files (workaround source code)
+        #
+        model_name = 'test_ft_saveload_native.model'
+
+        with temporary_file(model_name):
+            train_gensim().save(model_name)
+
+            model = FT_gensim.load(model_name)
+            model.train(list_corpus, total_examples=len(list_corpus), epochs=model.epochs)
+
+            model.save(model_name)
+
+    def test_save_load_native(self):
+        """Test that serialization works end-to-end.  Not crashing is a success."""
+
+        model_name = 'test_ft_saveload_fb.model'
+
+        with temporary_file(model_name):
+            load_native().save(model_name)
+
+            model = FT_gensim.load(model_name)
+            model.train(list_corpus, total_examples=len(list_corpus), epochs=model.epochs)
+
+            model.save(model_name)
+
+
+class HashCompatibilityTest(unittest.TestCase):
+    def test_compatibility_true(self):
+        m = FT_gensim.load(datapath('compatible-hash-true.model'))
+        self.assertTrue(m.wv.compatible_hash)
+        self.assertEqual(m.trainables.bucket, m.wv.bucket)
+
+    def test_compatibility_false(self):
+        #
+        # Originally obtained using and older version of gensim (e.g. 3.6.0).
+        #
+        m = FT_gensim.load(datapath('compatible-hash-false.model'))
+        self.assertFalse(m.wv.compatible_hash)
+        self.assertEqual(m.trainables.bucket, m.wv.bucket)
+
+    def test_hash_native(self):
+        m = load_native()
+        self.assertTrue(m.wv.compatible_hash)
+        self.assertEqual(m.trainables.bucket, m.wv.bucket)
+
+
+class HashTest(unittest.TestCase):
+    """Loosely based on the test described here:
+
+    https://github.com/RaRe-Technologies/gensim/issues/2059#issuecomment-432300777
+
+    With a broken hash, vectors for non-ASCII keywords don't match when loaded
+    from a native model.
+    """
+    def setUp(self):
+        #
+        # ./fasttext skipgram -minCount 0 -bucket 100 -input crime-and-punishment.txt -output crime-and-punishment -dim 5  # noqa: E501
+        #
+        self.model = FT_gensim.load_fasttext_format(datapath('crime-and-punishment.bin'))
+        with smart_open.smart_open(datapath('crime-and-punishment.vec'), 'r', encoding='utf-8') as fin:
+            self.expected = dict(load_vec(fin))
+
+    def test_ascii(self):
+        word = u'landlady'
+        expected = self.expected[word]
+        actual = self.model.wv[word]
+        self.assertTrue(np.allclose(expected, actual, atol=1e-5))
+
+    def test_unicode(self):
+        word = u'хозяйка'
+        expected = self.expected[word]
+        actual = self.model.wv[word]
+        self.assertTrue(np.allclose(expected, actual, atol=1e-5))
+
+    def test_out_of_vocab(self):
+        longword = u'rechtsschutzversicherungsgesellschaften'  # many ngrams
+        expected = {
+            u'steamtrain': np.array([0.031988, 0.022966, 0.059483, 0.094547, 0.062693]),
+            u'паровоз': np.array([-0.0033987, 0.056236, 0.036073, 0.094008, 0.00085222]),
+            longword: np.array([-0.012889, 0.029756, 0.018020, 0.099077, 0.041939]),
+        }
+        actual = {w: self.model.wv[w] for w in expected}
+        self.assertTrue(np.allclose(expected[u'steamtrain'], actual[u'steamtrain'], atol=1e-5))
+        self.assertTrue(np.allclose(expected[u'паровоз'], actual[u'паровоз'], atol=1e-5))
+        self.assertTrue(np.allclose(expected[longword], actual[longword], atol=1e-5))
+
+
+class ZeroBucketTest(unittest.TestCase):
+    def test_in_vocab(self):
+        model = train_gensim(bucket=0)
+        self.assertIsNotNone(model.wv['anarchist'])
+
+    def test_out_of_vocab(self):
+        model = train_gensim(bucket=0)
+        self.assertRaises(KeyError, model.wv.word_vec, 'streamtrain')
 
 
 if __name__ == '__main__':

@@ -243,7 +243,6 @@ def unique_ids_from_segments(segmented_topics):
 
     Example
     -------
-
     .. sourcecode:: pycon
 
         >>> from gensim.topic_coherence import probability_estimation
