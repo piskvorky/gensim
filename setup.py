@@ -347,7 +347,7 @@ setup(
         'numpy >= 1.11.3',
         'scipy >= 0.18.1',
         'six >= 1.5.0',
-        'smart_open >= 1.7.1',
+        'smart_open >= 1.7.0',
     ],
     tests_require=linux_testenv,
     extras_require={
