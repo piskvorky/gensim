@@ -93,13 +93,13 @@ import numpy as np
 from numpy import ones, vstack, float32 as REAL, sum as np_sum
 import six
 
-# TODO use smart_open again when https://github.com/RaRe-Technologies/smart_open/issues/207 will be fixed
 import gensim.models._fasttext_bin
 
 from gensim.models.word2vec import Word2VecVocab, Word2VecTrainables, train_sg_pair, train_cbow_pair
 from gensim.models.keyedvectors import FastTextKeyedVectors
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 from gensim.models.utils_any2vec import _compute_ngrams, _ft_hash, _ft_hash_broken
+from smart_open import smart_open
 
 from gensim.utils import deprecated, call_on_class_only
 
@@ -979,7 +979,7 @@ def _load_fasttext_format(model_file, encoding='utf-8'):
     """
     if not model_file.endswith('.bin'):
         model_file += '.bin'
-    with open(model_file, 'rb') as fin:
+    with smart_open(model_file, 'rb') as fin:
         m = gensim.models._fasttext_bin.load(fin, encoding=encoding)
 
     model = FastText(
