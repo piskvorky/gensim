@@ -262,6 +262,8 @@ ext_modules = [
         include_dirs=[model_dir]),
     Extension('gensim._matutils',
         sources=['./gensim/_matutils.c']),
+    Extension('gensim.models.nmf_pgd',
+        sources=['./gensim/models/nmf_pgd.c'])
 ]
 
 if not (os.name == 'nt' and sys.version_info[0] < 3):
