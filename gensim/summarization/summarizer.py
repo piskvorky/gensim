@@ -85,6 +85,9 @@ def _set_graph_edge_weights(graph):
     weights = _bm25_weights(documents)
 
     for i, doc_bow in enumerate(weights):
+        if i % 1000 == 0 and i > 0:
+            logger.info('PROGRESS: processing %s doc (%s non zero elements)', i, len(doc_bow))
+
         for j, weight in doc_bow:
             if i == j or weight < WEIGHT_THRESHOLD:
                 continue
@@ -354,8 +357,10 @@ def summarize_corpus(corpus, ratio=0.2):
 
     logger.info('Building graph')
     graph = _build_graph(hashable_corpus)
-    logger.info('Filing graph')
+
+    logger.info('Filling graph')
     _set_graph_edge_weights(graph)
+
     logger.info('Removing unreachable nodes of graph')
     _remove_unreachable_nodes(graph)
 
@@ -367,8 +372,8 @@ def summarize_corpus(corpus, ratio=0.2):
 
     logger.info('Pagerank graph')
     pagerank_scores = _pagerank(graph)
-    logger.info('Sorting pagerank scores')
 
+    logger.info('Sorting pagerank scores')
     hashable_corpus.sort(key=lambda doc: pagerank_scores.get(doc, 0), reverse=True)
 
     return [list(doc) for doc in hashable_corpus[:int(len(corpus) * ratio)]]

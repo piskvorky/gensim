@@ -229,7 +229,10 @@ class Graph(IGraph):
 
         """
         u, v = edge
-        return v in self.node_neighbors[u] and u in self.node_neighbors[v]
+        return (u in self.node_neighbors
+            and v in self.node_neighbors
+            and v in self.node_neighbors[u]
+            and u in self.node_neighbors[v])
 
     def edge_weight(self, edge):
         """Returns weight of given edge.
