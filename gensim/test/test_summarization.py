@@ -22,6 +22,7 @@ from gensim.summarization import summarize, summarize_corpus, keywords, mz_keywo
 from gensim.summarization.commons import remove_unreachable_nodes, build_graph
 from gensim.summarization.graph import Graph
 
+
 class TestGraph(unittest.TestCase):
 
     def _build_graph(self):
