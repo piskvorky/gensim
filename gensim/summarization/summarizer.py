@@ -86,7 +86,7 @@ def _set_graph_edge_weights(graph):
 
     for i, doc_bow in enumerate(weights):
         if i % 1000 == 0 and i > 0:
-            logger.info('PROGRESS: processing %s doc (%s non zero elements)', i, len(doc_bow))
+            logger.info('PROGRESS: processing %s/%s doc (%s non zero elements)', i, len(documents), len(doc_bow))
 
         for j, weight in doc_bow:
             if i == j or weight < WEIGHT_THRESHOLD:
