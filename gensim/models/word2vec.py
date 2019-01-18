@@ -631,12 +631,11 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
         """
         work, neu1 = inits
-        tally = 0
         if self.sg:
-            tally += train_batch_sg(self, sentences, alpha, work, self.compute_loss)
+            (tally, effective_samples) = train_batch_sg(self, sentences, alpha, work, self.compute_loss)
         else:
-            tally += train_batch_cbow(self, sentences, alpha, work, neu1, self.compute_loss)
-        return tally, self._raw_word_count(sentences)
+            (tally, effective_samples) = train_batch_cbow(self, sentences, alpha, work, neu1, self.compute_loss)
+        return tally, self._raw_word_count(sentences), effective_samples
 
     def _clear_post_train(self):
         """Remove all L2-normalized word vectors from the model."""

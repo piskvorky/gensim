@@ -473,7 +473,7 @@ cdef init_w2v_config(Word2VecConfig *c, model, alpha, compute_loss, _work, _neu1
     c[0].workers = model.workers
 
     c[0].compute_loss = (1 if compute_loss else 0)
-    c[0].running_training_loss = model.running_training_loss
+    c[0].running_training_loss = 0
 
     c[0].syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
     c[0].word_locks = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_lockf))
@@ -489,6 +489,7 @@ cdef init_w2v_config(Word2VecConfig *c, model, alpha, compute_loss, _work, _neu1
         c[0].cum_table_len = len(model.vocabulary.cum_table)
     if c[0].negative or c[0].sample:
         c[0].next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
+
 
     # convert Python structures to primitive types, so we can release the GIL
     c[0].work = <REAL_t *>np.PyArray_DATA(_work)
@@ -524,7 +525,7 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
     """
     cdef Word2VecConfig c
     cdef int i, j, k
-    cdef int effective_words = 0, effective_sentences = 0
+    cdef int effective_words = 0, effective_sentences = 0, effective_samples = 0
     cdef int sent_idx, idx_start, idx_end
 
     init_w2v_config(&c, model, alpha, compute_loss, _work)
@@ -565,6 +566,7 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
         c.reduced_windows[i] = item
 
     # release GIL & train on all sentences
+
     with nogil:
         for sent_idx in range(effective_sentences):
             idx_start = c.sentence_idx[sent_idx]
@@ -579,13 +581,14 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
                 for j in range(j, k):
                     if j == i:
                         continue
+                    effective_samples += 1
                     if c.hs:
                         w2v_fast_sentence_sg_hs(c.points[i], c.codes[i], c.codelens[i], c.syn0, c.syn1, c.size, c.indexes[j], c.alpha, c.work, c.word_locks, c.compute_loss, &c.running_training_loss)
                     if c.negative:
                         c.next_random = w2v_fast_sentence_sg_neg(c.negative, c.cum_table, c.cum_table_len, c.syn0, c.syn1neg, c.size, c.indexes[i], c.indexes[j], c.alpha, c.work, c.next_random, c.word_locks, c.compute_loss, &c.running_training_loss)
 
-    model.running_training_loss = c.running_training_loss
-    return effective_words
+    model.running_training_loss += c.running_training_loss
+    return effective_words, effective_samples
 
 
 def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
@@ -672,8 +675,9 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
                 if c.negative:
                     c.next_random = w2v_fast_sentence_cbow_neg(c.negative, c.cum_table, c.cum_table_len, c.codelens, c.neu1, c.syn0, c.syn1neg, c.size, c.indexes, c.alpha, c.work, i, j, k, c.cbow_mean, c.next_random, c.word_locks, c.compute_loss, &c.running_training_loss)
 
-    model.running_training_loss = c.running_training_loss
-    return effective_words
+    model.running_training_loss += c.running_training_loss
+    # in the case of CBOW, the number of samples is the number of words
+    return effective_words, effective_words
 
 
 def score_sentence_sg(model, sentence, _work):

@@ -129,7 +129,17 @@ class BaseAny2VecModel(utils.SaveLoad):
         raise NotImplementedError()
 
     def _do_train_job(self, data_iterable, job_parameters, thread_private_mem):
-        """Train a single batch. Return 2-tuple `(effective word count, total word count)`."""
+        """Train a single batch. Return 3-tuple
+        `(effective word count, total word count, total samples used)`.
+
+        The total samples used is the same as the effective word count when
+        using CBOW, but it can differ with Skip-Gram, since a random number of
+        positve examples are used for each effective word.
+
+        Knowing the effective number of samples used allows us to compute the
+        average loss for an epoch.
+
+        """
         raise NotImplementedError()
 
     def _check_training_sanity(self, epochs=None, total_examples=None, total_words=None, **kwargs):
@@ -169,11 +179,20 @@ class BaseAny2VecModel(utils.SaveLoad):
         """
         thread_private_mem = self._get_thread_working_mem()
 
-        examples, tally, raw_tally = self._do_train_epoch(
+        stats_tuple = self._do_train_epoch(
             corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
             total_examples=total_examples, total_words=total_words, **kwargs)
 
-        progress_queue.put((examples, tally, raw_tally))
+        if len(stats_tuple) == 4:
+            examples, tally, raw_tally, effective_samples = stats_tuple
+        else:
+            # TODO: Some models haven't updated their _do_train_epoch method to return a 4-tuple instead of a
+            # 3-tuple, containing also the number of samples used while processing the batch.
+            # For those models that don't implement samples tallying, We assume that the number of samples is the
+            # effective words tally. This gives coherent outputs with previous implementations.
+            examples, tally, raw_tally = stats_tuple
+            effective_samples = tally
+        progress_queue.put((examples, tally, raw_tally, effective_samples))
         progress_queue.put(None)
 
     def _worker_loop(self, job_queue, progress_queue):
@@ -207,12 +226,23 @@ class BaseAny2VecModel(utils.SaveLoad):
             for callback in self.callbacks:
                 callback.on_batch_begin(self)
 
-            tally, raw_tally = self._do_train_job(data_iterable, job_parameters, thread_private_mem)
+            stats_tuple = self._do_train_job(
+                data_iterable, job_parameters, thread_private_mem)
+            if len(stats_tuple) == 3:
+                tally, raw_tally, effective_samples = stats_tuple
+            else:
+                # TODO: Some models haven't updated their _do_train_job method to return a 3-tuple instead of a
+                # 2-tuple, containing also the number of samples used while processing the batch.
+                # For those models that don't implement samples tallying, We assume that the number of samples is the
+                # effective words tally. This gives coherent outputs with previous implementations.
+                tally, raw_tally = stats_tuple
+                effective_samples = tally
 
             for callback in self.callbacks:
                 callback.on_batch_end(self)
 
-            progress_queue.put((len(data_iterable), tally, raw_tally))  # report back progress
+            # report back progress
+            progress_queue.put((len(data_iterable), tally, raw_tally, effective_samples))
             jobs_processed += 1
         logger.debug("worker exiting, processed %i jobs", jobs_processed)
 
@@ -288,7 +318,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         logger.debug("job loop exiting, total %i jobs", job_no)
 
     def _log_progress(self, job_queue, progress_queue, cur_epoch, example_count, total_examples,
-                      raw_word_count, total_words, trained_word_count, elapsed):
+                      raw_word_count, total_words, trained_word_count, total_samples, elapsed):
         raise NotImplementedError()
 
     def _log_epoch_end(self, cur_epoch, example_count, total_examples, raw_word_count, total_words,
@@ -336,7 +366,7 @@ class BaseAny2VecModel(utils.SaveLoad):
                 * Total word count used in training.
 
         """
-        example_count, trained_word_count, raw_word_count = 0, 0, 0
+        example_count, trained_word_count, raw_word_count, samples_count = 0, 0, 0, 0
         start, next_report = default_timer() - 0.00001, 1.0
         job_tally = 0
         unfinished_worker_count = self.workers
@@ -347,20 +377,20 @@ class BaseAny2VecModel(utils.SaveLoad):
                 unfinished_worker_count -= 1
                 logger.info("worker thread finished; awaiting finish of %i more threads", unfinished_worker_count)
                 continue
-            examples, trained_words, raw_words = report
+            examples, trained_words, raw_words, effective_samples = report
             job_tally += 1
 
             # update progress stats
             example_count += examples
             trained_word_count += trained_words  # only words in vocab & sampled
             raw_word_count += raw_words
-
+            samples_count += effective_samples
             # log progress once every report_delay seconds
             elapsed = default_timer() - start
             if elapsed >= next_report:
                 self._log_progress(
                     job_queue, progress_queue, cur_epoch, example_count, total_examples,
-                    raw_word_count, total_words, trained_word_count, elapsed)
+                    raw_word_count, total_words, trained_word_count, samples_count, elapsed)
                 next_report = elapsed + report_delay
         # all done; report the final stats
         elapsed = default_timer() - start
@@ -464,6 +494,7 @@ class BaseAny2VecModel(utils.SaveLoad):
                 * Total word count used in training.
 
         """
+        self.running_training_loss = 0.
         job_queue = Queue(maxsize=queue_factor * self.workers)
         progress_queue = Queue(maxsize=(queue_factor + 1) * self.workers)
 
@@ -1066,6 +1097,10 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             queue_factor=queue_factor, report_delay=report_delay, compute_loss=compute_loss, callbacks=callbacks,
             **kwargs)
 
+    def get_latest_training_loss(self):
+        raise NotImplementedError(
+            "To compute the loss for a model, you must implement get_latest_training_loss")
+
     def _get_job_params(self, cur_epoch):
         """Get the learning rate used in the current epoch.
 
@@ -1248,7 +1283,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         return model
 
     def _log_progress(self, job_queue, progress_queue, cur_epoch, example_count, total_examples,
-                      raw_word_count, total_words, trained_word_count, elapsed):
+                      raw_word_count, total_words, trained_word_count, total_samples, elapsed):
         """Callback used to log progress for long running jobs.
 
         Parameters
@@ -1274,6 +1309,8 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         trained_word_count : int
             Number of effective words used in training until now (after ignoring unknown words and trimming
             the sentence length).
+        total_samples : int
+            Number of effective samples used in training until now (differs from total_examples for Skip-Gram)
         elapsed : int
             Elapsed time since the beginning of training in seconds.
 
@@ -1283,20 +1320,39 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         always be equal to -1.
 
         """
+        if self.compute_loss:
+            if total_samples == 0:
+                loss = -1
+            else:
+                loss = self.get_latest_training_loss() / total_samples
         if total_examples:
             # examples-based progress %
-            logger.info(
-                "EPOCH %i - PROGRESS: at %.2f%% examples, %.0f words/s, in_qsize %i, out_qsize %i",
-                cur_epoch + 1, 100.0 * example_count / total_examples, trained_word_count / elapsed,
-                -1 if job_queue is None else utils.qsize(job_queue), utils.qsize(progress_queue)
-            )
+            if self.compute_loss:
+                logger.info(
+                    "EPOCH %i - PROGRESS: at %.2f%% examples, %.0f words/s, in_qsize %i, out_qsize %i, current_loss %.3f",
+                    cur_epoch + 1, 100.0 * example_count / total_examples, trained_word_count / elapsed,
+                    utils.qsize(job_queue), utils.qsize(progress_queue), loss
+                )
+            else:
+                logger.info(
+                    "EPOCH %i - PROGRESS: at %.2f%% examples, %.0f words/s, in_qsize %i, out_qsize %i",
+                    cur_epoch + 1, 100.0 * example_count / total_examples, trained_word_count / elapsed,
+                    utils.qsize(job_queue), utils.qsize(progress_queue)
+                )
         else:
             # words-based progress %
-            logger.info(
-                "EPOCH %i - PROGRESS: at %.2f%% words, %.0f words/s, in_qsize %i, out_qsize %i",
-                cur_epoch + 1, 100.0 * raw_word_count / total_words, trained_word_count / elapsed,
-                -1 if job_queue is None else utils.qsize(job_queue), utils.qsize(progress_queue)
-            )
+            if self.compute_loss:
+                logger.info(
+                    "EPOCH %i - PROGRESS: at %.2f%% words, %.0f words/s, in_qsize %i, out_qsize %i",
+                    cur_epoch + 1, 100.0 * raw_word_count / total_words, trained_word_count / elapsed,
+                    utils.qsize(job_queue), utils.qsize(progress_queue)
+                )
+            else:
+                logger.info(
+                    "EPOCH %i - PROGRESS: at %.2f%% words, %.0f words/s, in_qsize %i, out_qsize %i, current_loss %.3f",
+                    cur_epoch + 1, 100.0 * raw_word_count / total_words, trained_word_count / elapsed,
+                    utils.qsize(job_queue), utils.qsize(progress_queue), loss
+                )
 
     def _log_epoch_end(self, cur_epoch, example_count, total_examples, raw_word_count, total_words,
                        trained_word_count, elapsed, is_corpus_file_mode):
