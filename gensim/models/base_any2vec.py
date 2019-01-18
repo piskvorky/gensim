@@ -184,10 +184,19 @@ class BaseAny2VecModel(utils.SaveLoad):
         """
         thread_private_mem = self._get_thread_working_mem()
 
-        examples, tally, raw_tally, effective_samples = self._do_train_epoch(
+        stats_tuple = self._do_train_epoch(
             corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
             total_examples=total_examples, total_words=total_words, **kwargs)
 
+        if len(stats_tuple) == 4:
+            examples, tally, raw_tally, effective_samples = stats_tuple
+        else:
+            # TODO: Some models haven't updated their _do_train_epoch method to return a 4-tuple instead of a
+            # 3-tuple, containing also the number of samples used while processing the batch.
+            # For those models that don't implement samples tallying, We assume that the number of samples is the
+            # effective words tally. This gives coherent outputs with previous implementations.
+            examples, tally, raw_tally = stats_tuple
+            effective_samples = tally
         progress_queue.put((examples, tally, raw_tally, effective_samples))
         progress_queue.put(None)
 
