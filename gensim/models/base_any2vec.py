@@ -130,15 +130,19 @@ class BaseAny2VecModel(utils.SaveLoad):
         raise NotImplementedError()
 
     def _do_train_job(self, data_iterable, job_parameters, thread_private_mem):
-        """Train a single batch. Return 3-tuple
-        `(effective word count, total word count, total samples used)`.
-
-        The total samples used is the same as the effective word count when
-        using CBOW, but it can differ with Skip-Gram, since a random number of
-        positve examples are used for each effective word.
-
-        Knowing the effective number of samples used allows us to compute the
-        average loss for an epoch.
+        """Train a single batch.
+        `
+        Returns
+        -------
+        (int, int, int)
+        effective_word_count: int
+            The number of words processed after ignoring unknown words and sentence length trimming.
+        total_word_count: int
+            The total number of words in this batch.
+        total_samples_used: int
+            The total samples used while training on this data. This is the same as the effective word count when using
+            CBOW, but it can differ with Skip-Gram, since a random number of positve examples are used for each average
+            loss for an epoch.
 
         """
         raise NotImplementedError()
@@ -1340,35 +1344,25 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             else:
                 loss = self.get_latest_training_loss() / total_samples
         if total_examples:
-            # examples-based progress %
-            if self.compute_loss:
-                logger.info(
-                    ("EPOCH %i - PROGRESS: at %.2f%% examples, %.0f words/s, "
-                     "in_qsize %i, out_qsize %i, current_loss %.3f"),
-                    cur_epoch + 1, 100.0 * example_count / total_examples, trained_word_count / elapsed,
-                    utils.qsize(job_queue), utils.qsize(progress_queue), loss
-                )
-            else:
-                logger.info(
-                    "EPOCH %i - PROGRESS: at %.2f%% examples, %.0f words/s, in_qsize %i, out_qsize %i",
-                    cur_epoch + 1, 100.0 * example_count / total_examples, trained_word_count / elapsed,
-                    utils.qsize(job_queue), utils.qsize(progress_queue)
-                )
+            progress_unit = "examples"
+            div = total_examples
+            word_count = example_count
         else:
-            # words-based progress %
-            if self.compute_loss:
-                logger.info(
-                    "EPOCH %i - PROGRESS: at %.2f%% words, %.0f words/s, in_qsize %i, out_qsize %i",
-                    cur_epoch + 1, 100.0 * raw_word_count / total_words, trained_word_count / elapsed,
-                    utils.qsize(job_queue), utils.qsize(progress_queue)
-                )
+            div = total_words
+            progress_unit = "words"
+            word_count = raw_word_count
+
+        msg = "EPOCH %i - PROGRESS: at %.2f%% %s, %.0f words/s, in_qsize %i, out_qsize %i"
+        args = (cur_epoch + 1, 100.0 * word_count / div, progress_unit, trained_word_count / elapsed,
+                -1 if job_queue is None else utils.qsize(job_queue), utils.qsize(progress_queue))
+        if self.compute_loss:
+            if total_samples == 0:
+                loss = -1
             else:
-                logger.info(
-                    ("EPOCH %i - PROGRESS: at %.2f%% words, %.0f words/s, "
-                     "in_qsize %i, out_qsize %i, current_loss %.3f"),
-                    cur_epoch + 1, 100.0 * raw_word_count / total_words, trained_word_count / elapsed,
-                    utils.qsize(job_queue), utils.qsize(progress_queue), loss
-                )
+                loss = self.get_latest_training_loss() / total_samples
+            msg += ", current_loss %.3f"
+            args += (loss,)
+        logger.info(msg, *args)
 
     def _log_epoch_end(self, cur_epoch, example_count, total_examples, raw_word_count, total_words,
                        trained_word_count, elapsed, is_corpus_file_mode):

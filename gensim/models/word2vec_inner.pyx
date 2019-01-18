@@ -520,11 +520,14 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
     int
         Number of words in the vocabulary actually used for training (They already existed in the vocabulary
         and were not discarded by negative sampling).
+    int
+        Number of samples used for training. A sample is a positive/negative example.
 
     """
+
     cdef Word2VecConfig c
     cdef int i, j, k
-    cdef int effective_words = 0, effective_sentences = 0
+    cdef int effective_words = 0, effective_sentences = 0, effective_samples = 0
     cdef int sent_idx, idx_start, idx_end
 
     init_w2v_config(&c, model, alpha, compute_loss, _work)
@@ -575,7 +578,6 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
                 k = i + c.window + 1 - c.reduced_windows[i]
                 if k > idx_end:
                     k = idx_end
-                _running_training_loss_sample = 0
                 for j in range(j, k):
                     if j == i:
                         continue
@@ -585,7 +587,7 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
                     if c.negative:
                         c.next_random = w2v_fast_sentence_sg_neg(c.negative, c.cum_table, c.cum_table_len, c.syn0, c.syn1neg, c.size, c.indexes[i], c.indexes[j], c.alpha, c.work, c.next_random, c.word_locks, c.compute_loss, &c.running_training_loss)
 
-    model.running_training_loss += _running_training_loss
+    model.running_training_loss += c.running_training_loss
     return effective_words, effective_samples
 
 
@@ -614,7 +616,11 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
     int
         Number of words in the vocabulary actually used for training (They already existed in the vocabulary
         and were not discarded by negative sampling).
+    int
+        Number of samples used for training. A sample is a positive/negative example. In the case of CBOW
+        this is the same as the effective number of words.
     """
+
     cdef Word2VecConfig c
     cdef int i, j, k
     cdef int effective_words = 0, effective_sentences = 0
@@ -672,8 +678,8 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
                     w2v_fast_sentence_cbow_hs(c.points[i], c.codes[i], c.codelens, c.neu1, c.syn0, c.syn1, c.size, c.indexes, c.alpha, c.work, i, j, k, c.cbow_mean, c.word_locks, c.compute_loss, &c.running_training_loss)
                 if c.negative:
                     c.next_random = w2v_fast_sentence_cbow_neg(c.negative, c.cum_table, c.cum_table_len, c.codelens, c.neu1, c.syn0, c.syn1neg, c.size, c.indexes, c.alpha, c.work, i, j, k, c.cbow_mean, c.next_random, c.word_locks, c.compute_loss, &c.running_training_loss)
+    model.running_training_loss += c.running_training_loss
 
-    model.running_training_loss += _running_training_loss
     return effective_words, effective_words
 
 
