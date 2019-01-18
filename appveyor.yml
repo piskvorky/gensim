@@ -28,6 +28,11 @@ environment:
       PYTHON_ARCH: "64"
       TOXENV: "py36-win"
 
+    - PYTHON: "C:\\Python37-x64"
+      PYTHON_VERSION: "3.7.0"
+      PYTHON_ARCH: "64"
+      TOXENV: "py37-win"
+
 init:
   - "ECHO %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%"
   - "ECHO \"%APPVEYOR_SCHEDULED_BUILD%\""

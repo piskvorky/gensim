@@ -20,20 +20,20 @@ Conceptually, a service that lets you :
 2. index arbitrary documents using this semantic model
 3. query the index for similar documents (the query can be either an id of a document already in the index, or an arbitrary text)
 
+  .. sourcecode:: pycon
 
->>> from simserver import SessionServer
->>> server = SessionServer('/tmp/my_server') # resume server (or create a new one)
-
->>> server.train(training_corpus, method='lsi') # create a semantic model
->>> server.index(some_documents) # convert plain text to semantic representation and index it
->>> server.find_similar(query) # convert query to semantic representation and compare against index
->>> ...
->>> server.index(more_documents) # add to index: incremental indexing works
->>> server.find_similar(query)
->>> ...
->>> server.delete(ids_to_delete) # incremental deleting also works
->>> server.find_similar(query)
->>> ...
+    >>> from simserver import SessionServer
+    >>> server = SessionServer('/tmp/my_server')  # resume server (or create a new one)
+    >>>
+    >>> server.train(training_corpus, method='lsi')  # create a semantic model
+    >>> server.index(some_documents)  # convert plain text to semantic representation and index it
+    >>> server.find_similar(query)  # convert query to semantic representation and compare against index
+    >>> 
+    >>> server.index(more_documents)  # add to index: incremental indexing works
+    >>> server.find_similar(query)
+    >>> 
+    >>> server.delete(ids_to_delete)  # incremental deleting also works
+    >>> server.find_similar(query)
 
 .. note::
     "Semantic" here refers to semantics of the crude, statistical type --
@@ -89,19 +89,23 @@ version 4.8 as of this writing)::
     $ sudo easy_install Pyro4
 
 .. note::
-    Don't forget to initialize logging to see logging messages::
+    Don't forget to initialize logging to see logging messages:
 
-    >>> import logging
-    >>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+    .. sourcecode:: pycon
+
+      >>> import logging
+      >>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 What is a document?
 -------------------
 
-In case of text documents, the service expects::
+In case of text documents, the service expects:
 
->>> document = {'id': 'some_unique_string',
->>>             'tokens': ['content', 'of', 'the', 'document', '...'],
->>>             'other_fields_are_allowed_but_ignored': None}
+.. sourcecode:: pycon
+
+  >>> document = {'id': 'some_unique_string',
+  >>>             'tokens': ['content', 'of', 'the', 'document', '...'],
+  >>>             'other_fields_are_allowed_but_ignored': None}
 
 This format was chosen because it coincides with plain JSON and is therefore easy to serialize and send over the wire, in almost any language.
 All strings involved must be utf8-encoded.
@@ -113,23 +117,29 @@ What is a corpus?
 A sequence of documents. Anything that supports the `for document in corpus: ...`
 iterator protocol. Generators are ok. Plain lists are also ok (but consume more memory).
 
->>> from gensim import utils
->>> texts = ["Human machine interface for lab abc computer applications",
->>>          "A survey of user opinion of computer system response time",
->>>          "The EPS user interface management system",
->>>          "System and human system engineering testing of EPS",
->>>          "Relation of user perceived response time to error measurement",
->>>          "The generation of random binary unordered trees",
->>>          "The intersection graph of paths in trees",
->>>          "Graph minors IV Widths of trees and well quasi ordering",
->>>          "Graph minors A survey"]
->>> corpus = [{'id': 'doc_%i' % num, 'tokens': utils.simple_preprocess(text)}
->>>           for num, text in enumerate(texts)]
+.. sourcecode:: pycon
+
+  >>> from gensim import utils
+  >>>
+  >>> texts = ["Human machine interface for lab abc computer applications",
+  >>>          "A survey of user opinion of computer system response time",
+  >>>          "The EPS user interface management system",
+  >>>          "System and human system engineering testing of EPS",
+  >>>          "Relation of user perceived response time to error measurement",
+  >>>          "The generation of random binary unordered trees",
+  >>>          "The intersection graph of paths in trees",
+  >>>          "Graph minors IV Widths of trees and well quasi ordering",
+  >>>          "Graph minors A survey"]
+  >>>
+  >>> corpus = [{'id': 'doc_%i' % num, 'tokens': utils.simple_preprocess(text)}
+  >>>           for num, text in enumerate(texts)]
 
 Since corpora are allowed to be arbitrarily large, it is
 recommended client splits them into smaller chunks before uploading them to the server:
 
->>> utils.upload_chunked(server, corpus, chunksize=1000) # send 1k docs at a time
+.. sourcecode:: pycon
+
+  >>> utils.upload_chunked(server, corpus, chunksize=1000)  # send 1k docs at a time
 
 Wait, upload what, where?
 -------------------------
@@ -141,11 +151,13 @@ option, not a necessity.
 Document similarity can also act as a long-running service, a daemon process on a separate machine. In that
 case, I'll call the service object a *server*.
 
-But let's start with a local object. Open your `favourite shell <http://ipython.org/>`_ and::
+But let's start with a local object. Open your `favourite shell <http://ipython.org/>`_ and
 
->>> from gensim import utils
->>> from simserver import SessionServer
->>> service = SessionServer('/tmp/my_server/') # or wherever
+.. sourcecode:: pycon
+
+  >>> from simserver import SessionServer
+  >>>
+  >>> service = SessionServer('/tmp/my_server/')  # or wherever
 
 That initialized a new service, located in `/tmp/my_server` (you need write access rights to that directory).
 
@@ -162,14 +174,18 @@ Model training
 
 We can start indexing right away:
 
->>> service.index(corpus)
-AttributeError: must initialize model for /tmp/my_server/b before indexing documents
+.. sourcecode:: pycon
+
+  >>> service.index(corpus)
+  AttributeError: must initialize model for /tmp/my_server/b before indexing documents
 
 Oops, we can not. The service indexes documents in a semantic representation, which
 is different to the plain text we give it. We must teach the service how to convert
-between plain text and semantics first::
+between plain text and semantics first:
 
->>> service.train(corpus, method='lsi')
+.. sourcecode:: pycon
+
+  >>> service.train(corpus, method='lsi')
 
 That was easy. The `method='lsi'` parameter meant that we trained a model for
 `Latent Semantic Indexing <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_
@@ -188,19 +204,25 @@ on a corpus that is:
 Indexing documents
 ------------------
 
->>> service.index(corpus) # index the same documents that we trained on...
+.. sourcecode:: pycon
+
+  >>> service.index(corpus)  # index the same documents that we trained on...
 
 Indexing can happen over any documents, but I'm too lazy to create another example corpus, so we index the same 9 docs used for training.
 
-Delete documents with::
+Delete documents with:
 
-  >>> service.delete(['doc_5', 'doc_8']) # supply a list of document ids to be removed from the index
+.. sourcecode:: pycon
+
+  >>> service.delete(['doc_5', 'doc_8'])  # supply a list of document ids to be removed from the index
 
 When you pass documents that have the same id as some already indexed document,
 the indexed document is overwritten by the new input (=only the latest counts;
-document ids are always unique per service)::
+document ids are always unique per service):
 
-  >>> service.index(corpus[:3]) # overall index size unchanged (just 3 docs overwritten)
+.. sourcecode:: pycon
+
+  >>> service.index(corpus[:3])  # overall index size unchanged (just 3 docs overwritten)
 
 The index/delete/overwrite calls can be arbitrarily interspersed with queries.
 You don't have to index **all** documents first to start querying, indexing can be incremental.
@@ -212,26 +234,26 @@ There are two types of queries:
 
 1. by id:
 
-   .. code-block:: python
+  .. sourcecode:: pycon
 
-     >>> print(service.find_similar('doc_0'))
-     [('doc_0', 1.0, None), ('doc_2', 0.30426699, None), ('doc_1', 0.25648531, None), ('doc_3', 0.25480536, None)]
+    >>> print(service.find_similar('doc_0'))
+    [('doc_0', 1.0, None), ('doc_2', 0.30426699, None), ('doc_1', 0.25648531, None), ('doc_3', 0.25480536, None)]
+    >>>
+    >>> print(service.find_similar('doc_5'))  # we deleted doc_5 and doc_8, remember?
+    ValueError: document 'doc_5' not in index
 
-   >>> print(service.find_similar('doc_5')) # we deleted doc_5 and doc_8, remember?
-   ValueError: document 'doc_5' not in index
-
-   In the resulting 3-tuples, `doc_n` is the document id we supplied during indexing,
-   `0.30426699` is the similarity of `doc_n` to the query, but what's up with that `None`, you ask?
-   Well, you can associate each document with a "payload", during indexing.
-   This payload object (anything pickle-able) is later returned during querying.
-   If you don't specify `doc['payload']` during indexing, queries simply return `None` in the result tuple, as in our example here.
+  In the resulting 3-tuples, `doc_n` is the document id we supplied during indexing,
+  `0.30426699` is the similarity of `doc_n` to the query, but what's up with that `None`, you ask?
+  Well, you can associate each document with a "payload", during indexing.
+  This payload object (anything pickle-able) is later returned during querying.
+  If you don't specify `doc['payload']` during indexing, queries simply return `None` in the result tuple, as in our example here.
 
 2. or by document (using `document['tokens']`; id is ignored in this case):
 
-   .. code-block:: python
+  .. sourcecode:: pycon
 
-     >>> doc = {'tokens': utils.simple_preprocess('Graph and minors and humans and trees.')}
-     >>> print(service.find_similar(doc, min_score=0.4, max_results=50))
+    >>> doc = {'tokens': utils.simple_preprocess('Graph and minors and humans and trees.')}
+    >>> print(service.find_similar(doc, min_score=0.4, max_results=50))
      [('doc_7', 0.93350589, None), ('doc_3', 0.42718196, None)]
 
 Remote access
@@ -250,20 +272,23 @@ included with simserver, run it with::
 
 You can just `ctrl+c` to terminate the server, but leave it running for now.
 
-Now open your Python shell again, in another terminal window or possibly on another machine, and::
+Now open your Python shell again, in another terminal window or possibly on another machine, and
 
->>> import Pyro4
->>> service = Pyro4.Proxy(Pyro4.locateNS().lookup('gensim.testserver'))
+.. sourcecode:: pycon
+
+  >>> import Pyro4
+  >>> service = Pyro4.Proxy(Pyro4.locateNS().lookup('gensim.testserver'))
 
 Now `service` is only a proxy object: every call is physically executed wherever
 you ran the `run_server.py` script, which can be a totally different computer
-(within a network broadcast domain), but you don't even know::
+(within a network broadcast domain), but you don't even know:
 
->>> print(service.status())
->>> service.train(corpus)
->>> service.index(other_corpus)
->>> service.find_similar(query)
->>> ...
+.. sourcecode:: pycon
+
+  >>> print(service.status())
+  >>> service.train(corpus)
+  >>> service.index(other_corpus)
+  >>> service.find_similar(query)
 
 It is worth mentioning that Irmen, the author of Pyro, also released
 `Pyrolite <http://irmen.home.xs4all.nl/pyrolite/>`_ recently. That is a package
@@ -300,7 +325,9 @@ with how the session went), it can be rolled back. It also means other clients c
 continue querying the original index during index updates.
 
 The mechanism is hidden from users by default through auto-committing (it was already happening
-in the examples above too), but auto-committing can be turned off explicitly::
+in the examples above too), but auto-committing can be turned off explicitly
+
+.. sourcecode:: pycon
 
   >>> service.set_autosession(False)
   >>> service.train(corpus)
@@ -309,19 +336,22 @@ in the examples above too), but auto-committing can be turned off explicitly::
   >>> service.train(corpus)
   >>> service.index(corpus)
   >>> service.delete(doc_ids)
-  >>> ...
 
 None of these changes are visible to other clients, yet. Also, other clients'
 calls to index/train/etc will block until this session is committed/rolled back---there
 cannot be two open sessions at the same time.
 
-To end a session::
+To end a session
 
-  >>> service.rollback() # discard all changes since open_session()
+.. sourcecode:: pycon
 
-or::
+  >>> service.rollback()  # discard all changes since open_session()
 
-  >>> service.commit() # make changes public; now other clients can see changes/acquire the modification lock
+or
+
+.. sourcecode:: pycon
+
+  >>> service.commit()  # make changes public; now other clients can see changes/acquire the modification lock
 
 
 Other stuff

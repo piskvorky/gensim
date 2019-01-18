@@ -35,12 +35,14 @@ How to use distributed LSI
 
     python -m gensim.models.lsi_dispatcher &
 
-#. Run :class:`~gensim.models.lsimodel.LsiModel` in distributed mode ::
+#. Run :class:`~gensim.models.lsimodel.LsiModel` in distributed mode:
 
-    >>> from gensim.test.utils import common_corpus, common_dictionary
-    >>> from gensim.models import LsiModel
-    >>>
-    >>> model = LsiModel(common_corpus, id2word=common_dictionary, distributed=True)
+    .. sourcecode:: pycon
+
+        >>> from gensim.test.utils import common_corpus, common_dictionary
+        >>> from gensim.models import LsiModel
+        >>>
+        >>> model = LsiModel(common_corpus, id2word=common_dictionary, distributed=True)
 
 
 Command line arguments

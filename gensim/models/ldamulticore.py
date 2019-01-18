@@ -45,35 +45,41 @@ Usage examples
 --------------
 The constructor estimates Latent Dirichlet Allocation model parameters based on a training corpus
 
->>> from gensim.test.utils import common_corpus, common_dictionary
->>>
->>> lda = LdaMulticore(common_corpus, id2word=common_dictionary, num_topics=10)
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import common_corpus, common_dictionary
+    >>>
+    >>> lda = LdaMulticore(common_corpus, id2word=common_dictionary, num_topics=10)
 
 Save a model to disk, or reload a pre-trained model
 
->>> from gensim.test.utils import datapath
->>>
->>> # Save model to disk.
->>> temp_file = datapath("model")
->>> lda.save(temp_file)
->>>
->>> # Load a potentially pretrained model from disk.
->>> lda = LdaModel.load(temp_file)
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import datapath
+    >>>
+    >>> # Save model to disk.
+    >>> temp_file = datapath("model")
+    >>> lda.save(temp_file)
+    >>>
+    >>> # Load a potentially pretrained model from disk.
+    >>> lda = LdaModel.load(temp_file)
 
 Query, or update the model using new, unseen documents
 
->>> other_texts = [
-...     ['computer', 'time', 'graph'],
-...     ['survey', 'response', 'eps'],
-...     ['human', 'system', 'computer']
-... ]
->>> other_corpus = [common_dictionary.doc2bow(text) for text in other_texts]
->>>
->>> unseen_doc = other_corpus[0]
->>> vector = lda[unseen_doc] # get topic probability distribution for a document
->>>
->>> # Update the model by incrementally training on the new corpus.
->>> lda.update(other_corpus) # update the LDA model with additional documents
+.. sourcecode:: pycon
+
+    >>> other_texts = [
+    ...     ['computer', 'time', 'graph'],
+    ...     ['survey', 'response', 'eps'],
+    ...     ['human', 'system', 'computer']
+    ... ]
+    >>> other_corpus = [common_dictionary.doc2bow(text) for text in other_texts]
+    >>>
+    >>> unseen_doc = other_corpus[0]
+    >>> vector = lda[unseen_doc]  # get topic probability distribution for a document
+    >>>
+    >>> # Update the model by incrementally training on the new corpus.
+    >>> lda.update(other_corpus)  # update the LDA model with additional documents
 
 """
 
@@ -85,7 +91,7 @@ from gensim import utils
 from gensim.models.ldamodel import LdaModel, LdaState
 
 import six
-from six.moves import queue, xrange
+from six.moves import queue, range
 from multiprocessing import Pool, Queue, cpu_count
 
 logger = logging.getLogger(__name__)
@@ -129,7 +135,6 @@ class LdaMulticore(LdaModel):
             Alternatively default prior selecting strategies can be employed by supplying a string:
 
                 * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / topicno`.
-                * 'auto': Learns an asymmetric prior from the corpus.
         eta : {float, np.array, str}, optional
             A-priori belief on word probability, this can be:
 
@@ -254,7 +259,7 @@ class LdaMulticore(LdaModel):
 
         logger.info("training LDA model using %i processes", self.workers)
         pool = Pool(self.workers, worker_e_step, (job_queue, result_queue,))
-        for pass_ in xrange(self.passes):
+        for pass_ in range(self.passes):
             queue_size, reallen = [0], 0
             other = LdaState(self.eta, self.state.sstats.shape)
 
@@ -272,9 +277,9 @@ class LdaMulticore(LdaModel):
                 if (force and merged_new and queue_size[0] == 0) or (not self.batch and (other.numdocs >= updateafter)):
                     self.do_mstep(rho(), other, pass_ > 0)
                     other.reset()
-                    if self.eval_every is not None and \
-                            ((force and queue_size[0] == 0) or
-                                 (self.eval_every != 0 and (self.num_updates / updateafter) % self.eval_every == 0)):
+                    if self.eval_every is not None \
+                            and ((force and queue_size[0] == 0)
+                            or (self.eval_every != 0 and (self.num_updates / updateafter) % self.eval_every == 0)):
                         self.log_perplexity(chunk, total_docs=lencorpus)
 
             chunk_stream = utils.grouper(corpus, self.chunksize, as_numpy=chunks_as_numpy)

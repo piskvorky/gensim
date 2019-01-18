@@ -28,28 +28,36 @@ Usage examples
 
 Initialize & train a model:
 
->>> from gensim.test.utils import common_texts
->>> from gensim.models.doc2vec import Doc2Vec, TaggedDocument
->>>
->>> documents = [TaggedDocument(doc, [i]) for i, doc in enumerate(common_texts)]
->>> model = Doc2Vec(documents, vector_size=5, window=2, min_count=1, workers=4)
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import common_texts
+    >>> from gensim.models.doc2vec import Doc2Vec, TaggedDocument
+    >>>
+    >>> documents = [TaggedDocument(doc, [i]) for i, doc in enumerate(common_texts)]
+    >>> model = Doc2Vec(documents, vector_size=5, window=2, min_count=1, workers=4)
 
 Persist a model to disk:
 
->>> from gensim.test.utils import get_tmpfile
->>>
->>> fname = get_tmpfile("my_doc2vec_model")
->>>
->>> model.save(fname)
->>> model = Doc2Vec.load(fname)  # you can continue training with the loaded model!
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import get_tmpfile
+    >>>
+    >>> fname = get_tmpfile("my_doc2vec_model")
+    >>>
+    >>> model.save(fname)
+    >>> model = Doc2Vec.load(fname)  # you can continue training with the loaded model!
 
 If you're finished training a model (=no more updates, only querying, reduce memory usage), you can do:
 
->>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True)
+.. sourcecode:: pycon
+
+    >>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True)
 
 Infer vector for a new document:
 
->>> vector = model.infer_vector(["system", "response"])
+.. sourcecode:: pycon
+
+    >>> vector = model.infer_vector(["system", "response"])
 
 """
 
@@ -73,7 +81,7 @@ from gensim.utils import call_on_class_only
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.models.word2vec import Word2VecKeyedVectors, Word2VecVocab, Word2VecTrainables, train_cbow_pair,\
     train_sg_pair, train_batch_sg
-from six.moves import xrange
+from six.moves import range
 from six import string_types, integer_types, itervalues
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 from gensim.models.keyedvectors import Doc2VecKeyedVectors
@@ -219,8 +227,8 @@ except ImportError:
         if doctag_locks is None:
             doctag_locks = model.docvecs.doctag_syn0_lockf
 
-        word_vocabs = [model.wv.vocab[w] for w in doc_words if w in model.wv.vocab and
-                       model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
+        word_vocabs = [model.wv.vocab[w] for w in doc_words if w in model.wv.vocab
+                       and model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
 
         for pos, word in enumerate(word_vocabs):
             reduced_window = model.random.randint(model.window)  # `b` in the original doc2vec code
@@ -306,8 +314,8 @@ except ImportError:
         if doctag_locks is None:
             doctag_locks = model.docvecs.doctag_syn0_lockf
 
-        word_vocabs = [model.wv.vocab[w] for w in doc_words if w in model.wv.vocab and
-                       model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
+        word_vocabs = [model.wv.vocab[w] for w in doc_words if w in model.wv.vocab
+                       and model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
         doctag_len = len(doctag_indexes)
         if doctag_len != model.dm_tag_count:
             return 0  # skip doc without expected number of doctag(s) (TODO: warn/pad?)
@@ -479,7 +487,8 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         corpus_file : str, optional
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
             You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
-            `corpus_file` arguments need to be passed (or none of them).
+            `corpus_file` arguments need to be passed (or none of them). Documents' tags are assigned automatically
+            and are equal to line number, as in :class:`~gensim.models.doc2vec.TaggedLineDocument`.
         dm : {1,0}, optional
             Defines the training algorithm. If `dm=1`, 'distributed memory' (PV-DM) is used.
             Otherwise, `distributed bag of words` (PV-DBOW) is employed.
@@ -753,7 +762,8 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         corpus_file : str, optional
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
             You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
-            `corpus_file` arguments need to be passed (not both of them).
+            `corpus_file` arguments need to be passed (not both of them). Documents' tags are assigned automatically
+            and are equal to line number, as in :class:`~gensim.models.doc2vec.TaggedLineDocument`.
         total_examples : int, optional
             Count of sentences.
         total_words : int, optional
@@ -1033,7 +1043,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         fvocab : str, optional
             Optional file path used to save the vocabulary.
         binary : bool, optional
-            If True, the data wil be saved in binary word2vec format, otherwise - will be saved in plain text.
+            If True, the data will be saved in binary word2vec format, otherwise - will be saved in plain text.
 
         """
         total_vec = len(self.wv.vocab) + len(self.docvecs)
@@ -1132,7 +1142,8 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         corpus_file : str, optional
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
             You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
-            `corpus_file` arguments need to be passed (not both of them).
+            `corpus_file` arguments need to be passed (not both of them). Documents' tags are assigned automatically
+            and are equal to a line number, as in :class:`~gensim.models.doc2vec.TaggedLineDocument`.
         update : bool
             If true, the new words in `sentences` will be added to model's vocab.
         progress_per : int
@@ -1254,7 +1265,7 @@ class Doc2VecVocab(Word2VecVocab):
             if there are more unique words than this, then prune the infrequent ones.
             Every 10 million word types need about 1GB of RAM, set to `None` for no limit.
         min_count : int
-            Words with frequency lower than this limit will be discarded form the vocabulary.
+            Words with frequency lower than this limit will be discarded from the vocabulary.
         sample : float, optional
             The threshold for configuring which higher-frequency words are randomly downsampled,
             useful range is (0, 1e-5).
@@ -1442,7 +1453,7 @@ class Doc2VecTrainables(Word2VecTrainables):
             docvecs.vectors_docs = empty((length, docvecs.vector_size), dtype=REAL)
             self.vectors_docs_lockf = ones((length,), dtype=REAL)  # zeros suppress learning
 
-        for i in xrange(length):
+        for i in range(length):
             # construct deterministic seed from index AND model seed
             seed = "%d %s" % (
                 self.seed, Doc2VecKeyedVectors._index_to_doctag(i, docvecs.offset2doctag, docvecs.max_rawint))
@@ -1511,11 +1522,13 @@ class TaggedLineDocument(object):
 
         Examples
         --------
-        >>> from gensim.test.utils import datapath
-        >>> from gensim.models.doc2vec import TaggedLineDocument
-        >>>
-        >>> for document in TaggedLineDocument(datapath("head500.noblanks.cor")):
-        ...     pass
+        .. sourcecode:: pycon
+
+            >>> from gensim.test.utils import datapath
+            >>> from gensim.models.doc2vec import TaggedLineDocument
+            >>>
+            >>> for document in TaggedLineDocument(datapath("head500.noblanks.cor")):
+            ...     pass
 
         """
         self.source = source

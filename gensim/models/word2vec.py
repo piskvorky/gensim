@@ -34,47 +34,57 @@ Usage examples
 
 Initialize a model with e.g.:
 
->>> from gensim.test.utils import common_texts, get_tmpfile
->>> from gensim.models import Word2Vec
->>>
->>> path = get_tmpfile("word2vec.model")
->>>
->>> model = Word2Vec(common_texts, size=100, window=5, min_count=1, workers=4)
->>> model.save("word2vec.model")
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import common_texts, get_tmpfile
+    >>> from gensim.models import Word2Vec
+    >>>
+    >>> path = get_tmpfile("word2vec.model")
+    >>>
+    >>> model = Word2Vec(common_texts, size=100, window=5, min_count=1, workers=4)
+    >>> model.save("word2vec.model")
 
 The training is streamed, meaning `sentences` can be a generator, reading input data
 from disk on-the-fly, without loading the entire corpus into RAM.
 
 It also means you can continue training the model later:
 
->>> model = Word2Vec.load("word2vec.model")
->>> model.train([["hello", "world"]], total_examples=1, epochs=1)
-(0, 2)
+.. sourcecode:: pycon
+
+    >>> model = Word2Vec.load("word2vec.model")
+    >>> model.train([["hello", "world"]], total_examples=1, epochs=1)
+    (0, 2)
 
 The trained word vectors are stored in a :class:`~gensim.models.keyedvectors.KeyedVectors` instance in `model.wv`:
 
->>> vector = model.wv['computer']  # numpy vector of a word
+.. sourcecode:: pycon
+
+    >>> vector = model.wv['computer']  # numpy vector of a word
 
 The reason for separating the trained vectors into `KeyedVectors` is that if you don't
 need the full model state any more (don't need to continue training), the state can discarded,
 resulting in a much smaller and faster object that can be mmapped for lightning
-fast loading and sharing the vectors in RAM between processes::
+fast loading and sharing the vectors in RAM between processes:
 
->>> from gensim.models import KeyedVectors
->>>
->>> path = get_tmpfile("wordvectors.kv")
->>>
->>> model.wv.save(path)
->>> wv = KeyedVectors.load("model.wv", mmap='r')
->>> vector = wv['computer']  # numpy vector of a word
+.. sourcecode:: pycon
+
+    >>> from gensim.models import KeyedVectors
+    >>>
+    >>> path = get_tmpfile("wordvectors.kv")
+    >>>
+    >>> model.wv.save(path)
+    >>> wv = KeyedVectors.load("model.wv", mmap='r')
+    >>> vector = wv['computer']  # numpy vector of a word
 
 Gensim can also load word vectors in the "word2vec C format", as a
-:class:`~gensim.models.keyedvectors.KeyedVectors` instance::
+:class:`~gensim.models.keyedvectors.KeyedVectors` instance:
 
->>> from gensim.test.utils import datapath
->>>
->>> wv_from_text = KeyedVectors.load_word2vec_format(datapath('word2vec_pre_kv_c'), binary=False)  # C text format
->>> wv_from_bin = KeyedVectors.load_word2vec_format(datapath("euclidean_vectors.bin"), binary=True)  # C binary format
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import datapath
+    >>>
+    >>> wv_from_text = KeyedVectors.load_word2vec_format(datapath('word2vec_pre_kv_c'), binary=False)  # C text format
+    >>> wv_from_bin = KeyedVectors.load_word2vec_format(datapath("euclidean_vectors.bin"), binary=True)  # C bin format
 
 It is impossible to continue training the vectors loaded from the C format because the hidden weights,
 vocabulary frequencies and the binary tree are missing. To continue training, you'll need the
@@ -87,8 +97,10 @@ are already built-in - you can see it in :mod:`gensim.models.keyedvectors`.
 If you're finished training a model (i.e. no more updates, only querying),
 you can switch to the :class:`~gensim.models.keyedvectors.KeyedVectors` instance:
 
->>> word_vectors = model.wv
->>> del model
+.. sourcecode:: pycon
+
+    >>> word_vectors = model.wv
+    >>> del model
 
 to trim unneeded model state = use much less RAM and allow fast loading and memory sharing (mmap).
 
@@ -96,11 +108,13 @@ Note that there is a :mod:`gensim.models.phrases` module which lets you automati
 detect phrases longer than one word. Using phrases, you can learn a word2vec model
 where "words" are actually multiword expressions, such as `new_york_times` or `financial_crisis`:
 
->>> from gensim.test.utils import common_texts
->>> from gensim.models import Phrases
->>>
->>> bigram_transformer = Phrases(common_texts)
->>> model = Word2Vec(bigram_transformer[common_texts], min_count=1)
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import common_texts
+    >>> from gensim.models import Phrases
+    >>>
+    >>> bigram_transformer = Phrases(common_texts)
+    >>> model = Word2Vec(bigram_transformer[common_texts], min_count=1)
 
 """
 
@@ -135,7 +149,7 @@ from scipy.special import expit
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.utils import deprecated
 from six import iteritems, itervalues, string_types
-from six.moves import xrange
+from six.moves import range
 
 logger = logging.getLogger(__name__)
 
@@ -181,8 +195,8 @@ except ImportError:
         """
         result = 0
         for sentence in sentences:
-            word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
-                           model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
+            word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab
+                           and model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
             for pos, word in enumerate(word_vocabs):
                 reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
 
@@ -233,8 +247,8 @@ except ImportError:
         result = 0
         for sentence in sentences:
             word_vocabs = [
-                model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
-                model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32
+                model.wv.vocab[w] for w in sentence if w in model.wv.vocab
+                and model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32
             ]
             for pos, word in enumerate(word_vocabs):
                 reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
@@ -744,9 +758,11 @@ class Word2Vec(BaseWordEmbeddingsModel):
         --------
         Initialize and train a :class:`~gensim.models.word2vec.Word2Vec` model
 
-        >>> from gensim.models import Word2Vec
-        >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
-        >>> model = Word2Vec(sentences, min_count=1)
+        .. sourcecode:: pycon
+
+            >>> from gensim.models import Word2Vec
+            >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
+            >>> model = Word2Vec(sentences, min_count=1)
 
         """
         self.max_final_vocab = max_final_vocab
@@ -877,13 +893,15 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
         Examples
         --------
-        >>> from gensim.models import Word2Vec
-        >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
-        >>>
-        >>> model = Word2Vec(min_count=1)
-        >>> model.build_vocab(sentences)  # prepare the model vocabulary
-        >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)  # train word vectors
-        (1, 30)
+        .. sourcecode:: pycon
+
+            >>> from gensim.models import Word2Vec
+            >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
+            >>>
+            >>> model = Word2Vec(min_count=1)
+            >>> model.build_vocab(sentences)  # prepare the model vocabulary
+            >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)  # train word vectors
+            (1, 30)
 
         """
         return super(Word2Vec, self).train(
@@ -970,7 +988,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
         job_queue = Queue(maxsize=queue_factor * self.workers)
         progress_queue = Queue(maxsize=(queue_factor + 1) * self.workers)
 
-        workers = [threading.Thread(target=worker_loop) for _ in xrange(self.workers)]
+        workers = [threading.Thread(target=worker_loop) for _ in range(self.workers)]
         for thread in workers:
             thread.daemon = True  # make interrupting the process with ctrl+c easier
             thread.start()
@@ -997,7 +1015,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
                 job_queue.put(items)
             except StopIteration:
                 logger.info("reached end of input; waiting to finish %i outstanding jobs", job_no - done_jobs + 1)
-                for _ in xrange(self.workers):
+                for _ in range(self.workers):
                     job_queue.put(None)  # give the workers heads up that they can finish -- no more work!
                 push_done = True
             try:
@@ -1067,7 +1085,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
                 # TOCONSIDER: maybe mismatched vectors still useful enough to merge (truncating/padding)?
             if binary:
                 binary_len = dtype(REAL).itemsize * vector_size
-                for _ in xrange(vocab_size):
+                for _ in range(vocab_size):
                     # mixed text and binary: read text first, then binary
                     word = []
                     while True:
@@ -1393,10 +1411,12 @@ class LineSentence(object):
 
         Examples
         --------
-        >>> from gensim.test.utils import datapath
-        >>> sentences = LineSentence(datapath('lee_background.cor'))
-        >>> for sentence in sentences:
-        ...     pass
+        .. sourcecode:: pycon
+
+            >>> from gensim.test.utils import datapath
+            >>> sentences = LineSentence(datapath('lee_background.cor'))
+            >>> for sentence in sentences:
+            ...     pass
 
         """
         self.source = source
@@ -1760,7 +1780,7 @@ class Word2VecVocab(utils.SaveLoad):
         # build the huffman tree
         heap = list(itervalues(wv.vocab))
         heapq.heapify(heap)
-        for i in xrange(len(wv.vocab) - 1):
+        for i in range(len(wv.vocab) - 1):
             min1, min2 = heapq.heappop(heap), heapq.heappop(heap)
             heapq.heappush(
                 heap, Vocab(count=min1.count + min2.count, index=i + len(wv.vocab), left=min1, right=min2)
@@ -1798,10 +1818,10 @@ class Word2VecVocab(utils.SaveLoad):
         self.cum_table = zeros(vocab_size, dtype=uint32)
         # compute sum of all power (Z in paper)
         train_words_pow = 0.0
-        for word_index in xrange(vocab_size):
+        for word_index in range(vocab_size):
             train_words_pow += wv.vocab[wv.index2word[word_index]].count**self.ns_exponent
         cumulative = 0.0
-        for word_index in xrange(vocab_size):
+        for word_index in range(vocab_size):
             cumulative += wv.vocab[wv.index2word[word_index]].count**self.ns_exponent
             self.cum_table[word_index] = round(cumulative / train_words_pow * domain)
         if len(self.cum_table) > 0:
@@ -1834,7 +1854,7 @@ class Word2VecTrainables(utils.SaveLoad):
         logger.info("resetting layer weights")
         wv.vectors = empty((len(wv.vocab), wv.vector_size), dtype=REAL)
         # randomize weights vector by vector, rather than materializing a huge random matrix in RAM at once
-        for i in xrange(len(wv.vocab)):
+        for i in range(len(wv.vocab)):
             # construct deterministic seed from word AND seed argument
             wv.vectors[i] = self.seeded_vector(wv.index2word[i] + str(self.seed), wv.vector_size)
         if hs:
@@ -1852,7 +1872,7 @@ class Word2VecTrainables(utils.SaveLoad):
         newvectors = empty((gained_vocab, wv.vector_size), dtype=REAL)
 
         # randomize the remaining words
-        for i in xrange(len(wv.vectors), len(wv.vocab)):
+        for i in range(len(wv.vectors), len(wv.vocab)):
             # construct deterministic seed from word AND seed argument
             newvectors[i - len(wv.vectors)] = self.seeded_vector(wv.index2word[i] + str(self.seed), wv.vector_size)
 
@@ -1868,7 +1888,8 @@ class Word2VecTrainables(utils.SaveLoad):
         if hs:
             self.syn1 = vstack([self.syn1, zeros((gained_vocab, self.layer1_size), dtype=REAL)])
         if negative:
-            self.syn1neg = vstack([self.syn1neg, zeros((gained_vocab, self.layer1_size), dtype=REAL)])
+            pad = zeros((gained_vocab, self.layer1_size), dtype=REAL)
+            self.syn1neg = vstack([self.syn1neg, pad])
         wv.vectors_norm = None
 
         # do not suppress learning for already learned words

@@ -23,62 +23,67 @@ To implement a Callback, inherit from this base class and override one or more o
 
 Create a callback to save the training model after each epoch
 
->>> from gensim.test.utils import common_corpus, common_texts, get_tmpfile
->>> from gensim.models.callbacks import CallbackAny2Vec
->>> from gensim.models import Word2Vec
->>>
->>> class EpochSaver(CallbackAny2Vec):
-...     '''Callback to save model after each epoch.'''
-...
-...     def __init__(self, path_prefix):
-...         self.path_prefix = path_prefix
-...         self.epoch = 0
-...
-...     def on_epoch_end(self, model):
-...         output_path = get_tmpfile('{}_epoch{}.model'.format(self.path_prefix, self.epoch))
-...         model.save(output_path)
-...         self.epoch += 1
-...
+.. sourcecode:: pycon
 
-Create a callback to print progress information to the console
+    >>> from gensim.test.utils import get_tmpfile
+    >>> from gensim.models.callbacks import CallbackAny2Vec
+    >>>
+    >>>
+    >>> class EpochSaver(CallbackAny2Vec):
+    ...     '''Callback to save model after each epoch.'''
+    ...
+    ...     def __init__(self, path_prefix):
+    ...         self.path_prefix = path_prefix
+    ...         self.epoch = 0
+    ...
+    ...     def on_epoch_end(self, model):
+    ...         output_path = get_tmpfile('{}_epoch{}.model'.format(self.path_prefix, self.epoch))
+    ...         model.save(output_path)
+    ...         self.epoch += 1
+    ...
 
->>> class EpochLogger(CallbackAny2Vec):
-...     '''Callback to log information about training'''
-...
-...     def __init__(self):
-...         self.epoch = 0
-...
-...     def on_epoch_begin(self, model):
-...         print("Epoch #{} start".format(self.epoch))
-...
-...     def on_epoch_end(self, model):
-...         print("Epoch #{} end".format(self.epoch))
-...         self.epoch += 1
-...
->>>
->>> epoch_logger = EpochLogger()
->>>
->>> w2v_model = Word2Vec(common_texts, iter=5, size=10, min_count=0, seed=42, callbacks=[epoch_logger])
-Epoch #0 start
-Epoch #0 end
-Epoch #1 start
-Epoch #1 end
-Epoch #2 start
-Epoch #2 end
-Epoch #3 start
-Epoch #3 end
-Epoch #4 start
-Epoch #4 end
+Create a callback to print progress information to the console:
 
-Create and bind a callback to a topic model. This callback will log the perplexity metric in real time
+.. sourcecode:: pycon
 
->>> from gensim.models.callbacks import PerplexityMetric
->>> from gensim.models.ldamodel import LdaModel
->>> from gensim.test.utils import common_corpus, common_dictionary
->>>
->>> # Log the perplexity score at the end of each epoch.
->>> perplexity_logger = PerplexityMetric(corpus=common_corpus, logger='shell')
->>> lda = LdaModel(common_corpus, id2word=common_dictionary, num_topics=5, callbacks=[perplexity_logger])
+    >>> class EpochLogger(CallbackAny2Vec):
+    ...     '''Callback to log information about training'''
+    ...
+    ...     def __init__(self):
+    ...         self.epoch = 0
+    ...
+    ...     def on_epoch_begin(self, model):
+    ...         print("Epoch #{} start".format(self.epoch))
+    ...
+    ...     def on_epoch_end(self, model):
+    ...         print("Epoch #{} end".format(self.epoch))
+    ...         self.epoch += 1
+    ...
+    >>>
+    >>> epoch_logger = EpochLogger()
+    >>> w2v_model = Word2Vec(common_texts, iter=5, size=10, min_count=0, seed=42, callbacks=[epoch_logger])
+    Epoch #0 start
+    Epoch #0 end
+    Epoch #1 start
+    Epoch #1 end
+    Epoch #2 start
+    Epoch #2 end
+    Epoch #3 start
+    Epoch #3 end
+    Epoch #4 start
+    Epoch #4 end
+
+Create and bind a callback to a topic model. This callback will log the perplexity metric in real time:
+
+.. sourcecode:: pycon
+
+    >>> from gensim.models.callbacks import PerplexityMetric
+    >>> from gensim.models.ldamodel import LdaModel
+    >>> from gensim.test.utils import common_corpus, common_dictionary
+    >>>
+    >>> # Log the perplexity score at the end of each epoch.
+    >>> perplexity_logger = PerplexityMetric(corpus=common_corpus, logger='shell')
+    >>> lda = LdaModel(common_corpus, id2word=common_dictionary, num_topics=5, callbacks=[perplexity_logger])
 
 """
 
@@ -544,8 +549,12 @@ class Callback(object):
                         )
                         self.diff_mat.put(diff_mat)
                     else:
-                        self.viz.updateTrace(
-                            Y=np.array([value]), X=np.array([epoch]), env=metric.viz_env, win=self.windows[i]
+                        self.viz.line(
+                            Y=np.array([value]),
+                            X=np.array([epoch]),
+                            env=metric.viz_env,
+                            win=self.windows[i],
+                            update='append'
                         )
 
             if metric.logger == "shell":
@@ -553,7 +562,7 @@ class Callback(object):
                 self.log_type.info(statement)
 
         # check for any metric which need model state from previous epoch
-        if isinstance(metric, (DiffMetric, ConvergenceMetric)):
+        if any(isinstance(metric, (DiffMetric, ConvergenceMetric)) for metric in self.metrics):
             self.previous = copy.deepcopy(self.model)
 
         return current_metrics

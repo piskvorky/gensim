@@ -21,21 +21,24 @@ csv-like format, or from a Python iterable of relations.
 
 Examples
 --------
-
 Initialize and train a model from a list
 
->>> from gensim.models.poincare import PoincareModel
->>> relations = [('kangaroo', 'marsupial'), ('kangaroo', 'mammal'), ('gib', 'cat')]
->>> model = PoincareModel(relations, negative=2)
->>> model.train(epochs=50)
+.. sourcecode:: pycon
+
+    >>> from gensim.models.poincare import PoincareModel
+    >>> relations = [('kangaroo', 'marsupial'), ('kangaroo', 'mammal'), ('gib', 'cat')]
+    >>> model = PoincareModel(relations, negative=2)
+    >>> model.train(epochs=50)
 
 Initialize and train a model from a file containing one relation per line
 
->>> from gensim.models.poincare import PoincareModel, PoincareRelations
->>> from gensim.test.utils import datapath
->>> file_path = datapath('poincare_hypernyms.tsv')
->>> model = PoincareModel(PoincareRelations(file_path), negative=2)
->>> model.train(epochs=50)
+.. sourcecode:: pycon
+
+    >>> from gensim.models.poincare import PoincareModel, PoincareRelations
+    >>> from gensim.test.utils import datapath
+    >>> file_path = datapath('poincare_hypernyms.tsv')
+    >>> model = PoincareModel(PoincareRelations(file_path), negative=2)
+    >>> model.train(epochs=50)
 
 """
 
@@ -49,6 +52,7 @@ from collections import defaultdict, Counter
 from numpy import random as np_random
 from scipy.stats import spearmanr
 from six import string_types
+from six.moves import zip, range
 from smart_open import smart_open
 
 from gensim import utils, matutils
@@ -128,16 +132,20 @@ class PoincareModel(utils.SaveLoad):
         --------
         Initialize a model from a list:
 
-        >>> from gensim.models.poincare import PoincareModel
-        >>> relations = [('kangaroo', 'marsupial'), ('kangaroo', 'mammal'), ('gib', 'cat')]
-        >>> model = PoincareModel(relations, negative=2)
+        .. sourcecode:: pycon
+
+            >>> from gensim.models.poincare import PoincareModel
+            >>> relations = [('kangaroo', 'marsupial'), ('kangaroo', 'mammal'), ('gib', 'cat')]
+            >>> model = PoincareModel(relations, negative=2)
 
         Initialize a model from a file containing one relation per line:
 
-        >>> from gensim.models.poincare import PoincareModel, PoincareRelations
-        >>> from gensim.test.utils import datapath
-        >>> file_path = datapath('poincare_hypernyms.tsv')
-        >>> model = PoincareModel(PoincareRelations(file_path), negative=2)
+        .. sourcecode:: pycon
+
+            >>> from gensim.models.poincare import PoincareModel, PoincareRelations
+            >>> from gensim.test.utils import datapath
+            >>> file_path = datapath('poincare_hypernyms.tsv')
+            >>> model = PoincareModel(PoincareRelations(file_path), negative=2)
 
         See :class:`~gensim.models.poincare.PoincareRelations` for more options.
 
@@ -187,8 +195,8 @@ class PoincareModel(utils.SaveLoad):
         logger.info("loaded %d relations from train data, %d nodes", len(all_relations), len(vocab))
         self.kv.vocab = vocab
         self.kv.index2word = index2word
-        self.indices_set = set((range(len(index2word))))  # Set of all node indices
-        self.indices_array = np.array(range(len(index2word)))  # Numpy array of all node indices
+        self.indices_set = set(range(len(index2word)))  # Set of all node indices
+        self.indices_array = np.fromiter(range(len(index2word)), dtype=int)  # Numpy array of all node indices
         self.all_relations = all_relations
         self.node_relations = node_relations
         self._init_node_probabilities()
@@ -202,11 +210,11 @@ class PoincareModel(utils.SaveLoad):
 
     def _init_node_probabilities(self):
         """Initialize a-priori probabilities."""
-        counts = np.array([
+        counts = np.fromiter((
                 self.kv.vocab[self.kv.index2word[i]].count
                 for i in range(len(self.kv.index2word))
-            ],
-            dtype=np.float64)
+            ),
+            dtype=np.float64, count=len(self.kv.index2word))
         self._node_counts_cumsum = np.cumsum(counts)
         self._node_probabilities = counts / counts.sum()
 
@@ -468,8 +476,8 @@ class PoincareModel(utils.SaveLoad):
 
         Parameters
         ----------
-        nodes : list of int
-            List of node indices for which negative samples are to be returned.
+        nodes : iterable of int
+            Iterable of node indices for which negative samples are to be returned.
 
         Returns
         -------
@@ -496,7 +504,7 @@ class PoincareModel(utils.SaveLoad):
             The batch that was just trained on, contains computed loss for the batch.
 
         """
-        all_negatives = self._sample_negatives_batch([relation[0] for relation in relations])
+        all_negatives = self._sample_negatives_batch(relation[0] for relation in relations)
         batch = self._prepare_training_batch(relations, all_negatives, check_gradients)
         self._update_vectors_batch(batch)
         return batch
@@ -574,10 +582,12 @@ class PoincareModel(utils.SaveLoad):
 
         Examples
         --------
-        >>> from gensim.models.poincare import PoincareModel
-        >>> relations = [('kangaroo', 'marsupial'), ('kangaroo', 'mammal'), ('gib', 'cat')]
-        >>> model = PoincareModel(relations, negative=2)
-        >>> model.train(epochs=50)
+        .. sourcecode:: pycon
+
+            >>> from gensim.models.poincare import PoincareModel
+            >>> relations = [('kangaroo', 'marsupial'), ('kangaroo', 'mammal'), ('gib', 'cat')]
+            >>> model = PoincareModel(relations, negative=2)
+            >>> model.train(epochs=50)
 
         """
         if self.workers > 1:
@@ -841,16 +851,17 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Examples
         --------
+        .. sourcecode:: pycon
 
-        >>> from gensim.test.utils import datapath
-        >>>
-        >>> # Read the sample relations file and train the model
-        >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
-        >>> model = PoincareModel(train_data=relations)
-        >>> model.train(epochs=50)
-        >>>
-        >>> # Query the trained model.
-        >>> wv = model.kv.word_vec('kangaroo.n.01')
+            >>> from gensim.test.utils import datapath
+            >>>
+            >>> # Read the sample relations file and train the model
+            >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
+            >>> model = PoincareModel(train_data=relations)
+            >>> model.train(epochs=50)
+            >>>
+            >>> # Query the trained model.
+            >>> wv = model.kv.word_vec('kangaroo.n.01')
 
         """
         return super(PoincareKeyedVectors, self).get_vector(word)
@@ -872,16 +883,18 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Examples
         --------
-        >>> from gensim.test.utils import datapath
-        >>>
-        >>> # Read the sample relations file and train the model
-        >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
-        >>> model = PoincareModel(train_data=relations)
-        >>> model.train(epochs=50)
-        >>>
-        >>> # Which term is closer to 'kangaroo' than 'metatherian' is to 'kangaroo'?
-        >>> model.kv.words_closer_than('kangaroo.n.01', 'metatherian.n.01')
-        [u'marsupial.n.01', u'phalanger.n.01']
+        .. sourcecode:: pycon
+
+            >>> from gensim.test.utils import datapath
+            >>>
+            >>> # Read the sample relations file and train the model
+            >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
+            >>> model = PoincareModel(train_data=relations)
+            >>> model.train(epochs=50)
+            >>>
+            >>> # Which term is closer to 'kangaroo' than 'metatherian' is to 'kangaroo'?
+            >>> model.kv.words_closer_than('kangaroo.n.01', 'metatherian.n.01')
+            [u'marsupial.n.01', u'phalanger.n.01']
 
         """
         return super(PoincareKeyedVectors, self).closer_than(w1, w2)
@@ -1107,16 +1120,18 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Examples
         --------
-        >>> from gensim.test.utils import datapath
-        >>>
-        >>> # Read the sample relations file and train the model
-        >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
-        >>> model = PoincareModel(train_data=relations)
-        >>> model.train(epochs=50)
-        >>>
-        >>> # What is the distance between the words 'mammal' and 'carnivore'?
-        >>> model.kv.distance('mammal.n.01', 'carnivore.n.01')
-        2.9742298803339304
+        .. sourcecode:: pycon
+
+            >>> from gensim.test.utils import datapath
+            >>>
+            >>> # Read the sample relations file and train the model
+            >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
+            >>> model = PoincareModel(train_data=relations)
+            >>> model.train(epochs=50)
+            >>>
+            >>> # What is the distance between the words 'mammal' and 'carnivore'?
+            >>> model.kv.distance('mammal.n.01', 'carnivore.n.01')
+            2.9742298803339304
 
         Raises
         ------
@@ -1145,16 +1160,18 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Examples
         --------
-        >>> from gensim.test.utils import datapath
-        >>>
-        >>> # Read the sample relations file and train the model
-        >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
-        >>> model = PoincareModel(train_data=relations)
-        >>> model.train(epochs=50)
-        >>>
-        >>> # What is the similarity between the words 'mammal' and 'carnivore'?
-        >>> model.kv.similarity('mammal.n.01', 'carnivore.n.01')
-        0.25162107631176484
+        .. sourcecode:: pycon
+
+            >>> from gensim.test.utils import datapath
+            >>>
+            >>> # Read the sample relations file and train the model
+            >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
+            >>> model = PoincareModel(train_data=relations)
+            >>> model.train(epochs=50)
+            >>>
+            >>> # What is the similarity between the words 'mammal' and 'carnivore'?
+            >>> model.kv.similarity('mammal.n.01', 'carnivore.n.01')
+            0.25162107631176484
 
         Raises
         ------
@@ -1185,16 +1202,18 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Examples
         --------
-        >>> from gensim.test.utils import datapath
-        >>>
-        >>> # Read the sample relations file and train the model
-        >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
-        >>> model = PoincareModel(train_data=relations)
-        >>> model.train(epochs=50)
-        >>>
-        >>> # Which words are most similar to 'kangaroo'?
-        >>> model.kv.most_similar('kangaroo.n.01', topn=2)
-        [(u'kangaroo.n.01', 0.0), (u'marsupial.n.01', 0.26524229460827725)]
+        .. sourcecode:: pycon
+
+            >>> from gensim.test.utils import datapath
+            >>>
+            >>> # Read the sample relations file and train the model
+            >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
+            >>> model = PoincareModel(train_data=relations)
+            >>> model.train(epochs=50)
+            >>>
+            >>> # Which words are most similar to 'kangaroo'?
+            >>> model.kv.most_similar('kangaroo.n.01', topn=2)
+            [(u'kangaroo.n.01', 0.0), (u'marsupial.n.01', 0.26524229460827725)]
 
         """
         if not restrict_vocab:
@@ -1239,19 +1258,21 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Examples
         --------
-        >>> from gensim.test.utils import datapath
-        >>>
-        >>> # Read the sample relations file and train the model
-        >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
-        >>> model = PoincareModel(train_data=relations)
-        >>> model.train(epochs=50)
-        >>>
-        >>> # Check the distances between a word and a list of other words.
-        >>> model.kv.distances('mammal.n.01', ['carnivore.n.01', 'dog.n.01'])
-        array([2.97422988, 2.83007402])
+        .. sourcecode:: pycon
 
-        >>> # Check the distances between a word and every other word in the vocab.
-        >>> all_distances = model.kv.distances('mammal.n.01')
+            >>> from gensim.test.utils import datapath
+            >>>
+            >>> # Read the sample relations file and train the model
+            >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
+            >>> model = PoincareModel(train_data=relations)
+            >>> model.train(epochs=50)
+            >>>
+            >>> # Check the distances between a word and a list of other words.
+            >>> model.kv.distances('mammal.n.01', ['carnivore.n.01', 'dog.n.01'])
+            array([2.97422988, 2.83007402])
+
+            >>> # Check the distances between a word and every other word in the vocab.
+            >>> all_distances = model.kv.distances('mammal.n.01')
 
         Raises
         ------
@@ -1286,16 +1307,18 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Examples
         --------
-        >>> from gensim.test.utils import datapath
-        >>>
-        >>> # Read the sample relations file and train the model
-        >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
-        >>> model = PoincareModel(train_data=relations)
-        >>> model.train(epochs=50)
-        >>>
-        >>> # Get the norm of the embedding of the word `mammal`.
-        >>> model.kv.norm('mammal.n.01')
-        0.6423008703542398
+        .. sourcecode:: pycon
+
+            >>> from gensim.test.utils import datapath
+            >>>
+            >>> # Read the sample relations file and train the model
+            >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
+            >>> model = PoincareModel(train_data=relations)
+            >>> model.train(epochs=50)
+            >>>
+            >>> # Get the norm of the embedding of the word `mammal`.
+            >>> model.kv.norm('mammal.n.01')
+            0.6423008703542398
 
         Notes
         -----
@@ -1326,18 +1349,20 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Examples
         --------
-        >>> from gensim.test.utils import datapath
-        >>>
-        >>> # Read the sample relations file and train the model
-        >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
-        >>> model = PoincareModel(train_data=relations)
-        >>> model.train(epochs=50)
-        >>>
-        >>> model.kv.difference_in_hierarchy('mammal.n.01', 'dog.n.01')
-        0.05382517902410999
+        .. sourcecode:: pycon
 
-        >>> model.kv.difference_in_hierarchy('dog.n.01', 'mammal.n.01')
-        -0.05382517902410999
+            >>> from gensim.test.utils import datapath
+            >>>
+            >>> # Read the sample relations file and train the model
+            >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
+            >>> model = PoincareModel(train_data=relations)
+            >>> model.train(epochs=50)
+            >>>
+            >>> model.kv.difference_in_hierarchy('mammal.n.01', 'dog.n.01')
+            0.05382517902410999
+
+            >>> model.kv.difference_in_hierarchy('dog.n.01', 'mammal.n.01')
+            -0.05382517902410999
 
         Notes
         -----

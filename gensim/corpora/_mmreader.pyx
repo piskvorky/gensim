@@ -8,7 +8,7 @@ from __future__ import with_statement
 from gensim import utils
 
 from six import string_types
-from six.moves import xrange
+from six.moves import range
 import logging
 
 cimport cython
@@ -148,7 +148,7 @@ cdef class MmReader(object):
 
                     # return implicit (empty) documents between previous id and new id
                     # too, to keep consistent document numbering and corpus length
-                    for previd in xrange(previd + 1, docid):
+                    for previd in range(previd + 1, docid):
                         yield previd, []
 
                     # from now on start adding fields to a new document, with a new id
@@ -163,7 +163,7 @@ cdef class MmReader(object):
 
         # return empty documents between the last explicit document and the number
         # of documents as specified in the header
-        for previd in xrange(previd + 1, self.num_docs):
+        for previd in range(previd + 1, self.num_docs):
             yield previd, []
 
     def docbyoffset(self, offset):

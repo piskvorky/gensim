@@ -27,7 +27,7 @@ class SyntacticUnit(object):
 
     """
 
-    def __init__(self, text, token=None, tag=None):
+    def __init__(self, text, token=None, tag=None, index=-1):
         """
 
         Parameters
@@ -43,7 +43,7 @@ class SyntacticUnit(object):
         self.text = text
         self.token = token
         self.tag = tag[:2] if tag else None  # Just first two letters of tag
-        self.index = -1
+        self.index = index
         self.score = -1
 
     def __str__(self):

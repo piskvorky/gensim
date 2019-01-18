@@ -13,7 +13,7 @@ from .rpmodel import RpModel  # noqa:F401
 from .logentropy_model import LogEntropyModel  # noqa:F401
 from .word2vec import Word2Vec  # noqa:F401
 from .doc2vec import Doc2Vec  # noqa:F401
-from .keyedvectors import KeyedVectors  # noqa:F401
+from .keyedvectors import KeyedVectors, WordEmbeddingSimilarityIndex  # noqa:F401
 from .ldamulticore import LdaMulticore  # noqa:F401
 from .phrases import Phrases  # noqa:F401
 from .normmodel import NormModel  # noqa:F401
@@ -37,12 +37,14 @@ class VocabTransform(interfaces.TransformationABC):
     `VocabTransform[corpus]` returns the same vectors but with the new ids.
 
     Old features that have no counterpart in the new ids are discarded. This
-    can be used to filter vocabulary of a corpus "online"::
+    can be used to filter vocabulary of a corpus "online":
 
-    >>> old2new = {oldid: newid for newid, oldid in enumerate(ids_you_want_to_keep)}
-    >>> vt = VocabTransform(old2new)
-    >>> for vec_with_new_ids in vt[corpus_with_old_ids]:
-    >>>     ...
+    .. sourcecode:: pycon
+
+        >>> old2new = {oldid: newid for newid, oldid in enumerate(ids_you_want_to_keep)}
+        >>> vt = VocabTransform(old2new)
+        >>> for vec_with_new_ids in vt[corpus_with_old_ids]:
+        >>>     pass
 
     """
 
