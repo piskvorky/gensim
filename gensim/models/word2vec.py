@@ -194,6 +194,7 @@ except ImportError:
 
         """
         result = 0
+        effective_samples = 0
         for sentence in sentences:
             word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab
                            and model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
@@ -205,12 +206,13 @@ except ImportError:
                 for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
                     # don't train on the `word` itself
                     if pos2 != pos:
+                        effective_samples += 1
                         train_sg_pair(
                             model, model.wv.index2word[word.index], word2.index, alpha, compute_loss=compute_loss
                         )
 
             result += len(word_vocabs)
-        return result
+        return result, effective_samples
 
     def train_batch_cbow(model, sentences, alpha, work=None, neu1=None, compute_loss=False):
         """Update CBOW model by training on a sequence of sentences.
@@ -260,7 +262,7 @@ except ImportError:
                     l1 /= len(word2_indices)
                 train_cbow_pair(model, word, word2_indices, l1, alpha, compute_loss=compute_loss)
             result += len(word_vocabs)
-        return result
+        return result, result
 
     def score_sentence_sg(model, sentence, work=None):
         """Obtain likelihood score for a single sentence in a fitted skip-gram representation.
@@ -814,12 +816,11 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
         """
         work, neu1 = inits
-        tally = 0
         if self.sg:
-            tally += train_batch_sg(self, sentences, alpha, work, self.compute_loss)
+            (tally, effective_samples) = train_batch_sg(self, sentences, alpha, work, self.compute_loss)
         else:
-            tally += train_batch_cbow(self, sentences, alpha, work, neu1, self.compute_loss)
-        return tally, self._raw_word_count(sentences)
+            (tally, effective_samples) = train_batch_cbow(self, sentences, alpha, work, neu1, self.compute_loss)
+        return tally, self._raw_word_count(sentences), effective_samples
 
     def _clear_post_train(self):
         """Remove all L2-normalized word vectors from the model."""
