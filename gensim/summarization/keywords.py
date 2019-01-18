@@ -97,7 +97,7 @@ def _get_words_for_graph(tokens, pos_filter=None):
     for word, unit in iteritems(tokens):
         if exclude_filters and unit.tag in exclude_filters:
             continue
-        if (include_filters and unit.tag in include_filters) or not include_filters or not unit.tag:
+        if not include_filters or not unit.tag or unit.tag in include_filters:
             result.append(unit.token)
     return result
 
@@ -511,7 +511,7 @@ def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=
 
     _remove_unreachable_nodes(graph)
 
-    if not graph.edges():
+    if not any(True for _ in graph.iter_edges()):
         return _format_results([], [], split, scores)
 
     # Ranks the tokens using the PageRank algorithm. Returns dict of lemma -> score
