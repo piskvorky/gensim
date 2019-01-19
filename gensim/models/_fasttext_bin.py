@@ -79,6 +79,49 @@ def _yield_field_names():
 
 _FIELD_NAMES = sorted(set(_yield_field_names()))
 Model = collections.namedtuple('Model', _FIELD_NAMES)
+"""Holds data loaded from the Facebook binary.
+
+Fields
+------
+dim : int
+    The dimensionality of the vectors.
+ws : int
+    The window size.
+epoch : int
+    The number of training epochs.
+neg : int
+    If non-zero, indicates that the model uses negative sampling.
+loss : int
+    If equal to 1, indicates that the model uses hierarchical sampling.
+model : int
+    If equal to 2, indicates that the model uses skip-grams.
+bucket : int
+    The number of buckets.
+min_count : int
+    The threshold below which the model ignores terms.
+t : float
+    The sample threshold.
+minn : int
+    The minimum ngram length.
+maxn : int
+    The maximum ngram length.
+raw_vocab : collections.OrderedDict
+    A map from words (str) to their frequency (int).  The order in the dict
+    corresponds to the order of the words in the Facebook binary.
+nwords : int
+    The number of words.
+vocab_size : int
+    The size of the vocabulary.
+vectors_ngrams : numpy.array
+    This is a matrix that contains vectors learned by the model.
+    Each row corresponds to a vector.
+    The number of vectors is equal to the number of words plus the number of buckets.
+    The number of columns is equal to the vector dimensionality.
+hidden_output : numpy.array
+    This is a matrix that contains the shallow neural network output.
+    This array has the same dimensions as vectors_ngrams.
+
+"""
 
 
 def _struct_unpack(fin, fmt):
