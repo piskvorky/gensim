@@ -708,7 +708,7 @@ class FastText(BaseWordEmbeddingsModel):
         if cant_train:
             raise ValueError(
                 'this model cannot be trained any further, '
-                'if this is a native model, try loading it with fast=False'
+                'if this is a native model, try loading it with full_model=True'
             )
 
         super(FastText, self).train(
@@ -761,7 +761,7 @@ class FastText(BaseWordEmbeddingsModel):
         return self.wv.__contains__(word)
 
     @classmethod
-    def load_fasttext_format(cls, model_file, encoding='utf8', fast=False):
+    def load_fasttext_format(cls, model_file, encoding='utf8', full_model=True):
         """Load the input-hidden weight matrix from Facebook's native fasttext `.bin` and `.vec` output files.
 
         Notes
@@ -777,8 +777,8 @@ class FastText(BaseWordEmbeddingsModel):
             as Gensim requires only `.bin` file to the load entire fastText model.
         encoding : str, optional
             Specifies the file encoding.
-        fast : boolean, optional
-            If True, skips loading the hidden output matrix.  This saves a fair bit
+        full_model : boolean, optional
+            If False, skips loading the hidden output matrix.  This saves a fair bit
             of time, but prevents training continuation.
 
         Returns
@@ -787,7 +787,7 @@ class FastText(BaseWordEmbeddingsModel):
             The loaded model.
 
         """
-        return _load_fasttext_format(model_file, encoding=encoding, fast=fast)
+        return _load_fasttext_format(model_file, encoding=encoding, full_model=full_model)
 
     def load_binary_data(self, encoding='utf8'):
         """Load data from a binary file created by Facebook's native FastText.
@@ -969,7 +969,7 @@ def _pad_ones(m, new_shape):
     return vstack([m, suffix])
 
 
-def _load_fasttext_format(model_file, encoding='utf-8', fast=False):
+def _load_fasttext_format(model_file, encoding='utf-8', full_model=True):
     """Load the input-hidden weight matrix from Facebook's native fasttext `.bin` and `.vec` output files.
 
     Parameters
@@ -981,8 +981,8 @@ def _load_fasttext_format(model_file, encoding='utf-8', fast=False):
         as Gensim requires only `.bin` file to the load entire fastText model.
     encoding : str, optional
         Specifies the file encoding.
-    fast : boolean, optional
-        If True, skips loading the hidden output matrix.  This saves a fair bit
+    full_model : boolean, optional
+        If False, skips loading the hidden output matrix.  This saves a fair bit
         of time, but prevents training continuation.
 
     Returns
@@ -993,7 +993,7 @@ def _load_fasttext_format(model_file, encoding='utf-8', fast=False):
     if not model_file.endswith('.bin'):
         model_file += '.bin'
     with smart_open(model_file, 'rb') as fin:
-        m = gensim.models._fasttext_bin.load(fin, encoding=encoding, fast=fast)
+        m = gensim.models._fasttext_bin.load(fin, encoding=encoding, full_model=full_model)
 
     model = FastText(
         size=m.dim,

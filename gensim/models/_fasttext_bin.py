@@ -220,7 +220,7 @@ def _load_matrix(fin, new_format=True):
     return matrix
 
 
-def load(fin, encoding='utf-8', fast=False):
+def load(fin, encoding='utf-8', full_model=True):
     """Load a model from a binary stream.
 
     Parameters
@@ -229,8 +229,8 @@ def load(fin, encoding='utf-8', fast=False):
         The readable binary stream.
     encoding : str, optional
         The encoding to use for decoding text
-    fast : boolean, optional
-        If True, skips loading the hidden output matrix.  This saves a fair bit
+    full_model : boolean, optional
+        If False, skips loading the hidden output matrix.  This saves a fair bit
         of time, but prevents training continuation.
 
     Returns
@@ -255,7 +255,7 @@ def load(fin, encoding='utf-8', fast=False):
 
     vectors_ngrams = _load_matrix(fin, new_format=new_format)
 
-    if fast:
+    if not full_model:
         hidden_output = None
     else:
         hidden_output = _load_matrix(fin, new_format=new_format)

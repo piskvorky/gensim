@@ -59,9 +59,9 @@ class TestFastTextModel(unittest.TestCase):
         self.test_model = FT_gensim.load_fasttext_format(self.test_model_file)
         self.test_new_model_file = datapath('lee_fasttext_new')
 
-    def test_native_fast(self):
+    def test_native_partial_model(self):
         """Can we skip loading the NN and still get a working model?"""
-        model = FT_gensim.load_fasttext_format(self.test_model_file, fast=True)
+        model = FT_gensim.load_fasttext_format(self.test_model_file, full_model=False)
 
         #
         # Training continuation should be impossible
