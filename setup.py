@@ -232,7 +232,8 @@ win_testenv = [
     'testfixtures',
     'scikit-learn',
     'Morfessor==2.0.2a4',
-    'visdom >= 0.1.8',
+    'python-Levenshtein >= 0.10.2',
+    'visdom >= 0.1.8, != 0.1.8.7',
 ]
 
 linux_testenv = win_testenv[:]
@@ -300,7 +301,7 @@ if not (os.name == 'nt' and sys.version_info[0] < 3):
 
 setup(
     name='gensim',
-    version='3.6.0',
+    version='3.7.0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
@@ -348,7 +349,7 @@ setup(
         'numpy >= 1.11.3',
         'scipy >= 0.18.1',
         'six >= 1.5.0',
-        'smart_open >= 1.2.1',
+        'smart_open >= 1.7.0',
     ],
     tests_require=linux_testenv,
     extras_require={

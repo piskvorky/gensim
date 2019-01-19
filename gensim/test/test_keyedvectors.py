@@ -15,13 +15,58 @@ import unittest
 import numpy as np
 
 from gensim.corpora import Dictionary
-from gensim.models import KeyedVectors as EuclideanKeyedVectors, TfidfModel
+from gensim.models import KeyedVectors as EuclideanKeyedVectors, WordEmbeddingSimilarityIndex
 from gensim.test.utils import datapath
 
 import gensim.models.keyedvectors
 
 
 logger = logging.getLogger(__name__)
+
+
+class TestWordEmbeddingSimilarityIndex(unittest.TestCase):
+    def setUp(self):
+        self.vectors = EuclideanKeyedVectors.load_word2vec_format(
+            datapath('euclidean_vectors.bin'), binary=True, datatype=np.float64)
+
+    def test_most_similar(self):
+        """Test most_similar returns expected results."""
+
+        # check the handling of out-of-dictionary terms
+        index = WordEmbeddingSimilarityIndex(self.vectors)
+        self.assertLess(0, len(list(index.most_similar(u"holiday", topn=10))))
+        self.assertEqual(0, len(list(index.most_similar(u"out-of-dictionary term", topn=10))))
+
+        # check that the topn works as expected
+        index = WordEmbeddingSimilarityIndex(self.vectors)
+        results = list(index.most_similar(u"holiday", topn=10))
+        self.assertLess(0, len(results))
+        self.assertGreaterEqual(10, len(results))
+        results = list(index.most_similar(u"holiday", topn=20))
+        self.assertLess(10, len(results))
+        self.assertGreaterEqual(20, len(results))
+
+        # check that the term itself is not returned
+        index = WordEmbeddingSimilarityIndex(self.vectors)
+        terms = [term for term, similarity in index.most_similar(u"holiday", topn=len(self.vectors.vocab))]
+        self.assertFalse(u"holiday" in terms)
+
+        # check that the threshold works as expected
+        index = WordEmbeddingSimilarityIndex(self.vectors, threshold=0.0)
+        results = list(index.most_similar(u"holiday", topn=10))
+        self.assertLess(0, len(results))
+        self.assertGreaterEqual(10, len(results))
+
+        index = WordEmbeddingSimilarityIndex(self.vectors, threshold=1.0)
+        results = list(index.most_similar(u"holiday", topn=10))
+        self.assertEqual(0, len(results))
+
+        # check that the exponent works as expected
+        index = WordEmbeddingSimilarityIndex(self.vectors, exponent=1.0)
+        first_similarities = np.array([similarity for term, similarity in index.most_similar(u"holiday", topn=10)])
+        index = WordEmbeddingSimilarityIndex(self.vectors, exponent=2.0)
+        second_similarities = np.array([similarity for term, similarity in index.most_similar(u"holiday", topn=10)])
+        self.assertTrue(np.allclose(first_similarities**2.0, second_similarities))
 
 
 class TestEuclideanKeyedVectors(unittest.TestCase):
@@ -32,59 +77,13 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
     def test_similarity_matrix(self):
         """Test similarity_matrix returns expected results."""
 
-        documents = [["government", "denied", "holiday"],
-                  ["holiday", "slowing", "hollingworth"]]
+        documents = [[u"government", u"denied", u"holiday"], [u"holiday", u"slowing", u"hollingworth"]]
         dictionary = Dictionary(documents)
-
-        # checking symmetry and the existence of ones on the diagonal
         similarity_matrix = self.vectors.similarity_matrix(dictionary).todense()
-        self.assertTrue((similarity_matrix.T == similarity_matrix).all())
+
+        # checking the existence of ones on the main diagonal
         self.assertTrue(
             (np.diag(similarity_matrix) == np.ones(similarity_matrix.shape[0])).all())
-
-        # checking that thresholding works as expected
-        similarity_matrix = self.vectors.similarity_matrix(dictionary, threshold=0.45).todense()
-        self.assertEqual(18, np.sum(similarity_matrix == 0))
-
-        # checking that exponent works as expected
-        similarity_matrix = self.vectors.similarity_matrix(dictionary, exponent=1.0).todense()
-        self.assertAlmostEqual(9.5788956, np.sum(similarity_matrix), places=5)
-
-        # checking that nonzero_limit works as expected
-        similarity_matrix = self.vectors.similarity_matrix(dictionary, nonzero_limit=4).todense()
-        self.assertEqual(4, np.sum(similarity_matrix == 0))
-
-        similarity_matrix = self.vectors.similarity_matrix(dictionary, nonzero_limit=3).todense()
-        self.assertEqual(20, np.sum(similarity_matrix == 0))
-
-        # check that processing rows in the order given by IDF has desired effect
-
-        # The complete similarity matrix we would obtain with nonzero_limit would look as follows:
-        documents = [["honour", "understanding"], ["understanding", "mean", "knop"]]
-        dictionary = Dictionary(documents)
-        tfidf = TfidfModel(dictionary=dictionary)
-
-        # All terms except for "understanding" have IDF of log2(2 / 1) = log2(2) = 1.
-        # The term "understanding" has IDF of log2(2 / 2) = log2(1) = 0.
-        #
-        # If we do not pass the tfidf parameter to the similarity_matrix
-        # method, then we process rows in the order from 1 to 4. If we do pass
-        # the tfidf parameter to the similarity_matrix method, then we first
-        # process the rows 1, 3, 4 that correspond to terms with IDF of 1.0 and
-        # then the row 2 that corresponds to the term "understanding" with IDF
-        # of 0. Since the method is greedy, we will end up with two different
-        # similarity matrices.
-
-        similarity_matrix = self.vectors.similarity_matrix(
-            dictionary, nonzero_limit=2).todense()
-        self.assertTrue(np.all(np.isclose(similarity_matrix, np.array([
-            [1, 0.9348248, 0, 0], [0.9348248, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]))))
-
-        similarity_matrix = self.vectors.similarity_matrix(
-            dictionary, tfidf, nonzero_limit=2).todense()
-        self.assertTrue(np.all(np.isclose(similarity_matrix, np.array([
-            [1, 0.9348248, 0, 0.9112908], [0.9348248, 1, 0.90007025, 0], [0, 0.90007025, 1, 0],
-            [0.9112908, 0, 0, 1]]))))
 
     def test_most_similar(self):
         """Test most_similar returns expected results."""
@@ -105,6 +104,29 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
 
         predicted = self.vectors.most_similar('war', topn=None)
         self.assertEqual(len(predicted), len(self.vectors.vocab))
+
+    def test_relative_cosine_similarity(self):
+        """Test relative_cosine_similarity returns expected results with an input of a word pair and topn"""
+        wordnet_syn = [
+            'good', 'goodness', 'commodity', 'trade_good', 'full', 'estimable', 'honorable',
+            'respectable', 'beneficial', 'just', 'upright', 'adept', 'expert', 'practiced', 'proficient',
+            'skillful', 'skilful', 'dear', 'near', 'dependable', 'safe', 'secure', 'right', 'ripe', 'well',
+            'effective', 'in_effect', 'in_force', 'serious', 'sound', 'salutary', 'honest', 'undecomposed',
+            'unspoiled', 'unspoilt', 'thoroughly', 'soundly'
+        ]   # synonyms for "good" as per wordnet
+        cos_sim = []
+        for i in range(len(wordnet_syn)):
+            if wordnet_syn[i] in self.vectors.vocab:
+                cos_sim.append(self.vectors.similarity("good", wordnet_syn[i]))
+        cos_sim = sorted(cos_sim, reverse=True)  # cosine_similarity of "good" with wordnet_syn in decreasing order
+        # computing relative_cosine_similarity of two similar words
+        rcs_wordnet = self.vectors.similarity("good", "nice") / sum(cos_sim[i] for i in range(10))
+        rcs = self.vectors.relative_cosine_similarity("good", "nice", 10)
+        self.assertTrue(rcs_wordnet >= rcs)
+        self.assertTrue(np.allclose(rcs_wordnet, rcs, 0, 0.125))
+        # computing relative_cosine_similarity for two non-similar words
+        rcs = self.vectors.relative_cosine_similarity("good", "worst", 10)
+        self.assertTrue(rcs < 0.10)
 
     def test_most_similar_raises_keyerror(self):
         """Test most_similar raises KeyError when input is out of vocab."""

@@ -39,7 +39,6 @@ Examples
 import sys
 import os
 import logging
-import warnings
 from collections import defaultdict
 import functools as ft
 import itertools as it
@@ -658,8 +657,6 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
             ...     pass
 
         """
-        warnings.warn("For a faster implementation, use the gensim.models.phrases.Phraser class")
-
         return _sentence2token(self, sentence)
 
 

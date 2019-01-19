@@ -20,9 +20,10 @@ from gensim import utils
 from gensim.corpora import Dictionary
 from gensim.summarization import summarize, summarize_corpus, keywords, mz_keywords
 from gensim.summarization.commons import remove_unreachable_nodes, build_graph
+from gensim.summarization.graph import Graph
 
 
-class TestCommons(unittest.TestCase):
+class TestGraph(unittest.TestCase):
 
     def _build_graph(self):
         graph = build_graph(['a', 'b', 'c', 'd'])
@@ -30,6 +31,17 @@ class TestCommons(unittest.TestCase):
         graph.add_edge(('b', 'c'))
         graph.add_edge(('c', 'a'))
         return graph
+
+    def test_build_graph(self):
+        graph = self._build_graph()
+
+        self.assertEqual(sorted(graph.nodes()), ['a', 'b', 'c', 'd'])
+        self.assertTrue(graph.has_edge(('a', 'b')))
+        self.assertTrue(graph.has_edge(('b', 'c')))
+        self.assertTrue(graph.has_edge(('c', 'a')))
+
+        graph = build_graph([])
+        self.assertEqual(graph.nodes(), [])
 
     def test_remove_unreachable_nodes(self):
         graph = self._build_graph()
@@ -43,6 +55,87 @@ class TestCommons(unittest.TestCase):
         self.assertTrue(graph.has_node('d'))
         remove_unreachable_nodes(graph)
         self.assertFalse(graph.has_node('d'))
+
+    def test_graph_nodes(self):
+        graph = Graph()
+
+        graph.add_node('a')
+        graph.add_node(1)
+        graph.add_node('b')
+        graph.add_node('qwe')
+
+        self.assertTrue(graph.has_node('a'))
+        self.assertTrue(graph.has_node('b'))
+        self.assertTrue(graph.has_node('qwe'))
+        self.assertTrue(graph.has_node(1))
+        self.assertFalse(graph.has_node(2))
+
+        graph.del_node(1)
+        self.assertEqual(sorted(graph.nodes()), ['a', 'b', 'qwe'])
+
+    def test_graph_edges(self):
+        graph = Graph()
+        for node in ('a', 'b', 'c', 'd', 'e', 'foo', 'baz', 'qwe', 'rtyu'):
+            graph.add_node(node)
+
+        edges = [
+            (('a', 'b'), 3.0),
+            (('c', 'b'), 5.0),
+            (('d', 'e'), 0.5),
+            (('a', 'c'), 0.1),
+            (('foo', 'baz'), 0.11),
+            (('qwe', 'rtyu'), 0.0),
+        ]
+        for edge, weight in edges:
+            graph.add_edge(edge, weight)
+
+        # check on edge weight first to exclude situation when touching will create an edge
+        self.assertEqual(graph.edge_weight(('qwe', 'rtyu')), 0.0)
+        self.assertEqual(graph.edge_weight(('rtyu', 'qwe')), 0.0)
+        self.assertFalse(graph.has_edge(('qwe', 'rtyu')))
+        self.assertFalse(graph.has_edge(('rtyu', 'qwe')))
+
+        for (u, v), weight in edges:
+            if weight == 0:
+                continue
+            self.assertTrue(graph.has_edge((u, v)))
+            self.assertTrue(graph.has_edge((v, u)))
+
+        edges_list = [(u, v) for (u, v), w in edges if w]
+        edges_list.extend((v, u) for (u, v), w in edges if w)
+        edges_list.sort()
+
+        self.assertEqual(sorted(graph.iter_edges()), edges_list)
+
+        ret_edges = graph.edges()
+        ret_edges.sort()
+        self.assertEqual(ret_edges, edges_list)
+
+        for (u, v), weight in edges:
+            self.assertEqual(graph.edge_weight((u, v)), weight)
+            self.assertEqual(graph.edge_weight((v, u)), weight)
+
+        self.assertEqual(sorted(graph.neighbors('a')), ['b', 'c'])
+        self.assertEqual(sorted(graph.neighbors('b')), ['a', 'c'])
+        self.assertEqual(graph.neighbors('d'), ['e'])
+        self.assertEqual(graph.neighbors('e'), ['d'])
+        self.assertEqual(graph.neighbors('foo'), ['baz'])
+        self.assertEqual(graph.neighbors('baz'), ['foo'])
+        self.assertEqual(graph.neighbors('foo'), ['baz'])
+        self.assertEqual(graph.neighbors('qwe'), [])
+        self.assertEqual(graph.neighbors('rtyu'), [])
+
+        graph.del_edge(('a', 'b'))
+        self.assertFalse(graph.has_edge(('a', 'b')))
+        self.assertFalse(graph.has_edge(('b', 'a')))
+
+        graph.add_edge(('baz', 'foo'), 0)
+        self.assertFalse(graph.has_edge(('foo', 'baz')))
+        self.assertFalse(graph.has_edge(('baz', 'foo')))
+
+        graph.del_node('b')
+        self.assertFalse(graph.has_edge(('b', 'c')))
+        self.assertFalse(graph.has_edge(('c', 'b')))
 
 
 class TestSummarizationTest(unittest.TestCase):
