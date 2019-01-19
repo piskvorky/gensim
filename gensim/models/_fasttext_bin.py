@@ -120,7 +120,7 @@ vectors_ngrams : numpy.array
 hidden_output : numpy.array
     This is a matrix that contains the shallow neural network output.
     This array has the same dimensions as vectors_ngrams.
-
+    May be None - in that case, it is impossible to continue training the model.
 """
 
 
@@ -220,7 +220,7 @@ def _load_matrix(fin, new_format=True):
     return matrix
 
 
-def load(fin, encoding='utf-8'):
+def load(fin, encoding='utf-8', fast=False):
     """Load a model from a binary stream.
 
     Parameters
@@ -229,6 +229,9 @@ def load(fin, encoding='utf-8'):
         The readable binary stream.
     encoding : str, optional
         The encoding to use for decoding text
+    fast : boolean, optional
+        If True, skips loading the hidden output matrix.  This saves a fair bit
+        of time, but prevents training continuation.
 
     Returns
     -------
@@ -252,10 +255,12 @@ def load(fin, encoding='utf-8'):
 
     vectors_ngrams = _load_matrix(fin, new_format=new_format)
 
-    hidden_output = _load_matrix(fin, new_format=new_format)
+    if fast:
+        hidden_output = None
+    else:
+        hidden_output = _load_matrix(fin, new_format=new_format)
+        assert fin.read() == b'', 'expected to reach EOF'
+
     model.update(vectors_ngrams=vectors_ngrams, hidden_output=hidden_output)
-
-    assert fin.read() == b'', 'expected to reach EOF'
-
     model = {k: v for k, v in model.items() if k in _FIELD_NAMES}
     return Model(**model)
