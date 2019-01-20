@@ -1045,7 +1045,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         # print out some debug info at the end of each EM iteration
         self.print_topics(5)
-        diff = mean_absolute_difference(previous_Elogbeta, current_Elogbeta)
+        diff = mean_absolute_difference(previous_Elogbeta.ravel(), current_Elogbeta.ravel())
         logger.info("topic diff=%f, rho=%f", diff, rho)
 
         if self.optimize_eta:
