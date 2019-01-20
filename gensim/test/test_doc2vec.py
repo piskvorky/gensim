@@ -23,7 +23,7 @@ from testfixtures import log_capture
 import numpy as np
 
 from gensim import utils
-from gensim.models import doc2vec, keyedvectors
+from gensim.models import doc2vec, keyedvectors, callbacks
 from gensim.test.utils import datapath, get_tmpfile, temporary_file, common_texts as raw_sentences
 
 
@@ -691,18 +691,31 @@ class TestDoc2VecModel(unittest.TestCase):
     def test_most_similiar_uses_newly_trained_vectors(self):
         """Test if the doc2vec model deletes the normalized vectors that are used by most similar
         when it is retrained"""
+
+        class AssertDocVecsHaveChanged(callbacks.CallbackAny2Vec):
+
+            def __init__(self, test):
+                self.test = test
+                self.vecs = None
+
+            def on_epoch_begin(self, model):
+                model.docvecs.most_similar(1, replace=True)
+                self.vecs = np.copy(model.docvecs.vectors_docs_norm)
+
+            def on_batch_end(self, model):
+                model.docvecs.most_similar(1, replace=True)
+                self.test.assertNotEqual(np.sum(model.docvecs.vectors_docs_norm - self.vecs), 0)
+
+            def on_epoch_end(self, model):
+                model.docvecs.most_similar(1, replace=True)
+                self.test.assertNotEqual(np.sum(model.docvecs.vectors_docs_norm - self.vecs), 0)
+
         corpus = DocsLeeCorpus()
         model = doc2vec.Doc2Vec(vector_size=10, min_count=1, workers=1)
         model.build_vocab(corpus)
 
-        model.train(corpus, total_examples=model.corpus_count, epochs=1, start_alpha=0.1, end_alpha=0.1)
-        model.docvecs.most_similar(1)
-        vecs = np.copy(model.docvecs.vectors_docs_norm)
-
-        model.train(corpus, total_examples=model.corpus_count, epochs=1, start_alpha=0.1, end_alpha=0.1)
-        model.docvecs.most_similar(1)
-
-        self.assertNotEqual(np.sum(model.docvecs.vectors_docs_norm - vecs), 0)
+        model.train(corpus, total_examples=model.corpus_count, epochs=2, start_alpha=0.1, end_alpha=0.1,
+                    callbacks=(AssertDocVecsHaveChanged(test=self),))
 # endclass TestDoc2VecModel
 
 

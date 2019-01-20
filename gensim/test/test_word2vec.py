@@ -19,7 +19,7 @@ import six
 import numpy as np
 
 from gensim import utils
-from gensim.models import word2vec, keyedvectors
+from gensim.models import word2vec, keyedvectors, callbacks
 from gensim.test.utils import datapath, get_tmpfile, temporary_file, common_texts as sentences
 from testfixtures import log_capture
 
@@ -1022,17 +1022,29 @@ class TestWord2VecModel(unittest.TestCase):
     def test_most_similiar_uses_newly_trained_vectors(self):
         """Test if the word2vec model deletes the normalized vectors that are used by most similar
         when it is retrained"""
+
+        class AssertWordVecsHaveChanged(callbacks.CallbackAny2Vec):
+
+            def __init__(self, test):
+                self.test = test
+                self.vecs = None
+
+            def on_epoch_begin(self, model):
+                model.wv.most_similar('graph', replace=True)
+                self.vecs = np.copy(model.wv.vectors_norm)
+
+            def on_batch_end(self, model):
+                model.wv.most_similar('graph', replace=True)
+                self.test.assertNotEqual(np.sum(model.wv.vectors_norm - self.vecs), 0)
+
+            def on_epoch_end(self, model):
+                model.wv.most_similar('graph', replace=True)
+                self.test.assertNotEqual(np.sum(model.wv.vectors_norm - self.vecs), 0)
+
         model = word2vec.Word2Vec(size=2, min_count=1, hs=1, negative=0)
         model.build_vocab(sentences)
-
-        model.train(sentences, total_examples=model.corpus_count, epochs=1, start_alpha=0.1, end_alpha=0.1)
-        model.wv.most_similar('graph', topn=10)
-        vecs = np.copy(model.wv.vectors_norm)
-
-        model.train(sentences, total_examples=model.corpus_count, epochs=1, start_alpha=0.1, end_alpha=0.1)
-        model.wv.most_similar('graph', topn=10)
-
-        self.assertNotEqual(np.sum(model.wv.vectors_norm - vecs), 0)
+        model.train(sentences, total_examples=model.corpus_count, epochs=1, start_alpha=0.1, end_alpha=0.1,
+                    callbacks=(AssertWordVecsHaveChanged(self),))
 
 
 # endclass TestWord2VecModel
