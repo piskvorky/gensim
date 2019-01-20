@@ -594,9 +594,19 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             self.num_terms, self.num_topics, self.decay, self.chunksize
         )
 
-    def sync_state(self):
-        """Propagate the states topic probabilities to the inner object's attribute."""
-        self.expElogbeta = np.exp(self.state.get_Elogbeta())
+    def sync_state(self, current_Elogbeta=None):
+        """Propagate the states topic probabilities to the inner object's attribute.
+
+        Parameters
+        ----------
+        current_Elogbeta: numpy.ndarray
+            Posterior probabilities for each topic, optional.
+            If omitted, it will get Elogbeta from state.
+        """
+
+        if current_Elogbeta is None:
+            current_Elogbeta = self.state.get_Elogbeta()
+        self.expElogbeta = np.exp(current_Elogbeta)
         assert self.expElogbeta.dtype == self.dtype
 
     def clear(self):
@@ -1027,14 +1037,16 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         logger.debug("updating topics")
         # update self with the new blend; also keep track of how much did
         # the topics change through this update, to assess convergence
-        diff = np.log(self.expElogbeta)
+        previous_Elogbeta = self.state.get_Elogbeta()
         self.state.blend(rho, other)
-        diff -= self.state.get_Elogbeta()
-        self.sync_state()
+
+        current_Elogbeta = self.state.get_Elogbeta()
+        self.sync_state(current_Elogbeta)
 
         # print out some debug info at the end of each EM iteration
         self.print_topics(5)
-        logger.info("topic diff=%f, rho=%f", np.mean(np.abs(diff)), rho)
+        diff = mean_absolute_difference(previous_Elogbeta, current_Elogbeta)
+        logger.info("topic diff=%f, rho=%f", diff, rho)
 
         if self.optimize_eta:
             self.update_eta(self.state.get_lambda(), rho)
