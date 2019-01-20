@@ -779,7 +779,7 @@ class FastText(BaseWordEmbeddingsModel):
             Specifies the file encoding.
         full_model : boolean, optional
             If False, skips loading the hidden output matrix.  This saves a fair bit
-            of time, but prevents training continuation.
+            of CPU time and RAM, but prevents training continuation.
 
         Returns
         -------
@@ -983,12 +983,13 @@ def _load_fasttext_format(model_file, encoding='utf-8', full_model=True):
         Specifies the file encoding.
     full_model : boolean, optional
         If False, skips loading the hidden output matrix.  This saves a fair bit
-        of time, but prevents training continuation.
+        of CPU time and RAM, but prevents training continuation.
 
     Returns
     -------
     :class: `~gensim.models.fasttext.FastText`
         The loaded model.
+
     """
     if not model_file.endswith('.bin'):
         model_file += '.bin'

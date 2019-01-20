@@ -231,7 +231,7 @@ def load(fin, encoding='utf-8', full_model=True):
         The encoding to use for decoding text
     full_model : boolean, optional
         If False, skips loading the hidden output matrix.  This saves a fair bit
-        of time, but prevents training continuation.
+        of CPU time and RAM, but prevents training continuation.
 
     Returns
     -------
