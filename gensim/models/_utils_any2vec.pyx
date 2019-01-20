@@ -7,6 +7,7 @@
 
 """General functions used for any2vec models."""
 
+from libc.stdint cimport uint32_t, int8_t
 from six import PY2
 import numpy as np
 cimport numpy as np
@@ -26,6 +27,11 @@ cpdef ft_hash(unicode string):
     Reproduce `hash method from Facebook fastText implementation
     <https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc>`_.
 
+    This function is expensive because it encodes each input string as UTF-8,
+    and this can accumulate to a high computational cost if there are many
+    strings.  If possible, convert your strings to bytes and use the faster
+    :py:func:`ft_hash_bytes` function instead.
+
     Parameters
     ----------
     string : unicode
@@ -41,6 +47,31 @@ cpdef ft_hash(unicode string):
     for c in string.encode("utf-8"):
         h = np.uint32(h ^ np.uint32(np.int8(_byte_to_int(c))))
         h = np.uint32(h * np.uint32(16777619))
+    return h
+
+
+cpdef ft_hash_bytes(bytes bytez):
+    """Calculate hash based on `bytez`.
+    Reproduce `hash method from Facebook fastText implementation
+    <https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc>`_.
+
+    Parameters
+    ----------
+    bytez : bytes
+        The string whose hash needs to be calculated, encoded as UTF-8.
+
+    Returns
+    -------
+    unsigned int
+        The hash of the string.
+
+    """
+    cdef uint32_t h = 2166136261
+    cdef char b
+
+    for b in bytez:
+        h = h ^ <uint32_t>(<int8_t>b)  # FIXME I drop 'ord' from py2, not sure about correctenss
+        h = h * 16777619
     return h
 
 

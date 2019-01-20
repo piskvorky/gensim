@@ -98,7 +98,7 @@ import gensim.models._fasttext_bin
 from gensim.models.word2vec import Word2VecVocab, Word2VecTrainables, train_sg_pair, train_cbow_pair
 from gensim.models.keyedvectors import FastTextKeyedVectors
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
-from gensim.models.utils_any2vec import _compute_ngrams, _ft_hash, _ft_hash_broken
+from gensim.models.utils_any2vec import ft_ngram_hashes, ft_ngram_hashes_broken
 from smart_open import smart_open
 
 from gensim.utils import deprecated, call_on_class_only
@@ -554,7 +554,7 @@ class FastText(BaseWordEmbeddingsModel):
         self.wv.buckets_word = None
 
     def estimate_memory(self, vocab_size=None, report=None):
-        hash_fn = _ft_hash if self.wv.compatible_hash else _ft_hash_broken
+        hash_fn = ft_ngram_hashes if self.wv.compatible_hash else ft_ngram_hashes_broken
 
         vocab_size = vocab_size or len(self.wv.vocab)
         vec_size = self.vector_size * np.dtype(np.float32).itemsize
@@ -574,9 +574,9 @@ class FastText(BaseWordEmbeddingsModel):
                 buckets = set()
                 num_ngrams = 0
                 for word in self.wv.vocab:
-                    ngrams = _compute_ngrams(word, self.wv.min_n, self.wv.max_n)
-                    num_ngrams += len(ngrams)
-                    buckets.update(hash_fn(ng) % self.trainables.bucket for ng in ngrams)
+                    hashes = hash_fn(word, self.wv.min_n, self.wv.max_n, self.trainables.bucket)
+                    num_ngrams += len(hashes)
+                    buckets.update(hashes)
                 num_buckets = len(buckets)
             report['syn0_ngrams'] = num_buckets * vec_size
             # A tuple (48 bytes) with num_ngrams_word ints (8 bytes) for each word

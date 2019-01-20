@@ -4,7 +4,21 @@
 # Author: Shiva Manne <s.manne@rare-technologies.com>
 # Copyright (C) 2018 RaRe Technologies s.r.o.
 
-"""General functions used for any2vec models."""
+"""General functions used for any2vec models.
+
+One of the goals of this module is to provide an abstraction over the Cython
+extensions for FastText.  If they are not available, then the module substitutes
+slower Python versions in their place.
+
+Another related set of FastText functionality is computing ngrams for a word,
+and then hashing them.  The :py:func:`ft_ngram_hashes` and
+:py:func:`ft_ngram_hashes_broken` achieves this goal.
+
+Finally, the module also exposes "working" and "broken" hash functions for
+FastText.  It does this without abstracting them away, because the correct
+function to use depends on the current model.
+
+"""
 
 import logging
 import numpy as np
@@ -30,18 +44,18 @@ _byte_to_int = _byte_to_int_py2 if PY2 else _byte_to_int_py3
 
 
 #
-# Define this here so we can unittest here.  Only use this function if the
-# faster C version fails to import.
+# Define this here so we can unittest this function directly.
+# Only use this function if the faster C version fails to import.
 #
-def _ft_hash_py(string):
-    """Calculate hash based on `string`.
+def _ft_hash_py_bytes(bytez):
+    """Calculate hash based on `bytez`.
     Reproduce `hash method from Facebook fastText implementation
     <https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc>`_.
 
     Parameters
     ----------
-    string : str
-        The string whose hash needs to be calculated.
+    bytez : bytes
+        The string whose hash needs to be calculated, encoded as UTF-8.
 
     Returns
     -------
@@ -51,8 +65,8 @@ def _ft_hash_py(string):
     """
     old_settings = np.seterr(all='ignore')
     h = np.uint32(2166136261)
-    for c in string.encode('utf-8'):
-        h = h ^ np.uint32(np.int8(_byte_to_int(c)))
+    for b in bytez:
+        h = h ^ np.uint32(np.int8(_byte_to_int(b)))
         h = h * np.uint32(16777619)
     np.seterr(**old_settings)
     return h
@@ -88,44 +102,80 @@ def _ft_hash_py_broken(string):
 
 try:
     from gensim.models._utils_any2vec import (
-        ft_hash as _ft_hash_cy,
+        compute_ngrams,
         ft_hash_broken as _ft_hash_cy_broken,
-        compute_ngrams as _compute_ngrams
+        ft_hash_bytes as _ft_hash_cy_bytes,
     )
-    _ft_hash = _ft_hash_cy
+    _ft_hash_bytes = _ft_hash_cy_bytes
     _ft_hash_broken = _ft_hash_cy_broken
+    FAST_VERSION = 0
 except ImportError:
+    # failed... fall back to plain python
     FAST_VERSION = -1
-
-    _ft_hash = _ft_hash_py
+    _ft_hash_bytes = _ft_hash_py_bytes
     _ft_hash_broken = _ft_hash_py_broken
 
-    # failed... fall back to plain python
-    def _compute_ngrams(word, min_n, max_n):
-        """Get the list of all possible ngrams for a given word.
 
-        Parameters
-        ----------
-        word : str
-            The word whose ngrams need to be computed.
-        min_n : int
-            Minimum character length of the ngrams.
-        max_n : int
-            Maximum character length of the ngrams.
+def ft_ngram_hashes(word, minn, maxn, num_buckets):
+    """Calculate the ngrams of the word and hash them.
 
-        Returns
-        -------
-        list of str
-            Sequence of character ngrams.
+    Do this in a way that is compatible with the original Facebook implementation.
 
-        """
-        BOW, EOW = ('<', '>')  # Used by FastText to attach to all words as prefix and suffix
-        extended_word = BOW + word + EOW
-        ngrams = []
-        for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
-            for i in range(0, len(extended_word) - ngram_length + 1):
-                ngrams.append(extended_word[i:i + ngram_length])
-        return ngrams
+    Parameters
+    ----------
+    word : str
+        The word to calculate ngram hashes for.
+    minn : int
+        Minimum ngram length
+    maxn : int
+        Maximum ngram length
+    num_buckets : int
+        The number of buckets
+
+    Returns
+    -------
+        A list of hashes (integers), one per each detected ngram.
+
+    """
+    ngrams = compute_ngrams(word, minn, maxn)
+    #
+    # This is a trick to avoid encoding each ngram separately, which is
+    # computationally expensive.  It works for two reasons:
+    #
+    # 1) ngrams are guaranteed to _not_ have any spaces, because that is the
+    # character we use to split sentences into words.
+    # 2) space is an ASCII character, so it survives UTF-8 encoding unchanged.
+    #
+    encoded_ngrams = (" ".join(ngrams)).encode("utf-8").split()
+    hashes = [_ft_hash_bytes(en) % num_buckets for en in encoded_ngrams]
+    return hashes
+
+
+def ft_ngram_hashes_broken(word, minn, maxn, num_buckets):
+    """Calculate the ngrams of the word and hash them.
+
+    Do this in a way that is incompatible with the original Facebook
+    implementation, but compatible with older versions of Gensim.
+
+    Parameters
+    ----------
+    word : str
+        The word to calculate ngram hashes for.
+    minn : int
+        Minimum ngram length
+    maxn : int
+        Maximum ngram length
+    num_buckets : int
+        The number of buckets
+
+    Returns
+    -------
+        A list of hashes (integers), one per each detected ngram.
+
+    """
+    ngrams = compute_ngrams(word, minn, maxn)
+    hashes = [_ft_hash_broken(n) % num_buckets for n in ngrams]
+    return hashes
 
 
 def _save_word2vec_format(fname, vocab, vectors, fvocab=None, binary=False, total_vec=None):

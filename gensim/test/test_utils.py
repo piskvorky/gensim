@@ -269,12 +269,14 @@ def hash_main(alg):
     import six
 
     assert six.PY3, 'this only works under Py3'
+    assert gensim.models.utils_any2vec.FAST_VERSION == 0, 'Cython extensions are broken'
 
     hashmap = {
-        'py': gensim.models.utils_any2vec._ft_hash_py,
         'py_broken': gensim.models.utils_any2vec._ft_hash_py_broken,
-        'cy': gensim.models.utils_any2vec._ft_hash_py,
+        'py_bytes': gensim.models.utils_any2vec._ft_hash_py_bytes,
+        'cy': gensim.models.utils_any2vec._ft_hash_cy,
         'cy_broken': gensim.models.utils_any2vec._ft_hash_py_broken,
+        'cy_bytes': gensim.models.utils_any2vec._ft_hash_cy_bytes,
     }
     try:
         fun = hashmap[alg]
@@ -282,7 +284,11 @@ def hash_main(alg):
         raise KeyError('invalid alg: %r expected one of %r' % (alg, sorted(hashmap)))
 
     for line in sys.stdin:
-        for word in line.rstrip().split(' '):
+        if 'bytes' in alg:
+            words = line.encode('utf-8').rstrip().split(b' ')
+        else:
+            words = line.rstrip().split(' ')
+        for word in words:
             print('u%r: %r,' % (word, fun(word)))
 
 
@@ -293,7 +299,7 @@ class HashTest(unittest.TestCase):
         #
         # $ echo word1 ... wordN | python -c 'from gensim.test.test_utils import hash_main;hash_main("alg")'  # noqa: E501
         #
-        # where alg is one of py, py_broken, cy, cy_broken.
+        # where alg is one of py_bytes, py_broken, cy_bytes, cy_broken.
 
         #
         self.expected = {
@@ -330,12 +336,12 @@ class HashTest(unittest.TestCase):
         }
 
     def test_python(self):
-        actual = {k: gensim.models.utils_any2vec._ft_hash_py(k) for k in self.expected}
+        actual = {k: gensim.models.utils_any2vec._ft_hash_py_bytes(k.encode('utf-8')) for k in self.expected}
         self.assertEqual(self.expected, actual)
 
     @unittest.skipIf(DISABLE_CYTHON_TESTS, 'Cython functions are not properly compiled')
     def test_cython(self):
-        actual = {k: gensim.models.utils_any2vec._ft_hash_cy(k) for k in self.expected}
+        actual = {k: gensim.models.utils_any2vec._ft_hash_cy_bytes(k.encode('utf-8')) for k in self.expected}
         self.assertEqual(self.expected, actual)
 
     def test_python_broken(self):
