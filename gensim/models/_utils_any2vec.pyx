@@ -22,34 +22,6 @@ cdef _byte_to_int_py2(b):
 _byte_to_int = _byte_to_int_py2 if PY2 else _byte_to_int_py3
 
 
-cpdef ft_hash(unicode string):
-    """Calculate hash based on `string`.
-    Reproduce `hash method from Facebook fastText implementation
-    <https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc>`_.
-
-    This function is expensive because it encodes each input string as UTF-8,
-    and this can accumulate to a high computational cost if there are many
-    strings.  If possible, convert your strings to bytes and use the faster
-    :py:func:`ft_hash_bytes` function instead.
-
-    Parameters
-    ----------
-    string : unicode
-        The string whose hash needs to be calculated.
-
-    Returns
-    -------
-    unsigned int
-        The hash of the string.
-
-    """
-    cdef unsigned int h = 2166136261
-    for c in string.encode("utf-8"):
-        h = np.uint32(h ^ np.uint32(np.int8(_byte_to_int(c))))
-        h = np.uint32(h * np.uint32(16777619))
-    return h
-
-
 cpdef ft_hash_bytes(bytes bytez):
     """Calculate hash based on `bytez`.
     Reproduce `hash method from Facebook fastText implementation
