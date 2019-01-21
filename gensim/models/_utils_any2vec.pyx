@@ -7,7 +7,10 @@
 
 """General functions used for any2vec models."""
 
-from libc.stdint cimport uint32_t, int8_t
+cdef extern from "stdint_wrapper.h":
+    ctypedef unsigned int uint32_t
+    ctypedef signed char int8_t
+
 from six import PY2
 import numpy as np
 cimport numpy as np
