@@ -851,7 +851,7 @@ class FastText(BaseWordEmbeddingsModel):
 
             if not hasattr(model.wv, 'compatible_hash'):
                 logger.warning(
-                    "This older model was trained with a buggy hash function.  ",
+                    "This older model was trained with a buggy hash function.  "
                     "The model will continue to work, but consider training it "
                     "from scratch."
                 )
