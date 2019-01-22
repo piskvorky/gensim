@@ -6,7 +6,7 @@
 """
 Automated tests for checking various utils functions.
 """
-
+from __future__ import unicode_literals
 
 import logging
 import unittest
@@ -351,6 +351,70 @@ class HashTest(unittest.TestCase):
     def test_cython_broken(self):
         actual = {k: gensim.models.utils_any2vec._ft_hash_broken_cy(k) for k in self.expected}
         self.assertEqual(self.expected_broken, actual)
+
+
+#
+# Run with:
+#
+#   python -c 'import gensim.test.test_utils as t;t.ngram_main()' py_text 3 5
+#
+def ngram_main():
+    """Generate ngrams for tests from standard input."""
+    import sys
+    import six
+
+    alg = sys.argv[1]
+    minn = int(sys.argv[2])
+    maxn = int(sys.argv[3])
+
+    assert six.PY3, 'this only works under Py3'
+    assert not DISABLE_CYTHON_TESTS, 'this only works if Cython extensions available'
+    assert minn <= maxn, 'expected sane command-line parameters'
+
+    hashmap = {
+        'py_text': gensim.models.utils_any2vec._compute_ngrams_py,
+        'py_bytes': gensim.models.utils_any2vec._compute_ngrams_bytes_py,
+        'cy_text': gensim.models.utils_any2vec._compute_ngrams_cy,
+        'cy_bytes': gensim.models.utils_any2vec._compute_ngrams_bytes_cy,
+    }
+    try:
+        fun = hashmap[alg]
+    except KeyError:
+        raise KeyError('invalid alg: %r expected one of %r' % (alg, sorted(hashmap)))
+
+    for line in sys.stdin:
+        word = line.rstrip('\n')
+        ngrams = fun(word, minn, maxn)
+        print("%r: %r," % (word, ngrams))
+
+
+class NgramsTest(unittest.TestCase):
+    def setUp(self):
+        self.expected_text = {
+            'test': ['<te', 'tes', 'est', 'st>', '<tes', 'test', 'est>', '<test', 'test>'],
+            'at the': [
+                '<at', 'at ', 't t', ' th', 'the', 'he>',
+                '<at ', 'at t', 't th', ' the', 'the>', '<at t', 'at th', 't the', ' the>'
+            ],
+            'at\nthe': [
+                '<at', 'at\n', 't\nt', '\nth', 'the', 'he>',
+                '<at ', 'at\nt', 't\nth', '\nthe', 'the>', '<at\nt', 'at\nth', 't\nthe', '\nthe>'
+            ],
+           'тест': ['<те', 'тес', 'ест', 'ст>', '<тес', 'тест', 'ест>', '<тест', 'тест>'],
+           'テスト': ['<テス', 'テスト', 'スト>', '<テスト', 'テスト>', '<テスト>'],
+           '試し': ['<試し', '試し>', '<試し>'],
+        }
+
+    def test_text_py(self):
+        for word in self.expected_text:
+            expected = self.expected_text[word]
+            actual = gensim.models.utils_any2vec._compute_ngrams_py(word, 3, 5)
+
+    @unittest.skipIf(DISABLE_CYTHON_TESTS, 'Cython functions are not properly compiled')
+    def test_text_cy(self):
+        for word in self.expected_text:
+            expected = self.expected_text[word]
+            actual = gensim.models.utils_any2vec._compute_ngrams_cy(word, 3, 5)
 
 
 if __name__ == '__main__':
