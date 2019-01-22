@@ -15,7 +15,8 @@ import unittest
 import numpy as np
 
 from gensim.corpora import Dictionary
-from gensim.models import KeyedVectors as EuclideanKeyedVectors, WordEmbeddingSimilarityIndex
+from gensim.models.keyedvectors import KeyedVectors as EuclideanKeyedVectors, WordEmbeddingSimilarityIndex, \
+    FastTextKeyedVectors
 from gensim.test.utils import datapath
 
 import gensim.models.keyedvectors
@@ -278,6 +279,19 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
         self.assertEqual(len(self.vectors.vocab), vocab_size + 2)
         for ent, vector in zip(entities, vectors):
             self.assertTrue(np.allclose(self.vectors[ent], vector))
+
+    def test_ft_kv_backward_compat_w_360(self):
+        kv = EuclideanKeyedVectors.load(datapath("ft_kv_3.6.0.model.gz"))
+        ft_kv = FastTextKeyedVectors.load(datapath("ft_kv_3.6.0.model.gz"))
+
+        expected = ['trees', 'survey', 'system', 'graph', 'interface']
+        actual = [word for (word, similarity) in kv.most_similar("human", topn=5)]
+
+        self.assertEqual(actual, expected)
+
+        actual = [word for (word, similarity) in ft_kv.most_similar("human", topn=5)]
+
+        self.assertEqual(actual, expected)
 
 
 class L2NormTest(unittest.TestCase):
