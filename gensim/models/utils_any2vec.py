@@ -167,20 +167,17 @@ def _compute_ngrams_bytes_py(word, min_n, max_n):
 
     ngrams = []
     for i in range(num_bytes):
-        ngram = []
-
         if utf8_word[i] & _MB_MASK == _MB_START:
             continue
 
         j, n = i, 1
         while j < num_bytes and n <= max_n:
-            ngram.append(utf8_word[j])
             j += 1
             while j < num_bytes and (utf8_word[j] & _MB_MASK) == _MB_START:
-                ngram.append(utf8_word[j])
                 j += 1
             if n >= min_n and not (n == 1 and (i == 0 or j == num_bytes)):
-                ngrams.append(bytes(ngram))
+                ngram = bytes(utf8_word[i:j])
+                ngrams.append(ngram)
             n += 1
     return ngrams
 
