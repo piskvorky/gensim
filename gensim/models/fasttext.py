@@ -713,7 +713,7 @@ class FastText(BaseWordEmbeddingsModel):
             raise ValueError(
                 'this model cannot be trained any further, '
                 'if this is a native model, try loading it with '
-                'with FastText.load_fasttext_format(path, full_model=True)'
+                'FastText.load_fasttext_format(path, full_model=True)'
             )
 
         super(FastText, self).train(
