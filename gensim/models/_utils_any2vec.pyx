@@ -7,6 +7,9 @@
 
 """General functions used for any2vec models."""
 
+#
+# This is here to support older versions of the MSVC compiler that don't have stdint.h.
+#
 cdef extern from "stdint_wrapper.h":
     ctypedef unsigned int uint32_t
     ctypedef signed char int8_t
@@ -123,7 +126,7 @@ cpdef compute_ngrams_bytes(word, unsigned int min_n, unsigned int max_n):
 
     Returns:
     --------
-    list
+    list of str
         A list of ngrams, where each ngram is a list of **bytes**.
 
     See Also

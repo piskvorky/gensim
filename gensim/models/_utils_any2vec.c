@@ -1852,7 +1852,7 @@ static PyObject *__pyx_tuple__10;
 static PyObject *__pyx_codeobj__11;
 /* Late includes */
 
-/* "gensim/models/_utils_any2vec.pyx":19
+/* "gensim/models/_utils_any2vec.pyx":22
  * 
  * 
  * cdef _byte_to_int_py3(b):             # <<<<<<<<<<<<<<
@@ -1865,7 +1865,7 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec__byte_to_int_py3(PyObj
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("_byte_to_int_py3", 0);
 
-  /* "gensim/models/_utils_any2vec.pyx":20
+  /* "gensim/models/_utils_any2vec.pyx":23
  * 
  * cdef _byte_to_int_py3(b):
  *     return b             # <<<<<<<<<<<<<<
@@ -1877,7 +1877,7 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec__byte_to_int_py3(PyObj
   __pyx_r = __pyx_v_b;
   goto __pyx_L0;
 
-  /* "gensim/models/_utils_any2vec.pyx":19
+  /* "gensim/models/_utils_any2vec.pyx":22
  * 
  * 
  * cdef _byte_to_int_py3(b):             # <<<<<<<<<<<<<<
@@ -1892,7 +1892,7 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec__byte_to_int_py3(PyObj
   return __pyx_r;
 }
 
-/* "gensim/models/_utils_any2vec.pyx":22
+/* "gensim/models/_utils_any2vec.pyx":25
  *     return b
  * 
  * cdef _byte_to_int_py2(b):             # <<<<<<<<<<<<<<
@@ -1907,7 +1907,7 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec__byte_to_int_py2(PyObj
   PyObject *__pyx_t_2 = NULL;
   __Pyx_RefNannySetupContext("_byte_to_int_py2", 0);
 
-  /* "gensim/models/_utils_any2vec.pyx":23
+  /* "gensim/models/_utils_any2vec.pyx":26
  * 
  * cdef _byte_to_int_py2(b):
  *     return ord(b)             # <<<<<<<<<<<<<<
@@ -1915,14 +1915,14 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec__byte_to_int_py2(PyObj
  * _byte_to_int = _byte_to_int_py2 if PY2 else _byte_to_int_py3
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_PyObject_Ord(__pyx_v_b); if (unlikely(__pyx_t_1 == ((long)(long)(Py_UCS4)-1))) __PYX_ERR(0, 23, __pyx_L1_error)
-  __pyx_t_2 = __Pyx_PyInt_From_long(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 23, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_Ord(__pyx_v_b); if (unlikely(__pyx_t_1 == ((long)(long)(Py_UCS4)-1))) __PYX_ERR(0, 26, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_From_long(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 26, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_r = __pyx_t_2;
   __pyx_t_2 = 0;
   goto __pyx_L0;
 
-  /* "gensim/models/_utils_any2vec.pyx":22
+  /* "gensim/models/_utils_any2vec.pyx":25
  *     return b
  * 
  * cdef _byte_to_int_py2(b):             # <<<<<<<<<<<<<<
@@ -1941,7 +1941,7 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec__byte_to_int_py2(PyObj
   return __pyx_r;
 }
 
-/* "gensim/models/_utils_any2vec.pyx":28
+/* "gensim/models/_utils_any2vec.pyx":31
  * 
  * 
  * cpdef ft_hash_bytes(bytes bytez):             # <<<<<<<<<<<<<<
@@ -1963,7 +1963,7 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_ft_hash_bytes(PyObject
   PyObject *__pyx_t_6 = NULL;
   __Pyx_RefNannySetupContext("ft_hash_bytes", 0);
 
-  /* "gensim/models/_utils_any2vec.pyx":44
+  /* "gensim/models/_utils_any2vec.pyx":47
  * 
  *     """
  *     cdef uint32_t h = 2166136261             # <<<<<<<<<<<<<<
@@ -1972,7 +1972,7 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_ft_hash_bytes(PyObject
  */
   __pyx_v_h = 0x811C9DC5;
 
-  /* "gensim/models/_utils_any2vec.pyx":47
+  /* "gensim/models/_utils_any2vec.pyx":50
  *     cdef char b
  * 
  *     for b in bytez:             # <<<<<<<<<<<<<<
@@ -1981,7 +1981,7 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_ft_hash_bytes(PyObject
  */
   if (unlikely(__pyx_v_bytez == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' is not iterable");
-    __PYX_ERR(0, 47, __pyx_L1_error)
+    __PYX_ERR(0, 50, __pyx_L1_error)
   }
   __Pyx_INCREF(__pyx_v_bytez);
   __pyx_t_1 = __pyx_v_bytez;
@@ -1991,7 +1991,7 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_ft_hash_bytes(PyObject
     __pyx_t_2 = __pyx_t_5;
     __pyx_v_b = (__pyx_t_2[0]);
 
-    /* "gensim/models/_utils_any2vec.pyx":48
+    /* "gensim/models/_utils_any2vec.pyx":51
  * 
  *     for b in bytez:
  *         h = h ^ <uint32_t>(<int8_t>b)  # FIXME I drop 'ord' from py2, not sure about correctenss             # <<<<<<<<<<<<<<
@@ -2000,7 +2000,7 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_ft_hash_bytes(PyObject
  */
     __pyx_v_h = (__pyx_v_h ^ ((uint32_t)((int8_t)__pyx_v_b)));
 
-    /* "gensim/models/_utils_any2vec.pyx":49
+    /* "gensim/models/_utils_any2vec.pyx":52
  *     for b in bytez:
  *         h = h ^ <uint32_t>(<int8_t>b)  # FIXME I drop 'ord' from py2, not sure about correctenss
  *         h = h * 16777619             # <<<<<<<<<<<<<<
@@ -2011,7 +2011,7 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_ft_hash_bytes(PyObject
   }
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "gensim/models/_utils_any2vec.pyx":50
+  /* "gensim/models/_utils_any2vec.pyx":53
  *         h = h ^ <uint32_t>(<int8_t>b)  # FIXME I drop 'ord' from py2, not sure about correctenss
  *         h = h * 16777619
  *     return h             # <<<<<<<<<<<<<<
@@ -2019,13 +2019,13 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_ft_hash_bytes(PyObject
  * 
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_6 = __Pyx_PyInt_From_uint32_t(__pyx_v_h); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 50, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyInt_From_uint32_t(__pyx_v_h); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 53, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __pyx_r = __pyx_t_6;
   __pyx_t_6 = 0;
   goto __pyx_L0;
 
-  /* "gensim/models/_utils_any2vec.pyx":28
+  /* "gensim/models/_utils_any2vec.pyx":31
  * 
  * 
  * cpdef ft_hash_bytes(bytes bytez):             # <<<<<<<<<<<<<<
@@ -2052,7 +2052,7 @@ static PyObject *__pyx_pw_6gensim_6models_14_utils_any2vec_1ft_hash_bytes(PyObje
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("ft_hash_bytes (wrapper)", 0);
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_bytez), (&PyBytes_Type), 1, "bytez", 1))) __PYX_ERR(0, 28, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_bytez), (&PyBytes_Type), 1, "bytez", 1))) __PYX_ERR(0, 31, __pyx_L1_error)
   __pyx_r = __pyx_pf_6gensim_6models_14_utils_any2vec_ft_hash_bytes(__pyx_self, ((PyObject*)__pyx_v_bytez));
 
   /* function exit code */
@@ -2070,7 +2070,7 @@ static PyObject *__pyx_pf_6gensim_6models_14_utils_any2vec_ft_hash_bytes(CYTHON_
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("ft_hash_bytes", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __pyx_f_6gensim_6models_14_utils_any2vec_ft_hash_bytes(__pyx_v_bytez, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 28, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_6gensim_6models_14_utils_any2vec_ft_hash_bytes(__pyx_v_bytez, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 31, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -2087,7 +2087,7 @@ static PyObject *__pyx_pf_6gensim_6models_14_utils_any2vec_ft_hash_bytes(CYTHON_
   return __pyx_r;
 }
 
-/* "gensim/models/_utils_any2vec.pyx":53
+/* "gensim/models/_utils_any2vec.pyx":56
  * 
  * 
  * cpdef ft_hash_broken(unicode string):             # <<<<<<<<<<<<<<
@@ -2112,7 +2112,7 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_ft_hash_broken(PyObjec
   long __pyx_t_9;
   __Pyx_RefNannySetupContext("ft_hash_broken", 0);
 
-  /* "gensim/models/_utils_any2vec.pyx":70
+  /* "gensim/models/_utils_any2vec.pyx":73
  * 
  *     """
  *     cdef unsigned int h = 2166136261             # <<<<<<<<<<<<<<
@@ -2121,7 +2121,7 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_ft_hash_broken(PyObjec
  */
   __pyx_v_h = 0x811C9DC5;
 
-  /* "gensim/models/_utils_any2vec.pyx":71
+  /* "gensim/models/_utils_any2vec.pyx":74
  *     """
  *     cdef unsigned int h = 2166136261
  *     for c in string:             # <<<<<<<<<<<<<<
@@ -2130,29 +2130,29 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_ft_hash_broken(PyObjec
  */
   if (unlikely(__pyx_v_string == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' is not iterable");
-    __PYX_ERR(0, 71, __pyx_L1_error)
+    __PYX_ERR(0, 74, __pyx_L1_error)
   }
   __Pyx_INCREF(__pyx_v_string);
   __pyx_t_1 = __pyx_v_string;
-  __pyx_t_6 = __Pyx_init_unicode_iteration(__pyx_t_1, (&__pyx_t_3), (&__pyx_t_4), (&__pyx_t_5)); if (unlikely(__pyx_t_6 == ((int)-1))) __PYX_ERR(0, 71, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_init_unicode_iteration(__pyx_t_1, (&__pyx_t_3), (&__pyx_t_4), (&__pyx_t_5)); if (unlikely(__pyx_t_6 == ((int)-1))) __PYX_ERR(0, 74, __pyx_L1_error)
   for (__pyx_t_7 = 0; __pyx_t_7 < __pyx_t_3; __pyx_t_7++) {
     __pyx_t_2 = __pyx_t_7;
-    __pyx_t_8 = PyUnicode_FromOrdinal(__Pyx_PyUnicode_READ(__pyx_t_5, __pyx_t_4, __pyx_t_2)); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 71, __pyx_L1_error)
+    __pyx_t_8 = PyUnicode_FromOrdinal(__Pyx_PyUnicode_READ(__pyx_t_5, __pyx_t_4, __pyx_t_2)); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 74, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_8);
     __Pyx_XDECREF_SET(__pyx_v_c, __pyx_t_8);
     __pyx_t_8 = 0;
 
-    /* "gensim/models/_utils_any2vec.pyx":72
+    /* "gensim/models/_utils_any2vec.pyx":75
  *     cdef unsigned int h = 2166136261
  *     for c in string:
  *         h ^= ord(c)             # <<<<<<<<<<<<<<
  *         h *= 16777619
  *     return h
  */
-    __pyx_t_9 = __Pyx_PyObject_Ord(__pyx_v_c); if (unlikely(__pyx_t_9 == ((long)(long)(Py_UCS4)-1))) __PYX_ERR(0, 72, __pyx_L1_error)
+    __pyx_t_9 = __Pyx_PyObject_Ord(__pyx_v_c); if (unlikely(__pyx_t_9 == ((long)(long)(Py_UCS4)-1))) __PYX_ERR(0, 75, __pyx_L1_error)
     __pyx_v_h = (__pyx_v_h ^ __pyx_t_9);
 
-    /* "gensim/models/_utils_any2vec.pyx":73
+    /* "gensim/models/_utils_any2vec.pyx":76
  *     for c in string:
  *         h ^= ord(c)
  *         h *= 16777619             # <<<<<<<<<<<<<<
@@ -2163,7 +2163,7 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_ft_hash_broken(PyObjec
   }
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "gensim/models/_utils_any2vec.pyx":74
+  /* "gensim/models/_utils_any2vec.pyx":77
  *         h ^= ord(c)
  *         h *= 16777619
  *     return h             # <<<<<<<<<<<<<<
@@ -2171,13 +2171,13 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_ft_hash_broken(PyObjec
  * 
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_8 = __Pyx_PyInt_From_unsigned_int(__pyx_v_h); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 74, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyInt_From_unsigned_int(__pyx_v_h); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 77, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
   __pyx_r = __pyx_t_8;
   __pyx_t_8 = 0;
   goto __pyx_L0;
 
-  /* "gensim/models/_utils_any2vec.pyx":53
+  /* "gensim/models/_utils_any2vec.pyx":56
  * 
  * 
  * cpdef ft_hash_broken(unicode string):             # <<<<<<<<<<<<<<
@@ -2205,7 +2205,7 @@ static PyObject *__pyx_pw_6gensim_6models_14_utils_any2vec_3ft_hash_broken(PyObj
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("ft_hash_broken (wrapper)", 0);
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_string), (&PyUnicode_Type), 1, "string", 1))) __PYX_ERR(0, 53, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_string), (&PyUnicode_Type), 1, "string", 1))) __PYX_ERR(0, 56, __pyx_L1_error)
   __pyx_r = __pyx_pf_6gensim_6models_14_utils_any2vec_2ft_hash_broken(__pyx_self, ((PyObject*)__pyx_v_string));
 
   /* function exit code */
@@ -2223,7 +2223,7 @@ static PyObject *__pyx_pf_6gensim_6models_14_utils_any2vec_2ft_hash_broken(CYTHO
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("ft_hash_broken", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __pyx_f_6gensim_6models_14_utils_any2vec_ft_hash_broken(__pyx_v_string, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 53, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_6gensim_6models_14_utils_any2vec_ft_hash_broken(__pyx_v_string, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 56, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -2240,7 +2240,7 @@ static PyObject *__pyx_pf_6gensim_6models_14_utils_any2vec_2ft_hash_broken(CYTHO
   return __pyx_r;
 }
 
-/* "gensim/models/_utils_any2vec.pyx":77
+/* "gensim/models/_utils_any2vec.pyx":80
  * 
  * 
  * cpdef compute_ngrams(word, unsigned int min_n, unsigned int max_n):             # <<<<<<<<<<<<<<
@@ -2272,14 +2272,14 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams(PyObjec
   int __pyx_t_14;
   __Pyx_RefNannySetupContext("compute_ngrams", 0);
 
-  /* "gensim/models/_utils_any2vec.pyx":95
+  /* "gensim/models/_utils_any2vec.pyx":98
  * 
  *     """
  *     cdef unicode extended_word = f'<{word}>'             # <<<<<<<<<<<<<<
  *     ngrams = []
  *     for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
  */
-  __pyx_t_1 = PyTuple_New(3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 95, __pyx_L1_error)
+  __pyx_t_1 = PyTuple_New(3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 98, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_t_2 = 0;
   __pyx_t_3 = 127;
@@ -2287,7 +2287,7 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams(PyObjec
   __pyx_t_2 += 1;
   __Pyx_GIVEREF(__pyx_kp_u_);
   PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_kp_u_);
-  __pyx_t_4 = __Pyx_PyObject_FormatSimple(__pyx_v_word, __pyx_empty_unicode); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 95, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_FormatSimple(__pyx_v_word, __pyx_empty_unicode); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 98, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __pyx_t_3 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_4) > __pyx_t_3) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_4) : __pyx_t_3;
   __pyx_t_2 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_4);
@@ -2298,43 +2298,43 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams(PyObjec
   __pyx_t_2 += 1;
   __Pyx_GIVEREF(__pyx_kp_u__2);
   PyTuple_SET_ITEM(__pyx_t_1, 2, __pyx_kp_u__2);
-  __pyx_t_4 = __Pyx_PyUnicode_Join(__pyx_t_1, 3, __pyx_t_2, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 95, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyUnicode_Join(__pyx_t_1, 3, __pyx_t_2, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 98, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_extended_word = ((PyObject*)__pyx_t_4);
   __pyx_t_4 = 0;
 
-  /* "gensim/models/_utils_any2vec.pyx":96
+  /* "gensim/models/_utils_any2vec.pyx":99
  *     """
  *     cdef unicode extended_word = f'<{word}>'
  *     ngrams = []             # <<<<<<<<<<<<<<
  *     for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
  *         for i in range(0, len(extended_word) - ngram_length + 1):
  */
-  __pyx_t_4 = PyList_New(0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 96, __pyx_L1_error)
+  __pyx_t_4 = PyList_New(0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 99, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __pyx_v_ngrams = ((PyObject*)__pyx_t_4);
   __pyx_t_4 = 0;
 
-  /* "gensim/models/_utils_any2vec.pyx":97
+  /* "gensim/models/_utils_any2vec.pyx":100
  *     cdef unicode extended_word = f'<{word}>'
  *     ngrams = []
  *     for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):             # <<<<<<<<<<<<<<
  *         for i in range(0, len(extended_word) - ngram_length + 1):
  *             ngrams.append(extended_word[i:i + ngram_length])
  */
-  __pyx_t_4 = __Pyx_PyInt_From_unsigned_int(__pyx_v_min_n); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 97, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyInt_From_unsigned_int(__pyx_v_min_n); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 100, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __pyx_t_5 = __pyx_v_max_n;
-  __pyx_t_2 = __Pyx_PyUnicode_GET_LENGTH(__pyx_v_extended_word); if (unlikely(__pyx_t_2 == ((Py_ssize_t)-1))) __PYX_ERR(0, 97, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyUnicode_GET_LENGTH(__pyx_v_extended_word); if (unlikely(__pyx_t_2 == ((Py_ssize_t)-1))) __PYX_ERR(0, 100, __pyx_L1_error)
   if (((__pyx_t_5 < __pyx_t_2) != 0)) {
     __pyx_t_6 = __pyx_t_5;
   } else {
     __pyx_t_6 = __pyx_t_2;
   }
-  __pyx_t_1 = PyInt_FromSsize_t((__pyx_t_6 + 1)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 97, __pyx_L1_error)
+  __pyx_t_1 = PyInt_FromSsize_t((__pyx_t_6 + 1)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 100, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_7 = PyTuple_New(2); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 97, __pyx_L1_error)
+  __pyx_t_7 = PyTuple_New(2); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 100, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __Pyx_GIVEREF(__pyx_t_4);
   PyTuple_SET_ITEM(__pyx_t_7, 0, __pyx_t_4);
@@ -2342,16 +2342,16 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams(PyObjec
   PyTuple_SET_ITEM(__pyx_t_7, 1, __pyx_t_1);
   __pyx_t_4 = 0;
   __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_range, __pyx_t_7, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 97, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_range, __pyx_t_7, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 100, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
   if (likely(PyList_CheckExact(__pyx_t_1)) || PyTuple_CheckExact(__pyx_t_1)) {
     __pyx_t_7 = __pyx_t_1; __Pyx_INCREF(__pyx_t_7); __pyx_t_6 = 0;
     __pyx_t_8 = NULL;
   } else {
-    __pyx_t_6 = -1; __pyx_t_7 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 97, __pyx_L1_error)
+    __pyx_t_6 = -1; __pyx_t_7 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 100, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
-    __pyx_t_8 = Py_TYPE(__pyx_t_7)->tp_iternext; if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 97, __pyx_L1_error)
+    __pyx_t_8 = Py_TYPE(__pyx_t_7)->tp_iternext; if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 100, __pyx_L1_error)
   }
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   for (;;) {
@@ -2359,17 +2359,17 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams(PyObjec
       if (likely(PyList_CheckExact(__pyx_t_7))) {
         if (__pyx_t_6 >= PyList_GET_SIZE(__pyx_t_7)) break;
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-        __pyx_t_1 = PyList_GET_ITEM(__pyx_t_7, __pyx_t_6); __Pyx_INCREF(__pyx_t_1); __pyx_t_6++; if (unlikely(0 < 0)) __PYX_ERR(0, 97, __pyx_L1_error)
+        __pyx_t_1 = PyList_GET_ITEM(__pyx_t_7, __pyx_t_6); __Pyx_INCREF(__pyx_t_1); __pyx_t_6++; if (unlikely(0 < 0)) __PYX_ERR(0, 100, __pyx_L1_error)
         #else
-        __pyx_t_1 = PySequence_ITEM(__pyx_t_7, __pyx_t_6); __pyx_t_6++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 97, __pyx_L1_error)
+        __pyx_t_1 = PySequence_ITEM(__pyx_t_7, __pyx_t_6); __pyx_t_6++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 100, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         #endif
       } else {
         if (__pyx_t_6 >= PyTuple_GET_SIZE(__pyx_t_7)) break;
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-        __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_7, __pyx_t_6); __Pyx_INCREF(__pyx_t_1); __pyx_t_6++; if (unlikely(0 < 0)) __PYX_ERR(0, 97, __pyx_L1_error)
+        __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_7, __pyx_t_6); __Pyx_INCREF(__pyx_t_1); __pyx_t_6++; if (unlikely(0 < 0)) __PYX_ERR(0, 100, __pyx_L1_error)
         #else
-        __pyx_t_1 = PySequence_ITEM(__pyx_t_7, __pyx_t_6); __pyx_t_6++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 97, __pyx_L1_error)
+        __pyx_t_1 = PySequence_ITEM(__pyx_t_7, __pyx_t_6); __pyx_t_6++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 100, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         #endif
       }
@@ -2379,7 +2379,7 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams(PyObjec
         PyObject* exc_type = PyErr_Occurred();
         if (exc_type) {
           if (likely(__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-          else __PYX_ERR(0, 97, __pyx_L1_error)
+          else __PYX_ERR(0, 100, __pyx_L1_error)
         }
         break;
       }
@@ -2388,23 +2388,23 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams(PyObjec
     __Pyx_XDECREF_SET(__pyx_v_ngram_length, __pyx_t_1);
     __pyx_t_1 = 0;
 
-    /* "gensim/models/_utils_any2vec.pyx":98
+    /* "gensim/models/_utils_any2vec.pyx":101
  *     ngrams = []
  *     for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
  *         for i in range(0, len(extended_word) - ngram_length + 1):             # <<<<<<<<<<<<<<
  *             ngrams.append(extended_word[i:i + ngram_length])
  *     return ngrams
  */
-    __pyx_t_2 = __Pyx_PyUnicode_GET_LENGTH(__pyx_v_extended_word); if (unlikely(__pyx_t_2 == ((Py_ssize_t)-1))) __PYX_ERR(0, 98, __pyx_L1_error)
-    __pyx_t_1 = PyInt_FromSsize_t(__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 98, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyUnicode_GET_LENGTH(__pyx_v_extended_word); if (unlikely(__pyx_t_2 == ((Py_ssize_t)-1))) __PYX_ERR(0, 101, __pyx_L1_error)
+    __pyx_t_1 = PyInt_FromSsize_t(__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 101, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_4 = PyNumber_Subtract(__pyx_t_1, __pyx_v_ngram_length); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 98, __pyx_L1_error)
+    __pyx_t_4 = PyNumber_Subtract(__pyx_t_1, __pyx_v_ngram_length); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 101, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = __Pyx_PyInt_AddObjC(__pyx_t_4, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 98, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyInt_AddObjC(__pyx_t_4, __pyx_int_1, 1, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 101, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 98, __pyx_L1_error)
+    __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 101, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_INCREF(__pyx_int_0);
     __Pyx_GIVEREF(__pyx_int_0);
@@ -2412,16 +2412,16 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams(PyObjec
     __Pyx_GIVEREF(__pyx_t_1);
     PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_t_1);
     __pyx_t_1 = 0;
-    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_range, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 98, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_range, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 101, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     if (likely(PyList_CheckExact(__pyx_t_1)) || PyTuple_CheckExact(__pyx_t_1)) {
       __pyx_t_4 = __pyx_t_1; __Pyx_INCREF(__pyx_t_4); __pyx_t_2 = 0;
       __pyx_t_9 = NULL;
     } else {
-      __pyx_t_2 = -1; __pyx_t_4 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 98, __pyx_L1_error)
+      __pyx_t_2 = -1; __pyx_t_4 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 101, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_4);
-      __pyx_t_9 = Py_TYPE(__pyx_t_4)->tp_iternext; if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 98, __pyx_L1_error)
+      __pyx_t_9 = Py_TYPE(__pyx_t_4)->tp_iternext; if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 101, __pyx_L1_error)
     }
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     for (;;) {
@@ -2429,17 +2429,17 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams(PyObjec
         if (likely(PyList_CheckExact(__pyx_t_4))) {
           if (__pyx_t_2 >= PyList_GET_SIZE(__pyx_t_4)) break;
           #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_1 = PyList_GET_ITEM(__pyx_t_4, __pyx_t_2); __Pyx_INCREF(__pyx_t_1); __pyx_t_2++; if (unlikely(0 < 0)) __PYX_ERR(0, 98, __pyx_L1_error)
+          __pyx_t_1 = PyList_GET_ITEM(__pyx_t_4, __pyx_t_2); __Pyx_INCREF(__pyx_t_1); __pyx_t_2++; if (unlikely(0 < 0)) __PYX_ERR(0, 101, __pyx_L1_error)
           #else
-          __pyx_t_1 = PySequence_ITEM(__pyx_t_4, __pyx_t_2); __pyx_t_2++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 98, __pyx_L1_error)
+          __pyx_t_1 = PySequence_ITEM(__pyx_t_4, __pyx_t_2); __pyx_t_2++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 101, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_1);
           #endif
         } else {
           if (__pyx_t_2 >= PyTuple_GET_SIZE(__pyx_t_4)) break;
           #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_4, __pyx_t_2); __Pyx_INCREF(__pyx_t_1); __pyx_t_2++; if (unlikely(0 < 0)) __PYX_ERR(0, 98, __pyx_L1_error)
+          __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_4, __pyx_t_2); __Pyx_INCREF(__pyx_t_1); __pyx_t_2++; if (unlikely(0 < 0)) __PYX_ERR(0, 101, __pyx_L1_error)
           #else
-          __pyx_t_1 = PySequence_ITEM(__pyx_t_4, __pyx_t_2); __pyx_t_2++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 98, __pyx_L1_error)
+          __pyx_t_1 = PySequence_ITEM(__pyx_t_4, __pyx_t_2); __pyx_t_2++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 101, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_1);
           #endif
         }
@@ -2449,7 +2449,7 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams(PyObjec
           PyObject* exc_type = PyErr_Occurred();
           if (exc_type) {
             if (likely(__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-            else __PYX_ERR(0, 98, __pyx_L1_error)
+            else __PYX_ERR(0, 101, __pyx_L1_error)
           }
           break;
         }
@@ -2458,7 +2458,7 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams(PyObjec
       __Pyx_XDECREF_SET(__pyx_v_i, __pyx_t_1);
       __pyx_t_1 = 0;
 
-      /* "gensim/models/_utils_any2vec.pyx":99
+      /* "gensim/models/_utils_any2vec.pyx":102
  *     for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
  *         for i in range(0, len(extended_word) - ngram_length + 1):
  *             ngrams.append(extended_word[i:i + ngram_length])             # <<<<<<<<<<<<<<
@@ -2471,26 +2471,26 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams(PyObjec
       if (__pyx_t_11) {
         __pyx_t_10 = 0;
       } else {
-        __pyx_t_12 = __Pyx_PyIndex_AsSsize_t(__pyx_t_1); if (unlikely((__pyx_t_12 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 99, __pyx_L1_error)
+        __pyx_t_12 = __Pyx_PyIndex_AsSsize_t(__pyx_t_1); if (unlikely((__pyx_t_12 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 102, __pyx_L1_error)
         __pyx_t_10 = __pyx_t_12;
       }
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-      __pyx_t_1 = PyNumber_Add(__pyx_v_i, __pyx_v_ngram_length); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 99, __pyx_L1_error)
+      __pyx_t_1 = PyNumber_Add(__pyx_v_i, __pyx_v_ngram_length); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 102, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
       __pyx_t_11 = (__pyx_t_1 == Py_None);
       if (__pyx_t_11) {
         __pyx_t_12 = PY_SSIZE_T_MAX;
       } else {
-        __pyx_t_13 = __Pyx_PyIndex_AsSsize_t(__pyx_t_1); if (unlikely((__pyx_t_13 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 99, __pyx_L1_error)
+        __pyx_t_13 = __Pyx_PyIndex_AsSsize_t(__pyx_t_1); if (unlikely((__pyx_t_13 == (Py_ssize_t)-1) && PyErr_Occurred())) __PYX_ERR(0, 102, __pyx_L1_error)
         __pyx_t_12 = __pyx_t_13;
       }
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-      __pyx_t_1 = __Pyx_PyUnicode_Substring(__pyx_v_extended_word, __pyx_t_10, __pyx_t_12); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 99, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyUnicode_Substring(__pyx_v_extended_word, __pyx_t_10, __pyx_t_12); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 102, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
-      __pyx_t_14 = __Pyx_PyList_Append(__pyx_v_ngrams, __pyx_t_1); if (unlikely(__pyx_t_14 == ((int)-1))) __PYX_ERR(0, 99, __pyx_L1_error)
+      __pyx_t_14 = __Pyx_PyList_Append(__pyx_v_ngrams, __pyx_t_1); if (unlikely(__pyx_t_14 == ((int)-1))) __PYX_ERR(0, 102, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-      /* "gensim/models/_utils_any2vec.pyx":98
+      /* "gensim/models/_utils_any2vec.pyx":101
  *     ngrams = []
  *     for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
  *         for i in range(0, len(extended_word) - ngram_length + 1):             # <<<<<<<<<<<<<<
@@ -2500,7 +2500,7 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams(PyObjec
     }
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-    /* "gensim/models/_utils_any2vec.pyx":97
+    /* "gensim/models/_utils_any2vec.pyx":100
  *     cdef unicode extended_word = f'<{word}>'
  *     ngrams = []
  *     for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):             # <<<<<<<<<<<<<<
@@ -2510,7 +2510,7 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams(PyObjec
   }
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-  /* "gensim/models/_utils_any2vec.pyx":100
+  /* "gensim/models/_utils_any2vec.pyx":103
  *         for i in range(0, len(extended_word) - ngram_length + 1):
  *             ngrams.append(extended_word[i:i + ngram_length])
  *     return ngrams             # <<<<<<<<<<<<<<
@@ -2522,7 +2522,7 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams(PyObjec
   __pyx_r = __pyx_v_ngrams;
   goto __pyx_L0;
 
-  /* "gensim/models/_utils_any2vec.pyx":77
+  /* "gensim/models/_utils_any2vec.pyx":80
  * 
  * 
  * cpdef compute_ngrams(word, unsigned int min_n, unsigned int max_n):             # <<<<<<<<<<<<<<
@@ -2582,17 +2582,17 @@ static PyObject *__pyx_pw_6gensim_6models_14_utils_any2vec_5compute_ngrams(PyObj
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_min_n)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_ngrams", 1, 3, 3, 1); __PYX_ERR(0, 77, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_ngrams", 1, 3, 3, 1); __PYX_ERR(0, 80, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_max_n)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_ngrams", 1, 3, 3, 2); __PYX_ERR(0, 77, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_ngrams", 1, 3, 3, 2); __PYX_ERR(0, 80, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "compute_ngrams") < 0)) __PYX_ERR(0, 77, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "compute_ngrams") < 0)) __PYX_ERR(0, 80, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 3) {
       goto __pyx_L5_argtuple_error;
@@ -2602,12 +2602,12 @@ static PyObject *__pyx_pw_6gensim_6models_14_utils_any2vec_5compute_ngrams(PyObj
       values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
     }
     __pyx_v_word = values[0];
-    __pyx_v_min_n = __Pyx_PyInt_As_unsigned_int(values[1]); if (unlikely((__pyx_v_min_n == (unsigned int)-1) && PyErr_Occurred())) __PYX_ERR(0, 77, __pyx_L3_error)
-    __pyx_v_max_n = __Pyx_PyInt_As_unsigned_int(values[2]); if (unlikely((__pyx_v_max_n == (unsigned int)-1) && PyErr_Occurred())) __PYX_ERR(0, 77, __pyx_L3_error)
+    __pyx_v_min_n = __Pyx_PyInt_As_unsigned_int(values[1]); if (unlikely((__pyx_v_min_n == (unsigned int)-1) && PyErr_Occurred())) __PYX_ERR(0, 80, __pyx_L3_error)
+    __pyx_v_max_n = __Pyx_PyInt_As_unsigned_int(values[2]); if (unlikely((__pyx_v_max_n == (unsigned int)-1) && PyErr_Occurred())) __PYX_ERR(0, 80, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("compute_ngrams", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 77, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("compute_ngrams", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 80, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("gensim.models._utils_any2vec.compute_ngrams", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -2626,7 +2626,7 @@ static PyObject *__pyx_pf_6gensim_6models_14_utils_any2vec_4compute_ngrams(CYTHO
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("compute_ngrams", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams(__pyx_v_word, __pyx_v_min_n, __pyx_v_max_n, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 77, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams(__pyx_v_word, __pyx_v_min_n, __pyx_v_max_n, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 80, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -2643,7 +2643,7 @@ static PyObject *__pyx_pf_6gensim_6models_14_utils_any2vec_4compute_ngrams(CYTHO
   return __pyx_r;
 }
 
-/* "gensim/models/_utils_any2vec.pyx":110
+/* "gensim/models/_utils_any2vec.pyx":113
  * 
  * 
  * cpdef compute_ngrams_bytes(word, unsigned int min_n, unsigned int max_n):             # <<<<<<<<<<<<<<
@@ -2678,14 +2678,14 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams_bytes(P
   int __pyx_t_14;
   __Pyx_RefNannySetupContext("compute_ngrams_bytes", 0);
 
-  /* "gensim/models/_utils_any2vec.pyx":134
+  /* "gensim/models/_utils_any2vec.pyx":137
  * 
  *     """
  *     cdef bytes utf8_word = f'<{word}>'.encode("utf-8")             # <<<<<<<<<<<<<<
  *     cdef int num_bytes = len(utf8_word)
  *     cdef int j, i, n
  */
-  __pyx_t_1 = PyTuple_New(3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 134, __pyx_L1_error)
+  __pyx_t_1 = PyTuple_New(3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 137, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_t_2 = 0;
   __pyx_t_3 = 127;
@@ -2693,7 +2693,7 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams_bytes(P
   __pyx_t_2 += 1;
   __Pyx_GIVEREF(__pyx_kp_u_);
   PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_kp_u_);
-  __pyx_t_4 = __Pyx_PyObject_FormatSimple(__pyx_v_word, __pyx_empty_unicode); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 134, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_FormatSimple(__pyx_v_word, __pyx_empty_unicode); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 137, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __pyx_t_3 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_4) > __pyx_t_3) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_4) : __pyx_t_3;
   __pyx_t_2 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_4);
@@ -2704,16 +2704,16 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams_bytes(P
   __pyx_t_2 += 1;
   __Pyx_GIVEREF(__pyx_kp_u__2);
   PyTuple_SET_ITEM(__pyx_t_1, 2, __pyx_kp_u__2);
-  __pyx_t_4 = __Pyx_PyUnicode_Join(__pyx_t_1, 3, __pyx_t_2, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 134, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyUnicode_Join(__pyx_t_1, 3, __pyx_t_2, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 137, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = PyUnicode_AsUTF8String(((PyObject*)__pyx_t_4)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 134, __pyx_L1_error)
+  __pyx_t_1 = PyUnicode_AsUTF8String(((PyObject*)__pyx_t_4)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 137, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __pyx_v_utf8_word = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "gensim/models/_utils_any2vec.pyx":135
+  /* "gensim/models/_utils_any2vec.pyx":138
  *     """
  *     cdef bytes utf8_word = f'<{word}>'.encode("utf-8")
  *     cdef int num_bytes = len(utf8_word)             # <<<<<<<<<<<<<<
@@ -2722,24 +2722,24 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams_bytes(P
  */
   if (unlikely(__pyx_v_utf8_word == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
-    __PYX_ERR(0, 135, __pyx_L1_error)
+    __PYX_ERR(0, 138, __pyx_L1_error)
   }
-  __pyx_t_2 = PyBytes_GET_SIZE(__pyx_v_utf8_word); if (unlikely(__pyx_t_2 == ((Py_ssize_t)-1))) __PYX_ERR(0, 135, __pyx_L1_error)
+  __pyx_t_2 = PyBytes_GET_SIZE(__pyx_v_utf8_word); if (unlikely(__pyx_t_2 == ((Py_ssize_t)-1))) __PYX_ERR(0, 138, __pyx_L1_error)
   __pyx_v_num_bytes = __pyx_t_2;
 
-  /* "gensim/models/_utils_any2vec.pyx":138
+  /* "gensim/models/_utils_any2vec.pyx":141
  *     cdef int j, i, n
  * 
  *     ngrams = []             # <<<<<<<<<<<<<<
  *     for i in range(num_bytes):
  *         ngram = []
  */
-  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 138, __pyx_L1_error)
+  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 141, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_v_ngrams = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "gensim/models/_utils_any2vec.pyx":139
+  /* "gensim/models/_utils_any2vec.pyx":142
  * 
  *     ngrams = []
  *     for i in range(num_bytes):             # <<<<<<<<<<<<<<
@@ -2751,43 +2751,43 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams_bytes(P
   for (__pyx_t_7 = 0; __pyx_t_7 < __pyx_t_6; __pyx_t_7+=1) {
     __pyx_v_i = __pyx_t_7;
 
-    /* "gensim/models/_utils_any2vec.pyx":140
+    /* "gensim/models/_utils_any2vec.pyx":143
  *     ngrams = []
  *     for i in range(num_bytes):
  *         ngram = []             # <<<<<<<<<<<<<<
  * 
  *         if utf8_word[i] & _MB_MASK == _MB_START:
  */
-    __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 140, __pyx_L1_error)
+    __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 143, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_XDECREF_SET(__pyx_v_ngram, ((PyObject*)__pyx_t_1));
     __pyx_t_1 = 0;
 
-    /* "gensim/models/_utils_any2vec.pyx":142
+    /* "gensim/models/_utils_any2vec.pyx":145
  *         ngram = []
  * 
  *         if utf8_word[i] & _MB_MASK == _MB_START:             # <<<<<<<<<<<<<<
  *             continue
  * 
  */
-    __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_utf8_word, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 142, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_utf8_word, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 145, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_MB_MASK); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 142, __pyx_L1_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_MB_MASK); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 145, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_8 = PyNumber_And(__pyx_t_1, __pyx_t_4); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 142, __pyx_L1_error)
+    __pyx_t_8 = PyNumber_And(__pyx_t_1, __pyx_t_4); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 145, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_8);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_MB_START); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 142, __pyx_L1_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_MB_START); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 145, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_1 = PyObject_RichCompare(__pyx_t_8, __pyx_t_4, Py_EQ); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 142, __pyx_L1_error)
+    __pyx_t_1 = PyObject_RichCompare(__pyx_t_8, __pyx_t_4, Py_EQ); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 145, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_9 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_9 < 0)) __PYX_ERR(0, 142, __pyx_L1_error)
+    __pyx_t_9 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_9 < 0)) __PYX_ERR(0, 145, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     if (__pyx_t_9) {
 
-      /* "gensim/models/_utils_any2vec.pyx":143
+      /* "gensim/models/_utils_any2vec.pyx":146
  * 
  *         if utf8_word[i] & _MB_MASK == _MB_START:
  *             continue             # <<<<<<<<<<<<<<
@@ -2796,7 +2796,7 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams_bytes(P
  */
       goto __pyx_L3_continue;
 
-      /* "gensim/models/_utils_any2vec.pyx":142
+      /* "gensim/models/_utils_any2vec.pyx":145
  *         ngram = []
  * 
  *         if utf8_word[i] & _MB_MASK == _MB_START:             # <<<<<<<<<<<<<<
@@ -2805,7 +2805,7 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams_bytes(P
  */
     }
 
-    /* "gensim/models/_utils_any2vec.pyx":145
+    /* "gensim/models/_utils_any2vec.pyx":148
  *             continue
  * 
  *         j, n = i, 1             # <<<<<<<<<<<<<<
@@ -2817,7 +2817,7 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams_bytes(P
     __pyx_v_j = __pyx_t_10;
     __pyx_v_n = __pyx_t_11;
 
-    /* "gensim/models/_utils_any2vec.pyx":146
+    /* "gensim/models/_utils_any2vec.pyx":149
  * 
  *         j, n = i, 1
  *         while j < num_bytes and n <= max_n:             # <<<<<<<<<<<<<<
@@ -2836,19 +2836,19 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams_bytes(P
       __pyx_L8_bool_binop_done:;
       if (!__pyx_t_9) break;
 
-      /* "gensim/models/_utils_any2vec.pyx":147
+      /* "gensim/models/_utils_any2vec.pyx":150
  *         j, n = i, 1
  *         while j < num_bytes and n <= max_n:
  *             ngram.append(utf8_word[j])             # <<<<<<<<<<<<<<
  *             j += 1
  *             while j < num_bytes and (utf8_word[j] & _MB_MASK) == _MB_START:
  */
-      __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_utf8_word, __pyx_v_j, int, 1, __Pyx_PyInt_From_int, 0, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 147, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_utf8_word, __pyx_v_j, int, 1, __Pyx_PyInt_From_int, 0, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 150, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
-      __pyx_t_13 = __Pyx_PyList_Append(__pyx_v_ngram, __pyx_t_1); if (unlikely(__pyx_t_13 == ((int)-1))) __PYX_ERR(0, 147, __pyx_L1_error)
+      __pyx_t_13 = __Pyx_PyList_Append(__pyx_v_ngram, __pyx_t_1); if (unlikely(__pyx_t_13 == ((int)-1))) __PYX_ERR(0, 150, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-      /* "gensim/models/_utils_any2vec.pyx":148
+      /* "gensim/models/_utils_any2vec.pyx":151
  *         while j < num_bytes and n <= max_n:
  *             ngram.append(utf8_word[j])
  *             j += 1             # <<<<<<<<<<<<<<
@@ -2857,7 +2857,7 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams_bytes(P
  */
       __pyx_v_j = (__pyx_v_j + 1);
 
-      /* "gensim/models/_utils_any2vec.pyx":149
+      /* "gensim/models/_utils_any2vec.pyx":152
  *             ngram.append(utf8_word[j])
  *             j += 1
  *             while j < num_bytes and (utf8_word[j] & _MB_MASK) == _MB_START:             # <<<<<<<<<<<<<<
@@ -2871,38 +2871,38 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams_bytes(P
           __pyx_t_9 = __pyx_t_12;
           goto __pyx_L12_bool_binop_done;
         }
-        __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_utf8_word, __pyx_v_j, int, 1, __Pyx_PyInt_From_int, 0, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 149, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_utf8_word, __pyx_v_j, int, 1, __Pyx_PyInt_From_int, 0, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 152, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
-        __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_MB_MASK); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 149, __pyx_L1_error)
+        __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_MB_MASK); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 152, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_4);
-        __pyx_t_8 = PyNumber_And(__pyx_t_1, __pyx_t_4); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 149, __pyx_L1_error)
+        __pyx_t_8 = PyNumber_And(__pyx_t_1, __pyx_t_4); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 152, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_8);
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
         __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-        __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_MB_START); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 149, __pyx_L1_error)
+        __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_MB_START); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 152, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_4);
-        __pyx_t_1 = PyObject_RichCompare(__pyx_t_8, __pyx_t_4, Py_EQ); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 149, __pyx_L1_error)
+        __pyx_t_1 = PyObject_RichCompare(__pyx_t_8, __pyx_t_4, Py_EQ); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 152, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
         __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-        __pyx_t_12 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_12 < 0)) __PYX_ERR(0, 149, __pyx_L1_error)
+        __pyx_t_12 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_12 < 0)) __PYX_ERR(0, 152, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
         __pyx_t_9 = __pyx_t_12;
         __pyx_L12_bool_binop_done:;
         if (!__pyx_t_9) break;
 
-        /* "gensim/models/_utils_any2vec.pyx":150
+        /* "gensim/models/_utils_any2vec.pyx":153
  *             j += 1
  *             while j < num_bytes and (utf8_word[j] & _MB_MASK) == _MB_START:
  *                 ngram.append(utf8_word[j])             # <<<<<<<<<<<<<<
  *                 j += 1
  *             if n >= min_n and not (n == 1 and (i == 0 or j == num_bytes)):
  */
-        __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_utf8_word, __pyx_v_j, int, 1, __Pyx_PyInt_From_int, 0, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 150, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_utf8_word, __pyx_v_j, int, 1, __Pyx_PyInt_From_int, 0, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 153, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
-        __pyx_t_13 = __Pyx_PyList_Append(__pyx_v_ngram, __pyx_t_1); if (unlikely(__pyx_t_13 == ((int)-1))) __PYX_ERR(0, 150, __pyx_L1_error)
+        __pyx_t_13 = __Pyx_PyList_Append(__pyx_v_ngram, __pyx_t_1); if (unlikely(__pyx_t_13 == ((int)-1))) __PYX_ERR(0, 153, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-        /* "gensim/models/_utils_any2vec.pyx":151
+        /* "gensim/models/_utils_any2vec.pyx":154
  *             while j < num_bytes and (utf8_word[j] & _MB_MASK) == _MB_START:
  *                 ngram.append(utf8_word[j])
  *                 j += 1             # <<<<<<<<<<<<<<
@@ -2912,7 +2912,7 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams_bytes(P
         __pyx_v_j = (__pyx_v_j + 1);
       }
 
-      /* "gensim/models/_utils_any2vec.pyx":152
+      /* "gensim/models/_utils_any2vec.pyx":155
  *                 ngram.append(utf8_word[j])
  *                 j += 1
  *             if n >= min_n and not (n == 1 and (i == 0 or j == num_bytes)):             # <<<<<<<<<<<<<<
@@ -2945,19 +2945,19 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams_bytes(P
       __pyx_L15_bool_binop_done:;
       if (__pyx_t_9) {
 
-        /* "gensim/models/_utils_any2vec.pyx":153
+        /* "gensim/models/_utils_any2vec.pyx":156
  *                 j += 1
  *             if n >= min_n and not (n == 1 and (i == 0 or j == num_bytes)):
  *                 ngrams.append(bytes(ngram))             # <<<<<<<<<<<<<<
  *             n += 1
  *     return ngrams
  */
-        __pyx_t_1 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyBytes_Type)), __pyx_v_ngram); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 153, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyBytes_Type)), __pyx_v_ngram); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 156, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
-        __pyx_t_13 = __Pyx_PyList_Append(__pyx_v_ngrams, __pyx_t_1); if (unlikely(__pyx_t_13 == ((int)-1))) __PYX_ERR(0, 153, __pyx_L1_error)
+        __pyx_t_13 = __Pyx_PyList_Append(__pyx_v_ngrams, __pyx_t_1); if (unlikely(__pyx_t_13 == ((int)-1))) __PYX_ERR(0, 156, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-        /* "gensim/models/_utils_any2vec.pyx":152
+        /* "gensim/models/_utils_any2vec.pyx":155
  *                 ngram.append(utf8_word[j])
  *                 j += 1
  *             if n >= min_n and not (n == 1 and (i == 0 or j == num_bytes)):             # <<<<<<<<<<<<<<
@@ -2966,7 +2966,7 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams_bytes(P
  */
       }
 
-      /* "gensim/models/_utils_any2vec.pyx":154
+      /* "gensim/models/_utils_any2vec.pyx":157
  *             if n >= min_n and not (n == 1 and (i == 0 or j == num_bytes)):
  *                 ngrams.append(bytes(ngram))
  *             n += 1             # <<<<<<<<<<<<<<
@@ -2977,7 +2977,7 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams_bytes(P
     __pyx_L3_continue:;
   }
 
-  /* "gensim/models/_utils_any2vec.pyx":155
+  /* "gensim/models/_utils_any2vec.pyx":158
  *                 ngrams.append(bytes(ngram))
  *             n += 1
  *     return ngrams             # <<<<<<<<<<<<<<
@@ -2987,7 +2987,7 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams_bytes(P
   __pyx_r = __pyx_v_ngrams;
   goto __pyx_L0;
 
-  /* "gensim/models/_utils_any2vec.pyx":110
+  /* "gensim/models/_utils_any2vec.pyx":113
  * 
  * 
  * cpdef compute_ngrams_bytes(word, unsigned int min_n, unsigned int max_n):             # <<<<<<<<<<<<<<
@@ -3013,7 +3013,7 @@ static PyObject *__pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams_bytes(P
 
 /* Python wrapper */
 static PyObject *__pyx_pw_6gensim_6models_14_utils_any2vec_7compute_ngrams_bytes(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_6gensim_6models_14_utils_any2vec_6compute_ngrams_bytes[] = "compute_ngrams_bytes(word, unsigned int min_n, unsigned int max_n)\nComputes ngrams for a word.\n\n    Ported from the original FB implementation.\n\n    Parameters\n    ----------\n    word : str\n        A unicode string.\n    min_n : unsigned int\n        The minimum ngram length.\n    max_n : unsigned int\n        The maximum ngram length.\n\n    Returns:\n    --------\n    list\n        A list of ngrams, where each ngram is a list of **bytes**.\n\n    See Also\n    --------\n    `Original implementation <https://github.com/facebookresearch/fastText/blob/7842495a4d64c7a3bb4339d45d6e64321d002ed8/src/dictionary.cc#L172>`__\n\n    ";
+static char __pyx_doc_6gensim_6models_14_utils_any2vec_6compute_ngrams_bytes[] = "compute_ngrams_bytes(word, unsigned int min_n, unsigned int max_n)\nComputes ngrams for a word.\n\n    Ported from the original FB implementation.\n\n    Parameters\n    ----------\n    word : str\n        A unicode string.\n    min_n : unsigned int\n        The minimum ngram length.\n    max_n : unsigned int\n        The maximum ngram length.\n\n    Returns:\n    --------\n    list of str\n        A list of ngrams, where each ngram is a list of **bytes**.\n\n    See Also\n    --------\n    `Original implementation <https://github.com/facebookresearch/fastText/blob/7842495a4d64c7a3bb4339d45d6e64321d002ed8/src/dictionary.cc#L172>`__\n\n    ";
 static PyObject *__pyx_pw_6gensim_6models_14_utils_any2vec_7compute_ngrams_bytes(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_word = 0;
   unsigned int __pyx_v_min_n;
@@ -3046,17 +3046,17 @@ static PyObject *__pyx_pw_6gensim_6models_14_utils_any2vec_7compute_ngrams_bytes
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_min_n)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_ngrams_bytes", 1, 3, 3, 1); __PYX_ERR(0, 110, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_ngrams_bytes", 1, 3, 3, 1); __PYX_ERR(0, 113, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_max_n)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_ngrams_bytes", 1, 3, 3, 2); __PYX_ERR(0, 110, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_ngrams_bytes", 1, 3, 3, 2); __PYX_ERR(0, 113, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "compute_ngrams_bytes") < 0)) __PYX_ERR(0, 110, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "compute_ngrams_bytes") < 0)) __PYX_ERR(0, 113, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 3) {
       goto __pyx_L5_argtuple_error;
@@ -3066,12 +3066,12 @@ static PyObject *__pyx_pw_6gensim_6models_14_utils_any2vec_7compute_ngrams_bytes
       values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
     }
     __pyx_v_word = values[0];
-    __pyx_v_min_n = __Pyx_PyInt_As_unsigned_int(values[1]); if (unlikely((__pyx_v_min_n == (unsigned int)-1) && PyErr_Occurred())) __PYX_ERR(0, 110, __pyx_L3_error)
-    __pyx_v_max_n = __Pyx_PyInt_As_unsigned_int(values[2]); if (unlikely((__pyx_v_max_n == (unsigned int)-1) && PyErr_Occurred())) __PYX_ERR(0, 110, __pyx_L3_error)
+    __pyx_v_min_n = __Pyx_PyInt_As_unsigned_int(values[1]); if (unlikely((__pyx_v_min_n == (unsigned int)-1) && PyErr_Occurred())) __PYX_ERR(0, 113, __pyx_L3_error)
+    __pyx_v_max_n = __Pyx_PyInt_As_unsigned_int(values[2]); if (unlikely((__pyx_v_max_n == (unsigned int)-1) && PyErr_Occurred())) __PYX_ERR(0, 113, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("compute_ngrams_bytes", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 110, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("compute_ngrams_bytes", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 113, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("gensim.models._utils_any2vec.compute_ngrams_bytes", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -3090,7 +3090,7 @@ static PyObject *__pyx_pf_6gensim_6models_14_utils_any2vec_6compute_ngrams_bytes
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("compute_ngrams_bytes", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams_bytes(__pyx_v_word, __pyx_v_min_n, __pyx_v_max_n, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 110, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_6gensim_6models_14_utils_any2vec_compute_ngrams_bytes(__pyx_v_word, __pyx_v_min_n, __pyx_v_max_n, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 113, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -5830,7 +5830,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {0, 0, 0, 0, 0, 0, 0}
 };
 static CYTHON_SMALL_CODE int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 97, __pyx_L1_error)
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 100, __pyx_L1_error)
   __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) __PYX_ERR(1, 272, __pyx_L1_error)
   __pyx_builtin_RuntimeError = __Pyx_GetBuiltinName(__pyx_n_s_RuntimeError); if (!__pyx_builtin_RuntimeError) __PYX_ERR(1, 856, __pyx_L1_error)
   __pyx_builtin_ImportError = __Pyx_GetBuiltinName(__pyx_n_s_ImportError); if (!__pyx_builtin_ImportError) __PYX_ERR(1, 1038, __pyx_L1_error)
@@ -6251,81 +6251,81 @@ if (!__Pyx_RefNanny) {
   if (__Pyx_patch_abc() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #endif
 
-  /* "gensim/models/_utils_any2vec.pyx":14
+  /* "gensim/models/_utils_any2vec.pyx":17
  *     ctypedef signed char int8_t
  * 
  * from six import PY2             # <<<<<<<<<<<<<<
  * import numpy as np
  * cimport numpy as np
  */
-  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 14, __pyx_L1_error)
+  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 17, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_INCREF(__pyx_n_s_PY2);
   __Pyx_GIVEREF(__pyx_n_s_PY2);
   PyList_SET_ITEM(__pyx_t_1, 0, __pyx_n_s_PY2);
-  __pyx_t_2 = __Pyx_Import(__pyx_n_s_six, __pyx_t_1, -1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 14, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_Import(__pyx_n_s_six, __pyx_t_1, -1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 17, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_ImportFrom(__pyx_t_2, __pyx_n_s_PY2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 14, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_ImportFrom(__pyx_t_2, __pyx_n_s_PY2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 17, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_PY2, __pyx_t_1) < 0) __PYX_ERR(0, 14, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_PY2, __pyx_t_1) < 0) __PYX_ERR(0, 17, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "gensim/models/_utils_any2vec.pyx":15
+  /* "gensim/models/_utils_any2vec.pyx":18
  * 
  * from six import PY2
  * import numpy as np             # <<<<<<<<<<<<<<
  * cimport numpy as np
  * 
  */
-  __pyx_t_2 = __Pyx_Import(__pyx_n_s_numpy, 0, -1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 15, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_Import(__pyx_n_s_numpy, 0, -1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 18, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_np, __pyx_t_2) < 0) __PYX_ERR(0, 15, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_np, __pyx_t_2) < 0) __PYX_ERR(0, 18, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "gensim/models/_utils_any2vec.pyx":25
+  /* "gensim/models/_utils_any2vec.pyx":28
  *     return ord(b)
  * 
  * _byte_to_int = _byte_to_int_py2 if PY2 else _byte_to_int_py3             # <<<<<<<<<<<<<<
  * 
  * 
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_PY2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 25, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_PY2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 28, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 25, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 28, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if (__pyx_t_3) {
-    __pyx_t_1 = __Pyx_CFunc_object____object___to_py(__pyx_f_6gensim_6models_14_utils_any2vec__byte_to_int_py2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 25, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_CFunc_object____object___to_py(__pyx_f_6gensim_6models_14_utils_any2vec__byte_to_int_py2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 28, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __pyx_t_2 = __pyx_t_1;
     __pyx_t_1 = 0;
   } else {
-    __pyx_t_1 = __Pyx_CFunc_object____object___to_py(__pyx_f_6gensim_6models_14_utils_any2vec__byte_to_int_py3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 25, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_CFunc_object____object___to_py(__pyx_f_6gensim_6models_14_utils_any2vec__byte_to_int_py3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 28, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __pyx_t_2 = __pyx_t_1;
     __pyx_t_1 = 0;
   }
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_byte_to_int, __pyx_t_2) < 0) __PYX_ERR(0, 25, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_byte_to_int, __pyx_t_2) < 0) __PYX_ERR(0, 28, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "gensim/models/_utils_any2vec.pyx":106
+  /* "gensim/models/_utils_any2vec.pyx":109
  * # as opposed to a new character.
  * #
  * _MB_MASK = 0xC0             # <<<<<<<<<<<<<<
  * _MB_START = 0x80
  * 
  */
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_MB_MASK, __pyx_int_192) < 0) __PYX_ERR(0, 106, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_MB_MASK, __pyx_int_192) < 0) __PYX_ERR(0, 109, __pyx_L1_error)
 
-  /* "gensim/models/_utils_any2vec.pyx":107
+  /* "gensim/models/_utils_any2vec.pyx":110
  * #
  * _MB_MASK = 0xC0
  * _MB_START = 0x80             # <<<<<<<<<<<<<<
  * 
  * 
  */
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_MB_START, __pyx_int_128) < 0) __PYX_ERR(0, 107, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_MB_START, __pyx_int_128) < 0) __PYX_ERR(0, 110, __pyx_L1_error)
 
   /* "gensim/models/_utils_any2vec.pyx":1
  * #!/usr/bin/env cython             # <<<<<<<<<<<<<<
