@@ -98,3 +98,58 @@ cpdef compute_ngrams(word, unsigned int min_n, unsigned int max_n):
         for i in range(0, len(extended_word) - ngram_length + 1):
             ngrams.append(extended_word[i:i + ngram_length])
     return ngrams
+
+#
+# UTF-8 bytes that begin with 10 are subsequent bytes of a multi-byte sequence,
+# as opposed to a new character.
+#
+_MB_MASK = 0xC0
+_MB_START = 0x80
+
+
+cpdef compute_ngrams_bytes(word, unsigned int min_n, unsigned int max_n):
+    """Computes ngrams for a word.
+
+    Ported from the original FB implementation.
+
+    Parameters
+    ----------
+    word : str
+        A unicode string.
+    min_n : unsigned int
+        The minimum ngram length.
+    max_n : unsigned int
+        The maximum ngram length.
+
+    Returns:
+    --------
+    list
+        A list of ngrams, where each ngram is a list of **bytes**.
+
+    See Also
+    --------
+    `Original implementation <https://github.com/facebookresearch/fastText/blob/7842495a4d64c7a3bb4339d45d6e64321d002ed8/src/dictionary.cc#L172>`__
+
+    """
+    cdef bytes utf8_word = f'<{word}>'.encode("utf-8")
+    cdef int num_bytes = len(utf8_word)
+    cdef int j, i, n
+
+    ngrams = []
+    for i in range(num_bytes):
+        ngram = []
+
+        if utf8_word[i] & _MB_MASK == _MB_START:
+            continue
+
+        j, n = i, 1
+        while j < num_bytes and n <= max_n:
+            ngram.append(utf8_word[j])
+            j += 1
+            while j < num_bytes and (utf8_word[j] & _MB_MASK) == _MB_START:
+                ngram.append(utf8_word[j])
+                j += 1
+            if n >= min_n and not (n == 1 and (i == 0 or j == num_bytes)):
+                ngrams.append(bytes(ngram))
+            n += 1
+    return ngrams

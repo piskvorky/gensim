@@ -10,13 +10,18 @@ One of the goals of this module is to provide an abstraction over the Cython
 extensions for FastText.  If they are not available, then the module substitutes
 slower Python versions in their place.
 
-Another related set of FastText functionality is computing ngrams for a word,
-and then hashing them.  The :py:func:`ft_ngram_hashes` and
-:py:func:`ft_ngram_hashes_broken` achieves this goal.
+Another related set of FastText functionality is computing ngrams for a word.
+The :py:func:`compute_ngrams` and :py:func:`compute_ngrams_bytes` hashes achieve that.
 
-Finally, the module also exposes "working" and "broken" hash functions for
-FastText.  It does this without abstracting them away, because the correct
-function to use depends on the current model.
+Closely related is the functionality for hashing ngrams, implemented by the
+:py:func:`ft_hash` and :py:func:`ft_hash_broken` functions.
+The module exposes "working" and "broken" hash functions in order to maintain
+backwards compatibility with older versions of Gensim.
+
+For compatibility with older Gensim, use :py:func:`compute_ngrams` and
+:py:func:`ft_hash_broken` to has each ngram.  For compatibility with the
+current Facebook implementation, use :py:func:`compute_ngrams_bytes` and
+:py:func:`ft_hash_bytes`.
 
 """
 
@@ -30,6 +35,14 @@ from six.moves import range
 from six import iteritems, PY2
 
 logger = logging.getLogger(__name__)
+
+
+#
+# UTF-8 bytes that begin with 10 are subsequent bytes of a multi-byte sequence,
+# as opposed to a new character.
+#
+_MB_MASK = 0xC0
+_MB_START = 0x80
 
 
 def _byte_to_int_py3(b):
@@ -47,7 +60,7 @@ _byte_to_int = _byte_to_int_py2 if PY2 else _byte_to_int_py3
 # Define this here so we can unittest this function directly.
 # Only use this function if the faster C version fails to import.
 #
-def _ft_hash_py_bytes(bytez):
+def _ft_hash_bytes_py(bytez):
     """Calculate hash based on `bytez`.
     Reproduce `hash method from Facebook fastText implementation
     <https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc>`_.
@@ -72,7 +85,7 @@ def _ft_hash_py_bytes(bytez):
     return h
 
 
-def _ft_hash_py_broken(string):
+def _ft_hash_broken_py(string):
     """Calculate hash based on `string`.
     Reproduce `hash method from Facebook fastText implementation
     <https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc>`_.
@@ -100,26 +113,109 @@ def _ft_hash_py_broken(string):
     return h
 
 
+def _compute_ngrams_py(word, min_n, max_n):
+    """Get the list of all possible ngrams for a given word.
+    Parameters
+    ----------
+    word : str
+        The word whose ngrams need to be computed.
+    min_n : int
+        Minimum character length of the ngrams.
+    max_n : int
+        Maximum character length of the ngrams.
+    Returns
+    -------
+    list of str
+        Sequence of character ngrams.
+    """
+    BOW, EOW = ('<', '>')  # Used by FastText to attach to all words as prefix and suffix
+    extended_word = BOW + word + EOW
+    ngrams = []
+    for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
+        for i in range(0, len(extended_word) - ngram_length + 1):
+            ngrams.append(extended_word[i:i + ngram_length])
+    return ngrams
+
+
+def _compute_ngrams_bytes_py(word, min_n, max_n):
+    """Computes ngrams for a word.
+
+    Ported from the original FB implementation.
+
+    Parameters
+    ----------
+    word : str
+        A unicode string.
+    min_n : unsigned int
+        The minimum ngram length.
+    max_n : unsigned int
+        The maximum ngram length.
+
+    Returns:
+    --------
+    list of str
+        A list of ngrams, where each ngram is a list of **bytes**.
+
+    See Also
+    --------
+    `Original implementation <https://github.com/facebookresearch/fastText/blob/7842495a4d64c7a3bb4339d45d6e64321d002ed8/src/dictionary.cc#L172>`__  # noqa: E501
+
+    """
+    utf8_word = f'<{word}>'.encode("utf-8")
+    num_bytes = len(utf8_word)
+    n = 0
+
+    ngrams = []
+    for i in range(num_bytes):
+        ngram = []
+
+        if utf8_word[i] & _MB_MASK == _MB_START:
+            continue
+
+        j, n = i, 1
+        while j < num_bytes and n <= max_n:
+            ngram.append(utf8_word[j])
+            j += 1
+            while j < num_bytes and (utf8_word[j] & _MB_MASK) == _MB_START:
+                ngram.append(utf8_word[j])
+                j += 1
+            if n >= min_n and not (n == 1 and (i == 0 or j == num_bytes)):
+                ngrams.append(bytes(ngram))
+            n += 1
+    return ngrams
+
+
+#
+# Internally, we use the following convention to abstract away the presence
+# or absence of the Cython extensions:
+#
+# - _function_cy: Imported from Cython extension
+# - _function_py: Implemented in Python
+# - function: Exported by this module.
+#
 try:
     from gensim.models._utils_any2vec import (
-        compute_ngrams,
-        ft_hash_broken as _ft_hash_cy_broken,
-        ft_hash_bytes as _ft_hash_cy_bytes,
+        compute_ngrams as _compute_ngrams_cy,
+        compute_ngrams_bytes as _compute_ngrams_bytes_cy,
+        ft_hash_broken as _ft_hash_broken_cy,
+        ft_hash_bytes as _ft_hash_bytes_cy,
     )
-    _ft_hash_bytes = _ft_hash_cy_bytes
-    _ft_hash_broken = _ft_hash_cy_broken
+    ft_hash_bytes = _ft_hash_bytes_cy
+    ft_hash_broken = _ft_hash_broken_cy
+    compute_ngrams = _compute_ngrams_cy
+    compute_ngrams_bytes = _compute_ngrams_bytes_cy
     FAST_VERSION = 0
 except ImportError:
     # failed... fall back to plain python
     FAST_VERSION = -1
-    _ft_hash_bytes = _ft_hash_py_bytes
-    _ft_hash_broken = _ft_hash_py_broken
+    ft_hash_bytes = _ft_hash_bytes_py
+    ft_hash_broken = _ft_hash_broken_py
+    compute_ngrams = _compute_ngrams_py
+    compute_ngrams_bytes = _compute_ngrams_bytes_py
 
 
-def ft_ngram_hashes(word, minn, maxn, num_buckets):
+def ft_ngram_hashes(word, minn, maxn, num_buckets, fb_compatible=True):
     """Calculate the ngrams of the word and hash them.
-
-    Do this in a way that is compatible with the original Facebook implementation.
 
     Parameters
     ----------
@@ -131,50 +227,21 @@ def ft_ngram_hashes(word, minn, maxn, num_buckets):
         Maximum ngram length
     num_buckets : int
         The number of buckets
+    fb_compatible : boolean, optional
+        True for compatibility with the Facebook implementation.
+        False for compatibility with the old Gensim implementation.
 
     Returns
     -------
         A list of hashes (integers), one per each detected ngram.
 
     """
-    ngrams = compute_ngrams(word, minn, maxn)
-    #
-    # This is a trick to avoid encoding each ngram separately, which is
-    # computationally expensive.  It works for two reasons:
-    #
-    # 1) ngrams are guaranteed to _not_ have any spaces, because that is the
-    # character we use to split sentences into words.
-    # 2) space is an ASCII character, so it survives UTF-8 encoding unchanged.
-    #
-    encoded_ngrams = (" ".join(ngrams)).encode("utf-8").split()
-    hashes = [_ft_hash_bytes(en) % num_buckets for en in encoded_ngrams]
-    return hashes
-
-
-def ft_ngram_hashes_broken(word, minn, maxn, num_buckets):
-    """Calculate the ngrams of the word and hash them.
-
-    Do this in a way that is incompatible with the original Facebook
-    implementation, but compatible with older versions of Gensim.
-
-    Parameters
-    ----------
-    word : str
-        The word to calculate ngram hashes for.
-    minn : int
-        Minimum ngram length
-    maxn : int
-        Maximum ngram length
-    num_buckets : int
-        The number of buckets
-
-    Returns
-    -------
-        A list of hashes (integers), one per each detected ngram.
-
-    """
-    ngrams = compute_ngrams(word, minn, maxn)
-    hashes = [_ft_hash_broken(n) % num_buckets for n in ngrams]
+    if fb_compatible:
+        encoded_ngrams = compute_ngrams_bytes(word, minn, maxn)
+        hashes = [ft_hash_bytes(n) % num_buckets for n in encoded_ngrams]
+    else:
+        text_ngrams = compute_ngrams(word, minn, maxn)
+        hashes = [ft_hash_broken(n) % num_buckets for n in text_ngrams]
     return hashes
 
 
