@@ -398,7 +398,7 @@ class NgramsTest(unittest.TestCase):
             ],
             'at\nthe': [
                 '<at', 'at\n', 't\nt', '\nth', 'the', 'he>',
-                '<at ', 'at\nt', 't\nth', '\nthe', 'the>', '<at\nt', 'at\nth', 't\nthe', '\nthe>'
+                '<at\n', 'at\nt', 't\nth', '\nthe', 'the>', '<at\nt', 'at\nth', 't\nthe', '\nthe>'
             ],
            'тест': ['<те', 'тес', 'ест', 'ст>', '<тес', 'тест', 'ест>', '<тест', 'тест>'],
            'テスト': ['<テス', 'テスト', 'スト>', '<テスト', 'テスト>', '<テスト>'],
@@ -409,12 +409,16 @@ class NgramsTest(unittest.TestCase):
         for word in self.expected_text:
             expected = self.expected_text[word]
             actual = gensim.models.utils_any2vec._compute_ngrams_py(word, 3, 5)
+            self.assertEqual(len(expected), len(actual))
+            self.assertEqual(set(expected), set(actual))
 
     @unittest.skipIf(DISABLE_CYTHON_TESTS, 'Cython functions are not properly compiled')
     def test_text_cy(self):
         for word in self.expected_text:
             expected = self.expected_text[word]
             actual = gensim.models.utils_any2vec._compute_ngrams_cy(word, 3, 5)
+            self.assertEqual(len(expected), len(actual))
+            self.assertEqual(set(expected), set(actual))
 
 
 if __name__ == '__main__':
