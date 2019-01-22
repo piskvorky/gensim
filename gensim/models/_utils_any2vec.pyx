@@ -19,15 +19,6 @@ import numpy as np
 cimport numpy as np
 
 
-cdef _byte_to_int_py3(b):
-    return b
-
-cdef _byte_to_int_py2(b):
-    return ord(b)
-
-_byte_to_int = _byte_to_int_py2 if PY2 else _byte_to_int_py3
-
-
 cpdef ft_hash_bytes(bytes bytez):
     """Calculate hash based on `bytez`.
     Reproduce `hash method from Facebook fastText implementation
@@ -48,7 +39,7 @@ cpdef ft_hash_bytes(bytes bytez):
     cdef char b
 
     for b in bytez:
-        h = h ^ <uint32_t>(<int8_t>b)  # FIXME I drop 'ord' from py2, not sure about correctenss
+        h = h ^ <uint32_t>(<int8_t>b)
         h = h * 16777619
     return h
 
