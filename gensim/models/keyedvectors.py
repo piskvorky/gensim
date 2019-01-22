@@ -1512,6 +1512,15 @@ class Word2VecKeyedVectors(WordEmbeddingsKeyedVectors):
         )
         return layer
 
+    @classmethod
+    def load(cls, fname_or_handle, **kwargs):
+        model = super(WordEmbeddingsKeyedVectors, cls).load(fname_or_handle, **kwargs)
+        if isinstance(model, FastTextKeyedVectors):
+            if not hasattr(model, 'compatible_hash'):
+                model.compatible_hash = False
+
+        return model
+
 
 KeyedVectors = Word2VecKeyedVectors  # alias for backward compatibility
 
@@ -1973,6 +1982,14 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         self.bucket = bucket
         self.num_ngram_vectors = 0
         self.compatible_hash = compatible_hash
+
+    @classmethod
+    def load(cls, fname_or_handle, **kwargs):
+        model = super(WordEmbeddingsKeyedVectors, cls).load(fname_or_handle, **kwargs)
+        if not hasattr(model, 'compatible_hash'):
+            model.compatible_hash = False
+
+        return model
 
     @property
     @deprecated("Attribute will be removed in 4.0.0, use self.vectors_vocab instead")
