@@ -408,21 +408,73 @@ class NgramsTest(unittest.TestCase):
                 '<🚑🚒🚓', '🚑🚒🚓🚕', '🚒🚓🚕>', '<🚑🚒🚓🚕', '🚑🚒🚓🚕>'
             ],
         }
+        self.expected_bytes = {
+            'test': [b'<te', b'<tes', b'<test', b'tes', b'test', b'test>', b'est', b'est>', b'st>'],
+            'at the': [
+                b'<at', b'<at ', b'<at t', b'at ', b'at t', b'at th', b't t',
+                b't th', b't the', b' th', b' the', b' the>', b'the', b'the>', b'he>'
+            ],
+            'тест': [
+                b'<\xd1\x82\xd0\xb5', b'<\xd1\x82\xd0\xb5\xd1\x81', b'<\xd1\x82\xd0\xb5\xd1\x81\xd1\x82',
+                b'\xd1\x82\xd0\xb5\xd1\x81', b'\xd1\x82\xd0\xb5\xd1\x81\xd1\x82', b'\xd1\x82\xd0\xb5\xd1\x81\xd1\x82>',
+                b'\xd0\xb5\xd1\x81\xd1\x82', b'\xd0\xb5\xd1\x81\xd1\x82>', b'\xd1\x81\xd1\x82>'
+            ],
+            'テスト': [
+                b'<\xe3\x83\x86\xe3\x82\xb9', b'<\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88',
+                b'<\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88>', b'\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88',
+                b'\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88>',b'\xe3\x82\xb9\xe3\x83\x88>'
+            ],
+            '試し': [b'<\xe8\xa9\xa6\xe3\x81\x97', b'<\xe8\xa9\xa6\xe3\x81\x97>', b'\xe8\xa9\xa6\xe3\x81\x97>'],
+            '🚑🚒🚓🚕': [
+                b'<\xf0\x9f\x9a\x91\xf0\x9f\x9a\x92',
+                b'<\xf0\x9f\x9a\x91\xf0\x9f\x9a\x92\xf0\x9f\x9a\x93',
+                b'<\xf0\x9f\x9a\x91\xf0\x9f\x9a\x92\xf0\x9f\x9a\x93\xf0\x9f\x9a\x95',
+                b'\xf0\x9f\x9a\x91\xf0\x9f\x9a\x92\xf0\x9f\x9a\x93',
+                b'\xf0\x9f\x9a\x91\xf0\x9f\x9a\x92\xf0\x9f\x9a\x93\xf0\x9f\x9a\x95',
+                b'\xf0\x9f\x9a\x91\xf0\x9f\x9a\x92\xf0\x9f\x9a\x93\xf0\x9f\x9a\x95>',
+                b'\xf0\x9f\x9a\x92\xf0\x9f\x9a\x93\xf0\x9f\x9a\x95',
+                b'\xf0\x9f\x9a\x92\xf0\x9f\x9a\x93\xf0\x9f\x9a\x95>',
+                b'\xf0\x9f\x9a\x93\xf0\x9f\x9a\x95>'
+            ],
+        }
 
     def test_text_py(self):
         for word in self.expected_text:
             expected = self.expected_text[word]
             actual = gensim.models.utils_any2vec._compute_ngrams_py(word, 3, 5)
-            self.assertEqual(len(expected), len(actual))
-            self.assertEqual(set(expected), set(actual))
+            self.assertEqual(expected, actual)
 
     @unittest.skipIf(DISABLE_CYTHON_TESTS, 'Cython functions are not properly compiled')
     def test_text_cy(self):
         for word in self.expected_text:
             expected = self.expected_text[word]
             actual = gensim.models.utils_any2vec._compute_ngrams_cy(word, 3, 5)
-            self.assertEqual(len(expected), len(actual))
-            self.assertEqual(set(expected), set(actual))
+            self.assertEqual(expected, actual)
+
+    def test_bytes_py(self):
+        for word in self.expected_bytes:
+            expected = self.expected_bytes[word]
+            actual = gensim.models.utils_any2vec._compute_ngrams_bytes_py(word, 3, 5)
+            self.assertEqual(expected, actual)
+
+            expected_text = self.expected_text[word]
+            actual_text = [n.decode('utf-8') for n in actual]
+            #
+            # The text and byte implementations yield ngrams in different
+            # order, so the test ignores ngram order.
+            #
+            self.assertEqual(sorted(set(expected_text)), sorted(set(actual_text)))
+
+    @unittest.skipIf(DISABLE_CYTHON_TESTS, 'Cython functions are not properly compiled')
+    def test_bytes_cy(self):
+        for word in self.expected_bytes:
+            expected = self.expected_bytes[word]
+            actual = gensim.models.utils_any2vec._compute_ngrams_bytes_cy(word, 3, 5)
+            self.assertEqual(expected, actual)
+
+            expected_text = self.expected_text[word]
+            actual_text = [n.decode('utf-8') for n in actual]
+            self.assertEqual(sorted(set(expected_text)), sorted(set(actual_text)))
 
 
 if __name__ == '__main__':
