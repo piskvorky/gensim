@@ -269,14 +269,13 @@ def hash_main(alg):
     import six
 
     assert six.PY3, 'this only works under Py3'
-    assert gensim.models.utils_any2vec.FAST_VERSION == 0, 'Cython extensions are broken'
+    assert not DISABLE_CYTHON_TESTS, 'this only works if Cython extensions available'
 
     hashmap = {
-        'py_broken': gensim.models.utils_any2vec._ft_hash_py_broken,
-        'py_bytes': gensim.models.utils_any2vec._ft_hash_py_bytes,
-        'cy': gensim.models.utils_any2vec._ft_hash_cy,
-        'cy_broken': gensim.models.utils_any2vec._ft_hash_py_broken,
-        'cy_bytes': gensim.models.utils_any2vec._ft_hash_cy_bytes,
+        'py_broken': gensim.models.utils_any2vec._ft_hash_broken_py,
+        'py_bytes': gensim.models.utils_any2vec._ft_hash_bytes_py,
+        'cy_broken': gensim.models.utils_any2vec._ft_hash_broken_py,
+        'cy_bytes': gensim.models.utils_any2vec._ft_hash_bytes_cy,
     }
     try:
         fun = hashmap[alg]
