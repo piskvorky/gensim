@@ -8,6 +8,7 @@ Automated tests for checking various utils functions.
 """
 from __future__ import unicode_literals
 
+import sys
 import logging
 import unittest
 
@@ -403,10 +404,6 @@ class NgramsTest(unittest.TestCase):
             'тест': ['<те', 'тес', 'ест', 'ст>', '<тес', 'тест', 'ест>', '<тест', 'тест>'],
             'テスト': ['<テス', 'テスト', 'スト>', '<テスト', 'テスト>', '<テスト>'],
             '試し': ['<試し', '試し>', '<試し>'],
-            '🚑🚒🚓🚕': [
-                '<🚑🚒', '🚑🚒🚓', '🚒🚓🚕', '🚓🚕>',
-                '<🚑🚒🚓', '🚑🚒🚓🚕', '🚒🚓🚕>', '<🚑🚒🚓🚕', '🚑🚒🚓🚕>'
-             ],
         }
         self.expected_bytes = {
             'test': [b'<te', b'<tes', b'<test', b'tes', b'test', b'test>', b'est', b'est>', b'st>'],
@@ -425,6 +422,15 @@ class NgramsTest(unittest.TestCase):
                 b'\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88>', b'\xe3\x82\xb9\xe3\x83\x88>'
             ],
             '試し': [b'<\xe8\xa9\xa6\xe3\x81\x97', b'<\xe8\xa9\xa6\xe3\x81\x97>', b'\xe8\xa9\xa6\xe3\x81\x97>'],
+        }
+
+        self.expected_text_wide_unicode = {
+            '🚑🚒🚓🚕': [
+                '<🚑🚒', '🚑🚒🚓', '🚒🚓🚕', '🚓🚕>',
+                '<🚑🚒🚓', '🚑🚒🚓🚕', '🚒🚓🚕>', '<🚑🚒🚓🚕', '🚑🚒🚓🚕>'
+             ],
+        }
+        self.expected_bytes_wide_unicode = {
             '🚑🚒🚓🚕': [
                 b'<\xf0\x9f\x9a\x91\xf0\x9f\x9a\x92',
                 b'<\xf0\x9f\x9a\x91\xf0\x9f\x9a\x92\xf0\x9f\x9a\x93',
@@ -444,10 +450,25 @@ class NgramsTest(unittest.TestCase):
             actual = gensim.models.utils_any2vec._compute_ngrams_py(word, 3, 5)
             self.assertEqual(expected, actual)
 
+    @unittest.skipIf(sys.maxunicode == 0xffff, "Python interpreter doesn't support UCS-4 (wide unicode)")
+    def test_text_py_wide_unicode(self):
+        for word in self.expected_text_wide_unicode:
+            expected = self.expected_text_wide_unicode[word]
+            actual = gensim.models.utils_any2vec._compute_ngrams_py(word, 3, 5)
+            self.assertEqual(expected, actual)
+
     @unittest.skipIf(DISABLE_CYTHON_TESTS, 'Cython functions are not properly compiled')
     def test_text_cy(self):
         for word in self.expected_text:
             expected = self.expected_text[word]
+            actual = gensim.models.utils_any2vec._compute_ngrams_cy(word, 3, 5)
+            self.assertEqual(expected, actual)
+
+    @unittest.skipIf(DISABLE_CYTHON_TESTS, 'Cython functions are not properly compiled')
+    @unittest.skipIf(sys.maxunicode == 0xffff, "Python interpreter doesn't support UCS-4 (wide unicode)")
+    def test_text_cy_wide_unicode(self):
+        for word in self.expected_text_wide_unicode:
+            expected = self.expected_text_wide_unicode[word]
             actual = gensim.models.utils_any2vec._compute_ngrams_cy(word, 3, 5)
             self.assertEqual(expected, actual)
 
@@ -465,6 +486,16 @@ class NgramsTest(unittest.TestCase):
             #
             self.assertEqual(sorted(expected_text), sorted(actual_text))
 
+        for word in self.expected_bytes_wide_unicode:
+            expected = self.expected_bytes_wide_unicode[word]
+            actual = gensim.models.utils_any2vec._compute_ngrams_bytes_py(word, 3, 5)
+            self.assertEqual(expected, actual)
+
+            expected_text = self.expected_text_wide_unicode[word]
+            actual_text = [n.decode('utf-8') for n in actual]
+
+            self.assertEqual(sorted(expected_text), sorted(actual_text))
+
     @unittest.skipIf(DISABLE_CYTHON_TESTS, 'Cython functions are not properly compiled')
     def test_bytes_cy(self):
         for word in self.expected_bytes:
@@ -473,6 +504,15 @@ class NgramsTest(unittest.TestCase):
             self.assertEqual(expected, actual)
 
             expected_text = self.expected_text[word]
+            actual_text = [n.decode('utf-8') for n in actual]
+            self.assertEqual(sorted(expected_text), sorted(actual_text))
+
+        for word in self.expected_bytes_wide_unicode:
+            expected = self.expected_bytes_wide_unicode[word]
+            actual = gensim.models.utils_any2vec._compute_ngrams_bytes_cy(word, 3, 5)
+            self.assertEqual(expected, actual)
+
+            expected_text = self.expected_text_wide_unicode[word]
             actual_text = [n.decode('utf-8') for n in actual]
             self.assertEqual(sorted(expected_text), sorted(actual_text))
 
