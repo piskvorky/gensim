@@ -908,7 +908,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
         """
         if isinstance(doc_words, string_types):
-            raise ValueError("You must pass a list of strings, not a single string.")
+            raise TypeError("Parameter doc_words of infer_vector() must be a list of strings (not a single string).")
 
         alpha = alpha or self.alpha
         min_alpha = min_alpha or self.min_alpha
