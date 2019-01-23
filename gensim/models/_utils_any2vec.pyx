@@ -101,6 +101,17 @@ _MB_MASK = 0xC0
 _MB_START = 0x80
 
 
+cdef _is_utf8_continue_py3(b):
+    return b & _MB_MASK == _MB_START
+
+
+cdef _is_utf8_continue_py2(b):
+    return ord(b) & _MB_MASK == _MB_START
+
+
+_is_utf8_continue = _is_utf8_continue_py2 if PY2 else _is_utf8_continue_py3
+
+
 cpdef compute_ngrams_bytes(word, unsigned int min_n, unsigned int max_n):
     """Computes ngrams for a word.
 
@@ -131,13 +142,13 @@ cpdef compute_ngrams_bytes(word, unsigned int min_n, unsigned int max_n):
 
     ngrams = []
     for i in range(num_bytes):
-        if utf8_word[i] & _MB_MASK == _MB_START:
+        if _is_utf8_continue(utf8_word[i]):
             continue
 
         j, n = i, 1
         while j < num_bytes and n <= max_n:
             j += 1
-            while j < num_bytes and (utf8_word[j] & _MB_MASK) == _MB_START:
+            while j < num_bytes and _is_utf8_continue(utf8_word[j]):
                 j += 1
             if n >= min_n and not (n == 1 and (i == 0 or j == num_bytes)):
                 ngram = bytes(utf8_word[i:j])

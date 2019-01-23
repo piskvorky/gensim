@@ -47,13 +47,18 @@ _MB_START = 0x80
 
 def _byte_to_int_py3(b):
     return b
-
-
+ 
+ 
 def _byte_to_int_py2(b):
     return ord(b)
 
 
 _byte_to_int = _byte_to_int_py2 if PY2 else _byte_to_int_py3
+
+
+def _is_utf8_continue(b):
+    return _byte_to_int(b) & _MB_MASK == _MB_START
+
 
 
 #
@@ -167,13 +172,13 @@ def _compute_ngrams_bytes_py(word, min_n, max_n):
 
     ngrams = []
     for i in range(num_bytes):
-        if utf8_word[i] & _MB_MASK == _MB_START:
+        if _is_utf8_continue(utf8_word[i]):
             continue
 
         j, n = i, 1
         while j < num_bytes and n <= max_n:
             j += 1
-            while j < num_bytes and (utf8_word[j] & _MB_MASK) == _MB_START:
+            while j < num_bytes and _is_utf8_continue(utf8_word[j]):
                 j += 1
             if n >= min_n and not (n == 1 and (i == 0 or j == num_bytes)):
                 ngram = bytes(utf8_word[i:j])
