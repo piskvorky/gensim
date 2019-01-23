@@ -907,6 +907,9 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             The inferred paragraph vector for the new document.
 
         """
+        if isinstance(doc_words, string_types):
+            raise TypeError("Parameter doc_words of infer_vector() must be a list of strings (not a single string).")
+
         alpha = alpha or self.alpha
         min_alpha = min_alpha or self.min_alpha
         epochs = epochs or steps or self.epochs
