@@ -152,6 +152,6 @@ cpdef compute_ngrams_bytes(word, unsigned int min_n, unsigned int max_n):
                 j += 1
             if n >= min_n and not (n == 1 and (i == 0 or j == num_bytes)):
                 ngram = bytes(utf8_word[i:j])
-                ngrams.append(bytes(ngram))
+                ngrams.append(ngram)
             n += 1
     return ngrams
