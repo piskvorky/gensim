@@ -463,7 +463,7 @@ class NgramsTest(unittest.TestCase):
             # The text and byte implementations yield ngrams in different
             # order, so the test ignores ngram order.
             #
-            self.assertEqual(sorted(set(expected_text)), sorted(set(actual_text)))
+            self.assertEqual(sorted(expected_text), sorted(actual_text))
 
     @unittest.skipIf(DISABLE_CYTHON_TESTS, 'Cython functions are not properly compiled')
     def test_bytes_cy(self):
@@ -474,7 +474,7 @@ class NgramsTest(unittest.TestCase):
 
             expected_text = self.expected_text[word]
             actual_text = [n.decode('utf-8') for n in actual]
-            self.assertEqual(sorted(set(expected_text)), sorted(set(actual_text)))
+            self.assertEqual(sorted(expected_text), sorted(actual_text))
 
 
 if __name__ == '__main__':
