@@ -47,8 +47,8 @@ _MB_START = 0x80
 
 def _byte_to_int_py3(b):
     return b
- 
- 
+
+
 def _byte_to_int_py2(b):
     return ord(b)
 
@@ -58,7 +58,6 @@ _byte_to_int = _byte_to_int_py2 if PY2 else _byte_to_int_py3
 
 def _is_utf8_continue(b):
     return _byte_to_int(b) & _MB_MASK == _MB_START
-
 
 
 #
