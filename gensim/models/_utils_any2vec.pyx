@@ -125,7 +125,7 @@ cpdef compute_ngrams_bytes(word, unsigned int min_n, unsigned int max_n):
     `Original implementation <https://github.com/facebookresearch/fastText/blob/7842495a4d64c7a3bb4339d45d6e64321d002ed8/src/dictionary.cc#L172>`__
 
     """
-    cdef bytes utf8_word = f'<{word}>'.encode("utf-8")
+    cdef bytes utf8_word = ('<%s>' % word).encode("utf-8")
     cdef int num_bytes = len(utf8_word)
     cdef int j, i, n
 

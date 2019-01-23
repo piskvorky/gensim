@@ -161,7 +161,7 @@ def _compute_ngrams_bytes_py(word, min_n, max_n):
     `Original implementation <https://github.com/facebookresearch/fastText/blob/7842495a4d64c7a3bb4339d45d6e64321d002ed8/src/dictionary.cc#L172>`__  # noqa: E501
 
     """
-    utf8_word = f'<{word}>'.encode("utf-8")
+    utf8_word = ('<%s>' % word).encode("utf-8")
     num_bytes = len(utf8_word)
     n = 0
 
