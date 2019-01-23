@@ -20,6 +20,8 @@ from gensim.test.utils import datapath, get_tmpfile
 
 import gensim.models.utils_any2vec
 
+import smart_open
+
 DISABLE_CYTHON_TESTS = getattr(gensim.models.utils_any2vec, 'FAST_VERSION', None) == -1
 
 
@@ -515,6 +517,60 @@ class NgramsTest(unittest.TestCase):
             expected_text = self.expected_text_wide_unicode[word]
             actual_text = [n.decode('utf-8') for n in actual]
             self.assertEqual(sorted(expected_text), sorted(actual_text))
+
+    def test_fb(self):
+        """Test against results from Facebook's implementation."""
+        with smart_open.smart_open(datapath('fb-ngrams.txt'), 'r', encoding='utf-8') as fin:
+            fb = dict(_read_fb(fin))
+
+        for word, expected in fb.items():
+            #
+            # The model was trained with minn=3, maxn=6
+            #
+            actual = gensim.models.utils_any2vec._compute_ngrams_py(word, 3, 6)
+            self.assertEqual(sorted(expected), sorted(actual))
+
+
+def _read_fb(fin):
+    """Read ngrams from output of the FB utility."""
+    #
+    # $ cat words.txt
+    # test
+    # at the
+    # at\nthe
+    # тест
+    # テスト
+    # 試し
+    # 🚑🚒🚓🚕
+    # $ while read w;
+    # do
+    #   echo "<start>";
+    #   echo $w;
+    #   ./fasttext print-ngrams gensim/test/test_data/crime-and-punishment.bin "$w";
+    #   echo "<end>";
+    # done < words.txt > gensim/test/test_data/fb-ngrams.txt
+    #
+    while fin:
+        line = fin.readline().rstrip()
+        if not line:
+            break
+
+        assert line == '<start>'
+        word = fin.readline().rstrip()
+
+        fin.readline()  # ignore this line, it contains an origin vector for the full term
+
+        ngrams = []
+        while True:
+            line = fin.readline().rstrip()
+            if line == '<end>':
+                break
+
+            columns = line.split(' ')
+            term = ' '.join(columns[:-5])
+            ngrams.append(term)
+
+        yield word, ngrams
 
 
 if __name__ == '__main__':
