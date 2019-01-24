@@ -205,8 +205,7 @@ def merge_syntactic_units(original_units, filtered_units, tags=None):
         text = original_units[i]
         token = filtered_units[i]
         tag = tags[i][1] if tags else None
-        sentence = SyntacticUnit(text, token, tag)
-        sentence.index = i
+        sentence = SyntacticUnit(text, token, tag, i)
 
         units.append(sentence)
 

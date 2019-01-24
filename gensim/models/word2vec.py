@@ -677,7 +677,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
         corpus_file : str, optional
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
             You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
-            `corpus_file` arguments need to be passed (or none of them).
+            `corpus_file` arguments need to be passed (or none of them, in that case, the model is left uninitialized).
         size : int, optional
             Dimensionality of the word vectors.
         window : int, optional
