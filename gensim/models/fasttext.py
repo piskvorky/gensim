@@ -98,7 +98,7 @@ import gensim.models._fasttext_bin
 from gensim.models.word2vec import Word2VecVocab, Word2VecTrainables, train_sg_pair, train_cbow_pair
 from gensim.models.keyedvectors import FastTextKeyedVectors
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
-from gensim.models.utils_any2vec import _compute_ngrams, _ft_hash, _ft_hash_broken
+from gensim.models.utils_any2vec import ft_ngram_hashes
 from smart_open import smart_open
 
 from gensim.utils import deprecated, call_on_class_only
@@ -554,8 +554,6 @@ class FastText(BaseWordEmbeddingsModel):
         self.wv.buckets_word = None
 
     def estimate_memory(self, vocab_size=None, report=None):
-        hash_fn = _ft_hash if self.wv.compatible_hash else _ft_hash_broken
-
         vocab_size = vocab_size or len(self.wv.vocab)
         vec_size = self.vector_size * np.dtype(np.float32).itemsize
         l1_size = self.trainables.layer1_size * np.dtype(np.float32).itemsize
@@ -574,9 +572,15 @@ class FastText(BaseWordEmbeddingsModel):
                 buckets = set()
                 num_ngrams = 0
                 for word in self.wv.vocab:
-                    ngrams = _compute_ngrams(word, self.wv.min_n, self.wv.max_n)
-                    num_ngrams += len(ngrams)
-                    buckets.update(hash_fn(ng) % self.trainables.bucket for ng in ngrams)
+                    hashes = ft_ngram_hashes(
+                        word,
+                        self.wv.min_n,
+                        self.wv.max_n,
+                        self.trainables.bucket,
+                        self.wv.compatible_hash
+                    )
+                    num_ngrams += len(hashes)
+                    buckets.update(hashes)
                 num_buckets = len(buckets)
             report['syn0_ngrams'] = num_buckets * vec_size
             # A tuple (48 bytes) with num_ngrams_word ints (8 bytes) for each word
@@ -704,6 +708,14 @@ class FastText(BaseWordEmbeddingsModel):
             >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.epochs)
 
         """
+        cant_train = hasattr(self.trainables, 'syn1neg') and self.trainables.syn1neg is None
+        if cant_train:
+            raise ValueError(
+                'this model cannot be trained any further, '
+                'if this is a native model, try loading it with '
+                'FastText.load_fasttext_format(path, full_model=True)'
+            )
+
         super(FastText, self).train(
             sentences=sentences, corpus_file=corpus_file, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
@@ -754,7 +766,7 @@ class FastText(BaseWordEmbeddingsModel):
         return self.wv.__contains__(word)
 
     @classmethod
-    def load_fasttext_format(cls, model_file, encoding='utf8'):
+    def load_fasttext_format(cls, model_file, encoding='utf8', full_model=True):
         """Load the input-hidden weight matrix from Facebook's native fasttext `.bin` and `.vec` output files.
 
         Notes
@@ -770,6 +782,9 @@ class FastText(BaseWordEmbeddingsModel):
             as Gensim requires only `.bin` file to the load entire fastText model.
         encoding : str, optional
             Specifies the file encoding.
+        full_model : boolean, optional
+            If False, skips loading the hidden output matrix.  This saves a fair bit
+            of CPU time and RAM, but prevents training continuation.
 
         Returns
         -------
@@ -777,7 +792,7 @@ class FastText(BaseWordEmbeddingsModel):
             The loaded model.
 
         """
-        return _load_fasttext_format(model_file, encoding=encoding)
+        return _load_fasttext_format(model_file, encoding=encoding, full_model=full_model)
 
     def load_binary_data(self, encoding='utf8'):
         """Load data from a binary file created by Facebook's native FastText.
@@ -959,7 +974,7 @@ def _pad_ones(m, new_shape):
     return vstack([m, suffix])
 
 
-def _load_fasttext_format(model_file, encoding='utf-8'):
+def _load_fasttext_format(model_file, encoding='utf-8', full_model=True):
     """Load the input-hidden weight matrix from Facebook's native fasttext `.bin` and `.vec` output files.
 
     Parameters
@@ -971,16 +986,20 @@ def _load_fasttext_format(model_file, encoding='utf-8'):
         as Gensim requires only `.bin` file to the load entire fastText model.
     encoding : str, optional
         Specifies the file encoding.
+    full_model : boolean, optional
+        If False, skips loading the hidden output matrix.  This saves a fair bit
+        of CPU time and RAM, but prevents training continuation.
 
     Returns
     -------
     :class: `~gensim.models.fasttext.FastText`
         The loaded model.
+
     """
     if not model_file.endswith('.bin'):
         model_file += '.bin'
     with smart_open(model_file, 'rb') as fin:
-        m = gensim.models._fasttext_bin.load(fin, encoding=encoding)
+        m = gensim.models._fasttext_bin.load(fin, encoding=encoding, full_model=full_model)
 
     model = FastText(
         size=m.dim,
