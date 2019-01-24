@@ -14,6 +14,9 @@ for out-of-vocabulary words.
 This module contains a fast native C implementation of Fasttext with Python interfaces. It is **not** only a wrapper
 around Facebook's implementation.
 
+This module supports loading models trained with Facebook's fastText implementation.
+It also supports continuing training from such models.
+
 For a tutorial see `this notebook
 <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/FastText_Tutorial.ipynb>`_.
 
@@ -31,6 +34,15 @@ Initialize and train a model:
     >>> from gensim.models import FastText
     >>>
     >>> model = FastText(common_texts, size=4, window=3, min_count=1, iter=10)
+    >>> sentences = [
+    ...     ['computer', 'artificial', 'intelligence'],
+    ...     ['artificial', 'trees'],
+    ...     ['human', 'intelligence'],
+    ...     ['artificial', 'graph'],
+    ...     ['intelligence'],
+    ...     ['artificial', 'intelligence', 'system']
+    ... ]
+    >>> model.train(sentences, total_examples=len(sentences), epochs=model.epochs)
 
 Persist a model to disk with:
 
@@ -41,7 +53,49 @@ Persist a model to disk with:
     >>> fname = get_tmpfile("fasttext.model")
     >>>
     >>> model.save(fname)
-    >>> model = FastText.load(fname)  # you can continue training with the loaded model!
+    >>> model = FastText.load(fname)
+
+Once loaded, such models behave identically to those created from scratch.
+For example, you can continue training the loaded model:
+
+    >>> new_sentences = [
+    ...     ['sweet', 'child', 'of', 'mine'],
+    ...     ['rocket', 'queen'],
+    ...     ['you', 'could', 'be', 'mine'],
+    ...     ['november', 'rain'],
+    ... ]
+    >>> 'rocket' in model.wv
+    False
+    >>> model.train(new_sentences, total_examples=len(sentences), epochs=model.epochs)
+    >>> 'rocket' in model.wv
+    True
+
+You can also load models trained with Facebook's fastText implementation:
+
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import datapath
+    >>> cap_path = datapath("crime-and-punishment.bin")
+    >>> # Partial model: loads quickly, uses less RAM, but cannot continue training
+    >>> fb_partial = FastText.load_fasttext_format(cap_path, full_model=False)
+    >>> # Full model: loads slowly, consumes RAM, but can continue training (see below)
+    >>> fb_full = FastText.load_fasttext_format(cap_path, full_model=True)
+
+Once loaded, such models behave identically to those trained from scratch.
+You may continue training them on new data:
+
+.. sourcecode:: pycon
+
+    >>> 'computer' in fb_full.wv.vocab  # New word, currently out of vocab
+    False
+    >>> 'rocket' in fb_full.wv.vocab
+    False
+    >>> fb_full.train(sentences, total_examples=len(sentences), epochs=model.epochs)
+    >>> fb_full.train(new_sentences, total_examples=len(new_sentences), epochs=model.epochs)
+    >>> 'computer' in fb_full.wv.vocab  # We have learned this word now
+    True
+    >>> 'rocket' in fb_full.wv.vocab
+    True
 
 Retrieve word-vector for vocab and out-of-vocab word:
 
@@ -84,6 +138,27 @@ And on word analogies:
 .. sourcecode:: pycon
 
     >>> analogies_result = model.wv.evaluate_word_analogies(datapath('questions-words.txt'))
+
+Implementation Notes
+--------------------
+
+Our FastText implementation is split across several submodules:
+
+- :py:mod:`gensim.models.fasttext`: This module.  Contains FastText-specific functionality only.
+- :py:mod:`gensim.models.keyedvectors`: Implements both generic and FastText-specific functionality.
+- :py:mod:`gensim.models.word2vec`:
+- :py:mod:`gensim.models.base_any2vec`:
+- :py:mod:`gensim.models.utils_any2vec`: Wrapper over Cython extensions.
+
+Our implementation relies heavily on inheritance.
+It consists of several important classes:
+
+- :py:class:`FastTextVocab`: the vocabulary.
+- :py:class:`gensim.models.keyedvectors.FastTextKeyedVectors`: the vectors.
+  Once training is complete, this class is sufficient for calculating embeddings.
+- :py:class:`FastTextTrainables`: the underlying neural network.  The implementation
+  uses this class to *learn* the word embeddings.
+- :py:class:`FastText`: ties everything together.
 
 """
 
@@ -759,7 +834,8 @@ class FastText(BaseWordEmbeddingsModel):
 
         Notes
         ------
-        Due to limitations in the FastText API, you cannot continue training with a model loaded this way.
+        This function effectively ignores `.vec` output file.
+        It only needs the `.bin` file.
 
         Parameters
         ----------
@@ -773,7 +849,7 @@ class FastText(BaseWordEmbeddingsModel):
 
         Returns
         -------
-        :class: `~gensim.models.fasttext.FastText`
+        gensim.models.fasttext.FastText
             The loaded model.
 
         """

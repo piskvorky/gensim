@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """Load models from the native binary format released by Facebook.
 
+The main entry point is the :py:func:`load` function.
+It returns a :py:class:`Model` namedtuple containing everything loaded from the binary.
+
 Examples
 --------
 
