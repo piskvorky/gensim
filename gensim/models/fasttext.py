@@ -524,7 +524,7 @@ class FastText(BaseWordEmbeddingsModel):
     def _set_train_params(self, **kwargs):
         pass
 
-    def _clear_post_train(self):
+    def _clear_keyed_vector_internals(self):
         """Clear the model's internal structures after training has finished to free up RAM."""
         self.wv.vectors_norm = None
         self.wv.vectors_vocab_norm = None
@@ -706,7 +706,7 @@ class FastText(BaseWordEmbeddingsModel):
         You can recompute them later again using the :meth:`~gensim.models.fasttext.FastText.init_sims` method.
 
         """
-        self._clear_post_train()
+        self._clear_keyed_vector_internals()
 
     @deprecated("Method will be removed in 4.0.0, use self.wv.__getitem__() instead")
     def __getitem__(self, words):
@@ -888,7 +888,7 @@ class FastText(BaseWordEmbeddingsModel):
             )
 
         self.trainables.init_ngrams_post_load(self.file_name, self.wv)
-        self._clear_post_train()
+        self._clear_keyed_vector_internals()
 
     def struct_unpack(self, file_handle, fmt):
         """Read a single object from an open file.

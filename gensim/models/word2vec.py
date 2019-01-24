@@ -819,7 +819,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
             tally += train_batch_cbow(self, sentences, alpha, work, neu1, self.compute_loss)
         return tally, self._raw_word_count(sentences)
 
-    def _clear_post_train(self):
+    def _clear_keyed_vector_internals(self):
         """Remove all L2-normalized word vectors from the model."""
         self.wv.vectors_norm = None
 

@@ -121,7 +121,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         """Get the number of words in a given job."""
         raise NotImplementedError()
 
-    def _clear_post_train(self):
+    def _clear_keyed_vector_internals(self):
         """Resets certain properties of the model post training. eg. `keyedvectors.vectors_norm`."""
         raise NotImplementedError()
 
@@ -547,6 +547,8 @@ class BaseAny2VecModel(utils.SaveLoad):
             for callback in self.callbacks:
                 callback.on_epoch_begin(self)
 
+            self._clear_keyed_vector_internals()
+
             if data_iterable is not None:
                 trained_word_count_epoch, raw_word_count_epoch, job_tally_epoch = self._train_epoch(
                     data_iterable, cur_epoch=cur_epoch, total_examples=total_examples,
@@ -554,8 +556,6 @@ class BaseAny2VecModel(utils.SaveLoad):
             else:
                 trained_word_count_epoch, raw_word_count_epoch, job_tally_epoch = self._train_epoch_corpusfile(
                     corpus_file, cur_epoch=cur_epoch, total_examples=total_examples, total_words=total_words, **kwargs)
-
-            self._clear_post_train()
 
             trained_word_count += trained_word_count_epoch
             raw_word_count += raw_word_count_epoch
@@ -637,7 +637,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         Poincare model - embeddings for graphs.
 
     """
-    def _clear_post_train(self):
+    def _clear_keyed_vector_internals(self):
         raise NotImplementedError()
 
     def _do_train_job(self, data_iterable, job_parameters, thread_private_mem):
