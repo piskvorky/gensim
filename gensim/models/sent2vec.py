@@ -51,7 +51,7 @@ from numpy import dot
 from gensim import utils, matutils
 from gensim.utils import tokenize
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
-from gensim.models.utils_any2vec import _ft_hash
+from gensim.models.utils_any2vec import ft_hash_bytes as _ft_hash
 from scipy.stats import logistic
 import os
 

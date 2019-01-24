@@ -7,36 +7,16 @@ import os
 import numpy as np
 
 from gensim.models.sent2vec import Sent2Vec
-from gensim.test.utils import get_tmpfile
+from gensim.test.utils import get_tmpfile, common_texts as sentences
+from gensim.test.test_fasttext import new_sentences
 
 logger = logging.getLogger(__name__)
 
 test_sentences = [
-    [u'How', u'are', u'you', u'today'],
-    [u'Coding', u'is', u'fun'],
-    [u'This', u'is', u'a', u'great', u'gensim', u'model'],
-    [u'Would', u'you', u'like', u'to', u'go', u'for', u'a', u'swim']
-]
-
-new_sentences = [
-    [u'computer', u'artificial', u'intelligence'],
-    [u'artificial', u'trees'],
-    [u'human', u'intelligence'],
-    [u'artificial', u'graph'],
-    [u'intelligence'],
-    [u'artificial', u'intelligence', u'system']
-]
-
-sentences = [
-    [u'human', u'interface', u'computer'],
-    [u'survey', u'user', u'computer', u'system', u'response', u'time'],
-    [u'eps', u'user', u'interface', u'system'],
-    [u'system', u'human', u'system', u'eps'],
-    [u'user', u'response', u'time'],
-    [u'trees'],
-    [u'graph', u'trees'],
-    [u'graph', u'minors', u'trees'],
-    [u'graph', u'minors', u'survey']
+    ['How', 'are', 'yo', 'today'],
+    ['Coding', 'is', 'fun'],
+    ['This', 'is', 'a', 'great', 'gensim', 'model'],
+    ['Would', 'yo', 'like', 'to', 'go', 'for', 'a', 'swim']
 ]
 
 
@@ -76,12 +56,12 @@ class TestSent2VecModel(unittest.TestCase):
     def test_online_learning(self):
         model = Sent2Vec(sentences, size=5, min_count=1, seed=42, negative=5, workers=1, max_vocab_size=100)
         self.assertTrue(model.vocabulary.size, 12)
-        self.assertTrue(model.vocabulary.words[model.vocabulary.word2int[model.vocabulary.find(u'graph')]].count, 3)
+        self.assertTrue(model.vocabulary.words[model.vocabulary.word2int[model.vocabulary.find('graph')]].count, 3)
         model.build_vocab(new_sentences, update=True)  # update vocab
         self.assertEqual(model.vocabulary.size, 14)
-        self.assertTrue(model.vocabulary.words[model.vocabulary.word2int[model.vocabulary.find(u'graph')]].count, 4)
+        self.assertTrue(model.vocabulary.words[model.vocabulary.word2int[model.vocabulary.find('graph')]].count, 4)
         self.assertTrue(
-            model.vocabulary.words[model.vocabulary.word2int[model.vocabulary.find(u'artificial')]].count, 3)
+            model.vocabulary.words[model.vocabulary.word2int[model.vocabulary.find('artificial')]].count, 3)
 
     def test_online_learning2(self):
         model = Sent2Vec(sentences, size=5, min_count=1, seed=42, negative=5, workers=1, max_vocab_size=100)
