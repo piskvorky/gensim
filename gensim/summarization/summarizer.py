@@ -58,10 +58,10 @@ from gensim.summarization.pagerank_weighted import pagerank_weighted as _pageran
 from gensim.summarization.textcleaner import clean_text_by_sentences as _clean_text_by_sentences
 from gensim.summarization.commons import build_graph as _build_graph
 from gensim.summarization.commons import remove_unreachable_nodes as _remove_unreachable_nodes
-from gensim.summarization.bm25 import get_bm25_weights as _bm25_weights
+from gensim.summarization.bm25 import iter_bm25_bow as _bm25_weights
 from gensim.corpora import Dictionary
 from math import log10 as _log10
-from six.moves import xrange
+from six.moves import range
 
 
 INPUT_MIN_LENGTH = 10
@@ -84,25 +84,22 @@ def _set_graph_edge_weights(graph):
     documents = graph.nodes()
     weights = _bm25_weights(documents)
 
-    for i in xrange(len(documents)):
-        for j in xrange(len(documents)):
-            if i == j or weights[i][j] < WEIGHT_THRESHOLD:
+    for i, doc_bow in enumerate(weights):
+        if i % 1000 == 0 and i > 0:
+            logger.info('PROGRESS: processing %s/%s doc (%s non zero elements)', i, len(documents), len(doc_bow))
+
+        for j, weight in doc_bow:
+            if i == j or weight < WEIGHT_THRESHOLD:
                 continue
 
-            sentence_1 = documents[i]
-            sentence_2 = documents[j]
+            edge = (documents[i], documents[j])
 
-            edge_1 = (sentence_1, sentence_2)
-            edge_2 = (sentence_2, sentence_1)
-
-            if not graph.has_edge(edge_1):
-                graph.add_edge(edge_1, weights[i][j])
-            if not graph.has_edge(edge_2):
-                graph.add_edge(edge_2, weights[j][i])
+            if not graph.has_edge(edge):
+                graph.add_edge(edge, weight)
 
     # Handles the case in which all similarities are zero.
     # The resultant summary will consist of random sentences.
-    if all(graph.edge_weight(edge) == 0 for edge in graph.edges()):
+    if all(graph.edge_weight(edge) == 0 for edge in graph.iter_edges()):
         _create_valid_graph(graph)
 
 
@@ -117,8 +114,8 @@ def _create_valid_graph(graph):
     """
     nodes = graph.nodes()
 
-    for i in xrange(len(nodes)):
-        for j in xrange(len(nodes)):
+    for i in range(len(nodes)):
+        for j in range(len(nodes)):
             if i == j:
                 continue
 
@@ -145,7 +142,7 @@ def _get_doc_length(doc):
         Length of document.
 
     """
-    return sum([item[1] for item in doc])
+    return sum(item[1] for item in doc)
 
 
 @deprecated("Function will be removed in 4.0.0")
@@ -303,7 +300,7 @@ def _format_results(extracted_sentences, split):
     """
     if split:
         return [sentence.text for sentence in extracted_sentences]
-    return "\n".join([sentence.text for sentence in extracted_sentences])
+    return "\n".join(sentence.text for sentence in extracted_sentences)
 
 
 def _build_hasheable_corpus(corpus):
@@ -358,8 +355,13 @@ def summarize_corpus(corpus, ratio=0.2):
     if len(corpus) < INPUT_MIN_LENGTH:
         logger.warning("Input corpus is expected to have at least %d documents.", INPUT_MIN_LENGTH)
 
+    logger.info('Building graph')
     graph = _build_graph(hashable_corpus)
+
+    logger.info('Filling graph')
     _set_graph_edge_weights(graph)
+
+    logger.info('Removing unreachable nodes of graph')
     _remove_unreachable_nodes(graph)
 
     # Cannot calculate eigenvectors if number of unique documents in corpus < 3.
@@ -368,8 +370,10 @@ def summarize_corpus(corpus, ratio=0.2):
         logger.warning("Please add more sentences to the text. The number of reachable nodes is below 3")
         return []
 
+    logger.info('Pagerank graph')
     pagerank_scores = _pagerank(graph)
 
+    logger.info('Sorting pagerank scores')
     hashable_corpus.sort(key=lambda doc: pagerank_scores.get(doc, 0), reverse=True)
 
     return [list(doc) for doc in hashable_corpus[:int(len(corpus) * ratio)]]

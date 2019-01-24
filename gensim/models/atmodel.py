@@ -25,7 +25,6 @@ insight on the subject knowledge of an author.
 
 Example
 -------
-
 .. sourcecode:: pycon
 
     >>> from gensim.models import AuthorTopicModel
@@ -67,11 +66,11 @@ from os import remove
 from gensim import utils
 from gensim.models import LdaModel
 from gensim.models.ldamodel import LdaState
-from gensim.matutils import dirichlet_expectation
+from gensim.matutils import dirichlet_expectation, mean_absolute_difference
 from gensim.corpora import MmCorpus
 from itertools import chain
 from scipy.special import gammaln  # gamma function utils
-from six.moves import xrange
+from six.moves import range
 import six
 
 logger = logging.getLogger(__name__)
@@ -376,14 +375,14 @@ class AuthorTopicModel(LdaModel):
             self.corpus.extend(corpus)
 
     def compute_phinorm(self, expElogthetad, expElogbetad):
-        """Efficiently computes the normalizing factor in phi.
+        r"""Efficiently computes the normalizing factor in phi.
 
         Parameters
         ----------
         expElogthetad: numpy.ndarray
             Value of variational distribution :math:`q(\theta|\gamma)`.
         expElogbetad: numpy.ndarray
-            Value of variational distribution :math:`q(\\beta|\lambda)`.
+            Value of variational distribution :math:`q(\beta|\lambda)`.
 
         Returns
         -------
@@ -465,10 +464,10 @@ class AuthorTopicModel(LdaModel):
             else:
                 ids = [idx for idx, _ in doc]
             ids = np.array(ids, dtype=np.int)
-            cts = np.array([cnt for _, cnt in doc], dtype=np.int)
+            cts = np.fromiter((cnt for _, cnt in doc), dtype=np.int, count=len(doc))
 
             # Get all authors in current document, and convert the author names to integer IDs.
-            authors_d = np.array([self.author2id[a] for a in self.doc2author[doc_no]], dtype=np.int)
+            authors_d = np.fromiter((self.author2id[a] for a in self.doc2author[doc_no]), dtype=np.int)
 
             gammad = self.state.gamma[authors_d, :]  # gamma of document d before update.
             tilde_gamma = gammad.copy()  # gamma that will be updated.
@@ -482,7 +481,7 @@ class AuthorTopicModel(LdaModel):
             phinorm = self.compute_phinorm(expElogthetad, expElogbetad)
 
             # Iterate between gamma and phi until convergence
-            for _ in xrange(self.iterations):
+            for _ in range(self.iterations):
                 lastgamma = tilde_gamma.copy()
 
                 # Update gamma.
@@ -505,7 +504,7 @@ class AuthorTopicModel(LdaModel):
 
                 # Check for convergence.
                 # Criterion is mean change in "local" gamma.
-                meanchange_gamma = np.mean(abs(tilde_gamma - lastgamma))
+                meanchange_gamma = mean_absolute_difference(tilde_gamma.ravel(), lastgamma.ravel())
                 gamma_condition = meanchange_gamma < self.gamma_threshold
                 if gamma_condition:
                     converged += 1
@@ -699,7 +698,7 @@ class AuthorTopicModel(LdaModel):
             # Just keep training on the already available data.
             # Assumes self.update() has been called before with input documents and corresponding authors.
             assert self.total_docs > 0, 'update() was called with no documents to train on.'
-            train_corpus_idx = [d for d in xrange(self.total_docs)]
+            train_corpus_idx = [d for d in range(self.total_docs)]
             num_input_authors = len(self.author2doc)
         else:
             if doc2author is None and author2doc is None:
@@ -816,7 +815,7 @@ class AuthorTopicModel(LdaModel):
         def rho():
             return pow(offset + pass_ + (self.num_updates / chunksize), -decay)
 
-        for pass_ in xrange(passes):
+        for pass_ in range(passes):
             if self.dispatcher:
                 logger.info('initializing %s workers', self.numworkers)
                 self.dispatcher.reset(self.state)
@@ -888,7 +887,7 @@ class AuthorTopicModel(LdaModel):
                 del other
 
     def bound(self, chunk, chunk_doc_idx=None, subsample_ratio=1.0, author2doc=None, doc2author=None):
-        """Estimate the variational bound of documents from `corpus`.
+        r"""Estimate the variational bound of documents from `corpus`.
 
         :math:`\mathbb{E_{q}}[\log p(corpus)] - \mathbb{E_{q}}[\log q(corpus)]`
 
@@ -910,7 +909,7 @@ class AuthorTopicModel(LdaModel):
             Assigns the value for document index.
         subsample_ratio : float, optional
             Used for calculation of word score for estimation of variational bound.
-        author2doc : dict of (str, list of int), optinal
+        author2doc : dict of (str, list of int), optional
             A dictionary where keys are the names of authors and values are lists of documents that the author
             contributes to.
         doc2author : dict of (int, list of str), optional
@@ -976,9 +975,9 @@ class AuthorTopicModel(LdaModel):
             else:
                 doc_no = d
             # Get all authors in current document, and convert the author names to integer IDs.
-            authors_d = np.array([self.author2id[a] for a in self.doc2author[doc_no]], dtype=np.int)
-            ids = np.array([id for id, _ in doc], dtype=np.int)  # Word IDs in doc.
-            cts = np.array([cnt for _, cnt in doc], dtype=np.int)  # Word counts.
+            authors_d = np.fromiter((self.author2id[a] for a in self.doc2author[doc_no]), dtype=np.int)
+            ids = np.fromiter((id for id, _ in doc), dtype=np.int, count=len(doc))  # Word IDs in doc.
+            cts = np.fromiter((cnt for _, cnt in doc), dtype=np.int, count=len(doc))  # Word counts.
 
             if d % self.chunksize == 0:
                 logger.debug("bound: at document #%i in chunk", d)
@@ -1094,7 +1093,7 @@ class AuthorTopicModel(LdaModel):
         gamma_new = self.random_state.gamma(100., 1. / 100., (num_new_authors, self.num_topics))
         self.state.gamma = np.vstack([self.state.gamma, gamma_new])
 
-        # Should not record the sstats, as we are goint to delete the new author after calculated.
+        # Should not record the sstats, as we are going to delete the new author after calculated.
         try:
             gammat, _ = self.inference(
                 corpus, self.author2doc, self.doc2author, rho(),

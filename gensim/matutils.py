@@ -14,6 +14,7 @@ import logging
 import math
 
 from gensim import utils
+from gensim.utils import deprecated
 
 import numpy as np
 import scipy.sparse
@@ -24,7 +25,7 @@ from scipy.linalg.special_matrices import triu
 from scipy.special import psi  # gamma function utils
 
 from six import iteritems, itervalues, string_types
-from six.moves import xrange, zip as izip
+from six.moves import zip, range
 
 
 logger = logging.getLogger(__name__)
@@ -152,8 +153,8 @@ def corpus2csc(corpus, num_terms=None, dtype=np.float64, num_docs=None, num_nnz=
         for docno, doc in enumerate(corpus):
             if printprogress and docno % printprogress == 0:
                 logger.info("PROGRESS: at document #%i", docno)
-            indices.extend([feature_id for feature_id, _ in doc])
-            data.extend([feature_weight for _, feature_weight in doc])
+            indices.extend(feature_id for feature_id, _ in doc)
+            data.extend(feature_weight for _, feature_weight in doc)
             num_nnz += len(doc)
             indptr.append(num_nnz)
         if num_terms is None:
@@ -586,7 +587,7 @@ class Sparse2Corpus(object):
             Document in BoW format.
 
         """
-        for indprev, indnow in izip(self.sparse.indptr, self.sparse.indptr[1:]):
+        for indprev, indnow in zip(self.sparse.indptr, self.sparse.indptr[1:]):
             yield list(zip(self.sparse.indices[indprev:indnow], self.sparse.data[indprev:indnow]))
 
     def __len__(self):
@@ -796,6 +797,9 @@ def cossim(vec1, vec2):
     return result
 
 
+@deprecated(
+    "Function will be removed in 4.0.0, use "
+    "gensim.similarities.termsim.SparseTermSimilarityMatrix.inner_product instead")
 def softcossim(vec1, vec2, similarity_matrix):
     """Get Soft Cosine Measure between two vectors given a term similarity matrix.
 
@@ -816,8 +820,10 @@ def softcossim(vec1, vec2, similarity_matrix):
     vec2 : list of (int, float)
         A document vector in the BoW format.
     similarity_matrix : {:class:`scipy.sparse.csc_matrix`, :class:`scipy.sparse.csr_matrix`}
-        A term similarity matrix, typically produced by
-        :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similarity_matrix`.
+        A term similarity matrix. If the matrix is :class:`scipy.sparse.csr_matrix`, it is going
+        to be transposed. If you rely on the fact that there is at most a constant number of
+        non-zero elements in a single column, it is your responsibility to ensure that the matrix
+        is symmetric.
 
     Returns
     -------
@@ -850,8 +856,8 @@ def softcossim(vec1, vec2, similarity_matrix):
     vec2 = dict(vec2)
     word_indices = sorted(set(chain(vec1, vec2)))
     dtype = similarity_matrix.dtype
-    vec1 = np.array([vec1[i] if i in vec1 else 0 for i in word_indices], dtype=dtype)
-    vec2 = np.array([vec2[i] if i in vec2 else 0 for i in word_indices], dtype=dtype)
+    vec1 = np.fromiter((vec1[i] if i in vec1 else 0 for i in word_indices), dtype=dtype, count=len(word_indices))
+    vec2 = np.fromiter((vec2[i] if i in vec2 else 0 for i in word_indices), dtype=dtype, count=len(word_indices))
     dense_matrix = similarity_matrix[[[i] for i in word_indices], word_indices].todense()
     vec1len = vec1.T.dot(dense_matrix).dot(vec1)[0, 0]
     vec2len = vec2.T.dot(dense_matrix).dot(vec2)[0, 0]
@@ -1516,7 +1522,7 @@ except ImportError:
 
                         # return implicit (empty) documents between previous id and new id
                         # too, to keep consistent document numbering and corpus length
-                        for previd in xrange(previd + 1, docid):
+                        for previd in range(previd + 1, docid):
                             yield previd, []
 
                         # from now on start adding fields to a new document, with a new id
@@ -1531,7 +1537,7 @@ except ImportError:
 
             # return empty documents between the last explicit document and the number
             # of documents as specified in the header
-            for previd in xrange(previd + 1, self.num_docs):
+            for previd in range(previd + 1, self.num_docs):
                 yield previd, []
 
         def docbyoffset(self, offset):
