@@ -155,3 +155,28 @@ cpdef compute_ngrams_bytes(word, unsigned int min_n, unsigned int max_n):
                 ngrams.append(ngram)
             n += 1
     return ngrams
+
+
+cpdef compute_ngrams_bytes_optimized(word, unsigned int min_n, unsigned int max_n):
+    cdef unsigned char _mb_mask = 0xC0
+    cdef unsigned char _mb_start = 0x80
+    cdef bytes utf8_word = ('<%s>' % word).encode("utf-8")
+    cdef const unsigned char *bytez = utf8_word
+    cdef size_t num_bytes = len(utf8_word)
+    cdef size_t j, i, n
+
+    ngrams = []
+    for i in range(num_bytes):
+        if bytez[i] & _mb_mask == _mb_start:
+            continue
+
+        j, n = i, 1
+        while j < num_bytes and n <= max_n:
+            j += 1
+            while j < num_bytes and (bytez[j] & _mb_mask) == _mb_start:
+                j += 1
+            if n >= min_n and not (n == 1 and (i == 0 or j == num_bytes)):
+                ngram = bytes(bytez[i:j])
+                ngrams.append(ngram)
+            n += 1
+    return ngrams
