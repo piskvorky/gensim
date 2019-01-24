@@ -642,9 +642,6 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         Poincare model - embeddings for graphs.
 
     """
-    def _clear_keyed_vector_internals(self):
-        raise NotImplementedError()
-
     def _do_train_job(self, data_iterable, job_parameters, thread_private_mem):
         raise NotImplementedError()
 
