@@ -14,7 +14,7 @@ for out-of-vocabulary words.
 This module contains a fast native C implementation of Fasttext with Python interfaces. It is **not** only a wrapper
 around Facebook's implementation.
 
-For a tutorial see `this noteboook
+For a tutorial see `this notebook
 <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/FastText_Tutorial.ipynb>`_.
 
 **Make sure you have a C compiler before installing Gensim, to use the optimized (compiled) Fasttext
@@ -24,6 +24,7 @@ Usage examples
 --------------
 
 Initialize and train a model:
+
 .. sourcecode:: pycon
 
     >>> from gensim.test.utils import common_texts
@@ -87,15 +88,18 @@ And on word analogies:
 """
 
 import logging
-import struct
 
 import numpy as np
-from numpy import ones, vstack, empty, float32 as REAL, sum as np_sum
+from numpy import ones, vstack, float32 as REAL, sum as np_sum
+import six
+
+import gensim.models._fasttext_bin
 
 from gensim.models.word2vec import Word2VecVocab, Word2VecTrainables, train_sg_pair, train_cbow_pair
-from gensim.models.keyedvectors import Vocab, FastTextKeyedVectors
+from gensim.models.keyedvectors import FastTextKeyedVectors
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
-from gensim.models.utils_any2vec import _compute_ngrams, _ft_hash
+from gensim.models.utils_any2vec import ft_ngram_hashes
+from smart_open import smart_open
 
 from gensim.utils import deprecated, call_on_class_only
 
@@ -140,8 +144,8 @@ except ImportError:
         """
         result = 0
         for sentence in sentences:
-            word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
-                           model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
+            word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab
+                           and model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
             for pos, word in enumerate(word_vocabs):
                 reduced_window = model.random.randint(model.window)
                 start = max(0, pos - model.window + reduced_window)
@@ -199,8 +203,8 @@ except ImportError:
         """
         result = 0
         for sentence in sentences:
-            word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
-                           model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
+            word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab
+                           and model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
             for pos, word in enumerate(word_vocabs):
                 reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
                 # now go over all words from the (reduced) window, predicting each one in turn
@@ -251,7 +255,7 @@ class FastText(BaseWordEmbeddingsModel):
         computed in the :class:`~gensim.models.word2vec.Word2Vec`, however here we also include vectors for n-grams.
         This allows the model to compute embeddings even for **unseen** words (that do not exist in the vocabulary),
         as the aggregate of the n-grams included in the word. After training the model, this attribute can be used
-        directly to query those embeddings in various ways. Check the module level docstring from some examples.
+        directly to query those embeddings in various ways. Check the module level docstring for some examples.
     vocabulary : :class:`~gensim.models.fasttext.FastTextVocab`
         This object represents the vocabulary of the model.
         Besides keeping track of all unique words, this object provides extra functionality, such as
@@ -270,7 +274,8 @@ class FastText(BaseWordEmbeddingsModel):
     def __init__(self, sentences=None, corpus_file=None, sg=0, hs=0, size=100, alpha=0.025, window=5, min_count=5,
                  max_vocab_size=None, word_ngrams=1, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
                  negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, iter=5, null_word=0, min_n=3, max_n=6,
-                 sorted_vocab=1, bucket=2000000, trim_rule=None, batch_words=MAX_WORDS_IN_BATCH, callbacks=()):
+                 sorted_vocab=1, bucket=2000000, trim_rule=None, batch_words=MAX_WORDS_IN_BATCH, callbacks=(),
+                 compatible_hash=True):
         """
 
         Parameters
@@ -285,7 +290,7 @@ class FastText(BaseWordEmbeddingsModel):
         corpus_file : str, optional
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
             You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
-            `corpus_file` arguments need to be passed (or none of them).
+            `corpus_file` arguments need to be passed (or none of them, in that case, the model is left uninitialized).
         min_count : int, optional
             The model ignores all words with total frequency lower than this.
         size : int, optional
@@ -366,6 +371,12 @@ class FastText(BaseWordEmbeddingsModel):
         callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`, optional
             List of callbacks that need to be executed/run at specific stages during training.
 
+        compatible_hash: bool, optional
+            By default, newer versions of Gensim's FastText use a hash function
+            that is 100% compatible with Facebook's FastText.
+            Older versions were not 100% compatible due to a bug.
+            To use the older, incompatible hash function, set this to False.
+
         Examples
         --------
         Initialize and train a `FastText` model:
@@ -387,12 +398,12 @@ class FastText(BaseWordEmbeddingsModel):
         if self.word_ngrams <= 1 and max_n == 0:
             bucket = 0
 
-        self.wv = FastTextKeyedVectors(size, min_n, max_n)
+        self.wv = FastTextKeyedVectors(size, min_n, max_n, bucket, compatible_hash)
         self.vocabulary = FastTextVocab(
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
             sorted_vocab=bool(sorted_vocab), null_word=null_word, ns_exponent=ns_exponent)
-        self.trainables = FastTextTrainables(
-            vector_size=size, seed=seed, bucket=bucket, hashfxn=hashfxn)
+        self.trainables = FastTextTrainables(vector_size=size, seed=seed, bucket=bucket, hashfxn=hashfxn)
+        self.trainables.prepare_weights(hs, negative, self.wv, update=False, vocabulary=self.vocabulary)
         self.wv.bucket = self.trainables.bucket
 
         super(FastText, self).__init__(
@@ -522,7 +533,18 @@ class FastText(BaseWordEmbeddingsModel):
             keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, **kwargs)
 
     def _set_train_params(self, **kwargs):
-        pass
+        #
+        # We need the wv.buckets_word member to be initialized in order to
+        # continue training.  The _clear_post_train method destroys this
+        # variable, so we reinitialize it here, if needed.
+        #
+        # The .old_vocab_len and .old_hash2index_len members are set only to
+        # keep the init_ngrams_weights method happy.
+        #
+        if self.wv.buckets_word is None:
+            self.vocabulary.old_vocab_len = len(self.wv.vocab)
+            self.trainables.old_hash2index_len = len(self.wv.hash2index)
+            self.trainables.init_ngrams_weights(self.wv, update=True, vocabulary=self.vocabulary)
 
     def _clear_post_train(self):
         self.clear_sims()
@@ -540,14 +562,23 @@ class FastText(BaseWordEmbeddingsModel):
         if self.negative:
             report['syn1neg'] = len(self.wv.vocab) * l1_size
         if self.word_ngrams > 0 and self.wv.vocab:
-            buckets = set()
-            num_ngrams = 0
-            for word in self.wv.vocab:
-                ngrams = _compute_ngrams(word, self.wv.min_n, self.wv.max_n)
-                num_ngrams += len(ngrams)
-                buckets.update(_ft_hash(ng) % self.trainables.bucket for ng in ngrams)
-            num_buckets = len(buckets)
-            report['syn0_ngrams'] = len(buckets) * vec_size
+            num_buckets = num_ngrams = 0
+
+            if self.trainables.bucket:
+                buckets = set()
+                num_ngrams = 0
+                for word in self.wv.vocab:
+                    hashes = ft_ngram_hashes(
+                        word,
+                        self.wv.min_n,
+                        self.wv.max_n,
+                        self.trainables.bucket,
+                        self.wv.compatible_hash
+                    )
+                    num_ngrams += len(hashes)
+                    buckets.update(hashes)
+                num_buckets = len(buckets)
+            report['syn0_ngrams'] = num_buckets * vec_size
             # A tuple (48 bytes) with num_ngrams_word ints (8 bytes) for each word
             # Only used during training, not stored with the model
             report['buckets_word'] = 48 * len(self.wv.vocab) + 8 * num_ngrams
@@ -673,11 +704,19 @@ class FastText(BaseWordEmbeddingsModel):
             >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.epochs)
 
         """
+        cant_train = hasattr(self.trainables, 'syn1neg') and self.trainables.syn1neg is None
+        if cant_train:
+            raise ValueError(
+                'this model cannot be trained any further, '
+                'if this is a native model, try loading it with '
+                'FastText.load_fasttext_format(path, full_model=True)'
+            )
+
         super(FastText, self).train(
             sentences=sentences, corpus_file=corpus_file, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
             queue_factor=queue_factor, report_delay=report_delay, callbacks=callbacks)
-        self.trainables.get_vocab_word_vecs(self.wv)
+        self.wv.adjust_vectors()
 
     def init_sims(self, replace=False):
         """
@@ -726,7 +765,7 @@ class FastText(BaseWordEmbeddingsModel):
         return self.wv.__contains__(word)
 
     @classmethod
-    def load_fasttext_format(cls, model_file, encoding='utf8'):
+    def load_fasttext_format(cls, model_file, encoding='utf8', full_model=True):
         """Load the input-hidden weight matrix from Facebook's native fasttext `.bin` and `.vec` output files.
 
         Notes
@@ -742,6 +781,9 @@ class FastText(BaseWordEmbeddingsModel):
             as Gensim requires only `.bin` file to the load entire fastText model.
         encoding : str, optional
             Specifies the file encoding.
+        full_model : boolean, optional
+            If False, skips loading the hidden output matrix.  This saves a fair bit
+            of CPU time and RAM, but prevents training continuation.
 
         Returns
         -------
@@ -749,12 +791,7 @@ class FastText(BaseWordEmbeddingsModel):
             The loaded model.
 
         """
-        model = cls()
-        if not model_file.endswith('.bin'):
-            model_file += '.bin'
-        model.file_name = model_file
-        model.load_binary_data(encoding=encoding)
-        return model
+        return _load_fasttext_format(model_file, encoding=encoding, full_model=full_model)
 
     def load_binary_data(self, encoding='utf8'):
         """Load data from a binary file created by Facebook's native FastText.
@@ -765,148 +802,9 @@ class FastText(BaseWordEmbeddingsModel):
             Specifies the encoding.
 
         """
-
-        # TODO use smart_open again when https://github.com/RaRe-Technologies/smart_open/issues/207 will be fixed
-        with open(self.file_name, 'rb') as f:
-            self._load_model_params(f)
-            self._load_dict(f, encoding=encoding)
-            self._load_vectors(f)
-
-    def _load_model_params(self, file_handle):
-        """Load model parameters from Facebook's native fasttext file.
-
-        Parameters
-        ----------
-        file_handle : file-like object
-            Handle to an open file.
-
-        """
-        magic, version = self.struct_unpack(file_handle, '@2i')
-        if magic == FASTTEXT_FILEFORMAT_MAGIC:  # newer format
-            self.new_format = True
-            dim, ws, epoch, min_count, neg, _, loss, model, bucket, minn, maxn, _, t = \
-                self.struct_unpack(file_handle, '@12i1d')
-        else:  # older format
-            self.new_format = False
-            dim = magic
-            ws = version
-            epoch, min_count, neg, _, loss, model, bucket, minn, maxn, _, t = self.struct_unpack(file_handle, '@10i1d')
-        # Parameters stored by [Args::save](https://github.com/facebookresearch/fastText/blob/master/src/args.cc)
-        self.wv.vector_size = dim
-        self.vector_size = dim
-        self.window = ws
-        self.epochs = epoch
-        self.vocabulary.min_count = min_count
-        self.negative = neg
-        self.hs = loss == 1
-        self.sg = model == 2
-        self.trainables.bucket = bucket
-        self.wv.bucket = bucket
-        self.wv.min_n = minn
-        self.wv.max_n = maxn
-        self.vocabulary.sample = t
-
-    def _load_dict(self, file_handle, encoding='utf8'):
-        """Load a previously saved dictionary from disk, stored in Facebook's native fasttext format.
-
-        Parameters
-        ----------
-        file_handle : file-like object
-            The opened file handle to the persisted dictionary.
-        encoding : str
-            Specifies the encoding.
-
-        """
-        vocab_size, nwords, nlabels = self.struct_unpack(file_handle, '@3i')
-        # Vocab stored by [Dictionary::save](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
-        if nlabels > 0:
-            raise NotImplementedError("Supervised fastText models are not supported")
-        logger.info("loading %s words for fastText model from %s", vocab_size, self.file_name)
-
-        self.struct_unpack(file_handle, '@1q')  # number of tokens
-        if self.new_format:
-            pruneidx_size, = self.struct_unpack(file_handle, '@q')
-        for i in range(vocab_size):
-            word_bytes = b''
-            char_byte = file_handle.read(1)
-            # Read vocab word
-            while char_byte != b'\x00':
-                word_bytes += char_byte
-                char_byte = file_handle.read(1)
-            word = word_bytes.decode(encoding)
-            count, _ = self.struct_unpack(file_handle, '@qb')
-
-            self.wv.vocab[word] = Vocab(index=i, count=count)
-            self.wv.index2word.append(word)
-
-        assert len(self.wv.vocab) == nwords, (
-            'mismatch between final vocab size ({} words), '
-            'and expected number of words ({} words)'.format(len(self.wv.vocab), nwords))
-        if len(self.wv.vocab) != vocab_size:
-            # expecting to log this warning only for pretrained french vector, wiki.fr
-            logger.warning(
-                "mismatch between final vocab size (%s words), and expected vocab size (%s words)",
-                len(self.wv.vocab), vocab_size
-            )
-
-        if self.new_format:
-            for j in range(pruneidx_size):
-                self.struct_unpack(file_handle, '@2i')
-
-    def _load_vectors(self, file_handle):
-        """Load word vectors stored in Facebook's native fasttext format from disk.
-
-        Parameters
-        ----------
-        file_handle : file-like object
-            Open file handle to persisted vectors.
-
-        """
-        if self.new_format:
-            self.struct_unpack(file_handle, '@?')  # bool quant_input in fasttext.cc
-        num_vectors, dim = self.struct_unpack(file_handle, '@2q')
-        # Vectors stored by [Matrix::save](https://github.com/facebookresearch/fastText/blob/master/src/matrix.cc)
-        assert self.wv.vector_size == dim, (
-            'mismatch between vector size in model params ({}) and model vectors ({})'
-            .format(self.wv.vector_size, dim)
-        )
-        float_size = struct.calcsize('@f')
-        if float_size == 4:
-            dtype = np.dtype(np.float32)
-        elif float_size == 8:
-            dtype = np.dtype(np.float64)
-
-        self.num_original_vectors = num_vectors
-        self.wv.vectors_ngrams = np.fromfile(file_handle, dtype=dtype, count=num_vectors * dim)
-        self.wv.vectors_ngrams = self.wv.vectors_ngrams.reshape((num_vectors, dim))
-        assert self.wv.vectors_ngrams.shape == (
-            self.trainables.bucket + len(self.wv.vocab), self.wv.vector_size), \
-            'mismatch between actual weight matrix shape {} and expected shape {}'\
-            .format(
-                self.wv.vectors_ngrams.shape, (self.trainables.bucket + len(self.wv.vocab), self.wv.vector_size)
-            )
-
-        self.trainables.init_ngrams_post_load(self.file_name, self.wv)
-        self.clear_sims()
-
-    def struct_unpack(self, file_handle, fmt):
-        """Read a single object from an open file.
-
-        Parameters
-        ----------
-        file_handle : file_like object
-            Handle to an open file
-        fmt : str
-            Byte format in which the structure is saved.
-
-        Returns
-        -------
-        Tuple of (str)
-            Unpacked structure.
-
-        """
-        num_bytes = struct.calcsize(fmt)
-        return struct.unpack(fmt, file_handle.read(num_bytes))
+        m = _load_fasttext_format(self.file_name, encoding=encoding)
+        for attr, val in six.iteritems(m.__dict__):
+            setattr(self, attr, val)
 
     def save(self, *args, **kwargs):
         """Save the Fasttext model. This saved model can be loaded again using
@@ -951,9 +849,21 @@ class FastText(BaseWordEmbeddingsModel):
         try:
             model = super(FastText, cls).load(*args, **kwargs)
             if not hasattr(model.trainables, 'vectors_vocab_lockf') and hasattr(model.wv, 'vectors_vocab'):
-                model.trainables.vectors_vocab_lockf = ones(len(model.trainables.vectors), dtype=REAL)
+                model.trainables.vectors_vocab_lockf = ones(model.wv.vectors_vocab.shape, dtype=REAL)
             if not hasattr(model.trainables, 'vectors_ngrams_lockf') and hasattr(model.wv, 'vectors_ngrams'):
-                model.trainables.vectors_ngrams_lockf = ones(len(model.trainables.vectors), dtype=REAL)
+                model.trainables.vectors_ngrams_lockf = ones(model.wv.vectors_ngrams.shape, dtype=REAL)
+
+            if not hasattr(model.wv, 'compatible_hash'):
+                logger.warning(
+                    "This older model was trained with a buggy hash function.  "
+                    "The model will continue to work, but consider training it "
+                    "from scratch."
+                )
+                model.wv.compatible_hash = False
+
+            if not hasattr(model.wv, 'bucket'):
+                model.wv.bucket = model.trainables.bucket
+
             return model
         except AttributeError:
             logger.info('Model saved using code from earlier Gensim Version. Re-loading old model in a compatible way.')
@@ -966,19 +876,11 @@ class FastText(BaseWordEmbeddingsModel):
         return self.wv.accuracy(questions, restrict_vocab, most_similar, case_insensitive)
 
 
+#
+# Keep for backward compatibility.
+#
 class FastTextVocab(Word2VecVocab):
-    """Vocabulary used by :class:`~gensim.models.fasttext.FastText`."""
-    def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0, ns_exponent=0.75):
-        super(FastTextVocab, self).__init__(
-            max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
-            sorted_vocab=sorted_vocab, null_word=null_word, ns_exponent=ns_exponent)
-
-    def prepare_vocab(self, hs, negative, wv, update=False, keep_raw_vocab=False, trim_rule=None,
-                      min_count=None, sample=None, dry_run=False):
-        report_values = super(FastTextVocab, self).prepare_vocab(
-            hs, negative, wv, update=update, keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule,
-            min_count=min_count, sample=sample, dry_run=dry_run)
-        return report_values
+    pass
 
 
 class FastTextTrainables(Word2VecTrainables):
@@ -987,6 +889,29 @@ class FastTextTrainables(Word2VecTrainables):
         super(FastTextTrainables, self).__init__(
             vector_size=vector_size, seed=seed, hashfxn=hashfxn)
         self.bucket = int(bucket)
+
+        #
+        # There are also two "hidden" attributes that get initialized outside
+        # this constructor:
+        #
+        #   1. vectors_vocab_lockf
+        #   2. vectors_ngrams_lockf
+        #
+        # These are both 2D matrices of shapes equal to the shapes of
+        # wv.vectors_vocab and wv.vectors_ngrams.  So, each row corresponds to
+        # a vector, and each column corresponds to a dimension within that
+        # vector.
+        #
+        # Lockf stands for "lock factor": zero values suppress learning, one
+        # values enable it.  Interestingly, the vectors_vocab_lockf and
+        # vectors_ngrams_lockf seem to be used only by the C code in
+        # fasttext_inner.pyx.
+        #
+        # The word2vec implementation also uses vectors_lockf: in that case,
+        # it's a 1D array, with a real number for each vector.  The FastText
+        # implementation inherits this vectors_lockf attribute but doesn't
+        # appear to use it.
+        #
 
     def prepare_weights(self, hs, negative, wv, update=False, vocabulary=None):
         super(FastTextTrainables, self).prepare_weights(hs, negative, wv, update=update, vocabulary=vocabulary)
@@ -998,139 +923,136 @@ class FastTextTrainables(Word2VecTrainables):
 
         Parameters
         ----------
+        wv : :class:`~gensim.models.keyedvectors.FastTextKeyedVectors`
+            Contains the mapping between the words and embeddings.
+            The vectors for the computed ngrams will go here.
         update : bool
             If True, the new vocab words and their new ngrams word vectors are initialized
             with random uniform distribution and updated/added to the existing vocab word and ngram vectors.
+        vocabulary : :class:`~gensim.models.fasttext.FastTextVocab`
+            This object represents the vocabulary of the model.
+            If update is True, then vocabulary may not be None.
 
         """
         if not update:
-            wv.vectors_vocab = empty((len(wv.vocab), wv.vector_size), dtype=REAL)
-            self.vectors_vocab_lockf = ones((len(wv.vocab), wv.vector_size), dtype=REAL)
-
-            wv.vectors_ngrams = empty((self.bucket, wv.vector_size), dtype=REAL)
-            self.vectors_ngrams_lockf = ones((self.bucket, wv.vector_size), dtype=REAL)
-
-            wv.hash2index = {}
-            wv.buckets_word = {}
-            ngram_indices = []
-            for word, vocab in wv.vocab.items():
-                buckets = []
-                for ngram in _compute_ngrams(word, wv.min_n, wv.max_n):
-                    ngram_hash = _ft_hash(ngram) % self.bucket
-                    if ngram_hash not in wv.hash2index:
-                        wv.hash2index[ngram_hash] = len(ngram_indices)
-                        ngram_indices.append(ngram_hash)
-                    buckets.append(wv.hash2index[ngram_hash])
-                wv.buckets_word[vocab.index] = np.array(buckets, dtype=np.uint32)
-            wv.num_ngram_vectors = len(ngram_indices)
-
-            logger.info("Total number of ngrams is %d", wv.num_ngram_vectors)
-
-            wv.vectors_ngrams = wv.vectors_ngrams.take(ngram_indices, axis=0)
-            self.vectors_ngrams_lockf = self.vectors_ngrams_lockf.take(ngram_indices, axis=0)
-            self.reset_ngrams_weights(wv)
+            wv.init_ngrams_weights(self.seed)
+            self.vectors_vocab_lockf = ones(wv.vectors_vocab.shape, dtype=REAL)
+            self.vectors_ngrams_lockf = ones(wv.vectors_ngrams.shape, dtype=REAL)
         else:
-            wv.buckets_word = {}
-            num_new_ngrams = 0
-            for word, vocab in wv.vocab.items():
-                buckets = []
-                for ngram in _compute_ngrams(word, wv.min_n, wv.max_n):
-                    ngram_hash = _ft_hash(ngram) % self.bucket
-                    if ngram_hash not in wv.hash2index:
-                        wv.hash2index[ngram_hash] = num_new_ngrams + self.old_hash2index_len
-                        num_new_ngrams += 1
-                    buckets.append(wv.hash2index[ngram_hash])
-                wv.buckets_word[vocab.index] = np.array(buckets, dtype=np.uint32)
+            wv.update_ngrams_weights(self.seed, vocabulary.old_vocab_len)
+            self.vectors_vocab_lockf = _pad_ones(self.vectors_vocab_lockf, wv.vectors_vocab.shape)
+            self.vectors_ngrams_lockf = _pad_ones(self.vectors_ngrams_lockf, wv.vectors_ngrams.shape)
 
-            wv.num_ngram_vectors += num_new_ngrams
-            logger.info("Number of new ngrams is %d", num_new_ngrams)
+    def init_post_load(self, model, hidden_output):
+        num_vectors = len(model.wv.vectors)
+        vocab_size = len(model.wv.vocab)
+        vector_size = model.wv.vector_size
 
-            rand_obj = np.random
-            rand_obj.seed(self.seed)
-            new_vocab_rows = rand_obj.uniform(
-                -1.0 / wv.vector_size, 1.0 / wv.vector_size,
-                (len(wv.vocab) - vocabulary.old_vocab_len, wv.vector_size)
-            ).astype(REAL)
-            new_vocab_lockf_rows = ones(
-                (len(wv.vocab) - vocabulary.old_vocab_len, wv.vector_size), dtype=REAL)
-            new_ngram_rows = rand_obj.uniform(
-                -1.0 / wv.vector_size, 1.0 / wv.vector_size,
-                (len(wv.hash2index) - self.old_hash2index_len, wv.vector_size)
-            ).astype(REAL)
-            new_ngram_lockf_rows = ones(
-                (len(wv.hash2index) - self.old_hash2index_len, wv.vector_size), dtype=REAL)
+        assert num_vectors > 0, 'expected num_vectors to be initialized already'
+        assert vocab_size > 0, 'expected vocab_size to be initialized already'
 
-            wv.vectors_vocab = vstack([wv.vectors_vocab, new_vocab_rows])
-            self.vectors_vocab_lockf = vstack([self.vectors_vocab_lockf, new_vocab_lockf_rows])
-            wv.vectors_ngrams = vstack([wv.vectors_ngrams, new_ngram_rows])
-            self.vectors_ngrams_lockf = vstack([self.vectors_ngrams_lockf, new_ngram_lockf_rows])
+        self.vectors_ngrams_lockf = ones(model.wv.vectors_ngrams.shape, dtype=REAL)
+        self.vectors_vocab_lockf = ones(model.wv.vectors_vocab.shape, dtype=REAL)
 
-    def reset_ngrams_weights(self, wv):
-        """Reset all projection weights to an initial (untrained) state,
-        but keep the existing vocabulary and their ngrams.
+        if model.hs:
+            self.syn1 = hidden_output
+        if model.negative:
+            self.syn1neg = hidden_output
 
-        """
-        rand_obj = np.random
-        rand_obj.seed(self.seed)
-        for index in range(len(wv.vocab)):
-            wv.vectors_vocab[index] = rand_obj.uniform(
-                -1.0 / wv.vector_size, 1.0 / wv.vector_size, wv.vector_size
-            ).astype(REAL)
-        for index in range(len(wv.hash2index)):
-            wv.vectors_ngrams[index] = rand_obj.uniform(
-                -1.0 / wv.vector_size, 1.0 / wv.vector_size, wv.vector_size
-            ).astype(REAL)
+        self.layer1_size = vector_size
 
-    def get_vocab_word_vecs(self, wv):
-        """Calculate vectors for words in vocabulary and stores them in `vectors`."""
-        for w, v in wv.vocab.items():
-            word_vec = np.copy(wv.vectors_vocab[v.index])
-            ngrams = _compute_ngrams(w, wv.min_n, wv.max_n)
-            ngram_weights = wv.vectors_ngrams
-            for ngram in ngrams:
-                word_vec += ngram_weights[wv.hash2index[_ft_hash(ngram) % self.bucket]]
-            word_vec /= (len(ngrams) + 1)
-            wv.vectors[v.index] = word_vec
 
-    def init_ngrams_post_load(self, file_name, wv):
-        """Compute ngrams of all words present in vocabulary, and store vectors for only those ngrams.
+def _pad_ones(m, new_shape):
+    """Pad a matrix with additional rows filled with ones."""
+    assert m.shape[0] <= new_shape[0], 'the new number of rows must be greater'
+    assert m.shape[1] == new_shape[1], 'the number of columns must match'
+    new_rows = new_shape[0] - m.shape[0]
+    if new_rows == 0:
+        return m
+    suffix = ones((new_rows, m.shape[1]), dtype=REAL)
+    return vstack([m, suffix])
 
-        Vectors for other ngrams are initialized with a random uniform distribution in FastText. These
-        vectors are discarded here to save space.
 
-        """
-        wv.vectors = np.zeros((len(wv.vocab), wv.vector_size), dtype=REAL)
+def _load_fasttext_format(model_file, encoding='utf-8', full_model=True):
+    """Load the input-hidden weight matrix from Facebook's native fasttext `.bin` and `.vec` output files.
 
-        for w, vocab in wv.vocab.items():
-            wv.vectors[vocab.index] += np.array(wv.vectors_ngrams[vocab.index])
+    Parameters
+    ----------
+    model_file : str
+        Path to the FastText output files.
+        FastText outputs two model files - `/path/to/model.vec` and `/path/to/model.bin`
+        Expected value for this example: `/path/to/model` or `/path/to/model.bin`,
+        as Gensim requires only `.bin` file to the load entire fastText model.
+    encoding : str, optional
+        Specifies the file encoding.
+    full_model : boolean, optional
+        If False, skips loading the hidden output matrix.  This saves a fair bit
+        of CPU time and RAM, but prevents training continuation.
 
-        ngram_indices = []
-        wv.num_ngram_vectors = 0
-        for word in wv.vocab.keys():
-            for ngram in _compute_ngrams(word, wv.min_n, wv.max_n):
-                ngram_hash = _ft_hash(ngram) % self.bucket
-                if ngram_hash in wv.hash2index:
-                    continue
-                wv.hash2index[ngram_hash] = len(ngram_indices)
-                ngram_indices.append(len(wv.vocab) + ngram_hash)
-        wv.num_ngram_vectors = len(ngram_indices)
-        wv.vectors_ngrams = wv.vectors_ngrams.take(ngram_indices, axis=0)
+    Returns
+    -------
+    :class: `~gensim.models.fasttext.FastText`
+        The loaded model.
 
-        ngram_weights = wv.vectors_ngrams
+    """
+    if not model_file.endswith('.bin'):
+        model_file += '.bin'
+    with smart_open(model_file, 'rb') as fin:
+        m = gensim.models._fasttext_bin.load(fin, encoding=encoding, full_model=full_model)
 
-        logger.info(
-            "loading weights for %s words for fastText model from %s",
-            len(wv.vocab), file_name
+    model = FastText(
+        size=m.dim,
+        window=m.ws,
+        iter=m.epoch,
+        negative=m.neg,
+        hs=(m.loss == 1),
+        sg=(m.model == 2),
+        bucket=m.bucket,
+        min_count=m.min_count,
+        sample=m.t,
+        min_n=m.minn,
+        max_n=m.maxn,
+    )
+
+    model.vocabulary.raw_vocab = m.raw_vocab
+    model.vocabulary.nwords = m.nwords
+    model.vocabulary.vocab_size = m.vocab_size
+    model.vocabulary.prepare_vocab(model.hs, model.negative, model.wv,
+                                   update=True, min_count=model.min_count)
+
+    model.num_original_vectors = m.vectors_ngrams.shape[0]
+
+    model.wv.init_post_load(m.vectors_ngrams)
+    model.trainables.init_post_load(model, m.hidden_output)
+
+    _check_model(model)
+
+    logger.info("loaded %s weight matrix for fastText model from %s", m.vectors_ngrams.shape, fin.name)
+    return model
+
+
+def _check_model(m):
+    #
+    # These checks only make sense after everything has been completely initialized.
+    #
+    assert m.wv.vector_size == m.wv.vectors_ngrams.shape[1], (
+        'mismatch between vector size in model params ({}) and model vectors ({})'
+        .format(m.wv.vector_size, m.wv.vectors_ngrams)
+    )
+    if m.trainables.syn1neg is not None:
+        assert m.wv.vector_size == m.trainables.syn1neg.shape[1], (
+            'mismatch between vector size in model params ({}) and trainables ({})'
+            .format(m.wv.vector_size, m.wv.vectors_ngrams)
         )
 
-        for w, vocab in wv.vocab.items():
-            word_ngrams = _compute_ngrams(w, wv.min_n, wv.max_n)
-            for word_ngram in word_ngrams:
-                vec_idx = wv.hash2index[_ft_hash(word_ngram) % self.bucket]
-                wv.vectors[vocab.index] += np.array(ngram_weights[vec_idx])
+    assert len(m.wv.vocab) == m.vocabulary.nwords, (
+        'mismatch between final vocab size ({} words), '
+        'and expected number of words ({} words)'.format(len(m.wv.vocab), m.vocabulary.nwords)
+    )
 
-            wv.vectors[vocab.index] /= (len(word_ngrams) + 1)
-        logger.info(
-            "loaded %s weight matrix for fastText model from %s",
-            wv.vectors.shape, file_name
+    if len(m.wv.vocab) != m.vocabulary.vocab_size:
+        # expecting to log this warning only for pretrained french vector, wiki.fr
+        logger.warning(
+            "mismatch between final vocab size (%s words), and expected vocab size (%s words)",
+            len(m.wv.vocab), m.vocabulary.vocab_size
         )

@@ -93,7 +93,6 @@ class IndexedCorpus(interfaces.CorpusABC):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.corpora import MmCorpus
