@@ -97,19 +97,8 @@ cpdef compute_ngrams(word, unsigned int min_n, unsigned int max_n):
 # UTF-8 bytes that begin with 10 are subsequent bytes of a multi-byte sequence,
 # as opposed to a new character.
 #
-_MB_MASK = 0xC0
-_MB_START = 0x80
-
-
-cdef _is_utf8_continue_py3(b):
-    return b & _MB_MASK == _MB_START
-
-
-cdef _is_utf8_continue_py2(b):
-    return ord(b) & _MB_MASK == _MB_START
-
-
-_is_utf8_continue = _is_utf8_continue_py2 if PY2 else _is_utf8_continue_py3
+cdef unsigned char _MB_MASK = 0xC0
+cdef unsigned char _MB_START = 0x80
 
 
 cpdef compute_ngrams_bytes(word, unsigned int min_n, unsigned int max_n):
@@ -137,43 +126,19 @@ cpdef compute_ngrams_bytes(word, unsigned int min_n, unsigned int max_n):
 
     """
     cdef bytes utf8_word = ('<%s>' % word).encode("utf-8")
-    cdef int num_bytes = len(utf8_word)
-    cdef int j, i, n
-
-    ngrams = []
-    for i in range(num_bytes):
-        if _is_utf8_continue(utf8_word[i]):
-            continue
-
-        j, n = i, 1
-        while j < num_bytes and n <= max_n:
-            j += 1
-            while j < num_bytes and _is_utf8_continue(utf8_word[j]):
-                j += 1
-            if n >= min_n and not (n == 1 and (i == 0 or j == num_bytes)):
-                ngram = bytes(utf8_word[i:j])
-                ngrams.append(ngram)
-            n += 1
-    return ngrams
-
-
-cpdef compute_ngrams_bytes_optimized(word, unsigned int min_n, unsigned int max_n):
-    cdef unsigned char _mb_mask = 0xC0
-    cdef unsigned char _mb_start = 0x80
-    cdef bytes utf8_word = ('<%s>' % word).encode("utf-8")
     cdef const unsigned char *bytez = utf8_word
     cdef size_t num_bytes = len(utf8_word)
     cdef size_t j, i, n
 
     ngrams = []
     for i in range(num_bytes):
-        if bytez[i] & _mb_mask == _mb_start:
+        if bytez[i] & _MB_MASK == _MB_START:
             continue
 
         j, n = i, 1
         while j < num_bytes and n <= max_n:
             j += 1
-            while j < num_bytes and (bytez[j] & _mb_mask) == _mb_start:
+            while j < num_bytes and (bytez[j] & _MB_MASK) == _MB_START:
                 j += 1
             if n >= min_n and not (n == 1 and (i == 0 or j == num_bytes)):
                 ngram = bytes(bytez[i:j])
