@@ -555,6 +555,8 @@ class BaseAny2VecModel(utils.SaveLoad):
                 trained_word_count_epoch, raw_word_count_epoch, job_tally_epoch = self._train_epoch_corpusfile(
                     corpus_file, cur_epoch=cur_epoch, total_examples=total_examples, total_words=total_words, **kwargs)
 
+            self._clear_post_train()
+
             trained_word_count += trained_word_count_epoch
             raw_word_count += raw_word_count_epoch
             job_tally += job_tally_epoch
@@ -567,7 +569,6 @@ class BaseAny2VecModel(utils.SaveLoad):
         self._log_train_end(raw_word_count, trained_word_count, total_elapsed, job_tally)
 
         self.train_count += 1  # number of times train() has been called
-        self._clear_post_train()
 
         for callback in self.callbacks:
             callback.on_train_end(self)

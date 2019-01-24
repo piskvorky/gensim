@@ -483,8 +483,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         """
         return super(WordEmbeddingsKeyedVectors, self).closer_than(w1, w2)
 
-    def most_similar(self, positive=None, negative=None, topn=10, restrict_vocab=None, indexer=None,
-                     replace=False):
+    def most_similar(self, positive=None, negative=None, topn=10, restrict_vocab=None, indexer=None):
         """Find the top-N most similar words.
         Positive words contribute positively towards the similarity, negative words negatively.
 
@@ -506,8 +505,6 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             are searched for most-similar values. For example, restrict_vocab=10000 would
             only check the first 10000 word vectors in the vocabulary order. (This may be
             meaningful if you've sorted the vocabulary by descending frequency.)
-        replace : bool, optional
-            Whether to replace the kededvectors with newly trained values.
 
         Returns
         -------
@@ -520,7 +517,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         if negative is None:
             negative = []
 
-        self.init_sims(replace)
+        self.init_sims()
 
         if isinstance(positive, string_types) and not negative:
             # allow calls like most_similar('dog'), as a shorthand for most_similar(['dog'])
@@ -1611,8 +1608,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
                 np_divide(
                     self.vectors_docs, sqrt((self.vectors_docs ** 2).sum(-1))[..., newaxis], self.vectors_docs_norm)
 
-    def most_similar(self, positive=None, negative=None, topn=10, clip_start=0, clip_end=None, indexer=None,
-                     replace=False):
+    def most_similar(self, positive=None, negative=None, topn=10, clip_start=0, clip_end=None, indexer=None):
         """Find the top-N most similar docvecs from the training set.
         Positive docvecs contribute positively towards the similarity, negative docvecs negatively.
 
@@ -1635,8 +1631,6 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
             Start clipping index.
         clip_end : int
             End clipping index.
-        replace : bool, optional
-            Whether the keyedvectors should be replaced with newly trained ones.
 
         Returns
         -------
@@ -1649,7 +1643,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
         if negative is None:
             negative = []
 
-        self.init_sims(replace)
+        self.init_sims()
         clip_end = clip_end or len(self.vectors_docs_norm)
 
         if isinstance(positive, string_types + integer_types + (integer,)) and not negative:

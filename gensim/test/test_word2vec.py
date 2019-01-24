@@ -1029,20 +1029,17 @@ class TestWord2VecModel(unittest.TestCase):
                 self.test = test
                 self.vecs = None
 
-            def on_epoch_begin(self, model):
-                model.wv.most_similar('graph', replace=True)
+            def on_train_begin(self, model):
+                model.wv.most_similar('highlands')
                 self.vecs = np.copy(model.wv.vectors_norm)
 
-            def on_batch_end(self, model):
-                model.wv.most_similar('graph', replace=True)
-                self.test.assertNotEqual(np.sum(model.wv.vectors_norm - self.vecs), 0)
-
             def on_epoch_end(self, model):
-                model.wv.most_similar('graph', replace=True)
+                model.wv.most_similar('highlands')
                 self.test.assertNotEqual(np.sum(model.wv.vectors_norm - self.vecs), 0)
+                self.vecs = model.wv.vectors_norm
 
         model = word2vec.Word2Vec(size=2, min_count=1, hs=1, negative=0)
-        model.build_vocab(sentences)
+        model.build_vocab(list_corpus)
         model.train(sentences, total_examples=model.corpus_count, epochs=1, start_alpha=0.1, end_alpha=0.1,
                     callbacks=(AssertWordVecsHaveChanged(self),))
 

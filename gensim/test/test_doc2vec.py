@@ -698,17 +698,14 @@ class TestDoc2VecModel(unittest.TestCase):
                 self.test = test
                 self.vecs = None
 
-            def on_epoch_begin(self, model):
-                model.docvecs.most_similar(1, replace=True)
+            def on_train_begin(self, model):
+                model.docvecs.most_similar(1)
                 self.vecs = np.copy(model.docvecs.vectors_docs_norm)
 
-            def on_batch_end(self, model):
-                model.docvecs.most_similar(1, replace=True)
-                self.test.assertNotEqual(np.sum(model.docvecs.vectors_docs_norm - self.vecs), 0)
-
             def on_epoch_end(self, model):
-                model.docvecs.most_similar(1, replace=True)
+                model.docvecs.most_similar(1)
                 self.test.assertNotEqual(np.sum(model.docvecs.vectors_docs_norm - self.vecs), 0)
+                self.vecs = model.docvecs.vectors_docs_norm
 
         corpus = DocsLeeCorpus()
         model = doc2vec.Doc2Vec(vector_size=10, min_count=1, workers=1)
