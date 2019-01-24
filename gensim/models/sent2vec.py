@@ -163,7 +163,7 @@ class Sent2VecVocab(object):
             Hash of the given word.
 
         """
-        h = _ft_hash(word) % self.max_vocab_size
+        h = _ft_hash(word.encode("utf-8")) % self.max_vocab_size
         while self.word2int[h] != -1 and self.words[self.word2int[h]].word != word:
             h = (h + 1) % self.max_vocab_size
         return h
