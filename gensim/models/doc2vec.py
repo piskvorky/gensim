@@ -641,8 +641,10 @@ class Doc2Vec(BaseWordEmbeddingsModel):
     def _set_train_params(self, **kwargs):
         pass
 
-    def _clear_keyed_vector_internals(self):
-        """Alias for :meth:`~gensim.models.doc2vec.Doc2Vec.clear_sims`."""
+    def _clear_epoch_start(self):
+        self.clear_sims()
+
+    def _clear_post_train(self):
         self.clear_sims()
 
     def clear_sims(self):

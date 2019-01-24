@@ -524,12 +524,8 @@ class FastText(BaseWordEmbeddingsModel):
     def _set_train_params(self, **kwargs):
         pass
 
-    def _clear_keyed_vector_internals(self):
-        """Clear the model's internal structures after training has finished to free up RAM."""
-        self.wv.vectors_norm = None
-        self.wv.vectors_vocab_norm = None
-        self.wv.vectors_ngrams_norm = None
-        self.wv.buckets_word = None
+    def _clear_post_train(self):
+        self.clear_sims()
 
     def estimate_memory(self, vocab_size=None, report=None):
         vocab_size = vocab_size or len(self.wv.vocab)
@@ -706,7 +702,10 @@ class FastText(BaseWordEmbeddingsModel):
         You can recompute them later again using the :meth:`~gensim.models.fasttext.FastText.init_sims` method.
 
         """
-        self._clear_keyed_vector_internals()
+        self.wv.vectors_norm = None
+        self.wv.vectors_vocab_norm = None
+        self.wv.vectors_ngrams_norm = None
+        self.wv.buckets_word = None
 
     @deprecated("Method will be removed in 4.0.0, use self.wv.__getitem__() instead")
     def __getitem__(self, words):
@@ -888,7 +887,7 @@ class FastText(BaseWordEmbeddingsModel):
             )
 
         self.trainables.init_ngrams_post_load(self.file_name, self.wv)
-        self._clear_keyed_vector_internals()
+        self.clear_sims()
 
     def struct_unpack(self, file_handle, fmt):
         """Read a single object from an open file.

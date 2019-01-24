@@ -121,9 +121,13 @@ class BaseAny2VecModel(utils.SaveLoad):
         """Get the number of words in a given job."""
         raise NotImplementedError()
 
-    def _clear_keyed_vector_internals(self):
+    def _clear_epoch_start(self):
+        """Resets certain properties of the model pre epoch. eg. `keyedvectors.vectors_norm`."""
+        pass
+
+    def _clear_post_train(self):
         """Resets certain properties of the model post training. eg. `keyedvectors.vectors_norm`."""
-        raise NotImplementedError()
+        pass
 
     def _do_train_epoch(self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
                         total_examples=None, total_words=None, **kwargs):
@@ -544,10 +548,10 @@ class BaseAny2VecModel(utils.SaveLoad):
         job_tally = 0
 
         for cur_epoch in range(self.epochs):
+            self._clear_epoch_start()
+
             for callback in self.callbacks:
                 callback.on_epoch_begin(self)
-
-            self._clear_keyed_vector_internals()
 
             if data_iterable is not None:
                 trained_word_count_epoch, raw_word_count_epoch, job_tally_epoch = self._train_epoch(
@@ -569,6 +573,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         self._log_train_end(raw_word_count, trained_word_count, total_elapsed, job_tally)
 
         self.train_count += 1  # number of times train() has been called
+        self._clear_post_train()
 
         for callback in self.callbacks:
             callback.on_train_end(self)
