@@ -58,17 +58,19 @@ Persist a model to disk with:
 Once loaded, such models behave identically to those created from scratch.
 For example, you can continue training the loaded model:
 
+.. sourcecode:: pycon
+
+    >>> import numpy as np
+    >>> old_computer = model.wv['computer']  # Grab the existing vector for this word
     >>> new_sentences = [
-    ...     ['sweet', 'child', 'of', 'mine'],
-    ...     ['rocket', 'queen'],
-    ...     ['you', 'could', 'be', 'mine'],
-    ...     ['november', 'rain'],
+    ...     ['computers', 'expensive'],
+    ...     ['computer', 'chess', 'players', 'stronger', 'than', 'humans'],
+    ...     ['computers', 'are', 'everywhere'],
     ... ]
-    >>> 'rocket' in model.wv
-    False
     >>> model.train(new_sentences, total_examples=len(sentences), epochs=model.epochs)
-    >>> 'rocket' in model.wv
-    True
+    >>> new_computer = model.wv['computer']
+    >>> np.allclose(old_computer, new_computer)
+    False
 
 You can also load models trained with Facebook's fastText implementation:
 
@@ -86,16 +88,15 @@ You may continue training them on new data:
 
 .. sourcecode:: pycon
 
+    >>> import numpy as np
     >>> 'computer' in fb_full.wv.vocab  # New word, currently out of vocab
     False
-    >>> 'rocket' in fb_full.wv.vocab
-    False
+    >>> old_computer = fb_full.wv['computer']  # Calculate current vectors
     >>> fb_full.train(sentences, total_examples=len(sentences), epochs=model.epochs)
     >>> fb_full.train(new_sentences, total_examples=len(new_sentences), epochs=model.epochs)
-    >>> 'computer' in fb_full.wv.vocab  # We have learned this word now
-    True
-    >>> 'rocket' in fb_full.wv.vocab
-    True
+    >>> new_computer = fb_full.wv['computer']
+    >>> np.allclose(old_computer, new_computer)  # Vector has changed, model has learnt something
+    False
 
 Retrieve word-vector for vocab and out-of-vocab word:
 
