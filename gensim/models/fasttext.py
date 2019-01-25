@@ -61,7 +61,7 @@ For example, you can continue training the loaded model:
 .. sourcecode:: pycon
 
     >>> import numpy as np
-    >>> old_computer = model.wv['computer']  # Grab the existing vector for this word
+    >>> old_computer = np.copy(model.wv['computer'])  # Grab the existing vector for this word
     >>> new_sentences = [
     ...     ['computers', 'expensive'],
     ...     ['computer', 'chess', 'players', 'stronger', 'than', 'humans'],
@@ -69,7 +69,8 @@ For example, you can continue training the loaded model:
     ... ]
     >>> model.train(new_sentences, total_examples=len(sentences), epochs=model.epochs)
     >>> new_computer = model.wv['computer']
-    >>> np.allclose(old_computer, new_computer)
+    >>> # FIXME: why is this True??
+    >>> np.allclose(old_computer, new_computer, atol=1e-4)
     False
 
 You can also load models trained with Facebook's fastText implementation:
@@ -88,14 +89,14 @@ You may continue training them on new data:
 
 .. sourcecode:: pycon
 
-    >>> import numpy as np
     >>> 'computer' in fb_full.wv.vocab  # New word, currently out of vocab
     False
-    >>> old_computer = fb_full.wv['computer']  # Calculate current vectors
+    >>> old_computer = np.copy(fb_full.wv['computer'])  # Calculate current vectors
     >>> fb_full.train(sentences, total_examples=len(sentences), epochs=model.epochs)
     >>> fb_full.train(new_sentences, total_examples=len(new_sentences), epochs=model.epochs)
     >>> new_computer = fb_full.wv['computer']
-    >>> np.allclose(old_computer, new_computer)  # Vector has changed, model has learnt something
+    >>> # FIXME: why is this True??
+    >>> np.allclose(old_computer, new_computer, atol=1e-4)  # Vector has changed, model has learnt something
     False
 
 Retrieve word-vector for vocab and out-of-vocab word:
