@@ -142,6 +142,7 @@ And on word analogies:
 Implementation Notes
 --------------------
 
+These notes may help developers navigate our fastText implementation.
 Our FastText implementation is split across several submodules:
 
 - :py:mod:`gensim.models.fasttext`: This module.  Contains FastText-specific functionality only.
@@ -153,8 +154,8 @@ Our FastText implementation is split across several submodules:
 Our implementation relies heavily on inheritance.
 It consists of several important classes:
 
-- :py:class:`FastTextVocab`: the vocabulary.
-- :py:class:`gensim.models.keyedvectors.FastTextKeyedVectors`: the vectors.
+- :py:class:`FastTextVocab`: the vocabulary.  Redundant, simply wraps its superclass.
+- :py:class:`~gensim.models.keyedvectors.FastTextKeyedVectors`: the vectors.
   Once training is complete, this class is sufficient for calculating embeddings.
 - :py:class:`FastTextTrainables`: the underlying neural network.  The implementation
   uses this class to *learn* the word embeddings.
@@ -938,15 +939,44 @@ class FastText(BaseWordEmbeddingsModel):
         return self.wv.accuracy(questions, restrict_vocab, most_similar, case_insensitive)
 
 
-#
-# Keep for backward compatibility.
-#
 class FastTextVocab(Word2VecVocab):
+    """This is a redundant class.  It exists only to maintain backwards compatibility
+    with older gensim versions."""
     pass
 
 
 class FastTextTrainables(Word2VecTrainables):
-    """Represents the inner shallow neural network used to train :class:`~gensim.models.fasttext.FastText`."""
+    """Represents the inner shallow neural network used to train :class:`~gensim.models.fasttext.FastText`.
+
+    Mostly inherits from its parent (:py:class:`gensim.models.word2vec.Word2VecTrainables`).
+    Adds logic for calculating and maintaining ngram weights.
+
+    Attributes
+    ----------
+
+    hashfxn : function
+        Used for randomly initializing weights.  Defaults to the built-in hash()
+    layer1_size : int
+        The size of the inner layer of the NN.  Equal to the vector dimensionality.  Set in the :py:class:`gensim.models.word2vec.Word2VecTrainables` constructor.
+    seed : float
+        The random generator seed used in reset_weights and update_weights
+    syn1 : numpy.array
+        The inner layer of the NN.  Each row corresponds to a term in the vocabulary.  Columns correspond to weights of the inner layer.  There are layer1_size such weights.  Set in the reset_weights and update_weights methods, only if hierarchical sampling is used.
+    syn1neg : numpy.array
+        Similar to syn1, but only set if negative sampling is used.
+    vectors_lockf : numpy.array
+        A one-dimensional array with one element for each term in the vocab.  Set in reset_weights to an array of ones.
+    vectors_vocab_lockf : numpy.array
+        Similar to vectors_vocab_lockf, ones(len(model.trainables.vectors), dtype=REAL)
+    vectors_ngrams_lockf : numpy.array
+        np.ones((self.bucket, wv.vector_size), dtype=REAL)
+
+    Notes
+    -----
+
+    The lockf stuff looks like it gets used by the fast C implementation.
+
+    """
     def __init__(self, vector_size=100, seed=1, hashfxn=hash, bucket=2000000):
         super(FastTextTrainables, self).__init__(
             vector_size=vector_size, seed=seed, hashfxn=hashfxn)

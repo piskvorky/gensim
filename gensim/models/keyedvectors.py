@@ -1936,14 +1936,19 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         If True, uses the Facebook-compatible hash function instead of the
         Gensim backwards-compatible hash function.
 
+    Some important attributes:
+
     Attributes
     ----------
     vectors_vocab : np.array
-        A vector for each entity in the vocabulary.
+        Each row corresponds to a vector for an entity in the vocabulary.
+        Columns correspond to vector dimensions.
     vectors_vocab_norm : np.array
         Same as vectors_vocab, but the vectors are L2 normalized.
     vectors_ngrams : np.array
         A vector for each ngram across all entities in the vocabulary.
+        Each row is a vector that corresponds to a bucket.
+        Columns correspond to vector dimensions.
     vectors_ngrams_norm : np.array
         Same as vectors_ngrams, but the vectors are L2 normalized.
         Under some conditions, may actually be the same matrix as
@@ -1957,7 +1962,8 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         bucket to an index, and then indexing into vectors_ngrams (in other
         words, vectors_ngrams[hash2index[hash_fn(ngram) % bucket]].
     num_ngram_vectors : int
-        TODO
+        The number of vectors that correspond to ngrams, as opposed to terms
+        (full words).
 
     """
     def __init__(self, vector_size, min_n, max_n, bucket, compatible_hash):
