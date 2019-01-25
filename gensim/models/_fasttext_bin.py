@@ -82,6 +82,49 @@ def _yield_field_names():
 
 _FIELD_NAMES = sorted(set(_yield_field_names()))
 Model = collections.namedtuple('Model', _FIELD_NAMES)
+"""Holds data loaded from the Facebook binary.
+
+Fields
+------
+dim : int
+    The dimensionality of the vectors.
+ws : int
+    The window size.
+epoch : int
+    The number of training epochs.
+neg : int
+    If non-zero, indicates that the model uses negative sampling.
+loss : int
+    If equal to 1, indicates that the model uses hierarchical sampling.
+model : int
+    If equal to 2, indicates that the model uses skip-grams.
+bucket : int
+    The number of buckets.
+min_count : int
+    The threshold below which the model ignores terms.
+t : float
+    The sample threshold.
+minn : int
+    The minimum ngram length.
+maxn : int
+    The maximum ngram length.
+raw_vocab : collections.OrderedDict
+    A map from words (str) to their frequency (int).  The order in the dict
+    corresponds to the order of the words in the Facebook binary.
+nwords : int
+    The number of words.
+vocab_size : int
+    The size of the vocabulary.
+vectors_ngrams : numpy.array
+    This is a matrix that contains vectors learned by the model.
+    Each row corresponds to a vector.
+    The number of vectors is equal to the number of words plus the number of buckets.
+    The number of columns is equal to the vector dimensionality.
+hidden_output : numpy.array
+    This is a matrix that contains the shallow neural network output.
+    This array has the same dimensions as vectors_ngrams.
+    May be None - in that case, it is impossible to continue training the model.
+"""
 
 
 def _struct_unpack(fin, fmt):
@@ -180,7 +223,7 @@ def _load_matrix(fin, new_format=True):
     return matrix
 
 
-def load(fin, encoding='utf-8'):
+def load(fin, encoding='utf-8', full_model=True):
     """Load a model from a binary stream.
 
     Parameters
@@ -189,6 +232,9 @@ def load(fin, encoding='utf-8'):
         The readable binary stream.
     encoding : str, optional
         The encoding to use for decoding text
+    full_model : boolean, optional
+        If False, skips loading the hidden output matrix.  This saves a fair bit
+        of CPU time and RAM, but prevents training continuation.
 
     Returns
     -------
@@ -212,10 +258,12 @@ def load(fin, encoding='utf-8'):
 
     vectors_ngrams = _load_matrix(fin, new_format=new_format)
 
-    hidden_output = _load_matrix(fin, new_format=new_format)
+    if not full_model:
+        hidden_output = None
+    else:
+        hidden_output = _load_matrix(fin, new_format=new_format)
+        assert fin.read() == b'', 'expected to reach EOF'
+
     model.update(vectors_ngrams=vectors_ngrams, hidden_output=hidden_output)
-
-    assert fin.read() == b'', 'expected to reach EOF'
-
     model = {k: v for k, v in model.items() if k in _FIELD_NAMES}
     return Model(**model)
