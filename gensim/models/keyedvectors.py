@@ -500,7 +500,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             List of words that contribute negatively.
         topn : int, optional
             Number of top-N similar words to return.
-        last: Only for set-Based analogy. The word which belongs in the same pair as the expected word. 
+        last: str, optional
+            Only for set-Based analogy. The word which belongs in the same pair as the expected word.		
         restrict_vocab : int, optional
             Optional integer which limits the range of vectors which
             are searched for most-similar values. For example, restrict_vocab=10000 would
@@ -550,7 +551,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         else:
             if (len(positive)+len(negative))%2 != 0:
                 raise ValueError("wrong input word analogies.. one or more words are missing..")            
-            mean = matutils.unitvec(array(mean).mean(axis=0)/2).astype(REAL)+self.word_vec(last, use_norm=True)
+            mean = matutils.unitvec(2*(array(mean).mean(axis=0))).astype(REAL)+matutils.unitvec(self.word_vec(last, use_norm=True)).astype(REAL)
 
         if indexer is not None:
             return indexer.most_similar(mean, topn)
@@ -564,7 +565,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
         
-    def evaluate_word_analogies_setBased(self, analogies, restrict_vocab=300000, case_insensitive=True, dummy4unknown=False, topk=1):
+    def evaluate_word_analogies_set_based(self, analogies, restrict_vocab=300000, case_insensitive=True, dummy4unknown=False, topk=1):
         """Compute performance of the model on an analogy test set.
         This is modern variant of :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.accuracy`, see
         `discussion on GitHub #1935 <https://github.com/RaRe-Technologies/gensim/pull/1935>`_.
@@ -640,7 +641,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                 predicted = None
                 # find the most likely prediction using 3CosAvg set based vector offset) method
                 # Implementation of the set-based method for solving analogies
-                sims = self.most_similar(positive=terms[0:len(terms)-2:2], negative=terms[1:len(terms)-2:2], last=terms[len(terms)-2], topn=topk, restrict_vocab=restrict_vocab)
+                sims = self.most_similar(positive=terms[1:len(terms)-2:2], negative=terms[0:len(terms)-2:2], last=terms[len(terms)-2], topn=topk, restrict_vocab=restrict_vocab)
                 expected = terms[len(terms)-1]
                 for element in sims:                  
                     predicted = element[0].upper() if case_insensitive else element[0]
