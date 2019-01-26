@@ -67,7 +67,7 @@ For example, you can continue training the loaded model:
     ...     ['computer', 'chess', 'players', 'stronger', 'than', 'humans'],
     ...     ['computers', 'are', 'everywhere'],
     ... ]
-    >>> model.train(new_sentences, total_examples=len(sentences), epochs=model.epochs)
+    >>> model.train(new_sentences, total_examples=len(new_sentences), epochs=model.epochs)
     >>> new_computer = model.wv['computer']
     >>> # FIXME: why is this True??
     >>> np.allclose(old_computer, new_computer, atol=1e-4)
