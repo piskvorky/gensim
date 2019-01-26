@@ -695,7 +695,10 @@ class TestFastTextModel(unittest.TestCase):
                             epochs=model_neg.epochs)
             self.assertEqual(len(model_neg.wv.vocab), 14)
 
-    def online_sanity(self, model):
+    def online_sanity(self, model, epochs=None):
+        if epochs is None:
+            epochs = model.epochs
+
         terro, others = [], []
         for l in list_corpus:
             if 'terrorism' in l:
@@ -730,9 +733,9 @@ class TestFastTextModel(unittest.TestCase):
     @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_cbow_hs_online(self):
         model = FT_gensim(
-            sg=0, cbow_mean=1, alpha=0.05, window=2, hs=1, negative=0, min_count=3, iter=1, seed=42, workers=1
+            sg=0, cbow_mean=1, alpha=0.05, window=2, hs=1, negative=0, min_count=3, seed=42, workers=1
         )
-        self.online_sanity(model)
+        self.online_sanity(model, epochs=1)
 
     @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_cbow_neg_online(self):
