@@ -353,7 +353,7 @@ class FastText(BaseWordEmbeddingsModel):
     """
     def __init__(self, sentences=None, corpus_file=None, sg=0, hs=0, size=100, alpha=0.025, window=5, min_count=5,
                  max_vocab_size=None, word_ngrams=1, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
-                 negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, iter=None, null_word=0, min_n=3, max_n=6,
+                 negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, iter=5, null_word=0, min_n=3, max_n=6,
                  sorted_vocab=1, bucket=2000000, trim_rule=None, batch_words=MAX_WORDS_IN_BATCH, callbacks=(),
                  compatible_hash=True):
         """
@@ -416,7 +416,7 @@ class FastText(BaseWordEmbeddingsModel):
         hashfxn : function, optional
             Hash function to use to randomly initialize weights, for increased training reproducibility.
         iter : int, optional
-            Deprecated.
+            Number of iterations (epochs) over the corpus.
         trim_rule : function, optional
             Vocabulary trimming rule, specifies whether certain words should remain in the vocabulary,
             be trimmed away, or handled using the default (discard if word count < min_count).
@@ -471,12 +471,6 @@ class FastText(BaseWordEmbeddingsModel):
             >>> of_vector = model.wv['of']  # get vector for out-of-vocab word
 
         """
-        if iter is not None:
-            logging.warn(
-                'The iter parameter is deprecated.  Pass the epochs keyword '
-                'parameter to the train method instead.'
-            )
-
         self.load = call_on_class_only
         self.load_fasttext_format = call_on_class_only
         self.callbacks = callbacks
@@ -493,7 +487,7 @@ class FastText(BaseWordEmbeddingsModel):
         self.wv.bucket = self.trainables.bucket
 
         super(FastText, self).__init__(
-            sentences=sentences, corpus_file=corpus_file, workers=workers, vector_size=size,
+            sentences=sentences, corpus_file=corpus_file, workers=workers, vector_size=size, epochs=iter,
             callbacks=callbacks, batch_words=batch_words, trim_rule=trim_rule, sg=sg, alpha=alpha, window=window,
             seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, fast_version=FAST_VERSION)
 
