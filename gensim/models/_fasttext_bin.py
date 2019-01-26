@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Load models from the native binary format released by Facebook.
 
-The main entry point is the :py:func:`load` function.
-It returns a :py:class:`Model` namedtuple containing everything loaded from the binary.
+The main entry point is the :func:`~gensim.models._fasttext_bin.load` function.
+It returns a :class:`~gensim.models._fasttext_bin.Model` namedtuple containing everything loaded from the binary.
 
 Examples
 --------
@@ -238,7 +238,7 @@ def load(fin, encoding='utf-8', full_model=True):
 
     Returns
     -------
-    Model
+    :class:`~gensim.models._fasttext_bin.Model`
         The loaded model.
 
     """
