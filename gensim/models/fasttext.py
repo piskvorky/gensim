@@ -985,11 +985,15 @@ class FastTextTrainables(Word2VecTrainables):
     hashfxn : function
         Used for randomly initializing weights. Defaults to the built-in hash()
     layer1_size : int
-        The size of the inner layer of the NN. Equal to the vector dimensionality. Set in the :py:class:`gensim.models.word2vec.Word2VecTrainables` constructor.
+        The size of the inner layer of the NN. Equal to the vector dimensionality.
+        Set in the :py:class:`gensim.models.word2vec.Word2VecTrainables` constructor.
     seed : float
-        The random generator seed used in reset_weights and update_weights
+        The random generator seed used in reset_weights and update_weights.
     syn1 : numpy.array
-        The inner layer of the NN. Each row corresponds to a term in the vocabulary. Columns correspond to weights of the inner layer. There are layer1_size such weights. Set in the reset_weights and update_weights methods, only if hierarchical sampling is used.
+        The inner layer of the NN. Each row corresponds to a term in the vocabulary.
+        Columns correspond to weights of the inner layer.
+        There are layer1_size such weights.
+        Set in the reset_weights and update_weights methods, only if hierarchical sampling is used.
     syn1neg : numpy.array
         Similar to syn1, but only set if negative sampling is used.
     vectors_lockf : numpy.array
@@ -998,11 +1002,6 @@ class FastTextTrainables(Word2VecTrainables):
         Similar to vectors_vocab_lockf, ones(len(model.trainables.vectors), dtype=REAL)
     vectors_ngrams_lockf : numpy.array
         np.ones((self.bucket, wv.vector_size), dtype=REAL)
-
-    Notes
-    -----
-
-    The lockf stuff looks like it gets used by the fast C implementation.
 
     """
     def __init__(self, vector_size=100, seed=1, hashfxn=hash, bucket=2000000):
