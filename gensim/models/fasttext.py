@@ -318,9 +318,6 @@ except ImportError:
         raise RuntimeError("Training with corpus_file argument is not supported")
 
 
-FASTTEXT_FILEFORMAT_MAGIC = 793712314
-
-
 class FastText(BaseWordEmbeddingsModel):
     """Train, use and evaluate word representations learned using the method
     described in `Enriching Word Vectors with Subword Information <https://arxiv.org/abs/1607.04606>`_, aka FastText.
