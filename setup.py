@@ -232,6 +232,7 @@ win_testenv = [
     'testfixtures',
     'scikit-learn',
     'Morfessor==2.0.2a4',
+    'visdom >= 0.1.8',
 ]
 
 linux_testenv = win_testenv[:]

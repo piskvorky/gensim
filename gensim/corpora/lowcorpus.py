@@ -10,10 +10,10 @@
 from __future__ import with_statement
 
 import logging
+from collections import Counter
 
 from gensim import utils
 from gensim.corpora import IndexedCorpus
-from six import iterkeys
 from six.moves import zip, range
 
 
@@ -159,25 +159,24 @@ class LowCorpus(IndexedCorpus):
         words = self.line2words(line)
 
         if self.use_wordids:
-            # get all distinct terms in this document, ignore unknown words
-            uniq_words = set(words).intersection(iterkeys(self.word2id))
-
             # the following creates a unique list of words *in the same order*
             # as they were in the input. when iterating over the documents,
             # the (word, count) pairs will appear in the same order as they
             # were in the input (bar duplicates), which looks better.
             # if this was not needed, we might as well have used useWords = set(words)
-            use_words, marker = [], set()
+            use_words, counts = [], Counter()
             for word in words:
-                if (word in uniq_words) and (word not in marker):
+                if word not in self.word2id:
+                    continue
+                if word not in counts:
                     use_words.append(word)
-                    marker.add(word)
+                counts[word] += 1
             # construct a list of (wordIndex, wordFrequency) 2-tuples
-            doc = [(self.word2id.get(w), words.count(w)) for w in use_words]
+            doc = [(self.word2id[w], counts[w]) for w in use_words]
         else:
-            uniq_words = set(words)
+            word_freqs = Counter(words)
             # construct a list of (word, wordFrequency) 2-tuples
-            doc = [(w, words.count(w)) for w in uniq_words]
+            doc = list(word_freqs.items())
 
         # return the document, then forget it and move on to the next one
         # note that this way, only one doc is stored in memory at a time, not the whole corpus

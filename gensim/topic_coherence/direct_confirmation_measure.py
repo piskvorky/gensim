@@ -41,7 +41,6 @@ def log_conditional_probability(segmented_topics, accumulator, with_std=False, w
 
     Examples
     --------
-
     .. sourcecode:: pycon
 
         >>> from gensim.topic_coherence import direct_confirmation_measure, text_analysis
@@ -73,6 +72,9 @@ def log_conditional_probability(segmented_topics, accumulator, with_std=False, w
                 co_occur_count = accumulator[w_prime, w_star]
                 m_lc_i = np.log(((co_occur_count / num_docs) + EPSILON) / (w_star_count / num_docs))
             except KeyError:
+                m_lc_i = 0.0
+            except ZeroDivisionError:
+                # if w_star_count==0, it will throw exception of divided by zero
                 m_lc_i = 0.0
 
             segment_sims.append(m_lc_i)
@@ -160,7 +162,6 @@ def log_ratio_measure(segmented_topics, accumulator, normalize=False, with_std=F
 
     Examples
     --------
-
     .. sourcecode:: pycon
 
         >>> from gensim.topic_coherence import direct_confirmation_measure, text_analysis
