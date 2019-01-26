@@ -145,21 +145,26 @@ Implementation Notes
 --------------------
 
 These notes may help developers navigate our fastText implementation.
-Our FastText implementation is split across several submodules:
+The implementation is split across several submodules:
 
-- :py:mod:`gensim.models.fasttext`: This module.  Contains FastText-specific functionality only.
+- :py:mod:`gensim.models.fasttext`: This module. Contains FastText-specific functionality only.
 - :py:mod:`gensim.models.keyedvectors`: Implements both generic and FastText-specific functionality.
-- :py:mod:`gensim.models.word2vec`:
-- :py:mod:`gensim.models.base_any2vec`:
+- :py:mod:`gensim.models.word2vec`: Contains implementations for the vocabulary
+  and the trainables for FastText.
+- :py:mod:`gensim.models.base_any2vec`: Contains implementations for the base
+  classes, including functionality such as callbacks, logging.
 - :py:mod:`gensim.models.utils_any2vec`: Wrapper over Cython extensions.
+- :py:mod:`gensim.utils`: Implements model I/O (loading and saving)
 
 Our implementation relies heavily on inheritance.
 It consists of several important classes:
 
-- :py:class:`FastTextVocab`: the vocabulary.  Redundant, simply wraps its superclass.
+- :py:class:`~gensim.models.word2vec.Word2VecVocab`: the vocabulary.
+  Keeps track of all the unique words, sometimes discarding the extremely rare ones.
+  This is sometimes called the Dictionary within Gensim.
 - :py:class:`~gensim.models.keyedvectors.FastTextKeyedVectors`: the vectors.
   Once training is complete, this class is sufficient for calculating embeddings.
-- :py:class:`FastTextTrainables`: the underlying neural network.  The implementation
+- :py:class:`FastTextTrainables`: the underlying neural network. The implementation
   uses this class to *learn* the word embeddings.
 - :py:class:`FastText`: ties everything together.
 
@@ -613,7 +618,7 @@ class FastText(BaseWordEmbeddingsModel):
     def _set_train_params(self, **kwargs):
         #
         # We need the wv.buckets_word member to be initialized in order to
-        # continue training.  The _clear_post_train method destroys this
+        # continue training. The _clear_post_train method destroys this
         # variable, so we reinitialize it here, if needed.
         #
         # The .old_vocab_len and .old_hash2index_len members are set only to
@@ -849,7 +854,10 @@ class FastText(BaseWordEmbeddingsModel):
 
         Notes
         ------
-        This function effectively ignores `.vec` output file.
+        Facebook provides both `.vec` and `.bin` files with their modules.
+        The former contains human-readable vectors.
+        The latter contains machine-readable vectors along with other model parameters.
+        This function effectively ignores `.vec` output file, since that file is redundant.
         It only needs the `.bin` file.
 
         Parameters
@@ -862,7 +870,7 @@ class FastText(BaseWordEmbeddingsModel):
         encoding : str, optional
             Specifies the file encoding.
         full_model : boolean, optional
-            If False, skips loading the hidden output matrix.  This saves a fair bit
+            If False, skips loading the hidden output matrix. This saves a fair bit
             of CPU time and RAM, but prevents training continuation.
 
         Returns
@@ -935,7 +943,7 @@ class FastText(BaseWordEmbeddingsModel):
 
             if not hasattr(model.wv, 'compatible_hash'):
                 logger.warning(
-                    "This older model was trained with a buggy hash function.  "
+                    "This older model was trained with a buggy hash function. "
                     "The model will continue to work, but consider training it "
                     "from scratch."
                 )
@@ -957,7 +965,7 @@ class FastText(BaseWordEmbeddingsModel):
 
 
 class FastTextVocab(Word2VecVocab):
-    """This is a redundant class.  It exists only to maintain backwards compatibility
+    """This is a redundant class. It exists only to maintain backwards compatibility
     with older gensim versions."""
     pass
 
@@ -972,17 +980,17 @@ class FastTextTrainables(Word2VecTrainables):
     ----------
 
     hashfxn : function
-        Used for randomly initializing weights.  Defaults to the built-in hash()
+        Used for randomly initializing weights. Defaults to the built-in hash()
     layer1_size : int
-        The size of the inner layer of the NN.  Equal to the vector dimensionality.  Set in the :py:class:`gensim.models.word2vec.Word2VecTrainables` constructor.
+        The size of the inner layer of the NN. Equal to the vector dimensionality. Set in the :py:class:`gensim.models.word2vec.Word2VecTrainables` constructor.
     seed : float
         The random generator seed used in reset_weights and update_weights
     syn1 : numpy.array
-        The inner layer of the NN.  Each row corresponds to a term in the vocabulary.  Columns correspond to weights of the inner layer.  There are layer1_size such weights.  Set in the reset_weights and update_weights methods, only if hierarchical sampling is used.
+        The inner layer of the NN. Each row corresponds to a term in the vocabulary. Columns correspond to weights of the inner layer. There are layer1_size such weights. Set in the reset_weights and update_weights methods, only if hierarchical sampling is used.
     syn1neg : numpy.array
         Similar to syn1, but only set if negative sampling is used.
     vectors_lockf : numpy.array
-        A one-dimensional array with one element for each term in the vocab.  Set in reset_weights to an array of ones.
+        A one-dimensional array with one element for each term in the vocab. Set in reset_weights to an array of ones.
     vectors_vocab_lockf : numpy.array
         Similar to vectors_vocab_lockf, ones(len(model.trainables.vectors), dtype=REAL)
     vectors_ngrams_lockf : numpy.array
@@ -1007,17 +1015,17 @@ class FastTextTrainables(Word2VecTrainables):
         #   2. vectors_ngrams_lockf
         #
         # These are both 2D matrices of shapes equal to the shapes of
-        # wv.vectors_vocab and wv.vectors_ngrams.  So, each row corresponds to
+        # wv.vectors_vocab and wv.vectors_ngrams. So, each row corresponds to
         # a vector, and each column corresponds to a dimension within that
         # vector.
         #
         # Lockf stands for "lock factor": zero values suppress learning, one
-        # values enable it.  Interestingly, the vectors_vocab_lockf and
+        # values enable it. Interestingly, the vectors_vocab_lockf and
         # vectors_ngrams_lockf seem to be used only by the C code in
         # fasttext_inner.pyx.
         #
         # The word2vec implementation also uses vectors_lockf: in that case,
-        # it's a 1D array, with a real number for each vector.  The FastText
+        # it's a 1D array, with a real number for each vector. The FastText
         # implementation inherits this vectors_lockf attribute but doesn't
         # appear to use it.
         #
@@ -1095,7 +1103,7 @@ def _load_fasttext_format(model_file, encoding='utf-8', full_model=True):
     encoding : str, optional
         Specifies the file encoding.
     full_model : boolean, optional
-        If False, skips loading the hidden output matrix.  This saves a fair bit
+        If False, skips loading the hidden output matrix. This saves a fair bit
         of CPU time and RAM, but prevents training continuation.
 
     Returns
