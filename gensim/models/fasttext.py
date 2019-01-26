@@ -147,26 +147,26 @@ Implementation Notes
 These notes may help developers navigate our fastText implementation.
 The implementation is split across several submodules:
 
-- :py:mod:`gensim.models.fasttext`: This module. Contains FastText-specific functionality only.
-- :py:mod:`gensim.models.keyedvectors`: Implements both generic and FastText-specific functionality.
-- :py:mod:`gensim.models.word2vec`: Contains implementations for the vocabulary
+- :mod:`gensim.models.fasttext`: This module. Contains FastText-specific functionality only.
+- :mod:`gensim.models.keyedvectors`: Implements both generic and FastText-specific functionality.
+- :mod:`gensim.models.word2vec`: Contains implementations for the vocabulary
   and the trainables for FastText.
-- :py:mod:`gensim.models.base_any2vec`: Contains implementations for the base
+- :mod:`gensim.models.base_any2vec`: Contains implementations for the base.
   classes, including functionality such as callbacks, logging.
-- :py:mod:`gensim.models.utils_any2vec`: Wrapper over Cython extensions.
-- :py:mod:`gensim.utils`: Implements model I/O (loading and saving)
+- :mod:`gensim.models.utils_any2vec`: Wrapper over Cython extensions.
+- :mod:`gensim.utils`: Implements model I/O (loading and saving).
 
 Our implementation relies heavily on inheritance.
 It consists of several important classes:
 
-- :py:class:`~gensim.models.word2vec.Word2VecVocab`: the vocabulary.
+- :class:`~gensim.models.word2vec.Word2VecVocab`: the vocabulary.
   Keeps track of all the unique words, sometimes discarding the extremely rare ones.
   This is sometimes called the Dictionary within Gensim.
-- :py:class:`~gensim.models.keyedvectors.FastTextKeyedVectors`: the vectors.
+- :class:`~gensim.models.keyedvectors.FastTextKeyedVectors`: the vectors.
   Once training is complete, this class is sufficient for calculating embeddings.
-- :py:class:`FastTextTrainables`: the underlying neural network. The implementation
-  uses this class to *learn* the word embeddings.
-- :py:class:`FastText`: ties everything together.
+- :class:`~gensim.models.fasttext.FastTextTrainables`: the underlying neural network.
+  The implementation uses this class to *learn* the word embeddings.
+- :class:`~gensim.models.fasttext.FastText`: ties everything together.
 
 """
 
@@ -976,7 +976,7 @@ class FastTextVocab(Word2VecVocab):
 class FastTextTrainables(Word2VecTrainables):
     """Represents the inner shallow neural network used to train :class:`~gensim.models.fasttext.FastText`.
 
-    Mostly inherits from its parent (:py:class:`gensim.models.word2vec.Word2VecTrainables`).
+    Mostly inherits from its parent (:class:`~gensim.models.word2vec.Word2VecTrainables`).
     Adds logic for calculating and maintaining ngram weights.
 
     Attributes
@@ -986,7 +986,7 @@ class FastTextTrainables(Word2VecTrainables):
         Used for randomly initializing weights. Defaults to the built-in hash()
     layer1_size : int
         The size of the inner layer of the NN. Equal to the vector dimensionality.
-        Set in the :py:class:`gensim.models.word2vec.Word2VecTrainables` constructor.
+        Set in the :class:`~gensim.models.word2vec.Word2VecTrainables` constructor.
     seed : float
         The random generator seed used in reset_weights and update_weights.
     syn1 : numpy.array
