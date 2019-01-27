@@ -511,6 +511,9 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             Sequence of (word, similarity).
 
         """
+        if topn is not None and topn < 1:
+            return []
+
         if positive is None:
             positive = []
         if negative is None:
@@ -550,7 +553,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         limited = self.vectors_norm if restrict_vocab is None else self.vectors_norm[:restrict_vocab]
         dists = dot(limited, mean)
-        if not topn:
+        if topn is None:
             return dists
         best = matutils.argsort(dists, topn=topn + len(all_words), reverse=True)
         # ignore (don't return) words from the input
