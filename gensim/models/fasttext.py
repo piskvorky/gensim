@@ -129,7 +129,9 @@ For example, you can continue training the loaded model:
 .. sourcecode:: pycon
 
     >>> import numpy as np
-    >>> old_computer = np.copy(model.wv['computer'])  # Grab the existing vector for this word
+    >>> 'computation' in model.wv.vocab  # New word, currently out of vocab
+    False
+    >>> old_vector = np.copy(model.wv['computation'])  # Grab the existing vector
     >>> new_sentences = [
     ...     ['computer', 'aided', 'design'],
     ...     ['computer', 'science'],
@@ -140,9 +142,10 @@ For example, you can continue training the loaded model:
     ... ]
     >>> model.build_vocab(new_sentences, update=True)  # Update the vocabulary
     >>> model.train(new_sentences, total_examples=len(new_sentences), epochs=model.epochs)
-    >>> new_computer = model.wv['computer']
-    >>> # FIXME: why is this True??
-    >>> np.allclose(old_computer, new_computer, atol=1e-4)
+    >>> new_vector = model.wv['computation']
+    >>> np.allclose(old_vector, new_vector, atol=1e-4)  # Vector has changed, model has learnt something
+    False
+    >>> 'computation' in model.wv.vocab  # Word is still out of vocab
     False
 
 .. Important::
