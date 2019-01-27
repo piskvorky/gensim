@@ -501,7 +501,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         topn : int, optional
             Number of top-N similar words to return.
         last: str, optional
-            Only for set-Based analogy. The word which belongs in the same pair as the expected word.		
+            Only for set-Based analogy. The word which belongs in the same pair as the expected word.        
         restrict_vocab : int, optional
             Optional integer which limits the range of vectors which
             are searched for most-similar values. For example, restrict_vocab=10000 would
@@ -551,7 +551,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         else:
             if (len(positive) + len(negative)) % 2 != 0:
                 raise ValueError("wrong input word analogies.. one or more words are missing..")
-			last_vector = matutils.unitvec(self.word_vec(last, use_norm=True)).astype(REAL)
+            last_vector = matutils.unitvec(self.word_vec(last, use_norm=True)).astype(REAL)
             mean = matutils.unitvec(2 * (array(mean).mean(axis=0))).astype(REAL) + last_vector
 
         if indexer is not None:
@@ -567,7 +567,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         return result[:topn]
         
     def evaluate_word_analogies_set_based(self, analogies, restrict_vocab=300000, case_insensitive=True,
-	dummy4unknown=False, topk=1):
+    dummy4unknown=False, topk=1):
         """Compute performance of the model on an analogy test set.
         This is modern variant of :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.accuracy`, see
         `discussion on GitHub #1935 <https://github.com/RaRe-Technologies/gensim/pull/1935>`_.
@@ -644,9 +644,9 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                 # find the most likely prediction using 3CosAvg set based vector offset) method
                 # Implementation of the set-based method for solving analogies
                 sims = self.most_similar(positive=terms[1:len(terms) - 2:2], negative=terms[0:len(terms) - 2:2],
-				last=terms[len(terms) - 2], topn=topk, restrict_vocab=restrict_vocab)
+                last=terms[len(terms) - 2], topn=topk, restrict_vocab=restrict_vocab)
                 expected = terms[len(terms)-1]
-                self.vocab = original_vocab				
+                self.vocab = original_vocab                
                 for element in sims:
                     predicted = element[0].upper() if case_insensitive else element[0]
                     if predicted in ok_vocab and predicted not in ignore:
@@ -1182,7 +1182,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             return score
 
     def evaluate_word_analogies(self, analogies, restrict_vocab=300000, case_insensitive=True,
-	dummy4unknown=False, topk=1, method='3CosAdd'):
+    dummy4unknown=False, topk=1, method='3CosAdd'):
         """Compute performance of the model on an analogy test set.
         This is modern variant of :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.accuracy`, see
         `discussion on GitHub #1935 <https://github.com/RaRe-Technologies/gensim/pull/1935>`_.
@@ -1265,7 +1265,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                     sims = self.most_similar(positive=[b, c], negative=[a], topn=topk, restrict_vocab=restrict_vocab)
                 if method == '3CosMul':
                     sims = self.most_similar_cosmul(positive=[b, c], negative=[a], topn=topk,
-					restrict_vocab=restrict_vocab)
+                    restrict_vocab=restrict_vocab)
                 self.vocab = original_vocab
 
                 for element in sims:
