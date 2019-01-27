@@ -955,6 +955,44 @@ class FastText(BaseWordEmbeddingsModel):
             If False, skips loading the hidden output matrix. This saves a fair bit
             of CPU time and RAM, but **prevents training continuation**.
 
+        Examples
+        --------
+
+        Load, infer, continue training:
+
+        .. sourcecode:: pycon
+
+            >>> from gensim.test.utils import datapath
+            >>>
+            >>> cap_path = datapath("crime-and-punishment.bin")
+            >>> fb_full = FastText.load_fasttext_format(cap_path, full_model=True)
+            >>>
+            >>> 'landlord' in fb_full.wv.vocab  # Word is out of vocabulary
+            False
+            >>> oov_term = fb_full.wv['landlord']
+            >>>
+            >>> 'landlady' in fb_full.wv.vocab  # Word is in the vocabulary
+            True
+            >>> iv_term = fb_full.wv['landlady']
+            >>>
+            >>> new_sent = [['lord', 'of', 'the', 'rings'], ['lord', 'of', 'the', 'flies']]
+            >>> fb_full.build_vocab(new_sent, update=True)
+            >>> fb_full.train(sentences=new_sent, total_examples=len(new_sent), epochs=5)
+
+        Load quickly, infer (forego training continuation):
+
+        .. sourcecode:: pycon
+
+            >>> fb_partial = FastText.load_fasttext_format(cap_path, full_model=False)
+            >>>
+            >>> 'landlord' in fb_partial.wv.vocab  # Word is out of vocabulary
+            False
+            >>> oov_term = fb_partial.wv['landlord']
+            >>>
+            >>> 'landlady' in fb_partial.wv.vocab  # Word is in the vocabulary
+            True
+            >>> iv_term = fb_partial.wv['landlady']
+
         Returns
         -------
         gensim.models.fasttext.FastText
