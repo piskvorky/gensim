@@ -8,6 +8,7 @@ Examples
 --------
 
 Load a model from a binary file:
+
 .. sourcecode:: pycon
 
     >>> from gensim.test.utils import datapath
@@ -84,8 +85,8 @@ _FIELD_NAMES = sorted(set(_yield_field_names()))
 Model = collections.namedtuple('Model', _FIELD_NAMES)
 """Holds data loaded from the Facebook binary.
 
-Fields
-------
+Parameters
+----------
 dim : int
     The dimensionality of the vectors.
 ws : int
