@@ -30,19 +30,60 @@ Initialize and train a model:
 
 .. sourcecode:: pycon
 
-    >>> from gensim.test.utils import common_texts
     >>> from gensim.models import FastText
-    >>>
-    >>> model = FastText(common_texts, size=4, window=3, min_count=1, iter=10)
-    >>> sentences = [
-    ...     ['computer', 'artificial', 'intelligence'],
-    ...     ['artificial', 'trees'],
-    ...     ['human', 'intelligence'],
-    ...     ['artificial', 'graph'],
-    ...     ['intelligence'],
-    ...     ['artificial', 'intelligence', 'system']
-    ... ]
-    >>> model.train(sentences, total_examples=len(sentences), epochs=model.epochs)
+    >>> from gensim.test.utils import common_texts  # some example sentences
+    >>> print(common_texts[0])
+    ['human', 'interface', 'computer']
+    >>> print(len(common_texts))
+    9
+    >>> model = FastText(size=4, window=3, min_count=1)  # instantiate
+    >>> model.build_vocab(sentences=common_texts)
+    >>> model.train(sentences=common_texts, total_examples=len(common_texts), epochs=10)  # train
+
+You can also pass all the above parameters to the constructor to do everything
+in a single line:
+
+.. sourcecode:: pycon
+
+    >>> model2 = FastText(
+    ...     size=4, window=3, min_count=1,
+    ...     sentences=common_texts, iter=10
+    ... )
+
+.. Important:
+    We intend to deprecate this second method of passing everything through the constructor.
+    The motivation is to simplify the API and resolve naming inconsistencies,
+    e.g. the iter parameter to the constructor is called epochs in the train function.
+
+The two models above are instantiated differently, but behave identically.
+For example, we can compare the embeddings they've calculated for the word "computer":
+
+    >>> import numpy as np
+    >>> np.allclose(model.wv['computer'], model2.wv['computer'])
+    True
+
+In the above examples, we trained the model from sentences (lists of words) loaded into memory.
+This is OK for smaller datasets, but for larger datasets, we recommend streaming the file,
+for example from disk or the network.
+In Gensim, we refer to such datasets as "corpora" (singular "corpus"), and keep them
+in the format described in :class:`~gensim.models.word2vec.LineSentence`.
+Passing a corpus is simple:
+
+.. sourcode:: pycon
+
+    >>> from gensim.test.utils import datapath
+    >>> corpus_file = datapath('lee_background.cor')  # absolute path to corpus
+    >>> model3 = FastText(size=4, window=3, min_count=1)
+    >>> model3.build_vocab(corpus_file=corpus_file)  # scan over corpus to build the vocabulary
+    >>> total_examples = model.corpus_count  # number of sentences in the corpus
+    >>> total_words = model.corpus_total_words  # number of words in the corpus
+    >>> model3.train(corpus_file=corpus_file, total_examples=total_examples, total_words=total_words, epochs=5)
+
+The model needs the `total_examples` and `total_words` parameters in order to
+manage the training rate (alpha) correctly, and to give accurate progress estimates.
+The above example relies on an implementation detail: the build_vocab method
+sets the `corpus_count` and `corpus_total_words` model attributes.
+You may calculate them by scanning over the corpus yourself, too.
 
 Persist a model to disk with:
 
@@ -63,9 +104,12 @@ For example, you can continue training the loaded model:
     >>> import numpy as np
     >>> old_computer = np.copy(model.wv['computer'])  # Grab the existing vector for this word
     >>> new_sentences = [
-    ...     ['computers', 'expensive'],
-    ...     ['computer', 'chess', 'players', 'stronger', 'than', 'humans'],
-    ...     ['computers', 'are', 'everywhere'],
+    ...     ['computer', 'artificial', 'intelligence'],
+    ...     ['artificial', 'trees'],
+    ...     ['human', 'intelligence'],
+    ...     ['artificial', 'graph'],
+    ...     ['intelligence'],
+    ...     ['artificial', 'intelligence', 'system']
     ... ]
     >>> model.train(new_sentences, total_examples=len(new_sentences), epochs=model.epochs)
     >>> new_computer = model.wv['computer']
@@ -77,7 +121,6 @@ You can also load models trained with Facebook's fastText implementation:
 
 .. sourcecode:: pycon
 
-    >>> from gensim.test.utils import datapath
     >>> cap_path = datapath("crime-and-punishment.bin")
     >>> # Partial model: loads quickly, uses less RAM, but cannot continue training
     >>> fb_partial = FastText.load_fasttext_format(cap_path, full_model=False)
@@ -92,7 +135,6 @@ You may continue training them on new data:
     >>> 'computer' in fb_full.wv.vocab  # New word, currently out of vocab
     False
     >>> old_computer = np.copy(fb_full.wv['computer'])  # Calculate current vectors
-    >>> fb_full.train(sentences, total_examples=len(sentences), epochs=model.epochs)
     >>> fb_full.train(new_sentences, total_examples=len(new_sentences), epochs=model.epochs)
     >>> new_computer = fb_full.wv['computer']
     >>> # FIXME: why is this True??
