@@ -40,6 +40,10 @@ Initialize and train a model:
     >>> model.build_vocab(sentences=common_texts)
     >>> model.train(sentences=common_texts, total_examples=len(common_texts), epochs=10)  # train
 
+Once you have a model, you can access its keyed vectors via the `model.wv` attributes.
+The keyed vectors instance is quite powerful: it can perform a wide range of NLP tasks.
+For a full list of examples, see :class:`~gensim.models.keyedvectors.FastTextKeyedVectors`.
+
 You can also pass all the above parameters to the constructor to do everything
 in a single line:
 
@@ -50,7 +54,7 @@ in a single line:
     ...     sentences=common_texts, iter=10
     ... )
 
-.. Important:
+.. Important::
     We intend to deprecate this second method of passing everything through the constructor.
     The motivation is to simplify the API and resolve naming inconsistencies,
     e.g. the iter parameter to the constructor is called epochs in the train function.
@@ -58,9 +62,12 @@ in a single line:
 The two models above are instantiated differently, but behave identically.
 For example, we can compare the embeddings they've calculated for the word "computer":
 
+.. sourcecode:: pycon
+
     >>> import numpy as np
     >>> np.allclose(model.wv['computer'], model2.wv['computer'])
     True
+
 
 In the above examples, we trained the model from sentences (lists of words) loaded into memory.
 This is OK for smaller datasets, but for larger datasets, we recommend streaming the file,
@@ -75,15 +82,33 @@ Passing a corpus is simple:
     >>> corpus_file = datapath('lee_background.cor')  # absolute path to corpus
     >>> model3 = FastText(size=4, window=3, min_count=1)
     >>> model3.build_vocab(corpus_file=corpus_file)  # scan over corpus to build the vocabulary
-    >>> total_examples = model.corpus_count  # number of sentences in the corpus
-    >>> total_words = model.corpus_total_words  # number of words in the corpus
+    >>> total_examples = model3.corpus_count  # number of sentences in the corpus
+    >>> total_words = model3.corpus_total_words  # number of words in the corpus
     >>> model3.train(corpus_file=corpus_file, total_examples=total_examples, total_words=total_words, epochs=5)
 
 The model needs the `total_examples` and `total_words` parameters in order to
 manage the training rate (alpha) correctly, and to give accurate progress estimates.
-The above example relies on an implementation detail: the build_vocab method
+The above example relies on an implementation detail: the
+:meth:`~gensim.models.fasttext.FastText.build_vocab` method
 sets the `corpus_count` and `corpus_total_words` model attributes.
 You may calculate them by scanning over the corpus yourself, too.
+
+If you have a corpus in a different format, then you can use it by wrapping it
+in an `iterator <https://wiki.python.org/moin/Iterator>`_.
+Your iterator should yield a list of strings each time.
+Gensim will take care of the rest:
+
+.. sourcecode:: pycon
+
+    >>> class MyIter:
+    ...     def __iter__(self):
+    ...         with open(datapath('crime-and-punishment.txt')) as fin:
+    ...             for line in fin:
+    ...                 yield line.lower().strip().split(" ")
+    >>> model4 = FastText(size=4, window=3, min_count=1)
+    >>> model4.build_vocab(sentences=MyIter())
+    >>> total_examples = model4.corpus_count
+    >>> model4.train(sentences=MyIter(), total_examples=total_examples, epochs=5)
 
 Persist a model to disk with:
 
