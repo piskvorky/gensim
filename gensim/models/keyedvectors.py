@@ -500,7 +500,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             List of words that contribute negatively.
         topn : int, optional
             Number of top-N similar words to return.
-        last: str, optional
+        last : str, optional
             Only for set-Based analogy. The word which belongs in the same pair as the expected word.
         restrict_vocab : int, optional
             Optional integer which limits the range of vectors which
@@ -2450,3 +2450,4 @@ def _l2_norm(m, replace=False):
         return m
     else:
         return (m / dist).astype(REAL)
+
