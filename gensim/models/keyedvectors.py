@@ -950,7 +950,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         With a single positive example, rankings will be the same as in the default
         :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.most_similar`.
 
-       Parameters
+        Parameters
         ----------
         positive : list of str, optional
             List of words that contribute positively.
