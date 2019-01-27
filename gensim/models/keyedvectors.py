@@ -564,8 +564,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
 
-    def evaluate_word_analogies_set_based(self, analogies, restrict_vocab=300000, 
-	case_insensitive=True, dummy4unknown=False, topk=1):
+    def evaluate_word_analogies_set_based(self, analogies, restrict_vocab=300000,
+    case_insensitive=True, dummy4unknown=False, topk=1):
         """Compute performance of the model on an analogy test set.
         This is modern variant of :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.accuracy`, see
         `discussion on GitHub #1935 <https://github.com/RaRe-Technologies/gensim/pull/1935>`_.
