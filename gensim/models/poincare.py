@@ -1383,6 +1383,7 @@ class PoincareRelations(object):
         ----------
         file_path : str
             Path to file containing a pair of nodes (a relation) per line, separated by `delimiter`.
+            To express u is v realtions, the lines should take the form `u` delimeter `v`.
         encoding : str, optional
             Character encoding of the input file.
         delimiter : str, optional
