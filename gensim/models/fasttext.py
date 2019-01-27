@@ -69,7 +69,7 @@ In Gensim, we refer to such datasets as "corpora" (singular "corpus"), and keep 
 in the format described in :class:`~gensim.models.word2vec.LineSentence`.
 Passing a corpus is simple:
 
-.. sourcode:: pycon
+.. sourcecode:: pycon
 
     >>> from gensim.test.utils import datapath
     >>> corpus_file = datapath('lee_background.cor')  # absolute path to corpus
