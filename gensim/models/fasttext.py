@@ -952,7 +952,7 @@ class FastText(BaseWordEmbeddingsModel):
             Specifies the file encoding.
         full_model : boolean, optional
             If False, skips loading the hidden output matrix. This saves a fair bit
-            of CPU time and RAM, but prevents training continuation.
+            of CPU time and RAM, but **prevents training continuation**.
 
         Returns
         -------
