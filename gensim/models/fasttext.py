@@ -1059,7 +1059,6 @@ class FastTextTrainables(Word2VecTrainables):
 
     Attributes
     ----------
-
     hashfxn : function
         Used for randomly initializing weights. Defaults to the built-in hash()
     layer1_size : int
