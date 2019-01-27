@@ -940,7 +940,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         return emd(d1, d2, distance_matrix)
 
     def most_similar_cosmul(self, positive=None, negative=None, topn=10, restrict_vocab=None):
-         """Find the top-N most similar words, using the multiplicative combination objective,
+        """Find the top-N most similar words, using the multiplicative combination objective,
         proposed by `Omer Levy and Yoav Goldberg "Linguistic Regularities in Sparse and Explicit Word Representations"
         <http://www.aclweb.org/anthology/W14-1618>`_. Positive words still contribute positively towards the similarity,
         negative words negatively, but with less susceptibility to one large distance dominating the calculation.
@@ -2452,4 +2452,3 @@ def _l2_norm(m, replace=False):
         return m
     else:
         return (m / dist).astype(REAL)
-		
