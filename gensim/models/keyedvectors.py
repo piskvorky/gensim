@@ -602,7 +602,6 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             Overall evaluation score and full lists of correct and incorrect predictions divided by sections.
 
         """
-
         ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
         ok_vocab = {w.upper(): v for w, v in reversed(ok_vocab)} if case_insensitive else dict(ok_vocab)
         oov = 0
@@ -645,8 +644,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                 # Implementation of the set-based method for solving analogies
                 sims = self.most_similar(positive=terms[1:len(terms) - 2:2], negative=terms[0:len(terms) - 2:2],
                 last=terms[len(terms) - 2], topn=topk, restrict_vocab=restrict_vocab)
-                expected = terms[len(terms)-1]
-                self.vocab = original_vocab                
+                expected = terms[len(terms) - 1]
+                self.vocab = original_vocab
                 for element in sims:
                     predicted = element[0].upper() if case_insensitive else element[0]
                     if predicted in ok_vocab and predicted not in ignore:
@@ -654,7 +653,6 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                             logger.debug("%s: expected %s, predicted %s", line.strip(), expected, predicted)
                         if predicted == expected:
                             break
-  
                 if predicted == expected:
                     section['correct'].append(terms)
                 else:
@@ -938,12 +936,11 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         # Compute nBOW representation of documents.
         d1 = nbow(document1)
         d2 = nbow(document2)
-
         # Compute WMD.
         return emd(d1, d2, distance_matrix)
 
     def most_similar_cosmul(self, positive=None, negative=None, topn=10, restrict_vocab=None):
-        """Find the top-N most similar words, using the multiplicative combination objective,
+         """Find the top-N most similar words, using the multiplicative combination objective,
         proposed by `Omer Levy and Yoav Goldberg "Linguistic Regularities in Sparse and Explicit Word Representations"
         <http://www.aclweb.org/anthology/W14-1618>`_. Positive words still contribute positively towards the similarity,
         negative words negatively, but with less susceptibility to one large distance dominating the calculation.
@@ -955,7 +952,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         With a single positive example, rankings will be the same as in the default
         :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.most_similar`.
 
-        Parameters
+       Parameters
         ----------
         positive : list of str, optional
             List of words that contribute positively.
@@ -2455,3 +2452,4 @@ def _l2_norm(m, replace=False):
         return m
     else:
         return (m / dist).astype(REAL)
+		
