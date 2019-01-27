@@ -32,6 +32,7 @@ Initialize and train a model:
 
     >>> # from gensim.models import FastText  # FIXME: why does Sphinx dislike this import?
     >>> from gensim.test.utils import common_texts  # some example sentences
+    >>>
     >>> print(common_texts[0])
     ['human', 'interface', 'computer']
     >>> print(len(common_texts))
@@ -49,10 +50,7 @@ in a single line:
 
 .. sourcecode:: pycon
 
-    >>> model2 = FastText(
-    ...     size=4, window=3, min_count=1,
-    ...     sentences=common_texts, iter=10
-    ... )
+    >>> model2 = FastText(size=4, window=3, min_count=1, sentences=common_texts, iter=10)
 
 .. Important::
     We intend to deprecate this second method of passing everything through the constructor.
@@ -65,6 +63,7 @@ For example, we can compare the embeddings they've calculated for the word "comp
 .. sourcecode:: pycon
 
     >>> import numpy as np
+    >>>
     >>> np.allclose(model.wv['computer'], model2.wv['computer'])
     True
 
@@ -79,9 +78,11 @@ Passing a corpus is simple:
 .. sourcecode:: pycon
 
     >>> from gensim.test.utils import datapath
+    >>>
     >>> corpus_file = datapath('lee_background.cor')  # absolute path to corpus
     >>> model3 = FastText(size=4, window=3, min_count=1)
     >>> model3.build_vocab(corpus_file=corpus_file)  # scan over corpus to build the vocabulary
+    >>>
     >>> total_examples = model3.corpus_count  # number of sentences in the corpus
     >>> total_words = model3.corpus_total_words  # number of words in the corpus
     >>> model3.train(corpus_file=corpus_file, total_examples=total_examples, total_words=total_words, epochs=5)
@@ -129,6 +130,7 @@ For example, you can continue training the loaded model:
 .. sourcecode:: pycon
 
     >>> import numpy as np
+    >>>
     >>> 'computation' in model.wv.vocab  # New word, currently out of vocab
     False
     >>> old_vector = np.copy(model.wv['computation'])  # Grab the existing vector
@@ -140,8 +142,10 @@ For example, you can continue training the loaded model:
     ...     ['central', 'processing', 'unit'],
     ...     ['onboard', 'car', 'computer'],
     ... ]
+    >>>
     >>> model.build_vocab(new_sentences, update=True)  # Update the vocabulary
     >>> model.train(new_sentences, total_examples=len(new_sentences), epochs=model.epochs)
+    >>>
     >>> new_vector = model.wv['computation']
     >>> np.allclose(old_vector, new_vector, atol=1e-4)  # Vector has changed, model has learnt something
     False
