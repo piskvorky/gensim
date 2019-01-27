@@ -501,7 +501,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         topn : int, optional
             Number of top-N similar words to return.
         last: str, optional
-            Only for set-Based analogy. The word which belongs in the same pair as the expected word.        
+            Only for set-Based analogy. The word which belongs in the same pair as the expected word.
         restrict_vocab : int, optional
             Optional integer which limits the range of vectors which
             are searched for most-similar values. For example, restrict_vocab=10000 would
@@ -518,9 +518,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             positive = []
         if negative is None:
             negative = []
-
         self.init_sims()
-
         if isinstance(positive, string_types) and not negative:
             # allow calls like most_similar('dog'), as a shorthand for most_similar(['dog'])
             positive = [positive]
@@ -565,7 +563,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         # ignore (don't return) words from the input
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
-        
+
     def evaluate_word_analogies_set_based(self, analogies, restrict_vocab=300000, case_insensitive=True,
     dummy4unknown=False, topk=1):
         """Compute performance of the model on an analogy test set.
@@ -964,7 +962,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             Optional integer which limits the range of vectors which
             are searched for most-similar values. For example, restrict_vocab=10000 would
             only check the first 10000 word vectors in the vocabulary order. (This may be
-            meaningful if you've sorted the vocabulary by descending frequency.)            
+            meaningful if you've sorted the vocabulary by descending frequency.)
 
         Returns
         -------
@@ -1213,11 +1211,11 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         Returns
         -------
         score : float
-            The overall evaluation score on the entire evaluation set        
+            The overall evaluation score on the entire evaluation set
         (float, list of dict of (str, (str, str, str))
             Overall evaluation score and full lists of correct and incorrect predictions divided by sections.
 
-        """        
+        """
         ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
         ok_vocab = {w.upper(): v for w, v in reversed(ok_vocab)} if case_insensitive else dict(ok_vocab)
         oov = 0
@@ -1272,7 +1270,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                             logger.debug("%s: expected %s, predicted %s", line.strip(), expected, predicted)
                         if predicted == expected:
                             break
-  
+
                 if predicted == expected:
                     section['correct'].append((a, b, c, expected))
                 else:
