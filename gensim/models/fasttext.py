@@ -131,18 +131,24 @@ For example, you can continue training the loaded model:
     >>> import numpy as np
     >>> old_computer = np.copy(model.wv['computer'])  # Grab the existing vector for this word
     >>> new_sentences = [
-    ...     ['computer', 'artificial', 'intelligence'],
-    ...     ['artificial', 'trees'],
-    ...     ['human', 'intelligence'],
-    ...     ['artificial', 'graph'],
-    ...     ['intelligence'],
-    ...     ['artificial', 'intelligence', 'system']
+    ...     ['computer', 'aided', 'design'],
+    ...     ['computer', 'science'],
+    ...     ['computational', 'complexity'],
+    ...     ['military', 'supercomputer'],
+    ...     ['central', 'processing', 'unit'],
+    ...     ['onboard', 'car', 'computer'],
     ... ]
+    >>> model.build_vocab(new_sentences, update=True)  # Update the vocabulary
     >>> model.train(new_sentences, total_examples=len(new_sentences), epochs=model.epochs)
     >>> new_computer = model.wv['computer']
     >>> # FIXME: why is this True??
     >>> np.allclose(old_computer, new_computer, atol=1e-4)
     False
+
+.. Important::
+    Be sure to call the :meth:`~gensim.models.fasttext.FastText.build_vocab`
+    method before the :meth:`~gensim.models.fasttext.FastText.train` method
+    when continuing training.
 
 You can also load models trained with Facebook's fastText implementation:
 
@@ -162,11 +168,13 @@ You may continue training them on new data:
     >>> 'computer' in fb_full.wv.vocab  # New word, currently out of vocab
     False
     >>> old_computer = np.copy(fb_full.wv['computer'])  # Calculate current vectors
+    >>> fb_full.build_vocab(new_sentences, update=True)
     >>> fb_full.train(new_sentences, total_examples=len(new_sentences), epochs=model.epochs)
     >>> new_computer = fb_full.wv['computer']
-    >>> # FIXME: why is this True??
     >>> np.allclose(old_computer, new_computer, atol=1e-4)  # Vector has changed, model has learnt something
     False
+    >>> 'computer' in fb_full.wv.vocab  # New word is now in the vocabulary
+    True
 
 Retrieve word-vector for vocab and out-of-vocab word:
 
