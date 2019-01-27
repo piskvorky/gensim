@@ -30,7 +30,7 @@ Initialize and train a model:
 
 .. sourcecode:: pycon
 
-    >>> from gensim.models import FastText
+    >>> # from gensim.models import FastText  # FIXME: why does Sphinx dislike this import?
     >>> from gensim.test.utils import common_texts  # some example sentences
     >>> print(common_texts[0])
     ['human', 'interface', 'computer']
