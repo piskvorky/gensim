@@ -1943,8 +1943,6 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         If True, uses the Facebook-compatible hash function instead of the
         Gensim backwards-compatible hash function.
 
-    Some important attributes:
-
     Attributes
     ----------
     vectors_vocab : np.array

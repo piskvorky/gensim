@@ -411,8 +411,6 @@ class FastText(BaseWordEmbeddingsModel):
     :meth:`~gensim.models.fasttext.FastText.load` methods, or loaded from a format compatible with the original
     Fasttext implementation via :meth:`~gensim.models.fasttext.FastText.load_fasttext_format`.
 
-    Some important internal attributes are the following:
-
     Attributes
     ----------
     wv : :class:`~gensim.models.keyedvectors.FastTextKeyedVectors`
