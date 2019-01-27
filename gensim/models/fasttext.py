@@ -105,6 +105,8 @@ Gensim will take care of the rest:
     ...         with open(datapath('crime-and-punishment.txt')) as fin:
     ...             for line in fin:
     ...                 yield line.lower().strip().split(" ")
+    >>>
+    >>>
     >>> model4 = FastText(size=4, window=3, min_count=1)
     >>> model4.build_vocab(sentences=MyIter())
     >>> total_examples = model4.corpus_count
