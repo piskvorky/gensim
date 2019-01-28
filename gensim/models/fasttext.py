@@ -99,7 +99,7 @@ You may calculate them by scanning over the corpus yourself, too.
 
 If you have a corpus in a different format, then you can use it by wrapping it
 in an `iterator <https://wiki.python.org/moin/Iterator>`_.
-Your iterator should yield a list of strings each time.
+Your iterator should yield a list of strings each time, where each string should be a separate word.
 Gensim will take care of the rest:
 
 .. sourcecode:: pycon
