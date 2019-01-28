@@ -1,4 +1,38 @@
-"""Online Non-Negative Matrix Factorization."""
+"""`Online Non-Negative Matrix Factorization. <https://arxiv.org/abs/1604.02634>`
+
+Implements online non-negative matrix factorization algorithm, which allows for fast latent topic inference.
+This NMF implementation updates in a streaming fashion and works best with sparse corpora.
+
+- W is a word-topic matrix
+- h is a topic-document matrix
+- r is a smoothed (v - Wh)
+- v is an input word-document matrix
+
+The idea of the algorithm is as follows:
+
+.. code-block:: text
+
+    Initialize W, A and B matrices
+
+    Input corpus
+    Split corpus to batches
+
+    for v in batches:
+        infer h (and optionally r):
+            do coordinate gradient descent step to find h that minimizes (v - Wh) l2 norm
+            bound h so that it is non-negative
+
+            r = v - Wh
+            bound and smooth r
+
+        update A and B
+
+        update W:
+            do gradient descent for W using A and B values
+
+The NMF should be used whenever one needs faster topic extraction.
+
+"""
 
 import itertools
 
@@ -50,20 +84,21 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Parameters
         ----------
         corpus : iterable of list of (int, float), optional
-            Training corpus. If not given, model is left untrained.
+          Training corpus.
         num_topics : int, optional
             Number of topics to extract.
-        id2word: gensim.corpora.Dictionary, optional
+        id2word: gensim.corpora.dictionary.Dictionary, optional
             Mapping from token id to token. If not set words get replaced with word ids.
         chunksize: int, optional
             Number of documents to be used in each training chunk.
         passes: int, optioanl
             Number of full passes over the training corpus.
-        lambda_ : float, optional
+        \lambda_ : float, optional
             Residuals regularizer coefficient. Increasing it helps prevent ovefitting. Has no effect if `use_r` is set
             to False.
         kappa : float, optional
-            Optimizer step coefficient. Increaing it makes model train faster, but adds a risk that it won't converge.
+            Gradient descent step size.
+            Larger value makes the model train faster, but could lead to non-convergence if set too large.
         w_max_iter: int, optional
             Maximum number of iterations to train W matrix per each batch.
         w_stop_condition: float, optional
@@ -73,15 +108,15 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         h_r_stop_condition: float
             If error difference gets less than that, training of matrices ``h`` and ``r`` stops for current batch.
         eval_every: int, optional
-            Number of batches after which model will be evaluated.
+            Number of batches after which l2 norm of (v - Wh) is computed. Decreases performance if set too low.
         v_max: int, optional
-            Maximum number of word occurrences in the corpora. Inferred if not set. Rarely needs to be set explicitly.
+            Deprecated.
         normalize: bool, optional
-            Whether to normalize results. Offers "kind-of-probabilistic" result.
+            Whether to normalize W, h and r. Allows for estimation of perplexity, coherence, e.t.c.
         sparse_coef: float, optional
-            The more it is, the more sparse are matrices. Significantly increases performance.
+            Larger value makes W sparser, which improves speed but decreases topics quality.
         random_state: {np.random.RandomState, int}, optional
-            Seed for random generator. Useful for reproducibility.
+            Seed for random generator. Needed for reproducibility.
 
         """
         self._w_error = None
@@ -148,7 +183,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def show_topics(self, num_topics=10, num_words=10, log=False,
                     formatted=True, normalize=None):
-        """Get a representation for selected topics.
+        """Get the topics sorted by sparsity.
 
         Parameters
         ----------
@@ -266,12 +301,12 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def top_topics(self, corpus=None, texts=None, dictionary=None, window_size=None,
                    coherence='u_mass', topn=20, processes=-1):
-        """Get the topics with the highest coherence score the coherence for each topic.
+        """Get the topics sorted by coherence.
 
         Parameters
         ----------
         corpus : iterable of list of (int, float), optional
-            Corpus in BoW format.
+          Training corpus.
         texts : list of list of str, optional
             Tokenized texts, needed for coherence models that use sliding window based (i.e. coherence=`c_something`)
             probability estimator .
@@ -323,8 +358,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : list of list of (int, float)
-            The corpus on which the perplexity is computed.
+        corpus : iterable of list of (int, float), optional
+          Training corpus.
 
         Returns
         -------
@@ -441,8 +476,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : iterable of list(int, float)
-            Training corpus.
+        corpus : iterable of list of (int, float), optional
+          Training corpus.
 
         """
         self._h, self._r = None, None
@@ -472,12 +507,10 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : iterable of list(int, float)
+        corpus : iterable of list of (int, float), optional
             Training corpus.
         chunks_as_numpy : bool, optional
-            Whether each chunk passed to the inference step should be a numpy.ndarray or not. Numpy can in some settings
-            turn the term IDs into floats, these will be converted back into integers in inference, which incurs a
-            performance hit. For distributed computing it may be desirable to keep the chunks as `numpy.ndarray`.
+            Deprecated.
 
         """
 
@@ -556,8 +589,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : iterable of list of (int, number)
-            Corpus in sparse Gensim bag-of-words format.
+        corpus : iterable of list of (int, float), optional
+          Training corpus.
         chunksize : int, optional
             If provided, a more effective processing will performed.
 
