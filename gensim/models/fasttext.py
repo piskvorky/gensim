@@ -154,9 +154,9 @@ For example, you can continue training the loaded model:
 
 .. Important::
     Be sure to call the :meth:`~gensim.models.fasttext.FastText.build_vocab`
-    method before the :meth:`~gensim.models.fasttext.FastText.train` method
+    method with `update=True` before the :meth:`~gensim.models.fasttext.FastText.train` method
     when continuing training.  Without this call, previously unseen terms
-    will notbe added to the vocabulary.
+    will not be added to the vocabulary.
 
 You can also load models trained with Facebook's fastText implementation:
 
