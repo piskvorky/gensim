@@ -87,15 +87,14 @@ Passing a corpus is simple:
     >>> model3 = FastText(size=4, window=3, min_count=1)
     >>> model3.build_vocab(corpus_file=corpus_file)  # scan over corpus to build the vocabulary
     >>>
-    >>> total_examples = model3.corpus_count  # number of sentences in the corpus
     >>> total_words = model3.corpus_total_words  # number of words in the corpus
-    >>> model3.train(corpus_file=corpus_file, total_examples=total_examples, total_words=total_words, epochs=5)
+    >>> model3.train(corpus_file=corpus_file, total_words=total_words, epochs=5)
 
-The model needs the `total_examples` and `total_words` parameters in order to
+The model needs the `total_words` parameter in order to
 manage the training rate (alpha) correctly, and to give accurate progress estimates.
 The above example relies on an implementation detail: the
 :meth:`~gensim.models.fasttext.FastText.build_vocab` method
-sets the `corpus_count` and `corpus_total_words` model attributes.
+sets the `corpus_total_words` (and also `corpus_count`) model attributes.
 You may calculate them by scanning over the corpus yourself, too.
 
 If you have a corpus in a different format, then you can use it by wrapping it
@@ -105,7 +104,7 @@ Gensim will take care of the rest:
 
 .. sourcecode:: pycon
 
-    >>> class MyIter:
+    >>> class MyIter(object):
     ...     def __iter__(self):
     ...         with open(datapath('crime-and-punishment.txt')) as fin:
     ...             for line in fin:
