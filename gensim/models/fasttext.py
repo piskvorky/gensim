@@ -104,11 +104,15 @@ Gensim will take care of the rest:
 
 .. sourcecode:: pycon
 
+    >>> import smart_open
+    >>>
+    >>>
     >>> class MyIter(object):
     ...     def __iter__(self):
-    ...         with open(datapath('crime-and-punishment.txt')) as fin:
+    ...         path = datapath('crime-and-punishment.txt')
+    ...         with smart_open.smart_open(path, 'r', encoding='utf-8') as fin:
     ...             for line in fin:
-    ...                 yield line.lower().strip().split(" ")
+    ...                 yield line.lower().strip().split()
     >>>
     >>>
     >>> model4 = FastText(size=4, window=3, min_count=1)
@@ -934,6 +938,10 @@ class FastText(BaseWordEmbeddingsModel):
     @classmethod
     def load_fasttext_format(cls, model_file, encoding='utf8', full_model=True):
         """Load the input-hidden weight matrix from Facebook's native fasttext `.bin` and `.vec` output files.
+
+        By default, this function loads the full model.
+        A full model allows continuing training with more data, but also consumes more RAM and takes longer to load.
+        If you do not need to continue training and only wish the work with the already-trained embeddings, use `partial=False` for faster loading and to save RAM.
 
         Notes
         ------
