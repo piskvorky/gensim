@@ -104,6 +104,7 @@ Gensim will take care of the rest:
 
 .. sourcecode:: pycon
 
+    >>> from gensim.utils import tokenize
     >>> import smart_open
     >>>
     >>>
@@ -112,7 +113,7 @@ Gensim will take care of the rest:
     ...         path = datapath('crime-and-punishment.txt')
     ...         with smart_open.smart_open(path, 'r', encoding='utf-8') as fin:
     ...             for line in fin:
-    ...                 yield line.lower().strip().split()
+    ...                 yield list(tokenize(line))
     >>>
     >>>
     >>> model4 = FastText(size=4, window=3, min_count=1)
