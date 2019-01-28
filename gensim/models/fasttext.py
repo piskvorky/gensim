@@ -53,7 +53,11 @@ in a single line:
     >>> model2 = FastText(size=4, window=3, min_count=1, sentences=common_texts, iter=10)
 
 .. Important::
-    We intend to deprecate this second method of passing everything through the constructor.
+    This style of initialize-and-train in a single line is **deprecated**. We include it here
+    for backward compatibility only. 
+    
+    Please use the initialize-`build_vocab`-`train` pattern above instead, including using `epochs`
+    instead of `iter`.
     The motivation is to simplify the API and resolve naming inconsistencies,
     e.g. the iter parameter to the constructor is called epochs in the train function.
 
