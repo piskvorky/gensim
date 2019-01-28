@@ -1383,6 +1383,12 @@ class PoincareRelations(object):
         ----------
         file_path : str
             Path to file containing a pair of nodes (a relation) per line, separated by `delimiter`.
+            Since the relations are asymmetric, the order of `u` and `v` nodes in each pair matters.
+            To express a "u is v" relation, the lines should take the form `u delimeter v`.
+            e.g: `kangaroo	mammal` is a tab-delimited line expressing a "`kangaroo is a mammal`" relation.
+
+            For a full input file example, see `gensim/test/test_data/poincare_hypernyms.tsv
+            <https://github.com/RaRe-Technologies/gensim/blob/master/gensim/test/test_data/poincare_hypernyms.tsv>`_.
         encoding : str, optional
             Character encoding of the input file.
         delimiter : str, optional
