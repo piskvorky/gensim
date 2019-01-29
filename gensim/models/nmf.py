@@ -79,7 +79,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         normalize: bool, optional
             Whether to normalize results. Offers "kind-of-probabilistic" result.
         sparse_coef: float, optional
-            The more it is, the more sparse are matrices. Significantly increases performance.
+            Deprecated.
         random_state: {np.random.RandomState, int}, optional
             Seed for random generator. Useful for reproducibility.
 
@@ -101,7 +101,6 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.v_max = v_max
         self.eval_every = eval_every
         self.normalize = normalize
-        self.sparse_coef = sparse_coef
         self.random_state = utils.get_random_state(random_state)
 
         if self.id2word is None:
@@ -135,7 +134,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             The probability for each word in each topic, shape (`num_topics`, `vocabulary_size`).
 
         """
-        dense_topics = self._W.T.toarray()
+        dense_topics = self._W.T
         if normalize is None:
             normalize = self.normalize
         if normalize:
@@ -177,7 +176,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if normalize is None:
             normalize = self.normalize
 
-        sparsity = self._W.getnnz(axis=0)
+        sparsity = self._W.mean(axis=0)
 
         if num_topics < 0 or num_topics >= self.num_topics:
             num_topics = self.num_topics
@@ -376,7 +375,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         values = []
 
-        word_topics = self._W.getrow(word_id)
+        word_topics = self._W[word_id]
 
         if normalize is None:
             normalize = self.normalize
@@ -384,7 +383,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             word_topics /= word_topics.sum()
 
         for topic_id in range(0, self.num_topics):
-            word_coef = word_topics[0, topic_id]
+            word_coef = word_topics[topic_id]
 
             if word_coef >= minimum_probability:
                 values.append((topic_id, word_coef))
@@ -431,9 +430,9 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             h.data /= h.sum()
 
         return [
-            (idx, proba.toarray()[0, 0])
+            (idx, proba)
             for idx, proba in enumerate(h[:, 0])
-            if not minimum_probability or proba.toarray()[0, 0] > minimum_probability
+            if not minimum_probability or proba > minimum_probability
         ]
 
     def _setup(self, corpus):
@@ -458,14 +457,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             )
         )
 
-        is_great_enough = self._W > self.w_std * self.sparse_coef
-
-        self._W *= is_great_enough | ~is_great_enough.all(axis=0)
-
-        self._W = scipy.sparse.csc_matrix(self._W)
-
-        self.A = scipy.sparse.csr_matrix((self.num_topics, self.num_topics))
-        self.B = scipy.sparse.csc_matrix((self.num_tokens, self.num_topics))
+        self.A = np.zeros((self.num_topics, self.num_topics))
+        self.B = np.zeros((self.num_tokens, self.num_topics))
 
     def update(self, corpus, chunks_as_numpy=False):
         """Train the model with new documents.
@@ -491,7 +484,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 corpus, self.chunksize, as_numpy=chunks_as_numpy
             ):
                 self.random_state.shuffle(chunk)
-                v = matutils.corpus2csc(chunk, len(self.id2word)).tocsr()
+                v = matutils.corpus2csc(chunk, len(self.id2word))
                 self._h, self._r = self._solveproj(
                     v, self._W, r=self._r, h=self._h, v_max=self.v_max
                 )
@@ -508,19 +501,29 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 self._solve_w()
 
                 if chunk_idx % self.eval_every == 0:
+                    Wt = self._W.T
+                    Wtv = scipy.sparse.csc_matrix.dot(Wt, v)
+                    Wtr = scipy.sparse.csc_matrix.dot(Wt, r)
+                    WtWh = Wt.dot(self._W).dot(h)
+
                     logger.info(
                         "Loss (no outliers): {}\tLoss (with outliers): {}".format(
-                            scipy.sparse.linalg.norm(v - self._W.dot(h)),
-                            scipy.sparse.linalg.norm(v - self._W.dot(h) - r),
+                            np.linalg.norm(Wtv - WtWh),
+                            np.linalg.norm(Wtv - WtWh - Wtr),
                         )
                     )
 
                 chunk_idx += 1
 
+        Wt = self._W.T
+        Wtv = scipy.sparse.csc_matrix.dot(Wt, v)
+        Wtr = scipy.sparse.csc_matrix.dot(Wt, r)
+        WtWh = Wt.dot(self._W).dot(h)
+
         logger.info(
             "Loss (no outliers): {}\tLoss (with outliers): {}".format(
-                scipy.sparse.linalg.norm(v - self._W.dot(h)),
-                scipy.sparse.linalg.norm(v - self._W.dot(h) - r),
+                np.linalg.norm(Wtv - WtWh),
+                np.linalg.norm(Wtv - WtWh - Wtr),
             )
         )
 
@@ -528,12 +531,13 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """Update W matrix."""
 
         def error():
+            Wt = self._W.T
             return (
-                0.5 * self._W.T.dot(self._W).dot(self.A).diagonal().sum()
-                - self._W.T.dot(self.B).diagonal().sum()
+                0.5 * Wt.dot(self._W).dot(self.A).trace()
+                - Wt.dot(self.B).trace()
             )
 
-        eta = self._kappa / scipy.sparse.linalg.norm(self.A)
+        eta = self._kappa / np.linalg.norm(self.A)
 
         for iter_number in range(self._w_max_iter):
             logger.debug("w_error: %s" % self._w_error)
@@ -571,22 +575,10 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def _transform(self):
         """Apply boundaries on W."""
-        np.clip(self._W.data, 0, self.v_max, out=self._W.data)
-        self._W.eliminate_zeros()
-        sumsq = scipy.sparse.linalg.norm(self._W, axis=0)
+        np.clip(self._W, 0, self.v_max, out=self._W)
+        sumsq = np.linalg.norm(self._W, axis=0)
         np.maximum(sumsq, 1, out=sumsq)
-        sumsq = np.repeat(sumsq, self._W.getnnz(axis=0))
-        self._W.data /= sumsq
-
-        is_great_enough_data = self._W.data > self.w_std * self.sparse_coef
-        is_great_enough = self._W.toarray() > self.w_std * self.sparse_coef
-        is_all_too_small = is_great_enough.sum(axis=0) == 0
-        is_all_too_small = np.repeat(is_all_too_small, self._W.getnnz(axis=0))
-
-        is_great_enough_data |= is_all_too_small
-
-        self._W.data *= is_great_enough_data
-        self._W.eliminate_zeros()
+        self._W /= sumsq
 
     def _solveproj(self, v, W, h=None, r=None, v_max=None):
         """Update residuals and representation(h) matrices.
@@ -616,12 +608,13 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         hshape = (n, batch_size)
 
         if h is None or h.shape != hshape:
-            h = scipy.sparse.csr_matrix(hshape)
+            h = np.zeros(hshape)
 
         if r is None or r.shape != rshape:
-            r = scipy.sparse.csr_matrix(rshape)
+            r = scipy.sparse.csc_matrix(rshape)
 
-        WtW = W.T.dot(W)
+        Wt = W.T
+        WtW = Wt.dot(W)
 
         _h_r_error = None
 
@@ -630,16 +623,14 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             error_ = 0.
 
-            Wt_v_minus_r = W.T.dot(v - r)
+            Wt_v_minus_r = scipy.sparse.csc_matrix.dot(Wt, v - r)
 
-            h_ = h.toarray()
             error_ = max(
-                error_, solve_h(h_, Wt_v_minus_r.toarray(), WtW.toarray(), self._kappa)
+                error_, solve_h(h, Wt_v_minus_r, WtW, self._kappa)
             )
-            h = scipy.sparse.csr_matrix(h_)
 
             if self.use_r:
-                r_actual = v - W.dot(h)
+                r_actual = scipy.sparse.csc_matrix(v - W.dot(h))
                 error_ = max(
                     error_,
                     solve_r(r, r_actual, self._lambda_, self.v_max)
