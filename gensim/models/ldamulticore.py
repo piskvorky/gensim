@@ -270,11 +270,6 @@ class LdaMulticore(LdaModel):
                 queue_size[0] -= 1
                 merged_new = True
 
-                if not (force or job_queue.full()):
-                    # better to put one more chunk than process all completed
-                    # as workers should be busy constantly
-                    break
-
             if (force and merged_new and queue_size[0] == 0) or (other.numdocs >= updateafter):
                 self.do_mstep(rho(), other, pass_ > 0)
                 other.reset()
