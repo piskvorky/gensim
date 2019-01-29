@@ -51,6 +51,7 @@ from gensim.models import basemodel, CoherenceModel
 
 logger = logging.getLogger(__name__)
 
+OLD_SCIPY = int(scipy.__version__.split('.')[1]) <= 18
 
 class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
     """Online Non-Negative Matrix Factorization.
@@ -616,7 +617,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     @staticmethod
     def _dense_dot_csc(dense, csc):
-        if sys.version_info.major < 3:
+        if OLD_SCIPY:
             return (csc.T.dot(dense.T)).T
         else:
             return scipy.sparse.csc_matrix.dot(dense, csc)
