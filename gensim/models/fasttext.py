@@ -940,9 +940,11 @@ class FastText(BaseWordEmbeddingsModel):
     def load_fasttext_format(cls, model_file, encoding='utf8', full_model=True):
         """Load the input-hidden weight matrix from Facebook's native fasttext `.bin` and `.vec` output files.
 
-        By default, this function loads the full model.
-        A full model allows continuing training with more data, but also consumes more RAM and takes longer to load.
-        If you do not need to continue training and only wish the work with the already-trained embeddings, use `partial=False` for faster loading and to save RAM.
+        By default, this function loads the full model.  A full model allows
+        continuing training with more data, but also consumes more RAM and
+        takes longer to load.  If you do not need to continue training and only
+        wish the work with the already-trained embeddings, use `partial=False`
+        for faster loading and to save RAM.
 
         Notes
         ------
