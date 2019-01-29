@@ -266,7 +266,7 @@ class LdaSeqModel(utils.SaveLoad):
             # initiate sufficient statistics
             topic_suffstats = []
             for topic in range(num_topics):
-                topic_suffstats.append(np.zeros((vocab_len, data_len))
+                topic_suffstats.append(np.zeros((vocab_len, data_len)))
 
             # set up variables
             gammas = np.zeros((corpus_len, num_topics))
