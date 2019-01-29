@@ -20,7 +20,7 @@ cdef double clip(double a, double a_min, double a_max) nogil:
     a = fmax(a, a_min)
     return a
 
-def solve_h(double[:, ::1] h, double[:, :] Wt_v_minus_r, double[:, ::1] WtW, double kappa):
+def solve_h(double[:, ::1] h, double[:, :] Wt_v_minus_r, double[:, ::1] WtW, Py_ssize_t[::1] permutation, double kappa):
     """Find optimal dense vector representation for current W and r matrices.
 
     Parameters
@@ -47,6 +47,7 @@ def solve_h(double[:, ::1] h, double[:, :] Wt_v_minus_r, double[:, ::1] WtW, dou
 
     for sample_idx in prange(n_samples, nogil=True):
         for component_idx_1 in range(n_components):
+            component_idx_1 = permutation[component_idx_1]
 
             grad = -Wt_v_minus_r[component_idx_1, sample_idx]
 

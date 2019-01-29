@@ -657,9 +657,10 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             error_ = 0.
 
             Wt_v_minus_r = scipy.sparse.csc_matrix.dot(Wt, v - r)
+            permutation = self.random_state.permutation(self.num_topics)
 
             error_ = max(
-                error_, solve_h(h, Wt_v_minus_r, WtW, self._kappa)
+                error_, solve_h(h, Wt_v_minus_r, WtW, permutation, self._kappa)
             )
 
             if self.use_r:
