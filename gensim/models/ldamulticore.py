@@ -225,12 +225,12 @@ class LdaMulticore(LdaModel):
 
         self.state.numdocs += lencorpus
 
-        if not self.batch:
-            updatetype = "online"
-            updateafter = self.chunksize * self.workers
-        else:
+        if self.batch:
             updatetype = "batch"
             updateafter = lencorpus
+        else:
+            updatetype = "online"
+            updateafter = self.chunksize * self.workers
         eval_every = self.eval_every or 0
         evalafter = min(lencorpus, eval_every * updateafter)
 
