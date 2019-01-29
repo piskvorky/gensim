@@ -54,8 +54,8 @@ in a single line:
 
 .. Important::
     This style of initialize-and-train in a single line is **deprecated**. We include it here
-    for backward compatibility only. 
-    
+    for backward compatibility only.
+
     Please use the initialize-`build_vocab`-`train` pattern above instead, including using `epochs`
     instead of `iter`.
     The motivation is to simplify the API and resolve naming inconsistencies,
