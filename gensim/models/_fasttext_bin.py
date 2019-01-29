@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 """Load models from the native binary format released by Facebook.
 
+The main entry point is the :func:`~gensim.models._fasttext_bin.load` function.
+It returns a :class:`~gensim.models._fasttext_bin.Model` namedtuple containing everything loaded from the binary.
+
 Examples
 --------
 
 Load a model from a binary file:
+
 .. sourcecode:: pycon
 
     >>> from gensim.test.utils import datapath
@@ -81,8 +85,8 @@ _FIELD_NAMES = sorted(set(_yield_field_names()))
 Model = collections.namedtuple('Model', _FIELD_NAMES)
 """Holds data loaded from the Facebook binary.
 
-Fields
-------
+Parameters
+----------
 dim : int
     The dimensionality of the vectors.
 ws : int
@@ -235,7 +239,7 @@ def load(fin, encoding='utf-8', full_model=True):
 
     Returns
     -------
-    Model
+    :class:`~gensim.models._fasttext_bin.Model`
         The loaded model.
 
     """
