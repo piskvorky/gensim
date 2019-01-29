@@ -604,11 +604,13 @@ class LdaSeqModel(utils.SaveLoad):
             The set of unique terms existing in the cropuse's vocabulary.
 
         """
-        doc_topic = self.gammas / doc_topic.sum(axis=1)[:, np.newaxis]
+        doc_topic = self.gammas / self.gammas.sum(axis=1)[:, np.newaxis]
 
-        norm = lambda x: x / x.sum()
+        def normalize(x):
+            return x / x.sum()
+
         topic_term = [
-            norm(np.exp(chain.e_log_prob.T[time]))
+            normalize(np.exp(chain.e_log_prob.T[time]))
             for k, chain in enumerate(self.topic_chains)
         ]
 
@@ -665,8 +667,8 @@ class LdaSeqModel(utils.SaveLoad):
             Probabilities for each topic in the mixture. This is essentially a point in the `num_topics - 1` simplex.
 
         """
-        lda_model = \
-            ldamodel.LdaModel(num_topics=self.num_topics, alpha=self.alphas, id2word=self.id2word, dtype=np.float64)
+        lda_model = ldamodel.LdaModel(
+            num_topics=self.num_topics, alpha=self.alphas, id2word=self.id2word, dtype=np.float64)
         lda_model.topics = np.zeros((self.vocab_len, self.num_topics))
         ldapost = LdaPost(num_topics=self.num_topics, max_doc_len=len(doc), lda=lda_model, doc=doc)
 
@@ -1006,7 +1008,7 @@ class sslm(utils.SaveLoad):
             (np.array(x) for x in zip(*(self.compute_post_mean(w, self.chain_variance) for w in range(w))))
         self.zeta = self.update_zeta()
 
-        val = sum(self.variance[w][0] - self.variance[w][t] for w in range(w)) / 2  * chain_variance
+        val = sum(self.variance[w][0] - self.variance[w][t] for w in range(w)) / 2 * chain_variance
 
         logger.info("Computing bound, all times")
 
