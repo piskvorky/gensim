@@ -35,10 +35,12 @@ The NMF should be used whenever one needs faster topic extraction.
 """
 
 import itertools
+import sys
 
 import logging
 import numpy as np
 import scipy.sparse
+from gensim.models.nmf_pgd import solve_h, solve_r
 from scipy.stats import halfnorm
 
 from gensim import interfaces
@@ -46,7 +48,6 @@ from gensim import matutils
 from gensim import utils
 from gensim.interfaces import TransformedCorpus
 from gensim.models import basemodel, CoherenceModel
-from gensim.models.nmf_pgd import solve_h, solve_r
 
 logger = logging.getLogger(__name__)
 
@@ -456,13 +457,13 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             kwargs = dict(minimum_probability=minimum_probability)
             return self._apply(corpus, **kwargs)
 
-        v = matutils.corpus2csc([bow], len(self.id2word)).tocsr()
+        v = matutils.corpus2csc([bow], len(self.id2word))
         h, _ = self._solveproj(v, self._W, v_max=np.inf)
 
         if normalize is None:
             normalize = self.normalize
         if normalize:
-            h.data /= h.sum()
+            h /= h.sum()
 
         return [
             (idx, proba)
@@ -535,8 +536,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
                 if chunk_idx % self.eval_every == 0:
                     Wt = self._W.T
-                    Wtv = scipy.sparse.csc_matrix.dot(Wt, v)
-                    Wtr = scipy.sparse.csc_matrix.dot(Wt, r)
+                    Wtv = self._dense_dot_csc(Wt, v)
+                    Wtr = self._dense_dot_csc(Wt, r)
                     WtWh = Wt.dot(self._W).dot(h)
 
                     logger.info(
@@ -549,8 +550,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 chunk_idx += 1
 
         Wt = self._W.T
-        Wtv = scipy.sparse.csc_matrix.dot(Wt, v)
-        Wtr = scipy.sparse.csc_matrix.dot(Wt, r)
+        Wtv = self._dense_dot_csc(Wt, v)
+        Wtr = self._dense_dot_csc(Wt, r)
         WtWh = Wt.dot(self._W).dot(h)
 
         logger.info(
@@ -613,18 +614,25 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         np.maximum(sumsq, 1, out=sumsq)
         self._W /= sumsq
 
+    @staticmethod
+    def _dense_dot_csc(dense, csc):
+        if sys.version_info.major < 3:
+            return (csc.T.dot(dense.T)).T
+        else:
+            return scipy.sparse.csc_matrix.dot(dense, csc)
+
     def _solveproj(self, v, W, h=None, r=None, v_max=None):
         """Update residuals and representation(h) matrices.
 
         Parameters
         ----------
-        v : iterable of list(int, float)
+        v : scipy.sparse.csc_matrix
             Subset of training corpus.
-        W : scipy.sparse.csc_matrix
+        W : ndarray
             Dictionary matrix.
-        h : scipy.sparse.csr_matrix
+        h : ndarray
             Representation matrix.
-        r : scipy.sparse.csr_matrix
+        r : scipy.sparse.csc_matrix
             Residuals matrix.
         v_max : float
             Maximum possible value in matrices.
@@ -656,7 +664,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             error_ = 0.
 
-            Wt_v_minus_r = scipy.sparse.csc_matrix.dot(Wt, v - r)
+            Wt_v_minus_r = self._dense_dot_csc(Wt, v - r)
+
             permutation = self.random_state.permutation(self.num_topics)
 
             error_ = max(
@@ -664,12 +673,11 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             )
 
             if self.use_r:
-                r_actual = scipy.sparse.csc_matrix(v - W.dot(h))
+                # r_actual = scipy.sparse.csc_matrix(v - W.dot(h))
                 error_ = max(
                     error_,
-                    solve_r(r, r_actual, self._lambda_, self.v_max)
+                    solve_r(r, v, W, h, self._lambda_, self.v_max)
                 )
-                r = r_actual
 
             error_ /= m
 
