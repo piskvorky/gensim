@@ -84,7 +84,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Parameters
         ----------
         corpus : iterable of list of (int, float), optional
-            Training corpus. Iterable of numbers
+            Training corpus. Contains list of counts of words for every document.
         num_topics : int, optional
             Number of topics to extract.
         id2word: gensim.corpora.dictionary.Dictionary, optional
@@ -305,7 +305,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Parameters
         ----------
         corpus : iterable of list of (int, float), optional
-            Training corpus.
+            Training corpus. Contains list of counts of words for every document.
         texts : list of list of str, optional
             Tokenized texts, needed for coherence models that use sliding window based (i.e. coherence=`c_something`)
             probability estimator .
@@ -358,7 +358,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Parameters
         ----------
         corpus : iterable of list of (int, float), optional
-            Training corpus.
+            Training corpus. Contains list of counts of words for every document.
 
         Returns
         -------
@@ -476,7 +476,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Parameters
         ----------
         corpus : iterable of list of (int, float), optional
-            Training corpus.
+            Training corpus. Contains list of counts of words for every document.
 
         """
         self._h, self._r = None, None
@@ -501,7 +501,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Parameters
         ----------
         corpus : iterable of list of (int, float), optional
-            Training corpus.
+            Training corpus. Contains list of counts of words for every document.
         chunks_as_numpy : bool, optional
             Deprecated.
 
@@ -594,7 +594,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Parameters
         ----------
         corpus : iterable of list of (int, float), optional
-            Training corpus.
+            Training corpus. Contains list of counts of words for every document.
         chunksize : int, optional
             If provided, a more effective processing will performed.
 
