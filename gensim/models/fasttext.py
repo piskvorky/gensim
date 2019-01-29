@@ -943,7 +943,7 @@ class FastText(BaseWordEmbeddingsModel):
         By default, this function loads the full model.  A full model allows
         continuing training with more data, but also consumes more RAM and
         takes longer to load.  If you do not need to continue training and only
-        wish the work with the already-trained embeddings, use `partial=False`
+        wish the work with the already-trained embeddings, use `full_model=False`
         for faster loading and to save RAM.
 
         Notes
