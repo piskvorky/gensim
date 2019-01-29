@@ -88,7 +88,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Training corpus. Contains list of counts of words for every document.
         num_topics : int, optional
             Number of topics to extract.
-        id2word: gensim.corpora.dictionary.Dictionary, optional
+        id2word: :class:`~gensim.corpora.dictionary.Dictionary`, optional
             Mapping from token id to token. If not set words get replaced with word ids.
         chunksize: int, optional
             Number of documents to be used in each training chunk.
