@@ -182,9 +182,7 @@ from gensim.utils import deprecated
 from gensim.models.utils_any2vec import (
     _save_word2vec_format,
     _load_word2vec_format,
-    _compute_ngrams,
-    _ft_hash,
-    _ft_hash_broken
+    ft_ngram_hashes,
 )
 from gensim.similarities.termsim import TermSimilarityIndex, SparseTermSimilarityMatrix
 
@@ -513,6 +511,9 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             Sequence of (word, similarity).
 
         """
+        if topn is not None and topn < 1:
+            return []
+
         if positive is None:
             positive = []
         if negative is None:
@@ -552,7 +553,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         limited = self.vectors_norm if restrict_vocab is None else self.vectors_norm[:restrict_vocab]
         dists = dot(limited, mean)
-        if not topn:
+        if topn is None:
             return dists
         best = matutils.argsort(dists, topn=topn + len(all_words), reverse=True)
         # ignore (don't return) words from the input
@@ -1512,6 +1513,15 @@ class Word2VecKeyedVectors(WordEmbeddingsKeyedVectors):
         )
         return layer
 
+    @classmethod
+    def load(cls, fname_or_handle, **kwargs):
+        model = super(WordEmbeddingsKeyedVectors, cls).load(fname_or_handle, **kwargs)
+        if isinstance(model, FastTextKeyedVectors):
+            if not hasattr(model, 'compatible_hash'):
+                model.compatible_hash = False
+
+        return model
+
 
 KeyedVectors = Word2VecKeyedVectors  # alias for backward compatibility
 
@@ -1974,6 +1984,14 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         self.num_ngram_vectors = 0
         self.compatible_hash = compatible_hash
 
+    @classmethod
+    def load(cls, fname_or_handle, **kwargs):
+        model = super(WordEmbeddingsKeyedVectors, cls).load(fname_or_handle, **kwargs)
+        if not hasattr(model, 'compatible_hash'):
+            model.compatible_hash = False
+
+        return model
+
     @property
     @deprecated("Attribute will be removed in 4.0.0, use self.vectors_vocab instead")
     def syn0_vocab(self):
@@ -2012,9 +2030,8 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         if word in self.vocab:
             return True
         else:
-            hash_fn = _ft_hash if self.compatible_hash else _ft_hash_broken
-            char_ngrams = _compute_ngrams(word, self.min_n, self.max_n)
-            return any(hash_fn(ng) % self.bucket in self.hash2index for ng in char_ngrams)
+            hashes = ft_ngram_hashes(word, self.min_n, self.max_n, self.bucket, self.compatible_hash)
+            return any(h in self.hash2index for h in hashes)
 
     def save(self, *args, **kwargs):
         """Save object.
@@ -2056,23 +2073,18 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
             If word and all ngrams not in vocabulary.
 
         """
-        hash_fn = _ft_hash if self.compatible_hash else _ft_hash_broken
-
         if word in self.vocab:
             return super(FastTextKeyedVectors, self).word_vec(word, use_norm)
         elif self.bucket == 0:
             raise KeyError('cannot calculate vector for OOV word without ngrams')
         else:
-            # from gensim.models.fasttext import compute_ngrams
             word_vec = np.zeros(self.vectors_ngrams.shape[1], dtype=np.float32)
-            ngrams = _compute_ngrams(word, self.min_n, self.max_n)
             if use_norm:
                 ngram_weights = self.vectors_ngrams_norm
             else:
                 ngram_weights = self.vectors_ngrams
             ngrams_found = 0
-            for ngram in ngrams:
-                ngram_hash = hash_fn(ngram) % self.bucket
+            for ngram_hash in ft_ngram_hashes(word, self.min_n, self.max_n, self.bucket, self.compatible_hash):
                 if ngram_hash in self.hash2index:
                     word_vec += ngram_weights[self.hash2index[ngram_hash]]
                     ngrams_found += 1
@@ -2130,7 +2142,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
             self.min_n,
             self.max_n,
             self.bucket,
-            _ft_hash if self.compatible_hash else _ft_hash_broken,
+            self.compatible_hash,
             self.hash2index
         )
         self.num_ngram_vectors = len(ngram_indices)
@@ -2153,7 +2165,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
             self.min_n,
             self.max_n,
             self.bucket,
-            _ft_hash if self.compatible_hash else _ft_hash_broken,
+            self.compatible_hash,
             self.hash2index
         )
         num_new_ngrams = len(new_ngram_hashes)
@@ -2215,7 +2227,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
                 self.min_n,
                 self.max_n,
                 self.bucket,
-                _ft_hash if self.compatible_hash else _ft_hash_broken,
+                self.compatible_hash,
                 dict(),  # we don't care what goes here in this case
             )
             ngram_hashes = sorted(set(ngram_hashes))
@@ -2237,19 +2249,16 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         if self.bucket == 0:
             return
 
-        hash_fn = _ft_hash if self.compatible_hash else _ft_hash_broken
-
         for w, v in self.vocab.items():
             word_vec = np.copy(self.vectors_vocab[v.index])
-            ngrams = _compute_ngrams(w, self.min_n, self.max_n)
-            for ngram in ngrams:
-                ngram_index = self.hash2index[hash_fn(ngram) % self.bucket]
-                word_vec += self.vectors_ngrams[ngram_index]
-            word_vec /= len(ngrams) + 1
+            ngram_hashes = ft_ngram_hashes(w, self.min_n, self.max_n, self.bucket, self.compatible_hash)
+            for nh in ngram_hashes:
+                word_vec += self.vectors_ngrams[self.hash2index[nh]]
+            word_vec /= len(ngram_hashes) + 1
             self.vectors[v.index] = word_vec
 
 
-def _process_fasttext_vocab(iterable, min_n, max_n, num_buckets, hash_fn, hash2index):
+def _process_fasttext_vocab(iterable, min_n, max_n, num_buckets, compatible_hash, hash2index):
     """
     Performs a common operation for FastText weight initialization and
     updates: scan the vocabulary, calculate ngrams and their hashes, keep
@@ -2266,8 +2275,9 @@ def _process_fasttext_vocab(iterable, min_n, max_n, num_buckets, hash_fn, hash2i
         The maximum length of ngrams.
     num_buckets : int
         The number of buckets used by the model.
-    hash_fn : callable
-        Used to hash ngrams to buckets.
+    compatible_hash : boolean
+        True for compatibility with the Facebook implementation.
+        False for compatibility with the old Gensim implementation.
     hash2index : dict
         Updated in-place.
 
@@ -2293,8 +2303,7 @@ def _process_fasttext_vocab(iterable, min_n, max_n, num_buckets, hash_fn, hash2i
 
     for word, vocab in iterable:
         wi = []
-        for ngram in _compute_ngrams(word, min_n, max_n):
-            ngram_hash = hash_fn(ngram) % num_buckets
+        for ngram_hash in ft_ngram_hashes(word, min_n, max_n, num_buckets, compatible_hash):
             if ngram_hash not in hash2index:
                 #
                 # This is a new ngram.  Reserve a new index in hash2index.
