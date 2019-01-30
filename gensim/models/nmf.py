@@ -82,12 +82,11 @@ A lot of parameters can be tuned to optimize training for your specific case
 
 .. sourcecode:: pycon
 
-    >>> nmf = Nmf(common_corpus, num_topics=50, kappa=0.1, eval_every=5) # descrease training step size
+    >>> nmf = Nmf(common_corpus, num_topics=50, kappa=0.1, eval_every=5)  # descrease training step size
 
 The NMF should be used whenever one needs extremely fast and memory optimized topic model.
 
 """
-
 import itertools
 
 import logging
