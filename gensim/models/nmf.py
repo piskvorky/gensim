@@ -691,7 +691,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             Wtv = self._dense_dot_csc(Wt, v)
 
-            permutation = self.random_state.permutation(self.num_topics)
+            permutation = self.random_state.permutation(self.num_topics).astype(np.int32)
 
             error_ = solve_h(h, Wtv, WtW, permutation, self._kappa)
 
