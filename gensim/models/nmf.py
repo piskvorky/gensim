@@ -120,7 +120,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         v_max: int, optional
             Deprecated.
         normalize: bool, optional
-            Whether to normalize W, h and r. Allows for estimation of perplexity, coherence, e.t.c.
+            Whether to normalize the result. Allows for estimation of perplexity, coherence, e.t.c.
         sparse_coef: float, optional
             Deprecated.
         random_state: {np.random.RandomState, int}, optional
@@ -168,8 +168,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        normalize : bool, optional
-            Whether to normalize an output vector.
+        normalize: bool, optional
+            Whether to normalize the result. Allows for estimation of perplexity, coherence, e.t.c.
 
         Returns
         -------
@@ -188,8 +188,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
     def __getitem__(self, bow, eps=None):
         return self.get_document_topics(bow, eps)
 
-    def show_topics(self, num_topics=10, num_words=10, log=False,
-                    formatted=True, normalize=None):
+    def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True, normalize=None):
         """Get the topics sorted by sparsity.
 
         Parameters
@@ -202,12 +201,12 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Number of words to be presented for each topic. These will be the most relevant words (assigned the highest
             probability for each topic).
         log : bool, optional
-            Whether the output is also logged, besides being returned.
+            Whether the result is also logged, besides being returned.
         formatted : bool, optional
             Whether the topic representations should be formatted as strings. If False, they are returned as
             2 tuples of (word, probability).
-        normalize : bool, optional
-            Whether to normalize an output vector.
+        normalize: bool, optional
+            Whether to normalize the result. Allows for estimation of perplexity, coherence, e.t.c.
 
         Returns
         -------
@@ -259,8 +258,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             The ID of the topic to be returned
         topn : int, optional
             Number of the most significant words that are associated with the topic.
-        normalize : bool, optional
-            Whether to normalize an output vector.
+        normalize: bool, optional
+            Whether to normalize the result. Allows for estimation of perplexity, coherence, e.t.c.
 
         Returns
         -------
@@ -287,8 +286,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             The ID of the topic to be returned
         topn : int, optional
             Number of the most significant words that are associated with the topic.
-        normalize : bool, optional
-            Whether to normalize an output vector.
+        normalize: bool, optional
+            Whether to normalize the result. Allows for estimation of perplexity, coherence, e.t.c.
 
         Returns
         -------
@@ -388,8 +387,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         return (np.log(pred_factors, where=pred_factors > 0) * dense_corpus).sum() / dense_corpus.sum()
 
-    def get_term_topics(self, word_id, minimum_probability=None,
-                        normalize=None):
+    def get_term_topics(self, word_id, minimum_probability=None, normalize=None):
         """Get the most relevant topics to the given word.
 
         Parameters
@@ -397,9 +395,11 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         word_id : int
             The word for which the topic distribution will be computed.
         minimum_probability : float, optional
-            Topics with an assigned probability below this threshold will be discarded.
-        normalize : bool, optional
-            Whether to normalize an output vector.
+            If `normalize` is True, than only topics with larger probabilities than this are included in a result.
+            If `normalize` is False, than only topics with larger factors than this are included in a result.
+            If set to None, a value of 1e-8 is used to prevent 0s.
+        normalize: bool, optional
+            Whether to normalize the result. Allows for estimation of perplexity, coherence, e.t.c.
 
         Returns
         -------
@@ -442,9 +442,11 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         bow : list of (int, float)
             The document in BOW format.
         minimum_probability : float
-            Topics with an assigned probability lower than this threshold will be discarded.
-        normalize : bool, optional
-            Whether to normalize an output vector.
+            If `normalize` is True, than only topics with larger probabilities than this are included in a result.
+            If `normalize` is False, than only topics with larger factors than this are included in a result.
+            If set to None, a value of 1e-8 is used to prevent 0s.
+        normalize: bool, optional
+            Whether to normalize the result. Allows for estimation of perplexity, coherence, e.t.c.
 
         Returns
         -------
