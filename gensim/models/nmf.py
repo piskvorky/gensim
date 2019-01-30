@@ -35,12 +35,11 @@ The NMF should be used whenever one needs faster topic extraction.
 """
 
 import itertools
-import sys
 
 import logging
 import numpy as np
 import scipy.sparse
-from gensim.models.nmf_pgd import solve_h, solve_r
+from gensim.models.nmf_pgd import solve_h
 from scipy.stats import halfnorm
 
 from gensim import interfaces
@@ -52,6 +51,7 @@ from gensim.models import basemodel, CoherenceModel
 logger = logging.getLogger(__name__)
 
 OLD_SCIPY = int(scipy.__version__.split('.')[1]) <= 18
+
 
 class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
     """Online Non-Negative Matrix Factorization.
@@ -96,11 +96,16 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         passes: int, optional
             Number of full passes over the training corpus.
         \lambda_ : float, optional
-            Residuals regularizer coefficient. Increasing it helps prevent ovefitting. Has no effect if `use_r` is set
-            to False.
+            Deprecated.
         kappa : float, optional
             Gradient descent step size.
             Larger value makes the model train faster, but could lead to non-convergence if set too large.
+        minimum_probability:
+            If `normalize` is True, than only topics with larger probabilities than this are included in a result.
+            If `normalize` is False, than only topics with larger factors than this are included in a result.
+            If set to None, a value of 1e-8 is used to prevent 0s.
+        use_r:
+            Deprecated.
         w_max_iter: int, optional
             Maximum number of iterations to train W matrix per each batch.
         w_stop_condition: float, optional
@@ -458,7 +463,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             kwargs = dict(minimum_probability=minimum_probability)
             return self._apply(corpus, **kwargs)
 
-        v = matutils.corpus2csc([bow], len(self.id2word))
+        v = matutils.corpus2csc([bow], self.num_tokens)
         h, _ = self._solveproj(v, self._W, v_max=np.inf)
 
         if normalize is None:
@@ -519,7 +524,10 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 corpus, self.chunksize, as_numpy=chunks_as_numpy
             ):
                 self.random_state.shuffle(chunk)
-                v = matutils.corpus2csc(chunk, len(self.id2word))
+                v = matutils.corpus2csc(
+                    chunk,
+                    num_terms=self.num_tokens,
+                )
                 self._h, self._r = self._solveproj(
                     v, self._W, r=self._r, h=self._h, v_max=self.v_max
                 )
@@ -658,33 +666,22 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Wt = W.T
         WtW = Wt.dot(W)
 
-        _h_r_error = None
+        h_r_error = None
 
         for iter_number in range(self._h_r_max_iter):
-            logger.debug("h_r_error: %s" % _h_r_error)
-
-            error_ = 0.
+            logger.debug("h_r_error: %s" % h_r_error)
 
             Wt_v_minus_r = self._dense_dot_csc(Wt, v - r)
 
             permutation = self.random_state.permutation(self.num_topics)
 
-            error_ = max(
-                error_, solve_h(h, Wt_v_minus_r, WtW, permutation, self._kappa)
-            )
-
-            if self.use_r:
-                # r_actual = scipy.sparse.csc_matrix(v - W.dot(h))
-                error_ = max(
-                    error_,
-                    solve_r(r, v, W, h, self._lambda_, self.v_max)
-                )
+            error_ = solve_h(h, Wt_v_minus_r, WtW, permutation, self._kappa)
 
             error_ /= m
 
-            if _h_r_error and np.abs(_h_r_error - error_) < self._h_r_stop_condition:
+            if h_r_error and np.abs(h_r_error - error_) < self._h_r_stop_condition:
                 break
 
-            _h_r_error = error_
+            h_r_error = error_
 
         return h, r
