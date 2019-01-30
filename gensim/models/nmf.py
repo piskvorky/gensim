@@ -26,7 +26,65 @@ The idea of the algorithm is as follows:
         update W:
             do gradient descent for W using A and B values
 
-The NMF should be used whenever one needs faster topic extraction.
+Examples
+--------
+
+Train an NMF model using a Gensim corpus
+
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import common_texts
+    >>> from gensim.corpora.dictionary import Dictionary
+    >>>
+    >>> # Create a corpus from a list of texts
+    >>> common_dictionary = Dictionary(common_texts)
+    >>> common_corpus = [common_dictionary.doc2bow(text) for text in common_texts]
+    >>>
+    >>> # Train the model on the corpus.
+    >>> nmf = Nmf(common_corpus, num_topics=10)
+
+Save a model to disk, or reload a pre-trained model
+
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import datapath
+    >>>
+    >>> # Save model to disk.
+    >>> temp_file = datapath("model")
+    >>> nmf.save(temp_file)
+    >>>
+    >>> # Load a potentially pretrained model from disk.
+    >>> nmf = Nmf.load(temp_file)
+
+Infer vectors for new documents
+
+.. sourcecode:: pycon
+
+    >>> # Create a new corpus, made of previously unseen documents.
+    >>> other_texts = [
+    ...     ['computer', 'time', 'graph'],
+    ...     ['survey', 'response', 'eps'],
+    ...     ['human', 'system', 'computer']
+    ... ]
+    >>> other_corpus = [common_dictionary.doc2bow(text) for text in other_texts]
+    >>>
+    >>> unseen_doc = other_corpus[0]
+    >>> vector = Nmf[unseen_doc]  # get topic probability distribution for a document
+
+Update the model by incrementally training on the new corpus
+
+.. sourcecode:: pycon
+
+    >>> nmf.update(other_corpus)
+    >>> vector = nmf[unseen_doc]
+
+A lot of parameters can be tuned to optimize training for your specific case
+
+.. sourcecode:: pycon
+
+    >>> nmf = Nmf(common_corpus, num_topics=50, kappa=0.1, eval_every=5) # descrease training step size
+
+The NMF should be used whenever one needs extremely fast and memory optimized topic model.
 
 """
 
