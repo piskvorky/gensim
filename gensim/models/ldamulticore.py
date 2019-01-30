@@ -209,9 +209,8 @@ class LdaMulticore(LdaModel):
             Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`) used to update the
             model.
         chunks_as_numpy : bool
-            Whether each chunk passed to the inference step should be a np.ndarray or not. Numpy can in some settings
-            turn the term IDs into floats, these will be converted back into integers in inference, which incurs a
-            performance hit. For distributed computing it may be desirable to keep the chunks as `numpy.ndarray`.
+            Whether each chunk passed to the inference step should be a np.ndarray or not.
+            For distributed computing it may be desirable to keep the chunks as `numpy.ndarray`.
 
         """
         try:

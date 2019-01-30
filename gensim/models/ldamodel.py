@@ -871,9 +871,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         gamma_threshold : float, optional
             Minimum change in the value of the gamma parameters to continue iterating.
         chunks_as_numpy : bool, optional
-            Whether each chunk passed to the inference step should be a numpy.ndarray or not. Numpy can in some settings
-            turn the term IDs into floats, these will be converted back into integers in inference, which incurs a
-            performance hit. For distributed computing it may be desirable to keep the chunks as `numpy.ndarray`.
+            Whether each chunk passed to the inference step should be a numpy.ndarray or not.
+            For distributed computing it may be desirable to keep the chunks as `numpy.ndarray`.
 
         """
         # use parameters given in constructor, unless user explicitly overrode them
