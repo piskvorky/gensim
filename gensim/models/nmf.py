@@ -470,9 +470,13 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         """
         self._h = None
-        first_doc_it = itertools.tee(corpus, 1)
-        first_doc = next(first_doc_it[0])
-        first_doc = matutils.corpus2csc([first_doc], len(self.id2word))
+
+        if isinstance(corpus, scipy.sparse.csc.csc_matrix):
+            first_doc = corpus.getcol(0)
+        else:
+            first_doc_it = itertools.tee(corpus, 1)
+            first_doc = next(first_doc_it[0])
+            first_doc = matutils.corpus2csc([first_doc], len(self.id2word))
         self.w_std = np.sqrt(first_doc.mean() / (self.num_tokens * self.num_topics))
 
         self._W = np.abs(
@@ -503,10 +507,15 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         for _ in range(self.passes):
             for chunk in utils.grouper(corpus, self.chunksize, as_numpy=False):
                 self.random_state.shuffle(chunk)
-                v = matutils.corpus2csc(
-                    chunk,
-                    num_terms=self.num_tokens,
-                )
+
+                if isinstance(corpus, scipy.sparse.csc.csc_matrix):
+                    v = chunk[0].T
+                else:
+                    v = matutils.corpus2csc(
+                        chunk,
+                        num_terms=self.num_tokens,
+                    )
+
                 self._h = self._solveproj(v, self._W, h=self._h, v_max=self.v_max)
                 h = self._h
 
