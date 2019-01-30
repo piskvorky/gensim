@@ -13,7 +13,7 @@ from gensim.test.utils import datapath
 
 
 class TestLdaSeq(unittest.TestCase):
-        # we are setting up a DTM model and fitting it, and checking topic-word and doc-topic results.
+    # we are setting up a DTM model and fitting it, and checking topic-word and doc-topic results.
     def setUp(self):
         texts = [
             [u'senior', u'studios', u'studios', u'studios', u'creators', u'award', u'mobile', u'currently',
