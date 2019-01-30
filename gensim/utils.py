@@ -1217,7 +1217,7 @@ class InputQueue(multiprocessing.Process):
                 # HACK XXX convert documents to numpy arrays, to save memory.
                 # This also gives a scipy warning at runtime:
                 # "UserWarning: indices array has non-integer dtype (float32)"
-                wrapped_chunk = [[np.asarray(doc, dtype=dtype) for doc in chunk]]
+                wrapped_chunk = [[np.asarray(doc, dtype=self.dtype) for doc in chunk]]
             else:
                 wrapped_chunk = [list(chunk)]
 
