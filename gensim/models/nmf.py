@@ -82,12 +82,11 @@ A lot of parameters can be tuned to optimize training for your specific case
 
 .. sourcecode:: pycon
 
-    >>> nmf = Nmf(common_corpus, num_topics=50, kappa=0.1, eval_every=5) # decrease training step size
+    >>> nmf = Nmf(common_corpus, num_topics=50, kappa=0.1, eval_every=5)  # decrease training step size
 
 The NMF should be used whenever one needs extremely fast and memory optimized topic model.
 
 """
-
 import itertools
 
 import logging
@@ -692,7 +691,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             Wtv = self._dense_dot_csc(Wt, v)
 
-            permutation = self.random_state.permutation(self.num_topics)
+            permutation = self.random_state.permutation(self.num_topics).astype(np.int32)
 
             error_ = solve_h(h, Wtv, WtW, permutation, self._kappa)
 
