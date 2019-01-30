@@ -8,6 +8,8 @@
 
 from libc.math cimport sqrt, fabs, copysign
 from cython.parallel import prange
+import numpy as np
+cimport numpy as np
 
 cdef double fmin(double x, double y) nogil:
     return x if x < y else y
@@ -63,105 +65,5 @@ def solve_h(double[:, ::1] h, double[:, :] Wt_v_minus_r, double[:, ::1] WtW, Py_
             violation += projected_grad * projected_grad
 
             h[component_idx_1, sample_idx] = fmax(h[component_idx_1, sample_idx] - grad, 0.)
-
-    return sqrt(violation)
-
-def solve_r(
-        r,
-        r_actual,
-        double lambda_,
-        double v_max
-    ):
-    """Bound new residuals.
-
-    Parameters
-    ----------
-    r: sparse matrix
-    r_actual: sparse matrix
-    lambda_ : double
-    v_max : double
-
-    Returns
-    -------
-    float
-        Cumulative difference between previous and current residuals vectors.
-
-    """
-
-    cdef int[::1] r_indptr = r.indptr
-    cdef int[::1] r_indices = r.indices
-    cdef double[::1] r_data = r.data
-    cdef int[::1] r_actual_indptr = r_actual.indptr
-    cdef int[::1] r_actual_indices = r_actual.indices
-    cdef double[::1] r_actual_data = r_actual.data
-
-    cdef Py_ssize_t r_col_size = 0
-    cdef Py_ssize_t r_actual_col_size = 0
-    cdef Py_ssize_t r_col_indptr
-    cdef Py_ssize_t r_actual_col_indptr
-    cdef Py_ssize_t r_col_idx
-    cdef Py_ssize_t r_actual_col_idx
-    cdef double* r_element
-    cdef double* r_actual_element
-
-    cdef double r_actual_sign = 1.0
-
-    cdef Py_ssize_t n_samples = r_actual_indptr.shape[0] - 1
-    cdef Py_ssize_t sample_idx
-
-    cdef double violation = 0
-
-    for sample_idx in prange(n_samples, nogil=True):
-        r_col_size = r_indptr[sample_idx + 1] - r_indptr[sample_idx]
-        r_actual_col_size = r_actual_indptr[sample_idx + 1] - r_actual_indptr[sample_idx]
-
-        r_col_idx = 0
-        r_actual_col_idx = 0
-
-        while r_col_idx < r_col_size or r_actual_col_idx < r_actual_col_size:
-            r_col_indptr = r_indices[
-                r_indptr[sample_idx]
-                + r_col_idx
-            ]
-            r_actual_col_indptr = r_actual_indices[
-                r_actual_indptr[sample_idx]
-                + r_actual_col_idx
-            ]
-
-            r_element = &r_data[
-                r_indptr[sample_idx]
-                + r_col_idx
-            ]
-            r_actual_element = &r_actual_data[
-                r_actual_indptr[sample_idx]
-                + r_actual_col_idx
-            ]
-
-            if r_col_indptr >= r_actual_col_indptr:
-                r_actual_sign = copysign(r_actual_sign, r_actual_element[0])
-
-                r_actual_element[0] = fabs(r_actual_element[0]) - lambda_
-                r_actual_element[0] = fmax(r_actual_element[0], 0)
-
-                if r_actual_element[0] != 0:
-                    r_actual_element[0] = copysign(r_actual_element[0], r_actual_sign)
-                    r_actual_element[0] = clip(r_actual_element[0], -v_max, v_max)
-
-                if r_col_indptr == r_actual_col_indptr:
-                    violation += (r_element[0] - r_actual_element[0]) ** 2
-                else:
-                    violation += r_actual_element[0] ** 2
-
-                if r_actual_col_idx < r_actual_col_size:
-                    r_actual_col_idx = r_actual_col_idx + 1
-                else:
-                    r_col_idx = r_col_idx + 1
-            else:
-                violation += r_element[0] ** 2
-
-                if r_col_idx < r_col_size:
-                    r_col_idx = r_col_idx + 1
-                else:
-                    r_actual_col_idx = r_actual_col_idx + 1
 
     return sqrt(violation)
