@@ -601,9 +601,9 @@ class FastText(Word2Vec):
         """
         self.neg_labels = []
         if self.negative > 0:
-                # precompute negative labels optimization for pure-python training
-                self.neg_labels = zeros(self.negative + 1)
-                self.neg_labels[0] = 1.
+            # precompute negative labels optimization for pure-python training
+            self.neg_labels = zeros(self.negative + 1)
+            self.neg_labels[0] = 1.
 
         Word2Vec.train(
             self, sentences, total_examples=self.corpus_count, epochs=self.iter,
