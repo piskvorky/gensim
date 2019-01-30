@@ -6,10 +6,8 @@
 # cython: nonecheck=False
 # cython: embedsignature=True
 
-from libc.math cimport sqrt, fabs, copysign
+from libc.math cimport sqrt
 from cython.parallel import prange
-import numpy as np
-cimport numpy as np
 
 cdef double fmin(double x, double y) nogil:
     return x if x < y else y
