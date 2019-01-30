@@ -22,8 +22,9 @@ The idea of the algorithm is as follows:
             do coordinate gradient descent step to find h that minimizes (v - Wh) l2 norm
             bound h so that it is non-negative
 
-            r = v - Wh
-            bound and smooth r
+            Not actually used because of a dreadfull performance hit
+            # r = v - Wh
+            # bound and smooth r
 
         update A and B
 
