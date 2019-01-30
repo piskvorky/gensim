@@ -5,7 +5,6 @@ This NMF implementation updates in a streaming fashion and works best with spars
 
 - W is a word-topic matrix
 - h is a topic-document matrix
-- r is a smoothed (v - Wh)
 - v is an input word-document matrix
 
 The idea of the algorithm is as follows:
@@ -18,13 +17,9 @@ The idea of the algorithm is as follows:
     Split corpus to batches
 
     for v in batches:
-        infer h (and optionally r):
+        infer h:
             do coordinate gradient descent step to find h that minimizes (v - Wh) l2 norm
             bound h so that it is non-negative
-
-            Not actually used because of a dreadfull performance hit
-            # r = v - Wh
-            # bound and smooth r
 
         update A and B
 
@@ -68,18 +63,14 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         id2word=None,
         chunksize=2000,
         passes=1,
-        lambda_=1.0,
         kappa=1.0,
         minimum_probability=0.01,
-        use_r=False,
         w_max_iter=200,
         w_stop_condition=1e-4,
-        h_r_max_iter=50,
-        h_r_stop_condition=1e-3,
+        h_max_iter=50,
+        h_stop_condition=1e-3,
         eval_every=10,
-        v_max=None,
         normalize=True,
-        sparse_coef=3,
         random_state=None,
     ):
         r"""
@@ -96,8 +87,6 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Number of documents to be used in each training chunk.
         passes: int, optional
             Number of full passes over the training corpus.
-        \lambda_ : float, optional
-            Deprecated.
         kappa : float, optional
             Gradient descent step size.
             Larger value makes the model train faster, but could lead to non-convergence if set too large.
@@ -105,24 +94,18 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             If `normalize` is True, than only topics with larger probabilities than this are included in a result.
             If `normalize` is False, than only topics with larger factors than this are included in a result.
             If set to None, a value of 1e-8 is used to prevent 0s.
-        use_r:
-            Deprecated.
         w_max_iter: int, optional
-            Maximum number of iterations to train W matrix per each batch.
+            Maximum number of iterations to train W per each batch.
         w_stop_condition: float, optional
-            If error difference gets less than that, training of matrix ``W`` stops for current batch.
-        h_r_max_iter: int, optional
-            Maximum number of iterations to train h and r matrices per each batch.
-        h_r_stop_condition: float
-            If error difference gets less than that, training of matrices ``h`` and ``r`` stops for current batch.
+            If error difference gets less than that, training of ``W`` stops for the current batch.
+        h_max_iter: int, optional
+            Maximum number of iterations to train h per each batch.
+        h_stop_condition: float
+            If error difference gets less than that, training of ``h`` stops for the current batch.
         eval_every: int, optional
             Number of batches after which l2 norm of (v - Wh) is computed. Decreases performance if set too low.
-        v_max: int, optional
-            Deprecated.
         normalize: bool, optional
             Whether to normalize the result. Allows for estimation of perplexity, coherence, e.t.c.
-        sparse_coef: float, optional
-            Deprecated.
         random_state: {np.random.RandomState, int}, optional
             Seed for random generator. Needed for reproducibility.
 
@@ -131,19 +114,17 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.id2word = id2word
         self.chunksize = chunksize
         self.passes = passes
-        self._lambda_ = lambda_
         self._kappa = kappa
         self.minimum_probability = minimum_probability
-        self.use_r = use_r
         self._w_max_iter = w_max_iter
         self._w_stop_condition = w_stop_condition
-        self._h_r_max_iter = h_r_max_iter
-        self._h_r_stop_condition = h_r_stop_condition
+        self._h_max_iter = h_max_iter
+        self.h_stop_condition = h_stop_condition
         self.eval_every = eval_every
-        self.v_max = v_max
         self.normalize = normalize
-        self.sparse_coef = sparse_coef
         self.random_state = utils.get_random_state(random_state)
+
+        self.v_max = None
 
         if self.id2word is None:
             self.id2word = utils.dict_from_corpus(corpus)
@@ -158,7 +139,6 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self._w_error = None
 
         self._h = None
-        self._r = None
 
         if corpus is not None:
             self.update(corpus)
@@ -467,7 +447,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             return self._apply(corpus, **kwargs)
 
         v = matutils.corpus2csc([bow], self.num_tokens)
-        h, _ = self._solveproj(v, self._W, v_max=np.inf)
+        h = self._solveproj(v, self._W, v_max=np.inf)
 
         if normalize is None:
             normalize = self.normalize
@@ -489,7 +469,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Training corpus. Contains list of counts of words for every document.
 
         """
-        self._h, self._r = None, None
+        self._h = None
         first_doc_it = itertools.tee(corpus, 1)
         first_doc = next(first_doc_it[0])
         first_doc = matutils.corpus2csc([first_doc], len(self.id2word))
@@ -505,15 +485,13 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.A = np.zeros((self.num_topics, self.num_topics))
         self.B = np.zeros((self.num_tokens, self.num_topics))
 
-    def update(self, corpus, chunks_as_numpy=False):
+    def update(self, corpus):
         """Train the model with new documents.
 
         Parameters
         ----------
         corpus : iterable of list of (int, float), optional
             Training corpus. Contains list of counts of words for every document.
-        chunks_as_numpy : bool, optional
-            Deprecated.
 
         """
 
@@ -523,58 +501,35 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         chunk_idx = 1
 
         for _ in range(self.passes):
-            for chunk in utils.grouper(
-                corpus, self.chunksize, as_numpy=chunks_as_numpy
-            ):
+            for chunk in utils.grouper(corpus, self.chunksize, as_numpy=False):
                 self.random_state.shuffle(chunk)
                 v = matutils.corpus2csc(
                     chunk,
                     num_terms=self.num_tokens,
                 )
-                self._h, self._r = self._solveproj(
-                    v, self._W, r=self._r, h=self._h, v_max=self.v_max
-                )
-                h, r = self._h, self._r
+                self._h = self._solveproj(v, self._W, h=self._h, v_max=self.v_max)
+                h = self._h
 
                 self.A *= chunk_idx - 1
                 self.A += h.dot(h.T)
                 self.A /= chunk_idx
 
                 self.B *= chunk_idx - 1
-                self.B += (v - r).dot(h.T)
+                self.B += v.dot(h.T)
                 self.B /= chunk_idx
+
+                prev_w_error = self._w_error
 
                 self._solve_w()
 
                 if chunk_idx % self.eval_every == 0:
-                    Wt = self._W.T
-                    Wtv = self._dense_dot_csc(Wt, v)
-                    Wtr = self._dense_dot_csc(Wt, r)
-                    WtWh = Wt.dot(self._W).dot(h)
-
-                    logger.info(
-                        "Loss (no outliers): {}\tLoss (with outliers): {}".format(
-                            np.linalg.norm(Wtv - WtWh),
-                            np.linalg.norm(Wtv - WtWh - Wtr),
-                        )
-                    )
+                    logger.info("Loss: {}".format(self._w_error / prev_w_error))
 
                 chunk_idx += 1
-
-        Wt = self._W.T
-        Wtv = self._dense_dot_csc(Wt, v)
-        Wtr = self._dense_dot_csc(Wt, r)
-        WtWh = Wt.dot(self._W).dot(h)
-
-        logger.info(
-            "Loss (no outliers): {}\tLoss (with outliers): {}".format(
-                np.linalg.norm(Wtv - WtWh),
-                np.linalg.norm(Wtv - WtWh - Wtr),
-            )
-        )
+        logger.info("Loss: {}".format(self._w_error / prev_w_error))
 
     def _solve_w(self):
-        """Update W matrix."""
+        """Update W."""
 
         def error():
             Wt = self._W.T
@@ -633,7 +588,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         else:
             return scipy.sparse.csc_matrix.dot(dense, csc)
 
-    def _solveproj(self, v, W, h=None, r=None, v_max=None):
+    def _solveproj(self, v, W, h=None, v_max=None):
         """Update residuals and representation(h) matrices.
 
         Parameters
@@ -644,8 +599,6 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Dictionary matrix.
         h : ndarray
             Representation matrix.
-        r : scipy.sparse.csc_matrix
-            Residuals matrix.
         v_max : float
             Maximum possible value in matrices.
 
@@ -657,34 +610,30 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             self.v_max = v.max()
 
         batch_size = v.shape[1]
-        rshape = (m, batch_size)
         hshape = (n, batch_size)
 
         if h is None or h.shape != hshape:
             h = np.zeros(hshape)
 
-        if r is None or r.shape != rshape:
-            r = scipy.sparse.csc_matrix(rshape)
-
         Wt = W.T
         WtW = Wt.dot(W)
 
-        h_r_error = None
+        h_error = None
 
-        for iter_number in range(self._h_r_max_iter):
-            logger.debug("h_r_error: %s" % h_r_error)
+        for iter_number in range(self._h_max_iter):
+            logger.debug("h_error: %s" % h_error)
 
-            Wt_v_minus_r = self._dense_dot_csc(Wt, v - r)
+            Wtv = self._dense_dot_csc(Wt, v)
 
             permutation = self.random_state.permutation(self.num_topics)
 
-            error_ = solve_h(h, Wt_v_minus_r, WtW, permutation, self._kappa)
+            error_ = solve_h(h, Wtv, WtW, permutation, self._kappa)
 
             error_ /= m
 
-            if h_r_error and np.abs(h_r_error - error_) < self._h_r_stop_condition:
+            if h_error and np.abs(h_error - error_) < self.h_stop_condition:
                 break
 
-            h_r_error = error_
+            h_error = error_
 
-        return h, r
+        return h
