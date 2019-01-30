@@ -126,8 +126,6 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Seed for random generator. Needed for reproducibility.
 
         """
-        self._w_error = None
-        self.num_tokens = None
         self.num_topics = num_topics
         self.id2word = id2word
         self.chunksize = chunksize
@@ -140,9 +138,10 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self._w_stop_condition = w_stop_condition
         self._h_r_max_iter = h_r_max_iter
         self._h_r_stop_condition = h_r_stop_condition
-        self.v_max = v_max
         self.eval_every = eval_every
+        self.v_max = v_max
         self.normalize = normalize
+        self.sparse_coef = sparse_coef
         self.random_state = utils.get_random_state(random_state)
 
         if self.id2word is None:
@@ -155,6 +154,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         self._W = None
         self.w_std = None
+        self._w_error = None
 
         self._h = None
         self._r = None
