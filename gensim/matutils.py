@@ -132,21 +132,19 @@ def corpus2csc(corpus, num_terms=None, dtype=np.float64, num_docs=None, num_nnz=
         pass  # not a MmCorpus...
     if printprogress:
         logger.info("creating sparse matrix from corpus")
-    if num_terms is not None and num_docs is not None and num_nnz is not None:
+    if num_nnz is not None:
         # faster and much more memory-friendly version of creating the sparse csc
         posnow, indptr = 0, [0]
         indices = np.empty((num_nnz,), dtype=np.int32)  # HACK assume feature ids fit in 32bit integer
         data = np.empty((num_nnz,), dtype=dtype)
         for docno, doc in enumerate(corpus):
             if printprogress and docno % printprogress == 0:
-                logger.info("PROGRESS: at document #%i/%i", docno, num_docs)
+                logger.info("PROGRESS: at document #%i/%i", docno, num_docs if num_docs is not None else "-")
             posnext = posnow + len(doc)
-            indices[posnow: posnext] = [feature_id for feature_id, _ in doc]
-            data[posnow: posnext] = [feature_weight for _, feature_weight in doc]
+            data[posnow: posnext], indices[posnow: posnext] = zip(*doc)
             indptr.append(posnext)
             posnow = posnext
         assert posnow == num_nnz, "mismatch between supplied and computed number of non-zeros"
-        result = scipy.sparse.csc_matrix((data, indices, indptr), shape=(num_terms, num_docs), dtype=dtype)
     else:
         # slower version; determine the sparse matrix parameters during iteration
         num_nnz, data, indices, indptr = 0, [], [], [0]
@@ -157,13 +155,19 @@ def corpus2csc(corpus, num_terms=None, dtype=np.float64, num_docs=None, num_nnz=
             data.extend(feature_weight for _, feature_weight in doc)
             num_nnz += len(doc)
             indptr.append(num_nnz)
-        if num_terms is None:
-            num_terms = max(indices) + 1 if indices else 0
-        num_docs = len(indptr) - 1
         # now num_docs, num_terms and num_nnz contain the correct values
         data = np.asarray(data, dtype=dtype)
         indices = np.asarray(indices)
-        result = scipy.sparse.csc_matrix((data, indices, indptr), shape=(num_terms, num_docs), dtype=dtype)
+
+    if num_terms is None:
+        num_terms = indices.max() + 1 if indices else 0
+
+    if num_docs is None:
+        num_docs = len(indptr) - 1
+    else:
+        assert num_docs == len(indptr) - 1, "mismatch between supplied and computed number of documents"
+
+    result = scipy.sparse.csc_matrix((data, indices, indptr), shape=(num_terms, num_docs), dtype=dtype)
     return result
 
 
