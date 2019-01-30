@@ -141,7 +141,7 @@ def corpus2csc(corpus, num_terms=None, dtype=np.float64, num_docs=None, num_nnz=
             if printprogress and docno % printprogress == 0:
                 logger.info("PROGRESS: at document #%i/%i", docno, num_docs if num_docs is not None else "-")
             posnext = posnow + len(doc)
-            data[posnow: posnext], indices[posnow: posnext] = zip(*doc)
+            indices[posnow: posnext], data[posnow: posnext] = zip(*doc)
             indptr.append(posnext)
             posnow = posnext
         assert posnow == num_nnz, "mismatch between supplied and computed number of non-zeros"
