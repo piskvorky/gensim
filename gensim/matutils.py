@@ -119,48 +119,35 @@ def corpus2csc(corpus, num_terms=None, dtype=np.float64, num_docs=None, num_nnz=
         Convert sparse format to Gensim corpus format.
 
     """
-    try:
-        # if the input corpus has the `num_nnz`, `num_docs` and `num_terms` attributes
-        # (as is the case with MmCorpus for example), we can use a more efficient code path
-        if num_terms is None:
-            num_terms = corpus.num_terms
-        if num_docs is None:
-            num_docs = corpus.num_docs
-        if num_nnz is None:
-            num_nnz = corpus.num_nnz
-    except AttributeError:
-        pass  # not a MmCorpus...
+    # if the input corpus has the `num_nnz`, `num_docs` and `num_terms` attributes
+    # (as is the case with MmCorpus for example), we can use a more efficient code path
+    if num_terms is None:
+        num_terms = getattr(corpus, 'num_terms', None)
+    if num_docs is None:
+        num_docs = getattr(corpus, 'num_docs', None)
+    if num_nnz is None:
+        num_nnz = getattr(corpus, 'num_nnz', None)
     if printprogress:
         logger.info("creating sparse matrix from corpus")
-    if num_nnz is not None:
-        # faster and much more memory-friendly version of creating the sparse csc
-        posnow, indptr = 0, [0]
-        indices = np.empty((num_nnz,), dtype=np.int32)  # HACK assume feature ids fit in 32bit integer
-        data = np.empty((num_nnz,), dtype=dtype)
-        for docno, doc in enumerate(corpus):
-            if printprogress and docno % printprogress == 0:
-                logger.info("PROGRESS: at document #%i/%i", docno, num_docs if num_docs is not None else "-")
-            posnext = posnow + len(doc)
+    if num_nnz is None:
+        num_nnz = sum(len(doc) for doc in corpus)
+    posnow, indptr = 0, [0]
+    indices = np.empty((num_nnz,), dtype=np.int32)  # HACK assume feature ids fit in 32bit integer
+    data = np.empty((num_nnz,), dtype=dtype)
+    for docno, doc in enumerate(corpus):
+        if printprogress and docno % printprogress == 0:
+            logger.info("PROGRESS: at document #%i/%i", docno, num_docs if num_docs is not None else "-")
+        posnext = posnow + len(doc)
+        # don't check like `if doc:` on the case if doc has numpy.array dtype
+        if posnext > posnow:
+            # transpose doc and set column indices and data
             indices[posnow: posnext], data[posnow: posnext] = zip(*doc)
-            indptr.append(posnext)
-            posnow = posnext
-        assert posnow == num_nnz, "mismatch between supplied and computed number of non-zeros"
-    else:
-        # slower version; determine the sparse matrix parameters during iteration
-        num_nnz, data, indices, indptr = 0, [], [], [0]
-        for docno, doc in enumerate(corpus):
-            if printprogress and docno % printprogress == 0:
-                logger.info("PROGRESS: at document #%i", docno)
-            indices.extend(feature_id for feature_id, _ in doc)
-            data.extend(feature_weight for _, feature_weight in doc)
-            num_nnz += len(doc)
-            indptr.append(num_nnz)
-        # now num_docs, num_terms and num_nnz contain the correct values
-        data = np.asarray(data, dtype=dtype)
-        indices = np.asarray(indices)
+        indptr.append(posnext)
+        posnow = posnext
+    assert posnow == num_nnz, "mismatch between supplied and computed number of non-zeros"
 
     if num_terms is None:
-        num_terms = indices.max() + 1 if indices else 0
+        num_terms = indices.max() + 1 if num_nnz > 0 else 0
 
     if num_docs is None:
         num_docs = len(indptr) - 1

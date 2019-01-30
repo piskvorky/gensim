@@ -83,6 +83,33 @@ def dirichlet_expectation(alpha):
 dirichlet_expectation_1d = dirichlet_expectation
 dirichlet_expectation_2d = dirichlet_expectation
 
+class TestCorpus2csc(unittest.TestCase):
+    corpus = [[(i * j, float(i + j)) for j in range(i)] for i in range(400)]
+    data = [d for doc in corpus for x, d in doc]
+    indices = [x for doc in corpus for x, d in doc]
+    nnz = sum(len(i) for i in corpus)
+    num_terms = max(max(x for x, d in doc) for doc in corpus if doc) + 1 # 398*399 + 1
+
+    def test_on_empty_corpus(self):
+        csc = matutils.corpus2csc([])
+        self.assertIsInstance(csc, sparse.csc.csc_matrix)
+        self.assertEqual(len(csc.data), 0)
+
+    def test_fast_path(self):
+        csc = matutils.corpus2csc(self.corpus,
+            num_docs=len(self.corpus), num_nnz=self.nnz, num_terms=self.num_terms)
+        self.assertIsInstance(csc, sparse.csc.csc_matrix)
+        self.assertTrue((csc.data == self.data).all())
+        self.assertTrue((csc.indices == self.indices).all())
+        self.assertEqual(csc.shape, (self.num_terms, len(self.corpus)))
+
+    def test_slow_path(self):
+        csc = matutils.corpus2csc(self.corpus)
+        self.assertIsInstance(csc, sparse.csc.csc_matrix)
+        self.assertTrue((csc.data == self.data).all())
+        self.assertTrue((csc.indices == self.indices).all())
+        self.assertEqual(csc.shape, (self.num_terms, len(self.corpus)))
+
 
 class TestLdaModelInner(unittest.TestCase):
     def setUp(self):
