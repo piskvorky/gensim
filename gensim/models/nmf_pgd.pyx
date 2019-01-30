@@ -17,11 +17,6 @@ cdef double fmin(double x, double y) nogil:
 cdef double fmax(double x, double y) nogil:
     return x if x > y else y
 
-cdef double clip(double a, double a_min, double a_max) nogil:
-    a = fmin(a, a_max)
-    a = fmax(a, a_min)
-    return a
-
 def solve_h(double[:, ::1] h, double[:, :] Wtv, double[:, ::1] WtW, int[::1] permutation, double kappa):
     """Find optimal dense vector representation for current W and r matrices.
 

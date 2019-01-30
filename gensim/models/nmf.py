@@ -561,6 +561,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         chunk_idx = 1
 
+        prev_w_error = np.inf
+
         for _ in range(self.passes):
             for chunk in utils.grouper(corpus, self.chunksize, as_numpy=False):
                 self.random_state.shuffle(chunk)
@@ -592,6 +594,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     logger.info("Loss: {}".format(self._w_error / prev_w_error))
 
                 chunk_idx += 1
+
         logger.info("Loss: {}".format(self._w_error / prev_w_error))
 
     def _solve_w(self):
