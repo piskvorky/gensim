@@ -6,6 +6,7 @@ This NMF implementation updates in a streaming fashion and works best with spars
 - W is a word-topic matrix
 - h is a topic-document matrix
 - v is an input word-document matrix
+- A, B - matrices that accumulate information from every consecutive chunk. A = h.dot(ht), B = v.dot(ht).
 
 The idea of the algorithm is as follows:
 
@@ -19,12 +20,15 @@ The idea of the algorithm is as follows:
     for v in batches:
         infer h:
             do coordinate gradient descent step to find h that minimizes (v - Wh) l2 norm
+
             bound h so that it is non-negative
 
-        update A and B
+        update A and B:
+            A = h.dot(ht)
+            B = v.dot(ht)
 
         update W:
-            do gradient descent for W using A and B values
+            do gradient descent step to find W that minimizes 0.5*trace(WtWA) - trace(WtB) l2 norm
 
 Examples
 --------
