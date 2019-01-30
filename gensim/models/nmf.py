@@ -569,7 +569,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         ----------
         corpus : iterable of list of (int, float), optional
             Training corpus.
-            Can be either iterable of documents, which are lists of `(word_id, word_count)`, 
+            Can be either iterable of documents, which are lists of `(word_id, word_count)`,
             or a sparse csc matrix of BOWs for each document.
             If not specified, the model is left uninitialized (presumably, to be trained later with `self.train()`).
 
@@ -657,7 +657,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         ----------
         corpus : iterable of list of (int, float), optional
             Training corpus.
-            Can be either iterable of documents, which are lists of `(word_id, word_count)`, 
+            Can be either iterable of documents, which are lists of `(word_id, word_count)`,
             or a sparse csc matrix of BOWs for each document.
             If not specified, the model is left uninitialized (presumably, to be trained later with `self.train()`).
         chunksize : int, optional
