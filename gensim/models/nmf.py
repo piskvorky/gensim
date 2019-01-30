@@ -193,7 +193,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         self._W = None
         self.w_std = None
-        self._w_error = None
+        self._w_error = np.inf
 
         self._h = None
 
@@ -560,8 +560,6 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             self._setup(corpus)
 
         chunk_idx = 1
-
-        prev_w_error = np.inf
 
         for _ in range(self.passes):
             for chunk in utils.grouper(corpus, self.chunksize, as_numpy=False):
