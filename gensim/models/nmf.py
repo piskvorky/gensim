@@ -139,7 +139,10 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Parameters
         ----------
         corpus : iterable of list of (int, float), optional
-            Training corpus. Contains list of counts of words for every document.
+            Training corpus.
+            Can be either iterable of documents, which are lists of `(word_id, word_count)`,
+            or a sparse csc matrix of BOWs for each document.
+            If not specified, the model is left uninitialized (presumably, to be trained later with `self.train()`).
         num_topics : int, optional
             Number of topics to extract.
         id2word: :class:`~gensim.corpora.dictionary.Dictionary`, optional
@@ -353,7 +356,10 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Parameters
         ----------
         corpus : iterable of list of (int, float), optional
-            Training corpus. Contains list of counts of words for every document.
+            Training corpus.
+            Can be either iterable of documents, which are lists of `(word_id, word_count)`,
+            or a sparse csc matrix of BOWs for each document.
+            If not specified, the model is left uninitialized (presumably, to be trained later with `self.train()`).
         texts : list of list of str, optional
             Tokenized texts, needed for coherence models that use sliding window based (i.e. coherence=`c_something`)
             probability estimator .
@@ -406,7 +412,10 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Parameters
         ----------
         corpus : iterable of list of (int, float), optional
-            Training corpus. Contains list of counts of words for every document.
+            Training corpus.
+            Can be either iterable of documents, which are lists of `(word_id, word_count)`,
+            or a sparse csc matrix of BOWs for each document.
+            If not specified, the model is left uninitialized (presumably, to be trained later with `self.train()`).
 
         Returns
         -------
@@ -527,7 +536,10 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Parameters
         ----------
         corpus : iterable of list of (int, float), optional
-            Training corpus. Contains list of counts of words for every document.
+            Training corpus.
+            Can be either iterable of documents, which are lists of `(word_id, word_count)`,
+            or a sparse csc matrix of BOWs for each document.
+            If not specified, the model is left uninitialized (presumably, to be trained later with `self.train()`).
 
         """
         self._h = None
@@ -556,7 +568,10 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Parameters
         ----------
         corpus : iterable of list of (int, float), optional
-            Training corpus. Contains list of counts of words for every document.
+            Training corpus.
+            Can be either iterable of documents, which are lists of `(word_id, word_count)`, 
+            or a sparse csc matrix of BOWs for each document.
+            If not specified, the model is left uninitialized (presumably, to be trained later with `self.train()`).
 
         """
 
@@ -642,7 +657,10 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Parameters
         ----------
         corpus : iterable of list of (int, float), optional
-            Training corpus. Contains list of counts of words for every document.
+            Training corpus.
+            Can be either iterable of documents, which are lists of `(word_id, word_count)`, 
+            or a sparse csc matrix of BOWs for each document.
+            If not specified, the model is left uninitialized (presumably, to be trained later with `self.train()`).
         chunksize : int, optional
             If provided, a more effective processing will performed.
 
