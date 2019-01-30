@@ -1635,6 +1635,7 @@ def df_obs(x, *args):
     if model == "DTM":
         deriv = sslm.compute_obs_deriv(word, word_counts, totals, mean_deriv_mtx, deriv)
     elif model == "DIM":
-        deriv = sslm.compute_obs_deriv_fixed(p.word, p.word_counts, p.totals, p.sslm, p.mean_deriv_mtx, deriv)  # noqa:F821
+        deriv = sslm.compute_obs_deriv_fixed(
+            p.word, p.word_counts, p.totals, p.sslm, p.mean_deriv_mtx, deriv)  # noqa:F821
 
     return np.negative(deriv)
