@@ -826,7 +826,7 @@ class AuthorTopicModel(LdaModel):
 
             reallen = 0
             for chunk_no, chunk_doc_idx in enumerate(
-                    utils.grouper(train_corpus_idx, chunksize, as_numpy=chunks_as_numpy)):
+                    utils.grouper(train_corpus_idx, chunksize, dtype=np.int32, as_numpy=chunks_as_numpy)):
                 chunk = [self.corpus[d] for d in chunk_doc_idx]
                 reallen += len(chunk)  # keep track of how many documents we've processed so far
 

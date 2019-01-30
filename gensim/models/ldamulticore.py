@@ -276,13 +276,16 @@ class LdaMulticore(LdaModel):
                 if eval_every > 0 and (force or (self.num_updates / updateafter) % eval_every == 0):
                     self.log_perplexity(chunk, total_docs=lencorpus)
 
+        # HACK np.int32 should be enough for word ids.
+        chunk_dtype = np.dtype([('1', np.int32), ('2', self.dtype)]) if chunks_as_numpy else self.dtype
+
         logger.info("training LDA model using %i processes", self.workers)
         pool = Pool(self.workers, worker_e_step, (job_queue, result_queue,))
         for pass_ in range(self.passes):
             queue_size, reallen = [0], 0
             other = LdaState(self.eta, self.state.sstats.shape)
 
-            chunk_stream = utils.grouper(corpus, self.chunksize, as_numpy=chunks_as_numpy)
+            chunk_stream = utils.grouper(corpus, self.chunksize, as_numpy=chunks_as_numpy, dtype=chunk_dtype)
             for chunk_no, chunk in enumerate(chunk_stream):
                 reallen += len(chunk)  # keep track of how many documents we've processed so far
 

@@ -948,6 +948,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             # initialize metrics list to store metric values after every epoch
             self.metrics = defaultdict(list)
 
+        # HACK np.int32 should be enough for word ids.
+        chunk_dtype = np.dtype([('1', np.int32), ('2', self.dtype)]) if chunks_as_numpy else self.dtype
+
         for pass_ in range(passes):
             if self.dispatcher:
                 logger.info('initializing %s workers', self.numworkers)
@@ -957,7 +960,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             dirty = False
 
             reallen = 0
-            chunks = utils.grouper(corpus, chunksize, as_numpy=chunks_as_numpy, dtype=self.dtype)
+            chunks = utils.grouper(corpus, chunksize, as_numpy=chunks_as_numpy, dtype=chunk_dtype)
             for chunk_no, chunk in enumerate(chunks):
                 reallen += len(chunk)  # keep track of how many documents we've processed so far
 

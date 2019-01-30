@@ -1146,6 +1146,8 @@ def chunkize_serial(iterable, chunksize, as_numpy=False, dtype=np.float32):
         Split iterable into chunks of this size.
     as_numpy : bool, optional
         Yield chunks as `np.ndarray` instead of lists.
+    dtype : numpy.dtype, optional
+        Data type of `np.ndarray`.
 
     Yields
     ------
@@ -1184,7 +1186,7 @@ class InputQueue(multiprocessing.Process):
     so that workers that use the queue are not starved for input chunks.
 
     """
-    def __init__(self, q, corpus, chunksize, maxsize, as_numpy):
+    def __init__(self, q, corpus, chunksize, maxsize, as_numpy, dtype=np.float32):
         """
         Parameters
         ----------
@@ -1196,7 +1198,8 @@ class InputQueue(multiprocessing.Process):
             Split `corpus` into chunks of this size.
         as_numpy : bool, optional
             Enqueue chunks as `numpy.ndarray` instead of lists.
-
+        dtype : numpy.dtype, optional
+            Data type of `np.ndarray`.
         """
         super(InputQueue, self).__init__()
         self.q = q
@@ -1204,6 +1207,7 @@ class InputQueue(multiprocessing.Process):
         self.corpus = corpus
         self.chunksize = chunksize
         self.as_numpy = as_numpy
+        self.dtype = dtype
 
     def run(self):
         it = iter(self.corpus)
@@ -1212,8 +1216,8 @@ class InputQueue(multiprocessing.Process):
             if self.as_numpy:
                 # HACK XXX convert documents to numpy arrays, to save memory.
                 # This also gives a scipy warning at runtime:
-                # "UserWarning: indices array has non-integer dtype (float64)"
-                wrapped_chunk = [[np.asarray(doc) for doc in chunk]]
+                # "UserWarning: indices array has non-integer dtype (float32)"
+                wrapped_chunk = [[np.asarray(doc, dtype=dtype) for doc in chunk]]
             else:
                 wrapped_chunk = [list(chunk)]
 
@@ -1230,7 +1234,7 @@ class InputQueue(multiprocessing.Process):
 
 
 if os.name == 'nt':
-    def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
+    def chunkize(corpus, chunksize, maxsize=0, as_numpy=False, dtype=np.float32):
         """Split `corpus` into fixed-sized chunks, using :func:`~gensim.utils.chunkize_serial`.
 
         Parameters
@@ -1243,6 +1247,8 @@ if os.name == 'nt':
             Ignored. For interface compatibility only.
         as_numpy : bool, optional
             Yield chunks as `np.ndarray`s instead of lists?
+        dtype : numpy.dtype, optional
+            Data type of `np.ndarray`.
 
         Yields
         ------
@@ -1252,10 +1258,10 @@ if os.name == 'nt':
         """
         if maxsize > 0:
             warnings.warn("detected Windows; aliasing chunkize to chunkize_serial")
-        for chunk in chunkize_serial(corpus, chunksize, as_numpy=as_numpy):
+        for chunk in chunkize_serial(corpus, chunksize, as_numpy=as_numpy, dtype=dtype):
             yield chunk
 else:
-    def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
+    def chunkize(corpus, chunksize, maxsize=0, as_numpy=False, dtype=np.float32):
         """Split `corpus` into fixed-sized chunks, using :func:`~gensim.utils.chunkize_serial`.
 
         Parameters
@@ -1268,6 +1274,8 @@ else:
             If > 0, prepare chunks in a background process, filling a chunk queue of size at most `maxsize`.
         as_numpy : bool, optional
             Yield chunks as `np.ndarray` instead of lists?
+        dtype : numpy.dtype, optional
+            Data type of `np.ndarray`.
 
         Yields
         ------
@@ -1297,7 +1305,7 @@ else:
 
         if maxsize > 0:
             q = multiprocessing.Queue(maxsize=maxsize)
-            worker = InputQueue(q, corpus, chunksize, maxsize=maxsize, as_numpy=as_numpy)
+            worker = InputQueue(q, corpus, chunksize, maxsize=maxsize, as_numpy=as_numpy, dtype=dtype)
             worker.daemon = True
             worker.start()
             while True:
@@ -1306,7 +1314,7 @@ else:
                     break
                 yield chunk.pop()
         else:
-            for chunk in chunkize_serial(corpus, chunksize, as_numpy=as_numpy):
+            for chunk in chunkize_serial(corpus, chunksize, as_numpy=as_numpy, dtype=dtype):
                 yield chunk
 
 
