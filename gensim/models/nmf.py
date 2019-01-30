@@ -562,12 +562,21 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         chunk_idx = 1
 
         for _ in range(self.passes):
-            for chunk in utils.grouper(corpus, self.chunksize, as_numpy=False):
-                self.random_state.shuffle(chunk)
+            if isinstance(corpus, scipy.sparse.csc.csc_matrix):
+                grouper = (
+                    corpus[:, col_idx:col_idx + self.chunksize]
+                    for col_idx
+                    in range(0, corpus.shape[1], self.chunksize)
+                )
+            else:
+                grouper = utils.grouper(corpus, self.chunksize)
 
+            for chunk in grouper:
                 if isinstance(corpus, scipy.sparse.csc.csc_matrix):
-                    v = chunk[0].T
+                    v = chunk[:, self.random_state.permutation(chunk.shape[1])]
                 else:
+                    self.random_state.shuffle(chunk)
+
                     v = matutils.corpus2csc(
                         chunk,
                         num_terms=self.num_tokens,
@@ -608,7 +617,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         eta = self._kappa / np.linalg.norm(self.A)
 
         for iter_number in range(self._w_max_iter):
-            logger.debug("w_error: %s" % self._w_error)
+            logger.debug("w_error: {}".format(self._w_error))
 
             error_ = error()
 
@@ -688,7 +697,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         h_error = None
 
         for iter_number in range(self._h_max_iter):
-            logger.debug("h_error: %s" % h_error)
+            logger.debug("h_error: {}".format(h_error))
 
             Wtv = self._dense_dot_csc(Wt, v)
 
