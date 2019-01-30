@@ -574,7 +574,6 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             If not specified, the model is left uninitialized (presumably, to be trained later with `self.train()`).
 
         """
-
         if self._W is None:
             self._setup(corpus)
 
