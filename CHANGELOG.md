@@ -1,5 +1,55 @@
 Changes
 ===========
+## 3.7.1, 2019-01-31
+
+### :+1: Improvements
+
+* NMF optimization & documentation (__[@anotherbugmaster](https://github.com/anotherbugmaster)__, [#2361](https://github.com/RaRe-Technologies/gensim/pull/2361))
+* Optimize `FastText.load_fasttext_model` (__[@mpenkov](https://github.com/mpenkov)__, [#2340](https://github.com/RaRe-Technologies/gensim/pull/2340))
+* Add warning when string is used as argument to `Doc2Vec.infer_vector` (__[@tobycheese](https://github.com/tobycheese)__, [#2347](https://github.com/RaRe-Technologies/gensim/pull/2347))
+* Fix light linting issues in `LdaSeqModel` (__[@horpto](https://github.com/horpto)__, [#2360](https://github.com/RaRe-Technologies/gensim/pull/2360))
+* Move out `process_result_queue` from cycle in `LdaMulticore` (__[@horpto](https://github.com/horpto)__, [#2358](https://github.com/RaRe-Technologies/gensim/pull/2358))
+
+
+### :red_circle: Bug fixes
+
+* Fix infinite diff in `LdaModel.do_mstep` (__[@horpto](https://github.com/horpto)__, [#2344](https://github.com/RaRe-Technologies/gensim/pull/2344))
+* Fix backward compatibility issue: loading `FastTextKeyedVectors` using `KeyedVectors` (missing attribute `compatible_hash`) (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#2349](https://github.com/RaRe-Technologies/gensim/pull/2349))
+* Fix logging issue (conda-forge related) (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#2339](https://github.com/RaRe-Technologies/gensim/pull/2339))
+* Fix `WordEmbeddingsKeyedVectors.most_similar` (__[@Witiko](https://github.com/Witiko)__, [#2356](https://github.com/RaRe-Technologies/gensim/pull/2356))
+* Fix issues of `flake8==3.7.1` (__[@horpto](https://github.com/horpto)__, [#2365](https://github.com/RaRe-Technologies/gensim/pull/2365))
+
+
+### :books: Tutorial and doc improvements
+
+* Improve `FastText` documentation (__[@mpenkov](https://github.com/mpenkov)__, [#2353](https://github.com/RaRe-Technologies/gensim/pull/2353))
+* Minor corrections and improvements in `Any*Vec` docstrings (__[@tobycheese](https://github.com/tobycheese)__, [#2345](https://github.com/RaRe-Technologies/gensim/pull/2345))
+* Fix the example code for SparseTermSimilarityMatrix (__[@Witiko](https://github.com/Witiko)__, [#2359](https://github.com/RaRe-Technologies/gensim/pull/2359))
+* Update `poincare` documentation to indicate the relation format (__[@AMR-KELEG](https://github.com/AMR-KELEG)__, [#2357](https://github.com/RaRe-Technologies/gensim/pull/2357))
+
+
+### :warning: Deprecations (will be removed in the next major release)
+
+* Remove
+    - `gensim.models.wrappers.fasttext` (obsoleted by the new native `gensim.models.fasttext` implementation)
+    - `gensim.examples`
+    - `gensim.nosy`
+    - `gensim.scripts.word2vec_standalone`
+    - `gensim.scripts.make_wiki_lemma`
+    - `gensim.scripts.make_wiki_online`
+    - `gensim.scripts.make_wiki_online_lemma`
+    - `gensim.scripts.make_wiki_online_nodebug`
+    - `gensim.scripts.make_wiki` (all of these obsoleted by the new native  `gensim.scripts.segment_wiki` implementation)
+    - "deprecated" functions and attributes
+
+* Move
+    - `gensim.scripts.make_wikicorpus` ➡ `gensim.scripts.make_wiki.py`
+    - `gensim.summarization` ➡ `gensim.models.summarization`
+    - `gensim.topic_coherence` ➡ `gensim.models._coherence`
+    - `gensim.utils` ➡ `gensim.utils.utils` (old imports will continue to work)
+    - `gensim.parsing.*` ➡ `gensim.utils.text_utils`
+
+
 ## 3.7.0, 2019-01-18
 
 ### :star2: New features
