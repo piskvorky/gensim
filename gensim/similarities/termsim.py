@@ -128,13 +128,13 @@ class SparseTermSimilarityMatrix(SaveLoad):
     >>> from gensim.test.utils import common_texts
     >>> from gensim.corpora import Dictionary
     >>> from gensim.models import Word2Vec, WordEmbeddingSimilarityIndex
-    >>> from gensim.similarities import SoftCosineSimilarity, TermSimilarityMatrix
+    >>> from gensim.similarities import SoftCosineSimilarity, SparseTermSimilarityMatrix
     >>>
     >>> model = Word2Vec(common_texts, size=20, min_count=1)  # train word-vectors
-    >>> termsim_index = WordEmbeddingSimilarityIndex(model)
+    >>> termsim_index = WordEmbeddingSimilarityIndex(model.wv)
     >>> dictionary = Dictionary(common_texts)
     >>> bow_corpus = [dictionary.doc2bow(document) for document in common_texts]
-    >>> similarity_matrix = TermSimilarityMatrix(termsim_index, dictionary)  # construct similarity matrix
+    >>> similarity_matrix = SparseTermSimilarityMatrix(termsim_index, dictionary)  # construct similarity matrix
     >>> docsim_index = SoftCosineSimilarity(bow_corpus, similarity_matrix, num_best=10)
     >>>
     >>> query = 'graph trees computer'.split()  # make a query
