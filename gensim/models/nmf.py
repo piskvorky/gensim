@@ -145,18 +145,20 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             If not specified, the model is left uninitialized (presumably, to be trained later with `self.train()`).
         num_topics : int, optional
             Number of topics to extract.
-        id2word: :class:`~gensim.corpora.dictionary.Dictionary`, optional
-            Mapping from token id to token. If not set words get replaced with word ids.
+        id2word: {dict of (int, str), :class:`gensim.corpora.dictionary.Dictionary`}
+            Mapping from word IDs to words. It is used to determine the vocabulary size, as well as for
+            debugging and topic printing.
         chunksize: int, optional
             Number of documents to be used in each training chunk.
         passes: int, optional
             Number of full passes over the training corpus.
+            Leave at default `passes=1` if your input is a non-repeatable generator.
         kappa : float, optional
             Gradient descent step size.
             Larger value makes the model train faster, but could lead to non-convergence if set too large.
         minimum_probability:
-            If `normalize` is True, than only topics with larger probabilities than this are included in a result.
-            If `normalize` is False, than only topics with larger factors than this are included in a result.
+            If `normalize` is True, topics with smaller probabilities are filtered out.
+            If `normalize` is False, topics with smaller factors are filtered out.
             If set to None, a value of 1e-8 is used to prevent 0s.
         w_max_iter: int, optional
             Maximum number of iterations to train W per each batch.
@@ -168,7 +170,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             If error difference gets less than that, training of ``h`` stops for the current batch.
         eval_every: int, optional
             Number of batches after which l2 norm of (v - Wh) is computed. Decreases performance if set too low.
-        normalize: bool, optional
+        normalize: bool or None, optional
             Whether to normalize the result. Allows for estimation of perplexity, coherence, e.t.c.
         random_state: {np.random.RandomState, int}, optional
             Seed for random generator. Needed for reproducibility.
@@ -212,7 +214,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        normalize: bool, optional
+        normalize: bool or None, optional
             Whether to normalize the result. Allows for estimation of perplexity, coherence, e.t.c.
 
         Returns
@@ -249,7 +251,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         formatted : bool, optional
             Whether the topic representations should be formatted as strings. If False, they are returned as
             2 tuples of (word, probability).
-        normalize: bool, optional
+        normalize: bool or None, optional
             Whether to normalize the result. Allows for estimation of perplexity, coherence, e.t.c.
 
         Returns
@@ -262,7 +264,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if normalize is None:
             normalize = self.normalize
 
-        sparsity = self._W.mean(axis=0)
+        sparsity = (self._W == 0).mean(axis=0)
 
         if num_topics < 0 or num_topics >= self.num_topics:
             num_topics = self.num_topics
@@ -302,7 +304,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             The ID of the topic to be returned
         topn : int, optional
             Number of the most significant words that are associated with the topic.
-        normalize: bool, optional
+        normalize: bool or None, optional
             Whether to normalize the result. Allows for estimation of perplexity, coherence, e.t.c.
 
         Returns
@@ -330,7 +332,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             The ID of the topic to be returned
         topn : int, optional
             Number of the most significant words that are associated with the topic.
-        normalize: bool, optional
+        normalize: bool or None, optional
             Whether to normalize the result. Allows for estimation of perplexity, coherence, e.t.c.
 
         Returns
@@ -363,8 +365,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         texts : list of list of str, optional
             Tokenized texts, needed for coherence models that use sliding window based (i.e. coherence=`c_something`)
             probability estimator .
-        dictionary : :class:`~gensim.corpora.dictionary.Dictionary`, optional
-            Gensim dictionary mapping of id word to create corpus.
+        dictionary : {dict of (int, str), :class:`gensim.corpora.dictionary.Dictionary`}, optional
+            Dictionary mapping of id word to create corpus.
             If `model.id2word` is present, this is not needed. If both are provided, passed `dictionary` will be used.
         window_size : int, optional
             Is the size of the window to be used for coherence measures using boolean sliding window as their
@@ -445,10 +447,10 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         word_id : int
             The word for which the topic distribution will be computed.
         minimum_probability : float, optional
-            If `normalize` is True, than only topics with larger probabilities than this are included in a result.
-            If `normalize` is False, than only topics with larger factors than this are included in a result.
+            If `normalize` is True, topics with smaller probabilities are filtered out.
+            If `normalize` is False, topics with smaller factors are filtered out.
             If set to None, a value of 1e-8 is used to prevent 0s.
-        normalize: bool, optional
+        normalize: bool or None, optional
             Whether to normalize the result. Allows for estimation of perplexity, coherence, e.t.c.
 
         Returns
@@ -492,10 +494,10 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         bow : list of (int, float)
             The document in BOW format.
         minimum_probability : float
-            If `normalize` is True, than only topics with larger probabilities than this are included in a result.
-            If `normalize` is False, than only topics with larger factors than this are included in a result.
+            If `normalize` is True, topics with smaller probabilities are filtered out.
+            If `normalize` is False, topics with smaller factors are filtered out.
             If set to None, a value of 1e-8 is used to prevent 0s.
-        normalize: bool, optional
+        normalize: bool or None, optional
             Whether to normalize the result. Allows for estimation of perplexity, coherence, e.t.c.
 
         Returns
