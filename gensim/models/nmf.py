@@ -618,11 +618,11 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 self._solve_w()
 
                 if chunk_idx % self.eval_every == 0:
-                    logger.info("Loss: {}".format(self._w_error / prev_w_error))
+                    logger.info("Loss: {}".format(np.abs((prev_w_error - self._w_error) / self._w_error)))
 
                 chunk_idx += 1
 
-        logger.info("Loss: {}".format(self._w_error / prev_w_error))
+        logger.info("Loss: {}".format(np.abs((prev_w_error - self._w_error) / self._w_error)))
 
     def _solve_w(self):
         """Update W."""
