@@ -690,18 +690,22 @@ class FastText(BaseWordEmbeddingsModel):
             >>> model.train(sentences_2, total_examples=model.corpus_count, epochs=model.epochs)
 
         """
-        if update:
-            if not len(self.wv.vocab):
-                raise RuntimeError(
-                    "You cannot do an online vocabulary-update of a model which has no prior vocabulary. "
-                    "First build the vocabulary of your model with a corpus "
-                    "before doing an online update.")
+        if not update:
+            self.wv.init_ngrams_weights(self.trainables.seed)
+        elif not len(self.wv.vocab):
+            raise RuntimeError(
+                "You cannot do an online vocabulary-update of a model which has no prior vocabulary. "
+                "First build the vocabulary of your model with a corpus "
+                "before doing an online update.")
+        else:
             self.vocabulary.old_vocab_len = len(self.wv.vocab)
-            self.trainables.old_hash2index_len = len(self.wv.hash2index)
 
-        return super(FastText, self).build_vocab(
+        retval = super(FastText, self).build_vocab(
             sentences=sentences, corpus_file=corpus_file, update=update, progress_per=progress_per,
             keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, **kwargs)
+
+        if update:
+            self.wv.update_ngrams_weights(self.trainables.seed, self.vocabulary.old_vocab_len)
 
     def _set_train_params(self, **kwargs):
         #
@@ -709,12 +713,10 @@ class FastText(BaseWordEmbeddingsModel):
         # continue training. The _clear_post_train method destroys this
         # variable, so we reinitialize it here, if needed.
         #
-        # The .old_vocab_len and .old_hash2index_len members are set only to
-        # keep the init_ngrams_weights method happy.
+        # The .old_vocab_len member is set only to keep the init_ngrams_weights method happy.
         #
         if self.wv.buckets_word is None:
             self.vocabulary.old_vocab_len = len(self.wv.vocab)
-            self.trainables.old_hash2index_len = len(self.wv.hash2index)
             self.trainables.init_ngrams_weights(self.wv, update=True, vocabulary=self.vocabulary)
 
     def _clear_post_train(self):
@@ -1068,6 +1070,9 @@ class FastText(BaseWordEmbeddingsModel):
         """
         try:
             model = super(FastText, cls).load(*args, **kwargs)
+            if hasattr(model.wv, 'hash2index'):
+                gensim.models.keyedvectors._rollback_optimization(model.wv)
+
             if not hasattr(model.trainables, 'vectors_vocab_lockf') and hasattr(model.wv, 'vectors_vocab'):
                 model.trainables.vectors_vocab_lockf = ones(model.wv.vectors_vocab.shape, dtype=REAL)
             if not hasattr(model.trainables, 'vectors_ngrams_lockf') and hasattr(model.wv, 'vectors_ngrams'):

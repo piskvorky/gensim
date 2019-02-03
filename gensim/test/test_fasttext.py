@@ -1186,6 +1186,20 @@ class ZeroBucketTest(unittest.TestCase):
         self.assertRaises(KeyError, model.wv.word_vec, 'streamtrain')
 
 
+class UnpackTest(unittest.TestCase):
+    def test_copy_sanity(self):
+        import gensim.models.keyedvectors
+
+        m = np.array(range(9))
+        m.shape = (3, 3)
+        hash2index = {10: 0, 11: 1, 12: 2}
+
+        n = gensim.models.keyedvectors._unpack_copy(m, 25, hash2index)
+        self.assertTrue(np.all(m[0] == n[10]))
+        self.assertTrue(np.all(m[1] == n[11]))
+        self.assertTrue(np.all(m[2] == n[12]))
+
+
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
