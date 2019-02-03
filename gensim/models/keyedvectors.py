@@ -1984,7 +1984,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         if not hasattr(model, 'compatible_hash'):
             model.compatible_hash = False
 
-        if model.hasattr('hash2index'):
+        if hasattr(model, 'hash2index'):
             _rollback_optimization(model)
 
         return model
