@@ -483,7 +483,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         """
         return super(WordEmbeddingsKeyedVectors, self).closer_than(w1, w2)
 
-    def most_similar(self, positive=None, negative=None, last=None, topn=10, restrict_vocab=None, indexer=None):
+    def most_similar(self, positive=None, negative=None, source=None, topn=10, restrict_vocab=None, indexer=None):
         """Find the top-N most similar words.
         Positive words contribute positively towards the similarity, negative words negatively.
 
@@ -500,7 +500,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             List of words that contribute negatively.
         topn : int, optional
             Number of top-N similar words to return.
-        last : str, optional
+        source : str, optional
             Only for set-Based analogy. The word which belongs in the same pair as the expected word.
         restrict_vocab : int, optional
             Optional integer which limits the range of vectors which
@@ -544,13 +544,13 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                     all_words.add(self.vocab[word].index)
         if not mean:
             raise ValueError("cannot compute similarity with no input")
-        if last is None:
+        if source is None:
             mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
         else:
             if (len(positive) + len(negative)) % 2 != 0:
                 raise ValueError("wrong input word analogies.. one or more words are missing..")
-            last_vector = matutils.unitvec(self.word_vec(last, use_norm=True)).astype(REAL)
-            mean = matutils.unitvec(2 * (array(mean).mean(axis=0))).astype(REAL) + last_vector
+            source_vector = matutils.unitvec(self.word_vec(source, use_norm=True)).astype(REAL)
+            mean = matutils.unitvec(2 * (array(mean).mean(axis=0))).astype(REAL) + source_vector
 
         if indexer is not None:
             return indexer.most_similar(mean, topn)
@@ -566,13 +566,17 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
     def evaluate_word_analogies_set_based(self, analogies, restrict_vocab=300000,
     case_insensitive=True, dummy4unknown=False, topk=1):
-        """Compute performance of the model on an analogy test set.
-        This is modern variant of :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.accuracy`, see
-        `discussion on GitHub #1935 <https://github.com/RaRe-Technologies/gensim/pull/1935>`_.
+        """Compute performance of the model on an analogy test set using a set based method.
+        
         The accuracy is reported (printed to log and returned as a score) for each section separately,
-        plus there's one aggregate summary at the end.
-        This method corresponds to the `compute-accuracy` script of the original C word2vec.
-        See also `Analogy (State of the art) <https://aclweb.org/aclwiki/Analogy_(State_of_the_art)>`_.
+        plus there's one aggregate summary at the end. It implements set based 3CosAvg method.
+        It has been implemented in a similar way with the original evaluate_word_analogies method
+        which is for the 3CosAdd OR 3CosMul methods. According to 3CosAvg method we compute
+        the average of the difference between every given pair of words and then we add it 
+        in the source word of the last pair trying to predict the target word of the last pair.
+        This method corresponds to the `compute-accuracy` script of the original C word2vec. 
+        See also `3CosAvg <https://www.aclweb.org/anthology/C/C16/C16-1332.pdf>`_. For more
+        details see  on GitHub #2321 <https://github.com/RaRe-Technologies/gensim/pull/2321>`_.
 
         Parameters
         ----------
@@ -596,7 +600,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         Returns
         -------
-        (float, list of dict of (str, (str, str, str))
+        (float, list of dict of (str, (str, str, ...., str))
             Overall evaluation score and full lists of correct and incorrect predictions divided by sections.
 
         """
@@ -626,6 +630,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                     logger.info("Skipping invalid line #%i in %s", line_no, analogies)
                     continue
                 tuples += 1
+                # terms is used to store the given tuples. Last pair includes the source and the target words.
                 if any(term not in ok_vocab for term in terms):
                     oov += 1
                     if dummy4unknown:
@@ -636,14 +641,24 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                     continue
                 original_vocab = self.vocab
                 self.vocab = ok_vocab
-                ignore = terms[0:len(terms) - 2]  # input words to be ignored
+                assert len(terms) >= 4, " Every tuple should include at least two pairs"
+                ignore = terms[0: - 2 : 2]  # input words to be ignored
                 predicted = None
                 # find the most likely prediction using 3CosAvg set based vector offset) method
                 # Implementation of the set-based method for solving analogies
-                sims = self.most_similar(positive=terms[1:len(terms) - 2:2], negative=terms[0:len(terms) - 2:2],
-                last=terms[len(terms) - 2], topn=topk, restrict_vocab=restrict_vocab)
-                expected = terms[len(terms) - 1]
+                # (a_i, b_i) word pairs are stored in terms
+                # avg_offset = Σ(b_i - a_i)/number_of_pairs
+                # a_i source words (positives), b_i target words (negative)
+                # if last pair is (c, d) where c is source and d is target words
+                # using cosine similarity in c + avg_offset try to find d word - vector
+                # below positive are the source a_i word - vectors while negatives
+                # the target b_i word vectors respectively
+                sims = self.most_similar(positive=terms[1: - 2 : 2], negative=terms[0: - 2 : 2],
+                source=terms[- 2], topn=topk, restrict_vocab=restrict_vocab)
+                expected = terms[ - 1]
                 self.vocab = original_vocab
+                # check every element in sims, which stores top-k similar vectors
+                # until you find the expected, if yes break from the loop
                 for element in sims:
                     predicted = element[0].upper() if case_insensitive else element[0]
                     if predicted in ok_vocab and predicted not in ignore:
@@ -944,6 +959,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         negative words negatively, but with less susceptibility to one large distance dominating the calculation.
         In the common analogy-solving case, of two positive and one negative examples,
         this method is equivalent to the "3CosMul" objective (equation (4)) of Levy and Goldberg.
+        restrict_vocab has been added as an optional parameter, 
+        see on GitHub #2321 <https://github.com/RaRe-Technologies/gensim/pull/2321>`_.
 
         Additional positive or negative examples contribute to the numerator or denominator,
         respectively - a potentially sensible but untested extension of the method.
@@ -994,6 +1011,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             self.word_vec(word, use_norm=True) if isinstance(word, string_types) else word
             for word in negative
         ]
+        # limited is for considering only a range of vectors which are searched for most-similar values
         limited = self.vectors_norm if restrict_vocab is None else self.vectors_norm[:restrict_vocab]
         if not positive:
             raise ValueError("cannot compute similarity with no input")
@@ -1179,8 +1197,11 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
     def evaluate_word_analogies(self, analogies, restrict_vocab=300000, case_insensitive=True,
     dummy4unknown=False, topk=1, method='3CosAdd'):
         """Compute performance of the model on an analogy test set.
+        
         This is modern variant of :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.accuracy`, see
         `discussion on GitHub #1935 <https://github.com/RaRe-Technologies/gensim/pull/1935>`_.
+        Implementation 3CosMul method and addition of topk as an optional input parameter,
+        have been added, see on GitHub #2321 <https://github.com/RaRe-Technologies/gensim/pull/2321>`_.
         The accuracy is reported (printed to log and returned as a score) for each section separately,
         plus there's one aggregate summary at the end.
         This method corresponds to the `compute-accuracy` script of the original C word2vec.
@@ -1254,13 +1275,15 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                 self.vocab = ok_vocab
                 ignore = {a, b, c}  # input words to be ignored
                 predicted = None
-                # find the most likely prediction using 3CosAdd (vector offset) method or 3CosMul
+                # find the most likely prediction using 3CosAdd (vector offset) method or 3CosMul method
 
                 if method == '3CosAdd':
                     sims = self.most_similar(positive=[b, c], negative=[a], topn=topk, restrict_vocab=restrict_vocab)
-                if method == '3CosMul':
+                elif method == '3CosMul':
                     sims = self.most_similar_cosmul(positive=[b, c], negative=[a], topn=topk,
                     restrict_vocab=restrict_vocab)
+                else:
+                    raise ValueError("Unknown method for the Evaluation on the Analogy test set...")    
                 self.vocab = original_vocab
 
                 for element in sims:
@@ -1268,6 +1291,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                     if predicted in ok_vocab and predicted not in ignore:
                         if predicted != expected:
                             logger.debug("%s: expected %s, predicted %s", line.strip(), expected, predicted)
+                        # check if the current predicted vector from top-k ones is equal to the expected, if yes break
                         if predicted == expected:
                             break
 
