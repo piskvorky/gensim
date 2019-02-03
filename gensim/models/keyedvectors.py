@@ -567,14 +567,14 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
     def evaluate_word_analogies_set_based(self, analogies, restrict_vocab=300000,
     case_insensitive=True, dummy4unknown=False, topk=1):
         """Compute performance of the model on an analogy test set using a set based method.
-        
+
         The accuracy is reported (printed to log and returned as a score) for each section separately,
         plus there's one aggregate summary at the end. It implements set based 3CosAvg method.
         It has been implemented in a similar way with the original evaluate_word_analogies method
         which is for the 3CosAdd OR 3CosMul methods. According to 3CosAvg method we compute
-        the average of the difference between every given pair of words and then we add it 
+        the average of the difference between every given pair of words and then we add it
         in the source word of the last pair trying to predict the target word of the last pair.
-        This method corresponds to the `compute-accuracy` script of the original C word2vec. 
+        This method corresponds to the `compute-accuracy` script of the original C word2vec.
         See also `3CosAvg <https://www.aclweb.org/anthology/C/C16/C16-1332.pdf>`_. For more
         details see  on GitHub #2321 <https://github.com/RaRe-Technologies/gensim/pull/2321>`_.
 
@@ -642,7 +642,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                 original_vocab = self.vocab
                 self.vocab = ok_vocab
                 assert len(terms) >= 4, " Every tuple should include at least two pairs"
-                ignore = terms[0: - 2 : 2]  # input words to be ignored
+                ignore = terms[0: - 2:2]  # input words to be ignored
                 predicted = None
                 # find the most likely prediction using 3CosAvg set based vector offset) method
                 # Implementation of the set-based method for solving analogies
@@ -653,9 +653,9 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                 # using cosine similarity in c + avg_offset try to find d word - vector
                 # below positive are the source a_i word - vectors while negatives
                 # the target b_i word vectors respectively
-                sims = self.most_similar(positive=terms[1: - 2 : 2], negative=terms[0: - 2 : 2],
+                sims = self.most_similar(positive=terms[1: - 2:2], negative=terms[0: - 2:2],
                 source=terms[- 2], topn=topk, restrict_vocab=restrict_vocab)
-                expected = terms[ - 1]
+                expected = terms[- 1]
                 self.vocab = original_vocab
                 # check every element in sims, which stores top-k similar vectors
                 # until you find the expected, if yes break from the loop
@@ -959,7 +959,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         negative words negatively, but with less susceptibility to one large distance dominating the calculation.
         In the common analogy-solving case, of two positive and one negative examples,
         this method is equivalent to the "3CosMul" objective (equation (4)) of Levy and Goldberg.
-        restrict_vocab has been added as an optional parameter, 
+        restrict_vocab has been added as an optional parameter,
         see on GitHub #2321 <https://github.com/RaRe-Technologies/gensim/pull/2321>`_.
 
         Additional positive or negative examples contribute to the numerator or denominator,
@@ -1197,7 +1197,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
     def evaluate_word_analogies(self, analogies, restrict_vocab=300000, case_insensitive=True,
     dummy4unknown=False, topk=1, method='3CosAdd'):
         """Compute performance of the model on an analogy test set.
-        
+
         This is modern variant of :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.accuracy`, see
         `discussion on GitHub #1935 <https://github.com/RaRe-Technologies/gensim/pull/1935>`_.
         Implementation 3CosMul method and addition of topk as an optional input parameter,
@@ -1283,7 +1283,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                     sims = self.most_similar_cosmul(positive=[b, c], negative=[a], topn=topk,
                     restrict_vocab=restrict_vocab)
                 else:
-                    raise ValueError("Unknown method for the Evaluation on the Analogy test set...")    
+                    raise ValueError("Unknown method for the Evaluation on the Analogy test set...")
                 self.vocab = original_vocab
 
                 for element in sims:
