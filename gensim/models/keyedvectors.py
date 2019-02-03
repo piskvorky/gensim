@@ -2370,7 +2370,7 @@ def _rollback_optimization(kv):
     assert hasattr(kv, 'hash2index')
     assert hasattr(kv, 'num_ngram_vectors')
 
-    kv.vectors_ngrams = _unpack_copy(kv.vectors_ngrams, kv.bucket, kv.hash2index)
+    kv.vectors_ngrams = _unpack(kv.vectors_ngrams, kv.bucket, kv.hash2index)
 
     #
     # We have replaced num_ngram_vectors with a property and deprecated it.
@@ -2405,8 +2405,18 @@ def _unpack_copy(m, num_rows, hash2index, seed=1):
     return n
 
 
-def _unpack(m, num_rows, seed, hash2index):
+def _unpack(m, num_rows, hash2index, seed=1):
     """Restore the array to its natural shape, undoing the optimization.
+
+    A packed matrix contains contiguous vectors for ngrams, as well as a hashmap.
+    The hash map maps the ngram hash to its index in the packed matrix.
+    To unpack the matrix, we need to do several things:
+
+    1. Restore the matrix to its "natural" shape, where the number of rows
+       equals the number of buckets.
+    2. Rearrange the existing rows such that the hashmap becomes the identity
+       function and is thus redundant.
+    3. Fill the new rows with random values.
 
     Parameters
     ----------
@@ -2415,10 +2425,10 @@ def _unpack(m, num_rows, seed, hash2index):
         The matrix to restore.
     num_rows : int
         The number of rows that this array should have.
-    seed : float
-        The seed for the PRNG.  Will be used to initialize new rows.
     hash2index : dict
         the product of the optimization we are undoing.
+    seed : float, optional
+        The seed for the PRNG.  Will be used to initialize new rows.
 
     Returns
     -------
@@ -2431,28 +2441,38 @@ def _unpack(m, num_rows, seed, hash2index):
     The unpacked matrix will reference some rows in the input matrix to save memory.
     Throw away the old matrix after calling this function, or use np.copy.
 
-    This implementation is a work in progress.
-
     """
-    rows, columns = m.shape
-    if rows == num_rows:
+    orig_rows, orig_columns = m.shape
+    if orig_rows == num_rows:
         #
         # Nothing to do.
         #
         return m
-    assert num_rows > rows
+    assert num_rows > orig_rows
 
     rand_obj = np.random
     rand_obj.seed(seed)
 
     #
+    # Rows at the top of the matrix (the first orig_rows) will contain "packed" learned vectors.
     # Rows at the bottom of the matrix will be "free": initialized to random values.
-    # Rows at the top of the matrix will contain learned vectors.
-    # Move the learned vectors down into their "proper" positions, starting from the bottom.
     #
-    m = _pad_random(m, num_rows - rows, rand_obj)
-    for src, dst in reversed(hash2index.items()):
-        assert src < dst
-        m[src], m[dst] = m[dst], m[src]
+    m = _pad_random(m, num_rows - orig_rows, rand_obj)
+
+    #
+    # Swap rows to transform hash2index into the identify function.
+    # There are two kinds of swaps.
+    # First, rearrange the rows that belong entirely within the original matrix dimensions.
+    # Second, swap out rows from the original matrix dimensions, replacing them with
+    # randomly initialized values.
+    #
+    # N.B. We only do the swap in one direction, because doing it in both directions
+    # nullifies the effect.
+    #
+    swap = {h: i for (h, i) in hash2index.items() if h < i < orig_rows}
+    swap.update({h: i for (h, i) in hash2index.items() if h >= orig_rows})
+    for h, i in swap.items():
+        assert h != i
+        m[[h, i]] = m[[i, h]]  # swap rows i and h
 
     return m
