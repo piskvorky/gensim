@@ -707,6 +707,8 @@ class FastText(BaseWordEmbeddingsModel):
         if update:
             self.wv.update_ngrams_weights(self.trainables.seed, self.vocabulary.old_vocab_len)
 
+        return retval
+
     def _set_train_params(self, **kwargs):
         #
         # We need the wv.buckets_word member to be initialized in order to

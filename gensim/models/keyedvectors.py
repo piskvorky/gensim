@@ -1984,6 +1984,9 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         if not hasattr(model, 'compatible_hash'):
             model.compatible_hash = False
 
+        if model.hasattr('hash2index'):
+            _rollback_optimization(model)
+
         return model
 
     @property
@@ -2107,14 +2110,6 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
             for nh in ngram_hashes:
                 word_vec += ngram_weights[nh]
             return word_vec / len(ngram_hashes)
-
-    @classmethod
-    def load(cls, fname_or_handle, **kwargs):
-        kv = super(FastTextKeyedVectors, cls).load(fname_or_handle, **kwargs)
-        if kv.hasattr('hash2index'):
-            _rollback_optimization(kv)
-
-        return kv
 
     def init_sims(self, replace=False):
         """Precompute L2-normalized vectors.
@@ -2416,7 +2411,7 @@ def _unpack(m, num_rows, seed, hash2index):
     Parameters
     ----------
 
-    a : np.ndarray
+    m : np.ndarray
         The matrix to restore.
     num_rows : int
         The number of rows that this array should have.
@@ -2439,12 +2434,12 @@ def _unpack(m, num_rows, seed, hash2index):
     This implementation is a work in progress.
 
     """
-    rows, columns = a.shape
+    rows, columns = m.shape
     if rows == num_rows:
         #
         # Nothing to do.
         #
-        return a
+        return m
     assert num_rows > rows
 
     rand_obj = np.random
