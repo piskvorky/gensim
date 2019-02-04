@@ -264,7 +264,12 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if normalize is None:
             normalize = self.normalize
 
-        sparsity = (self._W == 0).mean(axis=0)
+        sparsity = np.zeros(self._W.shape[1])
+
+        for row in self._W:
+            sparsity += (row == 0)
+
+        sparsity /= self._W.shape[1]
 
         if num_topics < 0 or num_topics >= self.num_topics:
             num_topics = self.num_topics
