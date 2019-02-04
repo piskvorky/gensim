@@ -3,8 +3,6 @@
 Implements online non-negative matrix factorization algorithm, which allows for fast latent topic inference.
 This NMF implementation updates in a streaming fashion and works best with sparse corpora.
 
-The shape of the input corpus is ``(n_words, n_documents)``, which is the dimension order used in the original paper.
-
 - W is a word-topic matrix
 - h is a topic-document matrix
 - v is an input corpus batch, word-document matrix
@@ -140,7 +138,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : iterable of list of (int, float), optional
+        corpus : iterable of list of (int, float) or :class:`scipy.sparse.csc.csc_matrix` with shape (n_tokens, n_documents), optional
             Training corpus.
             Can be either iterable of documents, which are lists of `(word_id, word_count)`,
             or a sparse csc matrix of BOWs for each document.
@@ -283,7 +281,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             sorted_topics = list(matutils.argsort(sparsity))
             chosen_topics = (
-                    sorted_topics[: num_topics // 2] + sorted_topics[-num_topics // 2:]
+                sorted_topics[: num_topics // 2] + sorted_topics[-num_topics // 2:]
             )
 
         shown = []
@@ -366,7 +364,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : iterable of list of (int, float), optional
+        corpus : iterable of list of (int, float) or :class:`scipy.sparse.csc.csc_matrix` with shape (n_tokens, n_documents), optional
             Training corpus.
             Can be either iterable of documents, which are lists of `(word_id, word_count)`,
             or a sparse csc matrix of BOWs for each document.
@@ -422,7 +420,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : iterable of list of (int, float), optional
+        corpus : iterable of list of (int, float) or :class:`scipy.sparse.csc.csc_matrix` with shape (n_tokens, n_documents), optional
             Training corpus.
             Can be either iterable of documents, which are lists of `(word_id, word_count)`,
             or a sparse csc matrix of BOWs for each document.
@@ -546,7 +544,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : iterable of list of (int, float), optional
+        corpus : iterable of list of (int, float) or :class:`scipy.sparse.csc.csc_matrix` with shape (n_tokens, n_documents), optional
             Training corpus.
             Can be either iterable of documents, which are lists of `(word_id, word_count)`,
             or a sparse csc matrix of BOWs for each document.
@@ -585,7 +583,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : iterable of list of (int, float), optional
+        corpus : iterable of list of (int, float) or :class:`scipy.sparse.csc.csc_matrix` with shape (n_tokens, n_documents), optional
             Training corpus.
             Can be either iterable of documents, which are lists of `(word_id, word_count)`,
             or a sparse csc matrix of BOWs for each document.
@@ -673,7 +671,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : iterable of list of (int, float), optional
+        corpus : iterable of list of (int, float) or :class:`scipy.sparse.csc.csc_matrix` with shape (n_tokens, n_documents), optional
             Training corpus.
             Can be either iterable of documents, which are lists of `(word_id, word_count)`,
             or a sparse csc matrix of BOWs for each document.
