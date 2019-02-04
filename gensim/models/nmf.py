@@ -266,6 +266,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if normalize is None:
             normalize = self.normalize
 
+        # Compute fraction of zero elements in each column
+
         sparsity = np.zeros(self._W.shape[1])
 
         for row in self._W:
