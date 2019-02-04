@@ -40,8 +40,22 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.assertFalse(np.allclose(self.model.get_topics(), model.get_topics()))
 
     def testRandomState(self):
-        model_1 = nmf.Nmf(common_corpus, id2word=common_dictionary, chunksize=1, num_topics=2, passes=100, random_state=42)
-        model_2 = nmf.Nmf(common_corpus, id2word=common_dictionary, chunksize=1, num_topics=2, passes=100, random_state=0)
+        model_1 = nmf.Nmf(
+            common_corpus,
+            id2word=common_dictionary,
+            chunksize=1,
+            num_topics=2,
+            passes=100,
+            random_state=42,
+        )
+        model_2 = nmf.Nmf(
+            common_corpus,
+            id2word=common_dictionary,
+            chunksize=1,
+            num_topics=2,
+            passes=100,
+            random_state=0,
+        )
 
         self.assertTrue(np.allclose(self.model.get_topics(), model_1.get_topics()))
         self.assertFalse(np.allclose(self.model.get_topics(), model_2.get_topics()))
