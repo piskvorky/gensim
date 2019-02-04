@@ -24,7 +24,14 @@ from gensim.test.utils import datapath, get_tmpfile, common_corpus, common_dicti
 
 class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
     def setUp(self):
-        self.model = nmf.Nmf(common_corpus, id2word=common_dictionary, num_topics=2, passes=100, random_state=42)
+        self.model = nmf.Nmf(
+            common_corpus,
+            id2word=common_dictionary,
+            chunksize=1,
+            num_topics=2,
+            passes=100,
+            random_state=42,
+        )
 
     def testUpdate(self):
         model = copy.deepcopy(self.model)
@@ -33,8 +40,8 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.assertFalse(np.allclose(self.model.get_topics(), model.get_topics()))
 
     def testRandomState(self):
-        model_1 = nmf.Nmf(common_corpus, id2word=common_dictionary, num_topics=2, passes=100, random_state=42)
-        model_2 = nmf.Nmf(common_corpus, id2word=common_dictionary, num_topics=2, passes=100, random_state=0)
+        model_1 = nmf.Nmf(common_corpus, id2word=common_dictionary, chunksize=1, num_topics=2, passes=100, random_state=42)
+        model_2 = nmf.Nmf(common_corpus, id2word=common_dictionary, chunksize=1, num_topics=2, passes=100, random_state=0)
 
         self.assertTrue(np.allclose(self.model.get_topics(), model_1.get_topics()))
         self.assertFalse(np.allclose(self.model.get_topics(), model_2.get_topics()))
@@ -54,7 +61,7 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         transformed = self.model.get_term_topics(word)
 
         vec = matutils.sparse2full(transformed, 2)
-        expected = [0., 1.]
+        expected = [0.35023746, 0.64976251]
         # must contain the same values, up to re-ordering
         self.assertTrue(np.allclose(sorted(vec), sorted(expected)))
 
@@ -139,15 +146,15 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.assertRaises(IOError, nmf.Nmf.load, fname, mmap='r')
 
     def testDtypeBackwardCompatibility(self):
-        nmf_3_6_0_fname = datapath('nmf_3_6_0_model')
+        nmf_fname = datapath('nmf_model')
         test_doc = [(0, 1), (1, 1), (2, 1)]
-        expected_topics = [(0, 1.0)]
+        expected_topics = [(1, 1.0)]
 
         # save model to use in test
-        self.model.save(nmf_3_6_0_fname)
+        self.model.save(nmf_fname)
 
-        # load a model saved using a 3.0.1 version of Gensim
-        model = nmf.Nmf.load(nmf_3_6_0_fname)
+        # load a model saved using the latest version of Gensim
+        model = nmf.Nmf.load(nmf_fname)
 
         # and test it on a predefined document
         topics = model[test_doc]
