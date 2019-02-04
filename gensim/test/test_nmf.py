@@ -151,7 +151,7 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         expected_topics = [(1, 1.0)]
 
         # save model to use in test
-        self.model.save(nmf_fname)
+        # self.model.save(nmf_fname)
 
         # load a model saved using the latest version of Gensim
         model = nmf.Nmf.load(nmf_fname)
