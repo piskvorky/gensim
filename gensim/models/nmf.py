@@ -3,9 +3,11 @@
 Implements online non-negative matrix factorization algorithm, which allows for fast latent topic inference.
 This NMF implementation updates in a streaming fashion and works best with sparse corpora.
 
+The shape of the input corpus is ``(n_words, n_documents)``, which is the dimension order used in the original paper.
+
 - W is a word-topic matrix
 - h is a topic-document matrix
-- v is an input word-document matrix
+- v is an input corpus batch, word-document matrix
 - A, B - matrices that accumulate information from every consecutive chunk. A = h.dot(ht), B = v.dot(ht).
 
 The idea of the algorithm is as follows:
@@ -14,8 +16,8 @@ The idea of the algorithm is as follows:
 
     Initialize W, A and B matrices
 
-    Input corpus
-    Split corpus to batches
+    Input the corpus
+    Split the corpus into batches
 
     for v in batches:
         infer h:
@@ -118,21 +120,21 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
     """
 
     def __init__(
-        self,
-        corpus=None,
-        num_topics=100,
-        id2word=None,
-        chunksize=2000,
-        passes=1,
-        kappa=1.0,
-        minimum_probability=0.01,
-        w_max_iter=200,
-        w_stop_condition=1e-4,
-        h_max_iter=50,
-        h_stop_condition=1e-3,
-        eval_every=10,
-        normalize=True,
-        random_state=None,
+            self,
+            corpus=None,
+            num_topics=100,
+            id2word=None,
+            chunksize=2000,
+            passes=1,
+            kappa=1.0,
+            minimum_probability=0.01,
+            w_max_iter=200,
+            w_stop_condition=1e-4,
+            h_max_iter=50,
+            h_stop_condition=1e-3,
+            eval_every=10,
+            normalize=True,
+            random_state=None,
     ):
         r"""
 
@@ -279,7 +281,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             sorted_topics = list(matutils.argsort(sparsity))
             chosen_topics = (
-                sorted_topics[: num_topics // 2] + sorted_topics[-num_topics // 2:]
+                    sorted_topics[: num_topics // 2] + sorted_topics[-num_topics // 2:]
             )
 
         shown = []
@@ -553,10 +555,15 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         if isinstance(corpus, scipy.sparse.csc.csc_matrix):
             first_doc = corpus.getcol(0)
-        else:
-            first_doc_it = itertools.tee(corpus, 1)
-            first_doc = next(first_doc_it[0])
+        elif hasattr(corpus, "__iter__"):
+            if hasattr(corpus, "__next__"):
+                first_doc_it, corpus = itertools.tee(corpus, 2)
+                first_doc = next(iter(first_doc_it))
+            else:
+                first_doc = next(iter(corpus))
+
             first_doc = matutils.corpus2csc([first_doc], len(self.id2word))
+
         self.w_std = np.sqrt(first_doc.mean() / (self.num_tokens * self.num_topics))
 
         self._W = np.abs(
@@ -568,6 +575,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         self.A = np.zeros((self.num_topics, self.num_topics))
         self.B = np.zeros((self.num_tokens, self.num_topics))
+
+        return corpus
 
     def update(self, corpus):
         """Train the model with new documents.
@@ -582,14 +591,14 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         """
         if self._W is None:
-            self._setup(corpus)
+            corpus = self._setup(corpus)
 
         chunk_idx = 1
 
         for _ in range(self.passes):
             if isinstance(corpus, scipy.sparse.csc.csc_matrix):
                 grouper = (
-                    corpus[:, col_idx:col_idx + self.chunksize]
+                    corpus[:, col_idx:min(corpus.shape[1], col_idx + self.chunksize)]
                     for col_idx
                     in range(0, corpus.shape[1], self.chunksize)
                 )
@@ -635,8 +644,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         def error():
             Wt = self._W.T
             return (
-                0.5 * Wt.dot(self._W).dot(self.A).trace()
-                - Wt.dot(self.B).trace()
+                    0.5 * Wt.dot(self._W).dot(self.A).trace()
+                    - Wt.dot(self.B).trace()
             )
 
         eta = self._kappa / np.linalg.norm(self.A)
@@ -647,8 +656,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             error_ = error()
 
             if (
-                self._w_error < np.inf
-                and np.abs((error_ - self._w_error) / self._w_error) < self._w_stop_condition
+                    self._w_error < np.inf
+                    and np.abs((error_ - self._w_error) / self._w_error) < self._w_stop_condition
             ):
                 break
 
