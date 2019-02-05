@@ -1,6 +1,7 @@
-"""`Online Non-Negative Matrix Factorization. <https://arxiv.org/abs/1604.02634>`
+"""Online Non-Negative Matrix Factorization.
+Implementation of the efficient incremental algorithm of Renbo Zhao, Vincent Y. F. Tan et al.
+`[PDF] <https://arxiv.org/abs/1604.02634>`_.
 
-Implements online non-negative matrix factorization algorithm, which allows for fast latent topic inference.
 This NMF implementation updates in a streaming fashion and works best with sparse corpora.
 
 - W is a word-topic matrix
@@ -152,7 +153,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Number of documents to be used in each training chunk.
         passes: int, optional
             Number of full passes over the training corpus.
-            Leave at default `passes=1` if your input is a non-repeatable generator.
+            Leave at default `passes=1` if your input is an iterator.
         kappa : float, optional
             Gradient descent step size.
             Larger value makes the model train faster, but could lead to non-convergence if set too large.
@@ -281,7 +282,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             sorted_topics = list(matutils.argsort(sparsity))
             chosen_topics = (
-                sorted_topics[: num_topics // 2] + sorted_topics[-num_topics // 2:]
+                    sorted_topics[: num_topics // 2] + sorted_topics[-num_topics // 2:]
             )
 
         shown = []
@@ -555,8 +556,11 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         if isinstance(corpus, scipy.sparse.csc.csc_matrix):
             first_doc = corpus.getcol(0)
-        elif hasattr(corpus, "__iter__"):
-            if hasattr(corpus, "__next__"):
+        elif hasattr(corpus, "__iter__"):  # check if corpus is iterable
+            if corpus.__iter__() is corpus:  # check if corpus is an iterator
+                if self.passes > 1:
+                    raise ValueError("Corpus is an iterator, only `passes=1` is possible")
+
                 first_doc_it, corpus = itertools.tee(corpus, 2)
                 first_doc = next(iter(first_doc_it))
             else:
