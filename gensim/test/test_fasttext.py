@@ -1114,6 +1114,29 @@ class NativeTrainingContinuationTest(unittest.TestCase):
 
             model.save(model_name)
 
+    def test_load_native_pretrained(self):
+        model = FT_gensim.load_fasttext_format(datapath('toy-model-pretrained.bin'))
+        actual = model['monarchist']
+        expected = np.array([0.76222, 1.0669, 0.7055, -0.090969, -0.53508])
+        self.assertTrue(np.allclose(expected, actual, atol=10e-4))
+
+
+def _train_model_with_pretrained_vectors():
+    """Generates toy-model-pretrained.bin for use in test_load_native_pretrained.
+
+    Requires https://github.com/facebookresearch/fastText/tree/master/python to be installed.
+
+    """
+    import fastText
+
+    training_text = datapath('toy-data.txt')
+    pretrained_file = datapath('pretrained.vec')
+    model = fastText.train_unsupervised(
+        training_text,
+        bucket=100, model='skipgram', dim=5, pretrainedVectors=pretrained_file
+    )
+    model.save_model(datapath('toy-model-pretrained.bin'))
+
 
 class HashCompatibilityTest(unittest.TestCase):
     def test_compatibility_true(self):

@@ -1264,8 +1264,21 @@ def _load_fasttext_format(model_file, encoding='utf-8', full_model=True):
     model.vocabulary.raw_vocab = m.raw_vocab
     model.vocabulary.nwords = m.nwords
     model.vocabulary.vocab_size = m.vocab_size
-    model.vocabulary.prepare_vocab(model.hs, model.negative, model.wv,
-                                   update=True, min_count=model.min_count)
+
+    #
+    # We explicitly set min_count=1 regardless of the model's parameters to
+    # ignore the trim rule when building the vocabulary.  We do this in order
+    # to support loading native models that were trained with pretrained vectors.
+    # Such models will contain vectors for _all_ encountered words, not only
+    # those occurring more frequently than min_count.
+    #
+    # Native models trained _without_ pretrained vectors already contain the
+    # trimmed raw_vocab, so this change does not affect them.
+    #
+    model.vocabulary.prepare_vocab(
+        model.hs, model.negative, model.wv,
+        update=True, min_count=1,
+    )
 
     model.num_original_vectors = m.vectors_ngrams.shape[0]
 
