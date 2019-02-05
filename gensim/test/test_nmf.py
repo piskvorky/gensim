@@ -40,8 +40,22 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.assertFalse(np.allclose(self.model.get_topics(), model.get_topics()))
 
     def testRandomState(self):
-        model_1 = nmf.Nmf(common_corpus, id2word=common_dictionary, chunksize=1, num_topics=2, passes=100, random_state=42)
-        model_2 = nmf.Nmf(common_corpus, id2word=common_dictionary, chunksize=1, num_topics=2, passes=100, random_state=0)
+        model_1 = nmf.Nmf(
+            common_corpus,
+            id2word=common_dictionary,
+            chunksize=1,
+            num_topics=2,
+            passes=100,
+            random_state=42,
+        )
+        model_2 = nmf.Nmf(
+            common_corpus,
+            id2word=common_dictionary,
+            chunksize=1,
+            num_topics=2,
+            passes=100,
+            random_state=0,
+        )
 
         self.assertTrue(np.allclose(self.model.get_topics(), model_1.get_topics()))
         self.assertFalse(np.allclose(self.model.get_topics(), model_2.get_topics()))
@@ -151,7 +165,7 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         expected_topics = [(1, 1.0)]
 
         # save model to use in test
-        self.model.save(nmf_fname)
+        # self.model.save(nmf_fname)
 
         # load a model saved using the latest version of Gensim
         model = nmf.Nmf.load(nmf_fname)
