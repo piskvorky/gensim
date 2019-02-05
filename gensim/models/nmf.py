@@ -119,21 +119,21 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
     """
 
     def __init__(
-            self,
-            corpus=None,
-            num_topics=100,
-            id2word=None,
-            chunksize=2000,
-            passes=1,
-            kappa=1.0,
-            minimum_probability=0.01,
-            w_max_iter=200,
-            w_stop_condition=1e-4,
-            h_max_iter=50,
-            h_stop_condition=1e-3,
-            eval_every=10,
-            normalize=True,
-            random_state=None,
+        self,
+        corpus=None,
+        num_topics=100,
+        id2word=None,
+        chunksize=2000,
+        passes=1,
+        kappa=1.0,
+        minimum_probability=0.01,
+        w_max_iter=200,
+        w_stop_condition=1e-4,
+        h_max_iter=50,
+        h_stop_condition=1e-3,
+        eval_every=10,
+        normalize=True,
+        random_state=None,
     ):
         r"""
 
