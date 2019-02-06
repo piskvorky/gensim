@@ -89,6 +89,7 @@ in the original Google's word2vec C format as a KeyedVectors instance
 You can also load vectors from Facebook's fastText binary format:
 
 .. sourcecode:: pycon
+
     >>> from gensim.test.utils import datapath
     >>>
     >>> cap_path = datapath("crime-and-punishment.bin")
@@ -1528,7 +1529,7 @@ class Word2VecKeyedVectors(WordEmbeddingsKeyedVectors):
         See Also
         --------
 
-        :method:`gensim.models.fasttext.FastText.load_fasttext_format` loads
+        :meth:`gensim.models.fasttext.FastText.load_fasttext_format` loads
         the full model, not just word embeddings, and enables you to continue
         model training.
 
