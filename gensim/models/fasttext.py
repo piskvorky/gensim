@@ -1266,6 +1266,8 @@ def _load_fasttext_format(model_file, encoding='utf-8', full_model=True):
     model.vocabulary.vocab_size = m.vocab_size
 
     #
+    # This is here to fix https://github.com/RaRe-Technologies/gensim/pull/2373.
+    #
     # We explicitly set min_count=1 regardless of the model's parameters to
     # ignore the trim rule when building the vocabulary.  We do this in order
     # to support loading native models that were trained with pretrained vectors.

@@ -1122,7 +1122,7 @@ class NativeTrainingContinuationTest(unittest.TestCase):
 
 
 def _train_model_with_pretrained_vectors():
-    """Generates toy-model-pretrained.bin for use in test_load_native_pretrained.
+    """Generate toy-model-pretrained.bin for use in test_load_native_pretrained.
 
     Requires https://github.com/facebookresearch/fastText/tree/master/python to be installed.
 
