@@ -59,21 +59,6 @@ class TestFastTextModel(unittest.TestCase):
         self.test_model = FT_gensim.load_fasttext_format(self.test_model_file)
         self.test_new_model_file = datapath('lee_fasttext_new')
 
-    def test_native_partial_model(self):
-        """Can we skip loading the NN and still get a working model?"""
-        model = FT_gensim.load_fasttext_format(self.test_model_file, full_model=False)
-
-        #
-        # Training continuation should be impossible
-        #
-        self.assertIsNone(model.trainables.syn1neg)
-        self.assertRaises(ValueError, model.train, sentences,
-                          total_examples=model.corpus_count, epochs=model.epochs)
-
-        model.wv['green']
-        model.wv['foobar']
-        model.wv['thisworddoesnotexist']
-
     def test_training(self):
         model = FT_gensim(size=10, min_count=1, hs=1, negative=0, seed=42, workers=1)
         model.build_vocab(sentences)
