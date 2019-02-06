@@ -359,13 +359,13 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         bestn = matutils.argsort(topic, topn, reverse=True)
         return [(idx, topic[idx]) for idx in bestn]
 
-    def top_topics(self, corpus=None, texts=None, dictionary=None, window_size=None,
+    def top_topics(self, corpus, texts=None, dictionary=None, window_size=None,
                    coherence='u_mass', topn=20, processes=-1):
         """Get the topics sorted by coherence.
 
         Parameters
         ----------
-        corpus : iterable of list of (int, float) or `csc_matrix` with the shape (n_tokens, n_documents), optional
+        corpus : iterable of list of (int, float) or `csc_matrix` with the shape (n_tokens, n_documents)
             Training corpus.
             Can be either iterable of documents, which are lists of `(word_id, word_count)`,
             or a sparse csc matrix of BOWs for each document.
@@ -421,7 +421,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : iterable of list of (int, float) or `csc_matrix` with the shape (n_tokens, n_documents), optional
+        corpus : iterable of list of (int, float) or `csc_matrix` with the shape (n_tokens, n_documents)
             Training corpus.
             Can be either iterable of documents, which are lists of `(word_id, word_count)`,
             or a sparse csc matrix of BOWs for each document.
@@ -540,35 +540,16 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             if not minimum_probability or proba > minimum_probability
         ]
 
-    def _setup(self, corpus):
-        """Infer info from the first document and initialize matrices.
+    def _setup(self, v):
+        """Infer info from the first batch and initialize the matrices.
 
         Parameters
         ----------
-        corpus : iterable of list of (int, float) or `csc_matrix` with the shape (n_tokens, n_documents), optional
-            Training corpus.
-            Can be either iterable of documents, which are lists of `(word_id, word_count)`,
-            or a sparse csc matrix of BOWs for each document.
-            If not specified, the model is left uninitialized (presumably, to be trained later with `self.train()`).
+        v : `csc_matrix` with the shape (n_tokens, chunksize)
+            Batch of bows.
 
         """
-        self._h = None
-
-        if isinstance(corpus, scipy.sparse.csc.csc_matrix):
-            first_doc = corpus.getcol(0)
-        elif hasattr(corpus, "__iter__"):  # check if corpus is iterable
-            if corpus.__iter__() is corpus:  # check if corpus is an iterator
-                if self.passes > 1:
-                    raise ValueError("Corpus is an iterator, only `passes=1` is possible")
-
-                first_doc_it, corpus = itertools.tee(corpus, 2)
-                first_doc = next(iter(first_doc_it))
-            else:
-                first_doc = next(iter(corpus))
-
-            first_doc = matutils.corpus2csc([first_doc], len(self.id2word))
-
-        self.w_std = np.sqrt(first_doc.mean() / (self.num_tokens * self.num_topics))
+        self.w_std = np.sqrt(v.mean() / (self.num_tokens * self.num_topics))
 
         self._W = np.abs(
             self.w_std
@@ -580,22 +561,25 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.A = np.zeros((self.num_topics, self.num_topics))
         self.B = np.zeros((self.num_tokens, self.num_topics))
 
-        return corpus
-
     def update(self, corpus):
         """Train the model with new documents.
 
         Parameters
         ----------
-        corpus : iterable of list of (int, float) or `csc_matrix` with the shape (n_tokens, n_documents), optional
+        corpus : iterable of list of (int, float) or `csc_matrix` with the shape (n_tokens, n_documents)
             Training corpus.
             Can be either iterable of documents, which are lists of `(word_id, word_count)`,
             or a sparse csc matrix of BOWs for each document.
             If not specified, the model is left uninitialized (presumably, to be trained later with `self.train()`).
 
         """
-        if self._W is None:
-            corpus = self._setup(corpus)
+        if not (utils.is_corpus(corpus) or isinstance(corpus, scipy.sparse.csc.csc_matrix)):
+            raise ValueError(
+                "Corpus type should be either `gensim.corpus.IndexedCorpus` or `scipy.sparse.csc.csc_matrix`"
+            )
+
+        if (hasattr(corpus, "__next__") or hasattr(corpus, "next")) and self.passes > 1:
+            raise ValueError("Corpus is an iterator, only `passes=1` is valid.")
 
         chunk_idx = 1
 
@@ -619,6 +603,9 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                         chunk,
                         num_terms=self.num_tokens,
                     )
+
+                if self._W is None:
+                    self._setup(v)
 
                 self._h = self._solveproj(v, self._W, h=self._h, v_max=self.v_max)
                 h = self._h
@@ -675,7 +662,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : iterable of list of (int, float) or `csc_matrix` with the shape (n_tokens, n_documents), optional
+        corpus : iterable of list of (int, float) or `csc_matrix` with the shape (n_tokens, n_documents)
             Training corpus.
             Can be either iterable of documents, which are lists of `(word_id, word_count)`,
             or a sparse csc matrix of BOWs for each document.
