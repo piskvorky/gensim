@@ -92,6 +92,7 @@ A lot of parameters can be tuned to optimize training for your specific case
 The NMF should be used whenever one needs extremely fast and memory optimized topic model.
 
 """
+import collections
 import logging
 import numpy as np
 import scipy.sparse
@@ -571,12 +572,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             If not specified, the model is left uninitialized (presumably, to be trained later with `self.train()`).
 
         """
-        if not (utils.is_corpus(corpus) or isinstance(corpus, scipy.sparse.csc.csc_matrix)):
-            raise ValueError(
-                "Corpus type should be either `gensim.corpus.IndexedCorpus` or `scipy.sparse.csc.csc_matrix`"
-            )
-
-        if (hasattr(corpus, "__next__") or hasattr(corpus, "next")) and self.passes > 1:
+        if isinstance(corpus, collections.Iterator) and self.passes > 1:
             raise ValueError("Corpus is an iterator, only `passes=1` is valid.")
 
         chunk_idx = 1
@@ -584,6 +580,9 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         for _ in range(self.passes):
             if isinstance(corpus, scipy.sparse.csc.csc_matrix):
                 grouper = (
+                    # Older scipy (0.19 etc) throw an error when slicing beyond the actual sparse array dimensions, so
+                    # we clip manually with min() here.
+
                     corpus[:, col_idx:min(corpus.shape[1], col_idx + self.chunksize)]
                     for col_idx
                     in range(0, corpus.shape[1], self.chunksize)
