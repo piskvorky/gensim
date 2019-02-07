@@ -92,8 +92,6 @@ A lot of parameters can be tuned to optimize training for your specific case
 The NMF should be used whenever one needs extremely fast and memory optimized topic model.
 
 """
-import itertools
-
 import logging
 import numpy as np
 import scipy.sparse
