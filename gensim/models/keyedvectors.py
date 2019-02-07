@@ -2363,7 +2363,9 @@ def _rollback_optimization(kv):
 
     """
     logger.warning(
-        "This older model was trained with a premature optimization. "
+        "This saved FastText model was trained with an optimization we no longer support. "
+        "The current Gensim version automatically reverses this optimization during loading. "
+        "Save the loaded model to a new file and reload to suppress this message."
         "The current Gensim version reverses this optimization during loading. "
         "Save the model to a new file and reload to suppress this message."
     )
