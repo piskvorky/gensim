@@ -602,6 +602,9 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     )
 
                 if self._W is None:
+                    # If `self._W` is not set (i.e. the first batch being handled), compute the initial matrix using the
+                    # batch mean.
+
                     self._setup(v)
 
                 self._h = self._solveproj(v, self._W, h=self._h, v_max=self.v_max)
