@@ -565,7 +565,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         return result[:topn]
 
     def evaluate_word_analogies_set_based(self, analogies, restrict_vocab=300000,
-    case_insensitive=True, dummy4unknown=False, topk=1):
+    case_insensitive=True, dummy4unknown=False, topk=5):
         """Compute performance of the model on an analogy test set using a set based method.
 
         The accuracy is reported (printed to log and returned as a score) for each section separately,
@@ -659,8 +659,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                 self.vocab = original_vocab
                 # check every element in sims, which stores top-k similar vectors
                 # until you find the expected, if yes break from the loop
-                for element in sims:
-                    predicted = element[0].upper() if case_insensitive else element[0]
+                for similar_word in sims:
+                    predicted = similar_word[0].upper() if case_insensitive else similar_word[0]
                     if predicted in ok_vocab and predicted not in ignore:
                         if predicted != expected:
                             logger.debug("%s: expected %s, predicted %s", line.strip(), expected, predicted)
@@ -1195,7 +1195,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             return score
 
     def evaluate_word_analogies(self, analogies, restrict_vocab=300000, case_insensitive=True,
-    dummy4unknown=False, topk=1, method='3CosAdd'):
+    dummy4unknown=False, topk=5, method='3CosAdd'):
         """Compute performance of the model on an analogy test set.
 
         This is modern variant of :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.accuracy`, see
@@ -1286,8 +1286,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                     raise ValueError("Unknown method for the Evaluation on the Analogy test set...")
                 self.vocab = original_vocab
 
-                for element in sims:
-                    predicted = element[0].upper() if case_insensitive else element[0]
+                for similar_word in sims:
+                    predicted = similar_word[0].upper() if case_insensitive else similar_word[0]
                     if predicted in ok_vocab and predicted not in ignore:
                         if predicted != expected:
                             logger.debug("%s: expected %s, predicted %s", line.strip(), expected, predicted)
