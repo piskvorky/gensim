@@ -82,7 +82,7 @@ def _set_graph_edge_weights(graph):
 
     """
     documents = graph.nodes()
-    weights = _bm25_weights(documents)
+    weights = _bm25_weights(documents, is_bow=True)
 
     for i, doc_bow in enumerate(weights):
         if i % 1000 == 0 and i > 0:

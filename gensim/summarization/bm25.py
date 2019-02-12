@@ -224,8 +224,26 @@ def _get_scores(bm25, document):
     """
     return bm25.get_scores(document)
 
+def _bow_to_text(corpus):
+    """Helper function for transforming corpus from BOW-format to list of words format.
 
-def iter_bm25_bow(corpus, n_jobs=1):
+    Parameters
+    ----------
+    corpus : corpus in BOW-format (word, weight).
+
+    Returns
+    -------
+    list of documents (list of words).
+    """
+
+    return [
+        [word
+            for word, count in doc
+            for count in range(count)]
+        for doc in corpus]
+
+
+def iter_bm25_bow(corpus, n_jobs=1, is_bow=False):
     """Yield BM25 scores (weights) of documents in corpus.
     Each document has to be weighted with every document in given corpus.
 
@@ -254,6 +272,8 @@ def iter_bm25_bow(corpus, n_jobs=1):
         >>> result = iter_bm25_weights(corpus, n_jobs=-1)
 
     """
+    if is_bow:
+        corpus = _bow_to_text(corpus)
     bm25 = BM25(corpus)
 
     n_processes = effective_n_jobs(n_jobs)
@@ -271,7 +291,7 @@ def iter_bm25_bow(corpus, n_jobs=1):
     pool.join()
 
 
-def get_bm25_weights(corpus, n_jobs=1):
+def get_bm25_weights(corpus, n_jobs=1, is_bow=False):
     """Returns BM25 scores (weights) of documents in corpus.
     Each document has to be weighted with every document in given corpus.
 
@@ -300,6 +320,8 @@ def get_bm25_weights(corpus, n_jobs=1):
         >>> result = get_bm25_weights(corpus, n_jobs=-1)
 
     """
+    if is_bow:
+        corpus = _bow_to_text(corpus)
     bm25 = BM25(corpus)
 
     n_processes = effective_n_jobs(n_jobs)
