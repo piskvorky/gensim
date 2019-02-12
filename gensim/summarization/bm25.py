@@ -235,11 +235,10 @@ def _bow_to_text(corpus):
     -------
     list of documents (list of words).
     """
-
     return [
         [word
             for word, count in doc
-            for count in range(count)]
+            for _ in range(count)]
         for doc in corpus]
 
 
