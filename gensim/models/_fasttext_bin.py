@@ -30,6 +30,7 @@ See Also
 """
 
 import collections
+import io
 import logging
 import struct
 
@@ -173,12 +174,14 @@ def _load_vocab(fin, new_format, encoding='utf-8'):
 
     raw_vocab = collections.OrderedDict()
     for i in range(vocab_size):
-        word_bytes = b''
+        word_bytes = io.BytesIO()
         char_byte = fin.read(1)
-        # Read vocab word
+
         while char_byte != _END_OF_WORD_MARKER:
-            word_bytes += char_byte
+            word_bytes.write(char_byte)
             char_byte = fin.read(1)
+
+        word_bytes = word_bytes.getvalue()
         try:
             word = word_bytes.decode(encoding)
         except UnicodeDecodeError:
