@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import division
 
+import io
 import logging
 import unittest
 import os
@@ -19,6 +20,8 @@ from gensim.models.wrappers.fasttext import FastTextKeyedVectors
 from gensim.models.wrappers.fasttext import FastText as FT_wrapper
 from gensim.models.keyedvectors import Word2VecKeyedVectors
 from gensim.test.utils import datapath, get_tmpfile, temporary_file, common_texts as sentences
+import gensim.models._fasttext_bin
+
 
 try:
     from pyemd import emd  # noqa:F401
@@ -1207,6 +1210,69 @@ class ZeroBucketTest(unittest.TestCase):
     def test_out_of_vocab(self):
         model = train_gensim(bucket=0)
         self.assertRaises(KeyError, model.wv.word_vec, 'streamtrain')
+
+
+class UnicodeVocabTest(unittest.TestCase):
+    def test_ascii(self):
+        buf = io.BytesIO()
+        buf.name = 'dummy name to keep fasttext happy'
+        buf.write(struct.pack('@3i', 2, -1, -1))  # vocab_size, nwords, nlabels
+        buf.write(struct.pack('@1q', -1))
+        buf.write(b'hello')
+        buf.write(b'\x00')
+        buf.write(struct.pack('@qb', 1, -1))
+        buf.write(b'world')
+        buf.write(b'\x00')
+        buf.write(struct.pack('@qb', 2, -1))
+        buf.seek(0)
+
+        raw_vocab, vocab_size, nlabels = gensim.models._fasttext_bin._load_vocab(buf, False)
+        expected = {'hello': 1, 'world': 2}
+        self.assertEqual(expected, dict(raw_vocab))
+
+        self.assertEqual(vocab_size, 2)
+        self.assertEqual(nlabels, -1)
+
+    def test_bad_unicode(self):
+        buf = io.BytesIO()
+        buf.name = 'dummy name to keep fasttext happy'
+        buf.write(struct.pack('@3i', 2, -1, -1))  # vocab_size, nwords, nlabels
+        buf.write(struct.pack('@1q', -1))
+        #
+        # encountered in https://github.com/RaRe-Technologies/gensim/issues/2378
+        # The model from downloaded from
+        # https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki-news-300d-1M-subword.bin.zip
+        # suffers from bad characters in a few of the vocab terms.  The native
+        # fastText utility loads the model fine, but we trip up over the bad
+        # characters.
+        #
+        buf.write(
+            b'\xe8\x8b\xb1\xe8\xaa\x9e\xe7\x89\x88\xe3\x82\xa6\xe3\x82\xa3\xe3'
+            b'\x82\xad\xe3\x83\x9a\xe3\x83\x87\xe3\x82\xa3\xe3\x82\xa2\xe3\x81'
+            b'\xb8\xe3\x81\xae\xe6\x8a\x95\xe7\xa8\xbf\xe3\x81\xaf\xe3\x81\x84'
+            b'\xe3\x81\xa4\xe3\x81\xa7\xe3\x82\x82\xe6'
+        )
+        buf.write(b'\x00')
+        buf.write(struct.pack('@qb', 1, -1))
+        buf.write(
+            b'\xd0\xb0\xd0\xb4\xd0\xbc\xd0\xb8\xd0\xbd\xd0\xb8\xd1\x81\xd1\x82'
+            b'\xd1\x80\xd0\xb0\xd1\x82\xd0\xb8\xd0\xb2\xd0\xbd\xd0\xbe-\xd1\x82'
+            b'\xd0\xb5\xd1\x80\xd1\x80\xd0\xb8\xd1\x82\xd0\xbe\xd1\x80\xd0\xb8'
+            b'\xd0\xb0\xd0\xbb\xd1\x8c\xd0\xbd\xd1'
+        )
+        buf.write(b'\x00')
+        buf.write(struct.pack('@qb', 2, -1))
+        buf.seek(0)
+
+        raw_vocab, vocab_size, nlabels = gensim.models._fasttext_bin._load_vocab(buf, False)
+        expected = {
+            u'英語版ウィキペディアへの投稿はいつでも': 1,
+            u'административно-территориальн': 2,
+        }
+        self.assertEqual(expected, dict(raw_vocab))
+
+        self.assertEqual(vocab_size, 2)
+        self.assertEqual(nlabels, -1)
 
 
 if __name__ == '__main__':

@@ -35,6 +35,11 @@ import struct
 
 import numpy as np
 
+_UNICODE_REPLACE = u'\ufffd'
+"""The character Python's unicode handling uses to denote characters that couldn't be decoded."""
+
+_END_OF_WORD_MARKER = b'\x00'
+
 logger = logging.getLogger(__name__)
 
 _FASTTEXT_FILEFORMAT_MAGIC = 793712314
@@ -171,10 +176,14 @@ def _load_vocab(fin, new_format, encoding='utf-8'):
         word_bytes = b''
         char_byte = fin.read(1)
         # Read vocab word
-        while char_byte != b'\x00':
+        while char_byte != _END_OF_WORD_MARKER:
             word_bytes += char_byte
             char_byte = fin.read(1)
-        word = word_bytes.decode(encoding)
+        try:
+            word = word_bytes.decode(encoding)
+        except UnicodeDecodeError:
+            word = word_bytes.decode(encoding, errors='replace').replace(_UNICODE_REPLACE, '')
+            logger.error('unable to cleanly decode bytes %r to word %r', word_bytes, word)
         count, _ = _struct_unpack(fin, '@qb')
         raw_vocab[word] = count
 
