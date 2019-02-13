@@ -224,6 +224,7 @@ def _get_scores(bm25, document):
     """
     return bm25.get_scores(document)
 
+
 def _bow_to_text(corpus):
     """Helper function for transforming corpus from BOW-format to list of words format.
 
