@@ -88,10 +88,20 @@ cdef unsigned long long fasttext_fast_sentence_sg_neg(
 
 
 cdef void fasttext_fast_sentence_sg_hs(
-    const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
-    REAL_t *syn0_vocab, REAL_t *syn0_ngrams, REAL_t *syn1, const int size,
-    const np.uint32_t word2_index, const np.uint32_t *subwords_index, const np.uint32_t subwords_len,
-    const REAL_t alpha, REAL_t *work, REAL_t *l1, REAL_t *word_locks_vocab,
+    const np.uint32_t *word_point,      # point of current token
+    const np.uint8_t *word_code,        # code of current token
+    const int codelen,
+    REAL_t *syn0_vocab,
+    REAL_t *syn0_ngrams,
+    REAL_t *syn1,
+    const int size,                     # window size
+    const np.uint32_t word2_index,      # index of the word at the center of the window
+    const np.uint32_t *subwords_index,
+    const np.uint32_t subwords_len,
+    const REAL_t alpha,                 # training rate
+    REAL_t *work,                       # working memory
+    REAL_t *l1,                         # working memory
+    REAL_t *word_locks_vocab,
     REAL_t *word_locks_ngrams) nogil:
 
     cdef long long a, b
@@ -242,6 +252,24 @@ cdef void fasttext_fast_sentence_cbow_hs(
 
 
 cdef init_ft_config(FastTextConfig *c, model, alpha, _work, _neu1):
+    """Load model parameters into a FastTextConfig struct.
+    We seem to do this because our CPython code uses a different abstraction
+    than the Python code, probably because the latter has been refactored more
+    aggressively.
+
+    The struct itself is defined in fasttext_inner.pxd.
+
+    Parameters
+    ----------
+    model : gensim.models.fasttext.FastText
+        The model to load.
+    alpha : float
+        The initial learning rate.
+    _work : np.ndarray
+        Private working memory for each worker.
+    _neu1 : np.ndarray
+        Private working memory for each worker.
+    """
     c[0].hs = model.hs
     c[0].negative = model.negative
     c[0].sample = (model.vocabulary.sample != 0)
@@ -272,6 +300,65 @@ cdef init_ft_config(FastTextConfig *c, model, alpha, _work, _neu1):
     c[0].neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
 
 
+cdef _prepare_sentences(FastTextConfig *c, model, sentences):
+    #
+    # prepare C structures so we can go "full C" and release the Python GIL
+    #
+    # This involves populating:
+    #
+    #   c.indexes
+    #   c.subwords_idx_len
+    #   c.subwords_idx
+    #   c.sentence_idx
+    #       tokens of sentence number X are between <sentence_idx[X], sentence_idx[X + 1])
+    #
+    # an for hierarchical softmax, also:
+    #
+    #   c.codelens
+    #   c.codes
+    #   c.points
+    #
+    # effective_words: The number of in-vocabulary tokens.
+    # effective_sentences: The number of non-empty sentences.
+    #
+    cdef int effective_words = 0
+    cdef int effective_sentences = 0
+
+    c.sentence_idx[0] = 0  # indices of the first sentence always start at 0
+    for sent in sentences:
+        if not sent:
+            continue  # ignore empty sentences; leave effective_sentences unchanged
+        for token in sent:
+            word = model.wv.vocab[token] if token in model.wv.vocab else None
+            if word is None:
+                continue  # leaving `effective_words` unchanged = shortening the sentence = expanding the window
+            if c.sample and word.sample_int < random_int32(&c.next_random):
+                continue
+            c.indexes[effective_words] = word.index
+
+            c.subwords_idx_len[effective_words] = <int>(len(model.wv.buckets_word[word.index]))
+            c.subwords_idx[effective_words] = <np.uint32_t *>np.PyArray_DATA(model.wv.buckets_word[word.index])
+
+            if c.hs:
+                c.codelens[effective_words] = <int>len(word.code)
+                c.codes[effective_words] = <np.uint8_t *>np.PyArray_DATA(word.code)
+                c.points[effective_words] = <np.uint32_t *>np.PyArray_DATA(word.point)
+
+            effective_words += 1
+            if effective_words == MAX_SENTENCE_LEN:
+                break
+
+        # keep track of which words go into which sentence, so we don't train
+        # across sentence boundaries.
+        effective_sentences += 1
+        c.sentence_idx[effective_sentences] = effective_words
+
+        if effective_words == MAX_SENTENCE_LEN:
+            break
+
+    return effective_words, effective_sentences
+
+
 def train_batch_sg(model, sentences, alpha, _work, _l1):
     """Update skip-gram model by training on a sequence of sentences.
 
@@ -298,57 +385,31 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
 
     """
     cdef FastTextConfig c
-
     cdef int i, j, k
-    cdef int effective_words = 0, effective_sentences = 0
     cdef int sent_idx, idx_start, idx_end
+    cdef int num_words = 0
+    cdef int num_sentences = 0
 
     init_ft_config(&c, model, alpha, _work, _l1)
-
-    # prepare C structures so we can go "full C" and release the Python GIL
-    vlookup = model.wv.vocab
-    c.sentence_idx[0] = 0  # indices of the first sentence always start at 0
-    for sent in sentences:
-        if not sent:
-            continue  # ignore empty sentences; leave effective_sentences unchanged
-        for token in sent:
-            word = vlookup[token] if token in vlookup else None
-            if word is None:
-                continue  # leaving `effective_words` unchanged = shortening the sentence = expanding the window
-            if c.sample and word.sample_int < random_int32(&c.next_random):
-                continue
-            c.indexes[effective_words] = word.index
-
-            c.subwords_idx_len[effective_words] = <int>(len(model.wv.buckets_word[word.index]))
-            c.subwords_idx[effective_words] = <np.uint32_t *>np.PyArray_DATA(model.wv.buckets_word[word.index])
-
-            if c.hs:
-                c.codelens[effective_words] = <int>len(word.code)
-                c.codes[effective_words] = <np.uint8_t *>np.PyArray_DATA(word.code)
-                c.points[effective_words] = <np.uint32_t *>np.PyArray_DATA(word.point)
-
-            effective_words += 1
-            if effective_words == MAX_SENTENCE_LEN:
-                break
-
-        # keep track of which words go into which sentence, so we don't train
-        # across sentence boundaries.
-        # indices of sentence number X are between <sentence_idx[X], sentence_idx[X])
-        effective_sentences += 1
-        c.sentence_idx[effective_sentences] = effective_words
-
-        if effective_words == MAX_SENTENCE_LEN:
-            break
+    num_words, num_sentences = _prepare_sentences(&c, model, sentences)
 
     # precompute "reduced window" offsets in a single randint() call
-    for i, item in enumerate(model.random.randint(0, c.window, effective_words)):
+    for i, item in enumerate(model.random.randint(0, c.window, num_words)):
         c.reduced_windows[i] = item
 
     with nogil:
-        for sent_idx in range(effective_sentences):
+        for sent_idx in range(num_sentences):
             idx_start = c.sentence_idx[sent_idx]
             idx_end = c.sentence_idx[sent_idx + 1]
             for i in range(idx_start, idx_end):
+                #
+                # Determine window boundaries, making sure we don't leak into
+                # adjacent sentences.
+                #
+                #   i: index of current token
+                #   j: index of the left boundary
+                #   k: index of the right boundary
+                #
                 j = i - c.window + c.reduced_windows[i]
                 if j < idx_start:
                     j = idx_start
@@ -357,19 +418,51 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
                     k = idx_end
                 for j in range(j, k):
                     if j == i:
+                        #
+                        # TODO: why do we ignore the token at the "center" of
+                        # the window?
+                        #
                         continue
                     if c.hs:
                         fasttext_fast_sentence_sg_hs(
-                            c.points[j], c.codes[j], c.codelens[j], c.syn0_vocab, c.syn0_ngrams, c.syn1, c.size,
-                            c.indexes[i], c.subwords_idx[i], c.subwords_idx_len[i], c.alpha, c.work, c.neu1,
-                            c.word_locks_vocab, c.word_locks_ngrams)
+                            c.points[j],
+                            c.codes[j],
+                            c.codelens[j],
+                            c.syn0_vocab,
+                            c.syn0_ngrams,
+                            c.syn1,
+                            c.size,
+                            c.indexes[i],
+                            c.subwords_idx[i],
+                            c.subwords_idx_len[i],
+                            c.alpha,
+                            c.work,
+                            c.neu1,
+                            c.word_locks_vocab,
+                            c.word_locks_ngrams
+                        )
                     if c.negative:
                         c.next_random = fasttext_fast_sentence_sg_neg(
-                            c.negative, c.cum_table, c.cum_table_len, c.syn0_vocab, c.syn0_ngrams, c.syn1neg, c.size,
-                            c.indexes[j], c.indexes[i], c.subwords_idx[i], c.subwords_idx_len[i], c.alpha, c.work,
-                            c.neu1, c.next_random, c.word_locks_vocab, c.word_locks_ngrams)
+                            c.negative,
+                            c.cum_table,
+                            c.cum_table_len,
+                            c.syn0_vocab,
+                            c.syn0_ngrams,
+                            c.syn1neg,
+                            c.size,
+                            c.indexes[j],
+                            c.indexes[i],
+                            c.subwords_idx[i],
+                            c.subwords_idx_len[i],
+                            c.alpha,
+                            c.work,
+                            c.neu1,
+                            c.next_random,
+                            c.word_locks_vocab,
+                            c.word_locks_ngrams
+                        )
 
-    return effective_words
+    return num_words
 
 
 def train_batch_cbow(model, sentences, alpha, _work, _neu1):
