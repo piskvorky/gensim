@@ -696,7 +696,7 @@ class FastText(BaseWordEmbeddingsModel):
             raise RuntimeError(
                 "You cannot do an online vocabulary-update of a model which has no prior vocabulary. "
                 "First build the vocabulary of your model with a corpus "
-                "by calling the :meth:`gensim.models.fasttext.FastText.build_vocab` method "
+                "by calling the gensim.models.fasttext.FastText.build_vocab method "
                 "before doing an online update."
             )
         else:
