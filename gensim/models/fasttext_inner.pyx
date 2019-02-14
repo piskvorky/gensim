@@ -14,7 +14,6 @@ cimport numpy as np
 from libc.math cimport exp
 from libc.math cimport log
 from libc.string cimport memset
-from libc.stdio cimport printf
 
 # scipy <= 0.15
 try:
@@ -53,7 +52,7 @@ cdef unsigned long long fasttext_fast_sentence_sg_neg(
     cdef long long a
     cdef long long row1 = word2_index * size, row2
     cdef unsigned long long modulo = 281474976710655ULL
-    cdef REAL_t f, g, label, f_dot, log_e_f_dot
+    cdef REAL_t f, g, label, f_dot, log_e_f_dot, norm_factor
     cdef np.uint32_t target_index
     cdef int d
 
@@ -61,10 +60,12 @@ cdef unsigned long long fasttext_fast_sentence_sg_neg(
     memset(l1, 0, size * cython.sizeof(REAL_t))
 
     scopy(&size, &syn0_vocab[row1], &ONE, l1, &ONE)
-    for d in range(subwords_len):
-        our_saxpy(&size, &ONEF, &syn0_ngrams[subwords_index[d] * size], &ONE, l1, &ONE)
-    cdef REAL_t norm_factor = ONEF / subwords_len
-    sscal(&size, &norm_factor, l1 , &ONE)
+
+    if subwords_len:
+        for d in range(subwords_len):
+            our_saxpy(&size, &ONEF, &syn0_ngrams[subwords_index[d] * size], &ONE, l1, &ONE)
+        norm_factor = ONEF / subwords_len
+        sscal(&size, &norm_factor, l1 , &ONE)
 
     for d in range(negative+1):
         if d == 0:
@@ -108,13 +109,6 @@ cdef void fasttext_fast_sentence_sg_hs(
     REAL_t *word_locks_vocab,
     REAL_t *word_locks_ngrams) nogil:
 
-    if subwords_len == 0:
-        #
-        # we can't raise an exception here without a GIL, so message is the
-        # best we can do for now.
-        #
-        printf("subwords_len unexpectedly zero, prepare to crash\n")
-
     #
     # a : long long
     #   Unused
@@ -141,7 +135,7 @@ cdef void fasttext_fast_sentence_sg_hs(
     #
     cdef long long b
     cdef long long row1 = word2_index * size, row2
-    cdef REAL_t f, g, f_dot, lprob
+    cdef REAL_t f, g, f_dot, lprob, norm_factor
 
     memset(work, 0, size * cython.sizeof(REAL_t))
     memset(l1, 0, size * cython.sizeof(REAL_t))
@@ -170,12 +164,16 @@ cdef void fasttext_fast_sentence_sg_hs(
 
     scopy(&size, &syn0_vocab[row1], &ONE, l1, &ONE)
 
-    for d in range(subwords_len):
-        row2 = subwords_index[d] * size
-        our_saxpy(&size, &ONEF, &syn0_ngrams[row2], &ONE, l1, &ONE)
+    #
+    # Avoid division by zero.
+    #
+    if subwords_len:
+        for d in range(subwords_len):
+            row2 = subwords_index[d] * size
+            our_saxpy(&size, &ONEF, &syn0_ngrams[row2], &ONE, l1, &ONE)
 
-    cdef REAL_t norm_factor = ONEF / subwords_len  # division by zero!
-    sscal(&size, &norm_factor, l1 , &ONE)
+        norm_factor = ONEF / subwords_len
+        sscal(&size, &norm_factor, l1 , &ONE)
 
     for b in range(codelen):
         row2 = word_point[b] * size
@@ -509,6 +507,12 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
                 window_end = i + c.window + 1 - c.reduced_windows[i]
                 if window_end > sentence_end:
                     window_end = sentence_end
+                #
+                # TODO: why can't I use min/max here?  I get a segfault.
+                #
+                # window_start = max(sentence_start, i - c.window + c.reduced_windows[i])
+                # window_end = min(sentence_end, i + c.window + 1 - c.reduced_windows[i])
+                #
                 for j in range(window_start, window_end):
                     if j == i:
                         #
