@@ -300,44 +300,76 @@ cdef init_ft_config(FastTextConfig *c, model, alpha, _work, _neu1):
     c[0].neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
 
 
-cdef _prepare_sentences(FastTextConfig *c, model, sentences):
-    #
-    # prepare C structures so we can go "full C" and release the Python GIL
-    #
-    # This involves populating:
-    #
-    #   c.indexes
-    #   c.subwords_idx_len
-    #   c.subwords_idx
-    #   c.sentence_idx
-    #       tokens of sentence number X are between <sentence_idx[X], sentence_idx[X + 1])
-    #
-    # an for hierarchical softmax, also:
-    #
-    #   c.codelens
-    #   c.codes
-    #   c.points
-    #
-    # effective_words: The number of in-vocabulary tokens.
-    # effective_sentences: The number of non-empty sentences.
-    #
+cdef _prepare_ft_config(FastTextConfig *c, vocab, buckets_word, sentences):
+    """Prepare C structures so we can go "full C" and release the Python GIL.
+
+    We create indices over the sentences.  We also perform some calculations for
+    each token and store the result up front to save time: we'll be seeing each
+    token multiple times because of windowing, so better to do the work once
+    here.
+
+    This involves populating the config struct:
+
+      c.sentence_idx
+          tokens of sentence number X are between <sentence_idx[X], sentence_idx[X + 1])
+
+    the rest is indexed by N, the "effective word number".
+
+      c.indexes[N]: the index of the Nth word within the vocabulary
+      c.subwords_idx[N]: bucket numbers in which the Nth word occurs
+      c.subwords_idx_len[N]: the _number_ of buckets in which the Nth word occurs
+      c.reduced_windows[N]: a random integer by which to resize the window around the Nth token
+
+    an for hierarchical softmax, also:
+
+      c.codes[N]: the binary code for the Nth word as a np.array.  Frequent words have shorter codes.
+      c.codelens[N]: the _length_ of the binary code for the Nth word.
+      c.points[N]:
+
+    Parameters
+    ----------
+    c : FastTextConfig*
+        A pointer to the struct that will contain the populated indices.
+    vocab : dict
+        The vocabulary
+    buckets_word : dict
+        A map containing the buckets each word appears in
+    sentences : iterable
+        The sentences to read
+
+    Returns
+    -------
+    effective_words : int
+        The number of in-vocabulary tokens.
+    effective_sentences : int
+        The number of non-empty sentences.
+
+    Notes
+    -----
+    If sampling is used, each vocab term must have the .sample_int attribute
+    initialized.
+
+    See Also
+    --------
+    :meth:`gensim.models.word2vec.Word2VecVocab.create_binary_tree`
+
+    """
     cdef int effective_words = 0
     cdef int effective_sentences = 0
-
     c.sentence_idx[0] = 0  # indices of the first sentence always start at 0
     for sent in sentences:
         if not sent:
             continue  # ignore empty sentences; leave effective_sentences unchanged
         for token in sent:
-            word = model.wv.vocab[token] if token in model.wv.vocab else None
+            word = vocab[token] if token in vocab else None
             if word is None:
                 continue  # leaving `effective_words` unchanged = shortening the sentence = expanding the window
             if c.sample and word.sample_int < random_int32(&c.next_random):
                 continue
             c.indexes[effective_words] = word.index
 
-            c.subwords_idx_len[effective_words] = <int>(len(model.wv.buckets_word[word.index]))
-            c.subwords_idx[effective_words] = <np.uint32_t *>np.PyArray_DATA(model.wv.buckets_word[word.index])
+            c.subwords_idx_len[effective_words] = <int>(len(buckets_word[word.index]))
+            c.subwords_idx[effective_words] = <np.uint32_t *>np.PyArray_DATA(buckets_word[word.index])
 
             if c.hs:
                 c.codelens[effective_words] = <int>len(word.code)
@@ -392,7 +424,10 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
     cdef int num_sentences = 0
 
     init_ft_config(&c, model, alpha, _work, _l1)
-    num_words, num_sentences = _prepare_sentences(&c, model, sentences)
+
+    num_words, num_sentences = _prepare_ft_config(
+        &c, model.wv.vocab, model.wv.buckets_word, sentences
+    )
 
     # precompute "reduced window" offsets in a single randint() call
     for i, randint in enumerate(model.random.randint(0, c.window, num_words)):
