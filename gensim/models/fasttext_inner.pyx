@@ -22,6 +22,9 @@ except ImportError:
     # in scipy > 0.15, fblas function has been removed
     import scipy.linalg.blas as fblas
 
+#
+# FIXME: why are we importing EXP_TABLE and then redefining it?
+#
 from word2vec_inner cimport bisect_left, random_int32, scopy, saxpy, dsdot, sscal, \
      REAL_t, EXP_TABLE, our_dot, our_saxpy, our_dot_double, our_dot_float, our_dot_noblas, our_saxpy_noblas
 
@@ -91,19 +94,43 @@ cdef void fasttext_fast_sentence_sg_hs(
     const np.uint32_t *word_point,      # point of current token
     const np.uint8_t *word_code,        # binary code of current token
     const int codelen,                  # the length of word_code
-    REAL_t *syn0_vocab,
+    REAL_t *syn0_vocab,                 # The vectors for the vocab, stored as a 1D array
     REAL_t *syn0_ngrams,
     REAL_t *syn1,
-    const int size,                     # window size
+    const int size,                     # Vector dimensionality (= matrix column count)
     const np.uint32_t word2_index,      # index of the word at the center of the window
-    const np.uint32_t *subwords_index,
-    const np.uint32_t subwords_len,
+    const np.uint32_t *subwords_index,  # bucket numbers in which word2 appears
+    const np.uint32_t subwords_len,     # the number of items in subwords_index
     const REAL_t alpha,                 # training rate
     REAL_t *work,                       # working memory
     REAL_t *l1,                         # working memory
     REAL_t *word_locks_vocab,
     REAL_t *word_locks_ngrams) nogil:
 
+    #
+    # a : long long
+    #   Unused
+    # b : long long
+    #   iteration variable
+    # row1 : long long
+    #   Offset for word2 (!!) into the syn0_vocab array
+    # row2 : long long
+    #   Another offset into the syn0_vocab array
+    # f : REAL_t
+    #   ?
+    # f_dot : REAL_t
+    #   Dot product result
+    # g : REAL_t
+    #   ?
+    # lprob : REAL_t
+    #   Unused
+    # sgn : long long
+    #   Unused
+    #
+    # The 1D arrays like syn0_vocab, syn0_ngrams, etc. are actually matrices
+    # with the number of columns equal to size.  So the first element of the
+    # ith row is array[i * size].
+    #
     cdef long long a, b
     cdef long long row1 = word2_index * size, row2, sgn
     cdef REAL_t f, g, f_dot, lprob
@@ -111,9 +138,32 @@ cdef void fasttext_fast_sentence_sg_hs(
     memset(work, 0, size * cython.sizeof(REAL_t))
     memset(l1, 0, size * cython.sizeof(REAL_t))
 
+    #
+    # We make use of the following BLAS functions (or their analogs, if BLAS is
+    # unavailable):
+    #
+    # scopy(dimensionality, x, inc_x, y, inc_y):
+    #   Performs y = x
+    #
+    # sscal: y *= alpha
+    #
+    # saxpy(dimensionality, alpha, x, inc_x, y, inc_y): 
+    #   Calculates y = y + alpha * x (Single precision A*X Plus Y).
+    #
+    # sdot: dot product
+    #
+    # The increments (inc_x and inc_y) are usually 1 in our case.
+    #
+    # See Also
+    # --------
+    # http://www.netlib.org/blas/
+    # https://devblogs.nvidia.com/six-ways-saxpy/
+    #
+
     scopy(&size, &syn0_vocab[row1], &ONE, l1, &ONE)
     for d in range(subwords_len):
-        our_saxpy(&size, &ONEF, &syn0_ngrams[subwords_index[d] * size], &ONE, l1, &ONE)
+        row2 = subwords_index[d] * size
+        our_saxpy(&size, &ONEF, &syn0_ngrams[row2], &ONE, l1, &ONE)
     cdef REAL_t norm_factor = ONEF / subwords_len
     sscal(&size, &norm_factor, l1 , &ONE)
 
@@ -130,7 +180,8 @@ cdef void fasttext_fast_sentence_sg_hs(
 
     our_saxpy(&size, &word_locks_vocab[word2_index], work, &ONE, &syn0_vocab[row1], &ONE)
     for d in range(subwords_len):
-        our_saxpy(&size, &word_locks_ngrams[subwords_index[d]], work, &ONE, &syn0_ngrams[subwords_index[d]*size], &ONE)
+        row2 = subwords_index[d] * size
+        our_saxpy(&size, &word_locks_ngrams[subwords_index[d]], work, &ONE, &syn0_ngrams[row2], &ONE)
 
 
 cdef unsigned long long fasttext_fast_sentence_cbow_neg(
