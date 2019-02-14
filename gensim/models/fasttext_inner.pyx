@@ -131,8 +131,8 @@ cdef void fasttext_fast_sentence_sg_hs(
     # with the number of columns equal to size.  So the first element of the
     # ith row is array[i * size].
     #
-    cdef long long a, b
-    cdef long long row1 = word2_index * size, row2, sgn
+    cdef long long b
+    cdef long long row1 = word2_index * size, row2
     cdef REAL_t f, g, f_dot, lprob
 
     memset(work, 0, size * cython.sizeof(REAL_t))
