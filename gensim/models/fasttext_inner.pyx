@@ -14,6 +14,7 @@ cimport numpy as np
 from libc.math cimport exp
 from libc.math cimport log
 from libc.string cimport memset
+from libc.stdio cimport printf
 
 # scipy <= 0.15
 try:
@@ -167,9 +168,20 @@ cdef void fasttext_fast_sentence_sg_hs(
     cdef REAL_t norm_factor = ONEF / subwords_len
     sscal(&size, &norm_factor, l1 , &ONE)
 
+    cdef long long x
+
     for b in range(codelen):
         row2 = word_point[b] * size
         f_dot = our_dot(&size, l1, &ONE, &syn1[row2], &ONE)
+        printf("l1: ")
+        for x in range(size):
+            printf("%f ", l1[x])
+        printf("\n")
+        printf("syn1[%lld]: ", row2)
+        for x in range(size):
+            printf("%f ", syn1[row2 + x])
+        printf("\n")
+        printf('%ld %f %d\n', -MAX_EXP, f_dot, MAX_EXP)
         if f_dot <= -MAX_EXP or f_dot >= MAX_EXP:
             continue
         f = EXP_TABLE[<int>((f_dot + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
