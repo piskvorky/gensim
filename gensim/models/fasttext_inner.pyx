@@ -321,34 +321,34 @@ cdef init_ft_config(FastTextConfig *c, model, alpha, _work, _neu1):
     _neu1 : np.ndarray
         Private working memory for each worker.
     """
-    c[0].hs = model.hs
-    c[0].negative = model.negative
-    c[0].sample = (model.vocabulary.sample != 0)
-    c[0].cbow_mean = model.cbow_mean
-    c[0].window = model.window
-    c[0].workers = model.workers
+    c.hs = model.hs
+    c.negative = model.negative
+    c.sample = (model.vocabulary.sample != 0)
+    c.cbow_mean = model.cbow_mean
+    c.window = model.window
+    c.workers = model.workers
 
-    c[0].syn0_vocab = <REAL_t *>(np.PyArray_DATA(model.wv.vectors_vocab))
-    c[0].word_locks_vocab = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_vocab_lockf))
-    c[0].syn0_ngrams = <REAL_t *>(np.PyArray_DATA(model.wv.vectors_ngrams))
-    c[0].word_locks_ngrams = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_ngrams_lockf))
+    c.syn0_vocab = <REAL_t *>(np.PyArray_DATA(model.wv.vectors_vocab))
+    c.word_locks_vocab = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_vocab_lockf))
+    c.syn0_ngrams = <REAL_t *>(np.PyArray_DATA(model.wv.vectors_ngrams))
+    c.word_locks_ngrams = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_ngrams_lockf))
 
-    c[0].alpha = alpha
-    c[0].size = model.wv.vector_size
+    c.alpha = alpha
+    c.size = model.wv.vector_size
 
-    if c[0].hs:
-        c[0].syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
+    if c.hs:
+        c.syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
 
-    if c[0].negative:
-        c[0].syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
-        c[0].cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
-        c[0].cum_table_len = len(model.vocabulary.cum_table)
-    if c[0].negative or c[0].sample:
-        c[0].next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
+    if c.negative:
+        c.syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
+        c.cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
+        c.cum_table_len = len(model.vocabulary.cum_table)
+    if c.negative or c.sample:
+        c.next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
     # convert Python structures to primitive types, so we can release the GIL
-    c[0].work = <REAL_t *>np.PyArray_DATA(_work)
-    c[0].neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
+    c.work = <REAL_t *>np.PyArray_DATA(_work)
+    c.neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
 
 
 cdef _prepare_ft_config(FastTextConfig *c, vocab, buckets_word, sentences):
