@@ -385,7 +385,8 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
 
     """
     cdef FastTextConfig c
-    cdef int i, j, k
+
+    cdef int window_start, window_end, i, j
     cdef int sent_idx, sentence_start, sentence_end
     cdef int num_words = 0
     cdef int num_sentences = 0
@@ -406,17 +407,13 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
                 # Determine window boundaries, making sure we don't leak into
                 # adjacent sentences.
                 #
-                #   i: index of current token
-                #   j: index of the left boundary
-                #   k: index of the right boundary
-                #
-                j = i - c.window + c.reduced_windows[i]
-                if j < idx_start:
-                    j = idx_start
-                k = i + c.window + 1 - c.reduced_windows[i]
-                if k > idx_end:
-                    k = idx_end
-                for j in range(j, k):
+                window_start = i - c.window + c.reduced_windows[i]
+                if window_start < sentence_start:
+                    window_start = sentence_start
+                window_end = i + c.window + 1 - c.reduced_windows[i]
+                if window_end > sentence_end:
+                    window_end = sentence_end
+                for j in range(window_start, window_end):
                     if j == i:
                         #
                         # TODO: why do we ignore the token at the "center" of
