@@ -108,6 +108,13 @@ cdef void fasttext_fast_sentence_sg_hs(
     REAL_t *word_locks_vocab,
     REAL_t *word_locks_ngrams) nogil:
 
+    if subwords_len == 0:
+        #
+        # we can't raise an exception here without a GIL, so message is the
+        # best we can do for now.
+        #
+        printf("subwords_len unexpectedly zero, prepare to crash\n")
+
     #
     # a : long long
     #   Unused
@@ -162,26 +169,17 @@ cdef void fasttext_fast_sentence_sg_hs(
     #
 
     scopy(&size, &syn0_vocab[row1], &ONE, l1, &ONE)
+
     for d in range(subwords_len):
         row2 = subwords_index[d] * size
         our_saxpy(&size, &ONEF, &syn0_ngrams[row2], &ONE, l1, &ONE)
-    cdef REAL_t norm_factor = ONEF / subwords_len
-    sscal(&size, &norm_factor, l1 , &ONE)
 
-    cdef long long x
+    cdef REAL_t norm_factor = ONEF / subwords_len  # division by zero!
+    sscal(&size, &norm_factor, l1 , &ONE)
 
     for b in range(codelen):
         row2 = word_point[b] * size
         f_dot = our_dot(&size, l1, &ONE, &syn1[row2], &ONE)
-        printf("l1: ")
-        for x in range(size):
-            printf("%f ", l1[x])
-        printf("\n")
-        printf("syn1[%lld]: ", row2)
-        for x in range(size):
-            printf("%f ", syn1[row2 + x])
-        printf("\n")
-        printf('%ld %f %d\n', -MAX_EXP, f_dot, MAX_EXP)
         if f_dot <= -MAX_EXP or f_dot >= MAX_EXP:
             continue
         f = EXP_TABLE[<int>((f_dot + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
