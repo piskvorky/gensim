@@ -395,8 +395,8 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
     num_words, num_sentences = _prepare_sentences(&c, model, sentences)
 
     # precompute "reduced window" offsets in a single randint() call
-    for i, item in enumerate(model.random.randint(0, c.window, num_words)):
-        c.reduced_windows[i] = item
+    for i, randint in enumerate(model.random.randint(0, c.window, num_words)):
+        c.reduced_windows[i] = randint
 
     with nogil:
         for sent_idx in range(num_sentences):
