@@ -386,7 +386,7 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
     """
     cdef FastTextConfig c
     cdef int i, j, k
-    cdef int sent_idx, idx_start, idx_end
+    cdef int sent_idx, sentence_start, sentence_end
     cdef int num_words = 0
     cdef int num_sentences = 0
 
@@ -399,9 +399,9 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
 
     with nogil:
         for sent_idx in range(num_sentences):
-            idx_start = c.sentence_idx[sent_idx]
-            idx_end = c.sentence_idx[sent_idx + 1]
-            for i in range(idx_start, idx_end):
+            sentence_start = c.sentence_idx[sent_idx]
+            sentence_end = c.sentence_idx[sent_idx + 1]
+            for i in range(sentence_start, sentence_end):
                 #
                 # Determine window boundaries, making sure we don't leak into
                 # adjacent sentences.
