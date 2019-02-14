@@ -89,8 +89,8 @@ cdef unsigned long long fasttext_fast_sentence_sg_neg(
 
 cdef void fasttext_fast_sentence_sg_hs(
     const np.uint32_t *word_point,      # point of current token
-    const np.uint8_t *word_code,        # code of current token
-    const int codelen,
+    const np.uint8_t *word_code,        # binary code of current token
+    const int codelen,                  # the length of word_code
     REAL_t *syn0_vocab,
     REAL_t *syn0_ngrams,
     REAL_t *syn1,
