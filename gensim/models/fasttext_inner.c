@@ -1936,7 +1936,7 @@ static const char __pyx_k_numpy_core_multiarray_failed_to[] = "numpy.core.multia
 static const char __pyx_k_unknown_dtype_code_in_numpy_pxd[] = "unknown dtype code in numpy.pxd (%d)";
 static const char __pyx_k_Format_string_allocated_too_shor[] = "Format string allocated too short, see comment in numpy.pxd";
 static const char __pyx_k_Non_native_byte_order_not_suppor[] = "Non-native byte order not supported";
-static const char __pyx_k_Optimized_Cython_functions_for_t[] = "Optimized Cython functions for training a :class:`~gensim.models.fasttext.FastText` model.\n\nThe main entry points are :func:`~gensim.models.fasttext_inner.train_batch_sg`\nand :func:`~gensim.models.fasttext_inner.train_batch_cbow`.  They may be\ncalled directly from Python code.\n\nNotes\n-----\nThe implementation of the above functions heavily depends on the\nFastTextConfig struct defined in fasttext_inner.pxd.\n\nThe FAST_VERSION constant determines what flavor of BLAS we're currently using:\n\n    0: double\n    1: float\n    2: no BLAS, use Cython loops instead\n\nSee Also\n--------\n`Basic Linear Algebra Subprograms <http://www.netlib.org/blas/>`_\n\n";
+static const char __pyx_k_Optimized_Cython_functions_for_t[] = "Optimized Cython functions for training a :class:`~gensim.models.fasttext.FastText` model.\n\nThe main entry points are :func:`~gensim.models.fasttext_inner.train_batch_sg`\nand :func:`~gensim.models.fasttext_inner.train_batch_cbow`.  They may be\ncalled directly from Python code.\n\nNotes\n-----\nThe implementation of the above functions heavily depends on the\nFastTextConfig struct defined in :file:`gensim/models/fasttext_inner.pxd`.\n\nThe FAST_VERSION constant determines what flavor of BLAS we're currently using:\n\n    0: double\n    1: float\n    2: no BLAS, use Cython loops instead\n\nSee Also\n--------\n`Basic Linear Algebra Subprograms <http://www.netlib.org/blas/>`_\n\n";
 static const char __pyx_k_gensim_models_fasttext_inner_pyx[] = "gensim/models/fasttext_inner.pyx";
 static const char __pyx_k_ndarray_is_not_Fortran_contiguou[] = "ndarray is not Fortran contiguous";
 static const char __pyx_k_numpy_core_umath_failed_to_impor[] = "numpy.core.umath failed to import";
@@ -2655,34 +2655,34 @@ static void __pyx_f_6gensim_6models_14fasttext_inner_fasttext_fast_sentence_sg_h
   /* "gensim/models/fasttext_inner.pyx":188
  *     """
  *     cdef:
- *         np.uint32_t *word_point = c.points[j]             # point of current token             # <<<<<<<<<<<<<<
- *         np.uint8_t *word_code = c.codes[j]                # binary code of current token
- *         int codelen = c.codelens[j]                       # the length of word_code
+ *         np.uint32_t *word_point = c.points[j]             # <<<<<<<<<<<<<<
+ *         np.uint8_t *word_code = c.codes[j]
+ *         int codelen = c.codelens[j]
  */
   __pyx_v_word_point = (__pyx_v_c->points[__pyx_v_j]);
 
   /* "gensim/models/fasttext_inner.pyx":189
  *     cdef:
- *         np.uint32_t *word_point = c.points[j]             # point of current token
- *         np.uint8_t *word_code = c.codes[j]                # binary code of current token             # <<<<<<<<<<<<<<
- *         int codelen = c.codelens[j]                       # the length of word_code
- *         REAL_t *syn0_vocab = c.syn0_vocab                 # The vectors for the vocab, stored as a 1D array
+ *         np.uint32_t *word_point = c.points[j]
+ *         np.uint8_t *word_code = c.codes[j]             # <<<<<<<<<<<<<<
+ *         int codelen = c.codelens[j]
+ *         REAL_t *syn0_vocab = c.syn0_vocab
  */
   __pyx_v_word_code = (__pyx_v_c->codes[__pyx_v_j]);
 
   /* "gensim/models/fasttext_inner.pyx":190
- *         np.uint32_t *word_point = c.points[j]             # point of current token
- *         np.uint8_t *word_code = c.codes[j]                # binary code of current token
- *         int codelen = c.codelens[j]                       # the length of word_code             # <<<<<<<<<<<<<<
- *         REAL_t *syn0_vocab = c.syn0_vocab                 # The vectors for the vocab, stored as a 1D array
+ *         np.uint32_t *word_point = c.points[j]
+ *         np.uint8_t *word_code = c.codes[j]
+ *         int codelen = c.codelens[j]             # <<<<<<<<<<<<<<
+ *         REAL_t *syn0_vocab = c.syn0_vocab
  *         REAL_t *syn0_ngrams = c.syn0_ngrams
  */
   __pyx_v_codelen = (__pyx_v_c->codelens[__pyx_v_j]);
 
   /* "gensim/models/fasttext_inner.pyx":191
- *         np.uint8_t *word_code = c.codes[j]                # binary code of current token
- *         int codelen = c.codelens[j]                       # the length of word_code
- *         REAL_t *syn0_vocab = c.syn0_vocab                 # The vectors for the vocab, stored as a 1D array             # <<<<<<<<<<<<<<
+ *         np.uint8_t *word_code = c.codes[j]
+ *         int codelen = c.codelens[j]
+ *         REAL_t *syn0_vocab = c.syn0_vocab             # <<<<<<<<<<<<<<
  *         REAL_t *syn0_ngrams = c.syn0_ngrams
  *         REAL_t *syn1 = c.syn1
  */
@@ -2690,21 +2690,21 @@ static void __pyx_f_6gensim_6models_14fasttext_inner_fasttext_fast_sentence_sg_h
   __pyx_v_syn0_vocab = __pyx_t_1;
 
   /* "gensim/models/fasttext_inner.pyx":192
- *         int codelen = c.codelens[j]                       # the length of word_code
- *         REAL_t *syn0_vocab = c.syn0_vocab                 # The vectors for the vocab, stored as a 1D array
+ *         int codelen = c.codelens[j]
+ *         REAL_t *syn0_vocab = c.syn0_vocab
  *         REAL_t *syn0_ngrams = c.syn0_ngrams             # <<<<<<<<<<<<<<
  *         REAL_t *syn1 = c.syn1
- *         int size = c.size                                 # Vector dimensionality (= matrix column count
+ *         int size = c.size
  */
   __pyx_t_1 = __pyx_v_c->syn0_ngrams;
   __pyx_v_syn0_ngrams = __pyx_t_1;
 
   /* "gensim/models/fasttext_inner.pyx":193
- *         REAL_t *syn0_vocab = c.syn0_vocab                 # The vectors for the vocab, stored as a 1D array
+ *         REAL_t *syn0_vocab = c.syn0_vocab
  *         REAL_t *syn0_ngrams = c.syn0_ngrams
  *         REAL_t *syn1 = c.syn1             # <<<<<<<<<<<<<<
- *         int size = c.size                                 # Vector dimensionality (= matrix column count
- *         np.uint32_t word2_index = c.indexes[i]            # index of the word at the center of the window
+ *         int size = c.size
+ *         np.uint32_t word2_index = c.indexes[i]
  */
   __pyx_t_1 = __pyx_v_c->syn1;
   __pyx_v_syn1 = __pyx_t_1;
@@ -2712,64 +2712,64 @@ static void __pyx_f_6gensim_6models_14fasttext_inner_fasttext_fast_sentence_sg_h
   /* "gensim/models/fasttext_inner.pyx":194
  *         REAL_t *syn0_ngrams = c.syn0_ngrams
  *         REAL_t *syn1 = c.syn1
- *         int size = c.size                                 # Vector dimensionality (= matrix column count             # <<<<<<<<<<<<<<
- *         np.uint32_t word2_index = c.indexes[i]            # index of the word at the center of the window
- *         np.uint32_t *subwords_index = c.subwords_idx[i]   # bucket numbers in which word2 appears
+ *         int size = c.size             # <<<<<<<<<<<<<<
+ *         np.uint32_t word2_index = c.indexes[i]
+ *         np.uint32_t *subwords_index = c.subwords_idx[i]
  */
   __pyx_t_2 = __pyx_v_c->size;
   __pyx_v_size = __pyx_t_2;
 
   /* "gensim/models/fasttext_inner.pyx":195
  *         REAL_t *syn1 = c.syn1
- *         int size = c.size                                 # Vector dimensionality (= matrix column count
- *         np.uint32_t word2_index = c.indexes[i]            # index of the word at the center of the window             # <<<<<<<<<<<<<<
- *         np.uint32_t *subwords_index = c.subwords_idx[i]   # bucket numbers in which word2 appears
- *         np.uint32_t subwords_len = c.subwords_idx_len[i]  # the number of items in subwords_index
+ *         int size = c.size
+ *         np.uint32_t word2_index = c.indexes[i]             # <<<<<<<<<<<<<<
+ *         np.uint32_t *subwords_index = c.subwords_idx[i]
+ *         np.uint32_t subwords_len = c.subwords_idx_len[i]
  */
   __pyx_v_word2_index = (__pyx_v_c->indexes[__pyx_v_i]);
 
   /* "gensim/models/fasttext_inner.pyx":196
- *         int size = c.size                                 # Vector dimensionality (= matrix column count
- *         np.uint32_t word2_index = c.indexes[i]            # index of the word at the center of the window
- *         np.uint32_t *subwords_index = c.subwords_idx[i]   # bucket numbers in which word2 appears             # <<<<<<<<<<<<<<
- *         np.uint32_t subwords_len = c.subwords_idx_len[i]  # the number of items in subwords_index
- *         REAL_t alpha = c.alpha,                           # training rate
+ *         int size = c.size
+ *         np.uint32_t word2_index = c.indexes[i]
+ *         np.uint32_t *subwords_index = c.subwords_idx[i]             # <<<<<<<<<<<<<<
+ *         np.uint32_t subwords_len = c.subwords_idx_len[i]
+ *         REAL_t alpha = c.alpha
  */
   __pyx_v_subwords_index = (__pyx_v_c->subwords_idx[__pyx_v_i]);
 
   /* "gensim/models/fasttext_inner.pyx":197
- *         np.uint32_t word2_index = c.indexes[i]            # index of the word at the center of the window
- *         np.uint32_t *subwords_index = c.subwords_idx[i]   # bucket numbers in which word2 appears
- *         np.uint32_t subwords_len = c.subwords_idx_len[i]  # the number of items in subwords_index             # <<<<<<<<<<<<<<
- *         REAL_t alpha = c.alpha,                           # training rate
- *         REAL_t *work = c.work,                            # working memory
+ *         np.uint32_t word2_index = c.indexes[i]
+ *         np.uint32_t *subwords_index = c.subwords_idx[i]
+ *         np.uint32_t subwords_len = c.subwords_idx_len[i]             # <<<<<<<<<<<<<<
+ *         REAL_t alpha = c.alpha
+ *         REAL_t *work = c.work
  */
   __pyx_v_subwords_len = (__pyx_v_c->subwords_idx_len[__pyx_v_i]);
 
   /* "gensim/models/fasttext_inner.pyx":198
- *         np.uint32_t *subwords_index = c.subwords_idx[i]   # bucket numbers in which word2 appears
- *         np.uint32_t subwords_len = c.subwords_idx_len[i]  # the number of items in subwords_index
- *         REAL_t alpha = c.alpha,                           # training rate             # <<<<<<<<<<<<<<
- *         REAL_t *work = c.work,                            # working memory
- *         REAL_t *l1 = c.neu1,                              # working memory
+ *         np.uint32_t *subwords_index = c.subwords_idx[i]
+ *         np.uint32_t subwords_len = c.subwords_idx_len[i]
+ *         REAL_t alpha = c.alpha             # <<<<<<<<<<<<<<
+ *         REAL_t *work = c.work
+ *         REAL_t *l1 = c.neu1
  */
   __pyx_t_3 = __pyx_v_c->alpha;
   __pyx_v_alpha = __pyx_t_3;
 
   /* "gensim/models/fasttext_inner.pyx":199
- *         np.uint32_t subwords_len = c.subwords_idx_len[i]  # the number of items in subwords_index
- *         REAL_t alpha = c.alpha,                           # training rate
- *         REAL_t *work = c.work,                            # working memory             # <<<<<<<<<<<<<<
- *         REAL_t *l1 = c.neu1,                              # working memory
+ *         np.uint32_t subwords_len = c.subwords_idx_len[i]
+ *         REAL_t alpha = c.alpha
+ *         REAL_t *work = c.work             # <<<<<<<<<<<<<<
+ *         REAL_t *l1 = c.neu1
  *         REAL_t *word_locks_vocab = c.word_locks_vocab
  */
   __pyx_t_1 = __pyx_v_c->work;
   __pyx_v_work = __pyx_t_1;
 
   /* "gensim/models/fasttext_inner.pyx":200
- *         REAL_t alpha = c.alpha,                           # training rate
- *         REAL_t *work = c.work,                            # working memory
- *         REAL_t *l1 = c.neu1,                              # working memory             # <<<<<<<<<<<<<<
+ *         REAL_t alpha = c.alpha
+ *         REAL_t *work = c.work
+ *         REAL_t *l1 = c.neu1             # <<<<<<<<<<<<<<
  *         REAL_t *word_locks_vocab = c.word_locks_vocab
  *         REAL_t *word_locks_ngrams = c.word_locks_ngrams
  */
@@ -2777,8 +2777,8 @@ static void __pyx_f_6gensim_6models_14fasttext_inner_fasttext_fast_sentence_sg_h
   __pyx_v_l1 = __pyx_t_1;
 
   /* "gensim/models/fasttext_inner.pyx":201
- *         REAL_t *work = c.work,                            # working memory
- *         REAL_t *l1 = c.neu1,                              # working memory
+ *         REAL_t *work = c.work
+ *         REAL_t *l1 = c.neu1
  *         REAL_t *word_locks_vocab = c.word_locks_vocab             # <<<<<<<<<<<<<<
  *         REAL_t *word_locks_ngrams = c.word_locks_ngrams
  * 
@@ -2787,7 +2787,7 @@ static void __pyx_f_6gensim_6models_14fasttext_inner_fasttext_fast_sentence_sg_h
   __pyx_v_word_locks_vocab = __pyx_t_1;
 
   /* "gensim/models/fasttext_inner.pyx":202
- *         REAL_t *l1 = c.neu1,                              # working memory
+ *         REAL_t *l1 = c.neu1
  *         REAL_t *word_locks_vocab = c.word_locks_vocab
  *         REAL_t *word_locks_ngrams = c.word_locks_ngrams             # <<<<<<<<<<<<<<
  * 
@@ -5686,7 +5686,7 @@ static void __pyx_f_6gensim_6models_14fasttext_inner_fasttext_train_any(struct _
 
 /* Python wrapper */
 static PyObject *__pyx_pw_6gensim_6models_14fasttext_inner_1train_batch_sg(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_6gensim_6models_14fasttext_inner_train_batch_sg[] = "train_batch_sg(model, sentences, alpha, _work, _l1)\nUpdate skip-gram model by training on a sequence of sentences.\n\n    Each sentence is a list of string tokens, which are looked up in the model's\n    vocab dictionary. Called internally from :meth:`gensim.models.fasttext.FastText.train`.\n\n    Parameters\n    ----------\n    model : :class:`~gensim.models.fasttext.FastText`\n        Model to be trained.\n    sentences : iterable of list of str\n        A single batch: part of the corpus streamed directly from disk/network.\n    alpha : float\n        Learning rate.\n    _work : np.ndarray\n        Private working memory for each worker.\n    _l1 : np.ndarray\n        Private working memory for each worker.\n\n    Returns\n    -------\n    int\n        Effective number of words trained.\n\n    ";
+static char __pyx_doc_6gensim_6models_14fasttext_inner_train_batch_sg[] = "train_batch_sg(model, sentences, alpha, _work, _l1)\nUpdate skip-gram model by training on a sequence of sentences.\n\n    Each sentence is a list of string tokens, which are looked up in the model's\n    vocab dictionary. Called internally from :meth:`~gensim.models.fasttext.FastText.train`.\n\n    Parameters\n    ----------\n    model : :class:`~gensim.models.fasttext.FastText`\n        Model to be trained.\n    sentences : iterable of list of str\n        A single batch: part of the corpus streamed directly from disk/network.\n    alpha : float\n        Learning rate.\n    _work : np.ndarray\n        Private working memory for each worker.\n    _l1 : np.ndarray\n        Private working memory for each worker.\n\n    Returns\n    -------\n    int\n        Effective number of words trained.\n\n    ";
 static PyMethodDef __pyx_mdef_6gensim_6models_14fasttext_inner_1train_batch_sg = {"train_batch_sg", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_6gensim_6models_14fasttext_inner_1train_batch_sg, METH_VARARGS|METH_KEYWORDS, __pyx_doc_6gensim_6models_14fasttext_inner_train_batch_sg};
 static PyObject *__pyx_pw_6gensim_6models_14fasttext_inner_1train_batch_sg(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_model = 0;
@@ -6142,7 +6142,7 @@ static PyObject *__pyx_pf_6gensim_6models_14fasttext_inner_train_batch_sg(CYTHON
 
 /* Python wrapper */
 static PyObject *__pyx_pw_6gensim_6models_14fasttext_inner_3train_batch_cbow(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_6gensim_6models_14fasttext_inner_2train_batch_cbow[] = "train_batch_cbow(model, sentences, alpha, _work, _neu1)\nUpdate the CBOW model by training on a sequence of sentences.\n\n    Each sentence is a list of string tokens, which are looked up in the model's\n    vocab dictionary. Called internally from :meth:`gensim.models.fasttext.FastText.train`.\n\n    Parameters\n    ----------\n    model : :class:`~gensim.models.fasttext.FastText`\n        Model to be trained.\n    sentences : iterable of list of str\n        A single batch: part of the corpus streamed directly from disk/network.\n    alpha : float\n        Learning rate.\n    _work : np.ndarray\n        Private working memory for each worker.\n    _neu1 : np.ndarray\n        Private working memory for each worker.\n\n    Returns\n    -------\n    int\n        Effective number of words trained.\n\n    ";
+static char __pyx_doc_6gensim_6models_14fasttext_inner_2train_batch_cbow[] = "train_batch_cbow(model, sentences, alpha, _work, _neu1)\nUpdate the CBOW model by training on a sequence of sentences.\n\n    Each sentence is a list of string tokens, which are looked up in the model's\n    vocab dictionary. Called internally from :meth:`~gensim.models.fasttext.FastText.train`.\n\n    Parameters\n    ----------\n    model : :class:`~gensim.models.fasttext.FastText`\n        Model to be trained.\n    sentences : iterable of list of str\n        A single batch: part of the corpus streamed directly from disk/network.\n    alpha : float\n        Learning rate.\n    _work : np.ndarray\n        Private working memory for each worker.\n    _neu1 : np.ndarray\n        Private working memory for each worker.\n\n    Returns\n    -------\n    int\n        Effective number of words trained.\n\n    ";
 static PyMethodDef __pyx_mdef_6gensim_6models_14fasttext_inner_3train_batch_cbow = {"train_batch_cbow", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_6gensim_6models_14fasttext_inner_3train_batch_cbow, METH_VARARGS|METH_KEYWORDS, __pyx_doc_6gensim_6models_14fasttext_inner_2train_batch_cbow};
 static PyObject *__pyx_pw_6gensim_6models_14fasttext_inner_3train_batch_cbow(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_model = 0;
