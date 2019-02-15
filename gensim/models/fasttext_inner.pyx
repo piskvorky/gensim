@@ -613,19 +613,6 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1):
 
     init_ft_config(&c, model, alpha, _work, _neu1)
 
-    #
-    # FIXME: This code duplicates what is already happening in init_ft_config
-    #
-    if c.hs:
-        c.syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
-
-    if c.negative:
-        c.syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
-        c.cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
-        c.cum_table_len = len(model.vocabulary.cum_table)
-    if c.negative or c.sample:
-        c.next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
-
     num_words, num_sentences = populate_ft_config(&c, model.wv.vocab, model.wv.buckets_word, sentences)
 
     # precompute "reduced window" offsets in a single randint() call
