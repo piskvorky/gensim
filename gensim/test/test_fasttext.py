@@ -20,6 +20,8 @@ from gensim.models.wrappers.fasttext import FastText as FT_wrapper
 from gensim.models.keyedvectors import Word2VecKeyedVectors
 from gensim.test.utils import datapath, get_tmpfile, temporary_file, common_texts as sentences
 
+import gensim.models.fasttext
+
 try:
     from pyemd import emd  # noqa:F401
     PYEMD_EXT = True
@@ -56,7 +58,7 @@ class TestFastTextModel(unittest.TestCase):
         ft_home = os.environ.get('FT_HOME', None)
         self.ft_path = os.path.join(ft_home, 'fasttext') if ft_home else None
         self.test_model_file = datapath('lee_fasttext')
-        self.test_model = FT_gensim.load_fasttext_format(self.test_model_file)
+        self.test_model = gensim.models.fasttext.load_facebook_model(self.test_model_file)
         self.test_new_model_file = datapath('lee_fasttext_new')
 
     def test_training(self):
@@ -187,7 +189,7 @@ class TestFastTextModel(unittest.TestCase):
 
     def test_load_fasttext_format(self):
         try:
-            model = FT_gensim.load_fasttext_format(self.test_model_file)
+            model = gensim.models.fasttext.load_facebook_model(self.test_model_file)
         except Exception as exc:
             self.fail('Unable to load FastText model from file %s: %s' % (self.test_model_file, exc))
         vocab_size, model_size = 1762, 10
@@ -240,7 +242,7 @@ class TestFastTextModel(unittest.TestCase):
 
     def test_load_fasttext_new_format(self):
         try:
-            new_model = FT_gensim.load_fasttext_format(self.test_new_model_file)
+            new_model = gensim.models.fasttext.load_facebook_model(self.test_new_model_file)
         except Exception as exc:
             self.fail('Unable to load FastText model from file %s: %s' % (self.test_new_model_file, exc))
         vocab_size, model_size = 1763, 10
@@ -293,10 +295,10 @@ class TestFastTextModel(unittest.TestCase):
 
     def test_load_model_supervised(self):
         with self.assertRaises(NotImplementedError):
-            FT_gensim.load_fasttext_format(datapath('pang_lee_polarity_fasttext'))
+            gensim.models.fasttext.load_facebook_model(datapath('pang_lee_polarity_fasttext'))
 
     def test_load_model_with_non_ascii_vocab(self):
-        model = FT_gensim.load_fasttext_format(datapath('non_ascii_fasttext'))
+        model = gensim.models.fasttext.load_facebook_model(datapath('non_ascii_fasttext'))
         self.assertTrue(u'který' in model.wv)
         try:
             model.wv[u'který']
@@ -304,7 +306,7 @@ class TestFastTextModel(unittest.TestCase):
             self.fail('Unable to access vector for utf8 encoded non-ascii word')
 
     def test_load_model_non_utf8_encoding(self):
-        model = FT_gensim.load_fasttext_format(datapath('cp852_fasttext'), encoding='cp852')
+        model = gensim.models.fasttext.load_facebook_model(datapath('cp852_fasttext'), encoding='cp852')
         self.assertTrue(u'který' in model.wv)
         try:
             model.wv[u'který']
@@ -876,7 +878,7 @@ def load_native():
     # ./fasttext cbow -input toy-data.txt -output toy-model -bucket 100 -dim 5
     #
     path = datapath('toy-model.bin')
-    model = FT_gensim.load_fasttext_format(path)
+    model = gensim.models.fasttext.load_facebook_model(path)
     return model
 
 
@@ -1100,10 +1102,19 @@ class NativeTrainingContinuationTest(unittest.TestCase):
             model.save(model_name)
 
     def test_load_native_pretrained(self):
-        model = FT_gensim.load_fasttext_format(datapath('toy-model-pretrained.bin'))
+        model = gensim.models.fasttext.load_facebook_model(datapath('toy-model-pretrained.bin'))
         actual = model['monarchist']
         expected = np.array([0.76222, 1.0669, 0.7055, -0.090969, -0.53508])
         self.assertTrue(np.allclose(expected, actual, atol=10e-4))
+
+    def test_load_native_vectors(self):
+        cap_path = datapath("crime-and-punishment.bin")
+        fbkv = gensim.models.fasttext.load_facebook_vectors(cap_path)
+        self.assertFalse('landlord' in fbkv.vocab)
+        self.assertTrue('landlady' in fbkv.vocab)
+        oov_vector = fbkv['landlord']
+        iv_vector = fbkv['landlady']
+        self.assertFalse(np.allclose(oov_vector, iv_vector))
 
 
 def _train_model_with_pretrained_vectors():
@@ -1155,7 +1166,7 @@ class HashTest(unittest.TestCase):
         #
         # ./fasttext skipgram -minCount 0 -bucket 100 -input crime-and-punishment.txt -output crime-and-punishment -dim 5  # noqa: E501
         #
-        self.model = FT_gensim.load_fasttext_format(datapath('crime-and-punishment.bin'))
+        self.model = gensim.models.fasttext.load_facebook_model(datapath('crime-and-punishment.bin'))
         with smart_open.smart_open(datapath('crime-and-punishment.vec'), 'r', encoding='utf-8') as fin:
             self.expected = dict(load_vec(fin))
 

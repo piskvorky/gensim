@@ -86,23 +86,6 @@ in the original Google's word2vec C format as a KeyedVectors instance
     >>> wv_from_text = KeyedVectors.load_word2vec_format(datapath('word2vec_pre_kv_c'), binary=False)  # C text format
     >>> wv_from_bin = KeyedVectors.load_word2vec_format(datapath("euclidean_vectors.bin"), binary=True)  # C bin format
 
-You can also load vectors from Facebook's fastText binary format:
-
-.. sourcecode:: pycon
-
-    >>> from gensim.test.utils import datapath
-    >>>
-    >>> cap_path = datapath("crime-and-punishment.bin")
-    >>> fbkv = KeyedVectors.load_fasttext_format(cap_path)
-    >>>
-    >>> 'landlord' in fbkv.vocab  # Word is out of vocabulary
-    False
-    >>> oov_vector = fbkv['landlord']
-    >>>
-    >>> 'landlady' in fbkv.vocab  # Word is in the vocabulary
-    True
-    >>> iv_vector = fbkv['landlady']
-
 What can I do with word vectors?
 ================================
 
@@ -1491,52 +1474,6 @@ class Word2VecKeyedVectors(WordEmbeddingsKeyedVectors):
         return _load_word2vec_format(
             cls, fname, fvocab=fvocab, binary=binary, encoding=encoding, unicode_errors=unicode_errors,
             limit=limit, datatype=datatype)
-
-    @staticmethod
-    def load_fasttext_format(path, encoding='utf-8'):
-        """Load word embeddings from a model saved in Facebook's native fasttext `.bin` format.
-
-        Parameters
-        ----------
-        path : str
-            The location of the model file.
-        encoding : str, optional
-            Specifies the file encoding.
-
-        Returns
-        -------
-        gensim.models.keyedvectors.FastTextKeyedVectors
-            The word embeddings.
-
-        Examples
-        --------
-
-        Load and infer:
-
-            >>> from gensim.test.utils import datapath
-            >>>
-            >>> cap_path = datapath("crime-and-punishment.bin")
-            >>> fbkv = KeyedVectors.load_fasttext_format(cap_path)
-            >>>
-            >>> 'landlord' in fbkv.vocab  # Word is out of vocabulary
-            False
-            >>> oov_vector = fbkv['landlord']
-            >>>
-            >>> 'landlady' in fbkv.vocab  # Word is in the vocabulary
-            True
-            >>> iv_vector = fbkv['landlady']
-
-        See Also
-        --------
-
-        :meth:`gensim.models.fasttext.FastText.load_fasttext_format` loads
-        the full model, not just word embeddings, and enables you to continue
-        model training.
-
-        """
-        from gensim.models.fasttext import _load_fasttext_format
-        model_wrapper = _load_fasttext_format(path, full_model=False, encoding=encoding)
-        return model_wrapper.wv
 
     def get_keras_embedding(self, train_embeddings=False):
         """Get a Keras 'Embedding' layer with weights set as the Word2Vec model's learned word embeddings.

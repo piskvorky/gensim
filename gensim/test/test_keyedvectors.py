@@ -306,17 +306,6 @@ class L2NormTest(unittest.TestCase):
         self.assertTrue(np.allclose(m, norm))
 
 
-class LoadFastTextFormatTest(unittest.TestCase):
-    def test(self):
-        cap_path = datapath("crime-and-punishment.bin")
-        fbkv = gensim.models.keyedvectors.KeyedVectors.load_fasttext_format(cap_path)
-        self.assertFalse('landlord' in fbkv.vocab)
-        self.assertTrue('landlady' in fbkv.vocab)
-        oov_vector = fbkv['landlord']
-        iv_vector = fbkv['landlady']
-        self.assertFalse(np.allclose(oov_vector, iv_vector))
-
-
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
