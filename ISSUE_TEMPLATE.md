@@ -11,13 +11,13 @@ Github bug reports that do not include relevant information and context will be 
 
 What are you trying to achieve? What is the expected result? What are you seeing instead?
 
-#### Steps/Code/Corpus to reproduce
+#### Steps/code/corpus to reproduce
 
-Include full tracebacks, logs and datasets if necessary. Keep the examples minimal.
+Include full tracebacks, logs and datasets if necessary. Please keep the examples minimal ("minimal reproducible example").
 
 #### Versions
 
-Please copypaste the output of:
+Please provide the output of:
 
 ```python
 import platform; print(platform.platform())
