@@ -64,10 +64,9 @@ cdef void fasttext_fast_sentence_sg_neg(FastTextConfig *c, int i, int j) nogil:
         REAL_t *word_locks_vocab = c.word_locks_vocab
         REAL_t *word_locks_ngrams = c.word_locks_ngrams
 
-    cdef long long a
     cdef long long row1 = word2_index * size, row2
     cdef unsigned long long modulo = 281474976710655ULL
-    cdef REAL_t f, g, label, f_dot, log_e_f_dot, norm_factor
+    cdef REAL_t f, g, label, f_dot, norm_factor
     cdef np.uint32_t target_index
     cdef int d
 
