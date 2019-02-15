@@ -259,10 +259,7 @@ def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _exp
                     if c.hs:
                         fasttext_fast_sentence_cbow_hs(&c, i, j, k)
                     if c.negative:
-                        c.next_random = fasttext_fast_sentence_cbow_neg(
-                            c.negative, c.cum_table, c.cum_table_len, c.codelens, c.neu1, c.syn0_vocab, c.syn0_ngrams,
-                            c.syn1neg, c.size, c.indexes, c.subwords_idx, c.subwords_idx_len, c.alpha, c.work, i, j, k,
-                            c.cbow_mean, c.next_random, c.word_locks_vocab, c.word_locks_ngrams)
+                        fasttext_fast_sentence_cbow_neg(&c, i, j, k)
 
             total_sentences += sentences.size()
             total_effective_words += effective_words
