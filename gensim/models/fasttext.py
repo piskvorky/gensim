@@ -945,7 +945,10 @@ class FastText(BaseWordEmbeddingsModel):
         return self.wv.__contains__(word)
 
     @classmethod
-    @deprecated('use load_facebook_vectors (to use pretrained embeddings) or load_facebook_model (to continue training with the loaded full model, more RAM) instead')
+    @deprecated(
+        'use load_facebook_vectors (to use pretrained embeddings) or load_facebook_model '
+        '(to continue training with the loaded full model, more RAM) instead'
+    )
     def load_fasttext_format(cls, model_file, encoding='utf8'):
         """Deprecated.
 
@@ -955,7 +958,10 @@ class FastText(BaseWordEmbeddingsModel):
         """
         return load_facebook_model(model_file, encoding=encoding)
 
-    @deprecated('use load_facebook_model or load_facebook_vectors instead')
+    @deprecated(
+        'use load_facebook_vectors (to use pretrained embeddings) or load_facebook_model '
+        '(to continue training with the loaded full model, more RAM) instead'
+    )
     def load_binary_data(self, encoding='utf8'):
         """Load data from a binary file created by Facebook's native FastText.
 
