@@ -42,12 +42,27 @@ cdef REAL_t[EXP_TABLE_SIZE] LOG_TABLE
 cdef int ONE = 1
 cdef REAL_t ONEF = <REAL_t>1.0
 
-cdef unsigned long long fasttext_fast_sentence_sg_neg(
-    const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len,
-    REAL_t *syn0_vocab, REAL_t *syn0_ngrams, REAL_t *syn1neg, const int size,
-    const np.uint32_t word_index, const np.uint32_t word2_index, const np.uint32_t *subwords_index,
-    const np.uint32_t subwords_len, const REAL_t alpha, REAL_t *work, REAL_t *l1, unsigned long long next_random,
-    REAL_t *word_locks_vocab, REAL_t *word_locks_ngrams) nogil:
+
+cdef void fasttext_fast_sentence_sg_neg(FastTextConfig *c, int i, int j) nogil:
+
+    cdef:
+        int negative = c.negative
+        np.uint32_t *cum_table = c.cum_table
+        unsigned long long cum_table_len = c.cum_table_len
+        REAL_t *syn0_vocab = c.syn0_vocab
+        REAL_t *syn0_ngrams = c.syn0_ngrams
+        REAL_t *syn1neg = c.syn1neg
+        int size = c.size
+        np.uint32_t word_index = c.indexes[j]
+        np.uint32_t word2_index = c.indexes[i]
+        np.uint32_t *subwords_index = c.subwords_idx[i]
+        np.uint32_t subwords_len = c.subwords_idx_len[i]
+        REAL_t alpha = c.alpha
+        REAL_t *work = c.work
+        REAL_t *l1 = c.neu1
+        unsigned long long next_random = c.next_random
+        REAL_t *word_locks_vocab = c.word_locks_vocab
+        REAL_t *word_locks_ngrams = c.word_locks_ngrams
 
     cdef long long a
     cdef long long row1 = word2_index * size, row2
@@ -89,7 +104,8 @@ cdef unsigned long long fasttext_fast_sentence_sg_neg(
     our_saxpy(&size, &word_locks_vocab[word2_index], work, &ONE, &syn0_vocab[row1], &ONE)
     for d in range(subwords_len):
         our_saxpy(&size, &word_locks_ngrams[subwords_index[d]], work, &ONE, &syn0_ngrams[subwords_index[d]*size], &ONE)
-    return next_random
+
+    c.next_random = next_random
 
 
 cdef void fasttext_fast_sentence_sg_hs(FastTextConfig *c, int i, int j) nogil:
@@ -519,25 +535,7 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
                     if c.hs:
                         fasttext_fast_sentence_sg_hs(&c, i, j)
                     if c.negative:
-                        c.next_random = fasttext_fast_sentence_sg_neg(
-                            c.negative,
-                            c.cum_table,
-                            c.cum_table_len,
-                            c.syn0_vocab,
-                            c.syn0_ngrams,
-                            c.syn1neg,
-                            c.size,
-                            c.indexes[j],
-                            c.indexes[i],
-                            c.subwords_idx[i],
-                            c.subwords_idx_len[i],
-                            c.alpha,
-                            c.work,
-                            c.neu1,
-                            c.next_random,
-                            c.word_locks_vocab,
-                            c.word_locks_ngrams
-                        )
+                        fasttext_fast_sentence_sg_neg(&c, i, j)
 
     return num_words
 

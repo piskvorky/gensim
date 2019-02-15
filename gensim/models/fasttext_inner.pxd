@@ -53,12 +53,7 @@ cdef struct FastTextConfig:
     np.uint32_t *subwords_idx[MAX_SENTENCE_LEN]
 
 
-cdef unsigned long long fasttext_fast_sentence_sg_neg(
-    const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len,
-    REAL_t *syn0_vocab, REAL_t *syn0_ngrams, REAL_t *syn1neg, const int size,
-    const np.uint32_t word_index, const np.uint32_t word2_index, const np.uint32_t *subwords_index,
-    const np.uint32_t subwords_len, const REAL_t alpha, REAL_t *work, REAL_t *l1, unsigned long long next_random,
-    REAL_t *word_locks_vocab, REAL_t *word_locks_ngrams) nogil
+cdef void fasttext_fast_sentence_sg_neg(FastTextConfig *c, int i, int j) nogil
 
 
 cdef void fasttext_fast_sentence_sg_hs(FastTextConfig *c, int i, int j) nogil
