@@ -169,10 +169,7 @@ def train_epoch_sg(
                         if j == i:
                             continue
                         if c.hs:
-                            fasttext_fast_sentence_sg_hs(
-                                c.points[j], c.codes[j], c.codelens[j], c.syn0_vocab, c.syn0_ngrams, c.syn1, c.size,
-                                c.indexes[i], c.subwords_idx[i], c.subwords_idx_len[i], c.alpha, c.work, c.neu1,
-                                c.word_locks_vocab, c.word_locks_ngrams)
+                            fasttext_fast_sentence_sg_hs(&c, i, j)
                         if c.negative:
                             c.next_random = fasttext_fast_sentence_sg_neg(
                                 c.negative, c.cum_table, c.cum_table_len, c.syn0_vocab, c.syn0_ngrams, c.syn1neg, c.size,

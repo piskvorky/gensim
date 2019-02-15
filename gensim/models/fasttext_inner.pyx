@@ -92,26 +92,26 @@ cdef unsigned long long fasttext_fast_sentence_sg_neg(
     return next_random
 
 
-cdef void fasttext_fast_sentence_sg_hs(
-    const np.uint32_t *word_point,      # point of current token
-    const np.uint8_t *word_code,        # binary code of current token
-    const int codelen,                  # the length of word_code
-    REAL_t *syn0_vocab,                 # The vectors for the vocab, stored as a 1D array
-    REAL_t *syn0_ngrams,
-    REAL_t *syn1,
-    const int size,                     # Vector dimensionality (= matrix column count)
-    const np.uint32_t word2_index,      # index of the word at the center of the window
-    const np.uint32_t *subwords_index,  # bucket numbers in which word2 appears
-    const np.uint32_t subwords_len,     # the number of items in subwords_index
-    const REAL_t alpha,                 # training rate
-    REAL_t *work,                       # working memory
-    REAL_t *l1,                         # working memory
-    REAL_t *word_locks_vocab,
-    REAL_t *word_locks_ngrams) nogil:
+cdef void fasttext_fast_sentence_sg_hs(FastTextConfig *c, int i, int j) nogil:
+
+    cdef:
+        np.uint32_t *word_point = c.points[j]             # point of current token
+        np.uint8_t *word_code = c.codes[j]                # binary code of current token
+        int codelen = c.codelens[j]                       # the length of word_code
+        REAL_t *syn0_vocab = c.syn0_vocab                 # The vectors for the vocab, stored as a 1D array
+        REAL_t *syn0_ngrams = c.syn0_ngrams
+        REAL_t *syn1 = c.syn1
+        int size = c.size                                 # Vector dimensionality (= matrix column count
+        np.uint32_t word2_index = c.indexes[i]            # index of the word at the center of the window
+        np.uint32_t *subwords_index = c.subwords_idx[i]   # bucket numbers in which word2 appears
+        np.uint32_t subwords_len = c.subwords_idx_len[i]  # the number of items in subwords_index
+        REAL_t alpha = c.alpha,                           # training rate
+        REAL_t *work = c.work,                            # working memory
+        REAL_t *l1 = c.neu1,                              # working memory
+        REAL_t *word_locks_vocab = c.word_locks_vocab
+        REAL_t *word_locks_ngrams = c.word_locks_ngrams
 
     #
-    # a : long long
-    #   Unused
     # b : long long
     #   iteration variable
     # row1 : long long
@@ -124,10 +124,6 @@ cdef void fasttext_fast_sentence_sg_hs(
     #   Dot product result
     # g : REAL_t
     #   ?
-    # lprob : REAL_t
-    #   Unused
-    # sgn : long long
-    #   Unused
     #
     # The 1D arrays like syn0_vocab, syn0_ngrams, etc. are actually matrices
     # with the number of columns equal to size.  So the first element of the
@@ -135,7 +131,7 @@ cdef void fasttext_fast_sentence_sg_hs(
     #
     cdef long long b
     cdef long long row1 = word2_index * size, row2
-    cdef REAL_t f, g, f_dot, lprob, norm_factor
+    cdef REAL_t f, g, f_dot, norm_factor
 
     memset(work, 0, size * cython.sizeof(REAL_t))
     memset(l1, 0, size * cython.sizeof(REAL_t))
@@ -521,23 +517,7 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
                         #
                         continue
                     if c.hs:
-                        fasttext_fast_sentence_sg_hs(
-                            c.points[j],
-                            c.codes[j],
-                            c.codelens[j],
-                            c.syn0_vocab,
-                            c.syn0_ngrams,
-                            c.syn1,
-                            c.size,
-                            c.indexes[i],
-                            c.subwords_idx[i],
-                            c.subwords_idx_len[i],
-                            c.alpha,
-                            c.work,
-                            c.neu1,
-                            c.word_locks_vocab,
-                            c.word_locks_ngrams
-                        )
+                        fasttext_fast_sentence_sg_hs(&c, i, j)
                     if c.negative:
                         c.next_random = fasttext_fast_sentence_sg_neg(
                             c.negative,

@@ -61,12 +61,7 @@ cdef unsigned long long fasttext_fast_sentence_sg_neg(
     REAL_t *word_locks_vocab, REAL_t *word_locks_ngrams) nogil
 
 
-cdef void fasttext_fast_sentence_sg_hs(
-    const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
-    REAL_t *syn0_vocab, REAL_t *syn0_ngrams, REAL_t *syn1, const int size,
-    const np.uint32_t word2_index, const np.uint32_t *subwords_index, const np.uint32_t subwords_len,
-    const REAL_t alpha, REAL_t *work, REAL_t *l1, REAL_t *word_locks_vocab,
-    REAL_t *word_locks_ngrams) nogil
+cdef void fasttext_fast_sentence_sg_hs(FastTextConfig *c, int i, int j) nogil
 
 
 cdef unsigned long long fasttext_fast_sentence_cbow_neg(
