@@ -488,6 +488,56 @@ cdef _prepare_ft_config(FastTextConfig *c, vocab, buckets_word, sentences):
     return effective_words, effective_sentences
 
 
+cdef void fasttext_train_any(FastTextConfig *c, int num_sentences, int sg) nogil:
+    cdef:
+        int sent_idx
+        int sentence_start
+        int sentence_end
+        int i
+        int window_start
+        int window_end
+        int j
+
+    for sent_idx in range(num_sentences):
+        sentence_start = c.sentence_idx[sent_idx]
+        sentence_end = c.sentence_idx[sent_idx + 1]
+        for i in range(sentence_start, sentence_end):
+            #
+            # Determine window boundaries, making sure we don't leak into
+            # adjacent sentences.
+            #
+            window_start = i - c.window + c.reduced_windows[i]
+            if window_start < sentence_start:
+                window_start = sentence_start
+            window_end = i + c.window + 1 - c.reduced_windows[i]
+            if window_end > sentence_end:
+                window_end = sentence_end
+
+            #
+            # TODO: why can't I use min/max here?  I get a segfault.
+            #
+            # window_start = max(sentence_start, i - c.window + c.reduced_windows[i])
+            # window_end = min(sentence_end, i + c.window + 1 - c.reduced_windows[i])
+            #
+            if sg == 0:
+                if c.hs:
+                    fasttext_fast_sentence_cbow_hs(c, i, window_start, window_end)
+                if c.negative:
+                    fasttext_fast_sentence_cbow_neg(c, i, window_start, window_end)
+            else:
+                for j in range(window_start, window_end):
+                    if j == i:
+                        #
+                        # TODO: why do we ignore the token at the "center" of
+                        # the window?
+                        #
+                        continue
+                    if c.hs:
+                        fasttext_fast_sentence_sg_hs(c, i, j)
+                    if c.negative:
+                        fasttext_fast_sentence_sg_neg(c, i, j)
+
+
 def train_batch_sg(model, sentences, alpha, _work, _l1):
     """Update skip-gram model by training on a sequence of sentences.
 
@@ -515,8 +565,6 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
     """
     cdef FastTextConfig c
 
-    cdef int window_start, window_end, i, j
-    cdef int sent_idx, sentence_start, sentence_end
     cdef int num_words = 0
     cdef int num_sentences = 0
 
@@ -531,37 +579,7 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
         c.reduced_windows[i] = randint
 
     with nogil:
-        for sent_idx in range(num_sentences):
-            sentence_start = c.sentence_idx[sent_idx]
-            sentence_end = c.sentence_idx[sent_idx + 1]
-            for i in range(sentence_start, sentence_end):
-                #
-                # Determine window boundaries, making sure we don't leak into
-                # adjacent sentences.
-                #
-                window_start = i - c.window + c.reduced_windows[i]
-                if window_start < sentence_start:
-                    window_start = sentence_start
-                window_end = i + c.window + 1 - c.reduced_windows[i]
-                if window_end > sentence_end:
-                    window_end = sentence_end
-                #
-                # TODO: why can't I use min/max here?  I get a segfault.
-                #
-                # window_start = max(sentence_start, i - c.window + c.reduced_windows[i])
-                # window_end = min(sentence_end, i + c.window + 1 - c.reduced_windows[i])
-                #
-                for j in range(window_start, window_end):
-                    if j == i:
-                        #
-                        # TODO: why do we ignore the token at the "center" of
-                        # the window?
-                        #
-                        continue
-                    if c.hs:
-                        fasttext_fast_sentence_sg_hs(&c, i, j)
-                    if c.negative:
-                        fasttext_fast_sentence_sg_neg(&c, i, j)
+        fasttext_train_any(&c, num_sentences, 1)
 
     return num_words
 

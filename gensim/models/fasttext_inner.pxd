@@ -65,4 +65,7 @@ cdef void fasttext_fast_sentence_cbow_neg(FastTextConfig *c, int i, int j, int k
 cdef void fasttext_fast_sentence_cbow_hs(FastTextConfig *c, int i, int j, int k) nogil
 
 
+cdef void fasttext_train_any(FastTextConfig *c, int num_sentences, int sg) nogil
+
+
 cdef init_ft_config(FastTextConfig *c, model, alpha, _work, _neu1)
