@@ -53,6 +53,12 @@ cdef struct FastTextConfig:
     np.uint32_t *subwords_idx[MAX_SENTENCE_LEN]
 
 
+cdef init_ft_config(FastTextConfig *c, model, alpha, _work, _neu1)
+
+
+cdef populate_ft_config(FastTextConfig *c, vocab, buckets_word, sentences)
+
+
 cdef void fasttext_fast_sentence_sg_neg(FastTextConfig *c, int i, int j) nogil
 
 

@@ -397,7 +397,7 @@ cdef init_ft_config(FastTextConfig *c, model, alpha, _work, _neu1):
     c.neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
 
 
-cdef _prepare_ft_config(FastTextConfig *c, vocab, buckets_word, sentences):
+cdef populate_ft_config(FastTextConfig *c, vocab, buckets_word, sentences):
     """Prepare C structures so we can go "full C" and release the Python GIL.
 
     We create indices over the sentences.  We also perform some calculations for
@@ -563,16 +563,14 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
         Effective number of words trained.
 
     """
-    cdef FastTextConfig c
-
-    cdef int num_words = 0
-    cdef int num_sentences = 0
+    cdef:
+        FastTextConfig c
+        int num_words = 0
+        int num_sentences = 0
 
     init_ft_config(&c, model, alpha, _work, _l1)
 
-    num_words, num_sentences = _prepare_ft_config(
-        &c, model.wv.vocab, model.wv.buckets_word, sentences
-    )
+    num_words, num_sentences = populate_ft_config(&c, model.wv.vocab, model.wv.buckets_word, sentences)
 
     # precompute "reduced window" offsets in a single randint() call
     for i, randint in enumerate(model.random.randint(0, c.window, num_words)):
@@ -608,14 +606,16 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1):
         Effective number of words trained.
 
     """
-    cdef FastTextConfig c
-
-    cdef int i, j, k
-    cdef int effective_words = 0, effective_sentences = 0
-    cdef int sent_idx, idx_start, idx_end
+    cdef:
+        FastTextConfig c
+        int num_words = 0
+        int num_sentences = 0
 
     init_ft_config(&c, model, alpha, _work, _neu1)
 
+    #
+    # FIXME: This code duplicates what is already happening in init_ft_config
+    #
     if c.hs:
         c.syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
 
@@ -626,63 +626,17 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1):
     if c.negative or c.sample:
         c.next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
-    # prepare C structures so we can go "full C" and release the Python GIL
-    vlookup = model.wv.vocab
-    c.sentence_idx[0] = 0  # indices of the first sentence always start at 0
-    for sent in sentences:
-        if not sent:
-            continue  # ignore empty sentences; leave effective_sentences unchanged
-        for token in sent:
-            word = vlookup[token] if token in vlookup else None
-            if word is None:
-                continue  # leaving `effective_words` unchanged = shortening the sentence = expanding the window
-            if c.sample and word.sample_int < random_int32(&c.next_random):
-                continue
-            c.indexes[effective_words] = word.index
-
-            c.subwords_idx_len[effective_words] = <int>len(model.wv.buckets_word[word.index])
-            c.subwords_idx[effective_words] = <np.uint32_t *>np.PyArray_DATA(model.wv.buckets_word[word.index])
-
-            if c.hs:
-                c.codelens[effective_words] = <int>len(word.code)
-                c.codes[effective_words] = <np.uint8_t *>np.PyArray_DATA(word.code)
-                c.points[effective_words] = <np.uint32_t *>np.PyArray_DATA(word.point)
-            effective_words += 1
-            if effective_words == MAX_SENTENCE_LEN:
-                break
-
-        # keep track of which words go into which sentence, so we don't train
-        # across sentence boundaries.
-        # indices of sentence number X are between <sentence_idx[X], sentence_idx[X])
-        effective_sentences += 1
-        c.sentence_idx[effective_sentences] = effective_words
-
-        if effective_words == MAX_SENTENCE_LEN:
-            break
+    num_words, num_sentences = populate_ft_config(&c, model.wv.vocab, model.wv.buckets_word, sentences)
 
     # precompute "reduced window" offsets in a single randint() call
-    for i, item in enumerate(model.random.randint(0, c.window, effective_words)):
-        c.reduced_windows[i] = item
+    for i, randint in enumerate(model.random.randint(0, c.window, num_words)):
+        c.reduced_windows[i] = randint
 
     # release GIL & train on all sentences
     with nogil:
-        for sent_idx in range(effective_sentences):
-            idx_start = c.sentence_idx[sent_idx]
-            idx_end = c.sentence_idx[sent_idx + 1]
-            for i in range(idx_start, idx_end):
-                j = i - c.window + c.reduced_windows[i]
-                if j < idx_start:
-                    j = idx_start
-                k = i + c.window + 1 - c.reduced_windows[i]
-                if k > idx_end:
-                    k = idx_end
+        fasttext_train_any(&c, num_sentences, 0)
 
-                if c.hs:
-                    fasttext_fast_sentence_cbow_hs(&c, i, j, k)
-                if c.negative:
-                    fasttext_fast_sentence_cbow_neg(&c, i, j, k)
-
-    return effective_words
+    return num_words
 
 
 def init():
