@@ -271,16 +271,29 @@ cdef unsigned long long fasttext_fast_sentence_cbow_neg(
     return next_random
 
 
-cdef void fasttext_fast_sentence_cbow_hs(
-    const np.uint32_t *word_point, const np.uint8_t *word_code, int codelens[MAX_SENTENCE_LEN],
-    REAL_t *neu1, REAL_t *syn0_vocab, REAL_t *syn0_ngrams, REAL_t *syn1, const int size,
-    const np.uint32_t indexes[MAX_SENTENCE_LEN], np.uint32_t *subwords_idx[MAX_SENTENCE_LEN],
-    const int subwords_idx_len[MAX_SENTENCE_LEN],const REAL_t alpha, REAL_t *work,
-    int i, int j, int k, int cbow_mean, REAL_t *word_locks_vocab, REAL_t *word_locks_ngrams) nogil:
+cdef void fasttext_fast_sentence_cbow_hs(FastTextConfig *c, int i, int j, int k) nogil:
 
-    cdef long long a, b
-    cdef long long row2, sgn
-    cdef REAL_t f, g, count, inv_count = 1.0, f_dot, lprob
+    cdef:
+        np.uint32_t *word_point = c.points[i]
+        np.uint8_t *word_code = c.codes[i]
+        int *codelens = c.codelens
+        REAL_t *neu1 = c.neu1
+        REAL_t *syn0_vocab = c.syn0_vocab
+        REAL_t *syn0_ngrams = c.syn0_ngrams
+        REAL_t *syn1 = c.syn1
+        int size = c.size
+        np.uint32_t *indexes = c.indexes
+        np.uint32_t **subwords_idx = c.subwords_idx
+        int *subwords_idx_len = c.subwords_idx_len
+        REAL_t alpha = c.alpha
+        REAL_t *work = c.work
+        int cbow_mean = c.cbow_mean
+        REAL_t *word_locks_vocab = c.word_locks_vocab
+        REAL_t *word_locks_ngrams = c.word_locks_ngrams
+
+    cdef long long b
+    cdef long long row2
+    cdef REAL_t f, g, count, inv_count = 1.0, f_dot
     cdef int m
 
     memset(neu1, 0, size * cython.sizeof(REAL_t))
@@ -633,10 +646,7 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1):
                     k = idx_end
 
                 if c.hs:
-                    fasttext_fast_sentence_cbow_hs(
-                        c.points[i], c.codes[i], c.codelens, c.neu1, c.syn0_vocab, c.syn0_ngrams, c.syn1, c.size,
-                        c.indexes, c.subwords_idx, c.subwords_idx_len, c.alpha, c.work, i, j, k, c.cbow_mean,
-                        c.word_locks_vocab, c.word_locks_ngrams)
+                    fasttext_fast_sentence_cbow_hs(&c, i, j, k)
                 if c.negative:
                     c.next_random = fasttext_fast_sentence_cbow_neg(
                         c.negative, c.cum_table, c.cum_table_len, c.codelens, c.neu1, c.syn0_vocab, c.syn0_ngrams,
