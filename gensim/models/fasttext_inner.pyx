@@ -5,7 +5,28 @@
 # cython: embedsignature=True
 # coding: utf-8
 
-"""Optimized cython functions for training :class:`~gensim.models.fasttext.FastText` model."""
+"""Optimized Cython functions for training a :class:`~gensim.models.fasttext.FastText` model.
+
+The main entry points are :func:`~gensim.models.fasttext_inner.train_batch_sg`
+and :func:`~gensim.models.fasttext_inner.train_batch_cbow`.  They may be
+called directly from Python code.
+
+Notes
+-----
+The implementation of the above functions heavily depends on the
+FastTextConfig struct defined in :file:`gensim/models/fasttext_inner.pxd`.
+
+The FAST_VERSION constant determines what flavor of BLAS we're currently using:
+
+    0: double
+    1: float
+    2: no BLAS, use Cython loops instead
+
+See Also
+--------
+`Basic Linear Algebra Subprograms <http://www.netlib.org/blas/>`_
+
+"""
 
 import cython
 import numpy as np
@@ -21,6 +42,23 @@ try:
 except ImportError:
     # in scipy > 0.15, fblas function has been removed
     import scipy.linalg.blas as fblas
+
+#
+# We make use of the following BLAS functions (or their analogs, if BLAS is
+# unavailable):
+#
+# scopy(dimensionality, x, inc_x, y, inc_y):
+#   Performs y = x
+#
+# sscal: y *= alpha
+#
+# saxpy(dimensionality, alpha, x, inc_x, y, inc_y):
+#   Calculates y = y + alpha * x (Single precision A*X Plus Y).
+#
+# sdot: dot product
+#
+# The increments (inc_x and inc_y) are usually 1 in our case.
+#
 
 #
 # FIXME: why are we importing EXP_TABLE and then redefining it?
@@ -44,7 +82,31 @@ cdef REAL_t ONEF = <REAL_t>1.0
 
 
 cdef void fasttext_fast_sentence_sg_neg(FastTextConfig *c, int i, int j) nogil:
+    """Perform skipgram training with negative sampling.
 
+    Parameters
+    ----------
+    c : FastTextConfig *
+        A pointer to a fully initialized and populated struct.
+    i : int
+        The index of the word at the center of the current window.  This is
+        referred to as word2 in some parts of the implementation.
+    j : int
+        The index of another word inside the window.  This is referred to as
+        word in some parts of the implementation.
+
+    Notes
+    -----
+    Modifies c.next_random as a side-effect.
+
+    """
+
+    #
+    # Unpack the struct, extracting only the required parts into separate
+    # variables.  This is here for historical reasons.  We could bypass these
+    # declarations and use parts of the struct directly, but that would be
+    # somewhat more verbose.
+    #
     cdef:
         int negative = c.negative
         np.uint32_t *cum_table = c.cum_table
@@ -108,7 +170,20 @@ cdef void fasttext_fast_sentence_sg_neg(FastTextConfig *c, int i, int j) nogil:
 
 
 cdef void fasttext_fast_sentence_sg_hs(FastTextConfig *c, int i, int j) nogil:
+    """Perform skipgram training with hierarchical sampling.
 
+    Parameters
+    ----------
+    c : FastTextConfig *
+        A pointer to a fully initialized and populated struct.
+    i : int
+        The index of the word at the center of the current window.  This is
+        referred to as word2 in some parts of the implementation.
+    j : int
+        The index of another word inside the window.  This is referred to as
+        word in some parts of the implementation.
+
+    """
     cdef:
         np.uint32_t *word_point = c.points[j]             # point of current token
         np.uint8_t *word_code = c.codes[j]                # binary code of current token
@@ -140,38 +215,12 @@ cdef void fasttext_fast_sentence_sg_hs(FastTextConfig *c, int i, int j) nogil:
     # g : REAL_t
     #   ?
     #
-    # The 1D arrays like syn0_vocab, syn0_ngrams, etc. are actually matrices
-    # with the number of columns equal to size.  So the first element of the
-    # ith row is array[i * size].
-    #
     cdef long long b
     cdef long long row1 = word2_index * size, row2
     cdef REAL_t f, g, f_dot, norm_factor
 
     memset(work, 0, size * cython.sizeof(REAL_t))
     memset(l1, 0, size * cython.sizeof(REAL_t))
-
-    #
-    # We make use of the following BLAS functions (or their analogs, if BLAS is
-    # unavailable):
-    #
-    # scopy(dimensionality, x, inc_x, y, inc_y):
-    #   Performs y = x
-    #
-    # sscal: y *= alpha
-    #
-    # saxpy(dimensionality, alpha, x, inc_x, y, inc_y): 
-    #   Calculates y = y + alpha * x (Single precision A*X Plus Y).
-    #
-    # sdot: dot product
-    #
-    # The increments (inc_x and inc_y) are usually 1 in our case.
-    #
-    # See Also
-    # --------
-    # http://www.netlib.org/blas/
-    # https://devblogs.nvidia.com/six-ways-saxpy/
-    #
 
     scopy(&size, &syn0_vocab[row1], &ONE, l1, &ONE)
 
@@ -204,6 +253,24 @@ cdef void fasttext_fast_sentence_sg_hs(FastTextConfig *c, int i, int j) nogil:
 
 
 cdef void fasttext_fast_sentence_cbow_neg(FastTextConfig *c, int i, int j, int k) nogil:
+    """Perform CBOW training with negative sampling.
+
+    Parameters
+    ----------
+    c : FastTextConfig *
+        A pointer to a fully initialized and populated struct.
+    i : int
+        The index of a word inside the current window.
+    j : int
+        The start of the current window.
+    k : int
+        The end of the current window.  Essentially, j <= i < k.
+
+    Notes
+    -----
+    Modifies c.next_random as a side-effect.
+
+    """
 
     cdef:
         int negative = c.negative
@@ -286,6 +353,20 @@ cdef void fasttext_fast_sentence_cbow_neg(FastTextConfig *c, int i, int j, int k
 
 
 cdef void fasttext_fast_sentence_cbow_hs(FastTextConfig *c, int i, int j, int k) nogil:
+    """Perform CBOW training with hierarchical sampling.
+
+    Parameters
+    ----------
+    c : FastTextConfig *
+        A pointer to a fully initialized and populated struct.
+    i : int
+        The index of a word inside the current window.
+    j : int
+        The start of the current window.
+    k : int
+        The end of the current window.  Essentially, j <= i < k.
+
+    """
 
     cdef:
         np.uint32_t *word_point = c.points[i]
@@ -348,16 +429,15 @@ cdef void fasttext_fast_sentence_cbow_hs(FastTextConfig *c, int i, int j, int k)
             our_saxpy(&size, &word_locks_ngrams[subwords_idx[m][d]], work, &ONE, &syn0_ngrams[subwords_idx[m][d]*size], &ONE)
 
 
-cdef init_ft_config(FastTextConfig *c, model, alpha, _work, _neu1):
+cdef void init_ft_config(FastTextConfig *c, model, alpha, _work, _neu1):
     """Load model parameters into a FastTextConfig struct.
-    We seem to do this because our CPython code uses a different abstraction
-    than the Python code, probably because the latter has been refactored more
-    aggressively.
 
-    The struct itself is defined in fasttext_inner.pxd.
+    The struct itself is defined and documented in fasttext_inner.pxd.
 
     Parameters
     ----------
+    c : FastTextConfig *
+        A pointer to the struct to initialize.
     model : gensim.models.fasttext.FastText
         The model to load.
     alpha : float
@@ -366,6 +446,7 @@ cdef init_ft_config(FastTextConfig *c, model, alpha, _work, _neu1):
         Private working memory for each worker.
     _neu1 : np.ndarray
         Private working memory for each worker.
+
     """
     c.hs = model.hs
     c.negative = model.negative
@@ -397,31 +478,13 @@ cdef init_ft_config(FastTextConfig *c, model, alpha, _work, _neu1):
     c.neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
 
 
-cdef populate_ft_config(FastTextConfig *c, vocab, buckets_word, sentences):
+cdef object populate_ft_config(FastTextConfig *c, vocab, buckets_word, sentences):
     """Prepare C structures so we can go "full C" and release the Python GIL.
 
     We create indices over the sentences.  We also perform some calculations for
     each token and store the result up front to save time: we'll be seeing each
     token multiple times because of windowing, so better to do the work once
     here.
-
-    This involves populating the config struct:
-
-      c.sentence_idx
-          tokens of sentence number X are between <sentence_idx[X], sentence_idx[X + 1])
-
-    the rest is indexed by N, the "effective word number".
-
-      c.indexes[N]: the index of the Nth word within the vocabulary
-      c.subwords_idx[N]: bucket numbers in which the Nth word occurs
-      c.subwords_idx_len[N]: the _number_ of buckets in which the Nth word occurs
-      c.reduced_windows[N]: a random integer by which to resize the window around the Nth token
-
-    an for hierarchical softmax, also:
-
-      c.codes[N]: the binary code for the Nth word as a np.array.  Frequent words have shorter codes.
-      c.codelens[N]: the _length_ of the binary code for the Nth word.
-      c.points[N]:
 
     Parameters
     ----------
@@ -489,6 +552,18 @@ cdef populate_ft_config(FastTextConfig *c, vocab, buckets_word, sentences):
 
 
 cdef void fasttext_train_any(FastTextConfig *c, int num_sentences, int sg) nogil:
+    """Performs training on a fully initialized and populated configuration.
+
+    Parameters
+    ----------
+    c : FastTextConfig *
+        A pointer to the configuration struct.
+    num_sentences : int
+        The number of sentences to train.
+    sg : int
+        1 for skipgram, 0 for CBOW.
+
+    """
     cdef:
         int sent_idx
         int sentence_start
@@ -542,14 +617,14 @@ def train_batch_sg(model, sentences, alpha, _work, _l1):
     """Update skip-gram model by training on a sequence of sentences.
 
     Each sentence is a list of string tokens, which are looked up in the model's
-    vocab dictionary. Called internally from :meth:`gensim.models.fasttext.FastText.train`.
+    vocab dictionary. Called internally from :meth:`~gensim.models.fasttext.FastText.train`.
 
     Parameters
     ----------
     model : :class:`~gensim.models.fasttext.FastText`
         Model to be trained.
     sentences : iterable of list of str
-        Corpus streamed directly from disk/network.
+        A single batch: part of the corpus streamed directly from disk/network.
     alpha : float
         Learning rate.
     _work : np.ndarray
@@ -586,20 +661,21 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1):
     """Update the CBOW model by training on a sequence of sentences.
 
     Each sentence is a list of string tokens, which are looked up in the model's
-    vocab dictionary. Called internally from :meth:`gensim.models.fasttext.FastText.train`.
+    vocab dictionary. Called internally from :meth:`~gensim.models.fasttext.FastText.train`.
 
     Parameters
     ----------
     model : :class:`~gensim.models.fasttext.FastText`
         Model to be trained.
     sentences : iterable of list of str
-        Corpus streamed directly from disk/network.
+        A single batch: part of the corpus streamed directly from disk/network.
     alpha : float
         Learning rate.
     _work : np.ndarray
         Private working memory for each worker.
     _neu1 : np.ndarray
         Private working memory for each worker.
+
     Returns
     -------
     int
@@ -619,7 +695,7 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1):
     for i, randint in enumerate(model.random.randint(0, c.window, num_words)):
         c.reduced_windows[i] = randint
 
-    # release GIL & train on all sentences
+    # release GIL & train on all sentences in the batch
     with nogil:
         fasttext_train_any(&c, num_sentences, 0)
 
