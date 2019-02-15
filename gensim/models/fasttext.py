@@ -944,8 +944,8 @@ class FastText(BaseWordEmbeddingsModel):
         """
         return self.wv.__contains__(word)
 
-    @deprecated('use load_facebook_model or load_facebook_vectors instead')
     @classmethod
+    @deprecated('use load_facebook_model or load_facebook_vectors instead')
     def load_fasttext_format(cls, model_file, encoding='utf8'):
         """Deprecated.
 
