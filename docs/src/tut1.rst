@@ -5,7 +5,12 @@ Corpora and Vector Spaces
 
 This tutorial is available as a Jupyter Notebook `here <https://github.com/piskvorky/gensim/blob/develop/docs/notebooks/Corpora_and_Vector_Spaces.ipynb>`_.
 
-Don't forget to set
+Or run these notebooks online (no installation required) via the Binder project:
+
+.. image:: https://mybinder.org/badge_logo.svg
+ :target: https://mybinder.org/v2/gh/RaRe-Technologies/gensim/master
+
+| Don't forget to set
 
 >>> import logging
 >>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
