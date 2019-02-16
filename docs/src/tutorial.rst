@@ -30,6 +30,11 @@ priority levels; to activate logging (this is optional), run
 >>> import logging
 >>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
+Many of the topics in these tutorials are also presented in Jupyter notebooks, which can be run in your browser via the Binder project (no installation required) by clicking here:
+
+.. image:: https://mybinder.org/badge_logo.svg
+ :target: https://mybinder.org/v2/gh/RaRe-Technologies/gensim/master
+
 
 .. _first-example:
 
