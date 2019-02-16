@@ -33,7 +33,7 @@ priority levels; to activate logging (this is optional), run
 Many of the topics in these tutorials are also presented in Jupyter notebooks, which can be run in your browser via the Binder project (no installation required) by clicking here:
 
 .. image:: https://mybinder.org/badge_logo.svg
- :target: https://mybinder.org/v2/gh/RaRe-Technologies/gensim/master
+ :target: https://mybinder.org/v2/gh/RaRe-Technologies/gensim/master?filepath=%2Fdocs%2Fnotebooks
 
 
 .. _first-example:
