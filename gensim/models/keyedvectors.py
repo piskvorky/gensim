@@ -664,8 +664,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                     if predicted in ok_vocab and predicted not in ignore:
                         if predicted != expected:
                             logger.debug("%s: expected %s, predicted %s", line.strip(), expected, predicted)
-                        if predicted == expected:
-                            break
+                        break
                 if predicted == expected:
                     section['correct'].append(terms)
                 else:
@@ -1291,9 +1290,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                     if predicted in ok_vocab and predicted not in ignore:
                         if predicted != expected:
                             logger.debug("%s: expected %s, predicted %s", line.strip(), expected, predicted)
-                        # check if the current predicted vector from top-k ones is equal to the expected, if yes break
-                        if predicted == expected:
-                            break
+                        break
 
                 if predicted == expected:
                     section['correct'].append((a, b, c, expected))
