@@ -36,9 +36,6 @@ import struct
 
 import numpy as np
 
-_UNICODE_REPLACE = u'\ufffd'
-"""The character Python's unicode handling uses to denote characters that couldn't be decoded."""
-
 _END_OF_WORD_MARKER = b'\x00'
 
 logger = logging.getLogger(__name__)
@@ -185,8 +182,11 @@ def _load_vocab(fin, new_format, encoding='utf-8'):
         try:
             word = word_bytes.decode(encoding)
         except UnicodeDecodeError:
-            word = word_bytes.decode(encoding, errors='replace').replace(_UNICODE_REPLACE, '')
-            logger.error('unable to cleanly decode bytes %r to word %r', word_bytes, word)
+            word = word_bytes.decode(encoding, errors='ignore')
+            logger.error(
+		'failed to decode invalid unicode bytes %r; ignoring invalid characters, using %r',
+		word_bytes, word
+	    )
         count, _ = _struct_unpack(fin, '@qb')
         raw_vocab[word] = count
 
