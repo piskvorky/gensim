@@ -626,8 +626,9 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
         Returns
         -------
-        (int, int)
-             2-tuple (effective word count after ignoring unknown words and sentence length trimming, total word count).
+        (int, int, int)
+             3-tuple (effective word count after ignoring unknown words and sentence length trimming, total word count,
+                      total effective samples).
 
         """
         work, neu1 = inits

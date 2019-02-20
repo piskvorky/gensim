@@ -129,15 +129,26 @@ class BaseAny2VecModel(utils.SaveLoad):
         raise NotImplementedError()
 
     def _do_train_job(self, data_iterable, job_parameters, thread_private_mem):
-        """Train a single batch. Return 3-tuple
-        `(effective word count, total word count, total samples used)`.
 
-        The total samples used is the same as the effective word count when
-        using CBOW, but it can differ with Skip-Gram, since a random number of
-        positve examples are used for each effective word.
+        """Train a single batch.
 
-        Knowing the effective number of samples used allows us to compute the
-        average loss for an epoch.
+        Parameters
+        ----------
+        data_iterable : an iterable chunk of data representing a batch
+        job_parameters : what is returned by `_get_job_params`
+        thread_private_mem : what is returned by `_get_thread_working_mem`
+
+        Returns
+        -------
+        (int, int, int)
+        effective_word_count: int
+            The number of words processed after ignoring unknown words and sentence length trimming.
+        total_word_count: int
+            The total number of words in this batch.
+        total_samples_used: int
+            The total samples used while training on this data. This is the same as the effective word count when using
+            CBOW, but it can differ with Skip-Gram, since a random number of positve examples are used for each average
+            loss for an epoch.
 
         """
         raise NotImplementedError()
@@ -226,8 +237,7 @@ class BaseAny2VecModel(utils.SaveLoad):
             for callback in self.callbacks:
                 callback.on_batch_begin(self)
 
-            stats_tuple = self._do_train_job(
-                data_iterable, job_parameters, thread_private_mem)
+            stats_tuple = self._do_train_job(data_iterable, job_parameters, thread_private_mem)
             if len(stats_tuple) == 3:
                 tally, raw_tally, effective_samples = stats_tuple
             else:
@@ -1091,11 +1101,10 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         self.min_alpha = end_alpha or self.min_alpha
         self.compute_loss = compute_loss
         self.running_training_loss = 0.0
-        return super(BaseWordEmbeddingsModel, self).train(
-            data_iterable=sentences, corpus_file=corpus_file, total_examples=total_examples,
-            total_words=total_words, epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
-            queue_factor=queue_factor, report_delay=report_delay, compute_loss=compute_loss, callbacks=callbacks,
-            **kwargs)
+        return super(BaseWordEmbeddingsModel, self).train(data_iterable=sentences, corpus_file=corpus_file,
+            total_examples=total_examples, total_words=total_words, epochs=epochs, start_alpha=start_alpha,
+            end_alpha=end_alpha, word_count=word_count, queue_factor=queue_factor, report_delay=report_delay,
+            compute_loss=compute_loss, callbacks=callbacks, **kwargs)
 
     def get_latest_training_loss(self):
         raise NotImplementedError(
@@ -1320,11 +1329,6 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         always be equal to -1.
 
         """
-        if self.compute_loss:
-            if total_samples == 0:
-                loss = -1
-            else:
-                loss = self.get_latest_training_loss() / total_samples
         if total_examples:
             # examples-based progress %
             if self.compute_loss:
