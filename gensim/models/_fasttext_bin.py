@@ -184,9 +184,9 @@ def _load_vocab(fin, new_format, encoding='utf-8'):
         except UnicodeDecodeError:
             word = word_bytes.decode(encoding, errors='ignore')
             logger.error(
-		'failed to decode invalid unicode bytes %r; ignoring invalid characters, using %r',
-		word_bytes, word
-	    )
+                'failed to decode invalid unicode bytes %r; ignoring invalid characters, using %r',
+                word_bytes, word
+            )
         count, _ = _struct_unpack(fin, '@qb')
         raw_vocab[word] = count
 
