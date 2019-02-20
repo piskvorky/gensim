@@ -700,7 +700,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         corpus_file : str, optional
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
             You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
-            `corpus_file` arguments need to be passed (or none of them).
+            `corpus_file` arguments need to be passed (or none of them, in that case, the model is left uninitialized).
         workers : int, optional
             Number of working threads, used for multiprocessing.
         vector_size : int, optional
@@ -794,7 +794,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             if corpus_file is not None and not isinstance(corpus_file, string_types):
                 raise TypeError("You must pass string as the corpus_file argument.")
             elif isinstance(sentences, GeneratorType):
-                raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
+                raise TypeError("You can't pass a generator as the sentences argument. Try a sequence.")
 
             self.build_vocab(sentences=sentences, corpus_file=corpus_file, trim_rule=trim_rule)
             self.train(

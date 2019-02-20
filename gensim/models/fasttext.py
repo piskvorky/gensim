@@ -290,7 +290,7 @@ class FastText(BaseWordEmbeddingsModel):
         corpus_file : str, optional
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
             You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
-            `corpus_file` arguments need to be passed (or none of them).
+            `corpus_file` arguments need to be passed (or none of them, in that case, the model is left uninitialized).
         min_count : int, optional
             The model ignores all words with total frequency lower than this.
         size : int, optional
@@ -841,7 +841,7 @@ class FastText(BaseWordEmbeddingsModel):
 
             if not hasattr(model.wv, 'compatible_hash'):
                 logger.warning(
-                    "This older model was trained with a buggy hash function.  ",
+                    "This older model was trained with a buggy hash function.  "
                     "The model will continue to work, but consider training it "
                     "from scratch."
                 )
