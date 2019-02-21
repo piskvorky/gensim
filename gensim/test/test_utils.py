@@ -6,8 +6,9 @@
 """
 Automated tests for checking various utils functions.
 """
+from __future__ import unicode_literals
 
-
+import sys
 import logging
 import unittest
 
@@ -18,6 +19,8 @@ from gensim import utils
 from gensim.test.utils import datapath, get_tmpfile
 
 import gensim.models.utils_any2vec
+
+import smart_open
 
 DISABLE_CYTHON_TESTS = getattr(gensim.models.utils_any2vec, 'FAST_VERSION', None) == -1
 
@@ -269,12 +272,13 @@ def hash_main(alg):
     import six
 
     assert six.PY3, 'this only works under Py3'
+    assert not DISABLE_CYTHON_TESTS, 'this only works if Cython extensions available'
 
     hashmap = {
-        'py': gensim.models.utils_any2vec._ft_hash_py,
-        'py_broken': gensim.models.utils_any2vec._ft_hash_py_broken,
-        'cy': gensim.models.utils_any2vec._ft_hash_py,
-        'cy_broken': gensim.models.utils_any2vec._ft_hash_py_broken,
+        'py_broken': gensim.models.utils_any2vec._ft_hash_broken_py,
+        'py_bytes': gensim.models.utils_any2vec._ft_hash_bytes_py,
+        'cy_broken': gensim.models.utils_any2vec._ft_hash_broken_py,
+        'cy_bytes': gensim.models.utils_any2vec._ft_hash_bytes_cy,
     }
     try:
         fun = hashmap[alg]
@@ -282,7 +286,11 @@ def hash_main(alg):
         raise KeyError('invalid alg: %r expected one of %r' % (alg, sorted(hashmap)))
 
     for line in sys.stdin:
-        for word in line.rstrip().split(' '):
+        if 'bytes' in alg:
+            words = line.encode('utf-8').rstrip().split(b' ')
+        else:
+            words = line.rstrip().split(' ')
+        for word in words:
             print('u%r: %r,' % (word, fun(word)))
 
 
@@ -293,7 +301,7 @@ class HashTest(unittest.TestCase):
         #
         # $ echo word1 ... wordN | python -c 'from gensim.test.test_utils import hash_main;hash_main("alg")'  # noqa: E501
         #
-        # where alg is one of py, py_broken, cy, cy_broken.
+        # where alg is one of py_bytes, py_broken, cy_bytes, cy_broken.
 
         #
         self.expected = {
@@ -330,22 +338,239 @@ class HashTest(unittest.TestCase):
         }
 
     def test_python(self):
-        actual = {k: gensim.models.utils_any2vec._ft_hash_py(k) for k in self.expected}
+        actual = {k: gensim.models.utils_any2vec._ft_hash_bytes_py(k.encode('utf-8')) for k in self.expected}
         self.assertEqual(self.expected, actual)
 
     @unittest.skipIf(DISABLE_CYTHON_TESTS, 'Cython functions are not properly compiled')
     def test_cython(self):
-        actual = {k: gensim.models.utils_any2vec._ft_hash_cy(k) for k in self.expected}
+        actual = {k: gensim.models.utils_any2vec._ft_hash_bytes_cy(k.encode('utf-8')) for k in self.expected}
         self.assertEqual(self.expected, actual)
 
     def test_python_broken(self):
-        actual = {k: gensim.models.utils_any2vec._ft_hash_py_broken(k) for k in self.expected}
+        actual = {k: gensim.models.utils_any2vec._ft_hash_broken_py(k) for k in self.expected}
         self.assertEqual(self.expected_broken, actual)
 
     @unittest.skipIf(DISABLE_CYTHON_TESTS, 'Cython functions are not properly compiled')
     def test_cython_broken(self):
-        actual = {k: gensim.models.utils_any2vec._ft_hash_cy_broken(k) for k in self.expected}
+        actual = {k: gensim.models.utils_any2vec._ft_hash_broken_cy(k) for k in self.expected}
         self.assertEqual(self.expected_broken, actual)
+
+
+#
+# Run with:
+#
+#   python -c 'import gensim.test.test_utils as t;t.ngram_main()' py_text 3 5
+#
+def ngram_main():
+    """Generate ngrams for tests from standard input."""
+    import sys
+    import six
+
+    alg = sys.argv[1]
+    minn = int(sys.argv[2])
+    maxn = int(sys.argv[3])
+
+    assert six.PY3, 'this only works under Py3'
+    assert not DISABLE_CYTHON_TESTS, 'this only works if Cython extensions available'
+    assert minn <= maxn, 'expected sane command-line parameters'
+
+    hashmap = {
+        'py_text': gensim.models.utils_any2vec._compute_ngrams_py,
+        'py_bytes': gensim.models.utils_any2vec._compute_ngrams_bytes_py,
+        'cy_text': gensim.models.utils_any2vec._compute_ngrams_cy,
+        'cy_bytes': gensim.models.utils_any2vec._compute_ngrams_bytes_cy,
+    }
+    try:
+        fun = hashmap[alg]
+    except KeyError:
+        raise KeyError('invalid alg: %r expected one of %r' % (alg, sorted(hashmap)))
+
+    for line in sys.stdin:
+        word = line.rstrip('\n')
+        ngrams = fun(word, minn, maxn)
+        print("%r: %r," % (word, ngrams))
+
+
+class NgramsTest(unittest.TestCase):
+    def setUp(self):
+        self.expected_text = {
+            'test': ['<te', 'tes', 'est', 'st>', '<tes', 'test', 'est>', '<test', 'test>'],
+            'at the': [
+                '<at', 'at ', 't t', ' th', 'the', 'he>',
+                '<at ', 'at t', 't th', ' the', 'the>', '<at t', 'at th', 't the', ' the>'
+            ],
+            'at\nthe': [
+                '<at', 'at\n', 't\nt', '\nth', 'the', 'he>',
+                '<at\n', 'at\nt', 't\nth', '\nthe', 'the>', '<at\nt', 'at\nth', 't\nthe', '\nthe>'
+            ],
+            'тест': ['<те', 'тес', 'ест', 'ст>', '<тес', 'тест', 'ест>', '<тест', 'тест>'],
+            'テスト': ['<テス', 'テスト', 'スト>', '<テスト', 'テスト>', '<テスト>'],
+            '試し': ['<試し', '試し>', '<試し>'],
+        }
+        self.expected_bytes = {
+            'test': [b'<te', b'<tes', b'<test', b'tes', b'test', b'test>', b'est', b'est>', b'st>'],
+            'at the': [
+                b'<at', b'<at ', b'<at t', b'at ', b'at t', b'at th', b't t',
+                b't th', b't the', b' th', b' the', b' the>', b'the', b'the>', b'he>'
+            ],
+            'тест': [
+                b'<\xd1\x82\xd0\xb5', b'<\xd1\x82\xd0\xb5\xd1\x81', b'<\xd1\x82\xd0\xb5\xd1\x81\xd1\x82',
+                b'\xd1\x82\xd0\xb5\xd1\x81', b'\xd1\x82\xd0\xb5\xd1\x81\xd1\x82', b'\xd1\x82\xd0\xb5\xd1\x81\xd1\x82>',
+                b'\xd0\xb5\xd1\x81\xd1\x82', b'\xd0\xb5\xd1\x81\xd1\x82>', b'\xd1\x81\xd1\x82>'
+            ],
+            'テスト': [
+                b'<\xe3\x83\x86\xe3\x82\xb9', b'<\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88',
+                b'<\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88>', b'\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88',
+                b'\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88>', b'\xe3\x82\xb9\xe3\x83\x88>'
+            ],
+            '試し': [b'<\xe8\xa9\xa6\xe3\x81\x97', b'<\xe8\xa9\xa6\xe3\x81\x97>', b'\xe8\xa9\xa6\xe3\x81\x97>'],
+        }
+
+        self.expected_text_wide_unicode = {
+            '🚑🚒🚓🚕': [
+                '<🚑🚒', '🚑🚒🚓', '🚒🚓🚕', '🚓🚕>',
+                '<🚑🚒🚓', '🚑🚒🚓🚕', '🚒🚓🚕>', '<🚑🚒🚓🚕', '🚑🚒🚓🚕>'
+             ],
+        }
+        self.expected_bytes_wide_unicode = {
+            '🚑🚒🚓🚕': [
+                b'<\xf0\x9f\x9a\x91\xf0\x9f\x9a\x92',
+                b'<\xf0\x9f\x9a\x91\xf0\x9f\x9a\x92\xf0\x9f\x9a\x93',
+                b'<\xf0\x9f\x9a\x91\xf0\x9f\x9a\x92\xf0\x9f\x9a\x93\xf0\x9f\x9a\x95',
+                b'\xf0\x9f\x9a\x91\xf0\x9f\x9a\x92\xf0\x9f\x9a\x93',
+                b'\xf0\x9f\x9a\x91\xf0\x9f\x9a\x92\xf0\x9f\x9a\x93\xf0\x9f\x9a\x95',
+                b'\xf0\x9f\x9a\x91\xf0\x9f\x9a\x92\xf0\x9f\x9a\x93\xf0\x9f\x9a\x95>',
+                b'\xf0\x9f\x9a\x92\xf0\x9f\x9a\x93\xf0\x9f\x9a\x95',
+                b'\xf0\x9f\x9a\x92\xf0\x9f\x9a\x93\xf0\x9f\x9a\x95>',
+                b'\xf0\x9f\x9a\x93\xf0\x9f\x9a\x95>'
+            ],
+        }
+
+    def test_text_py(self):
+        for word in self.expected_text:
+            expected = self.expected_text[word]
+            actual = gensim.models.utils_any2vec._compute_ngrams_py(word, 3, 5)
+            self.assertEqual(expected, actual)
+
+    @unittest.skipIf(sys.maxunicode == 0xffff, "Python interpreter doesn't support UCS-4 (wide unicode)")
+    def test_text_py_wide_unicode(self):
+        for word in self.expected_text_wide_unicode:
+            expected = self.expected_text_wide_unicode[word]
+            actual = gensim.models.utils_any2vec._compute_ngrams_py(word, 3, 5)
+            self.assertEqual(expected, actual)
+
+    @unittest.skipIf(DISABLE_CYTHON_TESTS, 'Cython functions are not properly compiled')
+    def test_text_cy(self):
+        for word in self.expected_text:
+            expected = self.expected_text[word]
+            actual = gensim.models.utils_any2vec._compute_ngrams_cy(word, 3, 5)
+            self.assertEqual(expected, actual)
+
+    @unittest.skipIf(DISABLE_CYTHON_TESTS, 'Cython functions are not properly compiled')
+    @unittest.skipIf(sys.maxunicode == 0xffff, "Python interpreter doesn't support UCS-4 (wide unicode)")
+    def test_text_cy_wide_unicode(self):
+        for word in self.expected_text_wide_unicode:
+            expected = self.expected_text_wide_unicode[word]
+            actual = gensim.models.utils_any2vec._compute_ngrams_cy(word, 3, 5)
+            self.assertEqual(expected, actual)
+
+    def test_bytes_py(self):
+        for word in self.expected_bytes:
+            expected = self.expected_bytes[word]
+            actual = gensim.models.utils_any2vec._compute_ngrams_bytes_py(word, 3, 5)
+            self.assertEqual(expected, actual)
+
+            expected_text = self.expected_text[word]
+            actual_text = [n.decode('utf-8') for n in actual]
+            #
+            # The text and byte implementations yield ngrams in different
+            # order, so the test ignores ngram order.
+            #
+            self.assertEqual(sorted(expected_text), sorted(actual_text))
+
+        for word in self.expected_bytes_wide_unicode:
+            expected = self.expected_bytes_wide_unicode[word]
+            actual = gensim.models.utils_any2vec._compute_ngrams_bytes_py(word, 3, 5)
+            self.assertEqual(expected, actual)
+
+            expected_text = self.expected_text_wide_unicode[word]
+            actual_text = [n.decode('utf-8') for n in actual]
+
+            self.assertEqual(sorted(expected_text), sorted(actual_text))
+
+    @unittest.skipIf(DISABLE_CYTHON_TESTS, 'Cython functions are not properly compiled')
+    def test_bytes_cy(self):
+        for word in self.expected_bytes:
+            expected = self.expected_bytes[word]
+            actual = gensim.models.utils_any2vec._compute_ngrams_bytes_cy(word, 3, 5)
+            self.assertEqual(expected, actual)
+
+            expected_text = self.expected_text[word]
+            actual_text = [n.decode('utf-8') for n in actual]
+            self.assertEqual(sorted(expected_text), sorted(actual_text))
+
+        for word in self.expected_bytes_wide_unicode:
+            expected = self.expected_bytes_wide_unicode[word]
+            actual = gensim.models.utils_any2vec._compute_ngrams_bytes_cy(word, 3, 5)
+            self.assertEqual(expected, actual)
+
+            expected_text = self.expected_text_wide_unicode[word]
+            actual_text = [n.decode('utf-8') for n in actual]
+            self.assertEqual(sorted(expected_text), sorted(actual_text))
+
+    def test_fb(self):
+        """Test against results from Facebook's implementation."""
+        with smart_open.smart_open(datapath('fb-ngrams.txt'), 'r', encoding='utf-8') as fin:
+            fb = dict(_read_fb(fin))
+
+        for word, expected in fb.items():
+            #
+            # The model was trained with minn=3, maxn=6
+            #
+            actual = gensim.models.utils_any2vec._compute_ngrams_py(word, 3, 6)
+            self.assertEqual(sorted(expected), sorted(actual))
+
+
+def _read_fb(fin):
+    """Read ngrams from output of the FB utility."""
+    #
+    # $ cat words.txt
+    # test
+    # at the
+    # at\nthe
+    # тест
+    # テスト
+    # 試し
+    # 🚑🚒🚓🚕
+    # $ while read w;
+    # do
+    #   echo "<start>";
+    #   echo $w;
+    #   ./fasttext print-ngrams gensim/test/test_data/crime-and-punishment.bin "$w";
+    #   echo "<end>";
+    # done < words.txt > gensim/test/test_data/fb-ngrams.txt
+    #
+    while fin:
+        line = fin.readline().rstrip()
+        if not line:
+            break
+
+        assert line == '<start>'
+        word = fin.readline().rstrip()
+
+        fin.readline()  # ignore this line, it contains an origin vector for the full term
+
+        ngrams = []
+        while True:
+            line = fin.readline().rstrip()
+            if line == '<end>':
+                break
+
+            columns = line.split(' ')
+            term = ' '.join(columns[:-5])
+            ngrams.append(term)
+
+        yield word, ngrams
 
 
 if __name__ == '__main__':

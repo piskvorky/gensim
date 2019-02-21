@@ -6,6 +6,7 @@ include COPYING.LESSER
 include ez_setup.py
 
 include gensim/models/voidptr.h
+include gensim/models/stdint_wrapper.h
 include gensim/models/fast_line_sentence.h
 
 include gensim/models/word2vec_inner.c

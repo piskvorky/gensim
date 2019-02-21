@@ -1,10 +1,102 @@
-"""Online Non-Negative Matrix Factorization."""
+"""`Online Non-Negative Matrix Factorization. <https://arxiv.org/abs/1604.02634>`
 
+Implements online non-negative matrix factorization algorithm, which allows for fast latent topic inference.
+This NMF implementation updates in a streaming fashion and works best with sparse corpora.
+
+- W is a word-topic matrix
+- h is a topic-document matrix
+- v is an input word-document matrix
+- A, B - matrices that accumulate information from every consecutive chunk. A = h.dot(ht), B = v.dot(ht).
+
+The idea of the algorithm is as follows:
+
+.. code-block:: text
+
+    Initialize W, A and B matrices
+
+    Input corpus
+    Split corpus to batches
+
+    for v in batches:
+        infer h:
+            do coordinate gradient descent step to find h that minimizes (v - Wh) l2 norm
+
+            bound h so that it is non-negative
+
+        update A and B:
+            A = h.dot(ht)
+            B = v.dot(ht)
+
+        update W:
+            do gradient descent step to find W that minimizes 0.5*trace(WtWA) - trace(WtB) l2 norm
+
+Examples
+--------
+
+Train an NMF model using a Gensim corpus
+
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import common_texts
+    >>> from gensim.corpora.dictionary import Dictionary
+    >>>
+    >>> # Create a corpus from a list of texts
+    >>> common_dictionary = Dictionary(common_texts)
+    >>> common_corpus = [common_dictionary.doc2bow(text) for text in common_texts]
+    >>>
+    >>> # Train the model on the corpus.
+    >>> nmf = Nmf(common_corpus, num_topics=10)
+
+Save a model to disk, or reload a pre-trained model
+
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import datapath
+    >>>
+    >>> # Save model to disk.
+    >>> temp_file = datapath("model")
+    >>> nmf.save(temp_file)
+    >>>
+    >>> # Load a potentially pretrained model from disk.
+    >>> nmf = Nmf.load(temp_file)
+
+Infer vectors for new documents
+
+.. sourcecode:: pycon
+
+    >>> # Create a new corpus, made of previously unseen documents.
+    >>> other_texts = [
+    ...     ['computer', 'time', 'graph'],
+    ...     ['survey', 'response', 'eps'],
+    ...     ['human', 'system', 'computer']
+    ... ]
+    >>> other_corpus = [common_dictionary.doc2bow(text) for text in other_texts]
+    >>>
+    >>> unseen_doc = other_corpus[0]
+    >>> vector = Nmf[unseen_doc]  # get topic probability distribution for a document
+
+Update the model by incrementally training on the new corpus
+
+.. sourcecode:: pycon
+
+    >>> nmf.update(other_corpus)
+    >>> vector = nmf[unseen_doc]
+
+A lot of parameters can be tuned to optimize training for your specific case
+
+.. sourcecode:: pycon
+
+    >>> nmf = Nmf(common_corpus, num_topics=50, kappa=0.1, eval_every=5)  # decrease training step size
+
+The NMF should be used whenever one needs extremely fast and memory optimized topic model.
+
+"""
 import itertools
 
 import logging
 import numpy as np
 import scipy.sparse
+from gensim.models.nmf_pgd import solve_h
 from scipy.stats import halfnorm
 
 from gensim import interfaces
@@ -12,9 +104,10 @@ from gensim import matutils
 from gensim import utils
 from gensim.interfaces import TransformedCorpus
 from gensim.models import basemodel, CoherenceModel
-from gensim.models.nmf_pgd import solve_h, solve_r
 
 logger = logging.getLogger(__name__)
+
+OLD_SCIPY = int(scipy.__version__.split('.')[1]) <= 18
 
 
 class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
@@ -31,78 +124,73 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         id2word=None,
         chunksize=2000,
         passes=1,
-        lambda_=1.0,
         kappa=1.0,
         minimum_probability=0.01,
-        use_r=False,
         w_max_iter=200,
         w_stop_condition=1e-4,
-        h_r_max_iter=50,
-        h_r_stop_condition=1e-3,
+        h_max_iter=50,
+        h_stop_condition=1e-3,
         eval_every=10,
-        v_max=None,
         normalize=True,
-        sparse_coef=3,
         random_state=None,
     ):
-        """
+        r"""
 
         Parameters
         ----------
         corpus : iterable of list of (int, float), optional
-            Training corpus. If not given, model is left untrained.
+            Training corpus.
+            Can be either iterable of documents, which are lists of `(word_id, word_count)`,
+            or a sparse csc matrix of BOWs for each document.
+            If not specified, the model is left uninitialized (presumably, to be trained later with `self.train()`).
         num_topics : int, optional
             Number of topics to extract.
-        id2word: gensim.corpora.Dictionary, optional
-            Mapping from token id to token. If not set words get replaced with word ids.
+        id2word: {dict of (int, str), :class:`gensim.corpora.dictionary.Dictionary`}
+            Mapping from word IDs to words. It is used to determine the vocabulary size, as well as for
+            debugging and topic printing.
         chunksize: int, optional
             Number of documents to be used in each training chunk.
-        passes: int, optioanl
+        passes: int, optional
             Number of full passes over the training corpus.
-        lambda_ : float, optional
-            Residuals regularizer coefficient. Increasing it helps prevent ovefitting. Has no effect if `use_r` is set
-            to False.
+            Leave at default `passes=1` if your input is a non-repeatable generator.
         kappa : float, optional
-            Optimizer step coefficient. Increaing it makes model train faster, but adds a risk that it won't converge.
+            Gradient descent step size.
+            Larger value makes the model train faster, but could lead to non-convergence if set too large.
+        minimum_probability:
+            If `normalize` is True, topics with smaller probabilities are filtered out.
+            If `normalize` is False, topics with smaller factors are filtered out.
+            If set to None, a value of 1e-8 is used to prevent 0s.
         w_max_iter: int, optional
-            Maximum number of iterations to train W matrix per each batch.
+            Maximum number of iterations to train W per each batch.
         w_stop_condition: float, optional
-            If error difference gets less than that, training of matrix ``W`` stops for current batch.
-        h_r_max_iter: int, optional
-            Maximum number of iterations to train h and r matrices per each batch.
-        h_r_stop_condition: float
-            If error difference gets less than that, training of matrices ``h`` and ``r`` stops for current batch.
+            If error difference gets less than that, training of ``W`` stops for the current batch.
+        h_max_iter: int, optional
+            Maximum number of iterations to train h per each batch.
+        h_stop_condition: float
+            If error difference gets less than that, training of ``h`` stops for the current batch.
         eval_every: int, optional
-            Number of batches after which model will be evaluated.
-        v_max: int, optional
-            Maximum number of word occurrences in the corpora. Inferred if not set. Rarely needs to be set explicitly.
-        normalize: bool, optional
-            Whether to normalize results. Offers "kind-of-probabilistic" result.
-        sparse_coef: float, optional
-            The more it is, the more sparse are matrices. Significantly increases performance.
+            Number of batches after which l2 norm of (v - Wh) is computed. Decreases performance if set too low.
+        normalize: bool or None, optional
+            Whether to normalize the result. Allows for estimation of perplexity, coherence, e.t.c.
         random_state: {np.random.RandomState, int}, optional
-            Seed for random generator. Useful for reproducibility.
+            Seed for random generator. Needed for reproducibility.
 
         """
-        self._w_error = None
-        self.num_tokens = None
         self.num_topics = num_topics
         self.id2word = id2word
         self.chunksize = chunksize
         self.passes = passes
-        self._lambda_ = lambda_
         self._kappa = kappa
         self.minimum_probability = minimum_probability
-        self.use_r = use_r
         self._w_max_iter = w_max_iter
         self._w_stop_condition = w_stop_condition
-        self._h_r_max_iter = h_r_max_iter
-        self._h_r_stop_condition = h_r_stop_condition
-        self.v_max = v_max
+        self._h_max_iter = h_max_iter
+        self.h_stop_condition = h_stop_condition
         self.eval_every = eval_every
         self.normalize = normalize
-        self.sparse_coef = sparse_coef
         self.random_state = utils.get_random_state(random_state)
+
+        self.v_max = None
 
         if self.id2word is None:
             self.id2word = utils.dict_from_corpus(corpus)
@@ -114,9 +202,9 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         self._W = None
         self.w_std = None
+        self._w_error = np.inf
 
         self._h = None
-        self._r = None
 
         if corpus is not None:
             self.update(corpus)
@@ -126,8 +214,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        normalize : bool, optional
-            Whether to normalize an output vector.
+        normalize: bool or None, optional
+            Whether to normalize the result. Allows for estimation of perplexity, coherence, e.t.c.
 
         Returns
         -------
@@ -135,7 +223,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             The probability for each word in each topic, shape (`num_topics`, `vocabulary_size`).
 
         """
-        dense_topics = self._W.T.toarray()
+        dense_topics = self._W.T
         if normalize is None:
             normalize = self.normalize
         if normalize:
@@ -146,9 +234,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
     def __getitem__(self, bow, eps=None):
         return self.get_document_topics(bow, eps)
 
-    def show_topics(self, num_topics=10, num_words=10, log=False,
-                    formatted=True, normalize=None):
-        """Get a representation for selected topics.
+    def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True, normalize=None):
+        """Get the topics sorted by sparsity.
 
         Parameters
         ----------
@@ -160,12 +247,12 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Number of words to be presented for each topic. These will be the most relevant words (assigned the highest
             probability for each topic).
         log : bool, optional
-            Whether the output is also logged, besides being returned.
+            Whether the result is also logged, besides being returned.
         formatted : bool, optional
             Whether the topic representations should be formatted as strings. If False, they are returned as
             2 tuples of (word, probability).
-        normalize : bool, optional
-            Whether to normalize an output vector.
+        normalize: bool or None, optional
+            Whether to normalize the result. Allows for estimation of perplexity, coherence, e.t.c.
 
         Returns
         -------
@@ -177,7 +264,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if normalize is None:
             normalize = self.normalize
 
-        sparsity = self._W.getnnz(axis=0)
+        sparsity = (self._W == 0).mean(axis=0)
 
         if num_topics < 0 or num_topics >= self.num_topics:
             num_topics = self.num_topics
@@ -217,8 +304,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             The ID of the topic to be returned
         topn : int, optional
             Number of the most significant words that are associated with the topic.
-        normalize : bool, optional
-            Whether to normalize an output vector.
+        normalize: bool or None, optional
+            Whether to normalize the result. Allows for estimation of perplexity, coherence, e.t.c.
 
         Returns
         -------
@@ -245,8 +332,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             The ID of the topic to be returned
         topn : int, optional
             Number of the most significant words that are associated with the topic.
-        normalize : bool, optional
-            Whether to normalize an output vector.
+        normalize: bool or None, optional
+            Whether to normalize the result. Allows for estimation of perplexity, coherence, e.t.c.
 
         Returns
         -------
@@ -254,7 +341,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Word ID - probability pairs for the most relevant words generated by the topic.
 
         """
-        topic = self._W.getcol(topicid).toarray()[0]
+        topic = self._W[:, topicid]
 
         if normalize is None:
             normalize = self.normalize
@@ -266,17 +353,20 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def top_topics(self, corpus=None, texts=None, dictionary=None, window_size=None,
                    coherence='u_mass', topn=20, processes=-1):
-        """Get the topics with the highest coherence score the coherence for each topic.
+        """Get the topics sorted by coherence.
 
         Parameters
         ----------
         corpus : iterable of list of (int, float), optional
-            Corpus in BoW format.
+            Training corpus.
+            Can be either iterable of documents, which are lists of `(word_id, word_count)`,
+            or a sparse csc matrix of BOWs for each document.
+            If not specified, the model is left uninitialized (presumably, to be trained later with `self.train()`).
         texts : list of list of str, optional
             Tokenized texts, needed for coherence models that use sliding window based (i.e. coherence=`c_something`)
             probability estimator .
-        dictionary : :class:`~gensim.corpora.dictionary.Dictionary`, optional
-            Gensim dictionary mapping of id word to create corpus.
+        dictionary : {dict of (int, str), :class:`gensim.corpora.dictionary.Dictionary`}, optional
+            Dictionary mapping of id word to create corpus.
             If `model.id2word` is present, this is not needed. If both are provided, passed `dictionary` will be used.
         window_size : int, optional
             Is the size of the window to be used for coherence measures using boolean sliding window as their
@@ -323,8 +413,11 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : list of list of (int, float)
-            The corpus on which the perplexity is computed.
+        corpus : iterable of list of (int, float), optional
+            Training corpus.
+            Can be either iterable of documents, which are lists of `(word_id, word_count)`,
+            or a sparse csc matrix of BOWs for each document.
+            If not specified, the model is left uninitialized (presumably, to be trained later with `self.train()`).
 
         Returns
         -------
@@ -346,8 +439,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         return (np.log(pred_factors, where=pred_factors > 0) * dense_corpus).sum() / dense_corpus.sum()
 
-    def get_term_topics(self, word_id, minimum_probability=None,
-                        normalize=None):
+    def get_term_topics(self, word_id, minimum_probability=None, normalize=None):
         """Get the most relevant topics to the given word.
 
         Parameters
@@ -355,9 +447,11 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         word_id : int
             The word for which the topic distribution will be computed.
         minimum_probability : float, optional
-            Topics with an assigned probability below this threshold will be discarded.
-        normalize : bool, optional
-            Whether to normalize an output vector.
+            If `normalize` is True, topics with smaller probabilities are filtered out.
+            If `normalize` is False, topics with smaller factors are filtered out.
+            If set to None, a value of 1e-8 is used to prevent 0s.
+        normalize: bool or None, optional
+            Whether to normalize the result. Allows for estimation of perplexity, coherence, e.t.c.
 
         Returns
         -------
@@ -376,7 +470,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         values = []
 
-        word_topics = self._W.getrow(word_id)
+        word_topics = self._W[word_id]
 
         if normalize is None:
             normalize = self.normalize
@@ -384,7 +478,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             word_topics /= word_topics.sum()
 
         for topic_id in range(0, self.num_topics):
-            word_coef = word_topics[0, topic_id]
+            word_coef = word_topics[topic_id]
 
             if word_coef >= minimum_probability:
                 values.append((topic_id, word_coef))
@@ -400,9 +494,11 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         bow : list of (int, float)
             The document in BOW format.
         minimum_probability : float
-            Topics with an assigned probability lower than this threshold will be discarded.
-        normalize : bool, optional
-            Whether to normalize an output vector.
+            If `normalize` is True, topics with smaller probabilities are filtered out.
+            If `normalize` is False, topics with smaller factors are filtered out.
+            If set to None, a value of 1e-8 is used to prevent 0s.
+        normalize: bool or None, optional
+            Whether to normalize the result. Allows for estimation of perplexity, coherence, e.t.c.
 
         Returns
         -------
@@ -422,18 +518,18 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             kwargs = dict(minimum_probability=minimum_probability)
             return self._apply(corpus, **kwargs)
 
-        v = matutils.corpus2csc([bow], len(self.id2word)).tocsr()
-        h, _ = self._solveproj(v, self._W, v_max=np.inf)
+        v = matutils.corpus2csc([bow], self.num_tokens)
+        h = self._solveproj(v, self._W, v_max=np.inf)
 
         if normalize is None:
             normalize = self.normalize
         if normalize:
-            h.data /= h.sum()
+            h /= h.sum()
 
         return [
-            (idx, proba.toarray()[0, 0])
+            (idx, proba)
             for idx, proba in enumerate(h[:, 0])
-            if not minimum_probability or proba.toarray()[0, 0] > minimum_probability
+            if not minimum_probability or proba > minimum_probability
         ]
 
     def _setup(self, corpus):
@@ -441,14 +537,21 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : iterable of list(int, float)
+        corpus : iterable of list of (int, float), optional
             Training corpus.
+            Can be either iterable of documents, which are lists of `(word_id, word_count)`,
+            or a sparse csc matrix of BOWs for each document.
+            If not specified, the model is left uninitialized (presumably, to be trained later with `self.train()`).
 
         """
-        self._h, self._r = None, None
-        first_doc_it = itertools.tee(corpus, 1)
-        first_doc = next(first_doc_it[0])
-        first_doc = matutils.corpus2csc([first_doc], len(self.id2word))
+        self._h = None
+
+        if isinstance(corpus, scipy.sparse.csc.csc_matrix):
+            first_doc = corpus.getcol(0)
+        else:
+            first_doc_it = itertools.tee(corpus, 1)
+            first_doc = next(first_doc_it[0])
+            first_doc = matutils.corpus2csc([first_doc], len(self.id2word))
         self.w_std = np.sqrt(first_doc.mean() / (self.num_tokens * self.num_topics))
 
         self._W = np.abs(
@@ -458,90 +561,88 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             )
         )
 
-        is_great_enough = self._W > self.w_std * self.sparse_coef
+        self.A = np.zeros((self.num_topics, self.num_topics))
+        self.B = np.zeros((self.num_tokens, self.num_topics))
 
-        self._W *= is_great_enough | ~is_great_enough.all(axis=0)
-
-        self._W = scipy.sparse.csc_matrix(self._W)
-
-        self.A = scipy.sparse.csr_matrix((self.num_topics, self.num_topics))
-        self.B = scipy.sparse.csc_matrix((self.num_tokens, self.num_topics))
-
-    def update(self, corpus, chunks_as_numpy=False):
+    def update(self, corpus):
         """Train the model with new documents.
 
         Parameters
         ----------
-        corpus : iterable of list(int, float)
+        corpus : iterable of list of (int, float), optional
             Training corpus.
-        chunks_as_numpy : bool, optional
-            Whether each chunk passed to the inference step should be a numpy.ndarray or not. Numpy can in some settings
-            turn the term IDs into floats, these will be converted back into integers in inference, which incurs a
-            performance hit. For distributed computing it may be desirable to keep the chunks as `numpy.ndarray`.
+            Can be either iterable of documents, which are lists of `(word_id, word_count)`,
+            or a sparse csc matrix of BOWs for each document.
+            If not specified, the model is left uninitialized (presumably, to be trained later with `self.train()`).
 
         """
-
         if self._W is None:
             self._setup(corpus)
 
         chunk_idx = 1
 
         for _ in range(self.passes):
-            for chunk in utils.grouper(
-                corpus, self.chunksize, as_numpy=chunks_as_numpy
-            ):
-                self.random_state.shuffle(chunk)
-                v = matutils.corpus2csc(chunk, len(self.id2word)).tocsr()
-                self._h, self._r = self._solveproj(
-                    v, self._W, r=self._r, h=self._h, v_max=self.v_max
+            if isinstance(corpus, scipy.sparse.csc.csc_matrix):
+                grouper = (
+                    corpus[:, col_idx:col_idx + self.chunksize]
+                    for col_idx
+                    in range(0, corpus.shape[1], self.chunksize)
                 )
-                h, r = self._h, self._r
+            else:
+                grouper = utils.grouper(corpus, self.chunksize)
+
+            for chunk in grouper:
+                if isinstance(corpus, scipy.sparse.csc.csc_matrix):
+                    v = chunk[:, self.random_state.permutation(chunk.shape[1])]
+                else:
+                    self.random_state.shuffle(chunk)
+
+                    v = matutils.corpus2csc(
+                        chunk,
+                        num_terms=self.num_tokens,
+                    )
+
+                self._h = self._solveproj(v, self._W, h=self._h, v_max=self.v_max)
+                h = self._h
 
                 self.A *= chunk_idx - 1
                 self.A += h.dot(h.T)
                 self.A /= chunk_idx
 
                 self.B *= chunk_idx - 1
-                self.B += (v - r).dot(h.T)
+                self.B += v.dot(h.T)
                 self.B /= chunk_idx
+
+                prev_w_error = self._w_error
 
                 self._solve_w()
 
                 if chunk_idx % self.eval_every == 0:
-                    logger.info(
-                        "Loss (no outliers): {}\tLoss (with outliers): {}".format(
-                            scipy.sparse.linalg.norm(v - self._W.dot(h)),
-                            scipy.sparse.linalg.norm(v - self._W.dot(h) - r),
-                        )
-                    )
+                    logger.info("Loss: {}".format(self._w_error / prev_w_error))
 
                 chunk_idx += 1
 
-        logger.info(
-            "Loss (no outliers): {}\tLoss (with outliers): {}".format(
-                scipy.sparse.linalg.norm(v - self._W.dot(h)),
-                scipy.sparse.linalg.norm(v - self._W.dot(h) - r),
-            )
-        )
+        logger.info("Loss: {}".format(self._w_error / prev_w_error))
 
     def _solve_w(self):
-        """Update W matrix."""
+        """Update W."""
 
         def error():
+            Wt = self._W.T
             return (
-                0.5 * self._W.T.dot(self._W).dot(self.A).diagonal().sum()
-                - self._W.T.dot(self.B).diagonal().sum()
+                0.5 * Wt.dot(self._W).dot(self.A).trace()
+                - Wt.dot(self.B).trace()
             )
 
-        eta = self._kappa / scipy.sparse.linalg.norm(self.A)
+        eta = self._kappa / np.linalg.norm(self.A)
 
         for iter_number in range(self._w_max_iter):
-            logger.debug("w_error: %s" % self._w_error)
+            logger.debug("w_error: {}".format(self._w_error))
 
             error_ = error()
 
             if (
-                self._w_error
+                self._w_error < np.inf
                 and np.abs((error_ - self._w_error) / self._w_error) < self._w_stop_condition
             ):
                 break
@@ -556,8 +657,11 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : iterable of list of (int, number)
-            Corpus in sparse Gensim bag-of-words format.
+        corpus : iterable of list of (int, float), optional
+            Training corpus.
+            Can be either iterable of documents, which are lists of `(word_id, word_count)`,
+            or a sparse csc matrix of BOWs for each document.
+            If not specified, the model is left uninitialized (presumably, to be trained later with `self.train()`).
         chunksize : int, optional
             If provided, a more effective processing will performed.
 
@@ -571,36 +675,29 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def _transform(self):
         """Apply boundaries on W."""
-        np.clip(self._W.data, 0, self.v_max, out=self._W.data)
-        self._W.eliminate_zeros()
-        sumsq = scipy.sparse.linalg.norm(self._W, axis=0)
+        np.clip(self._W, 0, self.v_max, out=self._W)
+        sumsq = np.linalg.norm(self._W, axis=0)
         np.maximum(sumsq, 1, out=sumsq)
-        sumsq = np.repeat(sumsq, self._W.getnnz(axis=0))
-        self._W.data /= sumsq
+        self._W /= sumsq
 
-        is_great_enough_data = self._W.data > self.w_std * self.sparse_coef
-        is_great_enough = self._W.toarray() > self.w_std * self.sparse_coef
-        is_all_too_small = is_great_enough.sum(axis=0) == 0
-        is_all_too_small = np.repeat(is_all_too_small, self._W.getnnz(axis=0))
+    @staticmethod
+    def _dense_dot_csc(dense, csc):
+        if OLD_SCIPY:
+            return (csc.T.dot(dense.T)).T
+        else:
+            return scipy.sparse.csc_matrix.dot(dense, csc)
 
-        is_great_enough_data |= is_all_too_small
-
-        self._W.data *= is_great_enough_data
-        self._W.eliminate_zeros()
-
-    def _solveproj(self, v, W, h=None, r=None, v_max=None):
+    def _solveproj(self, v, W, h=None, v_max=None):
         """Update residuals and representation(h) matrices.
 
         Parameters
         ----------
-        v : iterable of list(int, float)
+        v : scipy.sparse.csc_matrix
             Subset of training corpus.
-        W : scipy.sparse.csc_matrix
+        W : ndarray
             Dictionary matrix.
-        h : scipy.sparse.csr_matrix
+        h : ndarray
             Representation matrix.
-        r : scipy.sparse.csr_matrix
-            Residuals matrix.
         v_max : float
             Maximum possible value in matrices.
 
@@ -612,45 +709,30 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             self.v_max = v.max()
 
         batch_size = v.shape[1]
-        rshape = (m, batch_size)
         hshape = (n, batch_size)
 
         if h is None or h.shape != hshape:
-            h = scipy.sparse.csr_matrix(hshape)
+            h = np.zeros(hshape)
 
-        if r is None or r.shape != rshape:
-            r = scipy.sparse.csr_matrix(rshape)
+        Wt = W.T
+        WtW = Wt.dot(W)
 
-        WtW = W.T.dot(W)
+        h_error = None
 
-        _h_r_error = None
+        for iter_number in range(self._h_max_iter):
+            logger.debug("h_error: {}".format(h_error))
 
-        for iter_number in range(self._h_r_max_iter):
-            logger.debug("h_r_error: %s" % _h_r_error)
+            Wtv = self._dense_dot_csc(Wt, v)
 
-            error_ = 0.
+            permutation = self.random_state.permutation(self.num_topics).astype(np.int32)
 
-            Wt_v_minus_r = W.T.dot(v - r)
-
-            h_ = h.toarray()
-            error_ = max(
-                error_, solve_h(h_, Wt_v_minus_r.toarray(), WtW.toarray(), self._kappa)
-            )
-            h = scipy.sparse.csr_matrix(h_)
-
-            if self.use_r:
-                r_actual = v - W.dot(h)
-                error_ = max(
-                    error_,
-                    solve_r(r, r_actual, self._lambda_, self.v_max)
-                )
-                r = r_actual
+            error_ = solve_h(h, Wtv, WtW, permutation, self._kappa)
 
             error_ /= m
 
-            if _h_r_error and np.abs(_h_r_error - error_) < self._h_r_stop_condition:
+            if h_error and np.abs(h_error - error_) < self.h_stop_condition:
                 break
 
-            _h_r_error = error_
+            h_error = error_
 
-        return h, r
+        return h
