@@ -7,6 +7,10 @@ Changes
 
 * Fix unicode error when loading FastText vocabulary (__[@mpenkov](https://github.com/mpenkov)__, [#2390](https://github.com/RaRe-Technologies/gensim/pull/2390))
 
+### :books: Tutorial and doc improvements
+
+* Add link to bindr (__[rogueleaderr](https://github.com/rogueleaderr)__, [#2387](https://github.com/RaRe-Technologies/gensim/pull/2387))
+
 ## 3.7.1, 2019-01-31
 
 ### :+1: Improvements
