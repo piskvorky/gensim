@@ -390,10 +390,9 @@ class TfidfModel(interfaces.TransformationABC):
         self.num_nnz = numnnz
         self.dfs = dfs
         # and finally compute the idf weights
-        n_features = len(dfs) if dfs else 0
         logger.info(
             "calculating IDF weights for %i documents and %i features (%i matrix non-zeros)",
-            self.num_docs, n_features, self.num_nnz
+            self.num_docs, 1 + max([-1] + list(dfs.keys())), self.num_nnz
         )
         self.idfs = precompute_idfs(self.wglobal, self.dfs, self.num_docs)
 
