@@ -575,7 +575,15 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if isinstance(corpus, collections.Iterator) and self.passes > 1:
             raise ValueError("Corpus is an iterator, only `passes=1` is valid.")
 
+        logger.info(
+            "running NMF training, %s topics, %i passes over the supplied corpus, evaluating perplexity every %i"
+            "documents, iterating %ix with a convergence threshold of %f",
+            self.num_topics, self.passes, self.eval_every
+        )
+
         chunk_idx = 1
+
+        prev_w_error = np.inf
 
         for _ in range(self.passes):
             if isinstance(corpus, scipy.sparse.csc.csc_matrix):
@@ -632,29 +640,30 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
     def _solve_w(self):
         """Update W."""
 
-        def error():
-            Wt = self._W.T
+        def error(WA):
             return (
-                    0.5 * Wt.dot(self._W).dot(self.A).trace()
-                    - Wt.dot(self.B).trace()
+                0.5 * np.einsum('ij,ij', WA, self._W)
+                - np.einsum('ij,ij', self._W, self.B)
             )
 
-        eta = self._kappa / np.linalg.norm(self.A)
+        eta = self._kappa / np.linalg.norm(np.diag(self.A))
 
         for iter_number in range(self._w_max_iter):
             logger.debug("w_error: {}".format(self._w_error))
 
-            error_ = error()
+            WA = self._W.dot(self.A)
+
+            error_ = error(WA)
 
             if (
-                    self._w_error < np.inf
-                    and np.abs((error_ - self._w_error) / self._w_error) < self._w_stop_condition
+                self._w_error < np.inf
+                and np.abs((error_ - self._w_error) / self._w_error) < self._w_stop_condition
             ):
                 break
 
             self._w_error = error_
 
-            self._W -= eta * (self._W.dot(self.A) - self.B)
+            self._W -= eta * (WA - self.B)
             self._transform()
 
     def _apply(self, corpus, chunksize=None, **kwargs):
@@ -698,6 +707,34 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Parameters
         ----------
         v : scipy.sparse.csc_matrix
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             Subset of training corpus.
         W : ndarray
             Dictionary matrix.
