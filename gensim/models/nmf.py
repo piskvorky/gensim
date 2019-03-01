@@ -647,8 +647,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         def error(WA):
             return (
-                0.5 * np.einsum('ij,ij', WA, self._W)
-                - np.einsum('ij,ij', self._W, self.B)
+                0.5 * np.einsum('ij,ij', WA, self._W, optimize=True)
+                - np.einsum('ij,ij', self._W, self.B, optimize=True)
             )
 
         eta = self._kappa / np.linalg.norm(np.diag(self.A))
