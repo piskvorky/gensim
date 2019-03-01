@@ -185,7 +185,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self._w_max_iter = w_max_iter
         self._w_stop_condition = w_stop_condition
         self._h_max_iter = h_max_iter
-        self.h_stop_condition = h_stop_condition
+        self._h_stop_condition = h_stop_condition
         self.eval_every = eval_every
         self.normalize = normalize
         self.random_state = utils.get_random_state(random_state)
@@ -413,39 +413,6 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         scored_topics = zip(str_topics, coherence_scores)
         return sorted(scored_topics, key=lambda tup: tup[1], reverse=True)
 
-    def log_perplexity(self, corpus):
-        """Calculate perplexity bound on the specified corpus.
-
-        Perplexity = e^(-bound).
-
-        Parameters
-        ----------
-        corpus : iterable of list of (int, float) or `csc_matrix` with the shape (n_tokens, n_documents)
-            Training corpus.
-            Can be either iterable of documents, which are lists of `(word_id, word_count)`,
-            or a sparse csc matrix of BOWs for each document.
-            If not specified, the model is left uninitialized (presumably, to be trained later with `self.train()`).
-
-        Returns
-        -------
-        float
-            The perplexity bound.
-
-        """
-        W = self.get_topics().T
-
-        H = np.zeros((W.shape[1], len(corpus)))
-        for bow_id, bow in enumerate(corpus):
-            for topic_id, factor in self[bow]:
-                H[topic_id, bow_id] = factor
-
-        dense_corpus = matutils.corpus2dense(corpus, W.shape[0])
-
-        pred_factors = W.dot(H)
-        pred_factors /= pred_factors.sum(axis=0)
-
-        return (np.log(pred_factors, where=pred_factors > 0) * dense_corpus).sum() / dense_corpus.sum()
-
     def get_term_topics(self, word_id, minimum_probability=None, normalize=None):
         """Get the most relevant topics to the given word.
 
@@ -560,7 +527,17 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.A = np.zeros((self.num_topics, self.num_topics))
         self.B = np.zeros((self.num_tokens, self.num_topics))
 
-    def update(self, corpus):
+    def l2_norm(self, v):
+        Wt = self._W.T
+
+        l2 = 0
+
+        for doc, doc_topics in zip(v.T, self._h.T):
+            l2 += np.sum(np.square((doc - doc_topics.dot(Wt))))
+
+        return np.sqrt(l2)
+
+    def update(self, corpus, chunksize=None, passes=None, eval_every=None):
         """Train the model with new documents.
 
         Parameters
@@ -572,20 +549,41 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             If not specified, the model is left uninitialized (presumably, to be trained later with `self.train()`).
 
         """
+
+        # use parameters given in constructor, unless user explicitly overrode them
+        if passes is None:
+            passes = self.passes
+        if eval_every is None:
+            eval_every = self.eval_every
+
+        try:
+            lencorpus = len(corpus)
+        except Exception:
+            logger.warning("input corpus stream has no len(); counting documents")
+            lencorpus = sum(1 for _ in corpus)
+        if lencorpus == 0:
+            logger.warning("Nmf.update() called with an empty corpus")
+            return
+
+        if chunksize is None:
+            chunksize = min(lencorpus, self.chunksize)
+
+        evalafter = min(lencorpus, (eval_every or 0) * chunksize)
+
         if isinstance(corpus, collections.Iterator) and self.passes > 1:
             raise ValueError("Corpus is an iterator, only `passes=1` is valid.")
 
         logger.info(
-            "running NMF training, %s topics, %i passes over the supplied corpus, evaluating perplexity every %i"
-            "documents, iterating %ix with a convergence threshold of %f",
-            self.num_topics, self.passes, self.eval_every
+            "running NMF training, %s topics, %i passes over the supplied corpus of %i documents, evaluating l2 norm "
+            "every %i documents",
+            self.num_topics, passes, lencorpus, evalafter,
         )
 
-        chunk_idx = 1
+        chunk_overall_idx = 1
 
-        prev_w_error = np.inf
+        previous_w_error = np.inf
 
-        for _ in range(self.passes):
+        for pass_ in range(passes):
             if isinstance(corpus, scipy.sparse.csc.csc_matrix):
                 grouper = (
                     # Older scipy (0.19 etc) throw an error when slicing beyond the actual sparse array dimensions, so
@@ -598,7 +596,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             else:
                 grouper = utils.grouper(corpus, self.chunksize)
 
-            for chunk in grouper:
+            for chunk_idx, chunk in enumerate(grouper):
                 if isinstance(corpus, scipy.sparse.csc.csc_matrix):
                     v = chunk[:, self.random_state.permutation(chunk.shape[1])]
                 else:
@@ -609,6 +607,11 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                         num_terms=self.num_tokens,
                     )
 
+                logger.info(
+                    "PROGRESS: pass %i, at document #%i/%i",
+                    pass_, chunk_idx * chunksize + len(chunk), lencorpus
+                )
+
                 if self._W is None:
                     # If `self._W` is not set (i.e. the first batch being handled), compute the initial matrix using the
                     # batch mean.
@@ -618,24 +621,26 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 self._h = self._solveproj(v, self._W, h=self._h, v_max=self.v_max)
                 h = self._h
 
-                self.A *= chunk_idx - 1
+                if eval_every and (((chunk_idx + 1) * chunksize >= lencorpus) or (chunk_idx + 1) % evalafter == 0):
+                    logger.info("L2 norm: {}".format(self.l2_norm(v)))
+
+                self.A *= chunk_overall_idx - 1
                 self.A += h.dot(h.T)
-                self.A /= chunk_idx
+                self.A /= chunk_overall_idx
 
-                self.B *= chunk_idx - 1
+                self.B *= chunk_overall_idx - 1
                 self.B += v.dot(h.T)
-                self.B /= chunk_idx
+                self.B /= chunk_overall_idx
 
-                prev_w_error = self._w_error
+                previous_w_error = self._w_error
 
                 self._solve_w()
 
-                if chunk_idx % self.eval_every == 0:
-                    logger.info("Loss: {}".format(np.abs((prev_w_error - self._w_error) / self._w_error)))
+                chunk_overall_idx += 1
 
-                chunk_idx += 1
+                self.print_topics(5)
 
-        logger.info("Loss: {}".format(np.abs((prev_w_error - self._w_error) / self._w_error)))
+                logger.info("W error diff: {}".format(np.abs((previous_w_error - self._w_error))))
 
     def _solve_w(self):
         """Update W."""
@@ -707,34 +712,6 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Parameters
         ----------
         v : scipy.sparse.csc_matrix
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             Subset of training corpus.
         W : ndarray
             Dictionary matrix.
@@ -772,7 +749,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             error_ /= m
 
-            if h_error and np.abs(h_error - error_) < self.h_stop_condition:
+            if h_error and np.abs(h_error - error_) < self._h_stop_condition:
                 break
 
             h_error = error_
