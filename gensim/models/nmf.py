@@ -93,6 +93,8 @@ The NMF should be used whenever one needs extremely fast and memory optimized to
 
 """
 import collections
+import itertools
+
 import logging
 import numpy as np
 import scipy.sparse
@@ -581,8 +583,6 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         chunk_overall_idx = 1
 
-        previous_w_error = np.inf
-
         for pass_ in range(passes):
             if isinstance(corpus, scipy.sparse.csc.csc_matrix):
                 grouper = (
@@ -605,6 +605,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     v = matutils.corpus2csc(
                         chunk,
                         num_terms=self.num_tokens,
+                        num_docs=len(chunk),
+                        num_nnz=sum(1 for _ in itertools.chain.from_iterable(chunk)),
                     )
 
                 logger.info(
@@ -621,7 +623,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 self._h = self._solveproj(v, self._W, h=self._h, v_max=self.v_max)
                 h = self._h
 
-                if eval_every and (((chunk_idx + 1) * chunksize >= lencorpus) or (chunk_idx + 1) % evalafter == 0):
+                if eval_every and (((chunk_idx + 1) * chunksize >= lencorpus) or (chunk_idx + 1) % eval_every == 0):
                     logger.info("L2 norm: {}".format(self.l2_norm(v)))
 
                 self.A *= chunk_overall_idx - 1
@@ -640,7 +642,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
                 self.print_topics(5)
 
-                logger.info("W error diff: {}".format(np.abs((previous_w_error - self._w_error))))
+                logger.info("W error diff: {}".format((self._w_error - previous_w_error)))
 
     def _solve_w(self):
         """Update W."""
@@ -651,7 +653,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 - np.einsum('ij,ij', self._W, self.B, optimize=True)
             )
 
-        eta = self._kappa / np.linalg.norm(np.diag(self.A))
+        eta = self._kappa / np.linalg.norm(self.A)
 
         for iter_number in range(self._w_max_iter):
             logger.debug("w_error: {}".format(self._w_error))
@@ -695,7 +697,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
     def _transform(self):
         """Apply boundaries on W."""
         np.clip(self._W, 0, self.v_max, out=self._W)
-        sumsq = np.linalg.norm(self._W, axis=0)
+        sumsq = np.sqrt(np.einsum('ij,ij->j', self._W, self._W, optimize=True))
         np.maximum(sumsq, 1, out=sumsq)
         self._W /= sumsq
 
