@@ -598,6 +598,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             for chunk_idx, chunk in enumerate(grouper):
                 if isinstance(corpus, scipy.sparse.csc.csc_matrix):
                     v = chunk[:, self.random_state.permutation(chunk.shape[1])]
+
+                    chunk_len = v.shape[1]
                 else:
                     self.random_state.shuffle(chunk)
 
@@ -608,9 +610,11 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                         num_nnz=sum(len(doc) for doc in chunk),
                     )
 
+                    chunk_len = len(chunk)
+
                 logger.info(
                     "PROGRESS: pass %i, at document #%i/%i",
-                    pass_, chunk_idx * chunksize + len(chunk), lencorpus
+                    pass_, chunk_idx * chunksize + chunk_len, lencorpus
                 )
 
                 if self._W is None:
@@ -638,8 +642,6 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 self._solve_w()
 
                 chunk_overall_idx += 1
-
-                self.print_topics(5)
 
                 logger.info("W error diff: {}".format((self._w_error - previous_w_error)))
 
