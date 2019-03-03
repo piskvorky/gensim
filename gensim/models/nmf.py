@@ -628,6 +628,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
                 if eval_every and (((chunk_idx + 1) * chunksize >= lencorpus) or (chunk_idx + 1) % eval_every == 0):
                     logger.info("L2 norm: {}".format(self.l2_norm(v)))
+                    self.print_topics(5)
 
                 self.A *= chunk_overall_idx - 1
                 self.A += h.dot(h.T)
