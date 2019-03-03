@@ -606,7 +606,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                         chunk,
                         num_terms=self.num_tokens,
                         num_docs=len(chunk),
-                        num_nnz=sum(1 for _ in itertools.chain.from_iterable(chunk)),
+                        num_nnz=sum(len(doc) for doc in chunk),
                     )
 
                 logger.info(
