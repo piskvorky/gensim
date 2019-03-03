@@ -558,7 +558,10 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             eval_every = self.eval_every
 
         try:
-            lencorpus = len(corpus)
+            if isinstance(corpus, scipy.sparse.csc.csc_matrix):
+                lencorpus = corpus.shape[1]
+            else:
+                lencorpus = len(corpus)
         except Exception:
             logger.warning("input corpus stream has no len(); counting documents")
             lencorpus = sum(1 for _ in corpus)
@@ -606,8 +609,6 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     v = matutils.corpus2csc(
                         chunk,
                         num_terms=self.num_tokens,
-                        num_docs=len(chunk),
-                        num_nnz=sum(len(doc) for doc in chunk),
                     )
 
                     chunk_len = len(chunk)
