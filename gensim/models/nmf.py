@@ -93,7 +93,6 @@ The NMF should be used whenever one needs extremely fast and memory optimized to
 
 """
 import collections
-import itertools
 
 import logging
 import numpy as np
@@ -283,7 +282,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             sorted_topics = list(matutils.argsort(sparsity))
             chosen_topics = (
-                    sorted_topics[: num_topics // 2] + sorted_topics[-num_topics // 2:]
+                sorted_topics[: num_topics // 2] + sorted_topics[-num_topics // 2:]
             )
 
         shown = []
@@ -649,8 +648,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         def error(WA):
             return (
-                0.5 * np.einsum('ij,ij', WA, self._W, optimize=True)
-                - np.einsum('ij,ij', self._W, self.B, optimize=True)
+                0.5 * np.einsum('ij,ij', WA, self._W)
+                - np.einsum('ij,ij', self._W, self.B)
             )
 
         eta = self._kappa / np.linalg.norm(self.A)
