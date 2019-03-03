@@ -696,7 +696,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
     def _transform(self):
         """Apply boundaries on W."""
         np.clip(self._W, 0, self.v_max, out=self._W)
-        sumsq = np.sqrt(np.einsum('ij,ij->j', self._W, self._W, optimize=True))
+        sumsq = np.sqrt(np.einsum('ij,ij->j', self._W, self._W))
         np.maximum(sumsq, 1, out=sumsq)
         self._W /= sumsq
 
