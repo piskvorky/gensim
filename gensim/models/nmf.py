@@ -273,7 +273,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         for row in self._W:
             sparsity += (row == 0)
 
-        sparsity /= self._W.shape[1]
+        sparsity /= self._W.shape[0]
 
         if num_topics < 0 or num_topics >= self.num_topics:
             num_topics = self.num_topics
