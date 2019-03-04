@@ -557,22 +557,27 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if eval_every is None:
             eval_every = self.eval_every
 
+        lencorpus = np.inf
+        evalafter = "?"
+
         try:
             if isinstance(corpus, scipy.sparse.csc.csc_matrix):
                 lencorpus = corpus.shape[1]
             else:
                 lencorpus = len(corpus)
+
+            if chunksize is None:
+                chunksize = min(lencorpus, self.chunksize)
+
+            evalafter = min(lencorpus, (eval_every or 0) * chunksize)
         except Exception:
-            logger.warning("input corpus stream has no len(); counting documents")
-            lencorpus = sum(1 for _ in corpus)
+            logger.warning("input corpus stream has no len()")
         if lencorpus == 0:
             logger.warning("Nmf.update() called with an empty corpus")
             return
 
         if chunksize is None:
-            chunksize = min(lencorpus, self.chunksize)
-
-        evalafter = min(lencorpus, (eval_every or 0) * chunksize)
+            chunksize = self.chunksize
 
         if isinstance(corpus, collections.Iterator) and self.passes > 1:
             raise ValueError("Corpus is an iterator, only `passes=1` is valid.")
@@ -580,7 +585,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         logger.info(
             "running NMF training, %s topics, %i passes over the supplied corpus of %i documents, evaluating l2 norm "
             "every %i documents",
-            self.num_topics, passes, lencorpus, evalafter,
+            self.num_topics, passes, lencorpus if lencorpus < np.inf else "?", evalafter,
         )
 
         chunk_overall_idx = 1

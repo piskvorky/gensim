@@ -33,6 +33,27 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
             random_state=42,
         )
 
+    def testGenerator(self):
+        model_1 = nmf.Nmf(
+            iter(common_corpus * 100),
+            id2word=common_dictionary,
+            chunksize=1,
+            num_topics=2,
+            passes=1,
+            random_state=42,
+        )
+
+        model_2 = nmf.Nmf(
+            common_corpus * 100,
+            id2word=common_dictionary,
+            chunksize=1,
+            num_topics=2,
+            passes=1,
+            random_state=42,
+        )
+
+        self.assertTrue(np.allclose(model_1.get_topics(), model_2.get_topics()))
+
     def testUpdate(self):
         model = copy.deepcopy(self.model)
         model.update(common_corpus)
