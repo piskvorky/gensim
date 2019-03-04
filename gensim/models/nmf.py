@@ -548,6 +548,13 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Can be either iterable of documents, which are lists of `(word_id, word_count)`,
             or a sparse csc matrix of BOWs for each document.
             If not specified, the model is left uninitialized (presumably, to be trained later with `self.train()`).
+        chunksize: int, optional
+            Number of documents to be used in each training chunk.
+        passes: int, optional
+            Number of full passes over the training corpus.
+            Leave at default `passes=1` if your input is an iterator.
+        eval_every: int, optional
+            Number of batches after which l2 norm of (v - Wh) is computed. Decreases performance if set too low.
 
         """
 
@@ -558,26 +565,23 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             eval_every = self.eval_every
 
         lencorpus = np.inf
-        evalafter = "?"
 
-        try:
-            if isinstance(corpus, scipy.sparse.csc.csc_matrix):
-                lencorpus = corpus.shape[1]
-            else:
+        if isinstance(corpus, scipy.sparse.csc.csc_matrix):
+            lencorpus = corpus.shape[1]
+        else:
+            try:
                 lencorpus = len(corpus)
+            except TypeError:
+                logger.info("input corpus stream has no len()")
 
-            if chunksize is None:
-                chunksize = min(lencorpus, self.chunksize)
+        if chunksize is None:
+            chunksize = min(lencorpus, self.chunksize)
 
-            evalafter = min(lencorpus, (eval_every or 0) * chunksize)
-        except Exception:
-            logger.warning("input corpus stream has no len()")
+        evalafter = min(lencorpus, (eval_every or 0) * chunksize)
+
         if lencorpus == 0:
             logger.warning("Nmf.update() called with an empty corpus")
             return
-
-        if chunksize is None:
-            chunksize = self.chunksize
 
         if isinstance(corpus, collections.Iterator) and self.passes > 1:
             raise ValueError("Corpus is an iterator, only `passes=1` is valid.")
@@ -656,10 +660,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """Update W."""
 
         def error(WA):
-            return (
-                0.5 * np.einsum('ij,ij', WA, self._W)
-                - np.einsum('ij,ij', self._W, self.B)
-            )
+            """An optimized version of 0.5 * trace(WtWA) - trace(WtB)."""
+            return 0.5 * np.einsum('ij,ij', WA, self._W) - np.einsum('ij,ij', self._W, self.B)
 
         eta = self._kappa / np.linalg.norm(self.A)
 
