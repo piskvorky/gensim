@@ -506,7 +506,8 @@ def corpus2dense(corpus, num_terms, num_docs=None, dtype=np.float32):
         # The below used to be a generator, but NumPy deprecated generator as of 1.16 with:
         # """
         # FutureWarning: arrays to stack must be passed as a "sequence" type such as list or tuple.
-        # Support for non-sequence iterables such as generators is deprecated as of NumPy 1.16 and will raise an error in the future.
+        # Support for non-sequence iterables such as generators is deprecated as of NumPy 1.16 and will raise an error
+        # in the future.
         # """
         result = np.column_stack([sparse2full(doc, num_terms) for doc in corpus])
     return result.astype(dtype)
