@@ -6,6 +6,7 @@ Changes
 ### :red_circle: Bug fixes
 
 * Fix unicode error when loading FastText vocabulary (__[@mpenkov](https://github.com/mpenkov)__, [#2390](https://github.com/RaRe-Technologies/gensim/pull/2390))
+* Avoid division by zero in fasttext_inner.pyx (__[@mpenkov](https://github.com/mpenkov)__, [#2404](https://github.com/RaRe-Technologies/gensim/pull/2404))
 
 ### :books: Tutorial and doc improvements
 
