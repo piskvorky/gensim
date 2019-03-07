@@ -1964,14 +1964,6 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         replace=True.
     buckets_word : dict
         Maps vocabulary items (by their index) to the buckets they occur in.
-    hash2index : dict
-        Maps bucket numbers to an index within vectors_ngrams.  So, given an
-        ngram, you can get its vector by determining its bucket, mapping the
-        bucket to an index, and then indexing into vectors_ngrams (in other
-        words, vectors_ngrams[hash2index[hash_fn(ngram) % bucket]].
-    num_ngram_vectors : int
-        The number of vectors that correspond to ngrams, as opposed to terms
-        (full words).
 
     """
     def __init__(self, vector_size, min_n, max_n, bucket, compatible_hash):
@@ -1981,11 +1973,9 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         self.vectors_ngrams = None
         self.vectors_ngrams_norm = None
         self.buckets_word = None
-        self.hash2index = {}
         self.min_n = min_n
         self.max_n = max_n
         self.bucket = bucket
-        self.num_ngram_vectors = 0
         self.compatible_hash = compatible_hash
 
     @classmethod
@@ -1993,6 +1983,9 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         model = super(WordEmbeddingsKeyedVectors, cls).load(fname_or_handle, **kwargs)
         if not hasattr(model, 'compatible_hash'):
             model.compatible_hash = False
+
+        if hasattr(model, 'hash2index'):
+            _rollback_optimization(model)
 
         return model
 
@@ -2030,12 +2023,23 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         bool
             True if `word` or any character ngrams in `word` are present in the vocabulary, False otherwise.
 
+        Note
+        ----
+        This method **always** returns True, because of the way FastText works.
+
+        If you want to check if a word is an in-vocabulary term, use this instead:
+
+        .. pycon:
+
+            >>> from gensim.test.utils import datapath
+            >>> from gensim.models import FastText
+            >>> cap_path = datapath("crime-and-punishment.bin")
+            >>> model = FastText.load_fasttext_format(cap_path, full_model=False)
+            >>> 'steamtrain' in model.wv.vocab  # If False, is an OOV term
+            False
+
         """
-        if word in self.vocab:
-            return True
-        else:
-            hashes = ft_ngram_hashes(word, self.min_n, self.max_n, self.bucket, self.compatible_hash)
-            return any(h in self.hash2index for h in hashes)
+        return True
 
     def save(self, *args, **kwargs):
         """Save object.
@@ -2052,8 +2056,14 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
 
         """
         # don't bother storing the cached normalized vectors
-        kwargs['ignore'] = kwargs.get(
-            'ignore', ['vectors_norm', 'vectors_vocab_norm', 'vectors_ngrams_norm', 'buckets_word'])
+        ignore_attrs = [
+            'vectors_norm',
+            'vectors_vocab_norm',
+            'vectors_ngrams_norm',
+            'buckets_word',
+            'hash2index',
+        ]
+        kwargs['ignore'] = kwargs.get('ignore', ignore_attrs)
         super(FastTextKeyedVectors, self).save(*args, **kwargs)
 
     def word_vec(self, word, use_norm=False):
@@ -2087,15 +2097,10 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
                 ngram_weights = self.vectors_ngrams_norm
             else:
                 ngram_weights = self.vectors_ngrams
-            ngrams_found = 0
-            for ngram_hash in ft_ngram_hashes(word, self.min_n, self.max_n, self.bucket, self.compatible_hash):
-                if ngram_hash in self.hash2index:
-                    word_vec += ngram_weights[self.hash2index[ngram_hash]]
-                    ngrams_found += 1
-            if word_vec.any():
-                return word_vec / max(1, ngrams_found)
-            else:  # No ngrams of the word are present in self.ngrams
-                raise KeyError('all ngrams for word %s absent from model' % word)
+            ngram_hashes = ft_ngram_hashes(word, self.min_n, self.max_n, self.bucket, self.compatible_hash)
+            for nh in ngram_hashes:
+                word_vec += ngram_weights[nh]
+            return word_vec / len(ngram_hashes)
 
     def init_sims(self, replace=False):
         """Precompute L2-normalized vectors.
@@ -2140,41 +2145,69 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
             fname, self.vocab, self.vectors, fvocab=fvocab, binary=binary, total_vec=total_vec)
 
     def init_ngrams_weights(self, seed):
-        self.hash2index = {}
-        ngram_indices, self.buckets_word = _process_fasttext_vocab(
+        """Initialize the vocabulary and ngrams weights prior to training.
+
+        Creates the weight matrices and initializes them with uniform random values.
+
+        Parameters
+        ----------
+        seed : float
+            The seed for the PRNG.
+
+        Note
+        ----
+        Call this **after** the vocabulary has been fully initialized.
+
+        """
+        self.buckets_word = _process_fasttext_vocab(
             self.vocab.items(),
             self.min_n,
             self.max_n,
             self.bucket,
             self.compatible_hash,
-            self.hash2index
         )
-        self.num_ngram_vectors = len(ngram_indices)
-        logger.info("Total number of ngrams is %d", self.num_ngram_vectors)
 
         rand_obj = np.random
         rand_obj.seed(seed)
 
         lo, hi = -1.0 / self.vector_size, 1.0 / self.vector_size
         vocab_shape = (len(self.vocab), self.vector_size)
-        ngrams_shape = (len(ngram_indices), self.vector_size)
+        ngrams_shape = (self.bucket, self.vector_size)
         self.vectors_vocab = rand_obj.uniform(lo, hi, vocab_shape).astype(REAL)
+
+        #
+        # We could have initialized vectors_ngrams at construction time, but we
+        # do it here for two reasons:
+        #
+        # 1. The constructor does not have access to the random seed
+        # 2. We want to use the same rand_obj to fill vectors_vocab _and_
+        #    vectors_ngrams, and vectors_vocab cannot happen at construction
+        #    time because the vocab is not initialized at that stage.
+        #
         self.vectors_ngrams = rand_obj.uniform(lo, hi, ngrams_shape).astype(REAL)
 
     def update_ngrams_weights(self, seed, old_vocab_len):
-        old_hash2index_len = len(self.hash2index)
+        """Update the vocabulary weights for training continuation.
 
-        new_ngram_hashes, self.buckets_word = _process_fasttext_vocab(
+        Parameters
+        ----------
+        seed : float
+            The seed for the PRNG.
+        old_vocab_length : int
+            The length of the vocabulary prior to its update.
+
+        Note
+        ----
+        Call this **after** the vocabulary has been updated.
+
+        """
+        self.buckets_word = _process_fasttext_vocab(
             self.vocab.items(),
             self.min_n,
             self.max_n,
             self.bucket,
             self.compatible_hash,
-            self.hash2index
         )
-        num_new_ngrams = len(new_ngram_hashes)
-        self.num_ngram_vectors += num_new_ngrams
-        logger.info("Number of new ngrams is %d", num_new_ngrams)
 
         rand_obj = np.random
         rand_obj.seed(seed)
@@ -2182,10 +2215,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         new_vocab = len(self.vocab) - old_vocab_len
         self.vectors_vocab = _pad_random(self.vectors_vocab, new_vocab, rand_obj)
 
-        new_ngrams = len(self.hash2index) - old_hash2index_len
-        self.vectors_ngrams = _pad_random(self.vectors_ngrams, new_ngrams, rand_obj)
-
-    def init_post_load(self, vectors, match_gensim=False):
+    def init_post_load(self, vectors):
         """Perform initialization after loading a native Facebook model.
 
         Expects that the vocabulary (self.vocab) has already been initialized.
@@ -2198,9 +2228,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
             The order of the vectors must correspond to the indices in
             the vocabulary.
         match_gensim : boolean, optional
-            Match the behavior of gensim's FastText implementation and take a
-            subset of vectors_ngrams.  This behavior appears to be incompatible
-            with Facebook's implementation.
+            No longer supported.
 
         """
         vocab_words = len(self.vocab)
@@ -2215,31 +2243,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         self.vectors = np.array(vectors[:vocab_words, :])
         self.vectors_vocab = np.array(vectors[:vocab_words, :])
         self.vectors_ngrams = np.array(vectors[vocab_words:, :])
-        self.hash2index = {i: i for i in range(self.bucket)}
         self.buckets_word = None  # This can get initialized later
-        self.num_ngram_vectors = self.bucket
-
-        if match_gensim:
-            #
-            # This gives us the same shape for vectors_ngrams, and we can
-            # satisfy our unit tests when running gensim vs native comparisons,
-            # but because we're discarding some ngrams, the accuracy of the
-            # model suffers.
-            #
-            ngram_hashes, _ = _process_fasttext_vocab(
-                self.vocab.items(),
-                self.min_n,
-                self.max_n,
-                self.bucket,
-                self.compatible_hash,
-                dict(),  # we don't care what goes here in this case
-            )
-            ngram_hashes = sorted(set(ngram_hashes))
-
-            keep_indices = [self.hash2index[h] for h in self.hash2index if h in ngram_hashes]
-            self.num_ngram_vectors = len(keep_indices)
-            self.vectors_ngrams = self.vectors_ngrams.take(keep_indices, axis=0)
-            self.hash2index = {hsh: idx for (idx, hsh) in enumerate(ngram_hashes)}
 
         self.adjust_vectors()
 
@@ -2257,12 +2261,17 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
             word_vec = np.copy(self.vectors_vocab[v.index])
             ngram_hashes = ft_ngram_hashes(w, self.min_n, self.max_n, self.bucket, self.compatible_hash)
             for nh in ngram_hashes:
-                word_vec += self.vectors_ngrams[self.hash2index[nh]]
+                word_vec += self.vectors_ngrams[nh]
             word_vec /= len(ngram_hashes) + 1
             self.vectors[v.index] = word_vec
 
+    @property
+    @deprecated("Attribute will be removed in 4.0.0, use self.bucket instead")
+    def num_ngram_vectors(self):
+        return self.bucket
 
-def _process_fasttext_vocab(iterable, min_n, max_n, num_buckets, compatible_hash, hash2index):
+
+def _process_fasttext_vocab(iterable, min_n, max_n, num_buckets, compatible_hash):
     """
     Performs a common operation for FastText weight initialization and
     updates: scan the vocabulary, calculate ngrams and their hashes, keep
@@ -2282,42 +2291,27 @@ def _process_fasttext_vocab(iterable, min_n, max_n, num_buckets, compatible_hash
     compatible_hash : boolean
         True for compatibility with the Facebook implementation.
         False for compatibility with the old Gensim implementation.
-    hash2index : dict
-        Updated in-place.
 
     Returns
     -------
-    A tuple of two elements.
-
-    word_indices : dict
+    dict
         Keys are indices of entities in the vocabulary (words).  Values are
         arrays containing indices into vectors_ngrams for each ngram of the
         word.
-    new_ngram_hashes : list
-        A list of hashes for newly encountered ngrams.  Each hash is modulo
-        num_buckets.
 
     """
-    old_hash2index_len = len(hash2index)
     word_indices = {}
-    new_ngram_hashes = []
 
     if num_buckets == 0:
-        return [], {v.index: np.array([], dtype=np.uint32) for w, v in iterable}
+        return {v.index: np.array([], dtype=np.uint32) for w, v in iterable}
 
     for word, vocab in iterable:
         wi = []
         for ngram_hash in ft_ngram_hashes(word, min_n, max_n, num_buckets, compatible_hash):
-            if ngram_hash not in hash2index:
-                #
-                # This is a new ngram.  Reserve a new index in hash2index.
-                #
-                hash2index[ngram_hash] = old_hash2index_len + len(new_ngram_hashes)
-                new_ngram_hashes.append(ngram_hash)
-            wi.append(hash2index[ngram_hash])
+            wi.append(ngram_hash)
         word_indices[vocab.index] = np.array(wi, dtype=np.uint32)
 
-    return new_ngram_hashes, word_indices
+    return word_indices
 
 
 def _pad_random(m, new_rows, rand):
@@ -2349,3 +2343,127 @@ def _l2_norm(m, replace=False):
         return m
     else:
         return (m / dist).astype(REAL)
+
+
+def _rollback_optimization(kv):
+    """Undo the optimization that pruned buckets.
+
+    This unfortunate optimization saves memory and CPU cycles, but breaks
+    compatibility with Facebook's model by introducing divergent behavior
+    for OOV words.
+
+    """
+    logger.warning(
+        "This saved FastText model was trained with an optimization we no longer support. "
+        "The current Gensim version automatically reverses this optimization during loading. "
+        "Save the loaded model to a new file and reload to suppress this message."
+    )
+    assert hasattr(kv, 'hash2index')
+    assert hasattr(kv, 'num_ngram_vectors')
+
+    kv.vectors_ngrams = _unpack(kv.vectors_ngrams, kv.bucket, kv.hash2index)
+
+    #
+    # We have replaced num_ngram_vectors with a property and deprecated it.
+    # We can't delete it because the new attribute masks the member.
+    #
+    del kv.hash2index
+
+
+def _unpack_copy(m, num_rows, hash2index, seed=1):
+    """Same as _unpack, but makes a copy of the matrix.
+
+    Simpler implementation, but uses more RAM.
+
+    """
+    rows, columns = m.shape
+    if rows == num_rows:
+        #
+        # Nothing to do.
+        #
+        return m
+    assert num_rows > rows
+
+    rand_obj = np.random
+    rand_obj.seed(seed)
+
+    n = np.empty((0, columns), dtype=m.dtype)
+    n = _pad_random(n, num_rows, rand_obj)
+
+    for src, dst in hash2index.items():
+        n[src] = m[dst]
+
+    return n
+
+
+def _unpack(m, num_rows, hash2index, seed=1):
+    """Restore the array to its natural shape, undoing the optimization.
+
+    A packed matrix contains contiguous vectors for ngrams, as well as a hashmap.
+    The hash map maps the ngram hash to its index in the packed matrix.
+    To unpack the matrix, we need to do several things:
+
+    1. Restore the matrix to its "natural" shape, where the number of rows
+       equals the number of buckets.
+    2. Rearrange the existing rows such that the hashmap becomes the identity
+       function and is thus redundant.
+    3. Fill the new rows with random values.
+
+    Parameters
+    ----------
+
+    m : np.ndarray
+        The matrix to restore.
+    num_rows : int
+        The number of rows that this array should have.
+    hash2index : dict
+        the product of the optimization we are undoing.
+    seed : float, optional
+        The seed for the PRNG.  Will be used to initialize new rows.
+
+    Returns
+    -------
+    np.array
+        The unpacked matrix.
+
+    Notes
+    -----
+
+    The unpacked matrix will reference some rows in the input matrix to save memory.
+    Throw away the old matrix after calling this function, or use np.copy.
+
+    """
+    orig_rows, orig_columns = m.shape
+    if orig_rows == num_rows:
+        #
+        # Nothing to do.
+        #
+        return m
+    assert num_rows > orig_rows
+
+    rand_obj = np.random
+    rand_obj.seed(seed)
+
+    #
+    # Rows at the top of the matrix (the first orig_rows) will contain "packed" learned vectors.
+    # Rows at the bottom of the matrix will be "free": initialized to random values.
+    #
+    m = _pad_random(m, num_rows - orig_rows, rand_obj)
+
+    #
+    # Swap rows to transform hash2index into the identify function.
+    # There are two kinds of swaps.
+    # First, rearrange the rows that belong entirely within the original matrix dimensions.
+    # Second, swap out rows from the original matrix dimensions, replacing them with
+    # randomly initialized values.
+    #
+    # N.B. We only do the swap in one direction, because doing it in both directions
+    # nullifies the effect.
+    #
+    swap = {h: i for (h, i) in hash2index.items() if h < i < orig_rows}
+    swap.update({h: i for (h, i) in hash2index.items() if h >= orig_rows})
+    for h, i in swap.items():
+        assert h != i
+        m[[h, i]] = m[[i, h]]  # swap rows i and h
+
+    return m
