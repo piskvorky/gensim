@@ -2039,15 +2039,6 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
             False
 
         """
-        #
-        # FIXME: what's the right behavior here?
-        #
-        # If we maintain the previous behavior of this method (check for word
-        # _and_ ngram presence) then this method will never return False.
-        # This is because there will _always_ be a vector for any ngram.
-        # However, there is no guarantee that it will be "learned" - it may
-        # be still at its initial "unlearned" value.
-        #
         return True
 
     def save(self, *args, **kwargs):
