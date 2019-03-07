@@ -433,7 +433,7 @@ class FastText(BaseWordEmbeddingsModel):
 
     The model can be stored/loaded via its :meth:`~gensim.models.fasttext.FastText.save` and
     :meth:`~gensim.models.fasttext.FastText.load` methods, or loaded from a format compatible with the original
-    Fasttext implementation via :meth:`~gensim.models.fasttext.FastText.load_fasttext_format`.
+    Fasttext implementation via :func:`~gensim.models.fasttext.load_facebook_model`.
 
     Attributes
     ----------
