@@ -98,7 +98,7 @@ except ImportError:
     # failed... fall back to plain numpy (20-80x slower training than the above)
     FAST_VERSION = -1
 
-    def train_document_dbow(model, doc_words, doctag_indexes, alpha, work=None,
+    def train_document_dbow(model, doc_words, doctag_indexes, alpha, work=None, neu1=None,
                             train_words=False, learn_doctags=True, learn_words=True, learn_hidden=True,
                             word_vectors=None, word_locks=None, doctag_vectors=None, doctag_locks=None):
         """Update distributed bag of words model ("PV-DBOW") by training on a single document.
@@ -917,27 +917,24 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         doctag_vectors, doctag_locks = self.trainables.get_doctag_trainables(doc_words, self.docvecs.vector_size)
         doctag_indexes = [0]
         work = zeros(self.trainables.layer1_size, dtype=REAL)
+        neu1 = None
         if not self.sg:
             neu1 = matutils.zeros_aligned(self.trainables.layer1_size, dtype=REAL)
 
         alpha_delta = (alpha - min_alpha) / max(epochs - 1, 1)
 
+        if self.sg:
+            train_document = train_document_dbow
+        elif self.dm_concat:
+            train_document = train_document_dm_concat
+        else:
+            train_document = train_document_dm
+
         for i in range(epochs):
-            if self.sg:
-                train_document_dbow(
-                    self, doc_words, doctag_indexes, alpha, work,
-                    learn_words=False, learn_hidden=False, doctag_vectors=doctag_vectors, doctag_locks=doctag_locks
-                )
-            elif self.dm_concat:
-                train_document_dm_concat(
-                    self, doc_words, doctag_indexes, alpha, work, neu1,
-                    learn_words=False, learn_hidden=False, doctag_vectors=doctag_vectors, doctag_locks=doctag_locks
-                )
-            else:
-                train_document_dm(
-                    self, doc_words, doctag_indexes, alpha, work, neu1,
-                    learn_words=False, learn_hidden=False, doctag_vectors=doctag_vectors, doctag_locks=doctag_locks
-                )
+            train_document(
+                self, doc_words, doctag_indexes, alpha, work, neu1,
+                learn_words=False, learn_hidden=False, doctag_vectors=doctag_vectors, doctag_locks=doctag_locks
+            )
             alpha -= alpha_delta
 
         return doctag_vectors[0]
