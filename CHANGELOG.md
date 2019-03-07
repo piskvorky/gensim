@@ -3,6 +3,11 @@ Changes
 
 ## Unreleased
 
+### :star2: New Features
+
+- `gensim.models.fasttext.load_facebook_model` function: load full model (slower, more CPU/memory intensive, supports training continuation)
+- `gensim.models.fasttext.load_facebook_vectors` function: load embeddings only (faster, less CPU/memory usage, does not support training continuation)
+
 ### :red_circle: Bug fixes
 
 * Fix unicode error when loading FastText vocabulary (__[@mpenkov](https://github.com/mpenkov)__, [#2390](https://github.com/RaRe-Technologies/gensim/pull/2390))
@@ -16,7 +21,9 @@ Changes
 
 * Undo the hash2index optimization (__[mpenkov](https://github.com/mpenkov)__, [#2370](https://github.com/RaRe-Technologies/gensim/pull/2387))
 
-### :warning: Changes in FastText out-of-vocab word handling
+### :warning: Changes in FastText behavior
+
+#### Out-of-vocab word handling
 
 The `FastTextKeyedVectors.__contains__ method` now **always** returns True, because of the way FastText works.
 If you want to check if a word is an in-vocabulary term, use this instead:
@@ -27,6 +34,19 @@ If you want to check if a word is an in-vocabulary term, use this instead:
 	>>> model = FastText.load_fasttext_format(cap_path, full_model=False)
 	>>> 'steamtrain' in model.wv.vocab  # If False, is an OOV term
 	False
+	
+#### Loading models in Facebook .bin format
+
+The `gensim.models.FastText.load_fasttext_format` function (deprecated) now loads the entire model contained in the .bin file, including the shallow neural network that enables training continuation.
+Loading this NN requires more CPU and RAM than previously required.
+
+Since this function is deprecated, consider using one of its alternatives (see below).
+	
+### :warning: Deprecations (will be removed in the next major release)
+
+Remove:
+
+- `gensim.models.FastText.load_fasttext_format`: use load_facebook_vectors to load embeddings only (faster, less CPU/memory usage, does not support training continuation) and load_facebook_model to load full model (slower, more CPU/memory intensive, supports training continuation)
 
 ## 3.7.1, 2019-01-31
 
