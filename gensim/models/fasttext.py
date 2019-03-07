@@ -1318,3 +1318,200 @@ def _check_model(m):
             "mismatch between final vocab size (%s words), and expected vocab size (%s words)",
             len(m.wv.vocab), m.vocabulary.vocab_size
         )
+
+
+def train(
+        data,
+        model=None,
+        #
+        # Keyword arguments for the constructor
+        #
+        sg=0,
+        hs=0,
+        size=100,
+        alpha=0.025,
+        window=5,
+        min_n=3,
+        max_n=6,
+
+        seed=1,
+        workers=3,
+        min_alpha=0.0001,
+
+        negative=5,
+        cbow_mean=1,
+        hashfxn=hash,
+
+        bucket=2000000,
+        batch_words=MAX_WORDS_IN_BATCH,
+        compatible_hash=True,
+
+        #
+        # Keyword arguments for vocabulary building
+        #
+        sorted_vocab=1,
+        max_vocab_size=None,
+        trim_rule=None,
+        word_ngrams=1,
+        progress_per=10000,
+        keep_raw_vocab=False,
+        null_word=0,
+        ns_exponent=0.75,
+        #
+        # **kwargs for vocabulary building, see
+        # BaseWordEmbeddingsModel.build_vocab and word2vec.py:1608
+        #
+        min_count=5,
+        sample=1e-3,
+
+        #
+        # Keyword arguments for actually training.
+        #
+        epochs=5,
+        start_alpha=None,
+        end_alpha=None,
+        word_count=0,
+        queue_factor=2,
+        report_delay=1.0,
+        callbacks=(),
+        ):
+    """Train a FastText model.
+
+    This function has many parameters, but they are almost entirely optional,
+    with sensible defaults.  Start from the examples below, and adjust
+    parameter values as necessary.
+
+    Examples
+    --------
+    Train a model from scratch on a list of sentences:
+
+    >>> from gensim.test.utils import common_texts  # some example sentences
+    >>>
+    >>> print(common_texts[0])
+    ['human', 'interface', 'computer']
+    >>> print(len(common_texts))
+    9
+    >>> model = train(common_texts, size=4, window=3, min_count=1, epochs=10)
+
+    Continue training an existing model on new data using a corpus file:
+
+    >>> corpus_file = datapath('lee_background.cor')
+    >>> train(corpus_file, model=model, epochs=5)  # Will modify existing model in-place
+
+    Parameters
+    ----------
+    data: object
+        The data to train the model on.
+        This may a list of sentences, where each sentence is a string.
+        This may also be an iterator, in case the data is large and keeping it
+        all in memory at once is prohibitive.
+        Finally, this may also be a path to a corpus file.
+    model: :class:`~gensim.models.fasttext.FastText`, optional.
+        An existing model (for training continuation).  If you pass None, then
+        this function will train a new model from scratch.
+    %(min_count)s
+    %(size)s
+    %(window)s
+    %(workers)s
+    %(alpha)s
+    %(min_alpha)s
+    FIXME: include all parameters from constructor, build_vocab, train
+    ...
+    """
+    continue_training = model is not None
+
+    if continue_training:
+        #
+        # TODO: work out what the best thing to do is here.
+        # We have a potentially dangerous situation when:
+        #
+        # 1. User is continuing training (model is non-null)
+        # 2. User specified some constructor parameters
+        #
+        # Some of these parameters may _not_ be modified after model
+        # construction time, e.g. dimensionality (the size parameter).
+        # What are others?
+        #
+        # If the user _explicitly_ specified such parameters during training
+        # continuation, we should at the very least warn them that those
+        # parameters will be ignored.
+        #
+        # Other parameters _may_ be modified after model construction.
+        # To the best of my knowledge, I've moved them all down further, where
+        # they are actually need for invoking build_vocab and train methods.
+        #
+        pass
+    else:
+        model = FastText(
+            sg=sg,
+            hs=hs,
+            size=size,
+            alpha=alpha,
+            window=window,
+            word_ngrams=word_ngrams,
+            seed=seed,
+            workers=workers,
+            negative=negative,
+            ns_exponent=ns_exponent,
+            cbow_mean=cbow_mean,
+            hashfxn=hashfxn,
+            null_word=null_word,
+            min_n=min_n,
+            max_n=max_n,
+            bucket=bucket,
+            batch_words=batch_words,
+            compatible_hash=compatible_hash,
+        )
+
+    data_is_corpus = isinstance(data, six.string_types)
+    if data_is_corpus:
+        kw = dict(corpus_file=data)
+    else:
+        kw = dict(sentences=data)
+
+    model.build_vocab(
+        update=continue_training,
+        progress_per=progress_per,
+        keep_raw_vocab=keep_raw_vocab,
+        trim_rule=trim_rule,
+        min_count=min_count,
+        sample=sample,
+        **kw,
+    )
+
+    model.train(
+        total_examples=model.corpus_count,
+        total_words=None,
+        epochs=epochs,
+        start_alpha=start_alpha,
+        end_alpha=end_alpha,
+        word_count=word_count,
+        queue_factor=queue_factor,
+        report_delay=report_delay,
+        callbacks=callbacks,
+        #
+        # Take advantage of the fact that both build_vocab and train use the
+        # same pair of variable names (corpus_file, sentences) to pass data.
+        #
+        **kw,
+    )
+
+    return model
+
+
+def _extract_kwargs(*docstrings, indent='    '):
+    import gensim.doctools
+
+    def g(indent):
+        for ds in docstrings:
+            for (name, typ, desc) in gensim.doctools.extract_kwargs(ds):
+                desc = ' '.join(desc)
+                yield name, '%(name)s: %(typ)s\n%(indent)s%(indent)s%(desc)s' % locals()
+    return dict(g(indent))
+
+
+train.__doc__ = train.__doc__ % _extract_kwargs(
+    FastText.__init__.__doc__,
+    FastText.build_vocab.__doc__,
+    FastText.train.__doc__,
+)
