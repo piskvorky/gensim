@@ -12,6 +12,22 @@ Changes
 
 * Add link to bindr (__[rogueleaderr](https://github.com/rogueleaderr)__, [#2387](https://github.com/RaRe-Technologies/gensim/pull/2387))
 
+### :+1: Improvements
+
+* Undo the hash2index optimization (__[mpenkov](https://github.com/mpenkov)__, [#2370](https://github.com/RaRe-Technologies/gensim/pull/2387))
+
+### :warning: Changes in FastText out-of-vocab word handling
+
+The `FastTextKeyedVectors.__contains__ method` now **always** returns True, because of the way FastText works.
+If you want to check if a word is an in-vocabulary term, use this instead:
+
+	>>> from gensim.test.utils import datapath
+	>>> from gensim.models import FastText
+	>>> cap_path = datapath("crime-and-punishment.bin")
+	>>> model = FastText.load_fasttext_format(cap_path, full_model=False)
+	>>> 'steamtrain' in model.wv.vocab  # If False, is an OOV term
+	False
+
 ## 3.7.1, 2019-01-31
 
 ### :+1: Improvements
