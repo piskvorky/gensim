@@ -117,7 +117,6 @@ cdef void fasttext_fast_sentence_sg_hs(
         for d in range(subwords_len):
             row2 = subwords_index[d] * size
             our_saxpy(&size, &ONEF, &syn0_ngrams[row2], &ONE, l1, &ONE)
-
         norm_factor = ONEF / subwords_len
         sscal(&size, &norm_factor, l1 , &ONE)
 
