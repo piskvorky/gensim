@@ -1191,7 +1191,7 @@ def load_facebook_model(path, encoding='utf-8'):
 
     This function uses the smart_open library to open the path.
     The path may be on a remote host (e.g. HTTP, S3, etc).
-    It may also be gzip or bz2 compressed.
+    It may also be gzip or bz2 compressed (i.e. end in `.bin.gz` or `.bin.bz2`).
     For details, see `<https://github.com/RaRe-Technologies/smart_open>`__.
 
     Parameters
