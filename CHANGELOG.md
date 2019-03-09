@@ -25,24 +25,23 @@ Changes
 
 #### Out-of-vocab word handling
 
-The `FastTextKeyedVectors.__contains__ method` now **always** returns True, because of the way FastText works.
-If you want to check if a word is an in-vocabulary term, use this instead:
+To achieve consistency with the reference implementation from Facebook,
+a `FastText` model will now always report any word, out-of-vocabulary or 
+not, as being in the model,  and always return some vector for any word 
+looked-up. Specifically:
 
-	>>> from gensim.test.utils import datapath
-	>>> from gensim.models import FastText
-	>>> cap_path = datapath("crime-and-punishment.bin")
-	>>> model = FastText.load_fasttext_format(cap_path, full_model=False)
-	>>> 'steamtrain' in model.wv.vocab  # If False, is an OOV term
-	False
+1. `'any_word' in ft_model` will always return `True`.  Previously, it 
+returned `True` only if the full word was in the vocabulary. (To test if a 
+full word is in the known vocabulary, you can consult the `wv.vocab` 
+property: `'any_word' in ft_model.wv.vocab` will return `False` if the full 
+word wasn't learned during model training.)
+2. `ft_model['any_word']` will always return a vector.  Previously, it 
+raised `KeyError` for OOV words when the model had no vectors 
+for **any** ngrams of the word.
+3. Models may use more more memory, or take longer for word-vector
+lookup, especially after training on smaller corpuses where the previous 
+non-compliant behavior discarded some ngrams from consideration.
 
-There are several important consequences of the above change:
-
-1. `'any_word' in model` will always return `True`.  Previously, it returned `True` only if the word was in the vocabulary.
-2. `model['any_word']` will always return a vector.  Previously, it raised `KeyError` for OOV words when the model had no vectors for **any** ngrams of the word.
-3. Higher demand on CPU and memory, because this change reverts an [optimization](https://github.com/RaRe-Technologies/gensim/pull/1916#issuecomment-369171508) that sacrificed compatibility and correctness for lower CPU and memory demand.
-
-The main motivation behind this change was consistency with the reference implementation from Facebook.
-	
 #### Loading models in Facebook .bin format
 
 The `gensim.models.FastText.load_fasttext_format` function (deprecated) now loads the entire model contained in the .bin file, including the shallow neural network that enables training continuation.
