@@ -34,6 +34,14 @@ If you want to check if a word is an in-vocabulary term, use this instead:
 	>>> model = FastText.load_fasttext_format(cap_path, full_model=False)
 	>>> 'steamtrain' in model.wv.vocab  # If False, is an OOV term
 	False
+
+There are several important consequences of the above change:
+
+1. `'any_word' in model` will always return `True`.  Previously, it returned `True` only if the word was in the vocabulary.
+2. `model['any_word']` will always return a vector.  Previously, it raised `KeyError` for OOV words when the model had no vectors for **any** ngrams of the word.
+3. Higher demand on CPU and memory, because this change reverts an [optimization](https://github.com/RaRe-Technologies/gensim/pull/1916#issuecomment-369171508) that sacrificed compatibility and correctness for lower CPU and memory demand.
+
+The main motivation behind this change was consistency with the reference implementation from Facebook.
 	
 #### Loading models in Facebook .bin format
 
