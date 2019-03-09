@@ -60,9 +60,9 @@ class TestFastTextModel(unittest.TestCase):
     def setUp(self):
         ft_home = os.environ.get('FT_HOME', None)
         self.ft_path = os.path.join(ft_home, 'fasttext') if ft_home else None
-        self.test_model_file = datapath('lee_fasttext')
+        self.test_model_file = datapath('lee_fasttext.bin')
         self.test_model = gensim.models.fasttext.load_facebook_model(self.test_model_file)
-        self.test_new_model_file = datapath('lee_fasttext_new')
+        self.test_new_model_file = datapath('lee_fasttext_new.bin')
 
     def test_training(self):
         model = FT_gensim(size=10, min_count=1, hs=1, negative=0, seed=42, workers=1)
@@ -298,10 +298,10 @@ class TestFastTextModel(unittest.TestCase):
 
     def test_load_model_supervised(self):
         with self.assertRaises(NotImplementedError):
-            gensim.models.fasttext.load_facebook_model(datapath('pang_lee_polarity_fasttext'))
+            gensim.models.fasttext.load_facebook_model(datapath('pang_lee_polarity_fasttext.bin'))
 
     def test_load_model_with_non_ascii_vocab(self):
-        model = gensim.models.fasttext.load_facebook_model(datapath('non_ascii_fasttext'))
+        model = gensim.models.fasttext.load_facebook_model(datapath('non_ascii_fasttext.bin'))
         self.assertTrue(u'který' in model.wv)
         try:
             model.wv[u'který']
@@ -309,7 +309,7 @@ class TestFastTextModel(unittest.TestCase):
             self.fail('Unable to access vector for utf8 encoded non-ascii word')
 
     def test_load_model_non_utf8_encoding(self):
-        model = gensim.models.fasttext.load_facebook_model(datapath('cp852_fasttext'), encoding='cp852')
+        model = gensim.models.fasttext.load_facebook_model(datapath('cp852_fasttext.bin'), encoding='cp852')
         self.assertTrue(u'který' in model.wv)
         try:
             model.wv[u'který']
