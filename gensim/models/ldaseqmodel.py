@@ -79,7 +79,7 @@ class LdaSeqModel(utils.SaveLoad):
         time_slice : list of int, optional
             Number of documents in each time-slice. Each time slice could for example represent a year's published
             papers, in case the corpus comes from a journal publishing over multiple years.
-            It is asummed that `sum(time_slice) == num_topics`.
+            It is asummed that `sum(time_slice) == num_documents`.
         id2word : dict of (int, str), optional
             Mapping from word IDs to words. It is used to determine the vocabulary size, as well as for
             debugging and topic printing.
