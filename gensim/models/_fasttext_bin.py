@@ -182,7 +182,12 @@ def _load_vocab(fin, new_format, encoding='utf-8'):
         try:
             word = word_bytes.decode(encoding)
         except UnicodeDecodeError:
-            word = word_bytes.decode(encoding, errors='ignore')
+            #
+            # We must use backslashreplace instead of replace or ignore here,
+            # because we must avoid collisions in the decoded word, e.g.
+            # https://github.com/RaRe-Technologies/gensim/issues/2402
+            #
+            word = word_bytes.decode(encoding, errors='backslashreplace')
             logger.error(
                 'failed to decode invalid unicode bytes %r; ignoring invalid characters, using %r',
                 word_bytes, word
