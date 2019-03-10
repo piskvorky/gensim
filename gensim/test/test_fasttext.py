@@ -1261,10 +1261,18 @@ class UnicodeVocabTest(unittest.TestCase):
         buf.seek(0)
 
         raw_vocab, vocab_size, nlabels = gensim.models._fasttext_bin._load_vocab(buf, False)
-        expected = {
-            u'英語版ウィキペディアへの投稿はいつでも\\xe6': 1,
-            u'административно-территориальн\\xd1': 2,
-        }
+
+        if six.PY3:
+            expected = {
+                u'英語版ウィキペディアへの投稿はいつでも\\xe6': 1,
+                u'административно-территориальн\\xd1': 2,
+            }
+        else:
+            expected = {
+                u'英語版ウィキペディアへの投稿はいつでも�': 1,
+                u'административно-территориальн�': 2,
+            }
+
         self.assertEqual(expected, dict(raw_vocab))
 
         self.assertEqual(vocab_size, 2)

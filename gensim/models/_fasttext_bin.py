@@ -35,6 +35,7 @@ import logging
 import struct
 
 import numpy as np
+import six
 
 _END_OF_WORD_MARKER = b'\x00'
 
@@ -160,6 +161,16 @@ def _load_vocab(fin, new_format, encoding='utf-8'):
     """
     vocab_size, nwords, nlabels = _struct_unpack(fin, '@3i')
 
+    #
+    # We must use backslashreplace instead of replace or ignore here, because
+    # we must avoid collisions in the decoded word, e.g.
+    # https://github.com/RaRe-Technologies/gensim/issues/2402
+    #
+    # Unfortunately, backslashreplace is only available on Py3.  On Py2, we
+    # can't really do anything to avoid collisions.
+    #
+    errors = 'backslashreplace' if six.PY3 else 'replace'
+
     # Vocab stored by [Dictionary::save](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
     if nlabels > 0:
         raise NotImplementedError("Supervised fastText models are not supported")
@@ -182,12 +193,7 @@ def _load_vocab(fin, new_format, encoding='utf-8'):
         try:
             word = word_bytes.decode(encoding)
         except UnicodeDecodeError:
-            #
-            # We must use backslashreplace instead of replace or ignore here,
-            # because we must avoid collisions in the decoded word, e.g.
-            # https://github.com/RaRe-Technologies/gensim/issues/2402
-            #
-            word = word_bytes.decode(encoding, errors='backslashreplace')
+            word = word_bytes.decode(encoding, errors=errors)
             logger.error(
                 'failed to decode invalid unicode bytes %r; ignoring invalid characters, using %r',
                 word_bytes, word
