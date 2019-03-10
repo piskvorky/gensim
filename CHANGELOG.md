@@ -12,6 +12,7 @@ Changes
 
 * Fix unicode error when loading FastText vocabulary (__[@mpenkov](https://github.com/mpenkov)__, [#2390](https://github.com/RaRe-Technologies/gensim/pull/2390))
 * Avoid division by zero in fasttext_inner.pyx (__[@mpenkov](https://github.com/mpenkov)__, [#2404](https://github.com/RaRe-Technologies/gensim/pull/2404))
+* Avoid incorrect filename inference when loading model (__[@mpenkov](https://github.com/mpenkov)__, [#2408](https://github.com/RaRe-Technologies/gensim/pull/2408))
 
 ### :books: Tutorial and doc improvements
 
@@ -48,6 +49,10 @@ The `gensim.models.FastText.load_fasttext_format` function (deprecated) now load
 Loading this NN requires more CPU and RAM than previously required.
 
 Since this function is deprecated, consider using one of its alternatives (see below).
+
+Furthermore, you must now pass the full path to the file to load, **including the file extension.**
+Previously, if you specified a model path that ends with anything other than .bin, the code automatically appended .bin to the path before loading the model.
+This behavior was [confusing](https://github.com/RaRe-Technologies/gensim/issues/2407), so we removed it.
 	
 ### :warning: Deprecations (will be removed in the next major release)
 
