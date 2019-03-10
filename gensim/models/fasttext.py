@@ -1186,8 +1186,13 @@ def load_facebook_model(path, encoding='utf-8'):
     Facebook provides both `.vec` and `.bin` files with their modules.
     The former contains human-readable vectors.
     The latter contains machine-readable vectors along with other model parameters.
-    This function effectively ignores `.vec` output file, since that file is redundant.
-    It only needs the `.bin` file.
+    This function requires you to **provide the full path to the .bin file**.
+    It effectively ignores the `.vec` output file, since it is redundant.
+
+    This function uses the smart_open library to open the path.
+    The path may be on a remote host (e.g. HTTP, S3, etc).
+    It may also be gzip or bz2 compressed (i.e. end in `.bin.gz` or `.bin.bz2`).
+    For details, see `<https://github.com/RaRe-Technologies/smart_open>`__.
 
     Parameters
     ----------
@@ -1228,12 +1233,31 @@ def load_facebook_model(path, encoding='utf-8'):
     gensim.models.fasttext.FastText
         The loaded model.
 
+    See Also
+    --------
+    :func:`~gensim.models.fasttext.load_facebook_vectors` loads
+    the word embeddings only.  Its faster, but does not enable you to continue
+    training.
+
     """
     return _load_fasttext_format(path, encoding=encoding, full_model=True)
 
 
 def load_facebook_vectors(path, encoding='utf-8'):
     """Load word embeddings from a model saved in Facebook's native fasttext `.bin` format.
+
+    Notes
+    ------
+    Facebook provides both `.vec` and `.bin` files with their modules.
+    The former contains human-readable vectors.
+    The latter contains machine-readable vectors along with other model parameters.
+    This function requires you to **provide the full path to the .bin file**.
+    It effectively ignores the `.vec` output file, since it is redundant.
+
+    This function uses the smart_open library to open the path.
+    The path may be on a remote host (e.g. HTTP, S3, etc).
+    It may also be gzip or bz2 compressed.
+    For details, see `<https://github.com/RaRe-Technologies/smart_open>`__.
 
     Parameters
     ----------
@@ -1267,8 +1291,7 @@ def load_facebook_vectors(path, encoding='utf-8'):
 
     See Also
     --------
-
-    :meth:`gensim.models.fasttext.FastText.load_facebook_model` loads
+    :func:`~gensim.models.fasttext.load_facebook_model` loads
     the full model, not just word embeddings, and enables you to continue
     model training.
 
@@ -1278,15 +1301,12 @@ def load_facebook_vectors(path, encoding='utf-8'):
 
 
 def _load_fasttext_format(model_file, encoding='utf-8', full_model=True):
-    """Load the input-hidden weight matrix from Facebook's native fasttext `.bin` and `.vec` output files.
+    """Load the input-hidden weight matrix from Facebook's native fasttext `.bin` output files.
 
     Parameters
     ----------
     model_file : str
-        Path to the FastText output files.
-        FastText outputs two model files - `/path/to/model.vec` and `/path/to/model.bin`
-        Expected value for this example: `/path/to/model` or `/path/to/model.bin`,
-        as Gensim requires only `.bin` file to the load entire fastText model.
+        Full path to the FastText model file.
     encoding : str, optional
         Specifies the file encoding.
     full_model : boolean, optional
@@ -1299,8 +1319,6 @@ def _load_fasttext_format(model_file, encoding='utf-8', full_model=True):
         The loaded model.
 
     """
-    if not model_file.endswith('.bin'):
-        model_file += '.bin'
     with smart_open(model_file, 'rb') as fin:
         m = gensim.models._fasttext_bin.load(fin, encoding=encoding, full_model=full_model)
 
