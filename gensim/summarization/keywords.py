@@ -42,7 +42,7 @@ from gensim.summarization.commons import remove_unreachable_nodes as _remove_unr
 from gensim.utils import to_unicode
 from itertools import combinations as _combinations
 from six.moves.queue import Queue as _Queue
-from six.moves import xrange
+from six.moves import range
 from six import iteritems
 
 
@@ -97,7 +97,7 @@ def _get_words_for_graph(tokens, pos_filter=None):
     for word, unit in iteritems(tokens):
         if exclude_filters and unit.tag in exclude_filters:
             continue
-        if (include_filters and unit.tag in include_filters) or not include_filters or not unit.tag:
+        if not include_filters or not unit.tag or unit.tag in include_filters:
             result.append(unit.token)
     return result
 
@@ -235,7 +235,7 @@ def _process_text(graph, tokens, split_text):
 
     """
     queue = _init_queue(split_text)
-    for i in xrange(WINDOW_SIZE, len(split_text)):
+    for i in range(WINDOW_SIZE, len(split_text)):
         word = split_text[i]
         _process_word(graph, tokens, queue, word)
         _update_queue(queue, word)
@@ -256,7 +256,7 @@ def _queue_iterator(queue):
 
     """
     iterations = queue.qsize()
-    for _ in xrange(iterations):
+    for _ in range(iterations):
         var = queue.get()
         yield var
         queue.put(var)
@@ -391,13 +391,13 @@ def _get_combined_keywords(_keywords, split_text):
     result = []
     _keywords = _keywords.copy()
     len_text = len(split_text)
-    for i in xrange(len_text):
+    for i in range(len_text):
         word = _strip_word(split_text[i])
         if word in _keywords:
             combined_word = [word]
             if i + 1 == len_text:
                 result.append(word)   # appends last word if keyword and doesn't iterate
-            for j in xrange(i + 1, len_text):
+            for j in range(i + 1, len_text):
                 other_word = _strip_word(split_text[j])
                 if other_word in _keywords and other_word == split_text[j] and other_word not in combined_word:
                     combined_word.append(other_word)
@@ -426,11 +426,8 @@ def _get_average_score(concept, _keywords):
 
     """
     word_list = concept.split()
-    word_counter = 0
-    total = 0
-    for word in word_list:
-        total += _keywords[word]
-        word_counter += 1
+    word_counter = len(word_list)
+    total = float(sum(_keywords[word] for word in word_list))
     return total / word_counter
 
 
@@ -514,7 +511,7 @@ def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=
 
     _remove_unreachable_nodes(graph)
 
-    if not graph.edges():
+    if not any(True for _ in graph.iter_edges()):
         return _format_results([], [], split, scores)
 
     # Ranks the tokens using the PageRank algorithm. Returns dict of lemma -> score

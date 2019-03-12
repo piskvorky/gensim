@@ -5,7 +5,7 @@
 # Copyright (C) 2018 RaRe Technologies s.r.o.
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""This module contains base classes required for implementing \*2vec algorithms.
+r"""This module contains base classes required for implementing \*2vec algorithms.
 
 The class hierarchy is designed to facilitate adding more concrete implementations for creating embeddings.
 In the most general case, the purpose of this class is to transform an arbitrary representation to a numerical vector
@@ -36,7 +36,7 @@ from gensim import utils
 import logging
 from timeit import default_timer
 import threading
-from six.moves import xrange
+from six.moves import range
 from six import itervalues, string_types
 from gensim import matutils
 from numpy import float32 as REAL, ones, random, dtype, zeros
@@ -56,7 +56,7 @@ logger = logging.getLogger(__name__)
 
 
 class BaseAny2VecModel(utils.SaveLoad):
-    """Base class for training, using and evaluating \*2vec model.
+    r"""Base class for training, using and evaluating \*2vec model.
 
     Contains implementation for multi-threaded training. The purpose of this class is to provide a
     reference interface for concrete embedding implementations, whether the input space is a corpus
@@ -284,7 +284,7 @@ class BaseAny2VecModel(utils.SaveLoad):
             )
 
         # give the workers heads up that they can finish -- no more work!
-        for _ in xrange(self.workers):
+        for _ in range(self.workers):
             job_queue.put(None)
         logger.debug("job loop exiting, total %i jobs", job_no)
 
@@ -472,7 +472,7 @@ class BaseAny2VecModel(utils.SaveLoad):
             threading.Thread(
                 target=self._worker_loop,
                 args=(job_queue, progress_queue,))
-            for _ in xrange(self.workers)
+            for _ in range(self.workers)
         ]
 
         workers.append(threading.Thread(
@@ -660,7 +660,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         corpus_file : str, optional
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
             You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
-            `corpus_file` arguments need to be passed (or none of them).
+            `corpus_file` arguments need to be passed (or none of them, in that case, the model is left uninitialized).
         workers : int, optional
             Number of working threads, used for multiprocessing.
         vector_size : int, optional
@@ -754,7 +754,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             if corpus_file is not None and not isinstance(corpus_file, string_types):
                 raise TypeError("You must pass string as the corpus_file argument.")
             elif isinstance(sentences, GeneratorType):
-                raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
+                raise TypeError("You can't pass a generator as the sentences argument. Try a sequence.")
 
             self.build_vocab(sentences=sentences, corpus_file=corpus_file, trim_rule=trim_rule)
             self.train(

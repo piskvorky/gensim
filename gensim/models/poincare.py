@@ -21,7 +21,6 @@ csv-like format, or from a Python iterable of relations.
 
 Examples
 --------
-
 Initialize and train a model from a list
 
 .. sourcecode:: pycon
@@ -32,6 +31,7 @@ Initialize and train a model from a list
     >>> model.train(epochs=50)
 
 Initialize and train a model from a file containing one relation per line
+
 .. sourcecode:: pycon
 
     >>> from gensim.models.poincare import PoincareModel, PoincareRelations
@@ -52,6 +52,7 @@ from collections import defaultdict, Counter
 from numpy import random as np_random
 from scipy.stats import spearmanr
 from six import string_types
+from six.moves import zip, range
 from smart_open import smart_open
 
 from gensim import utils, matutils
@@ -194,8 +195,8 @@ class PoincareModel(utils.SaveLoad):
         logger.info("loaded %d relations from train data, %d nodes", len(all_relations), len(vocab))
         self.kv.vocab = vocab
         self.kv.index2word = index2word
-        self.indices_set = set((range(len(index2word))))  # Set of all node indices
-        self.indices_array = np.array(range(len(index2word)))  # Numpy array of all node indices
+        self.indices_set = set(range(len(index2word)))  # Set of all node indices
+        self.indices_array = np.fromiter(range(len(index2word)), dtype=int)  # Numpy array of all node indices
         self.all_relations = all_relations
         self.node_relations = node_relations
         self._init_node_probabilities()
@@ -209,11 +210,11 @@ class PoincareModel(utils.SaveLoad):
 
     def _init_node_probabilities(self):
         """Initialize a-priori probabilities."""
-        counts = np.array([
+        counts = np.fromiter((
                 self.kv.vocab[self.kv.index2word[i]].count
                 for i in range(len(self.kv.index2word))
-            ],
-            dtype=np.float64)
+            ),
+            dtype=np.float64, count=len(self.kv.index2word))
         self._node_counts_cumsum = np.cumsum(counts)
         self._node_probabilities = counts / counts.sum()
 
@@ -475,8 +476,8 @@ class PoincareModel(utils.SaveLoad):
 
         Parameters
         ----------
-        nodes : list of int
-            List of node indices for which negative samples are to be returned.
+        nodes : iterable of int
+            Iterable of node indices for which negative samples are to be returned.
 
         Returns
         -------
@@ -503,7 +504,7 @@ class PoincareModel(utils.SaveLoad):
             The batch that was just trained on, contains computed loss for the batch.
 
         """
-        all_negatives = self._sample_negatives_batch([relation[0] for relation in relations])
+        all_negatives = self._sample_negatives_batch(relation[0] for relation in relations)
         batch = self._prepare_training_batch(relations, all_negatives, check_gradients)
         self._update_vectors_batch(batch)
         return batch
@@ -850,7 +851,6 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.test.utils import datapath
@@ -1307,7 +1307,6 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.test.utils import datapath
@@ -1350,7 +1349,6 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Examples
         --------
-
         .. sourcecode:: pycon
 
             >>> from gensim.test.utils import datapath
@@ -1385,6 +1383,12 @@ class PoincareRelations(object):
         ----------
         file_path : str
             Path to file containing a pair of nodes (a relation) per line, separated by `delimiter`.
+            Since the relations are asymmetric, the order of `u` and `v` nodes in each pair matters.
+            To express a "u is v" relation, the lines should take the form `u delimeter v`.
+            e.g: `kangaroo	mammal` is a tab-delimited line expressing a "`kangaroo is a mammal`" relation.
+
+            For a full input file example, see `gensim/test/test_data/poincare_hypernyms.tsv
+            <https://github.com/RaRe-Technologies/gensim/blob/master/gensim/test/test_data/poincare_hypernyms.tsv>`_.
         encoding : str, optional
             Character encoding of the input file.
         delimiter : str, optional

@@ -81,7 +81,7 @@ from gensim.utils import call_on_class_only
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.models.word2vec import Word2VecKeyedVectors, Word2VecVocab, Word2VecTrainables, train_cbow_pair,\
     train_sg_pair, train_batch_sg
-from six.moves import xrange
+from six.moves import range
 from six import string_types, integer_types, itervalues
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 from gensim.models.keyedvectors import Doc2VecKeyedVectors
@@ -227,8 +227,8 @@ except ImportError:
         if doctag_locks is None:
             doctag_locks = model.docvecs.doctag_syn0_lockf
 
-        word_vocabs = [model.wv.vocab[w] for w in doc_words if w in model.wv.vocab and
-                       model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
+        word_vocabs = [model.wv.vocab[w] for w in doc_words if w in model.wv.vocab
+                       and model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
 
         for pos, word in enumerate(word_vocabs):
             reduced_window = model.random.randint(model.window)  # `b` in the original doc2vec code
@@ -314,8 +314,8 @@ except ImportError:
         if doctag_locks is None:
             doctag_locks = model.docvecs.doctag_syn0_lockf
 
-        word_vocabs = [model.wv.vocab[w] for w in doc_words if w in model.wv.vocab and
-                       model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
+        word_vocabs = [model.wv.vocab[w] for w in doc_words if w in model.wv.vocab
+                       and model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
         doctag_len = len(doctag_indexes)
         if doctag_len != model.dm_tag_count:
             return 0  # skip doc without expected number of doctag(s) (TODO: warn/pad?)
@@ -482,12 +482,14 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         ----------
         documents : iterable of list of :class:`~gensim.models.doc2vec.TaggedDocument`, optional
             Input corpus, can be simply a list of elements, but for larger corpora,consider an iterable that streams
-            the documents directly from disk/network. If you don't supply `documents`, the model is
+            the documents directly from disk/network. If you don't supply `documents` (or `corpus_file`), the model is
             left uninitialized -- use if you plan to initialize it in some other way.
         corpus_file : str, optional
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
-            You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
-            `corpus_file` arguments need to be passed (or none of them).
+            You may use this argument instead of `documents` to get performance boost. Only one of `documents` or
+            `corpus_file` arguments need to be passed (or none of them, in that case, the model is left uninitialized).
+            Documents' tags are assigned automatically and are equal to line number, as in
+            :class:`~gensim.models.doc2vec.TaggedLineDocument`.
         dm : {1,0}, optional
             Defines the training algorithm. If `dm=1`, 'distributed memory' (PV-DM) is used.
             Otherwise, `distributed bag of words` (PV-DBOW) is employed.
@@ -615,7 +617,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             if corpus_file is not None and not isinstance(corpus_file, string_types):
                 raise TypeError("You must pass string as the corpus_file argument.")
             elif isinstance(documents, GeneratorType):
-                raise TypeError("You can't pass a generator as the documents argument. Try an iterator.")
+                raise TypeError("You can't pass a generator as the documents argument. Try a sequence.")
             self.build_vocab(documents=documents, corpus_file=corpus_file, trim_rule=trim_rule)
             self.train(
                 documents=documents, corpus_file=corpus_file, total_examples=self.corpus_count,
@@ -742,8 +744,8 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         """Update the model's neural weights.
 
         To support linear learning-rate decay from (initial) `alpha` to `min_alpha`, and accurate
-        progress-percentage logging, either `total_examples` (count of sentences) or `total_words` (count of
-        raw words in sentences) **MUST** be provided. If `sentences` is the same corpus
+        progress-percentage logging, either `total_examples` (count of documents) or `total_words` (count of
+        raw words in documents) **MUST** be provided. If `documents` is the same corpus
         that was provided to :meth:`~gensim.models.word2vec.Word2Vec.build_vocab` earlier,
         you can simply use `total_examples=self.corpus_count`.
 
@@ -756,14 +758,15 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         ----------
         documents : iterable of list of :class:`~gensim.models.doc2vec.TaggedDocument`, optional
             Can be simply a list of elements, but for larger corpora,consider an iterable that streams
-            the documents directly from disk/network. If you don't supply `documents`, the model is
+            the documents directly from disk/network. If you don't supply `documents` (or `corpus_file`), the model is
             left uninitialized -- use if you plan to initialize it in some other way.
         corpus_file : str, optional
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
-            You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
-            `corpus_file` arguments need to be passed (not both of them).
+            You may use this argument instead of `documents` to get performance boost. Only one of `documents` or
+            `corpus_file` arguments need to be passed (not both of them). Documents' tags are assigned automatically
+            and are equal to line number, as in :class:`~gensim.models.doc2vec.TaggedLineDocument`.
         total_examples : int, optional
-            Count of sentences.
+            Count of documents.
         total_words : int, optional
             Count of raw words in documents.
         epochs : int, optional
@@ -781,7 +784,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             the alpha learning-rate yourself (not recommended).
         word_count : int, optional
             Count of words already trained. Set this to 0 for the usual
-            case of training on all words in sentences.
+            case of training on all words in documents.
         queue_factor : int, optional
             Multiplier for size of queue (number of workers * queue_factor).
         report_delay : float, optional
@@ -904,6 +907,9 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             The inferred paragraph vector for the new document.
 
         """
+        if isinstance(doc_words, string_types):
+            raise TypeError("Parameter doc_words of infer_vector() must be a list of strings (not a single string).")
+
         alpha = alpha or self.alpha
         min_alpha = min_alpha or self.min_alpha
         epochs = epochs or steps or self.epochs
@@ -1041,7 +1047,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         fvocab : str, optional
             Optional file path used to save the vocabulary.
         binary : bool, optional
-            If True, the data wil be saved in binary word2vec format, otherwise - will be saved in plain text.
+            If True, the data will be saved in binary word2vec format, otherwise - will be saved in plain text.
 
         """
         total_vec = len(self.wv.vocab) + len(self.docvecs)
@@ -1129,7 +1135,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
     def build_vocab(self, documents=None, corpus_file=None, update=False, progress_per=10000, keep_raw_vocab=False,
                     trim_rule=None, **kwargs):
-        """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
+        """Build vocabulary from a sequence of documents (can be a once-only generator stream).
 
         Parameters
         ----------
@@ -1139,10 +1145,11 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             See :class:`~gensim.models.doc2vec.TaggedBrownCorpus` or :class:`~gensim.models.doc2vec.TaggedLineDocument`
         corpus_file : str, optional
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
-            You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
-            `corpus_file` arguments need to be passed (not both of them).
+            You may use this argument instead of `documents` to get performance boost. Only one of `documents` or
+            `corpus_file` arguments need to be passed (not both of them). Documents' tags are assigned automatically
+            and are equal to a line number, as in :class:`~gensim.models.doc2vec.TaggedLineDocument`.
         update : bool
-            If true, the new words in `sentences` will be added to model's vocab.
+            If true, the new words in `documents` will be added to model's vocab.
         progress_per : int
             Indicates how many words to process before showing/updating the progress.
         keep_raw_vocab : bool
@@ -1220,7 +1227,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             len(raw_vocab), sum(itervalues(raw_vocab))
         )
 
-        # Since no sentences are provided, this is to control the corpus_count
+        # Since no documents are provided, this is to control the corpus_count
         self.corpus_count = corpus_count or 0
         self.vocabulary.raw_vocab = raw_vocab
 
@@ -1262,7 +1269,7 @@ class Doc2VecVocab(Word2VecVocab):
             if there are more unique words than this, then prune the infrequent ones.
             Every 10 million word types need about 1GB of RAM, set to `None` for no limit.
         min_count : int
-            Words with frequency lower than this limit will be discarded form the vocabulary.
+            Words with frequency lower than this limit will be discarded from the vocabulary.
         sample : float, optional
             The threshold for configuring which higher-frequency words are randomly downsampled,
             useful range is (0, 1e-5).
@@ -1334,7 +1341,7 @@ class Doc2VecVocab(Word2VecVocab):
             The tagged documents used to create the vocabulary. Their tags can be either str tokens or ints (faster).
         corpus_file : str, optional
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
-            You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
+            You may use this argument instead of `documents` to get performance boost. Only one of `documents` or
             `corpus_file` arguments need to be passed (not both of them).
         docvecs : list of :class:`~gensim.models.keyedvectors.Doc2VecKeyedVectors`
             The vector representations of the documents in our corpus. Each of them has a size == `vector_size`.
@@ -1450,7 +1457,7 @@ class Doc2VecTrainables(Word2VecTrainables):
             docvecs.vectors_docs = empty((length, docvecs.vector_size), dtype=REAL)
             self.vectors_docs_lockf = ones((length,), dtype=REAL)  # zeros suppress learning
 
-        for i in xrange(length):
+        for i in range(length):
             # construct deterministic seed from index AND model seed
             seed = "%d %s" % (
                 self.seed, Doc2VecKeyedVectors._index_to_doctag(i, docvecs.offset2doctag, docvecs.max_rawint))
@@ -1503,7 +1510,7 @@ class TaggedBrownCorpus(object):
 
 
 class TaggedLineDocument(object):
-    """Iterate over a file that contains sentences: one line = :class:`~gensim.models.doc2vec.TaggedDocument` object.
+    """Iterate over a file that contains documents: one line = :class:`~gensim.models.doc2vec.TaggedDocument` object.
 
     Words are expected to be already preprocessed and separated by whitespace. Document tags are constructed
     automatically from the document line number (each document gets a unique integer tag).

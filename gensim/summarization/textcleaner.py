@@ -23,7 +23,7 @@ Data
 from gensim.summarization.syntactic_unit import SyntacticUnit
 from gensim.parsing.preprocessing import preprocess_documents
 from gensim.utils import tokenize
-from six.moves import xrange
+from six.moves import range
 import re
 import logging
 
@@ -63,7 +63,6 @@ def split_sentences(text):
 
     Example
     -------
-
     .. sourcecode:: pycon
 
         >>> from gensim.summarization.textcleaner import split_sentences
@@ -94,7 +93,6 @@ def replace_abbreviations(text):
 
     Example
     -------
-
     .. sourcecode:: pycon
 
         >>> replace_abbreviations("God bless you, please, Mrs. Robinson")
@@ -167,7 +165,6 @@ def get_sentences(text):
 
     Example
     -------
-
     .. sourcecode:: pycon
 
         >>> text = "Does this text contains two sentences? Yes, it does."
@@ -201,15 +198,14 @@ def merge_syntactic_units(original_units, filtered_units, tags=None):
 
     """
     units = []
-    for i in xrange(len(original_units)):
+    for i in range(len(original_units)):
         if filtered_units[i] == '':
             continue
 
         text = original_units[i]
         token = filtered_units[i]
         tag = tags[i][1] if tags else None
-        sentence = SyntacticUnit(text, token, tag)
-        sentence.index = i
+        sentence = SyntacticUnit(text, token, tag, i)
 
         units.append(sentence)
 

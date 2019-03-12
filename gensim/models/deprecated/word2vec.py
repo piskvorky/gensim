@@ -157,7 +157,7 @@ from scipy.special import expit
 from gensim import utils
 from gensim import matutils  # utility fnc for pickling, common scipy operations etc
 from six import iteritems, itervalues, string_types
-from six.moves import xrange
+from six.moves import range
 from types import GeneratorType
 
 logger = logging.getLogger(__name__)
@@ -232,8 +232,8 @@ def train_batch_sg(model, sentences, alpha, work=None, compute_loss=False):
     """
     result = 0
     for sentence in sentences:
-        word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
-                       model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
+        word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab
+                       and model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
         for pos, word in enumerate(word_vocabs):
             reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
 
@@ -263,8 +263,8 @@ def train_batch_cbow(model, sentences, alpha, work=None, neu1=None, compute_loss
     """
     result = 0
     for sentence in sentences:
-        word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab and
-                       model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
+        word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab
+                       and model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
         for pos, word in enumerate(word_vocabs):
             reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
             start = max(0, pos - model.window + reduced_window)
@@ -658,10 +658,10 @@ class Word2Vec(SaveLoad):
         self.cum_table = zeros(vocab_size, dtype=uint32)
         # compute sum of all power (Z in paper)
         train_words_pow = 0.0
-        for word_index in xrange(vocab_size):
+        for word_index in range(vocab_size):
             train_words_pow += self.wv.vocab[self.wv.index2word[word_index]].count**power
         cumulative = 0.0
-        for word_index in xrange(vocab_size):
+        for word_index in range(vocab_size):
             cumulative += self.wv.vocab[self.wv.index2word[word_index]].count**power
             self.cum_table[word_index] = round(cumulative / train_words_pow * domain)
         if len(self.cum_table) > 0:
@@ -678,7 +678,7 @@ class Word2Vec(SaveLoad):
         # build the huffman tree
         heap = list(itervalues(self.wv.vocab))
         heapq.heapify(heap)
-        for i in xrange(len(self.wv.vocab) - 1):
+        for i in range(len(self.wv.vocab) - 1):
             min1, min2 = heapq.heappop(heap), heapq.heappop(heap)
             heapq.heappush(
                 heap, Vocab(count=min1.count + min2.count, index=i + len(self.wv.vocab), left=min1, right=min2)
@@ -1135,7 +1135,7 @@ class Word2Vec(SaveLoad):
                 )
 
             # give the workers heads up that they can finish -- no more work!
-            for _ in xrange(self.workers):
+            for _ in range(self.workers):
                 job_queue.put(None)
             logger.debug("job loop exiting, total %i jobs", job_no)
 
@@ -1143,7 +1143,7 @@ class Word2Vec(SaveLoad):
         job_queue = Queue(maxsize=queue_factor * self.workers)
         progress_queue = Queue(maxsize=(queue_factor + 1) * self.workers)
 
-        workers = [threading.Thread(target=worker_loop) for _ in xrange(self.workers)]
+        workers = [threading.Thread(target=worker_loop) for _ in range(self.workers)]
         unfinished_worker_count = len(workers)
         workers.append(threading.Thread(target=job_producer))
 
@@ -1280,7 +1280,7 @@ class Word2Vec(SaveLoad):
         job_queue = Queue(maxsize=queue_factor * self.workers)
         progress_queue = Queue(maxsize=(queue_factor + 1) * self.workers)
 
-        workers = [threading.Thread(target=worker_loop) for _ in xrange(self.workers)]
+        workers = [threading.Thread(target=worker_loop) for _ in range(self.workers)]
         for thread in workers:
             thread.daemon = True  # make interrupting the process with ctrl+c easier
             thread.start()
@@ -1307,7 +1307,7 @@ class Word2Vec(SaveLoad):
                 job_queue.put(items)
             except StopIteration:
                 logger.info("reached end of input; waiting to finish %i outstanding jobs", job_no - done_jobs + 1)
-                for _ in xrange(self.workers):
+                for _ in range(self.workers):
                     job_queue.put(None)  # give the workers heads up that they can finish -- no more work!
                 push_done = True
             try:
@@ -1354,7 +1354,7 @@ class Word2Vec(SaveLoad):
         newsyn0 = empty((gained_vocab, self.vector_size), dtype=REAL)
 
         # randomize the remaining words
-        for i in xrange(len(self.wv.syn0), len(self.wv.vocab)):
+        for i in range(len(self.wv.syn0), len(self.wv.vocab)):
             # construct deterministic seed from word AND seed argument
             newsyn0[i - len(self.wv.syn0)] = self.seeded_vector(self.wv.index2word[i] + str(self.seed))
 
@@ -1381,7 +1381,7 @@ class Word2Vec(SaveLoad):
         logger.info("resetting layer weights")
         self.wv.syn0 = empty((len(self.wv.vocab), self.vector_size), dtype=REAL)
         # randomize weights vector by vector, rather than materializing a huge random matrix in RAM at once
-        for i in xrange(len(self.wv.vocab)):
+        for i in range(len(self.wv.vocab)):
             # construct deterministic seed from word AND seed argument
             self.wv.syn0[i] = self.seeded_vector(self.wv.index2word[i] + str(self.seed))
         if self.hs:
@@ -1421,7 +1421,7 @@ class Word2Vec(SaveLoad):
                 # TOCONSIDER: maybe mismatched vectors still useful enough to merge (truncating/padding)?
             if binary:
                 binary_len = dtype(REAL).itemsize * vector_size
-                for _ in xrange(vocab_size):
+                for _ in range(vocab_size):
                     # mixed text and binary: read text first, then binary
                     word = []
                     while True:
