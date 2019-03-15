@@ -688,6 +688,160 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
         self.assertEqual(self.index.num_trees, self.index2.num_trees)
 
 
+class TestWord2VecNmslibIndexer(unittest.TestCase):
+
+    def setUp(self):
+        try:
+            import nmslib  # noqa:F401
+        except ImportError:
+            raise unittest.SkipTest("Nmslib library is not available")
+
+        from gensim.similarities.nmslib import NmslibIndexer
+        self.indexer = NmslibIndexer
+
+    def testWord2Vec(self):
+        model = word2vec.Word2Vec(texts, min_count=1)
+        model.init_sims()
+        index = self.indexer(model)
+
+        self.assertVectorIsSimilarToItself(model.wv, index)
+        self.assertApproxNeighborsMatchExact(model, model.wv, index)
+        self.assertIndexSaved(index)
+        self.assertLoadedIndexEqual(index, model)
+
+    def testFastText(self):
+        class LeeReader(object):
+            def __init__(self, fn):
+                self.fn = fn
+
+            def __iter__(self):
+                with smart_open(self.fn, 'r', encoding="latin_1") as infile:
+                    for line in infile:
+                        yield line.lower().strip().split()
+
+        model = FastText(LeeReader(datapath('lee.cor')))
+        model.init_sims()
+        index = self.indexer(model)
+
+        self.assertVectorIsSimilarToItself(model.wv, index)
+        self.assertApproxNeighborsMatchExact(model, model.wv, index)
+        self.assertIndexSaved(index)
+        self.assertLoadedIndexEqual(index, model)
+
+    def testNmslibIndexingOfKeyedVectors(self):
+        from gensim.similarities.nmslib import NmslibIndexer
+        keyVectors_file = datapath('lee_fasttext.vec')
+        model = KeyedVectors.load_word2vec_format(keyVectors_file)
+        index = NmslibIndexer(model)
+
+        self.assertVectorIsSimilarToItself(model, index)
+        self.assertApproxNeighborsMatchExact(model, model, index)
+
+    def testLoadMissingRaisesError(self):
+        from gensim.similarities.nmslib import NmslibIndexer
+        test_index = NmslibIndexer()
+
+        self.assertRaises(IOError, test_index.load, fname='test-index')
+
+    def assertVectorIsSimilarToItself(self, wv, index):
+        vector = wv.vectors_norm[0]
+        label = wv.index2word[0]
+        approx_neighbors = index.most_similar(vector, 1)
+        word, similarity = approx_neighbors[0]
+
+        self.assertEqual(word, label)
+        self.assertAlmostEqual(similarity, 1.0, places=2)
+
+    def assertApproxNeighborsMatchExact(self, model, wv, index):
+        vector = wv.vectors_norm[0]
+        approx_neighbors = model.wv.most_similar([vector], topn=5, indexer=index)
+        exact_neighbors = model.wv.most_similar(positive=[vector], topn=5)
+
+        approx_words = [neighbor[0] for neighbor in approx_neighbors]
+        exact_words = [neighbor[0] for neighbor in exact_neighbors]
+
+        self.assertEqual(approx_words, exact_words)
+
+    def assertIndexSaved(self, index):
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
+        index.save(fname)
+        self.assertTrue(os.path.exists(fname))
+        self.assertTrue(os.path.exists(fname + '.d'))
+
+    def assertLoadedIndexEqual(self, index, model):
+        from gensim.similarities.nmslib import NmslibIndexer
+
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
+        index.save(fname)
+
+        index2 = NmslibIndexer()
+        index2.load(fname)
+        index2.model = model
+
+        self.assertEqual(index.labels, index2.labels)
+        self.assertEqual(index.index_params, index2.index_params)
+        self.assertEqual(index.query_time_params, index2.query_time_params)
+
+
+class TestDoc2VecNmslibIndexer(unittest.TestCase):
+
+    def setUp(self):
+        try:
+            import nmslib  # noqa:F401
+        except ImportError:
+            raise unittest.SkipTest("Nmslib library is not available")
+
+        from gensim.similarities.nmslib import NmslibIndexer
+
+        self.model = doc2vec.Doc2Vec(sentences, min_count=1)
+        self.model.init_sims()
+        self.index = NmslibIndexer(self.model)
+        self.vector = self.model.docvecs.vectors_docs_norm[0]
+
+    def testDocumentIsSimilarToItself(self):
+        approx_neighbors = self.index.most_similar(self.vector, 1)
+        doc, similarity = approx_neighbors[0]
+
+        self.assertEqual(doc, 0)
+        self.assertAlmostEqual(similarity, 1.0, places=2)
+
+    def testApproxNeighborsMatchExact(self):
+        approx_neighbors = self.model.docvecs.most_similar([self.vector], topn=5, indexer=self.index)
+        exact_neighbors = self.model.docvecs.most_similar(
+            positive=[self.vector], topn=5)
+
+        approx_words = [neighbor[0] for neighbor in approx_neighbors]
+        exact_words = [neighbor[0] for neighbor in exact_neighbors]
+
+        self.assertEqual(approx_words, exact_words)
+
+    def testSave(self):
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
+        self.index.save(fname)
+        self.assertTrue(os.path.exists(fname))
+        self.assertTrue(os.path.exists(fname + '.d'))
+
+    def testLoadNotExist(self):
+        from gensim.similarities.nmslib import NmslibIndexer
+        self.test_index = NmslibIndexer()
+
+        self.assertRaises(IOError, self.test_index.load, fname='test-index')
+
+    def testSaveLoad(self):
+        from gensim.similarities.nmslib import NmslibIndexer
+
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
+        self.index.save(fname)
+
+        self.index2 = NmslibIndexer()
+        self.index2.load(fname)
+        self.index2.model = self.model
+
+        self.assertEqual(self.index.labels, self.index2.labels)
+        self.assertEqual(self.index.index_params, self.index2.index_params)
+        self.assertEqual(self.index.query_time_params, self.index2.query_time_params)
+
+
 class TestUniformTermSimilarityIndex(unittest.TestCase):
     def setUp(self):
         self.documents = [[u"government", u"denied", u"holiday"], [u"holiday", u"slowing", u"hollingworth"]]
