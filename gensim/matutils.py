@@ -725,7 +725,7 @@ def unitvec(vec, norm='l2', return_norm=False):
                 return vec
         else:
             if return_norm:
-                return vec, 1.
+                return vec, 1.0
             else:
                 return vec
 
@@ -743,14 +743,17 @@ def unitvec(vec, norm='l2', return_norm=False):
                 return blas_scal(1.0 / veclen, vec).astype(vec.dtype)
         else:
             if return_norm:
-                return vec, 1
+                return vec, 1.0
             else:
                 return vec
 
     try:
         first = next(iter(vec))  # is there at least one element?
     except StopIteration:
-        return vec
+        if return_norm:
+            return vec, 1.0
+        else:
+            return vec
 
     if isinstance(first, (tuple, list)) and len(first) == 2:  # gensim sparse format
         if norm == 'l1':
