@@ -733,7 +733,7 @@ def unitvec(vec, norm='l2', return_norm=False):
         if norm == 'l1':
             veclen = np.sum(np.abs(vec))
         if norm == 'l2':
-            veclen = blas_nrm2(vec)
+            veclen = blas_nrm2(vec) if len(vec) else 0.0
         if veclen > 0.0:
             if np.issubdtype(vec.dtype, np.integer):
                 vec = vec.astype(np.float)
