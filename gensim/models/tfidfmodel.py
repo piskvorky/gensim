@@ -15,6 +15,7 @@ see the blog post at https://rare-technologies.com/pivoted-document-length-norma
 
 import logging
 from functools import partial
+import re
 
 from gensim import interfaces, matutils, utils
 from six import iteritems
@@ -43,20 +44,23 @@ def resolve_weights(smartirs):
 
     local_letter : str
         Term frequency weighing, one of:
-            * `n` - natural,
-            * `l` - logarithm,
+            * `b` - binary,
+            * `t` or `n` - raw,
             * `a` - augmented,
-            * `b` - boolean,
+            * `l` - logarithm,
+            * `d` - double logarithm,
             * `L` - log average.
     global_letter : str
         Document frequency weighting, one of:
-            * `n` - none,
-            * `t` - idf,
-            * `p` - prob idf.
+            * `x` or `n` - none,
+            * `f` - idf,
+            * `t` - zero-corrected idf,
+            * `p` - probabilistic idf.
     normalization_letter : str
         Document normalization, one of:
-            * `n` - none,
-            * `c` - cosine.
+            * `x` or `n` - none,
+            * `c` - cosine,
+            * `u` - pivoted unique.
 
     Raises
     ------
@@ -65,19 +69,29 @@ def resolve_weights(smartirs):
         doesn't fit the list of permissible values.
 
     """
+    if isinstance(smartirs, str) and re.match(r"...\....", smartirs):
+        match = re.match(r"(?P<ddd>...)\.(?P<qqq>...)", smartirs)
+        raise ValueError(
+            "The notation {ddd}.{qqq} specifies two term-weighting schemes, "
+            "one for collection documents ({ddd}) and one for queries ({qqq}). "
+            "You must train two separate tf-idf models.".format(
+                ddd=match.group("ddd"),
+                qqq=match.group("qqq"),
+            )
+        )
     if not isinstance(smartirs, str) or len(smartirs) != 3:
         raise ValueError("Expected a string of length 3 except got " + smartirs)
 
     w_tf, w_df, w_n = smartirs
 
-    if w_tf not in 'nlabL':
-        raise ValueError("Expected term frequency weight to be one of 'nlabL', except got {}".format(w_tf))
+    if w_tf not in 'btnaldL':
+        raise ValueError("Expected term frequency weight to be one of 'btnaldL', except got {}".format(w_tf))
 
-    if w_df not in 'ntp':
-        raise ValueError("Expected inverse document frequency weight to be one of 'ntp', except got {}".format(w_df))
+    if w_df not in 'xnftp':
+        raise ValueError("Expected inverse document frequency weight to be one of 'xnftp', except got {}".format(w_df))
 
-    if w_n not in 'nc':
-        raise ValueError("Expected normalization weight to be one of 'ncb', except got {}".format(w_n))
+    if w_n not in 'xncu':
+        raise ValueError("Expected normalization weight to be one of 'xncu', except got {}".format(w_n))
 
     return w_tf, w_df, w_n
 
@@ -137,7 +151,7 @@ def smartirs_wlocal(tf, local_scheme):
     ----------
     tf : int
         Term frequency.
-    local : {'n', 'l', 'a', 'b', 'L'}
+    local : {'b', 't', 'n', 'a', 'l', 'd', 'L'}
         Local transformation scheme.
 
     Returns
@@ -146,10 +160,12 @@ def smartirs_wlocal(tf, local_scheme):
         Calculated local weight.
 
     """
-    if local_scheme == "n":
+    if local_scheme in ("t", "n"):
         return tf
     elif local_scheme == "l":
         return 1 + np.log2(tf)
+    elif local_scheme == "d":
+        return 1 + np.log2(1 + np.log2(tf))
     elif local_scheme == "a":
         return 0.5 + (0.5 * tf / tf.max(axis=0))
     elif local_scheme == "b":
@@ -167,7 +183,7 @@ def smartirs_wglobal(docfreq, totaldocs, global_scheme):
         Document frequency.
     totaldocs : int
         Total number of documents.
-    global_scheme : {'n', 't', 'p'}
+    global_scheme : {'x', 'n', 'f', 't', 'p'}
         Global transformation scheme.
 
     Returns
@@ -176,11 +192,12 @@ def smartirs_wglobal(docfreq, totaldocs, global_scheme):
         Calculated global weight.
 
     """
-
-    if global_scheme == "n":
-        return 1.
-    elif global_scheme == "t":
+    if global_scheme in ("x", "n"):
+        return 1.0
+    elif global_scheme == "f":
         return np.log2(1.0 * totaldocs / docfreq)
+    elif global_scheme == "t":
+        return np.log2((totaldocs + 1.0) / docfreq)
     elif global_scheme == "p":
         return max(0, np.log2((1.0 * totaldocs - docfreq) / docfreq))
 
@@ -191,11 +208,9 @@ def smartirs_normalize(x, norm_scheme, return_norm=False):
     Parameters
     ----------
     x : numpy.ndarray
-        Input array
-    norm_scheme : {'n', 'c'}
-        Normalizing function to use:
-        `n`: no normalization
-        `c`: unit L2 norm (scale `x` to unit euclidean length)
+        The tf-idf vector.
+    norm_scheme : {'x', 'n', 'c', 'u'}
+        Document length normalization scheme.
     return_norm : bool, optional
         Return the length of `x` as well?
 
@@ -204,10 +219,10 @@ def smartirs_normalize(x, norm_scheme, return_norm=False):
     numpy.ndarray
         Normalized array.
     float (only if return_norm is set)
-        L2 norm of `x`.
+        Norm of `x`.
 
     """
-    if norm_scheme == "n":
+    if norm_scheme in ("x", "n"):
         if return_norm:
             _, length = matutils.unitvec(x, return_norm=return_norm)
             return x, length
@@ -215,6 +230,8 @@ def smartirs_normalize(x, norm_scheme, return_norm=False):
             return x
     elif norm_scheme == "c":
         return matutils.unitvec(x, return_norm=return_norm)
+    elif norm_scheme == "u":
+        return matutils.unitvec(x, return_norm=return_norm, norm='unique')
 
 
 class TfidfModel(interfaces.TransformationABC):
@@ -265,7 +282,7 @@ class TfidfModel(interfaces.TransformationABC):
             (other options: :func:`math.sqrt`, :func:`math.log1p`, etc).
         wglobal : function, optional
             Function for global weighting, default is :func:`~gensim.models.tfidfmodel.df2idf`.
-        normalize : bool, optional
+        normalize : {bool, callable}, optional
             Normalize document vectors to unit euclidean length? You can also inject your own function into `normalize`.
         smartirs : str, optional
             SMART (System for the Mechanical Analysis and Retrieval of Text) Information Retrieval System,
@@ -274,20 +291,23 @@ class TfidfModel(interfaces.TransformationABC):
             for example 'ntc', 'bpn' and so on, where the letters represents the term weighting of the document vector.
 
             Term frequency weighing:
-                * `n` - natural,
-                * `l` - logarithm,
+                * `b` - binary,
+                * `t` or `n` - raw,
                 * `a` - augmented,
-                * `b` - boolean,
+                * `l` - logarithm,
+                * `d` - double logarithm,
                 * `L` - log average.
 
             Document frequency weighting:
-                * `n` - none,
-                * `t` - idf,
-                * `p` - prob idf.
+                * `x` or `n` - none,
+                * `f` - idf,
+                * `t` - zero-corrected idf,
+                * `p` - probabilistic idf.
 
             Document normalization:
-                * `n` - none,
-                * `c` - cosine.
+                * `x` or `n` - none,
+                * `c` - cosine,
+                * `u` - pivoted unique.
 
             For more information visit `SMART Information Retrieval System
             <https://en.wikipedia.org/wiki/SMART_Information_Retrieval_System>`_.
@@ -300,8 +320,9 @@ class TfidfModel(interfaces.TransformationABC):
             retrieval and relevance curves intersect.
 
             This parameter along with `slope` is used for pivoted document length normalization.
-            Only when `pivot` is not None will pivoted document length normalization be applied.
-            Otherwise, regular TfIdf is used.
+            When `pivot` is None, `smartirs` specifies the pivoted unique document normalization scheme, and either
+            `corpus` or `dictionary` are specified, then the pivot will be determined automatically. Otherwise, no
+            pivoted document length normalization is applied.
         slope : float, optional
             Parameter required by pivoted document length normalization which determines the slope to which
             the `old normalization` can be tilted. This parameter only works when pivot is defined.
@@ -315,16 +336,11 @@ class TfidfModel(interfaces.TransformationABC):
         self.pivot = pivot
         self.eps = 1e-12
 
-        # If smartirs is not None, override wlocal, wglobal and normalize
+        # If smartirs is not None, override wlocal and wglobal
         if smartirs is not None:
             n_tf, n_df, n_n = resolve_weights(smartirs)
             self.wlocal = partial(smartirs_wlocal, local_scheme=n_tf)
             self.wglobal = partial(smartirs_wglobal, global_scheme=n_df)
-            # also return norm factor if pivot is not none
-            if self.pivot is None:
-                self.normalize = partial(smartirs_normalize, norm_scheme=n_n)
-            else:
-                self.normalize = partial(smartirs_normalize, norm_scheme=n_n, return_norm=True)
 
         if dictionary is not None:
             # user supplied a Dictionary object, which already contains all the
@@ -345,6 +361,16 @@ class TfidfModel(interfaces.TransformationABC):
             # NOTE: everything is left uninitialized; presumably the model will
             # be initialized in some other way
             pass
+
+        # If smartirs is not None, override pivot and normalize
+        if smartirs is not None:
+            if self.pivot is None and (dictionary is not None or corpus is not None) and n_n == "u":
+                self.pivot = 1.0 * self.num_nnz / self.num_docs
+            # also return norm factor if pivot is not none
+            if self.pivot is None:
+                self.normalize = partial(smartirs_normalize, norm_scheme=n_n)
+            else:
+                self.normalize = partial(smartirs_normalize, norm_scheme=n_n, return_norm=True)
 
     @classmethod
     def load(cls, *args, **kwargs):

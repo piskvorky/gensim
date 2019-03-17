@@ -689,7 +689,7 @@ def unitvec(vec, norm='l2', return_norm=False):
     ----------
     vec : {numpy.ndarray, scipy.sparse, list of (int, float)}
         Input vector in any format
-    norm : {'l1', 'l2'}, optional
+    norm : {'l1', 'l2', 'unique'}, optional
         Metric to normalize in.
     return_norm : bool, optional
         Return the length of vector `vec`, in addition to the normalized vector itself?
@@ -706,7 +706,7 @@ def unitvec(vec, norm='l2', return_norm=False):
     Zero-vector will be unchanged.
 
     """
-    if norm not in ('l1', 'l2'):
+    if norm not in ('l1', 'l2', 'unique'):
         raise ValueError("'%s' is not a supported norm. Currently supported norms are 'l1' and 'l2'." % norm)
 
     if scipy.sparse.issparse(vec):
@@ -715,6 +715,8 @@ def unitvec(vec, norm='l2', return_norm=False):
             veclen = np.sum(np.abs(vec.data))
         if norm == 'l2':
             veclen = np.sqrt(np.sum(vec.data ** 2))
+        if norm == 'unique':
+            veclen = vec.nnz
         if veclen > 0.0:
             if np.issubdtype(vec.dtype, np.integer):
                 vec = vec.astype(np.float)
@@ -734,6 +736,8 @@ def unitvec(vec, norm='l2', return_norm=False):
             veclen = np.sum(np.abs(vec))
         if norm == 'l2':
             veclen = blas_nrm2(vec)
+        if norm == 'unique':
+            veclen = np.count_nonzero(vec)
         if veclen > 0.0:
             if np.issubdtype(vec.dtype, np.integer):
                 vec = vec.astype(np.float)
@@ -757,6 +761,8 @@ def unitvec(vec, norm='l2', return_norm=False):
             length = float(sum(abs(val) for _, val in vec))
         if norm == 'l2':
             length = 1.0 * math.sqrt(sum(val ** 2 for _, val in vec))
+        if norm == 'unique':
+            length = 1.0 * len(vec)
         assert length > 0.0, "sparse documents must not contain any explicit zero entries"
         if return_norm:
             return ret_normalized_vec(vec, length), length
