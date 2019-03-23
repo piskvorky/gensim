@@ -161,16 +161,6 @@ def _load_vocab(fin, new_format, encoding='utf-8'):
     """
     vocab_size, nwords, nlabels = _struct_unpack(fin, '@3i')
 
-    #
-    # We must use backslashreplace instead of replace or ignore here, because
-    # we must avoid collisions in the decoded word, e.g.
-    # https://github.com/RaRe-Technologies/gensim/issues/2402
-    #
-    # Unfortunately, backslashreplace is only available on Py3.  On Py2, we
-    # can't really do anything to avoid collisions.
-    #
-    errors = 'backslashreplace' if six.PY3 else 'replace'
-
     # Vocab stored by [Dictionary::save](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
     if nlabels > 0:
         raise NotImplementedError("Supervised fastText models are not supported")
@@ -193,11 +183,7 @@ def _load_vocab(fin, new_format, encoding='utf-8'):
         try:
             word = word_bytes.decode(encoding)
         except UnicodeDecodeError:
-            word = word_bytes.decode(encoding, errors=errors)
-            logger.error(
-                'failed to decode invalid unicode bytes %r; ignoring invalid characters, using %r',
-                word_bytes, word
-            )
+            word = _decode_bad_unicode(word_bytes, encoding)
         count, _ = _struct_unpack(fin, '@qb')
         raw_vocab[word] = count
 
@@ -206,6 +192,41 @@ def _load_vocab(fin, new_format, encoding='utf-8'):
             _struct_unpack(fin, '@2i')
 
     return raw_vocab, vocab_size, nwords
+
+
+def _decode_bad_unicode_py2(word_bytes, encoding):
+    #
+    # We are explicitly ignoring the encoding here.  This is bad, because the
+    # output is highly likely to be garbage, but its the only thing that:
+    #
+    # - does not cause collisions (see https://github.com/RaRe-Technologies/gensim/issues/2402)
+    # - works under Py2
+    #
+    del encoding
+    word = word_bytes.decode('latin1')
+    logger.error(
+        'failed to decode invalid unicode bytes %r; falling back to latin1, using %r; '
+        'consider upgrading to Python 3 for better Unicode handling (and so much more)',
+        word_bytes, word
+    )
+    return word
+
+
+def _decode_bad_unicode_py3(word_bytes, encoding):
+    #
+    # backslashreplace is the better option (when available) because it
+    # preserves characters that were properly encoded, and only replaces
+    # bad ones.
+    #
+    word = word_bytes.decode(encoding, errors='backslashreplace')
+    logger.error(
+        'failed to decode invalid unicode bytes %r; replacing invalid characters, using %r',
+        word_bytes, word
+    )
+    return word
+
+
+_decode_bad_unicode = _decode_bad_unicode_py3 if six.PY3 else _decode_bad_unicode_py2
 
 
 def _load_matrix(fin, new_format=True):
