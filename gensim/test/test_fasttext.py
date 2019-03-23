@@ -1119,6 +1119,13 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         iv_vector = fbkv['landlady']
         self.assertFalse(np.allclose(oov_vector, iv_vector))
 
+    def test_no_ngrams(self):
+        model = gensim.models.fasttext.load_facebook_model(datapath('crime-and-punishment.bin'))
+
+        v1 = model.wv['']
+        origin = np.zeros(v1.shape, v1.dtype)
+        self.assertTrue(np.allclose(v1, origin))
+
 
 def _train_model_with_pretrained_vectors():
     """Generate toy-model-pretrained.bin for use in test_load_native_pretrained.
