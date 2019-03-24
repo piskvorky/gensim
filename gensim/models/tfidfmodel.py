@@ -18,7 +18,8 @@ from functools import partial
 import re
 
 from gensim import interfaces, matutils, utils
-from six import iteritems
+from gensim.utils import deprecated
+from six import iteritems, iterkeys
 
 import numpy as np
 
@@ -60,7 +61,8 @@ def resolve_weights(smartirs):
         Document normalization, one of:
             * `x` or `n` - none,
             * `c` - cosine,
-            * `u` - pivoted unique.
+            * `u` - pivoted unique,
+            * `b` - pivoted character length.
 
     Raises
     ------
@@ -94,8 +96,8 @@ def resolve_weights(smartirs):
     if w_df not in 'xnftp':
         raise ValueError("Expected inverse document frequency weight to be one of 'xnftp', except got {}".format(w_df))
 
-    if w_n not in 'xncu':
-        raise ValueError("Expected normalization weight to be one of 'xncu', except got {}".format(w_n))
+    if w_n not in 'xncub':
+        raise ValueError("Expected normalization weight to be one of 'xncub', except got {}".format(w_n))
 
     # resolve aliases
     if w_tf == "t":
@@ -214,25 +216,23 @@ def smartirs_wglobal(docfreq, totaldocs, global_scheme):
         return max(0, np.log2((1.0 * totaldocs - docfreq) / docfreq))
 
 
+@deprecated("Function will be removed in 4.0.0")
 def smartirs_normalize(x, norm_scheme, return_norm=False):
     """Normalize a vector using the normalization scheme specified in `norm_scheme`.
-
     Parameters
     ----------
     x : numpy.ndarray
         The tf-idf vector.
-    norm_scheme : {'n', 'c', 'u'}
+    norm_scheme : {'n', 'c'}
         Document length normalization scheme.
     return_norm : bool, optional
         Return the length of `x` as well?
-
     Returns
     -------
     numpy.ndarray
         Normalized array.
     float (only if return_norm is set)
         Norm of `x`.
-
     """
     if norm_scheme == "n":
         if return_norm:
@@ -242,8 +242,6 @@ def smartirs_normalize(x, norm_scheme, return_norm=False):
             return x
     elif norm_scheme == "c":
         return matutils.unitvec(x, return_norm=return_norm)
-    elif norm_scheme == "u":
-        return matutils.unitvec(x, return_norm=return_norm, norm='unique')
 
 
 class TfidfModel(interfaces.TransformationABC):
@@ -319,7 +317,8 @@ class TfidfModel(interfaces.TransformationABC):
             Document normalization:
                 * `x` or `n` - none,
                 * `c` - cosine,
-                * `u` - pivoted unique.
+                * `u` - pivoted unique,
+                * `b` - pivoted character length.
 
             For more information visit `SMART Information Retrieval System
             <https://en.wikipedia.org/wiki/SMART_Information_Retrieval_System>`_.
@@ -332,9 +331,12 @@ class TfidfModel(interfaces.TransformationABC):
             retrieval and relevance curves intersect.
 
             This parameter along with `slope` is used for pivoted document length normalization.
-            When `pivot` is None, `smartirs` specifies the pivoted unique document normalization scheme, and either
-            `corpus` or `dictionary` are specified, then the pivot will be determined automatically. Otherwise, no
-            pivoted document length normalization is applied.
+
+            When `pivot` is None, and `smartirs` specifies the pivoted unique document normalization scheme (u), and
+            either `corpus` or `dictionary` are specified, then the pivot will be determined automatically.
+
+            When `pivot` is None, and `smartirs` specifies the character length unique document normalization
+            scheme (b), and `dictionary` is specified, then the pivot will be determined automatically.
         slope : float, optional
             Parameter required by pivoted document length normalization which determines the slope to which
             the `old normalization` can be tilted. This parameter only works when pivot is defined.
@@ -343,14 +345,14 @@ class TfidfModel(interfaces.TransformationABC):
         self.id2word = id2word
         self.wlocal, self.wglobal, self.normalize = wlocal, wglobal, normalize
         self.num_docs, self.num_nnz, self.idfs = None, None, None
-        self.smartirs = smartirs
+        self.smartirs = resolve_weights(smartirs)
         self.slope = slope
         self.pivot = pivot
         self.eps = 1e-12
 
         # If smartirs is not None, override wlocal and wglobal
         if smartirs is not None:
-            n_tf, n_df, n_n = resolve_weights(smartirs)
+            n_tf, n_df, n_n = self.smartirs
             self.wlocal = partial(smartirs_wlocal, local_scheme=n_tf)
             self.wglobal = partial(smartirs_wglobal, global_scheme=n_df)
 
@@ -363,7 +365,9 @@ class TfidfModel(interfaces.TransformationABC):
                     "constructor received both corpus and explicit inverse document frequencies; ignoring the corpus"
                 )
             self.num_docs, self.num_nnz = dictionary.num_docs, dictionary.num_nnz
+            self.cfs = dictionary.cfs.copy()
             self.dfs = dictionary.dfs.copy()
+            self.term_lens = {termid: len(term) for termid, term in iteritems(dictionary)}
             self.idfs = precompute_idfs(self.wglobal, self.dfs, self.num_docs)
             if id2word is None:
                 self.id2word = dictionary
@@ -376,13 +380,25 @@ class TfidfModel(interfaces.TransformationABC):
 
         # If smartirs is not None, override pivot and normalize
         if smartirs is not None:
-            if self.pivot is None and (dictionary is not None or corpus is not None) and n_n == "u":
-                self.pivot = 1.0 * self.num_nnz / self.num_docs
-            # also return norm factor if pivot is not none
             if self.pivot is None:
-                self.normalize = partial(smartirs_normalize, norm_scheme=n_n)
-            else:
-                self.normalize = partial(smartirs_normalize, norm_scheme=n_n, return_norm=True)
+                if n_n == "u":
+                    if dictionary is not None or corpus is not None:
+                        if callable(self.normalize):
+                            logger.warning("constructor received smartirs; ignoring normalize")
+                        self.pivot = 1.0 * self.num_nnz / self.num_docs
+                    else:
+                        logger.warning("constructor received no corpus or dictionary; ignoring smartirs[2]")
+                elif n_n == "b":
+                    if dictionary is not None:
+                        if callable(self.normalize):
+                            logger.warning("constructor received smartirs; ignoring normalize")
+                        self.pivot = 1.0 * sum(
+                            self.cfs[termid] * (self.term_lens[termid] + 1.0) for termid in iterkeys(dictionary)
+                        ) / self.num_docs
+                    else:
+                        logger.warning("constructor received no dictionary; ignoring smartirs[2]")
+            elif n_n in 'ub':
+                logger.warning("constructor received pivot; ignoring smartirs[2]")
 
     @classmethod
     def load(cls, *args, **kwargs):
@@ -426,7 +442,9 @@ class TfidfModel(interfaces.TransformationABC):
         # keep some stats about the training corpus
         self.num_docs = docno + 1
         self.num_nnz = numnnz
+        self.cfs = None
         self.dfs = dfs
+        self.term_lengths = None
         # and finally compute the idf weights
         n_features = max(dfs) if dfs else 0
         logger.info(
@@ -474,18 +492,37 @@ class TfidfModel(interfaces.TransformationABC):
             for termid, tf in zip(termid_array, tf_array) if abs(self.idfs.get(termid, 0.0)) > self.eps
         ]
 
-        if self.normalize is True:
-            self.normalize = matutils.unitvec
-        elif self.normalize is False:
-            self.normalize = utils.identity
-
         # and finally, normalize the vector either to unit length, or use a
         # user-defined normalization function
+        if self.smartirs is not None:
+            n_n = self.smartirs[2]
+            if n_n == "n" or (n_n in 'ub' and self.pivot is None):
+                if self.pivot is not None:
+                    _, old_norm = matutils.unitvec(vector, return_norm=True)
+                norm_vector = vector
+            elif n_n == "c":
+                if self.pivot is not None:
+                    _, old_norm = matutils.unitvec(vector, return_norm=True)
+                else:
+                    norm_vector = matutils.unitvec(vector)
+            elif n_n == "u":
+                _, old_norm = matutils.unitvec(vector, return_norm=True, norm='unique')
+            elif n_n == "b":
+                old_norm = sum(freq * (self.term_lens[termid] + 1.0) for termid, freq in bow)
+        else:
+            if self.normalize:
+                self.normalize = matutils.unitvec
+            else:
+                self.normalize = utils.identity
+
+            if self.pivot is not None:
+                _, old_norm = self.normalize(vector, return_norm=True)
+            else:
+                norm_vector = self.normalize(vector)
+
         if self.pivot is None:
-            norm_vector = self.normalize(vector)
             norm_vector = [(termid, weight) for termid, weight in norm_vector if abs(weight) > self.eps]
         else:
-            _, old_norm = self.normalize(vector, return_norm=True)
             pivoted_norm = (1 - self.slope) * self.pivot + self.slope * old_norm
             norm_vector = [
                 (termid, weight / float(pivoted_norm))

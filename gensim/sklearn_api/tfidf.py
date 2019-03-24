@@ -78,7 +78,8 @@ class TfIdfTransformer(TransformerMixin, BaseEstimator):
                 Document normalization, one of:
                     * `x` or `n` - none,
                     * `c` - cosine,
-                    * `u` - pivoted unique.
+                    * `u` - pivoted unique,
+                    * `b` - pivoted character length.
 
             For more info, visit `"Wikipedia" <https://en.wikipedia.org/wiki/SMART_Information_Retrieval_System>`_.
         pivot : float, optional

@@ -370,6 +370,23 @@ class TestTfidfModel(unittest.TestCase):
         self.assertTrue(np.allclose(transformed_docs[0], expected_docs[0]))
         self.assertTrue(np.allclose(transformed_docs[1], expected_docs[1]))
 
+        # nnb
+        slope = 0.2
+        model = tfidfmodel.TfidfModel(dictionary=dictionary, smartirs='nnb', slope=slope)
+        transformed_docs = [model[docs[0]], model[docs[1]]]
+        average_character_length = sum(len(word) + 1.0 for text in texts for word in text) / len(texts)
+        vector_norms = [
+            (1.0 - slope) * average_character_length + slope * 36.0,
+            (1.0 - slope) * average_character_length + slope * 25.0,
+        ]
+        expected_docs = [
+            [(termid, weight / vector_norms[0]) for termid, weight in docs[0]],
+            [(termid, weight / vector_norms[1]) for termid, weight in docs[1]],
+        ]
+
+        self.assertTrue(np.allclose(transformed_docs[0], expected_docs[0]))
+        self.assertTrue(np.allclose(transformed_docs[1], expected_docs[1]))
+
     def test_pivoted_normalization(self):
         docs = [corpus[1], corpus[2]]
 
