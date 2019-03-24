@@ -30,7 +30,7 @@ def resolve_weights(smartirs):
 
     Parameters
     ----------
-    smartirs : str
+    smartirs : str or None
         `smartirs` or SMART (System for the Mechanical Analysis and Retrieval of Text)
         Information Retrieval System, a mnemonic scheme for denoting tf-idf weighting
         variants in the vector space model. The mnemonic for representing a combination
@@ -40,7 +40,7 @@ def resolve_weights(smartirs):
 
     Returns
     -------
-    3-tuple (local_letter, global_letter, normalization_letter)
+    str of (local_letter, global_letter, normalization_letter) or None
 
     local_letter : str
         Term frequency weighing, one of:
@@ -69,6 +69,10 @@ def resolve_weights(smartirs):
         doesn't fit the list of permissible values.
 
     """
+
+    if smartirs is None:
+        return None
+
     if isinstance(smartirs, str) and re.match(r"...\....", smartirs):
         match = re.match(r"(?P<ddd>...)\.(?P<qqq>...)", smartirs)
         raise ValueError(
@@ -93,7 +97,15 @@ def resolve_weights(smartirs):
     if w_n not in 'xncu':
         raise ValueError("Expected normalization weight to be one of 'xncu', except got {}".format(w_n))
 
-    return w_tf, w_df, w_n
+    # resolve aliases
+    if w_tf == "t":
+        w_tf = "n"
+    if w_df == "x":
+        w_df = "n"
+    if w_n == "x":
+        w_n = "n"
+
+    return w_tf + w_df + w_n
 
 
 def df2idf(docfreq, totaldocs, log_base=2.0, add=0.0):
@@ -151,7 +163,7 @@ def smartirs_wlocal(tf, local_scheme):
     ----------
     tf : int
         Term frequency.
-    local : {'b', 't', 'n', 'a', 'l', 'd', 'L'}
+    local : {'b', 'n', 'a', 'l', 'd', 'L'}
         Local transformation scheme.
 
     Returns
@@ -160,7 +172,7 @@ def smartirs_wlocal(tf, local_scheme):
         Calculated local weight.
 
     """
-    if local_scheme in ("t", "n"):
+    if local_scheme == "n":
         return tf
     elif local_scheme == "l":
         return 1 + np.log2(tf)
@@ -183,7 +195,7 @@ def smartirs_wglobal(docfreq, totaldocs, global_scheme):
         Document frequency.
     totaldocs : int
         Total number of documents.
-    global_scheme : {'x', 'n', 'f', 't', 'p'}
+    global_scheme : {'n', 'f', 't', 'p'}
         Global transformation scheme.
 
     Returns
@@ -192,7 +204,7 @@ def smartirs_wglobal(docfreq, totaldocs, global_scheme):
         Calculated global weight.
 
     """
-    if global_scheme in ("x", "n"):
+    if global_scheme == "n":
         return 1.0
     elif global_scheme == "f":
         return np.log2(1.0 * totaldocs / docfreq)
@@ -209,7 +221,7 @@ def smartirs_normalize(x, norm_scheme, return_norm=False):
     ----------
     x : numpy.ndarray
         The tf-idf vector.
-    norm_scheme : {'x', 'n', 'c', 'u'}
+    norm_scheme : {'n', 'c', 'u'}
         Document length normalization scheme.
     return_norm : bool, optional
         Return the length of `x` as well?
@@ -222,7 +234,7 @@ def smartirs_normalize(x, norm_scheme, return_norm=False):
         Norm of `x`.
 
     """
-    if norm_scheme in ("x", "n"):
+    if norm_scheme == "n":
         if return_norm:
             _, length = matutils.unitvec(x, return_norm=return_norm)
             return x, length
