@@ -1269,23 +1269,10 @@ class UnicodeVocabTest(unittest.TestCase):
 
         raw_vocab, vocab_size, nlabels = gensim.models._fasttext_bin._load_vocab(buf, False)
 
-        if six.PY3:
-            expected = {
-                u'英語版ウィキペディアへの投稿はいつでも\\xe6': 1,
-                u'административно-территориальн\\xd1': 2,
-            }
-        else:
-            bad1 = (u'\xe8\x8b\xb1\xe8\xaa\x9e\xe7\x89\x88\xe3\x82\xa6\xe3'
-                    u'\x82\xa3\xe3\x82\xad\xe3\x83\x9a\xe3\x83\x87\xe3\x82'
-                    u'\xa3\xe3\x82\xa2\xe3\x81\xb8\xe3\x81\xae\xe6\x8a\x95'
-                    u'\xe7\xa8\xbf\xe3\x81\xaf\xe3\x81\x84\xe3\x81\xa4\xe3'
-                    u'\x81\xa7\xe3\x82\x82\xe6')
-            bad2 = (u'\xd0\xb0\xd0\xb4\xd0\xbc\xd0\xb8\xd0\xbd\xd0\xb8\xd1'
-                    u'\x81\xd1\x82\xd1\x80\xd0\xb0\xd1\x82\xd0\xb8\xd0\xb2'
-                    u'\xd0\xbd\xd0\xbe-\xd1\x82\xd0\xb5\xd1\x80\xd1\x80\xd0'
-                    u'\xb8\xd1\x82\xd0\xbe\xd1\x80\xd0\xb8\xd0\xb0\xd0\xbb'
-                    u'\xd1\x8c\xd0\xbd\xd1')
-            expected = {bad1: 1, bad2: 2}
+        expected = {
+            u'英語版ウィキペディアへの投稿はいつでも\\xe6': 1,
+            u'административно-территориальн\\xd1': 2,
+        }
 
         self.assertEqual(expected, dict(raw_vocab))
 

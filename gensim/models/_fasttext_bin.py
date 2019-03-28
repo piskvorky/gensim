@@ -29,6 +29,7 @@ See Also
 
 """
 
+import codecs
 import collections
 import io
 import logging
@@ -183,7 +184,11 @@ def _load_vocab(fin, new_format, encoding='utf-8'):
         try:
             word = word_bytes.decode(encoding)
         except UnicodeDecodeError:
-            word = _decode_bad_unicode(word_bytes, encoding)
+            word = word_bytes.decode(encoding, errors='backslashreplace')
+            logger.error(
+                'failed to decode invalid unicode bytes %r; replacing invalid characters, using %r',
+                word_bytes, word
+            )
         count, _ = _struct_unpack(fin, '@qb')
         raw_vocab[word] = count
 
@@ -192,41 +197,6 @@ def _load_vocab(fin, new_format, encoding='utf-8'):
             _struct_unpack(fin, '@2i')
 
     return raw_vocab, vocab_size, nwords
-
-
-def _decode_bad_unicode_py2(word_bytes, encoding):
-    #
-    # We are explicitly ignoring the encoding here.  This is bad, because the
-    # output is highly likely to be garbage, but its the only thing that:
-    #
-    # - does not cause collisions (see https://github.com/RaRe-Technologies/gensim/issues/2402)
-    # - works under Py2
-    #
-    del encoding
-    word = word_bytes.decode('latin1')
-    logger.error(
-        'failed to decode invalid unicode bytes %r; falling back to latin1, using %r; '
-        'consider upgrading to Python 3 for better Unicode handling (and so much more)',
-        word_bytes, word
-    )
-    return word
-
-
-def _decode_bad_unicode_py3(word_bytes, encoding):
-    #
-    # backslashreplace is the better option (when available) because it
-    # preserves characters that were properly encoded, and only replaces
-    # bad ones.
-    #
-    word = word_bytes.decode(encoding, errors='backslashreplace')
-    logger.error(
-        'failed to decode invalid unicode bytes %r; replacing invalid characters, using %r',
-        word_bytes, word
-    )
-    return word
-
-
-_decode_bad_unicode = _decode_bad_unicode_py3 if six.PY3 else _decode_bad_unicode_py2
 
 
 def _load_matrix(fin, new_format=True):
@@ -312,3 +282,39 @@ def load(fin, encoding='utf-8', full_model=True):
     model.update(vectors_ngrams=vectors_ngrams, hidden_output=hidden_output)
     model = {k: v for k, v in model.items() if k in _FIELD_NAMES}
     return Model(**model)
+
+
+def _backslashreplace_backport(ex):
+    """Replace byte sequences that failed to decode with character escapes.
+
+    Does the same thing as errors="backslashreplace" from Python 3.  Python 2
+    lacks this functionality out of the box, so we need to backport it.
+
+    Parameters
+    ----------
+    ex: UnicodeDecodeError
+        contains arguments of the string and start/end indexes of the bad portion.
+
+    Returns
+    -------
+    text: unicode
+        The Unicode string corresponding to the decoding of the bad section.
+    end: int
+        The index from which to continue decoding.
+
+    Note
+    ----
+    Works on Py2 only.  Py3 already has backslashreplace built-in.
+
+    """
+    #
+    # Based on:
+    # https://stackoverflow.com/questions/42860186/exact-equivalent-of-b-decodeutf-8-backslashreplace-in-python-2
+    #
+    bstr, start, end = ex.object, ex.start, ex.end
+    text = u''.join('\\x{:02x}'.format(ord(c)) for c in bstr[start:end])
+    return text, end
+
+
+if six.PY2:
+    codecs.register_error('backslashreplace', _backslashreplace_backport)
