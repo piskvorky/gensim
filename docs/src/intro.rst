@@ -80,7 +80,7 @@ Core concepts
            The models use this *training corpus* to look for common themes and topics, initializing
            their internal model parameters.
 
-           Gensim in unique in its focus on *unsupervised* models so that no human intervention,
+           Gensim focuses on *unsupervised* models so that no human intervention,
            such as costly annotations or tagging documents by hand, is required.
 
         2. Documents to organize.
