@@ -30,10 +30,13 @@ See Also
 """
 
 import collections
+import io
 import logging
 import struct
 
 import numpy as np
+
+_END_OF_WORD_MARKER = b'\x00'
 
 logger = logging.getLogger(__name__)
 
@@ -168,13 +171,22 @@ def _load_vocab(fin, new_format, encoding='utf-8'):
 
     raw_vocab = collections.OrderedDict()
     for i in range(vocab_size):
-        word_bytes = b''
+        word_bytes = io.BytesIO()
         char_byte = fin.read(1)
-        # Read vocab word
-        while char_byte != b'\x00':
-            word_bytes += char_byte
+
+        while char_byte != _END_OF_WORD_MARKER:
+            word_bytes.write(char_byte)
             char_byte = fin.read(1)
-        word = word_bytes.decode(encoding)
+
+        word_bytes = word_bytes.getvalue()
+        try:
+            word = word_bytes.decode(encoding)
+        except UnicodeDecodeError:
+            word = word_bytes.decode(encoding, errors='ignore')
+            logger.error(
+                'failed to decode invalid unicode bytes %r; ignoring invalid characters, using %r',
+                word_bytes, word
+            )
         count, _ = _struct_unpack(fin, '@qb')
         raw_vocab[word] = count
 

@@ -141,8 +141,8 @@ def corpus2csc(corpus, num_terms=None, dtype=np.float64, num_docs=None, num_nnz=
             if printprogress and docno % printprogress == 0:
                 logger.info("PROGRESS: at document #%i/%i", docno, num_docs)
             posnext = posnow + len(doc)
-            indices[posnow: posnext] = [feature_id for feature_id, _ in doc]
-            data[posnow: posnext] = [feature_weight for _, feature_weight in doc]
+            # zip(*doc) transforms doc to (token_indices, token_counts]
+            indices[posnow: posnext], data[posnow: posnext] = zip(*doc) if doc else ([], [])
             indptr.append(posnext)
             posnow = posnext
         assert posnow == num_nnz, "mismatch between supplied and computed number of non-zeros"
@@ -153,8 +153,11 @@ def corpus2csc(corpus, num_terms=None, dtype=np.float64, num_docs=None, num_nnz=
         for docno, doc in enumerate(corpus):
             if printprogress and docno % printprogress == 0:
                 logger.info("PROGRESS: at document #%i", docno)
-            indices.extend(feature_id for feature_id, _ in doc)
-            data.extend(feature_weight for _, feature_weight in doc)
+
+            # zip(*doc) transforms doc to (token_indices, token_counts]
+            doc_indices, doc_data = zip(*doc) if doc else ([], [])
+            indices.extend(doc_indices)
+            data.extend(doc_data)
             num_nnz += len(doc)
             indptr.append(num_nnz)
         if num_terms is None:
@@ -500,6 +503,12 @@ def corpus2dense(corpus, num_terms, num_docs=None, dtype=np.float32):
             result[:, docno] = sparse2full(doc, num_terms)
         assert docno + 1 == num_docs
     else:
+        # The below used to be a generator, but NumPy deprecated generator as of 1.16 with:
+        # """
+        # FutureWarning: arrays to stack must be passed as a "sequence" type such as list or tuple.
+        # Support for non-sequence iterables such as generators is deprecated as of NumPy 1.16 and will raise an error
+        # in the future.
+        # """
         result = np.column_stack([sparse2full(doc, num_terms) for doc in corpus])
     return result.astype(dtype)
 
