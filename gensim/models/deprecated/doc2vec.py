@@ -21,16 +21,22 @@ doc2vec training** (70x speedup [blog]_).
 
 Initialize a model with e.g.::
 
->>> model = Doc2Vec(documents, size=100, window=8, min_count=5, workers=4)
+.. sourcecode:: pycon
+
+    >>> model = Doc2Vec(documents, size=100, window=8, min_count=5, workers=4)
 
 Persist a model to disk with::
 
->>> model.save(fname)
->>> model = Doc2Vec.load(fname)  # you can continue training with the loaded model!
+.. sourcecode:: pycon
+
+    >>> model.save(fname)
+    >>> model = Doc2Vec.load(fname)  # you can continue training with the loaded model!
 
 If you're finished training a model (=no more updates, only querying), you can do
 
-  >>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True):
+.. sourcecode:: pycon
+
+    >>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True):
 
 to trim unneeded model memory = use (much) less RAM.
 
@@ -68,13 +74,14 @@ from numpy import zeros, sum as np_sum, add as np_add, concatenate, \
 
 from gensim import utils
 from gensim.utils import call_on_class_only, deprecated
-from gensim.models.deprecated.word2vec import Word2Vec, train_cbow_pair, train_sg_pair, train_batch_sg
+from gensim.models.deprecated.word2vec import Word2Vec, train_cbow_pair, train_sg_pair, train_batch_sg,\
+    MAX_WORDS_IN_BATCH
 from gensim.models.deprecated.keyedvectors import KeyedVectors
 from gensim.models.doc2vec import Doc2Vec as NewDoc2Vec
 from gensim.models.deprecated.old_saveload import SaveLoad
 
 from gensim import matutils  # utility fnc for pickling, common scipy operations etc
-from six.moves import xrange, zip
+from six.moves import zip, range
 from six import string_types, integer_types
 
 logger = logging.getLogger(__name__)
@@ -90,7 +97,7 @@ def load_old_doc2vec(*args, **kwargs):
         'dm_tag_count': old_model.dm_tag_count,
         'docvecs_mapfile': old_model.__dict__.get('docvecs_mapfile', None),
         'comment': old_model.__dict__.get('comment', None),
-        'size': old_model.vector_size,
+        'vector_size': old_model.vector_size,
         'alpha': old_model.alpha,
         'window': old_model.window,
         'min_count': old_model.min_count,
@@ -103,9 +110,9 @@ def load_old_doc2vec(*args, **kwargs):
         'negative': old_model.negative,
         'cbow_mean': old_model.cbow_mean,
         'hashfxn': old_model.hashfxn,
-        'iter': old_model.iter,
-        'sorted_vocab': old_model.sorted_vocab,
-        'batch_words': old_model.batch_words,
+        'epochs': old_model.iter,
+        'sorted_vocab': old_model.__dict__.get('sorted_vocab', 1),
+        'batch_words': old_model.__dict__.get('batch_words', MAX_WORDS_IN_BATCH),
         'compute_loss': old_model.__dict__.get('compute_loss', None)
     }
     new_model = NewDoc2Vec(**params)
@@ -136,16 +143,27 @@ def load_old_doc2vec(*args, **kwargs):
 
     # set doc2vec vocabulary attributes
     new_model.docvecs.doctags = old_model.docvecs.doctags
-    new_model.docvecs.max_rawint = old_model.docvecs.max_rawint
-    new_model.docvecs.offset2doctag = old_model.docvecs.offset2doctag
     new_model.docvecs.count = old_model.docvecs.count
+    if hasattr(old_model.docvecs, 'max_rawint'):  # `doc2vec` models before `0.12.3` do not have these 2 attributes
+        new_model.docvecs.max_rawint = old_model.docvecs.__dict__.get('max_rawint')
+        new_model.docvecs.offset2doctag = old_model.docvecs.__dict__.get('offset2doctag')
+    else:
+        # Doc2Vec models before Gensim version 0.12.3 did not have `max_rawint` and `offset2doctag` as they did not
+        # mixing of string and int tags. This implies the new attribute `offset2doctag` equals the old `index2doctag`
+        # (which was only filled if the documents had string tags).
+        # This also implies that the new attribute, `max_rawint`(highest rawint-indexed doctag) would either be equal
+        # to the initial value -1, in case only string tags are used or would be equal to `count` if only int indexing
+        # was used.
+        new_model.docvecs.max_rawint = -1 if old_model.docvecs.index2doctag else old_model.docvecs.count - 1
+        new_model.docvecs.offset2doctag = old_model.docvecs.index2doctag
 
-    new_model.train_count = old_model.train_count
-    new_model.corpus_count = old_model.corpus_count
-    new_model.running_training_loss = old_model.running_training_loss
-    new_model.total_train_time = old_model.total_train_time
-    new_model.min_alpha_yet_reached = old_model.min_alpha_yet_reached
-    new_model.model_trimmed_post_training = old_model.model_trimmed_post_training
+    new_model.train_count = old_model.__dict__.get('train_count', None)
+    new_model.corpus_count = old_model.__dict__.get('corpus_count', None)
+    new_model.corpus_total_words = old_model.__dict__.get('corpus_total_words', None)
+    new_model.running_training_loss = old_model.__dict__.get('running_training_loss', 0)
+    new_model.total_train_time = old_model.__dict__.get('total_train_time', None)
+    new_model.min_alpha_yet_reached = old_model.__dict__.get('min_alpha_yet_reached', old_model.alpha)
+    new_model.model_trimmed_post_training = old_model.__dict__.get('model_trimmed_post_training', None)
 
     return new_model
 
@@ -224,8 +242,8 @@ def train_document_dm(model, doc_words, doctag_indexes, alpha, work=None, neu1=N
     if doctag_locks is None:
         doctag_locks = model.docvecs.doctag_syn0_lockf
 
-    word_vocabs = [model.wv.vocab[w] for w in doc_words if w in model.wv.vocab and
-                   model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
+    word_vocabs = [model.wv.vocab[w] for w in doc_words if w in model.wv.vocab
+                   and model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
 
     for pos, word in enumerate(word_vocabs):
         reduced_window = model.random.randint(model.window)  # `b` in the original doc2vec code
@@ -280,8 +298,8 @@ def train_document_dm_concat(model, doc_words, doctag_indexes, alpha, work=None,
     if doctag_locks is None:
         doctag_locks = model.docvecs.doctag_syn0_lockf
 
-    word_vocabs = [model.wv.vocab[w] for w in doc_words if w in model.wv.vocab and
-                   model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
+    word_vocabs = [model.wv.vocab[w] for w in doc_words if w in model.wv.vocab
+                   and model.wv.vocab[w].sample_int > model.random.rand() * 2**32]
     doctag_len = len(doctag_indexes)
     if doctag_len != model.dm_tag_count:
         return 0  # skip doc without expected number of doctag(s) (TODO: warn/pad?)
@@ -347,11 +365,13 @@ class DocvecsArray(SaveLoad):
     As the 'docvecs' property of a Doc2Vec model, allows access and
     comparison of document vectors.
 
-    >>> docvec = d2v_model.docvecs[99]
-    >>> docvec = d2v_model.docvecs['SENT_99']  # if string tag used in training
-    >>> sims = d2v_model.docvecs.most_similar(99)
-    >>> sims = d2v_model.docvecs.most_similar('SENT_99')
-    >>> sims = d2v_model.docvecs.most_similar(docvec)
+    .. sourcecode:: pycon
+
+        >>> docvec = d2v_model.docvecs[99]
+        >>> docvec = d2v_model.docvecs['SENT_99']  # if string tag used in training
+        >>> sims = d2v_model.docvecs.most_similar(99)
+        >>> sims = d2v_model.docvecs.most_similar('SENT_99')
+        >>> sims = d2v_model.docvecs.most_similar(docvec)
 
     If only plain int tags are presented during training, the dict (of
     string tag -> index) and list (of index -> string tag) stay empty,
@@ -470,7 +490,7 @@ class DocvecsArray(SaveLoad):
             self.doctag_syn0 = empty((length, model.vector_size), dtype=REAL)
             self.doctag_syn0_lockf = ones((length,), dtype=REAL)  # zeros suppress learning
 
-        for i in xrange(length):
+        for i in range(length):
             # construct deterministic seed from index AND model seed
             seed = "%d %s" % (model.seed, self.index_to_doctag(i))
             self.doctag_syn0[i] = model.seeded_vector(seed)
@@ -490,7 +510,7 @@ class DocvecsArray(SaveLoad):
         if getattr(self, 'doctag_syn0norm', None) is None or replace:
             logger.info("precomputing L2-norms of doc weight vectors")
             if replace:
-                for i in xrange(self.doctag_syn0.shape[0]):
+                for i in range(self.doctag_syn0.shape[0]):
                     self.doctag_syn0[i, :] /= sqrt((self.doctag_syn0[i, :] ** 2).sum(-1))
                 self.doctag_syn0norm = self.doctag_syn0
             else:

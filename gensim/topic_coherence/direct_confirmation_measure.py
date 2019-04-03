@@ -17,8 +17,8 @@ EPSILON = 1e-12
 
 
 def log_conditional_probability(segmented_topics, accumulator, with_std=False, with_support=False):
-    """Calculate the log-conditional-probability measure which is used by coherence measures such as `U_mass`.
-    This is defined as :math:`m_{lc}(S_i) = log \\frac{P(W', W^{*}) + \epsilon}{P(W^{*})}`.
+    r"""Calculate the log-conditional-probability measure which is used by coherence measures such as `U_mass`.
+    This is defined as :math:`m_{lc}(S_i) = log \frac{P(W', W^{*}) + \epsilon}{P(W^{*})}`.
 
     Parameters
     ----------
@@ -41,23 +41,25 @@ def log_conditional_probability(segmented_topics, accumulator, with_std=False, w
 
     Examples
     --------
-    >>> from gensim.topic_coherence import direct_confirmation_measure, text_analysis
-    >>> from collections import namedtuple
-    >>>
-    >>> # Create dictionary
-    >>> id2token = {1: 'test', 2: 'doc'}
-    >>> token2id = {v: k for k, v in id2token.items()}
-    >>> dictionary = namedtuple('Dictionary', 'token2id, id2token')(token2id, id2token)
-    >>>
-    >>> # Initialize segmented topics and accumulator
-    >>> segmentation = [[(1, 2)]]
-    >>>
-    >>> accumulator = text_analysis.InvertedIndexAccumulator({1, 2}, dictionary)
-    >>> accumulator._inverted_index = {0: {2, 3, 4}, 1: {3, 5}}
-    >>> accumulator._num_docs = 5
-    >>>
-    >>> # result should be ~ ln(1 / 2) = -0.693147181
-    >>> result = direct_confirmation_measure.log_conditional_probability(segmentation, accumulator)[0]
+    .. sourcecode:: pycon
+
+        >>> from gensim.topic_coherence import direct_confirmation_measure, text_analysis
+        >>> from collections import namedtuple
+        >>>
+        >>> # Create dictionary
+        >>> id2token = {1: 'test', 2: 'doc'}
+        >>> token2id = {v: k for k, v in id2token.items()}
+        >>> dictionary = namedtuple('Dictionary', 'token2id, id2token')(token2id, id2token)
+        >>>
+        >>> # Initialize segmented topics and accumulator
+        >>> segmentation = [[(1, 2)]]
+        >>>
+        >>> accumulator = text_analysis.InvertedIndexAccumulator({1, 2}, dictionary)
+        >>> accumulator._inverted_index = {0: {2, 3, 4}, 1: {3, 5}}
+        >>> accumulator._num_docs = 5
+        >>>
+        >>> # result should be ~ ln(1 / 2) = -0.693147181
+        >>> result = direct_confirmation_measure.log_conditional_probability(segmentation, accumulator)[0]
 
     """
     topic_coherences = []
@@ -70,6 +72,9 @@ def log_conditional_probability(segmented_topics, accumulator, with_std=False, w
                 co_occur_count = accumulator[w_prime, w_star]
                 m_lc_i = np.log(((co_occur_count / num_docs) + EPSILON) / (w_star_count / num_docs))
             except KeyError:
+                m_lc_i = 0.0
+            except ZeroDivisionError:
+                # if w_star_count==0, it will throw exception of divided by zero
                 m_lc_i = 0.0
 
             segment_sims.append(m_lc_i)
@@ -99,13 +104,15 @@ def aggregate_segment_sims(segment_sims, with_std, with_support):
 
     Examples
     ---------
-    >>> from gensim.topic_coherence import direct_confirmation_measure
-    >>>
-    >>> segment_sims = [0.2, 0.5, 1., 0.05]
-    >>> direct_confirmation_measure.aggregate_segment_sims(segment_sims, True, True)
-    (0.4375, 0.36293077852394939, 4)
-    >>> direct_confirmation_measure.aggregate_segment_sims(segment_sims, False, False)
-    0.4375
+    .. sourcecode:: pycon
+
+        >>> from gensim.topic_coherence import direct_confirmation_measure
+        >>>
+        >>> segment_sims = [0.2, 0.5, 1., 0.05]
+        >>> direct_confirmation_measure.aggregate_segment_sims(segment_sims, True, True)
+        (0.4375, 0.36293077852394939, 4)
+        >>> direct_confirmation_measure.aggregate_segment_sims(segment_sims, False, False)
+        0.4375
 
     """
     mean = np.mean(segment_sims)
@@ -119,7 +126,7 @@ def aggregate_segment_sims(segment_sims, with_std, with_support):
 
 
 def log_ratio_measure(segmented_topics, accumulator, normalize=False, with_std=False, with_support=False):
-    """Compute log ratio measure for `segment_topics`.
+    r"""Compute log ratio measure for `segment_topics`.
 
     Parameters
     ----------
@@ -141,12 +148,12 @@ def log_ratio_measure(segmented_topics, accumulator, normalize=False, with_std=F
     -----
     If `normalize=False`:
         Calculate the log-ratio-measure, popularly known as **PMI** which is used by coherence measures such as `c_v`.
-        This is defined as :math:`m_{lr}(S_i) = log \\frac{P(W', W^{*}) + \epsilon}{P(W') * P(W^{*})}`
+        This is defined as :math:`m_{lr}(S_i) = log \frac{P(W', W^{*}) + \epsilon}{P(W') * P(W^{*})}`
 
     If `normalize=True`:
         Calculate the normalized-log-ratio-measure, popularly knowns as **NPMI**
         which is used by coherence measures such as `c_v`.
-        This is defined as :math:`m_{nlr}(S_i) = \\frac{m_{lr}(S_i)}{-log(P(W', W^{*}) + \epsilon)}`
+        This is defined as :math:`m_{nlr}(S_i) = \frac{m_{lr}(S_i)}{-log(P(W', W^{*}) + \epsilon)}`
 
     Returns
     -------
@@ -155,23 +162,25 @@ def log_ratio_measure(segmented_topics, accumulator, normalize=False, with_std=F
 
     Examples
     --------
-    >>> from gensim.topic_coherence import direct_confirmation_measure, text_analysis
-    >>> from collections import namedtuple
-    >>>
-    >>> # Create dictionary
-    >>> id2token = {1: 'test', 2: 'doc'}
-    >>> token2id = {v: k for k, v in id2token.items()}
-    >>> dictionary = namedtuple('Dictionary', 'token2id, id2token')(token2id, id2token)
-    >>>
-    >>> # Initialize segmented topics and accumulator
-    >>> segmentation = [[(1, 2)]]
-    >>>
-    >>> accumulator = text_analysis.InvertedIndexAccumulator({1, 2}, dictionary)
-    >>> accumulator._inverted_index = {0: {2, 3, 4}, 1: {3, 5}}
-    >>> accumulator._num_docs = 5
-    >>>
-    >>> # result should be ~ ln{(1 / 5) / [(3 / 5) * (2 / 5)]} = -0.182321557
-    >>> result = direct_confirmation_measure.log_ratio_measure(segmentation, accumulator)[0]
+    .. sourcecode:: pycon
+
+        >>> from gensim.topic_coherence import direct_confirmation_measure, text_analysis
+        >>> from collections import namedtuple
+        >>>
+        >>> # Create dictionary
+        >>> id2token = {1: 'test', 2: 'doc'}
+        >>> token2id = {v: k for k, v in id2token.items()}
+        >>> dictionary = namedtuple('Dictionary', 'token2id, id2token')(token2id, id2token)
+        >>>
+        >>> # Initialize segmented topics and accumulator
+        >>> segmentation = [[(1, 2)]]
+        >>>
+        >>> accumulator = text_analysis.InvertedIndexAccumulator({1, 2}, dictionary)
+        >>> accumulator._inverted_index = {0: {2, 3, 4}, 1: {3, 5}}
+        >>> accumulator._num_docs = 5
+        >>>
+        >>> # result should be ~ ln{(1 / 5) / [(3 / 5) * (2 / 5)]} = -0.182321557
+        >>> result = direct_confirmation_measure.log_ratio_measure(segmentation, accumulator)[0]
 
     """
     topic_coherences = []

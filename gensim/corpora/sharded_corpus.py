@@ -26,7 +26,7 @@ import numpy
 import scipy.sparse as sparse
 import time
 
-from six.moves import xrange
+from six.moves import range
 
 import gensim
 from gensim.corpora import IndexedCorpus
@@ -67,9 +67,11 @@ class ShardedCorpus(IndexedCorpus):
     supply the dimension of your data to the corpus. (The dimension of word
     frequency vectors will typically be the size of the vocabulary, etc.)
 
-    >>> corpus = gensim.utils.mock_data()
-    >>> output_prefix = 'mydata.shdat'
-    >>> ShardedCorpus.serialize(output_prefix, corpus, dim=1000)
+    .. sourcecode:: pycon
+
+        >>> corpus = gensim.utils.mock_data()
+        >>> output_prefix = 'mydata.shdat'
+        >>> ShardedCorpus.serialize(output_prefix, corpus, dim=1000)
 
     The `output_prefix` tells the ShardedCorpus where to put the data.
     Shards are saved as `output_prefix.0`, `output_prefix.1`, etc.
@@ -88,15 +90,19 @@ class ShardedCorpus(IndexedCorpus):
 
     To retrieve data, you can load the corpus and use it like a list:
 
-    >>> sh_corpus = ShardedCorpus.load(output_prefix)
-    >>> batch = sh_corpus[100:150]
+    .. sourcecode:: pycon
+
+        >>> sh_corpus = ShardedCorpus.load(output_prefix)
+        >>> batch = sh_corpus[100:150]
 
     This will retrieve a numpy 2-dimensional array of 50 rows and 1000
     columns (1000 was the dimension of the data we supplied to the corpus).
     To retrieve gensim-style sparse vectors, set the `gensim` property:
 
-    >>> sh_corpus.gensim = True
-    >>> batch = sh_corpus[100:150]
+    .. sourcecode:: pycon
+
+        >>> sh_corpus.gensim = True
+        >>> batch = sh_corpus[100:150]
 
     The batch now will be a generator of gensim vectors.
 
@@ -105,8 +111,10 @@ class ShardedCorpus(IndexedCorpus):
     `ShardedCorpus.serialize()`, you can just initialize and use the corpus
     right away:
 
-    >>> corpus = ShardedCorpus(output_prefix, corpus, dim=1000)
-    >>> batch = corpus[100:150]
+    .. sourcecode:: pycon
+
+        >>> corpus = ShardedCorpus(output_prefix, corpus, dim=1000)
+        >>> batch = corpus[100:150]
 
     ShardedCorpus also supports working with scipy sparse matrices, both
     during retrieval and during serialization. If you want to serialize your
@@ -117,15 +125,17 @@ class ShardedCorpus(IndexedCorpus):
     will retrieve numpy ndarrays even if it was serialized into sparse
     matrices.
 
-    >>> sparse_prefix = 'mydata.sparse.shdat'
-    >>> ShardedCorpus.serialize(sparse_prefix, corpus, dim=1000, sparse_serialization=True)
-    >>> sparse_corpus = ShardedCorpus.load(sparse_prefix)
-    >>> batch = sparse_corpus[100:150]
-    >>> type(batch)
-    <type 'numpy.ndarray'>
-    >>> sparse_corpus.sparse_retrieval = True
-    >>> batch = sparse_corpus[100:150]
-    <class 'scipy.sparse.csr.csr_matrix'>
+    .. sourcecode:: pycon
+
+        >>> sparse_prefix = 'mydata.sparse.shdat'
+        >>> ShardedCorpus.serialize(sparse_prefix, corpus, dim=1000, sparse_serialization=True)
+        >>> sparse_corpus = ShardedCorpus.load(sparse_prefix)
+        >>> batch = sparse_corpus[100:150]
+        >>> type(batch)
+        <type 'numpy.ndarray'>
+        >>> sparse_corpus.sparse_retrieval = True
+        >>> batch = sparse_corpus[100:150]
+        <class 'scipy.sparse.csr.csr_matrix'>
 
     While you *can* touch the `sparse_retrieval` attribute during the life
     of a ShardedCorpus object, you should definitely not touch `
@@ -422,7 +432,7 @@ class ShardedCorpus(IndexedCorpus):
         new_shard_names = []
         new_offsets = [0]
 
-        for new_shard_idx in xrange(n_new_shards):
+        for new_shard_idx in range(n_new_shards):
             new_start = shardsize * new_shard_idx
             new_stop = new_start + shardsize
 
@@ -451,7 +461,7 @@ class ShardedCorpus(IndexedCorpus):
 
         # Move old shard files out, new ones in. Complicated due to possibility
         # of exceptions.
-        old_shard_names = [self._shard_name(n) for n in xrange(self.n_shards)]
+        old_shard_names = [self._shard_name(n) for n in range(self.n_shards)]
         try:
             for old_shard_n, old_shard_name in enumerate(old_shard_names):
                 os.remove(old_shard_name)
@@ -634,7 +644,7 @@ class ShardedCorpus(IndexedCorpus):
             s_result = self.__add_to_slice(s_result, result_start, result_stop, shard_start, shard_stop)
 
             # First and last get special treatment, these are in between
-            for shard_n in xrange(first_shard + 1, last_shard):
+            for shard_n in range(first_shard + 1, last_shard):
                 self.load_shard(shard_n)
 
                 result_start = result_stop
@@ -725,7 +735,7 @@ class ShardedCorpus(IndexedCorpus):
             g_row = [(col_idx, csr_matrix[row_idx, col_idx]) for col_idx in indices]
             return g_row
 
-        output = (row_sparse2gensim(i, result) for i in xrange(result.shape[0]))
+        output = (row_sparse2gensim(i, result) for i in range(result.shape[0]))
 
         return output
 
@@ -735,7 +745,7 @@ class ShardedCorpus(IndexedCorpus):
             output = gensim.matutils.full2sparse(result)
         else:
             output = (gensim.matutils.full2sparse(result[i])
-                      for i in xrange(result.shape[0]))
+                      for i in range(result.shape[0]))
         return output
 
     # Overriding the IndexedCorpus and other corpus superclass methods
@@ -744,7 +754,7 @@ class ShardedCorpus(IndexedCorpus):
         Yield dataset items one by one (generator).
 
         """
-        for i in xrange(len(self)):
+        for i in range(len(self)):
             yield self[i]
 
     def save(self, *args, **kwargs):
@@ -756,13 +766,12 @@ class ShardedCorpus(IndexedCorpus):
         """
         # Can we save to a different file than output_prefix? Well, why not?
         if len(args) == 0:
-            args = tuple([self.output_prefix])
+            args = (self.output_prefix,)
 
         attrs_to_ignore = ['current_shard', 'current_shard_n', 'current_offset']
-        if 'ignore' not in kwargs:
-            kwargs['ignore'] = frozenset(attrs_to_ignore)
-        else:
-            kwargs['ignore'] = frozenset([v for v in kwargs['ignore']] + attrs_to_ignore)
+        if 'ignore' in kwargs:
+            attrs_to_ignore.extend(kwargs['ignore'])
+        kwargs['ignore'] = frozenset(attrs_to_ignore)
         super(ShardedCorpus, self).save(*args, **kwargs)
 
     @classmethod

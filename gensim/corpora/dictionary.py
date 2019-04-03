@@ -4,8 +4,7 @@
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-
-"""This module implements the concept of Dictionary -- a mapping between words and their integer ids."""
+"""This module implements the concept of a Dictionary -- a mapping between words and their integer ids."""
 
 from __future__ import with_statement
 
@@ -17,8 +16,7 @@ import itertools
 from gensim import utils
 
 from six import PY3, iteritems, iterkeys, itervalues, string_types
-from six.moves import xrange
-from six.moves import zip as izip
+from six.moves import zip, range
 
 if sys.version_info[0] >= 3:
     unicode = str
@@ -30,20 +28,23 @@ logger = logging.getLogger(__name__)
 class Dictionary(utils.SaveLoad, Mapping):
     """Dictionary encapsulates the mapping between normalized words and their integer ids.
 
+    Notable instance attributes:
+
     Attributes
-    ---------
+    ----------
     token2id : dict of (str, int)
         token -> tokenId.
     id2token : dict of (int, str)
-        Reverse mapping for token2id, initialized in lazy manner to save memory.
+        Reverse mapping for token2id, initialized in a lazy manner to save memory (not created until needed).
     dfs : dict of (int, int)
-        Document frequencies: token_id -> in how many documents contain this token.
+        Document frequencies: token_id -> how many documents contain this token.
     num_docs : int
         Number of documents processed.
     num_pos : int
         Total number of corpus positions (number of processed words).
     num_nnz : int
-        Total number of non-zeroes in the BOW matrix.
+        Total number of non-zeroes in the BOW matrix (sum of the number of unique
+        words per document over the entire corpus).
 
     """
     def __init__(self, documents=None, prune_at=2000000):
@@ -52,19 +53,23 @@ class Dictionary(utils.SaveLoad, Mapping):
         Parameters
         ----------
         documents : iterable of iterable of str, optional
-            Documents that used for initialization.
+            Documents to be used to initialize the mapping and collect corpus statistics.
         prune_at : int, optional
-            Total number of unique words. Dictionary will keep not more than `prune_at` words.
+            Dictionary will try to keep no more than `prune_at` words in its mapping, to limit its RAM
+            footprint, the correctness is not guaranteed.
+            Use :meth:`~gensim.corpora.dictionary.Dictionary.filter_extremes` to perform proper filtering.
 
         Examples
         --------
-        >>> from gensim.corpora import Dictionary
-        >>>
-        >>> texts = [['human', 'interface', 'computer']]
-        >>> dct = Dictionary(texts)  # fit dictionary
-        >>> dct.add_documents([["cat", "say", "meow"], ["dog"]])  # update dictionary with new documents
-        >>> dct.doc2bow(["dog", "computer", "non_existent_word"])
-        [(0, 1), (6, 1)]
+        .. sourcecode:: pycon
+
+            >>> from gensim.corpora import Dictionary
+            >>>
+            >>> texts = [['human', 'interface', 'computer']]
+            >>> dct = Dictionary(texts)  # initialize a Dictionary
+            >>> dct.add_documents([["cat", "say", "meow"], ["dog"]])  # add more document (extend the vocabulary)
+            >>> dct.doc2bow(["dog", "computer", "non_existent_word"])
+            [(0, 1), (6, 1)]
 
         """
         self.token2id = {}
@@ -79,12 +84,12 @@ class Dictionary(utils.SaveLoad, Mapping):
             self.add_documents(documents, prune_at=prune_at)
 
     def __getitem__(self, tokenid):
-        """Get token by provided `tokenid`.
+        """Get the string token that corresponds to `tokenid`.
 
         Parameters
         ----------
         tokenid : int
-            Id of token
+            Id of token.
 
         Returns
         -------
@@ -94,7 +99,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         Raises
         ------
         KeyError
-            If `tokenid` isn't contained in :class:`~gensim.corpora.dictionary.Dictionary`.
+            If this Dictionary doesn't contain such `tokenid`.
 
         """
         if len(self.id2token) != len(self.token2id):
@@ -104,7 +109,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         return self.id2token[tokenid]  # will throw for non-existent ids
 
     def __iter__(self):
-        """Iterate over tokens that stored."""
+        """Iterate over all tokens."""
         return iter(self.keys())
 
     if PY3:
@@ -145,7 +150,9 @@ class Dictionary(utils.SaveLoad, Mapping):
 
     @staticmethod
     def from_documents(documents):
-        """Create :class:`~gensim.corpora.dictionary.Dictionary` based on `documents`
+        """Create :class:`~gensim.corpora.dictionary.Dictionary` from `documents`.
+
+        Equivalent to `Dictionary(documents=documents)`.
 
         Parameters
         ----------
@@ -155,7 +162,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         Returns
         -------
         :class:`~gensim.corpora.dictionary.Dictionary`
-            Dictionary filled by `documents`.
+            Dictionary initialized from `documents`.
 
         """
         return Dictionary(documents=documents)
@@ -168,20 +175,23 @@ class Dictionary(utils.SaveLoad, Mapping):
         documents : iterable of iterable of str
             Input corpus. All tokens should be already **tokenized and normalized**.
         prune_at : int, optional
-            Total number of unique words. Dictionary will keep not more than `prune_at` words.
+            Dictionary will try to keep no more than `prune_at` words in its mapping, to limit its RAM
+            footprint, the correctness is not guaranteed.
+            Use :meth:`~gensim.corpora.dictionary.Dictionary.filter_extremes` to perform proper filtering.
 
         Examples
         --------
-        >>> from gensim.corpora import Dictionary
-        >>>
-        >>> corpus = ["máma mele maso".split(), "ema má máma".split()]
+        .. sourcecode:: pycon
 
-        >>> dct = Dictionary(corpus)
-        >>> len(dct)
-        5
-        >>> dct.add_documents([["this","is","sparta"],["just","joking"]])
-        >>> len(dct)
-        10
+            >>> from gensim.corpora import Dictionary
+            >>>
+            >>> corpus = ["máma mele maso".split(), "ema má máma".split()]
+            >>> dct = Dictionary(corpus)
+            >>> len(dct)
+            5
+            >>> dct.add_documents([["this", "is", "sparta"], ["just", "joking"]])
+            >>> len(dct)
+            10
 
         """
         for docno, document in enumerate(documents):
@@ -200,33 +210,35 @@ class Dictionary(utils.SaveLoad, Mapping):
         )
 
     def doc2bow(self, document, allow_update=False, return_missing=False):
-        """Convert `document` into the bag-of-words (BoW) format = list of (token_id, token_count).
+        """Convert `document` into the bag-of-words (BoW) format = list of `(token_id, token_count)` tuples.
 
         Parameters
         ----------
-        document :  list of str
+        document : list of str
             Input document.
         allow_update : bool, optional
-            If True - update dictionary in the process (i.e. add new tokens and update frequencies).
+            Update self, by adding new tokens from `document` and updating internal corpus statistics.
         return_missing : bool, optional
-            Also return missing tokens (that doesn't contains in current dictionary).
+            Return missing tokens (tokens present in `document` but not in self) with frequencies?
 
         Return
         ------
         list of (int, int)
-            BoW representation of `document`
+            BoW representation of `document`.
         list of (int, int), dict of (str, int)
             If `return_missing` is True, return BoW representation of `document` + dictionary with missing
             tokens and their frequencies.
 
         Examples
         --------
-        >>> from gensim.corpora import Dictionary
-        >>> dct = Dictionary(["máma mele maso".split(), "ema má máma".split()])
-        >>> dct.doc2bow(["this","is","máma"])
-        [(2, 1)]
-        >>> dct.doc2bow(["this","is","máma"], return_missing=True)
-        ([(2, 1)], {u'this': 1, u'is': 1})
+        .. sourcecode:: pycon
+
+            >>> from gensim.corpora import Dictionary
+            >>> dct = Dictionary(["máma mele maso".split(), "ema má máma".split()])
+            >>> dct.doc2bow(["this", "is", "máma"])
+            [(2, 1)]
+            >>> dct.doc2bow(["this", "is", "máma"], return_missing=True)
+            ([(2, 1)], {u'this': 1, u'is': 1})
 
         """
         if isinstance(document, string_types):
@@ -265,9 +277,6 @@ class Dictionary(utils.SaveLoad, Mapping):
 
     def doc2idx(self, document, unknown_word_index=-1):
         """Convert `document` (a list of words) into a list of indexes = list of `token_id`.
-
-        Notes
-        -----
         Replace all unknown words i.e, words not in the dictionary with the index as set via `unknown_word_index`.
 
         Parameters
@@ -280,16 +289,18 @@ class Dictionary(utils.SaveLoad, Mapping):
         Returns
         -------
         list of int
-            Indexes in the dictionary for words in the `document` (preserving the order of words).
+            Token ids for tokens in `document`, in the same order.
 
         Examples
         --------
-        >>> from gensim.corpora import Dictionary
-        >>>
-        >>> corpus = [["a", "a", "b"], ["a", "c"]]
-        >>> dct = Dictionary(corpus)
-        >>> dct.doc2idx(["a", "a", "c", "not_in_dictionary", "c"])
-        [0, 0, 2, -1, 2]
+        .. sourcecode:: pycon
+
+            >>> from gensim.corpora import Dictionary
+            >>>
+            >>> corpus = [["a", "a", "b"], ["a", "c"]]
+            >>> dct = Dictionary(corpus)
+            >>> dct.doc2idx(["a", "a", "c", "not_in_dictionary", "c"])
+            [0, 0, 2, -1, 2]
 
         """
         if isinstance(document, string_types):
@@ -299,7 +310,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         return [self.token2id.get(word, unknown_word_index) for word in document]
 
     def filter_extremes(self, no_below=5, no_above=0.5, keep_n=100000, keep_tokens=None):
-        """Filter tokens in dictionary by frequency.
+        """Filter out tokens in the dictionary by their frequency.
 
         Parameters
         ----------
@@ -315,44 +326,47 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Notes
         -----
-        For tokens that appear in:
+        This removes all tokens in the dictionary that are:
 
-        #. Less than `no_below` documents (absolute number) or \n
-        #. More than `no_above` documents (fraction of total corpus size, **not absolute number**).
-        #. After (1) and (2), keep only the first `keep_n` most frequent tokens (or keep all if `None`).
+        #. Less frequent than `no_below` documents (absolute number, e.g. `5`) or \n
+        #. More frequent than `no_above` documents (fraction of the total corpus size, e.g. `0.3`).
+        #. After (1) and (2), keep only the first `keep_n` most frequent tokens (or keep all if `keep_n=None`).
 
-
-        After the pruning, shrink resulting gaps in word ids.
-        Due to the gap shrinking, the same word may have a different word id before and after the call to this function!
+        After the pruning, resulting gaps in word ids are shrunk.
+        Due to this gap shrinking, **the same word may have a different word id before and after the call
+        to this function!**
 
         Examples
         --------
-        >>> from gensim.corpora import Dictionary
-        >>>
-        >>> corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
-        >>> dct = Dictionary(corpus)
-        >>> len(dct)
-        5
-        >>> dct.filter_extremes(no_below=1, no_above=0.5, keep_n=1)
-        >>> len(dct)
-        1
+        .. sourcecode:: pycon
+
+            >>> from gensim.corpora import Dictionary
+            >>>
+            >>> corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
+            >>> dct = Dictionary(corpus)
+            >>> len(dct)
+            5
+            >>> dct.filter_extremes(no_below=1, no_above=0.5, keep_n=1)
+            >>> len(dct)
+            1
 
         """
         no_above_abs = int(no_above * self.num_docs)  # convert fractional threshold to absolute threshold
 
         # determine which tokens to keep
         if keep_tokens:
-            keep_ids = [self.token2id[v] for v in keep_tokens if v in self.token2id]
-            good_ids = (
+            keep_ids = {self.token2id[v] for v in keep_tokens if v in self.token2id}
+            good_ids = [
                 v for v in itervalues(self.token2id)
                 if no_below <= self.dfs.get(v, 0) <= no_above_abs or v in keep_ids
-            )
+            ]
+            good_ids.sort(key=lambda x: self.num_docs if x in keep_ids else self.dfs.get(x, 0), reverse=True)
         else:
-            good_ids = (
+            good_ids = [
                 v for v in itervalues(self.token2id)
                 if no_below <= self.dfs.get(v, 0) <= no_above_abs
-            )
-        good_ids = sorted(good_ids, key=self.dfs.get, reverse=True)
+            ]
+            good_ids.sort(key=self.dfs.get, reverse=True)
         if keep_n is not None:
             good_ids = good_ids[:keep_n]
         bad_words = [(self[idx], self.dfs.get(idx, 0)) for idx in set(self).difference(good_ids)]
@@ -376,15 +390,17 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Examples
         --------
-        >>> from gensim.corpora import Dictionary
-        >>>
-        >>> corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
-        >>> dct = Dictionary(corpus)
-        >>> len(dct)
-        5
-        >>> dct.filter_n_most_frequent(2)
-        >>> len(dct)
-        3
+        .. sourcecode:: pycon
+
+            >>> from gensim.corpora import Dictionary
+            >>>
+            >>> corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
+            >>> dct = Dictionary(corpus)
+            >>> len(dct)
+            5
+            >>> dct.filter_n_most_frequent(2)
+            >>> len(dct)
+            3
 
         """
         # determine which tokens to keep
@@ -400,7 +416,8 @@ class Dictionary(utils.SaveLoad, Mapping):
 
     def filter_tokens(self, bad_ids=None, good_ids=None):
         """Remove the selected `bad_ids` tokens from :class:`~gensim.corpora.dictionary.Dictionary`.
-        Alternative - keep selected `good_ids` in :class:`~gensim.corpora.dictionary.Dictionary` and remove the rest.
+
+        Alternatively, keep selected `good_ids` in :class:`~gensim.corpora.dictionary.Dictionary` and remove the rest.
 
         Parameters
         ----------
@@ -411,20 +428,22 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Examples
         --------
-        >>> from gensim.corpora import Dictionary
-        >>>
-        >>> corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
-        >>> dct = Dictionary(corpus)
-        >>> 'ema' in dct.token2id
-        True
-        >>> dct.filter_tokens(bad_ids=[dct.token2id['ema']])
-        >>> 'ema' in dct.token2id
-        False
-        >>> len(dct)
-        4
-        >>> dct.filter_tokens(good_ids=[dct.token2id['maso']])
-        >>> len(dct)
-        1
+        .. sourcecode:: pycon
+
+            >>> from gensim.corpora import Dictionary
+            >>>
+            >>> corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
+            >>> dct = Dictionary(corpus)
+            >>> 'ema' in dct.token2id
+            True
+            >>> dct.filter_tokens(bad_ids=[dct.token2id['ema']])
+            >>> 'ema' in dct.token2id
+            False
+            >>> len(dct)
+            4
+            >>> dct.filter_tokens(good_ids=[dct.token2id['maso']])
+            >>> len(dct)
+            1
 
         """
         if bad_ids is not None:
@@ -438,11 +457,11 @@ class Dictionary(utils.SaveLoad, Mapping):
         self.compactify()
 
     def compactify(self):
-        """Assign new word ids to all words, shrinking gaps."""
+        """Assign new word ids to all words, shrinking any gaps."""
         logger.debug("rebuilding dictionary, shrinking gaps")
 
         # build mapping from old id -> new id
-        idmap = dict(izip(sorted(itervalues(self.token2id)), xrange(len(self.token2id))))
+        idmap = dict(zip(sorted(itervalues(self.token2id)), range(len(self.token2id))))
 
         # reassign mappings to new ids
         self.token2id = {token: idmap[tokenid] for token, tokenid in iteritems(self.token2id)}
@@ -457,7 +476,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         fname : str
             Path to output file.
         sort_by_word : bool, optional
-            if True - sort by word in lexicographical order.
+            Sort words in lexicographical order before writing them out?
 
         Notes
         -----
@@ -469,28 +488,31 @@ class Dictionary(utils.SaveLoad, Mapping):
             ....
             id_k[TAB]word_k[TAB]document_frequency_k[NEWLINE]
 
-        Warnings
-        --------
-        Text format should be use for corpus inspection. Use :meth:`~gensim.corpora.dictionary.Dictionary.save` and
-        :meth:`~gensim.corpora.dictionary.Dictionary.load` to store in binary format (pickle) for better performance.
+        This text format is great for corpus inspection and debugging. As plaintext, it's also easily portable
+        to other tools and frameworks. For better performance and to store the entire object state,
+        including collected corpus statistics, use :meth:`~gensim.corpora.dictionary.Dictionary.save` and
+        :meth:`~gensim.corpora.dictionary.Dictionary.load` instead.
 
         See Also
         --------
         :meth:`~gensim.corpora.dictionary.Dictionary.load_from_text`
+            Load :class:`~gensim.corpora.dictionary.Dictionary` from text file.
 
         Examples
         --------
-        >>> from gensim.corpora import Dictionary
-        >>> from gensim.test.utils import get_tmpfile
-        >>>
-        >>> tmp_fname = get_tmpfile("dictionary")
-        >>> corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
-        >>>
-        >>> dct = Dictionary(corpus)
-        >>> dct.save_as_text(tmp_fname)
-        >>>
-        >>> loaded_dct = Dictionary.load_from_text("testdata")
-        >>> assert dct.token2id == loaded_dct.token2id
+        .. sourcecode:: pycon
+
+            >>> from gensim.corpora import Dictionary
+            >>> from gensim.test.utils import get_tmpfile
+            >>>
+            >>> tmp_fname = get_tmpfile("dictionary")
+            >>> corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
+            >>>
+            >>> dct = Dictionary(corpus)
+            >>> dct.save_as_text(tmp_fname)
+            >>>
+            >>> loaded_dct = Dictionary.load_from_text(tmp_fname)
+            >>> assert dct.token2id == loaded_dct.token2id
 
         """
         logger.info("saving dictionary mapping to %s", fname)
@@ -507,23 +529,20 @@ class Dictionary(utils.SaveLoad, Mapping):
                     fout.write(utils.to_utf8(line))
 
     def merge_with(self, other):
-        """Merge another dictionary into this dictionary, mapping same tokens to the same ids and new tokens to new ids.
+        """Merge another dictionary into this dictionary, mapping the same tokens to the same ids
+        and new tokens to new ids.
 
         Notes
         -----
         The purpose is to merge two corpora created using two different dictionaries: `self` and `other`.
         `other` can be any id=>word mapping (a dict, a Dictionary object, ...).
 
-        Get a transformation object which, when accessed as `result[doc_from_other_corpus]`, will convert documents
+        Return a transformation object which, when accessed as `result[doc_from_other_corpus]`, will convert documents
         from a corpus built using the `other` dictionary into a document using the new, merged dictionary.
-
-        Warnings
-        --------
-        This method will change `self` dictionary.
 
         Parameters
         ----------
-        other : :class:`~gensim.corpora.dictionary.Dictionary`
+        other : {dict, :class:`~gensim.corpora.dictionary.Dictionary`}
             Other dictionary.
 
         Return
@@ -533,15 +552,17 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Examples
         --------
-        >>> from gensim.corpora import Dictionary
-        >>>
-        >>> corpus_1, corpus_2 = [["a", "b", "c"]], [["a", "f", "f"]]
-        >>> dct_1, dct_2 = Dictionary(corpus_1), Dictionary(corpus_2)
-        >>> dct_1.doc2bow(corpus_2[0])
-        [(0, 1)]
-        >>> transformer = dct_1.merge_with(dct_2)
-        >>> dct_1.doc2bow(corpus_2[0])
-        [(0, 1), (3, 2)]
+        .. sourcecode:: pycon
+
+            >>> from gensim.corpora import Dictionary
+            >>>
+            >>> corpus_1, corpus_2 = [["a", "b", "c"]], [["a", "f", "f"]]
+            >>> dct_1, dct_2 = Dictionary(corpus_1), Dictionary(corpus_2)
+            >>> dct_1.doc2bow(corpus_2[0])
+            [(0, 1)]
+            >>> transformer = dct_1.merge_with(dct_2)
+            >>> dct_1.doc2bow(corpus_2[0])
+            [(0, 1), (3, 2)]
 
         """
         old2new = {}
@@ -568,33 +589,83 @@ class Dictionary(utils.SaveLoad, Mapping):
         import gensim.models
         return gensim.models.VocabTransform(old2new)
 
+    def patch_with_special_tokens(self, special_token_dict):
+        """Patch token2id and id2token using a dictionary of special tokens.
+
+
+        **Usecase:** when doing sequence modeling (e.g. named entity recognition), one may  want to specify
+        special tokens that behave differently than others.
+        One example is the "unknown" token, and another is the padding token.
+        It is usual to set the padding token to have index `0`, and patching the dictionary with `{'<PAD>': 0}`
+        would be one way to specify this.
+
+        Parameters
+        ----------
+        special_token_dict : dict of (str, int)
+            dict containing the special tokens as keys and their wanted indices as values.
+
+        Examples
+        --------
+        .. sourcecode:: pycon
+
+            >>> from gensim.corpora import Dictionary
+            >>>
+            >>> corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
+            >>> dct = Dictionary(corpus)
+            >>>
+            >>> special_tokens = {'pad': 0, 'space': 1}
+            >>> print(dct.token2id)
+            {'maso': 0, 'mele': 1, 'máma': 2, 'ema': 3, 'má': 4}
+            >>>
+            >>> dct.patch_with_special_tokens(special_tokens)
+            >>> print(dct.token2id)
+            {'maso': 6, 'mele': 7, 'máma': 2, 'ema': 3, 'má': 4, 'pad': 0, 'space': 1}
+
+        """
+        possible_ids = []
+        for token, idx in special_token_dict.items():
+            if token in self.token2id and self.token2id[token] == idx:
+                continue
+            if token in self.token2id and self.token2id[token] != idx:
+                possible_ids.append(self.token2id[token])
+                del self.token2id[token]
+            old_token = self[idx]
+            self.token2id[token] = idx
+            self.token2id[old_token] = possible_ids.pop() if \
+                                       len(possible_ids) > 0 else len(self.token2id) - 1
+        self.id2token = {}  # Make sure that id2token is updated according to special tokens.
+
     @staticmethod
     def load_from_text(fname):
         """Load a previously stored :class:`~gensim.corpora.dictionary.Dictionary` from a text file.
+
         Mirror function to :meth:`~gensim.corpora.dictionary.Dictionary.save_as_text`.
 
         Parameters
         ----------
         fname: str
-            Path to file produced by :meth:`~gensim.corpora.dictionary.Dictionary.save_as_text`.
+            Path to a file produced by :meth:`~gensim.corpora.dictionary.Dictionary.save_as_text`.
 
         See Also
         --------
         :meth:`~gensim.corpora.dictionary.Dictionary.save_as_text`
+            Save :class:`~gensim.corpora.dictionary.Dictionary` to text file.
 
         Examples
         --------
-        >>> from gensim.corpora import Dictionary
-        >>> from gensim.test.utils import get_tmpfile
-        >>>
-        >>> tmp_fname = get_tmpfile("dictionary")
-        >>> corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
-        >>>
-        >>> dct = Dictionary(corpus)
-        >>> dct.save_as_text(tmp_fname)
-        >>>
-        >>> loaded_dct = Dictionary.load_from_text("testdata")
-        >>> assert dct.token2id == loaded_dct.token2id
+        .. sourcecode:: pycon
+
+            >>> from gensim.corpora import Dictionary
+            >>> from gensim.test.utils import get_tmpfile
+            >>>
+            >>> tmp_fname = get_tmpfile("dictionary")
+            >>> corpus = [["máma", "mele", "maso"], ["ema", "má", "máma"]]
+            >>>
+            >>> dct = Dictionary(corpus)
+            >>> dct.save_as_text(tmp_fname)
+            >>>
+            >>> loaded_dct = Dictionary.load_from_text(tmp_fname)
+            >>> assert dct.token2id == loaded_dct.token2id
 
         """
         result = Dictionary()
@@ -646,12 +717,14 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         Examples
         --------
-        >>> from gensim.corpora import Dictionary
-        >>>
-        >>> corpus = [[(1, 1.0)], [], [(0, 5.0), (2, 1.0)], []]
-        >>> dct = Dictionary.from_corpus(corpus)
-        >>> len(dct)
-        3
+        .. sourcecode:: pycon
+
+            >>> from gensim.corpora import Dictionary
+            >>>
+            >>> corpus = [[(1, 1.0)], [], [(0, 5.0), (2, 1.0)], []]
+            >>> dct = Dictionary.from_corpus(corpus)
+            >>> len(dct)
+            3
 
         """
         result = Dictionary()
@@ -668,7 +741,7 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         if id2word is None:
             # make sure length(result) == get_max_id(corpus) + 1
-            result.token2id = {unicode(i): i for i in xrange(max_id + 1)}
+            result.token2id = {unicode(i): i for i in range(max_id + 1)}
         else:
             # id=>word mapping given: simply copy it
             result.token2id = {utils.to_unicode(token): idx for idx, token in iteritems(id2word)}

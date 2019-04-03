@@ -47,7 +47,7 @@ class TestApi(unittest.TestCase):
             base_dir, "__testing_word2vec-matrix-synopsis", "__testing_word2vec-matrix-synopsis.gz"
         )
         model = api.load("__testing_word2vec-matrix-synopsis")
-        vector_dead_calc = model["dead"]
+        vector_dead_calc = model.wv["dead"]
         self.assertTrue(np.allclose(vector_dead, vector_dead_calc))
         shutil.rmtree(base_dir)
         self.assertEqual(api.load("__testing_word2vec-matrix-synopsis", return_path=True), dataset_path)
@@ -72,6 +72,9 @@ class TestApi(unittest.TestCase):
         self.assertEqual(sorted(data.keys()), sorted(['models', 'corpora']))
         self.assertTrue(len(data['models']))
         self.assertTrue(len(data['corpora']))
+        name_only_data = api.info(name_only=True)
+        self.assertEqual(len(name_only_data.keys()), 2)
+        self.assertTrue({'models', 'corpora'} == set(name_only_data))
 
 
 if __name__ == '__main__':

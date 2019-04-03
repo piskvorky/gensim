@@ -23,11 +23,11 @@ Data
 from gensim.summarization.syntactic_unit import SyntacticUnit
 from gensim.parsing.preprocessing import preprocess_documents
 from gensim.utils import tokenize
-from six.moves import xrange
+from six.moves import range
 import re
 import logging
 
-logger = logging.getLogger('summarizer.preprocessing.cleaner')
+logger = logging.getLogger(__name__)
 
 try:
     from pattern.en import tag
@@ -63,13 +63,15 @@ def split_sentences(text):
 
     Example
     -------
-    >>> from gensim.summarization.textcleaner import split_sentences
-    >>> text = '''Beautiful is better than ugly.
-    ... Explicit is better than implicit. Simple is better than complex.'''
-    >>> split_sentences(text)
-    ['Beautiful is better than ugly.',
-    'Explicit is better than implicit.',
-    'Simple is better than complex.']
+    .. sourcecode:: pycon
+
+        >>> from gensim.summarization.textcleaner import split_sentences
+        >>> text = '''Beautiful is better than ugly.
+        ... Explicit is better than implicit. Simple is better than complex.'''
+        >>> split_sentences(text)
+        ['Beautiful is better than ugly.',
+        'Explicit is better than implicit.',
+        'Simple is better than complex.']
 
     """
     processed = replace_abbreviations(text)
@@ -91,8 +93,10 @@ def replace_abbreviations(text):
 
     Example
     -------
-    >>> replace_abbreviations("God bless you, please, Mrs. Robinson")
-    God bless you, please, Mrs.@Robinson
+    .. sourcecode:: pycon
+
+        >>> replace_abbreviations("God bless you, please, Mrs. Robinson")
+        God bless you, please, Mrs.@Robinson
 
     """
     return replace_with_separator(text, SEPARATOR, [AB_SENIOR, AB_ACRONYM])
@@ -161,11 +165,13 @@ def get_sentences(text):
 
     Example
     -------
-    >>> text = "Does this text contains two sentences? Yes, it does."
-    >>> for sentence in get_sentences(text):
-    >>>     print(sentence)
-    Does this text contains two sentences?
-    Yes, it does.
+    .. sourcecode:: pycon
+
+        >>> text = "Does this text contains two sentences? Yes, it does."
+        >>> for sentence in get_sentences(text):
+        >>>     print(sentence)
+        Does this text contains two sentences?
+        Yes, it does.
 
     """
     for match in RE_SENTENCE.finditer(text):
@@ -192,15 +198,14 @@ def merge_syntactic_units(original_units, filtered_units, tags=None):
 
     """
     units = []
-    for i in xrange(len(original_units)):
+    for i in range(len(original_units)):
         if filtered_units[i] == '':
             continue
 
         text = original_units[i]
         token = filtered_units[i]
         tag = tags[i][1] if tags else None
-        sentence = SyntacticUnit(text, token, tag)
-        sentence.index = i
+        sentence = SyntacticUnit(text, token, tag, i)
 
         units.append(sentence)
 
@@ -263,11 +268,13 @@ def clean_text_by_word(text, deacc=True):
 
     Example
     -------
-    >>> from gensim.summarization.textcleaner import clean_text_by_word
-    >>> clean_text_by_word("God helps those who help themselves")
-    {'god': Original unit: 'god' *-*-*-* Processed unit: 'god',
-    'help': Original unit: 'help' *-*-*-* Processed unit: 'help',
-    'helps': Original unit: 'helps' *-*-*-* Processed unit: 'help'}
+    .. sourcecode:: pycon
+
+        >>> from gensim.summarization.textcleaner import clean_text_by_word
+        >>> clean_text_by_word("God helps those who help themselves")
+        {'god': Original unit: 'god' *-*-*-* Processed unit: 'god',
+        'help': Original unit: 'help' *-*-*-* Processed unit: 'help',
+        'helps': Original unit: 'helps' *-*-*-* Processed unit: 'help'}
 
     """
     text_without_acronyms = replace_with_separator(text, "", [AB_ACRONYM_LETTERS])
@@ -297,14 +304,16 @@ def tokenize_by_word(text):
 
     Example
     -------
-    >>> from gensim.summarization.textcleaner import tokenize_by_word
-    >>> g = tokenize_by_word('Veni. Vedi. Vici.')
-    >>> print(next(g))
-    veni
-    >>> print(next(g))
-    vedi
-    >>> print(next(g))
-    vici
+    .. sourcecode:: pycon
+
+        >>> from gensim.summarization.textcleaner import tokenize_by_word
+        >>> g = tokenize_by_word('Veni. Vedi. Vici.')
+        >>> print(next(g))
+        veni
+        >>> print(next(g))
+        vedi
+        >>> print(next(g))
+        vici
 
     """
     text_without_acronyms = replace_with_separator(text, "", [AB_ACRONYM_LETTERS])

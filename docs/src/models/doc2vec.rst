@@ -1,8 +1,8 @@
-:mod:`models.doc2vec` -- Deep learning with paragraph2vec
-=========================================================
+:mod:`models.doc2vec` -- Doc2vec paragraph embeddings
+=====================================================
 
 .. automodule:: gensim.models.doc2vec
-    :synopsis: Deep learning with doc2vec
+    :synopsis: Doc2vec paragraph embeddings
     :members:
     :inherited-members:
     :undoc-members:

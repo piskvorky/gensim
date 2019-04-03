@@ -5,7 +5,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""Python wrapper for `Latent Dirichlet Allocation (LDA) <https://en.wikipedia.org/wiki/Latent_Dirichlet_allocation>`_
+r"""Python wrapper for `Latent Dirichlet Allocation (LDA) <https://en.wikipedia.org/wiki/Latent_Dirichlet_allocation>`_
 from `MALLET, the Java topic modelling toolkit <http://mallet.cs.umass.edu/>`_
 
 This module allows both LDA model estimation from a training corpus and inference of topic distribution on new,
@@ -13,7 +13,7 @@ unseen documents, using an (optimized version of) collapsed gibbs sampling from 
 
 Notes
 -----
-MALLET's LDA training requires :math:O(#corpus_words) of memory, keeping the entire corpus in RAM.
+MALLET's LDA training requires :math:`O(corpus\_words)` of memory, keeping the entire corpus in RAM.
 If you find yourself running out of memory, either decrease the `workers` constructor parameter,
 or use :class:`gensim.models.ldamodel.LdaModel` or :class:`gensim.models.ldamulticore.LdaMulticore`
 which needs only :math:`O(1)` memory.
@@ -32,12 +32,14 @@ Use `official guide <http://mallet.cs.umass.edu/download.php>`_ or this one ::
 
 Examples
 --------
->>> from gensim.test.utils import common_corpus, common_dictionary
->>> from gensim.models.wrappers import LdaMallet
->>>
->>> path_to_mallet_binary = "/path/to/mallet/binary"
->>> model = LdaMallet(path_to_mallet_binary, corpus=common_corpus, num_topics=20, id2word=common_dictionary)
->>> vector = model[common_corpus[0]]  # LDA topics of a documents
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import common_corpus, common_dictionary
+    >>> from gensim.models.wrappers import LdaMallet
+    >>>
+    >>> path_to_mallet_binary = "/path/to/mallet/binary"
+    >>> model = LdaMallet(path_to_mallet_binary, corpus=common_corpus, num_topics=20, id2word=common_dictionary)
+    >>> vector = model[common_corpus[0]]  # LDA topics of a documents
 
 """
 
@@ -49,6 +51,7 @@ import warnings
 import tempfile
 import xml.etree.ElementTree as et
 import zipfile
+from itertools import chain
 
 import numpy
 from smart_open import smart_open
@@ -74,7 +77,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
 
     """
     def __init__(self, mallet_path, corpus=None, num_topics=100, alpha=50, id2word=None, workers=4, prefix=None,
-                 optimize_interval=0, iterations=1000, topic_threshold=0.0):
+                 optimize_interval=0, iterations=1000, topic_threshold=0.0, random_seed=0):
         """
 
         Parameters
@@ -100,6 +103,8 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
             Number of training iterations.
         topic_threshold : float, optional
             Threshold of the probability above which we consider a topic.
+        random_seed: int, optional
+            Random seed to ensure consistent results, if 0 - use system clock.
 
         """
         self.mallet_path = mallet_path
@@ -122,6 +127,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         self.workers = workers
         self.optimize_interval = optimize_interval
         self.iterations = iterations
+        self.random_seed = random_seed
         if corpus is not None:
             self.train(corpus)
 
@@ -219,9 +225,9 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         """
         for docno, doc in enumerate(corpus):
             if self.id2word:
-                tokens = sum(([self.id2word[tokenid]] * int(cnt) for tokenid, cnt in doc), [])
+                tokens = chain.from_iterable([self.id2word[tokenid]] * int(cnt) for tokenid, cnt in doc)
             else:
-                tokens = sum(([str(tokenid)] * int(cnt) for tokenid, cnt in doc), [])
+                tokens = chain.from_iterable([str(tokenid)] * int(cnt) for tokenid, cnt in doc)
             file_like.write(utils.to_utf8("%s 0 %s\n" % (docno, ' '.join(tokens))))
 
     def convert_input(self, corpus, infer=False, serialize_corpus=True):
@@ -246,7 +252,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         cmd = \
             self.mallet_path + \
             " import-file --preserve-case --keep-sequence " \
-            "--remove-stopwords --token-regex \"\S+\" --input %s --output %s"
+            "--remove-stopwords --token-regex \"\\S+\" --input %s --output %s"
         if infer:
             cmd += ' --use-pipe-from ' + self.fcorpusmallet()
             cmd = cmd % (self.fcorpustxt(), self.fcorpusmallet() + '.infer')
@@ -267,11 +273,12 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         self.convert_input(corpus, infer=False)
         cmd = self.mallet_path + ' train-topics --input %s --num-topics %s  --alpha %s --optimize-interval %s '\
             '--num-threads %s --output-state %s --output-doc-topics %s --output-topic-keys %s '\
-            '--num-iterations %s --inferencer-filename %s --doc-topics-threshold %s'
+            '--num-iterations %s --inferencer-filename %s --doc-topics-threshold %s  --random-seed %s'
+
         cmd = cmd % (
             self.fcorpusmallet(), self.num_topics, self.alpha, self.optimize_interval,
             self.workers, self.fstate(), self.fdoctopics(), self.ftopickeys(), self.iterations,
-            self.finferencer(), self.topic_threshold
+            self.finferencer(), self.topic_threshold, str(self.random_seed)
         )
         # NOTE "--keep-sequence-bigrams" / "--use-ngrams true" poorer results + runs out of memory
         logger.info("training MALLET LDA with %s", cmd)
@@ -308,10 +315,10 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         self.convert_input(bow, infer=True)
         cmd = \
             self.mallet_path + ' infer-topics --input %s --inferencer %s ' \
-                               '--output-doc-topics %s --num-iterations %s --doc-topics-threshold %s'
+                               '--output-doc-topics %s --num-iterations %s --doc-topics-threshold %s --random-seed %s'
         cmd = cmd % (
             self.fcorpusmallet() + '.infer', self.finferencer(),
-            self.fdoctopics() + '.infer', iterations, self.topic_threshold
+            self.fdoctopics() + '.infer', iterations, self.topic_threshold, str(self.random_seed)
         )
         logger.info("inferring topics with MALLET LDA '%s'", cmd)
         check_output(args=cmd, shell=True)
@@ -336,7 +343,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
 
         with utils.smart_open(self.fstate()) as fin:
             _ = next(fin)  # header
-            self.alpha = numpy.array([float(val) for val in next(fin).split()[2:]])
+            self.alpha = numpy.fromiter(next(fin).split()[2:], dtype=float)
             assert len(self.alpha) == self.num_topics, "mismatch between MALLET vs. requested topics"
             _ = next(fin)  # noqa:F841 beta
             for lineno, line in enumerate(fin):
@@ -556,10 +563,21 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
 
                 if renorm:
                     # explicitly normalize weights to sum up to 1.0, just to be sure...
-                    total_weight = float(sum([weight for _, weight in doc]))
+                    total_weight = float(sum(weight for _, weight in doc))
                     if total_weight:
                         doc = [(id_, float(weight) / total_weight) for id_, weight in doc]
                 yield doc
+
+    @classmethod
+    def load(cls, *args, **kwargs):
+        """Load a previously saved LdaMallet class. Handles backwards compatibility from
+        older LdaMallet versions which did not use random_seed parameter.
+        """
+        model = super(LdaMallet, cls).load(*args, **kwargs)
+        if not hasattr(model, 'random_seed'):
+            model.random_seed = 0
+
+        return model
 
 
 def malletmodel2ldamodel(mallet_model, gamma_threshold=0.001, iterations=50):
@@ -584,9 +602,11 @@ def malletmodel2ldamodel(mallet_model, gamma_threshold=0.001, iterations=50):
     """
     model_gensim = LdaModel(
         id2word=mallet_model.id2word, num_topics=mallet_model.num_topics,
-        alpha=mallet_model.alpha, iterations=iterations,
+        alpha=mallet_model.alpha, eta=0,
+        iterations=iterations,
         gamma_threshold=gamma_threshold,
         dtype=numpy.float64  # don't loose precision when converting from MALLET
     )
-    model_gensim.expElogbeta[:] = mallet_model.wordtopics
+    model_gensim.state.sstats[...] = mallet_model.wordtopics
+    model_gensim.sync_state()
     return model_gensim

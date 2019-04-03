@@ -11,16 +11,14 @@ sudo python ./setup.py install
 """
 
 import os
+import platform
 import sys
 import warnings
-import ez_setup
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
 
 if sys.version_info[:2] < (2, 7) or (sys.version_info[:1] == 3 and sys.version_info[:2] < (3, 5)):
     raise Exception('This version of gensim needs Python 2.7, 3.5 or later.')
-
-ez_setup.use_setuptools()
 
 # the following code is adapted from tornado's setup.py:
 # https://github.com/tornadoweb/tornado/blob/master/setup.py
@@ -234,38 +232,80 @@ win_testenv = [
     'testfixtures',
     'scikit-learn',
     'Morfessor==2.0.2a4',
+    'python-Levenshtein >= 0.10.2',
+    'visdom >= 0.1.8, != 0.1.8.7',
 ]
 
-linux_testenv = win_testenv + [
-    'annoy',
-    'tensorflow <= 1.3.0',
-    'keras >= 2.0.4, <= 2.1.4',
+linux_testenv = win_testenv[:]
+
+if sys.version_info < (3, 7):
+    linux_testenv.extend([
+        'tensorflow <= 1.3.0',
+        'keras >= 2.0.4, <= 2.1.4',
+        'annoy',
+    ])
+
+ext_modules = [
+    Extension('gensim.models.word2vec_inner',
+        sources=['./gensim/models/word2vec_inner.c'],
+        include_dirs=[model_dir]),
+    Extension('gensim.models.doc2vec_inner',
+        sources=['./gensim/models/doc2vec_inner.c'],
+        include_dirs=[model_dir]),
+    Extension('gensim.corpora._mmreader',
+        sources=['./gensim/corpora/_mmreader.c']),
+    Extension('gensim.models.fasttext_inner',
+        sources=['./gensim/models/fasttext_inner.c'],
+        include_dirs=[model_dir]),
+    Extension('gensim.models._utils_any2vec',
+        sources=['./gensim/models/_utils_any2vec.c'],
+        include_dirs=[model_dir]),
+    Extension('gensim._matutils',
+        sources=['./gensim/_matutils.c']),
+    Extension('gensim.models.nmf_pgd',
+        sources=['./gensim/models/nmf_pgd.c'])
 ]
+
+if not (os.name == 'nt' and sys.version_info[0] < 3):
+    extra_args = []
+    system = platform.system()
+
+    if system == 'Linux':
+        extra_args.append('-std=c++11')
+    elif system == 'Darwin':
+        extra_args.extend(['-stdlib=libc++', '-std=c++11'])
+
+    ext_modules.append(
+        Extension('gensim.models.word2vec_corpusfile',
+                  sources=['./gensim/models/word2vec_corpusfile.cpp'],
+                  language='c++',
+                  extra_compile_args=extra_args,
+                  extra_link_args=extra_args)
+    )
+
+    ext_modules.append(
+        Extension('gensim.models.fasttext_corpusfile',
+                  sources=['./gensim/models/fasttext_corpusfile.cpp'],
+                  language='c++',
+                  extra_compile_args=extra_args,
+                  extra_link_args=extra_args)
+    )
+
+    ext_modules.append(
+        Extension('gensim.models.doc2vec_corpusfile',
+                  sources=['./gensim/models/doc2vec_corpusfile.cpp'],
+                  language='c++',
+                  extra_compile_args=extra_args,
+                  extra_link_args=extra_args)
+    )
 
 setup(
     name='gensim',
-    version='3.4.0',
+    version='3.7.1',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
-    ext_modules=[
-        Extension('gensim.models.word2vec_inner',
-            sources=['./gensim/models/word2vec_inner.c'],
-            include_dirs=[model_dir]),
-        Extension('gensim.models.doc2vec_inner',
-            sources=['./gensim/models/doc2vec_inner.c'],
-            include_dirs=[model_dir]),
-        Extension('gensim.corpora._mmreader',
-            sources=['./gensim/corpora/_mmreader.c']),
-        Extension('gensim.models.fasttext_inner',
-            sources=['./gensim/models/fasttext_inner.c'],
-            include_dirs=[model_dir]),
-        Extension('gensim.models._utils_any2vec',
-            sources=['./gensim/models/_utils_any2vec.c'],
-            include_dirs=[model_dir]),
-        Extension('gensim._matutils',
-            sources=['./gensim/_matutils.c']),
-    ],
+    ext_modules=ext_modules,
     cmdclass=cmdclass,
     packages=find_packages(),
 
@@ -295,6 +335,7 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Scientific/Engineering :: Information Analysis',
         'Topic :: Text Processing :: Linguistic',
@@ -308,14 +349,14 @@ setup(
         'numpy >= 1.11.3',
         'scipy >= 0.18.1',
         'six >= 1.5.0',
-        'smart_open >= 1.2.1',
+        'smart_open >= 1.7.0',
     ],
     tests_require=linux_testenv,
     extras_require={
         'distributed': distributed_env,
         'test-win': win_testenv,
         'test': linux_testenv,
-        'docs': linux_testenv + distributed_env + ['sphinx', 'sphinxcontrib-napoleon', 'plotly', 'pattern', 'sphinxcontrib.programoutput'],
+        'docs': linux_testenv + distributed_env + ['sphinx', 'sphinxcontrib-napoleon', 'plotly', 'pattern <= 2.6', 'sphinxcontrib.programoutput'],
     },
 
     include_package_data=True,

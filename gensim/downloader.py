@@ -1,34 +1,44 @@
 """
 This module is an API for downloading, getting information and loading datasets/models.
 
+See `RaRe-Technologies/gensim-data <https://github.com/RaRe-Technologies/gensim-data>`_ repo
+for more information about models/datasets/how-to-add-new/etc.
+
 Give information about available models/datasets:
 
->>> import gensim.downloader as api
->>>
->>> api.info()  # return dict with info about available models/datasets
->>> api.info("text8")  # return dict with info about "text8" dataset
+.. sourcecode:: pycon
+
+    >>> import gensim.downloader as api
+    >>>
+    >>> api.info()  # return dict with info about available models/datasets
+    >>> api.info("text8")  # return dict with info about "text8" dataset
 
 
 Model example:
 
->>> import gensim.downloader as api
->>>
->>> model = api.load("glove-twitter-25")  # load glove vectors
->>> model.most_similar("cat")  # show words that similar to word 'cat'
+.. sourcecode:: pycon
+
+    >>> import gensim.downloader as api
+    >>>
+    >>> model = api.load("glove-twitter-25")  # load glove vectors
+    >>> model.most_similar("cat")  # show words that similar to word 'cat'
 
 
 Dataset example:
 
->>> import gensim.downloader as api
->>> from gensim.models import Word2Vec
->>>
->>> dataset = api.load("text8")  # load dataset as iterable
->>> model = Word2Vec(dataset)  # train w2v model
+.. sourcecode:: pycon
+
+    >>> import gensim.downloader as api
+    >>> from gensim.models import Word2Vec
+    >>>
+    >>> dataset = api.load("text8")  # load dataset as iterable
+    >>> model = Word2Vec(dataset)  # train w2v model
 
 
 Also, this API available via CLI::
 
     python -m gensim.downloader --info <dataname> # same as api.info(dataname)
+    python -m gensim.downloader --info name # same as api.info(name_only=True)
     python -m gensim.downloader --download <dataname> # same as api.load(dataname, return_path=True)
 
 """
@@ -54,7 +64,7 @@ else:
 
 user_dir = os.path.expanduser('~')
 base_dir = os.path.join(user_dir, 'gensim-data')
-logger = logging.getLogger('gensim.api')
+logger = logging.getLogger(__name__)
 
 DATA_LIST_URL = "https://raw.githubusercontent.com/RaRe-Technologies/gensim-data/master/list.json"
 DOWNLOAD_BASE_URL = "https://github.com/RaRe-Technologies/gensim-data/releases/download"
@@ -154,7 +164,7 @@ def _calculate_md5_checksum(fname):
     return hash_md5.hexdigest()
 
 
-def info(name=None, show_only_latest=True):
+def info(name=None, show_only_latest=True, name_only=False):
     """Provide the information related to model/dataset.
 
     Parameters
@@ -164,6 +174,8 @@ def info(name=None, show_only_latest=True):
     show_only_latest : bool, optional
         If storage contains different versions for one data/model, this flag allow to hide outdated versions.
         Affects only if `name` is None.
+    name_only : bool, optional
+        If True, will return only the names of available models and corpora.
 
     Returns
     -------
@@ -179,15 +191,17 @@ def info(name=None, show_only_latest=True):
 
     Examples
     --------
-    >>> import gensim.downloader as api
-    >>> api.info("text8")  # retrieve information about text8 dataset
-    {u'checksum': u'68799af40b6bda07dfa47a32612e5364',
-     u'description': u'Cleaned small sample from wikipedia',
-     u'file_name': u'text8.gz',
-     u'parts': 1,
-     u'source': u'http://mattmahoney.net/dc/text8.zip'}
-    >>>
-    >>> api.info()  # retrieve information about all available datasets and models
+    .. sourcecode:: pycon
+
+        >>> import gensim.downloader as api
+        >>> api.info("text8")  # retrieve information about text8 dataset
+        {u'checksum': u'68799af40b6bda07dfa47a32612e5364',
+         u'description': u'Cleaned small sample from wikipedia',
+         u'file_name': u'text8.gz',
+         u'parts': 1,
+         u'source': u'http://mattmahoney.net/dc/text8.zip'}
+        >>>
+        >>> api.info()  # retrieve information about all available datasets and models
 
     """
     information = json.loads(urlopen(DATA_LIST_URL).read().decode("utf-8"))
@@ -204,6 +218,9 @@ def info(name=None, show_only_latest=True):
 
     if not show_only_latest:
         return information
+
+    if name_only:
+        return {"corpora": list(information['corpora'].keys()), "models": list(information['models'])}
 
     return {
         "corpora": {name: data for (name, data) in information['corpora'].items() if data.get("latest", True)},
@@ -382,23 +399,30 @@ def load(name, return_path=False):
     --------
     Model example:
 
-    >>> import gensim.downloader as api
-    >>>
-    >>> model = api.load("glove-twitter-25")  # load glove vectors
-    >>> model.most_similar("cat")  # show words that similar to word 'cat'
+    .. sourcecode:: pycon
+
+        >>> import gensim.downloader as api
+        >>>
+        >>> model = api.load("glove-twitter-25")  # load glove vectors
+        >>> model.most_similar("cat")  # show words that similar to word 'cat'
 
     Dataset example:
 
-    >>> import gensim.downloader as api
-    >>>
-    >>> wiki = api.load("wiki-en")  # load extracted Wikipedia dump, around 6 Gb
-    >>> for article in wiki:  # iterate over all wiki script
-    >>>     ...
+    .. sourcecode:: pycon
 
-    Download only example
-    >>> import gensim.downloader as api
-    >>>
-    >>> print(api.load("wiki-en", return_path=True))  # output: /home/user/gensim-data/wiki-en/wiki-en.gz
+        >>> import gensim.downloader as api
+        >>>
+        >>> wiki = api.load("wiki-en")  # load extracted Wikipedia dump, around 6 Gb
+        >>> for article in wiki:  # iterate over all wiki script
+        >>>     pass
+
+    Download only example:
+
+    .. sourcecode:: pycon
+
+        >>> import gensim.downloader as api
+        >>>
+        >>> print(api.load("wiki-en", return_path=True))  # output: /home/user/gensim-data/wiki-en/wiki-en.gz
 
     """
     _create_base_dir()
@@ -420,11 +444,11 @@ def load(name, return_path=False):
 
 if __name__ == '__main__':
     logging.basicConfig(
-        format='%(asctime)s :%(name)s :%(levelname)s :%(message)s', stream=sys.stdout, level=logging.INFO
+        format='%(asctime)s : %(name)s : %(levelname)s : %(message)s', stream=sys.stdout, level=logging.INFO
     )
     parser = argparse.ArgumentParser(
         description="Gensim console API",
-        usage="python -m gensim.api.downloader  [-h] [-d data_name | -i data_name | -c]"
+        usage="python -m gensim.api.downloader  [-h] [-d data_name | -i data_name]"
     )
 
     group = parser.add_mutually_exclusive_group()
@@ -444,5 +468,8 @@ if __name__ == '__main__':
         data_path = load(args.download[0], return_path=True)
         logger.info("Data has been installed and data path is %s", data_path)
     elif args.info is not None:
-        output = info() if (args.info == full_information) else info(name=args.info)
-        print(json.dumps(output, indent=4))
+        if args.info == 'name':
+            print(json.dumps(info(name_only=True), indent=4))
+        else:
+            output = info() if (args.info == full_information) else info(name=args.info)
+            print(json.dumps(output, indent=4))

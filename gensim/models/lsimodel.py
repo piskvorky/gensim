@@ -43,11 +43,13 @@ with dual core Xeon 2.0GHz, 4GB RAM, ATLAS
 
 Examples
 --------
->>> from gensim.test.utils import common_dictionary, common_corpus
->>> from gensim.models import LsiModel
->>>
->>> model = LsiModel(common_corpus, id2word=common_dictionary)
->>> vectorized_corpus = model[common_corpus]  # vectorize input copus in BoW format
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import common_dictionary, common_corpus
+    >>> from gensim.models import LsiModel
+    >>>
+    >>> model = LsiModel(common_corpus, id2word=common_dictionary)
+    >>> vectorized_corpus = model[common_corpus]  # vectorize input copus in BoW format
 
 
 .. [1] The stochastic algo could be distributed too, but most time is already spent
@@ -65,7 +67,7 @@ import scipy.linalg
 import scipy.sparse
 from scipy.sparse import sparsetools
 from six import iterkeys
-from six.moves import xrange
+from six.moves import range
 
 from gensim import interfaces, matutils, utils
 from gensim.models import basemodel
@@ -113,7 +115,7 @@ def asfarray(a, name=''):
     a : numpy.ndarray
         Input array.
     name : str, optional
-        Array name, used for logging purposes.
+        Array name, used only for logging purposes.
 
     Returns
     -------
@@ -150,7 +152,7 @@ def ascarray(a, name=''):
 
 
 class Projection(utils.SaveLoad):
-    """Lower dimension projections of a Term-Passage matrix.
+    """Low dimensional projection of a term-document matrix.
 
     This is the class taking care of the 'core math': interfacing with corpora, splitting large corpora into chunks
     and merging them etc. This done through the higher-level :class:`~gensim.models.lsimodel.LsiModel` class.
@@ -158,7 +160,7 @@ class Projection(utils.SaveLoad):
     Notes
     -----
     The projection can be later updated by merging it with another :class:`~gensim.models.lsimodel.Projection`
-    via  :meth:`~gensim.models.lsimodel.Projection.merge`.
+    via  :meth:`~gensim.models.lsimodel.Projection.merge`. This is how incremental training actually happens.
 
     """
     def __init__(self, m, k, docs=None, use_svdlibc=False, power_iters=P2_EXTRA_ITERS,
@@ -312,7 +314,7 @@ class Projection(utils.SaveLoad):
 
         # make each column of U start with a non-negative number (to force canonical decomposition)
         if self.u.shape[0] > 0:
-            for i in xrange(self.u.shape[1]):
+            for i in range(self.u.shape[1]):
                 if self.u[0, i] < 0.0:
                     self.u[:, i] *= -1.0
 
@@ -321,7 +323,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     """Model for `Latent Semantic Indexing
     <https://en.wikipedia.org/wiki/Latent_semantic_analysis#Latent_semantic_indexing>`_.
 
-    Algorithm of decomposition described in `"Fast and Faster: A Comparison of Two Streamed
+    The decomposition algorithm is described in `"Fast and Faster: A Comparison of Two Streamed
     Matrix Decomposition Algorithms" <https://nlp.fi.muni.cz/~xrehurek/nips/rehurek_nips.pdf>`_.
 
     Notes
@@ -337,15 +339,17 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     Examples
     --------
-    >>> from gensim.test.utils import common_corpus, common_dictionary, get_tmpfile
-    >>> from gensim.models import LsiModel
-    >>>
-    >>> model = LsiModel(common_corpus[:3], id2word=common_dictionary)  # train model
-    >>> vector = model[common_corpus[4]]  # apply model to BoW document
-    >>> model.add_documents(common_corpus[4:])  # update model with new documents
-    >>> tmp_fname = get_tmpfile("lsi.model")
-    >>> model.save(tmp_fname)  # save model
-    >>> loaded_model = LsiModel.load(tmp_fname)  # load model
+    .. sourcecode:: pycon
+
+        >>> from gensim.test.utils import common_corpus, common_dictionary, get_tmpfile
+        >>> from gensim.models import LsiModel
+        >>>
+        >>> model = LsiModel(common_corpus[:3], id2word=common_dictionary)  # train model
+        >>> vector = model[common_corpus[4]]  # apply model to BoW document
+        >>> model.add_documents(common_corpus[4:])  # update model with new documents
+        >>> tmp_fname = get_tmpfile("lsi.model")
+        >>> model.save(tmp_fname)  # save model
+        >>> loaded_model = LsiModel.load(tmp_fname)  # load model
 
     """
 
@@ -616,7 +620,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Notes
         -----
         The number of topics can actually be smaller than `self.num_topics`, if there were not enough factors
-        (real rank of input matrix smaller than `self.num_topics`).
+        in the matrix (real rank of input matrix smaller than `self.num_topics`).
 
         Returns
         -------
@@ -636,8 +640,10 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     def show_topic(self, topicno, topn=10):
         """Get the words that define a topic along with their contribution.
 
-        This is actually the left singular vector of the specified topic. The most important words in defining the topic
-        (in both directions) are included in the string, along with their contribution to the topic.
+        This is actually the left singular vector of the specified topic.
+
+        The most important words in defining the topic (greatest absolute value) are included
+        in the output, along with their contribution to the topic.
 
         Parameters
         ----------
@@ -687,7 +693,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         shown = []
         if num_topics < 0:
             num_topics = self.num_topics
-        for i in xrange(min(num_topics, self.num_topics)):
+        for i in range(min(num_topics, self.num_topics)):
             if i < len(self.projection.s):
                 if formatted:
                     topic = self.print_topic(i, topn=num_words)
@@ -758,7 +764,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Notes
         -----
-        Large arrays can be memmap'ed back as read-only (shared memory) by setting `mmap='r'`:
+        Large arrays can be memmap'ed back as read-only (shared memory) by setting the `mmap='r'` parameter.
 
         Parameters
         ----------
@@ -931,7 +937,7 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
         q, _ = matutils.qr_destroy(y)  # orthonormalize the range
 
         logger.debug("running %i power iterations", power_iters)
-        for _ in xrange(power_iters):
+        for _ in range(power_iters):
             q = corpus.T * q
             q = [corpus * q]
             q, _ = matutils.qr_destroy(q)  # orthonormalize the range after each power iteration step
@@ -957,7 +963,7 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
         y = [y]
         q, _ = matutils.qr_destroy(y)  # orthonormalize the range
 
-        for power_iter in xrange(power_iters):
+        for power_iter in range(power_iters):
             logger.info("running power iteration #%i", power_iter + 1)
             yold = q.copy()
             q[:] = 0.0

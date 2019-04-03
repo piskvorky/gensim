@@ -33,14 +33,14 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
         Test word2vec training.
         """
         model = self.model_cos_sim
-        self.assertTrue(model.wv.syn0.shape == (len(model.wv.vocab), 100))
-        self.assertTrue(model.syn1.shape == (len(model.wv.vocab), 100))
-        sims = model.most_similar('graph', topn=10)
+        self.assertTrue(model.wv.vectors.shape == (len(model.wv.vocab), 100))
+        self.assertTrue(model.trainables.syn1.shape == (len(model.wv.vocab), 100))
+        sims = model.wv.most_similar('graph', topn=10)
         # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
 
         # test querying for "most similar" by vector
-        graph_vector = model.wv.syn0norm[model.wv.vocab['graph'].index]
-        sims2 = model.most_similar(positive=[graph_vector], topn=11)
+        graph_vector = model.wv.vectors_norm[model.wv.vocab['graph'].index]
+        sims2 = model.wv.most_similar(positive=[graph_vector], topn=11)
         sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
         self.assertEqual(sims, sims2)
 
@@ -119,7 +119,7 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
         # prepare the embedding layer using the wrapper
         keras_w2v = self.model_twenty_ng
         keras_w2v.build_vocab(texts_w2v)
-        keras_w2v.train(texts, total_examples=keras_w2v.corpus_count, epochs=keras_w2v.iter)
+        keras_w2v.train(texts, total_examples=keras_w2v.corpus_count, epochs=keras_w2v.epochs)
         keras_w2v_wv = keras_w2v.wv
         embedding_layer = keras_w2v_wv.get_keras_embedding()
 

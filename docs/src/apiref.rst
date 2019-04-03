@@ -29,6 +29,7 @@ Modules:
     corpora/wikicorpus
     models/ldamodel
     models/ldamulticore
+    models/nmf
     models/lsimodel
     models/ldaseqmodel
     models/tfidfmodel
@@ -46,6 +47,7 @@ Modules:
     models/keyedvectors
     models/doc2vec
     models/fasttext
+    models/_fasttext_bin
     models/phrases
     models/poincare
     models/coherencemodel
@@ -53,6 +55,9 @@ Modules:
     models/callbacks
     models/utils_any2vec
     models/_utils_any2vec
+    models/word2vec_inner
+    models/doc2vec_inner
+    models/fasttext_inner
     models/wrappers/ldamallet
     models/wrappers/dtmmodel
     models/wrappers/ldavowpalwabbit.rst
@@ -64,6 +69,7 @@ Modules:
     models/deprecated/word2vec
     models/deprecated/keyedvectors
     models/deprecated/fasttext_wrapper
+    models/base_any2vec
     similarities/docsim
     similarities/index
     sklearn_api/atmodel
