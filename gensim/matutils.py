@@ -488,7 +488,7 @@ def corpus2dense(corpus, num_terms, num_docs=None, dtype=np.float32):
             result[:, docno] = sparse2full(doc, num_terms)
         assert docno + 1 == num_docs
     else:
-        result = np.column_stack(sparse2full(doc, num_terms) for doc in corpus)
+        result = np.column_stack([sparse2full(doc, num_terms) for doc in corpus])
     return result.astype(dtype)
 
 
