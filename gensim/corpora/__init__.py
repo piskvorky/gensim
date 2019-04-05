@@ -15,3 +15,4 @@ from .wikicorpus import WikiCorpus  # noqa:F401
 from .textcorpus import TextCorpus, TextDirectoryCorpus  # noqa:F401
 from .ucicorpus import UciCorpus  # noqa:F401
 from .malletcorpus import MalletCorpus  # noqa:F401
+from .opinosiscorpus import OpinosisCorpus  # noqa:F401

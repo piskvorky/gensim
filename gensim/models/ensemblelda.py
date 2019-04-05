@@ -55,11 +55,12 @@ Query, the model using new, unseen documents
     >>> unseen_doc = other_corpus[0]
     >>> vector = elda[unseen_doc]  # get topic probability distribution for a document
 
-Increase the ensemble size by adding a new model
+Increase the ensemble size by adding a new model. Make sure it uses the same dictionary
 
 .. sourcecode:: pycon
 
     >>> elda.add_model(LdaModel(common_corpus, id2word=common_dictionary, num_topics=10))
+    >>> elda.recluster()
     >>> vector = elda[unseen_doc]
 
 To optimize the ensemble for your specific case, the children can be clustered again using
@@ -91,7 +92,7 @@ import numpy as np
 import pandas as pd
 from scipy.spatial.distance import cosine
 from gensim import utils
-from gensim.models import ldamodel, ldamulticore
+from gensim.models import ldamodel, ldamulticore, basemodel
 
 logger = logging.getLogger(__name__)
 
@@ -212,7 +213,9 @@ class EnsembleLda():
         self.sstats_sum = 0
         self.eta = None
         self.tms = []
-        self.ttda = None
+        # initialize empty topic term distribution array
+        self.ttda = np.empty((0, len(gensim_kw_args["id2word"])), np.float32)
+        self.asymmetric_distance_matrix_outdated = True
 
         # in case the model will not train due to some
         # parameters, stop here and don't train.
@@ -230,13 +233,10 @@ class EnsembleLda():
         # training
         if ensemble_workers > 1:
             # multiprocessed
-            self.generate_ttda_multiprocessed(num_models, ensemble_workers)
+            self.generate_topic_models_multiproc(num_models, ensemble_workers)
         else:
             # singlecore
             self.generate_topic_models(num_models)
-
-        if not memory_friendly_ttda:
-            self.generate_ttda()
 
         self.generate_asymmetric_distance_matrix(workers=self.distance_workers,
                                                  threshold=masking_threshold,
@@ -246,6 +246,11 @@ class EnsembleLda():
 
         # create model that can provide the usual gensim api to the stable topics from the ensemble
         self.generate_gensim_representation()
+
+    def convert_to_memory_friendly(self):
+        """removes the stored gensim models and only keeps their ttdas"""
+        self.tms = []
+        self.memory_friendly_ttda = True
 
     def generate_gensim_representation(self):
         """creates a gensim-model from the stable topics
@@ -344,11 +349,18 @@ class EnsembleLda():
 
         return classic_model_representation
 
-    def add_model(self, target, generate=True, num_new_models=None):
+    def add_model(self, target, num_new_models=None):
         """Adds the ttda of another model to the ensemble
         this way, multiple topic models can be connected
         to an ensemble.
 
+        Make sure that all the models use the exact same
+        dictionary/idword mapping.
+
+        In order to generate new stable topics afterwards, use
+            self.generate_asymmetric_distance_matrix()
+            self.recluster()
+        
         The ttda of another ensemble can also be used,
         in that case set num_new_models to the num_models
         parameter of the ensemble, that means the number
@@ -357,48 +369,30 @@ class EnsembleLda():
         is used to estimate "min_samples" for
         generate_topic_clusters.
 
-        Make sure that all the models use the exact same
-        dictionary/idword mapping and size.
-
         If you trained this ensemble in the past with a
         certain Dictionary that you want to reuse for other
-        models, you can get it from: self.id2word
-
-        This will also trigger the generation of
-        stable topics automatically, but it can be
-        disabled with the generate parameter.
+        models, you can get it from: self.id2word.
 
         Parameters
         ----------
         target : {see description}
-            1. topic-term-distribution-array
+            1. A single EnsembleLda object
+            2. List of EnsembleLda objects
+            3. A single Gensim topic model
+            4. List of Gensim topic models
+
+            if memory_friendly_ttda is True, target can also be:
+            5. topic-term-distribution-array
 
             example: [[0.1, 0.1, 0.8], [...], ...]
 
-            [topic_1, topic_2, ...]
-            with topic being:
-            [word_1, word_2, ...]
+            [topic1, topic2, ...]
+            with topic being an array of probabilities:
+            [token1, token2, ...]
 
-            sum of words in a single topic sum to one,
+            token probabilities in a single topic sum to one,
             therefore, all the words sum to len(ttda)
 
-            You can use this (option 1) only if
-            memory_friendly_ttda is set to True.
-
-            2. A single EnsembleLda object
-            3. List of EnsembleLda objects
-            4. A single Gensim topic model
-            5. List of Gensim topic models
-        generate : boolean, optional
-            if True, will cluster and generate
-            stable_topics afterwards. This is the default.
-
-            if False, you have to call:
-            self.generate_asymmetric_distance_matrix()
-            self.generate_topic_clusters()
-            self.generate_stable_topics()
-            self.generate_gensim_representation()
-            afterwards manually.
         num_new_models : integer, optional
             the model keeps track of how many models
             were used in this ensemble. Set higher
@@ -415,7 +409,6 @@ class EnsembleLda():
             parameter.
 
         """
-
         # If the model has never seen a ttda before, initialize.
         # If it has, append.
 
@@ -427,82 +420,77 @@ class EnsembleLda():
             target = np.array(target)
             assert len(target) > 0
 
-        detected_num_models = None
-
         if self.memory_friendly_ttda:
             # for memory friendly models/ttdas, append the ttdas to itself
 
-            ttda = None
+            detected_num_models = 0
 
-            # ttdas
+            ttda = []
+
+            # 1. ttda array, because that's the only accepted input that contains numbers
             if isinstance(target.dtype.type(), (np.number, float)):
-                # multiple ttdas, concatenate first
-                if len(target.shape) == 3:
-                        detected_num_models = len(target)
-                        ttda = np.concatenate(target)
+                ttda = target
+                detected_num_models = 1
 
-                # one single ttda
-                elif len(target.shape) == 2:
-                    detected_num_models = 1
-                    ttda = target
+            # 2. list of ensemblelda objects
+            elif isinstance(target[0], type(self)):
+                ttda = np.concatenate([ensemble.ttda for ensemble in target], axis=0)
+                detected_num_models = sum([ensemble.num_models for ensemble in target])
 
-            # ensemble lda object
+            # 3. list of gensim models
+            elif isinstance(target[0], basemodel.BaseTopicModel):
+                ttda = np.concatenate([model.get_topics() for model in target], axis=0)
+                detected_num_models = len(target)
+
+            # unknown
             else:
-                if type(target[0]) == EnsembleLda:
-                    # check if it is an ensemble with ttdas
-                    ttda = np.concatenate([model.ttda for model in target], axis=0)
-                    detected_num_models = sum([model.num_models for model in target])
-
-                # any gensim topic model object
-                elif isinstance(target[0], ldamodel.LdaModel):
-                    # might be a gensim model, use get_topics() then
-                    ttda = np.concatenate([model.get_topics() for model in target], axis=0)
-                    detected_num_models = len(target)
-
-                # unknown
-                else:
-                    raise ValueError("target is of unknown type or a list of unknown types: {}".format(type(target[0])))
-
-            logger.info("Adding {} model(s) with {} topics".format(detected_num_models, len(ttda)))
-
-            # check if ttda array already exists
-            if self.ttda is None:
-                self.ttda = ttda
-            else:
-                if self.ttda.shape[1] != ttda.shape[1]:
-                    raise ValueError(("target ttda dimensions do not match. Topics must be {} but was"
-                                      "{} elements large").format(self.ttda.shape[-1], ttda.shape[-1]))
-                self.ttda = np.append(self.ttda, ttda, axis=0)
+                raise ValueError("target is of unknown type or a list of unknown types: {}".format(type(target[0])))
 
             # new models were added, increase num_models
+            # if the user didn't provide a custon numer to use
             if num_new_models is None:
                 self.num_models += detected_num_models
             else:
                 self.num_models += num_new_models
-        else:
-            # memory unfriendly ensembles have all the models
-            # stored in tms. Can be a list of ensembles or
-            # a list of gensim topic models.
-            if type(target[0]) == type(self):
-                detected_num_models = 0
+
+        else: # memory unfriendly ensembles
+            
+            ttda = []
+
+            # 1. ttda array
+            if isinstance(target.dtype.type(), (np.number, float)):
+                raise ValueError('ttda arrays cannot be added to ensembles that are not memory friendly, '
+                                 'you can call convert_to_memory_friendly to discard the stored gensim models'
+                                 'and only keep the ttdas')
+
+            # 2. list of ensembles
+            elif isinstance(target[0], type(self)):
                 for ensemble in target:
                     self.tms += ensemble.tms
-                    detected_num_models += len(ensemble.tms)
-            else:
-                # else it is a list of gensim models
-                # (np.ndarray of len 1 or more, since it was wrapped in the beginning)
+                ttda = np.concatenate([ensemble.ttda for ensemble in target], axis=0)
+
+            # 3. list of gensim models
+            elif isinstance(target[0], basemodel.BaseTopicModel):
                 self.tms += target.tolist()
-                detected_num_models = len(target)
+                ttda = np.concatenate([model.get_topics() for model in target], axis=0)
+
+            # unknown
+            else:
+                raise ValueError("target is of unknown type or a list of unknown types: {}".format(type(target[0])))
 
             # in this case, len(self.tms) should
             # always match self.num_models
             self.num_models = len(self.tms)
 
-        if generate:
-            self.generate_asymmetric_distance_matrix(workers=None)  # multiprocessing enabled
-            self.generate_topic_clusters()
-            self.generate_stable_topics()
-            self.generate_gensim_representation()
+        logger.info("Ensemble contains {} models and {} topics now".format(self.num_models, len(self.ttda)))
+        
+        if self.ttda.shape[1] != ttda.shape[1]:
+            raise ValueError(("target ttda dimensions do not match. Topics must be {} but was"
+                                "{} elements large").format(self.ttda.shape[-1], ttda.shape[-1]))
+        self.ttda = np.append(self.ttda, ttda, axis=0)
+
+        # tell recluster that the distance matrix needs to be regenerated
+        self.asymmetric_distance_matrix_outdated = True
 
     def save(self, fname):
         """Save the ensemble to a file.
@@ -607,7 +595,7 @@ class EnsembleLda():
 
         return eLDA
 
-    def generate_ttda_multiprocessed(self, num_models, ensemble_workers):
+    def generate_topic_models_multiproc(self, num_models, ensemble_workers):
         """Will make the ensemble multiprocess, which results
         in a speedup on multicore machines. Results from the
         processes will be piped to the parent and concatenated.
@@ -648,7 +636,9 @@ class EnsembleLda():
             # send the ttda that is in the child/workers version of the memory into the pipe
             # available, after generate_topic_models has been called in the worker
             if self.memory_friendly_ttda:
-                pipe.send((id, self.ttda))  # remember that this code is inside the workers memory
+                # remember that this code is inside the worker processes memory,
+                # so self.ttda is the ttda of only a chunk of models
+                pipe.send((id, self.ttda))
             else:
                 pipe.send((id, self.tms))
 
@@ -707,24 +697,13 @@ class EnsembleLda():
 
             # collect results from the pipes
             # will also block until workers are finished
-            self.ttda = None
             for p in pipes:
                 answer = p[0].recv()  # [0], because that is the parentConn
                 p[0].close()
                 # this does basically the same as the generate_topic_models function (concatenate all the ttdas):
-                if self.ttda is None:
-                    self.ttda = answer[1]  # [1] is the ttda ([0] is the worker id)
-                else:
-                    self.ttda = np.concatenate([self.ttda, answer[1]])
+                self.ttda = np.concatenate([self.ttda, answer[1]])
                 # print(answer[0], "received and ttda concatenated")
                 # in [0] the id of the worker that sent the data is stored
-
-            # end all processes
-            for p in processes:
-                p.terminate()
-
-            # again, the same thing generate_topic_models does at the end
-            self.ttda = self.ttda / self.ttda.sum(axis=1)[:, None]
 
         else:
             # now do the same thing for a memory unfriendly ensemble
@@ -733,13 +712,15 @@ class EnsembleLda():
                 answer = p[0].recv()  # [0], because that is the parentConn
                 p[0].close()
                 self.tms += answer[1]
+                new_ttda = np.concatenate([model.get_topics() for model in answer[1]])
+                self.ttda = np.concatenate([self.ttda, new_ttda])
 
-            # end all processes
-            for p in processes:
-                p.terminate()
+        # end all processes
+        for p in processes:
+            p.terminate()
 
     def generate_topic_models(self, num_models, random_states=None):
-        """Will generate the topic models, that form the ensemble.
+        """Will train the topic models, that form the ensemble.
 
         Parameters
         ----------
@@ -768,38 +749,20 @@ class EnsembleLda():
             kwArgs["random_state"] = random_states[i]
             tm = GENSIM_MODEL[self.topic_model_kind](**kwArgs)
 
-            # memory friendly ttda = generate ttda on the run and delete model
-            if self.memory_friendly_ttda:
-                if self.ttda is None:
-                    self.ttda = tm.state.get_lambda()
-                else:
-                    # adds the lambda (that is the unnormalized get_topics) to ttda, which is
-                    # a list of all those lambdas
-                    self.ttda = np.concatenate([self.ttda, tm.state.get_lambda()])
-            else:
-                # only saves the model if it is not "memory friendly"
+            # adds the lambda (that is the unnormalized get_topics) to ttda, which is
+            # a list of all those lambdas
+            self.ttda = np.concatenate([self.ttda, tm.get_topics()])
+            
+            # only saves the model if it is not "memory friendly"
+            if not self.memory_friendly_ttda:
                 self.tms += [tm]
 
         # use one of the tms to get some info that will be needed later
         self.sstats_sum = tm.state.sstats.sum()
         self.eta = tm.eta
 
-        if self.memory_friendly_ttda:
-            # normalize all the ttda
-            # this results in the same that is being displayed on .get_topics() of a gensim LDA model
-            self.ttda = self.ttda / self.ttda.sum(axis=1)[:, None]
-
-    def generate_ttda(self):
-        """Generate the topic_term_distribution for all the topics - P(W|T)"""
-
-        logger.info("Generating topic term distributions over all topics over all topic models in the ensemble...")
-
-        lambda_all = np.concatenate([self.tms[x].state.get_lambda() for x in range(self.num_models)], axis=0)
-
-        self.ttda = lambda_all / lambda_all.sum(axis=1)[:, None]
-
     def generate_asymmetric_distance_matrix(self, threshold=None, workers=1, method="mass"):
-        """Makes the pairwise similarity matrix for all the ttdas
+        """Makes the pairwise distance matrix for all the ttdas
         from the ensemble.
 
         Returns the asymmetric pairwise distance matrix that
@@ -823,12 +786,18 @@ class EnsembleLda():
 
         """
 
+        # matrix is up to date afterwards
+        self.asymmetric_distance_matrix_outdated = False
+
+        if threshold is None:
+            threshold = {"mass": 0.95, "rank": 0.11}[method]
+
         # singlecore:
         if workers is not None and workers <= 1:
-            logger.info("Generating a {} x {} asymmetric similarity matrix...".format(len(self.ttda), len(self.ttda)))
-            self.asymmetric_distance_matrix = self.calculate_asymmetric_distance_matrix_chunk(ttda1=self.ttda,
-                                                                                              ttda2=self.ttda,
+            logger.info("Generating a {} x {} asymmetric distance matrix...".format(len(self.ttda), len(self.ttda)))
+            self.asymmetric_distance_matrix = self.calculate_asymmetric_distance_matrix_chunk(ttda1=self.ttda, ttda2=self.ttda,
                                                                                               threshold=threshold,
+                                                                                              start_index=0,
                                                                                               method=method)
             return self.asymmetric_distance_matrix
 
@@ -840,10 +809,10 @@ class EnsembleLda():
 
         # worker, that computes the distance to
         # all other nodes from a chunk of nodes.
-        # https://stackoverflow.com/questions/1743293/why-does-my-python-program-average-only-33-cpu-per-process-how-can-i-make-pyth#1743350
+        # https://stackoverflow.com/a/1743350
         def worker(worker_id, ttdas_sent, n_ttdas, pipe):
-            logger.info("Spawned worker to generate {} rows of the asymmetric similarity matrix...".format(n_ttdas))
-            # print(id,"calculating")
+            logger.info("Spawned worker to generate {} rows of the asymmetric distance matrix...".format(n_ttdas))
+            # print(id, "calculating")
             # the chunk of ttda that's going to be calculated:
             ttda1 = self.ttda[ttdas_sent:ttdas_sent + n_ttdas]
             distance_chunk = self.calculate_asymmetric_distance_matrix_chunk(ttda1=ttda1, ttda2=self.ttda,
@@ -910,7 +879,7 @@ class EnsembleLda():
 
         return self.asymmetric_distance_matrix
 
-    def calculate_asymmetric_distance_matrix_chunk(self, ttda1, ttda2, threshold=None, start_index=0, method="mass"):
+    def calculate_asymmetric_distance_matrix_chunk(self, ttda1, ttda2, threshold, start_index, method):
         """Iterates over ttda1 and calculates the
         distance to every ttda in tttda2.
 
@@ -933,13 +902,13 @@ class EnsembleLda():
             masking method that selects by rank of largest elements in the topic word
             distribution, to determine which tokens are relevant for the topic.
 
+        Returns
+        -------
+        2D Numpy.numpy.ndarray of floats
         """
 
         if method not in ["mass", "rank"]:
             raise ValueError("method {} unknown".format(method))
-
-        if threshold is None:
-            threshold = {"mass": 0.95, "rank": 0.11}[method]
 
         # select masking method:
         def mass_masking(a):
@@ -1216,6 +1185,11 @@ class EnsembleLda():
             default: min(3, max(1, int(self.num_models /4 +1)))
 
         """
+        # if new models were added to the ensemble, the distance
+        # matrix needs to be generated again
+        if self.asymmetric_distance_matrix_outdated:
+            self.generate_asymmetric_distance_matrix()
+
         self.generate_topic_clusters(eps, min_samples)
         self.generate_stable_topics(min_cores)
         self.generate_gensim_representation()
@@ -1224,7 +1198,6 @@ class EnsembleLda():
     # to make using the ensemble in place of a gensim model as easy as possible
 
     def get_topics(self):
-        """see https://radimrehurek.com/gensim/models/ldamodel.html"""
         return self.stable_topics.values
 
     def __getitem__(self, i):
@@ -1275,11 +1248,13 @@ class CBDBSCAN():
         # The dtype should be object for everything to fix this.
         self.results = self.results.astype(dtype="object")
 
-        tmp_amatrix = copy.deepcopy(amatrix)
+        tmp_amatrix = amatrix.copy()
+
         # to avoid problem about comparing the topic with itself
         np.fill_diagonal(tmp_amatrix, 1)
 
         min_distance_per_topic = pd.Series(tmp_amatrix.min(axis=1))
+
         min_distance_per_topic_sorted = min_distance_per_topic.sort_values()
 
         ordered_min_similarity = list(min_distance_per_topic_sorted.index.values)
