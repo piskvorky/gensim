@@ -1145,16 +1145,22 @@ class EnsembleLda():
         # only cores with the valid_parents as its own label can be a valid core
         self.cluster_model.results["is_valid_core"] = self.cluster_model.results.apply(validate_core, axis=1)
 
-        # trainsforming the ttda into pandas and adding labels
-        ttda_pd = pd.DataFrame(self.ttda)
-        ttda_pd["labels"] = self.cluster_model.labels_  # same as self.cluster_model.results["labels"]
+        # numpy solution
 
         # keeping only VALID cores
-        ttda_pd = ttda_pd.loc[self.cluster_model.results.is_valid_core]
+        valid_core_mask = self.cluster_model.results.is_valid_core.values
+        valid_topics = self.ttda[valid_core_mask]
+        topic_labels = self.cluster_model.results.labels.values[valid_core_mask]
+        unique_labels = np.unique(topic_labels)
 
-        # averaging the ttd of the cores in the same cluster
-        # "labels" marks the cluster-id from DBSCAN
-        stable_topics = ttda_pd.groupby("labels").mean()
+        num_topics = len(unique_labels)
+        stable_topics = np.empty((num_topics, len(self.id2word)), dtype=np.float32)
+
+        # for each cluster
+        for l, label in enumerate(unique_labels):
+            # mean of all the topics that are of that cluster
+            topics_of_cluster = np.array([topic for t, topic in enumerate(valid_topics) if topic_labels[t] == label])
+            stable_topics[l] = topics_of_cluster.mean(axis=0)
 
         self.stable_topics = stable_topics
 
@@ -1198,7 +1204,7 @@ class EnsembleLda():
     # to make using the ensemble in place of a gensim model as easy as possible
 
     def get_topics(self):
-        return self.stable_topics.values
+        return self.stable_topics
 
     def __getitem__(self, i):
         """see https://radimrehurek.com/gensim/models/ldamodel.html"""
