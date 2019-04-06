@@ -1014,143 +1014,109 @@ class EnsembleLda():
             # min_cores is a number between 1 and 3, depending on the number of models
             min_cores = min(3, max(1, int(self.num_models / 4 + 1)))
 
-        # helper functions
-        def remove_label_from_colum(label, valid_parent_labels):
-            """
-            Example
-            -------
-                - label = 0
-                - valid_parent_labels = {0, 1}
-                - result: {1}
-                will overwrite valid_parent_labels
-
-            """
-            try:
-                valid_parent_labels.remove(label)
-            except AttributeError:
-                # parent_labes is NaN
-                pass
-            except KeyError:
-                # Key does not exist
-                pass
-
-        def remove_label_from_sorted_labels(label, grouped_parent_labels):
-            """Despite the name, note that no sorting of anything is needed
-            for this to work.
-
-            Example
-            -------
-                - label = 2
-                - grouped_parent_labels = [{1, 2}, {1, 2, 3}]
-                - result: [{1}, {1, 3}]
-                will overwrite grouped_parent_labels
-
-            """
-            for i in grouped_parent_labels:
-                remove_label_from_colum(label, i)
-
-        def check_content_from_parent_labels(parent_label):
-            """
-            """
-            if not isinstance(parent_label, set):
-                return 0
-            else:
-                return len(parent_label)
-
-        def keep_only_valid_labels(parent_labels):
-            if not isinstance(parent_labels, set):
-                return set()
-            else:
-                return {label for label in parent_labels if label in valid_labels}
-
-        def validate_core(core):
-            """Core is an entry in the self.cluster_model.results dataframe
-
-            Will overwrite "is_valid_core" on that core with:
-            - False, if it is actually not marked as core (core.is_core)
-            - True, if valid_parents equals the cores label. E.g.: {1} == {1}
-
-            """
-            if not core.is_core:
-                return False
-            else:
-                return core.valid_parents == {core["labels"]}
-
         # counts how many different labels a core has as parents
-        self.cluster_model.results.loc[self.cluster_model.results.is_core, "amount_parent_labels"] = \
-            self.cluster_model.results.loc[self.cluster_model.results.is_core, "parent_labels"].apply(
-            check_content_from_parent_labels)
+        results = self.cluster_model.results.to_dict('index')
+        for topic in results.values():
+            if topic["is_core"]:
+                topic["amount_parent_labels"] = StableTopicHelpers.len_of_parent_labels(topic["parent_labels"])
 
-        # sorting the cores by the amount of labels in the "parent_labels"
-        # groups by labels, and aggregates each entry of the group. example: [{1, 2}, {1, 2, 3}]
-        sorted_labels = self.cluster_model.results.loc[
-            self.cluster_model.results.is_core, ["labels", "parent_labels", "amount_parent_labels"]].groupby(
-            "labels").agg({"amount_parent_labels": max, "parent_labels": lambda x: list(x)}).sort_values(
-            "amount_parent_labels")
+        # TODO write this back to self.cluster_model.results
+        # it just adds another column, so that's safe
+        # but atm cluster_model.results is a dataframe so first I need to
+        # remove pandas from the cluster_model
 
-        # removing NaN
-        sorted_labels.parent_labels = sorted_labels.parent_labels.apply(lambda L: [x for x in L if x is not np.nan])
+        # first, group all the learned cores based on the label,
+        # which was assigned in the cluster_model
+        grouped_by_labels = {}
+        for topic in results.values():
+            if topic["is_core"]:
+                label = topic["labels"] # "labels", but it actually means just a single number
+                if not label in grouped_by_labels:
+                    grouped_by_labels[label] = []
+                grouped_by_labels[label].append(topic)
 
-        sorted_labels["is_valid"] = np.nan
-        # sorted_labels["is_not_valid"] = np.nan
+        # then aggregate their amount_parent_labels by maxing and parent_labels by concatenating
+        # the result is sorted by amount_parent_labels and stored in sorted_clusters
+        sorted_clusters = []
+        for label, group in grouped_by_labels.items():
+            amount_parent_labels = 0
+            parent_labels = [] # will be a list of sets
+            for topic in group:
+                amount_parent_labels = max(topic["amount_parent_labels"], amount_parent_labels)
+                parent_labels.append(topic["parent_labels"])
+            # - here, nan means "not yet evaluated"
+            # - removing nan from parent_labels
+            sorted_clusters.append({
+                "amount_parent_labels": amount_parent_labels,
+                "parent_labels": [x for x in parent_labels if isinstance(x, set)],
+                "is_valid": np.nan,
+                "label": label
+            })
+        # start with the most significant core
+        sorted_clusters = sorted(sorted_clusters, key=lambda cluster: cluster["amount_parent_labels"], reverse=True)
 
         # APPLYING THE RULES 1 to 3
         # iterate over the cluster labels, see which clusters/labels
         # are valid to cause the creation of a stable topic
-        for label in sorted_labels.index:
-            # sorted_labels.index example: Int64Index([0, 1, 2, 3, 4, 5], dtype='int64', name='labels')
+        for i, cluster in enumerate(sorted_clusters):
+            label = cluster["label"]
             # label is iterating over 0, 1, 3, ...
 
             # 1. rule - remove if the cores in the cluster have no parents
-            if sorted_labels.loc[label].amount_parent_labels == 0:
+            if cluster["amount_parent_labels"] == 0:
                 # label is NOT VALID
-                sorted_labels.loc[label, "is_valid"] = False
-                sorted_labels.parent_labels.apply(
-                    lambda parent_labels: remove_label_from_sorted_labels(label, parent_labels))
+                cluster["is_valid"] = False
+                # removes a label from every set in parent_labels for each core
+                for a in sorted_clusters:
+                    if label in a["parent_labels"]:
+                        a["parent_labels"].remove(label)
 
             # 2. rule - remove if it has less than min_cores as parents
             # (parents are always also cores)
-            if len(sorted_labels.loc[label, "parent_labels"]) < min_cores:
-                sorted_labels.loc[label, "is_valid"] = False
-                sorted_labels.parent_labels.apply(
-                    lambda parent_labels: remove_label_from_sorted_labels(label, parent_labels))
-
+            if len(cluster["parent_labels"]) < min_cores:
+                cluster["is_valid"] = False
+                # removes a label from every set in parent_labels for each core
+                for a in sorted_clusters:
+                    if label in a["parent_labels"]:
+                        a["parent_labels"].remove(label)
+ 
             # 3. checking for "easy_valid"s
             # checks if the core has at least min_cores of cores with the only label as itself
-            if sorted_labels.loc[label].amount_parent_labels >= 1:
-                if sum(map(lambda x: x == {label}, sorted_labels.loc[label, "parent_labels"])) >= min_cores:
-                    sorted_labels.loc[label, "is_valid"] = True
+            if cluster["amount_parent_labels"] >= 1:
+                if sum(map(lambda x: x == {label}, cluster["parent_labels"])) >= min_cores:
+                    cluster["is_valid"] = True
 
         # Reaplying the rule 3
-        # this is NOT DETERMINISTIC, the order will influence the result
         # this happens when we have a close relationship among 2 or more clusters
-        for label in sorted_labels[sorted_labels.is_valid.isnull()].index:
-            # 3. checking for "easy_valid"s
-            # checks if the core has at least min_cores of cores with the only label as itself
-            if sum(map(lambda x: x == {label}, sorted_labels.loc[label, "parent_labels"])) >= min_cores:
-                sorted_labels.loc[label, "is_valid"] = True
+        for cluster in [cluster for cluster in sorted_clusters if np.isnan(cluster["is_valid"])]:
+            
+            # this checks for parent_labels, which are also modified in this function
+            # hence order will influence the result. it starts with the most significant
+            # label (hence "sorted_clusters")
+            if sum(map(lambda x: x == {label}, cluster["parent_labels"])) >= min_cores:
+                cluster["is_valid"] = True
             else:
-                sorted_labels.loc[label, "is_valid"] = False
-                sorted_labels.parent_labels.apply(
-                    lambda parent_labels: remove_label_from_sorted_labels(label, parent_labels))
+                cluster["is_valid"] = False
+                # removes a label from every set in parent_labels for each core
+                for a in sorted_clusters:
+                    if label in a["parent_labels"]:
+                        a["parent_labels"].remove(label)
 
-        self.sorted_labels = sorted_labels
+        # list of all the label numbers that are valid
+        valid_labels = np.array([cluster["label"] for cluster in sorted_clusters if cluster["is_valid"]])
 
-        valid_labels = self.sorted_labels[self.sorted_labels.is_valid].index.values
-
-        self.cluster_model.results["valid_parents"] = \
-            self.cluster_model.results.parent_labels.apply(keep_only_valid_labels)
-
-        # VALIDATING CORES
-        # only cores with the valid_parents as its own label can be a valid core
-        self.cluster_model.results["is_valid_core"] = self.cluster_model.results.apply(validate_core, axis=1)
-
-        # numpy solution
+        for i in results:
+            # TODO don't even have nan values, have {}/empty-sets instead
+            if not isinstance(results[i]["parent_labels"], set):
+                results[i]["parent_labels"] = set()
+                results[i]["valid_parents"] = set()
+            else:
+                results[i]["valid_parents"] = {label for label in results[i]["parent_labels"] if label in valid_labels}
 
         # keeping only VALID cores
-        valid_core_mask = self.cluster_model.results.is_valid_core.values
+        valid_core_mask = np.vectorize(StableTopicHelpers.validate_core)([results[i] for i in results])
         valid_topics = self.ttda[valid_core_mask]
-        topic_labels = self.cluster_model.results.labels.values[valid_core_mask]
+        topic_labels = np.array([results[i]['labels'] for i in results])[valid_core_mask]
         unique_labels = np.unique(topic_labels)
 
         num_topics = len(unique_labels)
@@ -1162,6 +1128,7 @@ class EnsembleLda():
             topics_of_cluster = np.array([topic for t, topic in enumerate(valid_topics) if topic_labels[t] == label])
             stable_topics[l] = topics_of_cluster.mean(axis=0)
 
+        self.sorted_clusters = sorted_clusters
         self.stable_topics = stable_topics
 
     def recluster(self, eps=0.1, min_samples=None, min_cores=None):
@@ -1234,6 +1201,86 @@ class EnsembleLda():
     def id2word(self):
         return self.gensim_kw_args["id2word"]
 
+class StableTopicHelpers():
+    """since there are so many helper functions involved,
+    a class is to be prefered over functions in functions
+    to be able to run unit tests on them individually"""
+
+    @staticmethod
+    def remove_label_from_colum(label, valid_parent_labels):
+        """
+        Parameters
+        -------
+            valid_parent_labels : set
+            label : number
+
+        Example
+        -------
+            - label = 0
+            - valid_parent_labels = {0, 1}
+            - result: {1}
+            will overwrite valid_parent_labels
+
+        """
+        try:
+            valid_parent_labels.remove(label)
+        except AttributeError:
+            # parent_labes is NaN
+            pass
+        except KeyError:
+            # Key does not exist
+            pass
+
+    @staticmethod
+    def remove_from_all_sets(label, grouped_parent_labels):
+        """
+        Example
+        -------
+            - label = 2
+            - grouped_parent_labels = [{1, 2}, {1, 2, 3}]
+            - result: [{1}, {1, 3}]
+            will overwrite grouped_parent_labels
+
+        """
+        for valid_parent_labels in grouped_parent_labels:
+            StableTopicHelpers.remove_label_from_colum(label, valid_parent_labels)
+            # valid_parent_labels.remove(label)
+
+    @staticmethod
+    def len_of_parent_labels(parent_label):
+        """
+
+        """
+        if not isinstance(parent_label, set):
+            return 0
+        else:
+            return len(parent_label)
+
+    @staticmethod
+    def keep_only_valid_labels(parent_labels, valid_labels):
+        if not isinstance(parent_labels, set):
+            return set()
+        else:
+            return {label for label in parent_labels if label in valid_labels}
+
+    @staticmethod
+    def validate_core(core):
+        """
+        
+        Core is a dict of {is_core, valid_parents, labels} among others
+
+        If not a core returns False
+
+        Only cores with the valid_parents as its own label can be a valid core. Returns
+        True if that is the case, False otherwise
+
+        """
+        # print('validate_core', core)
+        if not core["is_core"]:
+            return False
+        else:
+            ret = core["valid_parents"] == {core["labels"]}
+            return ret
 
 class CBDBSCAN():
 
