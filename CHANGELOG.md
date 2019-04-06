@@ -1,7 +1,7 @@
 Changes
 ===========
 
-## Unreleased
+## 3.7.2, 2019-04-06
 
 ### :star2: New Features
 
