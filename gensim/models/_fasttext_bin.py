@@ -29,11 +29,16 @@ See Also
 
 """
 
+import codecs
 import collections
+import io
 import logging
 import struct
 
 import numpy as np
+import six
+
+_END_OF_WORD_MARKER = b'\x00'
 
 logger = logging.getLogger(__name__)
 
@@ -168,13 +173,22 @@ def _load_vocab(fin, new_format, encoding='utf-8'):
 
     raw_vocab = collections.OrderedDict()
     for i in range(vocab_size):
-        word_bytes = b''
+        word_bytes = io.BytesIO()
         char_byte = fin.read(1)
-        # Read vocab word
-        while char_byte != b'\x00':
-            word_bytes += char_byte
+
+        while char_byte != _END_OF_WORD_MARKER:
+            word_bytes.write(char_byte)
             char_byte = fin.read(1)
-        word = word_bytes.decode(encoding)
+
+        word_bytes = word_bytes.getvalue()
+        try:
+            word = word_bytes.decode(encoding)
+        except UnicodeDecodeError:
+            word = word_bytes.decode(encoding, errors='backslashreplace')
+            logger.error(
+                'failed to decode invalid unicode bytes %r; replacing invalid characters, using %r',
+                word_bytes, word
+            )
         count, _ = _struct_unpack(fin, '@qb')
         raw_vocab[word] = count
 
@@ -268,3 +282,39 @@ def load(fin, encoding='utf-8', full_model=True):
     model.update(vectors_ngrams=vectors_ngrams, hidden_output=hidden_output)
     model = {k: v for k, v in model.items() if k in _FIELD_NAMES}
     return Model(**model)
+
+
+def _backslashreplace_backport(ex):
+    """Replace byte sequences that failed to decode with character escapes.
+
+    Does the same thing as errors="backslashreplace" from Python 3.  Python 2
+    lacks this functionality out of the box, so we need to backport it.
+
+    Parameters
+    ----------
+    ex: UnicodeDecodeError
+        contains arguments of the string and start/end indexes of the bad portion.
+
+    Returns
+    -------
+    text: unicode
+        The Unicode string corresponding to the decoding of the bad section.
+    end: int
+        The index from which to continue decoding.
+
+    Note
+    ----
+    Works on Py2 only.  Py3 already has backslashreplace built-in.
+
+    """
+    #
+    # Based on:
+    # https://stackoverflow.com/questions/42860186/exact-equivalent-of-b-decodeutf-8-backslashreplace-in-python-2
+    #
+    bstr, start, end = ex.object, ex.start, ex.end
+    text = u''.join('\\x{:02x}'.format(ord(c)) for c in bstr[start:end])
+    return text, end
+
+
+if six.PY2:
+    codecs.register_error('backslashreplace', _backslashreplace_backport)
