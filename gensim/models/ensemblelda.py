@@ -628,7 +628,6 @@ class EnsembleLda():
 
         # worker, that trains a bunch of models:
         def worker(id, num_models, random_states, pipe):
-            # print(id,"training")
             # since models cannot be piped to the parent because messages need to be pickled for that:
             # memory_friendly_ttda needs to be true, which will not store ensemble submodels
             logger.info("Spawned worker to generate {} topic models...".format(num_models))
@@ -702,7 +701,6 @@ class EnsembleLda():
                 p[0].close()
                 # this does basically the same as the generate_topic_models function (concatenate all the ttdas):
                 self.ttda = np.concatenate([self.ttda, answer[1]])
-                # print(answer[0], "received and ttda concatenated")
                 # in [0] the id of the worker that sent the data is stored
 
         else:
@@ -812,7 +810,6 @@ class EnsembleLda():
         # https://stackoverflow.com/a/1743350
         def worker(worker_id, ttdas_sent, n_ttdas, pipe):
             logger.info("Spawned worker to generate {} rows of the asymmetric distance matrix...".format(n_ttdas))
-            # print(id, "calculating")
             # the chunk of ttda that's going to be calculated:
             ttda1 = self.ttda[ttdas_sent:ttdas_sent + n_ttdas]
             distance_chunk = self.calculate_asymmetric_distance_matrix_chunk(ttda1=ttda1, ttda2=self.ttda,
@@ -912,12 +909,15 @@ class EnsembleLda():
 
         # select masking method:
         def mass_masking(a):
-            """original masking method. returns a binary mask"""
-            return (a.sort_values(by=0, ascending=False).cumsum() < threshold).sort_index()[0].values
-
-        def rank_masking(a):  # faster
-            """faster masking method. returns a mask that contains indices to keep"""
-            return a.sort_values(by=0, ascending=False)[0:int(len(a) * threshold)].index
+            """original masking method. returns a new binary mask"""
+            sorted_a = np.sort(a)[::-1]
+            largest_mass = sorted_a.cumsum() < threshold
+            smallest_valid = sorted_a[largest_mass][-1]
+            return a >= smallest_valid
+            
+        def rank_masking(a):
+            """faster masking method. returns a new binary mask"""
+            return a > np.sort(a)[::-1][int(len(a) * threshold)]
 
         create_mask = {"mass": mass_masking, "rank": rank_masking}[method]
 
@@ -927,11 +927,10 @@ class EnsembleLda():
         # now iterate over each topic
         for i in range(len(ttda1)):
 
-            # prepare that topic and create the mask from it
-            a = pd.DataFrame(ttda1[i])
             # create mask from a, that removes noise from a and keeps the largest terms
+            a = ttda1[i]
             mask = create_mask(a)
-            a_masked = a[0][mask].values
+            a_masked = a[mask]
 
             # now look at every possible pair for topic a:
             for j in range(len(ttda2)):
@@ -944,10 +943,16 @@ class EnsembleLda():
                 # now mask b based on a, which will force the shape of a onto b
                 b_masked = ttda2[j][mask]
 
+                # TODO instaed of checking <= 0.05 and cosine, rather make create_mask(b),
+                # then check how much of mask_a is covered by mask_b. By doing so, the check
+                # for <= 0.05 falls away which 1. seems rather like a magic number guess
+                # and 2. jumps the distance to 1 suddenly when this threshold is not reached
+                # Do experiments for this.
+
                 distance = 0
                 # is the masked b just some empty stuff? Then forget about it, no similarity, distance is 1
                 # (not 2 because that correspondsto negative values. The maximum distance is 1 here)
-                # don't normalize b_masked, otherwise the following threshold will never:
+                # don't normalize b_masked, otherwise the following threshold will never work:
                 if b_masked.sum() <= 0.05:
                     distance = 1
                 else:
@@ -1108,6 +1113,8 @@ class EnsembleLda():
         for i in results:
             # TODO don't even have nan values, have {}/empty-sets instead
             if not isinstance(results[i]["parent_labels"], set):
+                # TODO remove that:
+                print('TODO: nan found in parent_labels:', results[i])
                 results[i]["parent_labels"] = set()
                 results[i]["valid_parents"] = set()
             else:
@@ -1202,49 +1209,10 @@ class EnsembleLda():
         return self.gensim_kw_args["id2word"]
 
 class StableTopicHelpers():
-    """since there are so many helper functions involved,
+    """since there are so many helper functions involved
+    (EDIT: there were more of them before I improved things),
     a class is to be prefered over functions in functions
-    to be able to run unit tests on them individually"""
-
-    @staticmethod
-    def remove_label_from_colum(label, valid_parent_labels):
-        """
-        Parameters
-        -------
-            valid_parent_labels : set
-            label : number
-
-        Example
-        -------
-            - label = 0
-            - valid_parent_labels = {0, 1}
-            - result: {1}
-            will overwrite valid_parent_labels
-
-        """
-        try:
-            valid_parent_labels.remove(label)
-        except AttributeError:
-            # parent_labes is NaN
-            pass
-        except KeyError:
-            # Key does not exist
-            pass
-
-    @staticmethod
-    def remove_from_all_sets(label, grouped_parent_labels):
-        """
-        Example
-        -------
-            - label = 2
-            - grouped_parent_labels = [{1, 2}, {1, 2, 3}]
-            - result: [{1}, {1, 3}]
-            will overwrite grouped_parent_labels
-
-        """
-        for valid_parent_labels in grouped_parent_labels:
-            StableTopicHelpers.remove_label_from_colum(label, valid_parent_labels)
-            # valid_parent_labels.remove(label)
+    to be able to run unit tests on them individually (TODO)"""
 
     @staticmethod
     def len_of_parent_labels(parent_label):
@@ -1252,6 +1220,9 @@ class StableTopicHelpers():
 
         """
         if not isinstance(parent_label, set):
+            # TODO make sure this holds always true. either an empty set
+            # or a populated set, but no weird stuff pls
+            print('TODO: parent_label should be a set! but is', parent_label)
             return 0
         else:
             return len(parent_label)
@@ -1275,7 +1246,6 @@ class StableTopicHelpers():
         True if that is the case, False otherwise
 
         """
-        # print('validate_core', core)
         if not core["is_core"]:
             return False
         else:
