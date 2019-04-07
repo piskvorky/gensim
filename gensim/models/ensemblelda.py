@@ -83,13 +83,11 @@ References
 import logging
 import os
 from multiprocessing import Process, Pipe, ProcessError
-import copy
 try:
     import cPickle as _pickle
 except ImportError:
     import pickle as _pickle
 import numpy as np
-import pandas as pd
 from scipy.spatial.distance import cosine
 from gensim import utils
 from gensim.models import ldamodel, ldamulticore, basemodel
@@ -360,7 +358,7 @@ class EnsembleLda():
         In order to generate new stable topics afterwards, use
             self.generate_asymmetric_distance_matrix()
             self.recluster()
-        
+
         The ttda of another ensemble can also be used,
         in that case set num_new_models to the num_models
         parameter of the ensemble, that means the number
@@ -453,8 +451,8 @@ class EnsembleLda():
             else:
                 self.num_models += num_new_models
 
-        else: # memory unfriendly ensembles
-            
+        else:  # memory unfriendly ensembles
+
             ttda = []
 
             # 1. ttda array
@@ -483,7 +481,7 @@ class EnsembleLda():
             self.num_models = len(self.tms)
 
         logger.info("Ensemble contains {} models and {} topics now".format(self.num_models, len(self.ttda)))
-        
+
         if self.ttda.shape[1] != ttda.shape[1]:
             raise ValueError(("target ttda dimensions do not match. Topics must be {} but was"
                                 "{} elements large").format(self.ttda.shape[-1], ttda.shape[-1]))
@@ -750,7 +748,7 @@ class EnsembleLda():
             # adds the lambda (that is the unnormalized get_topics) to ttda, which is
             # a list of all those lambdas
             self.ttda = np.concatenate([self.ttda, tm.get_topics()])
-            
+
             # only saves the model if it is not "memory friendly"
             if not self.memory_friendly_ttda:
                 self.tms += [tm]
@@ -793,7 +791,8 @@ class EnsembleLda():
         # singlecore:
         if workers is not None and workers <= 1:
             logger.info("Generating a {} x {} asymmetric distance matrix...".format(len(self.ttda), len(self.ttda)))
-            self.asymmetric_distance_matrix = self.calculate_asymmetric_distance_matrix_chunk(ttda1=self.ttda, ttda2=self.ttda,
+            self.asymmetric_distance_matrix = self.calculate_asymmetric_distance_matrix_chunk(ttda1=self.ttda,
+                                                                                              ttda2=self.ttda,
                                                                                               threshold=threshold,
                                                                                               start_index=0,
                                                                                               method=method)
@@ -914,7 +913,7 @@ class EnsembleLda():
             largest_mass = sorted_a.cumsum() < threshold
             smallest_valid = sorted_a[largest_mass][-1]
             return a >= smallest_valid
-            
+
         def rank_masking(a):
             """faster masking method. returns a new binary mask"""
             return a > np.sort(a)[::-1][int(len(a) * threshold)]
@@ -1020,23 +1019,18 @@ class EnsembleLda():
             min_cores = min(3, max(1, int(self.num_models / 4 + 1)))
 
         # counts how many different labels a core has as parents
-        results = self.cluster_model.results.to_dict('index')
+        results = self.cluster_model.results
         for topic in results.values():
             if topic["is_core"]:
-                topic["amount_parent_labels"] = StableTopicHelpers.len_of_parent_labels(topic["parent_labels"])
-
-        # TODO write this back to self.cluster_model.results
-        # it just adds another column, so that's safe
-        # but atm cluster_model.results is a dataframe so first I need to
-        # remove pandas from the cluster_model
+                topic["amount_parent_labels"] = len(topic["parent_labels"])
 
         # first, group all the learned cores based on the label,
         # which was assigned in the cluster_model
         grouped_by_labels = {}
         for topic in results.values():
             if topic["is_core"]:
-                label = topic["labels"] # "labels", but it actually means just a single number
-                if not label in grouped_by_labels:
+                label = topic["label"]
+                if label not in grouped_by_labels:
                     grouped_by_labels[label] = []
                 grouped_by_labels[label].append(topic)
 
@@ -1045,7 +1039,7 @@ class EnsembleLda():
         sorted_clusters = []
         for label, group in grouped_by_labels.items():
             amount_parent_labels = 0
-            parent_labels = [] # will be a list of sets
+            parent_labels = []  # will be a list of sets
             for topic in group:
                 amount_parent_labels = max(topic["amount_parent_labels"], amount_parent_labels)
                 parent_labels.append(topic["parent_labels"])
@@ -1053,12 +1047,18 @@ class EnsembleLda():
             # - removing nan from parent_labels
             sorted_clusters.append({
                 "amount_parent_labels": amount_parent_labels,
-                "parent_labels": [x for x in parent_labels if isinstance(x, set)],
+                "parent_labels": [x for x in parent_labels if len(x) > 0],
                 "is_valid": np.nan,
                 "label": label
             })
         # start with the most significant core
         sorted_clusters = sorted(sorted_clusters, key=lambda cluster: cluster["amount_parent_labels"], reverse=True)
+
+        def remove_from_all_sets(label):
+            # removes a label from every set in parent_labels for each core
+            for a in sorted_clusters:
+                if label in a["parent_labels"]:
+                    a["parent_labels"].remove(label)
 
         # APPLYING THE RULES 1 to 3
         # iterate over the cluster labels, see which clusters/labels
@@ -1071,20 +1071,14 @@ class EnsembleLda():
             if cluster["amount_parent_labels"] == 0:
                 # label is NOT VALID
                 cluster["is_valid"] = False
-                # removes a label from every set in parent_labels for each core
-                for a in sorted_clusters:
-                    if label in a["parent_labels"]:
-                        a["parent_labels"].remove(label)
+                remove_from_all_sets(label)
 
             # 2. rule - remove if it has less than min_cores as parents
             # (parents are always also cores)
             if len(cluster["parent_labels"]) < min_cores:
                 cluster["is_valid"] = False
-                # removes a label from every set in parent_labels for each core
-                for a in sorted_clusters:
-                    if label in a["parent_labels"]:
-                        a["parent_labels"].remove(label)
- 
+                remove_from_all_sets(label)
+
             # 3. checking for "easy_valid"s
             # checks if the core has at least min_cores of cores with the only label as itself
             if cluster["amount_parent_labels"] >= 1:
@@ -1094,7 +1088,7 @@ class EnsembleLda():
         # Reaplying the rule 3
         # this happens when we have a close relationship among 2 or more clusters
         for cluster in [cluster for cluster in sorted_clusters if np.isnan(cluster["is_valid"])]:
-            
+
             # this checks for parent_labels, which are also modified in this function
             # hence order will influence the result. it starts with the most significant
             # label (hence "sorted_clusters")
@@ -1111,23 +1105,27 @@ class EnsembleLda():
         valid_labels = np.array([cluster["label"] for cluster in sorted_clusters if cluster["is_valid"]])
 
         for i in results:
-            # TODO don't even have nan values, have {}/empty-sets instead
-            if not isinstance(results[i]["parent_labels"], set):
-                # TODO remove that:
-                print('TODO: nan found in parent_labels:', results[i])
-                results[i]["parent_labels"] = set()
-                results[i]["valid_parents"] = set()
+            results[i]["valid_parents"] = {label for label in results[i]["parent_labels"] if label in valid_labels}
+
+        def validate_core(core):
+            """Core is a dict of {is_core, valid_parents, labels} among others.
+            If not a core returns False. Only cores with the valid_parents as
+            its own label can be a valid core. Returns True if that is the case,
+            False otherwise"""
+            if not core["is_core"]:
+                return False
             else:
-                results[i]["valid_parents"] = {label for label in results[i]["parent_labels"] if label in valid_labels}
+                ret = core["valid_parents"] == {core["label"]}
+                return ret
 
         # keeping only VALID cores
-        valid_core_mask = np.vectorize(StableTopicHelpers.validate_core)([results[i] for i in results])
+        valid_core_mask = np.vectorize(validate_core)(list(results.values()))
         valid_topics = self.ttda[valid_core_mask]
-        topic_labels = np.array([results[i]['labels'] for i in results])[valid_core_mask]
+        topic_labels = np.array([results[i]["label"] for i in results])[valid_core_mask]
         unique_labels = np.unique(topic_labels)
 
-        num_topics = len(unique_labels)
-        stable_topics = np.empty((num_topics, len(self.id2word)), dtype=np.float32)
+        num_stable_topics = len(unique_labels)
+        stable_topics = np.empty((num_stable_topics, len(self.id2word)), dtype=np.float32)
 
         # for each cluster
         for l, label in enumerate(unique_labels):
@@ -1208,49 +1206,6 @@ class EnsembleLda():
     def id2word(self):
         return self.gensim_kw_args["id2word"]
 
-class StableTopicHelpers():
-    """since there are so many helper functions involved
-    (EDIT: there were more of them before I improved things),
-    a class is to be prefered over functions in functions
-    to be able to run unit tests on them individually (TODO)"""
-
-    @staticmethod
-    def len_of_parent_labels(parent_label):
-        """
-
-        """
-        if not isinstance(parent_label, set):
-            # TODO make sure this holds always true. either an empty set
-            # or a populated set, but no weird stuff pls
-            print('TODO: parent_label should be a set! but is', parent_label)
-            return 0
-        else:
-            return len(parent_label)
-
-    @staticmethod
-    def keep_only_valid_labels(parent_labels, valid_labels):
-        if not isinstance(parent_labels, set):
-            return set()
-        else:
-            return {label for label in parent_labels if label in valid_labels}
-
-    @staticmethod
-    def validate_core(core):
-        """
-        
-        Core is a dict of {is_core, valid_parents, labels} among others
-
-        If not a core returns False
-
-        Only cores with the valid_parents as its own label can be a valid core. Returns
-        True if that is the case, False otherwise
-
-        """
-        if not core["is_core"]:
-            return False
-        else:
-            ret = core["valid_parents"] == {core["labels"]}
-            return ret
 
 class CBDBSCAN():
 
@@ -1262,39 +1217,40 @@ class CBDBSCAN():
     def fit(self, amatrix):
 
         self.next_label = 0
-        self.results = pd.DataFrame(index=range(len(amatrix)),
-                                    columns=["labels", "is_core",
-                                             "parent_ids", "parent_labels", "num_samples"])
-        self.results.is_core = False
 
-        # otherwise sets cannot be written into the dataframe (will be converted to integers).
-        # The dtype should be object for everything to fix this.
-        self.results = self.results.astype(dtype="object")
+        results = {index: {
+            "is_core": False,
+            "parent_labels": set(),
+            "parent_ids": set(),
+            "num_samples": 0,
+            "label": None
+        } for index in range(len(amatrix))}
 
         tmp_amatrix = amatrix.copy()
 
         # to avoid problem about comparing the topic with itself
         np.fill_diagonal(tmp_amatrix, 1)
 
-        min_distance_per_topic = pd.Series(tmp_amatrix.min(axis=1))
+        min_distance_per_topic = [(index, distance) for index, distance in enumerate(tmp_amatrix.min(axis=1))]
+        min_distance_per_topic_sorted = sorted(min_distance_per_topic, key=lambda x: x[1])
+        ordered_min_similarity = [index for index, distance in min_distance_per_topic_sorted]
 
-        min_distance_per_topic_sorted = min_distance_per_topic.sort_values()
-
-        ordered_min_similarity = list(min_distance_per_topic_sorted.index.values)
+        num_topics = len(amatrix)
 
         def scan_topic(topic_index, parent_id=None, current_label=None, parent_neighbors=None):
 
             # count how many neighbors
-            neighbors = pd.Series(tmp_amatrix[topic_index] < self.eps)
-            num_samples = sum(neighbors)
+            # check which indices (arange 0 to num_topics) is closer than eps
+            neighbors = np.arange(num_topics)[tmp_amatrix[topic_index] < self.eps]
+            num_samples = len(neighbors)
 
             # If the number of neighbors of a topic is large enough,
             # it is considered a core.
             # This also takes neighbors that already are identified as core in count.
             if num_samples >= self.min_samples:
                 # This topic is a core!
-                self.results.loc[topic_index, "is_core"] = True
-                self.results.loc[topic_index, "num_samples"] = num_samples
+                results[topic_index]["is_core"] = True
+                results[topic_index]["num_samples"] = num_samples
 
                 # if current_label is none, then this is the first core
                 # of a new cluster (hence next_label)
@@ -1313,7 +1269,7 @@ class CBDBSCAN():
 
                     # parent neighbors is the list of neighbors of parent_id
                     # (the topic_index that called this function recursively)
-                    all_members_of_current_cluster = list(parent_neighbors[parent_neighbors].index.values)
+                    all_members_of_current_cluster = list(parent_neighbors)
                     all_members_of_current_cluster.append(parent_id)
 
                     # look if 25% of the members of the current cluster are also
@@ -1332,11 +1288,11 @@ class CBDBSCAN():
                         current_label = self.next_label
                         self.next_label += 1
 
-                self.results.loc[topic_index, "labels"] = current_label
+                results[topic_index]["label"] = current_label
 
-                for neighbor in neighbors[neighbors].index:
+                for neighbor in neighbors:
 
-                    if self.results.loc[neighbor, "labels"] is np.nan:
+                    if results[neighbor]["label"] is None:
                         ordered_min_similarity.remove(neighbor)
                         # try to extend the cluster into the direction
                         # of the neighbor
@@ -1344,23 +1300,19 @@ class CBDBSCAN():
                                    current_label=current_label,
                                    parent_neighbors=neighbors)
 
-                    if isinstance(self.results.loc[neighbor, "parent_ids"], set):
-                        self.results.loc[neighbor, "parent_ids"].add(topic_index)
-                        self.results.loc[neighbor, "parent_labels"].add(current_label)
-                    else:
-                        self.results.loc[neighbor, "parent_ids"] = set([topic_index])
-                        self.results.loc[neighbor, "parent_labels"] = set([current_label])
+                    results[neighbor]["parent_ids"].add(topic_index)
+                    results[neighbor]["parent_labels"].add(current_label)
 
             else:
                 # this topic is not a core!
                 if current_label is None:
-                    self.results.loc[topic_index, "labels"] = -1
+                    results[topic_index]["label"] = -1
                 else:
-                    self.results.loc[topic_index, "labels"] = current_label
+                    results[topic_index]["label"] = current_label
 
         # elements are going to be removed from that array in scan_topic, do until it is empty
         while len(ordered_min_similarity) != 0:
             next_topic_index = ordered_min_similarity.pop(0)
             scan_topic(next_topic_index)
 
-        self.labels_ = self.results["labels"]
+        self.results = results
