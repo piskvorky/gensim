@@ -17,7 +17,7 @@ Train an ensemble of LdaModels using a Gensim corpus
 
     >>> from gensim.test.utils import common_texts
     >>> from gensim.corpora.dictionary import Dictionary
-    >>> from gensim.models import EnsembleLda, LdaModel
+    >>> from gensim.models import EnsembleLda
     >>>
     >>> # Create a corpus from a list of texts
     >>> common_dictionary = Dictionary(common_texts)
@@ -59,6 +59,7 @@ Increase the ensemble size by adding a new model. Make sure it uses the same dic
 
 .. sourcecode:: pycon
 
+    >>> from gensim.models import LdaModel
     >>> elda.add_model(LdaModel(common_corpus, id2word=common_dictionary, num_topics=10))
     >>> elda.recluster()
     >>> vector = elda[unseen_doc]

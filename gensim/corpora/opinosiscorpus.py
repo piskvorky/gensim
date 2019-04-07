@@ -4,11 +4,10 @@
 # Author: Tobias B <github.com/sezanzeb>
 
 import os
-from pathlib import Path
 import re
 from gensim.corpora import Dictionary
-from nltk.stem import PorterStemmer
-from nltk.corpus import stopwords
+from gensim.parsing.porter import PorterStemmer
+from gensim.parsing.preprocessing import STOPWORDS
 
 
 class OpinosisCorpus():
@@ -49,7 +48,7 @@ class OpinosisCorpus():
         print("year:\t\t2010")
         print("organization:\tAssociation for Computational Linguistics")
 
-        path = Path(path).joinpath("summaries-gold")
+        path = os.path.join(path, "summaries-gold")
         dictionary = Dictionary()
         corpus = []
         stemmer = PorterStemmer()
@@ -76,8 +75,8 @@ class OpinosisCorpus():
                     # overwrite dictionary, add corpus to test or train afterwards
                     # the following function takes an array of documents, so wrap it in square braces
                     processed = [
-                        stemmer.stem(token) for token in re.findall('\w+', doc.lower())
-                        if token not in stopwords.words('english')
+                        stemmer.stem(token) for token in re.findall(r'\w+', doc.lower())
+                        if token not in STOPWORDS
                     ]
 
                     dictionary.add_documents([processed])
