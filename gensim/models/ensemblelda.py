@@ -229,6 +229,7 @@ class EnsembleLda():
         if "passes" in gensim_kw_args and gensim_kw_args["passes"] <= 0:
             return
 
+        logger.info("Generating {} topic models...".format(num_models))
         # training
         if ensemble_workers > 1:
             # multiprocessed
@@ -275,29 +276,29 @@ class EnsembleLda():
 
         logger.info("Generating classic gensim model representation based on results from the ensemble")
 
-        numberOfWords = self.sstats_sum
-        # if numberOfWords should be wrong for some fantastic funny reason
+        number_of_words = self.sstats_sum
+        # if number_of_words should be wrong for some fantastic funny reason
         # that makes you want to peel your skin off, recreate it (takes a while):
-        if numberOfWords == 0 and "corpus" in self.gensim_kw_args and not self.gensim_kw_args["corpus"] is None:
+        if number_of_words == 0 and "corpus" in self.gensim_kw_args and not self.gensim_kw_args["corpus"] is None:
             for document in self.gensim_kw_args["corpus"]:
                 for token in document:
-                    numberOfWords += token[1]
-            self.sstats_sum = numberOfWords
-        assert numberOfWords != 0
+                    number_of_words += token[1]
+            self.sstats_sum = number_of_words
+        assert number_of_words != 0
 
-        stableTopics = self.get_topics()
+        stable_topics = self.get_topics()
 
-        nStableTopics = len(stableTopics)
+        num_stable_topics = len(stable_topics)
 
-        if nStableTopics == 0:
-            logger.warning("The model did not detect any stable topic. You can try to adjust epsilon: "
-                           "generate_topic_clusters(eps); generate_stable_topics()")
+        if num_stable_topics == 0:
+            logger.error("The model did not detect any stable topic! You can try to adjust epsilon: "
+                         "recluster(eps=...)")
             return
 
         # create a new gensim model
         params = self.gensim_kw_args.copy()
         params["eta"] = self.eta
-        params["num_topics"] = nStableTopics
+        params["num_topics"] = num_stable_topics
         # adjust params in a way that no training happens
         params["iterations"] = 0  # no training
         params["passes"] = 0  # no training
@@ -309,13 +310,13 @@ class EnsembleLda():
 
         # the following is important for the denormalization
         # to generate the proper sstats for the new gensim model:
-        # transform to dimensionality of stableTopics. axis=1 is summed
+        # transform to dimensionality of stable_topics. axis=1 is summed
         eta_sum = 0
         if int == type(eta) or float == type(eta):
-            eta_sum = [eta * len(stableTopics[0])] * nStableTopics
+            eta_sum = [eta * len(stable_topics[0])] * num_stable_topics
         else:
             if len(eta.shape) == 1:  # [e1, e2, e3]
-                eta_sum = [[eta.sum()]] * nStableTopics
+                eta_sum = [[eta.sum()]] * num_stable_topics
             if len(eta.shape) > 1:  # [[e11, e12, ...], [e21, e22, ...], ...]
                 eta_sum = np.array(eta.sum(axis=1)[:, None])
 
@@ -328,18 +329,11 @@ class EnsembleLda():
         # right sstats, so that get_topics() will return the stable topics no
         # matter eta.
 
-        normalization_factor = np.array([[numberOfWords / nStableTopics]] * nStableTopics) + eta_sum
+        normalization_factor = np.array([[number_of_words / num_stable_topics]] * num_stable_topics) + eta_sum
 
-        if stableTopics.shape[1] != len(eta):
-            raise ValueError("If load() was used: was the correct dictionary used when loading the model? "
-                             "because stableTopics.shape[0] {} != len(eta) {}".format(stableTopics.shape[1], len(eta)))
-
-        sstats = stableTopics * normalization_factor
+        sstats = stable_topics * normalization_factor
         sstats -= eta
 
-        # Note that this will cause some stuff to fail if nStableTopics is 1
-        # if nStableTopics is 1, the result will be (close to) uniform anyway
-        # inserting the new sstats
         classic_model_representation.state.sstats = sstats.astype("float32")
         # fix expElogbeta.
         classic_model_representation.sync_state()
@@ -458,9 +452,9 @@ class EnsembleLda():
 
             # 1. ttda array
             if isinstance(target.dtype.type(), (np.number, float)):
-                raise ValueError('ttda arrays cannot be added to ensembles that are not memory friendly, '
-                                 'you can call convert_to_memory_friendly to discard the stored gensim models'
-                                 'and only keep the ttdas')
+                raise ValueError('ttda arrays cannot be added to ensembles, for which memory_friendly_ttda=False, '
+                                 'you can call convert_to_memory_friendly, but it will discard the stored gensim'
+                                 'models and only keep the relevant topic term distributions from them.')
 
             # 2. list of ensembles
             elif isinstance(target[0], type(self)):
@@ -479,6 +473,9 @@ class EnsembleLda():
 
             # in this case, len(self.tms) should
             # always match self.num_models
+            if num_new_models is not None and num_new_models + self.num_models != len(self.tms):
+                logger.info('num_new_models will be ignored. num_models should match the number of '
+                            'stored models for a memory unfriendly ensemble')
             self.num_models = len(self.tms)
 
         logger.info("Ensemble contains {} models and {} topics now".format(self.num_models, len(self.ttda)))
@@ -501,37 +498,10 @@ class EnsembleLda():
 
         """
 
-        # parameter descriptions are similar to [1] in
-        # order to make the api less confusing
-
-        gensim_kw_args_persist = self.gensim_kw_args.copy()
-
-        payload = {
-            "ensemble_kw_args": {
-                "topic_model_kind": self.topic_model_kind,
-                "memory_friendly_ttda": self.memory_friendly_ttda,
-                "num_models": self.num_models
-            },
-            "gensim_kw_args": gensim_kw_args_persist,
-            "ttda": self.ttda,
-            "amatrix": self.asymmetric_distance_matrix,
-            "stable_topics": self.stable_topics,
-            "cluster_model.results": self.cluster_model.results,
-            "sstats_sum": self.sstats_sum,
-            "id2word": self.id2word
-        }
-
-        if not self.memory_friendly_ttda:
-            payload["topicModels"] = self.tms
-
-        # Version of the save/load api, to eventually make load
-        # backwards compatible if the save-function changes.
-        payload["version"] = "1.0"
+        logger.info("saving %s object to %d", self.__class__.__name__, fname)
 
         with open(fname, 'wb') as f:
-            _pickle.dump(payload, f)
-
-        logger.info("saved %s object", self.__class__.__name__)
+            _pickle.dump(self, f)
 
     @staticmethod
     def load(fname):
@@ -552,45 +522,7 @@ class EnsembleLda():
         logger.info("loading %s object from %s", EnsembleLda.__name__, fname)
 
         with open(fname, 'rb') as f:
-            data = _pickle.load(f)
-
-        # update() on the dict can be safely used, because they don't have
-        # keywords in common that overwrite each other
-        kwArgs = data["ensemble_kw_args"]
-        kwArgs.update(data["gensim_kw_args"])
-
-        kwArgs["id2word"] = data["id2word"]
-        # prevent training
-        kwArgs["iterations"] = 0
-
-        # now reconstruct an ensemble LDA object based on the data:
-        eLDA = EnsembleLda(**kwArgs)
-        # since no training will take place, num_models will be set to 0. restore:
-        eLDA.num_models = kwArgs["num_models"]
-
-        # some stuff that was not created automatically, because the "empty" eLDA object did not train
-        eLDA.ttda = data["ttda"]
-        eLDA.asymmetric_distance_matrix = data["amatrix"]
-        eLDA.sstats_sum = data["sstats_sum"]
-
-        # depends on memory_friendly_ttda in the save function:
-        if "topicModels" in data:
-            eLDA.tms = []
-            for i in range(len(data["topicModels"])):
-                eLDA.tms += [data["topicModels"][i]]
-
-        # As long as fit is not called on cluster_model, no results will be generated,
-        # so the CBDBSCAN constructor is safe to call without consuming cpu time.
-        # No need to provide the original params from the constructor, the result are
-        # going to be written into the model from the pickle.
-        eLDA.cluster_model = CBDBSCAN()
-        eLDA.cluster_model.results = data["cluster_model.results"]
-        eLDA.stable_topics = data["stable_topics"]
-
-        eLDA.generate_gensim_representation()
-
-        # message copied from [1]
-        logger.info("loaded %s", fname)
+            eLDA = _pickle.load(f)
 
         return eLDA
 
@@ -629,7 +561,7 @@ class EnsembleLda():
         def worker(id, num_models, random_states, pipe):
             # since models cannot be piped to the parent because messages need to be pickled for that:
             # memory_friendly_ttda needs to be true, which will not store ensemble submodels
-            logger.info("Spawned worker to generate {} topic models...".format(num_models))
+            logger.info("Spawned worker to generate {} topic models".format(num_models))
             self.generate_topic_models(num_models, random_states=random_states)
             # send the ttda that is in the child/workers version of the memory into the pipe
             # available, after generate_topic_models has been called in the worker
@@ -734,8 +666,6 @@ class EnsembleLda():
 
         assert len(random_states) == num_models
 
-        logger.info("Generating {} topic models...".format(num_models))
-
         kwArgs = self.gensim_kw_args.copy()
 
         tm = None  # remember one of the topic models from the following
@@ -744,6 +674,7 @@ class EnsembleLda():
         for i in range(num_models):
 
             kwArgs["random_state"] = random_states[i]
+
             tm = GENSIM_MODEL[self.topic_model_kind](**kwArgs)
 
             # adds the lambda (that is the unnormalized get_topics) to ttda, which is
@@ -764,6 +695,9 @@ class EnsembleLda():
 
         Returns the asymmetric pairwise distance matrix that
         is used in the DBSCAN clustering.
+
+        Afterwards, the model needs to be reclustered for
+        this generated matrix to take effect.
 
         Parameters
         ----------
@@ -789,9 +723,10 @@ class EnsembleLda():
         if threshold is None:
             threshold = {"mass": 0.95, "rank": 0.11}[method]
 
+        logger.info("Generating a {} x {} asymmetric distance matrix...".format(len(self.ttda), len(self.ttda)))
+
         # singlecore:
         if workers is not None and workers <= 1:
-            logger.info("Generating a {} x {} asymmetric distance matrix...".format(len(self.ttda), len(self.ttda)))
             self.asymmetric_distance_matrix = self.calculate_asymmetric_distance_matrix_chunk(ttda1=self.ttda,
                                                                                               ttda2=self.ttda,
                                                                                               threshold=threshold,
@@ -809,7 +744,7 @@ class EnsembleLda():
         # all other nodes from a chunk of nodes.
         # https://stackoverflow.com/a/1743350
         def worker(worker_id, ttdas_sent, n_ttdas, pipe):
-            logger.info("Spawned worker to generate {} rows of the asymmetric distance matrix...".format(n_ttdas))
+            logger.info("Spawned worker to generate {} rows of the asymmetric distance matrix".format(n_ttdas))
             # the chunk of ttda that's going to be calculated:
             ttda1 = self.ttda[ttdas_sent:ttdas_sent + n_ttdas]
             distance_chunk = self.calculate_asymmetric_distance_matrix_chunk(ttda1=ttda1, ttda2=self.ttda,
@@ -921,6 +856,9 @@ class EnsembleLda():
 
         create_mask = {"mass": mass_masking, "rank": rank_masking}[method]
 
+        # some help to find a better threshold by useful log messages
+        avg_mask_size = 0
+
         # initialize the distance matrix. ndarray is faster than zeros
         distances = np.ndarray((len(ttda1), len(ttda2)))
 
@@ -931,6 +869,8 @@ class EnsembleLda():
             a = ttda1[i]
             mask = create_mask(a)
             a_masked = a[mask]
+
+            avg_mask_size += mask.sum()
 
             # now look at every possible pair for topic a:
             for j in range(len(ttda2)):
@@ -947,7 +887,7 @@ class EnsembleLda():
                 # then check how much of mask_a is covered by mask_b. By doing so, the check
                 # for <= 0.05 falls away which 1. seems rather like a magic number guess
                 # and 2. jumps the distance to 1 suddenly when this threshold is not reached
-                # Do experiments for this.
+                # TODO Do experiments for this to see if it makes a lot of difference
 
                 distance = 0
                 # is the masked b just some empty stuff? Then forget about it, no similarity, distance is 1
@@ -962,6 +902,17 @@ class EnsembleLda():
                     distance = cosine(a_masked, b_masked)
 
                 distances[i][j] = distance
+
+        avg_mask_size = avg_mask_size / ttda1.shape[0] / ttda1.shape[1]
+        percent = round(100 * avg_mask_size, 1)
+        if avg_mask_size > 0.75:
+            # if the masks covered more than 75% of tokens on average,
+            # print a warning. info otherwise.
+            # The default mass setting of 0.95 makes uniform true masks on the opinosis corpus.
+            logger.warning('The given threshold of {} covered on average '
+                '{}% of tokens, which might be too much!'.format(threshold, percent))
+        else:
+            logger.info('The given threshold of {} covered on average {}% of tokens'.format(threshold, percent))
 
         return distances
 
@@ -1019,17 +970,18 @@ class EnsembleLda():
             # min_cores is a number between 1 and 3, depending on the number of models
             min_cores = min(3, max(1, int(self.num_models / 4 + 1)))
 
-        # counts how many different labels a core has as parents
         results = self.cluster_model.results
-        for topic in results.values():
-            if topic["is_core"]:
-                topic["amount_parent_labels"] = len(topic["parent_labels"])
 
         # first, group all the learned cores based on the label,
         # which was assigned in the cluster_model
         grouped_by_labels = {}
         for topic in results.values():
             if topic["is_core"]:
+                topic = topic.copy()
+                
+                # counts how many different labels a core has as parents
+                topic["amount_parent_labels"] = len(topic["parent_labels"])
+
                 label = topic["label"]
                 if label not in grouped_by_labels:
                     grouped_by_labels[label] = []
@@ -1045,7 +997,7 @@ class EnsembleLda():
                 amount_parent_labels = max(topic["amount_parent_labels"], amount_parent_labels)
                 parent_labels.append(topic["parent_labels"])
             # - here, nan means "not yet evaluated"
-            # - removing nan from parent_labels
+            # - removing empty sets from parent_labels
             sorted_clusters.append({
                 "amount_parent_labels": amount_parent_labels,
                 "parent_labels": [x for x in parent_labels if len(x) > 0],
@@ -1056,7 +1008,8 @@ class EnsembleLda():
         sorted_clusters = sorted(sorted_clusters, key=lambda cluster: cluster["amount_parent_labels"], reverse=True)
 
         def remove_from_all_sets(label):
-            # removes a label from every set in parent_labels for each core
+            """removes a label from every set in "parent_labels" for
+            each core in sorted_clusters."""
             for a in sorted_clusters:
                 if label in a["parent_labels"]:
                     a["parent_labels"].remove(label)
@@ -1167,6 +1120,7 @@ class EnsembleLda():
         # if new models were added to the ensemble, the distance
         # matrix needs to be generated again
         if self.asymmetric_distance_matrix_outdated:
+            logger.info("asymmetric distance matrix is outdated due to add_model")
             self.generate_asymmetric_distance_matrix()
 
         self.generate_topic_clusters(eps, min_samples)
@@ -1179,28 +1133,33 @@ class EnsembleLda():
     def get_topics(self):
         return self.stable_topics
 
+    def has_gensim_representation(self):
+        """checks if stable topics area vailable and if the internal
+        gensim representation exists. If not, raises errors"""
+        if self.classic_model_representation is None:
+            if len(self.stable_topics) == 0:
+                raise ValueError("no stable topic was detected!")
+            else:
+                raise ValueError("use generate_gensim_representation() first")
+
     def __getitem__(self, i):
         """see https://radimrehurek.com/gensim/models/ldamodel.html"""
-        if self.classic_model_representation is None:
-            raise ValueError("use generate_gensim_representation() first")
+        self.has_gensim_representation()
         return self.classic_model_representation[i]
 
     def inference(self, *posargs, **kwArgs):
         """see https://radimrehurek.com/gensim/models/ldamodel.html"""
-        if self.classic_model_representation is None:
-            raise ValueError("use generate_gensim_representation() first")
+        self.has_gensim_representation()
         return self.classic_model_representation.inference(*posargs, **kwArgs)
 
     def log_perplexity(self, *posargs, **kwArgs):
         """see https://radimrehurek.com/gensim/models/ldamodel.html"""
-        if self.classic_model_representation is None:
-            raise ValueError("use generate_gensim_representation() first")
+        self.has_gensim_representation()
         return self.classic_model_representation.log_perplexity(*posargs, **kwArgs)
 
     def print_topics(self, *posargs, **kwArgs):
         """see https://radimrehurek.com/gensim/models/ldamodel.html"""
-        if self.classic_model_representation is None:
-            raise ValueError("use generate_gensim_representation() first")
+        self.has_gensim_representation()
         return self.classic_model_representation.print_topics(*posargs, **kwArgs)
 
     @property
@@ -1239,7 +1198,7 @@ class CBDBSCAN():
         num_topics = len(amatrix)
 
         def scan_topic(topic_index, parent_id=None, current_label=None, parent_neighbors=None):
-
+            
             # count how many neighbors
             # check which indices (arange 0 to num_topics) is closer than eps
             neighbors = np.arange(num_topics)[tmp_amatrix[topic_index] < self.eps]
@@ -1254,7 +1213,7 @@ class CBDBSCAN():
                 results[topic_index]["num_samples"] = num_samples
 
                 # if current_label is none, then this is the first core
-                # of a new cluster (hence next_label)
+                # of a new cluster (hence next_label is used)
                 if current_label is None:
                     # next_label is initialized with 0 in
                     # fit() for the first cluster
@@ -1262,9 +1221,8 @@ class CBDBSCAN():
                     self.next_label += 1
 
                 else:
-                    # In case the core has a parent,
-                    # that means it has a label, namely the
-                    # label from the parent.
+                    # In case the core has a parent, that means
+                    # it has a label (= the parents label).
                     # Check the distance between the
                     # new core and the parent
 
