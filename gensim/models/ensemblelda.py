@@ -498,7 +498,7 @@ class EnsembleLda():
 
         """
 
-        logger.info("saving %s object to %d", self.__class__.__name__, fname)
+        logger.info("saving %s object to %s", self.__class__.__name__, fname)
 
         with open(fname, 'wb') as f:
             _pickle.dump(self, f)
@@ -883,12 +883,6 @@ class EnsembleLda():
                 # now mask b based on a, which will force the shape of a onto b
                 b_masked = ttda2[j][mask]
 
-                # TODO instaed of checking <= 0.05 and cosine, rather make create_mask(b),
-                # then check how much of mask_a is covered by mask_b. By doing so, the check
-                # for <= 0.05 falls away which 1. seems rather like a magic number guess
-                # and 2. jumps the distance to 1 suddenly when this threshold is not reached
-                # TODO Do experiments for this to see if it makes a lot of difference
-
                 distance = 0
                 # is the masked b just some empty stuff? Then forget about it, no similarity, distance is 1
                 # (not 2 because that correspondsto negative values. The maximum distance is 1 here)
@@ -978,7 +972,7 @@ class EnsembleLda():
         for topic in results.values():
             if topic["is_core"]:
                 topic = topic.copy()
-                
+
                 # counts how many different labels a core has as parents
                 topic["amount_parent_labels"] = len(topic["parent_labels"])
 
@@ -1198,7 +1192,7 @@ class CBDBSCAN():
         num_topics = len(amatrix)
 
         def scan_topic(topic_index, parent_id=None, current_label=None, parent_neighbors=None):
-            
+
             # count how many neighbors
             # check which indices (arange 0 to num_topics) is closer than eps
             neighbors = np.arange(num_topics)[tmp_amatrix[topic_index] < self.eps]
