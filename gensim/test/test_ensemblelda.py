@@ -5,11 +5,6 @@
 
 
 import logging
-
-# TODO remove this before pushing tests:
-import sys
-sys.path.insert(0, '/run/media/mango/Data/Code/gensim/')
-
 import pandas as pd
 import numpy as np
 from gensim.models import EnsembleLda
@@ -19,13 +14,13 @@ from gensim.test.utils import datapath, get_tmpfile, common_corpus, common_dicti
 
 num_topics = 2
 num_models = 4
+passes = 50
 
 
 class TestModel(unittest.TestCase):
     def setUp(self):
         # same configuration for each model to make sure
         # the topics are equal
-        passes = 50
         random_state = 0
 
         self.eLDA = EnsembleLda(corpus=common_corpus, id2word=common_dictionary, num_topics=num_topics,
@@ -66,6 +61,9 @@ class TestModel(unittest.TestCase):
         np.testing.assert_allclose(self.eLDA.get_topics(), reference.get_topics(), rtol=1e-05)
         np.testing.assert_allclose(self.eLDA.asymmetric_distance_matrix,
                                    reference.asymmetric_distance_matrix)
+
+        np.testing.assert_allclose(self.eLDA.classic_model_representation.get_topics(),
+                                   self.eLDA.get_topics(), rtol=1e-05)
 
     def test_memory_unfriendly(self):
         # at this point, self.eLDA_mu and self.eLDA are already trained
@@ -126,11 +124,6 @@ class TestModel(unittest.TestCase):
 
     def test_multiprocessing(self):
         # same configuration
-        param_ref = self.eLDA_mu.tms[0]
-        passes = param_ref.passes
-        iterations = param_ref.iterations
-        num_topics = param_ref.num_topics
-        num_models = self.eLDA.num_models
         random_state = 0
 
         # use 3 processes for the ensemble and the distance,
@@ -140,12 +133,12 @@ class TestModel(unittest.TestCase):
 
         # memory friendly. contains List of topic word distributions
         eLDA_multi = EnsembleLda(corpus=common_corpus, id2word=common_dictionary,
-                                 num_topics=num_topics, passes=passes, num_models=num_models, iterations=iterations,
+                                 num_topics=num_topics, passes=passes, num_models=num_models,
                                  random_state=random_state, ensemble_workers=workers, distance_workers=workers)
 
         # memory unfriendly. contains List of models
         eLDA_multi_mu = EnsembleLda(corpus=common_corpus, id2word=common_dictionary,
-                                    num_topics=num_topics, passes=passes, num_models=num_models, iterations=iterations,
+                                    num_topics=num_topics, passes=passes, num_models=num_models,
                                     random_state=random_state, ensemble_workers=workers, distance_workers=workers,
                                     memory_friendly_ttda=False)
 
@@ -314,5 +307,5 @@ class TestModel(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.WARN)
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
