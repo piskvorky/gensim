@@ -5,7 +5,6 @@
 
 
 import logging
-import pandas as pd
 import numpy as np
 from gensim.models import EnsembleLda
 from pathlib import Path
@@ -77,7 +76,6 @@ class TestModel(unittest.TestCase):
 
     def test_generate_gensim_rep(self):
         gensimModel = self.eLDA.generate_gensim_representation()
-        pd.DataFrame(gensimModel.get_topics())  # should return the stable topics from the ensemble
         topics = gensimModel.get_topics()
         np.testing.assert_allclose(self.eLDA.get_topics(), topics, rtol=1e-05)
 
