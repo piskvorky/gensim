@@ -7,7 +7,6 @@
 import logging
 import numpy as np
 from gensim.models import EnsembleLda
-from pathlib import Path
 import unittest
 from gensim.test.utils import datapath, get_tmpfile, common_corpus, common_dictionary
 
@@ -38,7 +37,7 @@ class TestModel(unittest.TestCase):
 
     def test_eLDA(self):
         # given that the random_state doesn't change, it should
-        # always be 4 detected topics in this setup.
+        # always be 2 detected topics in this setup.
         self.assertEqual(self.eLDA.stable_topics.shape[1], len(common_dictionary))
         self.assertEqual(len(self.eLDA.ttda), num_models * num_topics)
         self.check_ttda(self.eLDA)
@@ -93,9 +92,6 @@ class TestModel(unittest.TestCase):
         fname = get_tmpfile('gensim_models_ensemblelda')
         self.eLDA.save(fname)
         loaded_eLDA = EnsembleLda.load(fname)
-        # using Path objects instead of strings
-        self.eLDA.save(Path(fname))
-        loaded_eLDA = EnsembleLda.load(Path(fname))
         # storing the ensemble without memory_friendy_ttda
         self.eLDA_mu.save(fname)
         loaded_eLDA_mu = EnsembleLda.load(fname)
@@ -125,7 +121,7 @@ class TestModel(unittest.TestCase):
         random_state = 0
 
         # use 3 processes for the ensemble and the distance,
-        # so that the 4 models and 16 topics cannot be distributed
+        # so that the 4 models and 8 topics cannot be distributed
         # to each worker evenly
         workers = 3
 
