@@ -287,7 +287,7 @@ class EnsembleLda():
         num_stable_topics = len(stable_topics)
 
         if num_stable_topics == 0:
-            logger.error("The model did not detect any stable topic! You can try to adjust epsilon: "
+            logger.error("The model did not detect any stable topic. You can try to adjust epsilon: "
                          "recluster(eps=...)")
             return
 
@@ -493,7 +493,7 @@ class EnsembleLda():
             Path to the system file where the model will be persisted.
 
         """
-        
+
         logger.info("saving %s object to %s", self.__class__.__name__, fname)
 
         utils.pickle(self, fname)
@@ -898,7 +898,7 @@ class EnsembleLda():
             # print a warning. info otherwise.
             # The default mass setting of 0.95 makes uniform true masks on the opinosis corpus.
             logger.warning('The given threshold of {} covered on average '
-                '{}% of tokens, which might be too much!'.format(threshold, percent))
+                '{}% of tokens, which might be too much'.format(threshold, percent))
         else:
             logger.info('The given threshold of {} covered on average {}% of tokens'.format(threshold, percent))
 
@@ -993,7 +993,7 @@ class EnsembleLda():
                 "is_valid": np.nan,
                 "label": label
             })
-            
+
         # start with the most significant core.
         sorted_clusters = sorted(sorted_clusters,
             key=lambda cluster: (
@@ -1132,7 +1132,7 @@ class EnsembleLda():
         gensim representation exists. If not, raises errors"""
         if self.classic_model_representation is None:
             if len(self.stable_topics) == 0:
-                raise ValueError("no stable topic was detected!")
+                raise ValueError("no stable topic was detected")
             else:
                 raise ValueError("use generate_gensim_representation() first")
 

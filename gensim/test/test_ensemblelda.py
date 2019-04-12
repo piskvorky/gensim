@@ -3,10 +3,6 @@
 #
 # Author: Tobias B <github.com/sezanzeb>
 
-# TODO remove this before pushing tests:
-import sys
-sys.path.insert(0, '/home/mango/Data/Code/gensim/')
-
 import logging
 import numpy as np
 from gensim.models import EnsembleLda
@@ -57,7 +53,7 @@ class TestModel(unittest.TestCase):
 
         self.assertEqual(self.eLDA.cluster_model.results, reference.cluster_model.results)
         self.assertEqual(self.eLDA.sorted_clusters, reference.sorted_clusters)
-        
+
         np.testing.assert_allclose(self.eLDA.ttda, reference.ttda, rtol=1e-05)
         np.testing.assert_allclose(self.eLDA.get_topics(), reference.get_topics(), rtol=1e-05)
 
@@ -310,5 +306,5 @@ class TestModel(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.WARN)
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
