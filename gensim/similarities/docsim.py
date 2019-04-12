@@ -525,7 +525,7 @@ class Similarity(interfaces.SimilarityABC):
         if self.num_best is None:
             # user asked for all documents => just stack the sub-results into a single matrix
             # (works for both corpus / single doc query)
-            result = numpy.hstack(shard_results)
+            result = numpy.hstack(list(shard_results))
         else:
             # the following uses a lot of lazy evaluation and (optionally) parallel
             # processing, to improve query latency and minimize memory footprint.

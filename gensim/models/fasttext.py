@@ -171,26 +171,42 @@ You can also load models trained with Facebook's fastText implementation:
 .. sourcecode:: pycon
 
     >>> cap_path = datapath("crime-and-punishment.bin")
-    >>> # Partial model: loads quickly, uses less RAM, but cannot continue training
-    >>> fb_partial = FastText.load_fasttext_format(cap_path, full_model=False)
-    >>> # Full model: loads slowly, consumes RAM, but can continue training (see below)
-    >>> fb_full = FastText.load_fasttext_format(cap_path, full_model=True)
+    >>> fb_model = load_facebook_model(cap_path)
 
 Once loaded, such models behave identically to those trained from scratch.
 You may continue training them on new data:
 
 .. sourcecode:: pycon
 
-    >>> 'computer' in fb_full.wv.vocab  # New word, currently out of vocab
+    >>> 'computer' in fb_model.wv.vocab  # New word, currently out of vocab
     False
-    >>> old_computer = np.copy(fb_full.wv['computer'])  # Calculate current vectors
-    >>> fb_full.build_vocab(new_sentences, update=True)
-    >>> fb_full.train(new_sentences, total_examples=len(new_sentences), epochs=model.epochs)
-    >>> new_computer = fb_full.wv['computer']
+    >>> old_computer = np.copy(fb_model.wv['computer'])  # Calculate current vectors
+    >>> fb_model.build_vocab(new_sentences, update=True)
+    >>> fb_model.train(new_sentences, total_examples=len(new_sentences), epochs=model.epochs)
+    >>> new_computer = fb_model.wv['computer']
     >>> np.allclose(old_computer, new_computer, atol=1e-4)  # Vector has changed, model has learnt something
     False
-    >>> 'computer' in fb_full.wv.vocab  # New word is now in the vocabulary
+    >>> 'computer' in fb_model.wv.vocab  # New word is now in the vocabulary
     True
+
+If you do not intend to continue training the model, consider using the
+:func:`gensim.models.FastText.load_facebook_vectors` function instead.
+That function only loads the word embeddings (keyed vectors), consuming much less CPU and RAM:
+
+.. sourcecode:: pycon
+
+    >>> from gensim.test.utils import datapath
+    >>>
+    >>> cap_path = datapath("crime-and-punishment.bin")
+    >>> wv = load_facebook_vectors(cap_path)
+    >>>
+    >>> 'landlord' in wv.vocab  # Word is out of vocabulary
+    False
+    >>> oov_vector = wv['landlord']
+    >>>
+    >>> 'landlady' in wv.vocab  # Word is in the vocabulary
+    True
+    >>> iv_vector = wv['landlady']
 
 Retrieve word-vector for vocab and out-of-vocab word:
 
@@ -417,7 +433,7 @@ class FastText(BaseWordEmbeddingsModel):
 
     The model can be stored/loaded via its :meth:`~gensim.models.fasttext.FastText.save` and
     :meth:`~gensim.models.fasttext.FastText.load` methods, or loaded from a format compatible with the original
-    Fasttext implementation via :meth:`~gensim.models.fasttext.FastText.load_fasttext_format`.
+    Fasttext implementation via :func:`~gensim.models.fasttext.load_facebook_model`.
 
     Attributes
     ----------
@@ -690,18 +706,26 @@ class FastText(BaseWordEmbeddingsModel):
             >>> model.train(sentences_2, total_examples=model.corpus_count, epochs=model.epochs)
 
         """
-        if update:
-            if not len(self.wv.vocab):
-                raise RuntimeError(
-                    "You cannot do an online vocabulary-update of a model which has no prior vocabulary. "
-                    "First build the vocabulary of your model with a corpus "
-                    "before doing an online update.")
+        if not update:
+            self.wv.init_ngrams_weights(self.trainables.seed)
+        elif not len(self.wv.vocab):
+            raise RuntimeError(
+                "You cannot do an online vocabulary-update of a model which has no prior vocabulary. "
+                "First build the vocabulary of your model with a corpus "
+                "by calling the gensim.models.fasttext.FastText.build_vocab method "
+                "before doing an online update."
+            )
+        else:
             self.vocabulary.old_vocab_len = len(self.wv.vocab)
-            self.trainables.old_hash2index_len = len(self.wv.hash2index)
 
-        return super(FastText, self).build_vocab(
+        retval = super(FastText, self).build_vocab(
             sentences=sentences, corpus_file=corpus_file, update=update, progress_per=progress_per,
             keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, **kwargs)
+
+        if update:
+            self.wv.update_ngrams_weights(self.trainables.seed, self.vocabulary.old_vocab_len)
+
+        return retval
 
     def _set_train_params(self, **kwargs):
         #
@@ -709,12 +733,10 @@ class FastText(BaseWordEmbeddingsModel):
         # continue training. The _clear_post_train method destroys this
         # variable, so we reinitialize it here, if needed.
         #
-        # The .old_vocab_len and .old_hash2index_len members are set only to
-        # keep the init_ngrams_weights method happy.
+        # The .old_vocab_len member is set only to keep the init_ngrams_weights method happy.
         #
         if self.wv.buckets_word is None:
             self.vocabulary.old_vocab_len = len(self.wv.vocab)
-            self.trainables.old_hash2index_len = len(self.wv.hash2index)
             self.trainables.init_ngrams_weights(self.wv, update=True, vocabulary=self.vocabulary)
 
     def _clear_post_train(self):
@@ -879,14 +901,6 @@ class FastText(BaseWordEmbeddingsModel):
             >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.epochs)
 
         """
-        cant_train = hasattr(self.trainables, 'syn1neg') and self.trainables.syn1neg is None
-        if cant_train:
-            raise ValueError(
-                'this model cannot be trained any further, '
-                'if this is a native model, try loading it with '
-                'FastText.load_fasttext_format(path, full_model=True)'
-            )
-
         super(FastText, self).train(
             sentences=sentences, corpus_file=corpus_file, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
@@ -937,82 +951,23 @@ class FastText(BaseWordEmbeddingsModel):
         return self.wv.__contains__(word)
 
     @classmethod
-    def load_fasttext_format(cls, model_file, encoding='utf8', full_model=True):
-        """Load the input-hidden weight matrix from Facebook's native fasttext `.bin` and `.vec` output files.
+    @deprecated(
+        'use load_facebook_vectors (to use pretrained embeddings) or load_facebook_model '
+        '(to continue training with the loaded full model, more RAM) instead'
+    )
+    def load_fasttext_format(cls, model_file, encoding='utf8'):
+        """Deprecated.
 
-        By default, this function loads the full model.  A full model allows
-        continuing training with more data, but also consumes more RAM and
-        takes longer to load.  If you do not need to continue training and only
-        wish the work with the already-trained embeddings, use `full_model=False`
-        for faster loading and to save RAM.
-
-        Notes
-        ------
-        Facebook provides both `.vec` and `.bin` files with their modules.
-        The former contains human-readable vectors.
-        The latter contains machine-readable vectors along with other model parameters.
-        This function effectively ignores `.vec` output file, since that file is redundant.
-        It only needs the `.bin` file.
-
-        Parameters
-        ----------
-        model_file : str
-            Path to the FastText output files.
-            FastText outputs two model files - `/path/to/model.vec` and `/path/to/model.bin`
-            Expected value for this example: `/path/to/model` or `/path/to/model.bin`,
-            as Gensim requires only `.bin` file to the load entire fastText model.
-        encoding : str, optional
-            Specifies the file encoding.
-        full_model : boolean, optional
-            If False, skips loading the hidden output matrix. This saves a fair bit
-            of CPU time and RAM, but **prevents training continuation**.
-
-        Examples
-        --------
-
-        Load, infer, continue training:
-
-        .. sourcecode:: pycon
-
-            >>> from gensim.test.utils import datapath
-            >>>
-            >>> cap_path = datapath("crime-and-punishment.bin")
-            >>> fb_full = FastText.load_fasttext_format(cap_path, full_model=True)
-            >>>
-            >>> 'landlord' in fb_full.wv.vocab  # Word is out of vocabulary
-            False
-            >>> oov_term = fb_full.wv['landlord']
-            >>>
-            >>> 'landlady' in fb_full.wv.vocab  # Word is in the vocabulary
-            True
-            >>> iv_term = fb_full.wv['landlady']
-            >>>
-            >>> new_sent = [['lord', 'of', 'the', 'rings'], ['lord', 'of', 'the', 'flies']]
-            >>> fb_full.build_vocab(new_sent, update=True)
-            >>> fb_full.train(sentences=new_sent, total_examples=len(new_sent), epochs=5)
-
-        Load quickly, infer (forego training continuation):
-
-        .. sourcecode:: pycon
-
-            >>> fb_partial = FastText.load_fasttext_format(cap_path, full_model=False)
-            >>>
-            >>> 'landlord' in fb_partial.wv.vocab  # Word is out of vocabulary
-            False
-            >>> oov_term = fb_partial.wv['landlord']
-            >>>
-            >>> 'landlady' in fb_partial.wv.vocab  # Word is in the vocabulary
-            True
-            >>> iv_term = fb_partial.wv['landlady']
-
-        Returns
-        -------
-        gensim.models.fasttext.FastText
-            The loaded model.
+        Use :func:`gensim.models.fasttext.load_facebook_model` or
+        :func:`gensim.models.fasttext.load_facebook_vectors` instead.
 
         """
-        return _load_fasttext_format(model_file, encoding=encoding, full_model=full_model)
+        return load_facebook_model(model_file, encoding=encoding)
 
+    @deprecated(
+        'use load_facebook_vectors (to use pretrained embeddings) or load_facebook_model '
+        '(to continue training with the loaded full model, more RAM) instead'
+    )
     def load_binary_data(self, encoding='utf8'):
         """Load data from a binary file created by Facebook's native FastText.
 
@@ -1068,6 +1023,9 @@ class FastText(BaseWordEmbeddingsModel):
         """
         try:
             model = super(FastText, cls).load(*args, **kwargs)
+            if hasattr(model.wv, 'hash2index'):
+                gensim.models.keyedvectors._rollback_optimization(model.wv)
+
             if not hasattr(model.trainables, 'vectors_vocab_lockf') and hasattr(model.wv, 'vectors_vocab'):
                 model.trainables.vectors_vocab_lockf = ones(model.wv.vectors_vocab.shape, dtype=REAL)
             if not hasattr(model.trainables, 'vectors_ngrams_lockf') and hasattr(model.wv, 'vectors_ngrams'):
@@ -1220,8 +1178,21 @@ def _pad_ones(m, new_shape):
     return vstack([m, suffix])
 
 
-def _load_fasttext_format(model_file, encoding='utf-8', full_model=True):
-    """Load the input-hidden weight matrix from Facebook's native fasttext `.bin` and `.vec` output files.
+def load_facebook_model(path, encoding='utf-8'):
+    """Load the input-hidden weight matrix from Facebook's native fasttext `.bin` output file.
+
+    Notes
+    ------
+    Facebook provides both `.vec` and `.bin` files with their modules.
+    The former contains human-readable vectors.
+    The latter contains machine-readable vectors along with other model parameters.
+    This function requires you to **provide the full path to the .bin file**.
+    It effectively ignores the `.vec` output file, since it is redundant.
+
+    This function uses the smart_open library to open the path.
+    The path may be on a remote host (e.g. HTTP, S3, etc).
+    It may also be gzip or bz2 compressed (i.e. end in `.bin.gz` or `.bin.bz2`).
+    For details, see `<https://github.com/RaRe-Technologies/smart_open>`__.
 
     Parameters
     ----------
@@ -1230,6 +1201,112 @@ def _load_fasttext_format(model_file, encoding='utf-8', full_model=True):
         FastText outputs two model files - `/path/to/model.vec` and `/path/to/model.bin`
         Expected value for this example: `/path/to/model` or `/path/to/model.bin`,
         as Gensim requires only `.bin` file to the load entire fastText model.
+    encoding : str, optional
+        Specifies the file encoding.
+
+    Examples
+    --------
+
+    Load, infer, continue training:
+
+    .. sourcecode:: pycon
+
+        >>> from gensim.test.utils import datapath
+        >>>
+        >>> cap_path = datapath("crime-and-punishment.bin")
+        >>> fb_model = load_facebook_model(cap_path)
+        >>>
+        >>> 'landlord' in fb_model.wv.vocab  # Word is out of vocabulary
+        False
+        >>> oov_term = fb_model.wv['landlord']
+        >>>
+        >>> 'landlady' in fb_model.wv.vocab  # Word is in the vocabulary
+        True
+        >>> iv_term = fb_model.wv['landlady']
+        >>>
+        >>> new_sent = [['lord', 'of', 'the', 'rings'], ['lord', 'of', 'the', 'flies']]
+        >>> fb_model.build_vocab(new_sent, update=True)
+        >>> fb_model.train(sentences=new_sent, total_examples=len(new_sent), epochs=5)
+
+    Returns
+    -------
+    gensim.models.fasttext.FastText
+        The loaded model.
+
+    See Also
+    --------
+    :func:`~gensim.models.fasttext.load_facebook_vectors` loads
+    the word embeddings only.  Its faster, but does not enable you to continue
+    training.
+
+    """
+    return _load_fasttext_format(path, encoding=encoding, full_model=True)
+
+
+def load_facebook_vectors(path, encoding='utf-8'):
+    """Load word embeddings from a model saved in Facebook's native fasttext `.bin` format.
+
+    Notes
+    ------
+    Facebook provides both `.vec` and `.bin` files with their modules.
+    The former contains human-readable vectors.
+    The latter contains machine-readable vectors along with other model parameters.
+    This function requires you to **provide the full path to the .bin file**.
+    It effectively ignores the `.vec` output file, since it is redundant.
+
+    This function uses the smart_open library to open the path.
+    The path may be on a remote host (e.g. HTTP, S3, etc).
+    It may also be gzip or bz2 compressed.
+    For details, see `<https://github.com/RaRe-Technologies/smart_open>`__.
+
+    Parameters
+    ----------
+    path : str
+        The location of the model file.
+    encoding : str, optional
+        Specifies the file encoding.
+
+    Returns
+    -------
+    gensim.models.keyedvectors.FastTextKeyedVectors
+        The word embeddings.
+
+    Examples
+    --------
+
+    Load and infer:
+
+        >>> from gensim.test.utils import datapath
+        >>>
+        >>> cap_path = datapath("crime-and-punishment.bin")
+        >>> fbkv = load_facebook_vectors(cap_path)
+        >>>
+        >>> 'landlord' in fbkv.vocab  # Word is out of vocabulary
+        False
+        >>> oov_vector = fbkv['landlord']
+        >>>
+        >>> 'landlady' in fbkv.vocab  # Word is in the vocabulary
+        True
+        >>> iv_vector = fbkv['landlady']
+
+    See Also
+    --------
+    :func:`~gensim.models.fasttext.load_facebook_model` loads
+    the full model, not just word embeddings, and enables you to continue
+    model training.
+
+    """
+    model_wrapper = _load_fasttext_format(path, encoding=encoding, full_model=False)
+    return model_wrapper.wv
+
+
+def _load_fasttext_format(model_file, encoding='utf-8', full_model=True):
+    """Load the input-hidden weight matrix from Facebook's native fasttext `.bin` output files.
+
+    Parameters
+    ----------
+    model_file : str
+        Full path to the FastText model file.
     encoding : str, optional
         Specifies the file encoding.
     full_model : boolean, optional
@@ -1242,8 +1319,6 @@ def _load_fasttext_format(model_file, encoding='utf-8', full_model=True):
         The loaded model.
 
     """
-    if not model_file.endswith('.bin'):
-        model_file += '.bin'
     with smart_open(model_file, 'rb') as fin:
         m = gensim.models._fasttext_bin.load(fin, encoding=encoding, full_model=full_model)
 
@@ -1264,8 +1339,23 @@ def _load_fasttext_format(model_file, encoding='utf-8', full_model=True):
     model.vocabulary.raw_vocab = m.raw_vocab
     model.vocabulary.nwords = m.nwords
     model.vocabulary.vocab_size = m.vocab_size
-    model.vocabulary.prepare_vocab(model.hs, model.negative, model.wv,
-                                   update=True, min_count=model.min_count)
+
+    #
+    # This is here to fix https://github.com/RaRe-Technologies/gensim/pull/2373.
+    #
+    # We explicitly set min_count=1 regardless of the model's parameters to
+    # ignore the trim rule when building the vocabulary.  We do this in order
+    # to support loading native models that were trained with pretrained vectors.
+    # Such models will contain vectors for _all_ encountered words, not only
+    # those occurring more frequently than min_count.
+    #
+    # Native models trained _without_ pretrained vectors already contain the
+    # trimmed raw_vocab, so this change does not affect them.
+    #
+    model.vocabulary.prepare_vocab(
+        model.hs, model.negative, model.wv,
+        update=True, min_count=1,
+    )
 
     model.num_original_vectors = m.vectors_ngrams.shape[0]
 
