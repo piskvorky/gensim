@@ -84,10 +84,6 @@ References
 import logging
 import os
 from multiprocessing import Process, Pipe, ProcessError
-try:
-    import cPickle as _pickle
-except ImportError:
-    import pickle as _pickle
 import numpy as np
 from scipy.spatial.distance import cosine
 from gensim import utils
@@ -105,9 +101,9 @@ MAX_RANDOM_STATE = 2**32 - 1
 
 class EnsembleLda():
     """Ensemble Latent Dirichlet Allocation (LDA), a method of ensembling multiple gensim topic models.
-    They are clustered using DBSCAN, for which nearby topic mixtures - which are mixtures of two or more
-    true topics and therefore undesired - are being used to support topics in becoming cores,
-    but not vice versa.
+    They are clustered using a variation of DBSCAN, for which nearby topic mixtures - which are mixtures
+    of two or more true topics and therefore undesired - are being used to support topics in becoming
+    cores, but not vice versa.
 
     """
     def __init__(self, topic_model_kind="lda", num_models=3,
@@ -497,11 +493,10 @@ class EnsembleLda():
             Path to the system file where the model will be persisted.
 
         """
-
+        
         logger.info("saving %s object to %s", self.__class__.__name__, fname)
 
-        with open(fname, 'wb') as f:
-            _pickle.dump(self, f)
+        utils.pickle(self, fname)
 
     @staticmethod
     def load(fname):
@@ -521,8 +516,7 @@ class EnsembleLda():
         # message copied from [1]
         logger.info("loading %s object from %s", EnsembleLda.__name__, fname)
 
-        with open(fname, 'rb') as f:
-            eLDA = _pickle.load(f)
+        eLDA = utils.unpickle(fname)
 
         return eLDA
 
@@ -967,7 +961,8 @@ class EnsembleLda():
         results = self.cluster_model.results
 
         # first, group all the learned cores based on the label,
-        # which was assigned in the cluster_model
+        # which was assigned in the cluster_model. The result is a
+        # dict of {group: [topic, ...]}
         grouped_by_labels = {}
         for topic in results.values():
             if topic["is_core"]:
@@ -998,8 +993,13 @@ class EnsembleLda():
                 "is_valid": np.nan,
                 "label": label
             })
-        # start with the most significant core
-        sorted_clusters = sorted(sorted_clusters, key=lambda cluster: cluster["amount_parent_labels"], reverse=True)
+            
+        # start with the most significant core.
+        sorted_clusters = sorted(sorted_clusters,
+            key=lambda cluster: (
+                cluster["amount_parent_labels"],
+                cluster["label"]  # makes sorting deterministic
+            ), reverse=True)
 
         def remove_from_all_sets(label):
             """removes a label from every set in "parent_labels" for

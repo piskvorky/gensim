@@ -3,6 +3,9 @@
 #
 # Author: Tobias B <github.com/sezanzeb>
 
+# TODO remove this before pushing tests:
+import sys
+sys.path.insert(0, '/home/mango/Data/Code/gensim/')
 
 import logging
 import numpy as np
@@ -53,12 +56,18 @@ class TestModel(unittest.TestCase):
         reference = EnsembleLda.load(datapath('ensemblelda'))
 
         self.assertEqual(self.eLDA.cluster_model.results, reference.cluster_model.results)
-        # sorting will not be the same in case the sorting key is equal
-        # across multiple clusters. hence use assertCountEqual
-        self.assertCountEqual(self.eLDA.sorted_clusters, reference.sorted_clusters)
+        self.assertEqual(self.eLDA.sorted_clusters, reference.sorted_clusters)
+        
+        np.testing.assert_allclose(self.eLDA.ttda, reference.ttda, rtol=1e-05)
         np.testing.assert_allclose(self.eLDA.get_topics(), reference.get_topics(), rtol=1e-05)
+
+        # as small values in the distance matrix are subject to rounding differences of
+        # around 1-2% between python 2 and 3, use atol and select a 100000th of the
+        # largest value instead of rtol. Large values of the distance matrix are not prone
+        # to those rounding problems.
+        atol = reference.asymmetric_distance_matrix.max() * 1e-05
         np.testing.assert_allclose(self.eLDA.asymmetric_distance_matrix,
-                                   reference.asymmetric_distance_matrix)
+                                   reference.asymmetric_distance_matrix, atol=atol)
 
         np.testing.assert_allclose(self.eLDA.classic_model_representation.get_topics(),
                                    self.eLDA.get_topics(), rtol=1e-05)
@@ -301,5 +310,5 @@ class TestModel(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.WARN)
     unittest.main()
