@@ -330,7 +330,7 @@ class EnsembleLda():
         sstats = stable_topics * normalization_factor
         sstats -= eta
 
-        classic_model_representation.state.sstats = sstats.astype("float32")
+        classic_model_representation.state.sstats = sstats.astype(np.float32)
         # fix expElogbeta.
         classic_model_representation.sync_state()
 
@@ -854,7 +854,7 @@ class EnsembleLda():
         avg_mask_size = 0
 
         # initialize the distance matrix. ndarray is faster than zeros
-        distances = np.ndarray((len(ttda1), len(ttda2)))
+        distances = np.ndarray((len(ttda1), len(ttda2)), dtype=np.float64)
 
         # now iterate over each topic
         for i in range(len(ttda1)):
