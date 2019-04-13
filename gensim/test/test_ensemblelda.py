@@ -51,7 +51,10 @@ class TestModel(unittest.TestCase):
 
         reference = EnsembleLda.load(datapath('ensemblelda'))
 
-        self.assertEqual(self.eLDA.cluster_model.results, reference.cluster_model.results)
+        self.assert_cluster_results_equal(self.eLDA.cluster_model.results, reference.cluster_model.results)
+
+        # the following test is quite specific to the current implementation and not part of any api,
+        # but it makes improving those sections of the code easier.
         self.assertEqual(self.eLDA.sorted_clusters, reference.sorted_clusters)
 
         np.testing.assert_allclose(self.eLDA.ttda, reference.ttda, rtol=1e-05)
@@ -84,14 +87,11 @@ class TestModel(unittest.TestCase):
         np.testing.assert_allclose(self.eLDA.get_topics(), topics, rtol=1e-05)
 
     def assert_cluster_results_equal(self, a, b):
-        self.assertTrue(isinstance(a, dict))
-        self.assertTrue(isinstance(b, dict))
-        np.testing.assert_array_equal([row["label"] for row in a.values()],
-                                      [row["label"] for row in b.values()])
-        np.testing.assert_array_equal([row["is_core"] for row in a.values()],
-                                      [row["is_core"] for row in b.values()])
-        np.testing.assert_array_equal([row["num_samples"] for row in a.values()],
-                                      [row["num_samples"] for row in b.values()])
+        """compares important attributes of the cluster results"""
+        np.testing.assert_array_equal([row["label"] for row in a],
+                                      [row["label"] for row in b])
+        np.testing.assert_array_equal([row["is_core"] for row in a],
+                                      [row["is_core"] for row in b])
 
     def test_persisting(self):
         fname = get_tmpfile('gensim_models_ensemblelda')
@@ -306,5 +306,5 @@ class TestModel(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.WARN)
     unittest.main()

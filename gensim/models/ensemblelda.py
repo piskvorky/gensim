@@ -964,7 +964,7 @@ class EnsembleLda():
         # which was assigned in the cluster_model. The result is a
         # dict of {group: [topic, ...]}
         grouped_by_labels = {}
-        for topic in results.values():
+        for topic in results:
             if topic["is_core"]:
                 topic = topic.copy()
 
@@ -1052,8 +1052,8 @@ class EnsembleLda():
         # list of all the label numbers that are valid
         valid_labels = np.array([cluster["label"] for cluster in sorted_clusters if cluster["is_valid"]])
 
-        for i in results:
-            results[i]["valid_parents"] = {label for label in results[i]["parent_labels"] if label in valid_labels}
+        for topic in results:
+            topic["valid_parents"] = {label for label in topic["parent_labels"] if label in valid_labels}
 
         def validate_core(core):
             """Core is a dict of {is_core, valid_parents, labels} among others.
@@ -1067,9 +1067,9 @@ class EnsembleLda():
                 return ret
 
         # keeping only VALID cores
-        valid_core_mask = np.vectorize(validate_core)(list(results.values()))
+        valid_core_mask = np.vectorize(validate_core)(results)
         valid_topics = self.ttda[valid_core_mask]
-        topic_labels = np.array([results[i]["label"] for i in results])[valid_core_mask]
+        topic_labels = np.array([topic["label"] for topic in results])[valid_core_mask]
         unique_labels = np.unique(topic_labels)
 
         num_stable_topics = len(unique_labels)
@@ -1172,22 +1172,22 @@ class CBDBSCAN():
 
         self.next_label = 0
 
-        results = {index: {
+        results = [{
             "is_core": False,
             "parent_labels": set(),
             "parent_ids": set(),
             "num_samples": 0,
             "label": None
-        } for index in range(len(amatrix))}
+        } for _ in range(len(amatrix))]
 
         tmp_amatrix = amatrix.copy()
 
         # to avoid problem about comparing the topic with itself
         np.fill_diagonal(tmp_amatrix, 1)
 
-        min_distance_per_topic = [(index, distance) for index, distance in enumerate(tmp_amatrix.min(axis=1))]
-        min_distance_per_topic_sorted = sorted(min_distance_per_topic, key=lambda x: x[1])
-        ordered_min_similarity = [index for index, distance in min_distance_per_topic_sorted]
+        min_distance_per_topic = [(distance, index) for index, distance in enumerate(tmp_amatrix.min(axis=1))]
+        min_distance_per_topic_sorted = sorted(min_distance_per_topic, key=lambda x: x)
+        ordered_min_similarity = [index for distance, index in min_distance_per_topic_sorted]
 
         num_topics = len(amatrix)
 
