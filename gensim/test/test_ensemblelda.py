@@ -50,16 +50,7 @@ class TestModel(unittest.TestCase):
         self.check_ttda(self.eLDA)
 
         reference = EnsembleLda.load(datapath('ensemblelda'))
-
-        self.assert_cluster_results_equal(self.eLDA.cluster_model.results, reference.cluster_model.results)
-
-        # the following test is quite specific to the current implementation and not part of any api,
-        # but it makes improving those sections of the code easier.
-        self.assertEqual(self.eLDA.sorted_clusters, reference.sorted_clusters)
-
         np.testing.assert_allclose(self.eLDA.ttda, reference.ttda, rtol=1e-05)
-        np.testing.assert_allclose(self.eLDA.get_topics(), reference.get_topics(), rtol=1e-05)
-
         # as small values in the distance matrix are subject to rounding differences of
         # around 1-2% between python 2 and 3, use atol and select a 100000th of the
         # largest value instead of rtol. Large values of the distance matrix are not prone
@@ -67,6 +58,12 @@ class TestModel(unittest.TestCase):
         atol = reference.asymmetric_distance_matrix.max() * 1e-05
         np.testing.assert_allclose(self.eLDA.asymmetric_distance_matrix,
                                    reference.asymmetric_distance_matrix, atol=atol)
+        self.assert_cluster_results_equal(self.eLDA.cluster_model.results, reference.cluster_model.results)
+        # the following test is quite specific to the current implementation and not part of any api,
+        # but it makes improving those sections of the code easier as long as sorted_clusters is supposed
+        # to stay the same
+        self.assertEqual(self.eLDA.sorted_clusters, reference.sorted_clusters)
+        np.testing.assert_allclose(self.eLDA.get_topics(), reference.get_topics(), rtol=1e-05)
 
         np.testing.assert_allclose(self.eLDA.classic_model_representation.get_topics(),
                                    self.eLDA.get_topics(), rtol=1e-05)
