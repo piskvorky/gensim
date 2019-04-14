@@ -3,12 +3,19 @@
 #
 # Author: Tobias B <github.com/sezanzeb>
 
+"""
+Automated tests for checking the EnsembleLda Class
+"""
+
+
 import logging
-import numpy as np
-from gensim.models import EnsembleLda
 import unittest
-from gensim.test.utils import datapath, get_tmpfile, common_corpus, common_dictionary
+
+import numpy as np
 from copy import deepcopy
+
+from gensim.models import EnsembleLda
+from gensim.test.utils import datapath, get_tmpfile, common_corpus, common_dictionary
 
 num_topics = 2
 num_models = 4
@@ -337,5 +344,5 @@ class TestModel(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.WARN)
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()

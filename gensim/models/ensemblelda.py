@@ -96,7 +96,7 @@ GENSIM_MODEL = dict(
     ldamulticore=ldamulticore.LdaMulticore
 )
 
-MAX_RANDOM_STATE = 2**32 - 1
+MAX_RANDOM_STATE = np.iinfo(np.int32).max
 
 
 class EnsembleLda():
