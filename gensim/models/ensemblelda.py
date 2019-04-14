@@ -209,7 +209,7 @@ class EnsembleLda():
         self.eta = None
         self.tms = []
         # initialize empty topic term distribution array
-        self.ttda = np.empty((0, len(gensim_kw_args["id2word"])), np.float32)
+        self.ttda = np.empty((0, len(gensim_kw_args["id2word"])))
         self.asymmetric_distance_matrix_outdated = True
 
         # in case the model will not train due to some
@@ -854,7 +854,7 @@ class EnsembleLda():
         avg_mask_size = 0
 
         # initialize the distance matrix. ndarray is faster than zeros
-        distances = np.ndarray((len(ttda1), len(ttda2)), dtype=np.float64)
+        distances = np.ndarray((len(ttda1), len(ttda2)))
 
         # now iterate over each topic
         for i in range(len(ttda1)):
@@ -1073,7 +1073,7 @@ class EnsembleLda():
         unique_labels = np.unique(topic_labels)
 
         num_stable_topics = len(unique_labels)
-        stable_topics = np.empty((num_stable_topics, len(self.id2word)), dtype=np.float32)
+        stable_topics = np.empty((num_stable_topics, len(self.id2word)))
 
         # for each cluster
         for l, label in enumerate(unique_labels):

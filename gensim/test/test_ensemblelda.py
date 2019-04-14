@@ -8,6 +8,7 @@ import numpy as np
 from gensim.models import EnsembleLda
 import unittest
 from gensim.test.utils import datapath, get_tmpfile, common_corpus, common_dictionary
+from copy import deepcopy
 
 num_topics = 2
 num_models = 4
@@ -49,24 +50,57 @@ class TestModel(unittest.TestCase):
         self.assertEqual(len(self.eLDA.ttda), num_models * num_topics)
         self.check_ttda(self.eLDA)
 
+        # compare with a pre-trained reference model
         reference = EnsembleLda.load(datapath('ensemblelda'))
         np.testing.assert_allclose(self.eLDA.ttda, reference.ttda, rtol=1e-05)
-        # as small values in the distance matrix are subject to rounding differences of
-        # around 1-2% between python 2 and 3, use atol and select a 100000th of the
-        # largest value instead of rtol. Large values of the distance matrix are not prone
-        # to those rounding problems.
+        # small values in the distance matrix tend to vary quite a bit around 2%,
+        # so use some absolute tolerance measurement to check if the matrix is at least
+        # close to the target.
         atol = reference.asymmetric_distance_matrix.max() * 1e-05
         np.testing.assert_allclose(self.eLDA.asymmetric_distance_matrix,
                                    reference.asymmetric_distance_matrix, atol=atol)
-        self.assert_cluster_results_equal(self.eLDA.cluster_model.results, reference.cluster_model.results)
-        # the following test is quite specific to the current implementation and not part of any api,
-        # but it makes improving those sections of the code easier as long as sorted_clusters is supposed
-        # to stay the same
-        self.assertEqual(self.eLDA.sorted_clusters, reference.sorted_clusters)
-        np.testing.assert_allclose(self.eLDA.get_topics(), reference.get_topics(), rtol=1e-05)
 
-        np.testing.assert_allclose(self.eLDA.classic_model_representation.get_topics(),
-                                   self.eLDA.get_topics(), rtol=1e-05)
+    def test_clustering(self):
+        # the following test is quite specific to the current implementation and not part of any api,
+        # but it makes improving those sections of the code easier as long as sorted_clusters and the
+        # cluster_model results are supposed to stay the same. Potentially this test will deprecate.
+
+        reference = EnsembleLda.load(datapath('ensemblelda'))
+        cluster_model_results = deepcopy(reference.cluster_model.results)
+        sorted_clusters = deepcopy(reference.sorted_clusters)
+        stable_topics = deepcopy(reference.get_topics())
+
+        # continue training with the distance matrix of the pretrained reference and see if
+        # the generated clusters match.
+        reference.asymmetric_distance_matrix_outdated = True
+        reference.recluster()
+
+        self.assert_cluster_results_equal(reference.cluster_model.results, cluster_model_results)
+        self.assertEqual(reference.sorted_clusters, sorted_clusters)
+        np.testing.assert_allclose(reference.get_topics(), stable_topics, rtol=1e-05)
+
+    def test_not_trained(self):
+        # should not throw errors and no training should happen
+
+        # 0 passes
+        eLDA = EnsembleLda(corpus=common_corpus, id2word=common_dictionary, num_topics=num_topics,
+                           passes=0, num_models=num_models, random_state=0)
+        self.assertEqual(len(eLDA.ttda), 0)
+
+        # no corpus
+        eLDA = EnsembleLda(id2word=common_dictionary, num_topics=num_topics,
+                           passes=passes, num_models=num_models, random_state=0)
+        self.assertEqual(len(eLDA.ttda), 0)
+
+        # 0 iterations
+        eLDA = EnsembleLda(corpus=common_corpus, id2word=common_dictionary, num_topics=num_topics,
+                           iterations=0, num_models=num_models, random_state=0)
+        self.assertEqual(len(eLDA.ttda), 0)
+
+        # 0 models
+        eLDA = EnsembleLda(corpus=common_corpus, id2word=common_dictionary, num_topics=num_topics,
+                           passes=passes, num_models=0, random_state=0)
+        self.assertEqual(len(eLDA.ttda), 0)
 
     def test_memory_unfriendly(self):
         # at this point, self.eLDA_mu and self.eLDA are already trained
@@ -247,7 +281,7 @@ class TestModel(unittest.TestCase):
         self.assertEqual(eLDA_base_mu.num_models, len(eLDA_base_mu.tms))
         self.check_ttda(eLDA_base_mu)
 
-    def test_recluster(self):
+    def test_add_and_recluster(self):
         # 6.2: see if after adding a model, the model still makes sense
         num_new_models = 3
         num_new_topics = 3
