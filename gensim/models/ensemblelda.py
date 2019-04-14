@@ -91,11 +91,7 @@ from gensim.models import ldamodel, ldamulticore, basemodel
 
 logger = logging.getLogger(__name__)
 
-GENSIM_MODEL = dict(
-    lda=ldamodel.LdaModel,
-    ldamulticore=ldamulticore.LdaMulticore
-)
-
+# nps max random state of 2**32 - 1 is too large for windows:
 MAX_RANDOM_STATE = np.iinfo(np.int32).max
 
 
@@ -115,9 +111,10 @@ class EnsembleLda():
 
         Parameters
         ----------
-        topic_model_kind : str, optional
+        topic_model_kind : str, topic model, optional
             Examples:
-                'ldamulticore' (recommended) or 'lda' (default)
+                'ldamulticore' (recommended), 'lda' (default),
+                gensim.models.ldamodel, gensim.models.ldamulticore
         num_models : number, optional
             How many LDA models to train in this ensemble.
             Default: 3
@@ -188,11 +185,15 @@ class EnsembleLda():
                              "input space dimensionality. Corpus should be provided using the "
                              "keyword argument corpus.")
 
-        # Store some of the parameters:
-        # - store topic_model_kind for generate_gensim_representation,
-        #   so that it is made sure that the gensim_kw_args fit into
-        #   the constructor of the gensim model.
-        self.topic_model_kind = topic_model_kind
+        if type(topic_model_kind) == str:
+            self.topic_model_kind = {
+                "lda": ldamodel.LdaModel,
+                "ldamulticore": ldamulticore.LdaMulticore
+            }[topic_model_kind]
+        else:
+            self.topic_model_kind = topic_model_kind
+
+        # Store some of the parameters
         self.num_models = num_models
         self.gensim_kw_args = gensim_kw_args
 
@@ -299,7 +300,7 @@ class EnsembleLda():
         params["iterations"] = 0  # no training
         params["passes"] = 0  # no training
 
-        classic_model_representation = GENSIM_MODEL[self.topic_model_kind](**params)
+        classic_model_representation = self.topic_model_kind(**params)
 
         # when eta was None, use what gensim generates as default eta for the following tasks:
         eta = classic_model_representation.eta
@@ -551,23 +552,6 @@ class EnsembleLda():
         # multiprocessing is started.
         random_states = [self.random_state.randint(MAX_RANDOM_STATE) for _ in range(num_models)]
 
-        # worker, that trains a bunch of models:
-        def worker(id, num_models, random_states, pipe):
-            # since models cannot be piped to the parent because messages need to be pickled for that:
-            # memory_friendly_ttda needs to be true, which will not store ensemble submodels
-            logger.info("Spawned worker to generate {} topic models".format(num_models))
-            self.generate_topic_models(num_models, random_states=random_states)
-            # send the ttda that is in the child/workers version of the memory into the pipe
-            # available, after generate_topic_models has been called in the worker
-            if self.memory_friendly_ttda:
-                # remember that this code is inside the worker processes memory,
-                # so self.ttda is the ttda of only a chunk of models
-                pipe.send((id, self.ttda))
-            else:
-                pipe.send((id, self.tms))
-
-            pipe.close()
-
         # each worker has to work on at least one model.
         # Don't spawn idle workers:
         workers = min(ensemble_workers, num_models)
@@ -594,7 +578,8 @@ class EnsembleLda():
                 # get the chunk from the random states that is meant to be for those models
                 random_states_for_worker = random_states[-num_models_unhandled:][:num_subprocess_models]
 
-                p = Process(target=worker, args=(i, num_subprocess_models, random_states_for_worker, childConn))
+                p = Process(target=self.generate_topic_models,
+                            args=(num_subprocess_models, random_states_for_worker, childConn))
 
                 processes += [p]
                 pipes += [(parentConn, childConn)]
@@ -617,32 +602,23 @@ class EnsembleLda():
                 raise
 
         # aggregate results
-        if self.memory_friendly_ttda:
-
-            # collect results from the pipes
-            # will also block until workers are finished
-            for p in pipes:
-                answer = p[0].recv()  # [0], because that is the parentConn
-                p[0].close()
-                # this does basically the same as the generate_topic_models function (concatenate all the ttdas):
-                self.ttda = np.concatenate([self.ttda, answer[1]])
-                # in [0] the id of the worker that sent the data is stored
-
-        else:
-            # now do the same thing for a memory unfriendly ensemble
-            self.tms = []
-            for p in pipes:
-                answer = p[0].recv()  # [0], because that is the parentConn
-                p[0].close()
-                self.tms += answer[1]
-                new_ttda = np.concatenate([model.get_topics() for model in answer[1]])
-                self.ttda = np.concatenate([self.ttda, new_ttda])
+        # will also block until workers are finished
+        for p in pipes:
+            answer = p[0].recv()  # [0], because that is the parentConn
+            p[0].close()
+            # this does basically the same as the generate_topic_models function (concatenate all the ttdas):
+            if not self.memory_friendly_ttda:
+                self.tms += answer
+                ttda = np.concatenate([model.get_topics() for model in answer])
+            else:
+                ttda = answer
+            self.ttda = np.concatenate([self.ttda, ttda])
 
         # end all processes
         for p in processes:
             p.terminate()
 
-    def generate_topic_models(self, num_models, random_states=None):
+    def generate_topic_models(self, num_models, random_states=None, pipe=None):
         """Will train the topic models, that form the ensemble.
 
         Parameters
@@ -653,7 +629,14 @@ class EnsembleLda():
             list of numbers or np.random.RandomState objects.
             Will be autogenerated based on the ensembles RandomState
             if None (default).
+        pipe : multiprocessing.pipe
+            Default None. If provided, will send the trained models over
+            this pipe. If memory friendly, it will only send the ttda.
+
         """
+
+        if pipe is not None:
+            logger.info("Spawned worker to generate {} topic models".format(num_models))
 
         if random_states is None:
             random_states = [self.random_state.randint(MAX_RANDOM_STATE) for _ in range(num_models)]
@@ -669,7 +652,7 @@ class EnsembleLda():
 
             kwArgs["random_state"] = random_states[i]
 
-            tm = GENSIM_MODEL[self.topic_model_kind](**kwArgs)
+            tm = self.topic_model_kind(**kwArgs)
 
             # adds the lambda (that is the unnormalized get_topics) to ttda, which is
             # a list of all those lambdas
@@ -682,6 +665,33 @@ class EnsembleLda():
         # use one of the tms to get some info that will be needed later
         self.sstats_sum = tm.state.sstats.sum()
         self.eta = tm.eta
+
+        if pipe is not None:
+            # send the ttda that is in the child/workers version of the memory into the pipe
+            # available, after generate_topic_models has been called in the worker
+            if self.memory_friendly_ttda:
+                # remember that this code is inside the worker processes memory,
+                # so self.ttda is the ttda of only a chunk of models
+                pipe.send(self.ttda)
+            else:
+                pipe.send(self.tms)
+
+            pipe.close()
+
+    def asymmetric_distance_matrix_worker(self, worker_id, ttdas_sent, n_ttdas, pipe, threshold, method):
+        """ worker, that computes the distance to all other nodes
+        from a chunk of nodes. https://stackoverflow.com/a/1743350
+        """
+
+        logger.info("Spawned worker to generate {} rows of the asymmetric distance matrix".format(n_ttdas))
+        # the chunk of ttda that's going to be calculated:
+        ttda1 = self.ttda[ttdas_sent:ttdas_sent + n_ttdas]
+        distance_chunk = self.calculate_asymmetric_distance_matrix_chunk(ttda1=ttda1, ttda2=self.ttda,
+                                                                         threshold=threshold,
+                                                                         start_index=ttdas_sent,
+                                                                         method=method)
+        pipe.send((worker_id, distance_chunk))  # remember that this code is inside the workers memory
+        pipe.close()
 
     def generate_asymmetric_distance_matrix(self, threshold=None, workers=1, method="mass"):
         """Makes the pairwise distance matrix for all the ttdas
@@ -734,20 +744,6 @@ class EnsembleLda():
         if workers is None:
             workers = os.cpu_count()
 
-        # worker, that computes the distance to
-        # all other nodes from a chunk of nodes.
-        # https://stackoverflow.com/a/1743350
-        def worker(worker_id, ttdas_sent, n_ttdas, pipe):
-            logger.info("Spawned worker to generate {} rows of the asymmetric distance matrix".format(n_ttdas))
-            # the chunk of ttda that's going to be calculated:
-            ttda1 = self.ttda[ttdas_sent:ttdas_sent + n_ttdas]
-            distance_chunk = self.calculate_asymmetric_distance_matrix_chunk(ttda1=ttda1, ttda2=self.ttda,
-                                                                             threshold=threshold,
-                                                                             start_index=ttdas_sent,
-                                                                             method=method)
-            pipe.send((worker_id, distance_chunk))  # remember that this code is inside the workers memory
-            pipe.close()
-
         # create worker processes:
         processes = []
         pipes = []
@@ -768,7 +764,8 @@ class EnsembleLda():
                 else:
                     n_ttdas = int((len(self.ttda) - ttdas_sent) / (workers - i))
 
-                p = Process(target=worker, args=(i, ttdas_sent, n_ttdas, childConn))
+                p = Process(target=self.asymmetric_distance_matrix_worker,
+                            args=(i, ttdas_sent, n_ttdas, childConn, threshold, method))
                 ttdas_sent += n_ttdas
 
                 processes += [p]

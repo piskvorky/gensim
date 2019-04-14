@@ -14,7 +14,7 @@ import unittest
 import numpy as np
 from copy import deepcopy
 
-from gensim.models import EnsembleLda
+from gensim.models import EnsembleLda, LdaMulticore
 from gensim.test.utils import datapath, get_tmpfile, common_corpus, common_dictionary
 
 num_topics = 2
@@ -199,7 +199,7 @@ class TestModel(unittest.TestCase):
         # 1. memory friendly
         eLDA_base = EnsembleLda(corpus=common_corpus, id2word=common_dictionary,
                                 num_topics=num_new_topics, passes=1, num_models=num_new_models,
-                                iterations=1, random_state=0, topic_model_kind='ldamulticore',
+                                iterations=1, random_state=0, topic_model_kind=LdaMulticore,
                                 workers=3, ensemble_workers=2)
 
         # 1.1 ttda
@@ -245,7 +245,7 @@ class TestModel(unittest.TestCase):
         # 2. memory unfriendly
         eLDA_base_mu = EnsembleLda(corpus=common_corpus, id2word=common_dictionary,
                                    num_topics=num_new_topics, passes=1, num_models=num_new_models,
-                                   iterations=1, random_state=0, topic_model_kind='ldamulticore',
+                                   iterations=1, random_state=0, topic_model_kind=LdaMulticore,
                                    workers=3, ensemble_workers=2, memory_friendly_ttda=False)
 
         # 2.1 a single ensemble
@@ -344,5 +344,5 @@ class TestModel(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.WARN)
     unittest.main()
