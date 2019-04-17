@@ -69,6 +69,8 @@ except ImportError:
     from queue import Queue
 import Pyro4
 from gensim import utils
+from gensim.models.lsi_worker import LSI_WORKER_PREFIX
+
 
 logger = logging.getLogger(__name__)
 
@@ -83,6 +85,8 @@ MAX_JOBS_QUEUE = 10
 # so this is really just a hack, see http://bugs.python.org/issue1360
 HUGE_TIMEOUT = 365 * 24 * 60 * 60  # one year
 
+LSI_DISPATCHER_PREFIX = 'gensim.lsi_dispatcher'
+
 
 class Dispatcher(object):
     """Dispatcher object that communicates and coordinates individual workers.
@@ -92,7 +96,7 @@ class Dispatcher(object):
     There should never be more than one dispatcher running at any one time.
 
     """
-    def __init__(self, maxsize=0):
+    def __init__(self, maxsize=0, ns_conf=None):
         """Partly initialize the dispatcher.
 
         A full initialization (including initialization of the workers) requires a call to
@@ -102,11 +106,16 @@ class Dispatcher(object):
         ----------
         maxsize : int, optional
             Maximum number of jobs to be kept pre-fetched in the queue.
+        ns_conf : dict of (str, object)
+            Sets up the name server configuration for the pyro daemon server of dispatcher.
+            This also helps to keep track of your objects in your network by using logical object names
+            instead of exact object name(or id) and its location.
 
         """
         self.maxsize = maxsize
         self.workers = {}
         self.callback = None  # a pyro proxy to this object (unknown at init time, but will be set later)
+        self.ns_conf = ns_conf if ns_conf is not None else {}
 
     @Pyro4.expose
     def initialize(self, **model_params):
@@ -132,9 +141,9 @@ class Dispatcher(object):
 
         # locate all available workers and store their proxies, for subsequent RMI calls
         self.workers = {}
-        with utils.getNS() as ns:
-            self.callback = Pyro4.Proxy('PYRONAME:gensim.lsi_dispatcher')  # = self
-            for name, uri in iteritems(ns.list(prefix='gensim.lsi_worker')):
+        with utils.getNS(**self.ns_conf) as ns:
+            self.callback = Pyro4.Proxy(ns.list(prefix=LSI_DISPATCHER_PREFIX)[LSI_DISPATCHER_PREFIX])
+            for name, uri in iteritems(ns.list(prefix=LSI_WORKER_PREFIX)):
                 try:
                     worker = Pyro4.Proxy(uri)
                     workerid = len(self.workers)
@@ -277,14 +286,32 @@ class Dispatcher(object):
         os._exit(0)  # exit the whole process (not just this thread ala sys.exit())
 
 
-if __name__ == '__main__':
+def main():
     logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
     parser = argparse.ArgumentParser(description=__doc__[:-135], formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument(
         'maxsize', type=int, help='Maximum number of jobs to be kept pre-fetched in the queue.', default=MAX_JOBS_QUEUE
     )
+    parser.add_argument("--host", help="Nameserver hostname (default: %(default)s)", default=None)
+    parser.add_argument("--port", help="Nameserver port (default: %(default)s)", default=None, type=int)
+    parser.add_argument(
+        "--no-broadcast", help="Disable broadcast (default: %(default)s)", action='store_const',
+        default=True, const=False
+    )
+    parser.add_argument("--hmac", help="Nameserver hmac key (default: %(default)s)", default=None)
     args = parser.parse_args()
 
+    ns_conf = {
+        "broadcast": args.no_broadcast,
+        "host": args.host,
+        "port": args.port,
+        "hmac_key": args.hmac
+    }
+
     logger.info("running %s", " ".join(sys.argv))
-    utils.pyro_daemon('gensim.lsi_dispatcher', Dispatcher(maxsize=args.maxsize))
+    utils.pyro_daemon(LSI_DISPATCHER_PREFIX, Dispatcher(maxsize=args.maxsize, ns_conf=ns_conf), ns_conf=ns_conf)
     logger.info("finished running %s", parser.prog)
+
+
+if __name__ == '__main__':
+    main()

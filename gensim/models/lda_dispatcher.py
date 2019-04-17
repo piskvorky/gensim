@@ -315,15 +315,15 @@ def main():
     )
     args = parser.parse_args()
 
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=args.loglevel)
-    logger.info("running %s", " ".join(sys.argv))
-
     ns_conf = {
         "broadcast": args.no_broadcast,
         "host": args.host,
         "port": args.port,
         "hmac_key": args.hmac
     }
+
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=args.loglevel)
+    logger.info("running %s", " ".join(sys.argv))
     utils.pyro_daemon(LDA_DISPATCHER_PREFIX, Dispatcher(maxsize=args.maxsize, ns_conf=ns_conf), ns_conf=ns_conf)
     logger.info("finished running %s", " ".join(sys.argv))
 

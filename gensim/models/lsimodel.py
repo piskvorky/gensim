@@ -354,7 +354,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     """
 
     def __init__(self, corpus=None, num_topics=200, id2word=None, chunksize=20000,
-                 decay=1.0, distributed=False, onepass=True,
+                 decay=1.0, distributed=False, ns_conf=None, onepass=True,
                  power_iters=P2_EXTRA_ITERS, extra_samples=P2_EXTRA_DIMS, dtype=np.float64):
         """Construct an `LsiModel` object.
 
@@ -374,6 +374,9 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Weight of existing observations relatively to new ones.
         distributed : bool, optional
             If True - distributed mode (parallel execution on several machines) will be used.
+        ns_conf : dict of (str, object), optional
+            Key word parameters propagated to :func:`gensim.utils.getNS` to get a Pyro4 Nameserved.
+            Only used if `distributed` is set to True.
         onepass : bool, optional
             Whether the one-pass algorithm should be used for training.
             Pass `False` to force a multi-pass stochastic algorithm.
@@ -427,15 +430,20 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 )
             try:
                 import Pyro4
-                dispatcher = Pyro4.Proxy('PYRONAME:gensim.lsi_dispatcher')
-                logger.debug("looking for dispatcher at %s", str(dispatcher._pyroUri))
-                dispatcher.initialize(
-                    id2word=self.id2word, num_topics=num_topics, chunksize=chunksize, decay=decay,
-                    power_iters=self.power_iters, extra_samples=self.extra_samples, distributed=False, onepass=onepass
-                )
-                self.dispatcher = dispatcher
-                self.numworkers = len(dispatcher.getworkers())
-                logger.info("using distributed version with %i workers", self.numworkers)
+                if ns_conf is None:
+                    ns_conf = {}
+
+                with utils.getNS(**ns_conf) as ns:
+                    from gensim.models.lsi_dispatcher import LSI_DISPATCHER_PREFIX
+                    dispatcher = Pyro4.Proxy(ns.list(prefix=LSI_DISPATCHER_PREFIX)[LSI_DISPATCHER_PREFIX])
+                    logger.debug("looking for dispatcher at %s", str(dispatcher._pyroUri))
+                    dispatcher.initialize(
+                        id2word=self.id2word, num_topics=num_topics, chunksize=chunksize, decay=decay,
+                        power_iters=self.power_iters, extra_samples=self.extra_samples, distributed=False, onepass=onepass
+                    )
+                    self.dispatcher = dispatcher
+                    self.numworkers = len(dispatcher.getworkers())
+                    logger.info("using distributed version with %i workers", self.numworkers)
             except Exception as err:
                 # distributed version was specifically requested, so this is an error state
                 logger.error("failed to initialize distributed LSI (%s)", err)

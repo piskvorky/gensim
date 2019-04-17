@@ -74,6 +74,9 @@ logger = logging.getLogger(__name__)
 SAVE_DEBUG = 0  # save intermediate models after every SAVE_DEBUG updates (0 for never)
 
 
+LSI_WORKER_PREFIX = 'gensim.lsi_worker'
+
+
 class Worker(object):
     def __init__(self):
         """Partly initialize the model.
@@ -182,13 +185,27 @@ class Worker(object):
         os._exit(0)
 
 
-if __name__ == '__main__':
-    """The main script. """
-    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
-
+def main():
     parser = argparse.ArgumentParser(description=__doc__[:-135], formatter_class=argparse.RawTextHelpFormatter)
-    _ = parser.parse_args()
+    parser.add_argument(
+        '--host', dest='host', action='store',
+        type=str, default='', help='host of Pyro nameserver')
+    parser.add_argument(
+        '--port', dest='port', action='store',
+        type=int, default=0, help='port for Pyro nameserver')
+    args = parser.parse_args()
 
+    ns_conf = dict(
+        host=args.host if args.host else None,
+        port=args.port if args.port else None,
+        broadcast=args.host and args.port,
+    )
+
+    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
     logger.info("running %s", " ".join(sys.argv))
-    utils.pyro_daemon('gensim.lsi_worker', Worker(), random_suffix=True)
+    utils.pyro_daemon(LSI_WORKER_PREFIX, Worker(), random_suffix=True, ns_conf=ns_conf)
     logger.info("finished running %s", parser.prog)
+
+
+if __name__ == '__main__':
+    main()
