@@ -1023,30 +1023,31 @@ class FastText(BaseWordEmbeddingsModel):
         """
         try:
             model = super(FastText, cls).load(*args, **kwargs)
-            if hasattr(model.wv, 'hash2index'):
-                gensim.models.keyedvectors._rollback_optimization(model.wv)
 
             if not hasattr(model.trainables, 'vectors_vocab_lockf') and hasattr(model.wv, 'vectors_vocab'):
                 model.trainables.vectors_vocab_lockf = ones(model.wv.vectors_vocab.shape, dtype=REAL)
             if not hasattr(model.trainables, 'vectors_ngrams_lockf') and hasattr(model.wv, 'vectors_ngrams'):
                 model.trainables.vectors_ngrams_lockf = ones(model.wv.vectors_ngrams.shape, dtype=REAL)
 
-            if not hasattr(model.wv, 'compatible_hash'):
-                logger.warning(
-                    "This older model was trained with a buggy hash function. "
-                    "The model will continue to work, but consider training it "
-                    "from scratch."
-                )
-                model.wv.compatible_hash = False
-
             if not hasattr(model.wv, 'bucket'):
                 model.wv.bucket = model.trainables.bucket
-
-            return model
         except AttributeError:
             logger.info('Model saved using code from earlier Gensim Version. Re-loading old model in a compatible way.')
             from gensim.models.deprecated.fasttext import load_old_fasttext
-            return load_old_fasttext(*args, **kwargs)
+            model = load_old_fasttext(*args, **kwargs)
+
+        if hasattr(model.wv, 'hash2index'):
+            gensim.models.keyedvectors._rollback_optimization(model.wv)
+
+        if not hasattr(model.wv, 'compatible_hash'):
+            logger.warning(
+                "This older model was trained with a buggy hash function. "
+                "The model will continue to work, but consider training it "
+                "from scratch."
+            )
+            model.wv.compatible_hash = False
+
+        return model
 
     @deprecated("Method will be removed in 4.0.0, use self.wv.accuracy() instead")
     def accuracy(self, questions, restrict_vocab=30000, most_similar=None, case_insensitive=True):
