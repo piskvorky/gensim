@@ -734,7 +734,7 @@ def unitvec(vec, norm='l2', return_norm=False):
                 return vec
         else:
             if return_norm:
-                return vec, 1.
+                return vec, 1.0
             else:
                 return vec
 
@@ -742,7 +742,10 @@ def unitvec(vec, norm='l2', return_norm=False):
         if norm == 'l1':
             veclen = np.sum(np.abs(vec))
         if norm == 'l2':
-            veclen = blas_nrm2(vec)
+            if vec.size == 0:
+                veclen = 0.0
+            else:
+                veclen = blas_nrm2(vec)
         if veclen > 0.0:
             if np.issubdtype(vec.dtype, np.integer):
                 vec = vec.astype(np.float)
@@ -752,14 +755,17 @@ def unitvec(vec, norm='l2', return_norm=False):
                 return blas_scal(1.0 / veclen, vec).astype(vec.dtype)
         else:
             if return_norm:
-                return vec, 1
+                return vec, 1.0
             else:
                 return vec
 
     try:
         first = next(iter(vec))  # is there at least one element?
     except StopIteration:
-        return vec
+        if return_norm:
+            return vec, 1.0
+        else:
+            return vec
 
     if isinstance(first, (tuple, list)) and len(first) == 2:  # gensim sparse format
         if norm == 'l1':

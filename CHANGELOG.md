@@ -22,7 +22,7 @@ Changes
 
 ### :+1: Improvements
 
-* Undo the hash2index optimization (__[mpenkov](https://github.com/mpenkov)__, [#2370](https://github.com/RaRe-Technologies/gensim/pull/2387))
+* Undo the hash2index optimization (__[mpenkov](https://github.com/mpenkov)__, [#2370](https://github.com/RaRe-Technologies/gensim/pull/2370))
 
 ### :warning: Changes in FastText behavior
 
