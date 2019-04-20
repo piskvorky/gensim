@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import division
 
+import io
 import logging
 import unittest
 import os
@@ -19,6 +20,10 @@ from gensim.models.wrappers.fasttext import FastTextKeyedVectors
 from gensim.models.wrappers.fasttext import FastText as FT_wrapper
 from gensim.models.keyedvectors import Word2VecKeyedVectors
 from gensim.test.utils import datapath, get_tmpfile, temporary_file, common_texts as sentences
+import gensim.models._fasttext_bin
+
+
+import gensim.models.fasttext
 
 try:
     from pyemd import emd  # noqa:F401
@@ -55,24 +60,9 @@ class TestFastTextModel(unittest.TestCase):
     def setUp(self):
         ft_home = os.environ.get('FT_HOME', None)
         self.ft_path = os.path.join(ft_home, 'fasttext') if ft_home else None
-        self.test_model_file = datapath('lee_fasttext')
-        self.test_model = FT_gensim.load_fasttext_format(self.test_model_file)
-        self.test_new_model_file = datapath('lee_fasttext_new')
-
-    def test_native_partial_model(self):
-        """Can we skip loading the NN and still get a working model?"""
-        model = FT_gensim.load_fasttext_format(self.test_model_file, full_model=False)
-
-        #
-        # Training continuation should be impossible
-        #
-        self.assertIsNone(model.trainables.syn1neg)
-        self.assertRaises(ValueError, model.train, sentences,
-                          total_examples=model.corpus_count, epochs=model.epochs)
-
-        model.wv['green']
-        model.wv['foobar']
-        model.wv['thisworddoesnotexist']
+        self.test_model_file = datapath('lee_fasttext.bin')
+        self.test_model = gensim.models.fasttext.load_facebook_model(self.test_model_file)
+        self.test_new_model_file = datapath('lee_fasttext_new.bin')
 
     def test_training(self):
         model = FT_gensim(size=10, min_count=1, hs=1, negative=0, seed=42, workers=1)
@@ -202,7 +192,7 @@ class TestFastTextModel(unittest.TestCase):
 
     def test_load_fasttext_format(self):
         try:
-            model = FT_gensim.load_fasttext_format(self.test_model_file)
+            model = gensim.models.fasttext.load_facebook_model(self.test_model_file)
         except Exception as exc:
             self.fail('Unable to load FastText model from file %s: %s' % (self.test_model_file, exc))
         vocab_size, model_size = 1762, 10
@@ -255,7 +245,7 @@ class TestFastTextModel(unittest.TestCase):
 
     def test_load_fasttext_new_format(self):
         try:
-            new_model = FT_gensim.load_fasttext_format(self.test_new_model_file)
+            new_model = gensim.models.fasttext.load_facebook_model(self.test_new_model_file)
         except Exception as exc:
             self.fail('Unable to load FastText model from file %s: %s' % (self.test_new_model_file, exc))
         vocab_size, model_size = 1763, 10
@@ -308,10 +298,10 @@ class TestFastTextModel(unittest.TestCase):
 
     def test_load_model_supervised(self):
         with self.assertRaises(NotImplementedError):
-            FT_gensim.load_fasttext_format(datapath('pang_lee_polarity_fasttext'))
+            gensim.models.fasttext.load_facebook_model(datapath('pang_lee_polarity_fasttext.bin'))
 
     def test_load_model_with_non_ascii_vocab(self):
-        model = FT_gensim.load_fasttext_format(datapath('non_ascii_fasttext'))
+        model = gensim.models.fasttext.load_facebook_model(datapath('non_ascii_fasttext.bin'))
         self.assertTrue(u'který' in model.wv)
         try:
             model.wv[u'který']
@@ -319,7 +309,7 @@ class TestFastTextModel(unittest.TestCase):
             self.fail('Unable to access vector for utf8 encoded non-ascii word')
 
     def test_load_model_non_utf8_encoding(self):
-        model = FT_gensim.load_fasttext_format(datapath('cp852_fasttext'), encoding='cp852')
+        model = gensim.models.fasttext.load_facebook_model(datapath('cp852_fasttext.bin'), encoding='cp852')
         self.assertTrue(u'který' in model.wv)
         try:
             model.wv[u'který']
@@ -891,7 +881,7 @@ def load_native():
     # ./fasttext cbow -input toy-data.txt -output toy-model -bucket 100 -dim 5
     #
     path = datapath('toy-model.bin')
-    model = FT_gensim.load_fasttext_format(path)
+    model = gensim.models.fasttext.load_facebook_model(path)
     return model
 
 
@@ -1115,10 +1105,26 @@ class NativeTrainingContinuationTest(unittest.TestCase):
             model.save(model_name)
 
     def test_load_native_pretrained(self):
-        model = FT_gensim.load_fasttext_format(datapath('toy-model-pretrained.bin'))
+        model = gensim.models.fasttext.load_facebook_model(datapath('toy-model-pretrained.bin'))
         actual = model['monarchist']
         expected = np.array([0.76222, 1.0669, 0.7055, -0.090969, -0.53508])
         self.assertTrue(np.allclose(expected, actual, atol=10e-4))
+
+    def test_load_native_vectors(self):
+        cap_path = datapath("crime-and-punishment.bin")
+        fbkv = gensim.models.fasttext.load_facebook_vectors(cap_path)
+        self.assertFalse('landlord' in fbkv.vocab)
+        self.assertTrue('landlady' in fbkv.vocab)
+        oov_vector = fbkv['landlord']
+        iv_vector = fbkv['landlady']
+        self.assertFalse(np.allclose(oov_vector, iv_vector))
+
+    def test_no_ngrams(self):
+        model = gensim.models.fasttext.load_facebook_model(datapath('crime-and-punishment.bin'))
+
+        v1 = model.wv['']
+        origin = np.zeros(v1.shape, v1.dtype)
+        self.assertTrue(np.allclose(v1, origin))
 
 
 def _train_model_with_pretrained_vectors():
@@ -1170,7 +1176,7 @@ class HashTest(unittest.TestCase):
         #
         # ./fasttext skipgram -minCount 0 -bucket 100 -input crime-and-punishment.txt -output crime-and-punishment -dim 5  # noqa: E501
         #
-        self.model = FT_gensim.load_fasttext_format(datapath('crime-and-punishment.bin'))
+        self.model = gensim.models.fasttext.load_facebook_model(datapath('crime-and-punishment.bin'))
         with smart_open.smart_open(datapath('crime-and-punishment.vec'), 'r', encoding='utf-8') as fin:
             self.expected = dict(load_vec(fin))
 
@@ -1207,6 +1213,71 @@ class ZeroBucketTest(unittest.TestCase):
     def test_out_of_vocab(self):
         model = train_gensim(bucket=0)
         self.assertRaises(KeyError, model.wv.word_vec, 'streamtrain')
+
+
+class UnicodeVocabTest(unittest.TestCase):
+    def test_ascii(self):
+        buf = io.BytesIO()
+        buf.name = 'dummy name to keep fasttext happy'
+        buf.write(struct.pack('@3i', 2, -1, -1))  # vocab_size, nwords, nlabels
+        buf.write(struct.pack('@1q', -1))
+        buf.write(b'hello')
+        buf.write(b'\x00')
+        buf.write(struct.pack('@qb', 1, -1))
+        buf.write(b'world')
+        buf.write(b'\x00')
+        buf.write(struct.pack('@qb', 2, -1))
+        buf.seek(0)
+
+        raw_vocab, vocab_size, nlabels = gensim.models._fasttext_bin._load_vocab(buf, False)
+        expected = {'hello': 1, 'world': 2}
+        self.assertEqual(expected, dict(raw_vocab))
+
+        self.assertEqual(vocab_size, 2)
+        self.assertEqual(nlabels, -1)
+
+    def test_bad_unicode(self):
+        buf = io.BytesIO()
+        buf.name = 'dummy name to keep fasttext happy'
+        buf.write(struct.pack('@3i', 2, -1, -1))  # vocab_size, nwords, nlabels
+        buf.write(struct.pack('@1q', -1))
+        #
+        # encountered in https://github.com/RaRe-Technologies/gensim/issues/2378
+        # The model from downloaded from
+        # https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki-news-300d-1M-subword.bin.zip
+        # suffers from bad characters in a few of the vocab terms.  The native
+        # fastText utility loads the model fine, but we trip up over the bad
+        # characters.
+        #
+        buf.write(
+            b'\xe8\x8b\xb1\xe8\xaa\x9e\xe7\x89\x88\xe3\x82\xa6\xe3\x82\xa3\xe3'
+            b'\x82\xad\xe3\x83\x9a\xe3\x83\x87\xe3\x82\xa3\xe3\x82\xa2\xe3\x81'
+            b'\xb8\xe3\x81\xae\xe6\x8a\x95\xe7\xa8\xbf\xe3\x81\xaf\xe3\x81\x84'
+            b'\xe3\x81\xa4\xe3\x81\xa7\xe3\x82\x82\xe6'
+        )
+        buf.write(b'\x00')
+        buf.write(struct.pack('@qb', 1, -1))
+        buf.write(
+            b'\xd0\xb0\xd0\xb4\xd0\xbc\xd0\xb8\xd0\xbd\xd0\xb8\xd1\x81\xd1\x82'
+            b'\xd1\x80\xd0\xb0\xd1\x82\xd0\xb8\xd0\xb2\xd0\xbd\xd0\xbe-\xd1\x82'
+            b'\xd0\xb5\xd1\x80\xd1\x80\xd0\xb8\xd1\x82\xd0\xbe\xd1\x80\xd0\xb8'
+            b'\xd0\xb0\xd0\xbb\xd1\x8c\xd0\xbd\xd1'
+        )
+        buf.write(b'\x00')
+        buf.write(struct.pack('@qb', 2, -1))
+        buf.seek(0)
+
+        raw_vocab, vocab_size, nlabels = gensim.models._fasttext_bin._load_vocab(buf, False)
+
+        expected = {
+            u'英語版ウィキペディアへの投稿はいつでも\\xe6': 1,
+            u'административно-территориальн\\xd1': 2,
+        }
+
+        self.assertEqual(expected, dict(raw_vocab))
+
+        self.assertEqual(vocab_size, 2)
+        self.assertEqual(nlabels, -1)
 
 
 if __name__ == '__main__':

@@ -5,7 +5,12 @@ Corpora and Vector Spaces
 
 This tutorial is available as a Jupyter Notebook `here <https://github.com/piskvorky/gensim/blob/develop/docs/notebooks/Corpora_and_Vector_Spaces.ipynb>`_.
 
-Don't forget to set
+Or run this notebook online (no installation required) via the Binder project:
+
+.. image:: https://mybinder.org/badge_logo.svg
+ :target: https://mybinder.org/v2/gh/RaRe-Technologies/gensim/master?filepath=%2Fdocs%2Fnotebooks%2FCorpora_and_Vector_Spaces.ipynb
+
+| Don't forget to set
 
 >>> import logging
 >>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
@@ -45,8 +50,10 @@ as well as words that only appear once in the corpus:
     >>>
     >>> # remove common words and tokenize
     >>> stoplist = set('for a of the and to in'.split())
-    >>> texts = [[word for word in document.lower().split() if word not in stoplist]
-    >>>          for document in documents]
+    >>> texts = [
+    >>>     [word for word in document.lower().split() if word not in stoplist]
+    >>>     for document in documents
+    >>> ]
     >>>
     >>> # remove words that appear only once
     >>> frequency = defaultdict(int)
@@ -54,8 +61,10 @@ as well as words that only appear once in the corpus:
     >>>     for token in text:
     >>>         frequency[token] += 1
     >>>
-    >>> texts = [[token for token in text if frequency[token] > 1]
-    >>>          for text in texts]
+    >>> texts = [
+    >>>     [token for token in text if frequency[token] > 1]
+    >>>     for text in texts
+    >>> ]
     >>>
     >>> pprint(texts)
     [['human', 'interface', 'computer'],
@@ -90,10 +99,13 @@ a question-answer pair, in the style of:
 It is advantageous to represent the questions only by their (integer) ids. The mapping
 between the questions and ids is called a dictionary:
 
->>> dictionary = corpora.Dictionary(texts)
->>> dictionary.save('/tmp/deerwester.dict')  # store the dictionary, for future reference
->>> print(dictionary)
-Dictionary(12 unique tokens)
+.. sourcecode:: pycon
+
+    >>> from gensim import corpora
+    >>> dictionary = corpora.Dictionary(texts)
+    >>> dictionary.save('/tmp/deerwester.dict')  # store the dictionary, for future reference
+    >>> print(dictionary)
+    Dictionary(12 unique tokens)
 
 Here we assigned a unique integer id to all words appearing in the corpus with the
 :class:`gensim.corpora.dictionary.Dictionary` class. This sweeps across the texts, collecting word counts
@@ -202,8 +214,11 @@ Similarly, to construct the dictionary without loading all texts into memory:
     >>> # collect statistics about all tokens
     >>> dictionary = corpora.Dictionary(line.lower().split() for line in open('mycorpus.txt'))
     >>> # remove stop words and words that appear only once
-    >>> stop_ids = [dictionary.token2id[stopword] for stopword in stoplist
-    >>>             if stopword in dictionary.token2id]
+    >>> stop_ids = [
+    >>>     dictionary.token2id[stopword]
+    >>>     for stopword in stoplist
+    >>>     if stopword in dictionary.token2id
+    >>> ]
     >>> once_ids = [tokenid for tokenid, docfreq in iteritems(dictionary.dfs) if docfreq == 1]
     >>> dictionary.filter_tokens(stop_ids + once_ids)  # remove stop words and words that appear only once
     >>> dictionary.compactify()  # remove gaps in id sequence after words that were removed

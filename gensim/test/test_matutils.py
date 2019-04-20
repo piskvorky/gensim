@@ -241,6 +241,30 @@ class UnitvecTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(unit_vector, man_unit_vector))
         self.assertTrue(np.issubdtype(unit_vector.dtype, np.floating))
 
+    def test_return_norm_zero_vector_scipy_sparse(self):
+        input_vector = sparse.csr_matrix([[]], dtype=np.int32)
+        return_value = matutils.unitvec(input_vector, return_norm=True)
+        self.assertTrue(isinstance(return_value, tuple))
+        norm = return_value[1]
+        self.assertTrue(isinstance(norm, float))
+        self.assertEqual(norm, 1.0)
+
+    def test_return_norm_zero_vector_numpy(self):
+        input_vector = np.array([], dtype=np.int32)
+        return_value = matutils.unitvec(input_vector, return_norm=True)
+        self.assertTrue(isinstance(return_value, tuple))
+        norm = return_value[1]
+        self.assertTrue(isinstance(norm, float))
+        self.assertEqual(norm, 1.0)
+
+    def test_return_norm_zero_vector_gensim_sparse(self):
+        input_vector = []
+        return_value = matutils.unitvec(input_vector, return_norm=True)
+        self.assertTrue(isinstance(return_value, tuple))
+        norm = return_value[1]
+        self.assertTrue(isinstance(norm, float))
+        self.assertEqual(norm, 1.0)
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)

@@ -128,7 +128,7 @@ cdef void fasttext_fast_sentence_sg_neg(FastTextConfig *c, int i, int j) nogil:
 
     cdef long long row1 = word2_index * size, row2
     cdef unsigned long long modulo = 281474976710655ULL
-    cdef REAL_t f, g, label, f_dot, norm_factor
+    cdef REAL_t f, g, label, f_dot
     cdef np.uint32_t target_index
     cdef int d
 
@@ -137,6 +137,10 @@ cdef void fasttext_fast_sentence_sg_neg(FastTextConfig *c, int i, int j) nogil:
 
     scopy(&size, &syn0_vocab[row1], &ONE, l1, &ONE)
 
+    #
+    # Avoid division by zero.
+    #
+    cdef REAL_t norm_factor
     if subwords_len:
         for d in range(subwords_len):
             our_saxpy(&size, &ONEF, &syn0_ngrams[subwords_index[d] * size], &ONE, l1, &ONE)
@@ -217,7 +221,7 @@ cdef void fasttext_fast_sentence_sg_hs(FastTextConfig *c, int i, int j) nogil:
     #
     cdef long long b
     cdef long long row1 = word2_index * size, row2
-    cdef REAL_t f, g, f_dot, norm_factor
+    cdef REAL_t f, g, f_dot
 
     memset(work, 0, size * cython.sizeof(REAL_t))
     memset(l1, 0, size * cython.sizeof(REAL_t))
@@ -227,11 +231,11 @@ cdef void fasttext_fast_sentence_sg_hs(FastTextConfig *c, int i, int j) nogil:
     #
     # Avoid division by zero.
     #
+    cdef REAL_t norm_factor
     if subwords_len:
         for d in range(subwords_len):
             row2 = subwords_index[d] * size
             our_saxpy(&size, &ONEF, &syn0_ngrams[row2], &ONE, l1, &ONE)
-
         norm_factor = ONEF / subwords_len
         sscal(&size, &norm_factor, l1 , &ONE)
 
