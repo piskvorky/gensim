@@ -3,17 +3,25 @@
 #
 # Author: Tobias B <github.com/sezanzeb>
 
+# Opinosis Corpus Source:
+# title:         Opinosis: a graph-based approach to abstractive summarization of highly redundant opinions
+# authors:       Ganesan, Kavita and Zhai, ChengXiang and Han, Jiawei
+# booktitle:     Proceedings of the 23rd International Conference on Computational Linguistics
+# pages:         340-348
+# year:          2010
+# organization:  Association for Computational Linguistics
+# http://kavita-ganesan.com/opinosis-opinion-dataset/
+
 import os
 import re
 from gensim.corpora import Dictionary
 from gensim.parsing.porter import PorterStemmer
 from gensim.parsing.preprocessing import STOPWORDS
 
-
 class OpinosisCorpus():
     """Creates a corpus and dictionary from the opinosis dataset:
 
-    http://kavita-ganesan.com/opinosis-opinion-dataset/#.WyF_JNWxW00
+    http://kavita-ganesan.com/opinosis-opinion-dataset/
 
     This data is organized in folders, each folder containing a few short docs.
 
@@ -40,14 +48,6 @@ class OpinosisCorpus():
         """
 
         # citation
-        print("data source:")
-        print("title:\t\tOpinosis: a graph-based approach to abstractive summarization of highly redundant opinions")
-        print("authors:\tGanesan, Kavita and Zhai, ChengXiang and Han, Jiawei")
-        print("booktitle:\tProceedings of the 23rd International Conference on Computational Linguistics")
-        print("pages:\t\t340-348")
-        print("year:\t\t2010")
-        print("organization:\tAssociation for Computational Linguistics")
-
         path = os.path.join(path, "summaries-gold")
         dictionary = Dictionary()
         corpus = []
