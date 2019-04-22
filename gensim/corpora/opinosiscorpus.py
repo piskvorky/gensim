@@ -18,6 +18,7 @@ from gensim.corpora import Dictionary
 from gensim.parsing.porter import PorterStemmer
 from gensim.parsing.preprocessing import STOPWORDS
 
+
 class OpinosisCorpus():
     """Creates a corpus and dictionary from the opinosis dataset:
 
