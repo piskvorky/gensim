@@ -509,9 +509,9 @@ class TfidfModel(interfaces.TransformationABC):
             elif n_n == "b":
                 old_norm = sum(freq * (self.term_lens[termid] + 1.0) for termid, freq in bow)
         else:
-            if self.normalize:
+            if self.normalize is True:
                 self.normalize = matutils.unitvec
-            else:
+            elif self.normalize is False:
                 self.normalize = utils.identity
 
             if self.pivot is not None:
