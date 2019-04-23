@@ -706,8 +706,9 @@ def unitvec(vec, norm='l2', return_norm=False):
     Zero-vector will be unchanged.
 
     """
-    if norm not in ('l1', 'l2', 'unique'):
-        raise ValueError("'%s' is not a supported norm. Currently supported norms are 'l1' and 'l2'." % norm)
+    supported_norms = ('l1', 'l2', 'unique')
+    if norm not in supported_norms:
+        raise ValueError("'%s' is not a supported norm. Currently supported norms are %s." % (norm, supported_norms))
 
     if scipy.sparse.issparse(vec):
         vec = vec.tocsr()
