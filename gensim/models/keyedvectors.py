@@ -550,7 +550,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             raise ValueError("cannot compute similarity with no input")
         mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
 
-        if indexer is not None:
+        if indexer is not None and isinstance(topn, int):
             return indexer.most_similar(mean, topn)
 
         limited = self.vectors_norm if restrict_vocab is None else self.vectors_norm[:restrict_vocab]
