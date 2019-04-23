@@ -497,8 +497,9 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             List of words that contribute positively.
         negative : list of str, optional
             List of words that contribute negatively.
-        topn : int, optional
-            Number of top-N similar words to return.
+        topn : {int, None}, optional
+            Number of top-N similar words to return, when `topn` is int. When `topn` is None,
+            then similarities for all words are returned.
         restrict_vocab : int, optional
             Optional integer which limits the range of vectors which
             are searched for most-similar values. For example, restrict_vocab=10000 would
@@ -507,11 +508,12 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         Returns
         -------
-        list of (str, float)
-            Sequence of (word, similarity).
+        {list of (str, float), numpy.array}
+            Sequence of (word, similarity) when `topn` is int. When `topn` is None, then
+            similarities for all words are returned.
 
         """
-        if topn is not None and topn < 1:
+        if isinstance(topn, int) and topn < 1:
             return []
 
         if positive is None:
@@ -553,7 +555,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         limited = self.vectors_norm if restrict_vocab is None else self.vectors_norm[:restrict_vocab]
         dists = dot(limited, mean)
-        if topn is None:
+        if not topn:
             return dists
         best = matutils.argsort(dists, topn=topn + len(all_words), reverse=True)
         # ignore (don't return) words from the input
@@ -567,8 +569,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         ----------
         word : str
             Word
-        topn : {int, False}, optional
-            Number of top-N similar words to return. If topn is False, similar_by_word returns
+        topn : {int, None}, optional
+            Number of top-N similar words to return. If topn is None, similar_by_word returns
             the vector of similarity scores.
         restrict_vocab : int, optional
             Optional integer which limits the range of vectors which
@@ -578,8 +580,9 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         Returns
         -------
-        list of (str, float)
-            Sequence of (word, similarity).
+        {list of (str, float), numpy.array}
+            Sequence of (word, similarity) when `topn` is int. When `topn` is None, then
+            similarities for all words are returned.
 
         """
         return self.most_similar(positive=[word], topn=topn, restrict_vocab=restrict_vocab)
@@ -591,9 +594,9 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         ----------
         vector : numpy.array
             Vector from which similarities are to be computed.
-        topn : {int, False}, optional
-            Number of top-N similar words to return. If topn is False, similar_by_vector returns
-            the vector of similarity scores.
+        topn : {int, None}, optional
+            Number of top-N similar words to return, when `topn` is int. When `topn` is None,
+            then similarities for all words are returned.
         restrict_vocab : int, optional
             Optional integer which limits the range of vectors which
             are searched for most-similar values. For example, restrict_vocab=10000 would
@@ -602,8 +605,9 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         Returns
         -------
-        list of (str, float)
-            Sequence of (word, similarity).
+        {list of (str, float), numpy.array}
+            Sequence of (word, similarity) when `topn` is int. When `topn` is None, then
+            similarities for all words are returned.
 
         """
         return self.most_similar(positive=[vector], topn=topn, restrict_vocab=restrict_vocab)
@@ -783,15 +787,20 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             List of words that contribute positively.
         negative : list of str, optional
             List of words that contribute negatively.
-        topn : int, optional
-            Number of top-N similar words to return.
+        topn : {int, None}, optional
+            Number of top-N similar words to return, when `topn` is int. When `topn` is None,
+            then similarities for all words are returned.
 
         Returns
         -------
-        list of (str, float)
-            Sequence of (word, similarity).
+        {list of (str, float), numpy.array}
+            Sequence of (word, similarity) when `topn` is int. When `topn` is None, then
+            similarities for all words are returned.
 
         """
+        if isinstance(topn, int) and topn < 1:
+            return []
+
         if positive is None:
             positive = []
         if negative is None:
