@@ -1119,6 +1119,13 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         iv_vector = fbkv['landlady']
         self.assertFalse(np.allclose(oov_vector, iv_vector))
 
+    def test_no_ngrams(self):
+        model = gensim.models.fasttext.load_facebook_model(datapath('crime-and-punishment.bin'))
+
+        v1 = model.wv['']
+        origin = np.zeros(v1.shape, v1.dtype)
+        self.assertTrue(np.allclose(v1, origin))
+
 
 def _train_model_with_pretrained_vectors():
     """Generate toy-model-pretrained.bin for use in test_load_native_pretrained.
@@ -1261,10 +1268,12 @@ class UnicodeVocabTest(unittest.TestCase):
         buf.seek(0)
 
         raw_vocab, vocab_size, nlabels = gensim.models._fasttext_bin._load_vocab(buf, False)
+
         expected = {
-            u'英語版ウィキペディアへの投稿はいつでも': 1,
-            u'административно-территориальн': 2,
+            u'英語版ウィキペディアへの投稿はいつでも\\xe6': 1,
+            u'административно-территориальн\\xd1': 2,
         }
+
         self.assertEqual(expected, dict(raw_vocab))
 
         self.assertEqual(vocab_size, 2)

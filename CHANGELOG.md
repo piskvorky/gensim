@@ -1,7 +1,7 @@
 Changes
 ===========
 
-## Unreleased
+## 3.7.2, 2019-04-06
 
 ### :star2: New Features
 
@@ -13,6 +13,8 @@ Changes
 * Fix unicode error when loading FastText vocabulary (__[@mpenkov](https://github.com/mpenkov)__, [#2390](https://github.com/RaRe-Technologies/gensim/pull/2390))
 * Avoid division by zero in fasttext_inner.pyx (__[@mpenkov](https://github.com/mpenkov)__, [#2404](https://github.com/RaRe-Technologies/gensim/pull/2404))
 * Avoid incorrect filename inference when loading model (__[@mpenkov](https://github.com/mpenkov)__, [#2408](https://github.com/RaRe-Technologies/gensim/pull/2408))
+* Handle invalid unicode when loading native FastText models (__[@mpenkov](https://github.com/mpenkov)__, [#2411](https://github.com/RaRe-Technologies/gensim/pull/2411))
+* Avoid divide by zero when calculating vectors for terms with no ngrams (__[@mpenkov](https://github.com/mpenkov)__, [#2411](https://github.com/RaRe-Technologies/gensim/pull/2411))
 
 ### :books: Tutorial and doc improvements
 
@@ -20,7 +22,7 @@ Changes
 
 ### :+1: Improvements
 
-* Undo the hash2index optimization (__[mpenkov](https://github.com/mpenkov)__, [#2370](https://github.com/RaRe-Technologies/gensim/pull/2387))
+* Undo the hash2index optimization (__[mpenkov](https://github.com/mpenkov)__, [#2370](https://github.com/RaRe-Technologies/gensim/pull/2370))
 
 ### :warning: Changes in FastText behavior
 
@@ -39,7 +41,11 @@ word wasn't learned during model training.)
 2. `ft_model['any_word']` will always return a vector.  Previously, it 
 raised `KeyError` for OOV words when the model had no vectors 
 for **any** ngrams of the word.
-3. Models may use more more memory, or take longer for word-vector
+3. If no ngrams from the term are present in the model,
+or when no ngrams could be extracted from the term, a vector pointing
+to the origin will be returned.  Previously, a vector of NaN (not a number)
+was returned as a consequence of a divide-by-zero problem.
+4. Models may use more more memory, or take longer for word-vector
 lookup, especially after training on smaller corpuses where the previous 
 non-compliant behavior discarded some ngrams from consideration.
 

@@ -141,8 +141,8 @@ def corpus2csc(corpus, num_terms=None, dtype=np.float64, num_docs=None, num_nnz=
             if printprogress and docno % printprogress == 0:
                 logger.info("PROGRESS: at document #%i/%i", docno, num_docs)
             posnext = posnow + len(doc)
-            indices[posnow: posnext] = [feature_id for feature_id, _ in doc]
-            data[posnow: posnext] = [feature_weight for _, feature_weight in doc]
+            # zip(*doc) transforms doc to (token_indices, token_counts]
+            indices[posnow: posnext], data[posnow: posnext] = zip(*doc) if doc else ([], [])
             indptr.append(posnext)
             posnow = posnext
         assert posnow == num_nnz, "mismatch between supplied and computed number of non-zeros"
@@ -153,8 +153,11 @@ def corpus2csc(corpus, num_terms=None, dtype=np.float64, num_docs=None, num_nnz=
         for docno, doc in enumerate(corpus):
             if printprogress and docno % printprogress == 0:
                 logger.info("PROGRESS: at document #%i", docno)
-            indices.extend(feature_id for feature_id, _ in doc)
-            data.extend(feature_weight for _, feature_weight in doc)
+
+            # zip(*doc) transforms doc to (token_indices, token_counts]
+            doc_indices, doc_data = zip(*doc) if doc else ([], [])
+            indices.extend(doc_indices)
+            data.extend(doc_data)
             num_nnz += len(doc)
             indptr.append(num_nnz)
         if num_terms is None:
@@ -500,7 +503,13 @@ def corpus2dense(corpus, num_terms, num_docs=None, dtype=np.float32):
             result[:, docno] = sparse2full(doc, num_terms)
         assert docno + 1 == num_docs
     else:
-        result = np.column_stack(sparse2full(doc, num_terms) for doc in corpus)
+        # The below used to be a generator, but NumPy deprecated generator as of 1.16 with:
+        # """
+        # FutureWarning: arrays to stack must be passed as a "sequence" type such as list or tuple.
+        # Support for non-sequence iterables such as generators is deprecated as of NumPy 1.16 and will raise an error
+        # in the future.
+        # """
+        result = np.column_stack([sparse2full(doc, num_terms) for doc in corpus])
     return result.astype(dtype)
 
 
@@ -728,7 +737,7 @@ def unitvec(vec, norm='l2', return_norm=False):
                 return vec
         else:
             if return_norm:
-                return vec, 1.
+                return vec, 1.0
             else:
                 return vec
 
@@ -736,7 +745,10 @@ def unitvec(vec, norm='l2', return_norm=False):
         if norm == 'l1':
             veclen = np.sum(np.abs(vec))
         if norm == 'l2':
-            veclen = blas_nrm2(vec)
+            if vec.size == 0:
+                veclen = 0.0
+            else:
+                veclen = blas_nrm2(vec)
         if norm == 'unique':
             veclen = np.count_nonzero(vec)
         if veclen > 0.0:
@@ -748,14 +760,17 @@ def unitvec(vec, norm='l2', return_norm=False):
                 return blas_scal(1.0 / veclen, vec).astype(vec.dtype)
         else:
             if return_norm:
-                return vec, 1
+                return vec, 1.0
             else:
                 return vec
 
     try:
         first = next(iter(vec))  # is there at least one element?
     except StopIteration:
-        return vec
+        if return_norm:
+            return vec, 1.0
+        else:
+            return vec
 
     if isinstance(first, (tuple, list)) and len(first) == 2:  # gensim sparse format
         if norm == 'l1':
