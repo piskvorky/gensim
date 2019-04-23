@@ -72,7 +72,7 @@ def resolve_weights(smartirs):
 
     """
 
-    if smartirs is None:
+    if not smartirs:
         return None
 
     if isinstance(smartirs, str) and re.match(r"...\....", smartirs):
@@ -350,16 +350,16 @@ class TfidfModel(interfaces.TransformationABC):
         self.pivot = pivot
         self.eps = 1e-12
 
-        if smartirs is not None:
+        if smartirs:
             n_tf, n_df, n_n = self.smartirs
             self.wlocal = partial(smartirs_wlocal, local_scheme=n_tf)
             self.wglobal = partial(smartirs_wglobal, global_scheme=n_df)
 
-        if dictionary is not None:
+        if dictionary:
             # user supplied a Dictionary object, which already contains all the
             # statistics we need to construct the IDF mapping. we can skip the
             # step that goes through the corpus (= an optimization).
-            if corpus is not None:
+            if corpus:
                 logger.warning(
                     "constructor received both corpus and explicit inverse document frequencies; ignoring the corpus"
                 )
@@ -368,9 +368,9 @@ class TfidfModel(interfaces.TransformationABC):
             self.dfs = dictionary.dfs.copy()
             self.term_lens = {termid: len(term) for termid, term in iteritems(dictionary)}
             self.idfs = precompute_idfs(self.wglobal, self.dfs, self.num_docs)
-            if id2word is None:
+            if not id2word:
                 self.id2word = dictionary
-        elif corpus is not None:
+        elif corpus:
             self.initialize(corpus)
         else:
             # NOTE: everything is left uninitialized; presumably the model will
@@ -378,26 +378,22 @@ class TfidfModel(interfaces.TransformationABC):
             pass
 
         # If smartirs is not None, override pivot and normalize
-        if smartirs is not None:
-            if self.pivot is None:
-                if n_n == "u":
-                    if dictionary is not None or corpus is not None:
-                        if callable(self.normalize):
-                            logger.warning("constructor received smartirs; ignoring normalize")
-                        self.pivot = 1.0 * self.num_nnz / self.num_docs
-                    else:
-                        logger.warning("constructor received no corpus or dictionary; ignoring smartirs[2]")
-                elif n_n == "b":
-                    if dictionary is not None:
-                        if callable(self.normalize):
-                            logger.warning("constructor received smartirs; ignoring normalize")
-                        self.pivot = 1.0 * sum(
-                            self.cfs[termid] * (self.term_lens[termid] + 1.0) for termid in iterkeys(dictionary)
-                        ) / self.num_docs
-                    else:
-                        logger.warning("constructor received no dictionary; ignoring smartirs[2]")
-            elif n_n in 'ub':
+        if not smartirs:
+            return
+        if self.pivot is not None:
+            if n_n in 'ub':
                 logger.warning("constructor received pivot; ignoring smartirs[2]")
+            return
+        if n_n in 'ub' and callable(self.normalize):
+            logger.warning("constructor received smartirs; ignoring normalize")
+        if n_n in 'ub' and not dictionary and not corpus:
+            logger.warning("constructor received no corpus or dictionary; ignoring smartirs[2]")
+        elif n_n == "u":
+            self.pivot = 1.0 * self.num_nnz / self.num_docs
+        elif n_n == "b":
+            self.pivot = 1.0 * sum(
+                self.cfs[termid] * (self.term_lens[termid] + 1.0) for termid in iterkeys(dictionary)
+            ) / self.num_docs
 
     @classmethod
     def load(cls, *args, **kwargs):
@@ -493,7 +489,7 @@ class TfidfModel(interfaces.TransformationABC):
 
         # and finally, normalize the vector either to unit length, or use a
         # user-defined normalization function
-        if self.smartirs is not None:
+        if self.smartirs:
             n_n = self.smartirs[2]
             if n_n == "n" or (n_n in 'ub' and self.pivot is None):
                 if self.pivot is not None:
