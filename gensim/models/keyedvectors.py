@@ -1184,7 +1184,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                 ignore = {a, b, c}  # input words to be ignored
                 predicted = None
                 # find the most likely prediction, ignoring OOV words and input words
-                sims = most_similar(self, positive=[b, c], negative=[a], topn=False, restrict_vocab=restrict_vocab)
+                sims = most_similar(self, positive=[b, c], negative=[a], topn=None, restrict_vocab=restrict_vocab)
                 self.vocab = original_vocab
                 for index in matutils.argsort(sims, reverse=True):
                     predicted = self.index2word[index].upper() if case_insensitive else self.index2word[index]
