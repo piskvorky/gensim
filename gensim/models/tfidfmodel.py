@@ -287,10 +287,10 @@ class TfidfModel(interfaces.TransformationABC):
         dictionary : :class:`~gensim.corpora.Dictionary`
             If `dictionary` is specified, it must be a `corpora.Dictionary` object and it will be used.
             to directly construct the inverse document frequency mapping (then `corpus`, if specified, is ignored).
-        wlocals : function, optional
+        wlocals : callable, optional
             Function for local weighting, default for `wlocal` is :func:`~gensim.utils.identity`
-            (other options: :func:`math.sqrt`, :func:`math.log1p`, etc).
-        wglobal : function, optional
+            (other options: :func:`numpy.sqrt`, `lambda tf: 0.5 + (0.5 * tf / tf.max())`, etc.).
+        wglobal : callable, optional
             Function for global weighting, default is :func:`~gensim.models.tfidfmodel.df2idf`.
         normalize : {bool, callable}, optional
             Normalize document vectors to unit euclidean length? You can also inject your own function into `normalize`.
