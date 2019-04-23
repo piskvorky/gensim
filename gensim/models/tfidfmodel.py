@@ -350,7 +350,6 @@ class TfidfModel(interfaces.TransformationABC):
         self.pivot = pivot
         self.eps = 1e-12
 
-        # If smartirs is not None, override wlocal and wglobal
         if smartirs is not None:
             n_tf, n_df, n_n = self.smartirs
             self.wlocal = partial(smartirs_wlocal, local_scheme=n_tf)
