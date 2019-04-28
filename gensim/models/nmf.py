@@ -587,9 +587,9 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             raise ValueError("Corpus is an iterator, only `passes=1` is valid.")
 
         logger.info(
-            "running NMF training, %s topics, %i passes over the supplied corpus of %i documents, evaluating l2 norm "
+            "running NMF training, %s topics, %i passes over the supplied corpus of %s documents, evaluating l2 norm "
             "every %i documents",
-            self.num_topics, passes, lencorpus if lencorpus < np.inf else "?", evalafter,
+            self.num_topics, passes, lencorpus, evalafter,
         )
 
         chunk_overall_idx = 1
@@ -623,7 +623,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     chunk_len = len(chunk)
 
                 logger.info(
-                    "PROGRESS: pass %i, at document #%i/%i",
+                    "PROGRESS: pass %i, at document #%i/%s",
                     pass_, chunk_idx * chunksize + chunk_len, lencorpus
                 )
 
