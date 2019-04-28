@@ -348,6 +348,13 @@ class UnpackTest(unittest.TestCase):
         self.assertTrue(np.all(np.array([6, 7, 8]) == n[2]))
 
 
+class Gensim320Test(unittest.TestCase):
+    def test(self):
+        path = datapath('old_keyedvectors_320.dat')
+        vectors = gensim.models.keyedvectors.KeyedVectors.load(path)
+        self.assertTrue(vectors.word_vec('computer') is not None)
+
+
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
