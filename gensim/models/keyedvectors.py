@@ -1981,12 +1981,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
     @classmethod
     def load(cls, fname_or_handle, **kwargs):
         model = super(WordEmbeddingsKeyedVectors, cls).load(fname_or_handle, **kwargs)
-        if not hasattr(model, 'compatible_hash'):
-            model.compatible_hash = False
-
-        if hasattr(model, 'hash2index'):
-            _rollback_optimization(model)
-
+        _try_upgrade(model)
         return model
 
     @property
@@ -2478,3 +2473,16 @@ def _unpack(m, num_rows, hash2index, seed=1):
         m[[h, i]] = m[[i, h]]  # swap rows i and h
 
     return m
+
+
+def _try_upgrade(wv):
+    if hasattr(wv, 'hash2index'):
+        _rollback_optimization(wv)
+
+    if not hasattr(wv, 'compatible_hash'):
+        logger.warning(
+            "This older model was trained with a buggy hash function. "
+            "The model will continue to work, but consider training it "
+            "from scratch."
+        )
+        wv.compatible_hash = False

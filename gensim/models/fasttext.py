@@ -1036,16 +1036,7 @@ class FastText(BaseWordEmbeddingsModel):
             from gensim.models.deprecated.fasttext import load_old_fasttext
             model = load_old_fasttext(*args, **kwargs)
 
-        if hasattr(model.wv, 'hash2index'):
-            gensim.models.keyedvectors._rollback_optimization(model.wv)
-
-        if not hasattr(model.wv, 'compatible_hash'):
-            logger.warning(
-                "This older model was trained with a buggy hash function. "
-                "The model will continue to work, but consider training it "
-                "from scratch."
-            )
-            model.wv.compatible_hash = False
+        gensim.models.keyedvectors._try_upgrade(model.wv)
 
         return model
 
