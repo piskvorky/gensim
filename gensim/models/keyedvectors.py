@@ -1659,8 +1659,9 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
             List of doctags/indexes that contribute positively.
         negative : list of {str, int}, optional
             List of doctags/indexes that contribute negatively.
-        topn : int, optional
-            Number of top-N similar docvecs to return.
+        topn : int or None, optional
+            Number of top-N similar docvecs to return, when `topn` is int. When `topn` is None,
+            then similarities for all docvecs are returned.
         clip_start : int
             Start clipping index.
         clip_end : int
@@ -1672,6 +1673,9 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
             Sequence of (doctag/index, similarity).
 
         """
+        if isinstance(topn, int) and topn < 1:
+            return []
+
         if positive is None:
             positive = []
         if negative is None:
@@ -1708,7 +1712,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
             raise ValueError("cannot compute similarity with no input")
         mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
 
-        if indexer is not None:
+        if indexer is not None and isinstance(topn, int):
             return indexer.most_similar(mean, topn)
 
         dists = dot(self.vectors_docs_norm[clip_start:clip_end], mean)
