@@ -71,7 +71,6 @@ def resolve_weights(smartirs):
         doesn't fit the list of permissible values.
 
     """
-
     if isinstance(smartirs, str) and re.match(r"...\....", smartirs):
         match = re.match(r"(?P<ddd>...)\.(?P<qqq>...)", smartirs)
         raise ValueError(
