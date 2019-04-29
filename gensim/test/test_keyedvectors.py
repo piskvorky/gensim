@@ -106,6 +106,9 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
         predicted = self.vectors.most_similar('war', topn=None)
         self.assertEqual(len(predicted), len(self.vectors.vocab))
 
+        predicted = self.vectors.most_similar('war', topn=0)
+        self.assertEqual(len(predicted), 0)
+
     def test_relative_cosine_similarity(self):
         """Test relative_cosine_similarity returns expected results with an input of a word pair and topn"""
         wordnet_syn = [
