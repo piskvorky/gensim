@@ -497,7 +497,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             List of words that contribute positively.
         negative : list of str, optional
             List of words that contribute negatively.
-        topn : {int, None}, optional
+        topn : int or None, optional
             Number of top-N similar words to return, when `topn` is int. When `topn` is None,
             then similarities for all words are returned.
         restrict_vocab : int, optional
@@ -569,7 +569,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         ----------
         word : str
             Word
-        topn : {int, None}, optional
+        topn : int or None, optional
             Number of top-N similar words to return. If topn is None, similar_by_word returns
             the vector of similarity scores.
         restrict_vocab : int, optional
@@ -594,7 +594,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         ----------
         vector : numpy.array
             Vector from which similarities are to be computed.
-        topn : {int, None}, optional
+        topn : int or None, optional
             Number of top-N similar words to return, when `topn` is int. When `topn` is None,
             then similarities for all words are returned.
         restrict_vocab : int, optional
@@ -787,7 +787,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             List of words that contribute positively.
         negative : list of str, optional
             List of words that contribute negatively.
-        topn : {int, None}, optional
+        topn : int or None, optional
             Number of top-N similar words to return, when `topn` is int. When `topn` is None,
             then similarities for all words are returned.
 
