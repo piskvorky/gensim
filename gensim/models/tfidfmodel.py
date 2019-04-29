@@ -31,7 +31,7 @@ def resolve_weights(smartirs):
 
     Parameters
     ----------
-    smartirs : str or None
+    smartirs : str
         `smartirs` or SMART (System for the Mechanical Analysis and Retrieval of Text)
         Information Retrieval System, a mnemonic scheme for denoting tf-idf weighting
         variants in the vector space model. The mnemonic for representing a combination
@@ -41,7 +41,7 @@ def resolve_weights(smartirs):
 
     Returns
     -------
-    str of (local_letter, global_letter, normalization_letter) or None
+    str of (local_letter, global_letter, normalization_letter)
 
     local_letter : str
         Term frequency weighing, one of:
@@ -71,9 +71,6 @@ def resolve_weights(smartirs):
         doesn't fit the list of permissible values.
 
     """
-
-    if not smartirs:
-        return None
 
     if isinstance(smartirs, str) and re.match(r"...\....", smartirs):
         match = re.match(r"(?P<ddd>...)\.(?P<qqq>...)", smartirs)
@@ -345,7 +342,7 @@ class TfidfModel(interfaces.TransformationABC):
         self.id2word = id2word
         self.wlocal, self.wglobal, self.normalize = wlocal, wglobal, normalize
         self.num_docs, self.num_nnz, self.idfs = None, None, None
-        self.smartirs = resolve_weights(smartirs)
+        self.smartirs = resolve_weights(smartirs) if smartirs is not None else None
         self.slope = slope
         self.pivot = pivot
         self.eps = 1e-12
