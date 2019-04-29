@@ -168,7 +168,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
         strict column diagonal dominance. Positive definiteness is a necessary precondition if you
         later wish to derive a change-of-basis matrix from the term similarity matrix using Cholesky
         factorization.
-    nonzero_limit : {int, None}, optional
+    nonzero_limit : int or None, optional
         The maximum number of non-zero elements outside the diagonal in a single column of the
         sparse term similarity matrix. If None, then no limit will be imposed.
     dtype : numpy.dtype, optional
