@@ -792,21 +792,22 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
 
     def test_positive_definite(self):
         """Test the positive_definite parameter of the matrix constructor."""
+        negative_index = UniformTermSimilarityIndex(self.dictionary, term_similarity=-0.5)
         matrix = SparseTermSimilarityMatrix(
-            self.index, self.dictionary, nonzero_limit=2).matrix.todense()
+            negative_index, self.dictionary, nonzero_limit=2).matrix.todense()
         expected_matrix = numpy.array([
-            [1.0, 0.5, 0.5, 0.0, 0.0],
-            [0.5, 1.0, 0.0, 0.5, 0.0],
-            [0.5, 0.0, 1.0, 0.0, 0.0],
-            [0.0, 0.5, 0.0, 1.0, 0.0],
+            [1.0, -.5, -.5, 0.0, 0.0],
+            [-.5, 1.0, 0.0, -.5, 0.0],
+            [-.5, 0.0, 1.0, 0.0, 0.0],
+            [0.0, -.5, 0.0, 1.0, 0.0],
             [0.0, 0.0, 0.0, 0.0, 1.0]])
         self.assertTrue(numpy.all(expected_matrix == matrix))
 
         matrix = SparseTermSimilarityMatrix(
-            self.index, self.dictionary, nonzero_limit=2, positive_definite=True).matrix.todense()
+            negative_index, self.dictionary, nonzero_limit=2, positive_definite=True).matrix.todense()
         expected_matrix = numpy.array([
-            [1.0, 0.5, 0.0, 0.0, 0.0],
-            [0.5, 1.0, 0.0, 0.0, 0.0],
+            [1.0, -.5, 0.0, 0.0, 0.0],
+            [-.5, 1.0, 0.0, 0.0, 0.0],
             [0.0, 0.0, 1.0, 0.0, 0.0],
             [0.0, 0.0, 0.0, 1.0, 0.0],
             [0.0, 0.0, 0.0, 0.0, 1.0]])
