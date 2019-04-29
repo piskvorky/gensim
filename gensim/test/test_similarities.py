@@ -608,6 +608,14 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
 
         self.assertEqual(approx_words, exact_words)
 
+    def assertAllSimilaritiesDisableIndexer(self, model, wv, index):
+        vector = wv.vectors_norm[0]
+        approx_similarities = model.wv.most_similar([vector], topn=None, indexer=index)
+        exact_similarities = model.wv.most_similar(positive=[vector], topn=None)
+
+        self.assertEqual(approx_similarities, exact_similarities)
+        self.assertEqual(len(approx_similarities), len(wv.vectors.vocab))
+
     def assertIndexSaved(self, index):
         fname = get_tmpfile('gensim_similarities.tst.pkl')
         index.save(fname)
