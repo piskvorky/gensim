@@ -794,6 +794,11 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
         """
         kwargs = {}
+
+        # Check the type of corpus_file
+        if not isinstance(corpus_file, string_types):
+            raise TypeError("Parameter corpus_file of train() must be a string (path to a file).")
+
         if corpus_file is not None:
             # Calculate offsets for each worker along with initial doctags (doctag ~ document/line number in a file)
             offsets, start_doctags = self._get_offsets_and_start_doctags_for_corpusfile(corpus_file, self.workers)
