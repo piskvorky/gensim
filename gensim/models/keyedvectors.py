@@ -509,8 +509,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         Returns
         -------
         list of (str, float) or numpy.array
-            Sequence of (word, similarity) when `topn` is int. When `topn` is None, then
-            similarities for all words are returned.
+            When `topn` is int, a sequence of (word, similarity) is returned.
+            When `topn` is None, then similarities for all words are returned.
 
         """
         if isinstance(topn, int) and topn < 1:
@@ -581,8 +581,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         Returns
         -------
         list of (str, float) or numpy.array
-            Sequence of (word, similarity) when `topn` is int. When `topn` is None, then
-            similarities for all words are returned.
+            When `topn` is int, a sequence of (word, similarity) is returned.
+            When `topn` is None, then similarities for all words are returned.
 
         """
         return self.most_similar(positive=[word], topn=topn, restrict_vocab=restrict_vocab)
@@ -606,8 +606,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         Returns
         -------
         list of (str, float) or numpy.array
-            Sequence of (word, similarity) when `topn` is int. When `topn` is None, then
-            similarities for all words are returned.
+            When `topn` is int, a sequence of (word, similarity) is returned.
+            When `topn` is None, then similarities for all words are returned.
 
         """
         return self.most_similar(positive=[vector], topn=topn, restrict_vocab=restrict_vocab)
@@ -794,8 +794,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         Returns
         -------
         list of (str, float) or numpy.array
-            Sequence of (word, similarity) when `topn` is int. When `topn` is None, then
-            similarities for all words are returned.
+            When `topn` is int, a sequence of (word, similarity) is returned.
+            When `topn` is None, then similarities for all words are returned.
 
         """
         if isinstance(topn, int) and topn < 1:
