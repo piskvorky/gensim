@@ -215,6 +215,7 @@ def smartirs_wglobal(docfreq, totaldocs, global_scheme):
 @deprecated("Function will be removed in 4.0.0")
 def smartirs_normalize(x, norm_scheme, return_norm=False):
     """Normalize a vector using the normalization scheme specified in `norm_scheme`.
+
     Parameters
     ----------
     x : numpy.ndarray
@@ -223,6 +224,7 @@ def smartirs_normalize(x, norm_scheme, return_norm=False):
         Document length normalization scheme.
     return_norm : bool, optional
         Return the length of `x` as well?
+
     Returns
     -------
     numpy.ndarray
