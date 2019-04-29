@@ -82,18 +82,18 @@ def resolve_weights(smartirs):
             )
         )
     if not isinstance(smartirs, str) or len(smartirs) != 3:
-        raise ValueError("Expected a string of length 3 except got " + smartirs)
+        raise ValueError("Expected a string of length 3 got " + smartirs)
 
     w_tf, w_df, w_n = smartirs
 
     if w_tf not in 'btnaldL':
-        raise ValueError("Expected term frequency weight to be one of 'btnaldL', except got {}".format(w_tf))
+        raise ValueError("Expected term frequency weight to be one of 'btnaldL', got {}".format(w_tf))
 
     if w_df not in 'xnftp':
-        raise ValueError("Expected inverse document frequency weight to be one of 'xnftp', except got {}".format(w_df))
+        raise ValueError("Expected inverse document frequency weight to be one of 'xnftp', got {}".format(w_df))
 
     if w_n not in 'xncub':
-        raise ValueError("Expected normalization weight to be one of 'xncub', except got {}".format(w_n))
+        raise ValueError("Expected normalization weight to be one of 'xncub', got {}".format(w_n))
 
     # resolve aliases
     if w_tf == "t":
