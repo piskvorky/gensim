@@ -510,7 +510,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         -------
         list of (str, float) or numpy.array
             When `topn` is int, a sequence of (word, similarity) is returned.
-            When `topn` is None, then similarities for all words are returned.
+            When `topn` is None, then similarities for all words are returned as a
+            one-dimensional numpy array with the size of the vocabulary.
 
         """
         if isinstance(topn, int) and topn < 1:
@@ -582,7 +583,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         -------
         list of (str, float) or numpy.array
             When `topn` is int, a sequence of (word, similarity) is returned.
-            When `topn` is None, then similarities for all words are returned.
+            When `topn` is None, then similarities for all words are returned as a
+            one-dimensional numpy array with the size of the vocabulary.
 
         """
         return self.most_similar(positive=[word], topn=topn, restrict_vocab=restrict_vocab)
@@ -607,7 +609,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         -------
         list of (str, float) or numpy.array
             When `topn` is int, a sequence of (word, similarity) is returned.
-            When `topn` is None, then similarities for all words are returned.
+            When `topn` is None, then similarities for all words are returned as a
+            one-dimensional numpy array with the size of the vocabulary.
 
         """
         return self.most_similar(positive=[vector], topn=topn, restrict_vocab=restrict_vocab)
@@ -795,7 +798,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         -------
         list of (str, float) or numpy.array
             When `topn` is int, a sequence of (word, similarity) is returned.
-            When `topn` is None, then similarities for all words are returned.
+            When `topn` is None, then similarities for all words are returned as a
+            one-dimensional numpy array with the size of the vocabulary.
 
         """
         if isinstance(topn, int) and topn < 1:
