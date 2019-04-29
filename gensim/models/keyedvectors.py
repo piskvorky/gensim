@@ -277,7 +277,7 @@ class BaseKeyedVectors(utils.SaveLoad):
         ----------
         entities : list of str
             Entities specified by string ids.
-        weights: {list of numpy.ndarray, numpy.ndarray}
+        weights: list of numpy.ndarray or numpy.ndarray
             List of 1D np.array vectors or a 2D np.array of vectors.
         replace: bool, optional
             Flag indicating whether to replace vectors for entities which already exist in the vocabulary,
@@ -318,7 +318,7 @@ class BaseKeyedVectors(utils.SaveLoad):
         ----------
         entities : {str, list of str}
             Entities specified by their string ids.
-        weights: {list of numpy.ndarray, numpy.ndarray}
+        weights: list of numpy.ndarray or numpy.ndarray
             List of 1D np.array vectors or 2D np.array of vectors.
 
         """
@@ -508,7 +508,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         Returns
         -------
-        {list of (str, float), numpy.array}
+        list of (str, float) or numpy.array
             Sequence of (word, similarity) when `topn` is int. When `topn` is None, then
             similarities for all words are returned.
 
@@ -580,7 +580,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         Returns
         -------
-        {list of (str, float), numpy.array}
+        list of (str, float) or numpy.array
             Sequence of (word, similarity) when `topn` is int. When `topn` is None, then
             similarities for all words are returned.
 
@@ -605,7 +605,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         Returns
         -------
-        {list of (str, float), numpy.array}
+        list of (str, float) or numpy.array
             Sequence of (word, similarity) when `topn` is int. When `topn` is None, then
             similarities for all words are returned.
 
@@ -793,7 +793,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         Returns
         -------
-        {list of (str, float), numpy.array}
+        list of (str, float) or numpy.array
             Sequence of (word, similarity) when `topn` is int. When `topn` is None, then
             similarities for all words are returned.
 
