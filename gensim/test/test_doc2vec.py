@@ -189,7 +189,6 @@ class TestDoc2VecModel(unittest.TestCase):
         # check if corpus_file is an iterable
         self.assertRaises(TypeError, model.train, corpus_file=sentences)
 
-
     @unittest.skipIf(os.name == 'nt', "See another test for Windows below")
     def test_get_offsets_and_start_doctags(self):
         # Each line takes 6 bytes (including '\n' character)
