@@ -173,6 +173,23 @@ class TestDoc2VecModel(unittest.TestCase):
             sims_to_infer = loaded_model.docvecs.most_similar([doc0_inferred], topn=len(loaded_model.docvecs))
             self.assertTrue(sims_to_infer)
 
+    def testDoc2vecTrainParameters(self):
+
+        model = doc2vec.Doc2Vec(vector_size=50)
+        model.build_vocab(documents=list_corpus)
+
+        # check if corpus_file is not a string
+        self.assertRaises(TypeError, model.train, corpus_file=11111)
+        # check if documents is an iterable (but not string)
+        self.assertRaises(TypeError, model.train, documents="blabla")
+        # check is both the parameters are provided
+        self.assertRaises(TypeError, model.train, documents=sentences, corpus_file='test')
+        # check if both the parameters are left empty
+        self.assertRaises(TypeError, model.train, documents=None, corpus_file=None)
+        # check if corpus_file is an iterable
+        self.assertRaises(TypeError, model.train, corpus_file=sentences)
+
+
     @unittest.skipIf(os.name == 'nt', "See another test for Windows below")
     def test_get_offsets_and_start_doctags(self):
         # Each line takes 6 bytes (including '\n' character)
@@ -387,7 +404,7 @@ class TestDoc2VecModel(unittest.TestCase):
             tmpf = get_tmpfile('gensim_doc2vec.tst')
             model.save(tmpf)
             loaded = doc2vec.Doc2Vec.load(tmpf)
-            loaded.train(sentences, total_examples=loaded.corpus_count, epochs=loaded.epochs)
+            loaded.train(documents=sentences, total_examples=loaded.corpus_count, epochs=loaded.epochs)
 
     def test_training(self):
         """Test doc2vec training."""
