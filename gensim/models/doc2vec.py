@@ -809,8 +809,8 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
         # Check the type of corpus_file
         if corpus_file is not None and not isinstance(corpus_file, string_types):
-            raise TypeError(f"""Parameter corpus_file of train() must be a
-                             string (path to a file) got {corpus_file} instead.""")
+            raise TypeError("""Parameter corpus_file of train() must be a
+                             string (path to an existing file) got %s instead.""" % corpus_file)
 
         if corpus_file is not None:
             # Calculate offsets for each worker along with initial doctags (doctag ~ document/line number in a file)
