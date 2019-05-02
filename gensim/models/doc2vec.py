@@ -800,12 +800,12 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             raise TypeError("Either one of corpus_file or documents value must be provided.")
 
         # Check if both documents and corpus_file are not None
-        if corpus_file is not None and documents is not None:
+        if not ((corpus_file is None) ^ (documents is None)):
             raise TypeError("Instead provide value to either of corpus_file or documents parameter but not both.")
 
         # Check if documents is not None and not string type either
         if documents is not None and isinstance(documents, string_types):
-            raise TypeError("Documents must be an iterable of list and not a string type.")
+            raise TypeError("documents must be an iterable of list and not a string type.")
 
         # Check the type of corpus_file
         if not isinstance(corpus_file, string_types) and documents is None:
