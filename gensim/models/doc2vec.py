@@ -70,7 +70,7 @@ try:
 except ImportError:
     from Queue import Queue  # noqa:F401
 
-from collections import namedtuple, defaultdict
+from collections import namedtuple, defaultdict, Iterable
 from timeit import default_timer
 
 from numpy import zeros, float32 as REAL, empty, ones, \
@@ -803,13 +803,13 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         if not ((corpus_file is None) ^ (documents is None)):
             raise TypeError("Instead provide value to either of corpus_file or documents parameter but not both.")
 
-        # Check if documents is not None and not string type either
-        if documents is not None and isinstance(documents, string_types):
-            raise TypeError("documents must be an iterable of list and not a string type.")
-
-        # Check the type of corpus_file
+        # Check if corpus_file is string type
         if not isinstance(corpus_file, string_types) and documents is None:
             raise TypeError("Parameter corpus_file must be a valid path to a file, got %s instead." % corpus_file)
+
+        # Check if documents is iterable and not string type
+        if isinstance(documents, Iterable) and isinstance(documents, string_types):
+            raise TypeError("documents must be an iterable of list and not a string type.")
 
         if corpus_file is not None:
             # Calculate offsets for each worker along with initial doctags (doctag ~ document/line number in a file)
