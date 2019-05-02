@@ -807,9 +807,9 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         if not isinstance(corpus_file, string_types) and documents is None:
             raise TypeError("Parameter corpus_file must be a valid path to a file, got %s instead." % corpus_file)
 
-        # Check if documents is iterable and not string type
-        if isinstance(documents, Iterable) and isinstance(documents, string_types):
-            raise TypeError("documents must be an iterable of list and not a string type.")
+        # Check if documents is iterable
+        if not isinstance(documents, Iterable):
+            raise TypeError("documents must be an iterable of list, got %s instead." % documents)
 
         if corpus_file is not None:
             # Calculate offsets for each worker along with initial doctags (doctag ~ document/line number in a file)

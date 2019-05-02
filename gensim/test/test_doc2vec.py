@@ -180,8 +180,8 @@ class TestDoc2VecModel(unittest.TestCase):
 
         # check if corpus_file is not a string
         self.assertRaises(TypeError, model.train, corpus_file=11111)
-        # check if documents is an iterable (but not string)
-        self.assertRaises(TypeError, model.train, documents="blabla")
+        # check if documents is an iterable
+        self.assertRaises(TypeError, model.train, documents=11111)
         # check is both the parameters are provided
         self.assertRaises(TypeError, model.train, documents=sentences, corpus_file='test')
         # check if both the parameters are left empty
