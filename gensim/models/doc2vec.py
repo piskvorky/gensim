@@ -447,8 +447,8 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         directly to query those embeddings in various ways. See the module level docstring for examples.
 
     docvecs : :class:`~gensim.models.keyedvectors.Doc2VecKeyedVectors`
-        This object contains the paragraph vectors learned from the training data. There will be one such vector 
-        for each unique document tag supplied during training. They may be individually accessed using the tag 
+        This object contains the paragraph vectors learned from the training data. There will be one such vector
+        for each unique document tag supplied during training. They may be individually accessed using the tag
         as an indexed-access key. For example, if one of the training documents used a tag of 'doc003':
         
         .. sourcecode:: pycon
