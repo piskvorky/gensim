@@ -804,11 +804,11 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             raise TypeError("Instead provide value to either of corpus_file or documents parameter but not both.")
 
         # Check if corpus_file is string type
-        if not isinstance(corpus_file, string_types) and documents is None:
+        if documents is None and not isinstance(corpus_file, string_types):
             raise TypeError("Parameter corpus_file must be a valid path to a file, got %s instead." % corpus_file)
 
         # Check if documents is iterable
-        if not isinstance(documents, Iterable):
+        if documents is not None and not isinstance(documents, Iterable):
             raise TypeError("documents must be an iterable of list, got %s instead." % documents)
 
         if corpus_file is not None:
