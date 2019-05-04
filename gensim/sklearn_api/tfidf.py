@@ -96,6 +96,11 @@ class TfIdfTransformer(TransformerMixin, BaseEstimator):
             the `old normalization` can be tilted. This parameter only works when pivot is defined by user and is not
             None.
 
+        See Also
+        --------
+        ~gensim.models.tfidfmodel.TfidfModel : Class that also uses the SMART scheme.
+        ~gensim.models.tfidfmodel.resolve_weights : Function that also uses the SMART scheme.
+
         """
         self.gensim_model = None
         self.id2word = id2word

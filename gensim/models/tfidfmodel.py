@@ -70,6 +70,10 @@ def resolve_weights(smartirs):
         If `smartirs` is not a string of length 3 or one of the decomposed value
         doesn't fit the list of permissible values.
 
+    See Also
+    --------
+    ~gensim.sklearn_api.tfidf.TfIdfTransformer, TfidfModel : Classes that also use the SMART scheme.
+
     """
     if isinstance(smartirs, str) and re.match(r"...\....", smartirs):
         match = re.match(r"(?P<ddd>...)\.(?P<qqq>...)", smartirs)
@@ -338,6 +342,11 @@ class TfidfModel(interfaces.TransformationABC):
         slope : float, optional
             Parameter required by pivoted document length normalization which determines the slope to which
             the `old normalization` can be tilted. This parameter only works when pivot is defined.
+
+        See Also
+        --------
+        ~gensim.sklearn_api.tfidf.TfIdfTransformer : Class that also uses the SMART scheme.
+        resolve_weights : Function that also uses the SMART scheme.
 
         """
         self.id2word = id2word
