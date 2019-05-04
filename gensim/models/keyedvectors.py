@@ -186,6 +186,11 @@ from gensim.models.utils_any2vec import (
 )
 from gensim.similarities.termsim import TermSimilarityIndex, SparseTermSimilarityMatrix
 
+#
+# For backwards compatibility, see https://github.com/RaRe-Technologies/gensim/issues/2201
+#
+from gensim.models.deprecated.keyedvectors import EuclideanKeyedVectors  # noqa
+
 logger = logging.getLogger(__name__)
 
 
