@@ -95,6 +95,22 @@ class TestFastTextModel(unittest.TestCase):
         oov_vec = model.wv['minor']  # oov word
         self.assertEqual(len(oov_vec), 10)
 
+    def testFastTextTrainParameters(self):
+
+        model =  FT_gensim(size=10, min_count=1, hs=1, negative=0, seed=42, workers=1)
+        model.build_vocab(sentences=sentences)
+
+        # check if corpus_file is not a string
+        self.assertRaises(TypeError, model.train, corpus_file=11111)
+        # check if sentences is an iterable
+        self.assertRaises(TypeError, model.train, sentences=11111)
+        # check is both the parameters are provided
+        self.assertRaises(TypeError, model.train, sentences=sentences, corpus_file='test')
+        # check if both the parameters are left empty
+        self.assertRaises(TypeError, model.train, sentences=None, corpus_file=None)
+        # check if corpus_file is an iterable
+        self.assertRaises(TypeError, model.train, corpus_file=sentences)
+
     @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
     def test_training_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
