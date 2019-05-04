@@ -97,7 +97,7 @@ class TestFastTextModel(unittest.TestCase):
 
     def testFastTextTrainParameters(self):
 
-        model =  FT_gensim(size=10, min_count=1, hs=1, negative=0, seed=42, workers=1)
+        model = FT_gensim(size=10, min_count=1, hs=1, negative=0, seed=42, workers=1)
         model.build_vocab(sentences=sentences)
 
         # check if corpus_file is not a string
