@@ -780,9 +780,8 @@ class TestFastTextModel(unittest.TestCase):
         self.assertTrue(model.trainables.vectors_lockf.shape == (12, ))
         self.assertTrue(model.vocabulary.cum_table.shape == (12, ))
 
-        self.assertEqual(len(model.wv.hash2index), 202)
-        self.assertTrue(model.wv.vectors_vocab.shape == (12, 100))
-        self.assertTrue(model.wv.vectors_ngrams.shape == (202, 100))
+        self.assertEqual(model.wv.vectors_vocab.shape, (12, 100))
+        self.assertEqual(model.wv.vectors_ngrams.shape, (2000000, 100))
 
         # Model stored in multiple files
         model_file = 'fasttext_old_sep'
@@ -795,9 +794,8 @@ class TestFastTextModel(unittest.TestCase):
         self.assertTrue(model.trainables.vectors_lockf.shape == (12, ))
         self.assertTrue(model.vocabulary.cum_table.shape == (12, ))
 
-        self.assertEqual(len(model.wv.hash2index), 202)
-        self.assertTrue(model.wv.vectors_vocab.shape == (12, 100))
-        self.assertTrue(model.wv.vectors_ngrams.shape == (202, 100))
+        self.assertEqual(model.wv.vectors_vocab.shape, (12, 100))
+        self.assertEqual(model.wv.vectors_ngrams.shape, (2000000, 100))
 
     def compare_with_wrapper(self, model_gensim, model_wrapper):
         # make sure we get >=2 overlapping words for top-10 similar words suggested for `night`
