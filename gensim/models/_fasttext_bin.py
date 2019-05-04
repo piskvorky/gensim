@@ -196,6 +196,8 @@ def _load_vocab(fin, new_format, encoding='utf-8'):
         for j in range(pruneidx_size):
             _struct_unpack(fin, '@2i')
 
+    assert len(raw_vocab) == vocab_size == nwords, \
+        'should be equal: %r %r %r' % (len(raw_vocab), vocab_size, nwords)
     return raw_vocab, vocab_size, nwords
 
 
@@ -233,7 +235,9 @@ def _load_matrix(fin, new_format=True):
     else:
         raise ValueError("Incompatible float size: %r" % float_size)
 
-    matrix = np.fromfile(fin, dtype=dtype, count=num_vectors * dim)
+    count = num_vectors * dim
+    matrix = np.fromfile(fin, dtype=dtype, count=count)
+    assert matrix.shape == (count,), 'expected (%r,),  got %r' % (count, matrix.shape)
     matrix = matrix.reshape((num_vectors, dim))
     return matrix
 
