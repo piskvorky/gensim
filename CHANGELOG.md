@@ -1,15 +1,70 @@
 Changes
 ===========
 
-## Unreleased
+## 3.7.2, 2019-04-06
+
+### :star2: New Features
+
+- `gensim.models.fasttext.load_facebook_model` function: load full model (slower, more CPU/memory intensive, supports training continuation)
+- `gensim.models.fasttext.load_facebook_vectors` function: load embeddings only (faster, less CPU/memory usage, does not support training continuation)
 
 ### :red_circle: Bug fixes
 
 * Fix unicode error when loading FastText vocabulary (__[@mpenkov](https://github.com/mpenkov)__, [#2390](https://github.com/RaRe-Technologies/gensim/pull/2390))
+* Avoid division by zero in fasttext_inner.pyx (__[@mpenkov](https://github.com/mpenkov)__, [#2404](https://github.com/RaRe-Technologies/gensim/pull/2404))
+* Avoid incorrect filename inference when loading model (__[@mpenkov](https://github.com/mpenkov)__, [#2408](https://github.com/RaRe-Technologies/gensim/pull/2408))
+* Handle invalid unicode when loading native FastText models (__[@mpenkov](https://github.com/mpenkov)__, [#2411](https://github.com/RaRe-Technologies/gensim/pull/2411))
+* Avoid divide by zero when calculating vectors for terms with no ngrams (__[@mpenkov](https://github.com/mpenkov)__, [#2411](https://github.com/RaRe-Technologies/gensim/pull/2411))
 
 ### :books: Tutorial and doc improvements
 
 * Add link to bindr (__[rogueleaderr](https://github.com/rogueleaderr)__, [#2387](https://github.com/RaRe-Technologies/gensim/pull/2387))
+
+### :+1: Improvements
+
+* Undo the hash2index optimization (__[mpenkov](https://github.com/mpenkov)__, [#2370](https://github.com/RaRe-Technologies/gensim/pull/2370))
+
+### :warning: Changes in FastText behavior
+
+#### Out-of-vocab word handling
+
+To achieve consistency with the reference implementation from Facebook,
+a `FastText` model will now always report any word, out-of-vocabulary or 
+not, as being in the model,  and always return some vector for any word 
+looked-up. Specifically:
+
+1. `'any_word' in ft_model` will always return `True`.  Previously, it 
+returned `True` only if the full word was in the vocabulary. (To test if a 
+full word is in the known vocabulary, you can consult the `wv.vocab` 
+property: `'any_word' in ft_model.wv.vocab` will return `False` if the full 
+word wasn't learned during model training.)
+2. `ft_model['any_word']` will always return a vector.  Previously, it 
+raised `KeyError` for OOV words when the model had no vectors 
+for **any** ngrams of the word.
+3. If no ngrams from the term are present in the model,
+or when no ngrams could be extracted from the term, a vector pointing
+to the origin will be returned.  Previously, a vector of NaN (not a number)
+was returned as a consequence of a divide-by-zero problem.
+4. Models may use more more memory, or take longer for word-vector
+lookup, especially after training on smaller corpuses where the previous 
+non-compliant behavior discarded some ngrams from consideration.
+
+#### Loading models in Facebook .bin format
+
+The `gensim.models.FastText.load_fasttext_format` function (deprecated) now loads the entire model contained in the .bin file, including the shallow neural network that enables training continuation.
+Loading this NN requires more CPU and RAM than previously required.
+
+Since this function is deprecated, consider using one of its alternatives (see below).
+
+Furthermore, you must now pass the full path to the file to load, **including the file extension.**
+Previously, if you specified a model path that ends with anything other than .bin, the code automatically appended .bin to the path before loading the model.
+This behavior was [confusing](https://github.com/RaRe-Technologies/gensim/issues/2407), so we removed it.
+	
+### :warning: Deprecations (will be removed in the next major release)
+
+Remove:
+
+- `gensim.models.FastText.load_fasttext_format`: use load_facebook_vectors to load embeddings only (faster, less CPU/memory usage, does not support training continuation) and load_facebook_model to load full model (slower, more CPU/memory intensive, supports training continuation)
 
 ## 3.7.1, 2019-01-31
 
