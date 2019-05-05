@@ -249,9 +249,10 @@ def _load_matrix(fin, new_format=True):
     # and very efficient (when it works).
     #
     if isinstance(fin, gzip.GzipFile):
-        logger.info(
+        logger.warning(
             'Loading model from a compressed .gz file.  This can be slow. '
-            'Consider decompressing the model before loading it.'
+            'This is a work-around for a bug in NumPy: https://github.com/numpy/numpy/issues/13470. '
+            'Consider decompressing your model file for a faster load. '
         )
         matrix = _fromfile(fin, _FLOAT_DTYPE, count)
     else:
