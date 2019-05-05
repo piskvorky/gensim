@@ -227,24 +227,46 @@ def _load_matrix(fin, new_format=True):
 
     num_vectors, dim = _struct_unpack(fin, '@2q')
 
-    float_size = struct.calcsize('@f')
-    if float_size == 4:
-        dtype = np.dtype(np.float32)
-    elif float_size == 8:
-        dtype = np.dtype(np.float64)
-    else:
-        raise ValueError("Incompatible float size: %r" % float_size)
-
     count = num_vectors * dim
-    matrix = _fromfile(fin, dtype, count)
+    matrix = _fromfile(fin, None, count)
     assert matrix.shape == (count,), 'expected (%r,),  got %r' % (count, matrix.shape)
     matrix = matrix.reshape((num_vectors, dim))
     return matrix
 
 
+def _batched_generator(fin, count, batch_size=1e6):
+    """Reads count floats from fin.
+
+    Batches up read calls to avoid I/O overhead.  Keeps no more than batch_size
+    floats in memory at once.
+
+    Yields floats.
+
+    """
+    while count > batch_size:
+        batch = _struct_unpack(fin, '@%df' % batch_size)
+        for f in batch:
+            yield f
+        count -= batch_size
+
+    batch = _struct_unpack(fin, '@%df' % count)
+    for f in batch:
+        yield f
+
+
 def _fromfile(fin, dtype, count):
     """Reimplementation of numpy.fromfile."""
-    return np.fromfile(fin, dtype=dtype, count=count)
+
+    if dtype is None:
+        float_size = struct.calcsize('@f')
+        if float_size == 4:
+            dtype = np.dtype(np.float32)
+        elif float_size == 8:
+            dtype = np.dtype(np.float64)
+        else:
+            raise ValueError("Incompatible float size: %r" % float_size)
+
+    return np.fromiter(_batched_generator(fin, count), dtype=dtype)
 
 
 def load(fin, encoding='utf-8', full_model=True):
