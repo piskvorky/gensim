@@ -236,10 +236,15 @@ def _load_matrix(fin, new_format=True):
         raise ValueError("Incompatible float size: %r" % float_size)
 
     count = num_vectors * dim
-    matrix = np.fromfile(fin, dtype=dtype, count=count)
+    matrix = _fromfile(fin, dtype, count)
     assert matrix.shape == (count,), 'expected (%r,),  got %r' % (count, matrix.shape)
     matrix = matrix.reshape((num_vectors, dim))
     return matrix
+
+
+def _fromfile(fin, dtype, count):
+    """Reimplementation of numpy.fromfile."""
+    return np.fromfile(fin, dtype=dtype, count=count)
 
 
 def load(fin, encoding='utf-8', full_model=True):
