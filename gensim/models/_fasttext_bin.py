@@ -263,7 +263,7 @@ def _load_matrix(fin, new_format=True):
 
 
 def _batched_generator(fin, count, batch_size=1e6):
-    """Reads count floats from fin.
+    """Read `count` floats from `fin`.
 
     Batches up read calls to avoid I/O overhead.  Keeps no more than batch_size
     floats in memory at once.
