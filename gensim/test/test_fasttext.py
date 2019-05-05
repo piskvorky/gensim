@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import division
 
+import gzip
 import io
 import logging
 import unittest
@@ -1287,11 +1288,21 @@ _ARRAY = np.array([0., 1., 2., 3., 4., 5., 6., 7., 8.], dtype=np.dtype('float32'
 class TestFromfile(unittest.TestCase):
     def test_decompressed(self):
         with open(datapath('reproduce.dat'), 'rb') as fin:
-            actual = fin.read(len(_BYTES))
-            self.assertEqual(_BYTES, actual)
+            self._run(fin)
 
-            array = gensim.models._fasttext_bin._fromfile(fin, _ARRAY.dtype, _ARRAY.shape[0])
-            self.assertTrue(np.allclose(_ARRAY, array))
+    @unittest.skip('numpy does not work with gzip, see https://github.com/numpy/numpy/issues/13470')
+    def test_compressed(self):
+        with gzip.GzipFile(datapath('reproduce.dat.gz'), 'rb') as fin:
+            self._run(fin)
+
+    def _run(self, fin):
+        actual = fin.read(len(_BYTES))
+        self.assertEqual(_BYTES, actual)
+
+        array = gensim.models._fasttext_bin._fromfile(fin, _ARRAY.dtype, _ARRAY.shape[0])
+        logger.error('array: %r', array)
+        self.assertTrue(np.allclose(_ARRAY, array))
+
 
 
 if __name__ == '__main__':
