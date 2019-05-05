@@ -1290,7 +1290,6 @@ class TestFromfile(unittest.TestCase):
         with open(datapath('reproduce.dat'), 'rb') as fin:
             self._run(fin)
 
-    @unittest.skip('numpy does not work with gzip, see https://github.com/numpy/numpy/issues/13470')
     def test_compressed(self):
         with gzip.GzipFile(datapath('reproduce.dat.gz'), 'rb') as fin:
             self._run(fin)
