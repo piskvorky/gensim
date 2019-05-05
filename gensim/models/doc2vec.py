@@ -70,7 +70,7 @@ try:
 except ImportError:
     from Queue import Queue  # noqa:F401
 
-from collections import namedtuple, defaultdict
+from collections import namedtuple, defaultdict, Iterable
 from timeit import default_timer
 
 from numpy import zeros, float32 as REAL, empty, ones, \
@@ -789,6 +789,19 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
         """
         kwargs = {}
+
+        if corpus_file is None and documents is None:
+            raise TypeError("Either one of corpus_file or documents value must be provided")
+
+        if corpus_file is not None and documents is not None:
+            raise TypeError("Both corpus_file and documents must not be provided at the same time")
+
+        if documents is None and not os.path.isfile(corpus_file):
+            raise TypeError("Parameter corpus_file must be a valid path to a file, got %r instead" % corpus_file)
+
+        if documents is not None and not isinstance(documents, Iterable):
+            raise TypeError("documents must be an iterable of list, got %r instead" % documents)
+
         if corpus_file is not None:
             # Calculate offsets for each worker along with initial doctags (doctag ~ document/line number in a file)
             offsets, start_doctags = self._get_offsets_and_start_doctags_for_corpusfile(corpus_file, self.workers)

@@ -280,10 +280,12 @@ It consists of several important classes:
 """
 
 import logging
+import os
 
 import numpy as np
 from numpy import ones, vstack, float32 as REAL, sum as np_sum
 import six
+from collections import Iterable
 
 import gensim.models._fasttext_bin
 
@@ -901,6 +903,19 @@ class FastText(BaseWordEmbeddingsModel):
             >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.epochs)
 
         """
+
+        if corpus_file is None and sentences is None:
+            raise TypeError("Either one of corpus_file or sentences value must be provided")
+
+        if corpus_file is not None and sentences is not None:
+            raise TypeError("Both corpus_file and sentences must not be provided at the same time")
+
+        if sentences is None and not os.path.isfile(corpus_file):
+            raise TypeError("Parameter corpus_file must be a valid path to a file, got %r instead" % corpus_file)
+
+        if sentences is not None and not isinstance(sentences, Iterable):
+            raise TypeError("sentences must be an iterable of list, got %r instead" % sentences)
+
         super(FastText, self).train(
             sentences=sentences, corpus_file=corpus_file, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
