@@ -1278,6 +1278,20 @@ class UnicodeVocabTest(unittest.TestCase):
         self.assertEqual(nlabels, -1)
 
 
+_BYTES = b'the quick brown fox jumps over the lazy dog'
+_ARRAY = np.array([0., 1., 2., 3., 4., 5., 6., 7., 8.], dtype=np.dtype('float32'))
+
+
+class TestFromfile(unittest.TestCase):
+    def test_decompressed(self):
+        with open(datapath('reproduce.dat'), 'rb') as fin:
+            actual = fin.read(len(_BYTES))
+            self.assertEqual(_BYTES, actual)
+
+            array = gensim.models._fasttext_bin._fromfile(fin, _ARRAY.dtype, _ARRAY.shape[0])
+            self.assertTrue(np.allclose(_ARRAY, array))
+
+
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
