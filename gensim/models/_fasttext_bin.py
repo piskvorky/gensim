@@ -196,8 +196,6 @@ def _load_vocab(fin, new_format, encoding='utf-8'):
         for j in range(pruneidx_size):
             _struct_unpack(fin, '@2i')
 
-    assert len(raw_vocab) == vocab_size == nwords, \
-        'should be equal: %r %r %r' % (len(raw_vocab), vocab_size, nwords)
     return raw_vocab, vocab_size, nwords
 
 
