@@ -14,6 +14,7 @@ import unittest
 from gensim.summarization.bm25 import get_bm25_weights
 from gensim.test.utils import common_texts
 
+
 class TestBM25(unittest.TestCase):
     def test_max_match_with_itself(self):
         """ Document should show maximum matching with itself """
