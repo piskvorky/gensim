@@ -1,5 +1,51 @@
 Changes
-===========
+=======
+
+## 3.7.3, 2019-05-06
+
+### :red_circle: Bug fixes
+
+* Fix fasttext model loading from gzip files ([mpenkov](https://api.github.com/users/mpenkov), [#2476](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2476))
+* Fix misleading Doc2Vec.docvecs comment ([gojomo](https://api.github.com/users/gojomo), [#2472](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2472))
+* Nmf bugfix ([mpenkov](https://api.github.com/users/mpenkov), [#2466](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2466))
+* Fix WordEmbeddingsKeyedVectors.most_similar ([Witiko](https://api.github.com/users/Witiko), [#2461](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2461))
+* fix backwards compatibility ([mpenkov](https://api.github.com/users/mpenkov), [#2457](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2457))
+* Fix Lda Sequence model by updating to num_documents ([Bharat123rox](https://api.github.com/users/Bharat123rox), [#2410](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2410))
+* Make termsim matrix positive definite even with negative similarities ([Witiko](https://api.github.com/users/Witiko), [#2397](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2397))
+* Fix the off-by-one bug in the TFIDF model. ([AMR-KELEG](https://api.github.com/users/AMR-KELEG), [#2392](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2392))
+* update legacy model loading, fix #2453 ([mpenkov](https://api.github.com/users/mpenkov), [#2454](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2454))
+* Make matutils.unitvec always return float norm when requested ([Witiko](https://api.github.com/users/Witiko), [#2419](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2419))
+
+### :books: Tutorial and doc improvements
+
+* Update word2vec.ipynb ([asyabo](https://api.github.com/users/asyabo), [#2423](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2423))
+
+### :+1: Improvements
+
+* Adding type check for corpus_file argument ([saraswatmks](https://api.github.com/users/saraswatmks), [#2469](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2469))
+* Clean up FastText Cython code, fix division by zero ([mpenkov](https://api.github.com/users/mpenkov), [#2382](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2382))
+
+### :warning: Deprecations (will be removed in the next major release)
+
+* Remove
+    - `gensim.models.FastText.load_fasttext_format`: use load_facebook_vectors to load embeddings only (faster, less CPU/memory usage, does not support training continuation) and load_facebook_model to load full model (slower, more CPU/memory intensive, supports training continuation)
+    - `gensim.models.wrappers.fasttext` (obsoleted by the new native `gensim.models.fasttext` implementation)
+    - `gensim.examples`
+    - `gensim.nosy`
+    - `gensim.scripts.word2vec_standalone`
+    - `gensim.scripts.make_wiki_lemma`
+    - `gensim.scripts.make_wiki_online`
+    - `gensim.scripts.make_wiki_online_lemma`
+    - `gensim.scripts.make_wiki_online_nodebug`
+    - `gensim.scripts.make_wiki` (all of these obsoleted by the new native  `gensim.scripts.segment_wiki` implementation)
+    - "deprecated" functions and attributes
+
+* Move
+    - `gensim.scripts.make_wikicorpus` ➡ `gensim.scripts.make_wiki.py`
+    - `gensim.summarization` ➡ `gensim.models.summarization`
+    - `gensim.topic_coherence` ➡ `gensim.models._coherence`
+    - `gensim.utils` ➡ `gensim.utils.utils` (old imports will continue to work)
+    - `gensim.parsing.*` ➡ `gensim.utils.text_utils`
 
 ## 3.7.2, 2019-04-06
 
@@ -22,7 +68,7 @@ Changes
 
 ### :+1: Improvements
 
-* Undo the hash2index optimization (__[mpenkov](https://github.com/mpenkov)__, [#2370](https://github.com/RaRe-Technologies/gensim/pull/2387))
+* Undo the hash2index optimization (__[mpenkov](https://github.com/mpenkov)__, [#2370](https://github.com/RaRe-Technologies/gensim/pull/2370))
 
 ### :warning: Changes in FastText behavior
 

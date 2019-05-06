@@ -168,7 +168,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
         strict column diagonal dominance. Positive definiteness is a necessary precondition if you
         later wish to derive a change-of-basis matrix from the term similarity matrix using Cholesky
         factorization.
-    nonzero_limit : {int, None}, optional
+    nonzero_limit : int or None, optional
         The maximum number of non-zero elements outside the diagonal in a single column of the
         sparse term similarity matrix. If None, then no limit will be imposed.
     dtype : numpy.dtype, optional
@@ -242,11 +242,11 @@ class SparseTermSimilarityMatrix(SaveLoad):
                     key=lambda x: (lambda term_index, _: (tfidf.idfs[term_index], -term_index))(*x), reverse=True)
 
             for row_number, (t2_index, similarity) in zip(range(num_rows), rows):
-                if positive_definite and column_sum[t1_index] + similarity >= 1.0:
+                if positive_definite and column_sum[t1_index] + abs(similarity) >= 1.0:
                     break
                 if symmetric:
                     if column_nonzero[t2_index] <= nonzero_limit \
-                            and (not positive_definite or column_sum[t2_index] + similarity < 1.0) \
+                            and (not positive_definite or column_sum[t2_index] + abs(similarity) < 1.0) \
                             and not (t1_index, t2_index) in matrix:
                         matrix[t1_index, t2_index] = similarity
                         column_nonzero[t1_index] += 1
