@@ -184,6 +184,26 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertRaises(TypeError, model.train, documents=None, corpus_file=None)
         self.assertRaises(TypeError, model.train, corpus_file=sentences)
 
+    def testPredictOutputWord(self):
+
+        # under normal circumstances
+        model = doc2vec.Doc2Vec(vector_size=50, negative=1)
+        model.build_vocab(documents=list_corpus)
+        model.train(list_corpus, total_examples=model.corpus_count, epochs=model.epochs)
+
+        predictions_with_neg = model.predict_output_word(doc_vector=model.docvecs[0], topn=5)
+        self.assertTrue(len(predictions_with_neg) == 5)
+
+        # out-of-document document vector
+        self.assertRaises(RuntimeError, model.predict_output_word, doc_vector=[0.1,0.2])
+
+        # negative sampling scheme not used
+        model = doc2vec.Doc2Vec(vector_size=50, negative=0)
+        model.build_vocab(documents=list_corpus)
+        model.train(list_corpus, total_examples=model.corpus_count, epochs=model.epochs)
+        self.assertRaises(RuntimeError, model.predict_output_word, doc_vector=model.docvecs[0])
+
+
     @unittest.skipIf(os.name == 'nt', "See another test for Windows below")
     def test_get_offsets_and_start_doctags(self):
         # Each line takes 6 bytes (including '\n' character)

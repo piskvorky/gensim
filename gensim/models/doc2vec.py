@@ -74,7 +74,8 @@ from collections import namedtuple, defaultdict, Iterable
 from timeit import default_timer
 
 from numpy import zeros, float32 as REAL, empty, ones, \
-    memmap as np_memmap, vstack, integer, dtype, sum as np_sum, add as np_add, repeat as np_repeat, concatenate
+    memmap as np_memmap, vstack, integer, dtype, sum as np_sum, add as np_add, repeat as np_repeat, concatenate, \
+    exp, dot
 
 
 from gensim.utils import call_on_class_only
@@ -949,6 +950,41 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             alpha -= alpha_delta
 
         return doctag_vectors[0]
+
+    def predict_output_word(self, doc_vector, topn=10):
+        """Get the probability distribution of the words given a document vector.
+
+        Parameters
+        ----------
+        doc_vector :document vector
+        topn : int, optional
+            Return `topn` words and their probabilities.
+
+        Returns
+        -------
+        list of (str, float)
+            `topn` length list of tuples of (word, probability).
+
+        """
+        if not self.negative:
+            raise RuntimeError(
+                "We have currently only implemented predict_output_word for the negative sampling scheme, "
+                "so you need to have run word2vec with negative > 0 for this to work."
+            )
+
+        if len(doc_vector) != self.vector_size:
+            raise RuntimeError("The length of doc_vector should be"
+                               "equal to the vector_size parameter of length %r" % self.vector_size)
+
+        if not hasattr(self.wv, 'vectors') or not hasattr(self.trainables, 'syn1neg'):
+            raise RuntimeError("Parameters required for predicting the output words not found.")
+
+        # propagate hidden -> output and take softmax to get probabilities
+        prob_values = exp(dot(doc_vector, self.trainables.syn1neg.T))
+        prob_values /= sum(prob_values)
+        top_indices = matutils.argsort(prob_values, topn=topn, reverse=True)
+        # returning the most probable output words with their probabilities
+        return [(self.wv.index2word[index1], prob_values[index1]) for index1 in top_indices]
 
     def __getitem__(self, tag):
         """Get the vector representation of (possible multi-term) tag.
