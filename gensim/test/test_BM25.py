@@ -14,11 +14,19 @@ import unittest
 from gensim.summarization.bm25 import get_bm25_weights
 from gensim.test.utils import common_texts
 
-
 class TestBM25(unittest.TestCase):
     def test_max_match_with_itself(self):
         """ Document should show maximum matching with itself """
         weights = get_bm25_weights(common_texts)
+        for index, doc_weights in enumerate(weights):
+            expected = max(doc_weights)
+            predicted = doc_weights[index]
+            self.assertAlmostEqual(expected, predicted)
+
+    def test_with_generator(self):
+        """ Check above function with input as generator """
+        text_gen = (i for i in common_texts)
+        weights = get_bm25_weights(text_gen)
         for index, doc_weights in enumerate(weights):
             expected = max(doc_weights)
             predicted = doc_weights[index]
