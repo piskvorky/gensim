@@ -654,7 +654,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
                 chunk_overall_idx += 1
 
-                logger.info("W error diff: {}".format((self._w_error - previous_w_error)))
+                logger.info("W error: {}".format(self._w_error))
 
     def _solve_w(self):
         """Update W."""
@@ -670,18 +670,20 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             WA = self._W.dot(self.A)
 
+            self._W -= eta * (WA - self.B)
+            self._transform()
+
             error_ = error(WA)
 
             if (
                 self._w_error < np.inf
                 and np.abs((error_ - self._w_error) / self._w_error) < self._w_stop_condition
             ):
+                self._w_error = error_
                 break
 
             self._w_error = error_
 
-            self._W -= eta * (WA - self.B)
-            self._transform()
 
     def _apply(self, corpus, chunksize=None, **kwargs):
         """Apply the transformation to a whole corpus and get the result as another corpus.
