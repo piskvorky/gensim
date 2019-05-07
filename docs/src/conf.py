@@ -225,9 +225,19 @@ latex_use_parts = False
 
 suppress_warnings = ['image.nonlocal_uri', 'ref.citation', 'ref.footnote']
 
+import sphinx_gallery.sorting
 sphinx_gallery_conf = {
-    'examples_dirs': 'tutorials',   # path to your example scripts
+    'examples_dirs': 'gallery',   # path to your example scripts
     'gallery_dirs': 'auto_examples',  # path where to save gallery generated examples
     'show_memory': True,
     'filename_pattern': 'run',
+    'within_subsection_order': sphinx_gallery.sorting.FileNameSortKey,
+    # TODO: still need to tweak this to get it working
+    'binder': {
+        'org': 'mpenkov',
+        'repo': 'gensim',
+        'branch': 'numfocus',
+        'binderhub_url': 'https://mybinder.org',
+        'dependencies': 'requirements.txt',
+    }
 }

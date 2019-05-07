@@ -1,4 +1,6 @@
 r"""
+.. _intro_tutorial:
+
 Getting Started with Gensim
 ===========================
 
@@ -35,7 +37,7 @@ corpus = [
 # So, the first document included features 0, 1, and 2 only.
 # This representation is known as the `Vector Space Model <http://en.wikipedia.org/wiki/Vector_space_model>`_.
 #
-# If you’re not familiar with the vector space model, we’ll bridge the gap between raw strings, corpora and sparse vectors in the next tutorial on Corpora and Vector Spaces.
+# If you’re not familiar with the vector space model, we’ll bridge the gap between raw strings, corpora and sparse vectors in the next tutorial on :ref:`tut1`.
 # If you’re familiar with the vector space model, you’ll probably know that the way you parse your documents and convert them to vectors has major impact on the quality of any subsequent applications.
 #
 # In `gensim`, a :dfn:`corpus` is simply an object which, when iterated over, returns its documents represented as sparse vectors. In this case we’re using a list of list of tuples.
@@ -91,4 +93,12 @@ for document_number, score in sorted(enumerate(sims), key=lambda x: x[1], revers
 #
 # .. [1] This is the same corpus as used in
 #        `Deerwester et al. (1990): Indexing by Latent Semantic Analysis <http://www.cs.bham.ac.uk/~pxt/IDA/lsa_ind.pdf>`_, Table 2.
-
+#
+# Review
+# ------
+# In this tutorial, we took our first steps with gensim.
+# We created a toy corpus in the vector space representation and transformed it using Tf-Idf.
+# Finally, for each document in the corpus, we measured its similarity with a query document.
+#
+# Next, read the tutorials on :ref:`tut1` and :ref:`tut2`.
+# We will also revisit document similarity in :ref:`tut3`.

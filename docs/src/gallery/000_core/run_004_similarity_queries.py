@@ -1,13 +1,17 @@
-r""".. _tut3:
+r"""
+.. _tut3:
 
 Similarity Queries
-===========================
+==================
 
 Demonstrates querying a corpus for similar documents.
+
+Expands on the method introduced in :ref:`intro_tutorial`.
 
 """
 
 ###############################################################################
+#
 # Creating the Corpus
 # -------------------
 #
@@ -72,6 +76,12 @@ from gensim import models
 lsi = models.LsiModel(corpus, id2word=dictionary, num_topics=2)
 
 ###############################################################################
+# For the purposes of this tutorial, there are only two things you need to know about LSI.
+# First, it's just another transformation: it transforms vectors from one space to another.
+# Second, the benefit of LSI is that enables identifying patterns and relationships between terms (in our case, words in a document) and topics.
+# Our LSI space is two-dimensional (`num_topics = 2`) so there are two topics, but this is arbitrary.
+# If you're interested, you can read more about LSI here: `Latent Semantic Indexing <https://en.wikipedia.org/wiki/Latent_semantic_indexing>`_:
+#
 # Now suppose a user typed in the query `"Human computer interaction"`. We would
 # like to sort our nine corpus documents in decreasing order of relevance to this query.
 # Unlike modern search engines, here we only concentrate on a single aspect of possible

@@ -131,7 +131,8 @@ print(corpus)
 # Instead, let's assume the documents are stored in a file on disk, one document per line. Gensim
 # only requires that a corpus must be able to return one document vector at a time:
 #
-from smart_open import open
+from smart_open import open  # for transparently opening remote files
+
 
 class MyCorpus(object):
     def __iter__(self):
@@ -143,7 +144,7 @@ class MyCorpus(object):
 # Download the sample `mycorpus.txt file here <./mycorpus.txt>`_. The assumption that
 # each document occupies one line in a single file is not important; you can mold
 # the `__iter__` function to fit your input format, whatever it is.
-# Walking directories, parsing XML, accessing network...
+# Walking directories, parsing XML, accessing the network...
 # Just parse your input to retrieve a clean list of tokens in each document,
 # then convert the tokens via a dictionary to their ids and yield the resulting sparse vector inside `__iter__`.
 
@@ -181,7 +182,7 @@ print(dictionary)
 
 ###############################################################################
 # And that is all there is to it! At least as far as bag-of-words representation is concerned.
-# Of course, what we do with such corpus is another question; it is not at all clear
+# Of course, what we do with such a corpus is another question; it is not at all clear
 # how counting the frequency of distinct words could be useful. As it turns out, it isn't, and
 # we will need to apply a transformation on this simple representation first, before
 # we can use it to compute any meaningful document vs. document similarities.
