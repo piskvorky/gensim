@@ -1,5 +1,3 @@
-.. _tut1:
-
 Corpora and Vector Spaces
 ===================================
 
@@ -16,9 +14,6 @@ Or run this notebook online (no installation required) via the Binder project:
 >>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 if you want to see logging events.
-
-
-.. _second example:
 
 From Strings to Vectors
 ------------------------
@@ -232,9 +227,6 @@ we will need to apply a transformation on this simple representation first, befo
 we can use it to compute any meaningful document vs. document similarities.
 Transformations are covered in the :doc:`next tutorial <tut2>`, but before that, let's
 briefly turn our attention to *corpus persistency*.
-
-
-.. _corpus-formats:
 
 Corpus Formats
 ---------------

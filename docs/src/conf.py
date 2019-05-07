@@ -25,7 +25,13 @@ html_theme = 'gensim_theme'
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinxcontrib.napoleon', 'sphinx.ext.imgmath', 'sphinxcontrib.programoutput']
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinxcontrib.napoleon',
+    'sphinx.ext.imgmath',
+    'sphinxcontrib.programoutput',
+    'sphinx_gallery.gen_gallery',
+]
 autoclass_content = "both"
 
 napoleon_google_docstring = False  # Disable support for google-style docstring
@@ -218,3 +224,10 @@ latex_use_parts = False
 # latex_use_modindex = True
 
 suppress_warnings = ['image.nonlocal_uri', 'ref.citation', 'ref.footnote']
+
+sphinx_gallery_conf = {
+    'examples_dirs': 'tutorials',   # path to your example scripts
+    'gallery_dirs': 'auto_examples',  # path where to save gallery generated examples
+    'show_memory': True,
+    'filename_pattern': 'run',
+}

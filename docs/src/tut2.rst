@@ -1,5 +1,3 @@
-.. _tut2:
-
 Topics and Transformations
 ===========================
 
@@ -167,8 +165,6 @@ The next question might be: just how exactly similar are those documents to each
 Is there a way to formalize the similarity, so that for a given input document, we can
 order some other set of documents according to their similarity? Similarity queries
 are covered in the :doc:`next tutorial <tut3>`.
-
-.. _transformations:
 
 Available transformations
 --------------------------
