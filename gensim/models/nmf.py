@@ -499,7 +499,9 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if normalize is None:
             normalize = self.normalize
         if normalize:
-            h /= h.sum()
+            the_sum = h.sum()
+            if the_sum:
+                h /= the_sum
 
         return [
             (idx, proba)
