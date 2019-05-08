@@ -5,8 +5,8 @@ Changes
 
 ### :red_circle: Bug fixes
 
-* Fix fasttext model loading from gzip files (__[mpenkov](https://github.com/mpenkov__), [#2476](https://github.com/RaRe-Technologies/gensim/pull/2476))
-* Fix misleading Doc2Vec.docvecs comment (__[gojomo](https://github.com/gojomo__), [#2472](https://github.com/RaRe-Technologies/gensim/pull/2472))
+* Fix fasttext model loading from gzip files (__[mpenkov](https://github.com/mpenkov)__, [#2476](https://github.com/RaRe-Technologies/gensim/pull/2476))
+* Fix misleading Doc2Vec.docvecs comment (__[gojomo](https://github.com/gojomo)__, [#2472](https://github.com/RaRe-Technologies/gensim/pull/2472))
 * Nmf bugfix (__[mpenkov](https://github.com/mpenkov)__, [#2466](https://github.com/RaRe-Technologies/gensim/pull/2466))
 * Fix WordEmbeddingsKeyedVectors.most_similar (__[Witiko](https://github.com/Witiko)__, [#2461](https://github.com/RaRe-Technologies/gensim/pull/2461))
 * fix backwards compatibility (__[mpenkov](https://github.com/mpenkov)__, [#2457](https://github.com/RaRe-Technologies/gensim/pull/2457))
