@@ -6,15 +6,14 @@ Changes
 ### :red_circle: Bug fixes
 
 * Fix fasttext model loading from gzip files (__[mpenkov](https://github.com/mpenkov)__, [#2476](https://github.com/RaRe-Technologies/gensim/pull/2476))
-* Fix misleading Doc2Vec.docvecs comment (__[gojomo](https://github.com/gojomo)__, [#2472](https://github.com/RaRe-Technologies/gensim/pull/2472))
-* Nmf bugfix (__[mpenkov](https://github.com/mpenkov)__, [#2466](https://github.com/RaRe-Technologies/gensim/pull/2466))
-* Fix WordEmbeddingsKeyedVectors.most_similar (__[Witiko](https://github.com/Witiko)__, [#2461](https://github.com/RaRe-Technologies/gensim/pull/2461))
-* fix backwards compatibility (__[mpenkov](https://github.com/mpenkov)__, [#2457](https://github.com/RaRe-Technologies/gensim/pull/2457))
-* Fix Lda Sequence model by updating to num_documents (__[Bharat123rox](https://github.com/Bharat123rox)__, [#2410](https://github.com/RaRe-Technologies/gensim/pull/2410))
+* Fix misleading `Doc2Vec.docvecs` comment (__[gojomo](https://github.com/gojomo)__, [#2472](https://github.com/RaRe-Technologies/gensim/pull/2472))
+* NMF bugfix (__[mpenkov](https://github.com/mpenkov)__, [#2466](https://github.com/RaRe-Technologies/gensim/pull/2466))
+* Fix `WordEmbeddingsKeyedVectors.most_similar` (__[Witiko](https://github.com/Witiko)__, [#2461](https://github.com/RaRe-Technologies/gensim/pull/2461))
+* Fix LdaSequence model by updating to num_documents (__[Bharat123rox](https://github.com/Bharat123rox)__, [#2410](https://github.com/RaRe-Technologies/gensim/pull/2410))
 * Make termsim matrix positive definite even with negative similarities (__[Witiko](https://github.com/Witiko)__, [#2397](https://github.com/RaRe-Technologies/gensim/pull/2397))
 * Fix the off-by-one bug in the TFIDF model. (__[AMR-KELEG](https://github.com/AMR-KELEG)__, [#2392](https://github.com/RaRe-Technologies/gensim/pull/2392))
-* update legacy model loading, fix #2453 (__[mpenkov](https://github.com/mpenkov)__, [#2454](https://github.com/RaRe-Technologies/gensim/pull/2454))
-* Make matutils.unitvec always return float norm when requested (__[Witiko](https://github.com/Witiko)__, [#2419](https://github.com/RaRe-Technologies/gensim/pull/2419))
+* Update legacy model loading (__[mpenkov](https://github.com/mpenkov)__, [#2454](https://github.com/RaRe-Technologies/gensim/pull/2454), [#2457](https://github.com/RaRe-Technologies/gensim/pull/2457))
+* Make `matutils.unitvec` always return float norm when requested (__[Witiko](https://github.com/Witiko)__, [#2419](https://github.com/RaRe-Technologies/gensim/pull/2419))
 
 ### :books: Tutorial and doc improvements
 
