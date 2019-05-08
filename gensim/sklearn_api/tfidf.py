@@ -81,6 +81,7 @@ class TfIdfTransformer(TransformerMixin, BaseEstimator):
                     * `u` - pivoted unique,
                     * `b` - pivoted character length.
 
+            Default is `nfc`.
             For more info, visit `"Wikipedia" <https://en.wikipedia.org/wiki/SMART_Information_Retrieval_System>`_.
         pivot : float, optional
             It is the point around which the regular normalization curve is `tilted` to get the new pivoted

@@ -322,6 +322,7 @@ class TfidfModel(interfaces.TransformationABC):
                 * `u` - pivoted unique,
                 * `b` - pivoted character length.
 
+            Default is `nfc`.
             For more information visit `SMART Information Retrieval System
             <https://en.wikipedia.org/wiki/SMART_Information_Retrieval_System>`_.
         pivot : float, optional
