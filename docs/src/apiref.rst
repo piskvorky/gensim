@@ -71,6 +71,7 @@ Modules:
     models/deprecated/fasttext_wrapper
     models/base_any2vec
     similarities/docsim
+    similarities/termsim
     similarities/index
     sklearn_api/atmodel
     sklearn_api/d2vmodel
