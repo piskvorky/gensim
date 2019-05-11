@@ -82,6 +82,12 @@ A lot of parameters can be tuned to optimize training for your specific case
 
     >>> lda = LdaModel(common_corpus, num_topics=50, alpha='auto', eval_every=5)  # learn asymmetric alpha from data
 
+LDA returns complete topic probability distribution when you set minimum_probability to 0.0
+
+.. sourcecode:: pycon
+
+    >>> lda = LdaModel(common_corpus, num_topics=50, minimum_probability=0.0) 
+    
 """
 
 import logging
