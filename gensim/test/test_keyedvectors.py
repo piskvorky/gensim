@@ -106,6 +106,9 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
         predicted = self.vectors.most_similar('war', topn=None)
         self.assertEqual(len(predicted), len(self.vectors.vocab))
 
+        predicted = self.vectors.most_similar('war', topn=0)
+        self.assertEqual(len(predicted), 0)
+
     def test_relative_cosine_similarity(self):
         """Test relative_cosine_similarity returns expected results with an input of a word pair and topn"""
         wordnet_syn = [
@@ -346,6 +349,13 @@ class UnpackTest(unittest.TestCase):
         self.assertTrue(np.all(np.array([0, 1, 2]) == n[0]))
         self.assertTrue(np.all(np.array([3, 4, 5]) == n[1]))
         self.assertTrue(np.all(np.array([6, 7, 8]) == n[2]))
+
+
+class Gensim320Test(unittest.TestCase):
+    def test(self):
+        path = datapath('old_keyedvectors_320.dat')
+        vectors = gensim.models.keyedvectors.KeyedVectors.load(path)
+        self.assertTrue(vectors.word_vec('computer') is not None)
 
 
 if __name__ == '__main__':

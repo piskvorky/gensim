@@ -31,6 +31,7 @@ See Also
 
 import codecs
 import collections
+import gzip
 import io
 import logging
 import struct
@@ -73,6 +74,14 @@ _OLD_HEADER_FORMAT = [
     ('_', 'i'),
     ('t', 'd'),
 ]
+
+_FLOAT_SIZE = struct.calcsize('@f')
+if _FLOAT_SIZE == 4:
+    _FLOAT_DTYPE = np.dtype(np.float32)
+elif _FLOAT_SIZE == 8:
+    _FLOAT_DTYPE = np.dtype(np.float64)
+else:
+    _FLOAT_DTYPE = None
 
 
 def _yield_field_names():
@@ -220,22 +229,63 @@ def _load_matrix(fin, new_format=True):
         The number of columns of the array will correspond to the vector size.
 
     """
+    if _FLOAT_DTYPE is None:
+        raise ValueError('bad _FLOAT_SIZE: %r' % _FLOAT_SIZE)
+
     if new_format:
         _struct_unpack(fin, '@?')  # bool quant_input in fasttext.cc
 
     num_vectors, dim = _struct_unpack(fin, '@2q')
+    count = num_vectors * dim
 
-    float_size = struct.calcsize('@f')
-    if float_size == 4:
-        dtype = np.dtype(np.float32)
-    elif float_size == 8:
-        dtype = np.dtype(np.float64)
+    #
+    # numpy.fromfile doesn't play well with gzip.GzipFile as input:
+    #
+    # - https://github.com/RaRe-Technologies/gensim/pull/2476
+    # - https://github.com/numpy/numpy/issues/13470
+    #
+    # Until they fix it, we have to apply a workaround.  We only apply the
+    # workaround when it's necessary, because np.fromfile is heavily optimized
+    # and very efficient (when it works).
+    #
+    if isinstance(fin, gzip.GzipFile):
+        logger.warning(
+            'Loading model from a compressed .gz file.  This can be slow. '
+            'This is a work-around for a bug in NumPy: https://github.com/numpy/numpy/issues/13470. '
+            'Consider decompressing your model file for a faster load. '
+        )
+        matrix = _fromfile(fin, _FLOAT_DTYPE, count)
     else:
-        raise ValueError("Incompatible float size: %r" % float_size)
+        matrix = np.fromfile(fin, _FLOAT_DTYPE, count)
 
-    matrix = np.fromfile(fin, dtype=dtype, count=num_vectors * dim)
+    assert matrix.shape == (count,), 'expected (%r,),  got %r' % (count, matrix.shape)
     matrix = matrix.reshape((num_vectors, dim))
     return matrix
+
+
+def _batched_generator(fin, count, batch_size=1e6):
+    """Read `count` floats from `fin`.
+
+    Batches up read calls to avoid I/O overhead.  Keeps no more than batch_size
+    floats in memory at once.
+
+    Yields floats.
+
+    """
+    while count > batch_size:
+        batch = _struct_unpack(fin, '@%df' % batch_size)
+        for f in batch:
+            yield f
+        count -= batch_size
+
+    batch = _struct_unpack(fin, '@%df' % count)
+    for f in batch:
+        yield f
+
+
+def _fromfile(fin, dtype, count):
+    """Reimplementation of numpy.fromfile."""
+    return np.fromiter(_batched_generator(fin, count), dtype=dtype)
 
 
 def load(fin, encoding='utf-8', full_model=True):

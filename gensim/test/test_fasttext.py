@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import division
 
+import gzip
 import io
 import logging
 import unittest
@@ -94,6 +95,17 @@ class TestFastTextModel(unittest.TestCase):
 
         oov_vec = model.wv['minor']  # oov word
         self.assertEqual(len(oov_vec), 10)
+
+    def testFastTextTrainParameters(self):
+
+        model = FT_gensim(size=10, min_count=1, hs=1, negative=0, seed=42, workers=1)
+        model.build_vocab(sentences=sentences)
+
+        self.assertRaises(TypeError, model.train, corpus_file=11111)
+        self.assertRaises(TypeError, model.train, sentences=11111)
+        self.assertRaises(TypeError, model.train, sentences=sentences, corpus_file='test')
+        self.assertRaises(TypeError, model.train, sentences=None, corpus_file=None)
+        self.assertRaises(TypeError, model.train, corpus_file=sentences)
 
     @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
     def test_training_fromfile(self):
@@ -780,9 +792,8 @@ class TestFastTextModel(unittest.TestCase):
         self.assertTrue(model.trainables.vectors_lockf.shape == (12, ))
         self.assertTrue(model.vocabulary.cum_table.shape == (12, ))
 
-        self.assertEqual(len(model.wv.hash2index), 202)
-        self.assertTrue(model.wv.vectors_vocab.shape == (12, 100))
-        self.assertTrue(model.wv.vectors_ngrams.shape == (202, 100))
+        self.assertEqual(model.wv.vectors_vocab.shape, (12, 100))
+        self.assertEqual(model.wv.vectors_ngrams.shape, (2000000, 100))
 
         # Model stored in multiple files
         model_file = 'fasttext_old_sep'
@@ -795,9 +806,8 @@ class TestFastTextModel(unittest.TestCase):
         self.assertTrue(model.trainables.vectors_lockf.shape == (12, ))
         self.assertTrue(model.vocabulary.cum_table.shape == (12, ))
 
-        self.assertEqual(len(model.wv.hash2index), 202)
-        self.assertTrue(model.wv.vectors_vocab.shape == (12, 100))
-        self.assertTrue(model.wv.vectors_ngrams.shape == (202, 100))
+        self.assertEqual(model.wv.vectors_vocab.shape, (12, 100))
+        self.assertEqual(model.wv.vectors_ngrams.shape, (2000000, 100))
 
     def compare_with_wrapper(self, model_gensim, model_wrapper):
         # make sure we get >=2 overlapping words for top-10 similar words suggested for `night`
@@ -1278,6 +1288,28 @@ class UnicodeVocabTest(unittest.TestCase):
 
         self.assertEqual(vocab_size, 2)
         self.assertEqual(nlabels, -1)
+
+
+_BYTES = b'the quick brown fox jumps over the lazy dog'
+_ARRAY = np.array([0., 1., 2., 3., 4., 5., 6., 7., 8.], dtype=np.dtype('float32'))
+
+
+class TestFromfile(unittest.TestCase):
+    def test_decompressed(self):
+        with open(datapath('reproduce.dat'), 'rb') as fin:
+            self._run(fin)
+
+    def test_compressed(self):
+        with gzip.GzipFile(datapath('reproduce.dat.gz'), 'rb') as fin:
+            self._run(fin)
+
+    def _run(self, fin):
+        actual = fin.read(len(_BYTES))
+        self.assertEqual(_BYTES, actual)
+
+        array = gensim.models._fasttext_bin._fromfile(fin, _ARRAY.dtype, _ARRAY.shape[0])
+        logger.error('array: %r', array)
+        self.assertTrue(np.allclose(_ARRAY, array))
 
 
 if __name__ == '__main__':
