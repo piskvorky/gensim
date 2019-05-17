@@ -267,7 +267,7 @@ class TfidfModel(interfaces.TransformationABC):
 
     """
     def __init__(self, corpus=None, id2word=None, dictionary=None, wlocal=utils.identity,
-                 wglobal=df2idf, normalize=True, smartirs=None, pivot=None, slope=0.65):
+                 wglobal=df2idf, normalize=True, smartirs=None, pivot=None, slope=0.25):
         r"""Compute TF-IDF by multiplying a local component (term frequency) with a global component
         (inverse document frequency), and normalizing the resulting documents to unit length.
         Formula for non-normalized weight of term :math:`i` in document :math:`j` in a corpus of :math:`D` documents
@@ -322,32 +322,47 @@ class TfidfModel(interfaces.TransformationABC):
                 * `u` - pivoted unique,
                 * `b` - pivoted character length.
 
-            Default is `nfc`.
+            Default is 'nfc'.
             For more information visit `SMART Information Retrieval System
             <https://en.wikipedia.org/wiki/SMART_Information_Retrieval_System>`_.
-        pivot : float, optional
-            See the blog post at https://rare-technologies.com/pivoted-document-length-normalisation/.
+        pivot : float or None, optional
+            In information retrieval, TF-IDF is biased against long documents [1]_. Pivoted document length
+            normalization solves this problem by changing the norm of a document to `slope * old_norm + (1.0 -
+            slope) * pivot`.
 
-            Pivot is the point around which the regular normalization curve is `tilted` to get the new pivoted
-            normalization curve. In the paper `Amit Singhal, Chris Buckley, Mandar Mitra:
-            "Pivoted Document Length Normalization" <http://singhal.info/pivoted-dln.pdf>`_ it is the point where the
-            retrieval and relevance curves intersect.
+            You can either set the `pivot` by hand, or you can let Gensim figure it out automatically with the following
+            two steps:
 
-            This parameter along with `slope` is used for pivoted document length normalization.
+                * Set either the `u` or `b` document normalization in the `smartirs` parameter.
+                * Set either the `corpus` or `dictionary` parameter. The `pivot` will be automatically determined from
+                  the properties of the `corpus` or `dictionary`.
 
-            When `pivot` is None, and `smartirs` specifies the pivoted unique document normalization scheme (u), and
-            either `corpus` or `dictionary` are specified, then the pivot will be determined automatically.
+            If `pivot` is None and you don't follow steps 1 and 2, then pivoted document length normalization will be
+            disabled. Default is None.
 
-            When `pivot` is None, and `smartirs` specifies the character length unique document normalization
-            scheme (b), and `dictionary` is specified, then the pivot will be determined automatically.
+            See also the blog post at https://rare-technologies.com/pivoted-document-length-normalisation/.
         slope : float, optional
-            Parameter required by pivoted document length normalization which determines the slope to which
-            the `old normalization` can be tilted. This parameter only works when pivot is defined.
+            In information retrieval, TF-IDF is biased against long documents [1]_. Pivoted document length
+            normalization solves this problem by changing the norm of a document to `slope * old_norm + (1.0 -
+            slope) * pivot`.
+
+            Setting the `slope` to 0.0 uses only the `pivot` as the norm, and setting the `slope` to 1.0 effectively
+            disables pivoted document length normalization. Singhal [2]_ suggests setting the `slope` between 0.2 and
+            0.3 for best results. Default is 0.25.
+
+            See also the blog post at https://rare-technologies.com/pivoted-document-length-normalisation/.
 
         See Also
         --------
         ~gensim.sklearn_api.tfidf.TfIdfTransformer : Class that also uses the SMART scheme.
         resolve_weights : Function that also uses the SMART scheme.
+
+        References
+        ----------
+        .. [1] Singhal, A., Buckley, C., & Mitra, M. (1996). `Pivoted Document Length
+           Normalization <http://singhal.info/pivoted-dln.pdf>`_. *SIGIR Forum*, 51, 176–184.
+        .. [2] Singhal, A. (2001). `Modern information retrieval: A brief overview <http://singhal.info/ieee2001.pdf>`_.
+           *IEEE Data Eng. Bull.*, 24(4), 35–43.
 
         """
         self.id2word = id2word
