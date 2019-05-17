@@ -212,6 +212,6 @@ class NmslibIndexer(object):
             List of most similar items in format [(`item`, `cosine_distance`), ... ]
 
         """
-        ids, distances = self.index.knnQuery(vector, k=num_neighbors)
+        ids, distances = self.index.knnQueryBatch(vector.reshape(1, -1), k=num_neighbors)[0]
 
         return [(self.labels[ids[i]], 1 - distances[i] / 2) for i in range(len(ids))]

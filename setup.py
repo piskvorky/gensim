@@ -243,6 +243,7 @@ if sys.version_info < (3, 7):
         'tensorflow <= 1.3.0',
         'keras >= 2.0.4, <= 2.1.4',
         'annoy',
+        'nmslib'
     ])
 
 ext_modules = [
