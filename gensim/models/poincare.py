@@ -44,6 +44,7 @@ Initialize and train a model from a file containing one relation per line
 
 import csv
 import logging
+from numbers import Integral
 import sys
 import time
 
@@ -1219,7 +1220,7 @@ class PoincareKeyedVectors(BaseKeyedVectors):
             [(u'kangaroo.n.01', 0.0), (u'marsupial.n.01', 0.26524229460827725)]
 
         """
-        if isinstance(topn, int) and topn < 1:
+        if isinstance(topn, Integral) and topn < 1:
             return []
 
         if not restrict_vocab:
