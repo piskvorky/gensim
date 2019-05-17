@@ -231,8 +231,9 @@ class SparseTermSimilarityMatrix(SaveLoad):
             num_rows = nonzero_limit - num_nonzero
             most_similar = [
                 (dictionary.token2id[term], similarity)
-                for term, similarity in index.most_similar(t1, num_rows)
-                if term in dictionary.token2id]
+                for term, similarity in index.most_similar(t1, topn=num_rows)
+                if term in dictionary.token2id
+            ] if num_rows > 0 else []
 
             if tfidf is None:
                 rows = sorted(most_similar)
