@@ -2,8 +2,8 @@ r"""
 
 .. _doc2vec_lee_py:
 
-Doc2Vec Tutorial on the Lee Dataset
-===================================
+Doc2Vec Tutorial
+================
 
 Doc2Vec is an NLP tool for representing documents as a vector and is a generalizing of the Word2Vec method.
 This tutorial will serve as an introduction to Doc2Vec and present ways to train and assess a Doc2Vec model.
