@@ -49,7 +49,7 @@ This tutorial is about using `fastText <https://github.com/facebookresearch/fast
 #
 #
 #
-
+from pprint import pprint as print
 from gensim.models.fasttext import FastText as FT_gensim
 from gensim.test.utils import datapath
 
