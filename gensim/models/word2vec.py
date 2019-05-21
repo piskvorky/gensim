@@ -1144,32 +1144,8 @@ class Word2Vec(BaseWordEmbeddingsModel):
             `topn` length list of tuples of (word, probability).
 
         """
-        if not self.negative:
-            raise RuntimeError(
-                "We have currently only implemented predict_output_word for the negative sampling scheme, "
-                "so you need to have run word2vec with negative > 0 for this to work."
-            )
 
-        if not hasattr(self.wv, 'vectors') or not hasattr(self.trainables, 'syn1neg'):
-            raise RuntimeError("Parameters required for predicting the output words not found.")
-
-        word_vocabs = [self.wv.vocab[w] for w in context_words_list if w in self.wv.vocab]
-        if not word_vocabs:
-            warnings.warn("All the input context words are out-of-vocabulary for the current model.")
-            return None
-
-        word2_indices = [word.index for word in word_vocabs]
-
-        l1 = np_sum(self.wv.vectors[word2_indices], axis=0)
-        if word2_indices and self.cbow_mean:
-            l1 /= len(word2_indices)
-
-        # propagate hidden -> output and take softmax to get probabilities
-        prob_values = exp(dot(l1, self.trainables.syn1neg.T))
-        prob_values /= sum(prob_values)
-        top_indices = matutils.argsort(prob_values, topn=topn, reverse=True)
-        # returning the most probable output words with their probabilities
-        return [(self.wv.index2word[index1], prob_values[index1]) for index1 in top_indices]
+        return self._find_similar_words(context_words_list=context_words_list, topn=topn)
 
     def init_sims(self, replace=False):
         """Deprecated. Use `self.wv.init_sims` instead.

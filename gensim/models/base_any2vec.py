@@ -39,7 +39,7 @@ import threading
 from six.moves import range
 from six import itervalues, string_types
 from gensim import matutils
-from numpy import float32 as REAL, ones, random, dtype, zeros
+from numpy import float32 as REAL, ones, random, dtype, zeros, sum as np_sum, exp, dot
 from types import GeneratorType
 from gensim.utils import deprecated
 import warnings
@@ -1470,3 +1470,55 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
         """
         return self.wv.evaluate_word_pairs(pairs, delimiter, restrict_vocab, case_insensitive, dummy4unknown)
+
+    def _find_similar_words(self, doc_vector=None, context_words_list=None, topn=None):
+        """
+        Common functionality to calculate most similar words given a document vector or a word
+        It can be used in word2vec and doc2vec models
+
+        Parameters
+        ----------
+        context_words_list : list of str
+            List of context words.
+        doc_vector : document vector
+        topn : int, optional
+            Return `topn` words and their probabilities.
+
+        :return:
+        list of (str, float)
+            `topn` length list of tuples of (word, probability).
+        """
+
+        if not self.negative:
+            raise RuntimeError(
+                "We have currently only implemented predict_output_word for the negative sampling scheme, "
+                "so you need to have run word2vec with negative > 0 for this to work."
+            )
+
+        if not hasattr(self.wv, 'vectors') or not hasattr(self.trainables, 'syn1neg'):
+            raise RuntimeError("Parameters required for predicting the output words not found.")
+
+        # calculate string vector for word2vec
+        use_vector = None
+        if context_words_list is not None:
+            word_vocabs = [self.wv.vocab[w] for w in context_words_list if w in self.wv.vocab]
+            if not word_vocabs:
+                warnings.warn("All the input context words are out-of-vocabulary for the current model.")
+                return None
+
+            word2_indices = [word.index for word in word_vocabs]
+
+            l1 = np_sum(self.wv.vectors[word2_indices], axis=0)
+            if word2_indices and self.cbow_mean:
+                l1 /= len(word2_indices)
+                use_vector = l1
+
+        if doc_vector is not None:
+            use_vector = doc_vector
+
+        # propagate hidden -> output and take softmax to get probabilities
+        prob_values = exp(dot(use_vector, self.trainables.syn1neg.T))
+        prob_values /= sum(prob_values)
+        top_indices = matutils.argsort(prob_values, topn=topn, reverse=True)
+        # returning the most probable output words with their probabilities
+        return [(self.wv.index2word[index1], prob_values[index1]) for index1 in top_indices]
