@@ -1514,6 +1514,9 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
                 use_vector = l1
 
         if doc_vector is not None:
+            if len(doc_vector) != self.vector_size:
+                raise RuntimeError("The length of doc_vector should be"
+                                   "equal to the vector_size parameter of length %r" % self.vector_size)
             use_vector = doc_vector
 
         # propagate hidden -> output and take softmax to get probabilities
