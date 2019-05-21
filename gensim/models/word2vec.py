@@ -140,7 +140,7 @@ try:
 except ImportError:
     from Queue import Queue, Empty
 
-from numpy import exp, dot, zeros, random, dtype, float32 as REAL,\
+from numpy import dot, zeros, random, dtype, float32 as REAL,\
     uint32, seterr, array, uint8, vstack, fromstring, sqrt,\
     empty, sum as np_sum, ones, logaddexp, log, outer
 
