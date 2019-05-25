@@ -253,3 +253,15 @@ sentence_president = [w for w in sentence_president if w not in stopwords]
 # Compute WMD.
 distance = model.wmdistance(sentence_obama, sentence_president)
 print(distance)
+
+###############################################################################
+# That's all! You've made it to the end of this tutorial.
+#
+# Here we show a pretty fastText logo so that our gallery picks it up as a thumbnail.
+#
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+img = mpimg.imread('fasttext-logo-color-web.png')
+imgplot = plt.imshow(img)
+plt.axis('off')
+plt.show()
