@@ -68,6 +68,9 @@ or from the `Python Package Index <http://pypi.python.org/pypi/gensim>`_.
 Core concepts
 -------------
 
+.. seealso::
+    If you'd like jump ahead and see these concepts in action, see the :ref:`core_concepts_py` tutorial.
+
 .. glossary::
 
     Corpus
@@ -154,7 +157,3 @@ Core concepts
         Gensim implements multiple models, such as :class:`~gensim.models.word2vec.Word2Vec`,
         :class:`~gensim.models.lsimodel.LsiModel`, :class:`~gensim.models.ldamodel.LdaModel`,
         :class:`~gensim.models.fasttext.FastText` etc. See the :doc:`API reference <apiref>` for a full list.
-
-.. seealso::
-
-    For some examples on how all this works out in code, go to :doc:`Tutorials <tutorial>`.
