@@ -182,10 +182,15 @@ print(keywords(text, ratio=0.01))
 # prefixes of text; in other words we take the first **n** characters of the
 # book. The algorithm seems to be **quadratic in time** , so one needs to be
 # careful before plugging a large dataset into the summarizer.
-#
-# .. important::
-#    TODO: figure http://rare-technologies.com/summarization_tutorial_plot.png
-#
+
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+img = mpimg.imread('summarization_tutorial_plot.png')
+imgplot = plt.imshow(img)
+plt.axis('off')
+plt.show()
+
+###############################################################################
 # Text-content dependent running times
 # ------------------------------------
 #
