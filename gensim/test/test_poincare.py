@@ -99,14 +99,9 @@ class TestPoincareModel(unittest.TestCase):
         self.assertEqual(len(model.kv.vocab), 7)
         self.assertEqual(model.kv.vocab['kangaroo.n.01'].count, 3)
         self.assertEqual(model.kv.vocab['cat.n.01'].count, 1)
-        model.train(epochs=2)
-        old_vectors = np.copy(model.kv.syn0)
-
         model.build_vocab([('kangaroo.n.01', 'cat.n.01')], update=True)  # update vocab
         self.assertEqual(model.kv.vocab['kangaroo.n.01'].count, 4)
         self.assertEqual(model.kv.vocab['cat.n.01'].count, 2)
-        model.train(epochs=2)
-        self.assertFalse(np.allclose(old_vectors, model.kv.syn0))
 
     def test_train_after_load(self):
         """Tests whether the model can be trained correctly after loading from disk."""
