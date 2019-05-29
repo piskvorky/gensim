@@ -152,6 +152,10 @@ class PoincareModel(utils.SaveLoad):
         """
         self.train_data = train_data
         self.kv = PoincareKeyedVectors(size)
+        self.all_relations = []
+        self.node_relations = defaultdict(set)
+        self._negatives_buffer = NegativesBuffer([])
+        self._negatives_buffer_size = 2000
         self.size = size
         self.train_alpha = alpha  # Learning rate for training
         self.burn_in_alpha = burn_in_alpha  # Learning rate for burn-in
@@ -167,46 +171,47 @@ class PoincareModel(utils.SaveLoad):
         self._np_random = np_random.RandomState(seed)
         self.init_range = init_range
         self._loss_grad = None
-        self._load_relations()
-        self._init_embeddings()
+        self.build_vocab(train_data)
 
-    def _load_relations(self):
+    def build_vocab(self, relations=None, update=False):
         """Load relations from the train data and build vocab."""
-        vocab = {}
-        index2word = []
-        all_relations = []  # List of all relation pairs
-        node_relations = defaultdict(set)  # Mapping from node index to its related node indices
+        old_index2word_len = len(self.kv.index2word)
 
         logger.info("loading relations from train data..")
-        for relation in self.train_data:
+        for relation in relations:
             if len(relation) != 2:
                 raise ValueError('Relation pair "%s" should have exactly two items' % repr(relation))
             for item in relation:
-                if item in vocab:
-                    vocab[item].count += 1
+                if item in self.kv.vocab:
+                    self.kv.vocab[item].count += 1
                 else:
-                    vocab[item] = Vocab(count=1, index=len(index2word))
-                    index2word.append(item)
+                    self.kv.vocab[item] = Vocab(count=1, index=len(self.kv.index2word))
+                    self.kv.index2word.append(item)
             node_1, node_2 = relation
-            node_1_index, node_2_index = vocab[node_1].index, vocab[node_2].index
-            node_relations[node_1_index].add(node_2_index)
+            node_1_index, node_2_index = self.kv.vocab[node_1].index, self.kv.vocab[node_2].index
+            self.node_relations[node_1_index].add(node_2_index)
             relation = (node_1_index, node_2_index)
-            all_relations.append(relation)
-        logger.info("loaded %d relations from train data, %d nodes", len(all_relations), len(vocab))
-        self.kv.vocab = vocab
-        self.kv.index2word = index2word
-        self.indices_set = set(range(len(index2word)))  # Set of all node indices
-        self.indices_array = np.fromiter(range(len(index2word)), dtype=int)  # Numpy array of all node indices
-        self.all_relations = all_relations
-        self.node_relations = node_relations
+            self.all_relations.append(relation)
+        logger.info("loaded %d relations from train data, %d nodes", len(self.all_relations), len(self.kv.vocab))
+        self.indices_set = set(range(len(self.kv.index2word)))  # Set of all node indices
+        self.indices_array = np.fromiter(range(len(self.kv.index2word)), dtype=int)  # Numpy array of all node indices
         self._init_node_probabilities()
-        self._negatives_buffer = NegativesBuffer([])  # Buffer for negative samples, to reduce calls to sampling method
-        self._negatives_buffer_size = 2000
+
+        if not update:
+            self._init_embeddings()
+        else:
+            self._update_embeddings(old_index2word_len)
 
     def _init_embeddings(self):
         """Randomly initialize vectors for the items in the vocab."""
         shape = (len(self.kv.index2word), self.size)
         self.kv.syn0 = self._np_random.uniform(self.init_range[0], self.init_range[1], shape).astype(self.dtype)
+
+    def _update_embeddings(self, old_index2word_len):
+        """Randomly initialize vectors for the items in the additional vocab."""
+        shape = (len(self.kv.index2word) - old_index2word_len, self.size)
+        v = self._np_random.uniform(self.init_range[0], self.init_range[1], shape).astype(self.dtype)
+        self.kv.syn0 = np.concatenate([self.kv.syn0, v])
 
     def _init_node_probabilities(self):
         """Initialize a-priori probabilities."""
@@ -564,6 +569,85 @@ class PoincareModel(utils.SaveLoad):
         self.kv.syn0[indices_v] -= v_updates
         self.kv.syn0[indices_v] = self._clip_vectors(self.kv.syn0[indices_v], self.epsilon)
 
+    def _build_vocab(self, relations=None, corpus_file=None, update=False, progress_per=10000, keep_raw_vocab=False,
+                    trim_rule=None, **kwargs):
+        """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
+        Each sentence must be a list of unicode strings.
+
+        Parameters
+        ----------
+        relations : iterable of list of str, optional
+            Can be simply a list of lists of tokens, but for larger corpora,
+            consider an iterable that streams the sentences directly from disk/network.
+            See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
+            or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
+        corpus_file : str, optional
+            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
+            `corpus_file` arguments need to be passed (not both of them).
+        update : bool
+            If true, the new words in `sentences` will be added to model's vocab.
+        progress_per : int
+            Indicates how many words to process before showing/updating the progress.
+        keep_raw_vocab : bool
+            If not true, delete the raw vocabulary after the scaling is done and free up RAM.
+        trim_rule : function, optional
+            Vocabulary trimming rule, specifies whether certain words should remain in the vocabulary,
+            be trimmed away, or handled using the default (discard if word count < min_count).
+            Can be None (min_count will be used, look to :func:`~gensim.utils.keep_vocab_item`),
+            or a callable that accepts parameters (word, count, min_count) and returns either
+            :attr:`gensim.utils.RULE_DISCARD`, :attr:`gensim.utils.RULE_KEEP` or :attr:`gensim.utils.RULE_DEFAULT`.
+            The rule, if given, is only used to prune vocabulary during
+            :meth:`~gensim.models.fasttext.FastText.build_vocab` and is not stored as part of the model.
+
+            The input parameters are of the following types:
+                * `word` (str) - the word we are examining
+                * `count` (int) - the word's frequency count in the corpus
+                * `min_count` (int) - the minimum count threshold.
+
+        **kwargs
+            Additional key word parameters passed to
+            :meth:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel.build_vocab`.
+
+        Examples
+        --------
+        Train a model and update vocab for online training:
+
+        .. sourcecode:: pycon
+
+            >>> from gensim.models import FastText
+            >>> relations_1 = [('kangaroo', 'marsupial'), ('kangaroo', 'mammal')]
+            >>> relations_2 = [('gib', 'cat')]
+            >>>
+            >>> model = PoincareModel(relations, negative=2)
+            >>> model.build_vocab(relations_1)
+            >>> model.train(relations_1, epochs=5)
+            >>>
+            >>> model.build_vocab(relations_2, update=True)
+            >>> model.train(relations_2, epochs=5)
+
+        """
+        if not update:
+            self.wv.init_ngrams_weights(self.trainables.seed)
+        elif not len(self.wv.vocab):
+            raise RuntimeError(
+                "You cannot do an online vocabulary-update of a model which has no prior vocabulary. "
+                "First build the vocabulary of your model with a corpus "
+                "by calling the gensim.models.fasttext.FastText.build_vocab method "
+                "before doing an online update."
+            )
+        else:
+            self.vocabulary.old_vocab_len = len(self.wv.vocab)
+
+        retval = super(FastText, self).build_vocab(
+            sentences=sentences, corpus_file=corpus_file, update=update, progress_per=progress_per,
+            keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, **kwargs)
+
+        if update:
+            self.wv.update_ngrams_weights(self.trainables.seed, self.vocabulary.old_vocab_len)
+
+        return retval
+
     def train(self, epochs, batch_size=10, print_every=1000, check_gradients_every=None):
         """Train Poincare embeddings using loaded data and model parameters.
 
@@ -829,6 +913,7 @@ class PoincareKeyedVectors(BaseKeyedVectors):
         super(PoincareKeyedVectors, self).__init__(vector_size)
         self.max_distance = 0
         self.index2word = []
+        self.vocab = {}
 
     @property
     def vectors(self):
