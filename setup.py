@@ -237,9 +237,12 @@ win_testenv = [
 
 if sys.version_info[:2] == (2, 7):
     #
-    # The last supported version for Py2.
+    # 0.20.3 is the last version of scikit-learn that supports Py2.
+    # Similarly, for version 5.1.1 of tornado.  We require tornado indirectly
+    # via visdom.
     #
     win_testenv.append('scikit-learn==0.20.3')
+    win_testenv.append('tornado==5.1.1')
 else:
     win_testenv.append('scikit-learn')
 
