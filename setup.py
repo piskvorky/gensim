@@ -230,11 +230,18 @@ win_testenv = [
     'cython',
     'pyemd',
     'testfixtures',
-    'scikit-learn',
     'Morfessor==2.0.2a4',
     'python-Levenshtein >= 0.10.2',
     'visdom >= 0.1.8, != 0.1.8.7',
 ]
+
+if sys.version_info[:2] == (2, 7):
+    #
+    # The last supported version for Py2.
+    #
+    win_testenv.append('scikit-learn==0.20.3')
+else:
+    win_testenv.append('scikit-learn')
 
 linux_testenv = win_testenv[:]
 
