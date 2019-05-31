@@ -461,7 +461,7 @@ class FastText(BaseWordEmbeddingsModel):
 
     """
     def __init__(self, sentences=None, corpus_file=None, sg=0, hs=0, size=100, alpha=0.025, window=5, min_count=5,
-                 max_vocab_size=None, word_ngrams=1, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
+                 max_vocab_size=None, max_final_vocab=None, word_ngrams=1, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
                  negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, iter=5, null_word=0, min_n=3, max_n=6,
                  sorted_vocab=1, bucket=2000000, trim_rule=None, batch_words=MAX_WORDS_IN_BATCH, callbacks=(),
                  compatible_hash=True):
@@ -507,6 +507,10 @@ class FastText(BaseWordEmbeddingsModel):
             Limits the RAM during vocabulary building; if there are more unique
             words than this, then prune the infrequent ones. Every 10 million word types need about 1GB of RAM.
             Set to `None` for no limit.
+        max_final_vocab : int, optional
+            Prunes the final vocabulary to this number of word types.
+
+            Set to `None` to disable.
         sample : float, optional
             The threshold for configuring which higher-frequency words are randomly downsampled,
             useful range is (0, 1e-5).
@@ -589,8 +593,14 @@ class FastText(BaseWordEmbeddingsModel):
 
         self.wv = FastTextKeyedVectors(size, min_n, max_n, bucket, compatible_hash)
         self.vocabulary = FastTextVocab(
-            max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
-            sorted_vocab=bool(sorted_vocab), null_word=null_word, ns_exponent=ns_exponent)
+            max_vocab_size=max_vocab_size,
+            max_final_vocab=max_final_vocab,
+            min_count=min_count,
+            sample=sample,
+            sorted_vocab=bool(sorted_vocab),
+            null_word=null_word,
+            ns_exponent=ns_exponent
+        )
         self.trainables = FastTextTrainables(vector_size=size, seed=seed, bucket=bucket, hashfxn=hashfxn)
         self.trainables.prepare_weights(hs, negative, self.wv, update=False, vocabulary=self.vocabulary)
         self.wv.bucket = self.trainables.bucket
