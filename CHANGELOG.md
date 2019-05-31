@@ -1,7 +1,52 @@
 Changes
-===========
+=======
 
-## Unreleased
+## 3.7.3, 2019-05-06
+
+### :red_circle: Bug fixes
+
+* Fix fasttext model loading from gzip files (__[mpenkov](https://github.com/mpenkov)__, [#2476](https://github.com/RaRe-Technologies/gensim/pull/2476))
+* Fix misleading `Doc2Vec.docvecs` comment (__[gojomo](https://github.com/gojomo)__, [#2472](https://github.com/RaRe-Technologies/gensim/pull/2472))
+* NMF bugfix (__[mpenkov](https://github.com/mpenkov)__, [#2466](https://github.com/RaRe-Technologies/gensim/pull/2466))
+* Fix `WordEmbeddingsKeyedVectors.most_similar` (__[Witiko](https://github.com/Witiko)__, [#2461](https://github.com/RaRe-Technologies/gensim/pull/2461))
+* Fix LdaSequence model by updating to num_documents (__[Bharat123rox](https://github.com/Bharat123rox)__, [#2410](https://github.com/RaRe-Technologies/gensim/pull/2410))
+* Make termsim matrix positive definite even with negative similarities (__[Witiko](https://github.com/Witiko)__, [#2397](https://github.com/RaRe-Technologies/gensim/pull/2397))
+* Fix the off-by-one bug in the TFIDF model. (__[AMR-KELEG](https://github.com/AMR-KELEG)__, [#2392](https://github.com/RaRe-Technologies/gensim/pull/2392))
+* Update legacy model loading (__[mpenkov](https://github.com/mpenkov)__, [#2454](https://github.com/RaRe-Technologies/gensim/pull/2454), [#2457](https://github.com/RaRe-Technologies/gensim/pull/2457))
+* Make `matutils.unitvec` always return float norm when requested (__[Witiko](https://github.com/Witiko)__, [#2419](https://github.com/RaRe-Technologies/gensim/pull/2419))
+
+### :books: Tutorial and doc improvements
+
+* Update word2vec.ipynb (__[asyabo](https://github.com/asyabo)__, [#2423](https://github.com/RaRe-Technologies/gensim/pull/2423))
+
+### :+1: Improvements
+
+* Adding type check for corpus_file argument (__[saraswatmks](https://github.com/saraswatmks)__, [#2469](https://github.com/RaRe-Technologies/gensim/pull/2469))
+* Clean up FastText Cython code, fix division by zero (__[mpenkov](https://github.com/mpenkov)__, [#2382](https://github.com/RaRe-Technologies/gensim/pull/2382))
+
+### :warning: Deprecations (will be removed in the next major release)
+
+* Remove
+    - `gensim.models.FastText.load_fasttext_format`: use load_facebook_vectors to load embeddings only (faster, less CPU/memory usage, does not support training continuation) and load_facebook_model to load full model (slower, more CPU/memory intensive, supports training continuation)
+    - `gensim.models.wrappers.fasttext` (obsoleted by the new native `gensim.models.fasttext` implementation)
+    - `gensim.examples`
+    - `gensim.nosy`
+    - `gensim.scripts.word2vec_standalone`
+    - `gensim.scripts.make_wiki_lemma`
+    - `gensim.scripts.make_wiki_online`
+    - `gensim.scripts.make_wiki_online_lemma`
+    - `gensim.scripts.make_wiki_online_nodebug`
+    - `gensim.scripts.make_wiki` (all of these obsoleted by the new native  `gensim.scripts.segment_wiki` implementation)
+    - "deprecated" functions and attributes
+
+* Move
+    - `gensim.scripts.make_wikicorpus` ➡ `gensim.scripts.make_wiki.py`
+    - `gensim.summarization` ➡ `gensim.models.summarization`
+    - `gensim.topic_coherence` ➡ `gensim.models._coherence`
+    - `gensim.utils` ➡ `gensim.utils.utils` (old imports will continue to work)
+    - `gensim.parsing.*` ➡ `gensim.utils.text_utils`
+
+## 3.7.2, 2019-04-06
 
 ### :star2: New Features
 
@@ -13,6 +58,8 @@ Changes
 * Fix unicode error when loading FastText vocabulary (__[@mpenkov](https://github.com/mpenkov)__, [#2390](https://github.com/RaRe-Technologies/gensim/pull/2390))
 * Avoid division by zero in fasttext_inner.pyx (__[@mpenkov](https://github.com/mpenkov)__, [#2404](https://github.com/RaRe-Technologies/gensim/pull/2404))
 * Avoid incorrect filename inference when loading model (__[@mpenkov](https://github.com/mpenkov)__, [#2408](https://github.com/RaRe-Technologies/gensim/pull/2408))
+* Handle invalid unicode when loading native FastText models (__[@mpenkov](https://github.com/mpenkov)__, [#2411](https://github.com/RaRe-Technologies/gensim/pull/2411))
+* Avoid divide by zero when calculating vectors for terms with no ngrams (__[@mpenkov](https://github.com/mpenkov)__, [#2411](https://github.com/RaRe-Technologies/gensim/pull/2411))
 
 ### :books: Tutorial and doc improvements
 
@@ -20,7 +67,7 @@ Changes
 
 ### :+1: Improvements
 
-* Undo the hash2index optimization (__[mpenkov](https://github.com/mpenkov)__, [#2370](https://github.com/RaRe-Technologies/gensim/pull/2387))
+* Undo the hash2index optimization (__[mpenkov](https://github.com/mpenkov)__, [#2370](https://github.com/RaRe-Technologies/gensim/pull/2370))
 
 ### :warning: Changes in FastText behavior
 
@@ -39,7 +86,11 @@ word wasn't learned during model training.)
 2. `ft_model['any_word']` will always return a vector.  Previously, it 
 raised `KeyError` for OOV words when the model had no vectors 
 for **any** ngrams of the word.
-3. Models may use more more memory, or take longer for word-vector
+3. If no ngrams from the term are present in the model,
+or when no ngrams could be extracted from the term, a vector pointing
+to the origin will be returned.  Previously, a vector of NaN (not a number)
+was returned as a consequence of a divide-by-zero problem.
+4. Models may use more more memory, or take longer for word-vector
 lookup, especially after training on smaller corpuses where the previous 
 non-compliant behavior discarded some ngrams from consideration.
 

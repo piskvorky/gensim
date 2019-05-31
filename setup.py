@@ -230,11 +230,21 @@ win_testenv = [
     'cython',
     'pyemd',
     'testfixtures',
-    'scikit-learn',
     'Morfessor==2.0.2a4',
     'python-Levenshtein >= 0.10.2',
     'visdom >= 0.1.8, != 0.1.8.7',
 ]
+
+if sys.version_info[:2] == (2, 7):
+    #
+    # 0.20.3 is the last version of scikit-learn that supports Py2.
+    # Similarly, for version 5.1.1 of tornado.  We require tornado indirectly
+    # via visdom.
+    #
+    win_testenv.append('scikit-learn==0.20.3')
+    win_testenv.append('tornado==5.1.1')
+else:
+    win_testenv.append('scikit-learn')
 
 linux_testenv = win_testenv[:]
 
@@ -304,7 +314,7 @@ if not (os.name == 'nt' and sys.version_info[0] < 3):
 
 setup(
     name='gensim',
-    version='3.7.1',
+    version='3.7.3',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 

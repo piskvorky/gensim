@@ -70,7 +70,7 @@ try:
 except ImportError:
     from Queue import Queue  # noqa:F401
 
-from collections import namedtuple, defaultdict
+from collections import namedtuple, defaultdict, Iterable
 from timeit import default_timer
 
 from numpy import zeros, float32 as REAL, empty, ones, \
@@ -447,18 +447,13 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         directly to query those embeddings in various ways. See the module level docstring for examples.
 
     docvecs : :class:`~gensim.models.keyedvectors.Doc2VecKeyedVectors`
-        This object contains the paragraph vectors. Remember that the only difference between this model and
-        :class:`~gensim.models.word2vec.Word2Vec` is that besides the word vectors we also include paragraph embeddings
-        to capture the paragraph.
+        This object contains the paragraph vectors learned from the training data. There will be one such vector
+        for each unique document tag supplied during training. They may be individually accessed using the tag
+        as an indexed-access key. For example, if one of the training documents used a tag of 'doc003':
 
-        In this way we can capture the difference between the same word used in a different context.
-        For example we now have a different representation of the word "leaves" in the following two sentences ::
+        .. sourcecode:: pycon
 
-            1. Manos leaves the office every day at 18:00 to catch his train
-            2. This season is called Fall, because leaves fall from the trees.
-
-        In a plain :class:`~gensim.models.word2vec.Word2Vec` model the word would have exactly the same representation
-        in both sentences, in :class:`~gensim.models.doc2vec.Doc2Vec` it will not.
+            >>> model.docvecs['doc003']
 
     vocabulary : :class:`~gensim.models.doc2vec.Doc2VecVocab`
         This object represents the vocabulary (sometimes called Dictionary in gensim) of the model.
@@ -794,6 +789,19 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
         """
         kwargs = {}
+
+        if corpus_file is None and documents is None:
+            raise TypeError("Either one of corpus_file or documents value must be provided")
+
+        if corpus_file is not None and documents is not None:
+            raise TypeError("Both corpus_file and documents must not be provided at the same time")
+
+        if documents is None and not os.path.isfile(corpus_file):
+            raise TypeError("Parameter corpus_file must be a valid path to a file, got %r instead" % corpus_file)
+
+        if documents is not None and not isinstance(documents, Iterable):
+            raise TypeError("documents must be an iterable of list, got %r instead" % documents)
+
         if corpus_file is not None:
             # Calculate offsets for each worker along with initial doctags (doctag ~ document/line number in a file)
             offsets, start_doctags = self._get_offsets_and_start_doctags_for_corpusfile(corpus_file, self.workers)

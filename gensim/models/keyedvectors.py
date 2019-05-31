@@ -186,6 +186,11 @@ from gensim.models.utils_any2vec import (
 )
 from gensim.similarities.termsim import TermSimilarityIndex, SparseTermSimilarityMatrix
 
+#
+# For backwards compatibility, see https://github.com/RaRe-Technologies/gensim/issues/2201
+#
+from gensim.models.deprecated.keyedvectors import EuclideanKeyedVectors  # noqa
+
 logger = logging.getLogger(__name__)
 
 
@@ -277,7 +282,7 @@ class BaseKeyedVectors(utils.SaveLoad):
         ----------
         entities : list of str
             Entities specified by string ids.
-        weights: {list of numpy.ndarray, numpy.ndarray}
+        weights: list of numpy.ndarray or numpy.ndarray
             List of 1D np.array vectors or a 2D np.array of vectors.
         replace: bool, optional
             Flag indicating whether to replace vectors for entities which already exist in the vocabulary,
@@ -318,7 +323,7 @@ class BaseKeyedVectors(utils.SaveLoad):
         ----------
         entities : {str, list of str}
             Entities specified by their string ids.
-        weights: {list of numpy.ndarray, numpy.ndarray}
+        weights: list of numpy.ndarray or numpy.ndarray
             List of 1D np.array vectors or 2D np.array of vectors.
 
         """
@@ -497,8 +502,9 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             List of words that contribute positively.
         negative : list of str, optional
             List of words that contribute negatively.
-        topn : int, optional
-            Number of top-N similar words to return.
+        topn : int or None, optional
+            Number of top-N similar words to return, when `topn` is int. When `topn` is None,
+            then similarities for all words are returned.
         restrict_vocab : int, optional
             Optional integer which limits the range of vectors which
             are searched for most-similar values. For example, restrict_vocab=10000 would
@@ -507,11 +513,13 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         Returns
         -------
-        list of (str, float)
-            Sequence of (word, similarity).
+        list of (str, float) or numpy.array
+            When `topn` is int, a sequence of (word, similarity) is returned.
+            When `topn` is None, then similarities for all words are returned as a
+            one-dimensional numpy array with the size of the vocabulary.
 
         """
-        if topn is not None and topn < 1:
+        if isinstance(topn, int) and topn < 1:
             return []
 
         if positive is None:
@@ -548,12 +556,12 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             raise ValueError("cannot compute similarity with no input")
         mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
 
-        if indexer is not None:
+        if indexer is not None and isinstance(topn, int):
             return indexer.most_similar(mean, topn)
 
         limited = self.vectors_norm if restrict_vocab is None else self.vectors_norm[:restrict_vocab]
         dists = dot(limited, mean)
-        if topn is None:
+        if not topn:
             return dists
         best = matutils.argsort(dists, topn=topn + len(all_words), reverse=True)
         # ignore (don't return) words from the input
@@ -567,8 +575,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         ----------
         word : str
             Word
-        topn : {int, False}, optional
-            Number of top-N similar words to return. If topn is False, similar_by_word returns
+        topn : int or None, optional
+            Number of top-N similar words to return. If topn is None, similar_by_word returns
             the vector of similarity scores.
         restrict_vocab : int, optional
             Optional integer which limits the range of vectors which
@@ -578,8 +586,10 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         Returns
         -------
-        list of (str, float)
-            Sequence of (word, similarity).
+        list of (str, float) or numpy.array
+            When `topn` is int, a sequence of (word, similarity) is returned.
+            When `topn` is None, then similarities for all words are returned as a
+            one-dimensional numpy array with the size of the vocabulary.
 
         """
         return self.most_similar(positive=[word], topn=topn, restrict_vocab=restrict_vocab)
@@ -591,9 +601,9 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         ----------
         vector : numpy.array
             Vector from which similarities are to be computed.
-        topn : {int, False}, optional
-            Number of top-N similar words to return. If topn is False, similar_by_vector returns
-            the vector of similarity scores.
+        topn : int or None, optional
+            Number of top-N similar words to return, when `topn` is int. When `topn` is None,
+            then similarities for all words are returned.
         restrict_vocab : int, optional
             Optional integer which limits the range of vectors which
             are searched for most-similar values. For example, restrict_vocab=10000 would
@@ -602,8 +612,10 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         Returns
         -------
-        list of (str, float)
-            Sequence of (word, similarity).
+        list of (str, float) or numpy.array
+            When `topn` is int, a sequence of (word, similarity) is returned.
+            When `topn` is None, then similarities for all words are returned as a
+            one-dimensional numpy array with the size of the vocabulary.
 
         """
         return self.most_similar(positive=[vector], topn=topn, restrict_vocab=restrict_vocab)
@@ -783,15 +795,21 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             List of words that contribute positively.
         negative : list of str, optional
             List of words that contribute negatively.
-        topn : int, optional
-            Number of top-N similar words to return.
+        topn : int or None, optional
+            Number of top-N similar words to return, when `topn` is int. When `topn` is None,
+            then similarities for all words are returned.
 
         Returns
         -------
-        list of (str, float)
-            Sequence of (word, similarity).
+        list of (str, float) or numpy.array
+            When `topn` is int, a sequence of (word, similarity) is returned.
+            When `topn` is None, then similarities for all words are returned as a
+            one-dimensional numpy array with the size of the vocabulary.
 
         """
+        if isinstance(topn, int) and topn < 1:
+            return []
+
         if positive is None:
             positive = []
         if negative is None:
@@ -1184,7 +1202,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                 ignore = {a, b, c}  # input words to be ignored
                 predicted = None
                 # find the most likely prediction, ignoring OOV words and input words
-                sims = most_similar(self, positive=[b, c], negative=[a], topn=False, restrict_vocab=restrict_vocab)
+                sims = most_similar(self, positive=[b, c], negative=[a], topn=None, restrict_vocab=restrict_vocab)
                 self.vocab = original_vocab
                 for index in matutils.argsort(sims, reverse=True):
                     predicted = self.index2word[index].upper() if case_insensitive else self.index2word[index]
@@ -1646,8 +1664,9 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
             List of doctags/indexes that contribute positively.
         negative : list of {str, int}, optional
             List of doctags/indexes that contribute negatively.
-        topn : int, optional
-            Number of top-N similar docvecs to return.
+        topn : int or None, optional
+            Number of top-N similar docvecs to return, when `topn` is int. When `topn` is None,
+            then similarities for all docvecs are returned.
         clip_start : int
             Start clipping index.
         clip_end : int
@@ -1659,6 +1678,9 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
             Sequence of (doctag/index, similarity).
 
         """
+        if isinstance(topn, int) and topn < 1:
+            return []
+
         if positive is None:
             positive = []
         if negative is None:
@@ -1695,7 +1717,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
             raise ValueError("cannot compute similarity with no input")
         mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
 
-        if indexer is not None:
+        if indexer is not None and isinstance(topn, int):
             return indexer.most_similar(mean, topn)
 
         dists = dot(self.vectors_docs_norm[clip_start:clip_end], mean)
@@ -1981,12 +2003,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
     @classmethod
     def load(cls, fname_or_handle, **kwargs):
         model = super(WordEmbeddingsKeyedVectors, cls).load(fname_or_handle, **kwargs)
-        if not hasattr(model, 'compatible_hash'):
-            model.compatible_hash = False
-
-        if hasattr(model, 'hash2index'):
-            _rollback_optimization(model)
-
+        _try_upgrade(model)
         return model
 
     @property
@@ -2098,6 +2115,17 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
             else:
                 ngram_weights = self.vectors_ngrams
             ngram_hashes = ft_ngram_hashes(word, self.min_n, self.max_n, self.bucket, self.compatible_hash)
+            if len(ngram_hashes) == 0:
+                #
+                # If it is impossible to extract _any_ ngrams from the input
+                # word, then the best we can do is return a vector that points
+                # to the origin.  The reference FB implementation does this,
+                # too.
+                #
+                # https://github.com/RaRe-Technologies/gensim/issues/2402
+                #
+                logger.warning('could not extract any ngrams from %r, returning origin vector', word)
+                return word_vec
             for nh in ngram_hashes:
                 word_vec += ngram_weights[nh]
             return word_vec / len(ngram_hashes)
@@ -2467,3 +2495,16 @@ def _unpack(m, num_rows, hash2index, seed=1):
         m[[h, i]] = m[[i, h]]  # swap rows i and h
 
     return m
+
+
+def _try_upgrade(wv):
+    if hasattr(wv, 'hash2index'):
+        _rollback_optimization(wv)
+
+    if not hasattr(wv, 'compatible_hash'):
+        logger.warning(
+            "This older model was trained with a buggy hash function. "
+            "The model will continue to work, but consider training it "
+            "from scratch."
+        )
+        wv.compatible_hash = False
