@@ -190,7 +190,7 @@ You may continue training them on new data:
     True
 
 If you do not intend to continue training the model, consider using the
-:func:`gensim.models.FastText.load_facebook_vectors` function instead.
+:func:`gensim.models.fastText.load_facebook_vectors` function instead.
 That function only loads the word embeddings (keyed vectors), consuming much less CPU and RAM:
 
 .. sourcecode:: pycon
