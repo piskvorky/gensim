@@ -2,8 +2,8 @@ r"""
 
 .. _fasttext_tutorial:
 
-How to Use Gensim as a Wrapper for FastText
-===========================================
+How to Use Gensim as a Wrapper for Facebook's FastText
+======================================================
 
 This tutorial is about using `fastText <https://github.com/facebookresearch/fastText>`_ model in Gensim.
 
