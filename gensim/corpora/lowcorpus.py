@@ -131,7 +131,7 @@ class LowCorpus(IndexedCorpus):
 
         """
         # the first line in input data is the number of documents (integer). throws exception on bad input.
-        with utils.smart_open(self.fname) as fin:
+        with utils.open(self.fname, 'rb') as fin:
             try:
                 result = int(next(fin))
             except StopIteration:
@@ -191,7 +191,7 @@ class LowCorpus(IndexedCorpus):
             Document in BoW format.
 
         """
-        with utils.smart_open(self.fname) as fin:
+        with utils.open(self.fname, 'rb') as fin:
             for lineno, line in enumerate(fin):
                 if lineno > 0:  # ignore the first line = number of documents
                     yield self.line2doc(line)
@@ -231,7 +231,7 @@ class LowCorpus(IndexedCorpus):
         logger.info("storing corpus in List-Of-Words format into %s" % fname)
         truncated = 0
         offsets = []
-        with utils.smart_open(fname, 'wb') as fout:
+        with utils.open(fname, 'wb') as fout:
             fout.write(utils.to_utf8('%i\n' % len(corpus)))
             for doc in corpus:
                 words = []
@@ -277,7 +277,7 @@ class LowCorpus(IndexedCorpus):
             [(0, 1), (3, 1), (4, 1)]
 
         """
-        with utils.smart_open(self.fname) as f:
+        with utils.open(self.fname, 'rb') as f:
             f.seek(offset)
             return self.line2doc(f.readline())
 

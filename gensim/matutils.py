@@ -1236,7 +1236,7 @@ class MmWriter(object):
         self.fname = fname
         if fname.endswith(".gz") or fname.endswith('.bz2'):
             raise NotImplementedError("compressed output not supported with MmWriter")
-        self.fout = utils.smart_open(self.fname, 'wb+')  # open for both reading and writing
+        self.fout = utils.open(self.fname, 'wb+')  # open for both reading and writing
         self.headers_written = False
 
     def write_headers(self, num_docs, num_terms, num_nnz):
@@ -1574,7 +1574,7 @@ except ImportError:
             if offset == -1:
                 return []
             if isinstance(self.input, string_types):
-                fin, close_fin = utils.smart_open(self.input), True
+                fin, close_fin = utils.open(self.input, 'rb'), True
             else:
                 fin, close_fin = self.input, False
 

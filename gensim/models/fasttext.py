@@ -105,13 +105,13 @@ Gensim will take care of the rest:
 .. sourcecode:: pycon
 
     >>> from gensim.utils import tokenize
-    >>> import smart_open
+    >>> from gensim import utils
     >>>
     >>>
     >>> class MyIter(object):
     ...     def __iter__(self):
     ...         path = datapath('crime-and-punishment.txt')
-    ...         with smart_open.smart_open(path, 'r', encoding='utf-8') as fin:
+    ...         with utils.open(path, 'r', encoding='utf-8') as fin:
     ...             for line in fin:
     ...                 yield list(tokenize(line))
     >>>
@@ -293,8 +293,8 @@ from gensim.models.word2vec import Word2VecVocab, Word2VecTrainables, train_sg_p
 from gensim.models.keyedvectors import FastTextKeyedVectors
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 from gensim.models.utils_any2vec import ft_ngram_hashes
-from smart_open import smart_open
 
+from gensim import utils
 from gensim.utils import deprecated, call_on_class_only
 
 logger = logging.getLogger(__name__)
@@ -1326,7 +1326,7 @@ def _load_fasttext_format(model_file, encoding='utf-8', full_model=True):
         The loaded model.
 
     """
-    with smart_open(model_file, 'rb') as fin:
+    with utils.open(model_file, 'rb') as fin:
         m = gensim.models._fasttext_bin.load(fin, encoding=encoding, full_model=full_model)
 
     model = FastText(

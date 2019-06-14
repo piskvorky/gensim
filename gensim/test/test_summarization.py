@@ -142,7 +142,7 @@ class TestSummarizationTest(unittest.TestCase):
 
     def _get_text_from_test_data(self, file):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
-        with utils.smart_open(os.path.join(pre_path, file), mode="r") as f:
+        with utils.open(os.path.join(pre_path, file), mode="r") as f:
             return f.read()
 
     def test_text_summarization(self):
@@ -268,7 +268,7 @@ class TestSummarizationTest(unittest.TestCase):
     def test_mz_keywords(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
 
-        with utils.smart_open(os.path.join(pre_path, "head500.noblanks.cor")) as f:
+        with utils.open(os.path.join(pre_path, "head500.noblanks.cor"), 'rb') as f:
             text = utils.to_unicode(f.read())
         text = u' '.join(text.split()[:10240])
         kwds = mz_keywords(text)
