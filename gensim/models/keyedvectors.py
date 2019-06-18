@@ -1348,6 +1348,12 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         if getattr(self, 'vectors_norm', None) is None or replace:
             logger.info("precomputing L2-norms of word weight vectors")
             self.vectors_norm = _l2_norm(self.vectors, replace=replace)
+        elif (len(self.vectors_norm) == len(self.vectors)): #if all of the vectors are precomputed
+            pass
+        else: #when some newly added vectors in self.vectors are not precomputed
+            logger.info("adding L2-norm vectors for new documents")
+            diff = len(self.vectors) - len(self.vectors_norm)
+            self.vectors_norm = vstack((self.vectors_norm, _l2_norm(self.vectors[-diff:])))
 
     def relative_cosine_similarity(self, wa, wb, topn=10):
         """Compute the relative cosine similarity between two words given top-n similar words,
