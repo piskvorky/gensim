@@ -1,9 +1,9 @@
 r"""
 
-.. _howto_downloader_api:
+.. _tutorial_downloader_api:
 
-How to use the Downloader API
-=============================
+Downloader API
+==============
 
 Gensim's Downloader API allows you to programmatically fetch corpuses, models and other data.
 The API leverages a local cache that ensures data is downloaded at most once.
