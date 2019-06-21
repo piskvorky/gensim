@@ -175,12 +175,14 @@ class PoincareModel(utils.SaveLoad):
 
     def build_vocab(self, relations, update=False):
         """Build vocabulary from a relations.
-        Each relations must be a tuples of unicode strings.
 
         Parameters
         ----------
-        relations : list of tuples
-            List of tuples of positive examples of the form (node_1_index, node_2_index).
+        relations : {iterable of (str, str), :class:`gensim.models.poincare.PoincareRelations`}
+            Iterable of relations, e.g. a list of tuples, or a :class:`gensim.models.poincare.PoincareRelations`
+            instance streaming from a file. Note that the relations are treated as ordered pairs,
+            i.e. a relation (a, b) does not imply the opposite relation (b, a). In case the relations are symmetric,
+            the data should contain both relations (a, b) and (b, a).
         update : bool
             If true, the new nodes in `relations` will be added to model's vocab.
 
