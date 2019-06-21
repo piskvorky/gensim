@@ -185,7 +185,8 @@ class PoincareModel(utils.SaveLoad):
             i.e. a relation (a, b) does not imply the opposite relation (b, a). In case the relations are symmetric,
             the data should contain both relations (a, b) and (b, a).
         update : bool
-            If true, the new nodes in `relations` will be added to model's vocab.
+            If true, new nodes's embeddings are initialized.
+            If false, all node's embeddings are initialized.
 
         Examples
         --------
