@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2019 Radim Rehurek <me@radimrehurek.com>
@@ -26,9 +25,8 @@ Searching in generic non-metric space.
 More information about Nmslib: `github repository <https://github.com/nmslib/nmslib>`_.
 
 """
-import os
 
-from smart_open import smart_open
+from smart_open import open
 try:
     import cPickle as _pickle
 except ImportError:
@@ -120,7 +118,7 @@ class NmslibIndexer(object):
         fname_dict = fname + '.d'
         self.index.saveIndex(fname)
         d = {'index_params': self.index_params, 'query_time_params': self.query_time_params, 'labels': self.labels}
-        with smart_open(fname_dict, 'wb') as fout:
+        with open(fname_dict, 'wb') as fout:
             _pickle.dump(d, fout, protocol=protocol)
 
     def load(self, fname):
@@ -152,18 +150,13 @@ class NmslibIndexer(object):
 
         """
         fname_dict = fname + '.d'
-        if not (os.path.exists(fname) and os.path.exists(fname_dict)):
-            raise IOError(
-                "Can't find index files '%s' and '%s' - Unable to restore NmslibIndexer state." % (fname, fname_dict)
-            )
-        else:
-            with smart_open(fname_dict) as f:
-                d = _pickle.loads(f.read())
-            self.index_params = d['index_params']
-            self.query_time_params = d['query_time_params']
-            self.index = nmslib.init()
-            self.index.loadIndex(fname)
-            self.labels = d['labels']
+        with open(fname_dict, 'rb') as f:
+            d = _pickle.loads(f.read())
+        self.index_params = d['index_params']
+        self.query_time_params = d['query_time_params']
+        self.index = nmslib.init()
+        self.index.loadIndex(fname)
+        self.labels = d['labels']
 
     def build_from_word2vec(self):
         """Build an Nmslib index using word vectors from a Word2Vec model."""
