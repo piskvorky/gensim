@@ -5,25 +5,24 @@ Changes
 
 ### :red_circle: Bug fixes
 
-* Fix fasttext model loading from gzip files ([mpenkov](https://api.github.com/users/mpenkov), [#2476](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2476))
-* Fix misleading Doc2Vec.docvecs comment ([gojomo](https://api.github.com/users/gojomo), [#2472](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2472))
-* Nmf bugfix ([mpenkov](https://api.github.com/users/mpenkov), [#2466](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2466))
-* Fix WordEmbeddingsKeyedVectors.most_similar ([Witiko](https://api.github.com/users/Witiko), [#2461](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2461))
-* fix backwards compatibility ([mpenkov](https://api.github.com/users/mpenkov), [#2457](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2457))
-* Fix Lda Sequence model by updating to num_documents ([Bharat123rox](https://api.github.com/users/Bharat123rox), [#2410](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2410))
-* Make termsim matrix positive definite even with negative similarities ([Witiko](https://api.github.com/users/Witiko), [#2397](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2397))
-* Fix the off-by-one bug in the TFIDF model. ([AMR-KELEG](https://api.github.com/users/AMR-KELEG), [#2392](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2392))
-* update legacy model loading, fix #2453 ([mpenkov](https://api.github.com/users/mpenkov), [#2454](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2454))
-* Make matutils.unitvec always return float norm when requested ([Witiko](https://api.github.com/users/Witiko), [#2419](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2419))
+* Fix fasttext model loading from gzip files (__[mpenkov](https://github.com/mpenkov)__, [#2476](https://github.com/RaRe-Technologies/gensim/pull/2476))
+* Fix misleading `Doc2Vec.docvecs` comment (__[gojomo](https://github.com/gojomo)__, [#2472](https://github.com/RaRe-Technologies/gensim/pull/2472))
+* NMF bugfix (__[mpenkov](https://github.com/mpenkov)__, [#2466](https://github.com/RaRe-Technologies/gensim/pull/2466))
+* Fix `WordEmbeddingsKeyedVectors.most_similar` (__[Witiko](https://github.com/Witiko)__, [#2461](https://github.com/RaRe-Technologies/gensim/pull/2461))
+* Fix LdaSequence model by updating to num_documents (__[Bharat123rox](https://github.com/Bharat123rox)__, [#2410](https://github.com/RaRe-Technologies/gensim/pull/2410))
+* Make termsim matrix positive definite even with negative similarities (__[Witiko](https://github.com/Witiko)__, [#2397](https://github.com/RaRe-Technologies/gensim/pull/2397))
+* Fix the off-by-one bug in the TFIDF model. (__[AMR-KELEG](https://github.com/AMR-KELEG)__, [#2392](https://github.com/RaRe-Technologies/gensim/pull/2392))
+* Update legacy model loading (__[mpenkov](https://github.com/mpenkov)__, [#2454](https://github.com/RaRe-Technologies/gensim/pull/2454), [#2457](https://github.com/RaRe-Technologies/gensim/pull/2457))
+* Make `matutils.unitvec` always return float norm when requested (__[Witiko](https://github.com/Witiko)__, [#2419](https://github.com/RaRe-Technologies/gensim/pull/2419))
 
 ### :books: Tutorial and doc improvements
 
-* Update word2vec.ipynb ([asyabo](https://api.github.com/users/asyabo), [#2423](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2423))
+* Update word2vec.ipynb (__[asyabo](https://github.com/asyabo)__, [#2423](https://github.com/RaRe-Technologies/gensim/pull/2423))
 
 ### :+1: Improvements
 
-* Adding type check for corpus_file argument ([saraswatmks](https://api.github.com/users/saraswatmks), [#2469](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2469))
-* Clean up FastText Cython code, fix division by zero ([mpenkov](https://api.github.com/users/mpenkov), [#2382](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2382))
+* Adding type check for corpus_file argument (__[saraswatmks](https://github.com/saraswatmks)__, [#2469](https://github.com/RaRe-Technologies/gensim/pull/2469))
+* Clean up FastText Cython code, fix division by zero (__[mpenkov](https://github.com/mpenkov)__, [#2382](https://github.com/RaRe-Technologies/gensim/pull/2382))
 
 ### :warning: Deprecations (will be removed in the next major release)
 

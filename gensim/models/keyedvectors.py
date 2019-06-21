@@ -162,6 +162,7 @@ from __future__ import division  # py3 "true division"
 
 from itertools import chain
 import logging
+from numbers import Integral
 
 try:
     from queue import Queue, Empty
@@ -519,7 +520,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             one-dimensional numpy array with the size of the vocabulary.
 
         """
-        if isinstance(topn, int) and topn < 1:
+        if isinstance(topn, Integral) and topn < 1:
             return []
 
         if positive is None:
@@ -807,7 +808,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             one-dimensional numpy array with the size of the vocabulary.
 
         """
-        if isinstance(topn, int) and topn < 1:
+        if isinstance(topn, Integral) and topn < 1:
             return []
 
         if positive is None:
@@ -1678,7 +1679,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
             Sequence of (doctag/index, similarity).
 
         """
-        if isinstance(topn, int) and topn < 1:
+        if isinstance(topn, Integral) and topn < 1:
             return []
 
         if positive is None:

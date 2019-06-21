@@ -24,6 +24,15 @@ class TestBM25(unittest.TestCase):
             predicted = doc_weights[index]
             self.assertAlmostEqual(expected, predicted)
 
+    def test_with_generator(self):
+        """ Check above function with input as generator """
+        text_gen = (i for i in common_texts)
+        weights = get_bm25_weights(text_gen)
+        for index, doc_weights in enumerate(weights):
+            expected = max(doc_weights)
+            predicted = doc_weights[index]
+            self.assertAlmostEqual(expected, predicted)
+
     def test_nonnegative_weights(self):
         """ All the weights for a partiular document should be non negative """
         weights = get_bm25_weights(common_texts)
