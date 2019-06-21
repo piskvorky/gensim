@@ -44,6 +44,7 @@ Initialize and train a model from a file containing one relation per line
 
 import csv
 import logging
+from numbers import Integral
 import sys
 import time
 
@@ -1223,7 +1224,8 @@ class PoincareKeyedVectors(BaseKeyedVectors):
         node_or_vector : {str, int, numpy.array}
             node key or vector for which similar nodes are to be found.
         topn : int or None, optional
-            number of similar nodes to return, if `None`, returns all.
+            Number of top-N similar nodes to return, when `topn` is int. When `topn` is None,
+            then distance for all nodes are returned.
         restrict_vocab : int or None, optional
             Optional integer which limits the range of vectors which are searched for most-similar values.
             For example, restrict_vocab=10000 would only check the first 10000 node vectors in the vocabulary order.
@@ -1231,8 +1233,10 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Returns
         --------
-        list of (str, float)
-            List of tuples containing (node, distance) pairs in increasing order of distance.
+        list of (str, float) or numpy.array
+            When `topn` is int, a sequence of (node, distance) is returned in increasing order of distance.
+            When `topn` is None, then similarities for all words are returned as a one-dimensional numpy array with the
+            size of the vocabulary.
 
         Examples
         --------
@@ -1250,6 +1254,9 @@ class PoincareKeyedVectors(BaseKeyedVectors):
             [(u'kangaroo.n.01', 0.0), (u'marsupial.n.01', 0.26524229460827725)]
 
         """
+        if isinstance(topn, Integral) and topn < 1:
+            return []
+
         if not restrict_vocab:
             all_distances = self.distances(node_or_vector)
         else:

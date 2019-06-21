@@ -209,7 +209,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
                     tfidf.idfs.items(),
                     key=lambda x: (lambda term_index, term_idf: (term_idf, -term_index))(*x), reverse=True)]
 
-        column_nonzero = np.array([1] * matrix_order, dtype=_shortest_uint_dtype(nonzero_limit))
+        column_nonzero = np.array([0] * matrix_order, dtype=_shortest_uint_dtype(nonzero_limit))
         column_sum = np.zeros(matrix_order, dtype=dtype)
         matrix = sparse.identity(matrix_order, dtype=dtype, format="dok")
 
@@ -227,12 +227,13 @@ class SparseTermSimilarityMatrix(SaveLoad):
                         0.0, 1.0))
 
             t1 = dictionary[t1_index]
-            num_nonzero = column_nonzero[t1_index] - 1
+            num_nonzero = column_nonzero[t1_index]
             num_rows = nonzero_limit - num_nonzero
             most_similar = [
                 (dictionary.token2id[term], similarity)
-                for term, similarity in index.most_similar(t1, num_rows)
-                if term in dictionary.token2id]
+                for term, similarity in index.most_similar(t1, topn=num_rows)
+                if term in dictionary.token2id
+            ] if num_rows > 0 else []
 
             if tfidf is None:
                 rows = sorted(most_similar)
@@ -245,7 +246,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
                 if positive_definite and column_sum[t1_index] + abs(similarity) >= 1.0:
                     break
                 if symmetric:
-                    if column_nonzero[t2_index] <= nonzero_limit \
+                    if column_nonzero[t2_index] < nonzero_limit \
                             and (not positive_definite or column_sum[t2_index] + abs(similarity) < 1.0) \
                             and not (t1_index, t2_index) in matrix:
                         matrix[t1_index, t2_index] = similarity
