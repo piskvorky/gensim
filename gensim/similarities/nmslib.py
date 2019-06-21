@@ -151,7 +151,7 @@ class NmslibIndexer(object):
         """
         fname_dict = fname + '.d'
         with open(fname_dict, 'rb') as f:
-            d = _pickle.loads(f.read())
+            d = _pickle.load(f)
         self.index_params = d['index_params']
         self.query_time_params = d['query_time_params']
         self.index = nmslib.init()
