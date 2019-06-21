@@ -173,8 +173,34 @@ class PoincareModel(utils.SaveLoad):
         self._loss_grad = None
         self.build_vocab(train_data)
 
-    def build_vocab(self, relations=None, update=False):
-        """Load relations from the train data and build vocab."""
+    def build_vocab(self, relations, update=False):
+        """Build vocabulary from a relations.
+        Each relations must be a tuples of unicode strings.
+
+        Parameters
+        ----------
+        relations : list of tuples
+            List of tuples of positive examples of the form (node_1_index, node_2_index).
+        update : bool
+            If true, the new nodes in `relations` will be added to model's vocab.
+
+        Examples
+        --------
+        Train a model and update vocab for online training:
+
+        .. sourcecode:: pycon
+
+            >>> from gensim.models.poincare import PoincareModel
+            >>> relations_1 = [('kangaroo', 'marsupial'), ('kangaroo', 'mammal')]
+            >>> relations_2 = [('striped_skunk', 'mammal')]
+            >>>
+            >>> model = PoincareModel(relations_1, negative=1)
+            >>> model.train(epochs=50)
+            >>>
+            >>> model.build_vocab(relations_2, update=True)
+            >>> model.train(epochs=50)
+
+        """
         old_index2word_len = len(self.kv.index2word)
 
         logger.info("loading relations from train data..")
