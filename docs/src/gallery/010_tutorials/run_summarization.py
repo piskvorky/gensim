@@ -2,8 +2,8 @@ r"""
 
 .. _summarization_py:
 
-Summarization Tutorial
-======================
+Text Summarization
+==================
 
 Demonstrates summarizing text by extracting the most important sentences from it.
 
@@ -31,7 +31,7 @@ Demonstrates summarizing text by extracting the most important sentences from it
 # Small example
 # -------------
 #
-# First of all, we import the function "summarize".
+# First of all, we import the :py:func:`gensim.summarization.summarize` function.
 
 
 import logging
@@ -45,21 +45,22 @@ from gensim.summarization import summarize
 #
 
 
-text = "Thomas A. Anderson is a man living two lives. By day he is an " + \
-    "average computer programmer and by night a hacker known as " + \
-    "Neo. Neo has always questioned his reality, but the truth is " + \
-    "far beyond his imagination. Neo finds himself targeted by the " + \
-    "police when he is contacted by Morpheus, a legendary computer " + \
-    "hacker branded a terrorist by the government. Morpheus awakens " + \
-    "Neo to the real world, a ravaged wasteland where most of " + \
-    "humanity have been captured by a race of machines that live " + \
-    "off of the humans' body heat and electrochemical energy and " + \
-    "who imprison their minds within an artificial reality known as " + \
-    "the Matrix. As a rebel against the machines, Neo must return to " + \
-    "the Matrix and confront the agents: super-powerful computer " + \
-    "programs devoted to snuffing out Neo and the entire human " + \
+text = (
+    "Thomas A. Anderson is a man living two lives. By day he is an "
+    "average computer programmer and by night a hacker known as "
+    "Neo. Neo has always questioned his reality, but the truth is "
+    "far beyond his imagination. Neo finds himself targeted by the "
+    "police when he is contacted by Morpheus, a legendary computer "
+    "hacker branded a terrorist by the government. Morpheus awakens "
+    "Neo to the real world, a ravaged wasteland where most of "
+    "humanity have been captured by a race of machines that live "
+    "off of the humans' body heat and electrochemical energy and "
+    "who imprison their minds within an artificial reality known as "
+    "the Matrix. As a rebel against the machines, Neo must return to "
+    "the Matrix and confront the agents: super-powerful computer "
+    "programs devoted to snuffing out Neo and the entire human "
     "rebellion. "
-
+)
 print(text)
 
 ###############################################################################
@@ -138,7 +139,6 @@ print(summarize(text, ratio=0.01))
 print(keywords(text, ratio=0.01))
 
 ###############################################################################
-#
 # If you know this movie, you see that this summary is actually quite good. We
 # also see that some of the most important characters (Neo, Morpheus, Trinity)
 # were extracted as keywords.
@@ -214,7 +214,7 @@ plt.show()
 # Montemurro and Zanette's entropy based keyword extraction algorithm
 # -------------------------------------------------------------------
 #
-# `This paper <https://arxiv.org/abs/0907.1558>`_ describes a technique to
+# `This paper <https://arxiv.org/abs/0907.1558>`__ describes a technique to
 # identify words that play a significant role in the large-scale structure of a
 # text. These typically correspond to the major themes of the text. The text is
 # divided into blocks of ~1000 words, and the entropy of each word's

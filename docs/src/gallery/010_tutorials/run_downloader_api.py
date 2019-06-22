@@ -2,14 +2,18 @@ r"""
 
 .. _tutorial_downloader_api:
 
-Downloader API
-==============
+Downloader Module
+=================
 
-Gensim's Downloader API allows you to programmatically fetch corpuses, models and other data.
-The API leverages a local cache that ensures data is downloaded at most once.
+Demonstrates simple and quick access to common corpora, models, and other data.
 """
 
 ###############################################################################
+# One of Gensim's features is simple and easy access to some common data.
+# The `gensim-data <https://github.com/RaRe-Technologies/gensim-data>`_ project stores a variety of corpora, models and other data.
+# Gensim has a :py:mod:`gensim.downloader` module for programmatically accessing this data.
+# The module leverages a local cache that ensures data is downloaded at most once.
+#
 # This tutorial:
 #
 # * Retrieves the text8 corpus, unless it is already on your local machine

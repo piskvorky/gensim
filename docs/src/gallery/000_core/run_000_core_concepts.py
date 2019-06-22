@@ -61,6 +61,13 @@ raw_corpus = [
 # Tokenization breaks up the documents into words (in this case using space as
 # a delimiter).
 #
+# .. Important::
+#   There are better ways to perform preprocessing than just lower-casing and
+#   splitting by space.  Effective preprocessing is beyond the scope of this
+#   tutorial: if you're interested, check out the
+#   :py:func:`gensim.utils.simple_preprocess` function.
+#
+
 # Create a set of frequent words
 stoplist = set('for a of the and to in'.split(' '))
 # Lowercase each document, split it by white space and filter out stopwords
@@ -76,7 +83,7 @@ for text in texts:
 
 # Only keep words that appear more than once
 processed_corpus = [[token for token in text if frequency[token] > 1] for text in texts]
-processed_corpus
+print(processed_corpus)
 
 ###############################################################################
 # Before proceeding, we want to associate each word in the corpus with a unique
@@ -122,8 +129,6 @@ print(dictionary)
 # bag-of-words model. We can use the dictionary to turn tokenized documents
 # into these 12-dimensional vectors. We can see what these IDs correspond to:
 #
-
-
 print(dictionary.token2id)
 
 ###############################################################################
@@ -136,14 +141,12 @@ print(dictionary.token2id)
 
 new_doc = "Human computer interaction"
 new_vec = dictionary.doc2bow(new_doc.lower().split())
-new_vec
+print(new_vec)
 
 ###############################################################################
 # The first entry in each tuple corresponds to the ID of the token in the
 # dictionary, the second corresponds to the count of this token.
 #
-
-###############################################################################
 # Note that "interaction" did not occur in the original corpus and so it was
 # not included in the vectorization. Also note that this vector only contains
 # entries for words that actually appeared in the document. Because any given
@@ -154,7 +157,7 @@ new_vec
 # We can convert our entire original corpus to a list of vectors:
 #
 bow_corpus = [dictionary.doc2bow(text) for text in processed_corpus]
-bow_corpus
+print(bow_corpus)
 
 ###############################################################################
 # Note that while this list lives entirely in memory, in most applications you
@@ -185,10 +188,13 @@ bow_corpus
 #
 
 from gensim import models
+
 # train the model
 tfidf = models.TfidfModel(bow_corpus)
+
 # transform the "system minors" string
-tfidf[dictionary.doc2bow("system minors".lower().split())]
+words = "system minors".lower().split()
+print(tfidf[dictionary.doc2bow(words)])
 
 ###############################################################################
 # The ``tfidf`` model again returns a list of tuples, where the first entry is

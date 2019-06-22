@@ -5,7 +5,7 @@ r"""
 Distance Metrics
 ================
 
-This tutorial introduces the concept of **distance** between two bags of words or distributions, and demonstrates how to calculate this distance using gensim.
+Introduces the concept of distance between two bags of words or distributions, and demonstrates its calculation using gensim.
 
 """
 

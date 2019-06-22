@@ -2,18 +2,18 @@ r"""
 
 .. _doc2vec_lee_py:
 
-Doc2Vec Tutorial
-================
+Doc2Vec Model
+=============
 
-Doc2Vec is an NLP tool for representing documents as a vector and is a generalizing of the Word2Vec method.
-This tutorial will serve as an introduction to Doc2Vec and present ways to train and assess a Doc2Vec model.
+Introduces Gensim's Doc2Vec model and demonstrates its use on the Lee Corpus.
 
 """
 
 ###############################################################################
+# Doc2Vec is an NLP tool for representing documents as a vector and is a
+# generalizing of the Word2Vec method.  This tutorial will serve as an
+# introduction to Doc2Vec and present ways to train and assess a Doc2Vec model.
 #
-
-###############################################################################
 # This tutorial will take you through the following steps:
 #
 # 1. Load and preprocess the training and test corpora (see :ref:`core_concepts_corpus`)

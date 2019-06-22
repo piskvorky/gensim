@@ -2,16 +2,17 @@ r"""
 
 .. _fasttext_tutorial_py:
 
-FastText Tutorial
-=================
+FastText Model
+==============
 
-This tutorial is about using `fastText <https://github.com/facebookresearch/fastText>`_ model in Gensim.
+Introduces Gensim's fastText model and demonstrates its use on the Lee Corpus.
 
 """
 
 ###############################################################################
-#
-# Here, we'll learn to work with fastText library for training word-embedding models, saving & loading them and performing similarity operations & vector lookups analogous to Word2Vec.
+# Here, we'll learn to work with fastText library for training word-embedding
+# models, saving & loading them and performing similarity operations & vector
+# lookups analogous to Word2Vec.
 
 
 ###############################################################################
@@ -19,8 +20,7 @@ This tutorial is about using `fastText <https://github.com/facebookresearch/fast
 # When to use FastText?
 # ---------------------
 #
-#
-# The main principle behind fastText is that the morphological structure of a word carries important information about the meaning of the word, which is not taken into account by traditional word embeddings, which train a unique word embedding for every individual word. This is especially significant for morphologically rich languages (German, Turkish) in which a single word can have a large number of morphological forms, each of which might occur rarely, thus making it hard to train good word embeddings.
+# The main principle behind `fastText <https://github.com/facebookresearch/fastText>`_ is that the morphological structure of a word carries important information about the meaning of the word, which is not taken into account by traditional word embeddings, which train a unique word embedding for every individual word. This is especially significant for morphologically rich languages (German, Turkish) in which a single word can have a large number of morphological forms, each of which might occur rarely, thus making it hard to train good word embeddings.
 #
 #
 # fastText attempts to solve this by treating each word as the aggregation of its subwords. For the sake of simplicity and language-independence, subwords are taken to be the character ngrams of the word. The vector for a word is simply taken to be the sum of all vectors of its component char-ngrams.
