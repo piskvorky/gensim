@@ -13,16 +13,18 @@ This tutorial introduces the basic concepts and terms needed to understand and u
 # At a very high-level, ``gensim`` is a tool for discovering the semantic
 # structure of documents by examining the patterns of words (or higher-level
 # structures such as entire sentences or documents). ``gensim`` accomplishes
-# this by taking a *corpus*\ , a collection of text documents, and producing a
-# *vector* representation of the text in the corpus. The vector representation
-# can then be used to train a *model*\ , which is an algorithms to create
+# this by taking a **corpus**, a collection of text documents, and producing a
+# **vector** representation of the text in the corpus. The vector representation
+# can then be used to train a **model** , which is an algorithms to create
 # different representations of the data, which are usually more semantic. These
 # three concepts are key to understanding how ``gensim`` works so let's take a
 # moment to explain what each of them means. At the same time, we'll work
 # through a simple example that illustrates each of them.
 #
+# .. _core_concepts_corpus:
+#
 # Corpus
-# ^^^^^^
+# ------
 #
 # A *corpus* is a collection of digital documents. This collection is the input
 # to ``gensim`` from which it will infer the structure of the documents, their
@@ -78,11 +80,10 @@ processed_corpus
 
 ###############################################################################
 # Before proceeding, we want to associate each word in the corpus with a unique
-# integer ID. We can do this using the ``gensim.corpora.Dictionary`` class.
-# This dictionary defines the vocabulary of all words that our processing knows
-# about.
+# integer ID. We can do this using the :py:class:`gensim.corpora.Dictionary`
+# class.  This dictionary defines the vocabulary of all words that our
+# processing knows about.
 #
-
 from gensim import corpora
 
 dictionary = corpora.Dictionary(processed_corpus)
@@ -90,13 +91,16 @@ print(dictionary)
 
 ###############################################################################
 # Because our corpus is small, there are only 12 different tokens in this
-# ``Dictionary``. For larger corpuses, dictionaries that contains hundreds of
-# thousands of tokens are quite common.
+# :py:class:`gensim.corpora.Dictionary`. For larger corpuses, dictionaries that
+# contains hundreds of thousands of tokens are quite common.
 #
 
 ###############################################################################
+#
+# .. _core_concepts_vector:
+#
 # Vector
-# ^^^^^^
+# ------
 #
 # To infer the latent structure in our corpus we need a way to represent
 # documents that we can manipulate mathematically. One approach is to represent
@@ -158,8 +162,10 @@ bow_corpus
 # iterator that returns a single document vector at a time. See the
 # documentation for more details.
 #
+# .. _core_concepts_model:
+#
 # Model
-# ^^^^^
+# -----
 #
 # Now that we have vectorized our corpus we can begin to transform it using
 # *models*. We use model as an abstract term referring to a transformation from
