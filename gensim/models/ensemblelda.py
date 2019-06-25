@@ -205,19 +205,16 @@ class EnsembleLda():
         # parameters, stop here and don't train.
         if num_models <= 0:
             return
-        if "corpus" not in gensim_kw_args:
+        if gensim_kw_args.get("corpus") is None:
             return
-        if gensim_kw_args["corpus"] is None:
+        if gensim_kw_args.get("iterations", 0) <= 0:
             return
-        if "iterations" in gensim_kw_args and gensim_kw_args["iterations"] <= 0:
-            return
-        if "passes" in gensim_kw_args and gensim_kw_args["passes"] <= 0:
+        if gensim_kw_args.get("passes", 0) <= 0:
             return
 
         logger.info("Generating {} topic models...".format(num_models))
-        # training
+
         if ensemble_workers > 1:
-            # multiprocessed
             self.generate_topic_models_multiproc(num_models, ensemble_workers)
         else:
             # singlecore
