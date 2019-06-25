@@ -91,9 +91,6 @@ from gensim.models import ldamodel, ldamulticore, basemodel
 
 logger = logging.getLogger(__name__)
 
-# nps max random state of 2**32 - 1 is too large for windows:
-MAX_RANDOM_STATE = np.iinfo(np.int32).max
-
 
 class EnsembleLda():
     """Ensemble Latent Dirichlet Allocation (LDA), a method of ensembling multiple gensim topic models.
@@ -168,6 +165,10 @@ class EnsembleLda():
             https://radimrehurek.com/gensim/models/ldamodel.html
 
         """
+        # Set random state
+        # nps max random state of 2**32 - 1 is too large for windows:
+        self._MAX_RANDOM_STATE = np.iinfo(np.int32).max
+
 
         if "id2word" not in gensim_kw_args:
             gensim_kw_args["id2word"] = None
@@ -550,7 +551,7 @@ class EnsembleLda():
         # the same results in every lda children.
         # so it is solved by generating a list of state seeds before
         # multiprocessing is started.
-        random_states = [self.random_state.randint(MAX_RANDOM_STATE) for _ in range(num_models)]
+        random_states = [self.random_state.randint(self._MAX_RANDOM_STATE) for _ in range(num_models)]
 
         # each worker has to work on at least one model.
         # Don't spawn idle workers:
@@ -639,7 +640,7 @@ class EnsembleLda():
             logger.info("Spawned worker to generate {} topic models".format(num_models))
 
         if random_states is None:
-            random_states = [self.random_state.randint(MAX_RANDOM_STATE) for _ in range(num_models)]
+            random_states = [self.random_state.randint(self._MAX_RANDOM_STATE) for _ in range(num_models)]
 
         assert len(random_states) == num_models
 
