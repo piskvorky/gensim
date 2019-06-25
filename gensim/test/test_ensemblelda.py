@@ -318,21 +318,21 @@ class TestModel(unittest.TestCase):
         self.check_ttda(new_eLDA_mu)
 
         # 2. distance matrix
-        new_eLDA.generate_asymmetric_distance_matrix()
-        new_eLDA_mu.generate_asymmetric_distance_matrix()
+        new_eLDA._generate_asymmetric_distance_matrix()
+        new_eLDA_mu._generate_asymmetric_distance_matrix()
         np.testing.assert_allclose(new_eLDA.asymmetric_distance_matrix,
                                    new_eLDA_mu.asymmetric_distance_matrix)
 
         # 3. CBDBSCAN results
-        new_eLDA.generate_topic_clusters()
-        new_eLDA_mu.generate_topic_clusters()
+        new_eLDA._generate_topic_clusters()
+        new_eLDA_mu._generate_topic_clusters()
         a = new_eLDA.cluster_model.results
         b = new_eLDA_mu.cluster_model.results
         self.assert_cluster_results_equal(a, b)
 
         # 4. finally, the stable topics
-        new_eLDA.generate_stable_topics()
-        new_eLDA_mu.generate_stable_topics()
+        new_eLDA._generate_stable_topics()
+        new_eLDA_mu._generate_stable_topics()
         np.testing.assert_allclose(new_eLDA.get_topics(),
                                    new_eLDA_mu.get_topics())
 
