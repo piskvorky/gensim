@@ -168,15 +168,19 @@ class EnsembleLda():
         if gensim_kw_args["id2word"] is None and gensim_kw_args["corpus"] is None:
             raise ValueError("at least one of corpus/id2word must be specified, to establish "
                              "input space dimensionality. Corpus should be provided using the "
-                             "keyword argument corpus.")
+                             "`corpus` keyword argument.")
 
-        if type(topic_model_kind) == str:
-            self.topic_model_kind = {
+        if isinstance(topic_model_kind, ldamodel.LdaModel):
+            self.topic_model_kind = topic_model_kind
+        else:
+            kinds = {
                 "lda": ldamodel.LdaModel,
                 "ldamulticore": ldamulticore.LdaMulticore
-            }[topic_model_kind]
-        else:
-            self.topic_model_kind = topic_model_kind
+            }
+            if topic_model_kind not in kinds:
+                raise ValueError(
+                    "topic_model_kind should be one of 'lda', 'ldamulticode' or a model inheriting from LdaModel")
+            self.topic_model_kind = kinds[topic_model_kind]
 
         # Store some of the parameters
         self.num_models = num_models
