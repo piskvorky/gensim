@@ -142,8 +142,7 @@ class EnsembleLda():
             When distance_workers is None, it defaults to os.cpu_count() for maximum performance. Default is 1, which
             is not multiprocessed. Set to > 1 to enable multiprocessing.
         **gensim_kw_args
-            All the parameters for the gensim model, that is used for each model in the ensemble, can be provided as
-            additional keyword arguments. https://radimrehurek.com/gensim/models/ldamodel.html
+            Parameters for each gensim model (e.g. :py:class:`gensim.models.LdaModel`) in the ensemble.
 
         """
         # Set random state
