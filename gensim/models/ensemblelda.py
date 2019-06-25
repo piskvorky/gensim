@@ -116,53 +116,34 @@ class EnsembleLda():
             How many LDA models to train in this ensemble.
             Default: 3
         min_cores : number, optional
-            Minimum cores a cluster of topics has to contain
-            so that it is recognized as stable topic.
+            Minimum cores a cluster of topics has to contain so that it is recognized as stable topic.
         epsilon : float, optional
-            Defaults to 0.1. Epsilon for the cbdbscan clustering
-            that generates the stable topics.
+            Defaults to 0.1. Epsilon for the cbdbscan clustering that generates the stable topics.
         ensemble_workers : number, optional
-            Spawns that many processes and distributes the
-            models from the ensemble to those as evenly as
-            possible. num_models should be a multiple of
-            ensemble_workers.
+            Spawns that many processes and distributes the models from the ensemble to those as evenly as possible.
+            num_models should be a multiple of ensemble_workers.
 
-            Setting it to 0 or 1 will both use the non-
-            multiprocessing version. Default:1
+            Setting it to 0 or 1 will both use the nonmultiprocessing version. Default:1
         memory_friendly_ttda : boolean, optional
-            If True, the models in the ensemble are
-            deleted after training and only the
-            total topic word distribution is kept
-            to save memory.
+            If True, the models in the ensemble are deleted after training and only the total topic word distribution
+            is kept to save memory.
 
-            Defaults to True. When False, trained
-            models are stored in a list in self.tms,
-            and no models that are not of a gensim
-            model type can be added to this ensemble
-            using the add_model function.
+            Defaults to True. When False, trained models are stored in a list in self.tms, and no models that are not
+            of a gensim model type can be added to this ensemble using the add_model function.
 
-            If False, any topic term matrix can be
-            supllied to add_model.
+            If False, any topic term matrix can be supllied to add_model.
         min_samples : number, optional
-            Required number of nearby topics for
-            a topic to be considered as 'core' in
-            the CBDBSCAN clustering.
+            Required number of nearby topics for a topic to be considered as 'core' in the CBDBSCAN clustering.
         masking_method : {'mass', 'rank}, optional
             One of "mass" (default) or "rank" (faster).
         masking_threshold : float, optional
-            Default: None, which uses 0.11 for
-            masking_method "rank", and 0.95
-            for "mass".
+            Default: None, which uses 0.11 for masking_method "rank", and 0.95 for "mass".
         distance_workers : number, optional
-            When distance_workers is None, it defaults to
-            os.cpu_count() for maximum performance.
-            Default is 1, which is not multiprocessed.
-            Set to > 1 to enable multiprocessing.
+            When distance_workers is None, it defaults to os.cpu_count() for maximum performance. Default is 1, which
+            is not multiprocessed. Set to > 1 to enable multiprocessing.
         **gensim_kw_args
-            All the parameters for the gensim model,
-            that is used for each model in the ensemble,
-            can be provided as additional keyword arguments.
-            https://radimrehurek.com/gensim/models/ldamodel.html
+            All the parameters for the gensim model, that is used for each model in the ensemble, can be provided as
+            additional keyword arguments. https://radimrehurek.com/gensim/models/ldamodel.html
 
         """
         # Set random state
@@ -252,16 +233,12 @@ class EnsembleLda():
     def generate_gensim_representation(self):
         """creates a gensim-model from the stable topics
 
-        The prior for the gensim model, eta, Can be anything,
-        (a parameter in object constructor) and won't influence
-        get_topics(). Note that different eta means different
-        log_perplexity (the default is the same as the gensim
+        The prior for the gensim model, eta, Can be anything, (a parameter in object constructor) and won't influence
+        get_topics(). Note that different eta means different log_perplexity (the default is the same as the gensim
         default eta, which is for example [0.5, 0.5, 0.5]).
 
-        Note, that when the clustering of the topics
-        was changed using add_model, etc., and when no
-        topics were detected because of that, the old
-        classic gensim model will stay in place.
+        Note, that when the clustering of the topics was changed using add_model, etc., and when no topics were
+        detected because of that, the old classic gensim model will stay in place.
 
         Returns
         -------
@@ -340,27 +317,20 @@ class EnsembleLda():
         return classic_model_representation
 
     def add_model(self, target, num_new_models=None):
-        """Adds the ttda of another model to the ensemble
-        this way, multiple topic models can be connected
-        to an ensemble.
+        """Adds the ttda of another model to the ensemble this way, multiple topic models can be connected to an
+        ensemble.
 
-        Make sure that all the models use the exact same
-        dictionary/idword mapping.
+        Make sure that all the models use the exact same dictionary/idword mapping.
 
         In order to generate new stable topics afterwards, use
             self.generate_asymmetric_distance_matrix()
             self.recluster()
 
-        The ttda of another ensemble can also be used,
-        in that case set num_new_models to the num_models
-        parameter of the ensemble, that means the number
-        of classic models in the ensemble that generated
-        the ttda. This is important, because that information
-        is used to estimate "min_samples" for
-        generate_topic_clusters.
+        The ttda of another ensemble can also be used, in that case set num_new_models to the num_models parameter
+        of the ensemble, that means the number of classic models in the ensemble that generated the ttda. This is
+        important, because that information is used to estimate "min_samples" for generate_topic_clusters.
 
-        If you trained this ensemble in the past with a
-        certain Dictionary that you want to reuse for other
+        If you trained this ensemble in the past with a certain Dictionary that you want to reuse for other
         models, you can get it from: self.id2word.
 
         Parameters
@@ -380,23 +350,16 @@ class EnsembleLda():
             with topic being an array of probabilities:
             [token1, token2, ...]
 
-            token probabilities in a single topic sum to one,
-            therefore, all the words sum to len(ttda)
+            token probabilities in a single topic sum to one, therefore, all the words sum to len(ttda)
 
         num_new_models : integer, optional
-            the model keeps track of how many models
-            were used in this ensemble. Set higher
-            if ttda contained topics from more than
-            one model. Default: None, which takes
-            care of it automatically.
+            the model keeps track of how many models were used in this ensemble. Set higher if ttda contained topics
+            from more than one model. Default: None, which takes care of it automatically.
 
-            If target is a 2D-array of float values,
-            it assumes 1.
+            If target is a 2D-array of float values, it assumes 1.
 
-            If the ensemble has memory_friendly_ttda
-            set to False, then it will always use
-            the number of models in the target
-            parameter.
+            If the ensemble has memory_friendly_ttda set to False, then it will always use the number of models in
+            the target parameter.
 
         """
         # If the model has never seen a ttda before, initialize.
@@ -522,8 +485,7 @@ class EnsembleLda():
         return eLDA
 
     def generate_topic_models_multiproc(self, num_models, ensemble_workers):
-        """Will make the ensemble multiprocess, which results
-        in a speedup on multicore machines. Results from the
+        """Will make the ensemble multiprocess, which results in a speedup on multicore machines. Results from the
         processes will be piped to the parent and concatenated.
 
         Parameters
@@ -531,24 +493,19 @@ class EnsembleLda():
         num_models : number
             how many models to train in the ensemble
         ensemble_workers : number
-            into how many processes to split the models
-            will be set to max(workers, num_models), to avoid
-            workers that are supposed to train 0 models.
+            into how many processes to split the models will be set to max(workers, num_models), to avoid workers that
+            are supposed to train 0 models.
 
-            to get maximum performance, set to the number
-            of your cores, if non-parallelized models
-            are being used in the ensemble (LdaModel).
+            to get maximum performance, set to the number of your cores, if non-parallelized models are being used in
+            the ensemble (LdaModel).
 
-            For LdaMulticore, the performance gain is small
-            and gets larger for a significantly smaller corpus.
+            For LdaMulticore, the performance gain is small and gets larger for a significantly smaller corpus.
             In that case, ensemble_workers=2 can be used.
 
         """
 
-        # the way random_states is handled needs to prevent getting
-        # different results when multiprocessing is on, or getting
-        # the same results in every lda children.
-        # so it is solved by generating a list of state seeds before
+        # the way random_states is handled needs to prevent getting different results when multiprocessing is on,
+        # or getting the same results in every lda children. so it is solved by generating a list of state seeds before
         # multiprocessing is started.
         random_states = [self.random_state.randint(self._MAX_RANDOM_STATE) for _ in range(num_models)]
 
@@ -558,8 +515,7 @@ class EnsembleLda():
 
         # create worker processes:
         # from what I know this is basically forking with a jump to a target function in each child
-        # so modifying the ensemble object will not modify the one in the parent
-        # because of no shared memory
+        # so modifying the ensemble object will not modify the one in the parent because of no shared memory
         processes = []
         pipes = []
         num_models_unhandled = num_models  # how many more models need to be trained by workers?
@@ -626,12 +582,11 @@ class EnsembleLda():
         num_models : number
             number of models to be generated
         random_states : list
-            list of numbers or np.random.RandomState objects.
-            Will be autogenerated based on the ensembles RandomState
-            if None (default).
+            list of numbers or np.random.RandomState objects. Will be autogenerated based on the ensembles
+            RandomState if None (default).
         pipe : multiprocessing.pipe
-            Default None. If provided, will send the trained models over
-            this pipe. If memory friendly, it will only send the ttda.
+            Default None. If provided, will send the trained models over this pipe. If memory friendly, it will only
+            send the ttda.
 
         """
 
@@ -694,14 +649,11 @@ class EnsembleLda():
         pipe.close()
 
     def generate_asymmetric_distance_matrix(self, threshold=None, workers=1, method="mass"):
-        """Makes the pairwise distance matrix for all the ttdas
-        from the ensemble.
+        """Makes the pairwise distance matrix for all the ttdas from the ensemble.
 
-        Returns the asymmetric pairwise distance matrix that
-        is used in the DBSCAN clustering.
+        Returns the asymmetric pairwise distance matrix that is used in the DBSCAN clustering.
 
-        Afterwards, the model needs to be reclustered for
-        this generated matrix to take effect.
+        Afterwards, the model needs to be reclustered for this generated matrix to take effect.
 
         Parameters
         ----------
@@ -711,12 +663,10 @@ class EnsembleLda():
             if threshold is None and method == "mass":
                 threshold = 0.95
 
-            threshold keeps by default 95% of the largest terms by
-            mass. Except the "fast" parameter is "rank", then it
-            just selects that many of the largest terms.
+            threshold keeps by default 95% of the largest terms by mass. Except the "fast" parameter is "rank", then
+            it just selects that many of the largest terms.
         workers : number, optional
-            when workers is None, it defaults to os.cpu_count()
-            for maximum performance. Default is 1, which is not
+            when workers is None, it defaults to os.cpu_count() for maximum performance. Default is 1, which is not
             multiprocessed. Set to > 1 to enable multiprocessing.
 
         """
@@ -809,21 +759,18 @@ class EnsembleLda():
         Parameters
         ----------
         ttda1 and ttda2: 2D arrays of floats
-            Two ttda matrices that are going to be used for distance calculation.
-            Each row in ttda corresponds to one topic. Each cell in the resulting
-            matrix corresponds to the distance between a topic pair.
+            Two ttda matrices that are going to be used for distance calculation. Each row in ttda corresponds to one
+            topic. Each cell in the resulting matrix corresponds to the distance between a topic pair.
         threshold : float, optional
-            threshold defaults to: {"mass": 0.95, "rank": 0.11}, depending on the selected
-            method
+            threshold defaults to: {"mass": 0.95, "rank": 0.11}, depending on the selected method
         start_index : number
-            this function might be used in multiprocessing, so start_index has to be set as
-            ttda1 is a chunk of the complete ttda in that case. start_index would be 0
-            if ttda1 == self.ttda. When self.ttda is split into two pieces, each 100 ttdas
-            long, then start_index should be be 100. default is 0
+            this function might be used in multiprocessing, so start_index has to be set as ttda1 is a chunk of the
+            complete ttda in that case. start_index would be 0 if ttda1 == self.ttda. When self.ttda is split into two
+            pieces, each 100 ttdas long, then start_index should be be 100. default is 0
         method : {'mass', 'rank}, optional
-            method can be "mass" for the original masking method or "rank" for a faster
-            masking method that selects by rank of largest elements in the topic word
-            distribution, to determine which tokens are relevant for the topic.
+            method can be "mass" for the original masking method or "rank" for a faster masking method that selects
+            by rank of largest elements in the topic word distribution, to determine which tokens are relevant for the
+            topic.
 
         Returns
         -------
@@ -902,11 +849,10 @@ class EnsembleLda():
         return distances
 
     def generate_topic_clusters(self, eps=0.1, min_samples=None):
-        """Runs the DBSCAN algorithm on all the detected topics from
-        the models in the ensemble and labels them with label-indices.
+        """Runs the DBSCAN algorithm on all the detected topics from the models in the ensemble and labels them with
+        label-indices.
 
-        The final approval and generation of stable topics is done in
-        generate_stable_topics().
+        The final approval and generation of stable topics is done in generate_stable_topics().
 
         Parameters
         ----------
@@ -925,20 +871,16 @@ class EnsembleLda():
         self.cluster_model.fit(self.asymmetric_distance_matrix)
 
     def generate_stable_topics(self, min_cores=None):
-        """generates stable topics out of the clusters.
-        This function is the last step that has to be done
-        in the ensemble.
+        """generates stable topics out of the clusters. This function is the last step that has to be done in the
+        ensemble.
 
-        Stable topics can be retreived afterwards using
-        get_topics().
+        Stable topics can be retreived afterwards using get_topics().
 
         Parameters
         ----------
         min_cores : number
-            how many cores a cluster has to have,
-            to be treated as stable topic. That means, how many topics
-            that look similar have to be present, so that the average
-            topic in those is used as stable topic.
+            how many cores a cluster has to have, to be treated as stable topic. That means, how many topics
+            that look similar have to be present, so that the average topic in those is used as stable topic.
 
             defaults to min_cores = min(3, max(1, int(self.num_models /4 +1)))
 
@@ -1082,34 +1024,27 @@ class EnsembleLda():
         self.stable_topics = stable_topics
 
     def recluster(self, eps=0.1, min_samples=None, min_cores=None):
-        """Runs the CBDBSCAN algorithm on all the detected topics from
-        the children of the ensemble.
+        """Runs the CBDBSCAN algorithm on all the detected topics from the children of the ensemble.
 
         Generates stable topics out of the clusters afterwards.
 
-        Finally, stable topics can be retreived using
-        get_topics().
+        Finally, stable topics can be retreived using get_topics().
 
         Parameters
         ----------
         eps : float
-            epsilon for the CBDBSCAN algorithm, having the same
-            meaning as in classic DBSCAN clustering.
+            epsilon for the CBDBSCAN algorithm, having the same meaning as in classic DBSCAN clustering.
             default: 0.1
         min_samples : number
-            The minimum number of sampels in the neighborhood
-            of a topic to be considered a core in CBDBSCAN.
+            The minimum number of sampels in the neighborhood of a topic to be considered a core in CBDBSCAN.
             default: int(self.num_models / 2)
         min_cores : number
-            how many cores a cluster has to have,
-            to be treated as stable topic. That means, how many topics
-            that look similar have to be present, so that the average
-            topic in those is used as stable topic.
+            how many cores a cluster has to have, to be treated as stable topic. That means, how many topics
+            that look similar have to be present, so that the average topic in those is used as stable topic.
             default: min(3, max(1, int(self.num_models /4 +1)))
 
         """
-        # if new models were added to the ensemble, the distance
-        # matrix needs to be generated again
+        # if new models were added to the ensemble, the distance matrix needs to be generated again
         if self.asymmetric_distance_matrix_outdated:
             logger.info("asymmetric distance matrix is outdated due to add_model")
             self.generate_asymmetric_distance_matrix()
