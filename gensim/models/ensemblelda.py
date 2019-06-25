@@ -130,8 +130,8 @@ class EnsembleLda():
 
             Setting it to 0 or 1 will both use the nonmultiprocessing version. Default:1
         memory_friendly_ttda : boolean, optional
-            If True, the models in the ensemble are deleted after training and only the total topic word distribution
-            is kept to save memory.
+            If True, the models in the ensemble are deleted after training and only a concatenation of each model's
+            topic term distribution (called ttda) is kept to save memory.
 
             Defaults to True. When False, trained models are stored in a list in self.tms, and no models that are not
             of a gensim model type can be added to this ensemble using the add_model function.
@@ -758,8 +758,10 @@ class EnsembleLda():
         return self.asymmetric_distance_matrix
 
     def calculate_asymmetric_distance_matrix_chunk(self, ttda1, ttda2, threshold, start_index, method):
-        """Iterates over ttda1 and calculates the
-        distance to every ttda in tttda2.
+        """Internal method calculating an (asymmetric) distance from each topic term distribution in ttda1 to each topic
+        term distribution in ttda2 and returns a matrix of distances, size len(ttda1) by len(ttda2).
+
+        This is an internal method and should not be used for two general ttda arrays.
 
         Parameters
         ----------
@@ -774,12 +776,13 @@ class EnsembleLda():
             pieces, each 100 ttdas long, then start_index should be be 100. default is 0
         method : {'mass', 'rank}, optional
             method can be "mass" for the original masking method or "rank" for a faster masking method that selects
-            by rank of largest elements in the topic word distribution, to determine which tokens are relevant for the
+            by rank of largest elements in the topic term distribution, to determine which tokens are relevant for the
             topic.
 
         Returns
         -------
         2D Numpy.numpy.ndarray of floats
+            Asymmetric distance matrix of size len(ttda1) by len(ttda2).
         """
 
         if method not in ["mass", "rank"]:
@@ -806,39 +809,38 @@ class EnsembleLda():
         distances = np.ndarray((len(ttda1), len(ttda2)))
 
         # now iterate over each topic
-        for i in range(len(ttda1)):
+        for ttd1_idx, ttd1 in enumerate(ttda1):
 
-            # create mask from a, that removes noise from a and keeps the largest terms
-            a = ttda1[i]
-            mask = create_mask(a)
-            a_masked = a[mask]
+            # create mask from ttd1 that removes noise from a and keeps the largest terms
+            mask = create_mask(ttd1)
+            ttd1_masked = ttd1[mask]
 
             avg_mask_size += mask.sum()
 
             # now look at every possible pair for topic a:
-            for j in range(len(ttda2)):
+            for ttd2_idx, ttd2 in enumerate(ttda2):
 
                 # distance to itself is 0
-                if i + start_index == j:
-                    distances[i][j] = 0
+                if ttd1_idx + start_index == ttd2_idx:
+                    distances[ttd1_idx][ttd2_idx] = 0
                     continue
 
                 # now mask b based on a, which will force the shape of a onto b
-                b_masked = ttda2[j][mask]
+                ttd2_masked = ttd2[mask]
 
                 distance = 0
                 # is the masked b just some empty stuff? Then forget about it, no similarity, distance is 1
                 # (not 2 because that correspondsto negative values. The maximum distance is 1 here)
                 # don't normalize b_masked, otherwise the following threshold will never work:
-                if b_masked.sum() <= 0.05:
+                if ttd2_masked.sum() <= 0.05:
                     distance = 1
                 else:
                     # if there is indeed some non-noise stuff in the masked topic b, look at
                     # how similar the two topics are. note that normalizing is not needed for cosine distance,
                     # as it only looks at the angle between vectors
-                    distance = cosine(a_masked, b_masked)
+                    distance = cosine(ttd1_masked, ttd2_masked)
 
-                distances[i][j] = distance
+                distances[ttd1_idx][ttd2_idx] = distance
 
         avg_mask_size = avg_mask_size / ttda1.shape[0] / ttda1.shape[1]
         percent = round(100 * avg_mask_size, 1)
