@@ -136,7 +136,7 @@ class EnsembleLda():
             Defaults to True. When False, trained models are stored in a list in self.tms, and no models that are not
             of a gensim model type can be added to this ensemble using the add_model function.
 
-            If False, any topic term matrix can be supllied to add_model.
+            If False, any topic term matrix can be suplied to add_model.
         min_samples : int, optional
             Required int of nearby topics for a topic to be considered as 'core' in the CBDBSCAN clustering.
         masking_method : {'mass', 'rank}, optional
@@ -186,7 +186,6 @@ class EnsembleLda():
         self.num_models = num_models
         self.gensim_kw_args = gensim_kw_args
 
-        # some settings affecting performance
         self.memory_friendly_ttda = memory_friendly_ttda
         self.distance_workers = distance_workers
 
