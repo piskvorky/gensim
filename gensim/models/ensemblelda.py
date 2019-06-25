@@ -183,7 +183,6 @@ class EnsembleLda():
                     "topic_model_kind should be one of 'lda', 'ldamulticode' or a model inheriting from LdaModel")
             self.topic_model_kind = kinds[topic_model_kind]
 
-        # Store some of the parameters
         self.num_models = num_models
         self.gensim_kw_args = gensim_kw_args
 
@@ -277,6 +276,7 @@ class EnsembleLda():
         if num_stable_topics == 0:
             logger.error("The model did not detect any stable topic. You can try to adjust epsilon: "
                          "recluster(eps=...)")
+            self.classic_model_representation = None
             return
 
         # create a new gensim model
