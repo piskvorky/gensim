@@ -111,6 +111,11 @@ class EnsembleLda():
         topic_model_kind : str, topic model, optional
             Examples:
                 'ldamulticore' (recommended), 'lda' (default),
+        ensemble_workers : number, optional
+            Spawns that many processes and distributes the models from the ensemble to those as evenly as possible.
+            num_models should be a multiple of ensemble_workers.
+
+            Setting it to 0 or 1 will both use the nonmultiprocessing version. Default:1
                 gensim.models.ldamodel, gensim.models.ldamulticore
         num_models : int, optional
             How many LDA models to train in this ensemble.
@@ -164,15 +169,19 @@ class EnsembleLda():
             raise ValueError(
                 "at least one of corpus/id2word must be specified, to establish "
                 "input space dimensionality. Corpus should be provided using the "
-                "keyword argument corpus.")
+                "`corpus` keyword argument.")
 
-        if type(topic_model_kind) == str:
-            self.topic_model_kind = {
+        if isinstance(topic_model_kind, ldamodel.LdaModel):
+            self.topic_model_kind = topic_model_kind
+        else:
+            kinds = {
                 "lda": ldamodel.LdaModel,
                 "ldamulticore": ldamulticore.LdaMulticore
-            }[topic_model_kind]
-        else:
-            self.topic_model_kind = topic_model_kind
+            }
+            if topic_model_kind not in kinds:
+                raise ValueError(
+                    "topic_model_kind should be one of 'lda', 'ldamulticode' or a model inheriting from LdaModel")
+            self.topic_model_kind = kinds[topic_model_kind]
 
         # Store some of the parameters
         self.num_models = num_models
@@ -1065,22 +1074,22 @@ class EnsembleLda():
                 raise ValueError("use generate_gensim_representation() first")
 
     def __getitem__(self, i):
-        """see https://radimrehurek.com/gensim/models/ldamodel.html"""
+        """see :py:class:`gensim.models.LdaModel`"""
         self.has_gensim_representation()
         return self.classic_model_representation[i]
 
     def inference(self, *posargs, **kwArgs):
-        """see https://radimrehurek.com/gensim/models/ldamodel.html"""
+        """see :py:class:`gensim.models.LdaModel`"""
         self.has_gensim_representation()
         return self.classic_model_representation.inference(*posargs, **kwArgs)
 
     def log_perplexity(self, *posargs, **kwArgs):
-        """see https://radimrehurek.com/gensim/models/ldamodel.html"""
+        """see :py:class:`gensim.models.LdaModel`"""
         self.has_gensim_representation()
         return self.classic_model_representation.log_perplexity(*posargs, **kwArgs)
 
     def print_topics(self, *posargs, **kwArgs):
-        """see https://radimrehurek.com/gensim/models/ldamodel.html"""
+        """see :py:class:`gensim.models.LdaModel`"""
         self.has_gensim_representation()
         return self.classic_model_representation.print_topics(*posargs, **kwArgs)
 
