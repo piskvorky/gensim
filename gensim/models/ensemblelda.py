@@ -169,7 +169,6 @@ class EnsembleLda():
         # nps max random state of 2**32 - 1 is too large for windows:
         self._MAX_RANDOM_STATE = np.iinfo(np.int32).max
 
-
         if "id2word" not in gensim_kw_args:
             gensim_kw_args["id2word"] = None
         if "corpus" not in gensim_kw_args:
