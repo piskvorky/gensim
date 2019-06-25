@@ -232,21 +232,19 @@ class EnsembleLda():
         self.memory_friendly_ttda = True
 
     def generate_gensim_representation(self):
-        """creates a gensim-model from the stable topics
+        """Creates a gensim model from the stable topics.
 
-        The prior for the gensim model, eta, Can be anything, (a parameter in object constructor) and won't influence
-        get_topics(). Note that different eta means different log_perplexity (the default is the same as the gensim
-        default eta, which is for example [0.5, 0.5, 0.5]).
+        The returned representation is an Gensim LdaModel (:py:class:`gensim.models.LdaModel`) that has been
+        instantiated with an A-priori belief on word probability, eta, that represents the topic-term distributions of
+        any stable topics the were found by clustering over the ensemble of topic distributions.
 
-        Note, that when the clustering of the topics was changed using add_model, etc., and when no topics were
-        detected because of that, the old classic gensim model will stay in place.
+        When no stable topics have been detected, None is returned.
 
         Returns
         -------
-        LdaModel
+        :py:class:`gensim.models.LdaModel`
             A Gensim LDA Model classic_model_representation for which:
             classic_model_representation.get_topics() == self.get_topics()
-
         """
 
         logger.info("Generating classic gensim model representation based on results from the ensemble")
@@ -1179,9 +1177,10 @@ class CBDBSCAN():
                         ordered_min_similarity.remove(neighbor)
                         # try to extend the cluster into the direction
                         # of the neighbor
-                        scan_topic(neighbor, parent_id=topic_index,
-                                   current_label=current_label,
-                                   parent_neighbors=neighbors)
+                        scan_topic(
+                            neighbor, parent_id=topic_index,
+                            current_label=current_label,
+                            parent_neighbors=neighbors)
 
                     results[neighbor]["parent_ids"].add(topic_index)
                     results[neighbor]["parent_labels"].add(current_label)
