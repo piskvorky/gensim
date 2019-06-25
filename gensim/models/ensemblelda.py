@@ -681,14 +681,13 @@ class EnsembleLda():
 
         logger.info("Generating a {} x {} asymmetric distance matrix...".format(len(self.ttda), len(self.ttda)))
 
-        # singlecore:
+        # singlecore
         if workers is not None and workers <= 1:
             self.asymmetric_distance_matrix = self._calculate_asymmetric_distance_matrix_chunk(
                 ttda1=self.ttda, ttda2=self.ttda, threshold=threshold, start_index=0, method=method)
             return self.asymmetric_distance_matrix
 
-        # multicore:
-
+        # else, if workers > 1 use multiprocessing
         # best performance on 2-core machine: 2 workers
         if workers is None:
             workers = os.cpu_count()
@@ -822,7 +821,7 @@ class EnsembleLda():
 
                 distance = 0
                 # is the masked b just some empty stuff? Then forget about it, no similarity, distance is 1
-                # (not 2 because that correspondsto negative values. The maximum distance is 1 here)
+                # (not 2 because that corresponds to negative values. The maximum distance is 1 here)
                 # don't normalize b_masked, otherwise the following threshold will never work:
                 if b_masked.sum() <= 0.05:
                     distance = 1
