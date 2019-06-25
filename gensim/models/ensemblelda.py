@@ -100,7 +100,7 @@ class EnsembleLda():
 
     """
     def __init__(self, topic_model_kind="lda", num_models=3,
-                 min_cores=None,  # default value from generate_stable_topics()
+                 min_cores=None,  # default value from _generate_stable_topics()
                  epsilon=0.1, ensemble_workers=1, memory_friendly_ttda=True,
                  min_samples=None, masking_method="mass", masking_threshold=None,
                  distance_workers=1, random_state=None, **gensim_kw_args):
@@ -136,7 +136,7 @@ class EnsembleLda():
             Defaults to True. When False, trained models are stored in a list in self.tms, and no models that are not
             of a gensim model type can be added to this ensemble using the add_model function.
 
-            If False, any topic term matrix can be supllied to add_model.
+            If False, any topic term matrix can be suplied to add_model.
         min_samples : int, optional
             Required int of nearby topics for a topic to be considered as 'core' in the CBDBSCAN clustering.
         masking_method : {'mass', 'rank}, optional
@@ -186,7 +186,6 @@ class EnsembleLda():
         self.num_models = num_models
         self.gensim_kw_args = gensim_kw_args
 
-        # some settings affecting performance
         self.memory_friendly_ttda = memory_friendly_ttda
         self.distance_workers = distance_workers
 
@@ -206,30 +205,27 @@ class EnsembleLda():
         # parameters, stop here and don't train.
         if num_models <= 0:
             return
-        if ("corpus" not in gensim_kw_args):
+        if gensim_kw_args.get("corpus") is None:
             return
-        if gensim_kw_args["corpus"] is None:
+        if gensim_kw_args.get("iterations", 0) <= 0:
             return
-        if "iterations" in gensim_kw_args and gensim_kw_args["iterations"] <= 0:
-            return
-        if "passes" in gensim_kw_args and gensim_kw_args["passes"] <= 0:
+        if gensim_kw_args.get("passes", 0) <= 0:
             return
 
         logger.info("Generating {} topic models...".format(num_models))
-        # training
+
         if ensemble_workers > 1:
-            # multiprocessed
-            self.generate_topic_models_multiproc(num_models, ensemble_workers)
+            self._generate_topic_models_multiproc(num_models, ensemble_workers)
         else:
             # singlecore
-            self.generate_topic_models(num_models)
+            self._generate_topic_models(num_models)
 
-        self.generate_asymmetric_distance_matrix(
+        self._generate_asymmetric_distance_matrix(
             workers=self.distance_workers,
             threshold=masking_threshold,
             method=masking_method)
-        self.generate_topic_clusters(epsilon, min_samples)
-        self.generate_stable_topics(min_cores)
+        self._generate_topic_clusters(epsilon, min_samples)
+        self._generate_stable_topics(min_cores)
 
         # create model that can provide the usual gensim api to the stable topics from the ensemble
         self.generate_gensim_representation()
@@ -331,12 +327,12 @@ class EnsembleLda():
         Make sure that all the models use the exact same dictionary/idword mapping.
 
         In order to generate new stable topics afterwards, use
-            self.generate_asymmetric_distance_matrix()
+            self._generate_asymmetric_distance_matrix()
             self.recluster()
 
         The ttda of another ensemble can also be used, in that case set num_new_models to the num_models parameter
         of the ensemble, that means the number of classic models in the ensemble that generated the ttda. This is
-        important, because that information is used to estimate "min_samples" for generate_topic_clusters.
+        important, because that information is used to estimate "min_samples" for _generate_topic_clusters.
 
         If you trained this ensemble in the past with a certain Dictionary that you want to reuse for other
         models, you can get it from: self.id2word.
@@ -492,7 +488,7 @@ class EnsembleLda():
 
         return eLDA
 
-    def generate_topic_models_multiproc(self, num_models, ensemble_workers):
+    def _generate_topic_models_multiproc(self, num_models, ensemble_workers):
         """Will make the ensemble multiprocess, which results in a speedup on multicore machines. Results from the
         processes will be piped to the parent and concatenated.
 
@@ -542,7 +538,7 @@ class EnsembleLda():
                 # get the chunk from the random states that is meant to be for those models
                 random_states_for_worker = random_states[-num_models_unhandled:][:num_subprocess_models]
 
-                p = Process(target=self.generate_topic_models,
+                p = Process(target=self._generate_topic_models,
                             args=(num_subprocess_models, random_states_for_worker, childConn))
 
                 processes += [p]
@@ -570,7 +566,7 @@ class EnsembleLda():
         for p in pipes:
             answer = p[0].recv()  # [0], because that is the parentConn
             p[0].close()
-            # this does basically the same as the generate_topic_models function (concatenate all the ttdas):
+            # this does basically the same as the _generate_topic_models function (concatenate all the ttdas):
             if not self.memory_friendly_ttda:
                 self.tms += answer
                 ttda = np.concatenate([model.get_topics() for model in answer])
@@ -582,7 +578,7 @@ class EnsembleLda():
         for p in processes:
             p.terminate()
 
-    def generate_topic_models(self, num_models, random_states=None, pipe=None):
+    def _generate_topic_models(self, num_models, random_states=None, pipe=None):
         """Will train the topic models, that form the ensemble.
 
         Parameters
@@ -631,7 +627,7 @@ class EnsembleLda():
 
         if pipe is not None:
             # send the ttda that is in the child/workers version of the memory into the pipe
-            # available, after generate_topic_models has been called in the worker
+            # available, after _generate_topic_models has been called in the worker
             if self.memory_friendly_ttda:
                 # remember that this code is inside the worker processes memory,
                 # so self.ttda is the ttda of only a chunk of models
@@ -641,7 +637,7 @@ class EnsembleLda():
 
             pipe.close()
 
-    def asymmetric_distance_matrix_worker(self, worker_id, ttdas_sent, n_ttdas, pipe, threshold, method):
+    def _asymmetric_distance_matrix_worker(self, worker_id, ttdas_sent, n_ttdas, pipe, threshold, method):
         """ worker, that computes the distance to all other nodes
         from a chunk of nodes. https://stackoverflow.com/a/1743350
         """
@@ -649,14 +645,12 @@ class EnsembleLda():
         logger.info("Spawned worker to generate {} rows of the asymmetric distance matrix".format(n_ttdas))
         # the chunk of ttda that's going to be calculated:
         ttda1 = self.ttda[ttdas_sent:ttdas_sent + n_ttdas]
-        distance_chunk = self.calculate_asymmetric_distance_matrix_chunk(ttda1=ttda1, ttda2=self.ttda,
-                                                                         threshold=threshold,
-                                                                         start_index=ttdas_sent,
-                                                                         method=method)
+        distance_chunk = self._calculate_asymmetric_distance_matrix_chunk(
+            ttda1=ttda1, ttda2=self.ttda, threshold=threshold, start_index=ttdas_sent, method=method)
         pipe.send((worker_id, distance_chunk))  # remember that this code is inside the workers memory
         pipe.close()
 
-    def generate_asymmetric_distance_matrix(self, threshold=None, workers=1, method="mass"):
+    def _generate_asymmetric_distance_matrix(self, threshold=None, workers=1, method="mass"):
         """Makes the pairwise distance matrix for all the ttdas from the ensemble.
 
         Returns the asymmetric pairwise distance matrix that is used in the DBSCAN clustering.
@@ -687,14 +681,13 @@ class EnsembleLda():
 
         logger.info("Generating a {} x {} asymmetric distance matrix...".format(len(self.ttda), len(self.ttda)))
 
-        # singlecore:
+        # singlecore
         if workers is not None and workers <= 1:
-            self.asymmetric_distance_matrix = self.calculate_asymmetric_distance_matrix_chunk(
+            self.asymmetric_distance_matrix = self._calculate_asymmetric_distance_matrix_chunk(
                 ttda1=self.ttda, ttda2=self.ttda, threshold=threshold, start_index=0, method=method)
             return self.asymmetric_distance_matrix
 
-        # multicore:
-
+        # else, if workers > 1 use multiprocessing
         # best performance on 2-core machine: 2 workers
         if workers is None:
             workers = os.cpu_count()
@@ -719,7 +712,7 @@ class EnsembleLda():
                 else:
                     n_ttdas = int((len(self.ttda) - ttdas_sent) / (workers - i))
 
-                p = Process(target=self.asymmetric_distance_matrix_worker,
+                p = Process(target=self._asymmetric_distance_matrix_worker,
                             args=(i, ttdas_sent, n_ttdas, childConn, threshold, method))
                 ttdas_sent += n_ttdas
 
@@ -746,7 +739,7 @@ class EnsembleLda():
         for p in pipes:
             answer = p[0].recv()  # [0], because that is the parentConn
             p[0].close()  # child conn will be closed from inside the worker
-            # this does basically the same as the generate_topic_models function (concatenate all the ttdas):
+            # this does basically the same as the _generate_topic_models function (concatenate all the ttdas):
             distances += [answer[1]]
 
         # end all processes
@@ -757,7 +750,7 @@ class EnsembleLda():
 
         return self.asymmetric_distance_matrix
 
-    def calculate_asymmetric_distance_matrix_chunk(self, ttda1, ttda2, threshold, start_index, method):
+    def _calculate_asymmetric_distance_matrix_chunk(self, ttda1, ttda2, threshold, start_index, method):
         """Internal method calculating an (asymmetric) distance from each topic term distribution in ttda1 to each topic
         term distribution in ttda2 and returns a matrix of distances, size len(ttda1) by len(ttda2).
 
@@ -830,7 +823,7 @@ class EnsembleLda():
 
                 distance = 0
                 # is the masked b just some empty stuff? Then forget about it, no similarity, distance is 1
-                # (not 2 because that correspondsto negative values. The maximum distance is 1 here)
+                # (not 2 because that corresponds to negative values. The maximum distance is 1 here)
                 # don't normalize b_masked, otherwise the following threshold will never work:
                 if ttd2_masked.sum() <= 0.05:
                     distance = 1
@@ -855,11 +848,11 @@ class EnsembleLda():
 
         return distances
 
-    def generate_topic_clusters(self, eps=0.1, min_samples=None):
+    def _generate_topic_clusters(self, eps=0.1, min_samples=None):
         """Runs the DBSCAN algorithm on all the detected topics from the models in the ensemble and labels them with
         label-indices.
 
-        The final approval and generation of stable topics is done in generate_stable_topics().
+        The final approval and generation of stable topics is done in _generate_stable_topics().
 
         Parameters
         ----------
@@ -877,7 +870,7 @@ class EnsembleLda():
         self.cluster_model = CBDBSCAN(eps=eps, min_samples=min_samples)
         self.cluster_model.fit(self.asymmetric_distance_matrix)
 
-    def generate_stable_topics(self, min_cores=None):
+    def _generate_stable_topics(self, min_cores=None):
         """generates stable topics out of the clusters. This function is the last step that has to be done in the
         ensemble.
 
@@ -1054,10 +1047,10 @@ class EnsembleLda():
         # if new models were added to the ensemble, the distance matrix needs to be generated again
         if self.asymmetric_distance_matrix_outdated:
             logger.info("asymmetric distance matrix is outdated due to add_model")
-            self.generate_asymmetric_distance_matrix()
+            self._generate_asymmetric_distance_matrix()
 
-        self.generate_topic_clusters(eps, min_samples)
-        self.generate_stable_topics(min_cores)
+        self._generate_topic_clusters(eps, min_samples)
+        self._generate_stable_topics(min_cores)
         self.generate_gensim_representation()
 
     # GENSIM API
@@ -1066,7 +1059,7 @@ class EnsembleLda():
     def get_topics(self):
         return self.stable_topics
 
-    def has_gensim_representation(self):
+    def _has_gensim_representation(self):
         """checks if stable topics area vailable and if the internal
         gensim representation exists. If not, raises errors"""
         if self.classic_model_representation is None:
@@ -1077,23 +1070,23 @@ class EnsembleLda():
 
     def __getitem__(self, i):
         """see :py:class:`gensim.models.LdaModel`"""
-        self.has_gensim_representation()
+        self._has_gensim_representation()
         return self.classic_model_representation[i]
 
-    def inference(self, *posargs, **kwArgs):
+    def inference(self, *posargs, **kwargs):
         """see :py:class:`gensim.models.LdaModel`"""
-        self.has_gensim_representation()
-        return self.classic_model_representation.inference(*posargs, **kwArgs)
+        self._has_gensim_representation()
+        return self.classic_model_representation.inference(*posargs, **kwargs)
 
-    def log_perplexity(self, *posargs, **kwArgs):
+    def log_perplexity(self, *posargs, **kwargs):
         """see :py:class:`gensim.models.LdaModel`"""
-        self.has_gensim_representation()
-        return self.classic_model_representation.log_perplexity(*posargs, **kwArgs)
+        self._has_gensim_representation()
+        return self.classic_model_representation.log_perplexity(*posargs, **kwargs)
 
-    def print_topics(self, *posargs, **kwArgs):
+    def print_topics(self, *posargs, **kwargs):
         """see :py:class:`gensim.models.LdaModel`"""
-        self.has_gensim_representation()
-        return self.classic_model_representation.print_topics(*posargs, **kwArgs)
+        self._has_gensim_representation()
+        return self.classic_model_representation.print_topics(*posargs, **kwargs)
 
     @property
     def id2word(self):
