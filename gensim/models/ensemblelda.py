@@ -161,9 +161,10 @@ class EnsembleLda():
             logger.warning("no word id mapping provided; initializing from corpus, assuming identity")
             gensim_kw_args["id2word"] = utils.dict_from_corpus(gensim_kw_args["corpus"])
         if gensim_kw_args["id2word"] is None and gensim_kw_args["corpus"] is None:
-            raise ValueError("at least one of corpus/id2word must be specified, to establish "
-                             "input space dimensionality. Corpus should be provided using the "
-                             "keyword argument corpus.")
+            raise ValueError(
+                "at least one of corpus/id2word must be specified, to establish "
+                "input space dimensionality. Corpus should be provided using the "
+                "keyword argument corpus.")
 
         if type(topic_model_kind) == str:
             self.topic_model_kind = {
@@ -215,9 +216,10 @@ class EnsembleLda():
             # singlecore
             self.generate_topic_models(num_models)
 
-        self.generate_asymmetric_distance_matrix(workers=self.distance_workers,
-                                                 threshold=masking_threshold,
-                                                 method=masking_method)
+        self.generate_asymmetric_distance_matrix(
+            workers=self.distance_workers,
+            threshold=masking_threshold,
+            method=masking_method)
         self.generate_topic_clusters(epsilon, min_samples)
         self.generate_stable_topics(min_cores)
 
@@ -680,11 +682,8 @@ class EnsembleLda():
 
         # singlecore:
         if workers is not None and workers <= 1:
-            self.asymmetric_distance_matrix = self.calculate_asymmetric_distance_matrix_chunk(ttda1=self.ttda,
-                                                                                              ttda2=self.ttda,
-                                                                                              threshold=threshold,
-                                                                                              start_index=0,
-                                                                                              method=method)
+            self.asymmetric_distance_matrix = self.calculate_asymmetric_distance_matrix_chunk(
+                ttda1=self.ttda, ttda2=self.ttda, threshold=threshold, start_index=0, method=method)
             return self.asymmetric_distance_matrix
 
         # multicore:
