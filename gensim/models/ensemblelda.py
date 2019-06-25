@@ -217,7 +217,7 @@ class EnsembleLda():
         # parameters, stop here and don't train.
         if num_models <= 0:
             return
-        if ("corpus" not in gensim_kw_args):
+        if "corpus" not in gensim_kw_args:
             return
         if gensim_kw_args["corpus"] is None:
             return
