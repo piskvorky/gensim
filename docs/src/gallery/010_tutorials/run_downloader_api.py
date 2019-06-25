@@ -8,6 +8,9 @@ Downloader Module
 Demonstrates simple and quick access to common corpora, models, and other data.
 """
 
+import logging
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
 ###############################################################################
 # One of Gensim's features is simple and easy access to some common data.
 # The `gensim-data <https://github.com/RaRe-Technologies/gensim-data>`_ project stores a variety of corpora, models and other data.
@@ -23,19 +26,12 @@ Demonstrates simple and quick access to common corpora, models, and other data.
 #
 # Let's start by importing the api module.
 #
-
-
-import logging
 import gensim.downloader as api
-
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 ###############################################################################
 #
 # Now, lets download the text8 corpus and load it to memory (automatically)
 #
-
-
 corpus = api.load('text8')
 
 ###############################################################################

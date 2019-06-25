@@ -8,6 +8,8 @@ Text Summarization
 Demonstrates summarizing text by extracting the most important sentences from it.
 
 """
+import logging
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 ###############################################################################
 # This module automatically summarizes the given text, by extracting one or
@@ -33,9 +35,6 @@ Demonstrates summarizing text by extracting the most important sentences from it
 #
 # First of all, we import the :py:func:`gensim.summarization.summarize` function.
 
-
-import logging
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 from pprint import pprint as print
 from gensim.summarization import summarize

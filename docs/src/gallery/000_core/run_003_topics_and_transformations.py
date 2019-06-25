@@ -7,6 +7,10 @@ Topics and Transformations
 Introduces transformations and demonstrates their use on a toy corpus.
 
 """
+
+import logging
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
 ###############################################################################
 # In this tutorial, I will show how to transform documents from one vector representation
 # into another. This process serves two goals:

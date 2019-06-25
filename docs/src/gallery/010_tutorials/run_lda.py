@@ -9,6 +9,9 @@ Introduces Gensim's LDA model and demonstrates its use on the NIPS corpus.
 
 """
 
+import logging
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
 ###############################################################################
 # The purpose of this tutorial is to demonstrate training an LDA model and
 # obtaining good results.

@@ -9,6 +9,9 @@ This tutorial introduces the basic concepts and terms needed to understand and u
 
 """
 
+import logging
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
 ###############################################################################
 # At a very high-level, ``gensim`` is a tool for discovering the semantic
 # structure of documents by examining the patterns of words (or higher-level

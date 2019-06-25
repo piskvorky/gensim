@@ -9,6 +9,9 @@ Introduces Gensim's fastText model and demonstrates its use on the Lee Corpus.
 
 """
 
+import logging
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
 ###############################################################################
 # Here, we'll learn to work with fastText library for training word-embedding
 # models, saving & loading them and performing similarity operations & vector

@@ -15,6 +15,9 @@ This example demonstrates using gensim to:
 Let's begin.
 """
 
+import logging
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
 ###############################################################################
 # First, let’s create a small corpus of nine documents and twelve features [1]_:
 

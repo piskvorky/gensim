@@ -9,6 +9,9 @@ Introduces the concept of distance between two bags of words or distributions, a
 
 """
 
+import logging
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
 ###############################################################################
 # If you simply want to calculate the similarity between documents, then you
 # may want to check out the `Similarity Queries Tutorial
@@ -30,10 +33,6 @@ Introduces the concept of distance between two bags of words or distributions, a
 #
 # 5. Discuss the concept of distance metrics in slightly more detail
 # 
-
-import logging
-logging.basicConfig(level=logging.INFO)
-
 from gensim.corpora import Dictionary
 
 # you can use any corpus, this is just illustratory

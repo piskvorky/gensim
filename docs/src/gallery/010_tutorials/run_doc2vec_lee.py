@@ -9,6 +9,9 @@ Introduces Gensim's Doc2Vec model and demonstrates its use on the Lee Corpus.
 
 """
 
+import logging
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
 ###############################################################################
 # Doc2Vec is an NLP tool for representing documents as a vector and is a
 # generalizing of the Word2Vec method.  This tutorial will serve as an

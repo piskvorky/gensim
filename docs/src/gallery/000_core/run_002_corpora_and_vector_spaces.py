@@ -10,6 +10,9 @@ Also introduces corpus streaming and persistence to disk in various formats.
 
 """
 
+import logging
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
 ###############################################################################
 # First, let’s create a small corpus of nine short documents [1]_:
 #
