@@ -200,7 +200,8 @@ class PoincareModel(utils.SaveLoad):
             >>> relations_1 = [('kangaroo', 'marsupial'), ('kangaroo', 'mammal')]
             >>> relations_2 = [('striped_skunk', 'mammal')]
             >>>
-            >>> model = PoincareModel(relations_1, negative=1)
+            >>> # train a new model from initial data
+            >>> model = PoincareModel(initial_relations, negative=1)
             >>> model.train(epochs=50)
             >>>
             >>> model.build_vocab(relations_2, update=True)
