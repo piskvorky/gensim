@@ -197,7 +197,7 @@ class PoincareModel(utils.SaveLoad):
         .. sourcecode:: pycon
 
             >>> from gensim.models.poincare import PoincareModel
-            >>> relations_1 = [('kangaroo', 'marsupial'), ('kangaroo', 'mammal')]
+            >>> initial_relations = [('kangaroo', 'marsupial'), ('kangaroo', 'mammal')]
             >>> relations_2 = [('striped_skunk', 'mammal')]
             >>>
             >>> # train a new model from initial data
