@@ -175,7 +175,7 @@ class PoincareModel(utils.SaveLoad):
         self.build_vocab(train_data)
 
     def build_vocab(self, relations, update=False):
-        """Build vocabulary from relations.
+        """Build the model's vocabulary from known relations.
 
         Parameters
         ----------
