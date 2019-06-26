@@ -184,7 +184,7 @@ class PoincareModel(utils.SaveLoad):
             instance streaming from a file. Note that the relations are treated as ordered pairs,
             i.e. a relation (a, b) does not imply the opposite relation (b, a). In case the relations are symmetric,
             the data should contain both relations (a, b) and (b, a).
-        update : bool
+        update : bool, optional
             If true, new nodes's embeddings are initialized.
             If false, all node's embeddings are initialized.
 
