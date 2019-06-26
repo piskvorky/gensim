@@ -204,7 +204,9 @@ class PoincareModel(utils.SaveLoad):
             >>> model = PoincareModel(initial_relations, negative=1)
             >>> model.train(epochs=50)
             >>>
-            >>> model.build_vocab(relations_2, update=True)
+            >>> # online training: update the vocabulary and continue training
+            >>> online_relations = [('striped_skunk', 'mammal')]
+            >>> model.build_vocab(online_relations, update=True)
             >>> model.train(epochs=50)
 
         """
