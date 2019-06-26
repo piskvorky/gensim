@@ -188,6 +188,7 @@ class PoincareModel(utils.SaveLoad):
             If true, only new nodes's embeddings are initialized.
             Use this when the model already has an existing vocabulary and you want to update it.
             If false, all node's embeddings are initialized.
+            Use this when you're creating a new vocabulary from scratch.
 
         Examples
         --------
