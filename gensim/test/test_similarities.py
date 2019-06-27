@@ -782,8 +782,7 @@ class TestWord2VecNmslibIndexer(unittest.TestCase):
         fname = get_tmpfile('gensim_similarities.tst.pkl')
         index.save(fname)
 
-        index2 = NmslibIndexer()
-        index2.load(fname)
+        index2 = NmslibIndexer.load(fname)
         index2.model = model
 
         self.assertEqual(index.labels, index2.labels)
@@ -841,8 +840,7 @@ class TestDoc2VecNmslibIndexer(unittest.TestCase):
         fname = get_tmpfile('gensim_similarities.tst.pkl')
         self.index.save(fname)
 
-        self.index2 = NmslibIndexer()
-        self.index2.load(fname)
+        self.index2 = NmslibIndexer.load(fname)
         self.index2.model = self.model
 
         self.assertEqual(self.index.labels, self.index2.labels)
