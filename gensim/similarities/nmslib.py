@@ -7,14 +7,17 @@
 """
 Intro
 -----
+
 This module contains integration Nmslib with :class:`~gensim.models.word2vec.Word2Vec`,
 :class:`~gensim.models.doc2vec.Doc2Vec`, :class:`~gensim.models.fasttext.FastText` and
 :class:`~gensim.models.keyedvectors.KeyedVectors`.
-An instance of NmslibIndexer needs to be created in order to use Nmslib in gensim.
-The NmslibIndexer class is located in gensim.similarities.nmslib
+To use nmslib, instantiate a :class:`~gensim.similarities.nmslib.NmslibIndexer` class
+and pass the instance as the indexer parameter to your model's most_similar method 
+(e.g. :py:func:`~gensim.models.doc2vec.most_similar`).
 
 Example usage
---------
+-------------
+
 .. sourcecode:: pycon
 
     >>> from gensim.similarities.nmslib import NmslibIndexer
@@ -28,7 +31,8 @@ Example usage
     [('cat', 1.0), ('meow', 0.5595494508743286)]
 
 Load and save example
---------
+---------------------
+
 .. sourcecode:: pycon
 
     >>> from gensim.similarities.nmslib import NmslibIndexer
@@ -48,12 +52,14 @@ Load and save example
 
 What is Nmslib
 -------------
+
 Non-Metric Space Library (NMSLIB) is an efficient cross-platform similarity search library and a toolkit
 for evaluation of similarity search methods. The core-library does not have any third-party dependencies.
 More information about Nmslib: `github repository <https://github.com/nmslib/nmslib>`_.
 
 Why use Nmslib?
 -------------
+
 The current implementation for finding k nearest neighbors in a vector space in gensim has linear complexity
 via brute force in the number of indexed documents, although with extremely low constant factors.
 The retrieved results are exact, which is an overkill in many applications:
