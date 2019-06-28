@@ -47,7 +47,7 @@ class CsvCorpus(interfaces.CorpusABC):
         # load the first few lines, to guess the CSV dialect
         with utils.open(self.fname, 'rb') as f:
             head = ''.join(itertools.islice(f, 5))
-            
+
         self.headers = csv.Sniffer().has_header(head)
         self.dialect = csv.Sniffer().sniff(head)
         logger.info("sniffed CSV delimiter=%r, headers=%s", self.dialect.delimiter, self.headers)
