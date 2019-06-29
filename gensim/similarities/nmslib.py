@@ -118,8 +118,12 @@ class NmslibIndexer(object):
         self.index_params = index_params
         self.query_time_params = query_time_params
 
-        # If the model is None, index and labels are not initialized.
-        # In that case please load or init the index and labels by yourself.
+        #
+        # In the main use case, the user will pass us a non-None model, and we use that model
+        # to initialize the index and labels.  In a separate (completely internal) use case, the 
+        # NsmlibIndexer.load function handles the index and label initialization separately,
+        # so it passes us None as the model.
+        #
         if model:
             if isinstance(self.model, Doc2Vec):
                 self._build_from_doc2vec()
