@@ -12,7 +12,7 @@ This module contains integration Nmslib with :class:`~gensim.models.word2vec.Wor
 :class:`~gensim.models.doc2vec.Doc2Vec`, :class:`~gensim.models.fasttext.FastText` and
 :class:`~gensim.models.keyedvectors.KeyedVectors`.
 To use nmslib, instantiate a :class:`~gensim.similarities.nmslib.NmslibIndexer` class
-and pass the instance as the indexer parameter to your model's most_similar method 
+and pass the instance as the indexer parameter to your model's most_similar method
 (e.g. :py:func:`~gensim.models.doc2vec.most_similar`).
 
 Example usage
