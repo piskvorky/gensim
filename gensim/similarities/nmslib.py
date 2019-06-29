@@ -95,14 +95,12 @@ class NmslibIndexer(object):
 
     """
 
-    def __init__(self, model=None, index_params=None, query_time_params=None):
+    def __init__(self, model, index_params=None, query_time_params=None):
         """
         Parameters
         ----------
-        model : :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`, optional
+        model : :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
             Model, that will be used as source for index.
-            If the model is None, index and labels are not initialized.
-            In that case please load or init the index and labels by yourself.
         index_params : dict, optional
             index_params for Nmslib indexer.
         query_time_params : dict, optional
@@ -120,6 +118,8 @@ class NmslibIndexer(object):
         self.index_params = index_params
         self.query_time_params = query_time_params
 
+        # If the model is None, index and labels are not initialized.
+        # In that case please load or init the index and labels by yourself.
         if model:
             if isinstance(self.model, Doc2Vec):
                 self._build_from_doc2vec()
@@ -167,7 +167,7 @@ class NmslibIndexer(object):
             d = _pickle.load(f)
         index_params = d['index_params']
         query_time_params = d['query_time_params']
-        nmslib_instance = cls(index_params=index_params, query_time_params=query_time_params)
+        nmslib_instance = cls(model=None, index_params=index_params, query_time_params=query_time_params)
         index = nmslib.init()
         index.loadIndex(fname)
         nmslib_instance.index = index
@@ -178,7 +178,7 @@ class NmslibIndexer(object):
         """Build an Nmslib index using word vectors from a Word2Vec model."""
 
         self.model.init_sims()
-        return self._build_from_model(self.model.wv.vectors_norm, self.model.wv.index2word)
+        self._build_from_model(self.model.wv.vectors_norm, self.model.wv.index2word)
 
     def _build_from_doc2vec(self):
         """Build an Nmslib index using document vectors from a Doc2Vec model."""
@@ -186,13 +186,13 @@ class NmslibIndexer(object):
         docvecs = self.model.docvecs
         docvecs.init_sims()
         labels = [docvecs.index_to_doctag(i) for i in range(0, docvecs.count)]
-        return self._build_from_model(docvecs.vectors_docs_norm, labels)
+        self._build_from_model(docvecs.vectors_docs_norm, labels)
 
     def _build_from_keyedvectors(self):
         """Build an Nmslib index using word vectors from a KeyedVectors model."""
 
         self.model.init_sims()
-        return self._build_from_model(self.model.vectors_norm, self.model.index2word)
+        self._build_from_model(self.model.vectors_norm, self.model.index2word)
 
     def _build_from_model(self, vectors, labels):
         index = nmslib.init()

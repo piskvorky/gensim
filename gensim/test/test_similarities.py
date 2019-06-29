@@ -747,9 +747,8 @@ class TestWord2VecNmslibIndexer(unittest.TestCase):
 
     def testLoadMissingRaisesError(self):
         from gensim.similarities.nmslib import NmslibIndexer
-        test_index = NmslibIndexer()
 
-        self.assertRaises(IOError, test_index.load, fname='test-index')
+        self.assertRaises(IOError, NmslibIndexer.load, fname='test-index')
 
     def assertVectorIsSimilarToItself(self, wv, index):
         vector = wv.vectors_norm[0]
@@ -830,9 +829,8 @@ class TestDoc2VecNmslibIndexer(unittest.TestCase):
 
     def testLoadNotExist(self):
         from gensim.similarities.nmslib import NmslibIndexer
-        self.test_index = NmslibIndexer()
 
-        self.assertRaises(IOError, self.test_index.load, fname='test-index')
+        self.assertRaises(IOError, NmslibIndexer.load, fname='test-index')
 
     def testSaveLoad(self):
         from gensim.similarities.nmslib import NmslibIndexer

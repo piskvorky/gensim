@@ -252,7 +252,7 @@ if sys.version_info < (3, 7):
     linux_testenv.extend([
         'tensorflow <= 1.3.0',
         'keras >= 2.0.4, <= 2.1.4',
-        'annoy'
+        'annoy',
     ])
 
 if (3, 0) < sys.version_info < (3, 7):
