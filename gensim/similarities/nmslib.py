@@ -120,7 +120,7 @@ class NmslibIndexer(object):
 
         #
         # In the main use case, the user will pass us a non-None model, and we use that model
-        # to initialize the index and labels.  In a separate (completely internal) use case, the 
+        # to initialize the index and labels.  In a separate (completely internal) use case, the
         # NsmlibIndexer.load function handles the index and label initialization separately,
         # so it passes us None as the model.
         #
