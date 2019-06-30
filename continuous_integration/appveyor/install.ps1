@@ -167,6 +167,7 @@ function InstallPip ($python_home) {
         Write-Host "pip already installed."
     }
     RunCommand $pip_path "install --upgrade pip"
+    RunCommand $python_path "-m pip install --upgrade pip"
 }
 
 
