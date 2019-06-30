@@ -707,7 +707,7 @@ class TestWord2VecNmslibIndexer(unittest.TestCase):
         from gensim.similarities.nmslib import NmslibIndexer
         self.indexer = NmslibIndexer
 
-    def testWord2Vec(self):
+    def test_word2vec(self):
         model = word2vec.Word2Vec(texts, min_count=1)
         model.init_sims()
         index = self.indexer(model)
@@ -717,7 +717,7 @@ class TestWord2VecNmslibIndexer(unittest.TestCase):
         self.assertIndexSaved(index)
         self.assertLoadedIndexEqual(index, model)
 
-    def testFastText(self):
+    def test_fasttext(self):
         class LeeReader(object):
             def __init__(self, fn):
                 self.fn = fn
@@ -736,7 +736,7 @@ class TestWord2VecNmslibIndexer(unittest.TestCase):
         self.assertIndexSaved(index)
         self.assertLoadedIndexEqual(index, model)
 
-    def testNmslibIndexingOfKeyedVectors(self):
+    def test_indexing_keyedvectors(self):
         from gensim.similarities.nmslib import NmslibIndexer
         keyVectors_file = datapath('lee_fasttext.vec')
         model = KeyedVectors.load_word2vec_format(keyVectors_file)
@@ -745,7 +745,7 @@ class TestWord2VecNmslibIndexer(unittest.TestCase):
         self.assertVectorIsSimilarToItself(model, index)
         self.assertApproxNeighborsMatchExact(model, model, index)
 
-    def testLoadMissingRaisesError(self):
+    def test_load_missing_raises_error(self):
         from gensim.similarities.nmslib import NmslibIndexer
 
         self.assertRaises(IOError, NmslibIndexer.load, fname='test-index')
@@ -804,14 +804,14 @@ class TestDoc2VecNmslibIndexer(unittest.TestCase):
         self.index = NmslibIndexer(self.model)
         self.vector = self.model.docvecs.vectors_docs_norm[0]
 
-    def testDocumentIsSimilarToItself(self):
+    def test_document_is_similar_to_itself(self):
         approx_neighbors = self.index.most_similar(self.vector, 1)
         doc, similarity = approx_neighbors[0]
 
         self.assertEqual(doc, 0)
         self.assertAlmostEqual(similarity, 1.0, places=2)
 
-    def testApproxNeighborsMatchExact(self):
+    def test_approx_neighbors_match_exact(self):
         approx_neighbors = self.model.docvecs.most_similar([self.vector], topn=5, indexer=self.index)
         exact_neighbors = self.model.docvecs.most_similar(
             positive=[self.vector], topn=5)
@@ -821,18 +821,18 @@ class TestDoc2VecNmslibIndexer(unittest.TestCase):
 
         self.assertEqual(approx_words, exact_words)
 
-    def testSave(self):
+    def test_save(self):
         fname = get_tmpfile('gensim_similarities.tst.pkl')
         self.index.save(fname)
         self.assertTrue(os.path.exists(fname))
         self.assertTrue(os.path.exists(fname + '.d'))
 
-    def testLoadNotExist(self):
+    def test_load_not_exist(self):
         from gensim.similarities.nmslib import NmslibIndexer
 
         self.assertRaises(IOError, NmslibIndexer.load, fname='test-index')
 
-    def testSaveLoad(self):
+    def test_save_load(self):
         from gensim.similarities.nmslib import NmslibIndexer
 
         fname = get_tmpfile('gensim_similarities.tst.pkl')
