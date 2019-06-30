@@ -166,6 +166,7 @@ function InstallPip ($python_home) {
     } else {
         Write-Host "pip already installed."
     }
+    $pip_path install --upgrade pip
 }
 
 
