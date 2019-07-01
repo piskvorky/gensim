@@ -15,6 +15,19 @@ Similarity Queries
 Demonstrates querying a corpus for similar documents.
 
 Expands on the method introduced in :ref:`intro_tutorial`.
+
+.. code-block:: default
+
+
+    import logging
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
+
+
+
+
+
+
 Creating the Corpus
 -------------------
 
@@ -128,7 +141,7 @@ no random-walk static ranks, just a semantic extension over the boolean keyword 
 
  .. code-block:: none
 
-    [(0, 0.46182100453271635), (1, -0.07002766527900083)]
+    [(0, 0.4618210045327156), (1, 0.0700276652789995)]
 
 
 In addition, we will be considering `cosine similarity <http://en.wikipedia.org/wiki/Cosine_similarity>`_
@@ -283,7 +296,7 @@ on large datasets easily, and to facilitate prototyping of new algorithms for re
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.837 seconds)
+   **Total running time of the script:** ( 0 minutes  0.490 seconds)
 
 **Estimated memory usage:**  9 MB
 

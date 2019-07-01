@@ -13,6 +13,19 @@ Topics and Transformations
 ===========================
 
 Introduces transformations and demonstrates their use on a toy corpus.
+
+.. code-block:: default
+
+
+    import logging
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
+
+
+
+
+
+
 In this tutorial, I will show how to transform documents from one vector representation
 into another. This process serves two goals:
 
@@ -243,15 +256,15 @@ remaining four documents to the first topic:
 
  .. code-block:: none
 
-    [(0, 0.06600783396090318), (1, -0.5200703306361848)] Human machine interface for lab abc computer applications
-    [(0, 0.19667592859142513), (1, -0.7609563167700047)] A survey of user opinion of computer system response time
-    [(0, 0.0899263997244632), (1, -0.724186062675251)] The EPS user interface management system
-    [(0, 0.07585847652178042), (1, -0.6320551586003428)] System and human system engineering testing of EPS
-    [(0, 0.10150299184980137), (1, -0.5737308483002954)] Relation of user perceived response time to error measurement
-    [(0, 0.7032108939378305), (1, 0.16115180214025668)] The generation of random binary unordered trees
-    [(0, 0.8774787673119825), (1, 0.16758906864659262)] The intersection graph of paths in trees
-    [(0, 0.9098624686818572), (1, 0.14086553628718865)] Graph minors IV Widths of trees and well quasi ordering
-    [(0, 0.616582535056928), (1, -0.05392907566389461)] Graph minors A survey
+    [(0, -0.06600783396090576), (1, -0.5200703306361844)] Human machine interface for lab abc computer applications
+    [(0, -0.196675928591427), (1, -0.7609563167700044)] A survey of user opinion of computer system response time
+    [(0, -0.08992639972446696), (1, -0.7241860626752504)] The EPS user interface management system
+    [(0, -0.075858476521784), (1, -0.6320551586003422)] System and human system engineering testing of EPS
+    [(0, -0.10150299184980284), (1, -0.5737308483002957)] Relation of user perceived response time to error measurement
+    [(0, -0.7032108939378304), (1, 0.16115180214026054)] The generation of random binary unordered trees
+    [(0, -0.8774787673119824), (1, 0.16758906864659726)] The intersection graph of paths in trees
+    [(0, -0.9098624686818574), (1, 0.1408655362871934)] Graph minors IV Widths of trees and well quasi ordering
+    [(0, -0.6165825350569281), (1, -0.053929075663891685)] Graph minors A survey
 
 
 Model persistency is achieved with the :func:`save` and :func:`load` functions:
@@ -389,7 +402,7 @@ Continue on to the next tutorial on :ref:`tut3`.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.653 seconds)
+   **Total running time of the script:** ( 0 minutes  0.568 seconds)
 
 **Estimated memory usage:**  10 MB
 

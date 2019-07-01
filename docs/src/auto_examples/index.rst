@@ -168,7 +168,7 @@ on large datasets easily, and to facilitate prototyping of new algorithms for re
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="This tutorial introduces the concept of **distance** between two bags of words or distributions...">
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces the concept of distance between two bags of words or distributions, and demonstrates...">
 
 .. only:: html
 
@@ -188,7 +188,7 @@ on large datasets easily, and to facilitate prototyping of new algorithms for re
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Doc2Vec is an NLP tool for representing documents as a vector and is a generalizing of the Word...">
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s Doc2Vec model and demonstrates its use on the Lee Corpus.">
 
 .. only:: html
 
@@ -208,7 +208,7 @@ on large datasets easily, and to facilitate prototyping of new algorithms for re
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Gensim&#x27;s Downloader API allows you to programmatically fetch corpuses, models and other data. T...">
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates simple and quick access to common corpora, models, and other data.">
 
 .. only:: html
 
@@ -228,7 +228,7 @@ on large datasets easily, and to facilitate prototyping of new algorithms for re
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="This tutorial is about using `fastText &lt;https://github.com/facebookresearch/fastText&gt;`_ model i...">
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s fastText model and demonstrates its use on the Lee Corpus.">
 
 .. only:: html
 
@@ -245,6 +245,26 @@ on large datasets easily, and to facilitate prototyping of new algorithms for re
    :hidden:
 
    /auto_examples/010_tutorials/run_fasttext
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s LDA model and demonstrates its use on the NIPS corpus.">
+
+.. only:: html
+
+    .. figure:: /auto_examples/010_tutorials/images/thumb/sphx_glr_run_lda_thumb.png
+
+        :ref:`sphx_glr_auto_examples_010_tutorials_run_lda.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/010_tutorials/run_lda
 
 .. raw:: html
 
@@ -265,6 +285,46 @@ on large datasets easily, and to facilitate prototyping of new algorithms for re
    :hidden:
 
    /auto_examples/010_tutorials/run_summarization
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates using Gensim&#x27;s implemenation of the WMD.">
+
+.. only:: html
+
+    .. figure:: /auto_examples/010_tutorials/images/thumb/sphx_glr_run_wmd_thumb.png
+
+        :ref:`sphx_glr_auto_examples_010_tutorials_run_wmd.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/010_tutorials/run_wmd
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s Word2Vec model and demonstrates its use on the Lee Corpus.">
+
+.. only:: html
+
+    .. figure:: /auto_examples/010_tutorials/images/thumb/sphx_glr_run_word2vec_thumb.png
+
+        :ref:`sphx_glr_auto_examples_010_tutorials_run_word2vec.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/010_tutorials/run_word2vec
 .. raw:: html
 
     <div style='clear:both'></div>

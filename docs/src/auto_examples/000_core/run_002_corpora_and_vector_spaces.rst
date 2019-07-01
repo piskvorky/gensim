@@ -15,6 +15,19 @@ Corpora and Vector Spaces
 Demonstrates transforming text into a vector space representation.
 
 Also introduces corpus streaming and persistence to disk in various formats.
+
+.. code-block:: default
+
+
+    import logging
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
+
+
+
+
+
+
 First, let’s create a small corpus of nine short documents [1]_:
 
 .. _second example:
@@ -275,7 +288,7 @@ then convert the tokens via a dictionary to their ids and yield the resulting sp
 
  .. code-block:: none
 
-    <__main__.MyCorpus object at 0x7f02534e43c8>
+    <__main__.MyCorpus object at 0x7f2b3bfd3518>
 
 
 Corpus is now an object. We didn't define any way to print it, so `print` just outputs address
@@ -556,7 +569,7 @@ Or continue to the next tutorial on :ref:`tut2`.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  3.426 seconds)
+   **Total running time of the script:** ( 0 minutes  2.318 seconds)
 
 **Estimated memory usage:**  10 MB
 

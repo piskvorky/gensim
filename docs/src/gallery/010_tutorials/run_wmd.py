@@ -34,12 +34,17 @@ Demonstrates using Gensim's implemenation of the WMD.
 # intuition behind the method is that we find the minimum "traveling distance"
 # between documents, in other words the most efficient way to "move" the
 # distribution of document 1 to the distribution of document 2.
-# 
-# .. role:: raw-html-m2r(raw)
-#    :format: html
-# 
-# :raw-html-m2r:`<img src='https://vene.ro/images/wmd-obama.png' height='600' width='600'>`
-# 
+#
+
+# Image from https://vene.ro/images/wmd-obama.png
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+img = mpimg.imread('wmd-obama.png')
+imgplot = plt.imshow(img)
+plt.axis('off')
+plt.show()
+
+###############################################################################
 # This method was introduced in the article "From Word Embeddings To Document
 # Distances" by Matt Kusner et al. (\ `link to PDF
 # <http://jmlr.org/proceedings/papers/v37/kusnerb15.pdf>`_\ ). It is inspired

@@ -9,11 +9,28 @@
 
 .. _tutorial_downloader_api:
 
-Downloader API
-==============
+Downloader Module
+=================
 
-Gensim's Downloader API allows you to programmatically fetch corpuses, models and other data.
-The API leverages a local cache that ensures data is downloaded at most once.
+Demonstrates simple and quick access to common corpora, models, and other data.
+
+.. code-block:: default
+
+
+    import logging
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
+
+
+
+
+
+
+One of Gensim's features is simple and easy access to some common data.
+The `gensim-data <https://github.com/RaRe-Technologies/gensim-data>`_ project stores a variety of corpora, models and other data.
+Gensim has a :py:mod:`gensim.downloader` module for programmatically accessing this data.
+The module leverages a local cache that ensures data is downloaded at most once.
+
 This tutorial:
 
 * Retrieves the text8 corpus, unless it is already on your local machine
@@ -27,12 +44,7 @@ Let's start by importing the api module.
 
 .. code-block:: default
 
-
-
-    import logging
     import gensim.downloader as api
-
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 
 
@@ -45,8 +57,6 @@ Now, lets download the text8 corpus and load it to memory (automatically)
 
 
 .. code-block:: default
-
-
 
     corpus = api.load('text8')
 
@@ -144,7 +154,7 @@ Now that we have our word2vec model, let's find words that are similar to 'tree'
 
  .. code-block:: none
 
-    [('leaf', 0.6946436762809753), ('trees', 0.6882580518722534), ('bark', 0.6664859652519226), ('flower', 0.6106902360916138), ('avl', 0.6006214618682861), ('fruit', 0.5881094932556152), ('beetle', 0.5854080319404602), ('sap', 0.5781395435333252), ('egg', 0.5756324529647827), ('tiny', 0.5745721459388733)]
+    [('trees', 0.6992384195327759), ('bark', 0.6882385611534119), ('leaf', 0.656623125076294), ('fruit', 0.6152606010437012), ('bird', 0.6143398880958557), ('flower', 0.6121629476547241), ('vine', 0.592154860496521), ('leaves', 0.5886684656143188), ('sap', 0.5811404585838318), ('beetles', 0.5721043348312378)]
 
 
 You can use the API to download many corpora and models. You can get the list of all the models and corpora that are provided, by using the code below:
@@ -742,9 +752,9 @@ In corpora, the corpus is never loaded to memory, all corpuses wrapped to specia
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  54.137 seconds)
+   **Total running time of the script:** ( 1 minutes  32.165 seconds)
 
-**Estimated memory usage:**  373 MB
+**Estimated memory usage:**  358 MB
 
 
 .. _sphx_glr_download_auto_examples_010_tutorials_run_downloader_api.py:

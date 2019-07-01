@@ -9,20 +9,25 @@ This tutorial introduces the basic concepts and terms needed to understand and u
 
 """
 
+import logging
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
 ###############################################################################
 # At a very high-level, ``gensim`` is a tool for discovering the semantic
 # structure of documents by examining the patterns of words (or higher-level
 # structures such as entire sentences or documents). ``gensim`` accomplishes
-# this by taking a *corpus*\ , a collection of text documents, and producing a
-# *vector* representation of the text in the corpus. The vector representation
-# can then be used to train a *model*\ , which is an algorithms to create
+# this by taking a **corpus**, a collection of text documents, and producing a
+# **vector** representation of the text in the corpus. The vector representation
+# can then be used to train a **model** , which is an algorithms to create
 # different representations of the data, which are usually more semantic. These
 # three concepts are key to understanding how ``gensim`` works so let's take a
 # moment to explain what each of them means. At the same time, we'll work
 # through a simple example that illustrates each of them.
 #
+# .. _core_concepts_corpus:
+#
 # Corpus
-# ^^^^^^
+# ------
 #
 # A *corpus* is a collection of digital documents. This collection is the input
 # to ``gensim`` from which it will infer the structure of the documents, their
@@ -59,6 +64,13 @@ raw_corpus = [
 # Tokenization breaks up the documents into words (in this case using space as
 # a delimiter).
 #
+# .. Important::
+#   There are better ways to perform preprocessing than just lower-casing and
+#   splitting by space.  Effective preprocessing is beyond the scope of this
+#   tutorial: if you're interested, check out the
+#   :py:func:`gensim.utils.simple_preprocess` function.
+#
+
 # Create a set of frequent words
 stoplist = set('for a of the and to in'.split(' '))
 # Lowercase each document, split it by white space and filter out stopwords
@@ -74,15 +86,14 @@ for text in texts:
 
 # Only keep words that appear more than once
 processed_corpus = [[token for token in text if frequency[token] > 1] for text in texts]
-processed_corpus
+print(processed_corpus)
 
 ###############################################################################
 # Before proceeding, we want to associate each word in the corpus with a unique
-# integer ID. We can do this using the ``gensim.corpora.Dictionary`` class.
-# This dictionary defines the vocabulary of all words that our processing knows
-# about.
+# integer ID. We can do this using the :py:class:`gensim.corpora.Dictionary`
+# class.  This dictionary defines the vocabulary of all words that our
+# processing knows about.
 #
-
 from gensim import corpora
 
 dictionary = corpora.Dictionary(processed_corpus)
@@ -90,13 +101,16 @@ print(dictionary)
 
 ###############################################################################
 # Because our corpus is small, there are only 12 different tokens in this
-# ``Dictionary``. For larger corpuses, dictionaries that contains hundreds of
-# thousands of tokens are quite common.
+# :py:class:`gensim.corpora.Dictionary`. For larger corpuses, dictionaries that
+# contains hundreds of thousands of tokens are quite common.
 #
 
 ###############################################################################
+#
+# .. _core_concepts_vector:
+#
 # Vector
-# ^^^^^^
+# ------
 #
 # To infer the latent structure in our corpus we need a way to represent
 # documents that we can manipulate mathematically. One approach is to represent
@@ -118,8 +132,6 @@ print(dictionary)
 # bag-of-words model. We can use the dictionary to turn tokenized documents
 # into these 12-dimensional vectors. We can see what these IDs correspond to:
 #
-
-
 print(dictionary.token2id)
 
 ###############################################################################
@@ -132,14 +144,12 @@ print(dictionary.token2id)
 
 new_doc = "Human computer interaction"
 new_vec = dictionary.doc2bow(new_doc.lower().split())
-new_vec
+print(new_vec)
 
 ###############################################################################
 # The first entry in each tuple corresponds to the ID of the token in the
 # dictionary, the second corresponds to the count of this token.
 #
-
-###############################################################################
 # Note that "interaction" did not occur in the original corpus and so it was
 # not included in the vectorization. Also note that this vector only contains
 # entries for words that actually appeared in the document. Because any given
@@ -150,7 +160,7 @@ new_vec
 # We can convert our entire original corpus to a list of vectors:
 #
 bow_corpus = [dictionary.doc2bow(text) for text in processed_corpus]
-bow_corpus
+print(bow_corpus)
 
 ###############################################################################
 # Note that while this list lives entirely in memory, in most applications you
@@ -158,8 +168,10 @@ bow_corpus
 # iterator that returns a single document vector at a time. See the
 # documentation for more details.
 #
+# .. _core_concepts_model:
+#
 # Model
-# ^^^^^
+# -----
 #
 # Now that we have vectorized our corpus we can begin to transform it using
 # *models*. We use model as an abstract term referring to a transformation from
@@ -179,10 +191,13 @@ bow_corpus
 #
 
 from gensim import models
+
 # train the model
 tfidf = models.TfidfModel(bow_corpus)
+
 # transform the "system minors" string
-tfidf[dictionary.doc2bow("system minors".lower().split())]
+words = "system minors".lower().split()
+print(tfidf[dictionary.doc2bow(words)])
 
 ###############################################################################
 # The ``tfidf`` model again returns a list of tuples, where the first entry is

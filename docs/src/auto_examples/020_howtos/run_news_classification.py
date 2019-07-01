@@ -104,7 +104,7 @@ print(len(train_texts))
 
 ###############################################################################
 # Preprocessing our data. Remember: Garbage In Garbage Out
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# --------------------------------------------------------
 # 
 # This is the single most important step in setting up a good topic modeling
 # system. If the preprocessing is not good, the algorithm can't do much since
@@ -168,7 +168,7 @@ corpus = [dictionary.doc2bow(text) for text in train_texts]
 
 ###############################################################################
 # Topic modeling with LSI
-# ^^^^^^^^^^^^^^^^^^^^^^^
+# -----------------------
 # 
 # This is a useful topic modeling algorithm in that it can rank topics by
 # itself. Thus it outputs topics in a ranked order. However it does require a
@@ -185,7 +185,7 @@ lsitopics = lsimodel.show_topics(formatted=False)
 
 ###############################################################################
 # Topic modeling with `HDP <http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# -----------------------------------------------------------------------------------------------------
 # 
 # An HDP model is fully unsupervised. It can also determine the ideal number of
 # topics it needs through posterior inference.
@@ -199,7 +199,7 @@ hdptopics = hdpmodel.show_topics(formatted=False)
 
 ###############################################################################
 # Topic modeling using `LDA <https://www.cs.princeton.edu/~blei/papers/HoffmanBleiBach2010b.pdf>`_
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# ----------------------------------------------------------------------------------------------------
 # 
 # This is one the most popular topic modeling algorithms today. It is a
 # generative model in that it assumes each document is a mixture of topics and
@@ -232,7 +232,7 @@ else:
 
 ###############################################################################
 # Determining the optimal number of topics
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# ----------------------------------------
 # 
 # **Introduction to topic coherence**\ :
 # 
@@ -294,7 +294,7 @@ lmtopics = lmlist[5].show_topics(formatted=False)
 
 ###############################################################################
 # LDA as LSI
-# ^^^^^^^^^^
+# ----------
 #
 # One of the problem with LDA is that if we train it on a large number of
 # topics, the topics get "lost" among the numbers. Let us see if we can dig out
@@ -336,7 +336,7 @@ lm, top_topics = ldamodel, ldatopics
 
 ###############################################################################
 # Inference
-# ^^^^^^^^^
+# ---------
 # 
 # We can clearly see below that the first topic is about **cinema**\ , second is about **email malware**\ , third is about the land which was given back to the **Larrakia aboriginal community of Australia** in 2000. Then there's one about **Australian cricket**. LDA as LSI has worked wonderfully in finding out the best topics from within LDA.
 # 
@@ -345,7 +345,7 @@ lm, top_topics = ldamodel, ldatopics
 
 ###############################################################################
 # Evaluating all the topic models
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# -------------------------------
 # 
 # Any topic model which can come up with topic terms can be plugged into the
 # coherence pipeline. You can even plug in an `NMF topic model
@@ -391,7 +391,7 @@ evaluate_bar_graph(values, labels)
 
 ###############################################################################
 # Customizing the topic coherence measure
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# ---------------------------------------
 # 
 # Till now we only used the ``c_v`` coherence measure. There are others such as
 # ``u_mass``\ , ``c_uci``\ , ``c_npmi``. All of these calculate coherence in a
@@ -399,7 +399,7 @@ evaluate_bar_graph(values, labels)
 # be much slower than ``u_mass`` since it uses a sliding window over the texts.
 # 
 # Making your own coherence measure
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# ---------------------------------
 # 
 # Let's modify ``c_uci`` to use ``s_one_pre`` instead of ``s_one_one`` segmentation
 # 

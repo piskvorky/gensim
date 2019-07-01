@@ -21,6 +21,19 @@ This example demonstrates using gensim to:
     3. Calculate the similarity between all the documents in the corpus
 
 Let's begin.
+
+.. code-block:: default
+
+
+    import logging
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
+
+
+
+
+
+
 First, let’s create a small corpus of nine documents and twelve features [1]_:
 
 
@@ -194,7 +207,7 @@ We will also revisit document similarity in :ref:`tut3`.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.745 seconds)
+   **Total running time of the script:** ( 0 minutes  0.446 seconds)
 
 **Estimated memory usage:**  9 MB
 

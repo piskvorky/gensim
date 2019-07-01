@@ -144,7 +144,7 @@ Prepare our evaluation function
 
 
 Get TFIDF scores for corpus without pivoted document length normalisation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------------------------------------------------
 
 
 
@@ -212,7 +212,7 @@ Examine the bias towards shorter documents
 
 
 Get TFIDF scores for corpus with pivoted document length normalisation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------------------------------------------
 
 Test various values of alpha (slope) and pick the best one.
 
@@ -373,9 +373,9 @@ Using pivoted document normalization improved the classification accuracy signif
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  24.645 seconds)
+   **Total running time of the script:** ( 0 minutes  19.192 seconds)
 
-**Estimated memory usage:**  27 MB
+**Estimated memory usage:**  29 MB
 
 
 .. _sphx_glr_download_auto_examples_020_howtos_run_pivoted_doc_norm.py:

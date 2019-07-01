@@ -10,6 +10,9 @@ Expands on the method introduced in :ref:`intro_tutorial`.
 
 """
 
+import logging
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
 ###############################################################################
 #
 # Creating the Corpus

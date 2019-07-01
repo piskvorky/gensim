@@ -9,17 +9,31 @@
 
 .. _fasttext_tutorial_py:
 
-FastText Tutorial
-=================
+FastText Model
+==============
 
-This tutorial is about using `fastText <https://github.com/facebookresearch/fastText>`_ model in Gensim.
-Here, we'll learn to work with fastText library for training word-embedding models, saving & loading them and performing similarity operations & vector lookups analogous to Word2Vec.
+Introduces Gensim's fastText model and demonstrates its use on the Lee Corpus.
+
+.. code-block:: default
+
+
+    import logging
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
+
+
+
+
+
+
+Here, we'll learn to work with fastText library for training word-embedding
+models, saving & loading them and performing similarity operations & vector
+lookups analogous to Word2Vec.
 
 When to use FastText?
 ---------------------
 
-
-The main principle behind fastText is that the morphological structure of a word carries important information about the meaning of the word, which is not taken into account by traditional word embeddings, which train a unique word embedding for every individual word. This is especially significant for morphologically rich languages (German, Turkish) in which a single word can have a large number of morphological forms, each of which might occur rarely, thus making it hard to train good word embeddings.
+The main principle behind `fastText <https://github.com/facebookresearch/fastText>`_ is that the morphological structure of a word carries important information about the meaning of the word, which is not taken into account by traditional word embeddings, which train a unique word embedding for every individual word. This is especially significant for morphologically rich languages (German, Turkish) in which a single word can have a large number of morphological forms, each of which might occur rarely, thus making it hard to train good word embeddings.
 
 
 fastText attempts to solve this by treating each word as the aggregation of its subwords. For the sake of simplicity and language-independence, subwords are taken to be the character ngrams of the word. The vector for a word is simply taken to be the sum of all vectors of its component char-ngrams.
@@ -77,7 +91,7 @@ For the following examples, we'll use the Lee Corpus (which you already have if 
 
  .. code-block:: none
 
-    <gensim.models.fasttext.FastText object at 0x7f02528fda58>
+    <gensim.models.fasttext.FastText object at 0x7f2b1b63f6d8>
 
 
 Training hyperparameters
@@ -143,7 +157,7 @@ Models can be saved and loaded via the ``load`` and ``save`` methods.
 
  .. code-block:: none
 
-    <gensim.models.fasttext.FastText object at 0x7f0252c7b160>
+    <gensim.models.fasttext.FastText object at 0x7f2b1b63fb38>
 
 
 The ``save_word2vec_method`` causes the vectors for ngrams to be lost. As a result, a model loaded in this way will behave as a regular word2vec model.
@@ -211,31 +225,26 @@ FastText models support vector lookups for out-of-vocabulary words by summing up
 
  .. code-block:: none
 
-    array([ 9.68532935e-02,  7.53772864e-03, -5.85787535e-01,  5.01900017e-01,
-            5.97002208e-01, -3.22997630e-01, -1.89923018e-01, -3.03466413e-02,
-            4.35077220e-01,  3.41016859e-01, -6.40107334e-01, -1.82615593e-02,
-           -6.73842490e-01,  4.12545979e-01,  2.96752930e-01, -5.60669079e-02,
-           -1.83477640e-01,  1.81586832e-01,  2.40116790e-01, -3.78429711e-01,
-           -2.29927719e-01,  2.80625165e-01, -3.82913530e-01,  1.92540623e-02,
-           -8.28781426e-01,  7.46151507e-01,  1.21208429e-01,  1.72570542e-01,
-            4.13714051e-01,  1.34509010e-03, -6.58230484e-01,  2.36849174e-01,
-            9.31602493e-02, -4.86029893e-01,  4.70224082e-01,  1.13173991e-01,
-           -1.57694548e-01, -7.43469074e-02,  4.30460751e-01,  2.25712672e-01,
-            6.96012634e-04, -7.92741925e-02,  3.97076160e-01, -6.33269921e-02,
-            1.31146774e-01,  1.84730470e-01, -1.29139245e-01,  2.22790375e-01,
-           -2.07373183e-02, -3.83532912e-01, -5.73759258e-01, -5.61627388e-01,
-            6.55515864e-02,  5.86396223e-03,  4.10754532e-01, -8.07851672e-01,
-           -1.12943970e-01, -1.82702392e-01,  9.85942781e-03, -2.53139529e-02,
-            2.14411363e-01, -1.20995745e-01, -4.91106421e-01, -9.31469351e-02,
-           -5.42534471e-01,  3.62293780e-01, -6.55674003e-03,  1.56759426e-01,
-            3.19635458e-02,  4.90581453e-01, -5.66761255e-01, -5.23110867e-01,
-           -1.03973057e-02, -9.87688825e-02, -3.50620300e-01,  3.72875929e-02,
-            2.78797328e-01,  1.00131914e-01, -1.42450854e-01,  1.84168115e-01,
-            4.59850043e-01,  6.29884228e-02, -1.68175057e-01,  4.47754353e-01,
-           -4.06847298e-01, -2.64195889e-01,  1.35069609e-01,  2.95037359e-01,
-            3.24666053e-01,  2.98116088e-01, -1.73260227e-01,  1.27341181e-01,
-           -3.79600078e-02, -1.90464646e-01, -2.63515115e-01,  5.54983020e-01,
-            2.82217324e-01,  4.46204334e-01,  5.53820074e-01,  4.70821410e-01],
+    array([ 0.08809454,  0.00462394, -0.5864776 ,  0.48764512,  0.59266067,
+           -0.3289348 , -0.18769875, -0.05185637,  0.42779785,  0.32606098,
+           -0.63238895, -0.01023355, -0.66825646,  0.4079376 ,  0.28898352,
+           -0.05819847, -0.20956703,  0.19218387,  0.22385162, -0.37211645,
+           -0.24080205,  0.28925216, -0.3845128 ,  0.01912642, -0.82059234,
+            0.7312545 ,  0.13218074,  0.17801882,  0.40161476,  0.0055988 ,
+           -0.645143  ,  0.24397795,  0.09603377, -0.48711702,  0.45796207,
+            0.10446949, -0.15425271, -0.06821961,  0.41876414,  0.21820873,
+           -0.01122862, -0.07099853,  0.39802697, -0.06133444,  0.12586786,
+            0.17753069, -0.13177377,  0.21863978, -0.01259975, -0.38519612,
+           -0.56651664, -0.5438191 ,  0.05280963,  0.01127269,  0.39372838,
+           -0.7988662 , -0.10466399, -0.18153362,  0.00976756, -0.03204089,
+            0.20417729, -0.10242397, -0.49522698, -0.10040525, -0.53820163,
+            0.3599945 ,  0.01341753,  0.14818543,  0.02709586,  0.48140046,
+           -0.55834526, -0.509605  ,  0.00542481, -0.10311265, -0.33714786,
+            0.03041851,  0.27081314,  0.10661431, -0.14005469,  0.1771436 ,
+            0.45091954,  0.0537632 , -0.16273336,  0.45720157, -0.39692032,
+           -0.25611022,  0.12993893,  0.27449307,  0.3198574 ,  0.314403  ,
+           -0.17170118,  0.12574679, -0.02804552, -0.18872   , -0.27759033,
+            0.5663356 ,  0.2748947 ,  0.4453878 ,  0.54980594,  0.47006914],
           dtype=float32)
 
 
@@ -254,26 +263,26 @@ FastText models support vector lookups for out-of-vocabulary words by summing up
 
  .. code-block:: none
 
-    array([ 0.08485256,  0.00709199, -0.50795406,  0.43446752,  0.51676315,
-           -0.2815003 , -0.1653465 , -0.02552212,  0.376937  ,  0.296335  ,
-           -0.55712414, -0.01726196, -0.5845559 ,  0.3591265 ,  0.25334477,
-           -0.04835646, -0.16121016,  0.15573291,  0.20659533, -0.32859027,
-           -0.19935194,  0.24424045, -0.33273613,  0.01735642, -0.7193255 ,
-            0.6467734 ,  0.10506127,  0.1501022 ,  0.35888463,  0.0007384 ,
-           -0.56865793,  0.20659256,  0.0794794 , -0.4235615 ,  0.40752798,
-            0.09785194, -0.13529222, -0.06574824,  0.37323502,  0.19653909,
-            0.00149382, -0.06888723,  0.34383968, -0.05322546,  0.11262683,
-            0.16043907, -0.11555009,  0.19497375, -0.01862768, -0.3311437 ,
-           -0.50003594, -0.48619714,  0.05800197,  0.00603414,  0.35679218,
-           -0.70067173, -0.09802678, -0.15729271,  0.00622192, -0.02165668,
-            0.185478  , -0.10577381, -0.42565048, -0.08135959, -0.47099203,
-            0.3135938 , -0.00556303,  0.13582142,  0.02946983,  0.42623445,
-           -0.4914924 , -0.45323166, -0.00905497, -0.08654751, -0.30384213,
-            0.03154093,  0.24186537,  0.08704651, -0.12163028,  0.15891603,
-            0.39960673,  0.05445196, -0.14669728,  0.38747063, -0.35179204,
-           -0.22850554,  0.11917583,  0.25715488,  0.28089544,  0.25922963,
-           -0.15060836,  0.1101789 , -0.03429657, -0.16494407, -0.22833037,
-            0.48158392,  0.24381368,  0.3855345 ,  0.47989166,  0.4084021 ],
+    array([ 0.07766417,  0.00458002, -0.51123786,  0.4243402 ,  0.5157236 ,
+           -0.288177  , -0.16427347, -0.04439441,  0.37260023,  0.28485677,
+           -0.5533233 , -0.01036947, -0.58277214,  0.3569826 ,  0.24792239,
+           -0.05046317, -0.18477666,  0.16579315,  0.19349647, -0.32478225,
+           -0.20988104,  0.25304878, -0.3358584 ,  0.01734176, -0.71593636,
+            0.63718253,  0.11516301,  0.15562919,  0.35023203,  0.00446516,
+           -0.5602484 ,  0.21387918,  0.08240761, -0.42676434,  0.39907047,
+            0.09078669, -0.1330423 , -0.06077712,  0.3650524 ,  0.19104657,
+           -0.00888137, -0.06201624,  0.34642476, -0.05174574,  0.10860538,
+            0.15498231, -0.1184248 ,  0.19236074, -0.01163285, -0.33424512,
+           -0.49623632, -0.473113  ,  0.04720827,  0.01079329,  0.34376985,
+           -0.6963661 , -0.09131003, -0.15706775,  0.00616824, -0.0276337 ,
+            0.17751509, -0.09014308, -0.4314059 , -0.08809985, -0.4695263 ,
+            0.3131413 ,  0.0118192 ,  0.12902623,  0.02537876,  0.42031896,
+           -0.48662105, -0.44367906,  0.00466951, -0.09073911, -0.2936068 ,
+            0.02572422,  0.23610575,  0.09312797, -0.12016112,  0.15358655,
+            0.39381853,  0.04669925, -0.14271255,  0.39762706, -0.3448826 ,
+           -0.2225944 ,  0.11527011,  0.2405121 ,  0.2781124 ,  0.2747289 ,
+           -0.14999147,  0.10934623, -0.02584376, -0.16420597, -0.24172637,
+            0.49384513,  0.23865801,  0.3867399 ,  0.47874016,  0.4097537 ],
           dtype=float32)
 
 
@@ -380,7 +389,7 @@ Similarity operations work the same way as word2vec. **Out-of-vocabulary words c
 
  .. code-block:: none
 
-    0.9999929
+    0.99999267
 
 
 Syntactically similar words generally have high similarity in fastText models, since a large number of the component char-ngrams will be the same. As a result, fastText generally does better at syntactic tasks than Word2Vec. A detailed comparison is provided `here <Word2Vec_FastText_Comparison.ipynb>`_.
@@ -406,16 +415,16 @@ The example training corpus is a toy corpus, results are not expected to be good
 
  .. code-block:: none
 
-    [('study', 0.9982758164405823),
-     ('often', 0.9982642531394958),
-     ('"That', 0.9982632398605347),
-     ('Arafat', 0.9982630610466003),
-     ('Arafat,', 0.9982588887214661),
-     ('boat', 0.9982563257217407),
-     ('north.', 0.9982514381408691),
-     ('Endeavour', 0.9982463121414185),
-     ('details', 0.9982396960258484),
-     ("Arafat's", 0.9982390999794006)]
+    [('Arafat', 0.9982844591140747),
+     ('boat', 0.9982783198356628),
+     ('Arafat,', 0.9982778429985046),
+     ('"That', 0.9982759356498718),
+     ('study', 0.9982714056968689),
+     ('often', 0.9982637763023376),
+     ('north.', 0.9982573986053467),
+     ("Arafat's", 0.998254656791687),
+     ('Endeavour', 0.9982540011405945),
+     ('details', 0.998242974281311)]
 
 
 
@@ -433,7 +442,7 @@ The example training corpus is a toy corpus, results are not expected to be good
 
  .. code-block:: none
 
-    0.99995095
+    0.9999513
 
 
 
@@ -469,16 +478,16 @@ The example training corpus is a toy corpus, results are not expected to be good
 
  .. code-block:: none
 
-    [('1', 0.2429654449224472),
-     ('40', 0.23754820227622986),
-     ('2', 0.23473285138607025),
-     ('20', 0.23319712281227112),
-     ('26', 0.23305919766426086),
-     ('UN', 0.23269976675510406),
-     ('blaze', 0.23214034736156464),
-     ('keep', 0.2312297224998474),
-     ('As', 0.23102840781211853),
-     ('...', 0.2306765913963318)]
+    [('1', 0.24139031767845154),
+     ('40', 0.23604942858219147),
+     ('2', 0.23340445756912231),
+     ('26', 0.23200523853302002),
+     ('20', 0.23162022233009338),
+     ('UN', 0.23103418946266174),
+     ('blaze', 0.23080500960350037),
+     ('keep', 0.2298724502325058),
+     ('As', 0.22917315363883972),
+     ('...', 0.22909186780452728)]
 
 
 
@@ -506,11 +515,11 @@ The example training corpus is a toy corpus, results are not expected to be good
      {'correct': [], 'incorrect': [], 'section': 'gram1-adjective-to-adverb'},
      {'correct': [], 'incorrect': [], 'section': 'gram2-opposite'},
      {'correct': [('GOOD', 'BETTER', 'GREAT', 'GREATER'),
-                  ('GREAT', 'GREATER', 'LOW', 'LOWER'),
                   ('LONG', 'LONGER', 'GREAT', 'GREATER')],
       'incorrect': [('GOOD', 'BETTER', 'LONG', 'LONGER'),
                     ('GOOD', 'BETTER', 'LOW', 'LOWER'),
                     ('GREAT', 'GREATER', 'LONG', 'LONGER'),
+                    ('GREAT', 'GREATER', 'LOW', 'LOWER'),
                     ('GREAT', 'GREATER', 'GOOD', 'BETTER'),
                     ('LONG', 'LONGER', 'LOW', 'LOWER'),
                     ('LONG', 'LONGER', 'GOOD', 'BETTER'),
@@ -609,7 +618,6 @@ The example training corpus is a toy corpus, results are not expected to be good
       'section': 'gram8-plural'},
      {'correct': [], 'incorrect': [], 'section': 'gram9-plural-verbs'},
      {'correct': [('GOOD', 'BETTER', 'GREAT', 'GREATER'),
-                  ('GREAT', 'GREATER', 'LOW', 'LOWER'),
                   ('LONG', 'LONGER', 'GREAT', 'GREATER'),
                   ('GREAT', 'GREATEST', 'LARGE', 'LARGEST'),
                   ('PLAY', 'PLAYING', 'SAY', 'SAYING'),
@@ -631,6 +639,7 @@ The example training corpus is a toy corpus, results are not expected to be good
                     ('GOOD', 'BETTER', 'LONG', 'LONGER'),
                     ('GOOD', 'BETTER', 'LOW', 'LOWER'),
                     ('GREAT', 'GREATER', 'LONG', 'LONGER'),
+                    ('GREAT', 'GREATER', 'LOW', 'LOWER'),
                     ('GREAT', 'GREATER', 'GOOD', 'BETTER'),
                     ('LONG', 'LONGER', 'LOW', 'LOWER'),
                     ('LONG', 'LONGER', 'GOOD', 'BETTER'),
@@ -762,7 +771,7 @@ Compute WMD.
 
  .. code-block:: none
 
-    1.3932733855659962
+    1.3949753428325056
 
 
 That's all! You've made it to the end of this tutorial.
@@ -791,9 +800,9 @@ Here we show a pretty fastText logo so that our gallery picks it up as a thumbna
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  30.269 seconds)
+   **Total running time of the script:** ( 0 minutes  21.915 seconds)
 
-**Estimated memory usage:**  4506 MB
+**Estimated memory usage:**  4477 MB
 
 
 .. _sphx_glr_download_auto_examples_010_tutorials_run_fasttext.py:

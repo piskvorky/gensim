@@ -9,10 +9,22 @@
 
 .. _summarization_py:
 
-Summarization Tutorial
-======================
+Text Summarization
+==================
 
 Demonstrates summarizing text by extracting the most important sentences from it.
+
+.. code-block:: default
+
+    import logging
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
+
+
+
+
+
+
 This module automatically summarizes the given text, by extracting one or
 more important sentences from the text. In a similar way, it can also extract
 keywords. This tutorial will teach you to use this summarization module via
@@ -34,15 +46,12 @@ by introducing something called a "BM25 ranking function".
 Small example
 -------------
 
-First of all, we import the function "summarize".
+First of all, we import the :py:func:`gensim.summarization.summarize` function.
 
 
 .. code-block:: default
 
 
-
-    import logging
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
     from pprint import pprint as print
     from gensim.summarization import summarize
@@ -61,21 +70,22 @@ We will try summarizing a small toy example; later we will use a larger piece of
 
 
 
-    text = "Thomas A. Anderson is a man living two lives. By day he is an " + \
-        "average computer programmer and by night a hacker known as " + \
-        "Neo. Neo has always questioned his reality, but the truth is " + \
-        "far beyond his imagination. Neo finds himself targeted by the " + \
-        "police when he is contacted by Morpheus, a legendary computer " + \
-        "hacker branded a terrorist by the government. Morpheus awakens " + \
-        "Neo to the real world, a ravaged wasteland where most of " + \
-        "humanity have been captured by a race of machines that live " + \
-        "off of the humans' body heat and electrochemical energy and " + \
-        "who imprison their minds within an artificial reality known as " + \
-        "the Matrix. As a rebel against the machines, Neo must return to " + \
-        "the Matrix and confront the agents: super-powerful computer " + \
-        "programs devoted to snuffing out Neo and the entire human " + \
+    text = (
+        "Thomas A. Anderson is a man living two lives. By day he is an "
+        "average computer programmer and by night a hacker known as "
+        "Neo. Neo has always questioned his reality, but the truth is "
+        "far beyond his imagination. Neo finds himself targeted by the "
+        "police when he is contacted by Morpheus, a legendary computer "
+        "hacker branded a terrorist by the government. Morpheus awakens "
+        "Neo to the real world, a ravaged wasteland where most of "
+        "humanity have been captured by a race of machines that live "
+        "off of the humans' body heat and electrochemical energy and "
+        "who imprison their minds within an artificial reality known as "
+        "the Matrix. As a rebel against the machines, Neo must return to "
+        "the Matrix and confront the agents: super-powerful computer "
+        "programs devoted to snuffing out Neo and the entire human "
         "rebellion. "
-
+    )
     print(text)
 
 
@@ -1502,7 +1512,7 @@ some datasets than for others.
 Montemurro and Zanette's entropy based keyword extraction algorithm
 -------------------------------------------------------------------
 
-`This paper <https://arxiv.org/abs/0907.1558>`_ describes a technique to
+`This paper <https://arxiv.org/abs/0907.1558>`__ describes a technique to
 identify words that play a significant role in the large-scale structure of a
 text. These typically correspond to the major themes of the text. The text is
 divided into blocks of ~1000 words, and the entropy of each word's
@@ -2332,7 +2342,7 @@ of words in the document and *w* is the number of unique words.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  15.856 seconds)
+   **Total running time of the script:** ( 0 minutes  12.807 seconds)
 
 **Estimated memory usage:**  70 MB
 

@@ -12,7 +12,20 @@
 Distance Metrics
 ================
 
-This tutorial introduces the concept of **distance** between two bags of words or distributions, and demonstrates how to calculate this distance using gensim.
+Introduces the concept of distance between two bags of words or distributions, and demonstrates its calculation using gensim.
+
+.. code-block:: default
+
+
+    import logging
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
+
+
+
+
+
+
 If you simply want to calculate the similarity between documents, then you
 may want to check out the `Similarity Queries Tutorial
 <https://radimrehurek.com/gensim/tut3.html>`_ and the `API reference
@@ -36,10 +49,6 @@ Here's a brief summary of this tutorial:
 
 
 .. code-block:: default
-
-
-    import logging
-    logging.basicConfig(level=logging.INFO)
 
     from gensim.corpora import Dictionary
 
@@ -670,9 +679,9 @@ by A. Huang.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  2.209 seconds)
+   **Total running time of the script:** ( 0 minutes  1.154 seconds)
 
-**Estimated memory usage:**  16 MB
+**Estimated memory usage:**  17 MB
 
 
 .. _sphx_glr_download_auto_examples_010_tutorials_run_distance_metrics.py:

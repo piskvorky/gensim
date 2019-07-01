@@ -106,7 +106,7 @@ def get_tfidf_scores(kwargs):
 
 ###############################################################################
 # Get TFIDF scores for corpus without pivoted document length normalisation
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# -------------------------------------------------------------------------
 # 
 params = {}
 model_accuracy, doc_scores = get_tfidf_scores(params)
@@ -142,7 +142,7 @@ print(
 
 ###############################################################################
 # Get TFIDF scores for corpus with pivoted document length normalisation
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# ----------------------------------------------------------------------
 #
 # Test various values of alpha (slope) and pick the best one.
 best_model_accuracy = 0
