@@ -164,6 +164,36 @@ def _calculate_md5_checksum(fname):
     return hash_md5.hexdigest()
 
 
+def _load_info(url=DATA_LIST_URL, encoding='utf-8'):
+    """Load dataset information from the network.
+
+    If the network access fails, fall back to a local cache.  This cache gets
+    updated each time a network request _succeeds_.
+    """
+    cache_path = os.path.join(base_dir, 'information.json')
+
+    try:
+        info_bytes = urlopen(DATA_LIST_URL).read()
+    except (OSError, IOError) as err:
+        #
+        # The exception raised by urlopen differs between Py2 and Py3.
+        #
+        # https://docs.python.org/3/library/urllib.error.html
+        # https://docs.python.org/2/library/urllib.html
+        #
+        logger.error('caught non-fatal exception, see trace below')
+        logger.exception(err)
+        logger.error('attempting to recover from local cache (%r)', cache_path)
+    else:
+        with open(cache_path, 'wb') as fout:
+            fout.write(info_bytes)
+
+        return json.loads(info_bytes.decode(encoding))
+
+    with open(cache_path, 'rb') as fin:
+        return json.loads(fin.read().decode(encoding))
+
+
 def info(name=None, show_only_latest=True, name_only=False):
     """Provide the information related to model/dataset.
 
@@ -204,7 +234,7 @@ def info(name=None, show_only_latest=True, name_only=False):
         >>> api.info()  # retrieve information about all available datasets and models
 
     """
-    information = json.loads(urlopen(DATA_LIST_URL).read().decode("utf-8"))
+    information = _load_info()
 
     if name is not None:
         corpora = information['corpora']
