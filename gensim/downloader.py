@@ -173,7 +173,7 @@ def _load_info(url=DATA_LIST_URL, encoding='utf-8'):
     cache_path = os.path.join(base_dir, 'information.json')
 
     try:
-        info_bytes = urlopen(DATA_LIST_URL).read()
+        info_bytes = urlopen(url).read()
     except (OSError, IOError) as err:
         #
         # The exception raised by urlopen differs between Py2 and Py3.
@@ -181,17 +181,20 @@ def _load_info(url=DATA_LIST_URL, encoding='utf-8'):
         # https://docs.python.org/3/library/urllib.error.html
         # https://docs.python.org/2/library/urllib.html
         #
-        logger.error('caught non-fatal exception, see trace below')
-        logger.exception(err)
-        logger.error('attempting to recover from local cache %r', cache_path)
+        logger.exception(
+            'caught non-fatal exception while trying to update gensim-data cache from %r; '
+            'using local cache at %r instead', url, cache_path
+        )
     else:
         with open(cache_path, 'wb') as fout:
             fout.write(info_bytes)
 
-        return json.loads(info_bytes.decode(encoding))
+    try:
+        with open(cache_path, 'r', encoding=encoding) as fin:
+            return json.load(fin)
+    except IOError:
+        raise ValueError('unable to read local cache %r during fallback' % cache_path)
 
-    with open(cache_path, 'rb') as fin:
-        return json.loads(fin.read().decode(encoding))
 
 
 def info(name=None, show_only_latest=True, name_only=False):
