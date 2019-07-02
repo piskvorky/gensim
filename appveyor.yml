@@ -54,6 +54,7 @@ install:
   - "powershell ./continuous_integration/appveyor/install.ps1"
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   - "python -m pip install -U pip tox"
+  - "pip --version"
 
   # Check that we have the expected version and architecture for Python
   - "python --version"
