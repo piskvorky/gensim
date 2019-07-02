@@ -183,7 +183,7 @@ def _load_info(url=DATA_LIST_URL, encoding='utf-8'):
         #
         logger.error('caught non-fatal exception, see trace below')
         logger.exception(err)
-        logger.error('attempting to recover from local cache (%r)', cache_path)
+        logger.error('attempting to recover from local cache %r', cache_path)
     else:
         with open(cache_path, 'wb') as fout:
             fout.write(info_bytes)
