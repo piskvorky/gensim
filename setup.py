@@ -17,6 +17,8 @@ import warnings
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
 
+PY2 = sys.version_info[0] == 2
+
 if sys.version_info[:2] < (2, 7) or (sys.version_info[:1] == 3 and sys.version_info[:2] < (3, 5)):
     raise Exception('This version of gensim needs Python 2.7, 3.5 or later.')
 
@@ -309,6 +311,17 @@ if not (os.name == 'nt' and sys.version_info[0] < 3):
                   extra_link_args=extra_args)
     )
 
+#
+# 1.11.3 is the oldest version of numpy that we support, for historical reasons.
+# 1.16.1 is the last numpy version to support Py2.
+#
+# https://docs.scipy.org/doc/numpy/release.html
+#
+if PY2:
+    NUMPY_STR = 'numpy >= 1.11.3, numpy <= 1.16.1'
+else:
+    NUMPY_STR = 'numpy >= 1.11.3'
+
 setup(
     name='gensim',
     version='3.7.3',
@@ -353,10 +366,10 @@ setup(
 
     test_suite="gensim.test",
     setup_requires=[
-        'numpy >= 1.11.3'
+        NUMPY_STR,
     ],
     install_requires=[
-        'numpy >= 1.11.3',
+        NUMPY_STR,
         'scipy >= 0.18.1',
         'six >= 1.5.0',
         'smart_open >= 1.7.0',
