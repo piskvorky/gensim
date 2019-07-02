@@ -193,8 +193,10 @@ def _load_info(url=DATA_LIST_URL, encoding='utf-8'):
         with open(cache_path, 'r', encoding=encoding) as fin:
             return json.load(fin)
     except IOError:
-        raise ValueError('unable to read local cache %r during fallback' % cache_path)
-
+        raise ValueError(
+            'unable to read local cache %r during fallback, '
+            'connect to the Internet and retry' % cache_path
+        )
 
 
 def info(name=None, show_only_latest=True, name_only=False):
