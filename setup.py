@@ -318,7 +318,7 @@ if not (os.name == 'nt' and sys.version_info[0] < 3):
 # https://docs.scipy.org/doc/numpy/release.html
 #
 if PY2:
-    NUMPY_STR = 'numpy >= 1.11.3, numpy <= 1.16.1'
+    NUMPY_STR = 'numpy >= 1.11.3, <= 1.16.1'
 else:
     NUMPY_STR = 'numpy >= 1.11.3'
 
