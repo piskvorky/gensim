@@ -177,7 +177,7 @@ def _load_info(url=DATA_LIST_URL, encoding='utf-8'):
 
     try:
         info_bytes = urlopen(url).read()
-    except (OSError, IOError) as err:
+    except (OSError, IOError):
         #
         # The exception raised by urlopen differs between Py2 and Py3.
         #
