@@ -45,6 +45,7 @@ Also, this API available via CLI::
 from __future__ import absolute_import
 import argparse
 import os
+import io
 import json
 import logging
 import sys
@@ -54,8 +55,6 @@ import math
 import shutil
 import tempfile
 from functools import partial
-
-from smart_open import open
 
 if sys.version_info[0] == 2:
     import urllib
@@ -193,7 +192,10 @@ def _load_info(url=DATA_LIST_URL, encoding='utf-8'):
             fout.write(info_bytes)
 
     try:
-        with open(cache_path, 'r', encoding=encoding) as fin:
+        #
+        # We need io.open here because Py2 open doesn't support encoding keyword
+        #
+        with io.open(cache_path, 'r', encoding=encoding) as fin:
             return json.load(fin)
     except IOError:
         raise ValueError(
