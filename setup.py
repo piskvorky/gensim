@@ -221,14 +221,31 @@ Copyright (c) 2009-now Radim Rehurek
 
 """
 
+#
+# 1.11.3 is the oldest version of numpy that we support, for historical reasons.
+# 1.16.1 is the last numpy version to support Py2.
+#
+# Similarly, 4.6.4 is the last pytest version to support Py2.
+#
+# https://docs.scipy.org/doc/numpy/release.html
+# https://docs.pytest.org/en/latest/py27-py34-deprecation.html
+#
+if PY2:
+    NUMPY_STR = 'numpy >= 1.11.3, <= 1.16.1'
+    PYTEST_STR = 'pytest == 4.6.4'
+else:
+    NUMPY_STR = 'numpy >= 1.11.3'
+    PYTEST_STR = 'pytest'
+
 distributed_env = ['Pyro4 >= 4.27']
 
 win_testenv = [
-    'pytest',
+    PYTEST_STR,
     'pytest-rerunfailures',
     'mock',
     'cython',
-    'pyemd',
+    # temporarily remove pyemd to work around appveyor issues
+    # 'pyemd',
     'testfixtures',
     'Morfessor==2.0.2a4',
     'python-Levenshtein >= 0.10.2',
@@ -353,10 +370,10 @@ setup(
 
     test_suite="gensim.test",
     setup_requires=[
-        'numpy >= 1.11.3'
+        NUMPY_STR,
     ],
     install_requires=[
-        'numpy >= 1.11.3',
+        NUMPY_STR,
         'scipy >= 0.18.1',
         'six >= 1.5.0',
         'smart_open >= 1.7.0',
