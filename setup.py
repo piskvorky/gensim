@@ -246,7 +246,8 @@ win_testenv = [
     'pytest-rerunfailures',
     'mock',
     'cython',
-    'pyemd',
+    # temporarily remove pyemd to work around appveyor issues
+    # 'pyemd',
     'testfixtures',
     'Morfessor==2.0.2a4',
     'python-Levenshtein >= 0.10.2',
