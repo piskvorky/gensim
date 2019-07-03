@@ -55,6 +55,8 @@ import shutil
 import tempfile
 from functools import partial
 
+from smart_open import open
+
 if sys.version_info[0] == 2:
     import urllib
     from urllib2 import urlopen
@@ -171,6 +173,7 @@ def _load_info(url=DATA_LIST_URL, encoding='utf-8'):
     updated each time a network request _succeeds_.
     """
     cache_path = os.path.join(base_dir, 'information.json')
+    _create_base_dir()
 
     try:
         info_bytes = urlopen(url).read()
