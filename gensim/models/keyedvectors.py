@@ -2291,7 +2291,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
             ngram_hashes = ft_ngram_hashes(w, self.min_n, self.max_n, self.bucket, self.compatible_hash)
             for nh in ngram_hashes:
                 word_vec += self.vectors_ngrams[nh]
-            word_vec /= len(ngram_hashes) + 1
+            word_vec /= max(len(ngram_hashes), 1)
             self.vectors[v.index] = word_vec
 
     @property
