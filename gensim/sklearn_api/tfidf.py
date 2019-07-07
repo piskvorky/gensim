@@ -34,7 +34,7 @@ class TfIdfTransformer(TransformerMixin, BaseEstimator):
 
     """
     def __init__(self, id2word=None, dictionary=None, wlocal=gensim.utils.identity,
-                 wglobal=gensim.models.tfidfmodel.df2idf, normalize=True, smartirs="ntc",
+                 wglobal=gensim.models.tfidfmodel.df2idf, normalize=True, smartirs="nfc",
                  pivot=None, slope=0.65):
         """
 
@@ -60,35 +60,47 @@ class TfIdfTransformer(TransformerMixin, BaseEstimator):
             The mnemonic for representing a combination of weights takes the form XYZ,
             for example 'ntc', 'bpn' and so on, where the letters represents the term weighting of the document vector.
 
-            Term frequency weighing:
-                * `n` - natural,
-                * `l` - logarithm,
-                * `a` - augmented,
-                * `b` - boolean,
-                * `L` - log average.
+            local_letter : str
+                Term frequency weighing, one of:
+                    * `b` - binary,
+                    * `t` or `n` - raw,
+                    * `a` - augmented,
+                    * `l` - logarithm,
+                    * `d` - double logarithm,
+                    * `L` - log average.
+            global_letter : str
+                Document frequency weighting, one of:
+                    * `x` or `n` - none,
+                    * `f` - idf,
+                    * `t` - zero-corrected idf,
+                    * `p` - probabilistic idf.
+            normalization_letter : str
+                Document normalization, one of:
+                    * `x` or `n` - none,
+                    * `c` - cosine,
+                    * `u` - pivoted unique,
+                    * `b` - pivoted character length.
 
-            Document frequency weighting:
-                * `n` - none,
-                * `t` - idf,
-                * `p` - prob idf.
-
-            Document normalization:
-                * `n` - none,
-                * `c` - cosine.
-
+            Default is `nfc`.
             For more info, visit `"Wikipedia" <https://en.wikipedia.org/wiki/SMART_Information_Retrieval_System>`_.
         pivot : float, optional
             It is the point around which the regular normalization curve is `tilted` to get the new pivoted
             normalization curve. In the paper `Amit Singhal, Chris Buckley, Mandar Mitra:
             "Pivoted Document Length Normalization" <http://singhal.info/pivoted-dln.pdf>`_ it is the point where the
             retrieval and relevance curves intersect.
-            This parameter along with slope is used for pivoted document length normalization.
-            Only when `pivot` is not None pivoted document length normalization will be applied else regular TfIdf
-            is used.
+            This parameter along with `slope` is used for pivoted document length normalization.
+            When `pivot` is None, `smartirs` specifies the pivoted unique document normalization scheme, and either
+            `corpus` or `dictionary` are specified, then the pivot will be determined automatically. Otherwise, no
+            pivoted document length normalization is applied.
         slope : float, optional
             It is the parameter required by pivoted document length normalization which determines the slope to which
             the `old normalization` can be tilted. This parameter only works when pivot is defined by user and is not
             None.
+
+        See Also
+        --------
+        ~gensim.models.tfidfmodel.TfidfModel : Class that also uses the SMART scheme.
+        ~gensim.models.tfidfmodel.resolve_weights : Function that also uses the SMART scheme.
 
         """
         self.gensim_model = None
