@@ -274,6 +274,9 @@ if sys.version_info < (3, 7):
         'annoy',
     ])
 
+if (3, 0) < sys.version_info < (3, 7):
+    linux_testenv.extend(['nmslib'])
+
 ext_modules = [
     Extension('gensim.models.word2vec_inner',
         sources=['./gensim/models/word2vec_inner.c'],
