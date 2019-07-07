@@ -20,8 +20,6 @@ from gensim.test.utils import datapath, get_tmpfile
 
 import gensim.models.utils_any2vec
 
-import smart_open
-
 DISABLE_CYTHON_TESTS = getattr(gensim.models.utils_any2vec, 'FAST_VERSION', None) == -1
 
 
@@ -252,7 +250,7 @@ class TestSaveAsLineSentence(unittest.TestCase):
 
         utils.save_as_line_sentence(ref_sentences, corpus_file)
 
-        with utils.smart_open(corpus_file, encoding='utf8') as fin:
+        with utils.open(corpus_file, 'rb', encoding='utf8') as fin:
             sentences = [line.strip().split() for line in fin.read().strip().split('\n')]
             self.assertEqual(sentences, ref_sentences)
 
@@ -261,7 +259,7 @@ class TestSaveAsLineSentence(unittest.TestCase):
         ref_sentences = [l.split() for l in utils.any2unicode('привет мир\nкак ты поживаешь').split('\n')]
         utils.save_as_line_sentence(ref_sentences, corpus_file)
 
-        with utils.smart_open(corpus_file, encoding='utf8') as fin:
+        with utils.open(corpus_file, 'rb', encoding='utf8') as fin:
             sentences = [line.strip().split() for line in fin.read().strip().split('\n')]
             self.assertEqual(sentences, ref_sentences)
 
@@ -520,7 +518,7 @@ class NgramsTest(unittest.TestCase):
 
     def test_fb(self):
         """Test against results from Facebook's implementation."""
-        with smart_open.smart_open(datapath('fb-ngrams.txt'), 'r', encoding='utf-8') as fin:
+        with utils.open(datapath('fb-ngrams.txt'), 'r', encoding='utf-8') as fin:
             fb = dict(_read_fb(fin))
 
         for word, expected in fb.items():

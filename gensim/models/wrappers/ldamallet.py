@@ -54,7 +54,6 @@ import zipfile
 from itertools import chain
 
 import numpy
-from smart_open import smart_open
 
 from gensim import utils, matutils
 from gensim.models import basemodel
@@ -245,7 +244,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         """
         if serialize_corpus:
             logger.info("serializing temporary corpus to %s", self.fcorpustxt())
-            with smart_open(self.fcorpustxt(), 'wb') as fout:
+            with utils.open(self.fcorpustxt(), 'wb') as fout:
                 self.corpus2mallet(corpus, fout)
 
         # convert the text file above into MALLET's internal format
@@ -341,7 +340,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         else:
             word2id = revdict(self.id2word)
 
-        with utils.smart_open(self.fstate()) as fin:
+        with utils.open(self.fstate(), 'rb') as fin:
             _ = next(fin)  # header
             self.alpha = numpy.fromiter(next(fin).split()[2:], dtype=float)
             assert len(self.alpha) == self.num_topics, "mismatch between MALLET vs. requested topics"
@@ -505,7 +504,7 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
 
         """
         mallet_version = self.get_version(self.mallet_path)
-        with utils.smart_open(fname) as fin:
+        with utils.open(fname, 'rb') as fin:
             for lineno, line in enumerate(fin):
                 if lineno == 0 and line.startswith(b"#doc "):
                     continue  # skip the header line if it exists

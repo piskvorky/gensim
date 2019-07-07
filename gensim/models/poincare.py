@@ -54,7 +54,6 @@ from numpy import random as np_random
 from scipy.stats import spearmanr
 from six import string_types
 from six.moves import zip, range
-from smart_open import smart_open
 
 from gensim import utils, matutils
 from gensim.models.keyedvectors import Vocab, BaseKeyedVectors
@@ -1416,7 +1415,7 @@ class PoincareRelations(object):
             Relation from input file.
 
         """
-        with smart_open(self.file_path) as file_obj:
+        with utils.open(self.file_path, 'rb') as file_obj:
             if sys.version_info[0] < 3:
                 lines = file_obj
             else:
@@ -1497,7 +1496,7 @@ class ReconstructionEvaluation(object):
         items = set()
         embedding_vocab = embedding.vocab
         relations = defaultdict(set)
-        with smart_open(file_path, 'r') as f:
+        with utils.open(file_path, 'r') as f:
             reader = csv.reader(f, delimiter='\t')
             for row in reader:
                 assert len(row) == 2, 'Hypernym pair has more than two items'
@@ -1605,7 +1604,7 @@ class LinkPredictionEvaluation(object):
         relations = {'known': defaultdict(set), 'unknown': defaultdict(set)}
         data_files = {'known': train_path, 'unknown': test_path}
         for relation_type, data_file in data_files.items():
-            with smart_open(data_file, 'r') as f:
+            with utils.open(data_file, 'r') as f:
                 reader = csv.reader(f, delimiter='\t')
                 for row in reader:
                     assert len(row) == 2, 'Hypernym pair has more than two items'
@@ -1709,7 +1708,7 @@ class LexicalEntailmentEvaluation(object):
 
         """
         expected_scores = {}
-        with smart_open(filepath, 'r') as f:
+        with utils.open(filepath, 'r') as f:
             reader = csv.DictReader(f, delimiter=' ')
             for row in reader:
                 word_1, word_2 = row['WORD1'], row['WORD2']

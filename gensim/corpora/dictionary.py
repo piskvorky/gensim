@@ -516,7 +516,7 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         """
         logger.info("saving dictionary mapping to %s", fname)
-        with utils.smart_open(fname, 'wb') as fout:
+        with utils.open(fname, 'wb') as fout:
             numdocs_line = "%d\n" % self.num_docs
             fout.write(utils.to_utf8(numdocs_line))
             if sort_by_word:
@@ -669,7 +669,7 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         """
         result = Dictionary()
-        with utils.smart_open(fname) as f:
+        with utils.open(fname, 'rb') as f:
             for lineno, line in enumerate(f):
                 line = utils.to_unicode(line)
                 if lineno == 0:

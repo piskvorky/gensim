@@ -965,7 +965,7 @@ class Doc2Vec(Word2Vec):
             KeyedVectors.save_word2vec_format(self.wv, fname, fvocab, binary, total_vec)
         # save document vectors
         if doctag_vec:
-            with utils.smart_open(fname, 'ab') as fout:
+            with utils.open(fname, 'ab') as fout:
                 if not word_vec:
                     total_vec = len(self.docvecs)
                     logger.info("storing %sx%s projection weights into %s", total_vec, self.vector_size, fname)
@@ -992,16 +992,17 @@ class TaggedBrownCorpus(object):
             fname = os.path.join(self.dirname, fname)
             if not os.path.isfile(fname):
                 continue
-            for item_no, line in enumerate(utils.smart_open(fname)):
-                line = utils.to_unicode(line)
-                # each file line is a single document in the Brown corpus
-                # each token is WORD/POS_TAG
-                token_tags = [t.split('/') for t in line.split() if len(t.split('/')) == 2]
-                # ignore words with non-alphabetic tags like ",", "!" etc (punctuation, weird stuff)
-                words = ["%s/%s" % (token.lower(), tag[:2]) for token, tag in token_tags if tag[:2].isalpha()]
-                if not words:  # don't bother sending out empty documents
-                    continue
-                yield TaggedDocument(words, ['%s_SENT_%s' % (fname, item_no)])
+            with utils.open(fname, 'rb') as f:
+                for item_no, line in enumerate(f):
+                    line = utils.to_unicode(line)
+                    # each file line is a single document in the Brown corpus
+                    # each token is WORD/POS_TAG
+                    token_tags = [t.split('/') for t in line.split() if len(t.split('/')) == 2]
+                    # ignore words with non-alphabetic tags like ",", "!" etc (punctuation, weird stuff)
+                    words = ["%s/%s" % (token.lower(), tag[:2]) for token, tag in token_tags if tag[:2].isalpha()]
+                    if not words:  # don't bother sending out empty documents
+                        continue
+                    yield TaggedDocument(words, ['%s_SENT_%s' % (fname, item_no)])
 
 
 class TaggedLineDocument(object):
@@ -1036,6 +1037,6 @@ class TaggedLineDocument(object):
                 yield TaggedDocument(utils.to_unicode(line).split(), [item_no])
         except AttributeError:
             # If it didn't work like a file, use it as a string filename
-            with utils.smart_open(self.source) as fin:
+            with utils.open(self.source, 'rb') as fin:
                 for item_no, line in enumerate(fin):
                     yield TaggedDocument(utils.to_unicode(line).split(), [item_no])

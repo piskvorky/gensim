@@ -863,7 +863,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             logger.error("cannot store options without having specified an output directory")
             return
         fname = '%s/options.dat' % self.outputdir
-        with utils.smart_open(fname, 'wb') as fout:
+        with utils.open(fname, 'wb') as fout:
             fout.write('tau: %s\n' % str(self.m_tau - 1))
             fout.write('chunksize: %s\n' % str(self.chunksize))
             fout.write('var_converge: %s\n' % str(self.m_var_converge))

@@ -45,7 +45,9 @@ class CsvCorpus(interfaces.CorpusABC):
         self.labels = labels
 
         # load the first few lines, to guess the CSV dialect
-        head = ''.join(itertools.islice(utils.smart_open(self.fname), 5))
+        with utils.open(self.fname, 'rb') as f:
+            head = ''.join(itertools.islice(f, 5))
+
         self.headers = csv.Sniffer().has_header(head)
         self.dialect = csv.Sniffer().sniff(head)
         logger.info("sniffed CSV delimiter=%r, headers=%s", self.dialect.delimiter, self.headers)
@@ -59,14 +61,15 @@ class CsvCorpus(interfaces.CorpusABC):
             Document in BoW format.
 
         """
-        reader = csv.reader(utils.smart_open(self.fname), self.dialect)
-        if self.headers:
-            next(reader)    # skip the headers
+        with utils.open(self.fname, 'rb') as f:
+            reader = csv.reader(f, self.dialect)
+            if self.headers:
+                next(reader)    # skip the headers
 
-        line_no = -1
-        for line_no, line in enumerate(reader):
-            if self.labels:
-                line.pop(0)  # ignore the first column = class label
-            yield list(enumerate(float(x) for x in line))
+            line_no = -1
+            for line_no, line in enumerate(reader):
+                if self.labels:
+                    line.pop(0)  # ignore the first column = class label
+                yield list(enumerate(float(x) for x in line))
 
-        self.length = line_no + 1  # store the total number of CSV rows = documents
+            self.length = line_no + 1  # store the total number of CSV rows = documents

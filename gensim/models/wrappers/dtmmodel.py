@@ -322,7 +322,7 @@ class DtmModel(utils.SaveLoad):
         # write out the corpus in a file format that DTM understands:
         corpora.BleiCorpus.save_corpus(self.fcorpustxt(), corpus)
 
-        with utils.smart_open(self.ftimeslices(), 'wb') as fout:
+        with utils.open(self.ftimeslices(), 'wb') as fout:
             fout.write(utils.to_utf8(str(len(self.time_slices)) + "\n"))
             for sl in time_slices:
                 fout.write(utils.to_utf8(str(sl) + "\n"))
