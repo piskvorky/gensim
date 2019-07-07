@@ -45,6 +45,7 @@ Also, this API available via CLI::
 from __future__ import absolute_import
 import argparse
 import os
+import io
 import json
 import logging
 import sys
@@ -164,6 +165,45 @@ def _calculate_md5_checksum(fname):
     return hash_md5.hexdigest()
 
 
+def _load_info(url=DATA_LIST_URL, encoding='utf-8'):
+    """Load dataset information from the network.
+
+    If the network access fails, fall back to a local cache.  This cache gets
+    updated each time a network request _succeeds_.
+    """
+    cache_path = os.path.join(base_dir, 'information.json')
+    _create_base_dir()
+
+    try:
+        info_bytes = urlopen(url).read()
+    except (OSError, IOError):
+        #
+        # The exception raised by urlopen differs between Py2 and Py3.
+        #
+        # https://docs.python.org/3/library/urllib.error.html
+        # https://docs.python.org/2/library/urllib.html
+        #
+        logger.exception(
+            'caught non-fatal exception while trying to update gensim-data cache from %r; '
+            'using local cache at %r instead', url, cache_path
+        )
+    else:
+        with open(cache_path, 'wb') as fout:
+            fout.write(info_bytes)
+
+    try:
+        #
+        # We need io.open here because Py2 open doesn't support encoding keyword
+        #
+        with io.open(cache_path, 'r', encoding=encoding) as fin:
+            return json.load(fin)
+    except IOError:
+        raise ValueError(
+            'unable to read local cache %r during fallback, '
+            'connect to the Internet and retry' % cache_path
+        )
+
+
 def info(name=None, show_only_latest=True, name_only=False):
     """Provide the information related to model/dataset.
 
@@ -204,7 +244,7 @@ def info(name=None, show_only_latest=True, name_only=False):
         >>> api.info()  # retrieve information about all available datasets and models
 
     """
-    information = json.loads(urlopen(DATA_LIST_URL).read().decode("utf-8"))
+    information = _load_info()
 
     if name is not None:
         corpora = information['corpora']
