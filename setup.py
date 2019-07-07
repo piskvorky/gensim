@@ -19,7 +19,7 @@ from setuptools.command.build_ext import build_ext
 
 PY2 = sys.version_info[0] == 2
 
-if sys.version_info[:2] < (2, 7) or (sys.version_info[:1] == 3 and sys.version_info[:2] < (3, 5)):
+if sys.version_info[:2] < (2, 7) or ((3, 0) <= sys.version_info[:2] < (3, 5)):
     raise Exception('This version of gensim needs Python 2.7, 3.5 or later.')
 
 # the following code is adapted from tornado's setup.py:
