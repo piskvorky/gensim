@@ -333,7 +333,7 @@ if not (os.name == 'nt' and sys.version_info[0] < 3):
 
 setup(
     name='gensim',
-    version='3.7.3',
+    version='3.8.0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
