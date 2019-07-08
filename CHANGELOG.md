@@ -11,6 +11,7 @@ Changes
 * Make BM25 more scalable by adding support for generator inputs (__[saraswatmks](https://github.com/saraswatmks)__, [#2479](https://github.com/RaRe-Technologies/gensim/pull/2479))
 * Allow the Gensim dataset / pre-trained model downloader `gensim.downloader` to run offline, by introducing a local file cache (__[mpenkov](https://github.com/mpenkov)__, [#2545](https://github.com/RaRe-Technologies/gensim/pull/2545))
 * Make the `gensim.downloader` target directory configurable (__[mpenkov](https://github.com/mpenkov)__, [#2456](https://github.com/RaRe-Technologies/gensim/pull/2456))
+* Add `nmslib` indexer (__[masa3141](https://github.com/masa3141)__, [#2417](https://github.com/RaRe-Technologies/gensim/pull/2417))
 
 ### :red_circle: Bug fixes
 
