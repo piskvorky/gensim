@@ -76,6 +76,25 @@ class TestDictionary(unittest.TestCase):
         expected = {0: 1, 1: 1, 2: 1}
         self.assertEqual(d.dfs, expected)
 
+    def testDocFreqAndCollectionFreq(self):
+        # one doc
+        texts = [['human', 'human', 'human']]
+        d = Dictionary(texts)
+        self.assertEqual(d.cfs, {0: 3})
+        self.assertEqual(d.dfs, {0: 1})
+
+        # two docs
+        texts = [['human', 'human'], ['human']]
+        d = Dictionary(texts)
+        self.assertEqual(d.cfs, {0: 3})
+        self.assertEqual(d.dfs, {0: 2})
+
+        # three docs
+        texts = [['human'], ['human'], ['human']]
+        d = Dictionary(texts)
+        self.assertEqual(d.cfs, {0: 3})
+        self.assertEqual(d.dfs, {0: 3})
+
     def testBuild(self):
         d = Dictionary(self.texts)
 

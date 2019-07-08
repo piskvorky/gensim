@@ -17,7 +17,9 @@ import warnings
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
 
-if sys.version_info[:2] < (2, 7) or (sys.version_info[:1] == 3 and sys.version_info[:2] < (3, 5)):
+PY2 = sys.version_info[0] == 2
+
+if sys.version_info[:2] < (2, 7) or ((3, 0) <= sys.version_info[:2] < (3, 5)):
     raise Exception('This version of gensim needs Python 2.7, 3.5 or later.')
 
 # the following code is adapted from tornado's setup.py:
@@ -221,20 +223,47 @@ Copyright (c) 2009-now Radim Rehurek
 
 """
 
+#
+# 1.11.3 is the oldest version of numpy that we support, for historical reasons.
+# 1.16.1 is the last numpy version to support Py2.
+#
+# Similarly, 4.6.4 is the last pytest version to support Py2.
+#
+# https://docs.scipy.org/doc/numpy/release.html
+# https://docs.pytest.org/en/latest/py27-py34-deprecation.html
+#
+if PY2:
+    NUMPY_STR = 'numpy >= 1.11.3, <= 1.16.1'
+    PYTEST_STR = 'pytest == 4.6.4'
+else:
+    NUMPY_STR = 'numpy >= 1.11.3'
+    PYTEST_STR = 'pytest'
+
 distributed_env = ['Pyro4 >= 4.27']
 
 win_testenv = [
-    'pytest',
+    PYTEST_STR,
     'pytest-rerunfailures',
     'mock',
     'cython',
-    'pyemd',
+    # temporarily remove pyemd to work around appveyor issues
+    # 'pyemd',
     'testfixtures',
-    'scikit-learn',
     'Morfessor==2.0.2a4',
     'python-Levenshtein >= 0.10.2',
     'visdom >= 0.1.8, != 0.1.8.7',
 ]
+
+if sys.version_info[:2] == (2, 7):
+    #
+    # 0.20.3 is the last version of scikit-learn that supports Py2.
+    # Similarly, for version 5.1.1 of tornado.  We require tornado indirectly
+    # via visdom.
+    #
+    win_testenv.append('scikit-learn==0.20.3')
+    win_testenv.append('tornado==5.1.1')
+else:
+    win_testenv.append('scikit-learn')
 
 linux_testenv = win_testenv[:]
 
@@ -244,6 +273,9 @@ if sys.version_info < (3, 7):
         'keras >= 2.0.4, <= 2.1.4',
         'annoy',
     ])
+
+if (3, 0) < sys.version_info < (3, 7):
+    linux_testenv.extend(['nmslib'])
 
 ext_modules = [
     Extension('gensim.models.word2vec_inner',
@@ -301,7 +333,7 @@ if not (os.name == 'nt' and sys.version_info[0] < 3):
 
 setup(
     name='gensim',
-    version='3.7.3',
+    version='3.8.0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
@@ -343,10 +375,10 @@ setup(
 
     test_suite="gensim.test",
     setup_requires=[
-        'numpy >= 1.11.3'
+        NUMPY_STR,
     ],
     install_requires=[
-        'numpy >= 1.11.3',
+        NUMPY_STR,
         'scipy >= 0.18.1',
         'six >= 1.5.0',
         'smart_open >= 1.7.0',

@@ -44,6 +44,7 @@ Initialize and train a model from a file containing one relation per line
 
 import csv
 import logging
+from numbers import Integral
 import sys
 import time
 
@@ -53,7 +54,6 @@ from numpy import random as np_random
 from scipy.stats import spearmanr
 from six import string_types
 from six.moves import zip, range
-from smart_open import smart_open
 
 from gensim import utils, matutils
 from gensim.models.keyedvectors import Vocab, BaseKeyedVectors
@@ -152,6 +152,10 @@ class PoincareModel(utils.SaveLoad):
         """
         self.train_data = train_data
         self.kv = PoincareKeyedVectors(size)
+        self.all_relations = []
+        self.node_relations = defaultdict(set)
+        self._negatives_buffer = NegativesBuffer([])
+        self._negatives_buffer_size = 2000
         self.size = size
         self.train_alpha = alpha  # Learning rate for training
         self.burn_in_alpha = burn_in_alpha  # Learning rate for burn-in
@@ -167,46 +171,80 @@ class PoincareModel(utils.SaveLoad):
         self._np_random = np_random.RandomState(seed)
         self.init_range = init_range
         self._loss_grad = None
-        self._load_relations()
-        self._init_embeddings()
+        self.build_vocab(train_data)
 
-    def _load_relations(self):
-        """Load relations from the train data and build vocab."""
-        vocab = {}
-        index2word = []
-        all_relations = []  # List of all relation pairs
-        node_relations = defaultdict(set)  # Mapping from node index to its related node indices
+    def build_vocab(self, relations, update=False):
+        """Build the model's vocabulary from known relations.
+
+        Parameters
+        ----------
+        relations : {iterable of (str, str), :class:`gensim.models.poincare.PoincareRelations`}
+            Iterable of relations, e.g. a list of tuples, or a :class:`gensim.models.poincare.PoincareRelations`
+            instance streaming from a file. Note that the relations are treated as ordered pairs,
+            i.e. a relation (a, b) does not imply the opposite relation (b, a). In case the relations are symmetric,
+            the data should contain both relations (a, b) and (b, a).
+        update : bool, optional
+            If true, only new nodes's embeddings are initialized.
+            Use this when the model already has an existing vocabulary and you want to update it.
+            If false, all node's embeddings are initialized.
+            Use this when you're creating a new vocabulary from scratch.
+
+        Examples
+        --------
+        Train a model and update vocab for online training:
+
+        .. sourcecode:: pycon
+
+            >>> from gensim.models.poincare import PoincareModel
+            >>>
+            >>> # train a new model from initial data
+            >>> initial_relations = [('kangaroo', 'marsupial'), ('kangaroo', 'mammal')]
+            >>> model = PoincareModel(initial_relations, negative=1)
+            >>> model.train(epochs=50)
+            >>>
+            >>> # online training: update the vocabulary and continue training
+            >>> online_relations = [('striped_skunk', 'mammal')]
+            >>> model.build_vocab(online_relations, update=True)
+            >>> model.train(epochs=50)
+
+        """
+        old_index2word_len = len(self.kv.index2word)
 
         logger.info("loading relations from train data..")
-        for relation in self.train_data:
+        for relation in relations:
             if len(relation) != 2:
                 raise ValueError('Relation pair "%s" should have exactly two items' % repr(relation))
             for item in relation:
-                if item in vocab:
-                    vocab[item].count += 1
+                if item in self.kv.vocab:
+                    self.kv.vocab[item].count += 1
                 else:
-                    vocab[item] = Vocab(count=1, index=len(index2word))
-                    index2word.append(item)
+                    self.kv.vocab[item] = Vocab(count=1, index=len(self.kv.index2word))
+                    self.kv.index2word.append(item)
             node_1, node_2 = relation
-            node_1_index, node_2_index = vocab[node_1].index, vocab[node_2].index
-            node_relations[node_1_index].add(node_2_index)
+            node_1_index, node_2_index = self.kv.vocab[node_1].index, self.kv.vocab[node_2].index
+            self.node_relations[node_1_index].add(node_2_index)
             relation = (node_1_index, node_2_index)
-            all_relations.append(relation)
-        logger.info("loaded %d relations from train data, %d nodes", len(all_relations), len(vocab))
-        self.kv.vocab = vocab
-        self.kv.index2word = index2word
-        self.indices_set = set(range(len(index2word)))  # Set of all node indices
-        self.indices_array = np.fromiter(range(len(index2word)), dtype=int)  # Numpy array of all node indices
-        self.all_relations = all_relations
-        self.node_relations = node_relations
+            self.all_relations.append(relation)
+        logger.info("loaded %d relations from train data, %d nodes", len(self.all_relations), len(self.kv.vocab))
+        self.indices_set = set(range(len(self.kv.index2word)))  # Set of all node indices
+        self.indices_array = np.fromiter(range(len(self.kv.index2word)), dtype=int)  # Numpy array of all node indices
         self._init_node_probabilities()
-        self._negatives_buffer = NegativesBuffer([])  # Buffer for negative samples, to reduce calls to sampling method
-        self._negatives_buffer_size = 2000
+
+        if not update:
+            self._init_embeddings()
+        else:
+            self._update_embeddings(old_index2word_len)
 
     def _init_embeddings(self):
         """Randomly initialize vectors for the items in the vocab."""
         shape = (len(self.kv.index2word), self.size)
         self.kv.syn0 = self._np_random.uniform(self.init_range[0], self.init_range[1], shape).astype(self.dtype)
+
+    def _update_embeddings(self, old_index2word_len):
+        """Randomly initialize vectors for the items in the additional vocab."""
+        shape = (len(self.kv.index2word) - old_index2word_len, self.size)
+        v = self._np_random.uniform(self.init_range[0], self.init_range[1], shape).astype(self.dtype)
+        self.kv.syn0 = np.concatenate([self.kv.syn0, v])
 
     def _init_node_probabilities(self):
         """Initialize a-priori probabilities."""
@@ -829,6 +867,7 @@ class PoincareKeyedVectors(BaseKeyedVectors):
         super(PoincareKeyedVectors, self).__init__(vector_size)
         self.max_distance = 0
         self.index2word = []
+        self.vocab = {}
 
     @property
     def vectors(self):
@@ -1189,7 +1228,8 @@ class PoincareKeyedVectors(BaseKeyedVectors):
         node_or_vector : {str, int, numpy.array}
             node key or vector for which similar nodes are to be found.
         topn : int or None, optional
-            number of similar nodes to return, if `None`, returns all.
+            Number of top-N similar nodes to return, when `topn` is int. When `topn` is None,
+            then distance for all nodes are returned.
         restrict_vocab : int or None, optional
             Optional integer which limits the range of vectors which are searched for most-similar values.
             For example, restrict_vocab=10000 would only check the first 10000 node vectors in the vocabulary order.
@@ -1197,8 +1237,10 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         Returns
         --------
-        list of (str, float)
-            List of tuples containing (node, distance) pairs in increasing order of distance.
+        list of (str, float) or numpy.array
+            When `topn` is int, a sequence of (node, distance) is returned in increasing order of distance.
+            When `topn` is None, then similarities for all words are returned as a one-dimensional numpy array with the
+            size of the vocabulary.
 
         Examples
         --------
@@ -1216,6 +1258,9 @@ class PoincareKeyedVectors(BaseKeyedVectors):
             [(u'kangaroo.n.01', 0.0), (u'marsupial.n.01', 0.26524229460827725)]
 
         """
+        if isinstance(topn, Integral) and topn < 1:
+            return []
+
         if not restrict_vocab:
             all_distances = self.distances(node_or_vector)
         else:
@@ -1409,7 +1454,7 @@ class PoincareRelations(object):
             Relation from input file.
 
         """
-        with smart_open(self.file_path) as file_obj:
+        with utils.open(self.file_path, 'rb') as file_obj:
             if sys.version_info[0] < 3:
                 lines = file_obj
             else:
@@ -1490,7 +1535,7 @@ class ReconstructionEvaluation(object):
         items = set()
         embedding_vocab = embedding.vocab
         relations = defaultdict(set)
-        with smart_open(file_path, 'r') as f:
+        with utils.open(file_path, 'r') as f:
             reader = csv.reader(f, delimiter='\t')
             for row in reader:
                 assert len(row) == 2, 'Hypernym pair has more than two items'
@@ -1598,7 +1643,7 @@ class LinkPredictionEvaluation(object):
         relations = {'known': defaultdict(set), 'unknown': defaultdict(set)}
         data_files = {'known': train_path, 'unknown': test_path}
         for relation_type, data_file in data_files.items():
-            with smart_open(data_file, 'r') as f:
+            with utils.open(data_file, 'r') as f:
                 reader = csv.reader(f, delimiter='\t')
                 for row in reader:
                     assert len(row) == 2, 'Hypernym pair has more than two items'
@@ -1702,7 +1747,7 @@ class LexicalEntailmentEvaluation(object):
 
         """
         expected_scores = {}
-        with smart_open(filepath, 'r') as f:
+        with utils.open(filepath, 'r') as f:
             reader = csv.DictReader(f, delimiter=' ')
             for row in reader:
                 word_1, word_2 = row['WORD1'], row['WORD2']

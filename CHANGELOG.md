@@ -1,29 +1,78 @@
 Changes
 =======
 
+## 3.8.0, 2019-07-08
+
+### :star2: New Features
+
+* back gensim.downloader.load_info function by a cache (__[mpenkov](https://github.com/mpenkov)__, [#2545](https://github.com/RaRe-Technologies/gensim/pull/2545))
+* Add build_vocab to poincare model (__[koiizukag](https://github.com/koiizukag)__, [#2505](https://github.com/RaRe-Technologies/gensim/pull/2505))
+* Make most_similar accept topn of any integer type (__[Witiko](https://github.com/Witiko)__, [#2497](https://github.com/RaRe-Technologies/gensim/pull/2497))
+* generator support in bm25 (__[saraswatmks](https://github.com/saraswatmks)__, [#2479](https://github.com/RaRe-Technologies/gensim/pull/2479))
+* make downloader subdirectory configurable, fix #2416 (__[mpenkov](https://github.com/mpenkov)__, [#2456](https://github.com/RaRe-Technologies/gensim/pull/2456))
+
+### :red_circle: Bug fixes
+
+* fix python version check (__[charsyam](https://github.com/charsyam)__, [#2547](https://github.com/RaRe-Technologies/gensim/pull/2547))
+* Fix appveyor issues with Win and Py2 (__[mpenkov](https://github.com/mpenkov)__, [#2546](https://github.com/RaRe-Technologies/gensim/pull/2546))
+* Fix smart_open deprecation warning globally (__[itayB](https://github.com/itayB)__, [#2530](https://github.com/RaRe-Technologies/gensim/pull/2530))
+* Typo fix (__[Guitaricet](https://github.com/Guitaricet)__, [#2518](https://github.com/RaRe-Technologies/gensim/pull/2518))
+* Correct "Market Matrix" to "Matrix Market". (__[Shooter23](https://github.com/Shooter23)__, [#2513](https://github.com/RaRe-Technologies/gensim/pull/2513))
+* fix CHANGELOG.md (__[mpenkov](https://github.com/mpenkov)__, [#2482](https://github.com/RaRe-Technologies/gensim/pull/2482))
+
+### :books: Tutorial and doc improvements
+
+* Simplify Support section in README (__[piskvorky](https://github.com/piskvorky)__, [#2542](https://github.com/RaRe-Technologies/gensim/pull/2542))
+* Generate documentation for the gensim.similarities.termsim module (__[Witiko](https://github.com/Witiko)__, [#2485](https://github.com/RaRe-Technologies/gensim/pull/2485))
+
+### :+1: Improvements
+
+* pin sklearn version for Py2 (__[mpenkov](https://github.com/mpenkov)__, [#2510](https://github.com/RaRe-Technologies/gensim/pull/2510))
+
+### :warning: Deprecations (will be removed in the next major release)
+
+* Remove
+    - `gensim.models.FastText.load_fasttext_format`: use load_facebook_vectors to load embeddings only (faster, less CPU/memory usage, does not support training continuation) and load_facebook_model to load full model (slower, more CPU/memory intensive, supports training continuation)
+    - `gensim.models.wrappers.fasttext` (obsoleted by the new native `gensim.models.fasttext` implementation)
+    - `gensim.examples`
+    - `gensim.nosy`
+    - `gensim.scripts.word2vec_standalone`
+    - `gensim.scripts.make_wiki_lemma`
+    - `gensim.scripts.make_wiki_online`
+    - `gensim.scripts.make_wiki_online_lemma`
+    - `gensim.scripts.make_wiki_online_nodebug`
+    - `gensim.scripts.make_wiki` (all of these obsoleted by the new native  `gensim.scripts.segment_wiki` implementation)
+    - "deprecated" functions and attributes
+
+* Move
+    - `gensim.scripts.make_wikicorpus` ➡ `gensim.scripts.make_wiki.py`
+    - `gensim.summarization` ➡ `gensim.models.summarization`
+    - `gensim.topic_coherence` ➡ `gensim.models._coherence`
+    - `gensim.utils` ➡ `gensim.utils.utils` (old imports will continue to work)
+    - `gensim.parsing.*` ➡ `gensim.utils.text_utils`
+
 ## 3.7.3, 2019-05-06
 
 ### :red_circle: Bug fixes
 
-* Fix fasttext model loading from gzip files ([mpenkov](https://api.github.com/users/mpenkov), [#2476](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2476))
-* Fix misleading Doc2Vec.docvecs comment ([gojomo](https://api.github.com/users/gojomo), [#2472](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2472))
-* Nmf bugfix ([mpenkov](https://api.github.com/users/mpenkov), [#2466](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2466))
-* Fix WordEmbeddingsKeyedVectors.most_similar ([Witiko](https://api.github.com/users/Witiko), [#2461](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2461))
-* fix backwards compatibility ([mpenkov](https://api.github.com/users/mpenkov), [#2457](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2457))
-* Fix Lda Sequence model by updating to num_documents ([Bharat123rox](https://api.github.com/users/Bharat123rox), [#2410](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2410))
-* Make termsim matrix positive definite even with negative similarities ([Witiko](https://api.github.com/users/Witiko), [#2397](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2397))
-* Fix the off-by-one bug in the TFIDF model. ([AMR-KELEG](https://api.github.com/users/AMR-KELEG), [#2392](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2392))
-* update legacy model loading, fix #2453 ([mpenkov](https://api.github.com/users/mpenkov), [#2454](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2454))
-* Make matutils.unitvec always return float norm when requested ([Witiko](https://api.github.com/users/Witiko), [#2419](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2419))
+* Fix fasttext model loading from gzip files (__[mpenkov](https://github.com/mpenkov)__, [#2476](https://github.com/RaRe-Technologies/gensim/pull/2476))
+* Fix misleading `Doc2Vec.docvecs` comment (__[gojomo](https://github.com/gojomo)__, [#2472](https://github.com/RaRe-Technologies/gensim/pull/2472))
+* NMF bugfix (__[mpenkov](https://github.com/mpenkov)__, [#2466](https://github.com/RaRe-Technologies/gensim/pull/2466))
+* Fix `WordEmbeddingsKeyedVectors.most_similar` (__[Witiko](https://github.com/Witiko)__, [#2461](https://github.com/RaRe-Technologies/gensim/pull/2461))
+* Fix LdaSequence model by updating to num_documents (__[Bharat123rox](https://github.com/Bharat123rox)__, [#2410](https://github.com/RaRe-Technologies/gensim/pull/2410))
+* Make termsim matrix positive definite even with negative similarities (__[Witiko](https://github.com/Witiko)__, [#2397](https://github.com/RaRe-Technologies/gensim/pull/2397))
+* Fix the off-by-one bug in the TFIDF model. (__[AMR-KELEG](https://github.com/AMR-KELEG)__, [#2392](https://github.com/RaRe-Technologies/gensim/pull/2392))
+* Update legacy model loading (__[mpenkov](https://github.com/mpenkov)__, [#2454](https://github.com/RaRe-Technologies/gensim/pull/2454), [#2457](https://github.com/RaRe-Technologies/gensim/pull/2457))
+* Make `matutils.unitvec` always return float norm when requested (__[Witiko](https://github.com/Witiko)__, [#2419](https://github.com/RaRe-Technologies/gensim/pull/2419))
 
 ### :books: Tutorial and doc improvements
 
-* Update word2vec.ipynb ([asyabo](https://api.github.com/users/asyabo), [#2423](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2423))
+* Update word2vec.ipynb (__[asyabo](https://github.com/asyabo)__, [#2423](https://github.com/RaRe-Technologies/gensim/pull/2423))
 
 ### :+1: Improvements
 
-* Adding type check for corpus_file argument ([saraswatmks](https://api.github.com/users/saraswatmks), [#2469](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2469))
-* Clean up FastText Cython code, fix division by zero ([mpenkov](https://api.github.com/users/mpenkov), [#2382](https://api.github.com/repos/RaRe-Technologies/gensim/pulls/2382))
+* Adding type check for corpus_file argument (__[saraswatmks](https://github.com/saraswatmks)__, [#2469](https://github.com/RaRe-Technologies/gensim/pull/2469))
+* Clean up FastText Cython code, fix division by zero (__[mpenkov](https://github.com/mpenkov)__, [#2382](https://github.com/RaRe-Technologies/gensim/pull/2382))
 
 ### :warning: Deprecations (will be removed in the next major release)
 

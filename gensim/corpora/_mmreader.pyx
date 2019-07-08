@@ -188,7 +188,7 @@ cdef class MmReader(object):
         if offset == -1:
             return []
         if isinstance(self.input, string_types):
-            fin, close_fin = utils.smart_open(self.input), True
+            fin, close_fin = utils.open(self.input, 'rb'), True
         else:
             fin, close_fin = self.input, False
 

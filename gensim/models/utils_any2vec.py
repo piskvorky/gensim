@@ -274,12 +274,12 @@ def _save_word2vec_format(fname, vocab, vectors, fvocab=None, binary=False, tota
     vector_size = vectors.shape[1]
     if fvocab is not None:
         logger.info("storing vocabulary in %s", fvocab)
-        with utils.smart_open(fvocab, 'wb') as vout:
+        with utils.open(fvocab, 'wb') as vout:
             for word, vocab_ in sorted(iteritems(vocab), key=lambda item: -item[1].count):
                 vout.write(utils.to_utf8("%s %s\n" % (word, vocab_.count)))
     logger.info("storing %sx%s projection weights into %s", total_vec, vector_size, fname)
     assert (len(vocab), vector_size) == vectors.shape
-    with utils.smart_open(fname, 'wb') as fout:
+    with utils.open(fname, 'wb') as fout:
         fout.write(utils.to_utf8("%s %s\n" % (total_vec, vector_size)))
         # store in sorted order: most frequent words at the top
         for word, vocab_ in sorted(iteritems(vocab), key=lambda item: -item[1].count):
@@ -333,13 +333,13 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
     if fvocab is not None:
         logger.info("loading word counts from %s", fvocab)
         counts = {}
-        with utils.smart_open(fvocab) as fin:
+        with utils.open(fvocab, 'rb') as fin:
             for line in fin:
                 word, count = utils.to_unicode(line).strip().split()
                 counts[word] = int(count)
 
     logger.info("loading projection weights from %s", fname)
-    with utils.smart_open(fname) as fin:
+    with utils.open(fname, 'rb') as fin:
         header = utils.to_unicode(fin.readline(), encoding=encoding)
         vocab_size, vector_size = (int(x) for x in header.split())  # throws for invalid file format
         if limit:

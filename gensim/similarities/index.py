@@ -33,12 +33,12 @@ and `annoy-user maillist <https://groups.google.com/forum/#!forum/annoy-user>`_.
 """
 import os
 
-from smart_open import smart_open
 try:
     import cPickle as _pickle
 except ImportError:
     import pickle as _pickle
 
+from gensim import utils
 from gensim.models.doc2vec import Doc2Vec
 from gensim.models.word2vec import Word2Vec
 from gensim.models.fasttext import FastText
@@ -116,7 +116,7 @@ class AnnoyIndexer(object):
         fname_dict = fname + '.d'
         self.index.save(fname)
         d = {'f': self.model.vector_size, 'num_trees': self.num_trees, 'labels': self.labels}
-        with smart_open(fname_dict, 'wb') as fout:
+        with utils.open(fname_dict, 'wb') as fout:
             _pickle.dump(d, fout, protocol=protocol)
 
     def load(self, fname):
@@ -153,7 +153,7 @@ class AnnoyIndexer(object):
                 "Can't find index files '%s' and '%s' - Unable to restore AnnoyIndexer state." % (fname, fname_dict)
             )
         else:
-            with smart_open(fname_dict) as f:
+            with utils.open(fname_dict, 'rb') as f:
                 d = _pickle.loads(f.read())
             self.num_trees = d['num_trees']
             self.index = AnnoyIndex(d['f'])

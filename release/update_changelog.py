@@ -27,12 +27,12 @@ def summarize_prs(since_version):
         if merged_at is None or merged_at < published_at:
             continue
 
-        summary = "* {msg} ([{author}]({author_url}), [#{pr}]({purl}))".format(
+        summary = "* {msg} (__[{author}]({author_url})__, [#{pr}]({purl}))".format(
             msg=pr['title'],
             author=pr['user']['login'],
-            author_url=pr['user']['url'],
+            author_url=pr['user']['html_url'],
             pr=pr['number'],
-            purl=pr['url'],
+            purl=pr['html_url'],
         )
         print(summary)
         yield summary

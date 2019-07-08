@@ -77,7 +77,7 @@ from numpy import zeros, float32 as REAL, empty, ones, \
     memmap as np_memmap, vstack, integer, dtype, sum as np_sum, add as np_add, repeat as np_repeat, concatenate
 
 
-from gensim.utils import call_on_class_only
+from gensim.utils import call_on_class_only, deprecated
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.models.word2vec import Word2VecKeyedVectors, Word2VecVocab, Word2VecTrainables, train_cbow_pair,\
     train_sg_pair, train_batch_sg
@@ -86,7 +86,6 @@ from six import string_types, integer_types, itervalues
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 from gensim.models.keyedvectors import Doc2VecKeyedVectors
 from types import GeneratorType
-from gensim.utils import deprecated, smart_open
 
 logger = logging.getLogger(__name__)
 
@@ -838,7 +837,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         offsets = []
         start_doctags = []
 
-        with smart_open(corpus_file, mode='rb') as fin:
+        with utils.open(corpus_file, mode='rb') as fin:
             curr_offset_idx = 0
             prev_filepos = 0
 
@@ -1505,16 +1504,17 @@ class TaggedBrownCorpus(object):
             fname = os.path.join(self.dirname, fname)
             if not os.path.isfile(fname):
                 continue
-            for item_no, line in enumerate(utils.smart_open(fname)):
-                line = utils.to_unicode(line)
-                # each file line is a single document in the Brown corpus
-                # each token is WORD/POS_TAG
-                token_tags = [t.split('/') for t in line.split() if len(t.split('/')) == 2]
-                # ignore words with non-alphabetic tags like ",", "!" etc (punctuation, weird stuff)
-                words = ["%s/%s" % (token.lower(), tag[:2]) for token, tag in token_tags if tag[:2].isalpha()]
-                if not words:  # don't bother sending out empty documents
-                    continue
-                yield TaggedDocument(words, ['%s_SENT_%s' % (fname, item_no)])
+            with utils.open(fname, 'rb') as fin:
+                for item_no, line in enumerate(fin):
+                    line = utils.to_unicode(line)
+                    # each file line is a single document in the Brown corpus
+                    # each token is WORD/POS_TAG
+                    token_tags = [t.split('/') for t in line.split() if len(t.split('/')) == 2]
+                    # ignore words with non-alphabetic tags like ",", "!" etc (punctuation, weird stuff)
+                    words = ["%s/%s" % (token.lower(), tag[:2]) for token, tag in token_tags if tag[:2].isalpha()]
+                    if not words:  # don't bother sending out empty documents
+                        continue
+                    yield TaggedDocument(words, ['%s_SENT_%s' % (fname, item_no)])
 
 
 class TaggedLineDocument(object):
@@ -1562,6 +1562,6 @@ class TaggedLineDocument(object):
                 yield TaggedDocument(utils.to_unicode(line).split(), [item_no])
         except AttributeError:
             # If it didn't work like a file, use it as a string filename
-            with utils.smart_open(self.source) as fin:
+            with utils.open(self.source, 'rb') as fin:
                 for item_no, line in enumerate(fin):
                     yield TaggedDocument(utils.to_unicode(line).split(), [item_no])

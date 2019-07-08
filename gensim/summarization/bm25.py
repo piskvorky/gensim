@@ -74,7 +74,7 @@ class BM25(object):
             Given corpus.
 
         """
-        self.corpus_size = len(corpus)
+        self.corpus_size = 0
         self.avgdl = 0
         self.doc_freqs = []
         self.idf = {}
@@ -86,6 +86,7 @@ class BM25(object):
         nd = {}  # word -> number of documents with word
         num_doc = 0
         for document in corpus:
+            self.corpus_size += 1
             self.doc_len.append(len(document))
             num_doc += len(document)
 
