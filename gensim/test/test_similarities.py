@@ -723,7 +723,7 @@ class TestWord2VecNmslibIndexer(unittest.TestCase):
                 self.fn = fn
 
             def __iter__(self):
-                with smart_open(self.fn, 'r', encoding="latin_1") as infile:
+                with utils.open(self.fn, 'r', encoding="latin_1") as infile:
                     for line in infile:
                         yield line.lower().strip().split()
 
