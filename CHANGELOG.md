@@ -5,29 +5,30 @@ Changes
 
 ### :star2: New Features
 
-* back gensim.downloader.load_info function by a cache (__[mpenkov](https://github.com/mpenkov)__, [#2545](https://github.com/RaRe-Technologies/gensim/pull/2545))
-* Add build_vocab to poincare model (__[koiizukag](https://github.com/koiizukag)__, [#2505](https://github.com/RaRe-Technologies/gensim/pull/2505))
-* Make most_similar accept topn of any integer type (__[Witiko](https://github.com/Witiko)__, [#2497](https://github.com/RaRe-Technologies/gensim/pull/2497))
-* generator support in bm25 (__[saraswatmks](https://github.com/saraswatmks)__, [#2479](https://github.com/RaRe-Technologies/gensim/pull/2479))
-* make downloader subdirectory configurable, fix #2416 (__[mpenkov](https://github.com/mpenkov)__, [#2456](https://github.com/RaRe-Technologies/gensim/pull/2456))
+* Enable online training of Poincare models (__[koiizukag](https://github.com/koiizukag)__, [#2505](https://github.com/RaRe-Technologies/gensim/pull/2505))
+* Make BM25 more scalable by adding support for generator inputs (__[saraswatmks](https://github.com/saraswatmks)__, [#2479](https://github.com/RaRe-Technologies/gensim/pull/2479))
+* Allow the Gensim dataset / pre-trained model downloader `gensim.downloader` to run offline, by introducing a local file cache (__[mpenkov](https://github.com/mpenkov)__, [#2545](https://github.com/RaRe-Technologies/gensim/pull/2545))
+* Make the `gensim.downloader` target directory configurable (__[mpenkov](https://github.com/mpenkov)__, [#2456](https://github.com/RaRe-Technologies/gensim/pull/2456))
 
 ### :red_circle: Bug fixes
 
-* fix python version check (__[charsyam](https://github.com/charsyam)__, [#2547](https://github.com/RaRe-Technologies/gensim/pull/2547))
-* Fix appveyor issues with Win and Py2 (__[mpenkov](https://github.com/mpenkov)__, [#2546](https://github.com/RaRe-Technologies/gensim/pull/2546))
-* Fix smart_open deprecation warning globally (__[itayB](https://github.com/itayB)__, [#2530](https://github.com/RaRe-Technologies/gensim/pull/2530))
-* Typo fix (__[Guitaricet](https://github.com/Guitaricet)__, [#2518](https://github.com/RaRe-Technologies/gensim/pull/2518))
-* Correct "Market Matrix" to "Matrix Market". (__[Shooter23](https://github.com/Shooter23)__, [#2513](https://github.com/RaRe-Technologies/gensim/pull/2513))
-* fix CHANGELOG.md (__[mpenkov](https://github.com/mpenkov)__, [#2482](https://github.com/RaRe-Technologies/gensim/pull/2482))
+* Fix `smart_open` deprecation warning globally (__[itayB](https://github.com/itayB)__, [#2530](https://github.com/RaRe-Technologies/gensim/pull/2530))
+* Fix AppVeyor issues with Windows and Py2 (__[mpenkov](https://github.com/mpenkov)__, [#2546](https://github.com/RaRe-Technologies/gensim/pull/2546))
+* Fix `topn=0` versus `topn=None` bug in `most_similar`, accept `topn` of any integer type (__[Witiko](https://github.com/Witiko)__, [#2497](https://github.com/RaRe-Technologies/gensim/pull/2497))
+* Fix Python version check (__[charsyam](https://github.com/charsyam)__, [#2547](https://github.com/RaRe-Technologies/gensim/pull/2547))
+* Fix typo in FastText documentation (__[Guitaricet](https://github.com/Guitaricet)__, [#2518](https://github.com/RaRe-Technologies/gensim/pull/2518))
+* Fix "Market Matrix" to "Matrix Market" typo. (__[Shooter23](https://github.com/Shooter23)__, [#2513](https://github.com/RaRe-Technologies/gensim/pull/2513))
+* Fix auto-generated hyperlinks in `CHANGELOG.md` (__[mpenkov](https://github.com/mpenkov)__, [#2482](https://github.com/RaRe-Technologies/gensim/pull/2482))
 
 ### :books: Tutorial and doc improvements
 
-* Simplify Support section in README (__[piskvorky](https://github.com/piskvorky)__, [#2542](https://github.com/RaRe-Technologies/gensim/pull/2542))
-* Generate documentation for the gensim.similarities.termsim module (__[Witiko](https://github.com/Witiko)__, [#2485](https://github.com/RaRe-Technologies/gensim/pull/2485))
+* Generate documentation for the `gensim.similarities.termsim` module (__[Witiko](https://github.com/Witiko)__, [#2485](https://github.com/RaRe-Technologies/gensim/pull/2485))
+* Simplify the `Support` section in README (__[piskvorky](https://github.com/piskvorky)__, [#2542](https://github.com/RaRe-Technologies/gensim/pull/2542))
 
 ### :+1: Improvements
 
-* pin sklearn version for Py2 (__[mpenkov](https://github.com/mpenkov)__, [#2510](https://github.com/RaRe-Technologies/gensim/pull/2510))
+* Pin sklearn version for Py2, because sklearn dropped py2 support (__[mpenkov](https://github.com/mpenkov)__, [#2510](https://github.com/RaRe-Technologies/gensim/pull/2510))
+
 
 ### :warning: Deprecations (will be removed in the next major release)
 
