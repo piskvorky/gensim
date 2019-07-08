@@ -3,6 +3,8 @@ Changes
 
 ## 3.8.0, 2019-07-08
 
+## :warning: 3.8.x will be the last gensim version to support Py2.7. Starting with 4.0.0, gensim will only support Py3.5 and above
+
 ### :star2: New Features
 
 * Enable online training of Poincare models (__[koiizukag](https://github.com/koiizukag)__, [#2505](https://github.com/RaRe-Technologies/gensim/pull/2505))
