@@ -16,7 +16,7 @@ RELEASE=$1
 export RELEASE="$RELEASE"
 
 script_dir="$(dirname "${BASH_SOURCE[0]}")"
-root="$script_dir/.."
+root=$(dirname "$script_dir")
 cd "$script_dir"
 
 git fetch upstream
@@ -46,7 +46,10 @@ echo "Now update CHANGELOG.md and include the PRs in this release."
 read -p "Press Enter to continue.  An editor window will open."
 python update_changelog.py "$previous_version" "$RELEASE"
 $EDITOR "$root/CHANGELOG.md"
+
+set +e
 git commit "$root/CHANGELOG.md" -m "updated CHANGELOG.md for version $RELEASE"
+set -e
 
 bash cython.sh "$RELEASE"
 
