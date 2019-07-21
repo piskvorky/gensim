@@ -5,31 +5,37 @@ r"""
 Core Concepts
 =============
 
-This tutorial introduces the basic concepts and terms needed to understand and use ``gensim`` and provides a simple usage example.
+This tutorial introduces Documents, Corpora, Vectors and Models: the basic concepts and terms needed to understand and use gensim.
 
 """
 
-import logging
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+###############################################################################
+# The core concepts of ``gensim`` are:
+#
+# 1. :ref:`core_concepts_document`: some text.
+# 2. :ref:`core_concepts_corpus`: a collection of documents.
+# 3. :ref:`core_concepts_vector`: a mathematically convenient representation of a document.
+# 4. :ref:`core_concepts_model`: an algorithm for transforming vectors from one representation to another.
+#
+# Let's examine each of these in slightly more detail.
+#
+# .. _core_concepts_document:
+#
+# Document
+# --------
+#
+# In Gensim, a *Document* is an object of the `text sequence type <https://docs.python.org/3.7/library/stdtypes.html#text-sequence-type-str>`_ (commonly known as ``str`` in Python 3).
+# Depending on your use case, it may be a single sentence, a paragraph, a chapter, or an entire book.
+#
+document = "Human machine interface for lab abc computer applications"
 
 ###############################################################################
-# At a very high-level, ``gensim`` is a tool for discovering the semantic
-# structure of documents by examining the patterns of words (or higher-level
-# structures such as entire sentences or documents). ``gensim`` accomplishes
-# this by taking a **corpus**, a collection of text documents, and producing a
-# **vector** representation of the text in the corpus. The vector representation
-# can then be used to train a **model** , which is an algorithms to create
-# different representations of the data, which are usually more semantic. These
-# three concepts are key to understanding how ``gensim`` works so let's take a
-# moment to explain what each of them means. At the same time, we'll work
-# through a simple example that illustrates each of them.
-#
 # .. _core_concepts_corpus:
 #
 # Corpus
 # ------
 #
-# A *corpus* is a collection of digital documents.
+# A *corpus* is a collection of :ref:`core_concepts_document` s.
 # Corpora serve two roles in Gensim:
 #
 # 1. Input for training a :ref:`core_concepts_model`.
@@ -76,7 +82,7 @@ text_corpus = [
 # After collecting our corpus, there are typically a number of preprocessing
 # steps we want to undertake. We'll keep it simple and just remove some
 # commonly used English words (such as 'the') and words that occur only once in
-# the corpus. In the process of doing so, we'll [tokenise][1] our data.
+# the corpus. In the process of doing so, we'll tokenize our data.
 # Tokenization breaks up the documents into words (in this case using space as
 # a delimiter).
 #
@@ -122,7 +128,6 @@ print(dictionary)
 #
 
 ###############################################################################
-#
 # .. _core_concepts_vector:
 #
 # Vector
@@ -219,7 +224,7 @@ print(bow_corpus)
 # -----
 #
 # Now that we have vectorized our corpus we can begin to transform it using
-# *models*. We use model as an abstract term referring to a transformation from
+# *models*. We use model as an abstract term referring to a *transformation* from
 # one document representation to another. In ``gensim`` documents are
 # represented as vectors so a model can be thought of as a transformation
 # between two vector spaces. The model learns the details of this
@@ -257,4 +262,14 @@ print(tfidf[dictionary.doc2bow(words)])
 #
 # ``gensim`` offers a number of different models/transformations.
 # For more, see :ref:`tut2`.
+#
+# Summary
+# -------
+#
+# The core concepts of ``gensim`` are:
+#
+# 1. :ref:`core_concepts_document`: some text.
+# 2. :ref:`core_concepts_corpus`: a collection of documents.
+# 3. :ref:`core_concepts_vector`: a mathematically convenient representation of a document.
+# 4. :ref:`core_concepts_model`: an algorithm for transforming vectors from one representation to another.
 #
