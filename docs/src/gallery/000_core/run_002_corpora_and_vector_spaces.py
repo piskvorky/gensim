@@ -125,6 +125,8 @@ print(corpus)
 # the first six documents and "one" for the remaining three. As a matter of fact,
 # we have arrived at exactly the same corpus of vectors as in the :ref:`first-example`.
 #
+# .. _corpus_streaming_tutorial:
+#
 # Corpus Streaming -- One Document at a Time
 # -------------------------------------------
 #
@@ -142,6 +144,17 @@ class MyCorpus(object):
         for line in open('https://radimrehurek.com/gensim/mycorpus.txt'):
             # assume there's one document per line, tokens separated by whitespace
             yield dictionary.doc2bow(line.lower().split())
+
+###############################################################################
+# The full power of Gensim comes from the fact that a corpus doesn't have to be
+# a ``list``, or a ``NumPy`` array, or a ``Pandas`` dataframe, or whatever.
+# Gensim *accepts any object that, when iterated over, successively yields
+# documents.
+
+# This flexibility allows you to create your own corpus classes that stream the
+# documents directly from disk, network, database, dataframes…. The models
+# in Gensim are implemented such that they don't require all vectors to reside
+# in RAM at once. You can even create the documents on the fly!
 
 ###############################################################################
 # Download the sample `mycorpus.txt file here <./mycorpus.txt>`_. The assumption that

@@ -29,18 +29,27 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 # Corpus
 # ------
 #
-# A *corpus* is a collection of digital documents. This collection is the input
-# to ``gensim`` from which it will infer the structure of the documents, their
-# topics, etc. The latent structure inferred from the corpus can later be used
-# to assign topics to new documents which were not present in the training
-# corpus. For this reason, we also refer to this collection as the *training
-# corpus*. No human intervention (such as tagging the documents by hand) is
-# required - the topic classification is `unsupervised
-# <https://en.wikipedia.org/wiki/Unsupervised_learning>`_.
+# A *corpus* is a collection of digital documents.
+# Corpora serve two roles in Gensim:
 #
-# For our corpus, we'll use a list of 9 strings, each consisting of only a single sentence.
+# 1. Input for training a :ref:`core_concepts_model`.
+#    During training, the models use this *training corpus* to look for common
+#    themes and topics, initializing their internal model parameters.
 #
-raw_corpus = [
+#    Gensim focuses on *unsupervised* models so that no human intervention,
+#    such as costly annotations or tagging documents by hand, is required.
+#
+# 2. Documents to organize.
+#    After training, a topic model can be used to extract topics from new
+#    documents (documents not seen in the training corpus).
+#
+#    Such corpora can be :doc:`indexed <tut3>`, queried by semantic similarity,
+#    clustered etc.
+#
+# Here is an example corpus.
+# It consists of 9 documents, where each document is a string consisting of a single sentence.
+#
+text_corpus = [
     "Human machine interface for lab abc computer applications",
     "A survey of user opinion of computer system response time",
     "The EPS user interface management system",
@@ -53,6 +62,13 @@ raw_corpus = [
 ]
 
 ###############################################################################
+#
+# .. Important::
+#   The above example loads the entire corpus into memory.
+#   In practice, corpora may be very large, so loading them into memory may be impossible.
+#   Gensim intelligently handles such corpora by *streaming* them one document at a time.
+#   See :ref:`corpus_streaming_tutorial` for details.
+#
 # This is a particularly small example of a corpus for illustration purposes.
 # Another example could be a list of all the plays written by Shakespeare, list
 # of all wikipedia articles, or all tweets by a particular person of interest.
@@ -75,7 +91,7 @@ raw_corpus = [
 stoplist = set('for a of the and to in'.split(' '))
 # Lowercase each document, split it by white space and filter out stopwords
 texts = [[word for word in document.lower().split() if word not in stoplist]
-         for document in raw_corpus]
+         for document in text_corpus]
 
 # Count word frequencies
 from collections import defaultdict
@@ -114,12 +130,41 @@ print(dictionary)
 #
 # To infer the latent structure in our corpus we need a way to represent
 # documents that we can manipulate mathematically. One approach is to represent
-# each document as a vector. There are various approaches for creating a vector
-# representation of a document but a simple example is the *bag-of-words
-# model*. Under the bag-of-words model each document is represented by a vector
-# containing the frequency counts of each word in the dictionary. For example,
-# given a dictionary containing the words ``['coffee', 'milk', 'sugar',
-# 'spoon']`` a document consisting of the string ``"coffee milk coffee"`` could
+# each document as a vector of *features*.
+# For example, a single feature may be thought of as a question-answer pair:
+#
+# 1. How many times does the word *splonge* appear in the document? Zero.
+# 2. How many paragraphs does the document consist of? Two.
+# 3. How many fonts does the document use? Five.
+#
+# The question is usually represented only by its integer id (such as `1`, `2` and `3`).
+# The representation of this document then becomes a series of pairs like ``(1, 0.0), (2, 2.0), (3, 5.0)``.
+# This is known as a *dense vector*, because it contains an explicit answer to each of the above questions.
+#
+# If we know all the questions in advance, we may leave them implicit
+# and simply represent the document as ``(0, 2, 5)``.
+# This sequence of answers is the **vector** for our document (in this case a 3-dimensional dense vector).
+# For practical purposes, only questions to which the answer is (or
+# can be converted to) a *single floating point number* are allowed in Gensim.
+#
+# In practice, vectors often consist of many zero values.
+# To save memory, Gensim omits all vector elements with value 0.0.
+# The above example thus becomes ``(2, 2.0), (3, 5.0)``.
+# This is known as a *sparse vector* or *bag-of-words vector*.
+# The values of all missing features in this sparse representation can be unambiguously resolved to zero, ``0.0``.
+#
+# Assuming the questions are the same, we can compare the vectors of two different documents to each other.
+# For example, assume we are given two vectors ``(0.0, 2.0, 5.0)`` and ``(0.1, 1.9, 4.9)``.
+# Because the vectors are very similar to each other, we can conclude that the documents corresponding to those vectors are similar, too.
+# Of course, the correctness of that conclusion depends on how well we picked the questions in the first place.
+#
+# Another approach to represent a document as a vector is the *bag-of-words
+# model*.
+# Under the bag-of-words model each document is represented by a vector
+# containing the frequency counts of each word in the dictionary.
+# For example, assume we have a dictionary containing the words
+# ``['coffee', 'milk', 'sugar', 'spoon']``.
+# A document consisting of the string ``"coffee milk coffee"`` would then
 # be represented by the vector ``[2, 1, 0, 0]`` where the entries of the vector
 # are (in order) the occurrences of "coffee", "milk", "sugar" and "spoon" in
 # the document. The length of the vector is the number of entries in the
@@ -177,8 +222,9 @@ print(bow_corpus)
 # *models*. We use model as an abstract term referring to a transformation from
 # one document representation to another. In ``gensim`` documents are
 # represented as vectors so a model can be thought of as a transformation
-# between two vector spaces. The details of this transformation are learned
-# from the training corpus.
+# between two vector spaces. The model learns the details of this
+# transformation during training, when it reads the training
+# :ref:`core_concepts_corpus`.
 #
 # One simple example of a model is `tf-idf
 # <https://en.wikipedia.org/wiki/Tf%E2%80%93idf>`_.  The tf-idf model
@@ -206,6 +252,9 @@ print(tfidf[dictionary.doc2bow(words)])
 # been weighted lower than the ID corresponding to "minors" (which only
 # occurred twice).
 #
-# ``gensim`` offers a number of different models/transformations. See
-# `Transformations and Topics <Topics_and_Transformations.ipynb>`_ for details.
+# You can save trained models to disk and later load them back, either to
+# continue training on new training documents or to transform new documents.
+#
+# ``gensim`` offers a number of different models/transformations.
+# For more, see :ref:`tut2`.
 #
