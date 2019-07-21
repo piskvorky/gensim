@@ -30,6 +30,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 HAS_PATTERN = has_pattern()
+if HAS_PATTERN:
+    from pattern.en import tag
 
 SEPARATOR = r'@'
 RE_SENTENCE = re.compile(r'(\S.+?[.!?])(?=\s+|$)|(\S.+?)(?=[\n]|$)', re.UNICODE)
