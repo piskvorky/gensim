@@ -1,4 +1,4 @@
-Gallery
-=======
+Documentation
+=============
 
-This gallery contains gensim tutorials and howto guides.
+This section contains gensim tutorials and howto guides.
