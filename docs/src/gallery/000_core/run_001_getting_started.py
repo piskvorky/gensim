@@ -34,7 +34,8 @@ corpus = [
 ]
 
 ###############################################################################
-# Each of the elements in ``corpus`` is a :ref:`core_concepts_vector` that corresponds to some :ref:`core_concepts_document`.
+# To be precise, each element in the above list is a sparse :ref:`core_concepts_vector` as opposed to a :ref:`core_concepts_document`.
+# However, as you may recall from :ref:`core_concepts_py`, a vector is just another representation of a document, so the two terms often get used interchangeably.
 # This representation is known as the `Vector Space Model <http://en.wikipedia.org/wiki/Vector_space_model>`_.
 #
 # If you’re not familiar with the vector space model, we’ll bridge the gap between raw strings, corpora and sparse vectors in the next tutorial on :ref:`tut1`.

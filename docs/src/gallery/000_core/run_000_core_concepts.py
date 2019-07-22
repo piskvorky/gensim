@@ -24,7 +24,7 @@ This tutorial introduces Documents, Corpora, Vectors and Models: the basic conce
 # Document
 # --------
 #
-# In Gensim, a *Document* is an object of the `text sequence type <https://docs.python.org/3.7/library/stdtypes.html#text-sequence-type-str>`_ (commonly known as ``str`` in Python 3).
+# In Gensim, a *document* is an object of the `text sequence type <https://docs.python.org/3.7/library/stdtypes.html#text-sequence-type-str>`_ (commonly known as ``str`` in Python 3).
 # Depending on your use case, it may be a single sentence, a paragraph, a chapter, or an entire book.
 #
 document = "Human machine interface for lab abc computer applications"
@@ -35,7 +35,7 @@ document = "Human machine interface for lab abc computer applications"
 # Corpus
 # ------
 #
-# A *corpus* is a collection of :ref:`core_concepts_document` s.
+# A *corpus* is a collection of :ref:`core_concepts_document` objects.
 # Corpora serve two roles in Gensim:
 #
 # 1. Input for training a :ref:`core_concepts_model`.
@@ -49,7 +49,7 @@ document = "Human machine interface for lab abc computer applications"
 #    After training, a topic model can be used to extract topics from new
 #    documents (documents not seen in the training corpus).
 #
-#    Such corpora can be :doc:`indexed <tut3>`, queried by semantic similarity,
+#    Such corpora can be indexed for :ref:`tut3`, queried by semantic similarity,
 #    clustered etc.
 #
 # Here is an example corpus.

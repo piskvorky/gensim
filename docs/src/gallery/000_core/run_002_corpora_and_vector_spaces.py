@@ -82,7 +82,8 @@ pprint(texts)
 # each document is represented by one vector where each vector element represents
 # a question-answer pair, in the style of:
 #
-#  "How many times does the word `system` appear in the document? Once."
+# - Question: How many times does the word `system` appear in the document?
+# - Answer: Once.
 #
 # It is advantageous to represent the questions only by their (integer) ids. The mapping
 # between the questions and ids is called a dictionary:
@@ -149,10 +150,10 @@ class MyCorpus(object):
 # The full power of Gensim comes from the fact that a corpus doesn't have to be
 # a ``list``, or a ``NumPy`` array, or a ``Pandas`` dataframe, or whatever.
 # Gensim *accepts any object that, when iterated over, successively yields
-# documents.
+# documents*.
 
 # This flexibility allows you to create your own corpus classes that stream the
-# documents directly from disk, network, database, dataframes…. The models
+# documents directly from disk, network, database, dataframes... The models
 # in Gensim are implemented such that they don't require all vectors to reside
 # in RAM at once. You can even create the documents on the fly!
 
