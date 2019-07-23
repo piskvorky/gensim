@@ -25,7 +25,8 @@ This tutorial introduces Documents, Corpora, Vectors and Models: the basic conce
 # --------
 #
 # In Gensim, a *document* is an object of the `text sequence type <https://docs.python.org/3.7/library/stdtypes.html#text-sequence-type-str>`_ (commonly known as ``str`` in Python 3).
-# Depending on your use case, it may be a single sentence, a paragraph, a chapter, or an entire book.
+# A document could be anything from a short 140 character tweet, a single
+# paragraph (i.e., journal article abstract), a news article, or a book.
 #
 document = "Human machine interface for lab abc computer applications"
 
