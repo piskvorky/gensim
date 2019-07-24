@@ -26,26 +26,108 @@ Introduces Gensim's Doc2Vec model and demonstrates its use on the Lee Corpus.
 
 
 
-Doc2Vec is an NLP tool for representing documents as a vector and is a
-generalizing of the Word2Vec method.  This tutorial will serve as an
-introduction to Doc2Vec and present ways to train and assess a Doc2Vec model.
+Doc2Vec is a :ref:`core_concepts_model` that represents each
+:ref:`core_concepts_document` as a :ref:`core_concepts_vector`.  This
+tutorial introduces the model and demonstrates how to train and assess it.
 
-This tutorial will take you through the following steps:
+Here's a list of what we'll be doing:
 
+0. Review the relevant models: bag-of-words, Word2Vec, Doc2Vec
 1. Load and preprocess the training and test corpora (see :ref:`core_concepts_corpus`)
 2. Train a Doc2Vec :ref:`core_concepts_model` model using the training corpus
 3. Demonstrate how the trained model can be used to infer a :ref:`core_concepts_vector`
 4. Assess the model
 5. Test the model on the test corpus
 
-Getting Started
----------------
+Review: Bag-of-words
+--------------------
 
-To get going, we'll need to have a set of documents to train our doc2vec
-model. In theory, a document could be anything from a short 140 character
-tweet, a single paragraph (i.e., journal article abstract), a news article,
-or a book. In NLP parlance a collection or set of documents is often referred
-to as a **corpus**. 
+.. Note:: Feel free to skip these review sections if you're already familiar with the models.
+
+You may be familiar with the `bag-of-words model
+<https://en.wikipedia.org/wiki/Bag-of-words_model>`_ from the
+:ref:`core_concepts_py` section.
+This model transforms each document to a fixed-length vector of integers.
+For example, given the sentences:
+
+- ``John likes to watch movies. Mary likes movies too.``
+- ``John also likes to watch football games. Mary hates football.``
+
+The model outputs the vectors:
+
+- ``[1, 2, 1, 1, 2, 1, 1, 0, 0, 0, 0]``
+- ``[1, 1, 1, 1, 0, 1, 0, 1, 2, 1, 1]``
+
+Each vector has 10 elements, where each element counts the number of times a
+particular word occurred in the document.
+The order of elements is arbitrary.
+In the example above, the order of the elements corresponds to the words:
+``["John", "likes", "to", "watch", "movies", "Mary", "too", "also", "football", "games", "hates"]``.
+
+Bag-of-words models are surprisingly effective, but have several weaknesses.
+
+First, they lose all information about word order: "John likes Mary" and
+"Mary likes John" correspond to identical vectors. There is a solution: bag
+of `n-grams <https://en.wikipedia.org/wiki/N-gram>`__
+models consider word phrases of length n to represent documents as
+fixed-length vectors to capture local word order but suffer from data
+sparsity and high dimensionality.
+
+Second, the model does not attempt to learn the meaning of the underlying
+words, and as a consequence, the distance between vectors doesn't always
+reflect the difference in meaning.  The ``Word2Vec`` model addresses this
+second problem.
+
+Review: ``Word2Vec`` Model
+--------------------------
+
+``Word2Vec`` is a more recent model that embeds words in a lower-dimensional
+vector space using a shallow neural network. The result is a set of
+word-vectors where vectors close together in vector space have similar
+meanings based on context, and word-vectors distant to each other have
+differing meanings. For example, ``strong`` and ``powerful`` would be close
+together and ``strong`` and ``Paris`` would be relatively far.
+
+Gensim's :py:class:`~gensim.models.word2vec.Word2Vec` class implements this model.
+
+With the ``Word2Vec`` model, we can calculate the vectors for each **word** in a document.
+But what if we want to calculate a vector for the **entire document**\ ?
+We could average the vectors for each word in the document - while this is quick and crude, it can often be useful.
+However, there is a better way...
+
+Introducing: Paragraph Vector
+-----------------------------
+
+.. Important:: In Gensim, we refer to the Paragraph Vector model as ``Doc2Vec``.
+
+Le and Mikolov in 2014 introduced the *Paragraph Vector*, which usually outperforms such simple-averaging of ``Word2Vec`` vectors.
+
+The basic idea is: act as if a document has another floating word-like
+vector, which contributes to all training predictions, and is updated like
+other word-vectors, but we will call it a doc-vector. Gensim's
+:py:class:`~gensim.models.doc2vec.Doc2Vec` class implements this algorithm.
+
+There are two implementations:
+
+1. Paragraph Vector - Distributed Memory (PV-DM)
+2. Paragraph Vector - Distributed Bag of Words (PV-DBOW)
+
+.. Important::
+  Don't let the implementation details below scare you.
+  They're advanced material: if it's too much, then move on to the next section.
+
+PV-DM is analogous to Word2Vec CBOW. The doc-vectors are obtained by training
+a neural network on the synthetic task of predicting a center word based an
+average of both context word-vectors and the full document's doc-vector.
+
+PV-DBOW is analogous to Word2Vec SG. The doc-vectors are obtained by training
+a neural network on the synthetic task of predicting a target word just from
+the full document's doc-vector. (It is also common to combine this with
+skip-gram testing, using both the doc-vector and nearby word-vectors to
+predict a single target word, but only one at a time.)
+
+Prepare the Training and Test Data
+----------------------------------
 
 For this tutorial, we'll be training our model using the `Lee Background
 Corpus
@@ -79,15 +161,19 @@ which contains 50 documents.
 Define a Function to Read and Preprocess Text
 ---------------------------------------------
 
-Below, we define a function to open the train/test file (with latin
-encoding), read the file line-by-line, pre-process each line using a simple
-gensim pre-processing tool (i.e., tokenize text into individual words, remove
-punctuation, set to lowercase, etc), and return a list of words. Note that,
-for a given file (aka corpus), each continuous line constitutes a single
-document and the length of each line (i.e., document) can vary. Also, to
-train the model, we'll need to associate a tag/number with each document of
-the training corpus. In our case, the tag is simply the zero-based line
-number.
+Below, we define a function to:
+
+- open the train/test file (with latin encoding)
+- read the file line-by-line
+- pre-process each line (tokenize text into individual words, remove punctuation, set to lowercase, etc)
+
+The file we're reading is a **corpus**.
+Each line of the file is a **document**.
+
+.. Important::
+  To train the model, we'll need to associate a tag/number with each document
+  of the training corpus. In our case, the tag is simply the zero-based line
+  number.
 
 
 
@@ -244,28 +330,28 @@ vector can then be compared with other vectors via cosine similarity.
 
  .. code-block:: none
 
-    [-0.18575795 -0.13511986 -0.076375   -0.09754043  0.1818997  -0.0625411
-      0.11482348 -0.26765174 -0.00440135 -0.12531066 -0.066892    0.09797165
-     -0.2682665  -0.16709955  0.09132338  0.14093246  0.361435    0.1316588
-     -0.04919421 -0.06542347 -0.10133749  0.00798248  0.03723055 -0.22058137
-     -0.3045081   0.10888425 -0.12888427 -0.12382892  0.0957042   0.19151324
-      0.04488073 -0.05343053 -0.43255424  0.05910409 -0.06140405 -0.15290727
-     -0.0347239   0.0077343   0.17252333 -0.10788079  0.06345859 -0.04193899
-     -0.06547964 -0.05680009 -0.06289701 -0.07419236 -0.08074679  0.06059996
-     -0.09367087  0.02488928]
+    [ 0.17541483 -0.49196827  0.08779179 -0.00909387  0.06893727  0.12022585
+     -0.0408328  -0.09224472 -0.18015207  0.12408012  0.02713208 -0.04907346
+      0.18109988  0.04060466 -0.16465215 -0.07176629  0.04047617  0.09858649
+     -0.05062681  0.20516384 -0.12163664  0.00814463  0.03010288  0.05426239
+     -0.02301049 -0.01393805  0.01991753  0.16094668 -0.19610573 -0.1707981
+      0.08435371 -0.03093486  0.16544315  0.05434167  0.13624124 -0.10247199
+      0.09367518  0.230475   -0.06811217 -0.10978779 -0.16073455  0.08391835
+      0.0385895   0.08876099 -0.10157748 -0.17650042  0.17826441 -0.00666687
+      0.03084892  0.10378202]
 
 
 Note that ``infer_vector()`` does *not* take a string, but rather a list of
 string tokens, which should have already been tokenized the same way as the
-``words`` property of original training document objects. 
+``words`` property of original training document objects.
 
 Also note that because the underlying training/inference algorithms are an
 iterative approximation problem that makes use of internal randomization,
 repeated inferences of the same text will return slightly different vectors.
 
 
-Assessing Model
----------------
+Assessing the Model
+-------------------
 
 To assess our new model, we'll first infer new vectors for each document of
 the training corpus, compare the inferred vectors with the training corpus,
@@ -275,7 +361,7 @@ and then seeing how they compare with the trained model. The expectation is
 that we've likely overfit our model (i.e., all of the ranks will be less than
 2) and so we should be able to find similar documents very easily.
 Additionally, we'll keep track of the second ranks for a comparison of less
-similar documents. 
+similar documents.
 
 
 
@@ -288,7 +374,7 @@ similar documents.
         sims = model.docvecs.most_similar([inferred_vector], topn=len(model.docvecs))
         rank = [docid for docid, sim in sims].index(doc_id)
         ranks.append(rank)
-    
+
         second_ranks.append(sims[1])
 
 
@@ -297,7 +383,7 @@ similar documents.
 
 
 
-Let's count how each document ranks with respect to the training corpus 
+Let's count how each document ranks with respect to the training corpus
 
 NB. Results vary between runs due to random seeding and very small corpus
 
@@ -324,7 +410,7 @@ NB. Results vary between runs due to random seeding and very small corpus
 
 Basically, greater than 95% of the inferred documents are found to be most
 similar to itself and about 5% of the time it is mistakenly most similar to
-another document. the checking of an inferred-vector against a
+another document. Checking the inferred-vector against a
 training-vector is a sort of 'sanity check' as to whether the model is
 behaving in a usefully consistent manner, though not a real 'accuracy' value.
 
@@ -353,13 +439,13 @@ This is great and not entirely surprising. We can take a look at an example:
 
     SIMILAR/DISSIMILAR DOCS PER MODEL Doc2Vec(dm/m,d50,n5,w5,mc2,s0.001,t3):
 
-    MOST (299, 0.9336286783218384): «australia will take on france in the doubles rubber of the davis cup tennis final today with the tie levelled at wayne arthurs and todd woodbridge are scheduled to lead australia in the doubles against cedric pioline and fabrice santoro however changes can be made to the line up up to an hour before the match and australian team captain john fitzgerald suggested he might do just that we ll make team appraisal of the whole situation go over the pros and cons and make decision french team captain guy forget says he will not make changes but does not know what to expect from australia todd is the best doubles player in the world right now so expect him to play he said would probably use wayne arthurs but don know what to expect really pat rafter salvaged australia davis cup campaign yesterday with win in the second singles match rafter overcame an arm injury to defeat french number one sebastien grosjean in three sets the australian says he is happy with his form it not very pretty tennis there isn too many consistent bounces you are playing like said bit of classic old grass court rafter said rafter levelled the score after lleyton hewitt shock five set loss to nicholas escude in the first singles rubber but rafter says he felt no added pressure after hewitt defeat knew had good team to back me up even if we were down he said knew could win on the last day know the boys can win doubles so even if we were down still feel we are good enough team to win and vice versa they are good enough team to beat us as well»
+    MOST (299, 0.9471086263656616): «australia will take on france in the doubles rubber of the davis cup tennis final today with the tie levelled at wayne arthurs and todd woodbridge are scheduled to lead australia in the doubles against cedric pioline and fabrice santoro however changes can be made to the line up up to an hour before the match and australian team captain john fitzgerald suggested he might do just that we ll make team appraisal of the whole situation go over the pros and cons and make decision french team captain guy forget says he will not make changes but does not know what to expect from australia todd is the best doubles player in the world right now so expect him to play he said would probably use wayne arthurs but don know what to expect really pat rafter salvaged australia davis cup campaign yesterday with win in the second singles match rafter overcame an arm injury to defeat french number one sebastien grosjean in three sets the australian says he is happy with his form it not very pretty tennis there isn too many consistent bounces you are playing like said bit of classic old grass court rafter said rafter levelled the score after lleyton hewitt shock five set loss to nicholas escude in the first singles rubber but rafter says he felt no added pressure after hewitt defeat knew had good team to back me up even if we were down he said knew could win on the last day know the boys can win doubles so even if we were down still feel we are good enough team to win and vice versa they are good enough team to beat us as well»
 
-    SECOND-MOST (146, 0.8106157183647156): «the australian and south african sides for the first cricket test starting at the adelaide oval today are not expected to be finalised until just before the start of play australian captain steve waugh and his south african counterpart shaun pollock will decide on their lineups after an inspection of the pitch shortly before the start of play the match holds special significance for waugh and his twin brother mark who play their th test together steve waugh is not placing too much relevance on the milestone don want to read too much into it guess and then get too carried away but later on when we retire and look back on it it will be significant it nice for the family mum and dad all the sacrifices they made you know with us growing up and also our brothers so you know it nice for the family he said»
+    SECOND-MOST (112, 0.8182107210159302): «australian cricket captain steve waugh has supported fast bowler brett lee after criticism of his intimidatory bowling to the south african tailenders in the first test in adelaide earlier this month lee was fined for giving new zealand tailender shane bond an unsportsmanlike send off during the third test in perth waugh says tailenders should not be protected from short pitched bowling these days you re earning big money you ve got responsibility to learn how to bat he said mean there no times like years ago when it was not professional and sort of bowlers code these days you re professional our batsmen work very hard at their batting and expect other tailenders to do likewise meanwhile waugh says his side will need to guard against complacency after convincingly winning the first test by runs waugh says despite the dominance of his side in the first test south africa can never be taken lightly it only one test match out of three or six whichever way you want to look at it so there lot of work to go he said but it nice to win the first battle definitely it gives us lot of confidence going into melbourne you know the big crowd there we love playing in front of the boxing day crowd so that will be to our advantage as well south africa begins four day match against new south wales in sydney on thursday in the lead up to the boxing day test veteran fast bowler allan donald will play in the warm up match and is likely to take his place in the team for the second test south african captain shaun pollock expects much better performance from his side in the melbourne test we still believe that we didn play to our full potential so if we can improve on our aspects the output we put out on the field will be lot better and we still believe we have side that is good enough to beat australia on our day he said»
 
-    MEDIAN (129, 0.2583906054496765): «the governor general will issue statement this week to answer allegations about his response to alleged sexual abuse at queensland school dr peter hollingworth was the anglican archbishop of brisbane when teacher at toowoomba anglican school allegedly abused students there more than decade ago pressure has been mounting on dr hollingworth to speak out after public criticism of his role in responding to the claims of abuse spokeswoman says dr hollingworth is becoming concerned that if he does not respond publicly to the allegations he may jeopardise the standing of the position of governor general the spokeswoman says dr hollingworth will issue written statement in the next few days after obtaining legal advice four people were killed and eight others injured when fire broke out overnight at hotel in central paris fire service spokesperson says the fire which was brought under control within two hours could have been an act of arson the number of people staying in the hotel du palais at the time the fire was not immediately known the inferno began at around am in the elevator shaft of the six storey hotel next to the theatre du chatelet in paris first arrondissement the centre of the french capital the flames spread quickly via the shaft to the building roof firemen helped several hotel guests to safety through the windows of their rooms two of the victims were found asphyxiated on the fifth floor one of the injured was said to be in serious condition in hospital according to police one man was arrested at the scene and an inquiry has been opened the theatre was undamaged»
+    MEDIAN (151, 0.275578111410141): «senior construction forestry mining and energy union cfmeu officials giving evidence at the royal commission into the building industry have been overwhelmed by support from union members about construction workers have walked off the job for the third day to demonstrate outside the commission venue mounted police escorted the protesters from melbourne city square to collins place morning traffic ground to halt at the intersection of russell and collins streets when the crowd stopped to chant union slogans cfmeu victorian secretary martin kingham says he has been astounded by the strong support shown by union members on each day of the hearings he maintains the union has been treated unfairly as it faces allegations of intimidation and using standover tactics on work sites mr kingham is currently giving evidence before the commission it is the last day of hearings before the christmas break the labor leader simon crean says senior labor figures bob hawke and neville wran will be used to help modernise the party labor national executive is meeting in canberra mr crean will put his views on the changes labor needs to make the executive is expected to ask mr hawke and mr wran to oversee the process mr crean says they know what needs to be done bob hawke and neville wran understood the importance of modernising the party and that why they were successful leaders of the country sure we don need to teach them to suck eggs what want them to do is to give us guidance as to how we can bring the new approach to labor in to enable us to properly present and gain the confidence of the majority of the australian people the opposition leader said»
 
-    LEAST (87, -0.06319954991340637): «the australian transport safety bureau has called for pilots to be better trained on the risks of air turbulence it is response to helicopter crash last august which claimed the life of media personality shirley strachan mr strachan was on solo navigation training flight on august when he crashed into mt archer on queensland sunshine coast witnesses told of seeing mr strachan apparently struggling to control his aircraft just prior to the crash safety bureau director alan stray says the helicopter was struck by severe air turbulence phenomena known as mountain wave it caused one of the helicopter rotors to flap and strike the tail boom while reluctant to attribute blame mr stray says mountain waves are not uncommon and mr strachan could have been better advised of local weather conditions prior to the flight he says the accident is wake up call to flight trainers to ensure students are fully educated on the dangers of weather phenomena the helicopter training company which owned the aircraft mr strachan died in has declined to comment in detail on the findings blue tongue helicopters owner helen gillies says the company respects the findings of the australian transport safety bureau mrs gillies says the investigation was thorough one but says that the incident is still too painful to discuss the former chief financial officer of retailer harris scarfe will face court on charges following inquiries by the australian securities and investment commission asic the charges to be faced by alan hodgson from beaumont in adelaide eastern suburbs include counts of acting dishonestly as an officer of harris scarfe six counts of acting dishonestly as an employee of the company and eight counts of giving false information to the australian stock exchange the matter has been brought by the commonwealth director of public prosecutions following asic investigation of the company the original harris scarfe business went into receivership in april with debts of about million management buyout by executives not connected with the original company was finalised last month the buyout saw the closure of stores around australia and the retention of others in south australia victoria and tasmania»
+    LEAST (233, -0.10959328711032867): «three us troops and five members of the afghan opposition were killed by stray us bomb near kandahar in afghanistan the pentagon said the pentagon had earlier confirmed that two us special forces soldiers were killed and others wounded north of kandahar when bomber dropped pound bomb too close to them the was flying in support of opposition forces north of kandahar said pentagon spokeswoman victori clark we have an update since this morning and unfortunately the number of us forces killed is now three rival afghan factions signed an historic power sharing agreement to form post taliban government and set the country on the road to recovery and democracy after two decades of war the accord was sealed after nine days of exhausting negotiations and paves the way for six month interim administration headed by moderate muslim hamid karzai from the dominant pashtun ethnic group the deal gives the northern alliance control of three key portfolios in the member cabinet which includes two women and is due to be up and running by december it also gives symbolic role to the former king and provides for un security force for kabul the agreement was signed in the german city of bonn by the leaders of the four delegations and un special envoy for afghanistan lakhdar brahimi to applause from an audience which included german chancellor gerhard schroeder we were the champions of resistance and will be proud to be the champions of peace said yunus qanooni the northern alliance chief negotiator and the interim government interior minister delegate from the so called peshawar group sayed hamed gailani summed up the atmosphere in single phrase there are two things evident today yesterday rain does not have the courage to cry and the sun cannot hide its smile he said the appointment of karzai year old tribal pashtun tribal leader currently fighting the taliban near their last stronghold of kandahar was seen as an attempt to balance afghanistan delicate ethnic mix it cements whirlwind transformation in afghanistan fate since the september attacks on new york and washington the trigger for massive us air strikes that have dislodged the taliban militia from most of the country and put the northern alliance back on top showing the strain from nine days of frantic diplomacy brahimi recognised the accord was far from perfect and that its signatories were not fully representative of the afghan people»
 
 
 Notice above that the most similar document (usually the same text) is has a
@@ -369,7 +455,7 @@ are in fact different) and the reasoning becomes obvious when we examine the
 text itself.
 
 We can run the next cell repeatedly to see a sampling other target-document
-comparisons. 
+comparisons.
 
 
 
@@ -395,9 +481,9 @@ comparisons.
 
  .. code-block:: none
 
-    Train Document (288): «eight people are to appear in swiss court tomorrow charged with the manslaughter of tourists and three guides after the interlaken canyoning tragedy the first three defendants are managers of the now defunctoperator adventure world twenty one people including australians were killed when thunderstorm struck when they were canyoning down the saxeten river gorge near interlaken massive wall of water hit the group and swept them to their deaths it will be alleged the company adventure world allowed the trip to proceed with no safety provisions in place that they employed inexperienced staff and guides who had lack of knowledge about the violent weather changes which can occur in the mountains if convicted they face one year jail sentence»
+    Train Document (110): «the radical palestinian group hamas has reportedly shifted the focus in its guerrilla war against israel senior israeli defence official has told israel army radio the palestinian organisation is now planning to attack strategic targets hamas has carried out numerous suicide bombings in israel but its targets have tended to be what are known as soft ones such as public buses or crowded shopping areas but now the israel official says hamas focus will be on attacking strategic buildings and senior israeli officials and he admits that stopping the group will be next to impossible hamas has rejected call by palestinian leader yasser arafat for an end to all military operations against israel and return to peace negotiations»
 
-    Similar Document (288, 0.955746054649353): «eight people are to appear in swiss court tomorrow charged with the manslaughter of tourists and three guides after the interlaken canyoning tragedy the first three defendants are managers of the now defunctoperator adventure world twenty one people including australians were killed when thunderstorm struck when they were canyoning down the saxeten river gorge near interlaken massive wall of water hit the group and swept them to their deaths it will be alleged the company adventure world allowed the trip to proceed with no safety provisions in place that they employed inexperienced staff and guides who had lack of knowledge about the violent weather changes which can occur in the mountains if convicted they face one year jail sentence»
+    Similar Document (93, 0.8593460917472839): «senior hamas official has said the radical palestinian movement has decided to stop suicide bombings against israel he told the agence france presse news agency that hamas had taken an internal decision to end what it calls martyrdom operations but it was not going to make an official declaration the official refused to say what tactics the radical group would use in its avowed struggle to end the israeli occupation of palestinian land or if it would revert to grisly attacks if israel carries out more targeted killings which have taken heavy toll on hamas operatives we can predict anything the official said an official from palestinian leader yasser arafat fatah movement also said there had been meeting of various palestinian factions in the west bank on wednesday and that hamas had informed them they were halting their operations the suicide attacks triggered massive israeli armed response and sweeping international condemnation the fatah official who likewise asked to remain anonymous said hamas had said it did not want to damage palestinian national unity by carrying on with such operations hamas suicide bombers blew themselves up in jerusalem and haifa in northern israel at the beginning of this month killing people and provoking the heaviest israeli air raids against mr arafat administration to date israel prime minister ariel sharon severed all ties with mr arafat last week after another hamas attack which used gunmen and roadside explosives rather than suicide bombings mr arafat in turn ordered the closure of dozens of hamas offices and has started arresting its militants senior israeli defence official was quoted by army radio on tuesday as saying hamas had shifted the focus in its guerrilla war against israel and now planned to attack strategic targets rather than soft ones such as public buses or crowded shopping areas the defence source said the focus will be on attacking strategic buildings and senior israeli officials»
 
 
 Testing the Model
@@ -432,15 +518,15 @@ test document, and compare the document to our model by eye.
 
  .. code-block:: none
 
-    Test Document (42): «pope john paul ii urged delegates at major summit on sustainable growth on sunday to pursue development that protects the environment and social justice in comments to tourists and the faithful at his summer residence southeast of rome the pope said god had put humans on earth to be his administrators of the land to cultivate it and take care of it in world ever more interdependent peace justice and the safekeeping of creation cannot but be the fruit of joint commitment of all in pursuing the common good john paul said»
+    Test Document (35): «the spectre of osama bin laden rose again today urging afghans to launch new jihad or holy war and predicting the fall of the united states in hand written letter posted on an islamic website there was no hard proof that the scruffy missive was genuine but islamonline net said it had been received by their correspondent in jalalabad eastern afghanistan from an afghan source who asked to remain anonymous the source claimed it was the most recent letter from the world most wanted man»
 
     SIMILAR/DISSIMILAR DOCS PER MODEL Doc2Vec(dm/m,d50,n5,w5,mc2,s0.001,t3):
 
-    MOST (160, 0.7607941031455994): «french moroccan man has been charged in the united states with conspiracy in the terrorist attacks of september it is the first indictment directly related to the suicide hijackings news of the charge came as president george bush delivered major foreign policy speech zaccarias moussaoui sought flying lessons month before the hijackings attorney general john ashcroft claims he was an active participant in the attacks moussaoui is charged with undergoing the same training receiving the same funding and pledging the same commitment to kill americans as the hijackers he said three months to the day since the attacks and president bush says missile defence is now more essential than ever before we must protect america and our friends against all forms of terror including the terror that could arrive on missile he said president bush says the united states now needs dramatically retooled military armed with hi tech weapons and real time intelligence»
+    MOST (143, 0.8098287582397461): «kashmiri militant groups denied involvement in thursday attack on the indian parliament accusing indian intelligence instead we want to make it clear that kashmiris have no connection with this attack said the muttahida jihad council mjc an alliance of groups fighting indian rule in kashmir we believe it was carried out by indian intelligence agencies to achieve their motives about the kashmir issue the groups added in statement the attack on the parliament building in new delhi left at least dead the indian authorities have not said who they believe was behind the killings but the kashmiri groups accused the indian government of masterminding the attack in bid to divert attention from what they called increasing international pressure over kashmir»
 
-    MEDIAN (278, 0.38609835505485535): «the royal commission looking into the collapse of insurance giant hih says the possible leak of confidential document is criminal offence royal commissioner justice neville owen has opened the public hearings into the collapse more than eight months after the company was placed into provisional liquidation in his opening statement justice owen called on all parties to adhere to the confidentiality requirements of royal commission justice owen says there could have been leak of report on the role of auditors circulated in early november it is possible that someone to whom the commission delivered copy of the report in strict confidence disclosed its contents to the author of the article if so there may have been breach of section of the royal commissions act that is criminal offence he said»
+    MEDIAN (2, 0.1597033143043518): «the national road toll for the christmas new year holiday period stands at eight fewer than for the same time last year people have died on new south wales roads with eight fatalities in both queensland and victoria western australia the northern territory and south australia have each recorded three deaths while the act and tasmania remain fatality free»
 
-    LEAST (8, 0.032870396971702576): «there has been welcome relief for firefighters in new south wales overnight with milder weather allowing them to strengthen containment lines around the most severe fires but fire authorities are not getting overly optimistic as dry and hot weather is forecast to continue the weather bureau is forecasting temperatures in the high and westerly winds until at least friday which means fire authorities are reluctant to get too excited about last night favourable conditions marks sullivan from the rural fire service says fire fighters are remaining on guard lot of fires that have been burning in the areas around sydney and the north coast and further south have been burning within areas that are known and are contained he said however that not to say that these fires won pose threat given the weather conditions that are coming up over the next few days despite the caution the rural fire service says most of the state fires that threaten property are burning within containment lines greater sydney is ringed by fires to the north west and south two of those flared overnight one at appin in the southern highlands was quickly brought under control another flare up at spencer north of the city is not contained on its north western flank but is not threatening property in the lower blue mountains west of sydney firefighters have spent the night setting up kilometre containment line to protect communities along the great western highway from glenbrook to bulaburra two fires burning near cessnock west of newcastle are still within containment lines in the state north aircraft will this morning check if lightning from large electrical storm overnight has sparked any new fires above grafton aircraft have also been used in the shoalhaven area in the state south to drop incendiary devices that start fire control lines in inaccessible areas the rural fire service commissioner phil koperberg says if fire activity increases hundreds of new year eve fireworks celebrations in new south wales will be cancelled»
+    LEAST (203, -0.3237740099430084): «qantas management and unions representing the airline maintenance workers will meet again today after marathon talks last night failed to resolve wage dispute unions are fighting proposed to month wage freeze and to secure better career structure for their employees bill shorten of the australian workers union awu says the unions will not rest until satisfactory outcome is reached after eight hours the awu and amwu are still talking to qantas we will resume tomorrow morning at am aedt in the industrial relations commission to see if we can work through this position our members now find ourselves in he said last night meanwhile ansett workers will sing christmas carols in front of the prime minister kirribilli residence in sydney this morning to remind john howard about their owed entitlements the transport workers union twu will hold hour picket outside kirribilli house and says about workers and their families are facing bleak christmas the news south wales secretary of the twu tony sheldon says the government promised to deliver about million in entitlements mr sheldon says the financial situation for many workers has reached crisis point there been very little delivered by this government lot of promises lot of noise was made before the federal election but very little in substance it important john howard delivers for the tourism community for the ansett workers and for the australian community generally mr sheldon said»
 
 
 Conclusion
@@ -448,6 +534,7 @@ Conclusion
 
 Let's review what we've seen in this tutorial:
 
+0. Review the relevant models: bag-of-words, Word2Vec, Doc2Vec
 1. Load and preprocess the training and test corpora (see :ref:`core_concepts_corpus`)
 2. Train a Doc2Vec :ref:`core_concepts_model` model using the training corpus
 3. Demonstrate how the trained model can be used to infer a :ref:`core_concepts_vector`
@@ -471,9 +558,9 @@ If you'd like to know more about the subject matter of this tutorial, check out 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  7.685 seconds)
+   **Total running time of the script:** ( 0 minutes  12.068 seconds)
 
-**Estimated memory usage:**  14 MB
+**Estimated memory usage:**  17 MB
 
 
 .. _sphx_glr_download_auto_examples_010_tutorials_run_doc2vec_lee.py:

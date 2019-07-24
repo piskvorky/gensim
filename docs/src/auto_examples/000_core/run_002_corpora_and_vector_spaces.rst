@@ -129,7 +129,8 @@ To convert documents to vectors, we'll use a document representation called
 each document is represented by one vector where each vector element represents
 a question-answer pair, in the style of:
 
- "How many times does the word `system` appear in the document? Once."
+- Question: How many times does the word `system` appear in the document?
+- Answer: Once.
 
 It is advantageous to represent the questions only by their (integer) ids. The mapping
 between the questions and ids is called a dictionary:
@@ -236,6 +237,8 @@ times does the word `graph` appear in the document?" and that the answer is "zer
 the first six documents and "one" for the remaining three. As a matter of fact,
 we have arrived at exactly the same corpus of vectors as in the :ref:`first-example`.
 
+.. _corpus_streaming_tutorial:
+
 Corpus Streaming -- One Document at a Time
 -------------------------------------------
 
@@ -257,6 +260,26 @@ only requires that a corpus must be able to return one document vector at a time
             for line in open('https://radimrehurek.com/gensim/mycorpus.txt'):
                 # assume there's one document per line, tokens separated by whitespace
                 yield dictionary.doc2bow(line.lower().split())
+
+
+
+
+
+
+
+The full power of Gensim comes from the fact that a corpus doesn't have to be
+a ``list``, or a ``NumPy`` array, or a ``Pandas`` dataframe, or whatever.
+Gensim *accepts any object that, when iterated over, successively yields
+documents*.
+
+
+.. code-block:: default
+
+
+    # This flexibility allows you to create your own corpus classes that stream the
+    # documents directly from disk, network, database, dataframes... The models
+    # in Gensim are implemented such that they don't require all vectors to reside
+    # in RAM at once. You can even create the documents on the fly!
 
 
 
@@ -288,7 +311,7 @@ then convert the tokens via a dictionary to their ids and yield the resulting sp
 
  .. code-block:: none
 
-    <__main__.MyCorpus object at 0x7f2b3bfd3518>
+    <__main__.MyCorpus object at 0x7f93167ac048>
 
 
 Corpus is now an object. We didn't define any way to print it, so `print` just outputs address
@@ -569,9 +592,9 @@ Or continue to the next tutorial on :ref:`tut2`.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  2.318 seconds)
+   **Total running time of the script:** ( 0 minutes  2.225 seconds)
 
-**Estimated memory usage:**  10 MB
+**Estimated memory usage:**  40 MB
 
 
 .. _sphx_glr_download_auto_examples_000_core_run_002_corpora_and_vector_spaces.py:

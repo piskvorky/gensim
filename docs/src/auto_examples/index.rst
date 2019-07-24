@@ -4,10 +4,10 @@
 
 .. _sphx_glr_auto_examples:
 
-Gallery
-=======
+Documentation
+=============
 
-This gallery contains gensim tutorials and howto guides.
+This section contains gensim tutorials and howto guides.
 
 
 .. raw:: html
@@ -21,21 +21,15 @@ This gallery contains gensim tutorials and howto guides.
 Core Tutorials
 --------------
 
-This gallery contains tutorials that introduce `gensim` functionality to a new user.
-If you haven't already done so, we strongly recommend you start with the :ref:`intro`.
-Each tutorial is stand-alone, but if you're new, we recommend you go through the following in order:
-
-1. :ref:`core_concepts_py`
-2. :ref:`intro_tutorial`
-3. :ref:`tut1`
-4. :ref:`tut2`
-5. :ref:`tut3`
+These tutorials introduce core gensim functionality.
+Understanding this functionality is vital for using gensim effectively.
+Each tutorial is stand-alone, but if you're new, we recommend going through all of them, in order.
 
 
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="This tutorial introduces the basic concepts and terms needed to understand and use ``gensim`` a...">
+    <div class="sphx-glr-thumbcontainer" tooltip="This tutorial introduces Documents, Corpora, Vectors and Models: the basic concepts and terms n...">
 
 .. only:: html
 
@@ -141,30 +135,31 @@ Each tutorial is stand-alone, but if you're new, we recommend you go through the
 .. _sphx_glr_auto_examples_010_tutorials:
 
 Tutorials
-=========
+---------
 
-Where next?
------------
-
-Congratulations, you have finished the tutorials -- now you know how gensim works :-)
-To delve into more details, you can browse through the :ref:`apiref`,
-see the :ref:`wiki` or perhaps check out :ref:`distributed` in `gensim`.
-
-Gensim is a fairly mature package that has been used successfully by many individuals and companies, both for rapid prototyping and in production.
-That doesn't mean it's perfect though:
-
-* there are parts that could be implemented more efficiently (in C, for example), or make better use of parallelism (multiple machines cores)
-* new algorithms are published all the time; help gensim keep up by `discussing them <http://groups.google.com/group/gensim>`_ and `contributing code <https://github.com/piskvorky/gensim/wiki/Developer-page>`_
-* your **feedback is most welcome** and appreciated (and it's not just the code!):
-  `idea contributions <https://github.com/piskvorky/gensim/wiki/Ideas-&-Features-proposals>`_,
-  `bug reports <https://github.com/piskvorky/gensim/issues>`_ or just consider contributing
-  `user stories and general questions <http://groups.google.com/group/gensim/topics>`_.
-
-Gensim has no ambition to become an all-encompassing framework, across all NLP (or even Machine Learning) subfields.
-Its mission is to help NLP practitioners try out popular topic modelling algorithms
-on large datasets easily, and to facilitate prototyping of new algorithms for researchers.
+Once you're familiar with gensim's core concepts, try one of the tutorials below.
 
 
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces the annoy library for similarity queries using a Word2Vec model.">
+
+.. only:: html
+
+    .. figure:: /auto_examples/010_tutorials/images/thumb/sphx_glr_run_annoy_thumb.png
+
+        :ref:`sphx_glr_auto_examples_010_tutorials_run_annoy.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/010_tutorials/run_annoy
 
 .. raw:: html
 
@@ -225,26 +220,6 @@ on large datasets easily, and to facilitate prototyping of new algorithms for re
    :hidden:
 
    /auto_examples/010_tutorials/run_downloader_api
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s fastText model and demonstrates its use on the Lee Corpus.">
-
-.. only:: html
-
-    .. figure:: /auto_examples/010_tutorials/images/thumb/sphx_glr_run_fasttext_thumb.png
-
-        :ref:`sphx_glr_auto_examples_010_tutorials_run_fasttext.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/010_tutorials/run_fasttext
 
 .. raw:: html
 
@@ -339,6 +314,26 @@ How-to Guides
 How-to guides will go here.
 
 
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Shows how to reproduce results of the Le and Mikolov paper using Gensim.">
+
+.. only:: html
+
+    .. figure:: /auto_examples/020_howtos/images/thumb/sphx_glr_run_doc2vec_imdb_thumb.png
+
+        :ref:`sphx_glr_auto_examples_020_howtos_run_doc2vec_imdb.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/020_howtos/run_doc2vec_imdb
 
 .. raw:: html
 
