@@ -92,7 +92,6 @@ from gensim.models import ldamodel, ldamulticore, basemodel
 
 logger = logging.getLogger(__name__)
 
-
 class EnsembleLda():
     """Ensemble Latent Dirichlet Allocation (eLDA), a method of training a topic model ensemble and extracting
     reliable topics that are consistently learned accross the ensemble.  eLDA has the added benefit that the user
@@ -162,9 +161,14 @@ class EnsembleLda():
             Parameters for each gensim model (e.g. :py:class:`gensim.models.LdaModel`) in the ensemble.
 
         """
+        # INTERNAL PARAMETERS
         # Set random state
         # nps max random state of 2**32 - 1 is too large for windows:
         self._MAX_RANDOM_STATE = np.iinfo(np.int32).max
+
+        # _COSINE_DISTANCE_CALCULATION_THRESHOLD is used so that cosine distance calculations can be sped up by skipping
+        # distance calculations for highly masked topic-term distributions
+        self._COSINE_DISTANCE_CALCULATION_THRESHOLD = 0.05
 
         if "id2word" not in gensim_kw_args:
             gensim_kw_args["id2word"] = None
@@ -834,16 +838,11 @@ class EnsembleLda():
                 # now mask b based on a, which will force the shape of a onto b
                 ttd2_masked = ttd2[mask]
 
-                distance = 0
-                # is the masked b just some empty stuff? Then forget about it, no similarity, distance is 1
-                # (not 2 because that corresponds to negative values. The maximum distance is 1 here)
-                # don't normalize b_masked, otherwise the following threshold will never work:
-                if ttd2_masked.sum() <= 0.05:
+                # Smart distance calculation avoids calculating cosine distance for highly masked topic-term
+                # distributions that will have distance values near 1.
+                if ttd2_masked.sum() <= self._COSINE_DISTANCE_CALCULATION_THRESHOLD:
                     distance = 1
                 else:
-                    # if there is indeed some non-noise stuff in the masked topic b, look at
-                    # how similar the two topics are. note that normalizing is not needed for cosine distance,
-                    # as it only looks at the angle between vectors
                     distance = cosine(ttd1_masked, ttd2_masked)
 
                 distances[ttd1_idx][ttd2_idx] = distance
