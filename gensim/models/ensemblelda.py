@@ -205,6 +205,7 @@ class EnsembleLda():
         # parameters, stop here and don't train.
         if num_models <= 0:
             return
+
         if gensim_kw_args.get("corpus") is None:
             return
         if gensim_kw_args.get("iterations", 0) <= 0:
