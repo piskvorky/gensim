@@ -4,9 +4,10 @@
 # Authors: Tobias B <github.com/sezanzeb>, Alex Loosley <aloosley@alumni.brown.edu>,
 # Stephan Sahm <stephan.sahm@gmx.de>, Alex Salles <alex.salles@gmail.com>, Data Reply Munich
 
-"""Ensemble Latent Dirichlet Allocation (LDA), a method of ensembling multiple gensim topic models. They are clustered
-using DBSCAN, for which nearby topic mixtures - which are mixtures of two or more true topics and therefore undesired -
-are being used to support topics in becoming cores, but not vice versa.
+"""Ensemble Latent Dirichlet Allocation (eLDA), a method of training a topic model ensemble and extracting
+reliable topics that are consistently learned accross the ensemble.  eLDA has the added benefit that the user
+does not need to know the exact number of topics the topic model should extract ahead of time.  For more details
+read our paper (https://www.hip70890b.de/machine_learning/ensemble_LDA/).
 
 Usage examples
 --------------
@@ -93,10 +94,10 @@ logger = logging.getLogger(__name__)
 
 
 class EnsembleLda():
-    """Ensemble Latent Dirichlet Allocation (LDA), a method of ensembling multiple gensim topic models.
-    They are clustered using a variation of DBSCAN, for which nearby topic mixtures - which are mixtures
-    of two or more true topics and therefore undesired - are being used to support topics in becoming
-    cores, but not vice versa.
+    """Ensemble Latent Dirichlet Allocation (eLDA), a method of training a topic model ensemble and extracting
+    reliable topics that are consistently learned accross the ensemble.  eLDA has the added benefit that the user
+    does not need to know the exact number of topics the topic model should extract ahead of time.  For more details
+    read our paper (https://www.hip70890b.de/machine_learning/ensemble_LDA/).
 
     """
     def __init__(self, topic_model_kind="lda", num_models=3,
@@ -123,7 +124,7 @@ class EnsembleLda():
         min_cores : int, optional
             Minimum cores a cluster of topics has to contain so that it is recognized as stable topic.
         epsilon : float, optional
-            Defaults to 0.1. Epsilon for the cbdbscan clustering that generates the stable topics.
+            Defaults to 0.1. Epsilon for the CBDBSCAN clustering that generates the stable topics.
         ensemble_workers : int, optional
             Spawns that many processes and distributes the models from the ensemble to those as evenly as possible.
             num_models should be a multiple of ensemble_workers.
@@ -139,10 +140,21 @@ class EnsembleLda():
             If False, any topic term matrix can be suplied to add_model.
         min_samples : int, optional
             Required int of nearby topics for a topic to be considered as 'core' in the CBDBSCAN clustering.
-        masking_method : {'mass', 'rank}, optional
-            One of "mass" (default) or "rank" (faster).
+        masking_method : {'mass', 'rank'}, optional
+            Choose one of "mass" (default) or "rank" (percentile, faster).
+
+            For clustering, distances between topic-term distributions are asymmetric.  In particular, the distance
+            (technically a divergence) from distribution A to B is more of a measure of if A is contained in B.  At a
+            high level, this involves using distribution A to mask distribution B and then calculating the cosine
+            distance between the two.  The masking can be done in two ways:
+                mass: forms mask by taking the top ranked terms until their cumulative mass reaches the
+                    `masking_threshold`
+                rank: forms mask by taking the top ranked terms (by mass) until the `masking_threshold` is reached.
+                    For example, a ranking threshold of 0.11 means the top 0.11 terms by weight are used to form a mask.
         masking_threshold : float, optional
-            Default: None, which uses 0.11 for masking_method "rank", and 0.95 for "mass".
+            Default: None, which uses 0.95 for "mass", and 0.11 for masking_method "rank".  In general, too small a mask
+            threshold leads to inaccurate calculations (no signal) and too big a mask leads to noisy distance
+            calculations.  Defaults are often a good sweet spot for this hyperparameter.
         distance_workers : int, optional
             When distance_workers is None, it defaults to os.cpu_count() for maximum performance. Default is 1, which
             is not multiprocessed. Set to > 1 to enable multiprocessing.
@@ -639,7 +651,7 @@ class EnsembleLda():
             pipe.close()
 
     def _asymmetric_distance_matrix_worker(self, worker_id, ttdas_sent, n_ttdas, pipe, threshold, method):
-        """ worker, that computes the distance to all other nodes
+        """ Worker that computes the distance to all other nodes
         from a chunk of nodes. https://stackoverflow.com/a/1743350
         """
 
@@ -836,16 +848,8 @@ class EnsembleLda():
 
                 distances[ttd1_idx][ttd2_idx] = distance
 
-        avg_mask_size = avg_mask_size / ttda1.shape[0] / ttda1.shape[1]
-        percent = round(100 * avg_mask_size, 1)
-        if avg_mask_size > 0.75:
-            # if the masks covered more than 75% of tokens on average,
-            # print a warning. info otherwise.
-            # The default mass setting of 0.95 makes uniform true masks on the opinosis corpus.
-            logger.warning('The given threshold of {} covered on average '
-                '{}% of tokens, which might be too much'.format(threshold, percent))
-        else:
-            logger.info('The given threshold of {} covered on average {}% of tokens'.format(threshold, percent))
+        percent = round(100 * avg_mask_size / ttda1.shape[0] / ttda1.shape[1], 1)
+        logger.info('The given threshold of {} covered on average {}% of tokens'.format(threshold, percent))
 
         return distances
 
