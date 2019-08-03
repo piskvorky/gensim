@@ -238,6 +238,11 @@ sphinx_gallery_conf = {
         'repo': 'gensim',
         'branch': 'numfocus',
         'binderhub_url': 'https://mybinder.org',
+        #
+        # This refers to the requirements.txt file in the root of the
+        # repository.  This is where binder will look when setting up the
+        # virtual env.
+        #
         'dependencies': 'requirements.txt',
     }
 }
