@@ -341,7 +341,7 @@ class HashDictionary(utils.SaveLoad, dict):
 
         """
         logger.info("saving %s mapping to %s" % (self, fname))
-        with utils.smart_open(fname, 'wb') as fout:
+        with utils.open(fname, 'wb') as fout:
             for tokenid in self.keys():
                 words = sorted(self[tokenid])
                 if words:

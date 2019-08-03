@@ -236,7 +236,7 @@ There exist several file formats for serializing a Vector Space corpus (~sequenc
 documents are read from (resp. stored to) disk in a lazy fashion, one document at
 a time, without the whole corpus being read into main memory at once.
 
-One of the more notable file formats is the `Market Matrix format <http://math.nist.gov/MatrixMarket/formats.html>`_.
+One of the more notable file formats is the `Matrix Market format <http://math.nist.gov/MatrixMarket/formats.html>`_.
 To save a corpus in the Matrix Market format:
 
 .. sourcecode:: pycon

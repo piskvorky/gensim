@@ -59,7 +59,6 @@ from gensim import utils
 from gensim.models.keyedvectors import KeyedVectors
 from gensim.scripts.glove2word2vec import glove2word2vec
 
-from smart_open import smart_open
 from shutil import copyfile, rmtree
 
 
@@ -174,19 +173,19 @@ class Wordrank(KeyedVectors):
 
         logger.info("Prepare training data (%s) using glove code", ", ".join(input_fnames))
         for command, input_fname, output_fname in zip(commands, input_fnames, output_fnames):
-            with smart_open(input_fname, 'rb') as r:
-                with smart_open(output_fname, 'wb') as w:
+            with utils.open(input_fname, 'rb') as r:
+                with utils.open(output_fname, 'wb') as w:
                     utils.check_output(w, args=command, stdin=r)
 
         logger.info("Deleting frequencies from vocab file")
-        with smart_open(vocab_file, 'wb') as w:
+        with utils.open(vocab_file, 'wb') as w:
             utils.check_output(w, args=cmd_del_vocab_freq)
 
-        with smart_open(vocab_file, 'rb') as f:
+        with utils.open(vocab_file, 'rb') as f:
             numwords = sum(1 for _ in f)
-        with smart_open(cooccurrence_shuf_file, 'rb') as f:
+        with utils.open(cooccurrence_shuf_file, 'rb') as f:
             numlines = sum(1 for _ in f)
-        with smart_open(meta_file, 'wb') as f:
+        with utils.open(meta_file, 'wb') as f:
             meta_info = "{0} {1}\n{2} {3}\n{4} {5}".format(
                 numwords, numwords, numlines, cooccurrence_shuf_file.split('/')[-1],
                 numwords, vocab_file.split('/')[-1]
@@ -284,7 +283,7 @@ class Wordrank(KeyedVectors):
         self.index2word = []
 
         # sort embeddings using frequency sorted vocab file in wordrank
-        with utils.smart_open(vocab_file) as fin:
+        with utils.open(vocab_file, 'rb') as fin:
             for index, line in enumerate(fin):
                 word, count = utils.to_unicode(line).strip(), vocab_size - index
                 # store word with it's count in a dict

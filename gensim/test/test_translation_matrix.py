@@ -77,7 +77,7 @@ class TestTranslationMatrix(unittest.TestCase):
 def read_sentiment_docs(filename):
     sentiment_document = namedtuple('SentimentDocument', 'words tags')
     alldocs = []  # will hold all docs in original order
-    with utils.smart_open(filename, encoding='utf-8') as alldata:
+    with utils.open(filename, mode='rb', encoding='utf-8') as alldata:
         for line_no, line in enumerate(alldata):
             tokens = utils.to_unicode(line).split()
             words = tokens

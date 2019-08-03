@@ -43,16 +43,9 @@ on Wikipedia.
 Support
 ------------
 
-Please raise potential bugs on [github](https://github.com/RaRe-Technologies/gensim/blob/develop/CONTRIBUTING.md). See [Contribution Guide](https://github.com/RaRe-Technologies/gensim/blob/develop/CONTRIBUTING.md) prior to raising an issue.
+Ask open-ended or research questions on the [Gensim Mailing List](https://groups.google.com/forum/#!forum/gensim).
 
-If you have an open-ended or a research question:
-
--   [Mailing List] is the best option
--   [Gitter chat room] is also available
-
-  [Mailing List]: https://groups.google.com/forum/#!forum/gensim
-  [Gitter chat room]: https://gitter.im/RaRe-Technologies/gensim
-
+Raise bugs on [Github](https://github.com/RaRe-Technologies/gensim/blob/develop/CONTRIBUTING.md) but **make sure you follow the [issue template](https://github.com/RaRe-Technologies/gensim/blob/develop/ISSUE_TEMPLATE.md)**. Issues that are not bugs or fail to follow the issue template will be closed without inspection.
 
 Installation
 ------------

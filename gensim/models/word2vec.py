@@ -1077,7 +1077,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
         """
         overlap_count = 0
         logger.info("loading projection weights from %s", fname)
-        with utils.smart_open(fname) as fin:
+        with utils.open(fname, 'rb') as fin:
             header = utils.to_unicode(fin.readline(), encoding=encoding)
             vocab_size, vector_size = (int(x) for x in header.split())  # throws for invalid file format
             if not vector_size == self.wv.vector_size:
@@ -1354,16 +1354,17 @@ class BrownCorpus(object):
             fname = os.path.join(self.dirname, fname)
             if not os.path.isfile(fname):
                 continue
-            for line in utils.smart_open(fname):
-                line = utils.to_unicode(line)
-                # each file line is a single sentence in the Brown corpus
-                # each token is WORD/POS_TAG
-                token_tags = [t.split('/') for t in line.split() if len(t.split('/')) == 2]
-                # ignore words with non-alphabetic tags like ",", "!" etc (punctuation, weird stuff)
-                words = ["%s/%s" % (token.lower(), tag[:2]) for token, tag in token_tags if tag[:2].isalpha()]
-                if not words:  # don't bother sending out empty sentences
-                    continue
-                yield words
+            with utils.open(fname, 'rb') as fin:
+                for line in fin:
+                    line = utils.to_unicode(line)
+                    # each file line is a single sentence in the Brown corpus
+                    # each token is WORD/POS_TAG
+                    token_tags = [t.split('/') for t in line.split() if len(t.split('/')) == 2]
+                    # ignore words with non-alphabetic tags like ",", "!" etc (punctuation, weird stuff)
+                    words = ["%s/%s" % (token.lower(), tag[:2]) for token, tag in token_tags if tag[:2].isalpha()]
+                    if not words:  # don't bother sending out empty sentences
+                        continue
+                    yield words
 
 
 class Text8Corpus(object):
@@ -1376,7 +1377,7 @@ class Text8Corpus(object):
         # the entire corpus is one gigantic line -- there are no sentence marks at all
         # so just split the sequence of tokens arbitrarily: 1 sentence = 1000 tokens
         sentence, rest = [], b''
-        with utils.smart_open(self.fname) as fin:
+        with utils.open(self.fname, 'rb') as fin:
             while True:
                 text = rest + fin.read(8192)  # avoid loading the entire file (=1 line) into RAM
                 if text == rest:  # EOF
@@ -1437,7 +1438,7 @@ class LineSentence(object):
                     i += self.max_sentence_length
         except AttributeError:
             # If it didn't work like a file, use it as a string filename
-            with utils.smart_open(self.source) as fin:
+            with utils.open(self.source, 'rb') as fin:
                 for line in itertools.islice(fin, self.limit):
                     line = utils.to_unicode(line).split()
                     i = 0
@@ -1493,7 +1494,7 @@ class PathLineSentences(object):
         """iterate through the files"""
         for file_name in self.input_files:
             logger.info('reading file %s', file_name)
-            with utils.smart_open(file_name) as fin:
+            with utils.open(file_name, 'rb') as fin:
                 for line in itertools.islice(fin, self.limit):
                     line = utils.to_unicode(line).split()
                     i = 0
@@ -1775,33 +1776,7 @@ class Word2VecVocab(utils.SaveLoad):
         Called internally from :meth:`~gensim.models.word2vec.Word2VecVocab.build_vocab`.
 
         """
-        logger.info("constructing a huffman tree from %i words", len(wv.vocab))
-
-        # build the huffman tree
-        heap = list(itervalues(wv.vocab))
-        heapq.heapify(heap)
-        for i in range(len(wv.vocab) - 1):
-            min1, min2 = heapq.heappop(heap), heapq.heappop(heap)
-            heapq.heappush(
-                heap, Vocab(count=min1.count + min2.count, index=i + len(wv.vocab), left=min1, right=min2)
-            )
-
-        # recurse over the tree, assigning a binary code to each vocabulary word
-        if heap:
-            max_depth, stack = 0, [(heap[0], [], [])]
-            while stack:
-                node, codes, points = stack.pop()
-                if node.index < len(wv.vocab):
-                    # leaf node => store its path from the root
-                    node.code, node.point = codes, points
-                    max_depth = max(len(codes), max_depth)
-                else:
-                    # inner node => continue recursion
-                    points = array(list(points) + [node.index - len(wv.vocab)], dtype=uint32)
-                    stack.append((node.left, array(list(codes) + [0], dtype=uint8), points))
-                    stack.append((node.right, array(list(codes) + [1], dtype=uint8), points))
-
-            logger.info("built huffman tree with maximum node depth %i", max_depth)
+        _assign_binary_codes(wv.vocab)
 
     def make_cum_table(self, wv, domain=2**31 - 1):
         """Create a cumulative-distribution table using stored vocabulary word counts for
@@ -1826,6 +1801,65 @@ class Word2VecVocab(utils.SaveLoad):
             self.cum_table[word_index] = round(cumulative / train_words_pow * domain)
         if len(self.cum_table) > 0:
             assert self.cum_table[-1] == domain
+
+
+def _build_heap(vocab):
+    heap = list(itervalues(vocab))
+    heapq.heapify(heap)
+    for i in range(len(vocab) - 1):
+        min1, min2 = heapq.heappop(heap), heapq.heappop(heap)
+        heapq.heappush(
+            heap, Vocab(count=min1.count + min2.count, index=i + len(vocab), left=min1, right=min2)
+        )
+    return heap
+
+
+def _assign_binary_codes(vocab):
+    """
+    Appends a binary code to each vocab term.
+
+    Parameters
+    ----------
+    vocab : dict
+        A dictionary of :class:`gensim.models.word2vec.Vocab` objects.
+
+    Notes
+    -----
+    Expects each term to have an .index attribute that contains the order in
+    which the term was added to the vocabulary.  E.g. term.index == 0 means the
+    term was added to the vocab first.
+
+    Sets the .code and .point attributes of each node.
+    Each code is a numpy.array containing 0s and 1s.
+    Each point is an integer.
+
+    """
+    logger.info("constructing a huffman tree from %i words", len(vocab))
+
+    heap = _build_heap(vocab)
+    if not heap:
+        #
+        # TODO: how can we end up with an empty heap?
+        #
+        logger.info("built huffman tree with maximum node depth 0")
+        return
+
+    # recurse over the tree, assigning a binary code to each vocabulary word
+    max_depth = 0
+    stack = [(heap[0], [], [])]
+    while stack:
+        node, codes, points = stack.pop()
+        if node.index < len(vocab):
+            # leaf node => store its path from the root
+            node.code, node.point = codes, points
+            max_depth = max(len(codes), max_depth)
+        else:
+            # inner node => continue recursion
+            points = array(list(points) + [node.index - len(vocab)], dtype=uint32)
+            stack.append((node.left, array(list(codes) + [0], dtype=uint8), points))
+            stack.append((node.right, array(list(codes) + [1], dtype=uint8), points))
+
+    logger.info("built huffman tree with maximum node depth %i", max_depth)
 
 
 class Word2VecTrainables(utils.SaveLoad):
