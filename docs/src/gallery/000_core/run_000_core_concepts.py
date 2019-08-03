@@ -9,6 +9,8 @@ This tutorial introduces Documents, Corpora, Vectors and Models: the basic conce
 
 """
 
+import pprint
+
 ###############################################################################
 # The core concepts of ``gensim`` are:
 #
@@ -109,7 +111,7 @@ for text in texts:
 
 # Only keep words that appear more than once
 processed_corpus = [[token for token in text if frequency[token] > 1] for text in texts]
-print(processed_corpus)
+pprint.pprint(processed_corpus)
 
 ###############################################################################
 # Before proceeding, we want to associate each word in the corpus with a unique
@@ -183,7 +185,7 @@ print(dictionary)
 # bag-of-words model. We can use the dictionary to turn tokenized documents
 # into these 12-dimensional vectors. We can see what these IDs correspond to:
 #
-print(dictionary.token2id)
+pprint.pprint(dictionary.token2id)
 
 ###############################################################################
 # For example, suppose we wanted to vectorize the phrase "Human computer
@@ -211,13 +213,28 @@ print(new_vec)
 # We can convert our entire original corpus to a list of vectors:
 #
 bow_corpus = [dictionary.doc2bow(text) for text in processed_corpus]
-print(bow_corpus)
+pprint.pprint(bow_corpus)
 
 ###############################################################################
 # Note that while this list lives entirely in memory, in most applications you
 # will want a more scalable solution. Luckily, ``gensim`` allows you to use any
 # iterator that returns a single document vector at a time. See the
 # documentation for more details.
+#
+# .. Important::
+#   The distinction between a document and a vector is that the former is text,
+#   and the latter is a mathematically convenient representation of the text.
+#   Sometimes, people will use the terms interchangeably: for example, given
+#   some arbitrary document ``D``, instead of saying "the vector that
+#   corresponds to document ``D``", they will just say "the vector ``D``" or
+#   the "document ``D``".  This achieves brevity at the cost of ambiguity.
+#
+#   As long as you remember that documents exist in document space, and that
+#   vectors exist in vector space, the above ambiguity is acceptable.
+#
+# .. Important::
+#   Depending on how the representation was obtained, two different documents
+#   may have the same vector representations.
 #
 # .. _core_concepts_model:
 #
@@ -264,6 +281,29 @@ print(tfidf[dictionary.doc2bow(words)])
 # ``gensim`` offers a number of different models/transformations.
 # For more, see :ref:`tut2`.
 #
+# Once you've created the model, you can do all sorts of cool stuff with it.
+# For example, to transform the whole corpus via TfIdf and index it, in
+# preparation for similarity queries:
+#
+from gensim import similarities
+
+index = similarities.SparseMatrixSimilarity(tfidf[bow_corpus], num_features=12)
+
+###############################################################################
+# and to query the similarity of our query document ``query_document`` against every document in the corpus:
+query_document =  'system engineering'.split()
+query_bow = dictionary.doc2bow(query_document)
+sims = index[tfidf[query_bow]]
+print(list(enumerate(sims)))
+
+###############################################################################
+# How to read this output?
+# Document 3 has a similarity score of 0.72=72%, document 2 has a similarity score of 41% etc.
+# We can make this slightly more readable by sorting:
+
+for document_number, score in sorted(enumerate(sims), key=lambda x: x[1], reverse=True):
+    print(document_number, score)
+#
 # Summary
 # -------
 #
@@ -273,4 +313,10 @@ print(tfidf[dictionary.doc2bow(words)])
 # 2. :ref:`core_concepts_corpus`: a collection of documents.
 # 3. :ref:`core_concepts_vector`: a mathematically convenient representation of a document.
 # 4. :ref:`core_concepts_model`: an algorithm for transforming vectors from one representation to another.
+#
+# We saw these concepts in action.
+# First, we started with a corpus of documents.
+# Next, we transformed these documents to a vector space representation.
+# After that, we created a model that transformed our original vector representation to TfIdf.
+# Finally, we used our model to calculate the similarity between some query document and all documents in the corpus.
 #
