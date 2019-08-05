@@ -10,6 +10,8 @@ Demonstrates how you can compare a model with itself and other models, and why y
 """
 
 # sphinx_gallery_thumbnail_number = 2
+import logging
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 ###############################################################################
 #

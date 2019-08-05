@@ -6,7 +6,7 @@ Similarity Queries
 
 Demonstrates querying a corpus for similar documents.
 
-Expands on the method introduced in :ref:`intro_tutorial`.
+Expands on the method introduced in :ref:`core_concepts_py`.
 
 """
 

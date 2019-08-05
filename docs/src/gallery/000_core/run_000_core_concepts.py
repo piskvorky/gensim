@@ -303,7 +303,8 @@ print(list(enumerate(sims)))
 
 for document_number, score in sorted(enumerate(sims), key=lambda x: x[1], reverse=True):
     print(document_number, score)
-#
+
+###############################################################################
 # Summary
 # -------
 #
