@@ -70,8 +70,34 @@ print(model.most_similar('tree'))
 
 
 import json
-data_list = api.info()
-print(json.dumps(data_list, indent=4))
+info = api.info()
+print(json.dumps(info, indent=4))
+
+###############################################################################
+# There are two types of data: corpora and models.
+print(info.keys())
+
+###############################################################################
+# Let's have a look at the available corpora:
+for corpus_name, corpus_data in sorted(info['corpora'].items()):
+    print(
+        '%s (%d records): %s' % (
+            corpus_name,
+            corpus_data.get('num_records', -1),
+            corpus_data['description'][:40] + '...',
+        )
+    )
+
+###############################################################################
+# ... and the same for models:
+for model_name, model_data in sorted(info['models'].items()):
+    print(
+        '%s (%d records): %s' % (
+            model_name,
+            model_data.get('num_records', -1),
+            model_data['description'][:40] + '...',
+        )
+    )
 
 ###############################################################################
 #
