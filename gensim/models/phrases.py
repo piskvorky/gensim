@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """Automatically detect common phrases -- aka multi-word expressions, word n-gram collocations -- from a stream of sentences.
@@ -30,22 +31,28 @@ Examples
     >>> # Train a toy bigram model.
     >>> phrases = Phrases(sentences, min_count=1, threshold=1)
     >>> # Apply the trained phrases model to a new, unseen sentence.
-    >>> phrases[[u'trees', u'graph', u'minors']]  
-    [u'trees_graph', u'minors']
+    >>> phrases[['trees', 'graph', 'minors']]  
+    ['trees_graph', 'minors']
     >>> # The toy model considered "trees graph" a single phrase => joined the two
     >>> # tokens into a single token, `trees_graph`.
     >>>
     >>> # Update the model with two new sentences on the fly.
     >>> phrases.add_vocab([["hello", "world"], ["meow"]])  
     >>>
-    >>> # Export the trained model = use less RAM, faster processing. Model updating no longer possible.
+    >>> # Export the trained model = use less RAM, faster processing. Model updates no longer possible.
     >>> bigram = Phraser(phrases)
-    >>> bigram[[u'trees', u'graph', u'minors']]  # apply the exported model to a sentence
-    [u'trees_graph', u'minors']
+    >>> bigram[['trees', 'graph', 'minors']]  # apply the exported model to a sentence
+    ['trees_graph', 'minors']
     >>>
-    >>> # Apply exported model to each sentence of a corpus:
+    >>> # Apply the exported model to each sentence of a corpus:
     >>> for sent in bigram[sentences]:
     ...     pass
+    >>>
+    >>> # Save / load an exported collocation model.
+    >>> bigram.save("/tmp/my_bigram_model.pkl")
+    >>> bigram_reloaded = Phraser.load("/tmp/my_bigram_model.pkl")
+    >>> bigram_reloaded[['trees', 'graph', 'minors']]  # apply the exported model to a sentence
+    ['trees_graph', 'minors']
 
 """
 
