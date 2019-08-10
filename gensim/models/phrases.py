@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""Automatically detect common phrases -- multi-word expressions / word n-grams -- from a stream of sentences.
+"""Automatically detect common phrases -- aka multi-word expressions, word n-gram collocations -- from a stream of sentences.
 
 Inspired by:
 
@@ -20,18 +20,31 @@ Examples
     >>> from gensim.models.word2vec import Text8Corpus
     >>> from gensim.models.phrases import Phrases, Phraser
     >>>
+    >>> # Load training data.
     >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-    >>> phrases = Phrases(sentences, min_count=1, threshold=1)  # train model
-    >>> phrases[[u'trees', u'graph', u'minors']]  # apply model to sentence
+    >>> # The training corpus must be a sequence (stream, generator) of sentences,
+    >>> # with each sentence a list of tokens:
+    >>> print(list(sentences)[0][:10])
+    ['computer', 'human', 'interface', 'computer', 'response', 'survey', 'system', 'time', 'user', 'interface']
+    >>>
+    >>> # Train a toy bigram model.
+    >>> phrases = Phrases(sentences, min_count=1, threshold=1)
+    >>> # Apply the trained phrases model to a new, unseen sentence.
+    >>> phrases[[u'trees', u'graph', u'minors']]  
+    [u'trees_graph', u'minors']
+    >>> # The toy model considered "trees graph" a single phrase => joined the two
+    >>> # tokens into a single token, `trees_graph`.
+    >>>
+    >>> # Update the model with two new sentences on the fly.
+    >>> phrases.add_vocab([["hello", "world"], ["meow"]])  
+    >>>
+    >>> # Export the trained model = use less RAM, faster processing. Model updating no longer possible.
+    >>> bigram = Phraser(phrases)
+    >>> bigram[[u'trees', u'graph', u'minors']]  # apply the exported model to a sentence
     [u'trees_graph', u'minors']
     >>>
-    >>> phrases.add_vocab([["hello", "world"], ["meow"]])  # update model with new sentences
-    >>>
-    >>> bigram = Phraser(phrases)  # construct faster model (this is only an wrapper)
-    >>> bigram[[u'trees', u'graph', u'minors']]  # apply model to sentence
-    [u'trees_graph', u'minors']
-    >>>
-    >>> for sent in bigram[sentences]:  # apply model to text corpus
+    >>> # Apply exported model to each sentence of a corpus:
+    >>> for sent in bigram[sentences]:
     ...     pass
 
 """
