@@ -3,7 +3,9 @@
 # Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""Automatically detect common phrases -- aka multi-word expressions, word n-gram collocations -- from a stream of sentences.
+"""
+Automatically detect common phrases -- aka multi-word expressions, word n-gram collocations -- from
+a stream of sentences.
 
 Inspired by:
 
