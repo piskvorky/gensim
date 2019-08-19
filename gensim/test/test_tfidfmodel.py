@@ -442,9 +442,7 @@ class TestTfidfModel(unittest.TestCase):
         for a in attrs:
             self.assertTrue(hasattr(model, a))
         # __getitem__: assumes smartirs attr is present
-        docs = [corpus[1], corpus[2]]
-        transformed_docs = [model[docs[0]], model[docs[1]]]
-        self.assertIs(len(transformed_docs), 2)
+        self.assertEqual(len(model[corpus]), len(corpus))
 
 
 if __name__ == '__main__':
