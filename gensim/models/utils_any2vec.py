@@ -335,7 +335,7 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
         counts = {}
         with utils.open(fvocab, 'rb') as fin:
             for line in fin:
-                word, count = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
+                word, count = utils.to_unicode(line, errors=unicode_errors).strip().split()
                 counts[word] = int(count)
 
     logger.info("loading projection weights from %s", fname)
