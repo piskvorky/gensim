@@ -376,28 +376,28 @@ class Word2VecKeyedVectorsTest(unittest.TestCase):
         """Test loading model and voacab files which have decoding errors: replace mode"""
         model = gensim.models.KeyedVectors.load_word2vec_format(
             self.model_path, fvocab=self.vocab_path, binary=False, unicode_errors="replace")
-        self.assertEqual(model.vocab['ありがとう�'].count, 123)
-        self.assertEqual(model.vocab['どういたしまして�'].count, 789)
-        self.assertEqual(model.vocab['ありがとう�'].index, 0)
-        self.assertEqual(model.vocab['どういたしまして�'].index, 1)
+        self.assertEqual(model.vocab[u'ありがとう�'].count, 123)
+        self.assertEqual(model.vocab[u'どういたしまして�'].count, 789)
+        self.assertEqual(model.vocab[u'ありがとう�'].index, 0)
+        self.assertEqual(model.vocab[u'どういたしまして�'].index, 1)
         self.assertTrue(np.array_equal(
-            model.get_vector('ありがとう�'), np.array([.6, .6, .6], dtype=np.float32)))
+            model.get_vector(u'ありがとう�'), np.array([.6, .6, .6], dtype=np.float32)))
         self.assertTrue(np.array_equal(
-            model.get_vector('どういたしまして�'), np.array([.1, .2, .3], dtype=np.float32)))
+            model.get_vector(u'どういたしまして�'), np.array([.1, .2, .3], dtype=np.float32)))
 
     def test_load_model_and_vocab_file_ignore(self):
         """Test loading model and voacab files which have decoding errors: ignore mode"""
         model = gensim.models.KeyedVectors.load_word2vec_format(
             self.model_path, fvocab=self.vocab_path, binary=False, unicode_errors="ignore")
         print(model.vocab.keys())
-        self.assertEqual(model.vocab['ありがとう'].count, 123)
-        self.assertEqual(model.vocab['どういたしまして'].count, 789)
-        self.assertEqual(model.vocab['ありがとう'].index, 0)
-        self.assertEqual(model.vocab['どういたしまして'].index, 1)
+        self.assertEqual(model.vocab[u'ありがとう'].count, 123)
+        self.assertEqual(model.vocab[u'どういたしまして'].count, 789)
+        self.assertEqual(model.vocab[u'ありがとう'].index, 0)
+        self.assertEqual(model.vocab[u'どういたしまして'].index, 1)
         self.assertTrue(np.array_equal(
-            model.get_vector('ありがとう'), np.array([.6, .6, .6], dtype=np.float32)))
+            model.get_vector(u'ありがとう'), np.array([.6, .6, .6], dtype=np.float32)))
         self.assertTrue(np.array_equal(
-            model.get_vector('どういたしまして'), np.array([.1, .2, .3], dtype=np.float32)))
+            model.get_vector(u'どういたしまして'), np.array([.1, .2, .3], dtype=np.float32)))
 
 
 if __name__ == '__main__':
