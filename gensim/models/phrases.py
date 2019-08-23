@@ -33,7 +33,7 @@ Examples
     >>> # Train a toy bigram model.
     >>> phrases = Phrases(sentences, min_count=1, threshold=1)
     >>> # Apply the trained phrases model to a new, unseen sentence.
-    >>> phrases[['trees', 'graph', 'minors']]  
+    >>> phrases[['trees', 'graph', 'minors']]
     ['trees_graph', 'minors']
     >>> # The toy model considered "trees graph" a single phrase => joined the two
     >>> # tokens into a single token, `trees_graph`.
