@@ -39,7 +39,7 @@ Examples
     >>> # tokens into a single token, `trees_graph`.
     >>>
     >>> # Update the model with two new sentences on the fly.
-    >>> phrases.add_vocab([["hello", "world"], ["meow"]])  
+    >>> phrases.add_vocab([["hello", "world"], ["meow"]])
     >>>
     >>> # Export the trained model = use less RAM, faster processing. Model updates no longer possible.
     >>> bigram = Phraser(phrases)
