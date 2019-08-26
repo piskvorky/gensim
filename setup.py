@@ -265,6 +265,20 @@ if sys.version_info[:2] == (2, 7):
 else:
     win_testenv.append('scikit-learn')
 
+docs_testenv = linux_testenv + distributed_env + [
+    'sphinx',
+    'sphinxcontrib-napoleon',
+    'plotly',
+    'pattern <= 2.6',
+    'sphinxcontrib.programoutput',
+]
+
+#
+# Get Py2.7 docs to build, see https://github.com/RaRe-Technologies/gensim/pull/2552
+#
+if sys.version_info == (2, 7):
+    docs_testenv.insert(0, 'doctools==0.14')
+
 linux_testenv = win_testenv[:]
 
 if sys.version_info < (3, 7):
@@ -385,7 +399,7 @@ setup(
         'distributed': distributed_env,
         'test-win': win_testenv,
         'test': linux_testenv,
-        'docs': linux_testenv + distributed_env + ['sphinx', 'sphinxcontrib-napoleon', 'plotly', 'pattern <= 2.6', 'sphinxcontrib.programoutput'],
+        'docs': docs_testenv,
     },
 
     include_package_data=True,
