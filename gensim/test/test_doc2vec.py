@@ -190,7 +190,7 @@ class TestDoc2VecModel(unittest.TestCase):
         lines = ['line1\n', 'line2\n', 'line3\n', 'line4\n', 'line5\n']
         tmpf = get_tmpfile('gensim_doc2vec.tst')
 
-        with utils.smart_open(tmpf, 'wb', encoding='utf8') as fout:
+        with utils.open(tmpf, 'wb', encoding='utf8') as fout:
             for line in lines:
                 fout.write(utils.any2unicode(line))
 
@@ -224,7 +224,7 @@ class TestDoc2VecModel(unittest.TestCase):
         lines = ['line1\n', 'line2\n', 'line3\n', 'line4\n', 'line5\n']
         tmpf = get_tmpfile('gensim_doc2vec.tst')
 
-        with utils.smart_open(tmpf, 'wb', encoding='utf8') as fout:
+        with utils.open(tmpf, 'wb', encoding='utf8') as fout:
             for line in lines:
                 fout.write(utils.any2unicode(line))
 
@@ -257,7 +257,7 @@ class TestDoc2VecModel(unittest.TestCase):
         lines = ['line1\n', 'line2\n', 'line3\n', 'line4\n', 'line5\n']
         tmpf = get_tmpfile('gensim_doc2vec.tst')
 
-        with utils.smart_open(tmpf, 'wb', encoding='utf8') as fout:
+        with utils.open(tmpf, 'wb', encoding='utf8') as fout:
             for line in lines:
                 fout.write(utils.any2unicode(line))
 

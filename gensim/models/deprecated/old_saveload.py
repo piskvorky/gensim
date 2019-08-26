@@ -31,7 +31,7 @@ import scipy.sparse
 
 from six import iteritems
 
-from smart_open import smart_open
+from gensim import utils
 
 if sys.version_info[0] >= 3:
     unicode = str
@@ -367,8 +367,7 @@ def unpickle(fname):
         Python object loaded from `fname`.
 
     """
-    with smart_open(fname, 'rb') as f:
-        # Because of loading from S3 load can't be used (missing readline in smart_open)
+    with utils.open(fname, 'rb') as f:
         file_bytes = f.read()
         file_bytes = file_bytes.replace(b'gensim.models.word2vec', b'gensim.models.deprecated.word2vec')
         file_bytes = file_bytes.replace(b'gensim.models.keyedvectors', b'gensim.models.deprecated.keyedvectors')
@@ -395,5 +394,5 @@ def pickle(obj, fname, protocol=2):
         Pickle protocol number, default is 2 to support compatible across python 2.x and 3.x.
 
     """
-    with smart_open(fname, 'wb') as fout:  # 'b' for binary, needed on Windows
+    with utils.open(fname, 'wb') as fout:  # 'b' for binary, needed on Windows
         _pickle.dump(obj, fout, protocol=protocol)

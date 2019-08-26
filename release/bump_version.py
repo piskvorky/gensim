@@ -10,8 +10,10 @@ def bump(path, pattern, repl, check=True):
 
     new_contents = pattern.sub(repl, contents)
 
-    if check:
-        assert new_contents != contents
+    if check and new_contents == contents:
+        print('*' * 79)
+        print('WARNING: contents of %r unchanged after version bump' % path)
+        print('*' * 79)
 
     with open(path, 'w') as fout:
         fout.write(new_contents)

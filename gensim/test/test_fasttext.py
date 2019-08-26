@@ -12,8 +12,6 @@ import six
 
 import numpy as np
 
-import smart_open
-
 from gensim import utils
 from gensim.models.word2vec import LineSentence
 from gensim.models.fasttext import FastText as FT_gensim
@@ -995,7 +993,7 @@ class NativeTrainingContinuationTest(unittest.TestCase):
     def test_in_vocab(self):
         """Test for correct representation of in-vocab words."""
         native = load_native()
-        with smart_open.smart_open(datapath('toy-model.vec'), 'r', encoding='utf-8') as fin:
+        with utils.open(datapath('toy-model.vec'), 'r', encoding='utf-8') as fin:
             expected = dict(load_vec(fin))
 
         for word, expected_vector in expected.items():
@@ -1187,7 +1185,7 @@ class HashTest(unittest.TestCase):
         # ./fasttext skipgram -minCount 0 -bucket 100 -input crime-and-punishment.txt -output crime-and-punishment -dim 5  # noqa: E501
         #
         self.model = gensim.models.fasttext.load_facebook_model(datapath('crime-and-punishment.bin'))
-        with smart_open.smart_open(datapath('crime-and-punishment.vec'), 'r', encoding='utf-8') as fin:
+        with utils.open(datapath('crime-and-punishment.vec'), 'r', encoding='utf-8') as fin:
             self.expected = dict(load_vec(fin))
 
     def test_ascii(self):

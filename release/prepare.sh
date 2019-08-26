@@ -16,7 +16,7 @@ RELEASE=$1
 export RELEASE="$RELEASE"
 
 script_dir="$(dirname "${BASH_SOURCE[0]}")"
-root="$script_dir/.."
+root=$(cd "$script_dir/.." && pwd)
 cd "$script_dir"
 
 git fetch upstream
@@ -39,14 +39,19 @@ grep "$RELEASE" "$root/setup.py"
 grep "$RELEASE" "$root/docs/src/conf.py"
 grep "$RELEASE" "$root/gensim/__init__.py"
 
+set +e
 git diff | cat
 git commit -a -m "bumped version to $RELEASE"
+set -e
 
 echo "Now update CHANGELOG.md and include the PRs in this release."
 read -p "Press Enter to continue.  An editor window will open."
 python update_changelog.py "$previous_version" "$RELEASE"
 $EDITOR "$root/CHANGELOG.md"
+
+set +e
 git commit "$root/CHANGELOG.md" -m "updated CHANGELOG.md for version $RELEASE"
+set -e
 
 bash cython.sh "$RELEASE"
 

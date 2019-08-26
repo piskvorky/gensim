@@ -36,6 +36,8 @@ class Dictionary(utils.SaveLoad, Mapping):
         token -> tokenId.
     id2token : dict of (int, str)
         Reverse mapping for token2id, initialized in a lazy manner to save memory (not created until needed).
+    cfs : dict of (int, int)
+        Collection frequencies: token_id -> how many instances of this token are contained in the documents.
     dfs : dict of (int, int)
         Document frequencies: token_id -> how many documents contain this token.
     num_docs : int
@@ -74,6 +76,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         """
         self.token2id = {}
         self.id2token = {}
+        self.cfs = {}
         self.dfs = {}
 
         self.num_docs = 0
@@ -263,10 +266,10 @@ class Dictionary(utils.SaveLoad, Mapping):
             self.num_docs += 1
             self.num_pos += sum(itervalues(counter))
             self.num_nnz += len(result)
-            # increase document count for each unique token that appeared in the document
-            dfs = self.dfs
-            for tokenid in iterkeys(result):
-                dfs[tokenid] = dfs.get(tokenid, 0) + 1
+            # keep track of document and collection frequencies
+            for tokenid, freq in iteritems(result):
+                self.cfs[tokenid] = self.cfs.get(tokenid, 0) + freq
+                self.dfs[tokenid] = self.dfs.get(tokenid, 0) + 1
 
         # return tokenids, in ascending id order
         result = sorted(iteritems(result))
@@ -449,10 +452,12 @@ class Dictionary(utils.SaveLoad, Mapping):
         if bad_ids is not None:
             bad_ids = set(bad_ids)
             self.token2id = {token: tokenid for token, tokenid in iteritems(self.token2id) if tokenid not in bad_ids}
+            self.cfs = {tokenid: freq for tokenid, freq in iteritems(self.cfs) if tokenid not in bad_ids}
             self.dfs = {tokenid: freq for tokenid, freq in iteritems(self.dfs) if tokenid not in bad_ids}
         if good_ids is not None:
             good_ids = set(good_ids)
             self.token2id = {token: tokenid for token, tokenid in iteritems(self.token2id) if tokenid in good_ids}
+            self.cfs = {tokenid: freq for tokenid, freq in iteritems(self.cfs) if tokenid in good_ids}
             self.dfs = {tokenid: freq for tokenid, freq in iteritems(self.dfs) if tokenid in good_ids}
         self.compactify()
 
@@ -516,7 +521,7 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         """
         logger.info("saving dictionary mapping to %s", fname)
-        with utils.smart_open(fname, 'wb') as fout:
+        with utils.open(fname, 'wb') as fout:
             numdocs_line = "%d\n" % self.num_docs
             fout.write(utils.to_utf8(numdocs_line))
             if sort_by_word:
@@ -669,7 +674,7 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         """
         result = Dictionary()
-        with utils.smart_open(fname) as f:
+        with utils.open(fname, 'rb') as f:
             for lineno, line in enumerate(f):
                 line = utils.to_unicode(line)
                 if lineno == 0:

@@ -401,7 +401,7 @@ def preprocess_documents(docs):
 
 
 def read_file(path):
-    with utils.smart_open(path) as fin:
+    with utils.open(path, 'rb') as fin:
         return fin.read()
 
 

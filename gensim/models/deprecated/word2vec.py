@@ -1413,7 +1413,7 @@ class Word2Vec(SaveLoad):
         """
         overlap_count = 0
         logger.info("loading projection weights from %s", fname)
-        with utils.smart_open(fname) as fin:
+        with utils.open(fname, 'rb') as fin:
             header = utils.to_unicode(fin.readline(), encoding=encoding)
             vocab_size, vector_size = (int(x) for x in header.split())  # throws for invalid file format
             if not vector_size == self.vector_size:
@@ -1699,16 +1699,17 @@ class BrownCorpus(object):
             fname = os.path.join(self.dirname, fname)
             if not os.path.isfile(fname):
                 continue
-            for line in utils.smart_open(fname):
-                line = utils.to_unicode(line)
-                # each file line is a single sentence in the Brown corpus
-                # each token is WORD/POS_TAG
-                token_tags = [t.split('/') for t in line.split() if len(t.split('/')) == 2]
-                # ignore words with non-alphabetic tags like ",", "!" etc (punctuation, weird stuff)
-                words = ["%s/%s" % (token.lower(), tag[:2]) for token, tag in token_tags if tag[:2].isalpha()]
-                if not words:  # don't bother sending out empty sentences
-                    continue
-                yield words
+            with utils.open(fname, 'rb') as fin:
+                for line in fin:
+                    line = utils.to_unicode(line)
+                    # each file line is a single sentence in the Brown corpus
+                    # each token is WORD/POS_TAG
+                    token_tags = [t.split('/') for t in line.split() if len(t.split('/')) == 2]
+                    # ignore words with non-alphabetic tags like ",", "!" etc (punctuation, weird stuff)
+                    words = ["%s/%s" % (token.lower(), tag[:2]) for token, tag in token_tags if tag[:2].isalpha()]
+                    if not words:  # don't bother sending out empty sentences
+                        continue
+                    yield words
 
 
 class Text8Corpus(object):
@@ -1722,7 +1723,7 @@ class Text8Corpus(object):
         # the entire corpus is one gigantic line -- there are no sentence marks at all
         # so just split the sequence of tokens arbitrarily: 1 sentence = 1000 tokens
         sentence, rest = [], b''
-        with utils.smart_open(self.fname) as fin:
+        with utils.open(self.fname, 'rb') as fin:
             while True:
                 text = rest + fin.read(8192)  # avoid loading the entire file (=1 line) into RAM
                 if text == rest:  # EOF
@@ -1778,7 +1779,7 @@ class LineSentence(object):
                     i += self.max_sentence_length
         except AttributeError:
             # If it didn't work like a file, use it as a string filename
-            with utils.smart_open(self.source) as fin:
+            with utils.open(self.source, 'rb') as fin:
                 for line in itertools.islice(fin, self.limit):
                     line = utils.to_unicode(line).split()
                     i = 0
@@ -1833,7 +1834,7 @@ class PathLineSentences(object):
         """iterate through the files"""
         for file_name in self.input_files:
             logger.info('reading file %s', file_name)
-            with utils.smart_open(file_name) as fin:
+            with utils.open(file_name, 'rb') as fin:
                 for line in itertools.islice(fin, self.limit):
                     line = utils.to_unicode(line).split()
                     i = 0
