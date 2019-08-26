@@ -433,6 +433,10 @@ class TfidfModel(interfaces.TransformationABC):
             model.slope = 0.65
             logger.info('older version of %s loaded without slope arg', cls.__name__)
             logger.info('Setting slope to %s.', model.slope)
+        if not hasattr(model, 'smartirs'):
+            model.smartirs = None
+            logger.info('older version of %s loaded without smartirs arg', cls.__name__)
+            logger.info('Setting smartirs to %s.', model.smartirs)
         return model
 
     def __str__(self):
