@@ -875,6 +875,13 @@ class EnsembleLda():
         self.cluster_model = CBDBSCAN(eps=eps, min_samples=min_samples)
         self.cluster_model.fit(self.asymmetric_distance_matrix)
 
+    def _validate_core(core):
+        """Core is a dict of {is_core, valid_parents, labels} among others.
+        If not a core returns False. Only cores with the valid_parents as
+        its own label can be a valid core. Returns True if that is the case,
+        False otherwise"""
+        return core["is_core"] and (core["valid_parents"] == {core["label"]})
+
     def _generate_stable_topics(self, min_cores=None):
         """generates stable topics out of the clusters. This function is the last step that has to be done in the
         ensemble.
@@ -999,19 +1006,8 @@ class EnsembleLda():
         for topic in results:
             topic["valid_parents"] = {label for label in topic["parent_labels"] if label in valid_labels}
 
-        def validate_core(core):
-            """Core is a dict of {is_core, valid_parents, labels} among others.
-            If not a core returns False. Only cores with the valid_parents as
-            its own label can be a valid core. Returns True if that is the case,
-            False otherwise"""
-            if not core["is_core"]:
-                return False
-            else:
-                ret = core["valid_parents"] == {core["label"]}
-                return ret
-
         # keeping only VALID cores
-        valid_core_mask = np.vectorize(validate_core)(results)
+        valid_core_mask = np.vectorize(self._validate_core)(results)
         valid_topics = self.ttda[valid_core_mask]
         topic_labels = np.array([topic["label"] for topic in results])[valid_core_mask]
         unique_labels = np.unique(topic_labels)
