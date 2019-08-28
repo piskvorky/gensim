@@ -237,9 +237,9 @@ class EnsembleLda():
 
         if gensim_kw_args.get("corpus") is None:
             return
-        if gensim_kw_args.get("iterations", 0) <= 0:
+        if "iterations" in gensim_kw_args and gensim_kw_args["iterations"] <= 0:
             return
-        if gensim_kw_args.get("passes", 0) <= 0:
+        if "passes" in gensim_kw_args and gensim_kw_args["passes"] <= 0:
             return
 
         logger.info("Generating {} topic models...".format(num_models))
