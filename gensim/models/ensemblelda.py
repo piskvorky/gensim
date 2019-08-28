@@ -107,7 +107,7 @@ class EnsembleLda():
     does not need to know the exact number of topics the topic model should extract ahead of time [2].
 
     """
-    def __init__(self, topic_model_kind="lda", num_models=3,
+    def __init__(self, topic_model_class="lda", num_models=3,
                  min_cores=None,  # default value from _generate_stable_topics()
                  epsilon=0.1, ensemble_workers=1, memory_friendly_ttda=True,
                  min_samples=None, masking_method="mass", masking_threshold=None,
@@ -116,7 +116,7 @@ class EnsembleLda():
 
         Parameters
         ----------
-        topic_model_kind : str, topic model, optional
+        topic_model_class : str, topic model, optional
             Examples:
                 'ldamulticore' (recommended), 'lda' (default),
         ensemble_workers : number, optional
@@ -195,17 +195,17 @@ class EnsembleLda():
                 "input space dimensionality. Corpus should be provided using the "
                 "`corpus` keyword argument.")
 
-        if isinstance(topic_model_kind, ldamodel.LdaModel):
-            self.topic_model_kind = topic_model_kind
+        if type(topic_model_class) == type and issubclass(topic_model_class, ldamodel.LdaModel):
+            self.topic_model_class = topic_model_class
         else:
             kinds = {
                 "lda": ldamodel.LdaModel,
                 "ldamulticore": ldamulticore.LdaMulticore
             }
-            if topic_model_kind not in kinds:
+            if topic_model_class not in kinds:
                 raise ValueError(
-                    "topic_model_kind should be one of 'lda', 'ldamulticode' or a model inheriting from LdaModel")
-            self.topic_model_kind = kinds[topic_model_kind]
+                    "topic_model_class should be one of 'lda', 'ldamulticode' or a model inheriting from LdaModel")
+            self.topic_model_class = kinds[topic_model_class]
 
         self.num_models = num_models
         self.gensim_kw_args = gensim_kw_args
@@ -306,7 +306,7 @@ class EnsembleLda():
         params["iterations"] = 0  # no training
         params["passes"] = 0  # no training
 
-        classic_model_representation = self.topic_model_kind(**params)
+        classic_model_representation = self.topic_model_class(**params)
 
         # when eta was None, use what gensim generates as default eta for the following tasks:
         eta = classic_model_representation.eta
@@ -636,7 +636,7 @@ class EnsembleLda():
 
             kwArgs["random_state"] = random_states[i]
 
-            tm = self.topic_model_kind(**kwArgs)
+            tm = self.topic_model_class(**kwArgs)
 
             # adds the lambda (that is the unnormalized get_topics) to ttda, which is
             # a list of all those lambdas

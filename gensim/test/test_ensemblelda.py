@@ -199,7 +199,7 @@ class TestModel(unittest.TestCase):
         # 1. memory friendly
         eLDA_base = EnsembleLda(corpus=common_corpus, id2word=common_dictionary,
                                 num_topics=num_new_topics, passes=1, num_models=num_new_models,
-                                iterations=1, random_state=0, topic_model_kind=LdaMulticore,
+                                iterations=1, random_state=0, topic_model_class=LdaMulticore,
                                 workers=3, ensemble_workers=2)
 
         # 1.1 ttda
@@ -245,7 +245,7 @@ class TestModel(unittest.TestCase):
         # 2. memory unfriendly
         eLDA_base_mu = EnsembleLda(corpus=common_corpus, id2word=common_dictionary,
                                    num_topics=num_new_topics, passes=1, num_models=num_new_models,
-                                   iterations=1, random_state=0, topic_model_kind=LdaMulticore,
+                                   iterations=1, random_state=0, topic_model_class=LdaMulticore,
                                    workers=3, ensemble_workers=2, memory_friendly_ttda=False)
 
         # 2.1 a single ensemble
@@ -296,11 +296,11 @@ class TestModel(unittest.TestCase):
         # train
         new_eLDA = EnsembleLda(corpus=common_corpus, id2word=common_dictionary,
                                num_topics=num_new_topics, passes=10, num_models=num_new_models,
-                               iterations=30, random_state=1, topic_model_kind='ldamulticore',
+                               iterations=30, random_state=1, topic_model_class='ldamulticore',
                                distance_workers=4)
         new_eLDA_mu = EnsembleLda(corpus=common_corpus, id2word=common_dictionary,
                                   num_topics=num_new_topics, passes=10, num_models=num_new_models,
-                                  iterations=30, random_state=1, topic_model_kind='ldamulticore',
+                                  iterations=30, random_state=1, topic_model_class='ldamulticore',
                                   distance_workers=4, memory_friendly_ttda=False)
         # both should be similar
         np.testing.assert_allclose(new_eLDA.ttda, new_eLDA_mu.ttda, rtol=1e-05)
