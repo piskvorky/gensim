@@ -977,7 +977,7 @@ class EnsembleLda():
         """generates stable topics out of the clusters. This function is the last step that has to be done in the
         ensemble.
 
-        Stable topics can be retreived afterwards using get_topics().
+        Stable topics can be retrieved afterwards using get_topics().
 
         Parameters
         ----------
@@ -1077,7 +1077,7 @@ class EnsembleLda():
 
         Generates stable topics out of the clusters afterwards.
 
-        Finally, stable topics can be retreived using get_topics().
+        Finally, stable topics can be retrieved using get_topics().
 
         Parameters
         ----------
