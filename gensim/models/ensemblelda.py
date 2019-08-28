@@ -82,6 +82,13 @@ References
        Available from: https://www.hip70890b.de/machine_learning/ensemble_LDA/
        TODO country? thi? loosley, salles, stephan?
 
+Citation
+--------
+At the moment, there is no paper associated to ensemble LDA but we are working on publicly releasing Tobi Brigl's
+bachelor thesis on the topic.  In the meantime, please include a mention of us (Brigl, T.; Salles, A.; Loosley, A) and
+a link to this file (https://github.com/RaRe-Technologies/gensim/blob/develop/gensim/models/ensemblelda.py) if you use
+this work in a published or open-source project.
+
 """
 
 import logging
