@@ -1085,7 +1085,7 @@ class EnsembleLda():
             epsilon for the CBDBSCAN algorithm, having the same meaning as in classic DBSCAN clustering.
             default: 0.1
         min_samples : int
-            The minimum number of sampels in the neighborhood of a topic to be considered a core in CBDBSCAN.
+            The minimum number of samples in the neighborhood of a topic to be considered a core in CBDBSCAN.
             default: int(self.num_models / 2)
         min_cores : int
             how many cores a cluster has to have, to be treated as stable topic. That means, how many topics
@@ -1143,11 +1143,39 @@ class EnsembleLda():
 
 
 class CBDBSCAN():
-    """A Variation of the DBSCAN algorithm which limits how much a cluster is allowed to spread out and which works
-    on an asymmetric distance matrix.
+    """A Variation of the DBSCAN algorithm called Checkback DBSCAN (CBDBSCAN).  The algorithm works based on
+    DBSCAN-like parameters `eps` and `min_samples` that respectively define how far a "nearby" point is, and the
+    minimum number of nearby points needed to label a candidate datapoint a core of a cluster.
+    (See https://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html).
 
+    The algorithm works as follows:
+    1. (A)symmetric distance matrix provided at fit-time.
+    For the sake of example below, assume the there are only three topics (amatrix contains distances with dim 3x3),
+        T_1, T_2, and T_3:
+    2. Start by scanning a candidate topic
+        (e.g. T_1)
+    3. Check which topics are nearby using `self.eps` as a threshold and call them neighbours
+        (e.g. assume T_2, and T_3 are nearby and become neighbours)
+    4. If there are more neighbours than `self.min_samples`, the candidate topic becomes a core candidate for a cluster
+        (e.g. if `min_samples`<=2 then T_1 becomes the first core of a cluster)
+    5. CheckBack (CB) Step: Check if at least 25% of other cluster cores are nearby to core candidate
+        (e.g. at this stage in the example, the cluster is empty, so checkback passes)
+    6. Recursively scan the next nearby topic (e.g. scan T_2) - repeat step 2.-6.
+
+    The CB step has the effect that it enforces cluster compactness and allows the model to avoid creating clusters for
+    unreliable topics made of a composition of multiple reliable topics (something that occurs often LDA models that is
+    one cause of unreliable topics).
+
+    Parameters
+    ----------
+    eps : float
+        epsilon for the CBDBSCAN algorithm, having the same meaning as in classic DBSCAN clustering.
+        default: 0.1
+    min_samples : int
+        The minimum number of samples in the neighborhood of a topic to be considered a core in CBDBSCAN.
     """
-    def __init__(self, eps=0.1, min_samples=4):
+
+    def __init__(self, eps, min_samples):
         self.eps = eps
         self.min_samples = min_samples
 
@@ -1162,30 +1190,34 @@ class CBDBSCAN():
             "label": None
         } for _ in range(len(amatrix))]
 
-        tmp_amatrix = amatrix.copy()
+        amatrix_copy = amatrix.copy()
 
         # to avoid problem about comparing the topic with itself
-        np.fill_diagonal(tmp_amatrix, 1)
+        np.fill_diagonal(amatrix_copy, 1)
 
-        min_distance_per_topic = [(distance, index) for index, distance in enumerate(tmp_amatrix.min(axis=1))]
+        min_distance_per_topic = [(distance, index) for index, distance in enumerate(amatrix_copy.min(axis=1))]
         min_distance_per_topic_sorted = sorted(min_distance_per_topic, key=lambda x: x)
         ordered_min_similarity = [index for distance, index in min_distance_per_topic_sorted]
 
-        num_topics = len(amatrix)
-
         def scan_topic(topic_index, parent_id=None, current_label=None, parent_neighbors=None):
-            # count how many neighbors
-            # check which indices (arange 0 to num_topics) is closer than eps
-            neighbors = np.arange(num_topics)[tmp_amatrix[topic_index] < self.eps]
-            num_samples = len(neighbors)
+            # count how many neighbor_indices
+            # check which indices is closer than eps
+            neighbouring_topic_indices = np.array(
+                [
+                    candidate_topic_index
+                    for candidate_topic_index, is_neighbour in enumerate(amatrix_copy[topic_index] < self.eps)
+                    if is_neighbour
+                ]
+            )
+            num_neighbouring_topics = len(neighbouring_topic_indices)
 
-            # If the number of neighbors of a topic is large enough,
+            # If the number of neighbor_indices of a topic is large enough,
             # it is considered a core.
-            # This also takes neighbors that already are identified as core in count.
-            if num_samples >= self.min_samples:
+            # This also takes neighbor_indices that already are identified as core in count.
+            if num_neighbouring_topics >= self.min_samples:
                 # This topic is a core!
                 results[topic_index]["is_core"] = True
-                results[topic_index]["num_samples"] = num_samples
+                results[topic_index]["num_samples"] = num_neighbouring_topics
 
                 # if current_label is none, then this is the first core
                 # of a new cluster (hence next_label is used)
@@ -1201,7 +1233,7 @@ class CBDBSCAN():
                     # Check the distance between the
                     # new core and the parent
 
-                    # parent neighbors is the list of neighbors of parent_id
+                    # parent neighbor_indices is the list of neighbor_indices of parent_id
                     # (the topic_index that called this function recursively)
                     all_members_of_current_cluster = list(parent_neighbors)
                     all_members_of_current_cluster.append(parent_id)
@@ -1213,7 +1245,7 @@ class CBDBSCAN():
                     all_members_of_current_cluster_ix = np.ix_([topic_index], all_members_of_current_cluster)
                     # use the result of the previous step to index the matrix and see if those distances
                     # are smaller then epsilon. relations_to_the_cluster is a boolean array, True for close elements
-                    relations_to_the_cluster = tmp_amatrix[all_members_of_current_cluster_ix] < self.eps
+                    relations_to_the_cluster = amatrix_copy[all_members_of_current_cluster_ix] < self.eps
 
                     # if less than 25% of the elements are close, then the topic index in question is not a
                     # core of the current_label, but rather the core of a new cluster
@@ -1224,18 +1256,20 @@ class CBDBSCAN():
 
                 results[topic_index]["label"] = current_label
 
-                for neighbor in neighbors:
-                    if results[neighbor]["label"] is None:
-                        ordered_min_similarity.remove(neighbor)
+                for neighbouring_topic_index in neighbouring_topic_indices:
+
+                    if results[neighbouring_topic_index]["label"] is None:
+                        ordered_min_similarity.remove(neighbouring_topic_index)
                         # try to extend the cluster into the direction
                         # of the neighbor
                         scan_topic(
-                            neighbor, parent_id=topic_index,
+                            neighbouring_topic_index, parent_id=topic_index,
                             current_label=current_label,
-                            parent_neighbors=neighbors)
+                            parent_neighbors=neighbouring_topic_indices
+                        )
 
-                    results[neighbor]["parent_ids"].add(topic_index)
-                    results[neighbor]["parent_labels"].add(current_label)
+                    results[neighbouring_topic_index]["parent_ids"].add(topic_index)
+                    results[neighbouring_topic_index]["parent_labels"].add(current_label)
 
             else:
                 # this topic is not a core!
