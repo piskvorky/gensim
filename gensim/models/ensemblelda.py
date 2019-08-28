@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Authors: Tobias B <github.com/sezanzeb>, Alex Loosley <aloosley@alumni.brown.edu>,
+# Authors: Tobias Brigl <github.com/sezanzeb>, Alex Loosley <aloosley@alumni.brown.edu>,
 # Stephan Sahm <stephan.sahm@gmx.de>, Alex Salles <alex.salles@gmail.com>, Data Reply Munich
 
 """Ensemble Latent Dirichlet Allocation (eLDA), a method of training a topic model ensemble and extracting
@@ -882,18 +882,102 @@ class EnsembleLda():
         self.cluster_model = CBDBSCAN(eps=eps, min_samples=min_samples)
         self.cluster_model.fit(self.asymmetric_distance_matrix)
 
-    def _validate_core(core):
-        """Core is a dict of {is_core, valid_parents, labels} among others.
-        If not a core returns False. Only cores with the valid_parents as
-        its own label can be a valid core. Returns True if that is the case,
-        False otherwise"""
+    def _validate_core(self, core):
+        """If core is not a core returns False. Only cores with the valid_parents as its own label can be a valid core.
+        Returns True if that is the case, False otherwise.
+
+        Parameters
+        ----------
+        core : {'is_core', 'valid_parents', 'labels'}
+            eps is 0.1 by default.
+        """
         return core["is_core"] and (core["valid_parents"] == {core["label"]})
+
+    def _group_by_labels(self, results):
+        """Groups all the learned cores by their label, which was assigned in the cluster_model
+
+        Parameters
+        ----------
+        results : {list of {'is_core', 'parent_labels', 'num_samples', 'label'}}
+            After calling .fit on a CBDBSCAN model, the results can be retrieved from it by accessing the .results
+            member, which can be used as the argument to this function. It's a list of infos gathered during
+            the clustering step and each element in the list corresponds to a single topic.
+
+        Returns
+        -------
+            dict of (int, list of {'is_core', 'amount_parent_labels', 'parent_labels'})
+            A mapping of the label to a list of topics that belong to that particular label. Also adds
+            a new member to each topic called amount_parent_labels, which is the number of parent_labels of that
+            topic.
+        """
+        grouped_by_labels = {}
+        for topic in results:
+            if topic["is_core"]:
+                topic = topic.copy()
+
+                # counts how many different labels a core has as parents
+                topic["amount_parent_labels"] = len(topic["parent_labels"])
+
+                label = topic["label"]
+                if label not in grouped_by_labels:
+                    grouped_by_labels[label] = []
+                grouped_by_labels[label].append(topic)
+        return grouped_by_labels
+
+    def _aggregate_topics(self, grouped_by_labels):
+        """Aggregates the topics to a list of clusters
+
+        Parameters
+        ----------
+        grouped_by_labels : dict of (int, list of {'is_core', 'amount_parent_labels', 'parent_labels'})
+            The return value of _group_by_labels. A mapping of the label to a list of each topic which belongs to the
+            label.
+
+        Returns
+        -------
+            list of {'amount_parent_labels', 'parent_labels', 'label'}
+            amount_parent_labels is the max number of parent labels among each topic of a given cluster. label refers
+            to the label identifier of the cluster. parent_labels is a concatenated list of the parent_labels sets of
+            each topic. Its sorted by amount_parent_labels in descending order. There is one single element for each
+            cluster.
+        """
+        sorted_clusters = []
+
+        for label, group in grouped_by_labels.items():
+            amount_parent_labels = 0
+            parent_labels = []  # will be a list of sets
+
+            for topic in group:
+                amount_parent_labels = max(topic["amount_parent_labels"], amount_parent_labels)
+                parent_labels.append(topic["parent_labels"])
+
+            sorted_clusters.append({
+                "amount_parent_labels": amount_parent_labels,
+                "parent_labels": [x for x in parent_labels if len(x) > 0],
+                "label": label
+            })
+
+        # start with the most significant core.
+        sorted_clusters = sorted(sorted_clusters,
+            key=lambda cluster: (
+                cluster["amount_parent_labels"],
+                cluster["label"]  # makes sorting deterministic
+            ), reverse=True)
+
+        return sorted_clusters
+
+    def _remove_from_all_sets(self, label, clusters):
+        """removes a label from every set in "parent_labels" for
+        each core in clusters"""
+        for a in clusters:
+            if label in a["parent_labels"]:
+                a["parent_labels"].remove(label)
 
     def _generate_stable_topics(self, min_cores=None):
         """generates stable topics out of the clusters. This function is the last step that has to be done in the
         ensemble.
 
-        Stable topics can be retreived afterwards using get_topics().
+        Stable topics can be retrieved afterwards using get_topics().
 
         Parameters
         ----------
@@ -904,7 +988,6 @@ class EnsembleLda():
             defaults to min_cores = min(3, max(1, int(self.num_models /4 +1)))
 
         """
-
         logger.info("Generating stable topics")
 
         # min_cores being 0 makes no sense. there has to be a core for a cluster
@@ -918,72 +1001,30 @@ class EnsembleLda():
 
         results = self.cluster_model.results
 
-        # first, group all the learned cores based on the label,
-        # which was assigned in the cluster_model. The result is a
-        # dict of {group: [topic, ...]}
-        grouped_by_labels = {}
-        for topic in results:
-            if topic["is_core"]:
-                topic = topic.copy()
+        grouped_by_labels = self._group_by_labels(results)
 
-                # counts how many different labels a core has as parents
-                topic["amount_parent_labels"] = len(topic["parent_labels"])
-
-                label = topic["label"]
-                if label not in grouped_by_labels:
-                    grouped_by_labels[label] = []
-                grouped_by_labels[label].append(topic)
-
-        # then aggregate their amount_parent_labels by maxing and parent_labels by concatenating
-        # the result is sorted by amount_parent_labels and stored in sorted_clusters
-        sorted_clusters = []
-        for label, group in grouped_by_labels.items():
-            amount_parent_labels = 0
-            parent_labels = []  # will be a list of sets
-            for topic in group:
-                amount_parent_labels = max(topic["amount_parent_labels"], amount_parent_labels)
-                parent_labels.append(topic["parent_labels"])
-            # - here, nan means "not yet evaluated"
-            # - removing empty sets from parent_labels
-            sorted_clusters.append({
-                "amount_parent_labels": amount_parent_labels,
-                "parent_labels": [x for x in parent_labels if len(x) > 0],
-                "is_valid": np.nan,
-                "label": label
-            })
-
-        # start with the most significant core.
-        sorted_clusters = sorted(sorted_clusters,
-            key=lambda cluster: (
-                cluster["amount_parent_labels"],
-                cluster["label"]  # makes sorting deterministic
-            ), reverse=True)
-
-        def remove_from_all_sets(label):
-            """removes a label from every set in "parent_labels" for
-            each core in sorted_clusters."""
-            for a in sorted_clusters:
-                if label in a["parent_labels"]:
-                    a["parent_labels"].remove(label)
+        sorted_clusters = self._aggregate_topics(grouped_by_labels)
 
         # APPLYING THE RULES 1 to 3
         # iterate over the cluster labels, see which clusters/labels
         # are valid to cause the creation of a stable topic
         for i, cluster in enumerate(sorted_clusters):
+            # here, nan means "not yet evaluated"
+            cluster["is_valid"] = np.nan
+
             label = cluster["label"]
             # label is iterating over 0, 1, 3, ...
 
             # 1. rule - remove if the cores in the cluster have no parents
             if cluster["amount_parent_labels"] == 0:
-                # label is NOT VALID
                 cluster["is_valid"] = False
-                remove_from_all_sets(label)
+                self._remove_from_all_sets(label, sorted_clusters)
 
             # 2. rule - remove if it has less than min_cores as parents
             # (parents are always also cores)
             if len(cluster["parent_labels"]) < min_cores:
                 cluster["is_valid"] = False
-                remove_from_all_sets(label)
+                self._remove_from_all_sets(label, sorted_clusters)
 
             # 3. checking for "easy_valid"s
             # checks if the core has at least min_cores of cores with the only label as itself
@@ -991,7 +1032,7 @@ class EnsembleLda():
                 if sum(map(lambda x: x == {label}, cluster["parent_labels"])) >= min_cores:
                     cluster["is_valid"] = True
 
-        # Reaplying the rule 3
+        # Reapplying the rule 3
         # this happens when we have a close relationship among 2 or more clusters
         for cluster in [cluster for cluster in sorted_clusters if np.isnan(cluster["is_valid"])]:
 
@@ -1031,15 +1072,12 @@ class EnsembleLda():
         self.sorted_clusters = sorted_clusters
         self.stable_topics = stable_topics
 
-    def _get_total_parent_labels(self, cluster):
-        return sum(map(lambda x: x == {label}, cluster["parent_labels"]))
-
     def recluster(self, eps=0.1, min_samples=None, min_cores=None):
         """Runs the CBDBSCAN algorithm on all the detected topics from the children of the ensemble.
 
         Generates stable topics out of the clusters afterwards.
 
-        Finally, stable topics can be retreived using get_topics().
+        Finally, stable topics can be retrieved using get_topics().
 
         Parameters
         ----------
@@ -1162,7 +1200,6 @@ class CBDBSCAN():
         ordered_min_similarity = [index for distance, index in min_distance_per_topic_sorted]
 
         def scan_topic(topic_index, parent_id=None, current_label=None, parent_neighbors=None):
-
             # count how many neighbor_indices
             # check which indices is closer than eps
             neighbouring_topic_indices = np.array(
