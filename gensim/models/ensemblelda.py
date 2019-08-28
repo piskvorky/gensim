@@ -89,6 +89,11 @@ bachelor thesis on the topic.  In the meantime, please include a mention of us (
 a link to this file (https://github.com/RaRe-Technologies/gensim/blob/develop/gensim/models/ensemblelda.py) if you use
 this work in a published or open-source project.
 
+Other Notes
+-----------
+.. The adjectives stable and reliable (topics) are used somewhat interchangeably throughout the doc strings and
+comments.
+
 """
 
 import logging
@@ -1005,9 +1010,8 @@ class EnsembleLda():
 
         sorted_clusters = self._aggregate_topics(grouped_by_labels)
 
-        # APPLYING THE RULES 1 to 3
-        # iterate over the cluster labels, see which clusters/labels
-        # are valid to cause the creation of a stable topic
+        # Iterate over the cluster labels, see which clusters/labels
+        # are valid to trigger the creation of a stable topic
         for i, cluster in enumerate(sorted_clusters):
             # here, None means "not yet evaluated"
             cluster["is_valid"] = None
@@ -1073,11 +1077,10 @@ class EnsembleLda():
         self.stable_topics = stable_topics
 
     def recluster(self, eps=0.1, min_samples=None, min_cores=None):
-        """Runs the CBDBSCAN algorithm on all the detected topics from the children of the ensemble.
+        """Runs the CBDBSCAN algorithm on all the topics in the ensemble and uses resulting clusters to identify
+        reliable topics.
 
-        Generates stable topics out of the clusters afterwards.
-
-        Finally, stable topics can be retrieved using get_topics().
+        Stable topics can be retrieved using get_topics().
 
         Parameters
         ----------
@@ -1098,8 +1101,13 @@ class EnsembleLda():
             logger.info("asymmetric distance matrix is outdated due to add_model")
             self._generate_asymmetric_distance_matrix()
 
+        # Run CBDBSCAN to get topic clusters:
         self._generate_topic_clusters(eps, min_samples)
+
+        # Interpret the results of CBDBSCAN to identify reliable topics:
         self._generate_stable_topics(min_cores)
+
+        # Create gensim LdaModel representation of topic model with reliable topics (can be used for inference):
         self.generate_gensim_representation()
 
     # GENSIM API
