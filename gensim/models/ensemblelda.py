@@ -1154,9 +1154,9 @@ class CBDBSCAN():
         T_1, T_2, and T_3:
     2. Start by scanning a candidate topic
         (e.g. T_1)
-    3. Check which topics are nearby and call them neighbours
+    3. Check which topics are nearby using `self.eps` as a threshold and call them neighbours
         (e.g. assume T_2, and T_3 are nearby and become neighbours)
-    4. If there are more neighbours than `min_samples`, the candidate topic becomes a core candidate for a cluster
+    4. If there are more neighbours than `self.min_samples`, the candidate topic becomes a core candidate for a cluster
         (e.g. if `min_samples`<=2 then T_1 becomes the first core of a cluster)
     5. CheckBack (CB) Step: Check if at least 25% of other cluster cores are nearby to core candidate
         (e.g. at this stage in the example, the cluster is empty, so checkback passes)
