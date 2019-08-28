@@ -1009,8 +1009,8 @@ class EnsembleLda():
         # iterate over the cluster labels, see which clusters/labels
         # are valid to cause the creation of a stable topic
         for i, cluster in enumerate(sorted_clusters):
-            # here, nan means "not yet evaluated"
-            cluster["is_valid"] = np.nan
+            # here, None means "not yet evaluated"
+            cluster["is_valid"] = None
 
             label = cluster["label"]
             # label is iterating over 0, 1, 3, ...
@@ -1034,7 +1034,7 @@ class EnsembleLda():
 
         # Reapplying the rule 3
         # this happens when we have a close relationship among 2 or more clusters
-        for cluster in [cluster for cluster in sorted_clusters if np.isnan(cluster["is_valid"])]:
+        for cluster in [cluster for cluster in sorted_clusters if cluster["is_valid"] is None]:
 
             # this checks for parent_labels, which are also modified in this function
             # hence order will influence the result. it starts with the most significant
