@@ -74,11 +74,13 @@ different hyperparameters
 
 References
 ----------
-.. [1] REHUREK, Radim and Sojka, PETR, 2010, Software framework for topic
-       modelling with large corpora. In : THE LREC 2010 WORKSHOP ON NEW
-       CHALLENGES FOR NLP FRAMEWORKS [online]. Msida : University of Malta.
-       2010. p. 45-50. Available from:
-       http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.695.4595
+.. [1] REHUREK, Radim and Sojka, PETR, 2010, Software framework for topic modelling with large corpora. In : THE LREC
+       2010 WORKSHOP ON NEW CHALLENGES FOR NLP FRAMEWORKS [online]. Msida : University of Malta. 2010. p. 45-50.
+       Available from: http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.695.4595
+
+.. [2] BRIGL, Tobias, 2019, Extracting Reliable Topics using Ensemble Latent Dirichlet Allocation: bachelor thesis.
+       Available from: https://www.hip70890b.de/machine_learning/ensemble_LDA/
+       TODO country? thi? loosley, salles, stephan?
 
 """
 
@@ -95,8 +97,7 @@ logger = logging.getLogger(__name__)
 class EnsembleLda():
     """Ensemble Latent Dirichlet Allocation (eLDA), a method of training a topic model ensemble and extracting
     reliable topics that are consistently learned accross the ensemble.  eLDA has the added benefit that the user
-    does not need to know the exact number of topics the topic model should extract ahead of time.  For more details
-    read our paper (https://www.hip70890b.de/machine_learning/ensemble_LDA/).
+    does not need to know the exact number of topics the topic model should extract ahead of time [2].
 
     """
     def __init__(self, topic_model_kind="lda", num_models=3,
@@ -1098,14 +1099,15 @@ class EnsembleLda():
 
 
 class CBDBSCAN():
+    """A Variation of the DBSCAN algorithm which limits how much a cluster is allowed to spread out and which works
+    on an asymmetric distance matrix.
+    """
 
     def __init__(self, eps=0.1, min_samples=4):
-
         self.eps = eps
         self.min_samples = min_samples
 
     def fit(self, amatrix):
-
         self.next_label = 0
 
         results = [{
