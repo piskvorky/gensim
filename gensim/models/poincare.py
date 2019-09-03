@@ -568,7 +568,7 @@ class PoincareModel(utils.SaveLoad):
         """
         counts = Counter(node_indices)
         node_dict = defaultdict(list)
-        [node_dict[index].append(i) for i, index in enumerate(node_indices)]
+        [node_dict[node_index].append(i) for i, node_index in enumerate(node_indices)]
         for node_index, count in counts.items():
             if count == 1:
                 continue
