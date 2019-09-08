@@ -106,6 +106,7 @@ from gensim.models import ldamodel, ldamulticore, basemodel
 
 logger = logging.getLogger(__name__)
 
+
 class EnsembleLda():
     """Ensemble Latent Dirichlet Allocation (eLDA), a method of training a topic model ensemble and extracting
     reliable topics that are consistently learned accross the ensemble.  eLDA has the added benefit that the user
