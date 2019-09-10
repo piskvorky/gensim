@@ -435,6 +435,15 @@ class TestTfidfModel(unittest.TestCase):
         self.assertTrue(np.allclose(sorted(transformed_docs[0]), sorted(expected_docs[0])))
         self.assertTrue(np.allclose(sorted(transformed_docs[1]), sorted(expected_docs[1])))
 
+    def test_backwards_compatibility(self):
+        model = tfidfmodel.TfidfModel.load(datapath('tfidf_model_3_2.tst'))
+        # attrs ensured by load method
+        attrs = ['pivot', 'slope', 'smartirs']
+        for a in attrs:
+            self.assertTrue(hasattr(model, a))
+        # __getitem__: assumes smartirs attr is present
+        self.assertEqual(len(model[corpus]), len(corpus))
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)

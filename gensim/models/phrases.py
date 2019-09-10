@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""Automatically detect common phrases -- multi-word expressions / word n-grams -- from a stream of sentences.
+"""
+Automatically detect common phrases -- aka multi-word expressions, word n-gram collocations -- from
+a stream of sentences.
 
 Inspired by:
 
@@ -20,19 +23,38 @@ Examples
     >>> from gensim.models.word2vec import Text8Corpus
     >>> from gensim.models.phrases import Phrases, Phraser
     >>>
+    >>> # Load training data.
     >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-    >>> phrases = Phrases(sentences, min_count=1, threshold=1)  # train model
-    >>> phrases[[u'trees', u'graph', u'minors']]  # apply model to sentence
-    [u'trees_graph', u'minors']
+    >>> # The training corpus must be a sequence (stream, generator) of sentences,
+    >>> # with each sentence a list of tokens:
+    >>> print(list(sentences)[0][:10])
+    ['computer', 'human', 'interface', 'computer', 'response', 'survey', 'system', 'time', 'user', 'interface']
     >>>
-    >>> phrases.add_vocab([["hello", "world"], ["meow"]])  # update model with new sentences
+    >>> # Train a toy bigram model.
+    >>> phrases = Phrases(sentences, min_count=1, threshold=1)
+    >>> # Apply the trained phrases model to a new, unseen sentence.
+    >>> phrases[['trees', 'graph', 'minors']]
+    ['trees_graph', 'minors']
+    >>> # The toy model considered "trees graph" a single phrase => joined the two
+    >>> # tokens into a single token, `trees_graph`.
     >>>
-    >>> bigram = Phraser(phrases)  # construct faster model (this is only an wrapper)
-    >>> bigram[[u'trees', u'graph', u'minors']]  # apply model to sentence
-    [u'trees_graph', u'minors']
+    >>> # Update the model with two new sentences on the fly.
+    >>> phrases.add_vocab([["hello", "world"], ["meow"]])
     >>>
-    >>> for sent in bigram[sentences]:  # apply model to text corpus
+    >>> # Export the trained model = use less RAM, faster processing. Model updates no longer possible.
+    >>> bigram = Phraser(phrases)
+    >>> bigram[['trees', 'graph', 'minors']]  # apply the exported model to a sentence
+    ['trees_graph', 'minors']
+    >>>
+    >>> # Apply the exported model to each sentence of a corpus:
+    >>> for sent in bigram[sentences]:
     ...     pass
+    >>>
+    >>> # Save / load an exported collocation model.
+    >>> bigram.save("/tmp/my_bigram_model.pkl")
+    >>> bigram_reloaded = Phraser.load("/tmp/my_bigram_model.pkl")
+    >>> bigram_reloaded[['trees', 'graph', 'minors']]  # apply the exported model to a sentence
+    ['trees_graph', 'minors']
 
 """
 
