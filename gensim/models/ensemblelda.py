@@ -979,6 +979,11 @@ class EnsembleLda():
             if label in a["parent_labels"]:
                 a["parent_labels"].remove(label)
 
+    def _is_easy_valid_cluster(self, label, cluster, min_cores):
+        """checks if the cluster has at least min_cores of cores with the only parent-label as itself,
+        meaning no other cluster influenced those cores, hence the cluster in question is easy valid."""
+        return sum(map(lambda x: x == {label}, cluster["parent_labels"])) >= min_cores
+
     def _generate_stable_topics(self, min_cores=None):
         """generates stable topics out of the clusters. This function is the last step that has to be done in the
         ensemble.
@@ -1032,23 +1037,22 @@ class EnsembleLda():
                 self._remove_from_all_sets(label, sorted_clusters)
 
             # 3. checking for "easy_valid"s
-            # checks if the core has at least min_cores of cores with the only label as itself
+            # checks if the cluster has at least min_cores of cores with the only label as itself
             if cluster["amount_parent_labels"] >= 1:
-                if sum(map(lambda x: x == {label}, cluster["parent_labels"])) >= min_cores:
+                if self._is_easy_valid_cluster(label, cluster, min_cores):
                     cluster["is_valid"] = True
 
         # Reapplying the rule 3
         # this happens when we have a close relationship among 2 or more clusters
         for cluster in [cluster for cluster in sorted_clusters if cluster["is_valid"] is None]:
-
-            # this checks for parent_labels, which are also modified in this function
-            # hence order will influence the result. it starts with the most significant
-            # label (hence "sorted_clusters")
-            if sum(map(lambda x: x == {label}, cluster["parent_labels"])) >= min_cores:
+            # This modifies parent labels
+            # which is important in _is_easy_valid_cluster, so the result depends on where to start.
+            # That's why sorted_clusters is sorted, so it starts with the most significant cluster.
+            if self._is_easy_valid_cluster(label, cluster, min_cores):
                 cluster["is_valid"] = True
             else:
                 cluster["is_valid"] = False
-                # removes a label from every set in parent_labels for each core
+                # removes a label from every set in parent_labels for each core.
                 for a in sorted_clusters:
                     if label in a["parent_labels"]:
                         a["parent_labels"].remove(label)
