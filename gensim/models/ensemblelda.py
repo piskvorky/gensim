@@ -78,9 +78,8 @@ References
        2010 WORKSHOP ON NEW CHALLENGES FOR NLP FRAMEWORKS [online]. Msida : University of Malta. 2010. p. 45-50.
        Available from: http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.695.4595
 
-.. [2] BRIGL, Tobias, 2019, Extracting Reliable Topics using Ensemble Latent Dirichlet Allocation: bachelor thesis.
-       Available from: https://www.hip70890b.de/machine_learning/ensemble_LDA/
-       TODO country? thi? loosley, salles, stephan?
+.. [2] BRIGL, Tobias, 2019, Extracting Reliable Topics using Ensemble Latent Dirichlet Allocation [Bachelor Thesis].
+       Ingolstadt: Tecnische Hochschule. Available from: https://www.hip70890b.de/machine_learning/ensemble_LDA/
 
 Citation
 --------
