@@ -79,7 +79,7 @@ References
        Available from: http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.695.4595
 
 .. [2] BRIGL, Tobias, 2019, Extracting Reliable Topics using Ensemble Latent Dirichlet Allocation [Bachelor Thesis].
-       Ingolstadt: Tecnische Hochschule. Available from: https://www.hip70890b.de/machine_learning/ensemble_LDA/
+       Ingolstadt: Technische Hochschule. Available from: https://www.hip70890b.de/machine_learning/ensemble_LDA/
 
 Citation
 --------
