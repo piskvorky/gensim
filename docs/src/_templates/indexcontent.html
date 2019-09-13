@@ -81,12 +81,6 @@
 
     <div class="podklad">
       <div class="podkladwrapper">
-
-      </div>
-    </div>
-
-    <div class="podklad">
-      <div class="podkladwrapper">
         <h3 class="h3gensim">Features<div class="more-info">Hover your mouse over each feature for more info.</div></h3>
 
         <div class="half1">
@@ -133,86 +127,87 @@
 
     <div class="podklad">
       <div class="podkladwrapper">
+        <h3 class="h3gensim">Installation</h3>
 
-<!--
+          <!--
 
-Copy-pasted HTML from install.html generated from install.rst.
+          Copy-pasted HTML from install.html generated from install.rst.
 
-I can't think of a better way to get that RST into this HTML.
+          I can't think of a better way to get that RST into this HTML.
 
--->
+          -->
 
-<span id="install"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="quick-install">
-<h2>Quick install<a class="headerlink" href="#quick-install" title="Permalink to this headline">¶</a></h2>
-<p>Run in your terminal (recommended):</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">--</span><span class="n">upgrade</span> <span class="n">gensim</span>
-</pre></div>
-</div>
-<p>or, alternatively for <cite>conda</cite> environments:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span> <span class="n">gensim</span>
-</pre></div>
-</div>
-<p>That’s it! Congratulations, you can proceed to the <a class="reference internal" href="tutorial.html"><span class="doc">tutorials</span></a>.</p>
-<p>In case that failed, make sure you’re installing into a writeable location (or use <cite>sudo</cite>).</p>
-</div>
-<hr class="docutils">
+          <div class="section" id="quick-install">
+            <h2>Quick install</h2>
+            <p>Run in your terminal (recommended):</p>
+            <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">--</span><span class="n">upgrade</span> <span class="n">gensim</span>
+            </pre></div>
+            </div>
+            <p>or, alternatively for <cite>conda</cite> environments:</p>
+            <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span> <span class="n">gensim</span>
+            </pre></div>
+            </div>
+            <p>That’s it! Congratulations, you can proceed to the <a class="reference internal" href="tutorial.html"><span class="doc">tutorials</span></a>.</p>
+            <p>In case that failed, make sure you’re installing into a writeable location (or use <cite>sudo</cite>).</p>
+          </div>
 
-<div class="section" id="code-dependencies">
-<h2>Code dependencies<a class="headerlink" href="#code-dependencies" title="Permalink to this headline">¶</a></h2>
-<p>Gensim runs on Linux, Windows and Mac OS X, and should run on any other
-platform that supports Python 2.7+ and NumPy. Gensim depends on the following software:</p>
-<ul class="simple">
-<li><a class="reference external" href="https://www.python.org">Python</a> &gt;= 2.7 (tested with versions 2.7, 3.5 and 3.6)</li>
-<li><a class="reference external" href="https://www.numpy.org">NumPy</a> &gt;= 1.11.3</li>
-<li><a class="reference external" href="https://www.scipy.org">SciPy</a> &gt;= 0.18.1</li>
-<li><a class="reference external" href="https://pypi.org/project/six/">Six</a> &gt;= 1.5.0</li>
-<li><a class="reference external" href="https://pypi.org/project/smart_open/">smart_open</a> &gt;= 1.2.1</li>
-</ul>
-</div>
+          <hr class="docutils">
 
-<div class="section" id="testing-gensim">
-<h2>Testing Gensim<a class="headerlink" href="#testing-gensim" title="Permalink to this headline">¶</a></h2>
-<p>Gensim uses continuous integration, automatically running a full test suite on each pull request with</p>
-<table class="docutils" border="1">
-<colgroup>
-<col width="10%">
-<col width="77%">
-<col width="12%">
-</colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">CI service</th>
-<th class="head">Task</th>
-<th class="head">Build badge</th>
-</tr>
-</thead>
-<tbody valign="top">
-<tr class="row-even"><td>Travis</td>
-<td>Run tests on Linux and check <a class="reference external" href="https://www.python.org/dev/peps/pep-0008/?">code-style</a></td>
-<td><a class="reference external" href="https://travis-ci.org/RaRe-Technologies/gensim"><img alt="Travis" src="https://travis-ci.org/RaRe-Technologies/gensim.svg?branch=develop"></a></td>
-</tr>
-<tr class="row-odd"><td>AppVeyor</td>
-<td>Run tests on Windows</td>
-<td><a class="reference external" href="https://ci.appveyor.com/api/projects/status/r2au32ucpn8gr0tl/branch/develop?svg=true"><img alt="AppVeyor" src="https://ci.appveyor.com/api/projects/status/r2au32ucpn8gr0tl/branch/develop?svg=true"></a></td>
-</tr>
-<tr class="row-even"><td>CircleCI</td>
-<td>Build documentation</td>
-<td><a class="reference external" href="https://circleci.com/gh/RaRe-Technologies/gensim"><img alt="CircleCI" src="https://circleci.com/gh/RaRe-Technologies/gensim/tree/develop.svg?style=shield"></a></td>
-</tr>
-</tbody>
-</table>
-</div>
+          <div class="section" id="code-dependencies">
+            <h2>Code dependencies</h2>
+            <p>Gensim runs on Linux, Windows and Mac OS X, and should run on any other
+            platform that supports Python 2.7+ and NumPy. Gensim depends on the following software:</p>
+            <ul class="simple">
+              <li><a class="reference external" href="https://www.python.org">Python</a> &gt;= 2.7 (tested with versions 2.7, 3.5 and 3.6)</li>
+              <li><a class="reference external" href="https://www.numpy.org">NumPy</a> &gt;= 1.11.3</li>
+              <li><a class="reference external" href="https://www.scipy.org">SciPy</a> &gt;= 0.18.1</li>
+              <li><a class="reference external" href="https://pypi.org/project/six/">Six</a> &gt;= 1.5.0</li>
+              <li><a class="reference external" href="https://pypi.org/project/smart_open/">smart_open</a> &gt;= 1.2.1</li>
+            </ul>
+          </div>
 
-<div class="section" id="problems">
-<h2>Problems?<a class="headerlink" href="#problems" title="Permalink to this headline">¶</a></h2>
-<p>Use the <a class="reference external" href="https://groups.google.com/group/gensim/">Gensim discussion group</a> for
-questions and troubleshooting. See the <a class="reference internal" href="support.html"><span class="doc">support page</span></a> for commercial support.</p>
-</div>
+          <div class="section" id="testing-gensim">
+            <h2>Testing Gensim</h2>
+            <p>Gensim uses continuous integration, automatically running a full test suite on each pull request with</p>
+            <table class="docutils" border="1">
+              <colgroup>
+                <col width="10%">
+                <col width="77%">
+                <col width="12%">
+              </colgroup>
+              <thead valign="bottom">
+                <tr class="row-odd"><th class="head">CI service</th>
+                <th class="head">Task</th>
+                <th class="head">Build badge</th>
+                </tr>
+              </thead>
+              <tbody valign="top">
+                <tr class="row-even"><td>Travis</td>
+                  <td>Run tests on Linux and check <a class="reference external" href="https://www.python.org/dev/peps/pep-0008/?">code-style</a></td>
+                  <td><a class="reference external" href="https://travis-ci.org/RaRe-Technologies/gensim"><img alt="Travis" src="https://travis-ci.org/RaRe-Technologies/gensim.svg?branch=develop"></a></td>
+                </tr>
+                <tr class="row-odd"><td>AppVeyor</td>
+                  <td>Run tests on Windows</td>
+                  <td><a class="reference external" href="https://ci.appveyor.com/api/projects/status/r2au32ucpn8gr0tl/branch/develop?svg=true"><img alt="AppVeyor" src="https://ci.appveyor.com/api/projects/status/r2au32ucpn8gr0tl/branch/develop?svg=true"></a></td>
+                </tr>
+                <tr class="row-even"><td>CircleCI</td>
+                  <td>Build documentation</td>
+                  <td><a class="reference external" href="https://circleci.com/gh/RaRe-Technologies/gensim"><img alt="CircleCI" src="https://circleci.com/gh/RaRe-Technologies/gensim/tree/develop.svg?style=shield"></a></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="section" id="problems">
+            <h2>Problems?</h2>
+            <p>Use the <a class="reference external" href="https://groups.google.com/group/gensim/">Gensim discussion group</a> for
+            questions and troubleshooting. See the <a class="reference internal" href="support.html"><span class="doc">support page</span></a> for commercial support.</p>
+          </div>
 
       </div>
     </div>
 
-<!-- copy-paste ends here -->
+    <!-- copy-paste ends here -->
 
     <div class="podklad">
       <div class="podkladwrapper" id="testimonials">
