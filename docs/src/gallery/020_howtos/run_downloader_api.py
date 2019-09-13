@@ -2,8 +2,8 @@ r"""
 
 .. _tutorial_downloader_api:
 
-Downloader Module
-=================
+How to download pre-trained models and corpora
+==============================================
 
 Demonstrates simple and quick access to common corpora, models, and other data.
 """
