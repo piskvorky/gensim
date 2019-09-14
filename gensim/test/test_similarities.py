@@ -17,7 +17,7 @@ import os
 import numpy
 import scipy
 
-from smart_open import smart_open
+from gensim import utils
 from gensim.corpora import Dictionary
 from gensim.models import word2vec
 from gensim.models import doc2vec
@@ -560,7 +560,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
                 self.fn = fn
 
             def __iter__(self):
-                with smart_open(self.fn, 'r', encoding="latin_1") as infile:
+                with utils.open(self.fn, 'r', encoding="latin_1") as infile:
                     for line in infile:
                         yield line.lower().strip().split()
 
@@ -607,6 +607,14 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         exact_words = [neighbor[0] for neighbor in exact_neighbors]
 
         self.assertEqual(approx_words, exact_words)
+
+    def assertAllSimilaritiesDisableIndexer(self, model, wv, index):
+        vector = wv.vectors_norm[0]
+        approx_similarities = model.wv.most_similar([vector], topn=None, indexer=index)
+        exact_similarities = model.wv.most_similar(positive=[vector], topn=None)
+
+        self.assertEqual(approx_similarities, exact_similarities)
+        self.assertEqual(len(approx_similarities), len(wv.vectors.vocab))
 
     def assertIndexSaved(self, index):
         fname = get_tmpfile('gensim_similarities.tst.pkl')
@@ -686,6 +694,156 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
         self.assertEqual(self.index.index.f, self.index2.index.f)
         self.assertEqual(self.index.labels, self.index2.labels)
         self.assertEqual(self.index.num_trees, self.index2.num_trees)
+
+
+class TestWord2VecNmslibIndexer(unittest.TestCase):
+
+    def setUp(self):
+        try:
+            import nmslib  # noqa:F401
+        except ImportError:
+            raise unittest.SkipTest("Nmslib library is not available")
+
+        from gensim.similarities.nmslib import NmslibIndexer
+        self.indexer = NmslibIndexer
+
+    def test_word2vec(self):
+        model = word2vec.Word2Vec(texts, min_count=1)
+        model.init_sims()
+        index = self.indexer(model)
+
+        self.assertVectorIsSimilarToItself(model.wv, index)
+        self.assertApproxNeighborsMatchExact(model, model.wv, index)
+        self.assertIndexSaved(index)
+        self.assertLoadedIndexEqual(index, model)
+
+    def test_fasttext(self):
+        class LeeReader(object):
+            def __init__(self, fn):
+                self.fn = fn
+
+            def __iter__(self):
+                with utils.open(self.fn, 'r', encoding="latin_1") as infile:
+                    for line in infile:
+                        yield line.lower().strip().split()
+
+        model = FastText(LeeReader(datapath('lee.cor')))
+        model.init_sims()
+        index = self.indexer(model)
+
+        self.assertVectorIsSimilarToItself(model.wv, index)
+        self.assertApproxNeighborsMatchExact(model, model.wv, index)
+        self.assertIndexSaved(index)
+        self.assertLoadedIndexEqual(index, model)
+
+    def test_indexing_keyedvectors(self):
+        from gensim.similarities.nmslib import NmslibIndexer
+        keyVectors_file = datapath('lee_fasttext.vec')
+        model = KeyedVectors.load_word2vec_format(keyVectors_file)
+        index = NmslibIndexer(model)
+
+        self.assertVectorIsSimilarToItself(model, index)
+        self.assertApproxNeighborsMatchExact(model, model, index)
+
+    def test_load_missing_raises_error(self):
+        from gensim.similarities.nmslib import NmslibIndexer
+
+        self.assertRaises(IOError, NmslibIndexer.load, fname='test-index')
+
+    def assertVectorIsSimilarToItself(self, wv, index):
+        vector = wv.vectors_norm[0]
+        label = wv.index2word[0]
+        approx_neighbors = index.most_similar(vector, 1)
+        word, similarity = approx_neighbors[0]
+
+        self.assertEqual(word, label)
+        self.assertAlmostEqual(similarity, 1.0, places=2)
+
+    def assertApproxNeighborsMatchExact(self, model, wv, index):
+        vector = wv.vectors_norm[0]
+        approx_neighbors = model.wv.most_similar([vector], topn=5, indexer=index)
+        exact_neighbors = model.wv.most_similar(positive=[vector], topn=5)
+
+        approx_words = [neighbor[0] for neighbor in approx_neighbors]
+        exact_words = [neighbor[0] for neighbor in exact_neighbors]
+
+        self.assertEqual(approx_words, exact_words)
+
+    def assertIndexSaved(self, index):
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
+        index.save(fname)
+        self.assertTrue(os.path.exists(fname))
+        self.assertTrue(os.path.exists(fname + '.d'))
+
+    def assertLoadedIndexEqual(self, index, model):
+        from gensim.similarities.nmslib import NmslibIndexer
+
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
+        index.save(fname)
+
+        index2 = NmslibIndexer.load(fname)
+        index2.model = model
+
+        self.assertEqual(index.labels, index2.labels)
+        self.assertEqual(index.index_params, index2.index_params)
+        self.assertEqual(index.query_time_params, index2.query_time_params)
+
+
+class TestDoc2VecNmslibIndexer(unittest.TestCase):
+
+    def setUp(self):
+        try:
+            import nmslib  # noqa:F401
+        except ImportError:
+            raise unittest.SkipTest("Nmslib library is not available")
+
+        from gensim.similarities.nmslib import NmslibIndexer
+
+        self.model = doc2vec.Doc2Vec(sentences, min_count=1)
+        self.model.init_sims()
+        self.index = NmslibIndexer(self.model)
+        self.vector = self.model.docvecs.vectors_docs_norm[0]
+
+    def test_document_is_similar_to_itself(self):
+        approx_neighbors = self.index.most_similar(self.vector, 1)
+        doc, similarity = approx_neighbors[0]
+
+        self.assertEqual(doc, 0)
+        self.assertAlmostEqual(similarity, 1.0, places=2)
+
+    def test_approx_neighbors_match_exact(self):
+        approx_neighbors = self.model.docvecs.most_similar([self.vector], topn=5, indexer=self.index)
+        exact_neighbors = self.model.docvecs.most_similar(
+            positive=[self.vector], topn=5)
+
+        approx_words = [neighbor[0] for neighbor in approx_neighbors]
+        exact_words = [neighbor[0] for neighbor in exact_neighbors]
+
+        self.assertEqual(approx_words, exact_words)
+
+    def test_save(self):
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
+        self.index.save(fname)
+        self.assertTrue(os.path.exists(fname))
+        self.assertTrue(os.path.exists(fname + '.d'))
+
+    def test_load_not_exist(self):
+        from gensim.similarities.nmslib import NmslibIndexer
+
+        self.assertRaises(IOError, NmslibIndexer.load, fname='test-index')
+
+    def test_save_load(self):
+        from gensim.similarities.nmslib import NmslibIndexer
+
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
+        self.index.save(fname)
+
+        self.index2 = NmslibIndexer.load(fname)
+        self.index2.model = self.model
+
+        self.assertEqual(self.index.labels, self.index2.labels)
+        self.assertEqual(self.index.index_params, self.index2.index_params)
+        self.assertEqual(self.index.query_time_params, self.index2.query_time_params)
 
 
 class TestUniformTermSimilarityIndex(unittest.TestCase):
@@ -792,21 +950,22 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
 
     def test_positive_definite(self):
         """Test the positive_definite parameter of the matrix constructor."""
+        negative_index = UniformTermSimilarityIndex(self.dictionary, term_similarity=-0.5)
         matrix = SparseTermSimilarityMatrix(
-            self.index, self.dictionary, nonzero_limit=2).matrix.todense()
+            negative_index, self.dictionary, nonzero_limit=2).matrix.todense()
         expected_matrix = numpy.array([
-            [1.0, 0.5, 0.5, 0.0, 0.0],
-            [0.5, 1.0, 0.0, 0.5, 0.0],
-            [0.5, 0.0, 1.0, 0.0, 0.0],
-            [0.0, 0.5, 0.0, 1.0, 0.0],
+            [1.0, -.5, -.5, 0.0, 0.0],
+            [-.5, 1.0, 0.0, -.5, 0.0],
+            [-.5, 0.0, 1.0, 0.0, 0.0],
+            [0.0, -.5, 0.0, 1.0, 0.0],
             [0.0, 0.0, 0.0, 0.0, 1.0]])
         self.assertTrue(numpy.all(expected_matrix == matrix))
 
         matrix = SparseTermSimilarityMatrix(
-            self.index, self.dictionary, nonzero_limit=2, positive_definite=True).matrix.todense()
+            negative_index, self.dictionary, nonzero_limit=2, positive_definite=True).matrix.todense()
         expected_matrix = numpy.array([
-            [1.0, 0.5, 0.0, 0.0, 0.0],
-            [0.5, 1.0, 0.0, 0.0, 0.0],
+            [1.0, -.5, 0.0, 0.0, 0.0],
+            [-.5, 1.0, 0.0, 0.0, 0.0],
             [0.0, 0.0, 1.0, 0.0, 0.0],
             [0.0, 0.0, 0.0, 1.0, 0.0],
             [0.0, 0.0, 0.0, 0.0, 1.0]])

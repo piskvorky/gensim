@@ -169,15 +169,9 @@ def train_epoch_sg(
                         if j == i:
                             continue
                         if c.hs:
-                            fasttext_fast_sentence_sg_hs(
-                                c.points[j], c.codes[j], c.codelens[j], c.syn0_vocab, c.syn0_ngrams, c.syn1, c.size,
-                                c.indexes[i], c.subwords_idx[i], c.subwords_idx_len[i], c.alpha, c.work, c.neu1,
-                                c.word_locks_vocab, c.word_locks_ngrams)
+                            fasttext_fast_sentence_sg_hs(&c, i, j)
                         if c.negative:
-                            c.next_random = fasttext_fast_sentence_sg_neg(
-                                c.negative, c.cum_table, c.cum_table_len, c.syn0_vocab, c.syn0_ngrams, c.syn1neg, c.size,
-                                c.indexes[j], c.indexes[i], c.subwords_idx[i], c.subwords_idx_len[i], c.alpha, c.work,
-                                c.neu1, c.next_random, c.word_locks_vocab, c.word_locks_ngrams)
+                            fasttext_fast_sentence_sg_neg(&c, i, j)
 
             total_sentences += sentences.size()
             total_effective_words += effective_words
@@ -263,15 +257,9 @@ def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _exp
                         k = idx_end
 
                     if c.hs:
-                        fasttext_fast_sentence_cbow_hs(
-                            c.points[i], c.codes[i], c.codelens, c.neu1, c.syn0_vocab, c.syn0_ngrams, c.syn1, c.size,
-                            c.indexes, c.subwords_idx, c.subwords_idx_len, c.alpha, c.work, i, j, k, c.cbow_mean,
-                            c.word_locks_vocab, c.word_locks_ngrams)
+                        fasttext_fast_sentence_cbow_hs(&c, i, j, k)
                     if c.negative:
-                        c.next_random = fasttext_fast_sentence_cbow_neg(
-                            c.negative, c.cum_table, c.cum_table_len, c.codelens, c.neu1, c.syn0_vocab, c.syn0_ngrams,
-                            c.syn1neg, c.size, c.indexes, c.subwords_idx, c.subwords_idx_len, c.alpha, c.work, i, j, k,
-                            c.cbow_mean, c.next_random, c.word_locks_vocab, c.word_locks_ngrams)
+                        fasttext_fast_sentence_cbow_neg(&c, i, j, k)
 
             total_sentences += sentences.size()
             total_effective_words += effective_words

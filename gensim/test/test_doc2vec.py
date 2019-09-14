@@ -173,13 +173,24 @@ class TestDoc2VecModel(unittest.TestCase):
             sims_to_infer = loaded_model.docvecs.most_similar([doc0_inferred], topn=len(loaded_model.docvecs))
             self.assertTrue(sims_to_infer)
 
+    def testDoc2vecTrainParameters(self):
+
+        model = doc2vec.Doc2Vec(vector_size=50)
+        model.build_vocab(documents=list_corpus)
+
+        self.assertRaises(TypeError, model.train, corpus_file=11111)
+        self.assertRaises(TypeError, model.train, documents=11111)
+        self.assertRaises(TypeError, model.train, documents=sentences, corpus_file='test')
+        self.assertRaises(TypeError, model.train, documents=None, corpus_file=None)
+        self.assertRaises(TypeError, model.train, corpus_file=sentences)
+
     @unittest.skipIf(os.name == 'nt', "See another test for Windows below")
     def test_get_offsets_and_start_doctags(self):
         # Each line takes 6 bytes (including '\n' character)
         lines = ['line1\n', 'line2\n', 'line3\n', 'line4\n', 'line5\n']
         tmpf = get_tmpfile('gensim_doc2vec.tst')
 
-        with utils.smart_open(tmpf, 'wb', encoding='utf8') as fout:
+        with utils.open(tmpf, 'wb', encoding='utf8') as fout:
             for line in lines:
                 fout.write(utils.any2unicode(line))
 
@@ -213,7 +224,7 @@ class TestDoc2VecModel(unittest.TestCase):
         lines = ['line1\n', 'line2\n', 'line3\n', 'line4\n', 'line5\n']
         tmpf = get_tmpfile('gensim_doc2vec.tst')
 
-        with utils.smart_open(tmpf, 'wb', encoding='utf8') as fout:
+        with utils.open(tmpf, 'wb', encoding='utf8') as fout:
             for line in lines:
                 fout.write(utils.any2unicode(line))
 
@@ -246,7 +257,7 @@ class TestDoc2VecModel(unittest.TestCase):
         lines = ['line1\n', 'line2\n', 'line3\n', 'line4\n', 'line5\n']
         tmpf = get_tmpfile('gensim_doc2vec.tst')
 
-        with utils.smart_open(tmpf, 'wb', encoding='utf8') as fout:
+        with utils.open(tmpf, 'wb', encoding='utf8') as fout:
             for line in lines:
                 fout.write(utils.any2unicode(line))
 
@@ -387,7 +398,7 @@ class TestDoc2VecModel(unittest.TestCase):
             tmpf = get_tmpfile('gensim_doc2vec.tst')
             model.save(tmpf)
             loaded = doc2vec.Doc2Vec.load(tmpf)
-            loaded.train(sentences, total_examples=loaded.corpus_count, epochs=loaded.epochs)
+            loaded.train(documents=sentences, total_examples=loaded.corpus_count, epochs=loaded.epochs)
 
     def test_training(self):
         """Test doc2vec training."""

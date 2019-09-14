@@ -105,13 +105,13 @@ Gensim will take care of the rest:
 .. sourcecode:: pycon
 
     >>> from gensim.utils import tokenize
-    >>> import smart_open
+    >>> from gensim import utils
     >>>
     >>>
     >>> class MyIter(object):
     ...     def __iter__(self):
     ...         path = datapath('crime-and-punishment.txt')
-    ...         with smart_open.smart_open(path, 'r', encoding='utf-8') as fin:
+    ...         with utils.open(path, 'r', encoding='utf-8') as fin:
     ...             for line in fin:
     ...                 yield list(tokenize(line))
     >>>
@@ -190,7 +190,7 @@ You may continue training them on new data:
     True
 
 If you do not intend to continue training the model, consider using the
-:func:`gensim.models.FastText.load_facebook_vectors` function instead.
+:func:`gensim.models.fasttext.load_facebook_vectors` function instead.
 That function only loads the word embeddings (keyed vectors), consuming much less CPU and RAM:
 
 .. sourcecode:: pycon
@@ -280,10 +280,12 @@ It consists of several important classes:
 """
 
 import logging
+import os
 
 import numpy as np
 from numpy import ones, vstack, float32 as REAL, sum as np_sum
 import six
+from collections import Iterable
 
 import gensim.models._fasttext_bin
 
@@ -291,8 +293,8 @@ from gensim.models.word2vec import Word2VecVocab, Word2VecTrainables, train_sg_p
 from gensim.models.keyedvectors import FastTextKeyedVectors
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 from gensim.models.utils_any2vec import ft_ngram_hashes
-from smart_open import smart_open
 
+from gensim import utils
 from gensim.utils import deprecated, call_on_class_only
 
 logger = logging.getLogger(__name__)
@@ -901,6 +903,19 @@ class FastText(BaseWordEmbeddingsModel):
             >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.epochs)
 
         """
+
+        if corpus_file is None and sentences is None:
+            raise TypeError("Either one of corpus_file or sentences value must be provided")
+
+        if corpus_file is not None and sentences is not None:
+            raise TypeError("Both corpus_file and sentences must not be provided at the same time")
+
+        if sentences is None and not os.path.isfile(corpus_file):
+            raise TypeError("Parameter corpus_file must be a valid path to a file, got %r instead" % corpus_file)
+
+        if sentences is not None and not isinstance(sentences, Iterable):
+            raise TypeError("sentences must be an iterable of list, got %r instead" % sentences)
+
         super(FastText, self).train(
             sentences=sentences, corpus_file=corpus_file, total_examples=total_examples, total_words=total_words,
             epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
@@ -1023,30 +1038,22 @@ class FastText(BaseWordEmbeddingsModel):
         """
         try:
             model = super(FastText, cls).load(*args, **kwargs)
-            if hasattr(model.wv, 'hash2index'):
-                gensim.models.keyedvectors._rollback_optimization(model.wv)
 
             if not hasattr(model.trainables, 'vectors_vocab_lockf') and hasattr(model.wv, 'vectors_vocab'):
                 model.trainables.vectors_vocab_lockf = ones(model.wv.vectors_vocab.shape, dtype=REAL)
             if not hasattr(model.trainables, 'vectors_ngrams_lockf') and hasattr(model.wv, 'vectors_ngrams'):
                 model.trainables.vectors_ngrams_lockf = ones(model.wv.vectors_ngrams.shape, dtype=REAL)
 
-            if not hasattr(model.wv, 'compatible_hash'):
-                logger.warning(
-                    "This older model was trained with a buggy hash function. "
-                    "The model will continue to work, but consider training it "
-                    "from scratch."
-                )
-                model.wv.compatible_hash = False
-
             if not hasattr(model.wv, 'bucket'):
                 model.wv.bucket = model.trainables.bucket
-
-            return model
         except AttributeError:
             logger.info('Model saved using code from earlier Gensim Version. Re-loading old model in a compatible way.')
             from gensim.models.deprecated.fasttext import load_old_fasttext
-            return load_old_fasttext(*args, **kwargs)
+            model = load_old_fasttext(*args, **kwargs)
+
+        gensim.models.keyedvectors._try_upgrade(model.wv)
+
+        return model
 
     @deprecated("Method will be removed in 4.0.0, use self.wv.accuracy() instead")
     def accuracy(self, questions, restrict_vocab=30000, most_similar=None, case_insensitive=True):
@@ -1319,7 +1326,7 @@ def _load_fasttext_format(model_file, encoding='utf-8', full_model=True):
         The loaded model.
 
     """
-    with smart_open(model_file, 'rb') as fin:
+    with utils.open(model_file, 'rb') as fin:
         m = gensim.models._fasttext_bin.load(fin, encoding=encoding, full_model=full_model)
 
     model = FastText(

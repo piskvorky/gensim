@@ -23,20 +23,22 @@ How to use
 
 .. sourcecode:: pycon
 
-    >>> from smart_open import smart_open
+    >>> from gensim import utils
     >>> import json
     >>>
     >>> # iterate over the plain text data we just created
-    >>> for line in smart_open('enwiki-latest.json.gz'):
-    >>>     # decode each JSON line into a Python dictionary object
-    >>>     article = json.loads(line)
+    >>> with utils.open('enwiki-latest.json.gz', 'rb') as f:
+    >>>     for line in f:
+    >>>         # decode each JSON line into a Python dictionary object
+    >>>         article = json.loads(line)
     >>>
-    >>>     # each article has a "title", a mapping of interlinks and a list of "section_titles" and "section_texts".
-    >>>     print("Article title: %s" % article['title'])
-    >>>     print("Interlinks: %s" + article['interlinks'])
-    >>>     for section_title, section_text in zip(article['section_titles'], article['section_texts']):
-    >>>         print("Section title: %s" % section_title)
-    >>>         print("Section text: %s" % section_text)
+    >>>         # each article has a "title", a mapping of interlinks and a list of "section_titles" and
+    >>>         # "section_texts".
+    >>>         print("Article title: %s" % article['title'])
+    >>>         print("Interlinks: %s" + article['interlinks'])
+    >>>         for section_title, section_text in zip(article['section_titles'], article['section_texts']):
+    >>>             print("Section title: %s" % section_title)
+    >>>             print("Section text: %s" % section_text)
 
 
 Notes
@@ -63,7 +65,7 @@ from xml.etree import cElementTree
 from functools import partial
 
 from gensim.corpora.wikicorpus import IGNORED_NAMESPACES, WikiCorpus, filter_wiki, find_interlinks, get_namespace, utils
-from smart_open import smart_open
+import gensim.utils
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +94,7 @@ def segment_all_articles(file_path, min_article_character=200, workers=None, inc
         Structure contains (title, [(section_heading, section_content), ...], (Optionally) {interlinks}).
 
     """
-    with smart_open(file_path, 'rb') as xml_fileobj:
+    with gensim.utils.open(file_path, 'rb') as xml_fileobj:
         wiki_sections_corpus = _WikiSectionsCorpus(
             xml_fileobj, min_article_character=min_article_character, processes=workers,
             include_interlinks=include_interlinks)
@@ -135,7 +137,7 @@ def segment_and_write_all_articles(file_path, output_file, min_article_character
     if output_file is None:
         outfile = getattr(sys.stdout, 'buffer', sys.stdout)  # we want write bytes, so for py3 we used 'buffer'
     else:
-        outfile = smart_open(output_file, 'wb')
+        outfile = gensim.utils.open(output_file, 'wb')
 
     try:
         article_stream = segment_all_articles(file_path, min_article_character, workers=workers,

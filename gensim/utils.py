@@ -42,7 +42,7 @@ import scipy.sparse
 from six import iterkeys, iteritems, itervalues, u, string_types, unichr
 from six.moves import range
 
-from smart_open import smart_open
+from smart_open import open
 
 from multiprocessing import cpu_count
 
@@ -128,7 +128,7 @@ def file_or_filename(input):
     """
     if isinstance(input, string_types):
         # input was a filename: open as file
-        return smart_open(input)
+        return open(input, 'rb')
     else:
         # input already a file-like object; just reset to the beginning
         input.seek(0)
@@ -1360,7 +1360,7 @@ def pickle(obj, fname, protocol=2):
         Pickle protocol number. Default is 2 in order to support compatibility across python 2.x and 3.x.
 
     """
-    with smart_open(fname, 'wb') as fout:  # 'b' for binary, needed on Windows
+    with open(fname, 'wb') as fout:  # 'b' for binary, needed on Windows
         _pickle.dump(obj, fout, protocol=protocol)
 
 
@@ -1378,7 +1378,7 @@ def unpickle(fname):
         Python object loaded from `fname`.
 
     """
-    with smart_open(fname, 'rb') as f:
+    with open(fname, 'rb') as f:
         # Because of loading from S3 load can't be used (missing readline in smart_open)
         if sys.version_info > (3, 0):
             return _pickle.load(f, encoding='latin1')
@@ -2079,7 +2079,7 @@ def save_as_line_sentence(corpus, filename):
     corpus : iterable of iterables of strings
 
     """
-    with smart_open(filename, mode='wb', encoding='utf8') as fout:
+    with open(filename, mode='wb', encoding='utf8') as fout:
         for sentence in corpus:
             line = any2unicode(' '.join(sentence) + '\n')
             fout.write(line)

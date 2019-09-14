@@ -70,14 +70,14 @@ try:
 except ImportError:
     from Queue import Queue  # noqa:F401
 
-from collections import namedtuple, defaultdict
+from collections import namedtuple, defaultdict, Iterable
 from timeit import default_timer
 
 from numpy import zeros, float32 as REAL, empty, ones, \
     memmap as np_memmap, vstack, integer, dtype, sum as np_sum, add as np_add, repeat as np_repeat, concatenate
 
 
-from gensim.utils import call_on_class_only
+from gensim.utils import call_on_class_only, deprecated
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.models.word2vec import Word2VecKeyedVectors, Word2VecVocab, Word2VecTrainables, train_cbow_pair,\
     train_sg_pair, train_batch_sg
@@ -86,7 +86,6 @@ from six import string_types, integer_types, itervalues
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 from gensim.models.keyedvectors import Doc2VecKeyedVectors
 from types import GeneratorType
-from gensim.utils import deprecated, smart_open
 
 logger = logging.getLogger(__name__)
 
@@ -447,18 +446,13 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         directly to query those embeddings in various ways. See the module level docstring for examples.
 
     docvecs : :class:`~gensim.models.keyedvectors.Doc2VecKeyedVectors`
-        This object contains the paragraph vectors. Remember that the only difference between this model and
-        :class:`~gensim.models.word2vec.Word2Vec` is that besides the word vectors we also include paragraph embeddings
-        to capture the paragraph.
+        This object contains the paragraph vectors learned from the training data. There will be one such vector
+        for each unique document tag supplied during training. They may be individually accessed using the tag
+        as an indexed-access key. For example, if one of the training documents used a tag of 'doc003':
 
-        In this way we can capture the difference between the same word used in a different context.
-        For example we now have a different representation of the word "leaves" in the following two sentences ::
+        .. sourcecode:: pycon
 
-            1. Manos leaves the office every day at 18:00 to catch his train
-            2. This season is called Fall, because leaves fall from the trees.
-
-        In a plain :class:`~gensim.models.word2vec.Word2Vec` model the word would have exactly the same representation
-        in both sentences, in :class:`~gensim.models.doc2vec.Doc2Vec` it will not.
+            >>> model.docvecs['doc003']
 
     vocabulary : :class:`~gensim.models.doc2vec.Doc2VecVocab`
         This object represents the vocabulary (sometimes called Dictionary in gensim) of the model.
@@ -794,6 +788,19 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
         """
         kwargs = {}
+
+        if corpus_file is None and documents is None:
+            raise TypeError("Either one of corpus_file or documents value must be provided")
+
+        if corpus_file is not None and documents is not None:
+            raise TypeError("Both corpus_file and documents must not be provided at the same time")
+
+        if documents is None and not os.path.isfile(corpus_file):
+            raise TypeError("Parameter corpus_file must be a valid path to a file, got %r instead" % corpus_file)
+
+        if documents is not None and not isinstance(documents, Iterable):
+            raise TypeError("documents must be an iterable of list, got %r instead" % documents)
+
         if corpus_file is not None:
             # Calculate offsets for each worker along with initial doctags (doctag ~ document/line number in a file)
             offsets, start_doctags = self._get_offsets_and_start_doctags_for_corpusfile(corpus_file, self.workers)
@@ -830,7 +837,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         offsets = []
         start_doctags = []
 
-        with smart_open(corpus_file, mode='rb') as fin:
+        with utils.open(corpus_file, mode='rb') as fin:
             curr_offset_idx = 0
             prev_filepos = 0
 
@@ -1497,16 +1504,17 @@ class TaggedBrownCorpus(object):
             fname = os.path.join(self.dirname, fname)
             if not os.path.isfile(fname):
                 continue
-            for item_no, line in enumerate(utils.smart_open(fname)):
-                line = utils.to_unicode(line)
-                # each file line is a single document in the Brown corpus
-                # each token is WORD/POS_TAG
-                token_tags = [t.split('/') for t in line.split() if len(t.split('/')) == 2]
-                # ignore words with non-alphabetic tags like ",", "!" etc (punctuation, weird stuff)
-                words = ["%s/%s" % (token.lower(), tag[:2]) for token, tag in token_tags if tag[:2].isalpha()]
-                if not words:  # don't bother sending out empty documents
-                    continue
-                yield TaggedDocument(words, ['%s_SENT_%s' % (fname, item_no)])
+            with utils.open(fname, 'rb') as fin:
+                for item_no, line in enumerate(fin):
+                    line = utils.to_unicode(line)
+                    # each file line is a single document in the Brown corpus
+                    # each token is WORD/POS_TAG
+                    token_tags = [t.split('/') for t in line.split() if len(t.split('/')) == 2]
+                    # ignore words with non-alphabetic tags like ",", "!" etc (punctuation, weird stuff)
+                    words = ["%s/%s" % (token.lower(), tag[:2]) for token, tag in token_tags if tag[:2].isalpha()]
+                    if not words:  # don't bother sending out empty documents
+                        continue
+                    yield TaggedDocument(words, ['%s_SENT_%s' % (fname, item_no)])
 
 
 class TaggedLineDocument(object):
@@ -1554,6 +1562,6 @@ class TaggedLineDocument(object):
                 yield TaggedDocument(utils.to_unicode(line).split(), [item_no])
         except AttributeError:
             # If it didn't work like a file, use it as a string filename
-            with utils.smart_open(self.source) as fin:
+            with utils.open(self.source, 'rb') as fin:
                 for item_no, line in enumerate(fin):
                     yield TaggedDocument(utils.to_unicode(line).split(), [item_no])

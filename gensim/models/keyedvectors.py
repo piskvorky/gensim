@@ -162,6 +162,7 @@ from __future__ import division  # py3 "true division"
 
 from itertools import chain
 import logging
+from numbers import Integral
 
 try:
     from queue import Queue, Empty
@@ -185,6 +186,11 @@ from gensim.models.utils_any2vec import (
     ft_ngram_hashes,
 )
 from gensim.similarities.termsim import TermSimilarityIndex, SparseTermSimilarityMatrix
+
+#
+# For backwards compatibility, see https://github.com/RaRe-Technologies/gensim/issues/2201
+#
+from gensim.models.deprecated.keyedvectors import EuclideanKeyedVectors  # noqa
 
 logger = logging.getLogger(__name__)
 
@@ -277,7 +283,7 @@ class BaseKeyedVectors(utils.SaveLoad):
         ----------
         entities : list of str
             Entities specified by string ids.
-        weights: {list of numpy.ndarray, numpy.ndarray}
+        weights: list of numpy.ndarray or numpy.ndarray
             List of 1D np.array vectors or a 2D np.array of vectors.
         replace: bool, optional
             Flag indicating whether to replace vectors for entities which already exist in the vocabulary,
@@ -318,7 +324,7 @@ class BaseKeyedVectors(utils.SaveLoad):
         ----------
         entities : {str, list of str}
             Entities specified by their string ids.
-        weights: {list of numpy.ndarray, numpy.ndarray}
+        weights: list of numpy.ndarray or numpy.ndarray
             List of 1D np.array vectors or 2D np.array of vectors.
 
         """
@@ -497,8 +503,9 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             List of words that contribute positively.
         negative : list of str, optional
             List of words that contribute negatively.
-        topn : int, optional
-            Number of top-N similar words to return.
+        topn : int or None, optional
+            Number of top-N similar words to return, when `topn` is int. When `topn` is None,
+            then similarities for all words are returned.
         restrict_vocab : int, optional
             Optional integer which limits the range of vectors which
             are searched for most-similar values. For example, restrict_vocab=10000 would
@@ -507,11 +514,13 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         Returns
         -------
-        list of (str, float)
-            Sequence of (word, similarity).
+        list of (str, float) or numpy.array
+            When `topn` is int, a sequence of (word, similarity) is returned.
+            When `topn` is None, then similarities for all words are returned as a
+            one-dimensional numpy array with the size of the vocabulary.
 
         """
-        if topn is not None and topn < 1:
+        if isinstance(topn, Integral) and topn < 1:
             return []
 
         if positive is None:
@@ -548,12 +557,12 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             raise ValueError("cannot compute similarity with no input")
         mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
 
-        if indexer is not None:
+        if indexer is not None and isinstance(topn, int):
             return indexer.most_similar(mean, topn)
 
         limited = self.vectors_norm if restrict_vocab is None else self.vectors_norm[:restrict_vocab]
         dists = dot(limited, mean)
-        if topn is None:
+        if not topn:
             return dists
         best = matutils.argsort(dists, topn=topn + len(all_words), reverse=True)
         # ignore (don't return) words from the input
@@ -567,8 +576,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         ----------
         word : str
             Word
-        topn : {int, False}, optional
-            Number of top-N similar words to return. If topn is False, similar_by_word returns
+        topn : int or None, optional
+            Number of top-N similar words to return. If topn is None, similar_by_word returns
             the vector of similarity scores.
         restrict_vocab : int, optional
             Optional integer which limits the range of vectors which
@@ -578,8 +587,10 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         Returns
         -------
-        list of (str, float)
-            Sequence of (word, similarity).
+        list of (str, float) or numpy.array
+            When `topn` is int, a sequence of (word, similarity) is returned.
+            When `topn` is None, then similarities for all words are returned as a
+            one-dimensional numpy array with the size of the vocabulary.
 
         """
         return self.most_similar(positive=[word], topn=topn, restrict_vocab=restrict_vocab)
@@ -591,9 +602,9 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         ----------
         vector : numpy.array
             Vector from which similarities are to be computed.
-        topn : {int, False}, optional
-            Number of top-N similar words to return. If topn is False, similar_by_vector returns
-            the vector of similarity scores.
+        topn : int or None, optional
+            Number of top-N similar words to return, when `topn` is int. When `topn` is None,
+            then similarities for all words are returned.
         restrict_vocab : int, optional
             Optional integer which limits the range of vectors which
             are searched for most-similar values. For example, restrict_vocab=10000 would
@@ -602,8 +613,10 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         Returns
         -------
-        list of (str, float)
-            Sequence of (word, similarity).
+        list of (str, float) or numpy.array
+            When `topn` is int, a sequence of (word, similarity) is returned.
+            When `topn` is None, then similarities for all words are returned as a
+            one-dimensional numpy array with the size of the vocabulary.
 
         """
         return self.most_similar(positive=[vector], topn=topn, restrict_vocab=restrict_vocab)
@@ -783,15 +796,21 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             List of words that contribute positively.
         negative : list of str, optional
             List of words that contribute negatively.
-        topn : int, optional
-            Number of top-N similar words to return.
+        topn : int or None, optional
+            Number of top-N similar words to return, when `topn` is int. When `topn` is None,
+            then similarities for all words are returned.
 
         Returns
         -------
-        list of (str, float)
-            Sequence of (word, similarity).
+        list of (str, float) or numpy.array
+            When `topn` is int, a sequence of (word, similarity) is returned.
+            When `topn` is None, then similarities for all words are returned as a
+            one-dimensional numpy array with the size of the vocabulary.
 
         """
+        if isinstance(topn, Integral) and topn < 1:
+            return []
+
         if positive is None:
             positive = []
         if negative is None:
@@ -1044,52 +1063,53 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         logger.info("Evaluating word analogies for top %i words in the model on %s", restrict_vocab, analogies)
         sections, section = [], None
         quadruplets_no = 0
-        for line_no, line in enumerate(utils.smart_open(analogies)):
-            line = utils.to_unicode(line)
-            if line.startswith(': '):
-                # a new section starts => store the old section
-                if section:
-                    sections.append(section)
-                    self._log_evaluate_word_analogies(section)
-                section = {'section': line.lstrip(': ').strip(), 'correct': [], 'incorrect': []}
-            else:
-                if not section:
-                    raise ValueError("Missing section header before line #%i in %s" % (line_no, analogies))
-                try:
-                    if case_insensitive:
-                        a, b, c, expected = [word.upper() for word in line.split()]
-                    else:
-                        a, b, c, expected = [word for word in line.split()]
-                except ValueError:
-                    logger.info("Skipping invalid line #%i in %s", line_no, analogies)
-                    continue
-                quadruplets_no += 1
-                if a not in ok_vocab or b not in ok_vocab or c not in ok_vocab or expected not in ok_vocab:
-                    oov += 1
-                    if dummy4unknown:
-                        logger.debug('Zero accuracy for line #%d with OOV words: %s', line_no, line.strip())
-                        section['incorrect'].append((a, b, c, expected))
-                    else:
-                        logger.debug("Skipping line #%i with OOV words: %s", line_no, line.strip())
-                    continue
-                original_vocab = self.vocab
-                self.vocab = ok_vocab
-                ignore = {a, b, c}  # input words to be ignored
-                predicted = None
-                # find the most likely prediction using 3CosAdd (vector offset) method
-                # TODO: implement 3CosMul and set-based methods for solving analogies
-                sims = self.most_similar(positive=[b, c], negative=[a], topn=5, restrict_vocab=restrict_vocab)
-                self.vocab = original_vocab
-                for element in sims:
-                    predicted = element[0].upper() if case_insensitive else element[0]
-                    if predicted in ok_vocab and predicted not in ignore:
-                        if predicted != expected:
-                            logger.debug("%s: expected %s, predicted %s", line.strip(), expected, predicted)
-                        break
-                if predicted == expected:
-                    section['correct'].append((a, b, c, expected))
+        with utils.open(analogies, 'rb') as fin:
+            for line_no, line in enumerate(fin):
+                line = utils.to_unicode(line)
+                if line.startswith(': '):
+                    # a new section starts => store the old section
+                    if section:
+                        sections.append(section)
+                        self._log_evaluate_word_analogies(section)
+                    section = {'section': line.lstrip(': ').strip(), 'correct': [], 'incorrect': []}
                 else:
-                    section['incorrect'].append((a, b, c, expected))
+                    if not section:
+                        raise ValueError("Missing section header before line #%i in %s" % (line_no, analogies))
+                    try:
+                        if case_insensitive:
+                            a, b, c, expected = [word.upper() for word in line.split()]
+                        else:
+                            a, b, c, expected = [word for word in line.split()]
+                    except ValueError:
+                        logger.info("Skipping invalid line #%i in %s", line_no, analogies)
+                        continue
+                    quadruplets_no += 1
+                    if a not in ok_vocab or b not in ok_vocab or c not in ok_vocab or expected not in ok_vocab:
+                        oov += 1
+                        if dummy4unknown:
+                            logger.debug('Zero accuracy for line #%d with OOV words: %s', line_no, line.strip())
+                            section['incorrect'].append((a, b, c, expected))
+                        else:
+                            logger.debug("Skipping line #%i with OOV words: %s", line_no, line.strip())
+                        continue
+                    original_vocab = self.vocab
+                    self.vocab = ok_vocab
+                    ignore = {a, b, c}  # input words to be ignored
+                    predicted = None
+                    # find the most likely prediction using 3CosAdd (vector offset) method
+                    # TODO: implement 3CosMul and set-based methods for solving analogies
+                    sims = self.most_similar(positive=[b, c], negative=[a], topn=5, restrict_vocab=restrict_vocab)
+                    self.vocab = original_vocab
+                    for element in sims:
+                        predicted = element[0].upper() if case_insensitive else element[0]
+                        if predicted in ok_vocab and predicted not in ignore:
+                            if predicted != expected:
+                                logger.debug("%s: expected %s, predicted %s", line.strip(), expected, predicted)
+                            break
+                    if predicted == expected:
+                        section['correct'].append((a, b, c, expected))
+                    else:
+                        section['incorrect'].append((a, b, c, expected))
         if section:
             # store the last section, too
             sections.append(section)
@@ -1156,46 +1176,47 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         ok_vocab = {w.upper(): v for w, v in reversed(ok_vocab)} if case_insensitive else dict(ok_vocab)
 
         sections, section = [], None
-        for line_no, line in enumerate(utils.smart_open(questions)):
-            # TODO: use level3 BLAS (=evaluate multiple questions at once), for speed
-            line = utils.to_unicode(line)
-            if line.startswith(': '):
-                # a new section starts => store the old section
-                if section:
-                    sections.append(section)
-                    self.log_accuracy(section)
-                section = {'section': line.lstrip(': ').strip(), 'correct': [], 'incorrect': []}
-            else:
-                if not section:
-                    raise ValueError("Missing section header before line #%i in %s" % (line_no, questions))
-                try:
-                    if case_insensitive:
-                        a, b, c, expected = [word.upper() for word in line.split()]
-                    else:
-                        a, b, c, expected = [word for word in line.split()]
-                except ValueError:
-                    logger.info("Skipping invalid line #%i in %s", line_no, questions)
-                    continue
-                if a not in ok_vocab or b not in ok_vocab or c not in ok_vocab or expected not in ok_vocab:
-                    logger.debug("Skipping line #%i with OOV words: %s", line_no, line.strip())
-                    continue
-                original_vocab = self.vocab
-                self.vocab = ok_vocab
-                ignore = {a, b, c}  # input words to be ignored
-                predicted = None
-                # find the most likely prediction, ignoring OOV words and input words
-                sims = most_similar(self, positive=[b, c], negative=[a], topn=False, restrict_vocab=restrict_vocab)
-                self.vocab = original_vocab
-                for index in matutils.argsort(sims, reverse=True):
-                    predicted = self.index2word[index].upper() if case_insensitive else self.index2word[index]
-                    if predicted in ok_vocab and predicted not in ignore:
-                        if predicted != expected:
-                            logger.debug("%s: expected %s, predicted %s", line.strip(), expected, predicted)
-                        break
-                if predicted == expected:
-                    section['correct'].append((a, b, c, expected))
+        with utils.open(questions, 'rb') as fin:
+            for line_no, line in enumerate(fin):
+                # TODO: use level3 BLAS (=evaluate multiple questions at once), for speed
+                line = utils.to_unicode(line)
+                if line.startswith(': '):
+                    # a new section starts => store the old section
+                    if section:
+                        sections.append(section)
+                        self.log_accuracy(section)
+                    section = {'section': line.lstrip(': ').strip(), 'correct': [], 'incorrect': []}
                 else:
-                    section['incorrect'].append((a, b, c, expected))
+                    if not section:
+                        raise ValueError("Missing section header before line #%i in %s" % (line_no, questions))
+                    try:
+                        if case_insensitive:
+                            a, b, c, expected = [word.upper() for word in line.split()]
+                        else:
+                            a, b, c, expected = [word for word in line.split()]
+                    except ValueError:
+                        logger.info("Skipping invalid line #%i in %s", line_no, questions)
+                        continue
+                    if a not in ok_vocab or b not in ok_vocab or c not in ok_vocab or expected not in ok_vocab:
+                        logger.debug("Skipping line #%i with OOV words: %s", line_no, line.strip())
+                        continue
+                    original_vocab = self.vocab
+                    self.vocab = ok_vocab
+                    ignore = {a, b, c}  # input words to be ignored
+                    predicted = None
+                    # find the most likely prediction, ignoring OOV words and input words
+                    sims = most_similar(self, positive=[b, c], negative=[a], topn=None, restrict_vocab=restrict_vocab)
+                    self.vocab = original_vocab
+                    for index in matutils.argsort(sims, reverse=True):
+                        predicted = self.index2word[index].upper() if case_insensitive else self.index2word[index]
+                        if predicted in ok_vocab and predicted not in ignore:
+                            if predicted != expected:
+                                logger.debug("%s: expected %s, predicted %s", line.strip(), expected, predicted)
+                            break
+                    if predicted == expected:
+                        section['correct'].append((a, b, c, expected))
+                    else:
+                        section['incorrect'].append((a, b, c, expected))
         if section:
             # store the last section, too
             sections.append(section)
@@ -1267,33 +1288,34 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         original_vocab = self.vocab
         self.vocab = ok_vocab
 
-        for line_no, line in enumerate(utils.smart_open(pairs)):
-            line = utils.to_unicode(line)
-            if line.startswith('#'):
-                # May be a comment
-                continue
-            else:
-                try:
-                    if case_insensitive:
-                        a, b, sim = [word.upper() for word in line.split(delimiter)]
-                    else:
-                        a, b, sim = [word for word in line.split(delimiter)]
-                    sim = float(sim)
-                except (ValueError, TypeError):
-                    logger.info('Skipping invalid line #%d in %s', line_no, pairs)
+        with utils.open(pairs, 'rb') as fin:
+            for line_no, line in enumerate(fin):
+                line = utils.to_unicode(line)
+                if line.startswith('#'):
+                    # May be a comment
                     continue
-                if a not in ok_vocab or b not in ok_vocab:
-                    oov += 1
-                    if dummy4unknown:
-                        logger.debug('Zero similarity for line #%d with OOV words: %s', line_no, line.strip())
-                        similarity_model.append(0.0)
-                        similarity_gold.append(sim)
+                else:
+                    try:
+                        if case_insensitive:
+                            a, b, sim = [word.upper() for word in line.split(delimiter)]
+                        else:
+                            a, b, sim = [word for word in line.split(delimiter)]
+                        sim = float(sim)
+                    except (ValueError, TypeError):
+                        logger.info('Skipping invalid line #%d in %s', line_no, pairs)
                         continue
-                    else:
-                        logger.debug('Skipping line #%d with OOV words: %s', line_no, line.strip())
-                        continue
-                similarity_gold.append(sim)  # Similarity from the dataset
-                similarity_model.append(self.similarity(a, b))  # Similarity from the model
+                    if a not in ok_vocab or b not in ok_vocab:
+                        oov += 1
+                        if dummy4unknown:
+                            logger.debug('Zero similarity for line #%d with OOV words: %s', line_no, line.strip())
+                            similarity_model.append(0.0)
+                            similarity_gold.append(sim)
+                            continue
+                        else:
+                            logger.debug('Skipping line #%d with OOV words: %s', line_no, line.strip())
+                            continue
+                    similarity_gold.append(sim)  # Similarity from the dataset
+                    similarity_model.append(self.similarity(a, b))  # Similarity from the model
         self.vocab = original_vocab
         spearman = stats.spearmanr(similarity_gold, similarity_model)
         pearson = stats.pearsonr(similarity_gold, similarity_model)
@@ -1646,8 +1668,9 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
             List of doctags/indexes that contribute positively.
         negative : list of {str, int}, optional
             List of doctags/indexes that contribute negatively.
-        topn : int, optional
-            Number of top-N similar docvecs to return.
+        topn : int or None, optional
+            Number of top-N similar docvecs to return, when `topn` is int. When `topn` is None,
+            then similarities for all docvecs are returned.
         clip_start : int
             Start clipping index.
         clip_end : int
@@ -1659,6 +1682,9 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
             Sequence of (doctag/index, similarity).
 
         """
+        if isinstance(topn, Integral) and topn < 1:
+            return []
+
         if positive is None:
             positive = []
         if negative is None:
@@ -1695,7 +1721,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
             raise ValueError("cannot compute similarity with no input")
         mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
 
-        if indexer is not None:
+        if indexer is not None and isinstance(topn, int):
             return indexer.most_similar(mean, topn)
 
         dists = dot(self.vectors_docs_norm[clip_start:clip_end], mean)
@@ -1866,7 +1892,7 @@ class Doc2VecKeyedVectors(BaseKeyedVectors):
 
         """
         total_vec = total_vec or len(self)
-        with utils.smart_open(fname, 'ab') as fout:
+        with utils.open(fname, 'ab') as fout:
             if write_first_line:
                 logger.info("storing %sx%s projection weights into %s", total_vec, self.vectors_docs.shape[1], fname)
                 fout.write(utils.to_utf8("%s %s\n" % (total_vec, self.vectors_docs.shape[1])))
@@ -1981,12 +2007,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
     @classmethod
     def load(cls, fname_or_handle, **kwargs):
         model = super(WordEmbeddingsKeyedVectors, cls).load(fname_or_handle, **kwargs)
-        if not hasattr(model, 'compatible_hash'):
-            model.compatible_hash = False
-
-        if hasattr(model, 'hash2index'):
-            _rollback_optimization(model)
-
+        _try_upgrade(model)
         return model
 
     @property
@@ -2478,3 +2499,16 @@ def _unpack(m, num_rows, hash2index, seed=1):
         m[[h, i]] = m[[i, h]]  # swap rows i and h
 
     return m
+
+
+def _try_upgrade(wv):
+    if hasattr(wv, 'hash2index'):
+        _rollback_optimization(wv)
+
+    if not hasattr(wv, 'compatible_hash'):
+        logger.warning(
+            "This older model was trained with a buggy hash function. "
+            "The model will continue to work, but consider training it "
+            "from scratch."
+        )
+        wv.compatible_hash = False
