@@ -4,10 +4,12 @@
 # Authors: Tobias Brigl <github.com/sezanzeb>, Alex Loosley <aloosley@alumni.brown.edu>,
 # Stephan Sahm <stephan.sahm@gmx.de>, Alex Salles <alex.salles@gmail.com>, Data Reply Munich
 
-"""Ensemble Latent Dirichlet Allocation (eLDA), a method of training a topic model ensemble and extracting
-reliable topics that are consistently learned accross the ensemble.  eLDA has the added benefit that the user
-does not need to know the exact number of topics the topic model should extract ahead of time.  For more details
-read our paper (https://www.hip70890b.de/machine_learning/ensemble_LDA/).
+"""Ensemble Latent Dirichlet Allocation (eLDA), a method of training a topic model ensemble.
+
+Extracts reliable topics that are consistently learned accross multiple LDA models. eLDA has the added benefit that
+the user does not need to know the exact number of topics the topic model should extract ahead of time
+
+For more details read our paper (https://www.hip70890b.de/machine_learning/ensemble_LDA/).
 
 Usage examples
 --------------
@@ -107,17 +109,21 @@ logger = logging.getLogger(__name__)
 
 
 class EnsembleLda():
-    """Ensemble Latent Dirichlet Allocation (eLDA), a method of training a topic model ensemble and extracting
-    reliable topics that are consistently learned accross the ensemble.  eLDA has the added benefit that the user
-    does not need to know the exact number of topics the topic model should extract ahead of time [2].
+    """Ensemble Latent Dirichlet Allocation (eLDA), a method of training a topic model ensemble.
+    
+    Extracts reliable topics that are consistently learned accross multiple LDA models. eLDA has the added benefit that
+    the user does not need to know the exact number of topics the topic model should extract ahead of time [2].
 
     """
+    
     def __init__(self, topic_model_class="lda", num_models=3,
                  min_cores=None,  # default value from _generate_stable_topics()
                  epsilon=0.1, ensemble_workers=1, memory_friendly_ttda=True,
                  min_samples=None, masking_method="mass", masking_threshold=None,
                  distance_workers=1, random_state=None, **gensim_kw_args):
-        """
+        """Create and train a new EnsembleLda model.
+
+        Will start training immediatelly, except if iterations, passes or num_models is 0 or if the corpus is missing.
 
         Parameters
         ----------
@@ -188,9 +194,6 @@ class EnsembleLda():
         if "corpus" not in gensim_kw_args:
             gensim_kw_args["corpus"] = None
 
-        # dictionary. modified version of from gensim/models/ldamodel.py
-        # error messages are copied from the original gensim module [1]:
-        # will create a fake dict if no dict is provided.
         if gensim_kw_args["id2word"] is None and not gensim_kw_args["corpus"] is None:
             logger.warning("no word id mapping provided; initializing from corpus, assuming identity")
             gensim_kw_args["id2word"] = utils.dict_from_corpus(gensim_kw_args["corpus"])
@@ -216,7 +219,10 @@ class EnsembleLda():
         self.gensim_kw_args = gensim_kw_args
 
         self.memory_friendly_ttda = memory_friendly_ttda
+
         self.distance_workers = distance_workers
+        self.masking_threshold = masking_threshold
+        self.masking_method = masking_method
 
         # this will provide the gensim api to the ensemble basically
         self.classic_model_representation = None
@@ -234,7 +240,6 @@ class EnsembleLda():
         # parameters, stop here and don't train.
         if num_models <= 0:
             return
-
         if gensim_kw_args.get("corpus") is None:
             return
         if "iterations" in gensim_kw_args and gensim_kw_args["iterations"] <= 0:
@@ -242,7 +247,7 @@ class EnsembleLda():
         if "passes" in gensim_kw_args and gensim_kw_args["passes"] <= 0:
             return
 
-        logger.info("Generating {} topic models...".format(num_models))
+        logger.info("generating {} topic models...".format(num_models))
 
         if ensemble_workers > 1:
             self._generate_topic_models_multiproc(num_models, ensemble_workers)
@@ -250,10 +255,7 @@ class EnsembleLda():
             # singlecore
             self._generate_topic_models(num_models)
 
-        self._generate_asymmetric_distance_matrix(
-            workers=self.distance_workers,
-            threshold=masking_threshold,
-            method=masking_method)
+        self._generate_asymmetric_distance_matrix()
         self._generate_topic_clusters(epsilon, min_samples)
         self._generate_stable_topics(min_cores)
 
@@ -261,12 +263,12 @@ class EnsembleLda():
         self.generate_gensim_representation()
 
     def convert_to_memory_friendly(self):
-        """removes the stored gensim models and only keeps their ttdas"""
+        """Remove the stored gensim models and only keep their ttdas."""
         self.tms = []
         self.memory_friendly_ttda = True
 
     def generate_gensim_representation(self):
-        """Creates a gensim model from the stable topics.
+        """Create a gensim model from the stable topics.
 
         The returned representation is an Gensim LdaModel (:py:class:`gensim.models.LdaModel`) that has been
         instantiated with an A-priori belief on word probability, eta, that represents the topic-term distributions of
@@ -279,26 +281,25 @@ class EnsembleLda():
         :py:class:`gensim.models.LdaModel`
             A Gensim LDA Model classic_model_representation for which:
             classic_model_representation.get_topics() == self.get_topics()
+
         """
+        logger.info("generating classic gensim model representation based on results from the ensemble")
 
-        logger.info("Generating classic gensim model representation based on results from the ensemble")
-
-        number_of_words = self.sstats_sum
-        # if number_of_words should be wrong for some fantastic funny reason
+        sstats_sum = self.sstats_sum
+        # if sstats_sum (which is the number of words actually) should be wrong for some fantastic funny reason
         # that makes you want to peel your skin off, recreate it (takes a while):
-        if number_of_words == 0 and "corpus" in self.gensim_kw_args and not self.gensim_kw_args["corpus"] is None:
+        if sstats_sum == 0 and "corpus" in self.gensim_kw_args and not self.gensim_kw_args["corpus"] is None:
             for document in self.gensim_kw_args["corpus"]:
                 for token in document:
-                    number_of_words += token[1]
-            self.sstats_sum = number_of_words
-        assert number_of_words != 0
+                    sstats_sum += token[1]
+            self.sstats_sum = sstats_sum
 
         stable_topics = self.get_topics()
 
         num_stable_topics = len(stable_topics)
 
         if num_stable_topics == 0:
-            logger.error("The model did not detect any stable topic. You can try to adjust epsilon: "
+            logger.error("the model did not detect any stable topic. You can try to adjust epsilon: "
                          "recluster(eps=...)")
             self.classic_model_representation = None
             return
@@ -315,7 +316,10 @@ class EnsembleLda():
 
         # when eta was None, use what gensim generates as default eta for the following tasks:
         eta = classic_model_representation.eta
-
+        if sstats_sum == 0:
+            sstats_sum = classic_model_representation.state.sstats.sum()
+            self.sstats_sum = sstats_sum
+            
         # the following is important for the denormalization
         # to generate the proper sstats for the new gensim model:
         # transform to dimensionality of stable_topics. axis=1 is summed
@@ -337,7 +341,7 @@ class EnsembleLda():
         # right sstats, so that get_topics() will return the stable topics no
         # matter eta.
 
-        normalization_factor = np.array([[number_of_words / num_stable_topics]] * num_stable_topics) + eta_sum
+        normalization_factor = np.array([[sstats_sum / num_stable_topics]] * num_stable_topics) + eta_sum
 
         sstats = stable_topics * normalization_factor
         sstats -= eta
@@ -351,10 +355,10 @@ class EnsembleLda():
         return classic_model_representation
 
     def add_model(self, target, num_new_models=None):
-        """Adds the ttda of another model to the ensemble this way, multiple topic models can be connected to an
-        ensemble.
-
-        Make sure that all the models use the exact same dictionary/idword mapping.
+        """Add the ttda of another model to the ensemble.
+        
+        This way, multiple topic models can be connected to an ensemble manually. Make sure that all the models use
+        the exact same dictionary/idword mapping.
 
         In order to generate new stable topics afterwards, use
             self._generate_asymmetric_distance_matrix()
@@ -472,7 +476,7 @@ class EnsembleLda():
                             'stored models for a memory unfriendly ensemble')
             self.num_models = len(self.tms)
 
-        logger.info("Ensemble contains {} models and {} topics now".format(self.num_models, len(self.ttda)))
+        logger.info("ensemble contains {} models and {} topics now".format(self.num_models, len(self.ttda)))
 
         if self.ttda.shape[1] != ttda.shape[1]:
             raise ValueError(("target ttda dimensions do not match. Topics must be {} but was"
@@ -491,7 +495,6 @@ class EnsembleLda():
             Path to the system file where the model will be persisted.
 
         """
-
         logger.info("saving %s object to %s", self.__class__.__name__, fname)
 
         utils.pickle(self, fname)
@@ -510,8 +513,6 @@ class EnsembleLda():
             A previously saved ensembleLda object
 
         """
-
-        # message copied from [1]
         logger.info("loading %s object from %s", EnsembleLda.__name__, fname)
 
         eLDA = utils.unpickle(fname)
@@ -519,8 +520,9 @@ class EnsembleLda():
         return eLDA
 
     def _generate_topic_models_multiproc(self, num_models, ensemble_workers):
-        """Will make the ensemble multiprocess, which results in a speedup on multicore machines. Results from the
-        processes will be piped to the parent and concatenated.
+        """Generate the topic models to form the ensemble in a multiprocessed way.
+        
+        Depending on the used topic model this can result in a speedup.
 
         Parameters
         ----------
@@ -537,7 +539,6 @@ class EnsembleLda():
             In that case, ensemble_workers=2 can be used.
 
         """
-
         # the way random_states is handled needs to prevent getting different results when multiprocessing is on,
         # or getting the same results in every lda children. so it is solved by generating a list of state seeds before
         # multiprocessing is started.
@@ -609,7 +610,7 @@ class EnsembleLda():
             p.terminate()
 
     def _generate_topic_models(self, num_models, random_states=None, pipe=None):
-        """Will train the topic models, that form the ensemble.
+        """Train the topic models, that form the ensemble.
 
         Parameters
         ----------
@@ -623,9 +624,8 @@ class EnsembleLda():
             send the ttda.
 
         """
-
         if pipe is not None:
-            logger.info("Spawned worker to generate {} topic models".format(num_models))
+            logger.info("spawned worker to generate {} topic models".format(num_models))
 
         if random_states is None:
             random_states = [self.random_state.randint(self._MAX_RANDOM_STATE) for _ in range(num_models)]
@@ -668,11 +668,8 @@ class EnsembleLda():
             pipe.close()
 
     def _asymmetric_distance_matrix_worker(self, worker_id, ttdas_sent, n_ttdas, pipe, threshold, method):
-        """ Worker that computes the distance to all other nodes
-        from a chunk of nodes. https://stackoverflow.com/a/1743350
-        """
-
-        logger.info("Spawned worker to generate {} rows of the asymmetric distance matrix".format(n_ttdas))
+        """Worker that computes the distance to all other nodes from a chunk of nodes."""
+        logger.info("spawned worker to generate {} rows of the asymmetric distance matrix".format(n_ttdas))
         # the chunk of ttda that's going to be calculated:
         ttda1 = self.ttda[ttdas_sent:ttdas_sent + n_ttdas]
         distance_chunk = self._calculate_asymmetric_distance_matrix_chunk(
@@ -680,28 +677,17 @@ class EnsembleLda():
         pipe.send((worker_id, distance_chunk))  # remember that this code is inside the workers memory
         pipe.close()
 
-    def _generate_asymmetric_distance_matrix(self, threshold=None, workers=1, method="mass"):
-        """Makes the pairwise distance matrix for all the ttdas from the ensemble.
+    def _generate_asymmetric_distance_matrix(self):
+        """Calculate the pairwise distance matrix for all the ttdas from the ensemble.
 
         Returns the asymmetric pairwise distance matrix that is used in the DBSCAN clustering.
 
         Afterwards, the model needs to be reclustered for this generated matrix to take effect.
 
-        Parameters
-        ----------
-        threshold : float, optional
-            if threshold is None and method == "rank":
-                threshold = 0.11
-            if threshold is None and method == "mass":
-                threshold = 0.95
-
-            threshold keeps by default 95% of the largest terms by mass. Except the "fast" parameter is "rank", then
-            it just selects that many of the largest terms.
-        workers : number, optional
-            when workers is None, it defaults to os.cpu_count() for maximum performance. Default is 1, which is not
-            multiprocessed. Set to > 1 to enable multiprocessing.
-
         """
+        workers = self.distance_workers
+        threshold = self.masking_threshold
+        method = self.masking_method
 
         # matrix is up to date afterwards
         self.asymmetric_distance_matrix_outdated = False
@@ -709,7 +695,7 @@ class EnsembleLda():
         if threshold is None:
             threshold = {"mass": 0.95, "rank": 0.11}[method]
 
-        logger.info("Generating a {} x {} asymmetric distance matrix...".format(len(self.ttda), len(self.ttda)))
+        logger.info("generating a {} x {} asymmetric distance matrix...".format(len(self.ttda), len(self.ttda)))
 
         # singlecore
         if workers is not None and workers <= 1:
@@ -728,7 +714,6 @@ class EnsembleLda():
         ttdas_sent = 0
 
         for i in range(workers):
-
             try:
                 parentConn, childConn = Pipe()
 
@@ -781,10 +766,7 @@ class EnsembleLda():
         return self.asymmetric_distance_matrix
 
     def _calculate_asymmetric_distance_matrix_chunk(self, ttda1, ttda2, threshold, start_index, method):
-        """Internal method calculating an (asymmetric) distance from each topic term distribution in ttda1 to each topic
-        term distribution in ttda2 and returns a matrix of distances, size len(ttda1) by len(ttda2).
-
-        This is an internal method and should not be used for two general ttda arrays.
+        """Calculate an (asymmetric) distance from each topic in ttda1 to each topic in ttda2.
 
         Parameters
         ----------
@@ -806,21 +788,21 @@ class EnsembleLda():
         -------
         2D Numpy.numpy.ndarray of floats
             Asymmetric distance matrix of size len(ttda1) by len(ttda2).
-        """
 
+        """
         if method not in ["mass", "rank"]:
             raise ValueError("method {} unknown".format(method))
 
         # select masking method:
         def mass_masking(a):
-            """original masking method. returns a new binary mask"""
+            """Original masking method. Returns a new binary mask."""
             sorted_a = np.sort(a)[::-1]
             largest_mass = sorted_a.cumsum() < threshold
             smallest_valid = sorted_a[largest_mass][-1]
             return a >= smallest_valid
 
         def rank_masking(a):
-            """faster masking method. returns a new binary mask"""
+            """Faster masking method. Returns a new binary mask."""
             return a > np.sort(a)[::-1][int(len(a) * threshold)]
 
         create_mask = {"mass": mass_masking, "rank": rank_masking}[method]
@@ -833,7 +815,6 @@ class EnsembleLda():
 
         # now iterate over each topic
         for ttd1_idx, ttd1 in enumerate(ttda1):
-
             # create mask from ttd1 that removes noise from a and keeps the largest terms
             mask = create_mask(ttd1)
             ttd1_masked = ttd1[mask]
@@ -842,7 +823,6 @@ class EnsembleLda():
 
             # now look at every possible pair for topic a:
             for ttd2_idx, ttd2 in enumerate(ttda2):
-
                 # distance to itself is 0
                 if ttd1_idx + start_index == ttd2_idx:
                     distances[ttd1_idx][ttd2_idx] = 0
@@ -861,13 +841,12 @@ class EnsembleLda():
                 distances[ttd1_idx][ttd2_idx] = distance
 
         percent = round(100 * avg_mask_size / ttda1.shape[0] / ttda1.shape[1], 1)
-        logger.info('The given threshold of {} covered on average {}% of tokens'.format(threshold, percent))
+        logger.info('the given threshold of {} covered on average {}% of tokens'.format(threshold, percent))
 
         return distances
 
     def _generate_topic_clusters(self, eps=0.1, min_samples=None):
-        """Runs the DBSCAN algorithm on all the detected topics from the models in the ensemble and labels them with
-        label-indices.
+        """Run the CBDBSCAN algorithm on all the detected topics and label them with label-indices.
 
         The final approval and generation of stable topics is done in _generate_stable_topics().
 
@@ -877,43 +856,46 @@ class EnsembleLda():
             eps is 0.1 by default.
         min_samples : int
             min_samples is int(self.num_models / 2)
-        """
 
+        """
         if min_samples is None:
             min_samples = int(self.num_models / 2)
 
-        logger.info("Fitting the clustering model")
+        logger.info("fitting the clustering model")
 
         self.cluster_model = CBDBSCAN(eps=eps, min_samples=min_samples)
         self.cluster_model.fit(self.asymmetric_distance_matrix)
 
     def _validate_core(self, core):
-        """If core is not a core returns False. Only cores with the valid_parents as its own label can be a valid core.
-        Returns True if that is the case, False otherwise.
+        """Check if the core has only a single valid parent, which is also the label assigned to the core.
+        
+        If the presumed core is not even a core returns False.
 
         Parameters
         ----------
         core : {'is_core', 'valid_parents', 'labels'}
             eps is 0.1 by default.
+
         """
         return core["is_core"] and (core["valid_parents"] == {core["label"]})
 
     def _group_by_labels(self, results):
-        """Groups all the learned cores by their label, which was assigned in the cluster_model
+        """Group all the learned cores by their label, which was assigned in the cluster_model.
 
         Parameters
         ----------
-        results : {list of {'is_core', 'parent_labels', 'num_samples', 'label'}}
+        results : {list of {'is_core', 'neighboring_labels', 'num_samples', 'label'}}
             After calling .fit on a CBDBSCAN model, the results can be retrieved from it by accessing the .results
             member, which can be used as the argument to this function. It's a list of infos gathered during
             the clustering step and each element in the list corresponds to a single topic.
 
         Returns
         -------
-            dict of (int, list of {'is_core', 'amount_parent_labels', 'parent_labels'})
+            dict of (int, list of {'is_core', 'num_neighboring_labels', 'neighboring_labels'})
             A mapping of the label to a list of topics that belong to that particular label. Also adds
-            a new member to each topic called amount_parent_labels, which is the number of parent_labels of that
-            topic.
+            a new member to each topic called num_neighboring_labels, which is the number of
+            neighboring_labels of that topic.
+
         """
         grouped_by_labels = {}
         for topic in results:
@@ -921,7 +903,7 @@ class EnsembleLda():
                 topic = topic.copy()
 
                 # counts how many different labels a core has as parents
-                topic["amount_parent_labels"] = len(topic["parent_labels"])
+                topic["num_neighboring_labels"] = len(topic["neighboring_labels"])
 
                 label = topic["label"]
                 if label not in grouped_by_labels:
@@ -930,64 +912,70 @@ class EnsembleLda():
         return grouped_by_labels
 
     def _aggregate_topics(self, grouped_by_labels):
-        """Aggregates the topics to a list of clusters
+        """Aggregate the labeled topics to a list of clusters.
 
         Parameters
         ----------
-        grouped_by_labels : dict of (int, list of {'is_core', 'amount_parent_labels', 'parent_labels'})
+        grouped_by_labels : dict of (int, list of {'is_core', 'num_neighboring_labels', 'neighboring_labels'})
             The return value of _group_by_labels. A mapping of the label to a list of each topic which belongs to the
             label.
 
         Returns
         -------
-            list of {'amount_parent_labels', 'parent_labels', 'label'}
-            amount_parent_labels is the max number of parent labels among each topic of a given cluster. label refers
-            to the label identifier of the cluster. parent_labels is a concatenated list of the parent_labels sets of
-            each topic. Its sorted by amount_parent_labels in descending order. There is one single element for each
-            cluster.
+            list of {'max_num_neighboring_labels', 'neighboring_labels', 'label'}
+            max_num_neighboring_labels is the max number of parent labels among each topic of a given cluster. label
+            refers to the label identifier of the cluster. neighboring_labels is a concatenated list of the
+            neighboring_labels sets of each topic. Its sorted by max_num_neighboring_labels in descending
+            order. There is one single element for each cluster.
+
         """
         sorted_clusters = []
 
         for label, group in grouped_by_labels.items():
-            amount_parent_labels = 0
-            parent_labels = []  # will be a list of sets
+            num_neighboring_labels = 0
+            neighboring_labels = []  # will be a list of sets
 
             for topic in group:
-                amount_parent_labels = max(topic["amount_parent_labels"], amount_parent_labels)
-                parent_labels.append(topic["parent_labels"])
+                max_num_neighboring_labels = max(topic["num_neighboring_labels"], num_neighboring_labels)
+                neighboring_labels.append(topic["neighboring_labels"])
+
+            neighboring_labels = [x for x in neighboring_labels if len(x) > 0]
+
+            # TODO why is len(neighboring_labels) equal to num_cores?
 
             sorted_clusters.append({
-                "amount_parent_labels": amount_parent_labels,
-                "parent_labels": [x for x in parent_labels if len(x) > 0],
-                "label": label
+                "max_num_neighboring_labels": max_num_neighboring_labels,
+                "neighboring_labels": neighboring_labels,
+                "label": label,
+                "num_cores": len([topic for topic in group if topic["is_core"]])
             })
 
-        # start with the most significant core.
         sorted_clusters = sorted(sorted_clusters,
             key=lambda cluster: (
-                cluster["amount_parent_labels"],
-                cluster["label"]  # makes sorting deterministic
+                cluster["max_num_neighboring_labels"],
+                cluster["label"]
             ), reverse=True)
 
         return sorted_clusters
 
     def _remove_from_all_sets(self, label, clusters):
-        """removes a label from every set in "parent_labels" for
-        each core in clusters"""
+        """Remove a label from every set in "neighboring_labels" for each core in clusters."""
         for a in clusters:
-            if label in a["parent_labels"]:
-                a["parent_labels"].remove(label)
+            if label in a["neighboring_labels"]:
+                a["neighboring_labels"].remove(label)
 
-    def _is_easy_valid_cluster(self, label, cluster, min_cores):
-        """checks if the cluster has at least min_cores of cores with the only parent-label as itself,
-        meaning no other cluster influenced those cores, hence the cluster in question is easy valid."""
-        return sum(map(lambda x: x == {label}, cluster["parent_labels"])) >= min_cores
+    def _contains_isolated_cores(self, label, cluster, min_cores):
+        """Check if the cluster has at least min_cores of cores that belong to no other cluster."""
+        # TODO is supposed to check for cores, but checks neighboring_labels.
+        # Funnily, it actually seems to be cores (see output of next line) but it doesn't read that way
+        # print(len(cluster["neighboring_labels"]), cluster["num_cores"])
+        return sum(map(lambda x: x == {label}, cluster["neighboring_labels"])) >= min_cores
 
     def _generate_stable_topics(self, min_cores=None):
-        """generates stable topics out of the clusters. This function is the last step that has to be done in the
-        ensemble.
-
-        Stable topics can be retrieved afterwards using get_topics().
+        """Generate stable topics out of the clusters.
+        
+        This function is the last step that has to be done in the ensemble.Stable topics can be retrieved afterwards
+        using get_topics().
 
         Parameters
         ----------
@@ -998,8 +986,6 @@ class EnsembleLda():
             defaults to min_cores = min(3, max(1, int(self.num_models /4 +1)))
 
         """
-        logger.info("Generating stable topics")
-
         # min_cores being 0 makes no sense. there has to be a core for a cluster
         # or there is no cluster
         if min_cores == 0:
@@ -1008,6 +994,9 @@ class EnsembleLda():
         if min_cores is None:
             # min_cores is a number between 1 and 3, depending on the number of models
             min_cores = min(3, max(1, int(self.num_models / 4 + 1)))
+            logger.info(f"generating stable topics, each cluster needs at least {min_cores} cores")
+        else:
+            logger.info("generating stable topics")
 
         results = self.cluster_model.results
 
@@ -1015,52 +1004,37 @@ class EnsembleLda():
 
         sorted_clusters = self._aggregate_topics(grouped_by_labels)
 
-        # Iterate over the cluster labels, see which clusters/labels
-        # are valid to trigger the creation of a stable topic
         for i, cluster in enumerate(sorted_clusters):
-            # here, None means "not yet evaluated"
             cluster["is_valid"] = None
 
-            label = cluster["label"]
-            # label is iterating over 0, 1, 3, ...
+            # TODO removed first rule because when amount_parent_labels is 0, then there is no
+            # topic in the cluster than has a parent, hence the size is either 0 or 1,
+            # which can be covered by the next rule.
 
-            # 1. rule - remove if the cores in the cluster have no parents
-            if cluster["amount_parent_labels"] == 0:
+            if cluster["num_cores"] < min_cores:
                 cluster["is_valid"] = False
-                self._remove_from_all_sets(label, sorted_clusters)
+                self._remove_from_all_sets(cluster["label"], sorted_clusters)
 
-            # 2. rule - remove if it has less than min_cores as parents
-            # (parents are always also cores)
-            if len(cluster["parent_labels"]) < min_cores:
-                cluster["is_valid"] = False
-                self._remove_from_all_sets(label, sorted_clusters)
+            # TODO I don't think it makes a difference if _contains_isolated_cores (formerly easy valid) is done (here
+            # and afterwards) or (only afterwards)
 
-            # 3. checking for "easy_valid"s
-            # checks if the cluster has at least min_cores of cores with the only label as itself
-            if cluster["amount_parent_labels"] >= 1:
-                if self._is_easy_valid_cluster(label, cluster, min_cores):
-                    cluster["is_valid"] = True
-
-        # Reapplying the rule 3
-        # this happens when we have a close relationship among 2 or more clusters
+        # now that invalid clusters are removed, check which clusters contain enough cores that don't belong to any
+        # other cluster.
         for cluster in [cluster for cluster in sorted_clusters if cluster["is_valid"] is None]:
-            # This modifies parent labels
-            # which is important in _is_easy_valid_cluster, so the result depends on where to start.
-            # That's why sorted_clusters is sorted, so it starts with the most significant cluster.
-            if self._is_easy_valid_cluster(label, cluster, min_cores):
+            label = cluster["label"]
+            if self._contains_isolated_cores(label, cluster, min_cores):
                 cluster["is_valid"] = True
             else:
                 cluster["is_valid"] = False
-                # removes a label from every set in parent_labels for each core.
-                for a in sorted_clusters:
-                    if label in a["parent_labels"]:
-                        a["parent_labels"].remove(label)
+                # This modifies parent labels which is important in _contains_isolated_cores, so the result depends on
+                # where to start. That's why sorted_clusters is sorted, so it starts with the most cluttered cluster.
+                self._remove_from_all_sets(label, sorted_clusters)
 
         # list of all the label numbers that are valid
         valid_labels = np.array([cluster["label"] for cluster in sorted_clusters if cluster["is_valid"]])
 
         for topic in results:
-            topic["valid_parents"] = {label for label in topic["parent_labels"] if label in valid_labels}
+            topic["valid_parents"] = {label for label in topic["neighboring_labels"] if label in valid_labels}
 
         # keeping only VALID cores
         valid_core_mask = np.vectorize(self._validate_core)(results)
@@ -1081,8 +1055,7 @@ class EnsembleLda():
         self.stable_topics = stable_topics
 
     def recluster(self, eps=0.1, min_samples=None, min_cores=None):
-        """Runs the CBDBSCAN algorithm on all the topics in the ensemble and uses resulting clusters to identify
-        reliable topics.
+        """Quickly change the results of the ensemble by reapplying clustering and stable topic generation.
 
         Stable topics can be retrieved using get_topics().
 
@@ -1118,11 +1091,18 @@ class EnsembleLda():
     # to make using the ensemble in place of a gensim model as easy as possible
 
     def get_topics(self):
+        """Return only the stable topics from the ensemble.
+        
+        Returns
+        -------
+        2D Numpy.numpy.ndarray of floats
+            List of stable topic term distributions
+
+        """
         return self.stable_topics
 
     def _has_gensim_representation(self):
-        """checks if stable topics area vailable and if the internal
-        gensim representation exists. If not, raises errors"""
+        """Check if stable topics and the internal gensim representation exist. Raise an error if not."""
         if self.classic_model_representation is None:
             if len(self.stable_topics) == 0:
                 raise ValueError("no stable topic was detected")
@@ -1130,32 +1110,35 @@ class EnsembleLda():
                 raise ValueError("use generate_gensim_representation() first")
 
     def __getitem__(self, i):
-        """see :py:class:`gensim.models.LdaModel`"""
+        """See :py:class:`gensim.models.LdaModel`."""
         self._has_gensim_representation()
         return self.classic_model_representation[i]
 
     def inference(self, *posargs, **kwargs):
-        """see :py:class:`gensim.models.LdaModel`"""
+        """See :py:class:`gensim.models.LdaModel`."""
         self._has_gensim_representation()
         return self.classic_model_representation.inference(*posargs, **kwargs)
 
     def log_perplexity(self, *posargs, **kwargs):
-        """see :py:class:`gensim.models.LdaModel`"""
+        """See :py:class:`gensim.models.LdaModel`."""
         self._has_gensim_representation()
         return self.classic_model_representation.log_perplexity(*posargs, **kwargs)
 
     def print_topics(self, *posargs, **kwargs):
-        """see :py:class:`gensim.models.LdaModel`"""
+        """See :py:class:`gensim.models.LdaModel`."""
         self._has_gensim_representation()
         return self.classic_model_representation.print_topics(*posargs, **kwargs)
 
     @property
     def id2word(self):
+        """Return the :py:class:`gensim.corpora.dictionary.Dictionary` object used in the model."""
         return self.gensim_kw_args["id2word"]
 
 
 class CBDBSCAN():
-    """A Variation of the DBSCAN algorithm called Checkback DBSCAN (CBDBSCAN).  The algorithm works based on
+    """A Variation of the DBSCAN algorithm called Checkback DBSCAN (CBDBSCAN).
+    
+    The algorithm works based on
     DBSCAN-like parameters `eps` and `min_samples` that respectively define how far a "nearby" point is, and the
     minimum number of nearby points needed to label a candidate datapoint a core of a cluster.
     (See https://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html).
@@ -1178,58 +1161,59 @@ class CBDBSCAN():
     unreliable topics made of a composition of multiple reliable topics (something that occurs often LDA models that is
     one cause of unreliable topics).
 
-    Parameters
-    ----------
-    eps : float
-        epsilon for the CBDBSCAN algorithm, having the same meaning as in classic DBSCAN clustering.
-        default: 0.1
-    min_samples : int
-        The minimum number of samples in the neighborhood of a topic to be considered a core in CBDBSCAN.
     """
 
     def __init__(self, eps, min_samples):
+        """Create a new CBDBSCAN object. Call fit in order to train it on an asymmetric distance matrix.
+
+        Parameters
+        ----------
+        eps : float
+            epsilon for the CBDBSCAN algorithm, having the same meaning as in classic DBSCAN clustering.
+            default: 0.1
+        min_samples : int
+            The minimum number of samples in the neighborhood of a topic to be considered a core in CBDBSCAN.
+
+        """
         self.eps = eps
         self.min_samples = min_samples
 
     def fit(self, amatrix):
+        """Apply the algorithm to an asymmetric distance matrix."""
         self.next_label = 0
 
         results = [{
             "is_core": False,
-            "parent_labels": set(),
-            "parent_ids": set(),
+            "neighboring_labels": set(),
+            "neighboring_topic_indices": set(),
             "num_samples": 0,
             "label": None
         } for _ in range(len(amatrix))]
 
         amatrix_copy = amatrix.copy()
 
-        # to avoid problem about comparing the topic with itself
+        # to avoid the problem of comparing the topic with itself
         np.fill_diagonal(amatrix_copy, 1)
 
         min_distance_per_topic = [(distance, index) for index, distance in enumerate(amatrix_copy.min(axis=1))]
         min_distance_per_topic_sorted = sorted(min_distance_per_topic, key=lambda x: x)
         ordered_min_similarity = [index for distance, index in min_distance_per_topic_sorted]
 
-        def scan_topic(topic_index, parent_id=None, current_label=None, parent_neighbors=None):
-            # count how many neighbor_indices
-            # check which indices is closer than eps
-            neighbouring_topic_indices = np.array(
-                [
-                    candidate_topic_index
-                    for candidate_topic_index, is_neighbour in enumerate(amatrix_copy[topic_index] < self.eps)
-                    if is_neighbour
-                ]
-            )
-            num_neighbouring_topics = len(neighbouring_topic_indices)
+        def scan_topic(topic_index, current_label=None, cluster_topic_indices=[]):
+            neighboring_topic_indices = [
+                candidate_topic_index
+                for candidate_topic_index, is_neighbour in enumerate(amatrix_copy[topic_index] < self.eps)
+                if is_neighbour
+            ]
+            num_neighboring_topics = len(neighboring_topic_indices)
 
-            # If the number of neighbor_indices of a topic is large enough,
-            # it is considered a core.
-            # This also takes neighbor_indices that already are identified as core in count.
-            if num_neighbouring_topics >= self.min_samples:
+            # If the number of neighbor indices of a topic is large enough, it is considered a core.
+            # This also takes neighbor indices that already are identified as core in count.
+            if num_neighboring_topics >= self.min_samples:
                 # This topic is a core!
                 results[topic_index]["is_core"] = True
-                results[topic_index]["num_samples"] = num_neighbouring_topics
+                results[topic_index]["num_samples"] = num_neighboring_topics
+                cluster_topic_indices = cluster_topic_indices.copy()
 
                 # if current_label is none, then this is the first core
                 # of a new cluster (hence next_label is used)
@@ -1240,48 +1224,34 @@ class CBDBSCAN():
                     self.next_label += 1
 
                 else:
-                    # In case the core has a parent, that means
-                    # it has a label (= the parents label).
-                    # Check the distance between the
-                    # new core and the parent
+                    # In case the core has a parent, check the distance to the existing cluster (since the matrix is
+                    # asymmetric, it takes return distances into account here)
+                    # If less than 25% of the elements are close enough, then create a new cluster rather than further
+                    # growing the current cluster in that direction.
+                    close_members_mask = amatrix_copy[topic_index][cluster_topic_indices] < self.eps
 
-                    # parent neighbor_indices is the list of neighbor_indices of parent_id
-                    # (the topic_index that called this function recursively)
-                    all_members_of_current_cluster = list(parent_neighbors)
-                    all_members_of_current_cluster.append(parent_id)
+                    # TODO changed because it is supposed to check the distance to the existing cluster, not
+                    # to the neighbors of the parent
 
-                    # look if 25% of the members of the current cluster are also
-                    # close to the current/new topic...
-
-                    # example: (topic_index, 0), (topic_index, 2), (topic_index, ...)
-                    all_members_of_current_cluster_ix = np.ix_([topic_index], all_members_of_current_cluster)
-                    # use the result of the previous step to index the matrix and see if those distances
-                    # are smaller then epsilon. relations_to_the_cluster is a boolean array, True for close elements
-                    relations_to_the_cluster = amatrix_copy[all_members_of_current_cluster_ix] < self.eps
-
-                    # if less than 25% of the elements are close, then the topic index in question is not a
-                    # core of the current_label, but rather the core of a new cluster
-                    if relations_to_the_cluster[0].mean() < 0.25:
+                    if close_members_mask.mean() < 0.25:
                         # start new cluster by changing current_label
                         current_label = self.next_label
                         self.next_label += 1
+                        cluster_topic_indices = []
 
+                # TODO changed in order to make the parent_id parameter obsoloete because (i think) it (the appending)
+                # can easily done before calling scan_topic as well
+                cluster_topic_indices.append(topic_index)
                 results[topic_index]["label"] = current_label
 
-                for neighbouring_topic_index in neighbouring_topic_indices:
+                for neighboring_topic_index in neighboring_topic_indices:
+                    if results[neighboring_topic_index]["label"] is None:
+                        ordered_min_similarity.remove(neighboring_topic_index)
+                        # try to extend the cluster into the direction of the neighbor
+                        scan_topic(neighboring_topic_index, current_label, cluster_topic_indices)
 
-                    if results[neighbouring_topic_index]["label"] is None:
-                        ordered_min_similarity.remove(neighbouring_topic_index)
-                        # try to extend the cluster into the direction
-                        # of the neighbor
-                        scan_topic(
-                            neighbouring_topic_index, parent_id=topic_index,
-                            current_label=current_label,
-                            parent_neighbors=neighbouring_topic_indices
-                        )
-
-                    results[neighbouring_topic_index]["parent_ids"].add(topic_index)
-                    results[neighbouring_topic_index]["parent_labels"].add(current_label)
+                    results[neighboring_topic_index]["neighboring_topic_indices"].add(topic_index)
+                    results[neighboring_topic_index]["neighboring_labels"].add(current_label)
 
             else:
                 # this topic is not a core!
