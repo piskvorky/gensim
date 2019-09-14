@@ -110,12 +110,12 @@ logger = logging.getLogger(__name__)
 
 class EnsembleLda():
     """Ensemble Latent Dirichlet Allocation (eLDA), a method of training a topic model ensemble.
-    
+
     Extracts reliable topics that are consistently learned accross multiple LDA models. eLDA has the added benefit that
     the user does not need to know the exact number of topics the topic model should extract ahead of time [2].
 
     """
-    
+
     def __init__(self, topic_model_class="lda", num_models=3,
                  min_cores=None,  # default value from _generate_stable_topics()
                  epsilon=0.1, ensemble_workers=1, memory_friendly_ttda=True,
@@ -319,7 +319,7 @@ class EnsembleLda():
         if sstats_sum == 0:
             sstats_sum = classic_model_representation.state.sstats.sum()
             self.sstats_sum = sstats_sum
-            
+
         # the following is important for the denormalization
         # to generate the proper sstats for the new gensim model:
         # transform to dimensionality of stable_topics. axis=1 is summed
@@ -356,7 +356,7 @@ class EnsembleLda():
 
     def add_model(self, target, num_new_models=None):
         """Add the ttda of another model to the ensemble.
-        
+
         This way, multiple topic models can be connected to an ensemble manually. Make sure that all the models use
         the exact same dictionary/idword mapping.
 
@@ -521,7 +521,7 @@ class EnsembleLda():
 
     def _generate_topic_models_multiproc(self, num_models, ensemble_workers):
         """Generate the topic models to form the ensemble in a multiprocessed way.
-        
+
         Depending on the used topic model this can result in a speedup.
 
         Parameters
@@ -868,7 +868,7 @@ class EnsembleLda():
 
     def _validate_core(self, core):
         """Check if the core has only a single valid parent, which is also the label assigned to the core.
-        
+
         If the presumed core is not even a core returns False.
 
         Parameters
@@ -973,7 +973,7 @@ class EnsembleLda():
 
     def _generate_stable_topics(self, min_cores=None):
         """Generate stable topics out of the clusters.
-        
+
         This function is the last step that has to be done in the ensemble.Stable topics can be retrieved afterwards
         using get_topics().
 
@@ -1092,7 +1092,7 @@ class EnsembleLda():
 
     def get_topics(self):
         """Return only the stable topics from the ensemble.
-        
+
         Returns
         -------
         2D Numpy.numpy.ndarray of floats
@@ -1137,7 +1137,7 @@ class EnsembleLda():
 
 class CBDBSCAN():
     """A Variation of the DBSCAN algorithm called Checkback DBSCAN (CBDBSCAN).
-    
+
     The algorithm works based on
     DBSCAN-like parameters `eps` and `min_samples` that respectively define how far a "nearby" point is, and the
     minimum number of nearby points needed to label a candidate datapoint a core of a cluster.
