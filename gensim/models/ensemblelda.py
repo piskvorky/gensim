@@ -1237,7 +1237,6 @@ class CBDBSCAN():
                     # next_label is initialized with 0 in fit() for the first cluster
                     current_label = self.next_label
                     self.next_label += 1
-                    cluster_topic_indices = []
 
                 else:
                     # In case the core has a parent, check the distance to the existing cluster (since the matrix is
@@ -1253,11 +1252,12 @@ class CBDBSCAN():
                         # start new cluster by changing current_label
                         current_label = self.next_label
                         self.next_label += 1
-                        cluster_topic_indices = []
 
-                # TODO changed in order to make the parent_id parameter obsoloete because (i think) it (the appending)
-                # can easily done before calling scan_topic as well.
-                cluster_topic_indices.append(topic_index)
+                # TODO parent_neighbors and parent_id got obsolete. 1. the appending of parent_id can be done
+                # before calling scan_topic and 2. using parent_neighbors the way it was used was not conform
+                # with the algorithm description. scan_topic gets the list of topic_indices of the current cluster
+                # out of results now.
+
                 results[topic_index]["label"] = current_label
 
                 for neighboring_topic_index in neighboring_topic_indices:
