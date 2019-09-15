@@ -37,7 +37,6 @@ html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	rm -r $(BUILDDIR)/html/_sources
 	cp -r $(BUILDDIR)/html/* ../
-	find _build/html/auto_examples/ -iname "*.html" | xargs sed -i "s/filepath=notebooks/filepath=docs\/src/"
 	@echo
 	@echo "Build finished. The HTML pages are in ../"
 

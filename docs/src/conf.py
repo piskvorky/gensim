@@ -232,17 +232,4 @@ sphinx_gallery_conf = {
     'show_memory': True,
     'filename_pattern': 'run',
     'within_subsection_order': sphinx_gallery.sorting.FileNameSortKey,
-    # TODO: still need to tweak this to get it working
-    'binder': {
-        'org': 'mpenkov',
-        'repo': 'gensim',
-        'branch': 'numfocus',
-        'binderhub_url': 'https://mybinder.org',
-        #
-        # This refers to the requirements.txt file in the root of the
-        # repository.  This is where binder will look when setting up the
-        # virtual env.
-        #
-        'dependencies': 'requirements.txt',
-    }
 }
