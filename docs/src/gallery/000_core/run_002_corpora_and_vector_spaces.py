@@ -292,7 +292,13 @@ corpus = gensim.matutils.Sparse2Corpus(scipy_sparse_matrix)
 scipy_csc_matrix = gensim.matutils.corpus2csc(corpus)
 
 ###############################################################################
-# -------------
+# What Next
+# ---------
+#
+# Read about :ref:`tut2`.
+#
+# References
+# ----------
 #
 # For a complete reference (Want to prune the dictionary to a smaller size?
 # Optimize converting between corpora and NumPy/SciPy arrays?), see the :ref:`apiref`.

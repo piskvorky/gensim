@@ -321,3 +321,7 @@ for document_number, score in sorted(enumerate(sims), key=lambda x: x[1], revers
 # After that, we created a model that transformed our original vector representation to TfIdf.
 # Finally, we used our model to calculate the similarity between some query document and all documents in the corpus.
 #
+# What Next?
+# ----------
+#
+# There's still much more to learn about :ref:`tut1`.

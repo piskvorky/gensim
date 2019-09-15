@@ -265,7 +265,13 @@ lsi = models.LsiModel.load('/tmp/model.lsi')
 # If you feel you could contribute (by testing, providing use-cases or code),
 # please `let me know <mailto:radimrehurek@seznam.cz>`_.
 #
+# What Next?
+# ----------
+#
 # Continue on to the next tutorial on :ref:`tut3`.
+#
+# References
+# ----------
 #
 # .. [1] Bradford. 2008. An empirical study of required dimensionality for large-scale latent semantic indexing applications.
 #
