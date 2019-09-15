@@ -30,8 +30,7 @@ class TestModel(unittest.TestCase):
 
         self.eLDA = EnsembleLda(corpus=common_corpus, id2word=common_dictionary, num_topics=num_topics,
                                 passes=passes, num_models=num_models, random_state=random_state)
-        self.eLDA.save("asdf")
-
+                                
         self.eLDA_mu = EnsembleLda(corpus=common_corpus, id2word=common_dictionary, num_topics=num_topics,
                                    passes=passes, num_models=num_models, random_state=random_state,
                                    memory_friendly_ttda=False)

@@ -884,7 +884,7 @@ class EnsembleLda():
 
         Parameters
         ----------
-        results : {list of {'is_core', 'neighboring_labels', 'num_samples', 'label'}}
+        results : {list of {'is_core', 'neighboring_labels', 'label'}}
             After calling .fit on a CBDBSCAN model, the results can be retrieved from it by accessing the .results
             member, which can be used as the argument to this function. It's a list of infos gathered during
             the clustering step and each element in the list corresponds to a single topic.
@@ -1186,7 +1186,6 @@ class CBDBSCAN():
             "is_core": False,
             "neighboring_labels": set(),
             "neighboring_topic_indices": set(),
-            "num_samples": 0,
             "label": None
         } for _ in range(len(amatrix))]
 
@@ -1220,11 +1219,10 @@ class CBDBSCAN():
             ]
             num_neighboring_topics = len(neighboring_topic_indices)
 
-            # derive a list of all topic_indices that belong to the cluster with the current_label
+            # derive a list of all topic_indices that belong to the cluster with the current_label and that are cores
             cluster_topic_indices = [
-                i
-                for i, topic in enumerate(results)
-                if topic["label"] == current_label and topic["label"] is not None
+                index for index, topic in enumerate(results)
+                if topic["label"] == current_label and topic["label"] is not None and topic["is_core"]
             ]
 
             # If the number of neighbor indices of a topic is large enough, it is considered a core.
@@ -1232,7 +1230,6 @@ class CBDBSCAN():
             if num_neighboring_topics >= self.min_samples:
                 # This topic is a core!
                 results[topic_index]["is_core"] = True
-                results[topic_index]["num_samples"] = num_neighboring_topics
 
                 # if current_label is none, then this is the first core
                 # of a new cluster (hence next_label is used)
