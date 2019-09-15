@@ -85,7 +85,16 @@ Brief description.
 
 ###############################################################################
 # The rest of the script is Python, formatted in a special way so that Sphinx Gallery can parse it.
+# The most important properties of this format are:
+#
+# - Sphinx Gallery will split your script into blocks
+# - A block can be Python source or RST-formatted comments
+# - To indicate that a block is in RST, prefix it with a line of 80 hash (#) characters.
+# - All other blocks will be interpreted as Python source
+#
 # Read `this link <https://sphinx-gallery.github.io/syntax.html>`__ for more details.
+# If you need further examples, check out other ``gensim`` tutorials and guides.
+# All of them (including this one!) have a download link at the bottom of the page, which exposes the Python source they were generated from.
 #
 # You should be able to run your script directly from the command line::
 #
@@ -93,6 +102,40 @@ Brief description.
 #
 # and it should run to completion without error, occasionally printing stuff to standard output.
 #
+
+###############################################################################
+# Authoring Workflow
+# ------------------
+#
+# There are several ways to author documentation.
+# The simplest and most straightforward is to author your ``script.py`` from scratch.
+# You'll have the following cycle:
+#
+# 1. Make changes
+# 2. Run ``python script.py``
+# 3. Check standard output, standard error and return code
+# 4. If everything works well, stop.
+# 5. Otherwise, go back to step 1).
+#
+# If the above is not your cup of tea, you can also author your documentation as a Jupyter notebook.
+# This is a more flexible approach that enables you to tweak parts of the documentation and re-run them as necessary.
+#
+# Once you're happy with the notebook, convert it to a script.py.
+# There's a helpful `script <https://github.com/mpenkov/gensim/blob/numfocus/docs/to_python.py>`__ that will do it for you.
+# To use it::
+#
+#     python to_python.py < notebook.ipynb > script.py
+#
+# You may have to touch up the resulting ``script.py``.
+# More specifically:
+#
+# - Update the unique label
+# - Update the title
+# - Update the description
+# - Fix any issues that the markdown-to-RST converter could not deal with
+#
+# Once your script.py works, put it in a suitable subdirectory.
+# Please don't include your original Jupyter notebook in the repository - we won't be using it.
 
 ###############################################################################
 # Correctness
@@ -124,3 +167,4 @@ Brief description.
 # Once your documentation script is working correctly, make a PR on `github <https://github.com/RaRe-Technologies/gensim>`__.
 # One of our friendly maintainers will review it, make suggestions, and eventually merge it.
 # Your documentation will then appear in the gallery alongside the rest of the example.
+# At that stage, give yourself a pat on the back: you're done!
