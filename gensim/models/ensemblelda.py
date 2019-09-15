@@ -994,7 +994,7 @@ class EnsembleLda():
         if min_cores is None:
             # min_cores is a number between 1 and 3, depending on the number of models
             min_cores = min(3, max(1, int(self.num_models / 4 + 1)))
-            logger.info(f"generating stable topics, each cluster needs at least {min_cores} cores")
+            logger.info("generating stable topics, each cluster needs at least {} cores".format(min_cores))
         else:
             logger.info("generating stable topics")
 
@@ -1199,7 +1199,20 @@ class CBDBSCAN():
         min_distance_per_topic_sorted = sorted(min_distance_per_topic, key=lambda x: x)
         ordered_min_similarity = [index for distance, index in min_distance_per_topic_sorted]
 
-        def scan_topic(topic_index, current_label=None, cluster_topic_indices=[]):
+        def scan_topic(topic_index, current_label=None):
+            """Extend the cluster in one direction.
+
+            Results are accumulated in result, a variable outside of this function.
+
+            Parameters
+            ----------
+            topic_index : int
+                The topic that might be added to the existing cluster, or which might create a new cluster if
+                neccessary.
+            current_label : int
+                The label of the cluster that might be suitable for topic_index
+
+            """
             neighboring_topic_indices = [
                 candidate_topic_index
                 for candidate_topic_index, is_neighbour in enumerate(amatrix_copy[topic_index] < self.eps)
@@ -1207,21 +1220,27 @@ class CBDBSCAN():
             ]
             num_neighboring_topics = len(neighboring_topic_indices)
 
+            # derive a list of all topic_indices that belong to the cluster with the current_label
+            cluster_topic_indices = [
+                i
+                for i, topic in enumerate(results)
+                if topic["label"] == current_label and topic["label"] is not None
+            ]
+
             # If the number of neighbor indices of a topic is large enough, it is considered a core.
             # This also takes neighbor indices that already are identified as core in count.
             if num_neighboring_topics >= self.min_samples:
                 # This topic is a core!
                 results[topic_index]["is_core"] = True
                 results[topic_index]["num_samples"] = num_neighboring_topics
-                cluster_topic_indices = cluster_topic_indices.copy()
 
                 # if current_label is none, then this is the first core
                 # of a new cluster (hence next_label is used)
                 if current_label is None:
-                    # next_label is initialized with 0 in
-                    # fit() for the first cluster
+                    # next_label is initialized with 0 in fit() for the first cluster
                     current_label = self.next_label
                     self.next_label += 1
+                    cluster_topic_indices = []
 
                 else:
                     # In case the core has a parent, check the distance to the existing cluster (since the matrix is
@@ -1240,7 +1259,7 @@ class CBDBSCAN():
                         cluster_topic_indices = []
 
                 # TODO changed in order to make the parent_id parameter obsoloete because (i think) it (the appending)
-                # can easily done before calling scan_topic as well
+                # can easily done before calling scan_topic as well.
                 cluster_topic_indices.append(topic_index)
                 results[topic_index]["label"] = current_label
 
@@ -1248,7 +1267,7 @@ class CBDBSCAN():
                     if results[neighboring_topic_index]["label"] is None:
                         ordered_min_similarity.remove(neighboring_topic_index)
                         # try to extend the cluster into the direction of the neighbor
-                        scan_topic(neighboring_topic_index, current_label, cluster_topic_indices)
+                        scan_topic(neighboring_topic_index, current_label)
 
                     results[neighboring_topic_index]["neighboring_topic_indices"].add(topic_index)
                     results[neighboring_topic_index]["neighboring_labels"].add(current_label)
