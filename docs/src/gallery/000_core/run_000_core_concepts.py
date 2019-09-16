@@ -325,3 +325,13 @@ for document_number, score in sorted(enumerate(sims), key=lambda x: x[1], revers
 # ----------
 #
 # There's still much more to learn about :ref:`tut1`.
+
+###############################################################################
+# Here we show a pretty fastText logo so that our gallery picks it up as a thumbnail.
+#
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+img = mpimg.imread('run_000_core_concepts.png')
+imgplot = plt.imshow(img)
+plt.axis('off')
+plt.show()

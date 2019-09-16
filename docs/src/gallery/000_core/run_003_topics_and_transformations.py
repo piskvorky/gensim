@@ -282,3 +282,13 @@ lsi = models.LsiModel.load('/tmp/model.lsi')
 # .. [4] Halko, Martinsson, Tropp. 2009. Finding structure with randomness.
 #
 # .. [5] Řehůřek. 2011. Subspace tracking for Latent Semantic Analysis.
+
+###############################################################################
+# Here we show a pretty fastText logo so that our gallery picks it up as a thumbnail.
+#
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+img = mpimg.imread('run_003_topics_and_transformations.png')
+imgplot = plt.imshow(img)
+plt.axis('off')
+plt.show()

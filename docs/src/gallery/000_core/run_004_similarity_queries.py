@@ -187,3 +187,13 @@ for i, s in enumerate(sims):
 # Gensim has no ambition to become an all-encompassing framework, across all NLP (or even Machine Learning) subfields.
 # Its mission is to help NLP practitioners try out popular topic modelling algorithms
 # on large datasets easily, and to facilitate prototyping of new algorithms for researchers.
+
+###############################################################################
+# Here we show a pretty fastText logo so that our gallery picks it up as a thumbnail.
+#
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+img = mpimg.imread('run_004_similarity_queries.png')
+imgplot = plt.imshow(img)
+plt.axis('off')
+plt.show()
