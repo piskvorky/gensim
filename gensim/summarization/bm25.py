@@ -44,10 +44,6 @@ from functools import partial
 from multiprocessing import Pool
 from ..utils import effective_n_jobs
 
-PARAM_K1 = 1.5
-PARAM_B = 0.75
-EPSILON = 0.25
-
 
 class BM25(object):
     """Implementation of Best Matching 25 ranking function.
@@ -66,14 +62,56 @@ class BM25(object):
         List of document lengths.
     """
 
-    def __init__(self, corpus):
+    def __init__(self, corpus, k1=1.5, b=0.75, epsilon=0.25):
         """
+
+        'k1 is a variable which helps determine term frequency saturation characteristics.
+        That is, it limits how much a single query term can affect the score of a given document.
+        A higher/lower k1 value means that the slope of “tf() of BM25” curve changes.
+        This has the effect of changing how “terms occurring extra times add extra score.”
+        An interpretation of k1 is that for documents of the average length, it is the value of the term frequency that
+        gives a score of half the maximum score for the considered term. The curve of the impact of tf on the score
+        grows quickly when tf() ≤ k1 and slower and slower when tf() > k1.'
+
+        Shane Connelly (2018). Practical BM25 - Part 2: The BM25 Algorithm and its Variables
+        https://www.elastic.co/pt/blog/practical-bm25-part-2-the-bm25-algorithm-and-its-variables
+
+
+        'If b is bigger, the effects of the length of the document compared to the average length are more amplified.
+        To see this, you can imagine if you set b to 0, the effect of the length ratio would be completely nullified
+        and the length of the document would have no bearing on the score'
+
+        Shane Connelly (2018). Practical BM25 - Part 2: The BM25 Algorithm and its Variables
+        https://www.elastic.co/pt/blog/practical-bm25-part-2-the-bm25-algorithm-and-its-variables
+
+
+        'A significant number of such experiments have been done, and suggest that in general values
+        such as 0.5 < b < 0.8 and 1.2 < k1 < 2 are reasonably good in many circumstances.
+        However, there is also evidence that optimal values do depend on other factors
+        (such as the type of documents or queries).'
+
+        Robertson, Stephen; Zaragoza, Hugo (2009). The Probabilistic Relevance Framework: BM25 and Beyond,
+        http://www.staff.city.ac.uk/~sb317/papers/foundations_bm25_review.pdf
+
+
         Parameters
         ----------
         corpus : list of list of str
             Given corpus.
+        k1 : float
+            Constant used for influencing the term frequency saturation
+        b : float
+            Constant used for influencing the effects of different document lengths relative to average document length
+        epsilon : float
+            Constant used for negative idf of document in corpus.
+
 
         """
+
+        self.k1 = k1
+        self.b = b
+        self.epsilon = epsilon
+
         self.corpus_size = 0
         self.avgdl = 0
         self.doc_freqs = []
@@ -116,7 +154,7 @@ class BM25(object):
                 negative_idfs.append(word)
         self.average_idf = float(idf_sum) / len(self.idf)
 
-        eps = EPSILON * self.average_idf
+        eps = self.epsilon * self.average_idf
         for word in negative_idfs:
             self.idf[word] = eps
 
@@ -141,8 +179,8 @@ class BM25(object):
         for word in document:
             if word not in doc_freqs:
                 continue
-            score += (self.idf[word] * doc_freqs[word] * (PARAM_K1 + 1)
-                      / (doc_freqs[word] + PARAM_K1 * (1 - PARAM_B + PARAM_B * self.doc_len[index] / self.avgdl)))
+            score += (self.idf[word] * doc_freqs[word] * (self.k1 + 1)
+                      / (doc_freqs[word] + self.k * (1 - self.b + self.b * self.doc_len[index] / self.avgdl)))
         return score
 
     def get_scores(self, document):
@@ -226,7 +264,7 @@ def _get_scores(bm25, document):
     return bm25.get_scores(document)
 
 
-def iter_bm25_bow(corpus, n_jobs=1):
+def iter_bm25_bow(corpus, k1=1.5, b=0.75, epsilon=0.25, n_jobs=1):
     """Yield BM25 scores (weights) of documents in corpus.
     Each document has to be weighted with every document in given corpus.
 
@@ -234,6 +272,12 @@ def iter_bm25_bow(corpus, n_jobs=1):
     ----------
     corpus : list of list of str
         Corpus of documents.
+    k1 : float
+            Constant used for influencing the term frequency saturation
+    b : float
+        Constant used for influencing the effects of different document lengths relative to average document length
+    epsilon : float
+        Constant used for negative idf of document in corpus.
     n_jobs : int
         The number of processes to use for computing bm25.
 
@@ -255,7 +299,7 @@ def iter_bm25_bow(corpus, n_jobs=1):
         >>> result = iter_bm25_weights(corpus, n_jobs=-1)
 
     """
-    bm25 = BM25(corpus)
+    bm25 = BM25(corpus, k1, b, epsilon)
 
     n_processes = effective_n_jobs(n_jobs)
     if n_processes == 1:
@@ -272,7 +316,7 @@ def iter_bm25_bow(corpus, n_jobs=1):
     pool.join()
 
 
-def get_bm25_weights(corpus, n_jobs=1):
+def get_bm25_weights(corpus, k1=1.5, b=0.75, epsilon=0.25, n_jobs=1):
     """Returns BM25 scores (weights) of documents in corpus.
     Each document has to be weighted with every document in given corpus.
 
@@ -280,6 +324,12 @@ def get_bm25_weights(corpus, n_jobs=1):
     ----------
     corpus : list of list of str
         Corpus of documents.
+    k1 : float
+            Constant used for influencing the term frequency saturation
+    b : float
+        Constant used for influencing the effects of different document lengths relative to average document length
+    epsilon : float
+        Constant used for negative idf of document in corpus.
     n_jobs : int
         The number of processes to use for computing bm25.
 
@@ -301,7 +351,7 @@ def get_bm25_weights(corpus, n_jobs=1):
         >>> result = get_bm25_weights(corpus, n_jobs=-1)
 
     """
-    bm25 = BM25(corpus)
+    bm25 = BM25(corpus, k1, b, epsilon)
 
     n_processes = effective_n_jobs(n_jobs)
     if n_processes == 1:
