@@ -18,7 +18,7 @@ import os.path
 # This will instruct Binder to set up a virtual environment to use with the examples.
 # Binder will automatically pick up the required dependencies via the :file:`requirements.txt` at the top level of our git repository.
 #
-# .. Important:
+# .. Important::
 #   It takes a few minutes to set up the virtual environment.
 #
 # Once the environment is ready, you will see a collection of Jupyter notebooks.
@@ -49,10 +49,10 @@ for subdir in ('000_core', '010_tutorials', '020_howtos'):
 # A new browser tab will open.
 # You can now play with the example the same way you would with a local Jupyter notebook, e.g. edit code, run everything via Kernel/Restart & Run All, etc.
 #
-# .. Important:
+# .. Important::
 #   Avoid setting up more than virtual environment.
 #   You can reuse the same environment for multiple examples.
 #
-# .. Important:
+# .. Important::
 #   The virtual hardware provided by Binder may not be sufficient to run **all** the examples.
 #   If a particular example requires gigabytes of memory or many CPU cycles, consider running it locally.
