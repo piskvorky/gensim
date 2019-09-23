@@ -44,6 +44,10 @@ from functools import partial
 from multiprocessing import Pool
 from ..utils import effective_n_jobs
 
+PARAM_K1 = 1.5
+PARAM_B = 0.75
+EPSILON = 0.25
+
 
 class BM25(object):
     """Implementation of Best Matching 25 ranking function.
@@ -62,7 +66,7 @@ class BM25(object):
         List of document lengths.
     """
 
-    def __init__(self, corpus, k1=1.5, b=0.75, epsilon=0.25):
+    def __init__(self, corpus, k1=PARAM_K1, b=PARAM_B, epsilon=EPSILON):
         """
 
         'k1 is a variable which helps determine term frequency saturation characteristics.
@@ -180,7 +184,7 @@ class BM25(object):
             if word not in doc_freqs:
                 continue
             score += (self.idf[word] * doc_freqs[word] * (self.k1 + 1)
-                      / (doc_freqs[word] + self.k * (1 - self.b + self.b * self.doc_len[index] / self.avgdl)))
+                      / (doc_freqs[word] + self.k1 * (1 - self.b + self.b * self.doc_len[index] / self.avgdl)))
         return score
 
     def get_scores(self, document):
@@ -264,7 +268,7 @@ def _get_scores(bm25, document):
     return bm25.get_scores(document)
 
 
-def iter_bm25_bow(corpus, k1=1.5, b=0.75, epsilon=0.25, n_jobs=1):
+def iter_bm25_bow(corpus, k1=PARAM_K1, b=PARAM_B, epsilon=EPSILON, n_jobs=1):
     """Yield BM25 scores (weights) of documents in corpus.
     Each document has to be weighted with every document in given corpus.
 
@@ -316,7 +320,7 @@ def iter_bm25_bow(corpus, k1=1.5, b=0.75, epsilon=0.25, n_jobs=1):
     pool.join()
 
 
-def get_bm25_weights(corpus, k1=1.5, b=0.75, epsilon=0.25, n_jobs=1):
+def get_bm25_weights(corpus, k1=PARAM_K1, b=PARAM_B, epsilon=EPSILON, n_jobs=1):
     """Returns BM25 scores (weights) of documents in corpus.
     Each document has to be weighted with every document in given corpus.
 
