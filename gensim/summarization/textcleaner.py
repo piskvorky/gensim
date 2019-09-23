@@ -22,21 +22,16 @@ Data
 
 from gensim.summarization.syntactic_unit import SyntacticUnit
 from gensim.parsing.preprocessing import preprocess_documents
-from gensim.utils import tokenize
+from gensim.utils import tokenize, has_pattern
 from six.moves import range
 import re
 import logging
 
 logger = logging.getLogger(__name__)
 
-try:
+HAS_PATTERN = has_pattern()
+if HAS_PATTERN:
     from pattern.en import tag
-    logger.info("'pattern' package found; tag filters are available for English")
-    HAS_PATTERN = True
-except ImportError:
-    logger.info("'pattern' package not found; tag filters are not available for English")
-    HAS_PATTERN = False
-
 
 SEPARATOR = r'@'
 RE_SENTENCE = re.compile(r'(\S.+?[.!?])(?=\s+|$)|(\S.+?)(?=[\n]|$)', re.UNICODE)

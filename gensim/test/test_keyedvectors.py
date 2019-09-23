@@ -361,6 +361,45 @@ class Gensim320Test(unittest.TestCase):
         self.assertTrue(vectors.word_vec('computer') is not None)
 
 
+class Word2VecKeyedVectorsTest(unittest.TestCase):
+    def setUp(self):
+        self.model_path = datapath("w2v_keyedvectors_load_test.modeldata")
+        self.vocab_path = datapath("w2v_keyedvectors_load_test.vocab")
+
+    def test_load_model_and_vocab_file_strict(self):
+        """Test loading model and voacab files which have decoding errors: strict mode"""
+        with self.assertRaises(UnicodeDecodeError):
+            gensim.models.KeyedVectors.load_word2vec_format(
+                self.model_path, fvocab=self.vocab_path, binary=False, unicode_errors="strict")
+
+    def test_load_model_and_vocab_file_replace(self):
+        """Test loading model and voacab files which have decoding errors: replace mode"""
+        model = gensim.models.KeyedVectors.load_word2vec_format(
+            self.model_path, fvocab=self.vocab_path, binary=False, unicode_errors="replace")
+        self.assertEqual(model.vocab[u'ありがとう�'].count, 123)
+        self.assertEqual(model.vocab[u'どういたしまして�'].count, 789)
+        self.assertEqual(model.vocab[u'ありがとう�'].index, 0)
+        self.assertEqual(model.vocab[u'どういたしまして�'].index, 1)
+        self.assertTrue(np.array_equal(
+            model.get_vector(u'ありがとう�'), np.array([.6, .6, .6], dtype=np.float32)))
+        self.assertTrue(np.array_equal(
+            model.get_vector(u'どういたしまして�'), np.array([.1, .2, .3], dtype=np.float32)))
+
+    def test_load_model_and_vocab_file_ignore(self):
+        """Test loading model and voacab files which have decoding errors: ignore mode"""
+        model = gensim.models.KeyedVectors.load_word2vec_format(
+            self.model_path, fvocab=self.vocab_path, binary=False, unicode_errors="ignore")
+        print(model.vocab.keys())
+        self.assertEqual(model.vocab[u'ありがとう'].count, 123)
+        self.assertEqual(model.vocab[u'どういたしまして'].count, 789)
+        self.assertEqual(model.vocab[u'ありがとう'].index, 0)
+        self.assertEqual(model.vocab[u'どういたしまして'].index, 1)
+        self.assertTrue(np.array_equal(
+            model.get_vector(u'ありがとう'), np.array([.6, .6, .6], dtype=np.float32)))
+        self.assertTrue(np.array_equal(
+            model.get_vector(u'どういたしまして'), np.array([.1, .2, .3], dtype=np.float32)))
+
+
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()

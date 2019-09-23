@@ -567,10 +567,13 @@ class PoincareModel(utils.SaveLoad):
 
         """
         counts = Counter(node_indices)
+        node_dict = defaultdict(list)
+        for i, node_index in enumerate(node_indices):
+            node_dict[node_index].append(i)
         for node_index, count in counts.items():
             if count == 1:
                 continue
-            positions = [i for i, index in enumerate(node_indices) if index == node_index]
+            positions = node_dict[node_index]
             # Move all updates to the same node to the last such update, zeroing all the others
             vector_updates[positions[-1]] = vector_updates[positions].sum(axis=0)
             vector_updates[positions[:-1]] = 0
