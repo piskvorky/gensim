@@ -552,10 +552,10 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
         trainables : :class:`~gensim.models.doc2vec.Doc2VecTrainables`
             This object represents the inner shallow neural network used to train the embeddings. The semantics of the
-            network differ slightly in the two available training modes (CBOW or SG) but you can think of it as a NN 
-            with a single projection and hidden layer which we train on the corpus. The weights are then used as our 
-            embeddings. The only addition to the underlying NN used in :class:`~gensim.models.word2vec.Word2Vec` is 
-            that the input includes not only the word vectors of each word in the context, but also the paragraph 
+            network differ slightly in the two available training modes (CBOW or SG) but you can think of it as a NN
+            with a single projection and hidden layer which we train on the corpus. The weights are then used as our
+            embeddings. The only addition to the underlying NN used in :class:`~gensim.models.word2vec.Word2Vec` is
+            that the input includes not only the word vectors of each word in the context, but also the paragraph
             vector.
         """
         if 'sentences' in kwargs:
