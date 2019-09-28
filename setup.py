@@ -267,6 +267,15 @@ else:
 
 linux_testenv = win_testenv[:]
 
+docs_testenv = linux_testenv + distributed_env + [
+    'sphinx',
+    'sphinxcontrib-napoleon',
+    'plotly',
+    'pattern <= 2.6',
+    'sphinxcontrib.programoutput',
+    'sphinx-gallery',
+]
+
 if sys.version_info < (3, 7):
     linux_testenv.extend([
         'tensorflow <= 1.3.0',
@@ -388,7 +397,7 @@ setup(
         'distributed': distributed_env,
         'test-win': win_testenv,
         'test': linux_testenv,
-        'docs': linux_testenv + distributed_env + ['sphinx', 'sphinxcontrib-napoleon', 'plotly', 'pattern <= 2.6', 'sphinxcontrib.programoutput'],
+        'docs': docs_testenv,
     },
 
     include_package_data=True,
