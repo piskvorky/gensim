@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+#
+# Authors: Michael Penkov <m@penkov.dev>
+# Copyright (C) 2019 RaRe Technologies s.r.o.
+# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 """Check that our wheels are all there."""
 import os
 import os.path
