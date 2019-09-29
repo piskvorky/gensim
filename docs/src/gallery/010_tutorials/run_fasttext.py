@@ -132,9 +132,15 @@ print(model)
 
 
 # saving a model trained via Gensim's fastText implementation
-model.save('saved_model_gensim')
-loaded_model = FT_gensim.load('saved_model_gensim')
+import tempfile
+import os
+with tempfile.NamedTemporaryFile(prefix='saved_model_gensim-', delete=False) as tmp:
+    model.save(tmp.name)
+
+loaded_model = FT_gensim.load(tmp.name)
 print(loaded_model)
+
+os.unlink(tmp.name)
 
 ###############################################################################
 #
