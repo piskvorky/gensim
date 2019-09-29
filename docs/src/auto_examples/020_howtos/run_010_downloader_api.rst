@@ -1,10 +1,10 @@
 .. note::
     :class: sphx-glr-download-link-note
 
-    Click :ref:`here <sphx_glr_download_auto_examples_020_howtos_run_downloader_api.py>` to download the full example code
+    Click :ref:`here <sphx_glr_download_auto_examples_020_howtos_run_010_downloader_api.py>` to download the full example code
 .. rst-class:: sphx-glr-example-title
 
-.. _sphx_glr_auto_examples_020_howtos_run_downloader_api.py:
+.. _sphx_glr_auto_examples_020_howtos_run_010_downloader_api.py:
 
 
 .. _tutorial_downloader_api:
@@ -154,7 +154,7 @@ Now that we have our word2vec model, let's find words that are similar to 'tree'
 
  .. code-block:: none
 
-    [('trees', 0.7160046100616455), ('leaf', 0.6814600229263306), ('bark', 0.673116147518158), ('avl', 0.6230589151382446), ('flower', 0.6178625822067261), ('fruit', 0.6148846745491028), ('bird', 0.5924761891365051), ('pond', 0.5879237055778503), ('beetle', 0.5730318427085876), ('leaves', 0.5629512071609497)]
+    [('leaf', 0.7090295553207397), ('trees', 0.6969285011291504), ('bark', 0.6574575901031494), ('flower', 0.6349432468414307), ('bird', 0.632779598236084), ('avl', 0.6274975538253784), ('fruit', 0.6212154030799866), ('cave', 0.583029568195343), ('beetle', 0.5817441940307617), ('foliage', 0.5792064666748047)]
 
 
 You can use the API to download many corpora and models. You can get the list of all the models and corpora that are provided, by using the code below:
@@ -847,12 +847,12 @@ In corpora, the corpus is never loaded to memory, all corpuses wrapped to specia
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  30.604 seconds)
+   **Total running time of the script:** ( 1 minutes  23.366 seconds)
 
-**Estimated memory usage:**  435 MB
+**Estimated memory usage:**  393 MB
 
 
-.. _sphx_glr_download_auto_examples_020_howtos_run_downloader_api.py:
+.. _sphx_glr_download_auto_examples_020_howtos_run_010_downloader_api.py:
 
 
 .. only :: html
@@ -864,13 +864,13 @@ In corpora, the corpus is never loaded to memory, all corpuses wrapped to specia
 
   .. container:: sphx-glr-download
 
-     :download:`Download Python source code: run_downloader_api.py <run_downloader_api.py>`
+     :download:`Download Python source code: run_010_downloader_api.py <run_010_downloader_api.py>`
 
 
 
   .. container:: sphx-glr-download
 
-     :download:`Download Jupyter notebook: run_downloader_api.ipynb <run_downloader_api.ipynb>`
+     :download:`Download Jupyter notebook: run_010_downloader_api.ipynb <run_010_downloader_api.ipynb>`
 
 
 .. only:: html

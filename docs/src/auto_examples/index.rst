@@ -296,6 +296,26 @@ These tutorials are **learning-oriented lessons** that introduce a particular ge
    :hidden:
 
    /auto_examples/010_tutorials/run_090_summarization
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This tutorial demonstrates using Pivoted Document Length Normalization to counter the effect of...">
+
+.. only:: html
+
+    .. figure:: /auto_examples/010_tutorials/images/thumb/sphx_glr_run_100_pivoted_doc_norm_thumb.png
+
+        :ref:`sphx_glr_auto_examples_010_tutorials_run_100_pivoted_doc_norm.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/010_tutorials/run_100_pivoted_doc_norm
 .. raw:: html
 
     <div style='clear:both'></div>
@@ -314,13 +334,13 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates how you can compare a model with itself and other models, and why you need it.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates simple and quick access to common corpora, models, and other data.">
 
 .. only:: html
 
-    .. figure:: /auto_examples/020_howtos/images/thumb/sphx_glr_howto_compare_lda_thumb.png
+    .. figure:: /auto_examples/020_howtos/images/thumb/sphx_glr_run_010_downloader_api_thumb.png
 
-        :ref:`sphx_glr_auto_examples_020_howtos_howto_compare_lda.py`
+        :ref:`sphx_glr_auto_examples_020_howtos_run_010_downloader_api.py`
 
 .. raw:: html
 
@@ -330,7 +350,7 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 .. toctree::
    :hidden:
 
-   /auto_examples/020_howtos/howto_compare_lda
+   /auto_examples/020_howtos/run_010_downloader_api
 
 .. raw:: html
 
@@ -338,9 +358,9 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
 .. only:: html
 
-    .. figure:: /auto_examples/020_howtos/images/thumb/sphx_glr_run_binder_thumb.png
+    .. figure:: /auto_examples/020_howtos/images/thumb/sphx_glr_run_020_binder_thumb.png
 
-        :ref:`sphx_glr_auto_examples_020_howtos_run_binder.py`
+        :ref:`sphx_glr_auto_examples_020_howtos_run_020_binder.py`
 
 .. raw:: html
 
@@ -350,7 +370,7 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 .. toctree::
    :hidden:
 
-   /auto_examples/020_howtos/run_binder
+   /auto_examples/020_howtos/run_020_binder
 
 .. raw:: html
 
@@ -358,9 +378,9 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
 .. only:: html
 
-    .. figure:: /auto_examples/020_howtos/images/thumb/sphx_glr_run_doc_thumb.png
+    .. figure:: /auto_examples/020_howtos/images/thumb/sphx_glr_run_030_doc_thumb.png
 
-        :ref:`sphx_glr_auto_examples_020_howtos_run_doc.py`
+        :ref:`sphx_glr_auto_examples_020_howtos_run_030_doc.py`
 
 .. raw:: html
 
@@ -370,7 +390,7 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 .. toctree::
    :hidden:
 
-   /auto_examples/020_howtos/run_doc
+   /auto_examples/020_howtos/run_030_doc
 
 .. raw:: html
 
@@ -378,29 +398,9 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
 .. only:: html
 
-    .. figure:: /auto_examples/020_howtos/images/thumb/sphx_glr_run_doc2vec_imdb_thumb.png
+    .. figure:: /auto_examples/020_howtos/images/thumb/sphx_glr_run_050_doc2vec_imdb_thumb.png
 
-        :ref:`sphx_glr_auto_examples_020_howtos_run_doc2vec_imdb.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/020_howtos/run_doc2vec_imdb
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates simple and quick access to common corpora, models, and other data.">
-
-.. only:: html
-
-    .. figure:: /auto_examples/020_howtos/images/thumb/sphx_glr_run_downloader_api_thumb.png
-
-        :ref:`sphx_glr_auto_examples_020_howtos_run_downloader_api.py`
+        :ref:`sphx_glr_auto_examples_020_howtos_run_050_doc2vec_imdb.py`
 
 .. raw:: html
 
@@ -410,7 +410,7 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 .. toctree::
    :hidden:
 
-   /auto_examples/020_howtos/run_downloader_api
+   /auto_examples/020_howtos/run_050_doc2vec_imdb
 
 .. raw:: html
 
@@ -418,9 +418,9 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
 .. only:: html
 
-    .. figure:: /auto_examples/020_howtos/images/thumb/sphx_glr_run_news_classification_thumb.png
+    .. figure:: /auto_examples/020_howtos/images/thumb/sphx_glr_run_060_news_classification_thumb.png
 
-        :ref:`sphx_glr_auto_examples_020_howtos_run_news_classification.py`
+        :ref:`sphx_glr_auto_examples_020_howtos_run_060_news_classification.py`
 
 .. raw:: html
 
@@ -430,17 +430,17 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 .. toctree::
    :hidden:
 
-   /auto_examples/020_howtos/run_news_classification
+   /auto_examples/020_howtos/run_060_news_classification
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="This guide shows how to perform Pivoted Document Length Normalization to counter the effect of ...">
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates how you can compare a model with itself and other models, and why you need it.">
 
 .. only:: html
 
-    .. figure:: /auto_examples/020_howtos/images/thumb/sphx_glr_run_pivoted_doc_norm_thumb.png
+    .. figure:: /auto_examples/020_howtos/images/thumb/sphx_glr_rxx_040_compare_lda_thumb.png
 
-        :ref:`sphx_glr_auto_examples_020_howtos_run_pivoted_doc_norm.py`
+        :ref:`sphx_glr_auto_examples_020_howtos_rxx_040_compare_lda.py`
 
 .. raw:: html
 
@@ -450,7 +450,7 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 .. toctree::
    :hidden:
 
-   /auto_examples/020_howtos/run_pivoted_doc_norm
+   /auto_examples/020_howtos/rxx_040_compare_lda
 .. raw:: html
 
     <div style='clear:both'></div>

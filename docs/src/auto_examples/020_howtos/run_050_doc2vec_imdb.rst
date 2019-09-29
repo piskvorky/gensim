@@ -1,10 +1,10 @@
 .. note::
     :class: sphx-glr-download-link-note
 
-    Click :ref:`here <sphx_glr_download_auto_examples_020_howtos_run_doc2vec_imdb.py>` to download the full example code or run this example in your browser via Binder
+    Click :ref:`here <sphx_glr_download_auto_examples_020_howtos_run_050_doc2vec_imdb.py>` to download the full example code
 .. rst-class:: sphx-glr-example-title
 
-.. _sphx_glr_auto_examples_020_howtos_run_doc2vec_imdb.py:
+.. _sphx_glr_auto_examples_020_howtos_run_050_doc2vec_imdb.py:
 
 
 .. _run_doc2vec_imdb.py:
@@ -361,11 +361,11 @@ Sanity checking.  Let's see if our models give meaningful results.
 
  .. code-block:: none
 
-    0.43 'black-market'
-    0.42 'boxcar'
-    0.42 '"Agent'
-    0.42 'full?'
-    0.42 'Distress"'
+    0.47 'Shravan'
+    0.44 'mecha'
+    0.41 'Brewster)'
+    0.41 "Almighty'."
+    0.40 'wait..'
 
 
 Predictive Evaluation Methods
@@ -492,29 +492,29 @@ main models takes about an hour.)
 
     Evaluating Doc2Vec(dbow,d100,n5,mc2,t8)
 
-    0.104040 Doc2Vec(dbow,d100,n5,mc2,t8)
+    0.103320 Doc2Vec(dbow,d100,n5,mc2,t8)
 
     Training Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
 
     Evaluating Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
 
-    0.171680 Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
+    0.168280 Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
 
     Training Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
 
     Evaluating Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
 
-    0.305920 Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
+    0.302680 Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
 
 
     Evaluating Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
 
-    0.104320 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
+    0.102800 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
 
 
     Evaluating Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
 
-    0.104440 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
+    0.103080 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
 
 
 Achieved Sentiment-Prediction Accuracy
@@ -539,11 +539,11 @@ Compare error rates achieved, best-to-worst
  .. code-block:: none
 
     Err_rate Model
-    0.104040 Doc2Vec(dbow,d100,n5,mc2,t8)
-    0.104320 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
-    0.104440 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
-    0.171680 Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
-    0.305920 Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
+    0.102800 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
+    0.103080 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
+    0.103320 Doc2Vec(dbow,d100,n5,mc2,t8)
+    0.168280 Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
+    0.302680 Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
 
 
 In our testing, contrary to the results of the paper, on this problem,
@@ -594,13 +594,13 @@ Are inferred vectors close to the precalculated ones?
 
  .. code-block:: none
 
-    for doc 58241...
+    for doc 71726...
     Doc2Vec(dbow,d100,n5,mc2,t8):
-     [(58241, 0.9865663051605225), (59721, 0.5768244862556458), (82051, 0.5744959115982056)]
+     [(71726, 0.9907494783401489), (76963, 0.633242130279541), (71727, 0.6189519166946411)]
     Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8):
-     [(58241, 0.9134382009506226), (52381, 0.5564887523651123), (66819, 0.5543081760406494)]
+     [(71726, 0.9467856884002686), (90056, 0.5752678513526917), (71727, 0.5716109275817871)]
     Doc2Vec(dm/c,d100,n5,w5,mc2,t8):
-     [(58241, 0.7879481315612793), (55231, 0.43922340869903564), (59569, 0.41210946440696716)]
+     [(71726, 0.893122136592865), (24169, 0.45019519329071045), (96999, 0.4162907600402832)]
 
 
 (Yes, here the stored vector from 20 epochs of training is usually one of the
@@ -637,15 +637,15 @@ Do close documents seem more related than distant ones?
 
  .. code-block:: none
 
-    TARGET (86190): «absurdly overrated vehicle for Marin county anorexics, of interest<br /><br />only to older men charmed by, but largely excluded from, the<br /><br />pretentions of the privileged young. also, of course, to historians of<br /><br />the lesser directors of the old new wave.<br /><br />the mannered failure of the principal actress to - well - act is<br /><br />insupportable, and the annoyance is not decreased by a sense<br /><br />that the director doesnt particularly care, in fact might prefer it that<br /><br />way. the looseness of his direction is only pointed by the<br /><br />conspicuousness of passages in which actual actors rebel, and<br /><br />introduce verve.<br /><br />in short, a film for the voyeur.<br /><br />»
+    TARGET (12857): «Comic secret agents have made a comeback in recent years, with Mike Myers' 'Austin Powers' and Rowan Atkinson's 'Johnny English', and more recently Steve Carell in the big-screen version of the hit '60's show 'Get Smart!'.<br /><br />Back in 1974, it was David Jason who was wearing a shoulder holster and carrying an attaché case full of documents marked 'Classified'.<br /><br />'The Top Secret Life Of Edgar Briggs' was his first starring role in a sitcom, after years of being a supporting actor in such shows as 'Six Dates With Barker', the 'Doctor' series, and 'Hark At Barker'.<br /><br />Humphrey Barclay had found him working in a pier theatre in Bournemouth and was sufficiently impressed to include him alongside Michael Palin, Terry Jones and Eric Idle in the children's comedy show 'Do Not Adjust Your Set!'.<br /><br />'T.T.S.L.O.E.B' cast Jason as 'Edgar Briggs', a well-meaning but incompetent agent for the Secret Intelligence Service. Whereas John Steed wore a bowler hat, Briggs had a trilby. Whereas Napoleon Solo carried a radio pen, Briggs owned a pipe. Objects fell to bits in his hands. He read Confidential documents in bed while his wife ( Barbara Angell ) perused Woman's Own ( on one occasion it would be the other way round ). When he tracked a pair of Russian agents to a heliport, he accidentally switched on the airport's Tannoy system, and broadcast his plans to capture them! When he hid on a train so as to photograph a meeting between an S.I.S. man and his enemy-contact, it moved off with him aboard and took him straight to Brighton! When he tried to organise the defection of a female Russian scientist, he took a 'short cut' to elude his pursuers, only to wind up hopelessly lost in a car park. Yet, like 'Inspector Clouseau', he always seemed to come out on top at the end, much to the dismay of his colleagues.<br /><br />As previously mentioned, he was married. His wife Jennifer was understanding about the sort of work he did. Though they had a row once which resulted in her yelling at him from the window of their high-rise flat: "Secret Service this, Secret Service that! You never stop thinking about the Secret Service!". He shouted back: "Think of the neighbours! They're not supposed to know I'm in the Secret Service!".<br /><br />Briggs was part of a team of agents whose number included 'Coronation Street' villain Mark Eden ( he was the psychotic Alan Bradley ) as 'Spencer', Michael Stainton as 'Buxton', and 'Doctor At Sea''s Elisabeth Counsell as the lovely 'Cathy Strong'. They answered to 'The Commander', played by the late Noel Coleman. The Commander was kidnapped in one episode, leaving Briggs temporarily in charge of the S.I.S. - which naturally horrified everyone.<br /><br />This hilarious show was by Richard Laing and Bernard McKenna, who had written for the 'Doctor' series. Rather than spoof Bond, it was more of a send-up of the serious spy shows such as 'Callan' ( though it had a Bond-style theme tune ). Furtive meetings in underground car parks, code-breaking, stolen missile plans, that kind of thing. Jason brought a lot of energy to the role, doing a lot of his own stunts, such as Briggs falling off a ladder whilst decorating his flat, and tumbling down a hill in a wastepaper bin, and were reminiscent of those to be found in the 'Pink Panther' films.<br /><br />'Briggs' had all the ingredients to be a smash-hit. Unfortunately, it was not networked. In the London area, it was put out on Sundays at 7.25 P.M. where it was trounced in the ratings by the B.B.C.'s soapy drama 'The Brothers'. It was then moved to Fridays at 7 P.M. because I.T.V. wanted to showcase its latest American import - the T.V. version of 'Planet Of The Apes'. Briggs never found an audience. A similar fate befell Jason's next major show: 1976's 'Lucky Feller'. It was not until 1977 and 'A Sharp Intake Of Breath' that he found his first successful solo vehicle.<br /><br />You can see the title sequence ( along with two brief excerpts in German! ) for this series on YouTube. Unfortunately, that is all you can see. Jason will not permit his early starring shows either to be repeated or released on D.V.D. A great shame. For the moment, however, Edgar Briggs' life will have to remain top secret.<br /><br />CODA: I have seen a number of episodes recently and I'm pleased to say it stands up incredibly well.»
 
-    SIMILAR/DISSIMILAR DOCS PER MODEL Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8):
+    SIMILAR/DISSIMILAR DOCS PER MODEL Doc2Vec(dm/c,d100,n5,w5,mc2,t8):
 
-    MOST (91336, 0.6613749265670776): «this movie corrupted all that was good about the hobbit.<br /><br />the music was frightening.<br /><br />the script was a product of too many late nights of white lining.<br /><br />it gives you a brief, misleading summary that not even a child could enjoy.<br /><br />at least it is better than Ralph Bakshi's LOTR.<br /><br />apologies to those who actually finished watching the movie.»
+    MOST (15983, 0.5422624349594116): «I very nearly did not see 'Hi-De-Hi!'. I think it must have been the title that put me off. In those days, the Welsh language editions of 'The Radio Times' only used to print titles of certain shows without imparting a scrap of information as to what they were actually about. 'Hi-De-Hi!' suggested to me a bad quiz show hosted by Leslie Crowther or worse an inane U.S. import. But I managed to catch a later episode, and was surprised to find it written by Jimmy Perry and David Croft.<br /><br />As was the case with 'Dad's Army' and 'It Ain't Half Hot Mum', Perry based it on personal experiences, in this case his time at a Butlins' holiday camp. Before cheap air travel came along in the '60's, these camps sprang up along British coastlines, providing entertainment for working class families and earning millions for their owners.<br /><br />( As a matter of interest, I worked in one such camp in the '80's as a chef - Barry Island, South Wales - known to all and sundry as 'Shag Land' for reasons I won't go into! )<br /><br />Set in the late '50's, it began with university academic Jeffrey Fairbrother ( Simon Cadell ) taking over as the entertainments manager of Maplin's, a job he was ill equipped to handle. His staff included resident comic Ted Bovis ( Paul Shane ), his sidekick Spike ( Jeffrey Holland ), miserable Punch and Judy man Mr.Partridge ( Leslie Dwyer ), snobby ballroom dancers Barry ( Barry Howard ) and Yvonne Stuart-Hargreaves ) Diane Holland ), and the unforgettable Gladys Pugh ( Ruth Madoc ), who lusted after Fairbrother at every opportunity. Bubbly Su Pollard stole the show though as cleaner Peggy Ollerenshaw, whose driving ambition was to be a 'Yellowcoat' ( all the important staff members wore them ). A number of sexy girls occupied these coats too, most notably Nikki Kelly's 'Sylvia' and statuesque Rikki Howard's 'Betty'. We never saw Joe Maplin, the owner. He communicated to his staff in the form of ungrammatical missives, which poor Jeffrey was forced to read aloud. "Hi-De-Hi!" was the campers' greeting, usually met with the equally inane 'Ho-De-Ho!. <br /><br />One fan was the late Sir Fred Pontin, who told Perry and Croft that he recognised most of the characters from real life.<br /><br />I always found Bovis the most convincing of these as well as the most tragic, like Archie Rice he was the comedian whose big break never came, reduced to cracking corny gags for the amusement of drunken late-night audiences. He took advantage of his position to indulge in a few perks, and in one memorable episode Fairbrother's patience snapped and he sounded him out: "Lies, Ted! All lies!".<br /><br />As with every other Perry/Croft series, the cast were excellent, particularly Cadell and Shane. Ruth Madoc's prissy 'Gladys' got on my nerves ( no wonder Anne Robinson hates the Welsh! ), but Leslie Dwyer's misanthropic 'Mr.Partridge' and Felix Bowness' jockey 'Fred Qulley' more than compensated. <br /><br />The visual gag everyone remembers is drunken Mr.Partridge spotting a pantomime horse riding a real one along the beach. Looking at the bottle of whiskey in his hand, he decides to stick with it and instead throws away the banana he had been eating! <br /><br />With its frothy blend of '50's nostalgia and saucy gags, 'Hi-De'Hi' was a big hit for B.B.C.-1 in the '80's, resulting in a massive increase in bookings for Butlins and Pontins. It went downhill when Cadell left to return to the theatre though. I never took to his replacement, Squadron Leader Clive Dempster ( David Griffin ). Worse, Leslie Dwyer's death robbed the show of one of its best characters. Kenneth Connor was brought in to replace him as 'Uncle Sammy'.<br /><br />The period setting occasionally caused problems; in one episode, Sylvia and Betty had to dive into the pool to rescue Peggy who for some reason was dressed as a shark. The revealing costumes they wore were wrong for that era. Still they looked great in them so who's complaining? In another, Ted sang the Tom Jones hit 'Delilah' to campers. It was not composed ( by Les Reed and Barry Mason, incidentally ) until 1968.<br /><br />Maplins closed its doors in 1988, and the last shot was that of Peggy ( now a Yellowcoat ) all alone in the camp, jumping into the air and shouting ( what else? ) 'Hi-De-Hi!'. <br /><br />I don't rate it as highly as Perry and Croft's other shows but its popularity is undeniable. It was probably one of the last British sitcoms to generate tremendous public affection, mainly because it featured likable characters in a recognisable setting. Goodnight campers!»
 
-    MEDIAN (39475, 0.31675153970718384): «i'm really getting old,,am in the midst of watching this 40 year old flick,and wonder what my grandchildren will be watching 40 years from now,,its an old saying,,but they don't make em like that anymore..it's not only the story,its the music,the acting both by young and old..the cast ,it would seem,were born to play their roles,,young oliver,,old Fagin..too many to mention them all,the role played by the judge oliver stands before,i've seen in other roles over the years..the artful dodger,,Ron moody as Fagin,,Mr and Mrs bumble,,the movie not only won 5 Oscars,,but took a few golden globe awards too..if you decide to see this film..do yourself a favor,,take a few if not all the children,to see this masterpiece»
+    MEDIAN (22846, 0.004338208585977554): «Now, I am not prone to much emotion, but I cried seeing this movie. It certainly has more appeal among blacks than other ethnic groups, but there is something here for everyone. The classic song "It's so Hard to Say Goodbye" really makes this one worth watching at least once.»
 
-    LEAST (93747, -0.07457995414733887): «Kiefer plays an undercover cop who infiltrates a gang and takes part in a diamond heist where things get messy. They find out he's a cop and he almost gets iced. So here enters Phillips as a quiet dignified Lakota Indian who teams up with the hard boiled Kiefer because the diamond baddies stole his people's sacred lance. Yes, I said sacred lance. The supporting cast don't help matters any. Bill Smitrovich appears in the one note role as Sutherland's police superior and the moment Michael Moriarty shows up it's the "Hey I'm this movie's dirty cop. Yeah me!" dance.<br /><br />The only noteworthy element to Renegades is how quick the police response time is. Anything breaks out and they're on the scene pronto! In most movies, there's enough time to kill twenty people, blow up a building and have a car chase before the police even show up.<br /><br />I should mention the whole Native American Indian sub-plot and it's attempt at mixing culture fails miserably too. It's another variation on the whole buddy cop movie. The random factor is who's going to be the white guy's partner and having it be an Native American Indian doesn't change anything. Partnering up because of the sacred lance is without a doubt the absolute worse excuse to have two people join forces in an action movie I've ever seen too. 'They stole my secret lance - now we are partners'. Give me a break. It's not even so bad, it's funny. Renegades is a sad waste of nearly two hours if you're looking for it.»
+    LEAST (98632, -0.43389996886253357): «I have seen A LOT of bad movies. I watch them on a regular basis and even some of the really bad ones, I can get through-ones that Mystery Sceince Theater 3000 wouldn't even touch. This is bar none the worst "movie" ever made. I use the term movie loosely in this case because it is more like a group of friends that got together and made a video, but sure enough it has some Troma in it. Even if you like the mindless Troma stuff, this one will make you wince in pain. It IS that bad!! The cover has Lilith Stabs on it (a hot goth/punk type girl of Bad Movie Police fame) in a little outfit with a huge gun. Very misleading. She is NOT in the movie and there are no gun toting babes gunning down zombies. Instead you get to watch an ugly chick with a chocolate stained face annoy the hell out of you with over eccentric bad acting and lisp. The imitation Cosby/Don King character-Bonejack-is something you would laugh at if it were your friend, otherwise it is just lame. The filmmakers felt free to make plenty of inside jokes (the reappearing ice cream poster in tons of shots) without letting the audience in on their little jokes. If this can truly be called a movie versus just a video that some idiots threw together, then yes. This is THE worst movie I have ever seen. It even beats out the Tempe classics such as Humanoids from Atlantis and Robot Ninja. At least with James L Edwards you know what you are getting into. I wonder how many suckers fell for the false advertising on the box cover. Well live and learn the old "You can't judge a book by its cover". Well Mulva didn't kick any zombie ass-but this movie sure kicked mine.»
 
 
 Somewhat, in terms of reviewer tone, movie genre, etc... the MOST
@@ -692,41 +692,41 @@ Do the word vectors show useful similarities?
 
  .. code-block:: none
 
-    target_word: 'scene"' model: Doc2Vec(dbow,d100,n5,mc2,t8) similar words:
-        1. 0.44 "'movie'.<br"
-        2. 0.43 'dead!<br'
-        3. 0.42 'ear!'
-        4. 0.42 'Miao'
-        5. 0.41 'Gibb'
-        6. 0.40 'thieves"'
-        7. 0.40 'REQUIRES'
-        8. 0.39 'outtakes,'
-        9. 0.39 'Persepolis'
-        10. 0.39 'anti-Catholic'
+    target_word: 'Ops' model: Doc2Vec(dbow,d100,n5,mc2,t8) similar words:
+        1. 0.43 'not.Therefore,'
+        2. 0.42 'Eskimo,'
+        3. 0.42 'f'
+        4. 0.41 'side-note,'
+        5. 0.40 'culture?'
+        6. 0.39 'couleurs:'
+        7. 0.39 'Calamine'
+        8. 0.39 'endlessly'
+        9. 0.39 'camp-fest'
+        10. 0.39 'huge!'
 
-    target_word: 'scene"' model: Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8) similar words:
-        1. 0.56 'kiss,'
-        2. 0.55 'scene),'
-        3. 0.55 'moment"'
-        4. 0.54 'scene'
-        5. 0.53 'ending'
-        6. 0.53 'gunfight'
-        7. 0.53 'bands"'
-        8. 0.52 'funhouse'
-        9. 0.52 'matador'
-        10. 0.52 'sequence'
+    target_word: 'Ops' model: Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8) similar words:
+        1. 0.55 'counter-terrorism'
+        2. 0.54 'analyst,'
+        3. 0.51 'Kumjorn.<br'
+        4. 0.50 'operative.'
+        5. 0.49 'McGavin)'
+        6. 0.49 'ex-Navy'
+        7. 0.48 '(Arnold'
+        8. 0.48 'script!!!'
+        9. 0.47 'non-profit'
+        10. 0.47 'Digicorp,'
 
-    target_word: 'scene"' model: Doc2Vec(dm/c,d100,n5,w5,mc2,t8) similar words:
-        1. 0.56 'analogical'
-        2. 0.56 'Flyer'
-        3. 0.55 'Scene,'
-        4. 0.54 'Ganges'
-        5. 0.54 "1800's"
-        6. 0.53 'explosion'
-        7. 0.53 'Thames,'
-        8. 0.53 'lights...'
-        9. 0.53 'Aryans,'
-        10. 0.53 'Awakening'
+    target_word: 'Ops' model: Doc2Vec(dm/c,d100,n5,w5,mc2,t8) similar words:
+        1. 0.63 'Forces'
+        2. 0.61 'ops'
+        3. 0.60 'Operations'
+        4. 0.60 'ex-military'
+        5. 0.58 'Treasury'
+        6. 0.57 'ex-Confederate'
+        7. 0.57 'ex-army'
+        8. 0.56 'Army'
+        9. 0.56 'Orthodox'
+        10. 0.55 'Olympic'
 
 
 Do the DBOW words look meaningless? That's because the gensim DBOW model
@@ -777,11 +777,10 @@ Are the word vectors from this dataset any good at analogies?
 
  .. code-block:: none
 
-    Downloading analogy questions file...
     Success, questions-words.txt is available for next steps.
     Doc2Vec(dbow,d100,n5,mc2,t8): 0.00% correct (0 of 13617)
-    Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8): 18.15% correct (2472 of 13617)
-    Doc2Vec(dm/c,d100,n5,w5,mc2,t8): 18.37% correct (2501 of 13617)
+    Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8): 18.60% correct (2533 of 13617)
+    Doc2Vec(dm/c,d100,n5,w5,mc2,t8): 17.91% correct (2439 of 13617)
 
 
 Even though this is a tiny, domain-specific dataset, it shows some meager
@@ -793,12 +792,12 @@ random-initialized words of the DBOW model of course fail miserably.)
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 38 minutes  39.115 seconds)
+   **Total running time of the script:** ( 37 minutes  57.705 seconds)
 
-**Estimated memory usage:**  3814 MB
+**Estimated memory usage:**  4092 MB
 
 
-.. _sphx_glr_download_auto_examples_020_howtos_run_doc2vec_imdb.py:
+.. _sphx_glr_download_auto_examples_020_howtos_run_050_doc2vec_imdb.py:
 
 
 .. only :: html
@@ -807,22 +806,16 @@ random-initialized words of the DBOW model of course fail miserably.)
     :class: sphx-glr-footer-example
 
 
-  .. container:: binder-badge
-
-    .. image:: https://mybinder.org/badge_logo.svg
-      :target: https://mybinder.org/v2/gh/mpenkov/gensim/numfocus?filepath=notebooks/auto_examples/020_howtos/run_doc2vec_imdb.ipynb
-      :width: 150 px
-
 
   .. container:: sphx-glr-download
 
-     :download:`Download Python source code: run_doc2vec_imdb.py <run_doc2vec_imdb.py>`
+     :download:`Download Python source code: run_050_doc2vec_imdb.py <run_050_doc2vec_imdb.py>`
 
 
 
   .. container:: sphx-glr-download
 
-     :download:`Download Jupyter notebook: run_doc2vec_imdb.ipynb <run_doc2vec_imdb.ipynb>`
+     :download:`Download Jupyter notebook: run_050_doc2vec_imdb.ipynb <run_050_doc2vec_imdb.ipynb>`
 
 
 .. only:: html

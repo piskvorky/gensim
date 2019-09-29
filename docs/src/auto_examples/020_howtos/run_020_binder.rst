@@ -1,10 +1,10 @@
 .. note::
     :class: sphx-glr-download-link-note
 
-    Click :ref:`here <sphx_glr_download_auto_examples_020_howtos_run_binder.py>` to download the full example code
+    Click :ref:`here <sphx_glr_download_auto_examples_020_howtos_run_020_binder.py>` to download the full example code
 .. rst-class:: sphx-glr-example-title
 
-.. _sphx_glr_auto_examples_020_howtos_run_binder.py:
+.. _sphx_glr_auto_examples_020_howtos_run_020_binder.py:
 
 
 .. _binder_howto:
@@ -81,37 +81,37 @@ Once the environment is ready, you will see a collection of Jupyter notebooks.
     ../000_core/run_004_similarity_queries.py
             Similarity Queries
 
-    ../010_tutorials/run_annoy.py
-            Similarity Queries with Annoy
-    ../010_tutorials/run_distance_metrics.py
-            Distance Metrics
-    ../010_tutorials/run_doc2vec_lee.py
+    ../010_tutorials/run_010_doc2vec_lee.py
             Doc2Vec Model
-    ../010_tutorials/run_fasttext.py
-            FastText Model
-    ../010_tutorials/run_lda.py
-            LDA Model
-    ../010_tutorials/run_summarization.py
-            Text Summarization
-    ../010_tutorials/run_wmd.py
-            Word Movers' Distance
-    ../010_tutorials/run_word2vec.py
+    ../010_tutorials/run_020_word2vec.py
             Word2Vec Model
+    ../010_tutorials/run_025_annoy.py
+            Similarity Queries with Annoy and Word2Vec
+    ../010_tutorials/run_030_fasttext.py
+            FastText Model
+    ../010_tutorials/run_040_lda.py
+            LDA Model
+    ../010_tutorials/run_050_distance_metrics.py
+            Distance Metrics
+    ../010_tutorials/run_060_wmd.py
+            Word Movers' Distance
+    ../010_tutorials/run_090_summarization.py
+            Text Summarization
+    ../010_tutorials/run_100_pivoted_doc_norm.py
+            Pivoted Document Length Normalization
 
-    ../020_howtos/howto_compare_lda.py
-            How to Compare LDA Models
-    ../020_howtos/run_binder.py
-            How to Play with the Examples via Binder
-    ../020_howtos/run_doc.py
-            How to Author Documentation
-    ../020_howtos/run_doc2vec_imdb.py
-            How to Reproduce Results of Le and Mikolov 2014
-    ../020_howtos/run_downloader_api.py
+    ../020_howtos/run_010_downloader_api.py
             How to download pre-trained models and corpora
-    ../020_howtos/run_news_classification.py
+    ../020_howtos/run_020_binder.py
+            How to Play with the Examples via Binder
+    ../020_howtos/run_030_doc.py
+            How to Author Documentation
+    ../020_howtos/run_050_doc2vec_imdb.py
+            How to Reproduce Results of Le and Mikolov 2014
+    ../020_howtos/run_060_news_classification.py
             How to Classify News Articles into Topics
-    ../020_howtos/run_pivoted_doc_norm.py
-            How to Perform Pivoted Document Length Normalization
+    ../020_howtos/xrun_040_compare_lda.py
+            How to Compare LDA Models
 
 
 Find the notebook you're interested in and click on it.
@@ -129,12 +129,12 @@ You can now play with the example the same way you would with a local Jupyter no
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.171 seconds)
+   **Total running time of the script:** ( 0 minutes  0.170 seconds)
 
 **Estimated memory usage:**  9 MB
 
 
-.. _sphx_glr_download_auto_examples_020_howtos_run_binder.py:
+.. _sphx_glr_download_auto_examples_020_howtos_run_020_binder.py:
 
 
 .. only :: html
@@ -146,13 +146,13 @@ You can now play with the example the same way you would with a local Jupyter no
 
   .. container:: sphx-glr-download
 
-     :download:`Download Python source code: run_binder.py <run_binder.py>`
+     :download:`Download Python source code: run_020_binder.py <run_020_binder.py>`
 
 
 
   .. container:: sphx-glr-download
 
-     :download:`Download Jupyter notebook: run_binder.ipynb <run_binder.ipynb>`
+     :download:`Download Jupyter notebook: run_020_binder.ipynb <run_020_binder.ipynb>`
 
 
 .. only:: html

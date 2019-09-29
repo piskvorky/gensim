@@ -1,10 +1,10 @@
 .. note::
     :class: sphx-glr-download-link-note
 
-    Click :ref:`here <sphx_glr_download_auto_examples_020_howtos_howto_compare_lda.py>` to download the full example code
+    Click :ref:`here <sphx_glr_download_auto_examples_020_howtos_rxx_040_compare_lda.py>` to download the full example code
 .. rst-class:: sphx-glr-example-title
 
-.. _sphx_glr_auto_examples_020_howtos_howto_compare_lda.py:
+.. _sphx_glr_auto_examples_020_howtos_rxx_040_compare_lda.py:
 
 
 .. _howto_compare_lda_py:
@@ -274,7 +274,7 @@ Looking at this matrix, you can find similar and different topics (and relevant 
 **Estimated memory usage:**  0 MB
 
 
-.. _sphx_glr_download_auto_examples_020_howtos_howto_compare_lda.py:
+.. _sphx_glr_download_auto_examples_020_howtos_rxx_040_compare_lda.py:
 
 
 .. only :: html
@@ -286,13 +286,13 @@ Looking at this matrix, you can find similar and different topics (and relevant 
 
   .. container:: sphx-glr-download
 
-     :download:`Download Python source code: howto_compare_lda.py <howto_compare_lda.py>`
+     :download:`Download Python source code: rxx_040_compare_lda.py <rxx_040_compare_lda.py>`
 
 
 
   .. container:: sphx-glr-download
 
-     :download:`Download Jupyter notebook: howto_compare_lda.ipynb <howto_compare_lda.ipynb>`
+     :download:`Download Jupyter notebook: rxx_040_compare_lda.ipynb <rxx_040_compare_lda.ipynb>`
 
 
 .. only:: html

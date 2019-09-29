@@ -1,10 +1,10 @@
 .. note::
     :class: sphx-glr-download-link-note
 
-    Click :ref:`here <sphx_glr_download_auto_examples_020_howtos_run_doc.py>` to download the full example code
+    Click :ref:`here <sphx_glr_download_auto_examples_020_howtos_run_030_doc.py>` to download the full example code
 .. rst-class:: sphx-glr-example-title
 
-.. _sphx_glr_auto_examples_020_howtos_run_doc.py:
+.. _sphx_glr_auto_examples_020_howtos_run_030_doc.py:
 
 
 .. _doc_howto:
@@ -192,12 +192,12 @@ At that stage, give yourself a pat on the back: you're done!
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.201 seconds)
+   **Total running time of the script:** ( 0 minutes  0.175 seconds)
 
 **Estimated memory usage:**  9 MB
 
 
-.. _sphx_glr_download_auto_examples_020_howtos_run_doc.py:
+.. _sphx_glr_download_auto_examples_020_howtos_run_030_doc.py:
 
 
 .. only :: html
@@ -209,13 +209,13 @@ At that stage, give yourself a pat on the back: you're done!
 
   .. container:: sphx-glr-download
 
-     :download:`Download Python source code: run_doc.py <run_doc.py>`
+     :download:`Download Python source code: run_030_doc.py <run_030_doc.py>`
 
 
 
   .. container:: sphx-glr-download
 
-     :download:`Download Jupyter notebook: run_doc.ipynb <run_doc.ipynb>`
+     :download:`Download Jupyter notebook: run_030_doc.ipynb <run_030_doc.ipynb>`
 
 
 .. only:: html
