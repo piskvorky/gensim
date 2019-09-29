@@ -6,11 +6,14 @@
 """Check that our wheels are all there."""
 import os
 import os.path
+import re
+import sys
 
 #
 # We expect this to be set as part of the release process.
 #
 release = os.environ['RELEASE']
+assert re.match(r'^\d+.\d+.\d+', release), 'expected %r to be in major.minor.bugfix format'
 
 dist_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'dist')
 dist_path = os.path.abspath(dist_path)
@@ -59,3 +62,5 @@ for f in expected:
 
 if not fail:
     print('OK')
+
+sys.exit(1 if fail else 0)
