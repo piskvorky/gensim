@@ -1,18 +1,18 @@
 .. note::
     :class: sphx-glr-download-link-note
 
-    Click :ref:`here <sphx_glr_download_auto_examples_020_howtos_run_pivoted_doc_norm.py>` to download the full example code or run this example in your browser via Binder
+    Click :ref:`here <sphx_glr_download_auto_examples_010_tutorials_run_100_pivoted_doc_norm.py>` to download the full example code
 .. rst-class:: sphx-glr-example-title
 
-.. _sphx_glr_auto_examples_020_howtos_run_pivoted_doc_norm.py:
+.. _sphx_glr_auto_examples_010_tutorials_run_100_pivoted_doc_norm.py:
 
 
 .. _pivoted_document_len_norm:
 
-How to Perform Pivoted Document Length Normalization
-====================================================
+Pivoted Document Length Normalization
+=====================================
 
-This guide shows how to perform Pivoted Document Length Normalization to
+This tutorial demonstrates using Pivoted Document Length Normalization to
 counter the effect of short document bias when working with TfIdf, thereby
 increasing the classification accuracy.
 In many cases, normalizing the tfidf weights for each term favors weight of terms of the documents with shorter length. The *pivoted document length normalization* scheme counters the effect of this bias for short documents by making tfidf independent of the document length.
@@ -345,7 +345,7 @@ slope which is 0.5 where the overall accuracy of the model is increased.
 
 
 
-.. image:: /auto_examples/020_howtos/images/sphx_glr_run_pivoted_doc_norm_001.png
+.. image:: /auto_examples/010_tutorials/images/sphx_glr_run_100_pivoted_doc_norm_001.png
     :class: sphx-glr-single-img
 
 
@@ -373,12 +373,12 @@ Using pivoted document normalization improved the classification accuracy signif
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  19.406 seconds)
+   **Total running time of the script:** ( 0 minutes  14.445 seconds)
 
-**Estimated memory usage:**  9 MB
+**Estimated memory usage:**  92 MB
 
 
-.. _sphx_glr_download_auto_examples_020_howtos_run_pivoted_doc_norm.py:
+.. _sphx_glr_download_auto_examples_010_tutorials_run_100_pivoted_doc_norm.py:
 
 
 .. only :: html
@@ -387,22 +387,16 @@ Using pivoted document normalization improved the classification accuracy signif
     :class: sphx-glr-footer-example
 
 
-  .. container:: binder-badge
-
-    .. image:: https://mybinder.org/badge_logo.svg
-      :target: https://mybinder.org/v2/gh/mpenkov/gensim/numfocus?filepath=notebooks/auto_examples/020_howtos/run_pivoted_doc_norm.ipynb
-      :width: 150 px
-
 
   .. container:: sphx-glr-download
 
-     :download:`Download Python source code: run_pivoted_doc_norm.py <run_pivoted_doc_norm.py>`
+     :download:`Download Python source code: run_100_pivoted_doc_norm.py <run_100_pivoted_doc_norm.py>`
 
 
 
   .. container:: sphx-glr-download
 
-     :download:`Download Jupyter notebook: run_pivoted_doc_norm.ipynb <run_pivoted_doc_norm.ipynb>`
+     :download:`Download Jupyter notebook: run_100_pivoted_doc_norm.ipynb <run_100_pivoted_doc_norm.ipynb>`
 
 
 .. only:: html

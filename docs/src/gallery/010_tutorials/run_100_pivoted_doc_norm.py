@@ -2,10 +2,10 @@ r"""
 
 .. _pivoted_document_len_norm:
 
-How to Perform Pivoted Document Length Normalization
-====================================================
+Pivoted Document Length Normalization
+=====================================
 
-This guide shows how to perform Pivoted Document Length Normalization to
+This tutorial demonstrates using Pivoted Document Length Normalization to
 counter the effect of short document bias when working with TfIdf, thereby
 increasing the classification accuracy.
 """
