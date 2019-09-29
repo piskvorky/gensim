@@ -23,10 +23,12 @@ Subdirectories
 There are three important subdirectories for the gallery:
 
 1. ``docs/src/gallery`` contains Python scripts
-2. ``docs/src/auto_examples`` contains Jupyter notebooks rendered from the Python scripts
+2. ``docs/src/auto_examples`` contains Jupyter notebooks and RST rendered from the Python scripts
 3. ``docs/auto_examples`` contains HTML rendered from the Python scripts
 
-We keep all three under version control in our git repository.
+We keep all 1) and 2) under version control in our git repository.
+The rendering takes a fair bit of time (one or two hours to run everything) so it's worth keeping the result.
+On the contrary, it doesn't take a lot of time to generate 3) from 2), so we don't keep 3) under version control.
 
 .. Note::
     I'm not sure if there's some way we can merge 2) and 3) - that may make more
