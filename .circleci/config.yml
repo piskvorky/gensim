@@ -24,12 +24,10 @@ jobs:
           command: |
             python -m virtualenv venv
             source venv/bin/activate
-            pip install tox
+            pip install tox --progress-bar off
 
       - run:
           name: Build documentation
-          environment:
-            TOX_PARALLEL_NO_SPINNER: 1
           command: |
             source venv/bin/activate
             tox -e compile,docs -vv
