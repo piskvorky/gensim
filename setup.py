@@ -275,6 +275,7 @@ docs_testenv = linux_testenv + distributed_env + [
     'sphinxcontrib.programoutput',
     'sphinx-gallery',
     'memory_profiler',
+    'annoy',
 ]
 
 if sys.version_info < (3, 7):
