@@ -1,8 +1,8 @@
 r"""
 .. _annoy_py:
 
-Similarity Queries with Annoy
-=============================
+Similarity Queries with Annoy and Word2Vec
+==========================================
 
 Introduces the annoy library for similarity queries using a Word2Vec model.
 """
