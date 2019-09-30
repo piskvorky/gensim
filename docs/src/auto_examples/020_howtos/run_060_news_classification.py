@@ -1,7 +1,4 @@
 r"""
-
-.. _news_classification_py:
-
 How to Classify News Articles into Topics
 =========================================
 

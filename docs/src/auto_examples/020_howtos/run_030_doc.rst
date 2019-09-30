@@ -7,8 +7,6 @@
 .. _sphx_glr_auto_examples_020_howtos_run_030_doc.py:
 
 
-.. _doc_howto:
-
 How to Author Documentation
 ===========================
 
@@ -192,7 +190,7 @@ At that stage, give yourself a pat on the back: you're done!
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.175 seconds)
+   **Total running time of the script:** ( 0 minutes  1.802 seconds)
 
 **Estimated memory usage:**  9 MB
 

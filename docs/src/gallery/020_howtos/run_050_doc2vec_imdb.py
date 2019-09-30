@@ -1,7 +1,4 @@
 r"""
-
-.. _run_doc2vec_imdb.py:
-
 How to Reproduce Results of Le and Mikolov 2014
 ===============================================
 

@@ -1,7 +1,4 @@
 r"""
-
-.. _doc2vec_lee_py:
-
 Doc2Vec Model
 =============
 
@@ -33,7 +30,7 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 #
 # You may be familiar with the `bag-of-words model
 # <https://en.wikipedia.org/wiki/Bag-of-words_model>`_ from the
-# :ref:`core_concepts_py` section.
+# :ref:`core_concepts_vector` section.
 # This model transforms each document to a fixed-length vector of integers.
 # For example, given the sentences:
 #

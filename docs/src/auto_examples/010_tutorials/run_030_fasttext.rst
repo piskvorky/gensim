@@ -7,8 +7,6 @@
 .. _sphx_glr_auto_examples_010_tutorials_run_030_fasttext.py:
 
 
-.. _fasttext_tutorial_py:
-
 FastText Model
 ==============
 
@@ -91,7 +89,7 @@ For the following examples, we'll use the Lee Corpus (which you already have if 
 
  .. code-block:: none
 
-    <gensim.models.fasttext.FastText object at 0x7fe399b9fdd8>
+    <gensim.models.fasttext.FastText object at 0x7f5760e60278>
 
 
 Training hyperparameters
@@ -163,7 +161,7 @@ Models can be saved and loaded via the ``load`` and ``save`` methods.
 
  .. code-block:: none
 
-    <gensim.models.fasttext.FastText object at 0x7fe260091cc0>
+    <gensim.models.fasttext.FastText object at 0x7f575fa3d630>
 
 
 The ``save_word2vec_method`` causes the vectors for ngrams to be lost. As a result, a model loaded in this way will behave as a regular word2vec model.
@@ -231,31 +229,31 @@ FastText models support vector lookups for out-of-vocabulary words by summing up
 
  .. code-block:: none
 
-    array([ 8.4455185e-02, -1.0038717e-02, -5.9108943e-01,  4.5057020e-01,
-            6.1291409e-01, -2.9829705e-01, -1.9161057e-01, -5.8460418e-02,
-            4.2386848e-01,  3.4023973e-01, -6.3242573e-01,  3.8265304e-03,
-           -7.0242476e-01,  4.0764502e-01,  2.6526663e-01, -7.3893599e-02,
-           -2.1616289e-01,  1.8904778e-01,  2.3743360e-01, -3.7548923e-01,
-           -2.4184871e-01,  2.6657289e-01, -3.5883111e-01,  4.5346294e-02,
-           -8.3400190e-01,  7.4467582e-01,  1.3188230e-01,  1.9738491e-01,
-            4.0142837e-01,  1.9379098e-02, -6.5326267e-01,  2.4698308e-01,
-            8.3173893e-02, -4.9540538e-01,  4.7354230e-01,  7.7310435e-02,
-           -1.5998441e-01, -3.8665496e-02,  4.0121624e-01,  1.8975993e-01,
-           -3.8958719e-04, -7.5674988e-02,  3.8030967e-01, -5.9949864e-02,
-            1.2742083e-01,  1.8134865e-01, -1.0703909e-01,  2.0883927e-01,
-           -2.0948178e-03, -3.9545634e-01, -5.7543284e-01, -5.4236752e-01,
-            3.5078954e-02,  2.1431992e-02,  3.7261876e-01, -8.1508273e-01,
-           -1.0877564e-01, -2.0154855e-01,  1.3842276e-02, -4.1202016e-02,
-            2.2705761e-01, -9.6409880e-02, -4.9242309e-01, -1.3487200e-01,
-           -5.4028577e-01,  3.0330792e-01,  1.9712528e-02,  1.3594845e-01,
-            2.6747780e-02,  4.6500212e-01, -5.7465625e-01, -5.3054690e-01,
-           -9.4801508e-04, -1.4894724e-01, -3.2207409e-01,  3.5728578e-02,
-            2.5958005e-01,  1.3595429e-01, -1.2496351e-01,  1.8443903e-01,
-            4.6904901e-01,  3.6963750e-02, -1.4681615e-01,  4.6917006e-01,
-           -3.6232165e-01, -2.5221449e-01,  1.0284642e-01,  2.8069499e-01,
-            3.0935711e-01,  2.8910854e-01, -1.9946001e-01,  1.2434962e-01,
-           -2.9544644e-02, -1.7803410e-01, -2.9119951e-01,  5.7917684e-01,
-            2.8827086e-01,  4.9247938e-01,  5.5208868e-01,  4.5207450e-01],
+    array([ 9.51775461e-02,  6.89189089e-03, -5.75633347e-01,  4.84484404e-01,
+            5.98646402e-01, -3.22955698e-01, -1.88203231e-01, -3.48487310e-02,
+            4.31219041e-01,  3.35425019e-01, -6.36286318e-01, -1.59965567e-02,
+           -6.67633653e-01,  4.13802326e-01,  2.80708164e-01, -5.81725016e-02,
+           -1.89673513e-01,  1.83778614e-01,  2.39189222e-01, -3.78011256e-01,
+           -2.39169523e-01,  2.73841798e-01, -3.78472775e-01,  2.11551264e-02,
+           -8.25319648e-01,  7.29921758e-01,  1.21649534e-01,  1.76731527e-01,
+            4.07538623e-01,  5.84270060e-03, -6.50230169e-01,  2.28860602e-01,
+            8.25605169e-02, -4.79251295e-01,  4.70403671e-01,  1.10500589e-01,
+           -1.63527742e-01, -7.36760795e-02,  4.24491972e-01,  2.20531091e-01,
+           -1.05110975e-02, -7.41144270e-02,  3.92821461e-01, -6.24631047e-02,
+            1.27662361e-01,  1.85713992e-01, -1.31524295e-01,  2.17991263e-01,
+           -1.74904689e-02, -3.83495450e-01, -5.69042623e-01, -5.53412855e-01,
+            7.40526468e-02,  1.03890281e-02,  4.07311559e-01, -8.03362131e-01,
+           -1.08180597e-01, -1.78428411e-01,  9.29761119e-03, -2.72015128e-02,
+            2.11776942e-01, -1.24705046e-01, -4.90403205e-01, -9.45862085e-02,
+           -5.35887361e-01,  3.53770256e-01, -1.20761819e-04,  1.54261395e-01,
+            3.11418567e-02,  4.76123035e-01, -5.65737009e-01, -5.14414787e-01,
+           -1.19198393e-02, -1.10536508e-01, -3.42910647e-01,  3.17953080e-02,
+            2.77650893e-01,  1.07256003e-01, -1.41108185e-01,  1.81120232e-01,
+            4.52760220e-01,  5.86952008e-02, -1.71264693e-01,  4.52266842e-01,
+           -3.99318129e-01, -2.59079546e-01,  1.26494303e-01,  2.93788224e-01,
+            3.23280275e-01,  2.96236515e-01, -1.72860056e-01,  1.21067993e-01,
+           -3.56455632e-02, -1.90687954e-01, -2.67633319e-01,  5.57876825e-01,
+            2.82045633e-01,  4.40662771e-01,  5.51508486e-01,  4.76593047e-01],
           dtype=float32)
 
 
@@ -274,31 +272,31 @@ FastText models support vector lookups for out-of-vocabulary words by summing up
 
  .. code-block:: none
 
-    array([ 7.4382693e-02, -8.1921108e-03, -5.1449597e-01,  3.9142546e-01,
-            5.3269345e-01, -2.6111686e-01, -1.6746593e-01, -5.0075538e-02,
-            3.6867455e-01,  2.9684237e-01, -5.5263603e-01,  1.9028945e-03,
-           -6.1175287e-01,  3.5626999e-01,  2.2692643e-01, -6.4051077e-02,
-           -1.9029701e-01,  1.6284081e-01,  2.0505545e-01, -3.2731465e-01,
-           -2.1052462e-01,  2.3295945e-01, -3.1307852e-01,  4.0144339e-02,
-           -7.2678447e-01,  6.4808446e-01,  1.1478644e-01,  1.7230231e-01,
-            3.4964937e-01,  1.6442286e-02, -5.6662863e-01,  2.1622521e-01,
-            7.1130097e-02, -4.3346009e-01,  4.1215119e-01,  6.7024469e-02,
-           -1.3786827e-01, -3.4958296e-02,  3.4931681e-01,  1.6603869e-01,
-            5.6221359e-04, -6.6077292e-02,  3.3085573e-01, -5.0529730e-02,
-            1.0994045e-01,  1.5825827e-01, -9.6847363e-02,  1.8375373e-01,
-           -2.4567798e-03, -3.4309617e-01, -5.0386149e-01, -4.7173393e-01,
-            3.1731639e-02,  1.9644525e-02,  3.2527378e-01, -7.1030229e-01,
-           -9.4889559e-02, -1.7446031e-01,  9.7353803e-03, -3.5604339e-02,
-            1.9738355e-01, -8.4844828e-02, -4.2885214e-01, -1.1809799e-01,
-           -4.7122967e-01,  2.6369980e-01,  1.7286493e-02,  1.1833906e-01,
-            2.5069227e-02,  4.0593657e-01, -5.0070614e-01, -4.6183729e-01,
-           -8.6749974e-04, -1.3066567e-01, -2.8041545e-01,  3.0339070e-02,
-            2.2625467e-01,  1.1867213e-01, -1.0698760e-01,  1.5990424e-01,
-            4.0952358e-01,  3.2027539e-02, -1.2878175e-01,  4.0795246e-01,
-           -3.1465945e-01, -2.1913464e-01,  9.1661632e-02,  2.4584998e-01,
-            2.6889491e-01,  2.5260991e-01, -1.7412896e-01,  1.0811622e-01,
-           -2.7129170e-02, -1.5485901e-01, -2.5353333e-01,  5.0491500e-01,
-            2.5022638e-01,  4.2763287e-01,  4.8061603e-01,  3.9399058e-01],
+    array([ 8.36547464e-02,  6.55087968e-03, -5.00685155e-01,  4.20664519e-01,
+            5.19802272e-01, -2.82329440e-01, -1.64370134e-01, -2.95282304e-02,
+            3.74739796e-01,  2.92407662e-01, -5.55526197e-01, -1.53528349e-02,
+           -5.80950856e-01,  3.61315876e-01,  2.40151674e-01, -5.03144711e-02,
+           -1.67107195e-01,  1.58128008e-01,  2.06411198e-01, -3.29228520e-01,
+           -2.08010316e-01,  2.39102423e-01, -3.29903662e-01,  1.90601517e-02,
+           -7.18589365e-01,  6.34692907e-01,  1.05780549e-01,  1.54197395e-01,
+            3.54656041e-01,  4.67368308e-03, -5.63514590e-01,  2.00302228e-01,
+            7.05042407e-02, -4.18988466e-01,  4.08986926e-01,  9.58395377e-02,
+           -1.40793711e-01, -6.53786659e-02,  3.69218737e-01,  1.92644417e-01,
+           -8.25192221e-03, -6.46147057e-02,  3.41238201e-01, -5.26223630e-02,
+            1.09977126e-01,  1.61804438e-01, -1.17992245e-01,  1.91429988e-01,
+           -1.58510040e-02, -3.32186550e-01, -4.97555315e-01, -4.80619788e-01,
+            6.55840039e-02,  1.00020058e-02,  3.54951859e-01, -6.99018478e-01,
+           -9.42101181e-02, -1.54089138e-01,  5.75800799e-03, -2.33614929e-02,
+            1.83812991e-01, -1.09346680e-01, -4.26444769e-01, -8.28935578e-02,
+           -4.66715872e-01,  3.07202607e-01,  1.00058842e-05,  1.34095371e-01,
+            2.88459435e-02,  4.15012509e-01, -4.92204189e-01, -4.47121948e-01,
+           -1.04272002e-02, -9.70624313e-02, -2.98134476e-01,  2.68633105e-02,
+            2.41655767e-01,  9.35228318e-02, -1.20855518e-01,  1.56785622e-01,
+            3.94739091e-01,  5.08996844e-02, -1.49854109e-01,  3.92645687e-01,
+           -3.46374542e-01, -2.24778414e-01,  1.12099610e-01,  2.56878823e-01,
+            2.80495703e-01,  2.58337140e-01, -1.50668636e-01,  1.05068199e-01,
+           -3.23841572e-02, -1.65567130e-01, -2.32554063e-01,  4.85449374e-01,
+            2.44345963e-01,  3.81803930e-01,  4.79236662e-01,  4.14590687e-01],
           dtype=float32)
 
 
@@ -405,7 +403,7 @@ Similarity operations work the same way as word2vec. **Out-of-vocabulary words c
 
  .. code-block:: none
 
-    0.99999285
+    0.9999928
 
 
 Syntactically similar words generally have high similarity in fastText models, since a large number of the component char-ngrams will be the same. As a result, fastText generally does better at syntactic tasks than Word2Vec. A detailed comparison is provided `here <Word2Vec_FastText_Comparison.ipynb>`_.
@@ -431,16 +429,16 @@ The example training corpus is a toy corpus, results are not expected to be good
 
  .. code-block:: none
 
-    [('boat', 0.9982773065567017),
-     ('study', 0.9982753992080688),
-     ('"That', 0.9982752799987793),
-     ('often', 0.9982641935348511),
-     ('north.', 0.9982575178146362),
-     ('Endeavour', 0.9982515573501587),
-     ('beyond', 0.9982446432113647),
-     ('stage', 0.9982429146766663),
-     ('accept', 0.9982421398162842),
-     ('Commonwealth', 0.9982419013977051)]
+    [('study', 0.9982819557189941),
+     ('Arafat', 0.9982815980911255),
+     ('Arafat,', 0.9982744455337524),
+     ('boat', 0.998274028301239),
+     ('"That', 0.9982696175575256),
+     ('often', 0.9982571601867676),
+     ('north.', 0.9982531666755676),
+     ("Arafat's", 0.9982520341873169),
+     ('Endeavour', 0.9982511401176453),
+     ('heard', 0.998244047164917)]
 
 
 
@@ -458,7 +456,7 @@ The example training corpus is a toy corpus, results are not expected to be good
 
  .. code-block:: none
 
-    0.9999508
+    0.9999509
 
 
 
@@ -494,16 +492,16 @@ The example training corpus is a toy corpus, results are not expected to be good
 
  .. code-block:: none
 
-    [('1', 0.242139533162117),
-     ('40', 0.23757682740688324),
-     ('2', 0.23549434542655945),
-     ('20', 0.2334955781698227),
-     ('26', 0.23319362103939056),
-     ('UN', 0.232555091381073),
-     ('blaze', 0.23230190575122833),
-     ('keep', 0.2315463423728943),
-     ('As', 0.23101860284805298),
-     ('...', 0.23101305961608887)]
+    [('1', 0.24240879714488983),
+     ('40', 0.23784878849983215),
+     ('2', 0.23489072918891907),
+     ('26', 0.23309852182865143),
+     ('20', 0.2329929769039154),
+     ('UN', 0.2326236069202423),
+     ('blaze', 0.23229902982711792),
+     ('keep', 0.23141512274742126),
+     ('...', 0.2313539981842041),
+     ('As', 0.23093350231647491)]
 
 
 
@@ -531,11 +529,11 @@ The example training corpus is a toy corpus, results are not expected to be good
      {'correct': [], 'incorrect': [], 'section': 'gram1-adjective-to-adverb'},
      {'correct': [], 'incorrect': [], 'section': 'gram2-opposite'},
      {'correct': [('GOOD', 'BETTER', 'GREAT', 'GREATER'),
-                  ('GREAT', 'GREATER', 'LOW', 'LOWER'),
                   ('LONG', 'LONGER', 'GREAT', 'GREATER')],
       'incorrect': [('GOOD', 'BETTER', 'LONG', 'LONGER'),
                     ('GOOD', 'BETTER', 'LOW', 'LOWER'),
                     ('GREAT', 'GREATER', 'LONG', 'LONGER'),
+                    ('GREAT', 'GREATER', 'LOW', 'LOWER'),
                     ('GREAT', 'GREATER', 'GOOD', 'BETTER'),
                     ('LONG', 'LONGER', 'LOW', 'LOWER'),
                     ('LONG', 'LONGER', 'GOOD', 'BETTER'),
@@ -543,12 +541,12 @@ The example training corpus is a toy corpus, results are not expected to be good
                     ('LOW', 'LOWER', 'GREAT', 'GREATER'),
                     ('LOW', 'LOWER', 'LONG', 'LONGER')],
       'section': 'gram3-comparative'},
-     {'correct': [('GOOD', 'BEST', 'LARGE', 'LARGEST'),
+     {'correct': [('GOOD', 'BEST', 'GREAT', 'GREATEST'),
                   ('GREAT', 'GREATEST', 'LARGE', 'LARGEST')],
       'incorrect': [('BIG', 'BIGGEST', 'GOOD', 'BEST'),
                     ('BIG', 'BIGGEST', 'GREAT', 'GREATEST'),
                     ('BIG', 'BIGGEST', 'LARGE', 'LARGEST'),
-                    ('GOOD', 'BEST', 'GREAT', 'GREATEST'),
+                    ('GOOD', 'BEST', 'LARGE', 'LARGEST'),
                     ('GOOD', 'BEST', 'BIG', 'BIGGEST'),
                     ('GREAT', 'GREATEST', 'BIG', 'BIGGEST'),
                     ('GREAT', 'GREATEST', 'GOOD', 'BEST'),
@@ -634,9 +632,8 @@ The example training corpus is a toy corpus, results are not expected to be good
       'section': 'gram8-plural'},
      {'correct': [], 'incorrect': [], 'section': 'gram9-plural-verbs'},
      {'correct': [('GOOD', 'BETTER', 'GREAT', 'GREATER'),
-                  ('GREAT', 'GREATER', 'LOW', 'LOWER'),
                   ('LONG', 'LONGER', 'GREAT', 'GREATER'),
-                  ('GOOD', 'BEST', 'LARGE', 'LARGEST'),
+                  ('GOOD', 'BEST', 'GREAT', 'GREATEST'),
                   ('GREAT', 'GREATEST', 'LARGE', 'LARGEST'),
                   ('GO', 'GOING', 'PLAY', 'PLAYING'),
                   ('PLAY', 'PLAYING', 'SAY', 'SAYING'),
@@ -658,6 +655,7 @@ The example training corpus is a toy corpus, results are not expected to be good
                     ('GOOD', 'BETTER', 'LONG', 'LONGER'),
                     ('GOOD', 'BETTER', 'LOW', 'LOWER'),
                     ('GREAT', 'GREATER', 'LONG', 'LONGER'),
+                    ('GREAT', 'GREATER', 'LOW', 'LOWER'),
                     ('GREAT', 'GREATER', 'GOOD', 'BETTER'),
                     ('LONG', 'LONGER', 'LOW', 'LOWER'),
                     ('LONG', 'LONGER', 'GOOD', 'BETTER'),
@@ -667,7 +665,7 @@ The example training corpus is a toy corpus, results are not expected to be good
                     ('BIG', 'BIGGEST', 'GOOD', 'BEST'),
                     ('BIG', 'BIGGEST', 'GREAT', 'GREATEST'),
                     ('BIG', 'BIGGEST', 'LARGE', 'LARGEST'),
-                    ('GOOD', 'BEST', 'GREAT', 'GREATEST'),
+                    ('GOOD', 'BEST', 'LARGE', 'LARGEST'),
                     ('GOOD', 'BEST', 'BIG', 'BIGGEST'),
                     ('GREAT', 'GREATEST', 'BIG', 'BIGGEST'),
                     ('GREAT', 'GREATEST', 'GOOD', 'BEST'),
@@ -787,7 +785,7 @@ Compute WMD.
 
  .. code-block:: none
 
-    1.3962668012305497
+    1.3895121413147449
 
 
 That's all! You've made it to the end of this tutorial.
@@ -816,9 +814,9 @@ Here we show a pretty fastText logo so that our gallery picks it up as a thumbna
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  25.365 seconds)
+   **Total running time of the script:** ( 0 minutes  22.652 seconds)
 
-**Estimated memory usage:**  4530 MB
+**Estimated memory usage:**  4554 MB
 
 
 .. _sphx_glr_download_auto_examples_010_tutorials_run_030_fasttext.py:

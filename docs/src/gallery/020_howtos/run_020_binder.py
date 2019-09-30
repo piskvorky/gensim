@@ -1,7 +1,4 @@
 r"""
-
-.. _binder_howto:
-
 How to Play with the Examples via Binder
 ========================================
 

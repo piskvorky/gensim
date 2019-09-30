@@ -1,7 +1,4 @@
 r"""
-
-.. _wmd_py:
-
 Word Movers' Distance
 =====================
 
@@ -63,7 +60,7 @@ plt.show()
 # 
 # To use WMD, you need some existing word embeddings.
 # You could train your own Word2Vec model, but that is beyond the scope of this tutorial
-# (check out :ref:`word2vec_py` if you're interested).
+# (check out :ref:`sphx_glr_auto_examples_010_tutorials_run_020_word2vec.py` if you're interested).
 # For this tutorial, we'll be using an existing Word2Vec model.
 # 
 # Let's take some sentences to compute the distance between.

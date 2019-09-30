@@ -7,8 +7,6 @@
 .. _sphx_glr_auto_examples_000_core_run_003_topics_and_transformations.py:
 
 
-.. _tut2:
-
 Topics and Transformations
 ===========================
 
@@ -256,15 +254,15 @@ remaining four documents to the first topic:
 
  .. code-block:: none
 
-    [(0, 0.06600783396090418), (1, -0.5200703306361849)] Human machine interface for lab abc computer applications
-    [(0, 0.1966759285914257), (1, -0.7609563167700051)] A survey of user opinion of computer system response time
-    [(0, 0.08992639972446459), (1, -0.7241860626752509)] The EPS user interface management system
-    [(0, 0.07585847652178183), (1, -0.6320551586003427)] System and human system engineering testing of EPS
-    [(0, 0.1015029918498016), (1, -0.5737308483002959)] Relation of user perceived response time to error measurement
-    [(0, 0.703210893937831), (1, 0.16115180214025823)] The generation of random binary unordered trees
-    [(0, 0.8774787673119832), (1, 0.16758906864659445)] The intersection graph of paths in trees
-    [(0, 0.9098624686818577), (1, 0.14086553628719045)] Graph minors IV Widths of trees and well quasi ordering
-    [(0, 0.6165825350569283), (1, -0.0539290756638936)] Graph minors A survey
+    [(0, 0.06600783396090124), (1, -0.520070330636185)] Human machine interface for lab abc computer applications
+    [(0, 0.19667592859142186), (1, -0.760956316770006)] A survey of user opinion of computer system response time
+    [(0, 0.08992639972446101), (1, -0.7241860626752513)] The EPS user interface management system
+    [(0, 0.07585847652177873), (1, -0.6320551586003431)] System and human system engineering testing of EPS
+    [(0, 0.10150299184979868), (1, -0.5737308483002965)] Relation of user perceived response time to error measurement
+    [(0, 0.703210893937832), (1, 0.16115180214025474)] The generation of random binary unordered trees
+    [(0, 0.8774787673119846), (1, 0.16758906864659018)] The intersection graph of paths in trees
+    [(0, 0.9098624686818595), (1, 0.14086553628718615)] Graph minors IV Widths of trees and well quasi ordering
+    [(0, 0.616582535056929), (1, -0.05392907566389646)] Graph minors A survey
 
 
 Model persistency is achieved with the :func:`save` and :func:`load` functions:
@@ -285,7 +283,7 @@ Model persistency is achieved with the :func:`save` and :func:`load` functions:
 The next question might be: just how exactly similar are those documents to each other?
 Is there a way to formalize the similarity, so that for a given input document, we can
 order some other set of documents according to their similarity? Similarity queries
-are covered in the next tutorial (:ref:`tut3`).
+are covered in the next tutorial (:ref:`sphx_glr_auto_examples_000_core_run_004_similarity_queries.py`).
 
 .. _transformations:
 
@@ -390,7 +388,7 @@ please `let me know <mailto:radimrehurek@seznam.cz>`_.
 What Next?
 ----------
 
-Continue on to the next tutorial on :ref:`tut3`.
+Continue on to the next tutorial on :ref:`sphx_glr_auto_examples_000_core_run_004_similarity_queries.py`.
 
 References
 ----------
@@ -429,9 +427,9 @@ Here we show a pretty fastText logo so that our gallery picks it up as a thumbna
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.714 seconds)
+   **Total running time of the script:** ( 0 minutes  0.899 seconds)
 
-**Estimated memory usage:**  14 MB
+**Estimated memory usage:**  45 MB
 
 
 .. _sphx_glr_download_auto_examples_000_core_run_003_topics_and_transformations.py:

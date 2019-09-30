@@ -7,8 +7,6 @@
 .. _sphx_glr_auto_examples_010_tutorials_run_100_pivoted_doc_norm.py:
 
 
-.. _pivoted_document_len_norm:
-
 Pivoted Document Length Normalization
 =====================================
 
@@ -373,9 +371,9 @@ Using pivoted document normalization improved the classification accuracy signif
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  14.445 seconds)
+   **Total running time of the script:** ( 0 minutes  18.002 seconds)
 
-**Estimated memory usage:**  92 MB
+**Estimated memory usage:**  12 MB
 
 
 .. _sphx_glr_download_auto_examples_010_tutorials_run_100_pivoted_doc_norm.py:

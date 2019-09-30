@@ -7,8 +7,6 @@
 .. _sphx_glr_auto_examples_020_howtos_run_050_doc2vec_imdb.py:
 
 
-.. _run_doc2vec_imdb.py:
-
 How to Reproduce Results of Le and Mikolov 2014
 ===============================================
 
@@ -361,11 +359,11 @@ Sanity checking.  Let's see if our models give meaningful results.
 
  .. code-block:: none
 
-    0.47 'Shravan'
-    0.44 'mecha'
-    0.41 'Brewster)'
-    0.41 "Almighty'."
-    0.40 'wait..'
+    0.45 'extendedly'
+    0.43 'tribes?'
+    0.42 'interviews,'
+    0.42 'Bilson'
+    0.41 "'Union"
 
 
 Predictive Evaluation Methods
@@ -492,29 +490,29 @@ main models takes about an hour.)
 
     Evaluating Doc2Vec(dbow,d100,n5,mc2,t8)
 
-    0.103320 Doc2Vec(dbow,d100,n5,mc2,t8)
+    0.104640 Doc2Vec(dbow,d100,n5,mc2,t8)
 
     Training Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
 
     Evaluating Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
 
-    0.168280 Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
+    0.169400 Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
 
     Training Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
 
     Evaluating Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
 
-    0.302680 Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
+    0.306280 Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
 
 
     Evaluating Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
 
-    0.102800 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
+    0.103760 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
 
 
     Evaluating Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
 
-    0.103080 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
+    0.104920 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
 
 
 Achieved Sentiment-Prediction Accuracy
@@ -539,11 +537,11 @@ Compare error rates achieved, best-to-worst
  .. code-block:: none
 
     Err_rate Model
-    0.102800 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
-    0.103080 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
-    0.103320 Doc2Vec(dbow,d100,n5,mc2,t8)
-    0.168280 Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
-    0.302680 Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
+    0.103760 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
+    0.104640 Doc2Vec(dbow,d100,n5,mc2,t8)
+    0.104920 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
+    0.169400 Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
+    0.306280 Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
 
 
 In our testing, contrary to the results of the paper, on this problem,
@@ -594,13 +592,13 @@ Are inferred vectors close to the precalculated ones?
 
  .. code-block:: none
 
-    for doc 71726...
+    for doc 86522...
     Doc2Vec(dbow,d100,n5,mc2,t8):
-     [(71726, 0.9907494783401489), (76963, 0.633242130279541), (71727, 0.6189519166946411)]
+     [(86522, 0.9909253120422363), (85826, 0.680814266204834), (27682, 0.673947811126709)]
     Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8):
-     [(71726, 0.9467856884002686), (90056, 0.5752678513526917), (71727, 0.5716109275817871)]
+     [(86522, 0.9615100622177124), (98918, 0.5803713798522949), (19233, 0.5563608407974243)]
     Doc2Vec(dm/c,d100,n5,w5,mc2,t8):
-     [(71726, 0.893122136592865), (24169, 0.45019519329071045), (96999, 0.4162907600402832)]
+     [(86522, 0.9066746234893799), (87192, 0.43959346413612366), (36147, 0.4354143738746643)]
 
 
 (Yes, here the stored vector from 20 epochs of training is usually one of the
@@ -637,15 +635,15 @@ Do close documents seem more related than distant ones?
 
  .. code-block:: none
 
-    TARGET (12857): «Comic secret agents have made a comeback in recent years, with Mike Myers' 'Austin Powers' and Rowan Atkinson's 'Johnny English', and more recently Steve Carell in the big-screen version of the hit '60's show 'Get Smart!'.<br /><br />Back in 1974, it was David Jason who was wearing a shoulder holster and carrying an attaché case full of documents marked 'Classified'.<br /><br />'The Top Secret Life Of Edgar Briggs' was his first starring role in a sitcom, after years of being a supporting actor in such shows as 'Six Dates With Barker', the 'Doctor' series, and 'Hark At Barker'.<br /><br />Humphrey Barclay had found him working in a pier theatre in Bournemouth and was sufficiently impressed to include him alongside Michael Palin, Terry Jones and Eric Idle in the children's comedy show 'Do Not Adjust Your Set!'.<br /><br />'T.T.S.L.O.E.B' cast Jason as 'Edgar Briggs', a well-meaning but incompetent agent for the Secret Intelligence Service. Whereas John Steed wore a bowler hat, Briggs had a trilby. Whereas Napoleon Solo carried a radio pen, Briggs owned a pipe. Objects fell to bits in his hands. He read Confidential documents in bed while his wife ( Barbara Angell ) perused Woman's Own ( on one occasion it would be the other way round ). When he tracked a pair of Russian agents to a heliport, he accidentally switched on the airport's Tannoy system, and broadcast his plans to capture them! When he hid on a train so as to photograph a meeting between an S.I.S. man and his enemy-contact, it moved off with him aboard and took him straight to Brighton! When he tried to organise the defection of a female Russian scientist, he took a 'short cut' to elude his pursuers, only to wind up hopelessly lost in a car park. Yet, like 'Inspector Clouseau', he always seemed to come out on top at the end, much to the dismay of his colleagues.<br /><br />As previously mentioned, he was married. His wife Jennifer was understanding about the sort of work he did. Though they had a row once which resulted in her yelling at him from the window of their high-rise flat: "Secret Service this, Secret Service that! You never stop thinking about the Secret Service!". He shouted back: "Think of the neighbours! They're not supposed to know I'm in the Secret Service!".<br /><br />Briggs was part of a team of agents whose number included 'Coronation Street' villain Mark Eden ( he was the psychotic Alan Bradley ) as 'Spencer', Michael Stainton as 'Buxton', and 'Doctor At Sea''s Elisabeth Counsell as the lovely 'Cathy Strong'. They answered to 'The Commander', played by the late Noel Coleman. The Commander was kidnapped in one episode, leaving Briggs temporarily in charge of the S.I.S. - which naturally horrified everyone.<br /><br />This hilarious show was by Richard Laing and Bernard McKenna, who had written for the 'Doctor' series. Rather than spoof Bond, it was more of a send-up of the serious spy shows such as 'Callan' ( though it had a Bond-style theme tune ). Furtive meetings in underground car parks, code-breaking, stolen missile plans, that kind of thing. Jason brought a lot of energy to the role, doing a lot of his own stunts, such as Briggs falling off a ladder whilst decorating his flat, and tumbling down a hill in a wastepaper bin, and were reminiscent of those to be found in the 'Pink Panther' films.<br /><br />'Briggs' had all the ingredients to be a smash-hit. Unfortunately, it was not networked. In the London area, it was put out on Sundays at 7.25 P.M. where it was trounced in the ratings by the B.B.C.'s soapy drama 'The Brothers'. It was then moved to Fridays at 7 P.M. because I.T.V. wanted to showcase its latest American import - the T.V. version of 'Planet Of The Apes'. Briggs never found an audience. A similar fate befell Jason's next major show: 1976's 'Lucky Feller'. It was not until 1977 and 'A Sharp Intake Of Breath' that he found his first successful solo vehicle.<br /><br />You can see the title sequence ( along with two brief excerpts in German! ) for this series on YouTube. Unfortunately, that is all you can see. Jason will not permit his early starring shows either to be repeated or released on D.V.D. A great shame. For the moment, however, Edgar Briggs' life will have to remain top secret.<br /><br />CODA: I have seen a number of episodes recently and I'm pleased to say it stands up incredibly well.»
+    TARGET (16202): «David Attenborough brings his fascination of wild life, this time the creatures under the sea, in this extraordinary 8-episode trip to all the animals under the sea!<br /><br />The cinematography is astounding, bringing to the screen truly breathtaking footage of those whales! But the best thing about it, as well as seeing each episode, is how they made it! Whether it is making models of creatures, or those impressive shots of the whales, they explain to you in about 10 minutes how they did it!<br /><br />2001 had some great tv shows to our screen. But, in contrast to this documentary gem, they make them pretty lame! But to even boast this documentary series as the best tv series of 2001 just does not sum up the sheer brilliance that this series provides in quality entertainment!<br /><br />Overall, this is the best TV series of 2001, with no competition, and, maybe, the best TV series of 2000s!»
 
-    SIMILAR/DISSIMILAR DOCS PER MODEL Doc2Vec(dm/c,d100,n5,w5,mc2,t8):
+    SIMILAR/DISSIMILAR DOCS PER MODEL Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8):
 
-    MOST (15983, 0.5422624349594116): «I very nearly did not see 'Hi-De-Hi!'. I think it must have been the title that put me off. In those days, the Welsh language editions of 'The Radio Times' only used to print titles of certain shows without imparting a scrap of information as to what they were actually about. 'Hi-De-Hi!' suggested to me a bad quiz show hosted by Leslie Crowther or worse an inane U.S. import. But I managed to catch a later episode, and was surprised to find it written by Jimmy Perry and David Croft.<br /><br />As was the case with 'Dad's Army' and 'It Ain't Half Hot Mum', Perry based it on personal experiences, in this case his time at a Butlins' holiday camp. Before cheap air travel came along in the '60's, these camps sprang up along British coastlines, providing entertainment for working class families and earning millions for their owners.<br /><br />( As a matter of interest, I worked in one such camp in the '80's as a chef - Barry Island, South Wales - known to all and sundry as 'Shag Land' for reasons I won't go into! )<br /><br />Set in the late '50's, it began with university academic Jeffrey Fairbrother ( Simon Cadell ) taking over as the entertainments manager of Maplin's, a job he was ill equipped to handle. His staff included resident comic Ted Bovis ( Paul Shane ), his sidekick Spike ( Jeffrey Holland ), miserable Punch and Judy man Mr.Partridge ( Leslie Dwyer ), snobby ballroom dancers Barry ( Barry Howard ) and Yvonne Stuart-Hargreaves ) Diane Holland ), and the unforgettable Gladys Pugh ( Ruth Madoc ), who lusted after Fairbrother at every opportunity. Bubbly Su Pollard stole the show though as cleaner Peggy Ollerenshaw, whose driving ambition was to be a 'Yellowcoat' ( all the important staff members wore them ). A number of sexy girls occupied these coats too, most notably Nikki Kelly's 'Sylvia' and statuesque Rikki Howard's 'Betty'. We never saw Joe Maplin, the owner. He communicated to his staff in the form of ungrammatical missives, which poor Jeffrey was forced to read aloud. "Hi-De-Hi!" was the campers' greeting, usually met with the equally inane 'Ho-De-Ho!. <br /><br />One fan was the late Sir Fred Pontin, who told Perry and Croft that he recognised most of the characters from real life.<br /><br />I always found Bovis the most convincing of these as well as the most tragic, like Archie Rice he was the comedian whose big break never came, reduced to cracking corny gags for the amusement of drunken late-night audiences. He took advantage of his position to indulge in a few perks, and in one memorable episode Fairbrother's patience snapped and he sounded him out: "Lies, Ted! All lies!".<br /><br />As with every other Perry/Croft series, the cast were excellent, particularly Cadell and Shane. Ruth Madoc's prissy 'Gladys' got on my nerves ( no wonder Anne Robinson hates the Welsh! ), but Leslie Dwyer's misanthropic 'Mr.Partridge' and Felix Bowness' jockey 'Fred Qulley' more than compensated. <br /><br />The visual gag everyone remembers is drunken Mr.Partridge spotting a pantomime horse riding a real one along the beach. Looking at the bottle of whiskey in his hand, he decides to stick with it and instead throws away the banana he had been eating! <br /><br />With its frothy blend of '50's nostalgia and saucy gags, 'Hi-De'Hi' was a big hit for B.B.C.-1 in the '80's, resulting in a massive increase in bookings for Butlins and Pontins. It went downhill when Cadell left to return to the theatre though. I never took to his replacement, Squadron Leader Clive Dempster ( David Griffin ). Worse, Leslie Dwyer's death robbed the show of one of its best characters. Kenneth Connor was brought in to replace him as 'Uncle Sammy'.<br /><br />The period setting occasionally caused problems; in one episode, Sylvia and Betty had to dive into the pool to rescue Peggy who for some reason was dressed as a shark. The revealing costumes they wore were wrong for that era. Still they looked great in them so who's complaining? In another, Ted sang the Tom Jones hit 'Delilah' to campers. It was not composed ( by Les Reed and Barry Mason, incidentally ) until 1968.<br /><br />Maplins closed its doors in 1988, and the last shot was that of Peggy ( now a Yellowcoat ) all alone in the camp, jumping into the air and shouting ( what else? ) 'Hi-De-Hi!'. <br /><br />I don't rate it as highly as Perry and Croft's other shows but its popularity is undeniable. It was probably one of the last British sitcoms to generate tremendous public affection, mainly because it featured likable characters in a recognisable setting. Goodnight campers!»
+    MOST (81274, 0.6267575025558472): «This short parody of the Council of Elrond scene, included as an "easter egg" on the "The Lord of the Rings: The Fellowship of the Ring" Extended Edition DVD, is really not worth your time. I urge you to make better use of your time than to watch this crude, unfunny, MTV-made parody, especially when there are so many great things to explore on the Extended Edition DVD. After I finished watching it, I wondered, "This is it? This is what they give us as an easter egg on the extended version DVD of one of the best movies in recent memory? Does Peter Jackson really think that this is good enough to put on the otherwise excellent DVD of a truly spectacular film?" As another reviewer said, it's like a train wreck, you want to look away and stop watching but you can't because it's so bad. Good parodies can be incredibly funny, but this, however, is not one of them.»
 
-    MEDIAN (22846, 0.004338208585977554): «Now, I am not prone to much emotion, but I cried seeing this movie. It certainly has more appeal among blacks than other ethnic groups, but there is something here for everyone. The classic song "It's so Hard to Say Goodbye" really makes this one worth watching at least once.»
+    MEDIAN (28682, 0.2943798303604126): «It's a poor film, but I must give it to the lead actress in this one....Francine Forbes. She appeared to be acting the least and I personally thought she was kind of cute. Too bad she only appears in one other film in the database. Besides that, the film is filled with laughable gore and fakey death scenes. People get stabbed and they GUSH like 2 gallons of blood! But, if you like to watch poor horror films, I recommend this one highly.»
 
-    LEAST (98632, -0.43389996886253357): «I have seen A LOT of bad movies. I watch them on a regular basis and even some of the really bad ones, I can get through-ones that Mystery Sceince Theater 3000 wouldn't even touch. This is bar none the worst "movie" ever made. I use the term movie loosely in this case because it is more like a group of friends that got together and made a video, but sure enough it has some Troma in it. Even if you like the mindless Troma stuff, this one will make you wince in pain. It IS that bad!! The cover has Lilith Stabs on it (a hot goth/punk type girl of Bad Movie Police fame) in a little outfit with a huge gun. Very misleading. She is NOT in the movie and there are no gun toting babes gunning down zombies. Instead you get to watch an ugly chick with a chocolate stained face annoy the hell out of you with over eccentric bad acting and lisp. The imitation Cosby/Don King character-Bonejack-is something you would laugh at if it were your friend, otherwise it is just lame. The filmmakers felt free to make plenty of inside jokes (the reappearing ice cream poster in tons of shots) without letting the audience in on their little jokes. If this can truly be called a movie versus just a video that some idiots threw together, then yes. This is THE worst movie I have ever seen. It even beats out the Tempe classics such as Humanoids from Atlantis and Robot Ninja. At least with James L Edwards you know what you are getting into. I wonder how many suckers fell for the false advertising on the box cover. Well live and learn the old "You can't judge a book by its cover". Well Mulva didn't kick any zombie ass-but this movie sure kicked mine.»
+    LEAST (38756, -0.12590399384498596): «Match 1: Tag Team Table Match Bubba Ray and Spike Dudley vs Eddie Guerrero and Chris Benoit Bubba Ray and Spike Dudley started things off with a Tag Team Table Match against Eddie Guerrero and Chris Benoit. According to the rules of the match, both opponents have to go through tables in order to get the win. Benoit and Guerrero heated up early on by taking turns hammering first Spike and then Bubba Ray. A German suplex by Benoit to Bubba took the wind out of the Dudley brother. Spike tried to help his brother, but the referee restrained him while Benoit and Guerrero ganged up on him in the corner. With Benoit stomping away on Bubba, Guerrero set up a table outside. Spike dashed into the ring and somersaulted over the top rope onto Guerrero on the outside! After recovering and taking care of Spike, Guerrero slipped a table into the ring and helped the Wolverine set it up. The tandem then set up for a double superplex from the middle rope which would have put Bubba through the table, but Spike knocked the table over right before his brother came crashing down! Guerrero and Benoit propped another table in the corner and tried to Irish Whip Spike through it, but Bubba dashed in and blocked his brother. Bubba caught fire and lifted both opponents into back body drops! Bubba slammed Guerrero and Spike stomped on the Wolverine from off the top rope. Bubba held Benoit at bay for Spike to soar into the Wassup! headbutt! Shortly after, Benoit latched Spike in the Crossface, but the match continued even after Spike tapped out. Bubba came to his brother's rescue and managed to sprawl Benoit on a table. Bubba leapt from the middle rope, but Benoit moved and sent Bubba crashing through the wood! But because his opponents didn't force him through the table, Bubba was allowed to stay in the match. The first man was eliminated shortly after, though, as Spike put Eddie through a table with a Dudley Dawg from the ring apron to the outside! Benoit put Spike through a table moments later to even the score. Within seconds, Bubba nailed a Bubba Bomb that put Benoit through a table and gave the Dudleys the win! Winner: Bubba Ray and Spike Dudley<br /><br />Match 2: Cruiserweight Championship Jamie Noble vs Billy Kidman Billy Kidman challenged Jamie Noble, who brought Nidia with him to the ring, for the Cruiserweight Championship. Noble and Kidman locked up and tumbled over the ring, but raced back inside and grappled some more. When Kidman thwarted all Noble's moves, Noble fled outside the ring where Nidia gave him some encouragement. The fight spread outside the ring and Noble threw his girlfriend into the challenger. Kidman tossed Nidia aside but was taken down with a modified arm bar. Noble continued to attack Kidman's injured arm back in the ring. Kidman's injured harm hampered his offense, but he continued to battle hard. Noble tried to put Kidman away with a powerbomb but the challenger countered into a facebuster. Kidman went to finish things with a Shooting Star Press, but Noble broke up the attempt. Kidman went for the Shooting Star Press again, but this time Noble just rolled out of harm's way. Noble flipped Kidman into a power bomb soon after and got the pin to retain his WWE Cruiserweight Championship! Winner: Jamie Noble<br /><br />Match 3: European Championship William Regal vs Jeff Hardy William Regal took on Jeff Hardy next in an attempt to win back the European Championship. Jeff catapulted Regal over the top rope then took him down with a hurracanrana off the ring apron. Back in the ring, Jeff hit the Whisper in the wind to knock Regal for a loop. Jeff went for the Swanton Bomb, but Regal got his knees up to hit Jeff with a devastating shot. Jeff managed to surprise Regal with a quick rollup though and got the pin to keep the European Championship! Regal started bawling at seeing Hardy celebrate on his way back up the ramp. Winner: Jeff Hardy<br /><br />Match 4: Chris Jericho vs John Cena Chris Jericho had promised to end John Cena's career in their match at Vengeance, which came up next. Jericho tried to teach Cena a lesson as their match began by suplexing him to the mat. Jericho continued to knock Cena around the ring until his cockiness got the better of him. While on the top rope, Jericho began to showboat and allowed Cena to grab him for a superplex! Cena followed with a tilt-a-whirl slam but was taken down with a nasty dropkick to the gut. The rookie recovered and hit a belly to belly suplex but couldn't put Y2J away. Jericho launched into the Lionsault but Cena dodged the move. Jericho nailed a bulldog and then connected on the Lionsault, but did not go for the cover. He goaded Cena to his feet so he could put on the Walls of Jericho. Cena had other ideas, reversing the move into a pin attempt and getting the 1-2-3! Jericho went berserk after the match. Winner: John Cena<br /><br />Match 5: Intercontinental Championship RVD vs Brock Lesnar via disqualification The Next Big Thing and Mr. Pay-Per-View tangled with the Intercontinental Championship on the line. Brock grabbed the title from the ref and draped it over his shoulder momentarily while glaring at RVD. Van Dam 's quickness gave Brock fits early on. The big man rolled out of the ring and kicked the steel steps out of frustration. Brock pulled himself together and began to take charge. With Paul Heyman beaming at ringside, Brock slammed RVD to the hard floor outside the ring. From there, Brock began to overpower RVD, throwing him with ease over the top rope. RVD landed painfully on his back, then had to suffer from having his spine cracked against the steel ring steps. The fight returned to the ring with Brock squeezing RVD around the ribs. RVD broke away and soon after leveled Brock with a kick to the temple. RVD followed with the Rolling Thunder but Brock managed to kick out after a two-count. The fight looked like it might be over soon as RVD went for a Five-Star Frog Splash. Brock, though, hoisted Van Dam onto his shoulder and went for the F-5, but RVD whirled Brock into a DDT and followed with the Frog Splash! He went for the pin, but Heyman pulled the ref from the ring! The ref immediately called for a disqualification and soon traded blows with Heyman! After, RVD leapt onto Brock from the top rope and then threatened to hit the Van Terminator! Heyman grabbed RVD's leg and Brock picked up the champ and this time connected with the F-5 onto a steel chair! Winner: RVD<br /><br />Match 6: Booker T vs the Big Show Booker T faced the Big Show one-on-one next. Show withstood Booker T's kicks and punches and slapped Booker into the corner. After being thrown from the ring, Booker picked up a chair at ringside, but Big Show punched it back into Booker's face. Booker tried to get back into the game by choking Show with a camera cable at ringside. Booker smashed a TV monitor from the Spanish announcers' position into Show's skull, then delivered a scissors kick that put both men through the table! Booker crawled back into the ring and Big Show staggered in moments later. Show grabbed Booker's throat but was met by a low blow and a kick to the face. Booker climbed the top rope and nailed a somersaulting leg drop to get the pin! Winner: Booker T<br /><br />Announcement: Triple H entered the ring to a thunderous ovation as fans hoped to learn where The Game would end up competing. Before he could speak, Eric Bishoff stopped The Game to apologize for getting involved in his personal business. If Triple H signed with RAW, Bischoff promised his personal life would never come into play again. Bischoff said he's spent the past two years networking in Hollywood. He said everyone was looking for the next breakout WWE Superstar, and they were all talking about Triple H. Bischoff guaranteed that if Triple H signed with RAW, he'd be getting top opportunities coming his way. Stephanie McMahon stepped out to issue her own pitch. She said that because of her personal history with Triple H, the two of them know each other very well. She said the two of them were once unstoppable and they can be again. Bischoff cut her off and begged her to stop. Stephanie cited that Triple H once told her how Bischoff said Triple H had no talent and no charisma. Bischoff said he was young at the time and didn't know what he had, but he still has a lot more experience that Stephanie. The two continued to bicker back and forth, until Triple H stepped up with his microphone. The Game said it would be easy to say "screw you" to either one of them. Triple H went to shake Bischoff's hand, but pulled it away. He said he would rather go with the devil he knows, rather than the one he doesn't know. Before he could go any further, though, Shawn Michaels came out to shake things up. HBK said the last thing he wanted to do was cause any trouble. He didn't want to get involved, but he remembered pledging to bring Triple H to the nWo. HBK said there's nobody in the world that Triple H is better friends with. HBK told his friend to imagine the two back together again, making Bischoff's life a living hell. Triple H said that was a tempting offer. He then turned and hugged HBK, making official his switch to RAW! Triple H and HBK left, and Bischoff gloated over his victory. Bischoff said the difference between the two of them is that he's got testicles and she doesn't. Stephanie whacked Bischoff on the side of the head and left!<br /><br />Match 7: Tag Team Championship Match Christian and Lance Storm vs Hollywood Hogan and Edge The match started with loud "USA" chants and with Hogan shoving Christian through the ropes and out of the ring. The Canadians took over from there. But Edge scored a kick to Christian's head and planted a facebuster on Storm to get the tag to Hogan. Hogan began to Hulk up and soon caught Christian with a big boot and a leg drop! Storm broke up the count and Christian tossed Hogan from the ring where Storm superkicked the icon. Edge tagged in soon after and dropped both opponents. He speared both of them into the corner turnbuckles, but missed a spear on Strom and hit the ref hard instead. Edge nailed a DDT, but the ref was down and could not count. Test raced down and took down Hogan then leveled Edge with a boot. Storm tried to get the pin, but Edge kicked out after two. Riksihi sprinted in to fend off Test, allowing Edge to recover and spear Storm. Christian distracted the ref, though, and Y2J dashed in and clocked Edge with the Tag Team Championship! Storm rolled over and got the pinfall to win the title! Winners and New Tag Team Champions: Christian and Lance Storm<br /><br />Match 8: WWE Undisputed Championship Triple Threat Match. The Rock vs Kurt Angle and the Undertaker Three of WWE's most successful superstars lined up against each other in a Triple Threat Match with the Undisputed Championship hanging in the balance. Taker and The Rock got face to face with Kurt Angle begging for some attention off to the side. He got attention in the form of a beat down form the two other men. Soon after, Taker spilled out of the ring and The Rock brawled with Angle. Angle gave a series of suplexes that took down Rock, but the Great One countered with a DDT that managed a two-count. The fight continued outside the ring with Taker coming to life and clotheslining Angle and repeatedly smacking The Rock. Taker and Rock got into it back into the ring, and Taker dropped The Rock with a sidewalk slam to get a two-count. Rock rebounded, grabbed Taker by the throat and chokeslammed him! Angle broke up the pin attempt that likely would have given The Rock the title. The Rock retaliated by latching on the ankle lock to Kurt Angle. Angle reversed the move and Rock Bottomed the People's Champion. Soon after, The Rock disposed of Angle and hit the People's Elbow on the Undertaker. Angle tried to take advantage by disabling the Great One outside the ring and covering Taker, who kicked out after a two count. Outside the ring, Rock took a big swig from a nearby water bottle and spewed the liquid into Taker's face to blind the champion. Taker didn't stay disabled for long, and managed to overpower Rock and turn his attention to Angle. Taker landed a guillotine leg drop onto Angle, laying on the ring apron. The Rock picked himself up just in time to break up a pin attempt on Kurt Angle. Taker nailed Rock with a DDT and set him up for a chokeslam. ANgle tried sneaking up with a steel chair, but Taker caught on to that tomfoolery and smacked it out of his hands. The referee got caught in the ensuing fire and didn't see Angle knock Taker silly with a steel chair. Angle went to cover Taker as The Rock lay prone, but the Dead Man somehow got his shoulder up. Angle tried to pin Rock, but he too kicked out. The Rock got up and landed Angle in the sharpshooter! Angle looked like he was about to tap, but Taker kicked The Rock out of the submission hold. Taker picked Rock up and crashed him with the Last Ride. While the Dead Man covered him for the win, Angle raced in and picked Taker up in the ankle lock! Taker went delirious with pain, but managed to counter. He picked Angle up for the last ride, but Angle put on a triangle choke! It looked like Taker was about to pass out, but The Rock broke Angle's hold only to find himself caught in the ankle lock. Rock got out of the hold and watched Taker chokeslam Angle. Rocky hit the Rock Bottom, but Taker refused to go down and kicked out. Angle whirled Taker up into the Angle Slam but was Rock Bottomed by the Great One and pinned! Winner and New WWE Champion: The Rock<br /><br />~Finally there is a decent PPV! Lately the PPV weren't very good, but this one was a winner. I give this PPV a A-<br /><br />»
 
 
 Somewhat, in terms of reviewer tone, movie genre, etc... the MOST
@@ -692,41 +690,41 @@ Do the word vectors show useful similarities?
 
  .. code-block:: none
 
-    target_word: 'Ops' model: Doc2Vec(dbow,d100,n5,mc2,t8) similar words:
-        1. 0.43 'not.Therefore,'
-        2. 0.42 'Eskimo,'
-        3. 0.42 'f'
-        4. 0.41 'side-note,'
-        5. 0.40 'culture?'
-        6. 0.39 'couleurs:'
-        7. 0.39 'Calamine'
-        8. 0.39 'endlessly'
-        9. 0.39 'camp-fest'
-        10. 0.39 'huge!'
+    target_word: 'scene"' model: Doc2Vec(dbow,d100,n5,mc2,t8) similar words:
+        1. 0.41 'Toufexis'
+        2. 0.41 '/>may'
+        3. 0.40 'bookended'
+        4. 0.40 '"we'
+        5. 0.40 '4Kids'
+        6. 0.39 'Jade'
+        7. 0.39 'Henchmen'
+        8. 0.39 'dangler'
+        9. 0.39 'one-liners...'
+        10. 0.39 'McCool\'s"'
 
-    target_word: 'Ops' model: Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8) similar words:
-        1. 0.55 'counter-terrorism'
-        2. 0.54 'analyst,'
-        3. 0.51 'Kumjorn.<br'
-        4. 0.50 'operative.'
-        5. 0.49 'McGavin)'
-        6. 0.49 'ex-Navy'
-        7. 0.48 '(Arnold'
-        8. 0.48 'script!!!'
-        9. 0.47 'non-profit'
-        10. 0.47 'Digicorp,'
+    target_word: 'scene"' model: Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8) similar words:
+        1. 0.54 'scene),'
+        2. 0.53 '"twist"'
+        3. 0.53 '"joke"'
+        4. 0.53 'steps,'
+        5. 0.52 'nightmare...from'
+        6. 0.52 'matador'
+        7. 0.52 'gunfight'
+        8. 0.52 'victim,'
+        9. 0.52 'scene'
+        10. 0.51 'expletive'
 
-    target_word: 'Ops' model: Doc2Vec(dm/c,d100,n5,w5,mc2,t8) similar words:
-        1. 0.63 'Forces'
-        2. 0.61 'ops'
-        3. 0.60 'Operations'
-        4. 0.60 'ex-military'
-        5. 0.58 'Treasury'
-        6. 0.57 'ex-Confederate'
-        7. 0.57 'ex-army'
-        8. 0.56 'Army'
-        9. 0.56 'Orthodox'
-        10. 0.55 'Olympic'
+    target_word: 'scene"' model: Doc2Vec(dm/c,d100,n5,w5,mc2,t8) similar words:
+        1. 0.62 'tournament'
+        2. 0.58 '(1956)'
+        3. 0.58 'Escher'
+        4. 0.57 'featurette,'
+        5. 0.56 'asteroid'
+        6. 0.56 'Scene,'
+        7. 0.56 'Pyramids,'
+        8. 0.56 'ambush,'
+        9. 0.55 'Cannon)'
+        10. 0.55 'eagle'
 
 
 Do the DBOW words look meaningless? That's because the gensim DBOW model
@@ -779,8 +777,8 @@ Are the word vectors from this dataset any good at analogies?
 
     Success, questions-words.txt is available for next steps.
     Doc2Vec(dbow,d100,n5,mc2,t8): 0.00% correct (0 of 13617)
-    Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8): 18.60% correct (2533 of 13617)
-    Doc2Vec(dm/c,d100,n5,w5,mc2,t8): 17.91% correct (2439 of 13617)
+    Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8): 18.45% correct (2512 of 13617)
+    Doc2Vec(dm/c,d100,n5,w5,mc2,t8): 18.00% correct (2451 of 13617)
 
 
 Even though this is a tiny, domain-specific dataset, it shows some meager
@@ -792,9 +790,9 @@ random-initialized words of the DBOW model of course fail miserably.)
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 37 minutes  57.705 seconds)
+   **Total running time of the script:** ( 35 minutes  31.710 seconds)
 
-**Estimated memory usage:**  4092 MB
+**Estimated memory usage:**  3854 MB
 
 
 .. _sphx_glr_download_auto_examples_020_howtos_run_050_doc2vec_imdb.py:

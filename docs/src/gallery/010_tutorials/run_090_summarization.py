@@ -1,7 +1,4 @@
 r"""
-
-.. _summarization_py:
-
 Text Summarization
 ==================
 

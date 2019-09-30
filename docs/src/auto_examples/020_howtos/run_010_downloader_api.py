@@ -1,7 +1,4 @@
 r"""
-
-.. _tutorial_downloader_api:
-
 How to download pre-trained models and corpora
 ==============================================
 
@@ -20,7 +17,7 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 # This tutorial:
 #
 # * Retrieves the text8 corpus, unless it is already on your local machine
-# * Trains a Word2Vec model from the corpus (see :ref:`doc2vec_lee_py` for a detailed tutorial)
+# * Trains a Word2Vec model from the corpus (see :ref:`sphx_glr_auto_examples_010_tutorials_run_010_doc2vec_lee.py` for a detailed tutorial)
 # * Leverages the model to calculate word similarity
 # * Demonstrates using the API to load other models and corpora
 #

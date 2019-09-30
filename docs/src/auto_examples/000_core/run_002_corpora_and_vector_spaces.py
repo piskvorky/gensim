@@ -1,13 +1,10 @@
 r"""
-.. _tut1:
-
 Corpora and Vector Spaces
 =========================
 
 Demonstrates transforming text into a vector space representation.
 
 Also introduces corpus streaming and persistence to disk in various formats.
-
 """
 
 import logging
@@ -203,8 +200,9 @@ print(dictionary)
 # how counting the frequency of distinct words could be useful. As it turns out, it isn't, and
 # we will need to apply a transformation on this simple representation first, before
 # we can use it to compute any meaningful document vs. document similarities.
-# Transformations are covered in the next tutorial (:ref:`tut2`), but before that, let's
-# briefly turn our attention to *corpus persistency*.
+# Transformations are covered in the next tutorial
+# (:ref:`sphx_glr_auto_examples_000_core_run_003_topics_and_transformations.py`),
+# but before that, let's briefly turn our attention to *corpus persistency*.
 #
 # .. _corpus-formats:
 #
@@ -295,14 +293,13 @@ scipy_csc_matrix = gensim.matutils.corpus2csc(corpus)
 # What Next
 # ---------
 #
-# Read about :ref:`tut2`.
+# Read about :ref:`sphx_glr_auto_examples_000_core_run_003_topics_and_transformations.py`.
 #
 # References
 # ----------
 #
 # For a complete reference (Want to prune the dictionary to a smaller size?
 # Optimize converting between corpora and NumPy/SciPy arrays?), see the :ref:`apiref`.
-# Or continue to the next tutorial on :ref:`tut2`.
 #
 # .. [1] This is the same corpus as used in
 #        `Deerwester et al. (1990): Indexing by Latent Semantic Analysis <http://www.cs.bham.ac.uk/~pxt/IDA/lsa_ind.pdf>`_, Table 2.

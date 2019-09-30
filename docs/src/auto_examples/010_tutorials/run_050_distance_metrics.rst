@@ -7,8 +7,6 @@
 .. _sphx_glr_auto_examples_010_tutorials_run_050_distance_metrics.py:
 
 
-.. _distance_metrics:
-
 Distance Metrics
 ================
 
@@ -679,7 +677,7 @@ by A. Huang.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  12.808 seconds)
+   **Total running time of the script:** ( 0 minutes  10.379 seconds)
 
 **Estimated memory usage:**  9 MB
 

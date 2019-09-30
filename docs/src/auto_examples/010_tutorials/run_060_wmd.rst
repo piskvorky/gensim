@@ -7,8 +7,6 @@
 .. _sphx_glr_auto_examples_010_tutorials_run_060_wmd.py:
 
 
-.. _wmd_py:
-
 Word Movers' Distance
 =====================
 
@@ -78,7 +76,7 @@ Computing the Word Mover's Distance
 
 To use WMD, you need some existing word embeddings.
 You could train your own Word2Vec model, but that is beyond the scope of this tutorial
-(check out :ref:`word2vec_py` if you're interested).
+(check out :ref:`sphx_glr_auto_examples_010_tutorials_run_020_word2vec.py` if you're interested).
 For this tutorial, we'll be using an existing Word2Vec model.
 
 Let's take some sentences to compute the distance between.
@@ -250,9 +248,9 @@ References
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  50.180 seconds)
+   **Total running time of the script:** ( 1 minutes  33.471 seconds)
 
-**Estimated memory usage:**  7874 MB
+**Estimated memory usage:**  8095 MB
 
 
 .. _sphx_glr_download_auto_examples_010_tutorials_run_060_wmd.py:

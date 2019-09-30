@@ -7,8 +7,6 @@
 .. _sphx_glr_auto_examples_020_howtos_run_060_news_classification.py:
 
 
-.. _news_classification_py:
-
 How to Classify News Articles into Topics
 =========================================
 
@@ -255,11 +253,11 @@ latent dimensions after the SVD.
 
  .. code-block:: none
 
-    (0, '0.542*"said" + 0.349*"says" + 0.127*"arafat" + 0.122*"palestinian" + 0.118*"people" + 0.117*"israeli" + 0.112*"two" + 0.110*"australian" + 0.110*"also" + 0.107*"australia"')
-    (1, '0.407*"says" + -0.322*"arafat" + -0.315*"palestinian" + -0.273*"israeli" + -0.192*"israel" + -0.173*"sharon" + 0.145*"australia" + 0.144*"australian" + -0.140*"west_bank" + -0.136*"hamas"')
-    (2, '0.349*"says" + -0.330*"said" + -0.202*"afghanistan" + -0.191*"bin_laden" + -0.179*"taliban" + -0.169*"pakistan" + 0.161*"australia" + 0.149*"arafat" + -0.126*"tora_bora" + 0.124*"israeli"')
-    (3, '0.293*"fire" + 0.240*"sydney" + -0.214*"says" + 0.184*"firefighters" + 0.171*"south" + 0.165*"wales" + 0.165*"new_south" + 0.163*"north" + 0.161*"fires" + -0.153*"afghanistan"')
-    (4, '0.219*"said" + 0.173*"test" + 0.171*"match" + -0.154*"afghanistan" + -0.149*"government" + -0.149*"says" + 0.143*"first" + -0.142*"fire" + 0.139*"australia" + -0.135*"force"')
+    (0, '-0.542*"said" + -0.349*"says" + -0.127*"arafat" + -0.122*"palestinian" + -0.118*"people" + -0.117*"israeli" + -0.112*"two" + -0.110*"australian" + -0.110*"also" + -0.107*"australia"')
+    (1, '-0.407*"says" + 0.322*"arafat" + 0.315*"palestinian" + 0.273*"israeli" + 0.192*"israel" + 0.173*"sharon" + -0.145*"australia" + -0.143*"australian" + 0.140*"west_bank" + 0.136*"hamas"')
+    (2, '0.349*"says" + -0.330*"said" + -0.203*"afghanistan" + -0.191*"bin_laden" + -0.179*"taliban" + -0.169*"pakistan" + 0.161*"australia" + 0.149*"arafat" + -0.126*"tora_bora" + 0.124*"israeli"')
+    (3, '0.293*"fire" + 0.241*"sydney" + -0.214*"says" + 0.184*"firefighters" + 0.171*"south" + 0.165*"new_south" + 0.165*"wales" + 0.162*"north" + 0.160*"fires" + -0.153*"afghanistan"')
+    (4, '0.219*"said" + 0.171*"match" + 0.170*"test" + -0.155*"afghanistan" + -0.149*"government" + -0.148*"says" + 0.144*"first" + -0.142*"fire" + 0.139*"australia" + -0.135*"force"')
 
 
 Topic modeling with `HDP <http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_
@@ -289,26 +287,26 @@ topics it needs through posterior inference.
 
  .. code-block:: none
 
-    (0, '0.007*said + 0.003*airport + 0.003*taliban + 0.002*says + 0.002*killed + 0.002*opposition + 0.002*wounded + 0.002*damage + 0.002*kandahar + 0.002*sydney + 0.001*north + 0.001*left + 0.001*night + 0.001*fighters + 0.001*city + 0.001*lali + 0.001*also + 0.001*eight + 0.001*residents + 0.001*agha')
-    (1, '0.005*sharon + 0.005*said + 0.005*arafat + 0.004*palestinian + 0.004*israeli + 0.003*government + 0.002*west_bank + 0.002*terrorism + 0.002*gaza_strip + 0.002*suicide_attacks + 0.002*air_strikes + 0.002*called + 0.002*hamas + 0.002*security + 0.002*killed + 0.002*offices + 0.002*attacks + 0.002*war + 0.002*official + 0.002*call')
-    (2, '0.003*said + 0.003*rafter + 0.002*match + 0.002*israeli + 0.002*says + 0.002*team + 0.002*state + 0.002*one + 0.002*australia + 0.001*head + 0.001*action + 0.001*australian + 0.001*guarantee + 0.001*take + 0.001*france + 0.001*tennis + 0.001*launched + 0.001*could + 0.001*four + 0.001*rubber')
-    (3, '0.004*said + 0.003*says + 0.003*afghanistan + 0.002*storm + 0.002*powell + 0.002*still + 0.002*sydney + 0.002*southern + 0.002*taliban + 0.002*trees + 0.002*north + 0.002*ses + 0.002*bin_laden + 0.002*around + 0.002*areas + 0.002*hornsby + 0.002*forces + 0.001*united_states + 0.001*brought + 0.001*power')
-    (4, '0.004*says + 0.004*company + 0.002*administrators + 0.002*virgin + 0.002*entitlements + 0.002*launceston + 0.002*today + 0.002*staff + 0.002*airline + 0.002*said + 0.002*morning + 0.002*told + 0.002*japan + 0.002*australia + 0.002*canberra + 0.001*conference + 0.001*austar + 0.001*ansett + 0.001*terminal + 0.001*republic')
-    (5, '0.003*team + 0.003*one + 0.002*three + 0.002*rafter + 0.002*doubles + 0.002*canyoning + 0.002*win + 0.002*adventure_world + 0.002*guides + 0.002*changes + 0.002*australia + 0.002*said + 0.002*interlaken + 0.002*says + 0.002*make + 0.002*good + 0.002*know + 0.002*place + 0.001*first + 0.001*expect')
-    (6, '0.005*company + 0.003*report + 0.003*friedli + 0.003*director + 0.003*people + 0.002*replied + 0.002*know + 0.002*river + 0.002*trading + 0.002*think + 0.002*risk + 0.001*hih + 0.001*martin + 0.001*canyoning + 0.001*described + 0.001*first + 0.001*aware + 0.001*said + 0.001*fan + 0.001*made')
-    (7, '0.003*says + 0.003*india + 0.002*afghan + 0.002*said + 0.002*afghanistan + 0.002*government + 0.001*new + 0.001*agreement + 0.001*council + 0.001*report + 0.001*economy + 0.001*calls + 0.001*union + 0.001*could + 0.001*structure + 0.001*gets + 0.001*australian + 0.001*chairmen + 0.001*indian + 0.001*labour')
-    (8, '0.003*harrison + 0.002*said + 0.002*people + 0.002*george + 0.002*beatle + 0.002*tonight + 0.002*chain + 0.002*shaped + 0.001*says + 0.001*memory + 0.001*second + 0.001*liverpool + 0.001*died + 0.001*music + 0.001*bowl + 0.001*lord + 0.001*losing + 0.001*another + 0.001*really + 0.001*whole')
-    (9, '0.002*australia + 0.002*final + 0.001*band + 0.001*day + 0.001*two + 0.001*beatle + 0.001*adam + 0.001*harrison + 0.001*replays + 0.001*guitarist + 0.001*saying + 0.001*encouraging + 0.001*nettle + 0.001*bourne + 0.001*known + 0.001*kerry + 0.001*east_timor + 0.001*sweet + 0.001*contender + 0.001*obviously')
-    (10, '0.002*president + 0.002*rabbani + 0.002*says + 0.002*government + 0.001*factions + 0.001*international + 0.001*afghanistan + 0.001*interim + 0.001*appointment + 0.001*discussed + 0.001*around + 0.001*objected + 0.001*bonn + 0.001*afghans + 0.001*personnel + 0.001*nicorette + 0.001*security_forces + 0.001*crew + 0.001*security + 0.001*northern_alliance')
-    (11, '0.002*per_cent + 0.002*job + 0.002*employment + 0.002*market + 0.001*says + 0.001*olivier + 0.001*internet + 0.001*since + 0.001*machinery + 0.001*marketing + 0.001*november + 0.001*drop + 0.001*anz + 0.001*week + 0.001*advertising + 0.001*fall + 0.001*lowest + 0.001*cut + 0.001*qaeda_network + 0.001*prayer')
-    (12, '0.002*parties + 0.002*unions + 0.002*dispute + 0.002*matter + 0.001*yallourn + 0.001*energy + 0.001*said + 0.001*heavily + 0.001*commission + 0.001*homeless + 0.001*electricity + 0.001*power + 0.001*victoria + 0.001*possible + 0.001*fact + 0.001*future + 0.001*bargaining + 0.001*reached + 0.001*collapse + 0.001*running')
-    (13, '0.003*krishna + 0.003*hare + 0.003*benares + 0.003*ashes + 0.002*harrison + 0.002*ganges + 0.002*river + 0.002*ceremony + 0.002*take + 0.002*holy + 0.001*hindu + 0.001*sect + 0.001*devotees + 0.001*officials + 0.001*squads + 0.001*former + 0.001*place + 0.001*platforms + 0.001*razor + 0.001*fans')
-    (14, '0.003*says + 0.002*troops + 0.002*said + 0.002*metres + 0.001*afghanistan + 0.001*australian + 0.001*warn + 0.001*robert_hill + 0.001*drowned + 0.001*fight + 0.001*defence_minister + 0.001*senator_hill + 0.001*event + 0.001*taliban + 0.001*workers + 0.001*lebanon + 0.001*thought + 0.001*draw + 0.001*britt + 0.001*forces')
-    (15, '0.003*said + 0.002*israeli + 0.002*hamas + 0.002*source + 0.002*soldiers + 0.002*palestinian + 0.002*militants + 0.002*two + 0.001*wave + 0.001*another + 0.001*police + 0.001*arrests + 0.001*west_bank + 0.001*palestinians + 0.001*ismail + 0.001*senior + 0.001*near + 0.001*crackdown + 0.001*paedophilia + 0.001*palestinian_security')
-    (16, '0.002*howard + 0.002*indonesia + 0.002*australian + 0.002*president + 0.002*megawati + 0.002*case + 0.002*summit + 0.002*australia + 0.002*cannot + 0.001*confirmed + 0.001*says + 0.001*meeting + 0.001*government + 0.001*two + 0.001*another + 0.001*levies + 0.001*issues + 0.001*jakarta + 0.001*also + 0.001*revealed')
-    (17, '0.003*government + 0.002*says + 0.002*help + 0.002*qantas + 0.002*bid + 0.002*federal_government + 0.002*lew + 0.001*time + 0.001*assistance + 0.001*pointed + 0.001*pursued + 0.001*lindsay + 0.001*manufacturing + 0.001*dominance + 0.001*die + 0.001*per_cent + 0.001*trade + 0.001*practices + 0.001*helena + 0.001*would')
-    (18, '0.001*said + 0.001*pile + 0.001*even + 0.001*man + 0.001*afghanistan + 0.001*shootings + 0.001*equity + 0.001*destabilise + 0.001*arafat + 0.001*weekly + 0.001*pursuit + 0.001*gary + 0.001*hornsby + 0.001*divisions + 0.001*confined + 0.001*sunday + 0.001*deflecting + 0.001*behari + 0.001*formally + 0.001*cruising')
-    (19, '0.002*economy + 0.002*strong + 0.002*australia + 0.002*says + 0.002*marquee + 0.001*also + 0.001*months + 0.001*said + 0.001*clarify + 0.001*rural + 0.001*set + 0.001*taylor + 0.001*firm + 0.001*australian + 0.001*recession + 0.001*hawke + 0.001*economic + 0.001*view + 0.001*close + 0.001*term')
+    (0, '0.004*said + 0.004*says + 0.003*team + 0.002*rafter + 0.002*doubles + 0.002*win + 0.002*make + 0.002*australia + 0.002*australian + 0.002*good + 0.002*party + 0.002*two + 0.001*expect + 0.001*know + 0.001*number + 0.001*people + 0.001*second + 0.001*cup + 0.001*best + 0.001*rubber')
+    (1, '0.005*said + 0.005*sharon + 0.004*arafat + 0.004*palestinian + 0.004*israeli + 0.003*government + 0.003*official + 0.002*west_bank + 0.002*gaza_strip + 0.002*hamas + 0.002*terrorism + 0.002*group + 0.002*choosing + 0.002*war + 0.002*suicide_attacks + 0.002*attacks + 0.002*security + 0.002*air_strikes + 0.002*targets + 0.002*human_rights')
+    (2, '0.005*says + 0.003*government + 0.003*india + 0.002*said + 0.002*australian + 0.002*help + 0.002*australia + 0.002*also + 0.002*lew + 0.001*bid + 0.001*economy + 0.001*caird + 0.001*time + 0.001*federal_government + 0.001*trade + 0.001*alarming + 0.001*entitled + 0.001*encouraging + 0.001*per_cent + 0.001*laws')
+    (3, '0.004*people + 0.003*said + 0.003*friedli + 0.002*director + 0.002*know + 0.002*company + 0.002*says + 0.002*replied + 0.002*two + 0.002*day + 0.001*afp + 0.001*also + 0.001*hiv + 0.001*arrest + 0.001*first + 0.001*deaths + 0.001*australia + 0.001*trial + 0.001*accused + 0.001*malaysian')
+    (4, '0.004*match + 0.002*day + 0.002*said + 0.002*team + 0.002*says + 0.002*israeli + 0.002*france + 0.002*rafter + 0.002*final + 0.002*captain + 0.002*tennis + 0.002*four + 0.001*australia + 0.001*guarantee + 0.001*ask + 0.001*test + 0.001*hamas + 0.001*play + 0.001*government + 0.001*could')
+    (5, '0.006*said + 0.003*airport + 0.003*taliban + 0.002*opposition + 0.002*killed + 0.002*civilians + 0.002*kandahar + 0.002*city + 0.002*near + 0.002*gul + 0.002*half + 0.001*wounded + 0.001*lali + 0.001*injured + 0.001*left + 0.001*agha + 0.001*night + 0.001*also + 0.001*positions + 0.001*relish')
+    (6, '0.003*one + 0.003*harrison + 0.002*said + 0.002*commission + 0.002*george + 0.002*tonight + 0.002*liverpool + 0.002*memory + 0.001*music + 0.001*minute + 0.001*died + 0.001*collapse + 0.001*beatle + 0.001*come + 0.001*planted + 0.001*dickie + 0.001*says + 0.001*really + 0.001*group + 0.001*man')
+    (7, '0.003*says + 0.002*per_cent + 0.002*job + 0.001*market + 0.001*olivier + 0.001*future + 0.001*parties + 0.001*anz + 0.001*collapse + 0.001*drop + 0.001*fall + 0.001*biggest + 0.001*employment + 0.001*week + 0.001*november + 0.001*points + 0.001*weakest + 0.001*sleep + 0.001*following + 0.001*lowest')
+    (8, '0.004*company + 0.003*one + 0.002*three + 0.002*adventure_world + 0.002*canyoning + 0.002*people + 0.002*australian + 0.002*first + 0.001*deaths + 0.001*says + 0.001*hit + 0.001*apra + 0.001*told + 0.001*last_year + 0.001*weather + 0.001*convicted + 0.001*lack + 0.001*australians + 0.001*took + 0.001*charged')
+    (9, '0.002*said + 0.002*launceston + 0.002*israeli + 0.002*militants + 0.002*two + 0.002*virgin + 0.002*source + 0.002*palestinian + 0.002*airline + 0.002*arrests + 0.002*hamas + 0.002*soldiers + 0.002*terminal + 0.001*told + 0.001*police + 0.001*says + 0.001*another + 0.001*palestinians + 0.001*palestinian_security + 0.001*crackdown')
+    (10, '0.003*storm + 0.002*trees + 0.002*ses + 0.002*sydney + 0.002*says + 0.002*services + 0.002*homes + 0.002*hit + 0.002*around + 0.002*areas + 0.001*hornsby + 0.001*said + 0.001*brought + 0.001*worst + 0.001*storms + 0.001*emergency + 0.001*large + 0.001*leete + 0.001*calls + 0.001*serving')
+    (11, '0.002*guides + 0.002*interlaken + 0.002*rabbani + 0.002*president + 0.002*says + 0.001*international + 0.001*people_including + 0.001*saxeten + 0.001*changes + 0.001*security + 0.001*manslaughter + 0.001*alleged + 0.001*swept + 0.001*killed + 0.001*saying + 0.001*eight + 0.001*court + 0.001*inexperienced + 0.001*tragedy + 0.001*appointment')
+    (12, '0.003*afghanistan + 0.003*powell + 0.002*said + 0.002*taliban + 0.002*southern + 0.002*also + 0.002*says + 0.001*troops + 0.001*forces + 0.001*kandahar + 0.001*ground + 0.001*rumsfeld + 0.001*marines + 0.001*wants + 0.001*officers + 0.001*laden + 0.001*bomb + 0.001*matter + 0.001*united_states + 0.001*best')
+    (13, '0.002*australia + 0.002*howard + 0.002*president + 0.002*indonesia + 0.002*summit + 0.002*republic + 0.002*conference + 0.001*megawati + 0.001*february + 0.001*part + 0.001*university + 0.001*corowa + 0.001*federation + 0.001*alarming + 0.001*pakistan + 0.001*meeting + 0.001*revealed + 0.001*talks + 0.001*two + 0.001*people')
+    (14, '0.005*company + 0.002*says + 0.002*staff + 0.002*entitlements + 0.002*austar + 0.002*spa + 0.002*administrators + 0.002*million + 0.002*receive + 0.002*line + 0.001*said + 0.001*travel + 0.001*today + 0.001*redundant + 0.001*payments + 0.001*operating + 0.001*albarran + 0.001*morning + 0.001*foley + 0.001*cents')
+    (15, '0.002*agreement + 0.002*afghan + 0.001*says + 0.001*would + 0.001*afghanistan + 0.001*independently + 0.001*assembly + 0.001*said + 0.001*voice + 0.001*netted + 0.001*confirmed + 0.001*haggling + 0.001*national + 0.001*depression + 0.001*council + 0.001*structure + 0.001*aid + 0.001*calls + 0.001*deceived + 0.001*germany')
+    (16, '0.002*enterprise + 0.002*dispute + 0.002*yallourn + 0.001*unions + 0.001*bargaining + 0.001*press + 0.001*government + 0.001*said + 0.001*agreement + 0.001*victoria + 0.001*union + 0.001*electricity + 0.001*matter + 0.001*power + 0.001*energy + 0.001*feet + 0.001*state + 0.001*fly + 0.001*challenged + 0.001*industrial_relations')
+    (17, '0.003*krishna + 0.003*hare + 0.003*ashes + 0.003*benares + 0.002*ganges + 0.002*harrison + 0.002*take + 0.002*holy + 0.002*ceremony + 0.002*river + 0.001*members + 0.001*amid + 0.001*former + 0.001*hindu + 0.001*devotees + 0.001*devout + 0.001*hindus + 0.001*sect + 0.001*place + 0.001*time')
+    (18, '0.002*klusener + 0.001*acdt + 0.001*section + 0.001*supporting + 0.001*fires + 0.001*caught + 0.001*kembla + 0.001*airline + 0.001*says + 0.001*road + 0.001*incendiary + 0.001*establishments + 0.001*said + 0.001*slogans + 0.001*comply + 0.001*together + 0.001*rosebury + 0.001*activates + 0.001*patterns + 0.001*new')
+    (19, '0.001*human + 0.001*brain + 0.001*arafat + 0.001*embryos + 0.001*australian + 0.001*said + 0.001*team + 0.001*sharon + 0.001*research + 0.001*cells + 0.001*floor + 0.001*public + 0.001*israeli + 0.001*creating + 0.001*honours + 0.001*asylum + 0.001*commanders + 0.001*palestinian_leader + 0.001*spectator + 0.001*northern_alliance')
 
 
 Topic modeling using `LDA <https://www.cs.princeton.edu/~blei/papers/HoffmanBleiBach2010b.pdf>`_
@@ -616,7 +614,7 @@ To get topics out of the topic model:
 
  .. code-block:: none
 
-    [  99   98  967  258  956 2082  986 2564 2551  329]
+    [ 99  98 986 258 349 329 891 933 175  80]
 
 
 **Step 1**\ : Segmentation
@@ -644,7 +642,7 @@ To get topics out of the topic model:
 
  .. code-block:: none
 
-    [(99, 98), (99, 967), (99, 258), (99, 956), (99, 2082), (99, 986), (99, 2564), (99, 2551), (99, 329), (98, 99), (98, 967), (98, 258), (98, 956), (98, 2082), (98, 986), (98, 2564), (98, 2551), (98, 329), (967, 99), (967, 98), (967, 258), (967, 956), (967, 2082), (967, 986), (967, 2564), (967, 2551), (967, 329), (258, 99), (258, 98), (258, 967), (258, 956), (258, 2082), (258, 986), (258, 2564), (258, 2551), (258, 329), (956, 99), (956, 98), (956, 967), (956, 258), (956, 2082), (956, 986), (956, 2564), (956, 2551), (956, 329), (2082, 99), (2082, 98), (2082, 967), (2082, 258), (2082, 956), (2082, 986), (2082, 2564), (2082, 2551), (2082, 329), (986, 99), (986, 98), (986, 967), (986, 258), (986, 956), (986, 2082), (986, 2564), (986, 2551), (986, 329), (2564, 99), (2564, 98), (2564, 967), (2564, 258), (2564, 956), (2564, 2082), (2564, 986), (2564, 2551), (2564, 329), (2551, 99), (2551, 98), (2551, 967), (2551, 258), (2551, 956), (2551, 2082), (2551, 986), (2551, 2564), (2551, 329), (329, 99), (329, 98), (329, 967), (329, 258), (329, 956), (329, 2082), (329, 986), (329, 2564), (329, 2551)]
+    [(99, 98), (99, 986), (99, 258), (99, 349), (99, 329), (99, 891), (99, 933), (99, 175), (99, 80), (98, 99), (98, 986), (98, 258), (98, 349), (98, 329), (98, 891), (98, 933), (98, 175), (98, 80), (986, 99), (986, 98), (986, 258), (986, 349), (986, 329), (986, 891), (986, 933), (986, 175), (986, 80), (258, 99), (258, 98), (258, 986), (258, 349), (258, 329), (258, 891), (258, 933), (258, 175), (258, 80), (349, 99), (349, 98), (349, 986), (349, 258), (349, 329), (349, 891), (349, 933), (349, 175), (349, 80), (329, 99), (329, 98), (329, 986), (329, 258), (329, 349), (329, 891), (329, 933), (329, 175), (329, 80), (891, 99), (891, 98), (891, 986), (891, 258), (891, 349), (891, 329), (891, 933), (891, 175), (891, 80), (933, 99), (933, 98), (933, 986), (933, 258), (933, 349), (933, 329), (933, 891), (933, 175), (933, 80), (175, 99), (175, 98), (175, 986), (175, 258), (175, 349), (175, 329), (175, 891), (175, 933), (175, 80), (80, 99), (80, 98), (80, 986), (80, 258), (80, 349), (80, 329), (80, 891), (80, 933), (80, 175)]
 
 
 **Step 2**\ : Probability estimation
@@ -712,9 +710,9 @@ The best topic model here can be used as a standalone for news article classific
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  20.316 seconds)
+   **Total running time of the script:** ( 0 minutes  29.400 seconds)
 
-**Estimated memory usage:**  105 MB
+**Estimated memory usage:**  16 MB
 
 
 .. _sphx_glr_download_auto_examples_020_howtos_run_060_news_classification.py:

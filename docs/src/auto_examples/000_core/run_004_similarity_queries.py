@@ -1,13 +1,8 @@
 r"""
-.. _tut3:
-
 Similarity Queries
 ==================
 
 Demonstrates querying a corpus for similar documents.
-
-Expands on the method introduced in :ref:`core_concepts_py`.
-
 """
 
 import logging
@@ -62,11 +57,15 @@ corpus = [dictionary.doc2bow(text) for text in texts]
 # Similarity interface
 # --------------------
 #
-# In the previous tutorials on :ref:`tut1` and :ref:`tut2`, we covered what it means
-# to create a corpus in the Vector Space Model and how to transform it between different
-# vector spaces. A common reason for such a charade is that we want to determine
-# **similarity between pairs of documents**, or the **similarity between a specific document
-# and a set of other documents** (such as a user query vs. indexed documents).
+# In the previous tutorials on
+# :ref:`sphx_glr_auto_examples_000_core_run_002_corpora_and_vector_spaces.py`
+# and
+# :ref:`sphx_glr_auto_examples_000_core_run_003_topics_and_transformations.py`,
+# we covered what it means to create a corpus in the Vector Space Model and how
+# to transform it between different vector spaces. A common reason for such a
+# charade is that we want to determine **similarity between pairs of
+# documents**, or the **similarity between a specific document and a set of
+# other documents** (such as a user query vs. indexed documents).
 #
 # To show how this can be done in gensim, let us consider the same corpus as in the
 # previous examples (which really originally comes from Deerwester et al.'s

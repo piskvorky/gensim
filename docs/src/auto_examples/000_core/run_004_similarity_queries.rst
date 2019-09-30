@@ -7,14 +7,10 @@
 .. _sphx_glr_auto_examples_000_core_run_004_similarity_queries.py:
 
 
-.. _tut3:
-
 Similarity Queries
 ==================
 
 Demonstrates querying a corpus for similar documents.
-
-Expands on the method introduced in :ref:`core_concepts_py`.
 
 .. code-block:: default
 
@@ -84,11 +80,15 @@ if you completed it, feel free to skip to the next section.
 Similarity interface
 --------------------
 
-In the previous tutorials on :ref:`tut1` and :ref:`tut2`, we covered what it means
-to create a corpus in the Vector Space Model and how to transform it between different
-vector spaces. A common reason for such a charade is that we want to determine
-**similarity between pairs of documents**, or the **similarity between a specific document
-and a set of other documents** (such as a user query vs. indexed documents).
+In the previous tutorials on
+:ref:`sphx_glr_auto_examples_000_core_run_002_corpora_and_vector_spaces.py`
+and
+:ref:`sphx_glr_auto_examples_000_core_run_003_topics_and_transformations.py`,
+we covered what it means to create a corpus in the Vector Space Model and how
+to transform it between different vector spaces. A common reason for such a
+charade is that we want to determine **similarity between pairs of
+documents**, or the **similarity between a specific document and a set of
+other documents** (such as a user query vs. indexed documents).
 
 To show how this can be done in gensim, let us consider the same corpus as in the
 previous examples (which really originally comes from Deerwester et al.'s
@@ -141,7 +141,7 @@ no random-walk static ranks, just a semantic extension over the boolean keyword 
 
  .. code-block:: none
 
-    [(0, 0.4618210045327161), (1, -0.07002766527900026)]
+    [(0, 0.4618210045327169), (1, -0.07002766527900095)]
 
 
 In addition, we will be considering `cosine similarity <http://en.wikipedia.org/wiki/Cosine_similarity>`_
@@ -317,9 +317,9 @@ Here we show a pretty fastText logo so that our gallery picks it up as a thumbna
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.637 seconds)
+   **Total running time of the script:** ( 0 minutes  0.858 seconds)
 
-**Estimated memory usage:**  13 MB
+**Estimated memory usage:**  45 MB
 
 
 .. _sphx_glr_download_auto_examples_000_core_run_004_similarity_queries.py:

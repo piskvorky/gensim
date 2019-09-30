@@ -1,12 +1,8 @@
 r"""
-
-.. _fasttext_tutorial_py:
-
 FastText Model
 ==============
 
 Introduces Gensim's fastText model and demonstrates its use on the Lee Corpus.
-
 """
 
 import logging

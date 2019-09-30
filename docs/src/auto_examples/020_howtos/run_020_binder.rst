@@ -7,8 +7,6 @@
 .. _sphx_glr_auto_examples_020_howtos_run_020_binder.py:
 
 
-.. _binder_howto:
-
 How to Play with the Examples via Binder
 ========================================
 
@@ -110,7 +108,7 @@ Once the environment is ready, you will see a collection of Jupyter notebooks.
             How to Reproduce Results of Le and Mikolov 2014
     ../020_howtos/run_060_news_classification.py
             How to Classify News Articles into Topics
-    ../020_howtos/xrun_040_compare_lda.py
+    ../020_howtos/rxx_040_compare_lda.py
             How to Compare LDA Models
 
 
@@ -129,7 +127,7 @@ You can now play with the example the same way you would with a local Jupyter no
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.170 seconds)
+   **Total running time of the script:** ( 0 minutes  1.795 seconds)
 
 **Estimated memory usage:**  9 MB
 

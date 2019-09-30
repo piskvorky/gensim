@@ -1,12 +1,8 @@
 r"""
-
-.. _core_concepts_py:
-
 Core Concepts
 =============
 
 This tutorial introduces Documents, Corpora, Vectors and Models: the basic concepts and terms needed to understand and use gensim.
-
 """
 
 import pprint
@@ -52,8 +48,9 @@ document = "Human machine interface for lab abc computer applications"
 #    After training, a topic model can be used to extract topics from new
 #    documents (documents not seen in the training corpus).
 #
-#    Such corpora can be indexed for :ref:`tut3`, queried by semantic similarity,
-#    clustered etc.
+#    Such corpora can be indexed for
+#    :ref:`sphx_glr_auto_examples_000_core_run_004_similarity_queries.py`,
+#    queried by semantic similarity, clustered etc.
 #
 # Here is an example corpus.
 # It consists of 9 documents, where each document is a string consisting of a single sentence.
@@ -279,7 +276,7 @@ print(tfidf[dictionary.doc2bow(words)])
 # continue training on new training documents or to transform new documents.
 #
 # ``gensim`` offers a number of different models/transformations.
-# For more, see :ref:`tut2`.
+# For more, see :ref:`sphx_glr_auto_examples_000_core_run_003_topics_and_transformations.py`.
 #
 # Once you've created the model, you can do all sorts of cool stuff with it.
 # For example, to transform the whole corpus via TfIdf and index it, in
@@ -324,7 +321,7 @@ for document_number, score in sorted(enumerate(sims), key=lambda x: x[1], revers
 # What Next?
 # ----------
 #
-# There's still much more to learn about :ref:`tut1`.
+# There's still much more to learn about :ref:`sphx_glr_auto_examples_000_core_run_002_corpora_and_vector_spaces.py`.
 
 ###############################################################################
 # Here we show a pretty fastText logo so that our gallery picks it up as a thumbnail.

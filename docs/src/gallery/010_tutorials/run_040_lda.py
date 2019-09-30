@@ -1,7 +1,4 @@
 r"""
-
-.. _lda_py:
-
 LDA Model
 =========
 
@@ -34,7 +31,7 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 # understanding of the LDA model should suffice. Examples:
 # 
 # * `Introduction to Latent Dirichlet Allocation <http://blog.echen.me/2011/08/22/introduction-to-latent-dirichlet-allocation>`_
-# * Gensim tutorial: :ref:`tut2`
+# * Gensim tutorial: :ref:`sphx_glr_auto_examples_000_core_run_003_topics_and_transformations.py`
 # * Gensim's LDA model API docs: :py:class:`gensim.models.LdaModel`
 #
 # I would also encourage you to consider each step when applying the model to

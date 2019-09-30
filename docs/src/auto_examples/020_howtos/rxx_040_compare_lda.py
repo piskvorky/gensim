@@ -1,7 +1,4 @@
 r"""
-
-.. _howto_compare_lda_py:
-
 How to Compare LDA Models
 =========================
 

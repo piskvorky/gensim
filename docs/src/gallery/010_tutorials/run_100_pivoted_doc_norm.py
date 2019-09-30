@@ -1,7 +1,4 @@
 r"""
-
-.. _pivoted_document_len_norm:
-
 Pivoted Document Length Normalization
 =====================================
 

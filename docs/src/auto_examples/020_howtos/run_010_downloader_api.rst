@@ -7,8 +7,6 @@
 .. _sphx_glr_auto_examples_020_howtos_run_010_downloader_api.py:
 
 
-.. _tutorial_downloader_api:
-
 How to download pre-trained models and corpora
 ==============================================
 
@@ -34,7 +32,7 @@ The module leverages a local cache that ensures data is downloaded at most once.
 This tutorial:
 
 * Retrieves the text8 corpus, unless it is already on your local machine
-* Trains a Word2Vec model from the corpus (see :ref:`doc2vec_lee_py` for a detailed tutorial)
+* Trains a Word2Vec model from the corpus (see :ref:`sphx_glr_auto_examples_010_tutorials_run_010_doc2vec_lee.py` for a detailed tutorial)
 * Leverages the model to calculate word similarity
 * Demonstrates using the API to load other models and corpora
 
@@ -154,7 +152,7 @@ Now that we have our word2vec model, let's find words that are similar to 'tree'
 
  .. code-block:: none
 
-    [('leaf', 0.7090295553207397), ('trees', 0.6969285011291504), ('bark', 0.6574575901031494), ('flower', 0.6349432468414307), ('bird', 0.632779598236084), ('avl', 0.6274975538253784), ('fruit', 0.6212154030799866), ('cave', 0.583029568195343), ('beetle', 0.5817441940307617), ('foliage', 0.5792064666748047)]
+    [('leaf', 0.690528154373169), ('trees', 0.686185359954834), ('bark', 0.6746718883514404), ('flower', 0.6214938759803772), ('fruit', 0.6151382923126221), ('bird', 0.6047075390815735), ('avl', 0.5932597517967224), ('goat', 0.5775163173675537), ('tiny', 0.557826042175293), ('seed', 0.555831253528595)]
 
 
 You can use the API to download many corpora and models. You can get the list of all the models and corpora that are provided, by using the code below:
@@ -847,9 +845,9 @@ In corpora, the corpus is never loaded to memory, all corpuses wrapped to specia
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  23.366 seconds)
+   **Total running time of the script:** ( 1 minutes  18.954 seconds)
 
-**Estimated memory usage:**  393 MB
+**Estimated memory usage:**  458 MB
 
 
 .. _sphx_glr_download_auto_examples_020_howtos_run_010_downloader_api.py:

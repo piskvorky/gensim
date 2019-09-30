@@ -13,4 +13,4 @@ Each tutorial is available in several formats:
 - `Jupyter notebook <https://jupyter.org/>`__: You'll see a separate download link at the end of each tutorial.
   If you have a working copy of the ``gensim`` `git repository <https://github.com/RaRe-Technologies/gensim>`__, you'll also find these
   notebooks under :file:`docs/src/gallery/auto_examples`.
-- `Binder <https://mybinder.org>`__: see :ref:`binder_howto` for more details.
+- `Binder <https://mybinder.org>`__: see the :ref:`sphx_glr_auto_examples_020_howtos_run_020_binder.py` for more details.

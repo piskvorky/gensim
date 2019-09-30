@@ -1,7 +1,4 @@
 r"""
-
-.. _doc_howto:
-
 How to Author Documentation
 ===========================
 

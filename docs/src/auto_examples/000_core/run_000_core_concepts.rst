@@ -7,8 +7,6 @@
 .. _sphx_glr_auto_examples_000_core_run_000_core_concepts.py:
 
 
-.. _core_concepts_py:
-
 Core Concepts
 =============
 
@@ -74,8 +72,9 @@ Corpora serve two roles in Gensim:
    After training, a topic model can be used to extract topics from new
    documents (documents not seen in the training corpus).
 
-   Such corpora can be indexed for :ref:`tut3`, queried by semantic similarity,
-   clustered etc.
+   Such corpora can be indexed for
+   :ref:`sphx_glr_auto_examples_000_core_run_004_similarity_queries.py`,
+   queried by semantic similarity, clustered etc.
 
 Here is an example corpus.
 It consists of 9 documents, where each document is a string consisting of a single sentence.
@@ -431,7 +430,7 @@ You can save trained models to disk and later load them back, either to
 continue training on new training documents or to transform new documents.
 
 ``gensim`` offers a number of different models/transformations.
-For more, see :ref:`tut2`.
+For more, see :ref:`sphx_glr_auto_examples_000_core_run_003_topics_and_transformations.py`.
 
 Once you've created the model, you can do all sorts of cool stuff with it.
 For example, to transform the whole corpus via TfIdf and index it, in
@@ -525,7 +524,7 @@ Finally, we used our model to calculate the similarity between some query docume
 What Next?
 ----------
 
-There's still much more to learn about :ref:`tut1`.
+There's still much more to learn about :ref:`sphx_glr_auto_examples_000_core_run_002_corpora_and_vector_spaces.py`.
 
 Here we show a pretty fastText logo so that our gallery picks it up as a thumbnail.
 
@@ -551,7 +550,7 @@ Here we show a pretty fastText logo so that our gallery picks it up as a thumbna
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.903 seconds)
+   **Total running time of the script:** ( 0 minutes  0.967 seconds)
 
 **Estimated memory usage:**  44 MB
 

@@ -1,6 +1,4 @@
 r"""
-.. _annoy_py:
-
 Similarity Queries with Annoy and Word2Vec
 ==========================================
 
@@ -46,7 +44,7 @@ text8_path
 # 2. Train the Word2Vec model
 # ---------------------------
 #
-# For more details, see :ref:`word2vec_py`.
+# For more details, see :ref:`sphx_glr_auto_examples_010_tutorials_run_020_word2vec.py`.
 from gensim.models import Word2Vec, KeyedVectors
 from gensim.models.word2vec import Text8Corpus
 

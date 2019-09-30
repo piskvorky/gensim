@@ -1,7 +1,4 @@
 r"""
-
-.. _distance_metrics:
-
 Distance Metrics
 ================
 

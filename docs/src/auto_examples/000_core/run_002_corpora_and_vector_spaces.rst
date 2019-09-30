@@ -7,8 +7,6 @@
 .. _sphx_glr_auto_examples_000_core_run_002_corpora_and_vector_spaces.py:
 
 
-.. _tut1:
-
 Corpora and Vector Spaces
 =========================
 
@@ -311,7 +309,7 @@ then convert the tokens via a dictionary to their ids and yield the resulting sp
 
  .. code-block:: none
 
-    <__main__.MyCorpus object at 0x7feb2be3dcc0>
+    <__main__.MyCorpus object at 0x7fd6da9fd278>
 
 
 Corpus is now an object. We didn't define any way to print it, so `print` just outputs address
@@ -388,8 +386,9 @@ Of course, what we do with such a corpus is another question; it is not at all c
 how counting the frequency of distinct words could be useful. As it turns out, it isn't, and
 we will need to apply a transformation on this simple representation first, before
 we can use it to compute any meaningful document vs. document similarities.
-Transformations are covered in the next tutorial (:ref:`tut2`), but before that, let's
-briefly turn our attention to *corpus persistency*.
+Transformations are covered in the next tutorial
+(:ref:`sphx_glr_auto_examples_000_core_run_003_topics_and_transformations.py`),
+but before that, let's briefly turn our attention to *corpus persistency*.
 
 .. _corpus-formats:
 
@@ -583,14 +582,13 @@ and from/to `scipy.sparse` matrices
 What Next
 ---------
 
-Read about :ref:`tut2`.
+Read about :ref:`sphx_glr_auto_examples_000_core_run_003_topics_and_transformations.py`.
 
 References
 ----------
 
 For a complete reference (Want to prune the dictionary to a smaller size?
 Optimize converting between corpora and NumPy/SciPy arrays?), see the :ref:`apiref`.
-Or continue to the next tutorial on :ref:`tut2`.
 
 .. [1] This is the same corpus as used in
        `Deerwester et al. (1990): Indexing by Latent Semantic Analysis <http://www.cs.bham.ac.uk/~pxt/IDA/lsa_ind.pdf>`_, Table 2.
@@ -619,9 +617,9 @@ Here we show a pretty fastText logo so that our gallery picks it up as a thumbna
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  1.768 seconds)
+   **Total running time of the script:** ( 0 minutes  2.115 seconds)
 
-**Estimated memory usage:**  11 MB
+**Estimated memory usage:**  45 MB
 
 
 .. _sphx_glr_download_auto_examples_000_core_run_002_corpora_and_vector_spaces.py:

@@ -7,8 +7,6 @@
 .. _sphx_glr_auto_examples_010_tutorials_run_090_summarization.py:
 
 
-.. _summarization_py:
-
 Text Summarization
 ==================
 
@@ -2328,9 +2326,9 @@ of words in the document and *w* is the number of unique words.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  17.066 seconds)
+   **Total running time of the script:** ( 0 minutes  15.165 seconds)
 
-**Estimated memory usage:**  59 MB
+**Estimated memory usage:**  15 MB
 
 
 .. _sphx_glr_download_auto_examples_010_tutorials_run_090_summarization.py:

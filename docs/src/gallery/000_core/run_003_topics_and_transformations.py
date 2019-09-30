@@ -1,11 +1,8 @@
 r"""
-.. _tut2:
-
 Topics and Transformations
 ===========================
 
 Introduces transformations and demonstrates their use on a toy corpus.
-
 """
 
 import logging
@@ -163,7 +160,7 @@ lsi = models.LsiModel.load('/tmp/model.lsi')
 # The next question might be: just how exactly similar are those documents to each other?
 # Is there a way to formalize the similarity, so that for a given input document, we can
 # order some other set of documents according to their similarity? Similarity queries
-# are covered in the next tutorial (:ref:`tut3`).
+# are covered in the next tutorial (:ref:`sphx_glr_auto_examples_000_core_run_004_similarity_queries.py`).
 #
 # .. _transformations:
 #
@@ -268,7 +265,7 @@ lsi = models.LsiModel.load('/tmp/model.lsi')
 # What Next?
 # ----------
 #
-# Continue on to the next tutorial on :ref:`tut3`.
+# Continue on to the next tutorial on :ref:`sphx_glr_auto_examples_000_core_run_004_similarity_queries.py`.
 #
 # References
 # ----------
