@@ -227,11 +227,65 @@ latex_use_parts = False
 
 suppress_warnings = ['image.nonlocal_uri', 'ref.citation', 'ref.footnote']
 
+
+def sort_key(source_dir):
+    """Sorts tutorials and guides in a predefined order.
+
+    If the predefined order doesn't include the filename we're looking for,
+    fallback to alphabetical order.
+    """
+    core_order = [
+        'run_core_concepts.py',
+        'run_corpora_and_vector_spaces.py',
+        'run_topics_and_transformations.py',
+        'run_similarity_queries.py',
+    ]
+
+    tutorials_order = [
+        'run_doc2vec_lee.py',
+        'run_word2vec.py',
+        'run_annoy.py',
+        'run_fasttext.py',
+        'run_lda.py',
+        'run_distance_metrics.py',
+        'run_wmd.py',
+        'run_summarization.py',
+        'run_pivoted_doc_norm.py',
+    ]
+
+    howto_order = [
+        'run_downloader_api.py',
+        'run_binder.py',
+        'run_doc.py',
+        'run_doc2vec_imdb.py',
+        'run_news_classification.py',
+        'rxx_compare_lda.py',
+    ]
+
+    order = core_order + tutorials_order + howto_order
+    files = sorted(os.listdir(source_dir))
+
+    def key(arg):
+        try:
+            return order.index(arg)
+        except ValueError:
+            return files.index(arg)
+
+    return key
+
+
 import sphinx_gallery.sorting
 sphinx_gallery_conf = {
     'examples_dirs': 'gallery',   # path to your example scripts
     'gallery_dirs': 'auto_examples',  # path where to save gallery generated examples
     'show_memory': True,
     'filename_pattern': 'run',
-    'within_subsection_order': sphinx_gallery.sorting.FileNameSortKey,
+    'subsection_order': sphinx_gallery.sorting.ExplicitOrder(
+        [
+            'gallery/core',
+            'gallery/tutorials',
+            'gallery/howtos',
+        ],
+    ),
+    'within_subsection_order': sort_key,
 }

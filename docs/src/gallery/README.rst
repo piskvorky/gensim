@@ -44,15 +44,14 @@ If we remove that prefix from a file, then Sphinx will skip running it and just 
 This is helpful when the example fails to run for some reason, and we want to temporarily skip running it.
 It's best to avoid this unless absolutely necessary, because running the script ensures the example is still correct and valid.
 
-We use the file names to order things.
-This includes:
-
-- Subgalleries within the top-level gallery
-- Examples within each subgallery
-
 Configuration
 -------------
 
 The Gallery relies on the general Sphinx configuration script in ``docs/src/conf.py``.
 Within that script, there is a ``sphinx_gallery_conf`` dictionary that contains all the config options.
 If you go tweaking those options, see the `Sphinx Gallery Documentation <https://sphinx-gallery.github.io/configuration.html>`__.
+
+The order in which subgalleries and examples appear is an important part of the configuration.
+For the subgalleries, we list them explicitly using the ``subsection_order`` parameter.
+We do a similar thing for examples, except we need to write a little bit of code to make that happen.
+See the ``sort_key`` function in ``conf.py`` for details.

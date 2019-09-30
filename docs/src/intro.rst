@@ -68,4 +68,4 @@ or from the `Python Package Index <http://pypi.python.org/pypi/gensim>`_.
 Core concepts
 -------------
 
-See the :ref:`sphx_glr_auto_examples_000_core_run_000_core_concepts.py` tutorial.
+See the :ref:`sphx_glr_auto_examples_core_run_core_concepts.py` tutorial.
