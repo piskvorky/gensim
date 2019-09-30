@@ -62,28 +62,28 @@ http://api.mongodb.org/python/current/installation.html#osx
 ********************************************************************
 """
 
-    def run(self):
-        try:
-            build_ext.run(self)
-        except Exception:
-            e = sys.exc_info()[1]
-            sys.stdout.write('%s\n' % str(e))
-            warnings.warn(
-                self.warning_message +
-                "Extension modules" +
-                "There was an issue with your platform configuration - see above.")
+def run(self):
+    try:
+        build_ext.run(self)
+    except Exception:
+        e = sys.exc_info()[1]
+        sys.stdout.write('%s\n' % str(e))
+        warnings.warn(
+            self.warning_message +
+            "Extension modules" +
+            "There was an issue with your platform configuration - see above.")
 
-    def build_extension(self, ext):
-        name = ext.name
-        try:
-            build_ext.build_extension(self, ext)
-        except Exception:
-            e = sys.exc_info()[1]
-            sys.stdout.write('%s\n' % str(e))
-            warnings.warn(
-                self.warning_message +
-                "The %s extension module" % (name,) +
-                "The output above this warning shows how the compilation failed.")
+def build_extension(self, ext):
+    name = ext.name
+    try:
+        build_ext.build_extension(self, ext)
+    except Exception:
+        e = sys.exc_info()[1]
+        sys.stdout.write('%s\n' % str(e))
+        warnings.warn(
+            self.warning_message +
+            "The %s extension module" % (name,) +
+            "The output above this warning shows how the compilation failed.")
 
     # the following is needed to be able to add numpy's include dirs... without
     # importing numpy directly in this script, before it's actually installed!
@@ -100,13 +100,13 @@ http://api.mongodb.org/python/current/installation.html#osx
         import numpy
         self.include_dirs.append(numpy.get_include())
 
-
 model_dir = os.path.join(os.path.dirname(__file__), 'gensim', 'models')
 gensim_dir = os.path.join(os.path.dirname(__file__), 'gensim')
 
 cmdclass = {'build_ext': custom_build_ext}
 
 WHEELHOUSE_UPLOADER_COMMANDS = {'fetch_artifacts', 'upload_all'}
+
 if WHEELHOUSE_UPLOADER_COMMANDS.intersection(sys.argv):
     import wheelhouse_uploader.cmd
     cmdclass.update(vars(wheelhouse_uploader.cmd))
@@ -233,7 +233,7 @@ Copyright (c) 2009-now Radim Rehurek
 # https://docs.pytest.org/en/latest/py27-py34-deprecation.html
 #
 if PY2:
-    NUMPY_STR = 'numpy >= 1.11.3, <= 1.16.1'
+    NUMPY_STR = 'numpy >= 1.11.3 <= 1.16.1'
     PYTEST_STR = 'pytest == 4.6.4'
 else:
     NUMPY_STR = 'numpy >= 1.11.3'
@@ -251,7 +251,7 @@ win_testenv = [
     'testfixtures',
     'Morfessor==2.0.2a4',
     'python-Levenshtein >= 0.10.2',
-    'visdom >= 0.1.8, != 0.1.8.7',
+    'visdom >= 0.1.8, != 0.1.8.7'
 ]
 
 if sys.version_info[:2] == (2, 7):
@@ -272,7 +272,7 @@ if sys.version_info < (3, 7):
     linux_testenv.extend([
         'tensorflow <= 1.3.0',
         'keras >= 2.0.4, <= 2.1.4',
-        'annoy',
+        'annoy'
     ])
 
 if (3, 0) < sys.version_info < (3, 7):
@@ -283,7 +283,7 @@ docs_testenv = linux_testenv + distributed_env + [
     'sphinxcontrib-napoleon',
     'plotly',
     'pattern <= 2.6',
-    'sphinxcontrib.programoutput',
+    'sphinxcontrib.programoutput'
 ]
 #
 # Get Py2.7 docs to build, see https://github.com/RaRe-Technologies/gensim/pull/2552
@@ -384,7 +384,7 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Scientific/Engineering :: Information Analysis',
-        'Topic :: Text Processing :: Linguistic',
+        'Topic :: Text Processing :: Linguistic'
     ],
 
     test_suite="gensim.test",
@@ -395,15 +395,15 @@ setup(
         NUMPY_STR,
         'scipy >= 0.18.1',
         'six >= 1.5.0',
-        'smart_open >= 1.8.1',
+        'smart_open >= 1.8.1'
     ],
     tests_require=linux_testenv,
     extras_require={
         'distributed': distributed_env,
         'test-win': win_testenv,
         'test': linux_testenv,
-        'docs': docs_testenv,
+        'docs': docs_testenv
     },
 
-    include_package_data=True,
+    include_package_data=True
 )
