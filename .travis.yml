@@ -9,7 +9,6 @@ cache:
 dist: trusty
 language: python
 
-
 matrix:
   include:
     - python: '2.7'
@@ -34,6 +33,5 @@ matrix:
       dist: xenial
       sudo: true
 
-
 install: pip install tox
-script: tox -vv
+script: tox -v
