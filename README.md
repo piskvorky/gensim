@@ -10,12 +10,15 @@ gensim – Topic Modelling in Python
 [![Gitter](https://img.shields.io/badge/gitter-join%20chat%20%E2%86%92-09a3d5.svg)](https://gitter.im/RaRe-Technologies/gensim)
 [![Follow](https://img.shields.io/twitter/follow/gensim_py.svg?style=social&label=Follow)](https://twitter.com/gensim_py)
 
-
-
 Gensim is a Python library for *topic modelling*, *document indexing*
 and *similarity retrieval* with large corpora. Target audience is the
 *natural language processing* (NLP) and *information retrieval* (IR)
 community.
+
+## :pizza: Hacktoberfest 2019 :beer:
+
+We are accepting PRs for Hacktoberfest!
+See [here](HACKTOBERFEST.md) for details.
 
 Features
 --------
