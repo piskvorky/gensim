@@ -11,7 +11,10 @@ There's also a list of Hacktoberfest-friendly issues to work on [here](https://g
 Of course, we welcome contributions on any of the existing issues, not just the ones labeled `hacktoberfest`.
 Just be sure that no-one else is already working on it first.
 
-Furthermore, we also welcome contributions not connected to an existing issues.
+Furthermore, we also welcome contributions not connected to an existing issue.
+This includes things like fixing typos in documentation, docstrings, etc.
+If you make such contributions, please make the motivation behind the contribution clear.
+Please avoid making innocuous changes without sufficient motivation (e.g. changing code formatting, etc).
 
 ## Before Contributing
 
