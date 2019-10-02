@@ -127,7 +127,7 @@ class TestDictionary(unittest.TestCase):
         dfs_expected = {0: 3, 1: 3, 2: 3, 3: 3}
         cfs_expected = {0: 4, 1: 3, 2: 3, 3: 3}
         self.assertEqual(d.dfs, dfs_expected)
-        self.assertEqual(d.dfs, cfs_expected)
+        self.assertEqual(d.cfs, cfs_expected)
 
     def testFilterKeepTokens_keepTokens(self):
         # provide keep_tokens argument, keep the tokens given
