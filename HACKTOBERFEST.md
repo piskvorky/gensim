@@ -9,11 +9,13 @@ If the learning curve for `gensim` is a bit steep, give the [smart_open](https:/
 There's also a list of Hacktoberfest-friendly issues to work on: [smart_open hacktoberfest issues](https://github.com/RaRe-Technologies/smart_open/labels/hacktoberfest).
 
 Of course, we welcome contributions on any of the existing issues, not just the ones labeled `hacktoberfest`.
-Just be sure that no-one else is already working on it first.
+If the issue is simple & quick, you can just submit your PR, with a proper reference to the issue it addresses.
+If the issue requires a little more work, but you have a good idea of how to proceed & know when you'll be submitting some initial work, please post a short note about your plans to the issue, or a "work-in-progress" ("[WIP]") pull-request indicating work is underway, to help avoid wasted duplicate work.
 
 Furthermore, we also welcome contributions not connected to an existing issue.
 This includes things like fixing typos in documentation, docstrings, etc.
 If you make such contributions, please make the motivation behind the contribution clear.
+You could start such a contribution with a new pull-request, or if you think it requires other discussion beforehand, as a separate new issue.
 Please avoid making innocuous changes without sufficient motivation (e.g. changing code formatting, etc).
 
 ## Before Contributing
@@ -26,7 +28,8 @@ Check out the following:
 
 ## Questions
 
-If you have a questiona about a specific issue or PR, just ask there directly, and we'll get back to you as soon as we can.
+If you have a general question about Gensim, please ask on the [mailing list](https://groups.google.com/forum/#!forum/gensim).
+If you have a question a about a specific issue or PR, just ask there directly, and we'll get back to you as soon as we can.
 Otherwise, ping @mpenkov on [Twitter](https://twitter.com/mpenkov) or [Telegram](https://t.me/mpenkov).
 
 Happy Hacking!!
