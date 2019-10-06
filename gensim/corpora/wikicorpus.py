@@ -84,6 +84,8 @@ RE_P17 = re.compile(
     r'(^.{0,2}((bgcolor)|(\d{0,1}[ ]?colspan)|(rowspan)|(style=)|(class=)|(align=))(.*))',
     re.UNICODE
 )
+"""Remove headings """
+RE_P18 = re.compile(r'(#{1,6}) +|^\s*=*|\=*$|^\s*-*|\-*$', re.UNICODE)
 """Table markup"""
 IGNORED_NAMESPACES = [
     'Wikipedia', 'Category', 'File', 'Portal', 'Template',
@@ -255,6 +257,7 @@ def remove_markup(text, promote_remaining=True, simplify_links=True):
         text = text.replace('||', '\n|')  # each table cell on a separate line
         text = re.sub(RE_P13, '\n', text)  # leave only cell content
         text = re.sub(RE_P17, '\n', text)  # remove formatting lines
+        text = re.sub(RE_P18, '', text)  # remove headings
 
         # remove empty mark-up
         text = text.replace('[]', '')
