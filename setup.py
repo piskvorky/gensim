@@ -276,13 +276,13 @@ if sys.version_info < (3, 7):
     ])
 
 if (3, 0) < sys.version_info < (3, 7):
-    linux_testenv.extend(['nmslib'])    
-    
+    linux_testenv.extend(['nmslib'])
+
 docs_testenv = linux_testenv + distributed_env + [
     'sphinx',
     'sphinxcontrib-napoleon',
     'plotly',
-    'pattern <= 2.6',
+    'pattern >= 3.6',
     'sphinxcontrib.programoutput',
 ]
 #
@@ -360,7 +360,7 @@ setup(
 
     url='http://radimrehurek.com/gensim',
     download_url='http://pypi.python.org/pypi/gensim',
-    
+
     license='LGPLv2.1',
 
     keywords='Singular Value Decomposition, SVD, Latent Semantic Indexing, '
