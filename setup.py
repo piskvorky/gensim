@@ -282,7 +282,7 @@ docs_testenv = linux_testenv + distributed_env + [
     'sphinx',
     'sphinxcontrib-napoleon',
     'plotly',
-    'pattern >= 3.6',
+    'Pattern >= 3.6',
     'sphinxcontrib.programoutput',
 ]
 #
