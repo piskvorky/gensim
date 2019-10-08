@@ -282,6 +282,7 @@ docs_testenv = linux_testenv + distributed_env + [
     'sphinx',
     'sphinxcontrib-napoleon',
     'plotly',
+# Pattern's version is specified to install Pattern 3.6, which adds python3 support
     'Pattern >= 3.6',
     'sphinxcontrib.programoutput',
 ]
