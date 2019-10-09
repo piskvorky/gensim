@@ -700,7 +700,7 @@ class WikiCorpus(TextCorpus):
             logger.warn(
                 "user terminated iteration over Wikipedia corpus after %i documents with %i positions "
                 "(total %i articles, %i positions before pruning articles shorter than %i words)",
-                articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS
+                articles, positions, articles_all, positions_all, self.article_min_tokens
             )
         except PicklingError as exc:
             raise_from(PicklingError('Can not send filtering function {} to multiprocessing, '
@@ -709,7 +709,7 @@ class WikiCorpus(TextCorpus):
             logger.info(
                 "finished iterating over Wikipedia corpus of %i documents with %i positions "
                 "(total %i articles, %i positions before pruning articles shorter than %i words)",
-                articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS
+                articles, positions, articles_all, positions_all, self.article_min_tokens
             )
             self.length = articles  # cache corpus length
         finally:
