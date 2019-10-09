@@ -281,6 +281,7 @@ docs_testenv = linux_testenv + distributed_env + [
     'sphinx',
     'sphinxcontrib-napoleon',
     'plotly',
+    'Pattern >= 3.6',  # Need 3.6 or later for Py3 support
     'sphinxcontrib.programoutput',
 ]
 #
