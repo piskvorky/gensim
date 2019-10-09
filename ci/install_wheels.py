@@ -17,7 +17,7 @@ def main():
         packages = ['numpy==1.14.5', 'scipy==1.1.0']
     else:
         packages = ['numpy==1.11.3', 'scipy==1.0.0']
-    subprocess.check_call(['python', '-m', 'pip', 'install'] + packages)
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install'] + packages)
 
 
 if __name__ == '__main__':
