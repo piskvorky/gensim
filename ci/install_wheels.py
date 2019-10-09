@@ -13,7 +13,7 @@ import sys
 
 
 def main():
-    if sys.version[:2] == (3, 7):
+    if sys.version[:3] == (3, 7, 0):
         packages = ['numpy==1.14.5', 'scipy==1.1.0']
     else:
         packages = ['numpy==1.11.3', 'scipy==1.0.0']
