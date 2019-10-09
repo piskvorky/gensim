@@ -272,18 +272,16 @@ if sys.version_info < (3, 7):
     linux_testenv.extend([
         'tensorflow <= 1.3.0',
         'keras >= 2.0.4, <= 2.1.4',
-        'annoy',
     ])
 
 if (3, 0) < sys.version_info < (3, 7):
-    linux_testenv.extend(['nmslib'])    
-    
+    linux_testenv.extend(['nmslib'])
+
 docs_testenv = linux_testenv + distributed_env + [
     'sphinx',
     'sphinxcontrib-napoleon',
     'plotly',
     'sphinxcontrib.programoutput',
-    'annoy',
 ]
 #
 # Get Py2.7 docs to build, see https://github.com/RaRe-Technologies/gensim/pull/2552
@@ -360,7 +358,7 @@ setup(
 
     url='http://radimrehurek.com/gensim',
     download_url='http://pypi.python.org/pypi/gensim',
-    
+
     license='LGPLv2.1',
 
     keywords='Singular Value Decomposition, SVD, Latent Semantic Indexing, '
