@@ -10,7 +10,7 @@ Run with:
 sudo python ./setup.py install
 """
 
-import os
+import os #Imports os python module
 import platform
 import sys
 import warnings
