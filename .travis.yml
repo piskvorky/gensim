@@ -29,5 +29,7 @@ matrix:
       sudo: true
 
 
-install: pip install tox
+install:
+  - pip install tox
+  - python ci/install_wheels.py
 script: tox -vv
