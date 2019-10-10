@@ -17,7 +17,13 @@ def main():
         packages = ['numpy==1.14.5', 'scipy==1.1.0']
     else:
         packages = ['numpy==1.11.3', 'scipy==1.0.0']
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install'] + packages)
+    command = [sys.executable, '-m', 'pip', 'install'] + packages
+
+    print('sys.executable: %r\n' % sys.executable, file=sys.stderr)
+    print('sys.version: %r\n' % sys.version, file=sys.stderr)
+    print('command: %r\n' % sys.version, file=sys.stderr)
+
+    subprocess.check_call(command)
 
 
 if __name__ == '__main__':
