@@ -20,7 +20,7 @@ def main():
     command = [sys.executable, '-m', 'pip', 'install'] + packages
 
     print('sys.executable: %r' % sys.executable, file=sys.stderr)
-    print('sys.version_info: %r' % sys.version_info, file=sys.stderr)
+    print('sys.version_info: %r' % list(sys.version_info), file=sys.stderr)
     print('command: %r' % command, file=sys.stderr)
 
     subprocess.check_call(command)
