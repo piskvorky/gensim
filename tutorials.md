@@ -71,7 +71,7 @@
 * [Doc2vec to predict IMDB review star rating. Reproducing the Google paper](https://radimrehurek.com/gensim/gensim_numfocus/auto_examples/howtos/run_doc2vec_imdb.html)
 
 ##### Similarity Queries
-* [Similarity queries using Annoy with word2vec and doc2vec](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/annoytutorial.ipynb)
+* [Similarity queries using Annoy with word2vec and doc2vec](https://radimrehurek.com/gensim/gensim_numfocus/auto_examples/tutorials/run_annoy.html)
 
 ##### Word Movers Distance
 * Tool to get the most similar documents for word2vec
