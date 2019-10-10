@@ -62,7 +62,7 @@
 * [Comparison of FastText and Word2Vec](https://github.com/RaRe-Technologies/gensim/blob/ba1ce894a5192fc493a865c535202695bb3c0424/docs/notebooks/Word2Vec_FastText_Comparison.ipynb)
 
 ##### Doc2Vec (Model)
-* [Doc2vec Quick Start on Lee Corpus](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/doc2vec-lee.ipynb)
+* [Doc2vec Quick Start on Lee Corpus](https://radimrehurek.com/gensim/gensim_numfocus/auto_examples/tutorials/run_doc2vec_lee.html)
 * [Docs](https://radimrehurek.com/gensim/models/doc2vec.html), [Source](https://github.com/piskvorky/gensim/blob/develop/gensim/models/doc2vec.py) (Docs are not very good)
 * Doc2Vec requires a non-standard corpus (need sentiment label for each document)
 * [Great illustration of corpus preparation](https://linanqiu.github.io/2015/10/07/word2vec-sentiment/), [Code](https://github.com/linanqiu/word2vec-sentiments) ([Alternative](https://medium.com/@klintcho/doc2vec-tutorial-using-gensim-ab3ac03d3a1#.nv2lxvbj1), [Alternative 2](https://districtdatalabs.silvrback.com/modern-methods-for-sentiment-analysis))
