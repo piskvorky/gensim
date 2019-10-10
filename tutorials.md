@@ -86,7 +86,7 @@
 
 ##### Summarization
 * Extract most important keywords and sentences from the text
-* [Tutorial on TextRank summarisation](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/summarization_tutorial.ipynb)
+* [Tutorial on TextRank summarisation](https://radimrehurek.com/gensim/gensim_numfocus/auto_examples/core/run_similarity_queries.html)
 
 ##### Overviews
 * Tutorial showing API for document classification with various techniques: TF-IDF, word2vec averaging, Deep IR, Word Movers Distance and doc2vec
