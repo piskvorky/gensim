@@ -41,7 +41,7 @@
 * [Compare topics and documents using Jaccard, Kullback-Leibler and Hellinger similarities](https://radimrehurek.com/gensim/gensim_numfocus/auto_examples/tutorials/run_distance_metrics.html)
 * [America's Next Topic Model slides](https://speakerdeck.com/tmylk/americas-next-topic-model-at-pydata-berlin-august-2016?slide=7) -- How to choose your next topic model, presented at Pydata Berlin 10 August 2016 by Lev Konstantinovsky
 * [Classification of News Articles using Topic Modeling](https://radimrehurek.com/gensim/gensim_numfocus/auto_examples/howtos/run_news_classification.html)
-* [LDA: pre-processing and training tips](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/lda_training_tips.ipynb)
+* [LDA: pre-processing and training tips](https://radimrehurek.com/gensim/gensim_numfocus/auto_examples/tutorials/run_lda.html)
 
 ##### Query Similarities
 * Tool to get the most similar documents for LDA, LSI
