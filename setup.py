@@ -272,7 +272,6 @@ if sys.version_info < (3, 7):
     linux_testenv.extend([
         'tensorflow <= 1.3.0',
         'keras >= 2.0.4, <= 2.1.4',
-        'annoy',
     ])
 
 if (3, 0) < sys.version_info < (3, 7):
@@ -282,8 +281,7 @@ docs_testenv = linux_testenv + distributed_env + [
     'sphinx',
     'sphinxcontrib-napoleon',
     'plotly',
-# Pattern's version is specified to install Pattern 3.6, which adds python3 support
-    'Pattern >= 3.6',
+    'Pattern >= 3.6',  # Need 3.6 or later for Py3 support
     'sphinxcontrib.programoutput',
 ]
 #
