@@ -2,7 +2,7 @@
 ### Tutorials
 
 ##### Quick-start
-* [Getting Started with gensim](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/gensim%20Quick%20Start.ipynb)
+* [Getting Started with gensim](https://radimrehurek.com/gensim/gensim_numfocus/auto_examples/core/run_core_concepts.html)
 
 ##### Text to Vectors
 * We first need to transform text to vectors
