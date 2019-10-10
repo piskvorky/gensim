@@ -68,7 +68,7 @@
 * [Great illustration of corpus preparation](https://linanqiu.github.io/2015/10/07/word2vec-sentiment/), [Code](https://github.com/linanqiu/word2vec-sentiments) ([Alternative](https://medium.com/@klintcho/doc2vec-tutorial-using-gensim-ab3ac03d3a1#.nv2lxvbj1), [Alternative 2](https://districtdatalabs.silvrback.com/modern-methods-for-sentiment-analysis))
 * [Doc2Vec on customer review](http://multithreaded.stitchfix.com/blog/2015/03/11/word-is-worth-a-thousand-vectors/) (example)
 * [Doc2Vec on Airline Tweets Sentiment Analysis](https://www.zybuluo.com/HaomingJiang/note/462804)
-* [Doc2vec to predict IMDB review star rating. Reproducing the Google paper](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/doc2vec-IMDB.ipynb)
+* [Doc2vec to predict IMDB review star rating. Reproducing the Google paper](https://radimrehurek.com/gensim/gensim_numfocus/auto_examples/howtos/run_doc2vec_imdb.html)
 
 ##### Similarity Queries
 * [Similarity queries using Annoy with word2vec and doc2vec](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/annoytutorial.ipynb)
