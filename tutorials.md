@@ -13,7 +13,7 @@
 
 ##### Models and Transformation
 * Models (e.g. LsiModel, Word2Vec) are built / trained from a corpus
-* [Transformation interface tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/Topics_and_Transformations.ipynb)
+* [Transformation interface tutorial](https://radimrehurek.com/gensim/gensim_numfocus/auto_examples/core/run_topics_and_transformations.html)
 
 ##### TF-IDF (Model)
 * [Docs](https://radimrehurek.com/gensim/models/tfidfmodel.html), [Source](https://github.com/piskvorky/gensim/blob/develop/gensim/models/tfidfmodel.py)
