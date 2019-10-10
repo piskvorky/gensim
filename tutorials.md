@@ -6,10 +6,10 @@
 
 ##### Text to Vectors
 * We first need to transform text to vectors
-* [String to vectors tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/Corpora_and_Vector_Spaces.ipynb)
+* [String to vectors tutorial](https://radimrehurek.com/gensim/gensim_numfocus/auto_examples/core/run_corpora_and_vector_spaces.html)
     * Create a dictionary first that maps words to ids
     * Transform the text into vectors through ```dictionary.doc2bow(texts)```
-* [Corpus streaming tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/Corpora_and_Vector_Spaces.ipynb) (For very large corpuses)
+* [Corpus streaming tutorial](https://radimrehurek.com/gensim/gensim_numfocus/auto_examples/core/run_corpora_and_vector_spaces.html) (For very large corpuses)
 
 ##### Models and Transformation
 * Models (e.g. LsiModel, Word2Vec) are built / trained from a corpus
