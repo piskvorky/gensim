@@ -120,8 +120,7 @@ print(corpus)
 ###############################################################################
 # By now it should be clear that the vector feature with ``id=10`` stands for the question "How many
 # times does the word `graph` appear in the document?" and that the answer is "zero" for
-# the first six documents and "one" for the remaining three. As a matter of fact,
-# we have arrived at exactly the same corpus of vectors as in the :ref:`first-example`.
+# the first six documents and "one" for the remaining three.
 #
 # .. _corpus_streaming_tutorial:
 #

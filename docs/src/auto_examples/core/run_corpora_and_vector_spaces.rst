@@ -232,8 +232,7 @@ therefore reads: in the document `"Human computer interaction"`, the words `comp
 
 By now it should be clear that the vector feature with ``id=10`` stands for the question "How many
 times does the word `graph` appear in the document?" and that the answer is "zero" for
-the first six documents and "one" for the remaining three. As a matter of fact,
-we have arrived at exactly the same corpus of vectors as in the :ref:`first-example`.
+the first six documents and "one" for the remaining three.
 
 .. _corpus_streaming_tutorial:
 
@@ -309,7 +308,7 @@ then convert the tokens via a dictionary to their ids and yield the resulting sp
 
  .. code-block:: none
 
-    <__main__.MyCorpus object at 0x7fae31370dd8>
+    <__main__.MyCorpus object at 0x7f2f3d6fcc50>
 
 
 Corpus is now an object. We didn't define any way to print it, so `print` just outputs address
@@ -617,9 +616,9 @@ Here we show a pretty fastText logo so that our gallery picks it up as a thumbna
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  1.774 seconds)
+   **Total running time of the script:** ( 0 minutes  2.104 seconds)
 
-**Estimated memory usage:**  11 MB
+**Estimated memory usage:**  45 MB
 
 
 .. _sphx_glr_download_auto_examples_core_run_corpora_and_vector_spaces.py:

@@ -4,7 +4,6 @@
 
    intro
    install
-   tutorial
    distributed
    support
    wiki

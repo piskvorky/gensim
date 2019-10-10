@@ -11,7 +11,7 @@ The main communication channel is the `Gensim mailing list <https://groups.googl
 
 Additional channels are `twitter @gensim_py <https://twitter.com/gensim_py>`_ and `Gitter piskvorky/gensim <https://gitter.im/RaRe-Technologies/gensim>`_.
 
-This is the preferred way to **ask for help**, **report problems** and **share insights** with the community. Newbie questions are perfectly fine, just make sure you've read the :doc:`tutorials <tutorial>`.
+This is the preferred way to **ask for help**, **report problems** and **share insights** with the community. Newbie questions are perfectly fine, just make sure you've read the :ref:`tutorials <sphx_glr_auto_examples>`.
 
 I discourage sending private emails, because the mailing list serves as a knowledge base for all Gensim users, cutting maintenance efforts needed for support. If you feel your problem is too special, data too sensitive, technical scope too demanding, **see the "business" section below**.
 

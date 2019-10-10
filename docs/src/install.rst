@@ -15,7 +15,7 @@ or, alternatively for `conda` environments::
 
   conda install -c conda-forge gensim
 
-That's it! Congratulations, you can proceed to the :doc:`tutorials <tutorial>`.
+That's it! Congratulations, you can proceed to the :ref:`tutorials <sphx_glr_auto_examples_core_run_core_concepts.py>`.
 
 In case that failed, make sure you're installing into a writeable location (or use `sudo`).
 
