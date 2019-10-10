@@ -45,7 +45,7 @@
 
 ##### Query Similarities
 * Tool to get the most similar documents for LDA, LSI
-* [Similarity queries tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/Similarity_Queries.ipynb)
+* [Similarity queries tutorial](https://radimrehurek.com/gensim/gensim_numfocus/auto_examples/core/run_similarity_queries.html)
 
 ##### Dynamic Topic Modeling
 * Model evolution of topics through time
