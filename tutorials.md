@@ -58,7 +58,7 @@
 
 ##### Word2Vec (Model)
 * [Docs](https://radimrehurek.com/gensim/models/word2vec.html), [Source](https://github.com/piskvorky/gensim/blob/develop/gensim/models/word2vec.py) (very simple interface)
-* [Simple word2vec tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/word2vec.ipynb) (examples of ```most_similar, similarity, doesnt_match```)
+* [Simple word2vec tutorial](https://radimrehurek.com/gensim/gensim_numfocus/auto_examples/tutorials/run_word2vec.html) (examples of ```most_similar, similarity, doesnt_match```)
 * [Comparison of FastText and Word2Vec](https://github.com/RaRe-Technologies/gensim/blob/ba1ce894a5192fc493a865c535202695bb3c0424/docs/notebooks/Word2Vec_FastText_Comparison.ipynb)
 
 ##### Doc2Vec (Model)
