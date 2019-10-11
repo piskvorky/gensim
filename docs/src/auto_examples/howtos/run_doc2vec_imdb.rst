@@ -171,38 +171,6 @@ We can now proceed with loading the corpus.
 
 
 
-Working with the entire 100k document corpus takes close to 40 minutes.
-Let's reduce the size of the dataset so we can run the example more quickly.
-
-
-
-.. code-block:: default
-
-    import random
-
-    def shrink_list(the_list, fraction):
-        sample_size = int(fraction * len(the_list))
-        return random.sample(the_list, sample_size)
-
-    def shrink_dataset(docs, fraction=0.1):
-        train = shrink_list([d for d in docs if d.split == 'train'], fraction)
-        test = shrink_list([d for d in docs if d.split == 'test'], fraction)
-        extra = shrink_list([d for d in docs if d.split == 'extra'], fraction)
-
-        return [
-            SentimentDocument(d.words, [i], d.split, d.sentiment)
-            for (i, d) in enumerate(train + test + extra)
-        ]
-
-    # comment the line below to use the full dataset
-    # alldocs = shrink_dataset(alldocs)
-
-
-
-
-
-
-
 Here's what a single document looks like
 
 
@@ -359,11 +327,11 @@ Sanity checking.  Let's see if our models give meaningful results.
 
  .. code-block:: none
 
-    0.46 'dogmatic'
-    0.45 'remarried,'
-    0.44 'oyster'
-    0.42 '(ten'
-    0.41 'educative'
+    0.42 'pulverizes'
+    0.42 '/>Soderbergh'
+    0.41 'gordon.'
+    0.41 'businessman,'
+    0.40 'again)'
 
 
 Predictive Evaluation Methods
@@ -490,29 +458,29 @@ main models takes about an hour.)
 
     Evaluating Doc2Vec(dbow,d100,n5,mc2,t8)
 
-    0.105480 Doc2Vec(dbow,d100,n5,mc2,t8)
+    0.104760 Doc2Vec(dbow,d100,n5,mc2,t8)
 
     Training Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
 
     Evaluating Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
 
-    0.169840 Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
+    0.172000 Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
 
     Training Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
 
     Evaluating Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
 
-    0.299040 Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
+    0.305920 Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
 
 
     Evaluating Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
 
-    0.103320 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
+    0.103680 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
 
 
     Evaluating Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
 
-    0.104360 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
+    0.105320 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
 
 
 Achieved Sentiment-Prediction Accuracy
@@ -537,11 +505,11 @@ Compare error rates achieved, best-to-worst
  .. code-block:: none
 
     Err_rate Model
-    0.103320 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
-    0.104360 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
-    0.105480 Doc2Vec(dbow,d100,n5,mc2,t8)
-    0.169840 Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
-    0.299040 Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
+    0.103680 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
+    0.104760 Doc2Vec(dbow,d100,n5,mc2,t8)
+    0.105320 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
+    0.172000 Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
+    0.305920 Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
 
 
 In our testing, contrary to the results of the paper, on this problem,
@@ -592,13 +560,13 @@ Are inferred vectors close to the precalculated ones?
 
  .. code-block:: none
 
-    for doc 10903...
+    for doc 89090...
     Doc2Vec(dbow,d100,n5,mc2,t8):
-     [(10903, 0.9680473804473877), (44437, 0.6142169237136841), (23621, 0.5960041880607605)]
+     [(97572, 0.9825226068496704), (89090, 0.9798043966293335), (31052, 0.5808212757110596)]
     Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8):
-     [(10903, 0.911817193031311), (286, 0.6100775003433228), (21680, 0.6009228229522705)]
+     [(89090, 0.9403301477432251), (97572, 0.9247512817382812), (49437, 0.7062457799911499)]
     Doc2Vec(dm/c,d100,n5,w5,mc2,t8):
-     [(10903, 0.8146155476570129), (98214, 0.4899083971977234), (74094, 0.48425132036209106)]
+     [(89090, 0.8370115756988525), (97572, 0.8327091932296753), (62255, 0.4674952030181885)]
 
 
 (Yes, here the stored vector from 20 epochs of training is usually one of the
@@ -635,15 +603,15 @@ Do close documents seem more related than distant ones?
 
  .. code-block:: none
 
-    TARGET (734): «I would like to comment on how the girls are chosen. why is that their are always more white women chosen then their are black women. every episode their is always more white women then black one's. as if to say white women are better looking then black women. I would like for once see more black women then white. and it not just your show it's like that in a lot of shows always more white's. but i would have thought since you as the head honcho of the show you would see this yourself and have more black women on your show. but you are just like the rest trying to act like you are so fair and nice. you are just a big fony hypocrite.»
+    TARGET (8642): «When George Sluizer was told he could direct an American version of the book "Het Gouden Ei"/the movie "Spoorloos"(outside Holland, this movie has the name "the Vanishing" too), he was told that this would only go through if the ending was changed - He was told that 'the American Audience' wouldn't approve the original ending. Of course, the original ending is much better, and without it, the movie loses its impact. Because I have already put this in the trivia section, I won't give the original ending and keep my comment spoiler-free. If you want to know the original ending, watch "Spoorloos" or read the book. This movie is absolute rubbish, and the first Kiefer Sutherland movie I don't like. Watch the original Dutch movie, which is one of the best thrillers in the world.»
 
     SIMILAR/DISSIMILAR DOCS PER MODEL Doc2Vec(dm/c,d100,n5,w5,mc2,t8):
 
-    MOST (10012, 0.916856050491333): «I would like to comment on how the girls are chosen. why is that their are always more white women chosen then their are black women. every episode their is always more white women then black one's. as if to say white women are better looking then black women. I would like for once see more black women then white. and it not just your show it's like that in a lot of shows always more white's. but i would have thought since you as the head honcho of the show you would see this yourself and have more black women on your show. but you are just like the rest trying to act like you are so fair and nice. you are just a big fony hypocrite.»
+    MOST (24027, 0.5504707098007202): «1st watched 8/31/1996 - (Dir-Tim Robbins): Very thought provoking and very well done movie on the subject of the death penalty. Deserved more recognition and publicity than it received.»
 
-    MEDIAN (48884, -0.020214587450027466): «Tarzan and his mate(1934) was the only Tarzan movie I didn't see when I was a kid. It sounded boring. Now I have seen it. I have seen the ape man(1932) about a hundred times and I keep a copy on my drive. It's a remarkable movie. It's almost flawless. Tarzan and his mate(1934) however, falters. It's not harmonic and it's parts tend to live a life of there own. The parts themselves are often very good and the action sequences are great. Big budget expensive. Tarzan himself is co-starring. Jane dominates. She have developed and have become a jungle girl so sexy I tend to forget about criticism and sing her praise instead. Well. She let her be duped by a crock who steels a kiss from her and later murder an elephant. She insists Tarzan to carry a bracelet who belonged to her father. Forever. The thing would split to pieces the moment he went about his businesses in the jungle. Stupid? Later someone founds it in the river. Well it's supposed to proof Tarzan is dead. Some cheap drama. The crocks who has an obvious interest in a dead Tarzan convince Jane that he is gone. She takes their words for granted and want to be taken away(to England). Stupid Jane seems to have forgot how tough Tarzan is, how hard he is to kill. The caravan is leaving and Jane go along. Again a pothole. She could easily make the caravan rest for a few hours or more, to pick up a few things and say goodbye to the jungle and her dead husband. She could be smart. She could dive where they found the floating bracelet, check the banks for traces. She can make fire in 15 seconds and swing in Liana's. Picking up traces shouldn't be too hard for jungle Jane. She could talk to the apes, and so on. If she get home to England without have done this she would become miserable. Jane is smart but cheap drama brings her down. And why on earth is she letting the kiss rapist get away with "I blame myself as much as you". A punishment for being vane perhaps? Nonsense. Struggle, a hard slap and telling Tarzan would be appropriate. Still. This movie is far from bad even if the potholes are many and sometimes deep. Just lean back and enjoy. It's Tarzan and Jane for God sake.»
+    MEDIAN (37133, 0.00783273484557867): «Repugnant Bronson thriller. Unfortunately, it's technically good and I gave it 4/10, but it's so utterly vile that it would be inconceivable to call it "entertainment". Far more disturbing than a typical slasher film.»
 
-    LEAST (56144, -0.4906221330165863): «Let me say bravo to the cast,crew and director you all should be proud a film I was lucky enough to see at the HMC film fest with a packed theater. Not only did it win awards,it won over the Audience so props to all involved I can't wait till the next one comes out.»
+    LEAST (68641, -0.48551493883132935): «This Hammer box-set from the 1980 TV series provides a fitting homage and legacy to arguably the greatest contributors of horror on the big and small screen. <br /><br />The 13 stories cover everything from evil doppelgangers to Satanists; witches; ghosts; 'voodoo dolls'; werewolves; cannibals and more besides (no vampires though, something of a departure for Hammer!) They are imaginatively written and well acted with great performances from fine actors such as Peter Cushing and Diana Dors.<br /><br />It is from a time when horror was about more than hi-tech gory special effects and torture sequences thrown together to make a 'body' of work and although this Hammer box-set is of its time it is a brilliant collection that has also stood the test of time. I like a lot of modern day horror as well as the old Universal horrors, horrors from the 70's etc but you will never purchase a more diverse and enjoyable collection of horror shorts in one collection as this one.<br /><br />Well done Hammer, I truly salute you, you are sorely missed.»
 
 
 Somewhat, in terms of reviewer tone, movie genre, etc... the MOST
@@ -690,41 +658,41 @@ Do the word vectors show useful similarities?
 
  .. code-block:: none
 
-    target_word: 'film-making' model: Doc2Vec(dbow,d100,n5,mc2,t8) similar words:
-        1. 0.43 'tought.'
-        2. 0.41 'MEN,'
-        3. 0.41 'nonexistent.'
-        4. 0.40 'multilingual'
-        5. 0.40 'utterances'
-        6. 0.40 'uneasy,'
-        7. 0.39 'detest,'
-        8. 0.38 'Whiny'
-        9. 0.38 'buildings)'
-        10. 0.38 'demanded,'
+    target_word: 'minutes;' model: Doc2Vec(dbow,d100,n5,mc2,t8) similar words:
+        1. 0.44 'upon,'
+        2. 0.43 'lot<br'
+        3. 0.42 'Entertainment,'
+        4. 0.42 'with!<br'
+        5. 0.42 'Costanzo'
+        6. 0.41 'Obi'
+        7. 0.41 "'outside"
+        8. 0.41 'good/funny'
+        9. 0.40 'this??<br'
+        10. 0.39 '"Green'
 
-    target_word: 'film-making' model: Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8) similar words:
-        1. 0.77 'filmmaking'
-        2. 0.73 'film-making,'
-        3. 0.72 'movie-making'
-        4. 0.68 'storytelling'
-        5. 0.65 'cinema'
-        6. 0.63 'filmmaking,'
-        7. 0.62 'story-telling'
-        8. 0.57 'directing'
-        9. 0.56 'animation'
-        10. 0.56 'direction'
+    target_word: 'minutes;' model: Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8) similar words:
+        1. 0.77 'minutes,'
+        2. 0.72 'minutes).<br'
+        3. 0.71 'hours,'
+        4. 0.71 'minutes'
+        5. 0.69 'min.'
+        6. 0.69 'minutes),'
+        7. 0.69 'minute'
+        8. 0.67 'minuets'
+        9. 0.67 'minutes-'
+        10. 0.67 'mins'
 
-    target_word: 'film-making' model: Doc2Vec(dm/c,d100,n5,w5,mc2,t8) similar words:
-        1. 0.69 'movie-making'
-        2. 0.68 'cinema'
-        3. 0.68 'programming'
-        4. 0.66 'filmmaking'
-        5. 0.65 'storytelling'
-        6. 0.65 'film-making,'
-        7. 0.63 'entertainment'
-        8. 0.61 'production'
-        9. 0.60 'art'
-        10. 0.59 'cinema.<br'
+    target_word: 'minutes;' model: Doc2Vec(dm/c,d100,n5,w5,mc2,t8) similar words:
+        1. 0.78 'mins,'
+        2. 0.70 'min.,'
+        3. 0.69 'minutes,'
+        4. 0.68 'months,'
+        5. 0.68 'minutes),'
+        6. 0.68 'hours)'
+        7. 0.67 'Minutes,'
+        8. 0.66 'minutes,<br'
+        9. 0.66 'weeks,'
+        10. 0.66 'million,'
 
 
 Do the DBOW words look meaningless? That's because the gensim DBOW model
@@ -776,9 +744,9 @@ Are the word vectors from this dataset any good at analogies?
  .. code-block:: none
 
     Success, questions-words.txt is available for next steps.
-    Doc2Vec(dbow,d100,n5,mc2,t8): 0.01% correct (1 of 13617)
+    Doc2Vec(dbow,d100,n5,mc2,t8): 0.00% correct (0 of 13617)
     Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8): 18.32% correct (2495 of 13617)
-    Doc2Vec(dm/c,d100,n5,w5,mc2,t8): 16.99% correct (2313 of 13617)
+    Doc2Vec(dm/c,d100,n5,w5,mc2,t8): 17.32% correct (2359 of 13617)
 
 
 Even though this is a tiny, domain-specific dataset, it shows some meager
@@ -790,9 +758,9 @@ random-initialized words of the DBOW model of course fail miserably.)
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 33 minutes  48.415 seconds)
+   **Total running time of the script:** ( 34 minutes  14.807 seconds)
 
-**Estimated memory usage:**  4043 MB
+**Estimated memory usage:**  4062 MB
 
 
 .. _sphx_glr_download_auto_examples_howtos_run_doc2vec_imdb.py:

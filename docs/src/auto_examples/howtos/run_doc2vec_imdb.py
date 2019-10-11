@@ -139,29 +139,6 @@ def extract_documents():
 alldocs = list(extract_documents())
 
 ###############################################################################
-# Working with the entire 100k document corpus takes close to 40 minutes.
-# Let's reduce the size of the dataset so we can run the example more quickly.
-#
-import random
-
-def shrink_list(the_list, fraction):
-    sample_size = int(fraction * len(the_list))
-    return random.sample(the_list, sample_size)
-
-def shrink_dataset(docs, fraction=0.1):
-    train = shrink_list([d for d in docs if d.split == 'train'], fraction)
-    test = shrink_list([d for d in docs if d.split == 'test'], fraction)
-    extra = shrink_list([d for d in docs if d.split == 'extra'], fraction)
-
-    return [
-        SentimentDocument(d.words, [i], d.split, d.sentiment)
-        for (i, d) in enumerate(train + test + extra)
-    ]
-
-# comment the line below to use the full dataset
-# alldocs = shrink_dataset(alldocs)
-
-###############################################################################
 # Here's what a single document looks like
 print(alldocs[27])
 
