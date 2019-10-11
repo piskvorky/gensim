@@ -173,10 +173,33 @@ This will reduce the risk of your documentation becoming obsolete because requir
 Use the smallest possible dataset: avoid making people unnecessarily load large datasets and models.
 This will make your documentation faster to run and easier for people to use (they can modify your examples and re-run them quickly).
 
-Finalizing Your Contribution
+Finalizing your contribution
 ----------------------------
 
-Once your documentation script is working correctly, make a PR on `github <https://github.com/RaRe-Technologies/gensim>`__.
+First, get Sphinx Gallery to build your documentation::
+
+    make -C docs/src html
+
+This can take a while if your documentation uses a large dataset, or if you've changed many other tutorials or guides.
+Once this completes successfully, open ``docs/auto_examples/index.html`` in your browser.
+You should see your new tutorial or guide in the gallery.
+
+Once your documentation script is working correctly, it's time to add it to the git repository::
+
+    git add docs/src/gallery/tutorials/run_example.py
+    git add docs/src/auto_examples/tutorials/run_example.{py,py.md5,rst,ipynb}
+    git add docs/src/auto_examples/howtos/sg_execution_times.rst
+    git commit -m "enter a helpful commit message here"
+    git push origin branchname
+
+.. Note::
+  You may be wondering what all those other files are.
+  Sphinx Gallery puts a copy of your Python script in ``auto_examples/tutorials``.
+  The .md5 contains MD5 hash of the script to enable easy detection of modifications.
+  Gallery also generates .rst (RST for Sphinx) and .ipynb (Jupyter notebook) files from the script.
+  Finally, ``sg_execution_times.rst`` contains the time taken to run each example.
+
+Finally, make a PR on `github <https://github.com/RaRe-Technologies/gensim>`__.
 One of our friendly maintainers will review it, make suggestions, and eventually merge it.
 Your documentation will then appear in the gallery alongside the rest of the example.
 At that stage, give yourself a pat on the back: you're done!
@@ -184,7 +207,7 @@ At that stage, give yourself a pat on the back: you're done!
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.158 seconds)
+   **Total running time of the script:** ( 0 minutes  0.161 seconds)
 
 **Estimated memory usage:**  9 MB
 
