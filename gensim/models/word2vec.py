@@ -163,6 +163,7 @@ try:
         score_sentence_cbow,
         MAX_WORDS_IN_BATCH,
         FAST_VERSION,
+    )
 except ImportError:
     #
     # We could raise utils.NO_CYTHON right here, but let's delay it until
