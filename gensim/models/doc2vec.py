@@ -74,14 +74,12 @@ from collections import namedtuple, defaultdict, Iterable
 from timeit import default_timer
 
 from numpy import zeros, float32 as REAL, empty, ones, \
-    memmap as np_memmap, vstack, integer, dtype, sum as np_sum, add as np_add, repeat as np_repeat, concatenate
-
-import gensim.utils
+    memmap as np_memmap, vstack, integer, dtype
 
 from gensim.utils import call_on_class_only, deprecated
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
-from gensim.models.word2vec import Word2VecKeyedVectors, Word2VecVocab, Word2VecTrainables, train_cbow_pair,\
-    train_sg_pair, train_batch_sg
+from gensim.models.word2vec import Word2VecKeyedVectors, Word2VecVocab, Word2VecTrainables
+from gensim.models.word2vec import train_cbow_pair, train_sg_pair, train_batch_sg  # noqa
 from six.moves import range
 from six import string_types, integer_types, itervalues
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel

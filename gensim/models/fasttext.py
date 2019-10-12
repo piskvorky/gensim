@@ -283,13 +283,13 @@ import logging
 import os
 
 import numpy as np
-from numpy import ones, vstack, float32 as REAL, sum as np_sum
+from numpy import ones, vstack, float32 as REAL
 import six
 from collections import Iterable
 
 import gensim.models._fasttext_bin
 
-from gensim.models.word2vec import Word2VecVocab, Word2VecTrainables, train_sg_pair, train_cbow_pair
+from gensim.models.word2vec import Word2VecVocab, Word2VecTrainables, train_sg_pair, train_cbow_pair  # noqa
 from gensim.models.keyedvectors import FastTextKeyedVectors
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 from gensim.models.utils_any2vec import ft_ngram_hashes

@@ -39,10 +39,9 @@ import threading
 from six.moves import range
 from six import itervalues, string_types
 from gensim import matutils
-from numpy import float32 as REAL, ones, random, dtype, zeros
+from numpy import float32 as REAL, ones, random, dtype
 from types import GeneratorType
 from gensim.utils import deprecated
-import warnings
 import os
 import copy
 

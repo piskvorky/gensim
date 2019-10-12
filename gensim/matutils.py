@@ -24,7 +24,7 @@ from scipy.linalg.lapack import get_lapack_funcs
 from scipy.linalg.special_matrices import triu
 from scipy.special import psi  # gamma function utils
 
-from six import iteritems, itervalues, string_types
+from six import iteritems, itervalues
 from six.moves import zip, range
 
 
@@ -1424,6 +1424,6 @@ class MmWriter(object):
 
 try:
     # try to load fast, cythonized code if possible
-    from gensim.corpora._mmreader import MmReader
+    from gensim.corpora._mmreader import MmReader  # noqa
 except ImportError:
     raise utils.NO_CYTHON

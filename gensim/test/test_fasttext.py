@@ -8,7 +8,6 @@ import logging
 import unittest
 import os
 import struct
-import six
 
 import numpy as np
 

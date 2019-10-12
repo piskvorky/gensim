@@ -26,7 +26,6 @@ current Facebook implementation, use :py:func:`compute_ngrams_bytes` and
 """
 
 import logging
-import numpy as np
 from gensim import utils
 
 from numpy import zeros, dtype, float32 as REAL, ascontiguousarray, fromstring
