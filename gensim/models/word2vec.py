@@ -156,15 +156,20 @@ import gensim.utils
 logger = logging.getLogger(__name__)
 
 try:
-    from gensim.models.word2vec_inner import train_batch_sg, train_batch_cbow
-    from gensim.models.word2vec_inner import score_sentence_sg, score_sentence_cbow
-    from gensim.models.word2vec_inner import MAX_WORDS_IN_BATCH
+    from gensim.models.word2vec_inner import (
+        train_batch_sg,
+        train_batch_cbow,
+        score_sentence_sg,
+        score_sentence_cbow,
+        MAX_WORDS_IN_BATCH,
+        FAST_VERSION,
 except ImportError:
     #
     # We could raise utils.NO_CYTHON right here, but let's delay it until
     # Cython extensions are explicitly needed.
     #
     train_batch_sg = train_batch_cbow = score_sentence_sg = score_sentence_cbow = gensim.utils.no_cython
+    FAST_VERSION = -1
 
 try:
     from gensim.models.word2vec_corpusfile import train_epoch_sg, train_epoch_cbow, CORPUSFILE_VERSION
