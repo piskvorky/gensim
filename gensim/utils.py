@@ -55,6 +55,29 @@ logger = logging.getLogger(__name__)
 PAT_ALPHABETIC = re.compile(r'(((?![\d])\w)+)', re.UNICODE)
 RE_HTML_ENTITY = re.compile(r'&(#?)([xX]?)(\w{1,8});', re.UNICODE)
 
+NO_CYTHON = RuntimeError(
+    "Cython extensions are unavailable. "
+    "Without them, this gensim functionality is disabled. "
+    "If you've installed from a package, ask the package maintainer to include Cython extensions. "
+    "If you're building gensim from source yourself, run `python setup.py build_ext --inplace` "
+    "and retry. "
+    "Alternatively, install an older version of gensim (earlier than 4.0.0). "
+    "Older versions include native Python support, but it is too slow for practical use. "
+)
+"""An exception that gensim code raises when Cython extensions are unavailable."""
+
+
+def no_cython(*args, **kwargs):
+    """A replacement function that raises an exception signalling that
+    Cython extensions are required to proceed, but are unavailable.
+
+    Use this function instead of the native Python functions that replaced
+    Cython extensions.  This way, the user will only see the exception when
+    they actually **need** Cython, as opposed to when they merely import
+    gensim or one of its submodules.
+    """
+    raise NO_CYTHON
+
 
 def get_random_state(seed):
     """Generate :class:`numpy.random.RandomState` based on input seed.

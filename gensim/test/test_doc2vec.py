@@ -572,9 +572,6 @@ class TestDoc2VecModel(unittest.TestCase):
 
     def test_parallel(self):
         """Test doc2vec parallel training."""
-        if doc2vec.FAST_VERSION < 0:  # don't test the plain NumPy version for parallelism (too slow)
-            return
-
         corpus = utils.RepeatCorpus(DocsLeeCorpus(), 10000)
 
         for workers in [2, 4]:
@@ -839,5 +836,4 @@ def read_su_sentiment_rotten_tomatoes(dirname, lowercase=True):
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
-    logging.info("using optimization %s", doc2vec.FAST_VERSION)
     unittest.main()

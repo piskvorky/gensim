@@ -20,8 +20,6 @@ from gensim.test.utils import datapath, get_tmpfile
 
 import gensim.models.utils_any2vec
 
-DISABLE_CYTHON_TESTS = getattr(gensim.models.utils_any2vec, 'FAST_VERSION', None) == -1
-
 
 class TestIsCorpus(unittest.TestCase):
     def test_None(self):
@@ -270,13 +268,10 @@ def hash_main(alg):
     import six
 
     assert six.PY3, 'this only works under Py3'
-    assert not DISABLE_CYTHON_TESTS, 'this only works if Cython extensions available'
 
     hashmap = {
-        'py_broken': gensim.models.utils_any2vec._ft_hash_broken_py,
-        'py_bytes': gensim.models.utils_any2vec._ft_hash_bytes_py,
-        'cy_broken': gensim.models.utils_any2vec._ft_hash_broken_py,
-        'cy_bytes': gensim.models.utils_any2vec._ft_hash_bytes_cy,
+        'cy_broken': gensim.models.utils_any2vec.ft_hash_broken,
+        'cy_bytes': gensim.models.utils_any2vec.ft_hash_bytes,
     }
     try:
         fun = hashmap[alg]
@@ -335,22 +330,12 @@ class HashTest(unittest.TestCase):
             u'西区': 1113327900,
         }
 
-    def test_python(self):
-        actual = {k: gensim.models.utils_any2vec._ft_hash_bytes_py(k.encode('utf-8')) for k in self.expected}
-        self.assertEqual(self.expected, actual)
-
-    @unittest.skipIf(DISABLE_CYTHON_TESTS, 'Cython functions are not properly compiled')
     def test_cython(self):
-        actual = {k: gensim.models.utils_any2vec._ft_hash_bytes_cy(k.encode('utf-8')) for k in self.expected}
+        actual = {k: gensim.models.utils_any2vec.ft_hash_bytes(k.encode('utf-8')) for k in self.expected}
         self.assertEqual(self.expected, actual)
 
-    def test_python_broken(self):
-        actual = {k: gensim.models.utils_any2vec._ft_hash_broken_py(k) for k in self.expected}
-        self.assertEqual(self.expected_broken, actual)
-
-    @unittest.skipIf(DISABLE_CYTHON_TESTS, 'Cython functions are not properly compiled')
     def test_cython_broken(self):
-        actual = {k: gensim.models.utils_any2vec._ft_hash_broken_cy(k) for k in self.expected}
+        actual = {k: gensim.models.utils_any2vec.ft_hash_broken(k) for k in self.expected}
         self.assertEqual(self.expected_broken, actual)
 
 
@@ -369,14 +354,11 @@ def ngram_main():
     maxn = int(sys.argv[3])
 
     assert six.PY3, 'this only works under Py3'
-    assert not DISABLE_CYTHON_TESTS, 'this only works if Cython extensions available'
     assert minn <= maxn, 'expected sane command-line parameters'
 
     hashmap = {
-        'py_text': gensim.models.utils_any2vec._compute_ngrams_py,
-        'py_bytes': gensim.models.utils_any2vec._compute_ngrams_bytes_py,
-        'cy_text': gensim.models.utils_any2vec._compute_ngrams_cy,
-        'cy_bytes': gensim.models.utils_any2vec._compute_ngrams_bytes_cy,
+        'cy_text': gensim.models.utils_any2vec.compute_ngrams,
+        'cy_bytes': gensim.models.utils_any2vec.compute_ngrams_bytes,
     }
     try:
         fun = hashmap[alg]
@@ -444,63 +426,23 @@ class NgramsTest(unittest.TestCase):
             ],
         }
 
-    def test_text_py(self):
-        for word in self.expected_text:
-            expected = self.expected_text[word]
-            actual = gensim.models.utils_any2vec._compute_ngrams_py(word, 3, 5)
-            self.assertEqual(expected, actual)
-
-    @unittest.skipIf(sys.maxunicode == 0xffff, "Python interpreter doesn't support UCS-4 (wide unicode)")
-    def test_text_py_wide_unicode(self):
-        for word in self.expected_text_wide_unicode:
-            expected = self.expected_text_wide_unicode[word]
-            actual = gensim.models.utils_any2vec._compute_ngrams_py(word, 3, 5)
-            self.assertEqual(expected, actual)
-
-    @unittest.skipIf(DISABLE_CYTHON_TESTS, 'Cython functions are not properly compiled')
     def test_text_cy(self):
         for word in self.expected_text:
             expected = self.expected_text[word]
-            actual = gensim.models.utils_any2vec._compute_ngrams_cy(word, 3, 5)
+            actual = gensim.models.utils_any2vec.compute_ngrams(word, 3, 5)
             self.assertEqual(expected, actual)
 
-    @unittest.skipIf(DISABLE_CYTHON_TESTS, 'Cython functions are not properly compiled')
     @unittest.skipIf(sys.maxunicode == 0xffff, "Python interpreter doesn't support UCS-4 (wide unicode)")
     def test_text_cy_wide_unicode(self):
         for word in self.expected_text_wide_unicode:
             expected = self.expected_text_wide_unicode[word]
-            actual = gensim.models.utils_any2vec._compute_ngrams_cy(word, 3, 5)
+            actual = gensim.models.utils_any2vec.compute_ngrams(word, 3, 5)
             self.assertEqual(expected, actual)
 
-    def test_bytes_py(self):
-        for word in self.expected_bytes:
-            expected = self.expected_bytes[word]
-            actual = gensim.models.utils_any2vec._compute_ngrams_bytes_py(word, 3, 5)
-            self.assertEqual(expected, actual)
-
-            expected_text = self.expected_text[word]
-            actual_text = [n.decode('utf-8') for n in actual]
-            #
-            # The text and byte implementations yield ngrams in different
-            # order, so the test ignores ngram order.
-            #
-            self.assertEqual(sorted(expected_text), sorted(actual_text))
-
-        for word in self.expected_bytes_wide_unicode:
-            expected = self.expected_bytes_wide_unicode[word]
-            actual = gensim.models.utils_any2vec._compute_ngrams_bytes_py(word, 3, 5)
-            self.assertEqual(expected, actual)
-
-            expected_text = self.expected_text_wide_unicode[word]
-            actual_text = [n.decode('utf-8') for n in actual]
-
-            self.assertEqual(sorted(expected_text), sorted(actual_text))
-
-    @unittest.skipIf(DISABLE_CYTHON_TESTS, 'Cython functions are not properly compiled')
     def test_bytes_cy(self):
         for word in self.expected_bytes:
             expected = self.expected_bytes[word]
-            actual = gensim.models.utils_any2vec._compute_ngrams_bytes_cy(word, 3, 5)
+            actual = gensim.models.utils_any2vec.compute_ngrams_bytes(word, 3, 5)
             self.assertEqual(expected, actual)
 
             expected_text = self.expected_text[word]
@@ -509,7 +451,7 @@ class NgramsTest(unittest.TestCase):
 
         for word in self.expected_bytes_wide_unicode:
             expected = self.expected_bytes_wide_unicode[word]
-            actual = gensim.models.utils_any2vec._compute_ngrams_bytes_cy(word, 3, 5)
+            actual = gensim.models.utils_any2vec.compute_ngrams_bytes(word, 3, 5)
             self.assertEqual(expected, actual)
 
             expected_text = self.expected_text_wide_unicode[word]
@@ -525,7 +467,7 @@ class NgramsTest(unittest.TestCase):
             #
             # The model was trained with minn=3, maxn=6
             #
-            actual = gensim.models.utils_any2vec._compute_ngrams_py(word, 3, 6)
+            actual = gensim.models.utils_any2vec.compute_ngrams(word, 3, 6)
             self.assertEqual(sorted(expected), sorted(actual))
 
 
