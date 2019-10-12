@@ -61,8 +61,6 @@ NO_CYTHON = RuntimeError(
     "If you've installed from a package, ask the package maintainer to include Cython extensions. "
     "If you're building gensim from source yourself, run `python setup.py build_ext --inplace` "
     "and retry. "
-    "Alternatively, install an older version of gensim (earlier than 4.0.0). "
-    "Older versions include native Python support, but it is too slow for practical use. "
 )
 """An exception that gensim code raises when Cython extensions are unavailable."""
 
