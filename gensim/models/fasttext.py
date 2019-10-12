@@ -300,15 +300,15 @@ from gensim.utils import deprecated, call_on_class_only
 logger = logging.getLogger(__name__)
 
 try:
-    from gensim.models.fasttext_inner import train_batch_sg, train_batch_cbow
-    from gensim.models.fasttext_inner import MAX_WORDS_IN_BATCH
-
+    from gensim.models.fasttext_inner import train_batch_sg, train_batch_cbow, MAX_WORDS_IN_BATCH
+    from gensim.models.fasttext_corpusfile import train_epoch_sg, train_epoch_cbow
 except ImportError:
     #
     # We could raise utils.NO_CYTHON right here, but let's delay it until
     # Cython extensions are explicitly needed.
     #
     train_batch_sg = train_batch_cbow = utils.no_cython
+    train_epoch_sg = train_epoch_cbow = utils.no_cython
 
 
 class FastText(BaseWordEmbeddingsModel):
