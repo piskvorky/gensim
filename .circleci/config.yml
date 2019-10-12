@@ -29,6 +29,8 @@ jobs:
 
       - run:
           name: Build documentation
+          environment:
+            TOX_PARALLEL_NO_SPINNER: 1
           command: |
             source venv/bin/activate
             tox -e compile,docs -vv
