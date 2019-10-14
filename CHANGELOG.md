@@ -1,6 +1,8 @@
 Changes
 =======
 
+## :warning: 3.8.x will be the last gensim version to support Py2.7. Starting with 4.0.0, gensim will only support Py3.5 and above
+
 ## 3.8.1, 2019-09-23
 
 ### :red_circle: Bug fixes
@@ -42,8 +44,6 @@ Changes
     - `gensim.parsing.*` ➡ `gensim.utils.text_utils`
 
 ## 3.8.0, 2019-07-08
-
-## :warning: 3.8.x will be the last gensim version to support Py2.7. Starting with 4.0.0, gensim will only support Py3.5 and above
 
 ### :star2: New Features
 

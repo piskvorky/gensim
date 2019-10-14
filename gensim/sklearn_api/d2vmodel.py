@@ -164,6 +164,7 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
             The trained model.
 
         """
+        
         if isinstance(self._get_first(X), doc2vec.TaggedDocument):
             d2v_sentences = X
         else:
