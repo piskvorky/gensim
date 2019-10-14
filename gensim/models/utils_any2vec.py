@@ -67,11 +67,7 @@ try:
         ft_hash_bytes,
     )
 except ImportError:
-    #
-    # We could raise utils.NO_CYTHON right here, but let's delay it until
-    # Cython extensions are explicitly needed.
-    #
-    compute_ngrams = compute_ngrams_bytes = ft_hash_broken = ft_hash_bytes = utils.no_cython
+    raise utils.NO_CYTHON
 
 
 def ft_ngram_hashes(word, minn, maxn, num_buckets, fb_compatible=True):

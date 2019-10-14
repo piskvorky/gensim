@@ -91,12 +91,7 @@ logger = logging.getLogger(__name__)
 try:
     from gensim.models.doc2vec_inner import train_document_dbow, train_document_dm, train_document_dm_concat
 except ImportError:
-    #
-    # We could raise utils.NO_CYTHON right here, but let's delay it until
-    # Cython extensions are explicitly needed.
-    #
-    train_document_dbow = train_document_dm = train_document_dm_concat = utils.no_cython
-
+    raise utils.NO_CYTHON
 
 try:
     from gensim.models.doc2vec_corpusfile import (

@@ -1423,7 +1423,6 @@ class MmWriter(object):
 
 
 try:
-    # try to load fast, cythonized code if possible
-    from gensim.corpora._mmreader import MmReader  # noqa
+    from gensim.corpora._mmreader import MmReader  # noqa: F401
 except ImportError:
     raise utils.NO_CYTHON

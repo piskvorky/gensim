@@ -151,12 +151,10 @@ from gensim.utils import deprecated
 from six import iteritems, itervalues, string_types
 from six.moves import range
 
-import gensim.utils
-
 logger = logging.getLogger(__name__)
 
 try:
-    from gensim.models.word2vec_inner import (
+    from gensim.models.word2vec_inner import (  # noqa: F401
         train_batch_sg,
         train_batch_cbow,
         score_sentence_sg,
@@ -165,12 +163,7 @@ try:
         FAST_VERSION,
     )
 except ImportError:
-    #
-    # We could raise utils.NO_CYTHON right here, but let's delay it until
-    # Cython extensions are explicitly needed.
-    #
-    train_batch_sg = train_batch_cbow = score_sentence_sg = score_sentence_cbow = gensim.utils.no_cython
-    FAST_VERSION = -1
+    raise utils.NO_CYTHON
 
 try:
     from gensim.models.word2vec_corpusfile import train_epoch_sg, train_epoch_cbow, CORPUSFILE_VERSION

@@ -300,7 +300,7 @@ from gensim.utils import deprecated, call_on_class_only
 logger = logging.getLogger(__name__)
 
 try:
-    from gensim.models.fasttext_inner import (
+    from gensim.models.fasttext_inner import (  # noqa: F401
         train_batch_sg,
         train_batch_cbow,
         FAST_VERSION,
@@ -308,13 +308,7 @@ try:
     )
     from gensim.models.fasttext_corpusfile import train_epoch_sg, train_epoch_cbow
 except ImportError:
-    #
-    # We could raise utils.NO_CYTHON right here, but let's delay it until
-    # Cython extensions are explicitly needed.
-    #
-    FAST_VERSION = -1
-    train_batch_sg = train_batch_cbow = utils.no_cython
-    train_epoch_sg = train_epoch_cbow = utils.no_cython
+    raise utils.NO_CYTHON
 
 
 class FastText(BaseWordEmbeddingsModel):

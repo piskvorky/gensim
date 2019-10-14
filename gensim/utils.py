@@ -65,18 +65,6 @@ NO_CYTHON = RuntimeError(
 """An exception that gensim code raises when Cython extensions are unavailable."""
 
 
-def no_cython(*args, **kwargs):
-    """A replacement function that raises an exception signalling that
-    Cython extensions are required to proceed, but are unavailable.
-
-    Use this function instead of the native Python functions that replaced
-    Cython extensions.  This way, the user will only see the exception when
-    they actually **need** Cython, as opposed to when they merely import
-    gensim or one of its submodules.
-    """
-    raise NO_CYTHON
-
-
 def get_random_state(seed):
     """Generate :class:`numpy.random.RandomState` based on input seed.
 
