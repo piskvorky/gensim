@@ -961,6 +961,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             for chunk_no, chunk in enumerate(chunks):
                 reallen += len(chunk)  # keep track of how many documents we've processed so far
 
+                if reallen > lencorpus:
+                    raise RuntimeError("processed size is bigger than corpus length (don't use infinite iterators)")
+
                 if eval_every and ((reallen == lencorpus) or ((chunk_no + 1) % (eval_every * self.numworkers) == 0)):
                     self.log_perplexity(chunk, total_docs=lencorpus)
 
