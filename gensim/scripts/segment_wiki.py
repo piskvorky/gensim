@@ -91,7 +91,8 @@ def segment_all_articles(file_path, min_article_character=200, workers=None, inc
     Yields
     ------
     (str, list of (str, str), (Optionally) list of (str, str))
-        Structure contains (title, [(section_heading, section_content), ...], (Optionally) [(interlink_article, interlink_text), ...]).
+        Structure contains (title, [(section_heading, section_content), ...],
+        (Optionally) [(interlink_article, interlink_text), ...]).
 
     """
     with gensim.utils.open(file_path, 'rb') as xml_fileobj:
@@ -216,7 +217,8 @@ def segment(page_xml, include_interlinks=False):
     Returns
     -------
     (str, list of (str, str), (Optionally) list of (str, str))
-        Structure contains (title, [(section_heading, section_content), ...], (Optionally) [(interlink_article, interlink_text), ...]).
+        Structure contains (title, [(section_heading, section_content), ...],
+        (Optionally) [(interlink_article, interlink_text), ...]).
 
     """
     elem = cElementTree.fromstring(page_xml)
@@ -314,7 +316,8 @@ class _WikiSectionsCorpus(WikiCorpus):
         Yields
         ------
         (str, list of (str, str), list of (str, str))
-            Structure contains (title, [(section_heading, section_content), ...], (Optionally)[(interlink_article, interlink_text), ...]).
+            Structure contains (title, [(section_heading, section_content), ...],
+            (Optionally)[(interlink_article, interlink_text), ...]).
 
         """
         skipped_namespace, skipped_length, skipped_redirect = 0, 0, 0
