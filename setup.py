@@ -233,7 +233,7 @@ Copyright (c) 2009-now Radim Rehurek
 # https://docs.pytest.org/en/latest/py27-py34-deprecation.html
 #
 if PY2:
-    NUMPY_STR = 'numpy >= 1.11.3, <= 1.16.1'
+    NUMPY_STR = 'numpy >= 1.11.3, < 1.17.0'
     PYTEST_STR = 'pytest == 4.6.4'
 else:
     NUMPY_STR = 'numpy >= 1.11.3'
