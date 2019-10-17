@@ -106,6 +106,7 @@ class TestSegmentWiki(unittest.TestCase):
         self.assertEqual(section_titles, self.expected_section_titles)
 
         # Check interlinks
+        # NOTE: after loading the interlinks will be loaded as list of lists instead of list of tuples
         self.assertEqual(len(interlinks), 685)
         self.assertTrue(interlinks[0] == ["political philosophy", "political philosophy"])
         self.assertTrue(interlinks[1] == ["self-governance", "self-governed"])

@@ -164,8 +164,8 @@ def find_interlinks(raw):
 
     Returns
     -------
-    dict
-        Mapping from the linked article to the actual text found.
+    list
+        List of tuples in format [(linked article, the actual text found), ...].
 
     """
     filtered = filter_wiki(raw, promote_remaining=False, simplify_links=False)
