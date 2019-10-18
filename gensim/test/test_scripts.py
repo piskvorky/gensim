@@ -106,11 +106,14 @@ class TestSegmentWiki(unittest.TestCase):
         self.assertEqual(section_titles, self.expected_section_titles)
 
         # Check interlinks
-        # NOTE: after loading the interlinks will be loaded as list of lists instead of list of tuples
+        # NOTE: To ensure while writing tests which load the generated json file,
+        # we need to ensure that the comparison of interlinks value is not done against a tuple,
+        # as json always stores things as lists.
+        # After loading, the interlinks will be loaded as list of lists instead of list of tuples.
         self.assertEqual(len(interlinks), 685)
-        self.assertTrue(interlinks[0] == ["political philosophy", "political philosophy"])
-        self.assertTrue(interlinks[1] == ["self-governance", "self-governed"])
-        self.assertTrue(interlinks[2] == ["stateless society", "stateless societies"])
+        self.assertEqual(interlinks[0], ["political philosophy", "political philosophy"])
+        self.assertEqual(interlinks[1], ["self-governance", "self-governed"])
+        self.assertEqual(interlinks[2], ["stateless society", "stateless societies"])
 
 
 class TestWord2Vec2Tensor(unittest.TestCase):
