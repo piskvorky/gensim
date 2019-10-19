@@ -90,8 +90,9 @@ def segment_all_articles(file_path, min_article_character=200, workers=None, inc
 
     Yields
     ------
-    (str, list of (str, str), (Optionally) dict of str: str)
-        Structure contains (title, [(section_heading, section_content), ...], (Optionally) {interlinks}).
+    (str, list of (str, str), (Optionally) list of (str, str))
+        Structure contains (title, [(section_heading, section_content), ...],
+        (Optionally) [(interlink_article, interlink_text), ...]).
 
     """
     with gensim.utils.open(file_path, 'rb') as xml_fileobj:
@@ -215,8 +216,9 @@ def segment(page_xml, include_interlinks=False):
 
     Returns
     -------
-    (str, list of (str, str), (Optionally) dict of (str: str))
-        Structure contains (title, [(section_heading, section_content), ...], (Optionally) {interlinks}).
+    (str, list of (str, str), (Optionally) list of (str, str))
+        Structure contains (title, [(section_heading, section_content), ...],
+        (Optionally) [(interlink_article, interlink_text), ...]).
 
     """
     elem = cElementTree.fromstring(page_xml)
@@ -313,8 +315,9 @@ class _WikiSectionsCorpus(WikiCorpus):
 
         Yields
         ------
-        (str, list of (str, str), dict of (str: str))
-            Structure contains (title, [(section_heading, section_content), ...], (Optionally){interlinks}).
+        (str, list of (str, str), list of (str, str))
+            Structure contains (title, [(section_heading, section_content), ...],
+            (Optionally)[(interlink_article, interlink_text), ...]).
 
         """
         skipped_namespace, skipped_length, skipped_redirect = 0, 0, 0
@@ -378,7 +381,7 @@ if __name__ == "__main__":
     parser.add_argument(
         '-i', '--include-interlinks',
         help='Include a mapping for interlinks to other articles in the dump. The mappings format is: '
-             '"interlinks": {"article_title_1": "interlink_text_1", "article_title_2": "interlink_text_2", ...}',
+             '"interlinks": [("article_title_1", "interlink_text_1"), ("article_title_2", "interlink_text_2"), ...]',
         action='store_true'
     )
     args = parser.parse_args()
