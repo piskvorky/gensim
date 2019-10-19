@@ -266,7 +266,6 @@ def make_cpp_extensions():
     extensions = {
         'gensim.models.word2vec_corpusfile': './gensim/models/word2vec_corpusfile.pyx',
         'gensim.models.fasttext_corpusfile': './gensim/models/fasttext_corpusfile.pyx',
-        'gensim.models.fasttext_corpusfile': './gensim/models/fasttext_corpusfile.pyx',
         'gensim.models.doc2vec_corpusfile': './gensim/models/doc2vec_corpusfile.pyx',
     }
 
