@@ -29,61 +29,7 @@ if sys.version_info[:2] < (2, 7) or ((3, 0) <= sys.version_info[:2] < (3, 5)):
 
 
 class custom_build_ext(build_ext):
-    """Allow C extension building to fail.
-
-    The C extension speeds up word2vec and doc2vec training, but is not essential.
-    """
-
-    warning_message = """
-********************************************************************
-WARNING: %s could not
-be compiled. No C extensions are essential for gensim to run,
-although they do result in significant speed improvements for some modules.
-%s
-
-Here are some hints for popular operating systems:
-
-If you are seeing this message on Linux you probably need to
-install GCC and/or the Python development package for your
-version of Python.
-
-Debian and Ubuntu users should issue the following command:
-
-    $ sudo apt-get install build-essential python-dev
-
-RedHat, CentOS, and Fedora users should issue the following command:
-
-    $ sudo yum install gcc python-devel
-
-If you are seeing this message on OSX please read the documentation
-here:
-
-http://api.mongodb.org/python/current/installation.html#osx
-********************************************************************
-"""
-
-    def run(self):
-        try:
-            build_ext.run(self)
-        except Exception:
-            e = sys.exc_info()[1]
-            sys.stdout.write('%s\n' % str(e))
-            warnings.warn(
-                self.warning_message +
-                "Extension modules" +
-                "There was an issue with your platform configuration - see above.")
-
-    def build_extension(self, ext):
-        name = ext.name
-        try:
-            build_ext.build_extension(self, ext)
-        except Exception:
-            e = sys.exc_info()[1]
-            sys.stdout.write('%s\n' % str(e))
-            warnings.warn(
-                self.warning_message +
-                "The %s extension module" % (name,) +
-                "The output above this warning shows how the compilation failed.")
+    """Solve chicken-and-egg problem with numpy."""
 
     # the following is needed to be able to add numpy's include dirs... without
     # importing numpy directly in this script, before it's actually installed!
@@ -100,9 +46,6 @@ http://api.mongodb.org/python/current/installation.html#osx
         import numpy
         self.include_dirs.append(numpy.get_include())
 
-
-model_dir = os.path.join(os.path.dirname(__file__), 'gensim', 'models')
-gensim_dir = os.path.join(os.path.dirname(__file__), 'gensim')
 
 cmdclass = {'build_ext': custom_build_ext}
 
@@ -290,28 +233,28 @@ docs_testenv = linux_testenv + distributed_env + [
 if sys.version_info == (2, 7):
     docs_testenv.insert(0, 'doctools==0.14')
 
-ext_modules = [
-    Extension('gensim.models.word2vec_inner',
-        sources=['./gensim/models/word2vec_inner.c'],
-        include_dirs=[model_dir]),
-    Extension('gensim.models.doc2vec_inner',
-        sources=['./gensim/models/doc2vec_inner.c'],
-        include_dirs=[model_dir]),
-    Extension('gensim.corpora._mmreader',
-        sources=['./gensim/corpora/_mmreader.c']),
-    Extension('gensim.models.fasttext_inner',
-        sources=['./gensim/models/fasttext_inner.c'],
-        include_dirs=[model_dir]),
-    Extension('gensim.models._utils_any2vec',
-        sources=['./gensim/models/_utils_any2vec.c'],
-        include_dirs=[model_dir]),
-    Extension('gensim._matutils',
-        sources=['./gensim/_matutils.c']),
-    Extension('gensim.models.nmf_pgd',
-        sources=['./gensim/models/nmf_pgd.c'])
-]
 
-if not (os.name == 'nt' and sys.version_info[0] < 3):
+def make_c_extensions():
+    import numpy
+    include_dirs = [numpy.get_include()]
+
+    extensions = {
+        'gensim.models.word2vec_inner': './gensim/models/word2vec_inner.pyx',
+        'gensim.models.doc2vec_inner': './gensim/models/doc2vec_inner.pyx',
+        'gensim.corpora._mmreader': './gensim/corpora/_mmreader.pyx',
+        'gensim.models.fasttext_inner': './gensim/models/fasttext_inner.pyx',
+        'gensim.models._utils_any2vec': './gensim/models/_utils_any2vec.pyx',
+        'gensim._matutils': './gensim/_matutils.pyx',
+        'gensim.models.nmf_pgd': './gensim/models/nmf_pgd.pyx',
+    }
+    for module, source in extensions.items():
+        yield Extension(module, sources=[source], include_dirs=include_dirs)
+
+
+def make_cpp_extensions():
+    import numpy
+    include_dirs = [numpy.get_include()]
+
     extra_args = []
     system = platform.system()
 
@@ -320,29 +263,26 @@ if not (os.name == 'nt' and sys.version_info[0] < 3):
     elif system == 'Darwin':
         extra_args.extend(['-stdlib=libc++', '-std=c++11'])
 
-    ext_modules.append(
-        Extension('gensim.models.word2vec_corpusfile',
-                  sources=['./gensim/models/word2vec_corpusfile.cpp'],
-                  language='c++',
-                  extra_compile_args=extra_args,
-                  extra_link_args=extra_args)
-    )
+    extensions = {
+        'gensim.models.word2vec_corpusfile': './gensim/models/word2vec_corpusfile.pyx',
+        'gensim.models.fasttext_corpusfile': './gensim/models/fasttext_corpusfile.pyx',
+        'gensim.models.fasttext_corpusfile': './gensim/models/fasttext_corpusfile.pyx',
+        'gensim.models.doc2vec_corpusfile': './gensim/models/doc2vec_corpusfile.pyx',
+    }
 
-    ext_modules.append(
-        Extension('gensim.models.fasttext_corpusfile',
-                  sources=['./gensim/models/fasttext_corpusfile.cpp'],
-                  language='c++',
-                  extra_compile_args=extra_args,
-                  extra_link_args=extra_args)
-    )
+    for module, source in extensions.items():
+        yield Extension(
+            module,
+            sources=[source],
+            language='c++',
+            extra_compile_args=extra_args,
+            extra_link_args=extra_args,
+            include_dirs=include_dirs,
+        )
 
-    ext_modules.append(
-        Extension('gensim.models.doc2vec_corpusfile',
-                  sources=['./gensim/models/doc2vec_corpusfile.cpp'],
-                  language='c++',
-                  extra_compile_args=extra_args,
-                  extra_link_args=extra_args)
-    )
+
+ext_modules = list(make_c_extensions()) + list(make_cpp_extensions())
+
 
 setup(
     name='gensim',
@@ -395,6 +335,7 @@ setup(
         'scipy >= 0.18.1',
         'six >= 1.5.0',
         'smart_open >= 1.8.1',
+        'cython',
     ],
     tests_require=linux_testenv,
     extras_require={
