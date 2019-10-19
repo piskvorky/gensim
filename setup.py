@@ -5,32 +5,22 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-Run with:
+Run with::
 
-sudo python ./setup.py install
+    python ./setup.py install
 """
 
-import os
+import itertools
 import platform
 import sys
-import warnings
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
 
-PY2 = sys.version_info[0] == 2
-
-if sys.version_info[:2] < (2, 7) or ((3, 0) <= sys.version_info[:2] < (3, 5)):
-    raise Exception('This version of gensim needs Python 2.7, 3.5 or later.')
-
-# the following code is adapted from tornado's setup.py:
-# https://github.com/tornadoweb/tornado/blob/master/setup.py
-# to support installing without the extension on platforms where
-# no compiler is available.
+if sys.version_info[:2] < (3, 5):
+    raise Exception('This version of gensim needs 3.5 or later.')
 
 
-class custom_build_ext(build_ext):
-    """Solve chicken-and-egg problem with numpy."""
-
+class CustomBuildExt(build_ext):
     # the following is needed to be able to add numpy's include dirs... without
     # importing numpy directly in this script, before it's actually installed!
     # http://stackoverflow.com/questions/19919905/how-to-bootstrap-numpy-installation-in-setup-py
@@ -47,7 +37,7 @@ class custom_build_ext(build_ext):
         self.include_dirs.append(numpy.get_include())
 
 
-cmdclass = {'build_ext': custom_build_ext}
+cmdclass = {'build_ext': CustomBuildExt}
 
 WHEELHOUSE_UPLOADER_COMMANDS = {'fetch_artifacts', 'upload_all'}
 if WHEELHOUSE_UPLOADER_COMMANDS.intersection(sys.argv):
@@ -166,21 +156,8 @@ Copyright (c) 2009-now Radim Rehurek
 
 """
 
-#
-# 1.11.3 is the oldest version of numpy that we support, for historical reasons.
-# 1.16.1 is the last numpy version to support Py2.
-#
-# Similarly, 4.6.4 is the last pytest version to support Py2.
-#
-# https://docs.scipy.org/doc/numpy/release.html
-# https://docs.pytest.org/en/latest/py27-py34-deprecation.html
-#
-if PY2:
-    NUMPY_STR = 'numpy >= 1.11.3, <= 1.16.1'
-    PYTEST_STR = 'pytest == 4.6.4'
-else:
-    NUMPY_STR = 'numpy >= 1.11.3'
-    PYTEST_STR = 'pytest'
+NUMPY_STR = 'numpy >= 1.11.3'
+PYTEST_STR = 'pytest'
 
 distributed_env = ['Pyro4 >= 4.27']
 
@@ -195,19 +172,8 @@ win_testenv = [
     'Morfessor==2.0.2a4',
     'python-Levenshtein >= 0.10.2',
     'visdom >= 0.1.8, != 0.1.8.7',
+    'scikit-learn',
 ]
-
-if sys.version_info[:2] == (2, 7):
-    #
-    # 0.20.3 is the last version of scikit-learn that supports Py2.
-    # Similarly, for version 5.1.1 of tornado.  We require tornado indirectly
-    # via visdom.
-    #
-    win_testenv.append('scikit-learn==0.20.3')
-    win_testenv.append('tornado==5.1.1')
-else:
-    win_testenv.append('scikit-learn')
-
 
 linux_testenv = win_testenv[:]
 
@@ -227,17 +193,9 @@ docs_testenv = linux_testenv + distributed_env + [
     'Pattern >= 3.6',  # Need 3.6 or later for Py3 support
     'sphinxcontrib.programoutput',
 ]
-#
-# Get Py2.7 docs to build, see https://github.com/RaRe-Technologies/gensim/pull/2552
-#
-if sys.version_info == (2, 7):
-    docs_testenv.insert(0, 'doctools==0.14')
 
 
 def make_c_extensions():
-    import numpy
-    include_dirs = [numpy.get_include()]
-
     extensions = {
         'gensim.models.word2vec_inner': './gensim/models/word2vec_inner.pyx',
         'gensim.models.doc2vec_inner': './gensim/models/doc2vec_inner.pyx',
@@ -248,13 +206,10 @@ def make_c_extensions():
         'gensim.models.nmf_pgd': './gensim/models/nmf_pgd.pyx',
     }
     for module, source in extensions.items():
-        yield Extension(module, sources=[source], include_dirs=include_dirs)
+        yield Extension(module, sources=[source])
 
 
 def make_cpp_extensions():
-    import numpy
-    include_dirs = [numpy.get_include()]
-
     extra_args = []
     system = platform.system()
 
@@ -276,11 +231,10 @@ def make_cpp_extensions():
             language='c++',
             extra_compile_args=extra_args,
             extra_link_args=extra_args,
-            include_dirs=include_dirs,
         )
 
 
-ext_modules = list(make_c_extensions()) + list(make_cpp_extensions())
+ext_modules = list(itertools.chain(make_c_extensions(), make_cpp_extensions()))
 
 
 setup(
