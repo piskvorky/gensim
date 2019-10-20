@@ -2,7 +2,7 @@ r"""
 How to Compare LDA Models
 =========================
 
-Demonstrates how you can compare topics within a topic model and against other models.
+Demonstrates how you can compare a topic model with itself or other models.
 
 """
 

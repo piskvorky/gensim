@@ -9,3 +9,4 @@ scikit-learn==0.21.3
 plotly==4.2.1
 nltk==3.4.5
 testfixtures==6.10.0
+statsmodels==0.10.1

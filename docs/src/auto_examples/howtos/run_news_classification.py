@@ -1,4 +1,5 @@
 r"""
+Unsupervised Topic Modeling of News Articles
 How to Classify News Articles into Topics
 =========================================
 
@@ -11,21 +12,21 @@ Demonstrates classification of the Lee Corpus using a variety of topic models (L
 # over the world. We will be looking into how topic modeling can be used to
 # accurately classify news articles into different categories such as sports,
 # technology, politics etc.
-# 
+#
 # This guide demonstrates training a topic model which can come up with topics
 # that can easily be interpreted by us. On top of assigning a topic to an
 # arbitrary document, this model can also discover hidden structure in the
 # corpus.
-# 
+#
 # We will be using the Lee corpus which is a shortened version of the `Lee
 # Background Corpus
 # <http://www.socsci.uci.edu/~mdlee/lee_pincombe_welsh_document.PDF>`_. The
 # shortened version consists of 300 documents selected from the Australian
 # Broadcasting Corporation's news mail service. It consists of texts of
 # headline stories from around the year 2000-2001.
-# 
+#
 # We will examine the following models:
-# 
+#
 # - LSI (Latent Semantic Indexing)
 # - HDP (Hierarchical Dirichlet Process)
 # - LDA (Latent Dirichlet Allocation)
@@ -38,9 +39,9 @@ Demonstrates classification of the Lee Corpus using a variety of topic models (L
 # the Space of Topic Coherence Measures
 # <http://svn.aksw.org/papers/2015/WSDM_Topic_Evaluation/public.pdf>`_ by Roder
 # et al.
-# 
+#
 # Accompanying slides can be found `here <https://speakerdeck.com/dsquareindia/pycon-delhi-lightening>`_.
-# 
+#
 
 import os
 import re
@@ -63,18 +64,18 @@ lee_train_file = test_data_dir + os.sep + 'lee_background.cor'
 
 ###############################################################################
 # Analysing our corpus.
-# 
-# 
+#
+#
 #    - The first document talks about a bushfire that had occured in New South Wales.
 #    - The second talks about conflict between India and Pakistan in Kashmir.
 #    - The third talks about road accidents in the New South Wales area.
 #    - The fourth one talks about Argentina's economic and political crisis during that time.
 #    - The last one talks about the use of drugs by midwives in a Sydney hospital.
-# 
+#
 # Our final topic model should be giving us keywords which we can easily
 # interpret and make a small summary out of. Without this the topic model
 # cannot be of much practical use.
-# 
+#
 with open(lee_train_file, 'rb') as f:
     for n, l in enumerate(f):
         if n < 5:
@@ -83,11 +84,11 @@ with open(lee_train_file, 'rb') as f:
 def build_texts(fname):
     """
     Function to build tokenized texts from file
-    
+
     Parameters:
     ----------
     fname: File to be read
-    
+
     Returns:
     -------
     yields preprocessed line
@@ -102,12 +103,12 @@ print(len(train_texts))
 ###############################################################################
 # Preprocessing our data. Remember: Garbage In Garbage Out
 # --------------------------------------------------------
-# 
+#
 # This is the single most important step in setting up a good topic modeling
 # system. If the preprocessing is not good, the algorithm can't do much since
 # we would be feeding it a lot of noise. In this tutorial, we will be filtering
 # out the noise using the following steps in this order for each line:
-# 
+#
 # #. Stopword removal using NLTK's english stopwords dataset.
 # #. Bigram collocation detection (frequently co-occuring tokens) using
 #    gensim's `Phrases <https://radimrehurek.com/gensim/models/phrases.html>`_.
@@ -118,7 +119,7 @@ print(len(train_texts))
 #    case of topic modeling since the words after lemmatization still remain
 #    understable. However, generally stemming might be preferred if the data is
 #    being fed into a vectorizer and isn't intended to be viewed.
-# 
+#
 bigram = gensim.models.Phrases(train_texts)  # for bigram collocation detection
 
 bigram[['new', 'york', 'example']]
@@ -131,22 +132,22 @@ stops = set(stopwords.words('english'))  # nltk stopwords list
 def process_texts(texts):
     """
     Function to process texts. Following are the steps we take:
-    
+
     1. Stopword Removal.
     2. Collocation detection.
     3. Lemmatization (not stem since stemming can reduce the interpretability).
-    
+
     Parameters:
     ----------
     texts: Tokenized texts.
-    
+
     Returns:
     -------
     texts: Pre-processed tokenized texts.
     """
     texts = [[word for word in line if word not in stops] for line in texts]
     texts = [bigram[line] for line in texts]
-    
+
     from nltk.stem import WordNetLemmatizer
     lemmatizer = WordNetLemmatizer()
 
@@ -158,7 +159,7 @@ print(train_texts[5:6][:20])
 
 ###############################################################################
 # Finalising our dictionary and corpus
-# 
+#
 from gensim.corpora import Dictionary
 dictionary = Dictionary(train_texts)
 corpus = [dictionary.doc2bow(text) for text in train_texts]
@@ -166,12 +167,12 @@ corpus = [dictionary.doc2bow(text) for text in train_texts]
 ###############################################################################
 # Topic modeling with LSI
 # -----------------------
-# 
+#
 # This is a useful topic modeling algorithm in that it can rank topics by
 # itself. Thus it outputs topics in a ranked order. However it does require a
 # ``num_topics`` parameter (set to 200 by default) to determine the number of
 # latent dimensions after the SVD.
-# 
+#
 from gensim.models import LsiModel
 lsimodel = LsiModel(corpus=corpus, num_topics=10, id2word=dictionary)
 for t in lsimodel.show_topics(num_topics=5):
@@ -183,10 +184,10 @@ lsitopics = lsimodel.show_topics(formatted=False)
 ###############################################################################
 # Topic modeling with `HDP <http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_
 # -----------------------------------------------------------------------------------------------------
-# 
+#
 # An HDP model is fully unsupervised. It can also determine the ideal number of
 # topics it needs through posterior inference.
-# 
+#
 from gensim.models import HdpModel
 hdpmodel = HdpModel(corpus=corpus, id2word=dictionary)
 for t in hdpmodel.show_topics():
@@ -197,13 +198,13 @@ hdptopics = hdpmodel.show_topics(formatted=False)
 ###############################################################################
 # Topic modeling using `LDA <https://www.cs.princeton.edu/~blei/papers/HoffmanBleiBach2010b.pdf>`_
 # ----------------------------------------------------------------------------------------------------
-# 
+#
 # This is one the most popular topic modeling algorithms today. It is a
 # generative model in that it assumes each document is a mixture of topics and
 # in turn, each topic is a mixture of words. To understand it better you can
 # watch `this <https://www.youtube.com/watch?v=DDq3OVp9dNA>`_ lecture by David
 # Blei. Let's choose 10 topics to initialize this.
-# 
+#
 from gensim.models import LdaModel
 ldamodel = LdaModel(corpus=corpus, num_topics=10, id2word=dictionary)
 ldatopics = ldamodel.show_topics(formatted=False)
@@ -216,7 +217,7 @@ ldatopics = ldamodel.show_topics(formatted=False)
 # <http://nlp.stanford.edu/events/illvi2014/papers/sievert-illvi2014.pdf>`_.
 #
 # Unfortunately, the visualization only works inside a Jupyter notebook.
-# 
+#
 
 try:
     import pyLDAvis.gensim
@@ -230,14 +231,14 @@ else:
 ###############################################################################
 # Determining the optimal number of topics
 # ----------------------------------------
-# 
+#
 # **Introduction to topic coherence**\ :
-# 
+#
 # .. role:: raw-html-m2r(raw)
 #    :format: html
-# 
+#
 # :raw-html-m2r:`<img src="https://rare-technologies.com/wp-content/uploads/2016/06/pipeline.png">`
-# 
+#
 # Topic coherence in essence measures the human interpretability of a topic
 # model. Traditionally `perplexity has been used
 # <http://qpleple.com/perplexity-to-evaluate-topic-models/>`_ to evaluate topic
@@ -246,22 +247,22 @@ else:
 # guarantee on human interpretability. Thus this can be used to compare
 # different topic models among many other use-cases. Here's a short blog I
 # wrote explaining topic coherence:
-# 
+#
 # `What is topic coherence? <https://rare-technologies.com/what-is-topic-coherence/>`_
-# 
+#
 from gensim.models import CoherenceModel
 
 
 def evaluate_graph(dictionary, corpus, texts, limit):
     """
     Function to display num_topics - LDA graph using c_v coherence
-    
+
     Parameters:
     ----------
     dictionary : Gensim dictionary
     corpus : Gensim corpus
     limit : topic limit
-    
+
     Returns:
     -------
     lm_list : List of LDA topic models
@@ -274,7 +275,7 @@ def evaluate_graph(dictionary, corpus, texts, limit):
         lm_list.append(lm)
         cm = CoherenceModel(model=lm, texts=texts, dictionary=dictionary, coherence='c_v')
         c_v.append(cm.get_coherence())
-        
+
     # Show graph
     x = range(1, limit)
     plt.plot(x, c_v)
@@ -282,7 +283,7 @@ def evaluate_graph(dictionary, corpus, texts, limit):
     plt.ylabel("Coherence score")
     plt.legend(("c_v"), loc='best')
     plt.show()
-    
+
     return lm_list, c_v
 
 lmlist, c_v = evaluate_graph(dictionary=dictionary, corpus=corpus, texts=train_texts, limit=10)
@@ -297,15 +298,15 @@ lmtopics = lmlist[5].show_topics(formatted=False)
 # topics, the topics get "lost" among the numbers. Let us see if we can dig out
 # the best topics from the best LDA model we can produce. The function below
 # can be used to control the quality of the LDA model we produce.
-# 
+#
 
 
 def ret_top_model():
     """
     Since LDAmodel is a probabilistic model, it comes up different topics each time we run it. To control the
     quality of the topic model we produce, we can see what the interpretability of the best topic is and keep
-    evaluating the topic model until this threshold is crossed. 
-    
+    evaluating the topic model until this threshold is crossed.
+
     Returns:
     -------
     lm: Final evaluated topic model
@@ -334,20 +335,20 @@ lm, top_topics = ldamodel, ldatopics
 ###############################################################################
 # Inference
 # ---------
-# 
+#
 # We can clearly see below that the first topic is about **cinema**\ , second is about **email malware**\ , third is about the land which was given back to the **Larrakia aboriginal community of Australia** in 2000. Then there's one about **Australian cricket**. LDA as LSI has worked wonderfully in finding out the best topics from within LDA.
-# 
+#
 # pprint([lm.show_topic(topicid) for topicid, c_v in top_topics[:10]])
 # lda_lsi_topics = [[word for word, prob in lm.show_topic(topicid)] for topicid, c_v in top_topics]
 
 ###############################################################################
 # Evaluating all the topic models
 # -------------------------------
-# 
+#
 # Any topic model which can come up with topic terms can be plugged into the
 # coherence pipeline. You can even plug in an `NMF topic model
 # <http://derekgreene.com/nmf-topic/>`_ created with scikit-learn.
-# 
+#
 
 lsitopics = [[word for word, prob in topic] for topicid, topic in lsitopics]
 hdptopics = [[word for word, prob in topic] for topicid, topic in hdptopics]
@@ -371,7 +372,7 @@ lm_coherence = create_coherence_model(lmtopics)
 def evaluate_bar_graph(coherences, indices):
     """
     Function to plot bar graph.
-    
+
     coherences: list of coherence values
     indices: Indices to be used to mark bars. Length of this and coherences should be equal.
     """
@@ -389,17 +390,17 @@ evaluate_bar_graph(values, labels)
 ###############################################################################
 # Customizing the topic coherence measure
 # ---------------------------------------
-# 
+#
 # Till now we only used the ``c_v`` coherence measure. There are others such as
 # ``u_mass``\ , ``c_uci``\ , ``c_npmi``. All of these calculate coherence in a
 # different way. ``c_v`` is found to be most in line with human ratings but can
 # be much slower than ``u_mass`` since it uses a sliding window over the texts.
-# 
+#
 # Making your own coherence measure
 # ---------------------------------
-# 
+#
 # Let's modify ``c_uci`` to use ``s_one_pre`` instead of ``s_one_one`` segmentation
-# 
+#
 
 from gensim.topic_coherence import (
     segmentation, probability_estimation, direct_confirmation_measure,
@@ -417,7 +418,7 @@ measure = make_pipeline(segmentation.s_one_one,
 
 ###############################################################################
 # To get topics out of the topic model:
-# 
+#
 
 topics = []
 for topic in lm.state.get_lambda():
@@ -428,9 +429,9 @@ for t in topics:
     print(t)
 
 ###############################################################################
-# 
+#
 # **Step 1**\ : Segmentation
-# 
+#
 segmented_topics = measure.seg(topics)
 
 for t in segmented_topics:
@@ -442,7 +443,7 @@ for t in segmented_topics:
 
 ###############################################################################
 # **Step 2**\ : Probability estimation
-# 
+#
 # Since this is a window-based coherence measure we will perform window based prob estimation
 try:
     per_topic_postings, num_windows = measure.prob(
@@ -454,7 +455,7 @@ except Exception:
 
 ###############################################################################
 # **Step 3**\ : Confirmation Measure
-# 
+#
 try:
     confirmed_measures = measure.conf(segmented_topics, per_topic_postings, num_windows, normalize=False)
 except Exception:
@@ -462,7 +463,7 @@ except Exception:
 
 ###############################################################################
 # **Step 4**\ : Aggregation
-# 
+#
 
 try:
     print(measure.aggr(confirmed_measures))
@@ -472,6 +473,6 @@ except Exception:
 ###############################################################################
 # How this topic model can be used further
 # ========================================
-# 
+#
 # The best topic model here can be used as a standalone for news article classification. However a topic model can also be used as a dimensionality reduction algorithm to feed into a classifier. A good topic model should be able to extract the signal from the noise efficiently, hence improving the performance of the classifier.
-# 
+#

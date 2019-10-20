@@ -7,10 +7,12 @@
 .. _sphx_glr_auto_examples_howtos_run_doc2vec_imdb.py:
 
 
-How to Reproduce Results of Le and Mikolov 2014
-===============================================
+How to Apply Doc2Vec to Reproduce the 'Paragraph Vector' paper
+==============================================================
 
-Shows how to reproduce results of the Le and Mikolov paper using Gensim.
+Shows how to reproduce results of the "Distributed Representation of Sentences and Documents" paper by Le and Mikolov using Gensim.
+
+
 
 .. code-block:: default
 
@@ -191,6 +193,7 @@ Here's what a single document looks like
     SentimentDocument(words=['I', 'was', 'looking', 'forward', 'to', 'this', 'movie.', 'Trustworthy', 'actors,', 'interesting', 'plot.', 'Great', 'atmosphere', 'then', '?????', 'IF', 'you', 'are', 'going', 'to', 'attempt', 'something', 'that', 'is', 'meant', 'to', 'encapsulate', 'the', 'meaning', 'of', 'life.', 'First.', 'Know', 'it.', 'OK', 'I', 'did', 'not', 'expect', 'the', 'directors', 'or', 'writers', 'to', 'actually', 'know', 'the', 'meaning', 'but', 'I', 'thought', 'they', 'may', 'have', 'offered', 'crumbs', 'to', 'peck', 'at', 'and', 'treats', 'to', 'add', 'fuel', 'to', 'the', 'fire-Which!', 'they', 'almost', 'did.', 'Things', 'I', "didn't", 'get.', 'A', 'woman', 'wandering', 'around', 'in', 'dark', 'places', 'and', 'lonely', 'car', 'parks', 'alone-oblivious', 'to', 'the', 'consequences.', 'Great', 'riddles', 'that', 'fell', 'by', 'the', 'wayside.', 'The', 'promise', 'of', 'the', 'knowledge', 'therein', 'contained', 'by', 'the', 'original', 'so-called', 'criminal.', 'I', 'had', 'no', 'problem', 'with', 'the', 'budget', 'and', 'enjoyed', 'the', 'suspense.', 'I', 'understood', 'and', 'can', 'wax', 'lyrical', 'about', 'the', 'fool', 'and', 'found', 'Adrian', 'Pauls', 'role', 'crucial', 'and', 'penetrating', 'and', 'then', '?????', 'Basically', 'the', 'story', 'line', 'and', 'the', 'script', 'where', 'good', 'up', 'to', 'a', 'point', 'and', 'that', 'point', 'was', 'the', 'last', '10', 'minutes', 'or', 'so.', 'What?', 'Run', 'out', 'of', 'ideas!', 'Such', 'a', 'pity', 'that', 'this', 'movie', 'had', 'to', 'let', 'us', 'down', 'so', 'badly.', 'It', 'may', 'not', 'comprehend', 'the', 'meaning', 'and', 'I', 'really', 'did', 'not', 'expect', 'the', 'writers', 'to', 'understand', 'it', 'but', 'I', 'was', 'hoping', 'for', 'an', 'intellectual,', 'if', 'not', 'spiritual', 'ride', 'and', 'got', 'a', 'bump', 'in', 'the', 'road'], tags=[27], split='test', sentiment=0.0)
 
 
+
 Extract our documents and split into training/test sets
 
 
@@ -211,6 +214,7 @@ Extract our documents and split into training/test sets
  .. code-block:: none
 
     100000 docs: 25000 train-sentiment, 25000 test-sentiment
+
 
 
 Set-up Doc2Vec Training & Evaluation Models
@@ -287,6 +291,7 @@ We vary the following parameter choices:
     Doc2Vec(dm/c,d100,n5,w5,mc2,t8) vocabulary scanned & state initialized
 
 
+
 Le and Mikolov note that combining a paragraph vector from Distributed Bag of
 Words (DBOW) and Distributed Memory (DM) improves performance. We will
 follow, pairing the models together for evaluation. Here, we concatenate the
@@ -307,31 +312,6 @@ enabled by the ``dm_concat=1`` mode above.)
 
 
 
-
-
-Sanity checking.  Let's see if our models give meaningful results.
-
-
-.. code-block:: default
-
-    for word, sim in simple_models[1].wv.most_similar('head', topn=5):
-        print('%.2f %r' % (sim, word))
-
-
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
-    0.42 'pulverizes'
-    0.42 '/>Soderbergh'
-    0.41 'gordon.'
-    0.41 'businessman,'
-    0.40 'again)'
 
 
 Predictive Evaluation Methods
@@ -458,29 +438,31 @@ main models takes about an hour.)
 
     Evaluating Doc2Vec(dbow,d100,n5,mc2,t8)
 
-    0.104760 Doc2Vec(dbow,d100,n5,mc2,t8)
+    0.104320 Doc2Vec(dbow,d100,n5,mc2,t8)
 
     Training Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
 
     Evaluating Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
 
-    0.172000 Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
+    0.169080 Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
 
     Training Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
 
     Evaluating Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
 
-    0.305920 Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
+    0.304520 Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
 
 
     Evaluating Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
 
-    0.103680 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
+    0.103800 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
 
 
     Evaluating Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
 
-    0.105320 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
+    0.104760 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
+
+
 
 
 Achieved Sentiment-Prediction Accuracy
@@ -505,11 +487,12 @@ Compare error rates achieved, best-to-worst
  .. code-block:: none
 
     Err_rate Model
-    0.103680 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
-    0.104760 Doc2Vec(dbow,d100,n5,mc2,t8)
-    0.105320 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
-    0.172000 Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
-    0.305920 Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
+    0.103800 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
+    0.104320 Doc2Vec(dbow,d100,n5,mc2,t8)
+    0.104760 Doc2Vec(dbow,d100,n5,mc2,t8)+Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
+    0.169080 Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8)
+    0.304520 Doc2Vec(dm/c,d100,n5,w5,mc2,t8)
+
 
 
 In our testing, contrary to the results of the paper, on this problem,
@@ -560,13 +543,14 @@ Are inferred vectors close to the precalculated ones?
 
  .. code-block:: none
 
-    for doc 89090...
+    for doc 8260...
     Doc2Vec(dbow,d100,n5,mc2,t8):
-     [(97572, 0.9825226068496704), (89090, 0.9798043966293335), (31052, 0.5808212757110596)]
+     [(8260, 0.982399582862854), (14362, 0.6372007727622986), (1126, 0.6309436559677124)]
     Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8):
-     [(89090, 0.9403301477432251), (97572, 0.9247512817382812), (49437, 0.7062457799911499)]
+     [(8260, 0.8961429595947266), (60918, 0.5842142701148987), (49563, 0.5790035724639893)]
     Doc2Vec(dm/c,d100,n5,w5,mc2,t8):
-     [(89090, 0.8370115756988525), (97572, 0.8327091932296753), (62255, 0.4674952030181885)]
+     [(8260, 0.8670176267623901), (11056, 0.4305807054042816), (13621, 0.4183669090270996)]
+
 
 
 (Yes, here the stored vector from 20 epochs of training is usually one of the
@@ -603,15 +587,17 @@ Do close documents seem more related than distant ones?
 
  .. code-block:: none
 
-    TARGET (8642): «When George Sluizer was told he could direct an American version of the book "Het Gouden Ei"/the movie "Spoorloos"(outside Holland, this movie has the name "the Vanishing" too), he was told that this would only go through if the ending was changed - He was told that 'the American Audience' wouldn't approve the original ending. Of course, the original ending is much better, and without it, the movie loses its impact. Because I have already put this in the trivia section, I won't give the original ending and keep my comment spoiler-free. If you want to know the original ending, watch "Spoorloos" or read the book. This movie is absolute rubbish, and the first Kiefer Sutherland movie I don't like. Watch the original Dutch movie, which is one of the best thrillers in the world.»
+    TARGET (99757): «I couldn't make it through the whole thing. It just wasn't worth my time. Maybe one-fourth of the dialogue would have been worth listening to (or reading -- since I don't understand French) if the pseudo-profundity and pseudo-wittiness of the other three-fourths of the film were deleted. Then it could be made into a short maybe 13 or 15 min long and then it might be all right.<br /><br />I don't know why this movie even pretends to utilize actors. Actors are used as narrators of the script and little more. I could swear a whole 20-30 minutes of the film went by showing actors from behind while they talked and from across the street while they walked or sitting in low lighting close up but so that you could not see the expressions on their faces nor their eyes. There was little or no interaction between the actors on the screen except the most superficial for the most part.<br /><br />Some of the lines were as profound (or lame, depending on your viewpoint) as those in Forest "Life is like a box of chocolates" Gump. Other pseudo-profundities were simply sad or dumb or poetic (depending again on your viewpoint), but singularly uninspiring.<br /><br />Visually this film is INCREDIBLY boring, especially with the lack of actors. In fact some minutes of this film showed simply a black screen with the white subtitles and French audio. Altogether sophomoric. Don't waste your time.<br /><br />If you like GOOD movies that are stimulating and profound just from listening to conversation while enjoying good actors, check out RICHARD LINKLATER's "Before Sunset" -- or make a double feature of it and watch "Before Sunrise" first. At least these films are interesting and enjoyable, which is much more than I can say about IN PRAISE OF LOVE (Éloge de l'amour). I give this film 2 out of 10 stars. Not quite offensive enough to rate 1 for "awful" (such as "The Devils" with Oliver Reed and Vanessa Redgrave). If you still want to watch it, go ahead. But don't say I didn't warn you!!!»
 
     SIMILAR/DISSIMILAR DOCS PER MODEL Doc2Vec(dm/c,d100,n5,w5,mc2,t8):
 
-    MOST (24027, 0.5504707098007202): «1st watched 8/31/1996 - (Dir-Tim Robbins): Very thought provoking and very well done movie on the subject of the death penalty. Deserved more recognition and publicity than it received.»
+    MOST (53503, 0.49092066287994385): «Verrrry nice. I think this is the first good black movie I have seen that didn't need to be but simply was. Well-known, medium-powered Black actors and actresses in a movie that didn't focus on the Black experience. The BEST part... the whole movie was done with thought-out class. The story wasn't about brothers from the 'hood trying to make it in the White Man's world or some racially-charged Spike Lee joint. Think of a great episode of the Cosby Show re-written for an adult audience, bearing a PG-13 rating and you know how you'll feel when you leave the theater. It's about time.»
 
-    MEDIAN (37133, 0.00783273484557867): «Repugnant Bronson thriller. Unfortunately, it's technically good and I gave it 4/10, but it's so utterly vile that it would be inconceivable to call it "entertainment". Far more disturbing than a typical slasher film.»
+    MEDIAN (9222, 0.00015147030353546143): «Right this moment I am watching this movie on TV here in Tokyo. Beautiful scenery, beautiful sets of biblical proportions, beautiful costumes, beautiful color, beautiful Gina. Great climactic scene when God destroys the Sheban idol and a lot more with de Millean thunderbolts at the moment when Yul and Gina are about to consummate their love. Yul does a halfway decent job of delivering his lines, though he sounds a lot like Yul delivering his lines as Ramses or Taras Bulba. George Sanders sounds like George Sanders playing George Sanders. Given the limited range of acting she is asked to display in this role, Gina does a good job, though by the time the movie ends, she is completely converted into a demure remorseful lass and looks likes she might be playing in a biography of Mother Teresa. I guess thunderbolts will do that to you, but it is almost breathtaking how quickly she jettisons her own beliefs for her new religion. The supporting players are mostly awful, lacking credible emotion and timing. The usual big battle scenes, what passed for lascivious dances in 1959, and an orchestra blasting out plenty of trumpet calls behind a huge chorus singing lots of "Ah's", but none of it quite of topnotch Hollywood quality. The final swordfight between Brynner and Sanders is at the laughingly low skill level of a junior high school play. The film is one big piece of eye candy but not much more.»
 
-    LEAST (68641, -0.48551493883132935): «This Hammer box-set from the 1980 TV series provides a fitting homage and legacy to arguably the greatest contributors of horror on the big and small screen. <br /><br />The 13 stories cover everything from evil doppelgangers to Satanists; witches; ghosts; 'voodoo dolls'; werewolves; cannibals and more besides (no vampires though, something of a departure for Hammer!) They are imaginatively written and well acted with great performances from fine actors such as Peter Cushing and Diana Dors.<br /><br />It is from a time when horror was about more than hi-tech gory special effects and torture sequences thrown together to make a 'body' of work and although this Hammer box-set is of its time it is a brilliant collection that has also stood the test of time. I like a lot of modern day horror as well as the old Universal horrors, horrors from the 70's etc but you will never purchase a more diverse and enjoyable collection of horror shorts in one collection as this one.<br /><br />Well done Hammer, I truly salute you, you are sorely missed.»
+    LEAST (20517, -0.40096956491470337): «Any Batman fan will know just how great the films are, they've been a major success. Batman Returns however is by far the best film in the series. A combination of excellent directing, brilliant acting and settings makes this worthy of watching on a night in.<br /><br />Tim Burton, who directed this movie, has specifically made sure that this film gives a realistic atmosphere and he's done a great job. Danny Devito (Penguin man) is a man who has inherited penguin characteristics as a baby, and grown up to become a hideous and ugly...thing! Michelle Pfiffer plays the sleek and very seducing 'Catwoman' after cats had given her there genes from being bitten. The result in both the character changes is excellent and both Catwoman and Penguin man play a very important role in this excellent film. The mysterious Catwoman is great fun to watch - her classic sayings and a funny part in which skips with her whip in a jewelry shop adds such fun to the film. Danny Devito also does well, his ability to impersonate some strange creature was vital, and he adds a great atmosphere to the film that takes us back to the dull sewers where he lives.<br /><br />You can't forget Batman though. Micheal Keaton once again pulls of a comfortable performance, and shows us a different side to Batman. His affection is let loose when he confronts Catwoman at the end of the film, and his meetings with her when she's a normal person, Selina Kyle, result in him being seduced badly in his own home. There's a clever part after this when they leave, and the film is full of great scenes. Its worth noting that Bruce Wayne's Bat mobile is not used as much as in the other Batman films, as close combat and story telling scenes make up this film.<br /><br />The winter setting is created perfectly in Gotham City with most of the scenes being set at night, and with the town being filled with snow. Therefore, if you watch this film during the summer like I have, it doesn't feel the same. Best watch it during the winter.<br /><br />Overall, its an amazing movie. All the credit goes to Tom Burton and the cast, they've done an incredible job.»
+
+
 
 
 Somewhat, in terms of reviewer tone, movie genre, etc... the MOST
@@ -658,41 +644,43 @@ Do the word vectors show useful similarities?
 
  .. code-block:: none
 
-    target_word: 'minutes;' model: Doc2Vec(dbow,d100,n5,mc2,t8) similar words:
-        1. 0.44 'upon,'
-        2. 0.43 'lot<br'
-        3. 0.42 'Entertainment,'
-        4. 0.42 'with!<br'
-        5. 0.42 'Costanzo'
-        6. 0.41 'Obi'
-        7. 0.41 "'outside"
-        8. 0.41 'good/funny'
-        9. 0.40 'this??<br'
-        10. 0.39 '"Green'
+    target_word: 'yet?' model: Doc2Vec(dbow,d100,n5,mc2,t8) similar words:
+        1. 0.43 'crestfallen'
+        2. 0.43 "babies'"
+        3. 0.42 'earth)'
+        4. 0.41 'meh,'
+        5. 0.41 'Pryor.<br'
+        6. 0.40 'hole"'
+        7. 0.40 'Trumpy.'
+        8. 0.40 '"hold'
+        9. 0.40 'CHAMPIONSHIP.'
+        10. 0.40 'antagonists'
 
-    target_word: 'minutes;' model: Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8) similar words:
-        1. 0.77 'minutes,'
-        2. 0.72 'minutes).<br'
-        3. 0.71 'hours,'
-        4. 0.71 'minutes'
-        5. 0.69 'min.'
-        6. 0.69 'minutes),'
-        7. 0.69 'minute'
-        8. 0.67 'minuets'
-        9. 0.67 'minutes-'
-        10. 0.67 'mins'
+    target_word: 'yet?' model: Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8) similar words:
+        1. 0.61 'already.'
+        2. 0.59 'yet.'
+        3. 0.58 "can't!"
+        4. 0.57 'loose?'
+        5. 0.57 '?'
+        6. 0.57 'One.'
+        7. 0.57 'Tube.'
+        8. 0.56 'whatsoever!'
+        9. 0.56 'afterwords.'
+        10. 0.56 'anyway!'
 
-    target_word: 'minutes;' model: Doc2Vec(dm/c,d100,n5,w5,mc2,t8) similar words:
-        1. 0.78 'mins,'
-        2. 0.70 'min.,'
-        3. 0.69 'minutes,'
-        4. 0.68 'months,'
-        5. 0.68 'minutes),'
-        6. 0.68 'hours)'
-        7. 0.67 'Minutes,'
-        8. 0.66 'minutes,<br'
-        9. 0.66 'weeks,'
-        10. 0.66 'million,'
+    target_word: 'yet?' model: Doc2Vec(dm/c,d100,n5,w5,mc2,t8) similar words:
+        1. 0.61 'already.'
+        2. 0.59 'anyway!'
+        3. 0.59 'tremendously.'
+        4. 0.59 'anyways.'
+        5. 0.58 'sequence).'
+        6. 0.58 'too!!!'
+        7. 0.57 'already!'
+        8. 0.57 'indeed...'
+        9. 0.57 'before....'
+        10. 0.55 'BRAVO.'
+
+
 
 
 Do the DBOW words look meaningless? That's because the gensim DBOW model
@@ -743,10 +731,12 @@ Are the word vectors from this dataset any good at analogies?
 
  .. code-block:: none
 
+    Downloading analogy questions file...
     Success, questions-words.txt is available for next steps.
     Doc2Vec(dbow,d100,n5,mc2,t8): 0.00% correct (0 of 13617)
-    Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8): 18.32% correct (2495 of 13617)
-    Doc2Vec(dm/c,d100,n5,w5,mc2,t8): 17.32% correct (2359 of 13617)
+    Doc2Vec("alpha=0.05",dm/m,d100,n5,w10,mc2,t8): 18.58% correct (2530 of 13617)
+    Doc2Vec(dm/c,d100,n5,w5,mc2,t8): 17.58% correct (2394 of 13617)
+
 
 
 Even though this is a tiny, domain-specific dataset, it shows some meager
@@ -758,9 +748,9 @@ random-initialized words of the DBOW model of course fail miserably.)
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 34 minutes  14.807 seconds)
+   **Total running time of the script:** ( 40 minutes  26.360 seconds)
 
-**Estimated memory usage:**  4062 MB
+**Estimated memory usage:**  4146 MB
 
 
 .. _sphx_glr_download_auto_examples_howtos_run_doc2vec_imdb.py:
@@ -788,4 +778,4 @@ random-initialized words of the DBOW model of course fail miserably.)
 
  .. rst-class:: sphx-glr-signature
 
-    `Gallery generated by Sphinx-Gallery <https://sphinx-gallery.readthedocs.io>`_
+    `Gallery generated by Sphinx-Gallery <https://sphinx-gallery.github.io>`_

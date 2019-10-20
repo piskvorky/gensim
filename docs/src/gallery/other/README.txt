@@ -20,14 +20,11 @@ Blog posts, tutorial videos, hackathons and other useful Gensim resources, from 
 - ? `Compare topics and documents using Jaccard, Kullback-Leibler and Hellinger similarities <https://radimrehurek.com/gensim/gensim_numfocus/auto_examples/tutorials/run_distance_metrics.html>`__
 - ? `America's Next Topic Model slides <https://speakerdeck.com/tmylk/americas-next-topic-model-at-pydata-berlin-august-2016?slide=7>`__
    - How to choose your next topic model, presented at Pydata Berlin 10 August 2016 by Lev Konstantinovsky
-- ?  `Dynamic Topic Modeling and Dynamic Influence Model
-   Tutorial <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/dtm_example.ipynb>`__
-- ?  `Python Dynamic Topic Modelling Theory and
-   Tutorial <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/ldaseqmodel.ipynb>`__
+- ?  `Dynamic Topic Modeling and Dynamic Influence Model Tutorial <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/dtm_example.ipynb>`__
+- ?  `Python Dynamic Topic Modelling Theory and Tutorial <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/ldaseqmodel.ipynb>`__
 - ? `Word Movers Distance for Yelp Reviews tutorial <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/WMD_tutorial.ipynb>`__
   - FIXME WMD superceded by soft cosine similarity = faster and better? any numbers / tutorials for that?
-- ? `Great illustration of corpus preparation <https://linanqiu.github.io/2015/10/07/word2vec-sentiment/>`__,
-   `Code <https://github.com/linanqiu/word2vec-sentiments>`__
+- ? `Great illustration of corpus preparation <https://linanqiu.github.io/2015/10/07/word2vec-sentiment/>`__, `Code <https://github.com/linanqiu/word2vec-sentiments>`__
   - ? `Alternative <https://medium.com/@klintcho/doc2vec-tutorial-using-gensim-ab3ac03d3a1#.nv2lxvbj1>`__,
   - ? `Alternative 2 <https://districtdatalabs.silvrback.com/modern-methods-for-sentiment-analysis>`__
 - ? `Doc2Vec on customer reviews <http://multithreaded.stitchfix.com/blog/2015/03/11/word-is-worth-a-thousand-vectors/>`__
