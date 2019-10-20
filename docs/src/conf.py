@@ -259,7 +259,7 @@ def sort_key(source_dir):
         'run_doc.py',
         'run_doc2vec_imdb.py',
         'run_news_classification.py',
-        'rxx_compare_lda.py',
+        'run_compare_lda.py',
     ]
 
     order = core_order + tutorials_order + howto_order
@@ -285,6 +285,7 @@ sphinx_gallery_conf = {
             'gallery/core',
             'gallery/tutorials',
             'gallery/howtos',
+            'gallery/other',
         ],
     ),
     'within_subsection_order': sort_key,

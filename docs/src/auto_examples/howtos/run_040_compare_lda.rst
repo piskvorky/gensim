@@ -1,10 +1,10 @@
 .. note::
     :class: sphx-glr-download-link-note
 
-    Click :ref:`here <sphx_glr_download_auto_examples_howtos_rxx_040_compare_lda.py>` to download the full example code
+    Click :ref:`here <sphx_glr_download_auto_examples_howtos_run_040_compare_lda.py>` to download the full example code
 .. rst-class:: sphx-glr-example-title
 
-.. _sphx_glr_auto_examples_howtos_rxx_040_compare_lda.py:
+.. _sphx_glr_auto_examples_howtos_run_040_compare_lda.py:
 
 
 How to Compare LDA Models
@@ -12,12 +12,18 @@ How to Compare LDA Models
 
 Demonstrates how you can compare a model with itself and other models, and why you need it.
 
+
 .. code-block:: default
 
 
     # sphinx_gallery_thumbnail_number = 2
     import logging
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
+
+
+
+
 
 
 First, clean up 20 newsgroups dataset. We will use it for fitting LDA.
@@ -63,6 +69,11 @@ First, clean up 20 newsgroups dataset. We will use it for fitting LDA.
     d2b_dataset = [dictionary.doc2bow(doc) for doc in dataset]  # convert list of tokens to bag of word representation
 
 
+
+
+
+
+
 Second, fit two LDA models.
 ---------------------------
 
@@ -83,6 +94,11 @@ Second, fit two LDA models.
         corpus=d2b_dataset, num_topics=num_topics, id2word=dictionary,
         workers=4, eval_every=None, passes=20, batch=True
     )
+
+
+
+
+
 
 
 It's time to cases with visualisation, Yay!
@@ -145,6 +161,11 @@ If you're viewing the static version of the page, you'll get a similar matplotli
         plot_difference = plot_difference_plotly
 
 
+
+
+
+
+
 In gensim, you can visualise topic different with matrix and annotation. For this purposes, you can use method ``diff`` from LdaModel.
 
 This function return matrix with distances **mdiff** and matrix with annotations **annotation**. Read the docstring for more detailed info.
@@ -159,6 +180,62 @@ In cells **annotation[i][j]** we can see **[tokens from intersection, tokens fro
 
 
     print(LdaMulticore.diff.__doc__)
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    Calculate the difference in topic distributions between two models: `self` and `other`.
+
+            Parameters
+            ----------
+            other : :class:`~gensim.models.ldamodel.LdaModel`
+                The model which will be compared against the current object.
+            distance : {'kullback_leibler', 'hellinger', 'jaccard', 'jensen_shannon'}
+                The distance metric to calculate the difference with.
+            num_words : int, optional
+                The number of most relevant words used if `distance == 'jaccard'`. Also used for annotating topics.
+            n_ann_terms : int, optional
+                Max number of words in intersection/symmetric difference between topics. Used for annotation.
+            diagonal : bool, optional
+                Whether we need the difference between identical topics (the diagonal of the difference matrix).
+            annotation : bool, optional
+                Whether the intersection or difference of words between two topics should be returned.
+            normed : bool, optional
+                Whether the matrix should be normalized or not.
+
+            Returns
+            -------
+            numpy.ndarray
+                A difference matrix. Each element corresponds to the difference between the two topics,
+                shape (`self.num_topics`, `other.num_topics`)
+            numpy.ndarray, optional
+                Annotation matrix where for each pair we include the word from the intersection of the two topics,
+                and the word from the symmetric difference of the two topics. Only included if `annotation == True`.
+                Shape (`self.num_topics`, `other_model.num_topics`, 2).
+
+            Examples
+            --------
+            Get the differences between each pair of topics inferred by two models
+
+            .. sourcecode:: pycon
+
+                >>> from gensim.models.ldamulticore import LdaMulticore
+                >>> from gensim.test.utils import datapath
+                >>>
+                >>> m1 = LdaMulticore.load(datapath("lda_3_0_1_model"))
+                >>> m2 = LdaMulticore.load(datapath("ldamodel_python_3_5"))
+                >>> mdiff, annotation = m1.diff(m2)
+                >>> topic_diff = mdiff  # get matrix with difference for each topic pair from `m1` and `m2`
+
+        
+
 
 
 Case 1: How topics in ONE model correlate with each other.
@@ -196,6 +273,14 @@ In an ideal world, we would like to see different topics decorrelated between th
     plot_difference(mdiff, title="Topic difference (one model) in ideal world")
 
 
+
+
+.. image:: /auto_examples/howtos/images/sphx_glr_run_040_compare_lda_001.png
+    :class: sphx-glr-single-img
+
+
+
+
 Unfortunately, in real life, not everything is so good, and the matrix looks different.
 
 
@@ -219,6 +304,14 @@ Short description (annotations):
     plot_difference(mdiff, title="Topic difference (one model) [jaccard distance]", annotation=annotation)
 
 
+
+
+.. image:: /auto_examples/howtos/images/sphx_glr_run_040_compare_lda_002.png
+    :class: sphx-glr-single-img
+
+
+
+
 If you compare a model with itself, you want to see as many red elements as possible (except diagonal). With this picture, you can look at the not very red elements and understand which topics in the model are very similar and why (you can read annotation if you move your pointer to cell).
 
 
@@ -234,6 +327,14 @@ Jaccard is stable and robust distance function, but this function not enough sen
 
     mdiff, annotation = lda_fst.diff(lda_fst, distance='hellinger', num_words=50)
     plot_difference(mdiff, title="Topic difference (one model)[hellinger distance]", annotation=annotation)
+
+
+
+
+.. image:: /auto_examples/howtos/images/sphx_glr_run_040_compare_lda_003.png
+    :class: sphx-glr-single-img
+
+
 
 
 You see that everything has become worse, but remember that everything depends on the task.
@@ -261,18 +362,26 @@ You can do this by constructing a matrix with the difference.
     plot_difference(mdiff, title="Topic difference (two models)[jaccard distance]", annotation=annotation)
 
 
+
+
+.. image:: /auto_examples/howtos/images/sphx_glr_run_040_compare_lda_004.png
+    :class: sphx-glr-single-img
+
+
+
+
 Looking at this matrix, you can find similar and different topics (and relevant tokens which describe the intersection and difference).
 
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.000 seconds)
+   **Total running time of the script:** ( 4 minutes  26.169 seconds)
 
-**Estimated memory usage:**  0 MB
+**Estimated memory usage:**  389 MB
 
 
-.. _sphx_glr_download_auto_examples_howtos_rxx_040_compare_lda.py:
+.. _sphx_glr_download_auto_examples_howtos_run_040_compare_lda.py:
 
 
 .. only :: html
@@ -284,17 +393,17 @@ Looking at this matrix, you can find similar and different topics (and relevant 
 
   .. container:: sphx-glr-download
 
-     :download:`Download Python source code: rxx_040_compare_lda.py <rxx_040_compare_lda.py>`
+     :download:`Download Python source code: run_040_compare_lda.py <run_040_compare_lda.py>`
 
 
 
   .. container:: sphx-glr-download
 
-     :download:`Download Jupyter notebook: rxx_040_compare_lda.ipynb <rxx_040_compare_lda.ipynb>`
+     :download:`Download Jupyter notebook: run_040_compare_lda.ipynb <run_040_compare_lda.ipynb>`
 
 
 .. only:: html
 
  .. rst-class:: sphx-glr-signature
 
-    `Gallery generated by Sphinx-Gallery <https://sphinx-gallery.readthedocs.io>`_
+    `Gallery generated by Sphinx-Gallery <https://sphinx-gallery.github.io>`_

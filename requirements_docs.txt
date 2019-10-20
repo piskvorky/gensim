@@ -7,3 +7,4 @@ Pyro4
 annoy
 sklearn
 plotly
+nltk
