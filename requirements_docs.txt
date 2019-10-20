@@ -3,3 +3,7 @@ sphinx_gallery
 sphinxcontrib.napoleon
 sphinxcontrib.programoutput
 memory_profiler
+Pyro4
+annoy
+sklearn
+plotly
