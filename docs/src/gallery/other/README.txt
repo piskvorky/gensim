@@ -1,12 +1,19 @@
 Other Resources
 ---------------
 
+Blog posts, tutorial videos, hackathons and other useful Gensim resources, from around the internet.
+
 - Use FastText or Word2Vec? Comparison of embedding quality and performance. [notebook ` <https://github.com/RaRe-Technologies/gensim/blob/ba1ce894a5192fc493a865c535202695bb3c0424/docs/notebooks/Word2Vec_FastText_Comparison.ipynb>`__]
 - Phrases extracted from *How I Met Your Mother*. [`blog post by Mark Needham <http://www.markhneedham.com/blog/2015/02/12/pythongensim-creating-bigrams-over-how-i-met-your-mother-transcripts/>`__]
 - Using NLTK + Gensim LDA for hierarchical document clustering. [`notebook by Brandon Rose <http://brandonrose.org/clustering#Latent-Dirichlet-Allocation>`__]
 - Evolution of Voldemort topic through the 7 Harry Potter books. [`RARE blog post <http://rare-technologies.com/understanding-and-coding-dynamic-topic-models/>`__]
+-  Tutorial showing Gensim APIs for document classificaiton, using various techniques: TF-IDF, word2vec averaging, Deep IR, Word Movers Distance and doc2vec [`Movie plots by genre <https://github.com/RaRe-Technologies/movie-plots-by-genre>`__]
+- `Radim Řehůřek - Faster than Google? Optimization lessons in Python. <https://www.youtube.com/watch?v=vU4TlwZzTfU>`__
+- Word2vec & friends: Talk by Radim Řehůřek at MLMU.cz, 7.1.2015 [`youtube <https://www.youtube.com/watch?v=wTp3P2UnTfQ>`__]
+- ? `Making an Impact with NLP <https://www.youtube.com/watch?v=oSSnDeOXTZQ>`__ -- Pycon 2016 Tutorial by Hobsons Lane
+- ? `NLP with NLTK and Gensim <https://www.youtube.com/watch?v=itKNpCPHq3I>`__ -- Pycon 2016 Tutorial by Tony Ojeda, Benjamin Bengfort, Laura Lorenz from District Data Labs
+- ? `Word Embeddings for Fun and Profit <https://www.youtube.com/watch?v=lfqW46u0UKc>`__ -- Talk at PyData London 2016 talk by Lev Konstantinovskiy. See accompanying `repo <https://github.com/RaRe-Technologies/movie-plots-by-genre>`__
 - ? English Wikipedia; TODO: convert to proper .py format
-
 - ? `Colouring words by topic in a document, print words in a
   topics <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/topic_methods.ipynb>`__
 - ? `Topic Coherence, a metric that correlates that human judgement on topic quality. <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/topic_coherence_tutorial.ipynb>`__
@@ -19,62 +26,10 @@ Other Resources
    Tutorial <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/ldaseqmodel.ipynb>`__
 - ? `Word Movers Distance for Yelp Reviews tutorial <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/WMD_tutorial.ipynb>`__
   - FIXME WMD superceded by soft cosine similarity = faster and better? any numbers / tutorials for that?
-
-
-Doc2Vec (Model)
-~~~~~~~~~~~~~~~
-
--  `Doc2vec Quick Start on Lee
-   Corpus <https://radimrehurek.com/gensim/gensim_numfocus/auto_examples/tutorials/run_doc2vec_lee.html>`__
--  `Great illustration of corpus
-   preparation <https://linanqiu.github.io/2015/10/07/word2vec-sentiment/>`__,
+- ? `Great illustration of corpus preparation <https://linanqiu.github.io/2015/10/07/word2vec-sentiment/>`__,
    `Code <https://github.com/linanqiu/word2vec-sentiments>`__
-   (`Alternative <https://medium.com/@klintcho/doc2vec-tutorial-using-gensim-ab3ac03d3a1#.nv2lxvbj1>`__,
-   `Alternative
-   2 <https://districtdatalabs.silvrback.com/modern-methods-for-sentiment-analysis>`__)
--  `Doc2Vec on customer
-   review <http://multithreaded.stitchfix.com/blog/2015/03/11/word-is-worth-a-thousand-vectors/>`__
-   (example)
--  `Doc2Vec on Airline Tweets Sentiment
-   Analysis <https://www.zybuluo.com/HaomingJiang/note/462804>`__
--  `Doc2vec to predict IMDB review star rating. Reproducing the Google
-   paper <https://radimrehurek.com/gensim/gensim_numfocus/auto_examples/howtos/run_doc2vec_imdb.html>`__
-
-
-
-Deep Inverse Regression
-~~~~~~~~~~~~~~~~~~~~~~~
-
--  Document Classification using Bayesian Inversion and several word2vec
-   models(one for each class)
--  `Deep Inverse Regression with Yelp
-   Reviews <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/deepir.ipynb>`__
-
-
-Overviews
-~~~~~~~~~
-
--  Tutorial showing API for document classification with various
-   techniques: TF-IDF, word2vec averaging, Deep IR, Word Movers Distance
-   and doc2vec
--  `Movie plots by
-   genre <https://github.com/RaRe-Technologies/movie-plots-by-genre>`__
-
-Videos
-======
-
--  `Radim Řehůřek - Faster than Google? Optimization lessons in
-   Python. <https://www.youtube.com/watch?v=vU4TlwZzTfU>`__
--  `MLMU.cz - Radim Řehůřek - Word2vec & friends
-   (7.1.2015) <https://www.youtube.com/watch?v=wTp3P2UnTfQ>`__
--  `Making an Impact with
-   NLP <https://www.youtube.com/watch?v=oSSnDeOXTZQ>`__ -- Pycon 2016
-   Tutorial by Hobsons Lane
--  `NLP with NLTK and
-   Gensim <https://www.youtube.com/watch?v=itKNpCPHq3I>`__ -- Pycon 2016
-   Tutorial by Tony Ojeda, Benjamin Bengfort, Laura Lorenz from District
-   Data Labs
--  `Word Embeddings for Fun and
-   Profit <https://www.youtube.com/watch?v=lfqW46u0UKc>`__ -- Talk at
-   PyData London 2016 talk by Lev Konstantinovskiy. See accompanying
-   `repo <https://github.com/RaRe-Technologies/movie-plots-by-genre>`__
+  - ? `Alternative <https://medium.com/@klintcho/doc2vec-tutorial-using-gensim-ab3ac03d3a1#.nv2lxvbj1>`__,
+  - ? `Alternative 2 <https://districtdatalabs.silvrback.com/modern-methods-for-sentiment-analysis>`__
+- ? `Doc2Vec on customer reviews <http://multithreaded.stitchfix.com/blog/2015/03/11/word-is-worth-a-thousand-vectors/>`__
+- ? `Doc2Vec on Airline Tweets Sentiment Analysis <https://www.zybuluo.com/HaomingJiang/note/462804>`__
+- ? `Deep Inverse Regression with Yelp Reviews <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/deepir.ipynb>`__ (Document Classification using Bayesian Inversion and several word2vec models, one for each class)
