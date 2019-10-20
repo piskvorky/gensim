@@ -10,8 +10,12 @@ Run with::
     python ./setup.py install
 """
 
+import distutils.cmd
+import distutils.log
 import itertools
+import os.path
 import platform
+import shutil
 import sys
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
@@ -19,25 +23,104 @@ from setuptools.command.build_ext import build_ext
 if sys.version_info[:2] < (3, 5):
     raise Exception('This version of gensim needs 3.5 or later.')
 
+c_extensions = {
+    'gensim.models.word2vec_inner': 'gensim/models/word2vec_inner.c',
+    'gensim.models.doc2vec_inner': 'gensim/models/doc2vec_inner.c',
+    'gensim.corpora._mmreader': 'gensim/corpora/_mmreader.c',
+    'gensim.models.fasttext_inner': 'gensim/models/fasttext_inner.c',
+    'gensim.models._utils_any2vec': 'gensim/models/_utils_any2vec.c',
+    'gensim._matutils': 'gensim/_matutils.c',
+    'gensim.models.nmf_pgd': 'gensim/models/nmf_pgd.c',
+}
+
+cpp_extensions = {
+    'gensim.models.word2vec_corpusfile': 'gensim/models/word2vec_corpusfile.cpp',
+    'gensim.models.fasttext_corpusfile': 'gensim/models/fasttext_corpusfile.cpp',
+    'gensim.models.doc2vec_corpusfile': 'gensim/models/doc2vec_corpusfile.cpp',
+}
+
+
+def make_c_ext(use_cython=False):
+    for module, source in c_extensions.items():
+        if use_cython:
+            source = source.replace('.c', '.pyx')
+        yield Extension(module, sources=[source], language='C')
+
+
+def make_cpp_ext(use_cython=False):
+    extra_args = []
+    system = platform.system()
+
+    if system == 'Linux':
+        extra_args.append('-std=c++11')
+    elif system == 'Darwin':
+        extra_args.extend(['-stdlib=libc++', '-std=c++11'])
+
+    for module, source in cpp_extensions.items():
+        if use_cython:
+            source = source.replace('.cpp', '.pyx')
+        yield Extension(
+            module,
+            sources=[source],
+            language='c++',
+            extra_compile_args=extra_args,
+            extra_link_args=extra_args,
+        )
+
+
+ext_modules = list(itertools.chain(make_c_ext(), make_cpp_ext()))
+
 
 class CustomBuildExt(build_ext):
-    # the following is needed to be able to add numpy's include dirs... without
-    # importing numpy directly in this script, before it's actually installed!
+    """Custom build_ext action with bootstrapping.
+
+    We need this in order to use numpy and Cython in this script without
+    importing them at module level, because they may not be available yet.
+    """
+    #
     # http://stackoverflow.com/questions/19919905/how-to-bootstrap-numpy-installation-in-setup-py
+    #
     def finalize_options(self):
         build_ext.finalize_options(self)
         # Prevent numpy from thinking it is still in its setup process:
         # https://docs.python.org/2/library/__builtin__.html#module-__builtin__
-        if isinstance(__builtins__, dict):
-            __builtins__["__NUMPY_SETUP__"] = False
-        else:
-            __builtins__.__NUMPY_SETUP__ = False
+        __builtins__.__NUMPY_SETUP__ = False
 
         import numpy
         self.include_dirs.append(numpy.get_include())
 
+        import Cython.Build
+        Cython.Build.cythonize(list(make_c_ext(use_cython=True)), language='c')
+        Cython.Build.cythonize(list(make_cpp_ext(use_cython=True)))
 
-cmdclass = {'build_ext': CustomBuildExt}
+
+class CleanExt(distutils.cmd.Command):
+    description = 'Remove C sources, C++ sources and binaries for gensim extensions'
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        for root, dirs, files in os.walk('gensim'):
+            files = [
+                os.path.join(root, f)
+                for f in files
+                if os.path.splitext(f)[1] in ('.c', '.cpp', '.so')
+            ]
+            for f in files:
+                self.announce('removing %s' % f, level=distutils.log.INFO)
+                os.unlink(f)
+
+        if os.path.isdir('build'):
+            self.announce('recursively removing build', level=distutils.log.INFO)
+            shutil.rmtree('build')
+
+
+cmdclass = {'build_ext': CustomBuildExt, 'clean_ext': CleanExt}
 
 WHEELHOUSE_UPLOADER_COMMANDS = {'fetch_artifacts', 'upload_all'}
 if WHEELHOUSE_UPLOADER_COMMANDS.intersection(sys.argv):
@@ -156,13 +239,10 @@ Copyright (c) 2009-now Radim Rehurek
 
 """
 
-NUMPY_STR = 'numpy >= 1.11.3'
-PYTEST_STR = 'pytest'
-
 distributed_env = ['Pyro4 >= 4.27']
 
 win_testenv = [
-    PYTEST_STR,
+    'pytest',
     'pytest-rerunfailures',
     'mock',
     'cython',
@@ -195,47 +275,36 @@ docs_testenv = linux_testenv + distributed_env + [
 ]
 
 
-def make_c_extensions():
-    extensions = {
-        'gensim.models.word2vec_inner': './gensim/models/word2vec_inner.pyx',
-        'gensim.models.doc2vec_inner': './gensim/models/doc2vec_inner.pyx',
-        'gensim.corpora._mmreader': './gensim/corpora/_mmreader.pyx',
-        'gensim.models.fasttext_inner': './gensim/models/fasttext_inner.pyx',
-        'gensim.models._utils_any2vec': './gensim/models/_utils_any2vec.pyx',
-        'gensim._matutils': './gensim/_matutils.pyx',
-        'gensim.models.nmf_pgd': './gensim/models/nmf_pgd.pyx',
-    }
-    for module, source in extensions.items():
-        yield Extension(module, sources=[source])
+def need_cython():
+    """Return True if we need Cython to translate any of the extensions.
+
+    If the extensions have already been translated to C/C++, then we don't need
+    to install Cython."""
+    expected = [f.replace('.pyx', '.c') for f in c_extensions.values()]
+    expected += [f.replace('.pyx', '.cpp') for f in cpp_extensions.values()]
+    return any([not os.path.isfile(f) for f in expected])
 
 
-def make_cpp_extensions():
-    extra_args = []
-    system = platform.system()
+NUMPY_STR = 'numpy >= 1.11.3'
+#
+# We pin the Cython version for reproducibility.  We expect our extensions
+# to build with any sane version of Cython, so we should update this pin
+# periodically.
+#
+CYTHON_STR = 'Cython'
 
-    if system == 'Linux':
-        extra_args.append('-std=c++11')
-    elif system == 'Darwin':
-        extra_args.extend(['-stdlib=libc++', '-std=c++11'])
+install_requires = [
+    NUMPY_STR,
+    'scipy >= 0.18.1',
+    'six >= 1.5.0',
+    'smart_open >= 1.8.1',
+]
 
-    extensions = {
-        'gensim.models.word2vec_corpusfile': './gensim/models/word2vec_corpusfile.pyx',
-        'gensim.models.fasttext_corpusfile': './gensim/models/fasttext_corpusfile.pyx',
-        'gensim.models.doc2vec_corpusfile': './gensim/models/doc2vec_corpusfile.pyx',
-    }
+setup_requires = [NUMPY_STR]
 
-    for module, source in extensions.items():
-        yield Extension(
-            module,
-            sources=[source],
-            language='c++',
-            extra_compile_args=extra_args,
-            extra_link_args=extra_args,
-        )
-
-
-ext_modules = list(itertools.chain(make_c_extensions(), make_cpp_extensions()))
-
+if need_cython():
+    install_requires.append(CYTHON_STR)
+    setup_requires.append(CYTHON_STR)
 
 setup(
     name='gensim',
@@ -280,16 +349,8 @@ setup(
     ],
 
     test_suite="gensim.test",
-    setup_requires=[
-        NUMPY_STR,
-    ],
-    install_requires=[
-        NUMPY_STR,
-        'scipy >= 0.18.1',
-        'six >= 1.5.0',
-        'smart_open >= 1.8.1',
-        'cython',
-    ],
+    setup_requires=setup_requires,
+    install_requires=install_requires,
     tests_require=linux_testenv,
     extras_require={
         'distributed': distributed_env,
