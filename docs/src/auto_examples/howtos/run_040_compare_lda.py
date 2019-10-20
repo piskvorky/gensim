@@ -2,7 +2,7 @@ r"""
 How to Compare LDA Models
 =========================
 
-Demonstrates how you can compare a model with itself and other models, and why you need it.
+Demonstrates how you can compare topics within a topic model and against other models.
 
 """
 
@@ -12,8 +12,8 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 
 ###############################################################################
 #
-# First, clean up 20 newsgroups dataset. We will use it for fitting LDA.
-# ----------------------------------------------------------------------
+# First, clean up the 20 Newsgroups dataset. We will use it to fit LDA.
+# ---------------------------------------------------------------------
 #
 
 
@@ -27,14 +27,12 @@ from sklearn.datasets import fetch_20newsgroups
 newsgroups = fetch_20newsgroups()
 eng_stopwords = set(stopwords.words('english'))
 
-tokenizer = RegexpTokenizer('\s+', gaps=True)
+tokenizer = RegexpTokenizer(r'\s+', gaps=True)
 stemmer = PorterStemmer()
 translate_tab = {ord(p): u" " for p in punctuation}
 
 def text2tokens(raw_text):
-    """
-    Convert raw test to list of stemmed tokens
-    """
+    """Convert a raw text to a list of stemmed tokens."""
     clean_text = raw_text.lower().translate(translate_tab)
     tokens = [token.strip() for token in tokenizer.tokenize(clean_text)]
     tokens = [token for token in tokens if token not in eng_stopwords]
@@ -71,17 +69,17 @@ lda_snd = LdaMulticore(
 
 ###############################################################################
 #
-# It's time to cases with visualisation, Yay!
-# -------------------------------------------
+# Time to visualize, yay!
+# -----------------------
 #
 # We use two slightly different visualization methods depending on how you're running this tutorial.
-# If you're running via Jupyter notebook, then you'll get a nice interactive Plotly heatmap.
+# If you're running via a Jupyter notebook, then you'll get a nice interactive Plotly heatmap.
 # If you're viewing the static version of the page, you'll get a similar matplotlib heatmap, but it won't be interactive.
 #
 
 
 def plot_difference_plotly(mdiff, title="", annotation=None):
-    """Helper function for plot difference between models.
+    """Plot the difference between models.
 
     Uses plotly as the backend."""
     import plotly.graph_objs as go
@@ -103,7 +101,7 @@ def plot_difference_plotly(mdiff, title="", annotation=None):
 
 
 def plot_difference_matplotlib(mdiff, title="", annotation=None):
-    """Helper function for plot difference between models.
+    """Helper function to plot difference between models.
 
     Uses matplotlib as the backend."""
     import matplotlib.pyplot as plt
@@ -128,21 +126,21 @@ else:
 
 ###############################################################################
 #
-# In gensim, you can visualise topic different with matrix and annotation. For this purposes, you can use method ``diff`` from LdaModel.
+# Gensim can help you visualise the differences between topics. For this purpose, you can use the ``diff()`` method of LdaModel.
 #
-# This function return matrix with distances **mdiff** and matrix with annotations **annotation**. Read the docstring for more detailed info.
+# ``diff()`` returns a matrix with distances **mdiff** and a matrix with annotations **annotation**. Read the docstring for more detailed info.
 #
-# In cells **mdiff[i][j]** we can see a distance between **topic_i** from the first model and **topic_j** from the second model.
+# In each **mdiff[i][j]** cell you'll find a distance between **topic_i** from the first model and **topic_j** from the second model.
 #
-# In cells **annotation[i][j]** we can see **[tokens from intersection, tokens from difference** between **topic_i** from first model and **topic_j** from the second model.
+# In each **annotation[i][j]** cell you'll find **[tokens from intersection, tokens from difference** between **topic_i** from first model and **topic_j** from the second model.
 #
 
 print(LdaMulticore.diff.__doc__)
 
 ###############################################################################
 #
-# Case 1: How topics in ONE model correlate with each other.
-# ----------------------------------------------------------
+# Case 1: How topics within ONE model correlate with each other.
+# --------------------------------------------------------------
 #
 
 
@@ -182,15 +180,15 @@ plot_difference(mdiff, title="Topic difference (one model) in ideal world")
 
 ###############################################################################
 #
-# Short description (annotations):
+# Short description (interactive annotations only):
 #
 #
 #
-# * +++ make, world, well - words from the intersection of topics;
+# * ``+++ make, world, well`` - words from the intersection of topics = present in both topics;
 #
 #
 #
-# * --- money, day, still - words from the symmetric difference of topics.
+# * ``--- money, day, still`` - words from the symmetric difference of topics = present in one topic but not the other.
 #
 
 
