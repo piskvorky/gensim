@@ -285,6 +285,7 @@ sphinx_gallery_conf = {
             'gallery/core',
             'gallery/tutorials',
             'gallery/howtos',
+            'gallery/other',
         ],
     ),
     'within_subsection_order': sort_key,
