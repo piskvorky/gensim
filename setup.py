@@ -25,7 +25,6 @@ if sys.version_info[:2] < (3, 5):
 
 c_extensions = {
     'gensim.models.word2vec_inner': 'gensim/models/word2vec_inner.c',
-    'gensim.models.doc2vec_inner': 'gensim/models/doc2vec_inner.c',
     'gensim.corpora._mmreader': 'gensim/corpora/_mmreader.c',
     'gensim.models.fasttext_inner': 'gensim/models/fasttext_inner.c',
     'gensim.models._utils_any2vec': 'gensim/models/_utils_any2vec.c',
@@ -34,10 +33,20 @@ c_extensions = {
 }
 
 cpp_extensions = {
+    'gensim.models.doc2vec_inner': 'gensim/models/doc2vec_inner.cpp',
     'gensim.models.word2vec_corpusfile': 'gensim/models/word2vec_corpusfile.cpp',
     'gensim.models.fasttext_corpusfile': 'gensim/models/fasttext_corpusfile.cpp',
     'gensim.models.doc2vec_corpusfile': 'gensim/models/doc2vec_corpusfile.cpp',
 }
+
+
+def need_cython():
+    """Return True if we need Cython to translate any of the extensions.
+
+    If the extensions have already been translated to C/C++, then we don't need
+    to install Cython and perform the translation."""
+    expected = list(c_extensions.values()) + list(cpp_extensions.values())
+    return any([not os.path.isfile(f) for f in expected])
 
 
 def make_c_ext(use_cython=False):
@@ -68,7 +77,13 @@ def make_cpp_ext(use_cython=False):
         )
 
 
-ext_modules = list(itertools.chain(make_c_ext(), make_cpp_ext()))
+#
+# We use use_cython=False here for two reasons:
+#
+# 1. Cython may not be available at this stage
+# 2. The actual translation from Cython to C/C++ happens inside CustomBuildExt
+#
+ext_modules = list(itertools.chain(make_c_ext(use_cython=False), make_cpp_ext(use_cython=False)))
 
 
 class CustomBuildExt(build_ext):
@@ -89,9 +104,10 @@ class CustomBuildExt(build_ext):
         import numpy
         self.include_dirs.append(numpy.get_include())
 
-        import Cython.Build
-        Cython.Build.cythonize(list(make_c_ext(use_cython=True)), language='c')
-        Cython.Build.cythonize(list(make_cpp_ext(use_cython=True)))
+        if need_cython():
+            import Cython.Build
+            Cython.Build.cythonize(list(make_c_ext(use_cython=True)))
+            Cython.Build.cythonize(list(make_cpp_ext(use_cython=True)))
 
 
 class CleanExt(distutils.cmd.Command):
@@ -275,23 +291,13 @@ docs_testenv = linux_testenv + distributed_env + [
 ]
 
 
-def need_cython():
-    """Return True if we need Cython to translate any of the extensions.
-
-    If the extensions have already been translated to C/C++, then we don't need
-    to install Cython."""
-    expected = [f.replace('.pyx', '.c') for f in c_extensions.values()]
-    expected += [f.replace('.pyx', '.cpp') for f in cpp_extensions.values()]
-    return any([not os.path.isfile(f) for f in expected])
-
-
 NUMPY_STR = 'numpy >= 1.11.3'
 #
 # We pin the Cython version for reproducibility.  We expect our extensions
 # to build with any sane version of Cython, so we should update this pin
 # periodically.
 #
-CYTHON_STR = 'Cython'
+CYTHON_STR = 'Cython==0.29.3'
 
 install_requires = [
     NUMPY_STR,

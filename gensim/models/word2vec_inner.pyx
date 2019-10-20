@@ -4,7 +4,6 @@
 # cython: cdivision=True
 # cython: embedsignature=True
 # coding: utf-8
-# distutils: language=c
 #
 # Copyright (C) 2013 Radim Rehurek <me@radimrehurek.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
