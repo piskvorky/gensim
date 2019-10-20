@@ -10,7 +10,8 @@ https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/gensim_n
 https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/lda_training_tips.ipynb,https://radimrehurek.com/gensim/auto_examples/tutorials/run_lda.html
 https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/summarization_tutorial.ipynb,https://radimrehurek.com/gensim/auto_examples/core/run_similarity_queries.html
 https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/word2vec.ipynb,https://radimrehurek.com/gensim/auto_examples/tutorials/run_word2vec.html
-https://github.com/RaRe-Technologies/gensim/blob/develop/docs/src/tutorial.rst,https://radimrehurek.com/gensim/auto_examples/
-https://github.com/RaRe-Technologies/gensim/blob/develop/docs/src/tut1.rst,https://radimrehurek.com/gensim/auto_examples/
-https://github.com/RaRe-Technologies/gensim/blob/develop/docs/src/tut3.rst,https://radimrehurek.com/gensim/auto_examples/
+https://github.com/RaRe-Technologies/gensim/blob/develop/docs/src/tutorial.rst,https://radimrehurek.com/gensim/auto_examples/core/run_core_concepts.html
+https://github.com/RaRe-Technologies/gensim/blob/develop/docs/src/tut1.rst,https://radimrehurek.com/gensim/auto_examples/core/run_core_concepts.html
+https://github.com/RaRe-Technologies/gensim/blob/develop/docs/src/tut2.rst,https://radimrehurek.com/gensim/auto_examples/core/run_topics_and_transformations.html
+https://github.com/RaRe-Technologies/gensim/blob/develop/docs/src/tut3.rst,https://radimrehurek.com/gensim/auto_examples/core/run_similarity_queries.html
 https://github.com/RaRe-Technologies/gensim/blob/develop/gensim Quick Start.ipynb,https://radimrehurek.com/gensim/auto_examples/core/run_core_concepts.html
