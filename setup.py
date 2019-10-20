@@ -44,7 +44,7 @@ def make_c_ext(use_cython=False):
     for module, source in c_extensions.items():
         if use_cython:
             source = source.replace('.c', '.pyx')
-        yield Extension(module, sources=[source], language='C')
+        yield Extension(module, sources=[source], language='c')
 
 
 def make_cpp_ext(use_cython=False):
