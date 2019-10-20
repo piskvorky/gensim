@@ -145,11 +145,6 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
         self.sorted_vocab = sorted_vocab
         self.batch_words = batch_words
 
-    def _get_first(some_iterable):
-        """Return first element of some iterable."""
-        for elem in some_iterable:
-            return elem
-
     def fit(self, X, y=None):
         """Fit the model according to the given training data.
 
@@ -164,7 +159,11 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
             The trained model.
 
         """
-        if isinstance(self._get_first(X), doc2vec.TaggedDocument):
+        def _get_first(some_iterable):
+            """Return first element of some iterable."""
+            for elem in some_iterable:
+                return elem
+        if isinstance(_get_first(X[:1]), doc2vec.TaggedDocument):
             d2v_sentences = X
         else:
             d2v_sentences = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(X)]
