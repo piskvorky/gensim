@@ -7,11 +7,7 @@
 Documentation
 =============
 
-This section contains gensim tutorials and howto guides.
-The **tutorials** are learning-oriented: they are lessons that introduce gensim functionality to new users.
-The **guides** are goal-oriented: they demonstrate how to solve a specific problem using gensim.
-
-We always welcome contributions to our documentation via GitHub pull requests, whether it's fixing a typo or authoring an entirely new tutorial or guide.
+We welcome contributions to our documentation via GitHub pull requests, whether it's fixing a typo or authoring an entirely new tutorial or guide.
 If you're thinking about contributing documentation, please see :ref:`sphx_glr_auto_examples_howtos_run_doc.py`.
 
 
@@ -23,22 +19,11 @@ If you're thinking about contributing documentation, please see :ref:`sphx_glr_a
 
 .. _sphx_glr_auto_examples_core:
 
-Core Tutorials
---------------
+Core Tutorials: New Users Start Here
+------------------------------------
 
-These tutorials introduce core gensim functionality.
+If you're new to gensim, we recommend going through all core tutorials in order.
 Understanding this functionality is vital for using gensim effectively.
-Each tutorial is stand-alone, but if you're new, we recommend going through all of them, in order.
-
-Click on the thumbnails below to access the tutorials.
-If you mouse-over a thumbnail, you will see more context the tutorial.
-Each tutorial is available in several formats:
-
-- HTML: this is the default.  Everything is viewable in your browser.
-- `Jupyter notebook <https://jupyter.org/>`__: You'll see a separate download link at the end of each tutorial.
-  If you have a working copy of the ``gensim`` `git repository <https://github.com/RaRe-Technologies/gensim>`__, you'll also find these
-  notebooks under :file:`docs/src/gallery/auto_examples`.
-- `Binder <https://mybinder.org>`__: see the :ref:`sphx_glr_auto_examples_howtos_run_binder.py` for more details.
 
 
 
@@ -84,7 +69,7 @@ Each tutorial is available in several formats:
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces transformations and demonstrates their use on a toy corpus.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces transformations and demonstrates their use on a toy corpus. ">
 
 .. only:: html
 
@@ -104,7 +89,7 @@ Each tutorial is available in several formats:
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates querying a corpus for similar documents.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates querying a corpus for similar documents. ">
 
 .. only:: html
 
@@ -129,33 +114,12 @@ Each tutorial is available in several formats:
 
 .. _sphx_glr_auto_examples_tutorials:
 
-Tutorials
----------
+Tutorials: Learning Oriented Lessons
+------------------------------------
 
-Once you're familiar with gensim's core concepts, try one of the tutorials below.
-These tutorials are **learning-oriented lessons** that introduce a particular gensim feature, e.g. a model (Word2Vec, FastText) or technique (similarity queries or text summarization).
-
+Learning-oriented lessons that introduce a particular gensim feature, e.g. a model (Word2Vec, FastText) or technique (similarity queries or text summarization).
 
 
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s Doc2Vec model and demonstrates its use on the Lee Corpus.">
-
-.. only:: html
-
-    .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_doc2vec_lee_thumb.png
-
-        :ref:`sphx_glr_auto_examples_tutorials_run_doc2vec_lee.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/tutorials/run_doc2vec_lee
 
 .. raw:: html
 
@@ -179,13 +143,13 @@ These tutorials are **learning-oriented lessons** that introduce a particular ge
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces the annoy library for similarity queries using a Word2Vec model.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s Doc2Vec model and demonstrates its use on the Lee Corpus.">
 
 .. only:: html
 
-    .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_annoy_thumb.png
+    .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_doc2vec_lee_thumb.png
 
-        :ref:`sphx_glr_auto_examples_tutorials_run_annoy.py`
+        :ref:`sphx_glr_auto_examples_tutorials_run_doc2vec_lee.py`
 
 .. raw:: html
 
@@ -195,11 +159,11 @@ These tutorials are **learning-oriented lessons** that introduce a particular ge
 .. toctree::
    :hidden:
 
-   /auto_examples/tutorials/run_annoy
+   /auto_examples/tutorials/run_doc2vec_lee
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s fastText model and demonstrates its use on the Lee Corpus.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s fastText model and demonstrates its use on the Lee Corpus. ">
 
 .. only:: html
 
@@ -216,6 +180,26 @@ These tutorials are **learning-oriented lessons** that introduce a particular ge
    :hidden:
 
    /auto_examples/tutorials/run_fasttext
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces the annoy library for similarity queries using a Word2Vec model. ">
+
+.. only:: html
+
+    .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_annoy_thumb.png
+
+        :ref:`sphx_glr_auto_examples_tutorials_run_annoy.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/tutorials/run_annoy
 
 .. raw:: html
 
@@ -324,10 +308,9 @@ These tutorials are **learning-oriented lessons** that introduce a particular ge
 
 .. _sphx_glr_auto_examples_howtos:
 
-How-to Guides
--------------
+How-to Guides: Solve a Problem
+------------------------------
 
-How-to guides will go here.
 These **goal-oriented guides** demonstrate how to **solve a specific problem** using gensim.
 
 
@@ -354,7 +337,7 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates simple and quick access to common corpora, models, and other data.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates simple and quick access to common corpora, models, and other data. ">
 
 .. only:: html
 
@@ -394,7 +377,7 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Some tips of how to author documentation for ``gensim``.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Some tips of how to author documentation for gensim. ">
 
 .. only:: html
 
@@ -465,17 +448,17 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
   .. container:: sphx-glr-download
 
-    :download:`Download all examples in Python source code: auto_examples_python.zip <//home/misha/git/gensim/docs/src/auto_examples/auto_examples_python.zip>`
+    :download:`Download all examples in Python source code: auto_examples_python.zip <//Volumes/work/workspace/gensim_misha/docs/src/auto_examples/auto_examples_python.zip>`
 
 
 
   .. container:: sphx-glr-download
 
-    :download:`Download all examples in Jupyter notebooks: auto_examples_jupyter.zip <//home/misha/git/gensim/docs/src/auto_examples/auto_examples_jupyter.zip>`
+    :download:`Download all examples in Jupyter notebooks: auto_examples_jupyter.zip <//Volumes/work/workspace/gensim_misha/docs/src/auto_examples/auto_examples_jupyter.zip>`
 
 
 .. only:: html
 
  .. rst-class:: sphx-glr-signature
 
-    `Gallery generated by Sphinx-Gallery <https://sphinx-gallery.readthedocs.io>`_
+    `Gallery generated by Sphinx-Gallery <https://sphinx-gallery.github.io>`_

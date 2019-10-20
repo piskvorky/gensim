@@ -1,6 +1,6 @@
 r"""
-How to Author Documentation
-===========================
+How to Author Gensim Documentation
+==================================
 
 Some tips of how to author documentation for ``gensim``.
 """
@@ -15,30 +15,30 @@ import sys
 # Unfortunately, not all of this functionality is documented **well**, and some of it is not documented at all.
 # Without good documentation, users are unable to unlock Gensim's full potential.
 # Therefore, authoring new documentation and improving existing documentation is of great value to the Gensim project.
-# 
+#
 # If you implement new functionality in Gensim, please include **helpful** documentation.
 # By "helpful", we mean that your documentation answers questions that Gensim users may have.
 # For example:
-# 
+#
 # - What is this new functionality?
 # - **Why** is it important?
 # - **How** is it relevant to Gensim?
 # - **What** can I do with it? What are some real-world applications?
 # - **How** do I use it to achieve those things?
 # - ... and others (if you can think of them, please add them here)
-# 
+#
 # Before you author documentation, I suggest reading
 # `"What nobody tells you about documentation" <https://www.divio.com/blog/documentation/>`__
 # or watching its `accompanying video <https://www.youtube.com/watch?v=t4vKPhjcMZg>`__
 # (or even both, if you're really keen).
-# 
+#
 # The summary of the above presentation is: there are four distinct kinds of documentation, and you really need them all:
-# 
+#
 # 1. Tutorials
 # 2. Howto guides
 # 3. Explanations
 # 4. References
-# 
+#
 # Each kind has its own intended audience, purpose, and writing style.
 # When you make a PR with new functionality, please consider authoring each kind of documentation.
 # At the very least, you will (indirectly) author reference documentation through module, class and function docstrings.
@@ -131,24 +131,24 @@ Brief description.
 ###############################################################################
 # Correctness
 # -----------
-# 
+#
 # Incorrect documentation can be worse than no documentation at all.
 # Take the following steps to ensure correctness:
-# 
+#
 # - Run Python's doctest module on your docstrings
 # - Run your documentation scripts from scratch, removing any temporary files/results
-# 
+#
 # Using data in your documentation
 # --------------------------------
-# 
+#
 # Some parts of the documentation require real-world data to be useful.
 # For example, you may need more than just a toy example to demonstrate the benefits of one model over another.
 # This subsection provides some tips for including data in your documentation.
-# 
+#
 # If possible, use data available via Gensim's
 # `downloader API <https://radimrehurek.com/gensim/gensim_numfocus/auto_examples/010_tutorials/run_downloader_api.html>`__.
 # This will reduce the risk of your documentation becoming obsolete because required data is no longer available.
-# 
+#
 # Use the smallest possible dataset: avoid making people unnecessarily load large datasets and models.
 # This will make your documentation faster to run and easier for people to use (they can modify your examples and re-run them quickly).
 #

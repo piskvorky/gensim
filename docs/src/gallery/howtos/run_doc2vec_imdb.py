@@ -1,8 +1,8 @@
 r"""
-How to Reproduce Results of Le and Mikolov 2014
-===============================================
+How to Apply Doc2Vec to Reproduce the 'Paragraph Vector' paper
+==============================================================
 
-Shows how to reproduce results of the Le and Mikolov paper using Gensim.
+Shows how to reproduce results of the "Distributed Representation of Sentences and Documents" paper by Le and Mikolov using Gensim.
 
 """
 
@@ -216,11 +216,6 @@ models_by_name = OrderedDict((str(model), model) for model in simple_models)
 from gensim.test.test_doc2vec import ConcatenatedDoc2Vec
 models_by_name['dbow+dmm'] = ConcatenatedDoc2Vec([simple_models[0], simple_models[1]])
 models_by_name['dbow+dmc'] = ConcatenatedDoc2Vec([simple_models[0], simple_models[2]])
-
-###############################################################################
-# Sanity checking.  Let's see if our models give meaningful results.
-for word, sim in simple_models[1].wv.most_similar('head', topn=5):
-    print('%.2f %r' % (sim, word))
 
 ###############################################################################
 # Predictive Evaluation Methods

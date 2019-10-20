@@ -242,10 +242,10 @@ def sort_key(source_dir):
     ]
 
     tutorials_order = [
-        'run_doc2vec_lee.py',
         'run_word2vec.py',
-        'run_annoy.py',
+        'run_doc2vec_lee.py',
         'run_fasttext.py',
+        'run_annoy.py',
         'run_lda.py',
         'run_distance_metrics.py',
         'run_wmd.py',
