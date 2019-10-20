@@ -1,0 +1,5 @@
+sphinx
+sphinx_gallery
+sphinxcontrib.napoleon
+sphinxcontrib.programoutput
+memory_profiler
