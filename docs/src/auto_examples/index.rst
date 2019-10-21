@@ -69,7 +69,7 @@ Understanding this functionality is vital for using gensim effectively.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces transformations and demonstrates their use on a toy corpus. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces transformations and demonstrates their use on a toy corpus.">
 
 .. only:: html
 
@@ -89,7 +89,7 @@ Understanding this functionality is vital for using gensim effectively.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates querying a corpus for similar documents. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates querying a corpus for similar documents.">
 
 .. only:: html
 
@@ -163,7 +163,7 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s fastText model and demonstrates its use on the Lee Corpus. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s fastText model and demonstrates its use on the Lee Corpus.">
 
 .. only:: html
 
@@ -183,7 +183,7 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces the annoy library for similarity queries using a Word2Vec model. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces the annoy library for similarity queries using a Word2Vec model.">
 
 .. only:: html
 
@@ -317,27 +317,7 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates how you can compare a topic model with itself or other models.">
-
-.. only:: html
-
-    .. figure:: /auto_examples/howtos/images/thumb/sphx_glr_run_040_compare_lda_thumb.png
-
-        :ref:`sphx_glr_auto_examples_howtos_run_040_compare_lda.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/howtos/run_040_compare_lda
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates simple and quick access to common corpora, models, and other data. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates simple and quick access to common corpora, models, and other data.">
 
 .. only:: html
 
@@ -357,7 +337,7 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Some tips of how to author documentation for gensim. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="Some tips of how to author documentation for gensim.">
 
 .. only:: html
 
@@ -394,6 +374,26 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
    :hidden:
 
    /auto_examples/howtos/run_doc2vec_imdb
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates how you can compare a topic model with itself or other models.">
+
+.. only:: html
+
+    .. figure:: /auto_examples/howtos/images/thumb/sphx_glr_run_compare_lda_thumb.png
+
+        :ref:`sphx_glr_auto_examples_howtos_run_compare_lda.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/howtos/run_compare_lda
 .. raw:: html
 
     <div style='clear:both'></div>
@@ -452,13 +452,13 @@ Blog posts, tutorial videos, hackathons and other useful Gensim resources, from 
 
   .. container:: sphx-glr-download
 
-    :download:`Download all examples in Python source code: auto_examples_python.zip <//Volumes/work/workspace/gensim_misha/docs/src/auto_examples/auto_examples_python.zip>`
+    :download:`Download all examples in Python source code: auto_examples_python.zip <//home/misha/git/gensim-numfocus/docs/src/auto_examples/auto_examples_python.zip>`
 
 
 
   .. container:: sphx-glr-download
 
-    :download:`Download all examples in Jupyter notebooks: auto_examples_jupyter.zip <//Volumes/work/workspace/gensim_misha/docs/src/auto_examples/auto_examples_jupyter.zip>`
+    :download:`Download all examples in Jupyter notebooks: auto_examples_jupyter.zip <//home/misha/git/gensim-numfocus/docs/src/auto_examples/auto_examples_jupyter.zip>`
 
 
 .. only:: html

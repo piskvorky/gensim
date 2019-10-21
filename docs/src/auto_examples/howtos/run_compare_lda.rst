@@ -1,17 +1,16 @@
 .. note::
     :class: sphx-glr-download-link-note
 
-    Click :ref:`here <sphx_glr_download_auto_examples_howtos_run_040_compare_lda.py>` to download the full example code
+    Click :ref:`here <sphx_glr_download_auto_examples_howtos_run_compare_lda.py>` to download the full example code
 .. rst-class:: sphx-glr-example-title
 
-.. _sphx_glr_auto_examples_howtos_run_040_compare_lda.py:
+.. _sphx_glr_auto_examples_howtos_run_compare_lda.py:
 
 
 How to Compare LDA Models
 =========================
 
 Demonstrates how you can compare a topic model with itself or other models.
-
 
 
 .. code-block:: default
@@ -274,7 +273,7 @@ In an ideal world, we would like to see different topics decorrelated between th
 
 
 
-.. image:: /auto_examples/howtos/images/sphx_glr_run_040_compare_lda_001.png
+.. image:: /auto_examples/howtos/images/sphx_glr_run_compare_lda_001.png
     :class: sphx-glr-single-img
 
 
@@ -305,7 +304,7 @@ Short description (interactive annotations only):
 
 
 
-.. image:: /auto_examples/howtos/images/sphx_glr_run_040_compare_lda_002.png
+.. image:: /auto_examples/howtos/images/sphx_glr_run_compare_lda_002.png
     :class: sphx-glr-single-img
 
 
@@ -330,7 +329,7 @@ Jaccard is stable and robust distance function, but this function not enough sen
 
 
 
-.. image:: /auto_examples/howtos/images/sphx_glr_run_040_compare_lda_003.png
+.. image:: /auto_examples/howtos/images/sphx_glr_run_compare_lda_003.png
     :class: sphx-glr-single-img
 
 
@@ -363,7 +362,7 @@ You can do this by constructing a matrix with the difference.
 
 
 
-.. image:: /auto_examples/howtos/images/sphx_glr_run_040_compare_lda_004.png
+.. image:: /auto_examples/howtos/images/sphx_glr_run_compare_lda_004.png
     :class: sphx-glr-single-img
 
 
@@ -375,12 +374,12 @@ Looking at this matrix, you can find similar and different topics (and relevant 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 3 minutes  40.040 seconds)
+   **Total running time of the script:** ( 4 minutes  15.023 seconds)
 
-**Estimated memory usage:**  384 MB
+**Estimated memory usage:**  389 MB
 
 
-.. _sphx_glr_download_auto_examples_howtos_run_040_compare_lda.py:
+.. _sphx_glr_download_auto_examples_howtos_run_compare_lda.py:
 
 
 .. only :: html
@@ -392,13 +391,13 @@ Looking at this matrix, you can find similar and different topics (and relevant 
 
   .. container:: sphx-glr-download
 
-     :download:`Download Python source code: run_040_compare_lda.py <run_040_compare_lda.py>`
+     :download:`Download Python source code: run_compare_lda.py <run_compare_lda.py>`
 
 
 
   .. container:: sphx-glr-download
 
-     :download:`Download Jupyter notebook: run_040_compare_lda.ipynb <run_040_compare_lda.ipynb>`
+     :download:`Download Jupyter notebook: run_compare_lda.ipynb <run_compare_lda.ipynb>`
 
 
 .. only:: html
