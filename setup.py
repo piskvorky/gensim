@@ -219,7 +219,7 @@ Copyright (c) 2009-now Radim Rehurek
 .. _Official Documentation and Walkthrough: http://radimrehurek.com/gensim/
 .. _Tutorials: https://github.com/RaRe-Technologies/gensim/blob/develop/tutorials.md#tutorials
 .. _Tutorial Videos: https://github.com/RaRe-Technologies/gensim/blob/develop/tutorials.md#videos
-.. _QuickStart: https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/gensim%20Quick%20Start.ipynb
+.. _QuickStart: https://radimrehurek.com/gensim/gensim_numfocus/auto_examples/core/run_core_concepts.html
 
 """
 
@@ -267,6 +267,17 @@ else:
 
 
 linux_testenv = win_testenv[:]
+
+docs_testenv = linux_testenv + distributed_env + [
+    'sphinx',
+    'sphinxcontrib-napoleon',
+    'plotly',
+    'pattern <= 2.6',
+    'sphinxcontrib.programoutput',
+    'sphinx-gallery',
+    'memory_profiler',
+    'annoy',
+]
 
 if sys.version_info < (3, 7):
     linux_testenv.extend([

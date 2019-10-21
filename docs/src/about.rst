@@ -6,19 +6,16 @@
 About
 =====
 
-History
--------
+Gensim = "Generate Similar"
+---------------------------
 
-Gensim started off as a collection of various Python scripts for the Czech Digital Mathematics Library `dml.cz <http://dml.cz/>`_ in 2008,
-where it served to generate a short list of the most similar articles to a given article (**gensim = "generate similar"**).
-I also wanted to try these fancy "Latent Semantic Methods", but the libraries that
-realized the necessary computation were `not much fun to work with <http://soi.stanford.edu/~rmunk/PROPACK/>`_.
+Gensim started off as a collection of various Python scripts for the Czech Digital Mathematics Library `dml.cz <http://dml.cz/>`_ in 2008, where it served to generate a short list of the most similar articles to a given article.
 
-Naturally, I set out to reinvent the wheel. Our `2010 LREC publication <http://radimrehurek.com/gensim/lrec2010_final.pdf>`_
-describes the initial design decisions behind Gensim: clarity, efficiency and scalability. It is fairly representative of how Gensim works even today.
+I also wanted to try these fancy "Latent Semantic Methods", but the libraries that realized the necessary computation were `not much fun to work with <http://soi.stanford.edu/~rmunk/PROPACK/>`_.
 
-Later versions of gensim improved this efficiency and scalability tremendously. In fact,
-I made algorithmic scalability of distributional semantics the topic of my `PhD thesis <http://radimrehurek.com/phd_rehurek.pdf>`_.
+Naturally, I set out to reinvent the wheel. Our `2010 LREC publication <http://radimrehurek.com/lrec2010_final.pdf>`_ describes the initial design decisions behind Gensim: clarity, efficiency and scalability. It is fairly representative of how Gensim works even today.
+
+Later versions of gensim improved this efficiency and scalability tremendously. In fact, I made algorithmic scalability of distributional semantics the topic of my `PhD thesis <http://radimrehurek.com/phd_rehurek.pdf>`_.
 
 By now, Gensim is---to my knowledge---the most robust, efficient and hassle-free piece
 of software to realize unsupervised semantic modelling from plain text. It stands
@@ -47,20 +44,20 @@ The legalese is therefore less important to me than your input and contributions
 
 .. seealso::
 
-    We also built a high performance commercial server for NLP, document analysis, indexing, search and clustering: https://scaletext.ai. ScaleText is available both on-prem and as SaaS.
+    We also built a commercial product for automatic data discovery for privacy compliance, https://pii-tools.com.
 
-    Reach out at info@scaletext.com if you need an industry-grade NLP tool with professional support.
+    Reach out at info@pii-tools.com if you need industry-grade PII / PCI / PHI software for compliance or breach management.
 
 
 Contributors
 ------------
 
 Credit goes to the many people who contributed to Gensim, be it in `discussions <http://groups.google.com/group/gensim>`_,
-ideas, `code contributions <https://github.com/piskvorky/gensim/pulls>`_ or `bug reports <https://github.com/piskvorky/gensim/issues>`_.
+ideas, `code contributions <https://github.com/RARE-Technologies/gensim/pulls>`_ or `bug reports <https://github.com/RARE-Technologies/gensim/issues>`_.
 
 It's really useful and motivating to get feedback, in any shape or form, so big thanks to you all!
 
-Some honorable mentions are included in the `CHANGELOG.txt <https://github.com/piskvorky/gensim/blob/develop/CHANGELOG.md>`_.
+Some honorable mentions are included in the `CHANGELOG.txt <https://github.com/RARE-Technologies/gensim/blob/develop/CHANGELOG.md>`_.
 
 Academic citing
 ---------------

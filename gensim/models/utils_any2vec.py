@@ -372,7 +372,7 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
                 # mixed text and binary: read text first, then binary
                 word = []
                 while True:
-                    ch = fin.read(1)
+                    ch = fin.read(1)  # Python uses I/O buffering internally
                     if ch == b' ':
                         break
                     if ch == b'':

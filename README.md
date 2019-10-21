@@ -104,7 +104,7 @@ Documentation
 -   [Tutorial Videos]
 -   [Official API Documentation]
 
-  [QuickStart]: https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/gensim%20Quick%20Start.ipynb
+  [QuickStart]: https://radimrehurek.com/gensim/gensim_numfocus/auto_examples/core/run_core_concepts.html
   [Tutorials]: https://github.com/RaRe-Technologies/gensim/blob/develop/tutorials.md#tutorials
   [Tutorial Videos]: https://github.com/RaRe-Technologies/gensim/blob/develop/tutorials.md#videos
   [Official Documentation and Walkthrough]: http://radimrehurek.com/gensim/
