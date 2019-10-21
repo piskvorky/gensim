@@ -11,3 +11,4 @@ nltk==3.4.5
 testfixtures==6.10.0
 statsmodels==0.10.1
 pyemd==0.5.1
+pandas==0.25.2
