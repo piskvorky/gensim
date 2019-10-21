@@ -179,17 +179,13 @@ for i, s in enumerate(sims):
 # * there are parts that could be implemented more efficiently (in C, for example), or make better use of parallelism (multiple machines cores)
 # * new algorithms are published all the time; help gensim keep up by `discussing them <http://groups.google.com/group/gensim>`_ and `contributing code <https://github.com/piskvorky/gensim/wiki/Developer-page>`_
 # * your **feedback is most welcome** and appreciated (and it's not just the code!):
-#   `idea contributions <https://github.com/piskvorky/gensim/wiki/Ideas-&-Features-proposals>`_,
-#   `bug reports <https://github.com/piskvorky/gensim/issues>`_ or just consider contributing
+#   `bug reports <https://github.com/piskvorky/gensim/issues>`_ or
 #   `user stories and general questions <http://groups.google.com/group/gensim/topics>`_.
 #
 # Gensim has no ambition to become an all-encompassing framework, across all NLP (or even Machine Learning) subfields.
 # Its mission is to help NLP practitioners try out popular topic modelling algorithms
 # on large datasets easily, and to facilitate prototyping of new algorithms for researchers.
 
-###############################################################################
-# Here we show a pretty fastText logo so that our gallery picks it up as a thumbnail.
-#
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 img = mpimg.imread('run_similarity_queries.png')

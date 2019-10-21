@@ -84,7 +84,7 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 #
 # .. Important:: In Gensim, we refer to the Paragraph Vector model as ``Doc2Vec``.
 #
-# Le and Mikolov in 2014 introduced the *Paragraph Vector*, which usually outperforms such simple-averaging of ``Word2Vec`` vectors.
+# Le and Mikolov in 2014 introduced the `Doc2Vec algorithm <https://cs.stanford.edu/~quocle/paragraph_vector.pdf>`__, which usually outperforms such simple-averaging of ``Word2Vec`` vectors.
 #
 # The basic idea is: act as if a document has another floating word-like
 # vector, which contributes to all training predictions, and is updated like
@@ -128,9 +128,9 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 import os
 import gensim
 # Set file names for train and test data
-test_data_dir = '{}'.format(os.sep).join([gensim.__path__[0], 'test', 'test_data'])
-lee_train_file = test_data_dir + os.sep + 'lee_background.cor'
-lee_test_file = test_data_dir + os.sep + 'lee.cor'
+test_data_dir = os.path.join(gensim.__path__[0], 'test', 'test_data')
+lee_train_file = os.path.join(test_data_dir, 'lee_background.cor')
+lee_test_file = os.path.join(test_data_dir, 'lee.cor')
 
 ###############################################################################
 # Define a Function to Read and Preprocess Text
@@ -155,11 +155,12 @@ import smart_open
 def read_corpus(fname, tokens_only=False):
     with smart_open.open(fname, encoding="iso-8859-1") as f:
         for i, line in enumerate(f):
+            tokens = gensim.utils.simple_preprocess(line)
             if tokens_only:
-                yield gensim.utils.simple_preprocess(line)
+                yield tokens
             else:
                 # For training data, add tags
-                yield gensim.models.doc2vec.TaggedDocument(gensim.utils.simple_preprocess(line), [i])
+                yield gensim.models.doc2vec.TaggedDocument(tokens, [i])
 
 train_corpus = list(read_corpus(lee_train_file))
 test_corpus = list(read_corpus(lee_test_file, tokens_only=True))
@@ -183,11 +184,11 @@ print(test_corpus[:2])
 # Training the Model
 # ------------------
 #
-# Now, we'll instantiate a Doc2Vec model with a vector size with 50 words and
+# Now, we'll instantiate a Doc2Vec model with a vector size with 50 dimensions and
 # iterating over the training corpus 40 times. We set the minimum word count to
 # 2 in order to discard words with very few occurrences. (Without a variety of
 # representative examples, retaining such infrequent words can often make a
-# model worse!) Typical iteration counts in published 'Paragraph Vectors'
+# model worse!) Typical iteration counts in the published `Paragraph Vector paper <https://cs.stanford.edu/~quocle/paragraph_vector.pdf>`__
 # results, using 10s-of-thousands to millions of docs, are 10-20. More
 # iterations take more time and eventually reach a point of diminishing
 # returns.

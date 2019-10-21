@@ -147,9 +147,7 @@ vec_king = wv['king']
 try:
     vec_weapon = wv['cameroon']
 except KeyError:
-    pass
-else:
-    raise RuntimeError('expected to trip over a KeyError')
+    print("The word 'cameroon' does not appear in this model")
 
 ###############################################################################
 # Moving on, ``Word2Vec`` supports several word similarity tasks out of the
@@ -189,7 +187,7 @@ print(wv.doesnt_match(['fire', 'water', 'land', 'sea', 'air', 'car']))
 #
 
 from gensim.test.utils import datapath
-
+from gensim import utils
 
 class MyCorpus(object):
     """An interator that yields sentences (lists of str)."""
@@ -198,7 +196,7 @@ class MyCorpus(object):
         corpus_path = datapath('lee_background.cor')
         for line in open(corpus_path):
             # assume there's one document per line, tokens separated by whitespace
-            yield line.lower().split()
+            yield utils.simple_preprocess(line)
 
 ###############################################################################
 # If we wanted to do any custom preprocessing, e.g. decode a non-standard
@@ -375,7 +373,7 @@ model.accuracy('./datasets/questions-words.txt')
 model.evaluate_word_pairs(datapath('wordsim353.tsv'))
 
 ###############################################################################
-# Important::
+# .. Important::
 #   Good performance on Google's or WS-353 test set doesn’t mean word2vec will
 #   work well in your application, or vice versa. It’s always best to evaluate
 #   directly on your intended task. For an example of how to use word2vec in a
@@ -527,7 +525,7 @@ for data in input_data_subset:
                 time_taken_list = np.array(time_taken_list)
                 time_mean = np.mean(time_taken_list)
                 time_std = np.std(time_taken_list)
-          
+
                 d = {
                     'train_data': data.name,
                     'compute_loss': loss_flag,
@@ -631,10 +629,6 @@ print(end-start)
 # .. Important::
 #   The model used for the visualisation is trained on a small corpus. Thus
 #   some of the relations might not be so clear.
-#
-# .. Important::
-#   Beware: This sort of dimensionality reduction comes at the cost of loss of
-#   information.
 #
 
 from sklearn.decomposition import IncrementalPCA    # inital reduction
