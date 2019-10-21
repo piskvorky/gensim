@@ -13,7 +13,7 @@ for source, dest in redirects.items():
         dest = dest.replace('/gensim/', '/gensim/gensim_numfocus/')
     source_status = requests.head(source).status_code
     dest_status = requests.head(dest).status_code
-    if not (source_status == dest_status == 200):
+    if (source_status not in (200, 301)) or (dest_status not in (200, 301)):
         print('source: %r (HTTP %d)' % (source, source_status))
         print('dest: %r (HTTP %d)' % (dest, dest_status))
         break
