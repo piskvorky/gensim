@@ -357,26 +357,6 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="If you don&#x27;t have Jupyter installed locally, you can still play with the examples provided in t...">
-
-.. only:: html
-
-    .. figure:: /auto_examples/howtos/images/thumb/sphx_glr_run_binder_thumb.png
-
-        :ref:`sphx_glr_auto_examples_howtos_run_binder.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/howtos/run_binder
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="Some tips of how to author documentation for gensim. ">
 
 .. only:: html
@@ -414,26 +394,6 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
    :hidden:
 
    /auto_examples/howtos/run_doc2vec_imdb
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates topic modeling on the Lee Corpus using a variety of topic models (LSI, HDP, LDA, e...">
-
-.. only:: html
-
-    .. figure:: /auto_examples/howtos/images/thumb/sphx_glr_run_news_classification_thumb.png
-
-        :ref:`sphx_glr_auto_examples_howtos_run_news_classification.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/howtos/run_news_classification
 .. raw:: html
 
     <div style='clear:both'></div>
@@ -447,13 +407,13 @@ Other Resources
 
 Blog posts, tutorial videos, hackathons and other useful Gensim resources, from around the internet.
 
-- Use FastText or Word2Vec? Comparison of embedding quality and performance. [notebook ` <https://github.com/RaRe-Technologies/gensim/blob/ba1ce894a5192fc493a865c535202695bb3c0424/docs/notebooks/Word2Vec_FastText_Comparison.ipynb>`__]
-- Phrases extracted from *How I Met Your Mother*. [`blog post by Mark Needham <http://www.markhneedham.com/blog/2015/02/12/pythongensim-creating-bigrams-over-how-i-met-your-mother-transcripts/>`__]
-- Using NLTK + Gensim LDA for hierarchical document clustering. [`notebook by Brandon Rose <http://brandonrose.org/clustering#Latent-Dirichlet-Allocation>`__]
-- Evolution of Voldemort topic through the 7 Harry Potter books. [`RARE blog post <http://rare-technologies.com/understanding-and-coding-dynamic-topic-models/>`__]
--  Tutorial showing Gensim APIs for document classificaiton, using various techniques: TF-IDF, word2vec averaging, Deep IR, Word Movers Distance and doc2vec [`Movie plots by genre <https://github.com/RaRe-Technologies/movie-plots-by-genre>`__]
-- `Radim Řehůřek - Faster than Google? Optimization lessons in Python. <https://www.youtube.com/watch?v=vU4TlwZzTfU>`__
-- Word2vec & friends: Talk by Radim Řehůřek at MLMU.cz, 7.1.2015 [`youtube <https://www.youtube.com/watch?v=wTp3P2UnTfQ>`__]
+- Use FastText or Word2Vec? Comparison of embedding quality and performance. `Jupyter Notebook <https://github.com/RaRe-Technologies/gensim/blob/ba1ce894a5192fc493a865c535202695bb3c0424/docs/notebooks/Word2Vec_FastText_Comparison.ipynb>`__
+- Phrases extracted from *How I Met Your Mother*. `Blog post by Mark Needham <http://www.markhneedham.com/blog/2015/02/12/pythongensim-creating-bigrams-over-how-i-met-your-mother-transcripts/>`__
+- Using NLTK + Gensim LDA for hierarchical document clustering. `Jupyter notebook by Brandon Rose <http://brandonrose.org/clustering#Latent-Dirichlet-Allocation>`__
+- Evolution of Voldemort topic through the 7 Harry Potter books. `Blog post <http://rare-technologies.com/understanding-and-coding-dynamic-topic-models/>`__
+- *Movie plots by genre*: Document classification using various techniques: TF-IDF, word2vec averaging, Deep IR, Word Movers Distance and doc2vec. `Github repo <https://github.com/RaRe-Technologies/movie-plots-by-genre>`__
+- Word2vec: Faster than Google? Optimization lessons in Python. Talk by Radim Řehůřek at PyData Berlin 2014 `Youtube video <https://www.youtube.com/watch?v=vU4TlwZzTfU>`__
+- Word2vec & friends: Talk by Radim Řehůřek at MLMU.cz, 7.1.2015 `Youtube video <https://www.youtube.com/watch?v=wTp3P2UnTfQ>`__
 
 ..
    - ? `Making an Impact with NLP <https://www.youtube.com/watch?v=oSSnDeOXTZQ>`__ -- Pycon 2016 Tutorial by Hobsons Lane
