@@ -1,9 +1,8 @@
 r"""
-Unsupervised Topic Modeling of News Articles
-How to Classify News Articles into Topics
-=========================================
+How to Use Coherence Measures on Topic Models
+=============================================
 
-Demonstrates classification of the Lee Corpus using a variety of topic models (LSI, HDP, LDA, etc).
+Demonstrates topic modeling on the Lee Corpus using a variety of topic models (LSI, HDP, LDA, etc).
 
 """
 
@@ -31,11 +30,10 @@ Demonstrates classification of the Lee Corpus using a variety of topic models (L
 # - HDP (Hierarchical Dirichlet Process)
 # - LDA (Latent Dirichlet Allocation)
 # - LDA (tweaked with topic coherence to find optimal number of topics) and
-# - LDA as LSI with the help of topic coherence metrics
 #
-# All of these models are in gensim and can be used easily.  We will start by
+# All of these models are in gensim and can be used easily. We will start by
 # training our models on the data, and then compare them against each other.
-# For LDA, we will also use the # topic coherence metrics based on `Exploring
+# For LDA, we will also use the topic coherence metrics based on `Exploring
 # the Space of Topic Coherence Measures
 # <http://svn.aksw.org/papers/2015/WSDM_Topic_Evaluation/public.pdf>`_ by Roder
 # et al.
@@ -44,23 +42,19 @@ Demonstrates classification of the Lee Corpus using a variety of topic models (L
 #
 
 import os
-import re
 import operator
-import matplotlib.pyplot as plt
 import warnings
+warnings.filterwarnings('ignore')  # Let's not pay heed to them right now
+from pprint import pprint
+
+import matplotlib.pyplot as plt
+import nltk
 import gensim
 import numpy as np
-warnings.filterwarnings('ignore')  # Let's not pay heed to them right now
-
-import nltk
-nltk.download('stopwords') # Let's make sure the 'stopword' package is downloaded & updated
-nltk.download('wordnet') # Let's also download wordnet, which will be used for lemmatization
-
-from pprint import pprint
 from smart_open import open
 
-test_data_dir = '{}'.format(os.sep).join([gensim.__path__[0], 'test', 'test_data'])
-lee_train_file = test_data_dir + os.sep + 'lee_background.cor'
+test_data_dir = os.path.join(gensim.__path__[0], 'test', 'test_data')
+lee_train_file = os.path.join(test_data_dir, 'lee_background.cor')
 
 ###############################################################################
 # Analysing our corpus.
@@ -76,6 +70,10 @@ lee_train_file = test_data_dir + os.sep + 'lee_background.cor'
 # interpret and make a small summary out of. Without this the topic model
 # cannot be of much practical use.
 #
+
+nltk.download('stopwords')  # Let's make sure the NLTK 'stopword' package is downloaded & updated
+nltk.download('wordnet')  # Let's also download Wordnet, which will be used for lemmatization
+
 with open(lee_train_file, 'rb') as f:
     for n, l in enumerate(f):
         if n < 5:
@@ -83,22 +81,22 @@ with open(lee_train_file, 'rb') as f:
 
 def build_texts(fname):
     """
-    Function to build tokenized texts from file
+    Function to build tokenized texts from file.
 
-    Parameters:
+    Parameters
     ----------
     fname: File to be read
 
-    Returns:
+    Yields
     -------
-    yields preprocessed line
+    Preprocessed lines.
     """
     with open(fname, 'rb') as f:
         for line in f:
             yield gensim.utils.simple_preprocess(line, deacc=True, min_len=3)
 
 train_texts = list(build_texts(lee_train_file))
-print(len(train_texts))
+print("Number of training documents:", len(train_texts))
 
 ###############################################################################
 # Preprocessing our data. Remember: Garbage In Garbage Out
@@ -122,26 +120,26 @@ print(len(train_texts))
 #
 bigram = gensim.models.Phrases(train_texts)  # for bigram collocation detection
 
-bigram[['new', 'york', 'example']]
+print(bigram[['new', 'york', 'example']])
 
 from gensim.utils import lemmatize
 from nltk.corpus import stopwords
 
-stops = set(stopwords.words('english'))  # nltk stopwords list
+stops = set(stopwords.words('english'))  # set of stopwords from NLTK
 
 def process_texts(texts):
     """
-    Function to process texts. Following are the steps we take:
+    Process texts. Following are the steps we take:
 
     1. Stopword Removal.
     2. Collocation detection.
     3. Lemmatization (not stem since stemming can reduce the interpretability).
 
-    Parameters:
+    Parameters
     ----------
     texts: Tokenized texts.
 
-    Returns:
+    Returns
     -------
     texts: Pre-processed tokenized texts.
     """
@@ -290,56 +288,7 @@ lmlist, c_v = evaluate_graph(dictionary=dictionary, corpus=corpus, texts=train_t
 # pyLDAvis.gensim.prepare(lmlist[2], corpus, dictionary)
 lmtopics = lmlist[5].show_topics(formatted=False)
 
-###############################################################################
-# LDA as LSI
-# ----------
-#
-# One of the problem with LDA is that if we train it on a large number of
-# topics, the topics get "lost" among the numbers. Let us see if we can dig out
-# the best topics from the best LDA model we can produce. The function below
-# can be used to control the quality of the LDA model we produce.
-#
-
-
-def ret_top_model():
-    """
-    Since LDAmodel is a probabilistic model, it comes up different topics each time we run it. To control the
-    quality of the topic model we produce, we can see what the interpretability of the best topic is and keep
-    evaluating the topic model until this threshold is crossed.
-
-    Returns:
-    -------
-    lm: Final evaluated topic model
-    top_topics: ranked topics in decreasing order. List of tuples
-    """
-    top_topics = [(0, 0)]
-    while top_topics[0][1] < 0.97:
-        lm = LdaModel(corpus=corpus, id2word=dictionary)
-        coherence_values = {}
-        for n, topic in lm.show_topics(num_topics=-1, formatted=False):
-            topic = [word for word, _ in topic]
-            cm = CoherenceModel(topics=[topic], texts=train_texts, dictionary=dictionary, window_size=10)
-            coherence_values[n] = cm.get_coherence()
-        top_topics = sorted(coherence_values.items(), key=operator.itemgetter(1), reverse=True)
-    return lm, top_topics
-
-#
-# This part is broken: the confidence never reaches 0.97.
-# It also takes a prohibitively long time to run.  Disable it for now.
-# Use the regular LDA model instead, to keep the rest of this script working.
-#
-# lm, top_topics = ret_top_model()
-# print(top_topics[:5])
 lm, top_topics = ldamodel, ldatopics
-
-###############################################################################
-# Inference
-# ---------
-#
-# We can clearly see below that the first topic is about **cinema**\ , second is about **email malware**\ , third is about the land which was given back to the **Larrakia aboriginal community of Australia** in 2000. Then there's one about **Australian cricket**. LDA as LSI has worked wonderfully in finding out the best topics from within LDA.
-#
-# pprint([lm.show_topic(topicid) for topicid, c_v in top_topics[:10]])
-# lda_lsi_topics = [[word for word, prob in lm.show_topic(topicid)] for topicid, c_v in top_topics]
 
 ###############################################################################
 # Evaluating all the topic models
@@ -367,7 +316,6 @@ lsi_coherence = create_coherence_model(lsitopics[:10])
 hdp_coherence = create_coherence_model(hdptopics[:10])
 lda_coherence = create_coherence_model(ldatopics)
 lm_coherence = create_coherence_model(lmtopics)
-# lda_lsi_coherence = create_coherence_model(lda_lsi_topics[:10])
 
 def evaluate_bar_graph(coherences, indices):
     """
@@ -383,8 +331,8 @@ def evaluate_bar_graph(coherences, indices):
     plt.xlabel('Models')
     plt.ylabel('Coherence Value')
 
-values = [lsi_coherence, hdp_coherence, lda_coherence, lm_coherence] #, lda_lsi_coherence]
-labels = ['LSI', 'HDP', 'LDA', 'LDA_Mod'] #, 'LDA_LSI']
+values = [lsi_coherence, hdp_coherence, lda_coherence, lm_coherence]
+labels = ['LSI', 'HDP', 'LDA', 'LDA_Mod']
 evaluate_bar_graph(values, labels)
 
 ###############################################################################
@@ -411,10 +359,12 @@ from collections import namedtuple
 
 make_pipeline = namedtuple('Coherence_Measure', 'seg, prob, conf, aggr')
 
-measure = make_pipeline(segmentation.s_one_one,
-                        probability_estimation.p_boolean_sliding_window,
-                        direct_confirmation_measure.log_ratio_measure,
-                        aggregation.arithmetic_mean)
+measure = make_pipeline(
+    segmentation.s_one_one,
+    probability_estimation.p_boolean_sliding_window,
+    direct_confirmation_measure.log_ratio_measure,
+    aggregation.arithmetic_mean,
+)
 
 ###############################################################################
 # To get topics out of the topic model:
@@ -474,5 +424,6 @@ except Exception:
 # How this topic model can be used further
 # ========================================
 #
-# The best topic model here can be used as a standalone for news article classification. However a topic model can also be used as a dimensionality reduction algorithm to feed into a classifier. A good topic model should be able to extract the signal from the noise efficiently, hence improving the performance of the classifier.
+# A topic model can be used as a dimensionality reduction algorithm to feed into a classifier.
+# A good topic model should be able to extract the signal from the noise efficiently, hence improving the performance of the classifier.
 #

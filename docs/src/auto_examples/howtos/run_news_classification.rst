@@ -7,11 +7,10 @@
 .. _sphx_glr_auto_examples_howtos_run_news_classification.py:
 
 
-Unsupervised Topic Modeling of News Articles
-How to Classify News Articles into Topics
-=========================================
+How to Get Topics from News Articles
+====================================
 
-Demonstrates classification of the Lee Corpus using a variety of topic models (LSI, HDP, LDA, etc).
+Demonstrates topic modeling on the Lee Corpus using a variety of topic models (LSI, HDP, LDA, etc).
 
 
 News article classification is performed on a huge scale by news agencies all
@@ -39,9 +38,9 @@ We will examine the following models:
 - LDA (tweaked with topic coherence to find optimal number of topics) and
 - LDA as LSI with the help of topic coherence metrics
 
-All of these models are in gensim and can be used easily.  We will start by
+All of these models are in gensim and can be used easily. We will start by
 training our models on the data, and then compare them against each other.
-For LDA, we will also use the # topic coherence metrics based on `Exploring
+For LDA, we will also use the topic coherence metrics based on `Exploring
 the Space of Topic Coherence Measures
 <http://svn.aksw.org/papers/2015/WSDM_Topic_Evaluation/public.pdf>`_ by Roder
 et al.
@@ -54,39 +53,23 @@ Accompanying slides can be found `here <https://speakerdeck.com/dsquareindia/pyc
 
 
     import os
-    import re
     import operator
-    import matplotlib.pyplot as plt
     import warnings
+    warnings.filterwarnings('ignore')  # Let's not pay heed to them right now
+    from pprint import pprint
+
+    import matplotlib.pyplot as plt
+    import nltk
     import gensim
     import numpy as np
-    warnings.filterwarnings('ignore')  # Let's not pay heed to them right now
-
-    import nltk
-    nltk.download('stopwords') # Let's make sure the 'stopword' package is downloaded & updated
-    nltk.download('wordnet') # Let's also download wordnet, which will be used for lemmatization
-
-    from pprint import pprint
     from smart_open import open
 
-    test_data_dir = '{}'.format(os.sep).join([gensim.__path__[0], 'test', 'test_data'])
-    lee_train_file = test_data_dir + os.sep + 'lee_background.cor'
+    test_data_dir = os.path.join(gensim.__path__[0], 'test', 'test_data')
+    lee_train_file = os.path.join(test_data_dir, 'lee_background.cor')
 
 
 
 
-
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
-    [nltk_data] Downloading package stopwords to
-    [nltk_data]     /Users/kofola3/nltk_data...
-    [nltk_data]   Unzipping corpora/stopwords.zip.
-    [nltk_data] Downloading package wordnet to /Users/kofola3/nltk_data...
-    [nltk_data]   Package wordnet is already up-to-date!
 
 
 
@@ -107,6 +90,10 @@ cannot be of much practical use.
 
 .. code-block:: default
 
+
+    nltk.download('stopwords')  # Let's make sure the NLTK 'stopword' package is downloaded & updated
+    nltk.download('wordnet')  # Let's also download Wordnet, which will be used for lemmatization
+
     with open(lee_train_file, 'rb') as f:
         for n, l in enumerate(f):
             if n < 5:
@@ -114,22 +101,22 @@ cannot be of much practical use.
 
     def build_texts(fname):
         """
-        Function to build tokenized texts from file
+        Function to build tokenized texts from file.
 
-        Parameters:
+        Parameters
         ----------
         fname: File to be read
 
-        Returns:
+        Yields
         -------
-        yields preprocessed line
+        Preprocessed lines.
         """
         with open(fname, 'rb') as f:
             for line in f:
                 yield gensim.utils.simple_preprocess(line, deacc=True, min_len=3)
 
     train_texts = list(build_texts(lee_train_file))
-    print(len(train_texts))
+    print("Number of training documents:", len(train_texts))
 
 
 
@@ -146,7 +133,7 @@ cannot be of much practical use.
     b'The national road toll for the Christmas-New Year holiday period stands at 45, eight fewer than for '
     b"Argentina's political and economic crisis has deepened with the resignation of its interim President"
     b'Six midwives have been suspended at Wollongong Hospital, south of Sydney, for inappropriate use of n'
-    300
+    Number of training documents: 300
 
 
 
@@ -175,26 +162,26 @@ out the noise using the following steps in this order for each line:
 
     bigram = gensim.models.Phrases(train_texts)  # for bigram collocation detection
 
-    bigram[['new', 'york', 'example']]
+    print(bigram[['new', 'york', 'example']])
 
     from gensim.utils import lemmatize
     from nltk.corpus import stopwords
 
-    stops = set(stopwords.words('english'))  # nltk stopwords list
+    stops = set(stopwords.words('english'))  # set of stopwords from NLTK
 
     def process_texts(texts):
         """
-        Function to process texts. Following are the steps we take:
+        Process texts. Following are the steps we take:
 
         1. Stopword Removal.
         2. Collocation detection.
         3. Lemmatization (not stem since stemming can reduce the interpretability).
 
-        Parameters:
+        Parameters
         ----------
         texts: Tokenized texts.
 
-        Returns:
+        Returns
         -------
         texts: Pre-processed tokenized texts.
         """
@@ -220,6 +207,7 @@ out the noise using the following steps in this order for each line:
 
  .. code-block:: none
 
+    ['new_york', 'example']
     [['federal_government', 'says', 'safe', 'afghani', 'asylum_seekers', 'australia', 'return', 'home', 'environment', 'becomes', 'secure', 'government', 'suspended', 'applications', 'interim_government', 'established', 'kabul', 'foreign_affairs', 'minister_alexander', 'downer', 'refused', 'say', 'long', 'claims', 'process', 'put', 'hold', 'says', 'major', 'threat', 'people', 'seeking', 'asylum', 'longer', 'many', 'afghans', 'tried', 'get', 'australia', 'matter', 'britain', 'countries', 'north', 'west', 'europe', 'claimed', 'fleeing', 'taliban', 'said', 'well', 'taliban', 'longer', 'power', 'afghanistan', 'taliban', 'finished', 'meanwhile', 'mass', 'airlift', 'detainees', 'christmas', 'island', 'pacific', 'island', 'nauru', 'total', 'people', 'flown', 'island', 'two', 'operations', 'using', 'chartered', 'aircraft', 'second', 'airlift', 'today', 'delivered', 'asylum_seekers', 'nauru', 'await', 'processing', 'claims', 'temporary', 'visas', 'department', 'immigration', 'says', 'detainees', 'remaining', 'christmas', 'island', 'spokesman', 'says', 'decision', 'regarding', 'future', 'yet', 'made']]
 
 
@@ -271,10 +259,10 @@ latent dimensions after the SVD.
  .. code-block:: none
 
     (0, '0.542*"said" + 0.349*"says" + 0.127*"arafat" + 0.122*"palestinian" + 0.118*"people" + 0.117*"israeli" + 0.112*"two" + 0.110*"australian" + 0.110*"also" + 0.107*"australia"')
-    (1, '0.408*"says" + -0.322*"arafat" + -0.315*"palestinian" + -0.273*"israeli" + -0.192*"israel" + -0.173*"sharon" + 0.145*"australia" + 0.143*"australian" + -0.140*"west_bank" + -0.136*"hamas"')
-    (2, '0.349*"says" + -0.330*"said" + -0.203*"afghanistan" + -0.191*"bin_laden" + -0.178*"taliban" + -0.169*"pakistan" + 0.161*"australia" + 0.149*"arafat" + -0.126*"tora_bora" + 0.124*"palestinian"')
-    (3, '-0.292*"fire" + -0.240*"sydney" + 0.214*"says" + -0.184*"firefighters" + -0.172*"south" + -0.164*"new_south" + -0.164*"wales" + -0.163*"north" + -0.161*"fires" + 0.152*"afghanistan"')
-    (4, '-0.219*"said" + -0.171*"test" + -0.171*"match" + 0.154*"afghanistan" + 0.150*"government" + 0.148*"says" + -0.144*"first" + 0.143*"fire" + -0.139*"australia" + 0.136*"force"')
+    (1, '-0.408*"says" + 0.322*"arafat" + 0.315*"palestinian" + 0.273*"israeli" + 0.192*"israel" + 0.173*"sharon" + -0.145*"australia" + -0.143*"australian" + 0.140*"west_bank" + 0.136*"hamas"')
+    (2, '-0.349*"says" + 0.330*"said" + 0.203*"afghanistan" + 0.191*"bin_laden" + 0.178*"taliban" + 0.169*"pakistan" + -0.161*"australia" + -0.149*"arafat" + 0.126*"tora_bora" + -0.124*"israeli"')
+    (3, '-0.293*"fire" + -0.240*"sydney" + 0.214*"says" + -0.184*"firefighters" + -0.170*"south" + -0.164*"new_south" + -0.164*"wales" + -0.163*"north" + -0.161*"fires" + 0.152*"afghanistan"')
+    (4, '0.219*"said" + 0.171*"test" + 0.170*"match" + -0.155*"afghanistan" + -0.149*"government" + -0.148*"says" + 0.144*"first" + -0.142*"fire" + 0.139*"australia" + -0.135*"force"')
 
 
 
@@ -305,26 +293,26 @@ topics it needs through posterior inference.
 
  .. code-block:: none
 
-    (0, '0.005*said + 0.004*arafat + 0.003*sharon + 0.003*team + 0.002*israeli + 0.002*rafter + 0.002*australia + 0.002*win + 0.002*says + 0.002*palestinian + 0.002*doubles + 0.002*expect + 0.002*west_bank + 0.001*official + 0.001*yesterday + 0.001*made + 0.001*military + 0.001*know + 0.001*good + 0.001*make')
-    (1, '0.004*says + 0.003*match + 0.002*said + 0.002*australian + 0.002*team + 0.002*australia + 0.002*government + 0.002*rabbani + 0.002*president + 0.002*israeli + 0.002*rafter + 0.002*action + 0.001*france + 0.001*metres + 0.001*guarantee + 0.001*day + 0.001*tennis + 0.001*career + 0.001*marshal + 0.001*world')
-    (2, '0.004*said + 0.004*says + 0.004*company + 0.003*afghanistan + 0.003*people + 0.002*taliban + 0.002*powell + 0.002*travel + 0.002*staff + 0.002*austar + 0.002*traveland + 0.002*southern + 0.002*entitlements + 0.002*united_states + 0.002*today + 0.002*bin_laden + 0.001*million + 0.001*operator + 0.001*time + 0.001*administrators')
-    (3, '0.004*said + 0.003*palestinian + 0.002*government + 0.002*sharon + 0.002*israeli + 0.002*hamas + 0.002*statement + 0.002*human_rights + 0.002*security + 0.002*arafat + 0.002*call + 0.002*two + 0.001*national + 0.001*gaza_strip + 0.001*suicide_attacks + 0.001*party + 0.001*called + 0.001*terrorism + 0.001*group + 0.001*weekend')
-    (4, '0.004*report + 0.003*says + 0.002*company + 0.002*would + 0.002*virgin + 0.002*said + 0.002*told + 0.002*launceston + 0.002*arrested + 0.002*terminal + 0.002*arrest + 0.001*australia + 0.001*afp + 0.001*airline + 0.001*could + 0.001*three + 0.001*administrators + 0.001*morning + 0.001*marquee + 0.001*police')
-    (5, '0.006*said + 0.003*airport + 0.003*taliban + 0.002*killed + 0.002*city + 0.002*kandahar + 0.002*opposition + 0.002*civilians + 0.002*lali + 0.002*gul + 0.002*left + 0.001*half + 0.001*near + 0.001*agha + 0.001*night + 0.001*wounded + 0.001*end + 0.001*skills + 0.001*survey + 0.001*alarming')
-    (6, '0.003*friedli + 0.003*people + 0.002*director + 0.002*company + 0.002*know + 0.002*replied + 0.002*senate + 0.002*court + 0.002*says + 0.002*said + 0.002*responsibility + 0.002*river + 0.001*first + 0.001*possibility + 0.001*heater + 0.001*stephan + 0.001*also + 0.001*described + 0.001*dying + 0.001*unforeseeable')
-    (7, '0.002*sydney + 0.002*north + 0.002*indonesia + 0.002*howard + 0.002*new_south + 0.002*megawati + 0.002*wales + 0.002*summit + 0.002*meeting + 0.001*president + 0.001*hit + 0.001*damage + 0.001*fire + 0.001*state + 0.001*areas + 0.001*expected + 0.001*said + 0.001*better + 0.001*australia + 0.001*trees')
-    (8, '0.003*says + 0.003*india + 0.002*unions + 0.002*government + 0.002*new + 0.002*union + 0.002*said + 0.002*australia + 0.002*dispute + 0.002*yallourn + 0.001*enterprise + 0.001*afternoon + 0.001*caird + 0.001*indian + 0.001*sector + 0.001*reportedly + 0.001*document + 0.001*power + 0.001*support + 0.001*running')
-    (9, '0.003*krishna + 0.002*benares + 0.002*hare + 0.002*ashes + 0.002*ganges + 0.002*harrison + 0.002*ceremony + 0.002*holy + 0.002*take + 0.002*former + 0.001*river + 0.001*said + 0.001*devout + 0.001*sect + 0.001*local_afghan + 0.001*hindu + 0.001*devotees + 0.001*levy + 0.001*scatter + 0.001*imposed')
-    (10, '0.002*storm + 0.002*says + 0.002*ses + 0.002*trees + 0.002*sydney + 0.002*hit + 0.002*services + 0.002*said + 0.002*homes + 0.002*night + 0.001*areas + 0.001*storms + 0.001*brought + 0.001*around + 0.001*worst + 0.001*hornsby + 0.001*volunteers + 0.001*power + 0.001*needed + 0.001*energy')
-    (11, '0.003*said + 0.002*israeli + 0.002*source + 0.002*militants + 0.002*soldiers + 0.002*hamas + 0.002*two + 0.001*palestinian + 0.001*ismail + 0.001*fire + 0.001*another + 0.001*leaders + 0.001*palestinian_security + 0.001*senior + 0.001*police + 0.001*qantas + 0.001*near + 0.001*breaking + 0.001*wave + 0.001*crackdown')
-    (12, '0.003*harrison + 0.002*said + 0.002*george + 0.002*man + 0.002*music + 0.002*tonight + 0.002*another + 0.002*liverpool + 0.001*memory + 0.001*died + 0.001*people + 0.001*beatle + 0.001*vigil + 0.001*stufflebeem + 0.001*support + 0.001*talented + 0.001*tree + 0.001*field + 0.001*musician + 0.001*intifada')
-    (13, '0.003*government + 0.002*says + 0.002*hiv + 0.002*per_cent + 0.002*review + 0.002*bid + 0.002*assistance + 0.001*lew + 0.001*help + 0.001*said + 0.001*taxpayers + 0.001*qantas + 0.001*industrial_action + 0.001*assassination + 0.001*unemployment + 0.001*time + 0.001*united + 0.001*latest + 0.001*europe + 0.001*federal_government')
-    (14, '0.003*economy + 0.002*says + 0.002*strong + 0.002*australia + 0.001*also + 0.001*said + 0.001*quite + 0.001*firm + 0.001*australians + 0.001*taylor + 0.001*follow + 0.001*arabs + 0.001*banksa + 0.001*australian + 0.001*recession + 0.001*numerous + 0.001*stock + 0.001*economic + 0.001*rural + 0.001*immunity')
-    (15, '0.002*one + 0.002*guides + 0.002*three + 0.002*interlaken + 0.002*canyoning + 0.002*adventure_world + 0.002*weather + 0.001*inexperienced + 0.001*killed + 0.001*changes + 0.001*wall + 0.001*struck + 0.001*convicted + 0.001*toes + 0.001*first + 0.001*saxeten + 0.001*tragedy + 0.001*swiss + 0.001*near + 0.001*provisions')
-    (16, '0.002*human + 0.002*brain + 0.002*research + 0.002*team + 0.002*cells + 0.001*says + 0.001*said + 0.001*findings + 0.001*earlier + 0.001*australian + 0.001*embryos + 0.001*israeli + 0.001*believe + 0.001*honour + 0.001*various + 0.001*embryo + 0.001*media + 0.001*dale + 0.001*massachusetts + 0.001*darkness')
-    (17, '0.001*australian + 0.001*australians + 0.001*disarm + 0.001*murders + 0.001*convince + 0.001*released + 0.001*educate + 0.001*world + 0.001*pitch + 0.001*markets + 0.001*teenage + 0.001*expects + 0.001*quiet + 0.001*afghanistan + 0.001*importance + 0.001*collapse + 0.001*bloomberg + 0.001*said + 0.001*soorley + 0.001*disturbances')
-    (18, '0.003*says + 0.002*afghanistan + 0.002*taliban + 0.002*troops + 0.002*senator_hill + 0.002*australian + 0.001*zones + 0.001*could + 0.001*advocates + 0.001*adolfo + 0.001*andrew + 0.001*continent + 0.001*soft + 0.001*government + 0.001*shells + 0.001*made + 0.001*backbencher + 0.001*pakistan + 0.001*hidden + 0.001*vendors')
-    (19, '0.002*buchanan + 0.001*says + 0.001*twice + 0.001*actually + 0.001*day + 0.001*game + 0.001*pointed + 0.001*win + 0.001*duck + 0.001*without + 0.001*australia + 0.001*new_zealand + 0.001*towards + 0.001*match + 0.001*cavalcade + 0.001*bow + 0.001*score + 0.001*revered + 0.001*burnt + 0.001*kiwi')
+    (0, '0.006*said + 0.005*sharon + 0.005*arafat + 0.004*palestinian + 0.003*government + 0.003*israeli + 0.002*west_bank + 0.002*terrorism + 0.002*gaza_strip + 0.002*called + 0.002*security + 0.002*suicide_attacks + 0.002*air_strikes + 0.002*attacks + 0.002*group + 0.002*war + 0.002*address + 0.002*official + 0.002*offices + 0.002*choosing')
+    (1, '0.006*said + 0.003*airport + 0.003*taliban + 0.002*killed + 0.002*kandahar + 0.002*opposition + 0.002*nearly + 0.002*near + 0.002*around + 0.002*half + 0.002*city + 0.002*yallourn + 0.001*civilians + 0.001*end + 0.001*agha + 0.001*masood + 0.001*gul + 0.001*night + 0.001*left + 0.001*state')
+    (2, '0.004*said + 0.003*afghanistan + 0.002*says + 0.002*powell + 0.002*australian + 0.002*also + 0.002*taliban + 0.002*southern + 0.002*united_states + 0.001*laden + 0.001*time + 0.001*officers + 0.001*osama_bin + 0.001*bin_laden + 0.001*less + 0.001*troops + 0.001*former + 0.001*mountains + 0.001*saviour + 0.001*rumsfeld')
+    (3, '0.004*team + 0.003*rafter + 0.002*australia + 0.002*said + 0.002*says + 0.002*win + 0.002*good + 0.002*doubles + 0.002*make + 0.002*know + 0.001*expect + 0.001*racing + 0.001*today + 0.001*hewitt + 0.001*davis + 0.001*hour + 0.001*prizemoney + 0.001*new_zealand + 0.001*number + 0.001*todd')
+    (4, '0.002*howard + 0.002*australia + 0.002*indonesia + 0.002*match + 0.002*says + 0.002*megawati + 0.002*summit + 0.001*day + 0.001*president + 0.001*said + 0.001*pieterse + 0.001*towards + 0.001*game + 0.001*test + 0.001*buchanan + 0.001*fast_bowler + 0.001*two + 0.001*win + 0.001*honours + 0.001*talks')
+    (5, '0.004*company + 0.002*staff + 0.002*says + 0.002*cow + 0.002*entitlements + 0.002*disease + 0.002*austar + 0.002*said + 0.002*million + 0.002*confirmed + 0.002*japan + 0.001*administrators + 0.001*case + 0.001*receive + 0.001*third + 0.001*line + 0.001*albarran + 0.001*considerable + 0.001*foley + 0.001*traveland')
+    (6, '0.003*match + 0.002*israeli + 0.002*rafter + 0.002*team + 0.002*says + 0.002*training + 0.002*tennis + 0.001*guarantee + 0.001*france + 0.001*australia + 0.001*said + 0.001*killed + 0.001*way + 0.001*arthurs + 0.001*members + 0.001*swinging + 0.001*government + 0.001*day + 0.001*want + 0.001*asked')
+    (7, '0.003*afghan + 0.003*rabbani + 0.002*afghanistan + 0.002*says + 0.002*president + 0.002*agreement + 0.002*would + 0.002*government + 0.002*interim + 0.001*security + 0.001*factions + 0.001*bonn + 0.001*leaders + 0.001*talks + 0.001*northern_alliance + 0.001*international + 0.001*security_forces + 0.001*rosebury + 0.001*personnel + 0.001*real')
+    (8, '0.003*australia + 0.003*says + 0.003*economy + 0.002*strong + 0.002*conference + 0.002*republic + 0.001*australian + 0.001*would + 0.001*canberra + 0.001*monarchy + 0.001*recession + 0.001*rural + 0.001*banksa + 0.001*quite + 0.001*process + 0.001*follow + 0.001*corowa + 0.001*taylor + 0.001*reverend + 0.001*said')
+    (9, '0.002*adventure_world + 0.002*canyoning + 0.002*one + 0.002*three + 0.002*interlaken + 0.002*guides + 0.002*tourists + 0.001*court + 0.001*staff + 0.001*eight + 0.001*massive + 0.001*swiss + 0.001*changes + 0.001*convicted + 0.001*group + 0.001*says + 0.001*sentence + 0.001*allowed + 0.001*employed + 0.001*peace')
+    (10, '0.003*israeli + 0.003*said + 0.002*palestinian + 0.002*source + 0.002*hamas + 0.002*two + 0.002*militants + 0.001*soldiers + 0.001*palestinian_security + 0.001*ismail + 0.001*west_bank + 0.001*police + 0.001*near + 0.001*leaders + 0.001*senior + 0.001*quest + 0.001*killed + 0.001*afp + 0.001*palestinians + 0.001*another')
+    (11, '0.002*government + 0.002*said + 0.002*says + 0.002*help + 0.002*bid + 0.002*time + 0.002*lew + 0.001*famously + 0.001*assistance + 0.001*would + 0.001*per_cent + 0.001*review + 0.001*bin_laden + 0.001*federal_government + 0.001*dominance + 0.001*brewing + 0.001*progress + 0.001*trade + 0.001*lindsay + 0.001*leak')
+    (12, '0.002*storm + 0.002*says + 0.002*sydney + 0.002*ses + 0.002*trees + 0.002*damage + 0.002*around + 0.002*said + 0.002*hornsby + 0.002*homes + 0.002*brought + 0.001*worst + 0.001*hit + 0.001*areas + 0.001*services + 0.001*storms + 0.001*slightly + 0.001*feet + 0.001*electricity + 0.001*energy')
+    (13, '0.002*commission + 0.002*collapse + 0.002*one + 0.001*said + 0.001*australian + 0.001*says + 0.001*whether + 0.001*dickie + 0.001*begin + 0.001*expected + 0.001*today + 0.001*nabil + 0.001*need + 0.001*directors + 0.001*asic + 0.001*regime + 0.001*ascertain + 0.001*government + 0.001*witnesses + 0.001*regulatory')
+    (14, '0.003*krishna + 0.003*hare + 0.003*benares + 0.003*ashes + 0.002*harrison + 0.002*ganges + 0.002*holy + 0.002*take + 0.001*river + 0.001*ceremony + 0.001*sect + 0.001*jackie + 0.001*devotees + 0.001*morning + 0.001*would + 0.001*members + 0.001*fans + 0.001*wore + 0.001*told + 0.001*said')
+    (15, '0.001*band + 0.001*powerful + 0.001*lennon + 0.001*harrison + 0.001*songs + 0.001*known + 0.001*undertakings + 0.001*beatles + 0.001*salvation + 0.001*sun + 0.001*success + 0.001*said + 0.001*cranky + 0.001*beatle + 0.001*motor + 0.001*sustained + 0.001*found + 0.001*although + 0.001*hamas + 0.001*widely')
+    (16, '0.003*friedli + 0.002*people + 0.002*replied + 0.002*know + 0.002*director + 0.002*company + 0.002*day + 0.002*said + 0.001*adventure_world + 0.001*swiss + 0.001*two + 0.001*trip + 0.001*along + 0.001*accused + 0.001*court + 0.001*think + 0.001*question + 0.001*asked + 0.001*trial + 0.001*first')
+    (17, '0.001*one + 0.001*collapse + 0.001*third + 0.001*inspired + 0.001*made + 0.001*appleby + 0.001*parties + 0.001*future + 0.001*given + 0.001*recommendation + 0.001*masterminding + 0.001*disruptions + 0.001*best + 0.001*gabriel + 0.001*first + 0.001*culture + 0.001*report + 0.001*aware + 0.001*principles + 0.001*issue')
+    (18, '0.003*harrison + 0.002*george + 0.002*said + 0.002*tonight + 0.002*memory + 0.002*died + 0.002*music + 0.001*beatle + 0.001*liverpool + 0.001*losing + 0.001*talented + 0.001*people + 0.001*insisted + 0.001*lord + 0.001*gaming + 0.001*say + 0.001*vigil + 0.001*planted + 0.001*silence + 0.001*internal')
+    (19, '0.002*party + 0.002*lee + 0.002*said + 0.001*yesterday + 0.001*new_zealand + 0.001*coalition + 0.001*match + 0.001*two + 0.001*national + 0.001*says + 0.001*stage + 0.001*shane + 0.001*president + 0.001*atlanta + 0.001*parties + 0.001*outlined + 0.001*amalgamation + 0.001*test + 0.001*upon + 0.001*states')
 
 
 
@@ -444,6 +432,8 @@ wrote explaining topic coherence:
     # pyLDAvis.gensim.prepare(lmlist[2], corpus, dictionary)
     lmtopics = lmlist[5].show_topics(formatted=False)
 
+    lm, top_topics = ldamodel, ldatopics
+
 
 
 
@@ -452,65 +442,6 @@ wrote explaining topic coherence:
 
 
 
-
-LDA as LSI
-----------
-
-One of the problem with LDA is that if we train it on a large number of
-topics, the topics get "lost" among the numbers. Let us see if we can dig out
-the best topics from the best LDA model we can produce. The function below
-can be used to control the quality of the LDA model we produce.
-
-
-
-.. code-block:: default
-
-
-
-    def ret_top_model():
-        """
-        Since LDAmodel is a probabilistic model, it comes up different topics each time we run it. To control the
-        quality of the topic model we produce, we can see what the interpretability of the best topic is and keep
-        evaluating the topic model until this threshold is crossed.
-
-        Returns:
-        -------
-        lm: Final evaluated topic model
-        top_topics: ranked topics in decreasing order. List of tuples
-        """
-        top_topics = [(0, 0)]
-        while top_topics[0][1] < 0.97:
-            lm = LdaModel(corpus=corpus, id2word=dictionary)
-            coherence_values = {}
-            for n, topic in lm.show_topics(num_topics=-1, formatted=False):
-                topic = [word for word, _ in topic]
-                cm = CoherenceModel(topics=[topic], texts=train_texts, dictionary=dictionary, window_size=10)
-                coherence_values[n] = cm.get_coherence()
-            top_topics = sorted(coherence_values.items(), key=operator.itemgetter(1), reverse=True)
-        return lm, top_topics
-
-    #
-    # This part is broken: the confidence never reaches 0.97.
-    # It also takes a prohibitively long time to run.  Disable it for now.
-    # Use the regular LDA model instead, to keep the rest of this script working.
-    #
-    # lm, top_topics = ret_top_model()
-    # print(top_topics[:5])
-    lm, top_topics = ldamodel, ldatopics
-
-
-
-
-
-
-
-Inference
----------
-
-We can clearly see below that the first topic is about **cinema**\ , second is about **email malware**\ , third is about the land which was given back to the **Larrakia aboriginal community of Australia** in 2000. Then there's one about **Australian cricket**. LDA as LSI has worked wonderfully in finding out the best topics from within LDA.
-
-pprint([lm.show_topic(topicid) for topicid, c_v in top_topics[:10]])
-lda_lsi_topics = [[word for word, prob in lm.show_topic(topicid)] for topicid, c_v in top_topics]
 
 Evaluating all the topic models
 -------------------------------
@@ -541,7 +472,6 @@ coherence pipeline. You can even plug in an `NMF topic model
     hdp_coherence = create_coherence_model(hdptopics[:10])
     lda_coherence = create_coherence_model(ldatopics)
     lm_coherence = create_coherence_model(lmtopics)
-    # lda_lsi_coherence = create_coherence_model(lda_lsi_topics[:10])
 
     def evaluate_bar_graph(coherences, indices):
         """
@@ -557,8 +487,8 @@ coherence pipeline. You can even plug in an `NMF topic model
         plt.xlabel('Models')
         plt.ylabel('Coherence Value')
 
-    values = [lsi_coherence, hdp_coherence, lda_coherence, lm_coherence] #, lda_lsi_coherence]
-    labels = ['LSI', 'HDP', 'LDA', 'LDA_Mod'] #, 'LDA_LSI']
+    values = [lsi_coherence, hdp_coherence, lda_coherence, lm_coherence]
+    labels = ['LSI', 'HDP', 'LDA', 'LDA_Mod']
     evaluate_bar_graph(values, labels)
 
 
@@ -597,10 +527,12 @@ Let's modify ``c_uci`` to use ``s_one_pre`` instead of ``s_one_one`` segmentatio
 
     make_pipeline = namedtuple('Coherence_Measure', 'seg, prob, conf, aggr')
 
-    measure = make_pipeline(segmentation.s_one_one,
-                            probability_estimation.p_boolean_sliding_window,
-                            direct_confirmation_measure.log_ratio_measure,
-                            aggregation.arithmetic_mean)
+    measure = make_pipeline(
+        segmentation.s_one_one,
+        probability_estimation.p_boolean_sliding_window,
+        direct_confirmation_measure.log_ratio_measure,
+        aggregation.arithmetic_mean,
+    )
 
 
 
@@ -633,7 +565,7 @@ To get topics out of the topic model:
 
  .. code-block:: none
 
-    [ 99  98 356  80 450 225 956 329 986 755]
+    [ 98  99 258 356  86 986 349 574  80 200]
 
 
 
@@ -662,7 +594,7 @@ To get topics out of the topic model:
 
  .. code-block:: none
 
-    [(99, 98), (99, 356), (99, 80), (99, 450), (99, 225), (99, 956), (99, 329), (99, 986), (99, 755), (98, 99), (98, 356), (98, 80), (98, 450), (98, 225), (98, 956), (98, 329), (98, 986), (98, 755), (356, 99), (356, 98), (356, 80), (356, 450), (356, 225), (356, 956), (356, 329), (356, 986), (356, 755), (80, 99), (80, 98), (80, 356), (80, 450), (80, 225), (80, 956), (80, 329), (80, 986), (80, 755), (450, 99), (450, 98), (450, 356), (450, 80), (450, 225), (450, 956), (450, 329), (450, 986), (450, 755), (225, 99), (225, 98), (225, 356), (225, 80), (225, 450), (225, 956), (225, 329), (225, 986), (225, 755), (956, 99), (956, 98), (956, 356), (956, 80), (956, 450), (956, 225), (956, 329), (956, 986), (956, 755), (329, 99), (329, 98), (329, 356), (329, 80), (329, 450), (329, 225), (329, 956), (329, 986), (329, 755), (986, 99), (986, 98), (986, 356), (986, 80), (986, 450), (986, 225), (986, 956), (986, 329), (986, 755), (755, 99), (755, 98), (755, 356), (755, 80), (755, 450), (755, 225), (755, 956), (755, 329), (755, 986)]
+    [(98, 99), (98, 258), (98, 356), (98, 86), (98, 986), (98, 349), (98, 574), (98, 80), (98, 200), (99, 98), (99, 258), (99, 356), (99, 86), (99, 986), (99, 349), (99, 574), (99, 80), (99, 200), (258, 98), (258, 99), (258, 356), (258, 86), (258, 986), (258, 349), (258, 574), (258, 80), (258, 200), (356, 98), (356, 99), (356, 258), (356, 86), (356, 986), (356, 349), (356, 574), (356, 80), (356, 200), (86, 98), (86, 99), (86, 258), (86, 356), (86, 986), (86, 349), (86, 574), (86, 80), (86, 200), (986, 98), (986, 99), (986, 258), (986, 356), (986, 86), (986, 349), (986, 574), (986, 80), (986, 200), (349, 98), (349, 99), (349, 258), (349, 356), (349, 86), (349, 986), (349, 574), (349, 80), (349, 200), (574, 98), (574, 99), (574, 258), (574, 356), (574, 86), (574, 986), (574, 349), (574, 80), (574, 200), (80, 98), (80, 99), (80, 258), (80, 356), (80, 86), (80, 986), (80, 349), (80, 574), (80, 200), (200, 98), (200, 99), (200, 258), (200, 356), (200, 86), (200, 986), (200, 349), (200, 574), (200, 80)]
 
 
 
@@ -725,15 +657,16 @@ Since this is a window-based coherence measure we will perform window based prob
 How this topic model can be used further
 ========================================
 
-The best topic model here can be used as a standalone for news article classification. However a topic model can also be used as a dimensionality reduction algorithm to feed into a classifier. A good topic model should be able to extract the signal from the noise efficiently, hence improving the performance of the classifier.
+A topic model can be used as a dimensionality reduction algorithm to feed into a classifier.
+A good topic model should be able to extract the signal from the noise efficiently, hence improving the performance of the classifier.
 
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  20.807 seconds)
+   **Total running time of the script:** ( 0 minutes  17.335 seconds)
 
-**Estimated memory usage:**  158 MB
+**Estimated memory usage:**  211 MB
 
 
 .. _sphx_glr_download_auto_examples_howtos_run_news_classification.py:
