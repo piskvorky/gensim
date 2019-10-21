@@ -69,7 +69,7 @@ Understanding this functionality is vital for using gensim effectively.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces transformations and demonstrates their use on a toy corpus.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces transformations and demonstrates their use on a toy corpus. ">
 
 .. only:: html
 
@@ -89,7 +89,7 @@ Understanding this functionality is vital for using gensim effectively.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates querying a corpus for similar documents.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates querying a corpus for similar documents. ">
 
 .. only:: html
 
@@ -163,7 +163,7 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s fastText model and demonstrates its use on the Lee Corpus.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s fastText model and demonstrates its use on the Lee Corpus. ">
 
 .. only:: html
 
@@ -183,7 +183,7 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces the annoy library for similarity queries using a Word2Vec model.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces the annoy library for similarity queries using a Word2Vec model. ">
 
 .. only:: html
 
@@ -317,7 +317,7 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates simple and quick access to common corpora, models, and other data.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates simple and quick access to common corpora, models, and other data. ">
 
 .. only:: html
 
@@ -337,7 +337,7 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Some tips of how to author documentation for gensim.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Some tips of how to author documentation for gensim. ">
 
 .. only:: html
 
@@ -407,13 +407,13 @@ Other Resources
 
 Blog posts, tutorial videos, hackathons and other useful Gensim resources, from around the internet.
 
-- Use FastText or Word2Vec? Comparison of embedding quality and performance. `Jupyter Notebook <https://github.com/RaRe-Technologies/gensim/blob/ba1ce894a5192fc493a865c535202695bb3c0424/docs/notebooks/Word2Vec_FastText_Comparison.ipynb>`__
-- Phrases extracted from *How I Met Your Mother*. `Blog post by Mark Needham <http://www.markhneedham.com/blog/2015/02/12/pythongensim-creating-bigrams-over-how-i-met-your-mother-transcripts/>`__
-- Using NLTK + Gensim LDA for hierarchical document clustering. `Jupyter notebook by Brandon Rose <http://brandonrose.org/clustering#Latent-Dirichlet-Allocation>`__
-- Evolution of Voldemort topic through the 7 Harry Potter books. `Blog post <http://rare-technologies.com/understanding-and-coding-dynamic-topic-models/>`__
+- *Use FastText or Word2Vec?* Comparison of embedding quality and performance. `Jupyter Notebook <https://github.com/RaRe-Technologies/gensim/blob/ba1ce894a5192fc493a865c535202695bb3c0424/docs/notebooks/Word2Vec_FastText_Comparison.ipynb>`__
+- Multiword phrases extracted from *How I Met Your Mother*. `Blog post by Mark Needham <http://www.markhneedham.com/blog/2015/02/12/pythongensim-creating-bigrams-over-how-i-met-your-mother-transcripts/>`__
+- *Using Gensim LDA for hierarchical document clustering*. `Jupyter notebook by Brandon Rose <http://brandonrose.org/clustering#Latent-Dirichlet-Allocation>`__
+- *Evolution of Voldemort topic through the 7 Harry Potter books*. `Blog post <http://rare-technologies.com/understanding-and-coding-dynamic-topic-models/>`__
 - *Movie plots by genre*: Document classification using various techniques: TF-IDF, word2vec averaging, Deep IR, Word Movers Distance and doc2vec. `Github repo <https://github.com/RaRe-Technologies/movie-plots-by-genre>`__
-- Word2vec: Faster than Google? Optimization lessons in Python. Talk by Radim Řehůřek at PyData Berlin 2014 `Youtube video <https://www.youtube.com/watch?v=vU4TlwZzTfU>`__
-- Word2vec & friends: Talk by Radim Řehůřek at MLMU.cz, 7.1.2015 `Youtube video <https://www.youtube.com/watch?v=wTp3P2UnTfQ>`__
+- *Word2vec: Faster than Google? Optimization lessons in Python*, talk by Radim Řehůřek at PyData Berlin 2014. `Youtube video <https://www.youtube.com/watch?v=vU4TlwZzTfU>`__
+- *Word2vec & friends*, talk by Radim Řehůřek at MLMU.cz 7.1.2015. `Youtube video <https://www.youtube.com/watch?v=wTp3P2UnTfQ>`__
 
 ..
    - ? `Making an Impact with NLP <https://www.youtube.com/watch?v=oSSnDeOXTZQ>`__ -- Pycon 2016 Tutorial by Hobsons Lane
@@ -452,13 +452,13 @@ Blog posts, tutorial videos, hackathons and other useful Gensim resources, from 
 
   .. container:: sphx-glr-download
 
-    :download:`Download all examples in Python source code: auto_examples_python.zip <//home/misha/git/gensim-numfocus/docs/src/auto_examples/auto_examples_python.zip>`
+    :download:`Download all examples in Python source code: auto_examples_python.zip <//Volumes/work/workspace/gensim_misha/docs/src/auto_examples/auto_examples_python.zip>`
 
 
 
   .. container:: sphx-glr-download
 
-    :download:`Download all examples in Jupyter notebooks: auto_examples_jupyter.zip <//home/misha/git/gensim-numfocus/docs/src/auto_examples/auto_examples_jupyter.zip>`
+    :download:`Download all examples in Jupyter notebooks: auto_examples_jupyter.zip <//Volumes/work/workspace/gensim_misha/docs/src/auto_examples/auto_examples_jupyter.zip>`
 
 
 .. only:: html

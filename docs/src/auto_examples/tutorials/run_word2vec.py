@@ -147,9 +147,7 @@ vec_king = wv['king']
 try:
     vec_weapon = wv['cameroon']
 except KeyError:
-    pass
-else:
-    raise RuntimeError('expected to trip over a KeyError')
+    print("The word 'cameroon' does not appear in this model")
 
 ###############################################################################
 # Moving on, ``Word2Vec`` supports several word similarity tasks out of the
@@ -189,7 +187,7 @@ print(wv.doesnt_match(['fire', 'water', 'land', 'sea', 'air', 'car']))
 #
 
 from gensim.test.utils import datapath
-
+from gensim import utils
 
 class MyCorpus(object):
     """An interator that yields sentences (lists of str)."""
@@ -198,7 +196,7 @@ class MyCorpus(object):
         corpus_path = datapath('lee_background.cor')
         for line in open(corpus_path):
             # assume there's one document per line, tokens separated by whitespace
-            yield line.lower().split()
+            yield utils.simple_preprocess(line)
 
 ###############################################################################
 # If we wanted to do any custom preprocessing, e.g. decode a non-standard
@@ -375,7 +373,7 @@ model.accuracy('./datasets/questions-words.txt')
 model.evaluate_word_pairs(datapath('wordsim353.tsv'))
 
 ###############################################################################
-# Important::
+# .. Important::
 #   Good performance on Google's or WS-353 test set doesn’t mean word2vec will
 #   work well in your application, or vice versa. It’s always best to evaluate
 #   directly on your intended task. For an example of how to use word2vec in a
@@ -452,7 +450,6 @@ print(training_loss)
 
 import io
 import os
-import os.path
 
 import gensim.models.word2vec
 import gensim.downloader as api
@@ -490,7 +487,7 @@ input_data = list(generate_input_data())
 #
 
 # Temporarily reduce logging verbosity
-logging.basicConfig(level=logging.ERROR)
+logging.root.level = logging.ERROR
 
 import time
 import numpy as np
@@ -520,29 +517,29 @@ for data in input_data_subset:
                         compute_loss=loss_flag,
                         sg=sg_val,
                         hs=hs_val,
-                        seed=seed_val
+                        seed=seed_val,
                     )
                     time_taken_list.append(time.time() - start_time)
 
                 time_taken_list = np.array(time_taken_list)
                 time_mean = np.mean(time_taken_list)
                 time_std = np.std(time_taken_list)
-          
-                d = {
+
+                model_result = {
                     'train_data': data.name,
                     'compute_loss': loss_flag,
                     'sg': sg_val,
                     'hs': hs_val,
-                    'mean': time_mean,
-                    'std': time_std
+                    'train_time_mean': time_mean,
+                    'train_time_std': time_std,
                 }
-                print(d)
-                train_time_values.append(d)
+                print("Word2vec model #%i: %s" % (len(train_time_values), model_result))
+                train_time_values.append(model_result)
 
 train_times_table = pd.DataFrame(train_time_values)
 train_times_table = train_times_table.sort_values(
     by=['train_data', 'sg', 'hs', 'compute_loss'],
-    ascending=[False, False, True, False]
+    ascending=[False, False, True, False],
 )
 print(train_times_table)
 
@@ -563,7 +560,7 @@ print(train_times_table)
 
 
 # re-enable logging
-logging.basicConfig(level=logging.INFO)
+logging.root.level = logging.INFO
 
 most_similars_precalc = {word : model.wv.most_similar(word) for word in model.wv.index2word}
 for i, (key, value) in enumerate(most_similars_precalc.items()):
@@ -588,7 +585,7 @@ for word in words:
     result = model.wv.most_similar(word)
     print(result)
 end = time.time()
-print(end-start)
+print(end - start)
 
 ###############################################################################
 # Now with caching
@@ -604,7 +601,7 @@ for word in words:
         print(result)
 
 end = time.time()
-print(end-start)
+print(end - start)
 
 ###############################################################################
 # Clearly you can see the improvement but this difference will be even larger
@@ -631,10 +628,6 @@ print(end-start)
 # .. Important::
 #   The model used for the visualisation is trained on a small corpus. Thus
 #   some of the relations might not be so clear.
-#
-# .. Important::
-#   Beware: This sort of dimensionality reduction comes at the cost of loss of
-#   information.
 #
 
 from sklearn.decomposition import IncrementalPCA    # inital reduction
@@ -691,7 +684,7 @@ def plot_with_matplotlib(x_vals, y_vals, labels):
     plt.scatter(x_vals, y_vals)
 
     #
-    # Label some random data points
+    # Label randomly subsampled 25 data points
     #
     indices = list(range(len(labels)))
     selected_indices = random.sample(indices, 25)

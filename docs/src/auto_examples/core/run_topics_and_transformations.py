@@ -259,8 +259,7 @@ lsi = models.LsiModel.load('/tmp/model.lsi')
 # which do not require the whole training corpus to be present in main memory all at once.
 # With memory taken care of, I am now improving :ref:`distributed`,
 # to improve CPU efficiency, too.
-# If you feel you could contribute (by testing, providing use-cases or code),
-# please `let me know <mailto:radimrehurek@seznam.cz>`_.
+# If you feel you could contribute by testing, providing use-cases or code, see the `Gensim Developer guide <https://github.com/RaRe-Technologies/gensim/wiki/Developer-page>`__.
 #
 # What Next?
 # ----------
@@ -280,9 +279,6 @@ lsi = models.LsiModel.load('/tmp/model.lsi')
 #
 # .. [5] Řehůřek. 2011. Subspace tracking for Latent Semantic Analysis.
 
-###############################################################################
-# Here we show a pretty fastText logo so that our gallery picks it up as a thumbnail.
-#
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 img = mpimg.imread('run_topics_and_transformations.png')

@@ -12,6 +12,8 @@ Word2Vec Model
 
 Introduces Gensim's Word2Vec model and demonstrates its use on the Lee Corpus.
 
+
+
 .. code-block:: default
 
 
@@ -182,13 +184,19 @@ out the FastText model.
     try:
         vec_weapon = wv['cameroon']
     except KeyError:
-        pass
-    else:
-        raise RuntimeError('expected to trip over a KeyError')
+        print("The word 'cameroon' does not appear in this model")
 
 
 
 
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    The word 'cameroon' does not appear in this model
 
 
 
@@ -227,6 +235,7 @@ less and less similar.
     'car'   'communism'     0.06
 
 
+
 Print the 5 most similar words to "car" or "minivan"
 
 
@@ -247,6 +256,7 @@ Print the 5 most similar words to "car" or "minivan"
     [('SUV', 0.853219211101532), ('vehicle', 0.8175784349441528), ('pickup_truck', 0.7763689160346985), ('Jeep', 0.7567334175109863), ('Ford_Explorer', 0.756571888923645)]
 
 
+
 Which of the below does not belong in the sequence?
 
 
@@ -264,7 +274,10 @@ Which of the below does not belong in the sequence?
 
  .. code-block:: none
 
+    /Volumes/work/workspace/gensim_misha/gensim/models/keyedvectors.py:877: FutureWarning: arrays to stack must be passed as a "sequence" type such as list or tuple. Support for non-sequence iterables such as generators is deprecated as of NumPy 1.16 and will raise an error in the future.
+      vectors = vstack(self.word_vec(word, use_norm=True) for word in used_words).astype(REAL)
     car
+
 
 
 Training Your Own Model
@@ -285,7 +298,7 @@ would handle a larger corpus.
 
 
     from gensim.test.utils import datapath
-
+    from gensim import utils
 
     class MyCorpus(object):
         """An interator that yields sentences (lists of str)."""
@@ -294,7 +307,7 @@ would handle a larger corpus.
             corpus_path = datapath('lee_background.cor')
             for line in open(corpus_path):
                 # assume there's one document per line, tokens separated by whitespace
-                yield line.lower().split()
+                yield utils.simple_preprocess(line)
 
 
 
@@ -538,7 +551,7 @@ are less similar because they are related but not interchangeable.
 
 
 
-Important::
+.. Important::
   Good performance on Google's or WS-353 test set doesn’t mean word2vec will
   work well in your application, or vice versa. It’s always best to evaluate
   directly on your intended task. For an example of how to use word2vec in a
@@ -620,7 +633,8 @@ attribute ``running_training_loss`` and can be retrieved using the function
 
  .. code-block:: none
 
-    1502637.375
+    1360402.375
+
 
 
 Benchmarks
@@ -642,7 +656,6 @@ We'll use the following data for the benchmarks:
 
     import io
     import os
-    import os.path
 
     import gensim.models.word2vec
     import gensim.downloader as api
@@ -689,7 +702,7 @@ standard deviation of the test duration.
 
 
     # Temporarily reduce logging verbosity
-    logging.basicConfig(level=logging.ERROR)
+    logging.root.level = logging.ERROR
 
     import time
     import numpy as np
@@ -719,29 +732,29 @@ standard deviation of the test duration.
                             compute_loss=loss_flag,
                             sg=sg_val,
                             hs=hs_val,
-                            seed=seed_val
+                            seed=seed_val,
                         )
                         time_taken_list.append(time.time() - start_time)
 
                     time_taken_list = np.array(time_taken_list)
                     time_mean = np.mean(time_taken_list)
                     time_std = np.std(time_taken_list)
-          
-                    d = {
+
+                    model_result = {
                         'train_data': data.name,
                         'compute_loss': loss_flag,
                         'sg': sg_val,
                         'hs': hs_val,
-                        'mean': time_mean,
-                        'std': time_std
+                        'train_time_mean': time_mean,
+                        'train_time_std': time_std,
                     }
-                    print(d)
-                    train_time_values.append(d)
+                    print("Word2vec model #%i: %s" % (len(train_time_values), model_result))
+                    train_time_values.append(model_result)
 
     train_times_table = pd.DataFrame(train_time_values)
     train_times_table = train_times_table.sort_values(
         by=['train_data', 'sg', 'hs', 'compute_loss'],
-        ascending=[False, False, True, False]
+        ascending=[False, False, True, False],
     )
     print(train_times_table)
 
@@ -755,55 +768,56 @@ standard deviation of the test duration.
 
  .. code-block:: none
 
-    {'train_data': '25kB', 'compute_loss': True, 'sg': 0, 'hs': 0, 'mean': 0.19494970639546713, 'std': 0.00656640911381026}
-    {'train_data': '25kB', 'compute_loss': False, 'sg': 0, 'hs': 0, 'mean': 0.1885364055633545, 'std': 0.005899886680402744}
-    {'train_data': '25kB', 'compute_loss': True, 'sg': 0, 'hs': 1, 'mean': 0.32846776644388836, 'std': 0.007235989409126235}
-    {'train_data': '25kB', 'compute_loss': False, 'sg': 0, 'hs': 1, 'mean': 0.3174721399943034, 'std': 0.00976786571912327}
-    {'train_data': '25kB', 'compute_loss': True, 'sg': 1, 'hs': 0, 'mean': 0.4416662851969401, 'std': 0.02416361207653766}
-    {'train_data': '25kB', 'compute_loss': False, 'sg': 1, 'hs': 0, 'mean': 0.42744946479797363, 'std': 0.01287903542670004}
-    {'train_data': '25kB', 'compute_loss': True, 'sg': 1, 'hs': 1, 'mean': 0.8072147369384766, 'std': 0.001837302959397753}
-    {'train_data': '25kB', 'compute_loss': False, 'sg': 1, 'hs': 1, 'mean': 0.8134814103444418, 'std': 0.004925226679404845}
-    {'train_data': '1MB', 'compute_loss': True, 'sg': 0, 'hs': 0, 'mean': 0.5463788509368896, 'std': 0.003758690583742914}
-    {'train_data': '1MB', 'compute_loss': False, 'sg': 0, 'hs': 0, 'mean': 0.5561865170796713, 'std': 0.00626457823638386}
-    {'train_data': '1MB', 'compute_loss': True, 'sg': 0, 'hs': 1, 'mean': 1.0325961112976074, 'std': 0.012677259113984108}
-    {'train_data': '1MB', 'compute_loss': False, 'sg': 0, 'hs': 1, 'mean': 1.029321591059367, 'std': 0.008078151596284607}
-    {'train_data': '1MB', 'compute_loss': True, 'sg': 1, 'hs': 0, 'mean': 1.5717225869496663, 'std': 0.007371674451609514}
-    {'train_data': '1MB', 'compute_loss': False, 'sg': 1, 'hs': 0, 'mean': 1.5486384232838948, 'std': 0.004524179612369696}
-    {'train_data': '1MB', 'compute_loss': True, 'sg': 1, 'hs': 1, 'mean': 3.128040393193563, 'std': 0.003113123968354469}
-    {'train_data': '1MB', 'compute_loss': False, 'sg': 1, 'hs': 1, 'mean': 3.0806221961975098, 'std': 0.015909420046736233}
-    {'train_data': '10MB', 'compute_loss': True, 'sg': 0, 'hs': 0, 'mean': 5.936583201090495, 'std': 0.03580138216253529}
-    {'train_data': '10MB', 'compute_loss': False, 'sg': 0, 'hs': 0, 'mean': 6.344505151112874, 'std': 0.16398530540737036}
-    {'train_data': '10MB', 'compute_loss': True, 'sg': 0, 'hs': 1, 'mean': 11.630548397699991, 'std': 0.38870646028299405}
-    {'train_data': '10MB', 'compute_loss': False, 'sg': 0, 'hs': 1, 'mean': 10.999666611353556, 'std': 0.029906461516413196}
-    {'train_data': '10MB', 'compute_loss': True, 'sg': 1, 'hs': 0, 'mean': 18.783557891845703, 'std': 0.14469018282620552}
-    {'train_data': '10MB', 'compute_loss': False, 'sg': 1, 'hs': 0, 'mean': 18.581509272257488, 'std': 0.08707001972588001}
-    {'train_data': '10MB', 'compute_loss': True, 'sg': 1, 'hs': 1, 'mean': 38.71146329243978, 'std': 0.16674930603931276}
-    {'train_data': '10MB', 'compute_loss': False, 'sg': 1, 'hs': 1, 'mean': 40.09593804677328, 'std': 1.505383499828536}
-        compute_loss  hs       mean  sg       std train_data
-    4           True   0   0.441666   1  0.024164       25kB
-    5          False   0   0.427449   1  0.012879       25kB
-    6           True   1   0.807215   1  0.001837       25kB
-    7          False   1   0.813481   1  0.004925       25kB
-    0           True   0   0.194950   0  0.006566       25kB
-    1          False   0   0.188536   0  0.005900       25kB
-    2           True   1   0.328468   0  0.007236       25kB
-    3          False   1   0.317472   0  0.009768       25kB
-    12          True   0   1.571723   1  0.007372        1MB
-    13         False   0   1.548638   1  0.004524        1MB
-    14          True   1   3.128040   1  0.003113        1MB
-    15         False   1   3.080622   1  0.015909        1MB
-    8           True   0   0.546379   0  0.003759        1MB
-    9          False   0   0.556187   0  0.006265        1MB
-    10          True   1   1.032596   0  0.012677        1MB
-    11         False   1   1.029322   0  0.008078        1MB
-    20          True   0  18.783558   1  0.144690       10MB
-    21         False   0  18.581509   1  0.087070       10MB
-    22          True   1  38.711463   1  0.166749       10MB
-    23         False   1  40.095938   1  1.505383       10MB
-    16          True   0   5.936583   0  0.035801       10MB
-    17         False   0   6.344505   0  0.163985       10MB
-    18          True   1  11.630548   0  0.388706       10MB
-    19         False   1  10.999667   0  0.029906       10MB
+    Word2vec model #0: {'train_data': '25kB', 'compute_loss': True, 'sg': 0, 'hs': 0, 'train_time_mean': 0.5849939982096354, 'train_time_std': 0.01522972640617474}
+    Word2vec model #1: {'train_data': '25kB', 'compute_loss': False, 'sg': 0, 'hs': 0, 'train_time_mean': 0.5755656560262045, 'train_time_std': 0.004836459768774513}
+    Word2vec model #2: {'train_data': '25kB', 'compute_loss': True, 'sg': 0, 'hs': 1, 'train_time_mean': 0.7215259075164795, 'train_time_std': 0.0036675706813458463}
+    Word2vec model #3: {'train_data': '25kB', 'compute_loss': False, 'sg': 0, 'hs': 1, 'train_time_mean': 0.7099150816599528, 'train_time_std': 0.007504192894166025}
+    Word2vec model #4: {'train_data': '25kB', 'compute_loss': True, 'sg': 1, 'hs': 0, 'train_time_mean': 0.8580133120218912, 'train_time_std': 0.04921330375815855}
+    Word2vec model #5: {'train_data': '25kB', 'compute_loss': False, 'sg': 1, 'hs': 0, 'train_time_mean': 0.8091535568237305, 'train_time_std': 0.018924161943969856}
+    Word2vec model #6: {'train_data': '25kB', 'compute_loss': True, 'sg': 1, 'hs': 1, 'train_time_mean': 1.2724089622497559, 'train_time_std': 0.062276006861437014}
+    Word2vec model #7: {'train_data': '25kB', 'compute_loss': False, 'sg': 1, 'hs': 1, 'train_time_mean': 1.2518735726674397, 'train_time_std': 0.04091287201090217}
+    Word2vec model #8: {'train_data': '1MB', 'compute_loss': True, 'sg': 0, 'hs': 0, 'train_time_mean': 1.4700793425242107, 'train_time_std': 0.006733981587454556}
+    Word2vec model #9: {'train_data': '1MB', 'compute_loss': False, 'sg': 0, 'hs': 0, 'train_time_mean': 1.4821499983469646, 'train_time_std': 0.03462018535600499}
+    Word2vec model #10: {'train_data': '1MB', 'compute_loss': True, 'sg': 0, 'hs': 1, 'train_time_mean': 1.9445404211680095, 'train_time_std': 0.010264233877768257}
+    Word2vec model #11: {'train_data': '1MB', 'compute_loss': False, 'sg': 0, 'hs': 1, 'train_time_mean': 1.9506103197733562, 'train_time_std': 0.04041906808376729}
+    Word2vec model #12: {'train_data': '1MB', 'compute_loss': True, 'sg': 1, 'hs': 0, 'train_time_mean': 2.3204263051350913, 'train_time_std': 0.008098699493083719}
+    Word2vec model #13: {'train_data': '1MB', 'compute_loss': False, 'sg': 1, 'hs': 0, 'train_time_mean': 2.31768536567688, 'train_time_std': 0.024492678542708125}
+    Word2vec model #14: {'train_data': '1MB', 'compute_loss': True, 'sg': 1, 'hs': 1, 'train_time_mean': 5.889267047246297, 'train_time_std': 2.6677627505059167}
+    Word2vec model #15: {'train_data': '1MB', 'compute_loss': False, 'sg': 1, 'hs': 1, 'train_time_mean': 4.347986380259196, 'train_time_std': 0.5657730587543749}
+    Word2vec model #16: {'train_data': '10MB', 'compute_loss': True, 'sg': 0, 'hs': 0, 'train_time_mean': 11.660234848658243, 'train_time_std': 0.7073372278416881}
+    Word2vec model #17: {'train_data': '10MB', 'compute_loss': False, 'sg': 0, 'hs': 0, 'train_time_mean': 11.397770245869955, 'train_time_std': 0.5955700294784938}
+    Word2vec model #18: {'train_data': '10MB', 'compute_loss': True, 'sg': 0, 'hs': 1, 'train_time_mean': 18.748068968454998, 'train_time_std': 2.581779420648853}
+    Word2vec model #19: {'train_data': '10MB', 'compute_loss': False, 'sg': 0, 'hs': 1, 'train_time_mean': 14.647332032521566, 'train_time_std': 0.09193970789408673}
+    Word2vec model #20: {'train_data': '10MB', 'compute_loss': True, 'sg': 1, 'hs': 0, 'train_time_mean': 20.749327341715496, 'train_time_std': 0.11215719011982248}
+    Word2vec model #21: {'train_data': '10MB', 'compute_loss': False, 'sg': 1, 'hs': 0, 'train_time_mean': 20.204603910446167, 'train_time_std': 0.06809825435513993}
+    Word2vec model #22: {'train_data': '10MB', 'compute_loss': True, 'sg': 1, 'hs': 1, 'train_time_mean': 38.24850662549337, 'train_time_std': 2.213900159041499}
+    Word2vec model #23: {'train_data': '10MB', 'compute_loss': False, 'sg': 1, 'hs': 1, 'train_time_mean': 37.563968658447266, 'train_time_std': 0.36400679560453986}
+       train_data  compute_loss  sg  hs  train_time_mean  train_time_std
+    4        25kB          True   1   0         0.858013        0.049213
+    5        25kB         False   1   0         0.809154        0.018924
+    6        25kB          True   1   1         1.272409        0.062276
+    7        25kB         False   1   1         1.251874        0.040913
+    0        25kB          True   0   0         0.584994        0.015230
+    1        25kB         False   0   0         0.575566        0.004836
+    2        25kB          True   0   1         0.721526        0.003668
+    3        25kB         False   0   1         0.709915        0.007504
+    12        1MB          True   1   0         2.320426        0.008099
+    13        1MB         False   1   0         2.317685        0.024493
+    14        1MB          True   1   1         5.889267        2.667763
+    15        1MB         False   1   1         4.347986        0.565773
+    8         1MB          True   0   0         1.470079        0.006734
+    9         1MB         False   0   0         1.482150        0.034620
+    10        1MB          True   0   1         1.944540        0.010264
+    11        1MB         False   0   1         1.950610        0.040419
+    20       10MB          True   1   0        20.749327        0.112157
+    21       10MB         False   1   0        20.204604        0.068098
+    22       10MB          True   1   1        38.248507        2.213900
+    23       10MB         False   1   1        37.563969        0.364007
+    16       10MB          True   0   0        11.660235        0.707337
+    17       10MB         False   0   0        11.397770        0.595570
+    18       10MB          True   0   1        18.748069        2.581779
+    19       10MB         False   0   1        14.647332        0.091940
+
 
 
 Adding Word2Vec "model to dict" method to production pipeline
@@ -826,7 +840,7 @@ otherwise we will query the word and then cache it so that it doesn't miss next 
 
 
     # re-enable logging
-    logging.basicConfig(level=logging.INFO)
+    logging.root.level = logging.INFO
 
     most_similars_precalc = {word : model.wv.most_similar(word) for word in model.wv.index2word}
     for i, (key, value) in enumerate(most_similars_precalc.items()):
@@ -844,9 +858,10 @@ otherwise we will query the word and then cache it so that it doesn't miss next 
 
  .. code-block:: none
 
-    the [('its', 0.9999318718910217), ('on', 0.9999240040779114), ('australian', 0.9999238848686218), ('a', 0.9999231100082397), ('after', 0.999922513961792), ('his', 0.9999197721481323), ('an', 0.9999192953109741), ('with', 0.9999172687530518), ('which', 0.999916672706604), ('at', 0.9999138712882996)]
-    to [('from', 0.999965250492096), ('on', 0.9999632835388184), ('but', 0.9999628067016602), ('at', 0.9999585151672363), ('with', 0.9999552369117737), ('and', 0.9999539256095886), ('for', 0.9999520182609558), ('by', 0.9999509453773499), ('into', 0.9999498724937439), ('some', 0.9999494552612305)]
-    of [('and', 0.999954342842102), ('in', 0.9999535083770752), ('for', 0.999950647354126), ('on', 0.9999498724937439), ('by', 0.9999458193778992), ('at', 0.9999449253082275), ('with', 0.9999442100524902), ('which', 0.9999428391456604), ('out', 0.9999419450759888), ('an', 0.9999390840530396)]
+    the [('in', 0.9999227523803711), ('afghanistan', 0.9999197125434875), ('after', 0.9999192953109741), ('on', 0.9999148845672607), ('by', 0.9999129772186279), ('with', 0.999912440776825), ('two', 0.9999121427536011), ('which', 0.9999109506607056), ('three', 0.9999096393585205), ('their', 0.9999094009399414)]
+    to [('is', 0.9999458193778992), ('by', 0.9999446868896484), ('for', 0.9999421834945679), ('their', 0.9999414086341858), ('into', 0.9999411106109619), ('who', 0.9999386668205261), ('if', 0.9999375939369202), ('any', 0.9999368190765381), ('say', 0.9999366402626038), ('his', 0.9999357461929321)]
+    of [('in', 0.9999579191207886), ('with', 0.999951958656311), ('on', 0.9999455213546753), ('after', 0.9999436140060425), ('and', 0.9999428987503052), ('by', 0.9999402761459351), ('from', 0.999940037727356), ('at', 0.9999394416809082), ('its', 0.9999387264251709), ('for', 0.9999380707740784)]
+
 
 
 Comparison with and without caching
@@ -878,7 +893,7 @@ Without caching
         result = model.wv.most_similar(word)
         print(result)
     end = time.time()
-    print(end-start)
+    print(end - start)
 
 
 
@@ -890,11 +905,12 @@ Without caching
 
  .. code-block:: none
 
-    [('forces', 0.9990668892860413), ('much', 0.9990617036819458), ('world', 0.999051034450531), ('rates', 0.9990494847297668), ('"we', 0.9990443587303162), ('afghan', 0.9990271925926208), ('very', 0.9990226030349731), ('a', 0.9990226030349731), ('test', 0.999019980430603), ('it', 0.9990196228027344)]
-    [('when', 0.9997634887695312), ('three', 0.9997605681419373), ('as', 0.9997529983520508), ('were', 0.9997521638870239), ('or', 0.9997519254684448), ('also', 0.9997490644454956), ('for', 0.999748706817627), ('by', 0.9997445940971375), ('last', 0.9997431635856628), ('says', 0.9997419118881226)]
-    [('from', 0.9999604225158691), ('at', 0.9999573230743408), ('into', 0.9999547004699707), ('and', 0.9999547004699707), ('before', 0.9999521970748901), ('an', 0.999951958656311), ('as', 0.9999505281448364), ('are', 0.9999493360519409), ('on', 0.9999492168426514), ('have', 0.9999490976333618)]
-    [('and', 0.9999432563781738), ('up', 0.9999399781227112), ('with', 0.9999398589134216), ('from', 0.9999386668205261), ('by', 0.9999384880065918), ('on', 0.9999372959136963), ('world', 0.9999362230300903), ('who', 0.99993497133255), ('about', 0.99993497133255), ('after', 0.999932050704956)]
-    0.012031316757202148
+    [('eight', 0.9987820386886597), ('being', 0.9987704753875732), ('children', 0.9987442493438721), ('off', 0.998741865158081), ('local', 0.99873948097229), ('royal', 0.9987344145774841), ('qantas', 0.9987306594848633), ('near', 0.99872887134552), ('night', 0.9987269639968872), ('before', 0.9987255334854126)]
+    [('are', 0.9997553825378418), ('one', 0.9997513294219971), ('his', 0.9997497797012329), ('police', 0.9997488260269165), ('their', 0.9997481107711792), ('they', 0.9997480511665344), ('three', 0.9997479319572449), ('at', 0.9997453093528748), ('as', 0.9997446537017822), ('month', 0.9997410774230957)]
+    [('by', 0.9999604821205139), ('world', 0.9999570846557617), ('for', 0.999954342842102), ('from', 0.9999533891677856), ('his', 0.9999526143074036), ('at', 0.9999525547027588), ('on', 0.9999521374702454), ('who', 0.9999504685401917), ('into', 0.9999492168426514), ('which', 0.9999484419822693)]
+    [('and', 0.9999351501464844), ('by', 0.9999305605888367), ('on', 0.999929666519165), ('from', 0.9999263286590576), ('about', 0.999925971031189), ('with', 0.9999253153800964), ('one', 0.9999237656593323), ('when', 0.9999232292175293), ('australian', 0.9999225735664368), ('their', 0.999922513961792)]
+    0.0038039684295654297
+
 
 
 Now with caching
@@ -914,7 +930,7 @@ Now with caching
             print(result)
 
     end = time.time()
-    print(end-start)
+    print(end - start)
 
 
 
@@ -926,11 +942,12 @@ Now with caching
 
  .. code-block:: none
 
-    [('forces', 0.9990668892860413), ('much', 0.9990617036819458), ('world', 0.999051034450531), ('rates', 0.9990494847297668), ('"we', 0.9990443587303162), ('afghan', 0.9990271925926208), ('very', 0.9990226030349731), ('a', 0.9990226030349731), ('test', 0.999019980430603), ('it', 0.9990196228027344)]
-    [('when', 0.9997634887695312), ('three', 0.9997605681419373), ('as', 0.9997529983520508), ('were', 0.9997521638870239), ('or', 0.9997519254684448), ('also', 0.9997490644454956), ('for', 0.999748706817627), ('by', 0.9997445940971375), ('last', 0.9997431635856628), ('says', 0.9997419118881226)]
-    [('from', 0.9999604225158691), ('at', 0.9999573230743408), ('into', 0.9999547004699707), ('and', 0.9999547004699707), ('before', 0.9999521970748901), ('an', 0.999951958656311), ('as', 0.9999505281448364), ('are', 0.9999493360519409), ('on', 0.9999492168426514), ('have', 0.9999490976333618)]
-    [('and', 0.9999432563781738), ('up', 0.9999399781227112), ('with', 0.9999398589134216), ('from', 0.9999386668205261), ('by', 0.9999384880065918), ('on', 0.9999372959136963), ('world', 0.9999362230300903), ('who', 0.99993497133255), ('about', 0.99993497133255), ('after', 0.999932050704956)]
-    0.0008373260498046875
+    [('eight', 0.9987820386886597), ('being', 0.9987704753875732), ('children', 0.9987442493438721), ('off', 0.998741865158081), ('local', 0.99873948097229), ('royal', 0.9987344145774841), ('qantas', 0.9987306594848633), ('near', 0.99872887134552), ('night', 0.9987269639968872), ('before', 0.9987255334854126)]
+    [('are', 0.9997553825378418), ('one', 0.9997513294219971), ('his', 0.9997497797012329), ('police', 0.9997488260269165), ('their', 0.9997481107711792), ('they', 0.9997480511665344), ('three', 0.9997479319572449), ('at', 0.9997453093528748), ('as', 0.9997446537017822), ('month', 0.9997410774230957)]
+    [('by', 0.9999604821205139), ('world', 0.9999570846557617), ('for', 0.999954342842102), ('from', 0.9999533891677856), ('his', 0.9999526143074036), ('at', 0.9999525547027588), ('on', 0.9999521374702454), ('who', 0.9999504685401917), ('into', 0.9999492168426514), ('which', 0.9999484419822693)]
+    [('and', 0.9999351501464844), ('by', 0.9999305605888367), ('on', 0.999929666519165), ('from', 0.9999263286590576), ('about', 0.999925971031189), ('with', 0.9999253153800964), ('one', 0.9999237656593323), ('when', 0.9999232292175293), ('australian', 0.9999225735664368), ('their', 0.999922513961792)]
+    0.0012600421905517578
+
 
 
 Clearly you can see the improvement but this difference will be even larger
@@ -955,10 +972,6 @@ Vector relations like vKing - vMan = vQueen - vWoman can also be noticed.
 .. Important::
   The model used for the visualisation is trained on a small corpus. Thus
   some of the relations might not be so clear.
-
-.. Important::
-  Beware: This sort of dimensionality reduction comes at the cost of loss of
-  information.
 
 
 
@@ -1019,7 +1032,7 @@ Vector relations like vKing - vMan = vQueen - vWoman can also be noticed.
         plt.scatter(x_vals, y_vals)
 
         #
-        # Label some random data points
+        # Label randomly subsampled 25 data points
         #
         indices = list(range(len(labels)))
         selected_indices = random.sample(indices, 25)
@@ -1061,9 +1074,9 @@ Links
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 10 minutes  30.703 seconds)
+   **Total running time of the script:** ( 14 minutes  22.799 seconds)
 
-**Estimated memory usage:**  11342 MB
+**Estimated memory usage:**  9582 MB
 
 
 .. _sphx_glr_download_auto_examples_tutorials_run_word2vec.py:
@@ -1091,4 +1104,4 @@ Links
 
  .. rst-class:: sphx-glr-signature
 
-    `Gallery generated by Sphinx-Gallery <https://sphinx-gallery.readthedocs.io>`_
+    `Gallery generated by Sphinx-Gallery <https://sphinx-gallery.github.io>`_

@@ -131,7 +131,7 @@ print(model)
 import tempfile
 import os
 with tempfile.NamedTemporaryFile(prefix='saved_model_gensim-', delete=False) as tmp:
-    model.save(tmp.name)
+    model.save(tmp.name, separately=[])
 
 loaded_model = FT_gensim.load(tmp.name)
 print(loaded_model)

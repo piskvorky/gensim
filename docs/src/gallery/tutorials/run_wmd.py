@@ -11,16 +11,16 @@ Demonstrates using Gensim's implemenation of the WMD.
 # allows us to submit a query and return the most relevant documents. This
 # tutorial introduces WMD and shows how you can compute the WMD distance
 # between two documents using ``wmdistance``.
-# 
+#
 # WMD Basics
 # ----------
-# 
+#
 # WMD enables us to assess the "distance" between two documents in a meaningful
 # way, even when they have no words in common. It uses `word2vec
 # <http://rare-technologies.com/word2vec-tutorial/>`_ [4] vector embeddings of
 # words. It been shown to outperform many of the state-of-the-art methods in
 # *k*\ -nearest neighbors classification [3].
-# 
+#
 # WMD is illustrated below for two very similar sentences (illustration taken
 # from `Vlad Niculae's blog
 # <http://vene.ro/blog/word-movers-distance-in-python.html>`_\ ). The sentences
@@ -47,28 +47,28 @@ plt.show()
 # <http://jmlr.org/proceedings/papers/v37/kusnerb15.pdf>`_\ ). It is inspired
 # by the "Earth Mover's Distance", and employs a solver of the "transportation
 # problem".
-# 
+#
 # In this tutorial, we will learn how to use Gensim's WMD functionality, which
 # consists of the ``wmdistance`` method for distance computation, and the
 # ``WmdSimilarity`` class for corpus based similarity queries.
-# 
-# .. Important:: 
+#
+# .. Important::
 #    If you use Gensim's WMD functionality, please consider citing [1], [2] and [3].
-# 
+#
 # Computing the Word Mover's Distance
 # -----------------------------------
-# 
+#
 # To use WMD, you need some existing word embeddings.
 # You could train your own Word2Vec model, but that is beyond the scope of this tutorial
 # (check out :ref:`sphx_glr_auto_examples_tutorials_run_word2vec.py` if you're interested).
 # For this tutorial, we'll be using an existing Word2Vec model.
-# 
+#
 # Let's take some sentences to compute the distance between.
-# 
+#
 
 # Initialize logging.
 import logging
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s')
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 sentence_obama = 'Obama speaks to the media in Illinois'
 sentence_president = 'The president greets the press in Chicago'
@@ -77,7 +77,7 @@ sentence_president = 'The president greets the press in Chicago'
 # These sentences have very similar content, and as such the WMD should be low.
 # Before we compute the WMD, we want to remove stopwords ("the", "to", etc.),
 # as these do not contribute a lot to the information in the sentences.
-# 
+#
 
 # Import and download stopwords from NLTK.
 from nltk.corpus import stopwords
@@ -97,19 +97,19 @@ sentence_president = preprocess(sentence_president)
 #
 # .. Important::
 #   The embeddings we have chosen here require a lot of memory.
-# 
+#
 import gensim.downloader as api
 model = api.load('word2vec-google-news-300')
 
 ###############################################################################
 # So let's compute WMD using the ``wmdistance`` method.
-# 
+#
 distance = model.wmdistance(sentence_obama, sentence_president)
 print('distance = %.4f' % distance)
 
 ###############################################################################
 # Let's try the same thing with two completely unrelated sentences. Notice that the distance is larger.
-# 
+#
 sentence_orange = preprocess('Oranges are my favorite fruit')
 distance = model.wmdistance(sentence_obama, sentence_orange)
 print('distance = %.4f' % distance)
@@ -117,12 +117,12 @@ print('distance = %.4f' % distance)
 ###############################################################################
 # Normalizing word2vec vectors
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-# 
+#
 # When using the ``wmdistance`` method, it is beneficial to normalize the
 # word2vec vectors first, so they all have equal length. To do this, simply
 # call ``model.init_sims(replace=True)`` and Gensim will take care of that for
 # you.
-# 
+#
 # Usually, one measures the distance between two word2vec vectors using the
 # cosine distance (see `cosine similarity
 # <https://en.wikipedia.org/wiki/Cosine_similarity>`_\ ), which measures the
@@ -130,11 +130,11 @@ print('distance = %.4f' % distance)
 # The Euclidean distance between two vectors might be large because their
 # lengths differ, but the cosine distance is small because the angle between
 # them is small; we can mitigate some of this by normalizing the vectors.
-# 
+#
 # .. Important::
 #   Note that normalizing the vectors can take some time, especially if you have
 #   a large vocabulary and/or large vectors.
-# 
+#
 model.init_sims(replace=True)  # Normalizes the vectors in the word2vec class.
 
 distance = model.wmdistance(sentence_obama, sentence_president)  # Compute WMD as normal.
@@ -146,9 +146,9 @@ print('distance = %.4f' % distance)
 ###############################################################################
 # References
 # ----------
-# 
+#
 # 1. Ofir Pele and Michael Werman, *A linear time histogram metric for improved SIFT matching*\ , 2008.
 # 2. Ofir Pele and Michael Werman, *Fast and robust earth mover's distances*\ , 2009.
 # 3. Matt Kusner et al. *From Embeddings To Document Distances*\ , 2015.
 # 4. Thomas Mikolov et al. *Efficient Estimation of Word Representations in Vector Space*\ , 2013.
-# 
+#

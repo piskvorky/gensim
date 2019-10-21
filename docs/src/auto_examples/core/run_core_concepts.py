@@ -288,14 +288,14 @@ index = similarities.SparseMatrixSimilarity(tfidf[bow_corpus], num_features=12)
 
 ###############################################################################
 # and to query the similarity of our query document ``query_document`` against every document in the corpus:
-query_document =  'system engineering'.split()
+query_document = 'system engineering'.split()
 query_bow = dictionary.doc2bow(query_document)
 sims = index[tfidf[query_bow]]
 print(list(enumerate(sims)))
 
 ###############################################################################
 # How to read this output?
-# Document 3 has a similarity score of 0.72=72%, document 2 has a similarity score of 41% etc.
+# Document 3 has a similarity score of 0.718=72%, document 2 has a similarity score of 42% etc.
 # We can make this slightly more readable by sorting:
 
 for document_number, score in sorted(enumerate(sims), key=lambda x: x[1], reverse=True):
@@ -323,9 +323,6 @@ for document_number, score in sorted(enumerate(sims), key=lambda x: x[1], revers
 #
 # There's still much more to learn about :ref:`sphx_glr_auto_examples_core_run_corpora_and_vector_spaces.py`.
 
-###############################################################################
-# Here we show a pretty fastText logo so that our gallery picks it up as a thumbnail.
-#
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 img = mpimg.imread('run_core_concepts.png')
