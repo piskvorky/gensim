@@ -97,8 +97,8 @@ class DtmModel(utils.SaveLoad):
              Max em optimization iterations in LDA.
         alpha : int, optional
             Hyperparameter that affects sparsity of the document-topics for the LDA models in each timeslice.
-        top_chain_var : int, optional
-            Hyperparameter that affects.
+        top_chain_var : float, optional
+            Hyperparameter that determines how similar topics would be over multiple timeslice.
         rng_seed : int, optional
              Random seed.
         initialize_lda : bool, optional
