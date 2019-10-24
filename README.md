@@ -101,12 +101,10 @@ Documentation
 
 -   [QuickStart]
 -   [Tutorials]
--   [Tutorial Videos]
 -   [Official API Documentation]
 
   [QuickStart]: https://radimrehurek.com/gensim/auto_examples/core/run_core_concepts.html
   [Tutorials]: https://radimrehurek.com/gensim/auto_examples/
-  [Tutorial Videos]: https://radimrehurek.com/gensim/auto_examples/#other-resources
   [Official Documentation and Walkthrough]: http://radimrehurek.com/gensim/
   [Official API Documentation]: http://radimrehurek.com/gensim/apiref.html
   
