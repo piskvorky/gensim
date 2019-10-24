@@ -1,7 +1,0 @@
-gensim
-nltk==3.4
-sklearn
-matplotlib==3.0.3
-networkx==2.3
-pandas==0.24.2
-statsmodels==0.9.0
