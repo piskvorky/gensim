@@ -104,9 +104,9 @@ Documentation
 -   [Tutorial Videos]
 -   [Official API Documentation]
 
-  [QuickStart]: https://radimrehurek.com/gensim/gensim_numfocus/auto_examples/core/run_core_concepts.html
-  [Tutorials]: https://github.com/RaRe-Technologies/gensim/blob/develop/tutorials.md#tutorials
-  [Tutorial Videos]: https://github.com/RaRe-Technologies/gensim/blob/develop/tutorials.md#videos
+  [QuickStart]: https://radimrehurek.com/gensim/auto_examples/core/run_core_concepts.html
+  [Tutorials]: https://radimrehurek.com/gensim/auto_examples/
+  [Tutorial Videos]: https://radimrehurek.com/gensim/auto_examples/#other-resources
   [Official Documentation and Walkthrough]: http://radimrehurek.com/gensim/
   [Official API Documentation]: http://radimrehurek.com/gensim/apiref.html
   
