@@ -98,7 +98,9 @@ class DtmModel(utils.SaveLoad):
         alpha : int, optional
             Hyperparameter that affects sparsity of the document-topics for the LDA models in each timeslice.
         top_chain_var : float, optional
-            Hyperparameter that determines how similar topics would be over multiple timeslice.
+            This hyperparameter controls one of the key aspect of topic evolution which is the speed at which
+            these topics evolve. A smaller top_chain_var leads to similar word distributions over multiple timeslice.
+
         rng_seed : int, optional
              Random seed.
         initialize_lda : bool, optional
