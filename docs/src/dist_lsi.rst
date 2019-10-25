@@ -73,7 +73,6 @@ our choice is incidental) and try:
     >>> # run distributed LSA on nine documents
     >>> lsi = models.LsiModel(corpus, id2word=id2word, num_topics=200, chunksize=1, distributed=True)
 
-This uses the corpus and feature-token mapping created in the :doc:`tut1` tutorial.
 If you look at the log in your Python session, you should see a line similar to::
 
   2010-08-09 23:44:25,746 : INFO : using distributed version with 8 workers

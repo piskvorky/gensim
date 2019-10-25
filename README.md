@@ -101,12 +101,10 @@ Documentation
 
 -   [QuickStart]
 -   [Tutorials]
--   [Tutorial Videos]
 -   [Official API Documentation]
 
-  [QuickStart]: https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/gensim%20Quick%20Start.ipynb
-  [Tutorials]: https://github.com/RaRe-Technologies/gensim/blob/develop/tutorials.md#tutorials
-  [Tutorial Videos]: https://github.com/RaRe-Technologies/gensim/blob/develop/tutorials.md#videos
+  [QuickStart]: https://radimrehurek.com/gensim/auto_examples/core/run_core_concepts.html
+  [Tutorials]: https://radimrehurek.com/gensim/auto_examples/
   [Official Documentation and Walkthrough]: http://radimrehurek.com/gensim/
   [Official API Documentation]: http://radimrehurek.com/gensim/apiref.html
   

@@ -251,7 +251,7 @@ Copyright (c) 2009-now Radim Rehurek
 .. _Official Documentation and Walkthrough: http://radimrehurek.com/gensim/
 .. _Tutorials: https://github.com/RaRe-Technologies/gensim/blob/develop/tutorials.md#tutorials
 .. _Tutorial Videos: https://github.com/RaRe-Technologies/gensim/blob/develop/tutorials.md#videos
-.. _QuickStart: https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/gensim%20Quick%20Start.ipynb
+.. _QuickStart: https://radimrehurek.com/gensim/gensim_numfocus/auto_examples/core/run_core_concepts.html
 
 """
 
@@ -273,6 +273,39 @@ win_testenv = [
 
 linux_testenv = win_testenv[:]
 
+#
+# This list partially duplicates requirements_docs.txt.
+# The main difference is that we don't include version pins here unless
+# absolutely necessary, whereas requirements_docs.txt includes pins for
+# everything, by design.
+#
+# For more info about the difference between the two:
+#
+#   https://packaging.python.org/discussions/install-requires-vs-requirements/
+#
+docs_testenv = linux_testenv + distributed_env + [
+    'sphinx',
+    'sphinxcontrib-napoleon',
+    'plotly',
+    #
+    # Pattern is a PITA to install, it requires mysqlclient, which in turn
+    # requires MySQL dev tools be installed.  We don't need it for building
+    # documentation.
+    #
+    # 'Pattern==3.6',  # Need 3.6 or later for Py3 support
+    'sphinxcontrib.programoutput',
+    'sphinx-gallery',
+    'memory_profiler',
+    'annoy',
+    'Pyro4',
+    'scikit-learn',
+    'nltk',
+    'testfixtures',
+    'statsmodels',
+    'pyemd',
+    'pandas',
+]
+
 if sys.version_info < (3, 7):
     linux_testenv.extend([
         'tensorflow <= 1.3.0',
@@ -290,7 +323,6 @@ docs_testenv = linux_testenv + distributed_env + [
     'sphinxcontrib.programoutput',
 ]
 
-
 NUMPY_STR = 'numpy >= 1.11.3'
 #
 # We pin the Cython version for reproducibility.  We expect our extensions
@@ -304,7 +336,6 @@ install_requires = [
     'scipy >= 0.18.1',
     'six >= 1.5.0',
     'smart_open >= 1.8.1',
-]
 
 setup_requires = [NUMPY_STR]
 

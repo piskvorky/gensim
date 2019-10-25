@@ -28,10 +28,10 @@ Conceptually, a service that lets you :
     >>> server.train(training_corpus, method='lsi')  # create a semantic model
     >>> server.index(some_documents)  # convert plain text to semantic representation and index it
     >>> server.find_similar(query)  # convert query to semantic representation and compare against index
-    >>> 
+    >>>
     >>> server.index(more_documents)  # add to index: incremental indexing works
     >>> server.find_similar(query)
-    >>> 
+    >>>
     >>> server.delete(ids_to_delete)  # incremental deleting also works
     >>> server.find_similar(query)
 
@@ -77,16 +77,16 @@ The rest of this document serves as a tutorial explaining the features in more d
 Prerequisites
 ----------------------
 
-It is assumed you have `gensim` properly :doc:`installed <install>`. You'll also
+It is assumed you have `gensim` properly installed. You'll also
 need the `sqlitedict <http://pypi.python.org/pypi/sqlitedict>`_ package that wraps
 Python's sqlite3 module in a thread-safe manner::
 
-    $ sudo easy_install -U sqlitedict
+    $ pip install sqlitedict
 
 To test the remote server capabilities, install Pyro4 (Python Remote Objects, at
 version 4.8 as of this writing)::
 
-    $ sudo easy_install Pyro4
+    $ pip install Pyro4
 
 .. note::
     Don't forget to initialize logging to see logging messages:
