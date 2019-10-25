@@ -29,6 +29,9 @@ jobs:
 
       - run:
           name: Build documentation
+          environment:
+            TOX_PARALLEL_NO_SPINNER: 1
+            TOX_PIP_OPTS: --progress-bar=off
           command: |
             source venv/bin/activate
             tox -e compile,docs -vv

@@ -55,6 +55,15 @@ logger = logging.getLogger(__name__)
 PAT_ALPHABETIC = re.compile(r'(((?![\d])\w)+)', re.UNICODE)
 RE_HTML_ENTITY = re.compile(r'&(#?)([xX]?)(\w{1,8});', re.UNICODE)
 
+NO_CYTHON = RuntimeError(
+    "Cython extensions are unavailable. "
+    "Without them, this gensim functionality is disabled. "
+    "If you've installed from a package, ask the package maintainer to include Cython extensions. "
+    "If you're building gensim from source yourself, run `python setup.py build_ext --inplace` "
+    "and retry. "
+)
+"""An exception that gensim code raises when Cython extensions are unavailable."""
+
 
 def get_random_state(seed):
     """Generate :class:`numpy.random.RandomState` based on input seed.

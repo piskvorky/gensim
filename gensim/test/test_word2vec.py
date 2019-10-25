@@ -813,9 +813,6 @@ class TestWord2VecModel(unittest.TestCase):
 
     def testParallel(self):
         """Test word2vec parallel training."""
-        if word2vec.FAST_VERSION < 0:  # don't test the plain np version for parallelism (too slow)
-            return
-
         corpus = utils.RepeatCorpus(LeeCorpus(), 10000)
 
         for workers in [2, 4]:
@@ -1135,5 +1132,4 @@ if __name__ == '__main__':
         format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s',
         level=logging.DEBUG
     )
-    logging.info("using optimization %s", word2vec.FAST_VERSION)
     unittest.main()

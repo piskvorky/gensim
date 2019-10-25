@@ -8,6 +8,8 @@ cache:
   - $HOME/.pip-cache
 dist: trusty
 language: python
+env:
+  TOX_PARALLEL_NO_SPINNER: 1
 
 
 matrix:
