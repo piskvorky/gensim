@@ -315,14 +315,6 @@ if sys.version_info < (3, 7):
 if (3, 0) < sys.version_info < (3, 7):
     linux_testenv.extend(['nmslib'])
 
-docs_testenv = linux_testenv + distributed_env + [
-    'sphinx',
-    'sphinxcontrib-napoleon',
-    'plotly',
-    'Pattern >= 3.6',  # Need 3.6 or later for Py3 support
-    'sphinxcontrib.programoutput',
-]
-
 NUMPY_STR = 'numpy >= 1.11.3'
 #
 # We pin the Cython version for reproducibility.  We expect our extensions
