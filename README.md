@@ -1,5 +1,5 @@
-gensim – Topic Modelling in Python
-==================================
+gensim – Topic Modelling in Python Programming Langauage
+========================================================
 
 [![Build Status](https://travis-ci.org/RaRe-Technologies/gensim.svg?branch=develop)](https://travis-ci.org/RaRe-Technologies/gensim)
 [![GitHub release](https://img.shields.io/github/release/rare-technologies/gensim.svg?maxAge=3600)](https://github.com/RaRe-Technologies/gensim/releases)
@@ -46,7 +46,7 @@ on Wikipedia.
 Support
 ------------
 
-Ask open-ended or research questions on the [Gensim Mailing List](https://groups.google.com/forum/#!forum/gensim).
+Ask an open-ended or research questions on the [Gensim Mailing List](https://groups.google.com/forum/#!forum/gensim).
 
 Raise bugs on [Github](https://github.com/RaRe-Technologies/gensim/blob/develop/CONTRIBUTING.md) but **make sure you follow the [issue template](https://github.com/RaRe-Technologies/gensim/blob/develop/ISSUE_TEMPLATE.md)**. Issues that are not bugs or fail to follow the issue template will be closed without inspection.
 
