@@ -1195,7 +1195,7 @@ class CBDBSCAN():
         np.fill_diagonal(amatrix_copy, 1)
 
         min_distance_per_topic = [(distance, index) for index, distance in enumerate(amatrix_copy.min(axis=1))]
-        min_distance_per_topic_sorted = sorted(min_distance_per_topic, key=lambda x: x)
+        min_distance_per_topic_sorted = sorted(min_distance_per_topic, key=lambda x: x[0])
         ordered_min_similarity = [index for distance, index in min_distance_per_topic_sorted]
 
         def scan_topic(topic_index, current_label=None):
@@ -1212,11 +1212,9 @@ class CBDBSCAN():
                 The label of the cluster that might be suitable for topic_index
 
             """
-            neighboring_topic_indices = [
-                candidate_topic_index
-                for candidate_topic_index, is_neighbour in enumerate(amatrix_copy[topic_index] < self.eps)
-                if is_neighbour
-            ]
+            neighbors_sorted = sorted([(distance, index) for index, distance in enumerate(amatrix_copy[topic_index])], key=lambda x: x[0])
+            neighboring_topic_indices = [index for distance, index in neighbors_sorted if distance < self.eps]
+
             num_neighboring_topics = len(neighboring_topic_indices)
 
             # derive a list of all topic_indices that belong to the cluster with the current_label and that are cores
