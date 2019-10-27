@@ -349,8 +349,8 @@ setup(
     author=u'Radim Rehurek',
     author_email='me@radimrehurek.com',
 
-    url='http://radimrehurek.com/gensim',
-    download_url='http://pypi.python.org/pypi/gensim',
+    url='radimrehurek.com/gensim',
+    download_url='pypi.python.org/pypi/gensim',
 
     license='LGPLv2.1',
 
