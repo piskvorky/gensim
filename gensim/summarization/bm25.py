@@ -68,47 +68,27 @@ class BM25(object):
 
     def __init__(self, corpus, k1=PARAM_K1, b=PARAM_B, epsilon=EPSILON):
         """
-
-        'k1 is a variable which helps determine term frequency saturation characteristics.
-        That is, it limits how much a single query term can affect the score of a given document.
-        A higher/lower k1 value means that the slope of “tf() of BM25” curve changes.
-        This has the effect of changing how “terms occurring extra times add extra score.”
-        An interpretation of k1 is that for documents of the average length, it is the value of the term frequency that
-        gives a score of half the maximum score for the considered term. The curve of the impact of tf on the score
-        grows quickly when tf() ≤ k1 and slower and slower when tf() > k1.'
-
-        Shane Connelly (2018). Practical BM25 - Part 2: The BM25 Algorithm and its Variables
-        https://www.elastic.co/pt/blog/practical-bm25-part-2-the-bm25-algorithm-and-its-variables
-
-
-        'If b is bigger, the effects of the length of the document compared to the average length are more amplified.
-        To see this, you can imagine if you set b to 0, the effect of the length ratio would be completely nullified
-        and the length of the document would have no bearing on the score'
-
-        Shane Connelly (2018). Practical BM25 - Part 2: The BM25 Algorithm and its Variables
-        https://www.elastic.co/pt/blog/practical-bm25-part-2-the-bm25-algorithm-and-its-variables
-
-
-        'A significant number of such experiments have been done, and suggest that in general values
-        such as 0.5 < b < 0.8 and 1.2 < k1 < 2 are reasonably good in many circumstances.
-        However, there is also evidence that optimal values do depend on other factors
-        (such as the type of documents or queries).'
-
-        Robertson, Stephen; Zaragoza, Hugo (2009). The Probabilistic Relevance Framework: BM25 and Beyond,
-        http://www.staff.city.ac.uk/~sb317/papers/foundations_bm25_review.pdf
-
-
         Parameters
         ----------
         corpus : list of list of str
             Given corpus.
         k1 : float
-            Constant used for influencing the term frequency saturation
+            Constant used for influencing the term frequency saturation. After saturation is reached, additional
+            presence for the term adds a significantly less additional score. According to [1]_, experiments suggest
+            that 1.2 < k1 < 2 yields reasonably good results, although the optimal value depends on factors such as
+            the type of documents or queries.
         b : float
-            Constant used for influencing the effects of different document lengths relative to average document length
+            Constant used for influencing the effects of different document lengths relative to average document length.
+            When b is bigger, lengthier documents (compared to average) have more impact on its effect. According to
+            [1]_, experiments suggest that 0.5 < b < 0.8 yields reasonably good results, although the optimal value
+            depends on factors such as the type of documents or queries.
         epsilon : float
-            Constant used for negative idf of document in corpus.
-
+            Constant used as floor value for idf of a document in the corpus. When epsilon is positive, it restricts
+            negative idf values. Negative idf implies that adding a very common term to a document penalize the overall
+            score (with 'very common' meaning that it is present in more than half of the documents). That can be
+            undesirable as it means that an identical document would score less than an almost identical one (by
+            removing the referred term). Increasing epsilon above 0 raises the sense of how rare a word has to be (among
+            different documents) to receive an extra score.
 
         """
 
@@ -268,7 +248,7 @@ def _get_scores(bm25, document):
     return bm25.get_scores(document)
 
 
-def iter_bm25_bow(corpus, k1=PARAM_K1, b=PARAM_B, epsilon=EPSILON, n_jobs=1):
+def iter_bm25_bow(corpus, n_jobs=1, k1=PARAM_K1, b=PARAM_B, epsilon=EPSILON):
     """Yield BM25 scores (weights) of documents in corpus.
     Each document has to be weighted with every document in given corpus.
 
@@ -276,14 +256,25 @@ def iter_bm25_bow(corpus, k1=PARAM_K1, b=PARAM_B, epsilon=EPSILON, n_jobs=1):
     ----------
     corpus : list of list of str
         Corpus of documents.
-    k1 : float
-            Constant used for influencing the term frequency saturation
-    b : float
-        Constant used for influencing the effects of different document lengths relative to average document length
-    epsilon : float
-        Constant used for negative idf of document in corpus.
     n_jobs : int
         The number of processes to use for computing bm25.
+    k1 : float
+        Constant used for influencing the term frequency saturation. After saturation is reached, additional
+        presence for the term adds a significantly less additional score. According to [1]_, experiments suggest
+        that 1.2 < k1 < 2 yields reasonably good results, although the optimal value depends on factors such as
+        the type of documents or queries.
+    b : float
+        Constant used for influencing the effects of different document lengths relative to average document length.
+        When b is bigger, lengthier documents (compared to average) have more impact on its effect. According to
+        [1]_, experiments suggest that 0.5 < b < 0.8 yields reasonably good results, although the optimal value
+        depends on factors such as the type of documents or queries.
+    epsilon : float
+        Constant used as floor value for idf of a document in the corpus. When epsilon is positive, it restricts
+        negative idf values. Negative idf implies that adding a very common term to a document penalize the overall
+        score (with 'very common' meaning that it is present in more than half of the documents). That can be
+        undesirable as it means that an identical document would score less than an almost identical one (by
+        removing the referred term). Increasing epsilon above 0 raises the sense of how rare a word has to be (among
+        different documents) to receive an extra score.
 
     Yields
     -------
@@ -320,7 +311,7 @@ def iter_bm25_bow(corpus, k1=PARAM_K1, b=PARAM_B, epsilon=EPSILON, n_jobs=1):
     pool.join()
 
 
-def get_bm25_weights(corpus, k1=PARAM_K1, b=PARAM_B, epsilon=EPSILON, n_jobs=1):
+def get_bm25_weights(corpus, n_jobs=1, k1=PARAM_K1, b=PARAM_B, epsilon=EPSILON):
     """Returns BM25 scores (weights) of documents in corpus.
     Each document has to be weighted with every document in given corpus.
 
@@ -328,14 +319,25 @@ def get_bm25_weights(corpus, k1=PARAM_K1, b=PARAM_B, epsilon=EPSILON, n_jobs=1):
     ----------
     corpus : list of list of str
         Corpus of documents.
-    k1 : float
-            Constant used for influencing the term frequency saturation
-    b : float
-        Constant used for influencing the effects of different document lengths relative to average document length
-    epsilon : float
-        Constant used for negative idf of document in corpus.
     n_jobs : int
         The number of processes to use for computing bm25.
+    k1 : float
+        Constant used for influencing the term frequency saturation. After saturation is reached, additional
+        presence for the term adds a significantly less additional score. According to [1]_, experiments suggest
+        that 1.2 < k1 < 2 yields reasonably good results, although the optimal value depends on factors such as
+        the type of documents or queries.
+    b : float
+        Constant used for influencing the effects of different document lengths relative to average document length.
+        When b is bigger, lengthier documents (compared to average) have more impact on its effect. According to
+        [1]_, experiments suggest that 0.5 < b < 0.8 yields reasonably good results, although the optimal value
+        depends on factors such as the type of documents or queries.
+    epsilon : float
+        Constant used as floor value for idf of a document in the corpus. When epsilon is positive, it restricts
+        negative idf values. Negative idf implies that adding a very common term to a document penalize the overall
+        score (with 'very common' meaning that it is present in more than half of the documents). That can be
+        undesirable as it means that an identical document would score less than an almost identical one (by
+        removing the referred term). Increasing epsilon above 0 raises the sense of how rare a word has to be (among
+        different documents) to receive an extra score.
 
     Returns
     -------
