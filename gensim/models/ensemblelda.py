@@ -974,16 +974,18 @@ class EnsembleLda():
     def _generate_stable_topics(self, min_cores=None):
         """Generate stable topics out of the clusters.
 
-        This function is the last step that has to be done in the ensemble.Stable topics can be retrieved afterwards
-        using get_topics().
+        The function finds clusters of topics using a variant of DBScan.  If a cluster has enough core topics
+        (c.f. parameter min_cores), then this cluster represents a stable topic.  The stable topic is specifically
+        calculated as the average over all topic-term distributions of the core topics in the cluster.
+
+        This function is the last step that has to be done in the ensemble.  After this step is complete,
+        Stable topics can be retrieved afterwards using the get_topics() method.
 
         Parameters
         ----------
         min_cores : int
-            how many cores a cluster has to have, to be treated as stable topic. That means, how many topics
-            that look similar have to be present, so that the average topic in those is used as stable topic.
-
-            defaults to min_cores = min(3, max(1, int(self.num_models /4 +1)))
+            Minimum number of core topics needed to form a cluster that represents a stable topic.
+                Using None defaults to min_cores = min(3, max(1, int(self.num_models /4 +1)))
 
         """
         # min_cores being 0 makes no sense. there has to be a core for a cluster
@@ -1055,7 +1057,7 @@ class EnsembleLda():
         self.stable_topics = stable_topics
 
     def recluster(self, eps=0.1, min_samples=None, min_cores=None):
-        """Quickly change the results of the ensemble by reapplying clustering and stable topic generation.
+        """Reapply CBDBSCAN clustering and stable topic generation.
 
         Stable topics can be retrieved using get_topics().
 
@@ -1138,24 +1140,32 @@ class EnsembleLda():
 class CBDBSCAN():
     """A Variation of the DBSCAN algorithm called Checkback DBSCAN (CBDBSCAN).
 
-    The algorithm works based on
-    DBSCAN-like parameters `eps` and `min_samples` that respectively define how far a "nearby" point is, and the
-    minimum number of nearby points needed to label a candidate datapoint a core of a cluster.
-    (See https://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html).
+    The algorithm works based on DBSCAN-like parameters `eps` and `min_samples` that respectively define how far a
+    "nearby" point is, and the minimum number of nearby points needed to label a candidate datapoint a core of a
+    cluster. (See https://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html).
 
     The algorithm works as follows:
-    1. (A)symmetric distance matrix provided at fit-time.
-    For the sake of example below, assume the there are only three topics (amatrix contains distances with dim 3x3),
-        T_1, T_2, and T_3:
-    2. Start by scanning a candidate topic
-        (e.g. T_1)
-    3. Check which topics are nearby using `self.eps` as a threshold and call them neighbours
-        (e.g. assume T_2, and T_3 are nearby and become neighbours)
+    1. (A)symmetric distance matrix provided at fit-time (called `amatrix`).
+    For the sake of example below, assume the there are only five topics (amatrix contains distances with dim 5x5),
+        T_1, T_2, T_3, T_4, T_5:
+    2. Start by scanning a candidate topic with respect to a parent topic
+        (e.g. T_1 with respect to parent None)
+    3. Check which topics are nearby the candidate topic using `self.eps` as a threshold and call them neighbours
+        (e.g. assume T_3, T_4, and T_5 are nearby and become neighbours)
     4. If there are more neighbours than `self.min_samples`, the candidate topic becomes a core candidate for a cluster
-        (e.g. if `min_samples`<=2 then T_1 becomes the first core of a cluster)
-    5. CheckBack (CB) Step: Check if at least 25% of other cluster cores are nearby to core candidate
-        (e.g. at this stage in the example, the cluster is empty, so checkback passes)
-    6. Recursively scan the next nearby topic (e.g. scan T_2) - repeat step 2.-6.
+        (e.g. if `min_samples`=1, then T_1 becomes the first core of a cluster)
+    5. If candidate is a core, CheckBack (CB) to find the fraction of neighbours that are either the parent or the
+        parent's neighbours.  If this fraction is more than 75%, give the candidate the same label as its parent.
+        (e.g. in the trivial case there is no parent (or neighbours of that parent), a new incremental label is given)
+    6. If candidate is a core, recursively scan the next nearby topic (e.g. scan T_3) labeling the previous topic as
+        the parent and the previous neighbours as the parent_neighbours - repeat steps
+        2.-6.
+        2. (e.g. Scan candidate T_3 with respect to parent T_1 that has parent_neighbours T_3, T_4, and T_5)
+        3. (e.g. T5 is the only neighbour)
+        4. (e.g. number of neighbours is 1, therefore candidate T_3 becomes a core)
+        5. (e.g. CheckBack finds that two of the four parent and parent neighbours are neighbours of candidate T_3.
+            Therefore the candidate T_3 does NOT get the same label as its parent T_1)
+        6. (e.g. Scan candidate T_5 with respect to parent T_3 that has parent_neighbours T_5)
 
     The CB step has the effect that it enforces cluster compactness and allows the model to avoid creating clusters for
     unreliable topics made of a composition of multiple reliable topics (something that occurs often LDA models that is
@@ -1182,7 +1192,7 @@ class CBDBSCAN():
         """Apply the algorithm to an asymmetric distance matrix."""
         self.next_label = 0
 
-        results = [{
+        topic_clustering_results = [{
             "is_core": False,
             "neighboring_labels": set(),
             "neighboring_topic_indices": set(),
@@ -1195,13 +1205,13 @@ class CBDBSCAN():
         np.fill_diagonal(amatrix_copy, 1)
 
         min_distance_per_topic = [(distance, index) for index, distance in enumerate(amatrix_copy.min(axis=1))]
-        min_distance_per_topic_sorted = sorted(min_distance_per_topic, key=lambda x: x[0])
+        min_distance_per_topic_sorted = sorted(min_distance_per_topic, key=lambda distance: distance[0])
         ordered_min_similarity = [index for distance, index in min_distance_per_topic_sorted]
 
         def scan_topic(topic_index, current_label=None):
             """Extend the cluster in one direction.
 
-            Results are accumulated in result, a variable outside of this function.
+            Results are accumulated in topic_clustering_results, a variable outside of this function.
 
             Parameters
             ----------
@@ -1219,7 +1229,7 @@ class CBDBSCAN():
 
             # derive a list of all topic_indices that belong to the cluster with the current_label and that are cores
             cluster_topic_indices = [
-                index for index, topic in enumerate(results)
+                index for index, topic in enumerate(topic_clustering_results)
                 if topic["label"] == current_label and topic["label"] is not None and topic["is_core"]
             ]
 
@@ -1227,7 +1237,7 @@ class CBDBSCAN():
             # This also takes neighbor indices that already are identified as core in count.
             if num_neighboring_topics >= self.min_samples:
                 # This topic is a core!
-                results[topic_index]["is_core"] = True
+                topic_clustering_results[topic_index]["is_core"] = True
 
                 # if current_label is none, then this is the first core
                 # of a new cluster (hence next_label is used)
@@ -1252,31 +1262,31 @@ class CBDBSCAN():
                         self.next_label += 1
 
                 # TODO parent_neighbors and parent_id got obsolete. 1. the appending of parent_id can be done
-                # before calling scan_topic and 2. using parent_neighbors the way it was used was not conform
-                # with the algorithm description. scan_topic gets the list of topic_indices of the current cluster
-                # out of results now.
+                #  before calling scan_topic and 2. using parent_neighbors the way it was used did not conform
+                #  with the algorithm description. scan_topic gets the list of topic_indices of the current cluster
+                #  out of topic_clustering_results now.
 
-                results[topic_index]["label"] = current_label
+                topic_clustering_results[topic_index]["label"] = current_label
 
                 for neighboring_topic_index in neighboring_topic_indices:
-                    if results[neighboring_topic_index]["label"] is None:
+                    if topic_clustering_results[neighboring_topic_index]["label"] is None:
                         ordered_min_similarity.remove(neighboring_topic_index)
                         # try to extend the cluster into the direction of the neighbor
                         scan_topic(neighboring_topic_index, current_label)
 
-                    results[neighboring_topic_index]["neighboring_topic_indices"].add(topic_index)
-                    results[neighboring_topic_index]["neighboring_labels"].add(current_label)
+                    topic_clustering_results[neighboring_topic_index]["neighboring_topic_indices"].add(topic_index)
+                    topic_clustering_results[neighboring_topic_index]["neighboring_labels"].add(current_label)
 
             else:
                 # this topic is not a core!
                 if current_label is None:
-                    results[topic_index]["label"] = -1
+                    topic_clustering_results[topic_index]["label"] = -1
                 else:
-                    results[topic_index]["label"] = current_label
+                    topic_clustering_results[topic_index]["label"] = current_label
 
         # elements are going to be removed from that array in scan_topic, do until it is empty
         while len(ordered_min_similarity) != 0:
             next_topic_index = ordered_min_similarity.pop(0)
             scan_topic(next_topic_index)
 
-        self.results = results
+        self.results = topic_clustering_results
