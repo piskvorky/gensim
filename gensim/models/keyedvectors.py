@@ -777,7 +777,9 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         # Compute WMD.
         return emd(d1, d2, distance_matrix)
 
-    def most_similar_cosmul(self, positive=None, negative=None, topn=10):
+    def most_similar_cosmul(
+            self, positive=None, negative=None, topn=10, restrict_vocab=None
+        ):
         """Find the top-N most similar words, using the multiplicative combination objective,
         proposed by `Omer Levy and Yoav Goldberg "Linguistic Regularities in Sparse and Explicit Word Representations"
         <http://www.aclweb.org/anthology/W14-1618>`_. Positive words still contribute positively towards the similarity,
@@ -799,6 +801,11 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         topn : int or None, optional
             Number of top-N similar words to return, when `topn` is int. When `topn` is None,
             then similarities for all words are returned.
+        restrict_vocab : int or None, optional
+            Optional integer which limits the range of vectors which are searched for most-similar values.
+            For example, restrict_vocab=10000 would only check the first 10000 node vectors in the vocabulary order.
+            This may be meaningful if vocabulary is sorted by descending frequency.
+
 
         Returns
         -------
@@ -818,9 +825,12 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         self.init_sims()
 
-        if isinstance(positive, string_types) and not negative:
+        if isinstance(positive, string_types):
             # allow calls like most_similar_cosmul('dog'), as a shorthand for most_similar_cosmul(['dog'])
             positive = [positive]
+
+        if isinstance(negative, string_types):
+            negative = [negative]
 
         all_words = {
             self.vocab[word].index for word in positive + negative
@@ -841,8 +851,9 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         # equation (4) of Levy & Goldberg "Linguistic Regularities...",
         # with distances shifted to [0,1] per footnote (7)
-        pos_dists = [((1 + dot(self.vectors_norm, term)) / 2) for term in positive]
-        neg_dists = [((1 + dot(self.vectors_norm, term)) / 2) for term in negative]
+        vectors_norm = self.vectors_norm[:restrict_vocab] if restrict_vocab else self.vectors_norm
+        pos_dists = [((1 + dot(vectors_norm, term)) / 2) for term in positive]
+        neg_dists = [((1 + dot(vectors_norm, term)) / 2) for term in negative]
         dists = prod(pos_dists, axis=0) / (prod(neg_dists, axis=0) + 0.000001)
 
         if not topn:
@@ -1017,7 +1028,9 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             logger.info("%s: %.1f%% (%i/%i)", section['section'], 100.0 * score, correct, correct + incorrect)
             return score
 
-    def evaluate_word_analogies(self, analogies, restrict_vocab=300000, case_insensitive=True, dummy4unknown=False):
+    def evaluate_word_analogies(
+            self, analogies, restrict_vocab=300000, case_insensitive=True,
+            dummy4unknown=False, most_similar=most_similar):
         """Compute performance of the model on an analogy test set.
 
         This is modern variant of :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.accuracy`, see
@@ -1046,6 +1059,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         dummy4unknown : bool, optional
             If True - produce zero accuracies for 4-tuples with out-of-vocabulary words.
             Otherwise, these tuples are skipped entirely and not used in the evaluation.
+        most_similar : function, optional
+            Function used for similarity calculation.
 
         Returns
         -------
@@ -1098,7 +1113,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                     predicted = None
                     # find the most likely prediction using 3CosAdd (vector offset) method
                     # TODO: implement 3CosMul and set-based methods for solving analogies
-                    sims = self.most_similar(positive=[b, c], negative=[a], topn=5, restrict_vocab=restrict_vocab)
+                    sims = most_similar(self, positive=[b, c], negative=[a], topn=5, restrict_vocab=restrict_vocab)
                     self.vocab = original_vocab
                     for element in sims:
                         predicted = element[0].upper() if case_insensitive else element[0]
