@@ -126,15 +126,15 @@ for doc in corpus_tfidf:
 #
 # Transformations can also be serialized, one on top of another, in a sort of chain:
 
-lsi = models.LsiModel(corpus_tfidf, id2word=dictionary, num_topics=2)  # initialize an LSI transformation
-corpus_lsi = lsi[corpus_tfidf]  # create a double wrapper over the original corpus: bow->tfidf->fold-in-lsi
+lsi_model = models.LsiModel(corpus_tfidf, id2word=dictionary, num_topics=2)  # initialize an LSI transformation
+corpus_lsi = lsi_model[corpus_tfidf]  # create a double wrapper over the original corpus: bow->tfidf->fold-in-lsi
 
 ###############################################################################
 # Here we transformed our Tf-Idf corpus via `Latent Semantic Indexing <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_
 # into a latent 2-D space (2-D because we set ``num_topics=2``). Now you're probably wondering: what do these two latent
 # dimensions stand for? Let's inspect with :func:`models.LsiModel.print_topics`:
 
-lsi.print_topics(2)
+lsi_model.print_topics(2)
 
 ###############################################################################
 # (the topics are printed to log -- see the note at the top of this page about activating
@@ -152,9 +152,15 @@ for doc, as_text in zip(corpus_lsi, documents):
 
 ###############################################################################
 # Model persistency is achieved with the :func:`save` and :func:`load` functions:
+import os
+import tempfile
 
-lsi.save('/tmp/model.lsi')  # same for tfidf, lda, ...
-lsi = models.LsiModel.load('/tmp/model.lsi')
+with tempfile.NamedTemporaryFile(prefix='model-', suffix='.lsi', delete=False) as tmp:
+    lsi_model.save(tmp.name)  # same for tfidf, lda, ...
+
+loaded_lsi_model = models.LsiModel.load(tmp.name)
+
+os.unlink(tmp.name)
 
 ###############################################################################
 # The next question might be: just how exactly similar are those documents to each other?

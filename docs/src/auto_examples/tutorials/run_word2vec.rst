@@ -159,6 +159,39 @@ this vector algebra for yourself. That demo runs ``word2vec`` on the
 
 
 
+A common operation is to retrieve the vocabulary of a model.  That is trivial:
+
+
+.. code-block:: default
+
+    for i, word in enumerate(wv.vocab):
+        if i == 10:
+            break
+        print(word)
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    </s>
+    in
+    for
+    that
+    is
+    on
+    ##
+    The
+    with
+    said
+
+
+
 We can easily obtain vectors for terms the model is familiar with:
 
 
@@ -182,7 +215,7 @@ out the FastText model.
 .. code-block:: default
 
     try:
-        vec_weapon = wv['cameroon']
+        vec_cameroon = wv['cameroon']
     except KeyError:
         print("The word 'cameroon' does not appear in this model")
 
@@ -274,7 +307,7 @@ Which of the below does not belong in the sequence?
 
  .. code-block:: none
 
-    /Volumes/work/workspace/gensim_misha/gensim/models/keyedvectors.py:877: FutureWarning: arrays to stack must be passed as a "sequence" type such as list or tuple. Support for non-sequence iterables such as generators is deprecated as of NumPy 1.16 and will raise an error in the future.
+    /home/misha/git/gensim/gensim/models/keyedvectors.py:877: FutureWarning: arrays to stack must be passed as a "sequence" type such as list or tuple. Support for non-sequence iterables such as generators is deprecated as of NumPy 1.16 and will raise an error in the future.
       vectors = vstack(self.word_vec(word, use_norm=True) for word in used_words).astype(REAL)
     car
 
@@ -352,6 +385,39 @@ The main part of the model is ``model.wv``\ , where "wv" stands for "word vector
 
 
 
+
+
+
+Retrieving the vocabulary works the same way:
+
+
+.. code-block:: default
+
+    for i, word in enumerate(model.wv.vocab):
+        if i == 10:
+            break
+        print(word)
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    hundreds
+    of
+    people
+    have
+    been
+    forced
+    to
+    their
+    homes
+    in
 
 
 
@@ -633,7 +699,7 @@ attribute ``running_training_loss`` and can be retrieved using the function
 
  .. code-block:: none
 
-    1360402.375
+    1376815.375
 
 
 
@@ -768,55 +834,55 @@ standard deviation of the test duration.
 
  .. code-block:: none
 
-    Word2vec model #0: {'train_data': '25kB', 'compute_loss': True, 'sg': 0, 'hs': 0, 'train_time_mean': 0.5849939982096354, 'train_time_std': 0.01522972640617474}
-    Word2vec model #1: {'train_data': '25kB', 'compute_loss': False, 'sg': 0, 'hs': 0, 'train_time_mean': 0.5755656560262045, 'train_time_std': 0.004836459768774513}
-    Word2vec model #2: {'train_data': '25kB', 'compute_loss': True, 'sg': 0, 'hs': 1, 'train_time_mean': 0.7215259075164795, 'train_time_std': 0.0036675706813458463}
-    Word2vec model #3: {'train_data': '25kB', 'compute_loss': False, 'sg': 0, 'hs': 1, 'train_time_mean': 0.7099150816599528, 'train_time_std': 0.007504192894166025}
-    Word2vec model #4: {'train_data': '25kB', 'compute_loss': True, 'sg': 1, 'hs': 0, 'train_time_mean': 0.8580133120218912, 'train_time_std': 0.04921330375815855}
-    Word2vec model #5: {'train_data': '25kB', 'compute_loss': False, 'sg': 1, 'hs': 0, 'train_time_mean': 0.8091535568237305, 'train_time_std': 0.018924161943969856}
-    Word2vec model #6: {'train_data': '25kB', 'compute_loss': True, 'sg': 1, 'hs': 1, 'train_time_mean': 1.2724089622497559, 'train_time_std': 0.062276006861437014}
-    Word2vec model #7: {'train_data': '25kB', 'compute_loss': False, 'sg': 1, 'hs': 1, 'train_time_mean': 1.2518735726674397, 'train_time_std': 0.04091287201090217}
-    Word2vec model #8: {'train_data': '1MB', 'compute_loss': True, 'sg': 0, 'hs': 0, 'train_time_mean': 1.4700793425242107, 'train_time_std': 0.006733981587454556}
-    Word2vec model #9: {'train_data': '1MB', 'compute_loss': False, 'sg': 0, 'hs': 0, 'train_time_mean': 1.4821499983469646, 'train_time_std': 0.03462018535600499}
-    Word2vec model #10: {'train_data': '1MB', 'compute_loss': True, 'sg': 0, 'hs': 1, 'train_time_mean': 1.9445404211680095, 'train_time_std': 0.010264233877768257}
-    Word2vec model #11: {'train_data': '1MB', 'compute_loss': False, 'sg': 0, 'hs': 1, 'train_time_mean': 1.9506103197733562, 'train_time_std': 0.04041906808376729}
-    Word2vec model #12: {'train_data': '1MB', 'compute_loss': True, 'sg': 1, 'hs': 0, 'train_time_mean': 2.3204263051350913, 'train_time_std': 0.008098699493083719}
-    Word2vec model #13: {'train_data': '1MB', 'compute_loss': False, 'sg': 1, 'hs': 0, 'train_time_mean': 2.31768536567688, 'train_time_std': 0.024492678542708125}
-    Word2vec model #14: {'train_data': '1MB', 'compute_loss': True, 'sg': 1, 'hs': 1, 'train_time_mean': 5.889267047246297, 'train_time_std': 2.6677627505059167}
-    Word2vec model #15: {'train_data': '1MB', 'compute_loss': False, 'sg': 1, 'hs': 1, 'train_time_mean': 4.347986380259196, 'train_time_std': 0.5657730587543749}
-    Word2vec model #16: {'train_data': '10MB', 'compute_loss': True, 'sg': 0, 'hs': 0, 'train_time_mean': 11.660234848658243, 'train_time_std': 0.7073372278416881}
-    Word2vec model #17: {'train_data': '10MB', 'compute_loss': False, 'sg': 0, 'hs': 0, 'train_time_mean': 11.397770245869955, 'train_time_std': 0.5955700294784938}
-    Word2vec model #18: {'train_data': '10MB', 'compute_loss': True, 'sg': 0, 'hs': 1, 'train_time_mean': 18.748068968454998, 'train_time_std': 2.581779420648853}
-    Word2vec model #19: {'train_data': '10MB', 'compute_loss': False, 'sg': 0, 'hs': 1, 'train_time_mean': 14.647332032521566, 'train_time_std': 0.09193970789408673}
-    Word2vec model #20: {'train_data': '10MB', 'compute_loss': True, 'sg': 1, 'hs': 0, 'train_time_mean': 20.749327341715496, 'train_time_std': 0.11215719011982248}
-    Word2vec model #21: {'train_data': '10MB', 'compute_loss': False, 'sg': 1, 'hs': 0, 'train_time_mean': 20.204603910446167, 'train_time_std': 0.06809825435513993}
-    Word2vec model #22: {'train_data': '10MB', 'compute_loss': True, 'sg': 1, 'hs': 1, 'train_time_mean': 38.24850662549337, 'train_time_std': 2.213900159041499}
-    Word2vec model #23: {'train_data': '10MB', 'compute_loss': False, 'sg': 1, 'hs': 1, 'train_time_mean': 37.563968658447266, 'train_time_std': 0.36400679560453986}
+    Word2vec model #0: {'train_data': '25kB', 'compute_loss': True, 'sg': 0, 'hs': 0, 'train_time_mean': 0.42024485270182294, 'train_time_std': 0.010698776849185184}
+    Word2vec model #1: {'train_data': '25kB', 'compute_loss': False, 'sg': 0, 'hs': 0, 'train_time_mean': 0.4227687517801921, 'train_time_std': 0.010170030330566043}
+    Word2vec model #2: {'train_data': '25kB', 'compute_loss': True, 'sg': 0, 'hs': 1, 'train_time_mean': 0.536113421122233, 'train_time_std': 0.004805753793586722}
+    Word2vec model #3: {'train_data': '25kB', 'compute_loss': False, 'sg': 0, 'hs': 1, 'train_time_mean': 0.5387027263641357, 'train_time_std': 0.008667062182886069}
+    Word2vec model #4: {'train_data': '25kB', 'compute_loss': True, 'sg': 1, 'hs': 0, 'train_time_mean': 0.6562980810801188, 'train_time_std': 0.013588778726591642}
+    Word2vec model #5: {'train_data': '25kB', 'compute_loss': False, 'sg': 1, 'hs': 0, 'train_time_mean': 0.6652247111002604, 'train_time_std': 0.011507952438692074}
+    Word2vec model #6: {'train_data': '25kB', 'compute_loss': True, 'sg': 1, 'hs': 1, 'train_time_mean': 1.063435713450114, 'train_time_std': 0.007722866080141013}
+    Word2vec model #7: {'train_data': '25kB', 'compute_loss': False, 'sg': 1, 'hs': 1, 'train_time_mean': 1.0656228065490723, 'train_time_std': 0.010417429290681622}
+    Word2vec model #8: {'train_data': '1MB', 'compute_loss': True, 'sg': 0, 'hs': 0, 'train_time_mean': 1.1557533740997314, 'train_time_std': 0.021498065208364548}
+    Word2vec model #9: {'train_data': '1MB', 'compute_loss': False, 'sg': 0, 'hs': 0, 'train_time_mean': 1.1348456541697185, 'train_time_std': 0.008478234726085157}
+    Word2vec model #10: {'train_data': '1MB', 'compute_loss': True, 'sg': 0, 'hs': 1, 'train_time_mean': 1.5982224941253662, 'train_time_std': 0.032441277082374986}
+    Word2vec model #11: {'train_data': '1MB', 'compute_loss': False, 'sg': 0, 'hs': 1, 'train_time_mean': 1.6024325688680012, 'train_time_std': 0.05484816962039394}
+    Word2vec model #12: {'train_data': '1MB', 'compute_loss': True, 'sg': 1, 'hs': 0, 'train_time_mean': 2.0538527170817056, 'train_time_std': 0.02116566035017678}
+    Word2vec model #13: {'train_data': '1MB', 'compute_loss': False, 'sg': 1, 'hs': 0, 'train_time_mean': 2.095852772394816, 'train_time_std': 0.027719772722993145}
+    Word2vec model #14: {'train_data': '1MB', 'compute_loss': True, 'sg': 1, 'hs': 1, 'train_time_mean': 3.8532145023345947, 'train_time_std': 0.13194007715689138}
+    Word2vec model #15: {'train_data': '1MB', 'compute_loss': False, 'sg': 1, 'hs': 1, 'train_time_mean': 4.347004095713298, 'train_time_std': 0.4074951861350163}
+    Word2vec model #16: {'train_data': '10MB', 'compute_loss': True, 'sg': 0, 'hs': 0, 'train_time_mean': 9.744145313898722, 'train_time_std': 0.528574777917741}
+    Word2vec model #17: {'train_data': '10MB', 'compute_loss': False, 'sg': 0, 'hs': 0, 'train_time_mean': 10.102657397588095, 'train_time_std': 0.04922284567998143}
+    Word2vec model #18: {'train_data': '10MB', 'compute_loss': True, 'sg': 0, 'hs': 1, 'train_time_mean': 14.720670620600382, 'train_time_std': 0.14477234755034}
+    Word2vec model #19: {'train_data': '10MB', 'compute_loss': False, 'sg': 0, 'hs': 1, 'train_time_mean': 15.064472993214926, 'train_time_std': 0.13933597618834875}
+    Word2vec model #20: {'train_data': '10MB', 'compute_loss': True, 'sg': 1, 'hs': 0, 'train_time_mean': 22.98580002784729, 'train_time_std': 0.13657929022316737}
+    Word2vec model #21: {'train_data': '10MB', 'compute_loss': False, 'sg': 1, 'hs': 0, 'train_time_mean': 22.99385412534078, 'train_time_std': 0.4251254084886872}
+    Word2vec model #22: {'train_data': '10MB', 'compute_loss': True, 'sg': 1, 'hs': 1, 'train_time_mean': 43.337499936421715, 'train_time_std': 0.8026425548453814}
+    Word2vec model #23: {'train_data': '10MB', 'compute_loss': False, 'sg': 1, 'hs': 1, 'train_time_mean': 41.70925132433573, 'train_time_std': 0.2547404428238225}
        train_data  compute_loss  sg  hs  train_time_mean  train_time_std
-    4        25kB          True   1   0         0.858013        0.049213
-    5        25kB         False   1   0         0.809154        0.018924
-    6        25kB          True   1   1         1.272409        0.062276
-    7        25kB         False   1   1         1.251874        0.040913
-    0        25kB          True   0   0         0.584994        0.015230
-    1        25kB         False   0   0         0.575566        0.004836
-    2        25kB          True   0   1         0.721526        0.003668
-    3        25kB         False   0   1         0.709915        0.007504
-    12        1MB          True   1   0         2.320426        0.008099
-    13        1MB         False   1   0         2.317685        0.024493
-    14        1MB          True   1   1         5.889267        2.667763
-    15        1MB         False   1   1         4.347986        0.565773
-    8         1MB          True   0   0         1.470079        0.006734
-    9         1MB         False   0   0         1.482150        0.034620
-    10        1MB          True   0   1         1.944540        0.010264
-    11        1MB         False   0   1         1.950610        0.040419
-    20       10MB          True   1   0        20.749327        0.112157
-    21       10MB         False   1   0        20.204604        0.068098
-    22       10MB          True   1   1        38.248507        2.213900
-    23       10MB         False   1   1        37.563969        0.364007
-    16       10MB          True   0   0        11.660235        0.707337
-    17       10MB         False   0   0        11.397770        0.595570
-    18       10MB          True   0   1        18.748069        2.581779
-    19       10MB         False   0   1        14.647332        0.091940
+    4        25kB          True   1   0         0.656298        0.013589
+    5        25kB         False   1   0         0.665225        0.011508
+    6        25kB          True   1   1         1.063436        0.007723
+    7        25kB         False   1   1         1.065623        0.010417
+    0        25kB          True   0   0         0.420245        0.010699
+    1        25kB         False   0   0         0.422769        0.010170
+    2        25kB          True   0   1         0.536113        0.004806
+    3        25kB         False   0   1         0.538703        0.008667
+    12        1MB          True   1   0         2.053853        0.021166
+    13        1MB         False   1   0         2.095853        0.027720
+    14        1MB          True   1   1         3.853215        0.131940
+    15        1MB         False   1   1         4.347004        0.407495
+    8         1MB          True   0   0         1.155753        0.021498
+    9         1MB         False   0   0         1.134846        0.008478
+    10        1MB          True   0   1         1.598222        0.032441
+    11        1MB         False   0   1         1.602433        0.054848
+    20       10MB          True   1   0        22.985800        0.136579
+    21       10MB         False   1   0        22.993854        0.425125
+    22       10MB          True   1   1        43.337500        0.802643
+    23       10MB         False   1   1        41.709251        0.254740
+    16       10MB          True   0   0         9.744145        0.528575
+    17       10MB         False   0   0        10.102657        0.049223
+    18       10MB          True   0   1        14.720671        0.144772
+    19       10MB         False   0   1        15.064473        0.139336
 
 
 
@@ -858,9 +924,9 @@ otherwise we will query the word and then cache it so that it doesn't miss next 
 
  .. code-block:: none
 
-    the [('in', 0.9999227523803711), ('afghanistan', 0.9999197125434875), ('after', 0.9999192953109741), ('on', 0.9999148845672607), ('by', 0.9999129772186279), ('with', 0.999912440776825), ('two', 0.9999121427536011), ('which', 0.9999109506607056), ('three', 0.9999096393585205), ('their', 0.9999094009399414)]
-    to [('is', 0.9999458193778992), ('by', 0.9999446868896484), ('for', 0.9999421834945679), ('their', 0.9999414086341858), ('into', 0.9999411106109619), ('who', 0.9999386668205261), ('if', 0.9999375939369202), ('any', 0.9999368190765381), ('say', 0.9999366402626038), ('his', 0.9999357461929321)]
-    of [('in', 0.9999579191207886), ('with', 0.999951958656311), ('on', 0.9999455213546753), ('after', 0.9999436140060425), ('and', 0.9999428987503052), ('by', 0.9999402761459351), ('from', 0.999940037727356), ('at', 0.9999394416809082), ('its', 0.9999387264251709), ('for', 0.9999380707740784)]
+    the [('of', 0.999931812286377), ('at', 0.999925434589386), ('state', 0.9999253153800964), ('and', 0.9999250769615173), ('from', 0.9999250173568726), ('world', 0.9999234676361084), ('its', 0.9999232292175293), ('first', 0.9999232292175293), ('australia', 0.9999231100082397), ('one', 0.9999231100082397)]
+    to [('at', 0.999946117401123), ('if', 0.9999457597732544), ('will', 0.9999451637268066), ('out', 0.9999433159828186), ('or', 0.999942421913147), ('are', 0.9999421238899231), ('that', 0.9999387264251709), ('but', 0.9999367594718933), ('into', 0.999936580657959), ('from', 0.9999353885650635)]
+    of [('first', 0.9999472498893738), ('at', 0.999944806098938), ('australian', 0.9999432563781738), ('into', 0.9999418258666992), ('three', 0.9999409914016724), ('with', 0.999938428401947), ('over', 0.9999372363090515), ('in', 0.9999370574951172), ('by', 0.9999368786811829), ('and', 0.9999358654022217)]
 
 
 
@@ -905,11 +971,11 @@ Without caching
 
  .. code-block:: none
 
-    [('eight', 0.9987820386886597), ('being', 0.9987704753875732), ('children', 0.9987442493438721), ('off', 0.998741865158081), ('local', 0.99873948097229), ('royal', 0.9987344145774841), ('qantas', 0.9987306594848633), ('near', 0.99872887134552), ('night', 0.9987269639968872), ('before', 0.9987255334854126)]
-    [('are', 0.9997553825378418), ('one', 0.9997513294219971), ('his', 0.9997497797012329), ('police', 0.9997488260269165), ('their', 0.9997481107711792), ('they', 0.9997480511665344), ('three', 0.9997479319572449), ('at', 0.9997453093528748), ('as', 0.9997446537017822), ('month', 0.9997410774230957)]
-    [('by', 0.9999604821205139), ('world', 0.9999570846557617), ('for', 0.999954342842102), ('from', 0.9999533891677856), ('his', 0.9999526143074036), ('at', 0.9999525547027588), ('on', 0.9999521374702454), ('who', 0.9999504685401917), ('into', 0.9999492168426514), ('which', 0.9999484419822693)]
-    [('and', 0.9999351501464844), ('by', 0.9999305605888367), ('on', 0.999929666519165), ('from', 0.9999263286590576), ('about', 0.999925971031189), ('with', 0.9999253153800964), ('one', 0.9999237656593323), ('when', 0.9999232292175293), ('australian', 0.9999225735664368), ('their', 0.999922513961792)]
-    0.0038039684295654297
+    [('flights', 0.9986665844917297), ('job', 0.9986284971237183), ('building', 0.9985975623130798), ('see', 0.9985952377319336), ('figures', 0.9985781311988831), ('melbourne', 0.9985730051994324), ('two', 0.9985727071762085), ('per', 0.9985710978507996), ('weather', 0.9985674619674683), ('still', 0.9985595345497131)]
+    [('an', 0.9997475147247314), ('today', 0.999739408493042), ('were', 0.9997352361679077), ('after', 0.9997317790985107), ('which', 0.9997289180755615), ('with', 0.9997268915176392), ('against', 0.999722957611084), ('still', 0.9997221231460571), ('at', 0.9997204542160034), ('could', 0.9997197389602661)]
+    [('at', 0.9999508857727051), ('from', 0.9999468326568604), ('up', 0.9999455809593201), ('today', 0.9999449849128723), ('us', 0.9999443292617798), ('on', 0.999944269657135), ('his', 0.9999438524246216), ('by', 0.9999434947967529), ('into', 0.9999425411224365), ('with', 0.9999420642852783)]
+    [('by', 0.9999364018440247), ('out', 0.999934732913971), ('after', 0.9999337196350098), ('into', 0.9999316334724426), ('at', 0.9999312162399292), ('and', 0.9999300241470337), ('with', 0.9999291896820068), ('over', 0.9999289512634277), ('as', 0.9999284744262695), ('were', 0.9999282360076904)]
+    0.030631542205810547
 
 
 
@@ -942,11 +1008,11 @@ Now with caching
 
  .. code-block:: none
 
-    [('eight', 0.9987820386886597), ('being', 0.9987704753875732), ('children', 0.9987442493438721), ('off', 0.998741865158081), ('local', 0.99873948097229), ('royal', 0.9987344145774841), ('qantas', 0.9987306594848633), ('near', 0.99872887134552), ('night', 0.9987269639968872), ('before', 0.9987255334854126)]
-    [('are', 0.9997553825378418), ('one', 0.9997513294219971), ('his', 0.9997497797012329), ('police', 0.9997488260269165), ('their', 0.9997481107711792), ('they', 0.9997480511665344), ('three', 0.9997479319572449), ('at', 0.9997453093528748), ('as', 0.9997446537017822), ('month', 0.9997410774230957)]
-    [('by', 0.9999604821205139), ('world', 0.9999570846557617), ('for', 0.999954342842102), ('from', 0.9999533891677856), ('his', 0.9999526143074036), ('at', 0.9999525547027588), ('on', 0.9999521374702454), ('who', 0.9999504685401917), ('into', 0.9999492168426514), ('which', 0.9999484419822693)]
-    [('and', 0.9999351501464844), ('by', 0.9999305605888367), ('on', 0.999929666519165), ('from', 0.9999263286590576), ('about', 0.999925971031189), ('with', 0.9999253153800964), ('one', 0.9999237656593323), ('when', 0.9999232292175293), ('australian', 0.9999225735664368), ('their', 0.999922513961792)]
-    0.0012600421905517578
+    [('flights', 0.9986665844917297), ('job', 0.9986284971237183), ('building', 0.9985975623130798), ('see', 0.9985952377319336), ('figures', 0.9985781311988831), ('melbourne', 0.9985730051994324), ('two', 0.9985727071762085), ('per', 0.9985710978507996), ('weather', 0.9985674619674683), ('still', 0.9985595345497131)]
+    [('an', 0.9997475147247314), ('today', 0.999739408493042), ('were', 0.9997352361679077), ('after', 0.9997317790985107), ('which', 0.9997289180755615), ('with', 0.9997268915176392), ('against', 0.999722957611084), ('still', 0.9997221231460571), ('at', 0.9997204542160034), ('could', 0.9997197389602661)]
+    [('at', 0.9999508857727051), ('from', 0.9999468326568604), ('up', 0.9999455809593201), ('today', 0.9999449849128723), ('us', 0.9999443292617798), ('on', 0.999944269657135), ('his', 0.9999438524246216), ('by', 0.9999434947967529), ('into', 0.9999425411224365), ('with', 0.9999420642852783)]
+    [('by', 0.9999364018440247), ('out', 0.999934732913971), ('after', 0.9999337196350098), ('into', 0.9999316334724426), ('at', 0.9999312162399292), ('and', 0.9999300241470337), ('with', 0.9999291896820068), ('over', 0.9999289512634277), ('as', 0.9999284744262695), ('were', 0.9999282360076904)]
+    0.0009360313415527344
 
 
 
@@ -1074,9 +1140,9 @@ Links
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 14 minutes  22.799 seconds)
+   **Total running time of the script:** ( 14 minutes  57.464 seconds)
 
-**Estimated memory usage:**  9582 MB
+**Estimated memory usage:**  11388 MB
 
 
 .. _sphx_glr_download_auto_examples_tutorials_run_word2vec.py:
