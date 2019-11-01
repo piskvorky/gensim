@@ -452,13 +452,13 @@ Blog posts, tutorial videos, hackathons and other useful Gensim resources, from 
 
   .. container:: sphx-glr-download
 
-    :download:`Download all examples in Python source code: auto_examples_python.zip <//Volumes/work/workspace/gensim_misha/docs/src/auto_examples/auto_examples_python.zip>`
+    :download:`Download all examples in Python source code: auto_examples_python.zip <//home/misha/git/gensim/docs/src/auto_examples/auto_examples_python.zip>`
 
 
 
   .. container:: sphx-glr-download
 
-    :download:`Download all examples in Jupyter notebooks: auto_examples_jupyter.zip <//Volumes/work/workspace/gensim_misha/docs/src/auto_examples/auto_examples_jupyter.zip>`
+    :download:`Download all examples in Jupyter notebooks: auto_examples_jupyter.zip <//home/misha/git/gensim/docs/src/auto_examples/auto_examples_jupyter.zip>`
 
 
 .. only:: html

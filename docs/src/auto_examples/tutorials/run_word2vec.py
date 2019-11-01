@@ -135,6 +135,13 @@ import gensim.downloader as api
 wv = api.load('word2vec-google-news-300')
 
 ###############################################################################
+# A common operation is to retrieve the vocabulary of a model.  That is trivial:
+for i, word in enumerate(wv.vocab):
+    if i == 10:
+        break
+    print(word)
+
+###############################################################################
 # We can easily obtain vectors for terms the model is familiar with:
 #
 vec_king = wv['king']
@@ -145,7 +152,7 @@ vec_king = wv['king']
 # out the FastText model.
 #
 try:
-    vec_weapon = wv['cameroon']
+    vec_cameroon = wv['cameroon']
 except KeyError:
     print("The word 'cameroon' does not appear in this model")
 
@@ -219,6 +226,13 @@ model = gensim.models.Word2Vec(sentences=sentences)
 # The main part of the model is ``model.wv``\ , where "wv" stands for "word vectors".
 #
 vec_king = model.wv['king']
+
+###############################################################################
+# Retrieving the vocabulary works the same way:
+for i, word in enumerate(model.wv.vocab):
+    if i == 10:
+        break
+    print(word)
 
 ###############################################################################
 # Storing and loading models

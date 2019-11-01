@@ -205,8 +205,8 @@ Transformations can also be serialized, one on top of another, in a sort of chai
 .. code-block:: default
 
 
-    lsi = models.LsiModel(corpus_tfidf, id2word=dictionary, num_topics=2)  # initialize an LSI transformation
-    corpus_lsi = lsi[corpus_tfidf]  # create a double wrapper over the original corpus: bow->tfidf->fold-in-lsi
+    lsi_model = models.LsiModel(corpus_tfidf, id2word=dictionary, num_topics=2)  # initialize an LSI transformation
+    corpus_lsi = lsi_model[corpus_tfidf]  # create a double wrapper over the original corpus: bow->tfidf->fold-in-lsi
 
 
 
@@ -222,7 +222,7 @@ dimensions stand for? Let's inspect with :func:`models.LsiModel.print_topics`:
 .. code-block:: default
 
 
-    lsi.print_topics(2)
+    lsi_model.print_topics(2)
 
 
 
@@ -257,15 +257,15 @@ remaining four documents to the first topic:
 
  .. code-block:: none
 
-    [(0, 0.06600783396090373), (1, -0.5200703306361856)] Human machine interface for lab abc computer applications
-    [(0, 0.19667592859142588), (1, -0.7609563167700043)] A survey of user opinion of computer system response time
-    [(0, 0.08992639972446417), (1, -0.7241860626752514)] The EPS user interface management system
-    [(0, 0.07585847652178135), (1, -0.6320551586003438)] System and human system engineering testing of EPS
-    [(0, 0.1015029918498023), (1, -0.573730848300295)] Relation of user perceived response time to error measurement
-    [(0, 0.7032108939378311), (1, 0.16115180214025807)] The generation of random binary unordered trees
-    [(0, 0.8774787673119832), (1, 0.16758906864659448)] The intersection graph of paths in trees
-    [(0, 0.9098624686818579), (1, 0.1408655362871908)] Graph minors IV Widths of trees and well quasi ordering
-    [(0, 0.6165825350569284), (1, -0.05392907566389287)] Graph minors A survey
+    [(0, 0.06600783396090627), (1, -0.520070330636184)] Human machine interface for lab abc computer applications
+    [(0, 0.1966759285914279), (1, -0.760956316770005)] A survey of user opinion of computer system response time
+    [(0, 0.08992639972446735), (1, -0.7241860626752503)] The EPS user interface management system
+    [(0, 0.07585847652178428), (1, -0.6320551586003422)] System and human system engineering testing of EPS
+    [(0, 0.10150299184980327), (1, -0.5737308483002963)] Relation of user perceived response time to error measurement
+    [(0, 0.7032108939378309), (1, 0.16115180214026148)] The generation of random binary unordered trees
+    [(0, 0.8774787673119828), (1, 0.16758906864659825)] The intersection graph of paths in trees
+    [(0, 0.9098624686818573), (1, 0.14086553628719417)] Graph minors IV Widths of trees and well quasi ordering
+    [(0, 0.6165825350569281), (1, -0.053929075663891594)] Graph minors A survey
 
 
 
@@ -274,9 +274,15 @@ Model persistency is achieved with the :func:`save` and :func:`load` functions:
 
 .. code-block:: default
 
+    import os
+    import tempfile
 
-    lsi.save('/tmp/model.lsi')  # same for tfidf, lda, ...
-    lsi = models.LsiModel.load('/tmp/model.lsi')
+    with tempfile.NamedTemporaryFile(prefix='model-', suffix='.lsi', delete=False) as tmp:
+        lsi_model.save(tmp.name)  # same for tfidf, lda, ...
+
+    loaded_lsi_model = models.LsiModel.load(tmp.name)
+
+    os.unlink(tmp.name)
 
 
 
@@ -429,7 +435,7 @@ References
 
  .. code-block:: none
 
-    /Volumes/work/workspace/gensim_misha/docs/src/gallery/core/run_topics_and_transformations.py:287: UserWarning: Matplotlib is currently using agg, which is a non-GUI backend, so cannot show the figure.
+    /home/misha/git/gensim/docs/src/gallery/core/run_topics_and_transformations.py:293: UserWarning: Matplotlib is currently using agg, which is a non-GUI backend, so cannot show the figure.
       plt.show()
 
 
@@ -437,9 +443,9 @@ References
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.743 seconds)
+   **Total running time of the script:** ( 0 minutes  0.844 seconds)
 
-**Estimated memory usage:**  7 MB
+**Estimated memory usage:**  44 MB
 
 
 .. _sphx_glr_download_auto_examples_core_run_topics_and_transformations.py:
