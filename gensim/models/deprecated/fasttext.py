@@ -45,7 +45,6 @@ from gensim.models.fasttext import FastText as NewFastText
 
 logger = logging.getLogger(__name__)
 
-FAST_VERSION = -1
 MAX_WORDS_IN_BATCH = 10000
 
 

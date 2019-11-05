@@ -813,9 +813,6 @@ class TestWord2VecModel(unittest.TestCase):
 
     def testParallel(self):
         """Test word2vec parallel training."""
-        if word2vec.FAST_VERSION < 0:  # don't test the plain np version for parallelism (too slow)
-            return
-
         corpus = utils.RepeatCorpus(LeeCorpus(), 10000)
 
         for workers in [2, 4]:
@@ -1060,7 +1057,7 @@ class TestWMD(unittest.TestCase):
 class TestWord2VecSentenceIterators(unittest.TestCase):
     def testLineSentenceWorksWithFilename(self):
         """Does LineSentence work with a filename argument?"""
-        with utils.smart_open(datapath('lee_background.cor')) as orig:
+        with utils.open(datapath('lee_background.cor'), 'rb') as orig:
             sentences = word2vec.LineSentence(datapath('lee_background.cor'))
             for words in sentences:
                 self.assertEqual(words, utils.to_unicode(orig.readline()).split())
@@ -1069,41 +1066,41 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
     def testCythonLineSentenceWorksWithFilename(self):
         """Does CythonLineSentence work with a filename argument?"""
         from gensim.models import word2vec_corpusfile
-        with utils.smart_open(datapath('lee_background.cor')) as orig:
+        with utils.open(datapath('lee_background.cor'), 'rb') as orig:
             sentences = word2vec_corpusfile.CythonLineSentence(datapath('lee_background.cor'))
             for words in sentences:
                 self.assertEqual(words, orig.readline().split())
 
     def testLineSentenceWorksWithCompressedFile(self):
         """Does LineSentence work with a compressed file object argument?"""
-        with utils.smart_open(datapath('head500.noblanks.cor')) as orig:
+        with utils.open(datapath('head500.noblanks.cor'), 'rb') as orig:
             sentences = word2vec.LineSentence(bz2.BZ2File(datapath('head500.noblanks.cor.bz2')))
             for words in sentences:
                 self.assertEqual(words, utils.to_unicode(orig.readline()).split())
 
     def testLineSentenceWorksWithNormalFile(self):
         """Does LineSentence work with a file object argument, rather than filename?"""
-        with utils.smart_open(datapath('head500.noblanks.cor')) as orig:
-            with utils.smart_open(datapath('head500.noblanks.cor')) as fin:
+        with utils.open(datapath('head500.noblanks.cor'), 'rb') as orig:
+            with utils.open(datapath('head500.noblanks.cor'), 'rb') as fin:
                 sentences = word2vec.LineSentence(fin)
                 for words in sentences:
                     self.assertEqual(words, utils.to_unicode(orig.readline()).split())
 
     def testPathLineSentences(self):
         """Does PathLineSentences work with a path argument?"""
-        with utils.smart_open(os.path.join(datapath('PathLineSentences'), '1.txt')) as orig1,\
-        utils.smart_open(os.path.join(datapath('PathLineSentences'), '2.txt.bz2')) as orig2:
-            sentences = word2vec.PathLineSentences(datapath('PathLineSentences'))
-            orig = orig1.readlines() + orig2.readlines()
-            orig_counter = 0  # to go through orig while matching PathLineSentences
-            for words in sentences:
-                self.assertEqual(words, utils.to_unicode(orig[orig_counter]).split())
-                orig_counter += 1
+        with utils.open(os.path.join(datapath('PathLineSentences'), '1.txt'), 'rb') as orig1:
+            with utils.open(os.path.join(datapath('PathLineSentences'), '2.txt.bz2'), 'rb') as orig2:
+                sentences = word2vec.PathLineSentences(datapath('PathLineSentences'))
+                orig = orig1.readlines() + orig2.readlines()
+                orig_counter = 0  # to go through orig while matching PathLineSentences
+                for words in sentences:
+                    self.assertEqual(words, utils.to_unicode(orig[orig_counter]).split())
+                    orig_counter += 1
 
     def testPathLineSentencesOneFile(self):
         """Does PathLineSentences work with a single file argument?"""
         test_file = os.path.join(datapath('PathLineSentences'), '1.txt')
-        with utils.smart_open(test_file) as orig:
+        with utils.open(test_file, 'rb') as orig:
             sentences = word2vec.PathLineSentences(test_file)
             for words in sentences:
                 self.assertEqual(words, utils.to_unicode(orig.readline()).split())
@@ -1135,5 +1132,4 @@ if __name__ == '__main__':
         format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s',
         level=logging.DEBUG
     )
-    logging.info("using optimization %s", word2vec.FAST_VERSION)
     unittest.main()

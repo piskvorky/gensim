@@ -164,23 +164,24 @@ def find_interlinks(raw):
 
     Returns
     -------
-    dict
-        Mapping from the linked article to the actual text found.
+    list
+        List of tuples in format [(linked article, the actual text found), ...].
 
     """
     filtered = filter_wiki(raw, promote_remaining=False, simplify_links=False)
     interlinks_raw = re.findall(RE_P16, filtered)
 
-    interlinks = {}
+    interlinks = []
     for parts in [i.split('|') for i in interlinks_raw]:
         actual_title = parts[0]
         try:
             interlink_text = parts[1]
-            interlinks[actual_title] = interlink_text
         except IndexError:
-            interlinks[actual_title] = actual_title
+            interlink_text = actual_title
+        interlink_tuple = (actual_title, interlink_text)
+        interlinks.append(interlink_tuple)
 
-    legit_interlinks = {i: j for i, j in interlinks.items() if '[' not in i and ']' not in i}
+    legit_interlinks = [(i, j) for i, j in interlinks if '[' not in i and ']' not in i]
     return legit_interlinks
 
 
@@ -700,7 +701,7 @@ class WikiCorpus(TextCorpus):
             logger.warn(
                 "user terminated iteration over Wikipedia corpus after %i documents with %i positions "
                 "(total %i articles, %i positions before pruning articles shorter than %i words)",
-                articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS
+                articles, positions, articles_all, positions_all, self.article_min_tokens
             )
         except PicklingError as exc:
             raise_from(PicklingError('Can not send filtering function {} to multiprocessing, '
@@ -709,7 +710,7 @@ class WikiCorpus(TextCorpus):
             logger.info(
                 "finished iterating over Wikipedia corpus of %i documents with %i positions "
                 "(total %i articles, %i positions before pruning articles shorter than %i words)",
-                articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS
+                articles, positions, articles_all, positions_all, self.article_min_tokens
             )
             self.length = articles  # cache corpus length
         finally:

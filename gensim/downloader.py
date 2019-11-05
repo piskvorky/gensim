@@ -41,10 +41,19 @@ Also, this API available via CLI::
     python -m gensim.downloader --info name # same as api.info(name_only=True)
     python -m gensim.downloader --download <dataname> # same as api.load(dataname, return_path=True)
 
+You may specify the local subdirectory for saving gensim data using the
+GENSIM_DATA_DIR environment variable.  For example:
+
+    $ export GENSIM_DATA_DIR=/tmp/gensim-data
+    $ python -m gensim.downloader --download <dataname>
+
+By default, this subdirectory is ~/gensim-data.
+
 """
 from __future__ import absolute_import
 import argparse
 import os
+import io
 import json
 import logging
 import sys
@@ -62,8 +71,20 @@ else:
     import urllib.request as urllib
     from urllib.request import urlopen
 
-user_dir = os.path.expanduser('~')
-base_dir = os.path.join(user_dir, 'gensim-data')
+
+_DEFAULT_BASE_DIR = os.path.expanduser('~/gensim-data')
+BASE_DIR = os.environ.get('GENSIM_DATA_DIR', _DEFAULT_BASE_DIR)
+"""The default location to store downloaded data.
+
+You may override this with the GENSIM_DATA_DIR environment variable.
+
+"""
+
+_PARENT_DIR = os.path.abspath(os.path.join(BASE_DIR, '..'))
+
+
+base_dir = BASE_DIR  # for backward compatibility with some of our test data
+
 logger = logging.getLogger(__name__)
 
 DATA_LIST_URL = "https://raw.githubusercontent.com/RaRe-Technologies/gensim-data/master/list.json"
@@ -125,21 +146,21 @@ def _create_base_dir():
         already exists in the home directory.
 
     """
-    if not os.path.isdir(base_dir):
+    if not os.path.isdir(BASE_DIR):
         try:
-            logger.info("Creating %s", base_dir)
-            os.makedirs(base_dir)
+            logger.info("Creating %s", BASE_DIR)
+            os.makedirs(BASE_DIR)
         except OSError as e:
             if e.errno == errno.EEXIST:
                 raise Exception(
                     "Not able to create folder gensim-data in {}. File gensim-data "
-                    "exists in the direcory already.".format(user_dir)
+                    "exists in the directory already.".format(_PARENT_DIR)
                 )
             else:
                 raise Exception(
                     "Can't create {}. Make sure you have the read/write permissions "
                     "to the directory or you can try creating the folder manually"
-                    .format(base_dir)
+                    .format(BASE_DIR)
                 )
 
 
@@ -162,6 +183,45 @@ def _calculate_md5_checksum(fname):
         for chunk in iter(lambda: f.read(4096), b""):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
+
+
+def _load_info(url=DATA_LIST_URL, encoding='utf-8'):
+    """Load dataset information from the network.
+
+    If the network access fails, fall back to a local cache.  This cache gets
+    updated each time a network request _succeeds_.
+    """
+    cache_path = os.path.join(BASE_DIR, 'information.json')
+    _create_base_dir()
+
+    try:
+        info_bytes = urlopen(url).read()
+    except (OSError, IOError):
+        #
+        # The exception raised by urlopen differs between Py2 and Py3.
+        #
+        # https://docs.python.org/3/library/urllib.error.html
+        # https://docs.python.org/2/library/urllib.html
+        #
+        logger.exception(
+            'caught non-fatal exception while trying to update gensim-data cache from %r; '
+            'using local cache at %r instead', url, cache_path
+        )
+    else:
+        with open(cache_path, 'wb') as fout:
+            fout.write(info_bytes)
+
+    try:
+        #
+        # We need io.open here because Py2 open doesn't support encoding keyword
+        #
+        with io.open(cache_path, 'r', encoding=encoding) as fin:
+            return json.load(fin)
+    except IOError:
+        raise ValueError(
+            'unable to read local cache %r during fallback, '
+            'connect to the Internet and retry' % cache_path
+        )
 
 
 def info(name=None, show_only_latest=True, name_only=False):
@@ -204,7 +264,7 @@ def info(name=None, show_only_latest=True, name_only=False):
         >>> api.info()  # retrieve information about all available datasets and models
 
     """
-    information = json.loads(urlopen(DATA_LIST_URL).read().decode("utf-8"))
+    information = _load_info()
 
     if name is not None:
         corpora = information['corpora']
@@ -297,7 +357,7 @@ def _download(name):
 
     """
     url_load_file = "{base}/{fname}/__init__.py".format(base=DOWNLOAD_BASE_URL, fname=name)
-    data_folder_dir = os.path.join(base_dir, name)
+    data_folder_dir = os.path.join(BASE_DIR, name)
     data_folder_dir_tmp = data_folder_dir + '_tmp'
     tmp_dir = tempfile.mkdtemp()
     init_path = os.path.join(tmp_dir, "__init__.py")
@@ -429,7 +489,7 @@ def load(name, return_path=False):
     file_name = _get_filename(name)
     if file_name is None:
         raise ValueError("Incorrect model/corpus name")
-    folder_dir = os.path.join(base_dir, name)
+    folder_dir = os.path.join(BASE_DIR, name)
     path = os.path.join(folder_dir, file_name)
     if not os.path.exists(folder_dir):
         _download(name)
@@ -437,7 +497,7 @@ def load(name, return_path=False):
     if return_path:
         return path
     else:
-        sys.path.insert(0, base_dir)
+        sys.path.insert(0, BASE_DIR)
         module = __import__(name)
         return module.load_data()
 

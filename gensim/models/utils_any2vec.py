@@ -26,7 +26,6 @@ current Facebook implementation, use :py:func:`compute_ngrams_bytes` and
 """
 
 import logging
-import numpy as np
 from gensim import utils
 
 from numpy import zeros, dtype, float32 as REAL, ascontiguousarray, fromstring
@@ -60,159 +59,15 @@ def _is_utf8_continue(b):
     return _byte_to_int(b) & _MB_MASK == _MB_START
 
 
-#
-# Define this here so we can unittest this function directly.
-# Only use this function if the faster C version fails to import.
-#
-def _ft_hash_bytes_py(bytez):
-    """Calculate hash based on `bytez`.
-    Reproduce `hash method from Facebook fastText implementation
-    <https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc>`_.
-
-    Parameters
-    ----------
-    bytez : bytes
-        The string whose hash needs to be calculated, encoded as UTF-8.
-
-    Returns
-    -------
-    int
-        The hash of the string.
-
-    """
-    old_settings = np.seterr(all='ignore')
-    h = np.uint32(2166136261)
-    for b in bytez:
-        h = h ^ np.uint32(np.int8(_byte_to_int(b)))
-        h = h * np.uint32(16777619)
-    np.seterr(**old_settings)
-    return h
-
-
-def _ft_hash_broken_py(string):
-    """Calculate hash based on `string`.
-    Reproduce `hash method from Facebook fastText implementation
-    <https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc>`_.
-
-    This implementation is broken, see https://github.com/RaRe-Technologies/gensim/issues/2059.
-
-    Parameters
-    ----------
-    string : str
-        The string whose hash needs to be calculated.
-
-    Returns
-    -------
-    int
-        The hash of the string.
-
-    """
-    # Runtime warnings for integer overflow are raised, this is expected behaviour. These warnings are suppressed.
-    old_settings = np.seterr(all='ignore')
-    h = np.uint32(2166136261)
-    for c in string:
-        h = h ^ np.uint32(ord(c))
-        h = h * np.uint32(16777619)
-    np.seterr(**old_settings)
-    return h
-
-
-def _compute_ngrams_py(word, min_n, max_n):
-    """Get the list of all possible ngrams for a given word.
-    Parameters
-    ----------
-    word : str
-        The word whose ngrams need to be computed.
-    min_n : int
-        Minimum character length of the ngrams.
-    max_n : int
-        Maximum character length of the ngrams.
-    Returns
-    -------
-    list of str
-        Sequence of character ngrams.
-    """
-    BOW, EOW = ('<', '>')  # Used by FastText to attach to all words as prefix and suffix
-    extended_word = BOW + word + EOW
-    ngrams = []
-    for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
-        for i in range(0, len(extended_word) - ngram_length + 1):
-            ngrams.append(extended_word[i:i + ngram_length])
-    return ngrams
-
-
-def _compute_ngrams_bytes_py(word, min_n, max_n):
-    """Computes ngrams for a word.
-
-    Ported from the original FB implementation.
-
-    Parameters
-    ----------
-    word : str
-        A unicode string.
-    min_n : unsigned int
-        The minimum ngram length.
-    max_n : unsigned int
-        The maximum ngram length.
-
-    Returns:
-    --------
-    list of str
-        A list of ngrams, where each ngram is a list of **bytes**.
-
-    See Also
-    --------
-    `Original implementation <https://github.com/facebookresearch/fastText/blob/7842495a4d64c7a3bb4339d45d6e64321d002ed8/src/dictionary.cc#L172>`__  # noqa: E501
-
-    """
-    utf8_word = ('<%s>' % word).encode("utf-8")
-    num_bytes = len(utf8_word)
-    n = 0
-
-    ngrams = []
-    for i in range(num_bytes):
-        if _is_utf8_continue(utf8_word[i]):
-            continue
-
-        j, n = i, 1
-        while j < num_bytes and n <= max_n:
-            j += 1
-            while j < num_bytes and _is_utf8_continue(utf8_word[j]):
-                j += 1
-            if n >= min_n and not (n == 1 and (i == 0 or j == num_bytes)):
-                ngram = bytes(utf8_word[i:j])
-                ngrams.append(ngram)
-            n += 1
-    return ngrams
-
-
-#
-# Internally, we use the following convention to abstract away the presence
-# or absence of the Cython extensions:
-#
-# - _function_cy: Imported from Cython extension
-# - _function_py: Implemented in Python
-# - function: Exported by this module.
-#
 try:
     from gensim.models._utils_any2vec import (
-        compute_ngrams as _compute_ngrams_cy,
-        compute_ngrams_bytes as _compute_ngrams_bytes_cy,
-        ft_hash_broken as _ft_hash_broken_cy,
-        ft_hash_bytes as _ft_hash_bytes_cy,
+        compute_ngrams,
+        compute_ngrams_bytes,
+        ft_hash_broken,
+        ft_hash_bytes,
     )
-    ft_hash_bytes = _ft_hash_bytes_cy
-    ft_hash_broken = _ft_hash_broken_cy
-    compute_ngrams = _compute_ngrams_cy
-    compute_ngrams_bytes = _compute_ngrams_bytes_cy
-    FAST_VERSION = 0
 except ImportError:
-    # failed... fall back to plain python
-    FAST_VERSION = -1
-    ft_hash_bytes = _ft_hash_bytes_py
-    ft_hash_broken = _ft_hash_broken_py
-    compute_ngrams = _compute_ngrams_py
-    compute_ngrams_bytes = _compute_ngrams_bytes_py
+    raise utils.NO_CYTHON
 
 
 def ft_ngram_hashes(word, minn, maxn, num_buckets, fb_compatible=True):
@@ -274,12 +129,12 @@ def _save_word2vec_format(fname, vocab, vectors, fvocab=None, binary=False, tota
     vector_size = vectors.shape[1]
     if fvocab is not None:
         logger.info("storing vocabulary in %s", fvocab)
-        with utils.smart_open(fvocab, 'wb') as vout:
+        with utils.open(fvocab, 'wb') as vout:
             for word, vocab_ in sorted(iteritems(vocab), key=lambda item: -item[1].count):
                 vout.write(utils.to_utf8("%s %s\n" % (word, vocab_.count)))
     logger.info("storing %sx%s projection weights into %s", total_vec, vector_size, fname)
     assert (len(vocab), vector_size) == vectors.shape
-    with utils.smart_open(fname, 'wb') as fout:
+    with utils.open(fname, 'wb') as fout:
         fout.write(utils.to_utf8("%s %s\n" % (total_vec, vector_size)))
         # store in sorted order: most frequent words at the top
         for word, vocab_ in sorted(iteritems(vocab), key=lambda item: -item[1].count):
@@ -333,13 +188,13 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
     if fvocab is not None:
         logger.info("loading word counts from %s", fvocab)
         counts = {}
-        with utils.smart_open(fvocab) as fin:
+        with utils.open(fvocab, 'rb') as fin:
             for line in fin:
-                word, count = utils.to_unicode(line).strip().split()
+                word, count = utils.to_unicode(line, errors=unicode_errors).strip().split()
                 counts[word] = int(count)
 
     logger.info("loading projection weights from %s", fname)
-    with utils.smart_open(fname) as fin:
+    with utils.open(fname, 'rb') as fin:
         header = utils.to_unicode(fin.readline(), encoding=encoding)
         vocab_size, vector_size = (int(x) for x in header.split())  # throws for invalid file format
         if limit:
@@ -372,7 +227,7 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
                 # mixed text and binary: read text first, then binary
                 word = []
                 while True:
-                    ch = fin.read(1)
+                    ch = fin.read(1)  # Python uses I/O buffering internally
                     if ch == b' ':
                         break
                     if ch == b'':

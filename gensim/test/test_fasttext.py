@@ -8,11 +8,8 @@ import logging
 import unittest
 import os
 import struct
-import six
 
 import numpy as np
-
-import smart_open
 
 from gensim import utils
 from gensim.models.word2vec import LineSentence
@@ -107,7 +104,6 @@ class TestFastTextModel(unittest.TestCase):
         self.assertRaises(TypeError, model.train, sentences=None, corpus_file=None)
         self.assertRaises(TypeError, model.train, corpus_file=sentences)
 
-    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
     def test_training_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
             utils.save_as_line_sentence(sentences, corpus_file)
@@ -164,8 +160,6 @@ class TestFastTextModel(unittest.TestCase):
         self.assertTrue(np.allclose(wv.vectors_ngrams, loaded_wv.vectors_ngrams))
         self.assertEqual(len(wv.vocab), len(loaded_wv.vocab))
 
-    @unittest.skipIf(os.name == 'nt',
-        "corpus_file is not supported for Windows + Py2 and avoid memory error with Appveyor x32")
     def test_persistence_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext1.tst')) as corpus_file:
             utils.save_as_line_sentence(sentences, corpus_file)
@@ -423,7 +417,6 @@ class TestFastTextModel(unittest.TestCase):
         overlap_count = len(set(sims_gensim_words).intersection(expected_sims_words))
         self.assertGreaterEqual(overlap_count, 2)
 
-    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
     def test_cbow_hs_training_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
             model_gensim = FT_gensim(
@@ -486,7 +479,6 @@ class TestFastTextModel(unittest.TestCase):
         overlap_count = len(set(sims_gensim_words).intersection(expected_sims_words))
         self.assertGreaterEqual(overlap_count, 2)
 
-    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
     def test_sg_hs_training_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
             model_gensim = FT_gensim(
@@ -549,7 +541,6 @@ class TestFastTextModel(unittest.TestCase):
         overlap_count = len(set(sims_gensim_words).intersection(expected_sims_words))
         self.assertGreaterEqual(overlap_count, 2)
 
-    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
     def test_cbow_neg_training_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
             model_gensim = FT_gensim(
@@ -612,7 +603,6 @@ class TestFastTextModel(unittest.TestCase):
         overlap_count = len(set(sims_gensim_words).intersection(expected_sims_words))
         self.assertGreaterEqual(overlap_count, 2)
 
-    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
     def test_sg_neg_training_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
             model_gensim = FT_gensim(
@@ -655,7 +645,6 @@ class TestFastTextModel(unittest.TestCase):
         self.assertTrue(model_hs.wv.vocab['graph'].count, 4)
         self.assertTrue(model_hs.wv.vocab['artificial'].count, 4)
 
-    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
     def test_online_learning_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext1.tst')) as corpus_file, \
                 temporary_file(get_tmpfile('gensim_fasttext2.tst')) as new_corpus_file:
@@ -680,7 +669,6 @@ class TestFastTextModel(unittest.TestCase):
         model_neg.train(new_sentences, total_examples=model_neg.corpus_count, epochs=model_neg.epochs)
         self.assertEqual(len(model_neg.wv.vocab), 14)
 
-    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
     def test_online_learning_after_save_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext1.tst')) as corpus_file, \
                 temporary_file(get_tmpfile('gensim_fasttext2.tst')) as new_corpus_file:
@@ -995,7 +983,7 @@ class NativeTrainingContinuationTest(unittest.TestCase):
     def test_in_vocab(self):
         """Test for correct representation of in-vocab words."""
         native = load_native()
-        with smart_open.smart_open(datapath('toy-model.vec'), 'r', encoding='utf-8') as fin:
+        with utils.open(datapath('toy-model.vec'), 'r', encoding='utf-8') as fin:
             expected = dict(load_vec(fin))
 
         for word, expected_vector in expected.items():
@@ -1187,7 +1175,7 @@ class HashTest(unittest.TestCase):
         # ./fasttext skipgram -minCount 0 -bucket 100 -input crime-and-punishment.txt -output crime-and-punishment -dim 5  # noqa: E501
         #
         self.model = gensim.models.fasttext.load_facebook_model(datapath('crime-and-punishment.bin'))
-        with smart_open.smart_open(datapath('crime-and-punishment.vec'), 'r', encoding='utf-8') as fin:
+        with utils.open(datapath('crime-and-punishment.vec'), 'r', encoding='utf-8') as fin:
             self.expected = dict(load_vec(fin))
 
     def test_ascii(self):
