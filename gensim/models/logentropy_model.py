@@ -108,6 +108,8 @@ class LogEntropyModel(interfaces.TransformationABC):
             self.n_docs, len(glob_freq), self.n_words
         )
         logger.debug('iterating over corpus')
+        # initial doc2 in case corpus is empty
+        doc_no2 = 0
         for doc_no2, bow in enumerate(corpus):
             for key, freq in bow:
                 p = (float(freq) / glob_freq[key]) * math.log(float(freq) / glob_freq[key])
