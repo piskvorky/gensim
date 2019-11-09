@@ -1222,7 +1222,13 @@ class CBDBSCAN():
                 The label of the cluster that might be suitable for topic_index
 
             """
-            neighbors_sorted = sorted([(distance, index) for index, distance in enumerate(amatrix_copy[topic_index])], key=lambda x: x[0])
+            neighbors_sorted = sorted(
+                [
+                    (distance, index) 
+                    for index, distance in enumerate(amatrix_copy[topic_index])
+                ], 
+                key=lambda x: x[0],
+            )
             neighboring_topic_indices = [index for distance, index in neighbors_sorted if distance < self.eps]
 
             num_neighboring_topics = len(neighboring_topic_indices)
