@@ -19,9 +19,42 @@ from gensim.test.utils import datapath, get_tmpfile
 
 
 class TestLogEntropyModel(unittest.TestCase):
+    TEST_CORPUS = [[(1, 1.0)], [], [(0, 0.5), (2, 1.0)], []]
+
     def setUp(self):
         self.corpus_small = MmCorpus(datapath('test_corpus_small.mm'))
         self.corpus_ok = MmCorpus(datapath('test_corpus_ok.mm'))
+        self.corpus_empty = [[()]]
+
+    def testGeneratorFail(self):
+        # attempt to create model generator
+        def get_generator(test_corpus=TestLogEntropyModel.TEST_CORPUS):
+            for iter in test_corpus:
+                yield iter
+        
+        try:
+            model = logentropy_model.LogEntropyModel(get_generator())
+        except ValueError as val_err:
+            model = 'None'
+        except Exception as val_err:
+            model = 'Other'
+            
+        # logentropy_model.LogEntropyModel should throw a value error
+        self.assertNotEqual(model, 'Other', "Invalid error state.")
+        self.assertEqual(model, 'None')
+
+    def testEmptyFail(self):
+        # attempt to create model with empty corpus
+        try:
+            model = logentropy_model.LogEntropyModel(self.corpus_empty)
+        except ValueError as val_err:
+            model = 'None'
+        except Exception as val_err:
+            model = 'Other'
+
+        # logentropy_model.LogEntropyModel should throw a value error                                
+        self.assertNotEqual(model, 'Other', "Invalid error state.")
+        self.assertEqual(model, 'None')
 
     def testTransform(self):
         # create the transformation model
