@@ -15,10 +15,12 @@ and *similarity retrieval* with large corpora. Target audience is the
 *natural language processing* (NLP) and *information retrieval* (IR)
 community.
 
+<!--
 ## :pizza: Hacktoberfest 2019 :beer:
 
 We are accepting PRs for Hacktoberfest!
 See [here](HACKTOBERFEST.md) for details.
+-->
 
 Features
 --------
