@@ -102,6 +102,7 @@ import os
 from multiprocessing import Process, Pipe, ProcessError
 import numpy as np
 from scipy.spatial.distance import cosine
+
 from gensim import utils
 from gensim.models import ldamodel, ldamulticore, basemodel
 
@@ -610,7 +611,7 @@ class EnsembleLda():
             p.terminate()
 
     def _generate_topic_models(self, num_models, random_states=None, pipe=None):
-        """Train the topic models, that form the ensemble.
+        """Train the topic models that form the ensemble.
 
         Parameters
         ----------
@@ -1005,9 +1006,8 @@ class EnsembleLda():
 
         sorted_clusters = self._aggregate_topics(grouped_by_labels)
 
-        for i, cluster in enumerate(sorted_clusters):
+        for cluster in sorted_clusters:
             cluster["is_valid"] = None
-
             if cluster["num_cores"] < min_cores:
                 cluster["is_valid"] = False
                 self._remove_from_all_sets(cluster["label"], sorted_clusters)
@@ -1021,7 +1021,7 @@ class EnsembleLda():
             else:
                 cluster["is_valid"] = False
                 # This modifies parent labels which is important in _contains_isolated_cores, so the result depends on
-                # where to start. That's why sorted_clusters is sorted, so it starts with the most cluttered cluster.
+                # where to start.
                 self._remove_from_all_sets(label, sorted_clusters)
 
         # list of all the label numbers that are valid
