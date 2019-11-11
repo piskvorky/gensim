@@ -790,58 +790,61 @@ class EnsembleLda():
             Asymmetric distance matrix of size len(ttda1) by len(ttda2).
 
         """
-        if method not in ["mass", "rank"]:
-            raise ValueError("method {} unknown".format(method))
-
-        # select masking method:
-        def mass_masking(a):
-            """Original masking method. Returns a new binary mask."""
-            sorted_a = np.sort(a)[::-1]
-            largest_mass = sorted_a.cumsum() < threshold
-            smallest_valid = sorted_a[largest_mass][-1]
-            return a >= smallest_valid
-
-        def rank_masking(a):
-            """Faster masking method. Returns a new binary mask."""
-            return a > np.sort(a)[::-1][int(len(a) * threshold)]
-
-        create_mask = {"mass": mass_masking, "rank": rank_masking}[method]
-
-        # some help to find a better threshold by useful log messages
-        avg_mask_size = 0
-
         # initialize the distance matrix. ndarray is faster than zeros
         distances = np.ndarray((len(ttda1), len(ttda2)))
 
-        # now iterate over each topic
-        for ttd1_idx, ttd1 in enumerate(ttda1):
-            # create mask from ttd1 that removes noise from a and keeps the largest terms
-            mask = create_mask(ttd1)
-            ttd1_masked = ttd1[mask]
+        if ttda1.shape[0] > 0 and ttda2.shape[0] > 0:
+            # the worker might not have received a ttda because it was chunked up too much
+            
+            if method not in ["mass", "rank"]:
+                raise ValueError("method {} unknown".format(method))
 
-            avg_mask_size += mask.sum()
+            # select masking method:
+            def mass_masking(a):
+                """Original masking method. Returns a new binary mask."""
+                sorted_a = np.sort(a)[::-1]
+                largest_mass = sorted_a.cumsum() < threshold
+                smallest_valid = sorted_a[largest_mass][-1]
+                return a >= smallest_valid
 
-            # now look at every possible pair for topic a:
-            for ttd2_idx, ttd2 in enumerate(ttda2):
-                # distance to itself is 0
-                if ttd1_idx + start_index == ttd2_idx:
-                    distances[ttd1_idx][ttd2_idx] = 0
-                    continue
+            def rank_masking(a):
+                """Faster masking method. Returns a new binary mask."""
+                return a > np.sort(a)[::-1][int(len(a) * threshold)]
 
-                # now mask b based on a, which will force the shape of a onto b
-                ttd2_masked = ttd2[mask]
+            create_mask = {"mass": mass_masking, "rank": rank_masking}[method]
 
-                # Smart distance calculation avoids calculating cosine distance for highly masked topic-term
-                # distributions that will have distance values near 1.
-                if ttd2_masked.sum() <= self._COSINE_DISTANCE_CALCULATION_THRESHOLD:
-                    distance = 1
-                else:
-                    distance = cosine(ttd1_masked, ttd2_masked)
+            # some help to find a better threshold by useful log messages
+            avg_mask_size = 0
 
-                distances[ttd1_idx][ttd2_idx] = distance
+            # now iterate over each topic
+            for ttd1_idx, ttd1 in enumerate(ttda1):
+                # create mask from ttd1 that removes noise from a and keeps the largest terms
+                mask = create_mask(ttd1)
+                ttd1_masked = ttd1[mask]
 
-        percent = round(100 * avg_mask_size / ttda1.shape[0] / ttda1.shape[1], 1)
-        logger.info('the given threshold of {} covered on average {}% of tokens'.format(threshold, percent))
+                avg_mask_size += mask.sum()
+
+                # now look at every possible pair for topic a:
+                for ttd2_idx, ttd2 in enumerate(ttda2):
+                    # distance to itself is 0
+                    if ttd1_idx + start_index == ttd2_idx:
+                        distances[ttd1_idx][ttd2_idx] = 0
+                        continue
+
+                    # now mask b based on a, which will force the shape of a onto b
+                    ttd2_masked = ttd2[mask]
+
+                    # Smart distance calculation avoids calculating cosine distance for highly masked topic-term
+                    # distributions that will have distance values near 1.
+                    if ttd2_masked.sum() <= self._COSINE_DISTANCE_CALCULATION_THRESHOLD:
+                        distance = 1
+                    else:
+                        distance = cosine(ttd1_masked, ttd2_masked)
+
+                    distances[ttd1_idx][ttd2_idx] = distance
+
+            percent = round(100 * avg_mask_size / ttda1.shape[0] / ttda1.shape[1], 1)
+            logger.info('the given threshold of {} covered on average {}% of tokens'.format(threshold, percent))
 
         return distances
 
@@ -941,8 +944,6 @@ class EnsembleLda():
 
             neighboring_labels = [x for x in neighboring_labels if len(x) > 0]
 
-            # TODO why is len(neighboring_labels) equal to num_cores?
-
             sorted_clusters.append({
                 "max_num_neighboring_labels": max_num_neighboring_labels,
                 "neighboring_labels": neighboring_labels,
@@ -954,21 +955,19 @@ class EnsembleLda():
             key=lambda cluster: (
                 cluster["max_num_neighboring_labels"],
                 cluster["label"]
-            ), reverse=True)
+            ), reverse=False)
 
         return sorted_clusters
 
     def _remove_from_all_sets(self, label, clusters):
         """Remove a label from every set in "neighboring_labels" for each core in clusters."""
-        for a in clusters:
-            if label in a["neighboring_labels"]:
-                a["neighboring_labels"].remove(label)
+        for cluster in clusters:
+            for neighboring_labels_set in cluster["neighboring_labels"]:
+                if label in neighboring_labels_set:
+                    neighboring_labels_set.remove(label)
 
     def _contains_isolated_cores(self, label, cluster, min_cores):
         """Check if the cluster has at least min_cores of cores that belong to no other cluster."""
-        # TODO is supposed to check for cores, but checks neighboring_labels.
-        # Funnily, it actually seems to be cores (see output of next line) but it doesn't read that way
-        # print(len(cluster["neighboring_labels"]), cluster["num_cores"])
         return sum(map(lambda x: x == {label}, cluster["neighboring_labels"])) >= min_cores
 
     def _generate_stable_topics(self, min_cores=None):
@@ -1009,16 +1008,9 @@ class EnsembleLda():
         for i, cluster in enumerate(sorted_clusters):
             cluster["is_valid"] = None
 
-            # TODO removed first rule because when amount_parent_labels is 0, then there is no
-            # topic in the cluster than has a parent, hence the size is either 0 or 1,
-            # which can be covered by the next rule.
-
             if cluster["num_cores"] < min_cores:
                 cluster["is_valid"] = False
                 self._remove_from_all_sets(cluster["label"], sorted_clusters)
-
-            # TODO I don't think it makes a difference if _contains_isolated_cores (formerly easy valid) is done (here
-            # and afterwards) or (only afterwards)
 
         # now that invalid clusters are removed, check which clusters contain enough cores that don't belong to any
         # other cluster.
@@ -1208,7 +1200,7 @@ class CBDBSCAN():
         min_distance_per_topic_sorted = sorted(min_distance_per_topic, key=lambda distance: distance[0])
         ordered_min_similarity = [index for distance, index in min_distance_per_topic_sorted]
 
-        def scan_topic(topic_index, current_label=None):
+        def scan_topic(topic_index, current_label=None, parent_neighbors=None):
             """Extend the cluster in one direction.
 
             Results are accumulated in topic_clustering_results, a variable outside of this function.
@@ -1233,12 +1225,6 @@ class CBDBSCAN():
 
             num_neighboring_topics = len(neighboring_topic_indices)
 
-            # derive a list of all topic_indices that belong to the cluster with the current_label and that are cores
-            cluster_topic_indices = [
-                index for index, topic in enumerate(topic_clustering_results)
-                if topic["label"] == current_label and topic["label"] is not None and topic["is_core"]
-            ]
-
             # If the number of neighbor indices of a topic is large enough, it is considered a core.
             # This also takes neighbor indices that already are identified as core in count.
             if num_neighboring_topics >= self.min_samples:
@@ -1253,24 +1239,16 @@ class CBDBSCAN():
                     self.next_label += 1
 
                 else:
-                    # In case the core has a parent, check the distance to the existing cluster (since the matrix is
+                    # In case the core has a parent, check the distance to the parents neighbors (since the matrix is
                     # asymmetric, it takes return distances into account here)
                     # If less than 25% of the elements are close enough, then create a new cluster rather than further
                     # growing the current cluster in that direction.
-                    close_members_mask = amatrix_copy[topic_index][cluster_topic_indices] < self.eps
+                    close_parent_neighbors_mask = amatrix_copy[topic_index][parent_neighbors] < self.eps
 
-                    # TODO changed because it is supposed to check the distance to the existing cluster, not
-                    # to the neighbors of the parent
-
-                    if close_members_mask.mean() < 0.25:
+                    if close_parent_neighbors_mask.mean() < 0.25:
                         # start new cluster by changing current_label
                         current_label = self.next_label
                         self.next_label += 1
-
-                # TODO parent_neighbors and parent_id got obsolete. 1. the appending of parent_id can be done
-                #  before calling scan_topic and 2. using parent_neighbors the way it was used did not conform
-                #  with the algorithm description. scan_topic gets the list of topic_indices of the current cluster
-                #  out of topic_clustering_results now.
 
                 topic_clustering_results[topic_index]["label"] = current_label
 
@@ -1278,7 +1256,7 @@ class CBDBSCAN():
                     if topic_clustering_results[neighboring_topic_index]["label"] is None:
                         ordered_min_similarity.remove(neighboring_topic_index)
                         # try to extend the cluster into the direction of the neighbor
-                        scan_topic(neighboring_topic_index, current_label)
+                        scan_topic(neighboring_topic_index, current_label, neighboring_topic_indices + [topic_index])
 
                     topic_clustering_results[neighboring_topic_index]["neighboring_topic_indices"].add(topic_index)
                     topic_clustering_results[neighboring_topic_index]["neighboring_labels"].add(current_label)
