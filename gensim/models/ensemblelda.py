@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Authors: Tobias Brigl <github.com/sezanzeb>, Alex Loosley <aloosley@alumni.brown.edu>,
-# Stephan Sahm <stephan.sahm@gmx.de>, Alex Salles <alex.salles@gmail.com>, Data Reply Munich
+# Authors: Tobias Brigl <github.com/sezanzeb>, Alex Salles <alex.salles@gmail.com>,
+# Alex Loosley <aloosley@alumni.brown.edu>, Data Reply Munich
 
 """Ensemble Latent Dirichlet Allocation (eLDA), a method of training a topic model ensemble.
 
@@ -81,14 +81,15 @@ References
        Available from: http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.695.4595
 
 .. [2] BRIGL, Tobias, 2019, Extracting Reliable Topics using Ensemble Latent Dirichlet Allocation [Bachelor Thesis].
-       Ingolstadt: Technische Hochschule. Available from: https://www.hip70890b.de/machine_learning/ensemble_LDA/
+       Technische Hochschule Ingolstadt. Munich: Data Reply GmbH. Available from:
+       https://www.hip70890b.de/machine_learning/ensemble_LDA/
 
 Citation
 --------
 At the moment, there is no paper associated to ensemble LDA but we are working on publicly releasing Tobi Brigl's
 bachelor thesis on the topic.  In the meantime, please include a mention of us (Brigl, T.; Salles, A.; Loosley, A) and
-a link to this file (https://github.com/RaRe-Technologies/gensim/blob/develop/gensim/models/ensemblelda.py) if you use
-this work in a published or open-source project.
+a link to this file (https://github.com/RaRe-Technologies/gensim/blob/develop/gensim/models/ensemblelda.py) if this work
+is presented, further developed, or used as the basis for a published result.
 
 Other Notes
 -----------
