@@ -101,16 +101,18 @@ comments.
 import logging
 import os
 from multiprocessing import Process, Pipe, ProcessError
+
 import numpy as np
 from scipy.spatial.distance import cosine
 
 from gensim import utils
 from gensim.models import ldamodel, ldamulticore, basemodel
+from gensim.utils import SaveLoad
 
 logger = logging.getLogger(__name__)
 
 
-class EnsembleLda():
+class EnsembleLda(SaveLoad):
     """Ensemble Latent Dirichlet Allocation (eLDA), a method of training a topic model ensemble.
 
     Extracts reliable topics that are consistently learned accross multiple LDA models. eLDA has the added benefit that
@@ -182,6 +184,7 @@ class EnsembleLda():
             Parameters for each gensim model (e.g. :py:class:`gensim.models.LdaModel`) in the ensemble.
 
         """
+
         # INTERNAL PARAMETERS
         # Set random state
         # nps max random state of 2**32 - 1 is too large for windows:
@@ -487,39 +490,6 @@ class EnsembleLda():
 
         # tell recluster that the distance matrix needs to be regenerated
         self.asymmetric_distance_matrix_outdated = True
-
-    def save(self, fname):
-        """Save the ensemble to a file.
-
-        Parameters
-        ----------
-        fname : str
-            Path to the system file where the model will be persisted.
-
-        """
-        logger.info("saving %s object to %s", self.__class__.__name__, fname)
-
-        utils.pickle(self, fname)
-
-    @staticmethod
-    def load(fname):
-        """Load a previously stored ensemble from disk.
-
-        Parameters
-        ----------
-        fname : str
-            Path to file that contains the needed object.
-
-        Returns
-        -------
-            A previously saved ensembleLda object
-
-        """
-        logger.info("loading %s object from %s", EnsembleLda.__name__, fname)
-
-        eLDA = utils.unpickle(fname)
-
-        return eLDA
 
     def _generate_topic_models_multiproc(self, num_models, ensemble_workers):
         """Generate the topic models to form the ensemble in a multiprocessed way.

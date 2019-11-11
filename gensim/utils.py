@@ -606,7 +606,8 @@ class SaveLoad(object):
         recursive_saveloads = []
         restores = []
         for attrib, val in iteritems(self.__dict__):
-            if hasattr(val, '_save_specials') and type(val) != type:  # better than 'isinstance(val, SaveLoad)' if IPython reloading
+            # better than 'isinstance(val, SaveLoad)' if IPython reloading
+            if hasattr(val, '_save_specials') and type(val) != type:
                 recursive_saveloads.append(attrib)
                 cfname = '.'.join((fname, attrib))
                 print(val, compress, subname)
