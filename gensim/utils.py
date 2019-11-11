@@ -18,7 +18,9 @@ except ImportError:
     from htmlentitydefs import name2codepoint as n2cp
 try:
     import cPickle as _pickle
+    print('import cpickle')
 except ImportError:
+    print('import pickle')
     import pickle as _pickle
 
 import re
@@ -542,6 +544,7 @@ class SaveLoad(object):
         logger.info("saving %s object under %s, separately %s", self.__class__.__name__, fname, separately)
 
         compress, subname = SaveLoad._adapt_by_suffix(fname)
+        print(compress, subname)
 
         restores = self._save_specials(fname, separately, sep_limit, ignore, pickle_protocol,
                                        compress, subname)
@@ -603,9 +606,10 @@ class SaveLoad(object):
         recursive_saveloads = []
         restores = []
         for attrib, val in iteritems(self.__dict__):
-            if hasattr(val, '_save_specials'):  # better than 'isinstance(val, SaveLoad)' if IPython reloading
+            if hasattr(val, '_save_specials') and type(val) != type:  # better than 'isinstance(val, SaveLoad)' if IPython reloading
                 recursive_saveloads.append(attrib)
                 cfname = '.'.join((fname, attrib))
+                print(val, compress, subname)
                 restores.extend(val._save_specials(cfname, None, sep_limit, ignore, pickle_protocol, compress, subname))
 
         try:
@@ -688,10 +692,12 @@ class SaveLoad(object):
             Load object from file.
 
         """
+        print(fname_or_handle, type(fname_or_handle), separately, sep_limit, ignore, pickle_protocol)
         try:
             _pickle.dump(self, fname_or_handle, protocol=pickle_protocol)
             logger.info("saved %s object", self.__class__.__name__)
         except TypeError:  # `fname_or_handle` does not have write attribute
+            print("failed")
             self._smart_save(fname_or_handle, separately, sep_limit, ignore, pickle_protocol=pickle_protocol)
 
 
