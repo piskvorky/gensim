@@ -796,7 +796,7 @@ class EnsembleLda():
 
         if ttda1.shape[0] > 0 and ttda2.shape[0] > 0:
             # the worker might not have received a ttda because it was chunked up too much
-            
+
             if method not in ["mass", "rank"]:
                 raise ValueError("method {} unknown".format(method))
 
