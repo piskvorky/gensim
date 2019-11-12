@@ -165,6 +165,7 @@ try:
 except ImportError:
     raise utils.NO_CYTHON
 
+
 try:
     from gensim.models.word2vec_corpusfile import train_epoch_sg, train_epoch_cbow, CORPUSFILE_VERSION
 except ImportError:
@@ -604,13 +605,13 @@ class Word2Vec(BaseWordEmbeddingsModel):
         work, neu1 = thread_private_mem
 
         if self.sg:
-            examples, tally, raw_tally = train_epoch_sg(self, corpus_file, offset, cython_vocab, cur_epoch,
-                                                        total_examples, total_words, work, neu1, self.compute_loss)
+            train_fct = train_epoch_sg
         else:
-            examples, tally, raw_tally = train_epoch_cbow(self, corpus_file, offset, cython_vocab, cur_epoch,
-                                                          total_examples, total_words, work, neu1, self.compute_loss)
+            train_fct = train_epoch_cbow
+        examples, tally, raw_tally, effective_samples = train_fct(self, corpus_file, offset, cython_vocab,
+            cur_epoch, total_examples, total_words, work, neu1, self.compute_loss)
 
-        return examples, tally, raw_tally
+        return examples, tally, raw_tally, effective_samples
 
     def _do_train_job(self, sentences, alpha, inits):
         """Train the model on a single batch of sentences.
@@ -626,17 +627,18 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
         Returns
         -------
-        (int, int)
-             2-tuple (effective word count after ignoring unknown words and sentence length trimming, total word count).
+        (int, int, int)
+             3-tuple (effective word count after ignoring unknown words and sentence length trimming, total word count,
+                      total effective samples).
 
         """
         work, neu1 = inits
-        tally = 0
         if self.sg:
-            tally += train_batch_sg(self, sentences, alpha, work, self.compute_loss)
+
+            tally, effective_samples = train_batch_sg(self, sentences, alpha, work, self.compute_loss)
         else:
-            tally += train_batch_cbow(self, sentences, alpha, work, neu1, self.compute_loss)
-        return tally, self._raw_word_count(sentences)
+            tally, effective_samples = train_batch_cbow(self, sentences, alpha, work, neu1, self.compute_loss)
+        return tally, self._raw_word_count(sentences), effective_samples
 
     def _clear_post_train(self):
         """Remove all L2-normalized word vectors from the model."""
