@@ -8,7 +8,7 @@
 
 
 """This script allows converting word-vectors from word2vec format into Tensorflow 2D tensor and metadata format.
-This script used for for word-vector visualization on `Embedding Visualization <http://projector.tensorflow.org/>`_.
+This script used for word-vector visualization on `Embedding Visualization <http://projector.tensorflow.org/>`_.
 
 
 How to use
