@@ -1294,7 +1294,6 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
     def _log_progress(self, job_queue, progress_queue, cur_epoch, example_count, total_examples,
                       raw_word_count, total_words, trained_word_count, total_samples, elapsed):
         """Callback used to log progress for long running jobs.
-
         Parameters
         ----------
         job_queue : Queue of (list of object, dict of (str, float))
@@ -1322,43 +1321,36 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             Number of effective samples used in training until now (differs from total_examples for Skip-Gram)
         elapsed : int
             Elapsed time since the beginning of training in seconds.
-
         Notes
         -----
         If you train the model via `corpus_file` argument, there is no job_queue, so reported job_queue size will
         always be equal to -1.
-
         """
+        if self.compute_loss:
+            if total_samples == 0:
+                loss = -1
+            else:
+                loss = self.get_latest_training_loss() / total_samples
         if total_examples:
-            # examples-based progress %
-            if self.compute_loss:
-                logger.info(
-                    ("EPOCH %i - PROGRESS: at %.2f%% examples, %.0f words/s, "
-                     "in_qsize %i, out_qsize %i, current_loss %.3f"),
-                    cur_epoch + 1, 100.0 * example_count / total_examples, trained_word_count / elapsed,
-                    utils.qsize(job_queue), utils.qsize(progress_queue), loss
-                )
-            else:
-                logger.info(
-                    "EPOCH %i - PROGRESS: at %.2f%% examples, %.0f words/s, in_qsize %i, out_qsize %i",
-                    cur_epoch + 1, 100.0 * example_count / total_examples, trained_word_count / elapsed,
-                    utils.qsize(job_queue), utils.qsize(progress_queue)
-                )
+            progress_unit = "examples"
+            div = total_examples
+            word_count = example_count
         else:
-            # words-based progress %
-            if self.compute_loss:
-                logger.info(
-                    "EPOCH %i - PROGRESS: at %.2f%% words, %.0f words/s, in_qsize %i, out_qsize %i",
-                    cur_epoch + 1, 100.0 * raw_word_count / total_words, trained_word_count / elapsed,
-                    utils.qsize(job_queue), utils.qsize(progress_queue)
-                )
+            div = total_words
+            progress_unit = "words"
+            word_count = raw_word_count
+
+        msg = "EPOCH %i - PROGRESS: at %.2f%% %s, %.0f words/s, in_qsize %i, out_qsize %i"
+        args = (cur_epoch + 1, 100.0 * word_count / div, progress_unit, trained_word_count / elapsed,
+                -1 if job_queue is None else utils.qsize(job_queue), utils.qsize(progress_queue))
+        if self.compute_loss:
+            if total_samples == 0:
+                loss = -1
             else:
-                logger.info(
-                    ("EPOCH %i - PROGRESS: at %.2f%% words, %.0f words/s, "
-                     "in_qsize %i, out_qsize %i, current_loss %.3f"),
-                    cur_epoch + 1, 100.0 * raw_word_count / total_words, trained_word_count / elapsed,
-                    utils.qsize(job_queue), utils.qsize(progress_queue), loss
-                )
+                loss = self.get_latest_training_loss() / total_samples
+            msg += ", current_loss %.3f"
+            args += (loss,)
+        logger.info(msg, *args)
 
     def _log_epoch_end(self, cur_epoch, example_count, total_examples, raw_word_count, total_words,
                        trained_word_count, elapsed, is_corpus_file_mode):
