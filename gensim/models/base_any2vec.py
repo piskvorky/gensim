@@ -129,7 +129,6 @@ class BaseAny2VecModel(utils.SaveLoad):
         raise NotImplementedError()
 
     def _do_train_job(self, data_iterable, job_parameters, thread_private_mem):
-
         """Train a single batch.
 
         Parameters

@@ -521,15 +521,17 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
     int
         Number of words in the vocabulary actually used for training (They already existed in the vocabulary
         and were not discarded by negative sampling).
+    int
+        Number of samples used for training. A sample is a positive/negative example.
 
     """
+
     cdef Word2VecConfig c
     cdef int i, j, k
     cdef int effective_words = 0, effective_sentences = 0, effective_samples = 0
     cdef int sent_idx, idx_start, idx_end
 
     init_w2v_config(&c, model, alpha, compute_loss, _work)
-
 
     # prepare C structures so we can go "full C" and release the Python GIL
     vlookup = model.wv.vocab
@@ -616,7 +618,11 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
     int
         Number of words in the vocabulary actually used for training (They already existed in the vocabulary
         and were not discarded by negative sampling).
+    int
+        Number of samples used for training. A sample is a positive/negative example. In the case of CBOW
+        this is the same as the effective number of words.
     """
+
     cdef Word2VecConfig c
     cdef int i, j, k
     cdef int effective_words = 0, effective_sentences = 0
@@ -677,6 +683,7 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
 
     model.running_training_loss += c.running_training_loss
     # in the case of CBOW, the number of samples is the number of words
+
     return effective_words, effective_words
 
 
