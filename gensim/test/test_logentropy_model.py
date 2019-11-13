@@ -29,8 +29,8 @@ class TestLogEntropyModel(unittest.TestCase):
     def testGeneratorFail(self):
         # attempt to create model generator
         def get_generator(test_corpus=TestLogEntropyModel.TEST_CORPUS):
-            for iter in test_corpus:
-                yield iter
+            for test_doc in test_corpus:
+                yield test_doc
         
         try:
             model = logentropy_model.LogEntropyModel(get_generator())
