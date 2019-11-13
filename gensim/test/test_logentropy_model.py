@@ -31,14 +31,12 @@ class TestLogEntropyModel(unittest.TestCase):
         def get_generator(test_corpus=TestLogEntropyModel.TEST_CORPUS):
             for test_doc in test_corpus:
                 yield test_doc
-        
         try:
             model = logentropy_model.LogEntropyModel(get_generator())
-        except ValueError as val_err:
+        except ValueError:
             model = 'None'
-        except Exception as val_err:
+        except Exception:
             model = 'Other'
-            
         # logentropy_model.LogEntropyModel should throw a value error
         self.assertNotEqual(model, 'Other', "Invalid error state.")
         self.assertEqual(model, 'None')
@@ -47,12 +45,11 @@ class TestLogEntropyModel(unittest.TestCase):
         # attempt to create model with empty corpus
         try:
             model = logentropy_model.LogEntropyModel(self.corpus_empty)
-        except ValueError as val_err:
+        except ValueError:
             model = 'None'
-        except Exception as val_err:
+        except Exception:
             model = 'Other'
-
-        # logentropy_model.LogEntropyModel should throw a value error                                
+        # logentropy_model.LogEntropyModel should throw a value error
         self.assertNotEqual(model, 'Other', "Invalid error state.")
         self.assertEqual(model, 'None')
 
