@@ -24,7 +24,7 @@ class TestLogEntropyModel(unittest.TestCase):
     def setUp(self):
         self.corpus_small = MmCorpus(datapath('test_corpus_small.mm'))
         self.corpus_ok = MmCorpus(datapath('test_corpus_ok.mm'))
-        self.corpus_empty = [[()]]
+        self.corpus_empty = []
 
     def testGeneratorFail(self):
         # attempt to create model generator
