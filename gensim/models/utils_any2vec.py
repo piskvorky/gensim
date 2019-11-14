@@ -146,6 +146,79 @@ def _save_word2vec_format(fname, vocab, vectors, fvocab=None, binary=False, tota
                 fout.write(utils.to_utf8("%s %s\n" % (word, ' '.join(repr(val) for val in row))))
 
 
+# Functions for internal use by _load_word2vec_format function
+
+def _add_word_to_result(result, counts, word, weights, vocab_size):
+    from gensim.models.keyedvectors import Vocab
+    word_id = len(result.vocab)
+    if word in result.vocab:
+        logger.warning("duplicate word '%s' in word2vec file, ignoring all but first", word)
+        return
+    if counts is None:
+        # most common scenario: no vocab file given. just make up some bogus counts, in descending order
+        result.vocab[word] = Vocab(index=word_id, count=vocab_size - word_id)
+    elif word in counts:
+        # use count from the vocab file
+        result.vocab[word] = Vocab(index=word_id, count=counts[word])
+    else:
+        # vocab file given, but word is missing -- set count to None (TODO: or raise?)
+        logger.warning("vocabulary file is incomplete: '%s' is missing", word)
+        result.vocab[word] = Vocab(index=word_id, count=None)
+    result.vectors[word_id] = weights
+    result.index2word.append(word)
+
+
+def _add_bytes_to_result(result, counts, chunk, vocab_size, vector_size, datatype, unicode_errors):
+    start = 0
+    processed_words = 0
+    bytes_per_vector = vector_size * dtype(REAL).itemsize
+    max_words = vocab_size - len(result.vocab)
+    for _ in range(max_words):
+        i_space = chunk.find(b' ', start)
+        i_vector = i_space + 1
+
+        if i_space == -1 or (len(chunk) - i_vector) < bytes_per_vector:
+            break
+
+        word = chunk[start:i_space].decode("utf-8", errors=unicode_errors)
+        # Some binary files are reported to have obsolete new line in the beginning of word, remove it
+        word = word.lstrip('\n')
+        vector = frombuffer(chunk, offset=i_vector, count=vector_size, dtype=REAL).astype(datatype)
+        _add_word_to_result(result, counts, word, vector, vocab_size)
+        start = i_vector + bytes_per_vector
+        processed_words += 1
+
+    return processed_words, chunk[start:]
+
+
+def _word2vec_read_binary(fin, result, counts, vocab_size, vector_size, datatype, unicode_errors, binary_chunk_size):
+    chunk = b''
+    tot_processed_words = 0
+
+    while tot_processed_words < vocab_size:
+        new_chunk = fin.read(binary_chunk_size)
+        chunk += new_chunk
+        processed_words, chunk = _add_bytes_to_result(
+            result, counts, chunk, vocab_size, vector_size, datatype, unicode_errors)
+        tot_processed_words += processed_words
+        if len(new_chunk) < binary_chunk_size:
+            break
+    if tot_processed_words != vocab_size:
+        raise EOFError("unexpected end of input; is count incorrect or file otherwise damaged?")
+
+
+def _word2vec_read_text(fin, result, counts, vocab_size, vector_size, datatype, unicode_errors, encoding):
+    for line_no in range(vocab_size):
+        line = fin.readline()
+        if line == b'':
+            raise EOFError("unexpected end of input; is count incorrect or file otherwise damaged?")
+        parts = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
+        if len(parts) != vector_size + 1:
+            raise ValueError("invalid vector on line %s (is this really the text format?)" % line_no)
+        word, weights = parts[0], [datatype(x) for x in parts[1:]]
+        _add_word_to_result(result, counts, word, weights, vocab_size)
+
+
 def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
                           limit=None, datatype=REAL, binary_chunk_size=100 * 1024):
     """Load the input-hidden weight matrix from the original C word2vec-tool format.
@@ -186,47 +259,6 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
 
     """
 
-    def _add_word_to_result(result, counts, word, weights, vocab_size):
-        from gensim.models.keyedvectors import Vocab
-        word_id = len(result.vocab)
-        if word in result.vocab:
-            logger.warning("duplicate word '%s' in %s, ignoring all but first", word, fname)
-            return
-        if counts is None:
-            # most common scenario: no vocab file given. just make up some bogus counts, in descending order
-            result.vocab[word] = Vocab(index=word_id, count=vocab_size - word_id)
-        elif word in counts:
-            # use count from the vocab file
-            result.vocab[word] = Vocab(index=word_id, count=counts[word])
-        else:
-            # vocab file given, but word is missing -- set count to None (TODO: or raise?)
-            logger.warning("vocabulary file is incomplete: '%s' is missing", word)
-            result.vocab[word] = Vocab(index=word_id, count=None)
-        result.vectors[word_id] = weights
-        result.index2word.append(word)
-
-    def _add_bytes_to_result(result, counts, chunk, vocab_size, vector_size, datatype, unicode_errors):
-        start = 0
-        processed_words = 0
-        bytes_per_vector = vector_size * dtype(REAL).itemsize
-        max_words = vocab_size - len(result.vocab)
-        for _ in range(max_words):
-            i_space = chunk.find(b' ', start)
-            i_vector = i_space + 1
-
-            if i_space == -1 or (len(chunk) - i_vector) < bytes_per_vector:
-                break
-
-            word = chunk[start:i_space].decode("utf-8", errors=unicode_errors)
-            # Some binary files are reported to have obsolete new line in the beginning of word, remove it
-            word = word.lstrip('\n')
-            vector = frombuffer(chunk, offset=i_vector, count=vector_size, dtype=REAL).astype(datatype)
-            _add_word_to_result(result, counts, word, vector, vocab_size)
-            start = i_vector + bytes_per_vector
-            processed_words += 1
-
-        return processed_words, chunk[start:]
-
     counts = None
     if fvocab is not None:
         logger.info("loading word counts from %s", fvocab)
@@ -247,29 +279,10 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
         result.vectors = zeros((vocab_size, vector_size), dtype=datatype)
 
         if binary:
-            chunk = b''
-            tot_processed_words = 0
-
-            while tot_processed_words < vocab_size:
-                new_chunk = fin.read(binary_chunk_size)
-                chunk += new_chunk
-                processed_words, chunk = _add_bytes_to_result(
-                    result, counts, chunk, vocab_size, vector_size, datatype, unicode_errors)
-                tot_processed_words += processed_words
-                if len(new_chunk) < binary_chunk_size:
-                    break
-            if tot_processed_words != vocab_size:
-                raise EOFError("unexpected end of input; is count incorrect or file otherwise damaged?")
+            _word2vec_read_binary(fin, result, counts,
+                vocab_size, vector_size, datatype, unicode_errors, binary_chunk_size)
         else:
-            for line_no in range(vocab_size):
-                line = fin.readline()
-                if line == b'':
-                    raise EOFError("unexpected end of input; is count incorrect or file otherwise damaged?")
-                parts = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
-                if len(parts) != vector_size + 1:
-                    raise ValueError("invalid vector on line %s (is this really the text format?)" % line_no)
-                word, weights = parts[0], [datatype(x) for x in parts[1:]]
-                _add_word_to_result(result, counts, word, weights, vocab_size)
+            _word2vec_read_text(fin, result, counts, vocab_size, vector_size, datatype, unicode_errors, encoding)
     if result.vectors.shape[0] != len(result.vocab):
         logger.info(
             "duplicate words detected, shrinking matrix size from %i to %i",
