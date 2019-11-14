@@ -177,7 +177,7 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
         (Experimental) Can coerce dimensions to a non-default float type (such as `np.float16`) to save memory.
         Such types may result in much slower bulk operations or incompatibility with optimized routines.)
     binary_chunk_size : int, optional
-        Size of chunk in which binary files are read. Used mostly for testing. Defalut value 100 kB.
+        Read input file in chunks of this many bytes for performance reasons.
 
     Returns
     -------
@@ -204,12 +204,6 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
         result.vectors[word_id] = weights
         result.index2word.append(word)
 
-    def __remove_initial_new_line(s):
-        i = 0
-        while i < len(s) and s[i] == '\n':
-            i += 1
-        return s[i:]
-
     def __add_words_from_binary_chunk_to_result(result, counts, max_words, chunk, vector_size, datatype):
         start = 0
         n = len(chunk)
@@ -222,7 +216,7 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
             if i_space != -1 and (n - i_vector) >= n_bytes_per_vector:
                 word = chunk[start:i_space].decode("utf-8", errors=unicode_errors)
                 # Some binary files are reported to have obsolete new line in the beginning of word, remove it
-                word = __remove_initial_new_line(word)
+                word = word.lstrip('\n')
                 vector = frombuffer(chunk, offset=i_vector, count=vector_size, dtype=REAL).astype(datatype)
                 __add_word_to_result(result, counts, word, vector)
                 start = i_vector + n_bytes_per_vector
@@ -242,6 +236,7 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
             for line in fin:
                 word, count = utils.to_unicode(line, errors=unicode_errors).strip().split()
                 counts[word] = int(count)
+
     logger.info("loading projection weights from %s", fname)
     with utils.open(fname, 'rb') as fin:
         header = utils.to_unicode(fin.readline(), encoding=encoding)
@@ -259,8 +254,8 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
                 new_chunk = fin.read(binary_chunk_size)
                 chunk += new_chunk
                 max_words = vocab_size - len(result.vocab)
-                processed_words, chunk = __add_words_from_binary_chunk_to_result(result, counts, max_words,
-                                                                chunk, vector_size, datatype)
+                processed_words, chunk = __add_words_from_binary_chunk_to_result(
+                    result, counts, max_words, chunk, vector_size, datatype)
                 tot_processed_words += processed_words
                 if len(new_chunk) < binary_chunk_size:
                     break
