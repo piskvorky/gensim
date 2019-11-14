@@ -148,6 +148,7 @@ def _save_word2vec_format(fname, vocab, vectors, fvocab=None, binary=False, tota
 
 # Functions for internal use by _load_word2vec_format function
 
+
 def _add_word_to_result(result, counts, word, weights, vocab_size):
     from gensim.models.keyedvectors import Vocab
     word_id = len(result.vocab)
@@ -156,14 +157,15 @@ def _add_word_to_result(result, counts, word, weights, vocab_size):
         return
     if counts is None:
         # most common scenario: no vocab file given. just make up some bogus counts, in descending order
-        result.vocab[word] = Vocab(index=word_id, count=vocab_size - word_id)
+        word_count = vocab_size - word_id
     elif word in counts:
         # use count from the vocab file
-        result.vocab[word] = Vocab(index=word_id, count=counts[word])
+        word_count = counts[word]
     else:
-        # vocab file given, but word is missing -- set count to None (TODO: or raise?)
         logger.warning("vocabulary file is incomplete: '%s' is missing", word)
-        result.vocab[word] = Vocab(index=word_id, count=None)
+        word_count = None
+
+    result.vocab[word] = Vocab(index=word_id, count=word_count)
     result.vectors[word_id] = weights
     result.index2word.append(word)
 
