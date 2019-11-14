@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # Author: Shiva Manne <s.manne@rare-technologies.com>
-# Copyright (C) 2018 RaRe Technologies s.r.o.
+# Copyright (C) 2019 RaRe Technologies s.r.o.
 
 """General functions used for any2vec models.
 
@@ -186,7 +186,8 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
 
     """
 
-    def __add_word_to_result(result, counts, word, weights):
+    def _add_word_to_result(result, counts, word, weights, vocab_size):
+        from gensim.models.keyedvectors import Vocab
         word_id = len(result.vocab)
         if word in result.vocab:
             logger.warning("duplicate word '%s' in %s, ignoring all but first", word, fname)
@@ -204,29 +205,27 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
         result.vectors[word_id] = weights
         result.index2word.append(word)
 
-    def __add_words_from_binary_chunk_to_result(result, counts, max_words, chunk, vector_size, datatype):
+    def _add_bytes_to_result(result, counts, chunk, vocab_size, vector_size, datatype, unicode_errors):
         start = 0
-        n = len(chunk)
         processed_words = 0
-        n_bytes_per_vector = vector_size * dtype(REAL).itemsize
-
-        for _ in range(0, max_words):
+        bytes_per_vector = vector_size * dtype(REAL).itemsize
+        max_words = vocab_size - len(result.vocab)
+        for _ in range(max_words):
             i_space = chunk.find(b' ', start)
             i_vector = i_space + 1
-            if i_space != -1 and (n - i_vector) >= n_bytes_per_vector:
-                word = chunk[start:i_space].decode("utf-8", errors=unicode_errors)
-                # Some binary files are reported to have obsolete new line in the beginning of word, remove it
-                word = word.lstrip('\n')
-                vector = frombuffer(chunk, offset=i_vector, count=vector_size, dtype=REAL).astype(datatype)
-                __add_word_to_result(result, counts, word, vector)
-                start = i_vector + n_bytes_per_vector
-                processed_words += 1
-            else:
+
+            if i_space == -1 or (len(chunk) - i_vector) < bytes_per_vector:
                 break
 
-        return processed_words, chunk[start:]
+            word = chunk[start:i_space].decode("utf-8", errors=unicode_errors)
+            # Some binary files are reported to have obsolete new line in the beginning of word, remove it
+            word = word.lstrip('\n')
+            vector = frombuffer(chunk, offset=i_vector, count=vector_size, dtype=REAL).astype(datatype)
+            _add_word_to_result(result, counts, word, vector, vocab_size)
+            start = i_vector + bytes_per_vector
+            processed_words += 1
 
-    from gensim.models.keyedvectors import Vocab
+        return processed_words, chunk[start:]
 
     counts = None
     if fvocab is not None:
@@ -246,6 +245,7 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
         result = cls(vector_size)
         result.vector_size = vector_size
         result.vectors = zeros((vocab_size, vector_size), dtype=datatype)
+
         if binary:
             chunk = b''
             tot_processed_words = 0
@@ -253,9 +253,8 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
             while tot_processed_words < vocab_size:
                 new_chunk = fin.read(binary_chunk_size)
                 chunk += new_chunk
-                max_words = vocab_size - len(result.vocab)
-                processed_words, chunk = __add_words_from_binary_chunk_to_result(
-                    result, counts, max_words, chunk, vector_size, datatype)
+                processed_words, chunk = _add_bytes_to_result(
+                    result, counts, chunk, vocab_size, vector_size, datatype, unicode_errors)
                 tot_processed_words += processed_words
                 if len(new_chunk) < binary_chunk_size:
                     break
@@ -270,7 +269,7 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
                 if len(parts) != vector_size + 1:
                     raise ValueError("invalid vector on line %s (is this really the text format?)" % line_no)
                 word, weights = parts[0], [datatype(x) for x in parts[1:]]
-                __add_word_to_result(result, counts, word, weights)
+                _add_word_to_result(result, counts, word, weights, vocab_size)
     if result.vectors.shape[0] != len(result.vocab):
         logger.info(
             "duplicate words detected, shrinking matrix size from %i to %i",
