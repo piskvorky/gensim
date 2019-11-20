@@ -27,6 +27,7 @@ current Facebook implementation, use :py:func:`compute_ngrams_bytes` and
 
 import logging
 from gensim import utils
+import gensim.models.keyedvectors
 
 from numpy import zeros, dtype, float32 as REAL, ascontiguousarray, frombuffer
 
@@ -150,7 +151,7 @@ def _save_word2vec_format(fname, vocab, vectors, fvocab=None, binary=False, tota
 
 
 def _add_word_to_result(result, counts, word, weights, vocab_size):
-    from gensim.models.keyedvectors import Vocab
+
     word_id = len(result.vocab)
     if word in result.vocab:
         logger.warning("duplicate word '%s' in word2vec file, ignoring all but first", word)
@@ -165,7 +166,7 @@ def _add_word_to_result(result, counts, word, weights, vocab_size):
         logger.warning("vocabulary file is incomplete: '%s' is missing", word)
         word_count = None
 
-    result.vocab[word] = Vocab(index=word_id, count=word_count)
+    result.vocab[word] = gensim.models.keyedvectors.Vocab(index=word_id, count=word_count)
     result.vectors[word_id] = weights
     result.index2word.append(word)
 
