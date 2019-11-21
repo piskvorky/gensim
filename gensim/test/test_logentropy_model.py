@@ -26,32 +26,19 @@ class TestLogEntropyModel(unittest.TestCase):
         self.corpus_ok = MmCorpus(datapath('test_corpus_ok.mm'))
         self.corpus_empty = []
 
-    def testGeneratorFail(self):
-        # attempt to create model generator
+    def test_generator_fail(self):
+        """Test creating a model using a generator as input; should fail.
+        """
         def get_generator(test_corpus=TestLogEntropyModel.TEST_CORPUS):
             for test_doc in test_corpus:
                 yield test_doc
-        try:
-            model = logentropy_model.LogEntropyModel(get_generator())
-        except ValueError:
-            model = 'None'
-        except Exception:
-            model = 'Other'
-        # logentropy_model.LogEntropyModel should throw a value error
-        self.assertNotEqual(model, 'Other', "Invalid error state.")
-        self.assertEqual(model, 'None')
+        
+        self.assertRaises(ValueError, logentropy_model.LogEntropyModel, get_generator())
 
-    def testEmptyFail(self):
-        # attempt to create model with empty corpus
-        try:
-            model = logentropy_model.LogEntropyModel(self.corpus_empty)
-        except ValueError:
-            model = 'None'
-        except Exception:
-            model = 'Other'
-        # logentropy_model.LogEntropyModel should throw a value error
-        self.assertNotEqual(model, 'Other', "Invalid error state.")
-        self.assertEqual(model, 'None')
+    def test_empty_fail(self):
+        """Test creating a model using an empty input; should fail.
+        """
+        self.assertRaises(ValueError, logentropy_model.LogEntropyModel, self.corpus_empty)
 
     def testTransform(self):
         # create the transformation model
