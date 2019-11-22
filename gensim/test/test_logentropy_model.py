@@ -27,18 +27,15 @@ class TestLogEntropyModel(unittest.TestCase):
         self.corpus_empty = []
 
     def test_generator_fail(self):
-        """Test creating a model using a generator as input; should fail.
-        """
+        """Test creating a model using a generator as input; should fail."""
         def get_generator(test_corpus=TestLogEntropyModel.TEST_CORPUS):
             for test_doc in test_corpus:
                 yield test_doc
-        
-        self.assertRaises(ValueError, logentropy_model.LogEntropyModel, get_generator())
+        self.assertRaises(ValueError, logentropy_model.LogEntropyModel, corpus=get_generator())
 
     def test_empty_fail(self):
-        """Test creating a model using an empty input; should fail.
-        """
-        self.assertRaises(ValueError, logentropy_model.LogEntropyModel, self.corpus_empty)
+        """Test creating a model using an empty input; should fail."""
+        self.assertRaises(ValueError, logentropy_model.LogEntropyModel, corpus=self.corpus_empty)
 
     def testTransform(self):
         # create the transformation model
