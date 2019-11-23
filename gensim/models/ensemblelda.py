@@ -276,9 +276,14 @@ class EnsembleLda(SaveLoad):
             eLDA.topic_model_class = getattr(module, eLDA.topic_model_class_string)
             del eLDA.topic_model_module_string
             del eLDA.topic_model_class_string
-        except:
-            logger.error(f'Could not import the "{eLDA.topic_model_class_string}" module and set the '
-                '"topic_model_class" attribute to it. Try setting this manually instead.')
+        except ModuleNotFoundError:
+            logger.error(f'Could not import the "{eLDA.topic_model_class_string}" module in order to provide the '
+                f'"{eLDA.topic_model_class_string}" class as "topic_model_class" attribute. '
+                'Try setting this manually instead after loading.')
+        except AttributeError:
+            logger.error(f'Could not import the "{eLDA.topic_model_class_string}" class from the '
+                f'{eLDA.topic_model_module_string} module in order to set the "topic_model_class" attribute. '
+                'Try setting this manually instead after loading.')
         return eLDA
 
     load.__doc__ = SaveLoad.load.__doc__

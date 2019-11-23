@@ -7,9 +7,6 @@
 Automated tests for checking the EnsembleLda Class
 """
 
-import sys
-sys.path.append('/mnt/data/Code/ensemble_lda_repo/gensim')
-
 import logging
 import unittest
 
