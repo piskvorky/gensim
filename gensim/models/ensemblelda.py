@@ -282,7 +282,7 @@ class EnsembleLda(SaveLoad):
                 'Try setting this manually instead after loading.')
         except AttributeError:
             logger.error(f'Could not import the "{eLDA.topic_model_class_string}" class from the '
-                f'{eLDA.topic_model_module_string} module in order to set the "topic_model_class" attribute. '
+                f'"{eLDA.topic_model_module_string}" module in order to set the "topic_model_class" attribute. '
                 'Try setting this manually instead after loading.')
         return eLDA
 
