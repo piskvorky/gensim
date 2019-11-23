@@ -101,6 +101,7 @@ comments.
 import logging
 import os
 from multiprocessing import Process, Pipe, ProcessError
+import importlib
 
 import numpy as np
 from scipy.spatial.distance import cosine
@@ -266,6 +267,26 @@ class EnsembleLda(SaveLoad):
 
         # create model that can provide the usual gensim api to the stable topics from the ensemble
         self.generate_gensim_representation()
+
+    @classmethod
+    def load(cls, *args, **kwargs):
+        eLDA = super().load(*args, **kwargs)
+        try:
+            eLDA.topic_model_class = importlib.import_module(eLDA.topic_model_class_string)
+            del eLDA.topic_model_class_string
+        except:
+            logger.error(f'Could not import the "{eLDA.topic_model_class_string}" module and set the '
+                '"topic_model_class" attribute to it. Try setting this manually instead.')
+        return eLDA
+
+    load.__doc__ = SaveLoad.load.__doc__
+
+    def save(self, *args, **kwargs):
+        self.topic_model_class_string = self.topic_model_class.__module__
+        kwargs['ignore'] = frozenset(kwargs.get('ignore', ())).union(('topic_model_class', ))
+        super(EnsembleLda, self).save(*args, **kwargs)
+
+    save.__doc__ = SaveLoad.save.__doc__
 
     def convert_to_memory_friendly(self):
         """Remove the stored gensim models and only keep their ttdas."""
