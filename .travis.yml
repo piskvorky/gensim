@@ -8,18 +8,14 @@ cache:
   - $HOME/.pip-cache
 dist: trusty
 language: python
+env:
+  TOX_PARALLEL_NO_SPINNER: 1
 
 
 matrix:
   include:
-    - python: '2.7'
-      env: TOXENV="flake8,flake8-docs"
-
     - python: '3.6'
       env: TOXENV="flake8,flake8-docs"
-
-    - python: '2.7'
-      env: TOXENV="py27-linux"
 
     - python: '3.5'
       env: TOXENV="py35-linux"
@@ -35,5 +31,7 @@ matrix:
       sudo: true
 
 
-install: pip install tox
+install:
+  - pip install tox
+  - python ci/install_wheels.py
 script: tox -vv

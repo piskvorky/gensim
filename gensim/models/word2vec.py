@@ -154,198 +154,16 @@ from six.moves import range
 logger = logging.getLogger(__name__)
 
 try:
-    from gensim.models.word2vec_inner import train_batch_sg, train_batch_cbow
-    from gensim.models.word2vec_inner import score_sentence_sg, score_sentence_cbow
-    from gensim.models.word2vec_inner import FAST_VERSION, MAX_WORDS_IN_BATCH
-
+    from gensim.models.word2vec_inner import (  # noqa: F401
+        train_batch_sg,
+        train_batch_cbow,
+        score_sentence_sg,
+        score_sentence_cbow,
+        MAX_WORDS_IN_BATCH,
+        FAST_VERSION,
+    )
 except ImportError:
-    # failed... fall back to plain numpy (20-80x slower training than the above)
-    FAST_VERSION = -1
-    MAX_WORDS_IN_BATCH = 10000
-
-    def train_batch_sg(model, sentences, alpha, work=None, compute_loss=False):
-        """Update skip-gram model by training on a sequence of sentences.
-
-        Called internally from :meth:`~gensim.models.word2vec.Word2Vec.train`.
-
-        Warnings
-        --------
-        This is the non-optimized, pure Python version. If you have a C compiler, Gensim
-        will use an optimized code path from :mod:`gensim.models.word2vec_inner` instead.
-
-        Parameters
-        ----------
-        model : :class:`~gensim.models.word2Vec.Word2Vec`
-            The Word2Vec model instance to train.
-        sentences : iterable of list of str
-            The corpus used to train the model.
-        alpha : float
-            The learning rate
-        work : object, optional
-            Unused.
-        compute_loss : bool, optional
-            Whether or not the training loss should be computed in this batch.
-
-        Returns
-        -------
-        int
-            Number of words in the vocabulary actually used for training (that already existed in the vocabulary
-            and were not discarded by negative sampling).
-
-        """
-        result = 0
-        for sentence in sentences:
-            word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab
-                           and model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
-            for pos, word in enumerate(word_vocabs):
-                reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
-
-                # now go over all words from the (reduced) window, predicting each one in turn
-                start = max(0, pos - model.window + reduced_window)
-                for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
-                    # don't train on the `word` itself
-                    if pos2 != pos:
-                        train_sg_pair(
-                            model, model.wv.index2word[word.index], word2.index, alpha, compute_loss=compute_loss
-                        )
-
-            result += len(word_vocabs)
-        return result
-
-    def train_batch_cbow(model, sentences, alpha, work=None, neu1=None, compute_loss=False):
-        """Update CBOW model by training on a sequence of sentences.
-
-        Called internally from :meth:`~gensim.models.word2vec.Word2Vec.train`.
-
-        Warnings
-        --------
-        This is the non-optimized, pure Python version. If you have a C compiler, Gensim
-        will use an optimized code path from :mod:`gensim.models.word2vec_inner` instead.
-
-        Parameters
-        ----------
-        model : :class:`~gensim.models.word2vec.Word2Vec`
-            The Word2Vec model instance to train.
-        sentences : iterable of list of str
-            The corpus used to train the model.
-        alpha : float
-            The learning rate
-        work : object, optional
-            Unused.
-        neu1 : object, optional
-            Unused.
-        compute_loss : bool, optional
-            Whether or not the training loss should be computed in this batch.
-
-        Returns
-        -------
-        int
-            Number of words in the vocabulary actually used for training (that already existed in the vocabulary
-            and were not discarded by negative sampling).
-
-        """
-        result = 0
-        for sentence in sentences:
-            word_vocabs = [
-                model.wv.vocab[w] for w in sentence if w in model.wv.vocab
-                and model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32
-            ]
-            for pos, word in enumerate(word_vocabs):
-                reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
-                start = max(0, pos - model.window + reduced_window)
-                window_pos = enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start)
-                word2_indices = [word2.index for pos2, word2 in window_pos if (word2 is not None and pos2 != pos)]
-                l1 = np_sum(model.wv.syn0[word2_indices], axis=0)  # 1 x vector_size
-                if word2_indices and model.cbow_mean:
-                    l1 /= len(word2_indices)
-                train_cbow_pair(model, word, word2_indices, l1, alpha, compute_loss=compute_loss)
-            result += len(word_vocabs)
-        return result
-
-    def score_sentence_sg(model, sentence, work=None):
-        """Obtain likelihood score for a single sentence in a fitted skip-gram representation.
-
-        Notes
-        -----
-        This is the non-optimized, pure Python version. If you have a C compiler, Gensim
-        will use an optimized code path from :mod:`gensim.models.word2vec_inner` instead.
-
-        Parameters
-        ----------
-        model : :class:`~gensim.models.word2vec.Word2Vec`
-            The trained model. It **MUST** have been trained using hierarchical softmax and the skip-gram algorithm.
-        sentence : list of str
-            The words comprising the sentence to be scored.
-        work : object, optional
-            Unused. For interface compatibility only.
-
-        Returns
-        -------
-        float
-            The probability assigned to this sentence by the Skip-Gram model.
-
-        """
-        log_prob_sentence = 0.0
-        if model.negative:
-            raise RuntimeError("scoring is only available for HS=True")
-
-        word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab]
-        for pos, word in enumerate(word_vocabs):
-            if word is None:
-                continue  # OOV word in the input sentence => skip
-
-            # now go over all words from the window, predicting each one in turn
-            start = max(0, pos - model.window)
-            for pos2, word2 in enumerate(word_vocabs[start: pos + model.window + 1], start):
-                # don't train on OOV words and on the `word` itself
-                if word2 is not None and pos2 != pos:
-                    log_prob_sentence += score_sg_pair(model, word, word2)
-
-        return log_prob_sentence
-
-    def score_sentence_cbow(model, sentence, work=None, neu1=None):
-        """Obtain likelihood score for a single sentence in a fitted CBOW representation.
-
-        Notes
-        -----
-        This is the non-optimized, pure Python version. If you have a C compiler, Gensim
-        will use an optimized code path from :mod:`gensim.models.word2vec_inner` instead.
-
-        Parameters
-        ----------
-        model : :class:`~gensim.models.word2vec.Word2Vec`
-            The trained model. It **MUST** have been trained using hierarchical softmax and the CBOW algorithm.
-        sentence : list of str
-            The words comprising the sentence to be scored.
-        work : object, optional
-            Unused. For interface compatibility only.
-        neu1 : object, optional
-            Unused. For interface compatibility only.
-
-        Returns
-        -------
-        float
-            The probability assigned to this sentence by the CBOW model.
-
-        """
-        log_prob_sentence = 0.0
-        if model.negative:
-            raise RuntimeError("scoring is only available for HS=True")
-
-        word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab]
-        for pos, word in enumerate(word_vocabs):
-            if word is None:
-                continue  # OOV word in the input sentence => skip
-
-            start = max(0, pos - model.window)
-            window_pos = enumerate(word_vocabs[start:(pos + model.window + 1)], start)
-            word2_indices = [word2.index for pos2, word2 in window_pos if (word2 is not None and pos2 != pos)]
-            l1 = np_sum(model.wv.syn0[word2_indices], axis=0)  # 1 x layer1_size
-            if word2_indices and model.cbow_mean:
-                l1 /= len(word2_indices)
-            log_prob_sentence += score_cbow_pair(model, word, l1)
-
-        return log_prob_sentence
+    raise utils.NO_CYTHON
 
 try:
     from gensim.models.word2vec_corpusfile import train_epoch_sg, train_epoch_cbow, CORPUSFILE_VERSION
@@ -779,8 +597,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
         super(Word2Vec, self).__init__(
             sentences=sentences, corpus_file=corpus_file, workers=workers, vector_size=size, epochs=iter,
             callbacks=callbacks, batch_words=batch_words, trim_rule=trim_rule, sg=sg, alpha=alpha, window=window,
-            seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, compute_loss=compute_loss,
-            fast_version=FAST_VERSION)
+            seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, compute_loss=compute_loss)
 
     def _do_train_epoch(self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
                         total_examples=None, total_words=None, **kwargs):
@@ -941,12 +758,6 @@ class Word2Vec(BaseWordEmbeddingsModel):
             Seconds to wait before reporting progress.
 
         """
-        if FAST_VERSION < 0:
-            warnings.warn(
-                "C extension compilation failed, scoring will be slow. "
-                "Install a C compiler and reinstall gensim for fastness."
-            )
-
         logger.info(
             "scoring sentences with %i workers on %i vocabulary and %i features, "
             "using sg=%s hs=%s sample=%s and negative=%s",
@@ -1939,7 +1750,6 @@ if __name__ == "__main__":
         level=logging.INFO
     )
     logger.info("running %s", " ".join(sys.argv))
-    logger.info("using optimization %s", FAST_VERSION)
 
     # check and process cmdline input
     program = os.path.basename(sys.argv[0])

@@ -11,13 +11,9 @@ environment:
     WHEELHOUSE_UPLOADER_USERNAME: "Lev.Konstantinovskiy"
     WHEELHOUSE_UPLOADER_SECRET:
       secure: qXqY3dFmLOqvxa3Om2gQi/BjotTOK+EP2IPLolBNo0c61yDtNWxbmE4wH3up72Be
+    TOX_PARALLEL_NO_SPINNER: 1
 
   matrix:
-    - PYTHON: "C:\\Python27-x64"
-      PYTHON_VERSION: "2.7.12"
-      PYTHON_ARCH: "64"
-      TOXENV: "py27-win"
-
     - PYTHON: "C:\\Python35-x64"
       PYTHON_VERSION: "3.5.2"
       PYTHON_ARCH: "64"
@@ -59,6 +55,8 @@ install:
   # Check that we have the expected version and architecture for Python
   - "python --version"
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
+
+  - "python ci/install_wheels.py"
 
 build: false
 

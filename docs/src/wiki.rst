@@ -6,7 +6,7 @@ Experiments on the English Wikipedia
 To test `gensim` performance, we run it against the English version of Wikipedia.
 
 This page describes the process of obtaining and processing Wikipedia, so that
-anyone can reproduce the results. It is assumed you have `gensim` properly :doc:`installed <install>`.
+anyone can reproduce the results. It is assumed you have `gensim` properly installed.
 
 
 

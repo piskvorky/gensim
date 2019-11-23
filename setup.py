@@ -5,106 +5,138 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-Run with:
+Run with::
 
-sudo python ./setup.py install
+    python ./setup.py install
 """
 
-import os
+import distutils.cmd
+import distutils.log
+import itertools
+import os.path
 import platform
+import shutil
 import sys
-import warnings
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
 
-PY2 = sys.version_info[0] == 2
+if sys.version_info[:2] < (3, 5):
+    raise Exception('This version of gensim needs 3.5 or later.')
 
-if sys.version_info[:2] < (2, 7) or ((3, 0) <= sys.version_info[:2] < (3, 5)):
-    raise Exception('This version of gensim needs Python 2.7, 3.5 or later.')
+c_extensions = {
+    'gensim.models.word2vec_inner': 'gensim/models/word2vec_inner.c',
+    'gensim.corpora._mmreader': 'gensim/corpora/_mmreader.c',
+    'gensim.models.fasttext_inner': 'gensim/models/fasttext_inner.c',
+    'gensim.models._utils_any2vec': 'gensim/models/_utils_any2vec.c',
+    'gensim._matutils': 'gensim/_matutils.c',
+    'gensim.models.nmf_pgd': 'gensim/models/nmf_pgd.c',
+}
 
-# the following code is adapted from tornado's setup.py:
-# https://github.com/tornadoweb/tornado/blob/master/setup.py
-# to support installing without the extension on platforms where
-# no compiler is available.
+cpp_extensions = {
+    'gensim.models.doc2vec_inner': 'gensim/models/doc2vec_inner.cpp',
+    'gensim.models.word2vec_corpusfile': 'gensim/models/word2vec_corpusfile.cpp',
+    'gensim.models.fasttext_corpusfile': 'gensim/models/fasttext_corpusfile.cpp',
+    'gensim.models.doc2vec_corpusfile': 'gensim/models/doc2vec_corpusfile.cpp',
+}
 
 
-class custom_build_ext(build_ext):
-    """Allow C extension building to fail.
+def need_cython():
+    """Return True if we need Cython to translate any of the extensions.
 
-    The C extension speeds up word2vec and doc2vec training, but is not essential.
+    If the extensions have already been translated to C/C++, then we don't need
+    to install Cython and perform the translation."""
+    expected = list(c_extensions.values()) + list(cpp_extensions.values())
+    return any([not os.path.isfile(f) for f in expected])
+
+
+def make_c_ext(use_cython=False):
+    for module, source in c_extensions.items():
+        if use_cython:
+            source = source.replace('.c', '.pyx')
+        yield Extension(module, sources=[source], language='c')
+
+
+def make_cpp_ext(use_cython=False):
+    extra_args = []
+    system = platform.system()
+
+    if system == 'Linux':
+        extra_args.append('-std=c++11')
+    elif system == 'Darwin':
+        extra_args.extend(['-stdlib=libc++', '-std=c++11'])
+
+    for module, source in cpp_extensions.items():
+        if use_cython:
+            source = source.replace('.cpp', '.pyx')
+        yield Extension(
+            module,
+            sources=[source],
+            language='c++',
+            extra_compile_args=extra_args,
+            extra_link_args=extra_args,
+        )
+
+
+#
+# We use use_cython=False here for two reasons:
+#
+# 1. Cython may not be available at this stage
+# 2. The actual translation from Cython to C/C++ happens inside CustomBuildExt
+#
+ext_modules = list(itertools.chain(make_c_ext(use_cython=False), make_cpp_ext(use_cython=False)))
+
+
+class CustomBuildExt(build_ext):
+    """Custom build_ext action with bootstrapping.
+
+    We need this in order to use numpy and Cython in this script without
+    importing them at module level, because they may not be available yet.
     """
-
-    warning_message = """
-********************************************************************
-WARNING: %s could not
-be compiled. No C extensions are essential for gensim to run,
-although they do result in significant speed improvements for some modules.
-%s
-
-Here are some hints for popular operating systems:
-
-If you are seeing this message on Linux you probably need to
-install GCC and/or the Python development package for your
-version of Python.
-
-Debian and Ubuntu users should issue the following command:
-
-    $ sudo apt-get install build-essential python-dev
-
-RedHat, CentOS, and Fedora users should issue the following command:
-
-    $ sudo yum install gcc python-devel
-
-If you are seeing this message on OSX please read the documentation
-here:
-
-http://api.mongodb.org/python/current/installation.html#osx
-********************************************************************
-"""
-
-    def run(self):
-        try:
-            build_ext.run(self)
-        except Exception:
-            e = sys.exc_info()[1]
-            sys.stdout.write('%s\n' % str(e))
-            warnings.warn(
-                self.warning_message +
-                "Extension modules" +
-                "There was an issue with your platform configuration - see above.")
-
-    def build_extension(self, ext):
-        name = ext.name
-        try:
-            build_ext.build_extension(self, ext)
-        except Exception:
-            e = sys.exc_info()[1]
-            sys.stdout.write('%s\n' % str(e))
-            warnings.warn(
-                self.warning_message +
-                "The %s extension module" % (name,) +
-                "The output above this warning shows how the compilation failed.")
-
-    # the following is needed to be able to add numpy's include dirs... without
-    # importing numpy directly in this script, before it's actually installed!
+    #
     # http://stackoverflow.com/questions/19919905/how-to-bootstrap-numpy-installation-in-setup-py
+    #
     def finalize_options(self):
         build_ext.finalize_options(self)
         # Prevent numpy from thinking it is still in its setup process:
         # https://docs.python.org/2/library/__builtin__.html#module-__builtin__
-        if isinstance(__builtins__, dict):
-            __builtins__["__NUMPY_SETUP__"] = False
-        else:
-            __builtins__.__NUMPY_SETUP__ = False
+        __builtins__.__NUMPY_SETUP__ = False
 
         import numpy
         self.include_dirs.append(numpy.get_include())
 
+        if need_cython():
+            import Cython.Build
+            Cython.Build.cythonize(list(make_c_ext(use_cython=True)))
+            Cython.Build.cythonize(list(make_cpp_ext(use_cython=True)))
 
-model_dir = os.path.join(os.path.dirname(__file__), 'gensim', 'models')
-gensim_dir = os.path.join(os.path.dirname(__file__), 'gensim')
 
-cmdclass = {'build_ext': custom_build_ext}
+class CleanExt(distutils.cmd.Command):
+    description = 'Remove C sources, C++ sources and binaries for gensim extensions'
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        for root, dirs, files in os.walk('gensim'):
+            files = [
+                os.path.join(root, f)
+                for f in files
+                if os.path.splitext(f)[1] in ('.c', '.cpp', '.so')
+            ]
+            for f in files:
+                self.announce('removing %s' % f, level=distutils.log.INFO)
+                os.unlink(f)
+
+        if os.path.isdir('build'):
+            self.announce('recursively removing build', level=distutils.log.INFO)
+            shutil.rmtree('build')
+
+
+cmdclass = {'build_ext': CustomBuildExt, 'clean_ext': CleanExt}
 
 WHEELHOUSE_UPLOADER_COMMANDS = {'fetch_artifacts', 'upload_all'}
 if WHEELHOUSE_UPLOADER_COMMANDS.intersection(sys.argv):
@@ -219,30 +251,14 @@ Copyright (c) 2009-now Radim Rehurek
 .. _Official Documentation and Walkthrough: http://radimrehurek.com/gensim/
 .. _Tutorials: https://github.com/RaRe-Technologies/gensim/blob/develop/tutorials.md#tutorials
 .. _Tutorial Videos: https://github.com/RaRe-Technologies/gensim/blob/develop/tutorials.md#videos
-.. _QuickStart: https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/gensim%20Quick%20Start.ipynb
+.. _QuickStart: https://radimrehurek.com/gensim/gensim_numfocus/auto_examples/core/run_core_concepts.html
 
 """
-
-#
-# 1.11.3 is the oldest version of numpy that we support, for historical reasons.
-# 1.16.1 is the last numpy version to support Py2.
-#
-# Similarly, 4.6.4 is the last pytest version to support Py2.
-#
-# https://docs.scipy.org/doc/numpy/release.html
-# https://docs.pytest.org/en/latest/py27-py34-deprecation.html
-#
-if PY2:
-    NUMPY_STR = 'numpy >= 1.11.3, <= 1.16.1'
-    PYTEST_STR = 'pytest == 4.6.4'
-else:
-    NUMPY_STR = 'numpy >= 1.11.3'
-    PYTEST_STR = 'pytest'
 
 distributed_env = ['Pyro4 >= 4.27']
 
 win_testenv = [
-    PYTEST_STR,
+    'pytest',
     'pytest-rerunfailures',
     'mock',
     'cython',
@@ -252,88 +268,77 @@ win_testenv = [
     'Morfessor==2.0.2a4',
     'python-Levenshtein >= 0.10.2',
     'visdom >= 0.1.8, != 0.1.8.7',
+    'scikit-learn',
 ]
 
-if sys.version_info[:2] == (2, 7):
-    #
-    # 0.20.3 is the last version of scikit-learn that supports Py2.
-    # Similarly, for version 5.1.1 of tornado.  We require tornado indirectly
-    # via visdom.
-    #
-    win_testenv.append('scikit-learn==0.20.3')
-    win_testenv.append('tornado==5.1.1')
-else:
-    win_testenv.append('scikit-learn')
-
 linux_testenv = win_testenv[:]
+
+#
+# This list partially duplicates requirements_docs.txt.
+# The main difference is that we don't include version pins here unless
+# absolutely necessary, whereas requirements_docs.txt includes pins for
+# everything, by design.
+#
+# For more info about the difference between the two:
+#
+#   https://packaging.python.org/discussions/install-requires-vs-requirements/
+#
+docs_testenv = linux_testenv + distributed_env + [
+    'sphinx',
+    'sphinxcontrib-napoleon',
+    'plotly',
+    #
+    # Pattern is a PITA to install, it requires mysqlclient, which in turn
+    # requires MySQL dev tools be installed.  We don't need it for building
+    # documentation.
+    #
+    # 'Pattern==3.6',  # Need 3.6 or later for Py3 support
+    'sphinxcontrib.programoutput',
+    'sphinx-gallery',
+    'memory_profiler',
+    'annoy',
+    'Pyro4',
+    'scikit-learn',
+    'nltk',
+    'testfixtures',
+    'statsmodels',
+    'pyemd',
+    'pandas',
+]
 
 if sys.version_info < (3, 7):
     linux_testenv.extend([
         'tensorflow <= 1.3.0',
         'keras >= 2.0.4, <= 2.1.4',
-        'annoy',
     ])
 
 if (3, 0) < sys.version_info < (3, 7):
     linux_testenv.extend(['nmslib'])
 
-ext_modules = [
-    Extension('gensim.models.word2vec_inner',
-        sources=['./gensim/models/word2vec_inner.c'],
-        include_dirs=[model_dir]),
-    Extension('gensim.models.doc2vec_inner',
-        sources=['./gensim/models/doc2vec_inner.c'],
-        include_dirs=[model_dir]),
-    Extension('gensim.corpora._mmreader',
-        sources=['./gensim/corpora/_mmreader.c']),
-    Extension('gensim.models.fasttext_inner',
-        sources=['./gensim/models/fasttext_inner.c'],
-        include_dirs=[model_dir]),
-    Extension('gensim.models._utils_any2vec',
-        sources=['./gensim/models/_utils_any2vec.c'],
-        include_dirs=[model_dir]),
-    Extension('gensim._matutils',
-        sources=['./gensim/_matutils.c']),
-    Extension('gensim.models.nmf_pgd',
-        sources=['./gensim/models/nmf_pgd.c'])
+NUMPY_STR = 'numpy >= 1.11.3'
+#
+# We pin the Cython version for reproducibility.  We expect our extensions
+# to build with any sane version of Cython, so we should update this pin
+# periodically.
+#
+CYTHON_STR = 'Cython==0.29.3'
+
+install_requires = [
+    NUMPY_STR,
+    'scipy >= 0.18.1',
+    'six >= 1.5.0',
+    'smart_open >= 1.8.1',
 ]
 
-if not (os.name == 'nt' and sys.version_info[0] < 3):
-    extra_args = []
-    system = platform.system()
+setup_requires = [NUMPY_STR]
 
-    if system == 'Linux':
-        extra_args.append('-std=c++11')
-    elif system == 'Darwin':
-        extra_args.extend(['-stdlib=libc++', '-std=c++11'])
-
-    ext_modules.append(
-        Extension('gensim.models.word2vec_corpusfile',
-                  sources=['./gensim/models/word2vec_corpusfile.cpp'],
-                  language='c++',
-                  extra_compile_args=extra_args,
-                  extra_link_args=extra_args)
-    )
-
-    ext_modules.append(
-        Extension('gensim.models.fasttext_corpusfile',
-                  sources=['./gensim/models/fasttext_corpusfile.cpp'],
-                  language='c++',
-                  extra_compile_args=extra_args,
-                  extra_link_args=extra_args)
-    )
-
-    ext_modules.append(
-        Extension('gensim.models.doc2vec_corpusfile',
-                  sources=['./gensim/models/doc2vec_corpusfile.cpp'],
-                  language='c++',
-                  extra_compile_args=extra_args,
-                  extra_link_args=extra_args)
-    )
+if need_cython():
+    install_requires.append(CYTHON_STR)
+    setup_requires.append(CYTHON_STR)
 
 setup(
     name='gensim',
-    version='3.8.0',
+    version='3.8.1',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
@@ -346,7 +351,7 @@ setup(
 
     url='http://radimrehurek.com/gensim',
     download_url='http://pypi.python.org/pypi/gensim',
-    
+
     license='LGPLv2.1',
 
     keywords='Singular Value Decomposition, SVD, Latent Semantic Indexing, '
@@ -374,21 +379,14 @@ setup(
     ],
 
     test_suite="gensim.test",
-    setup_requires=[
-        NUMPY_STR,
-    ],
-    install_requires=[
-        NUMPY_STR,
-        'scipy >= 0.18.1',
-        'six >= 1.5.0',
-        'smart_open >= 1.7.0',
-    ],
+    setup_requires=setup_requires,
+    install_requires=install_requires,
     tests_require=linux_testenv,
     extras_require={
         'distributed': distributed_env,
         'test-win': win_testenv,
         'test': linux_testenv,
-        'docs': linux_testenv + distributed_env + ['sphinx', 'sphinxcontrib-napoleon', 'plotly', 'pattern <= 2.6', 'sphinxcontrib.programoutput'],
+        'docs': docs_testenv,
     },
 
     include_package_data=True,

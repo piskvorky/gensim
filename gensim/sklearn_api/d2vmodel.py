@@ -159,7 +159,7 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
             The trained model.
 
         """
-        if isinstance(X[0], doc2vec.TaggedDocument):
+        if isinstance([i for i in X[:1]][0], doc2vec.TaggedDocument):
             d2v_sentences = X
         else:
             d2v_sentences = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(X)]

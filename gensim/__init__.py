@@ -5,7 +5,7 @@ of documents.
 from gensim import parsing, corpora, matutils, interfaces, models, similarities, summarization, utils  # noqa:F401
 import logging
 
-__version__ = '3.8.0'
+__version__ = '3.8.1'
 
 
 logger = logging.getLogger('gensim')

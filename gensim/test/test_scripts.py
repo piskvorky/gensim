@@ -70,9 +70,10 @@ class TestSegmentWiki(unittest.TestCase):
         self.assertTrue(first_sentence in first_section_text)
 
         # Check interlinks
-        self.assertTrue(interlinks['self-governance'] == 'self-governed')
-        self.assertTrue(interlinks['Hierarchy'] == 'hierarchical')
-        self.assertTrue(interlinks['Pierre-Joseph Proudhon'] == 'Proudhon')
+        self.assertEqual(len(interlinks), 685)
+        self.assertTrue(interlinks[0] == ("political philosophy", "political philosophy"))
+        self.assertTrue(interlinks[1] == ("self-governance", "self-governed"))
+        self.assertTrue(interlinks[2] == ("stateless society", "stateless societies"))
 
     def test_generator_len(self):
         expected_num_articles = 106
@@ -105,9 +106,11 @@ class TestSegmentWiki(unittest.TestCase):
         self.assertEqual(section_titles, self.expected_section_titles)
 
         # Check interlinks
-        self.assertTrue(interlinks['self-governance'] == 'self-governed')
-        self.assertTrue(interlinks['Hierarchy'] == 'hierarchical')
-        self.assertTrue(interlinks['Pierre-Joseph Proudhon'] == 'Proudhon')
+        # JSON has no tuples, only lists. So, we convert lists to tuples explicitly before comparison.
+        self.assertEqual(len(interlinks), 685)
+        self.assertEqual(tuple(interlinks[0]), ("political philosophy", "political philosophy"))
+        self.assertEqual(tuple(interlinks[1]), ("self-governance", "self-governed"))
+        self.assertEqual(tuple(interlinks[2]), ("stateless society", "stateless societies"))
 
 
 class TestWord2Vec2Tensor(unittest.TestCase):

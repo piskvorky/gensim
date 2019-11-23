@@ -15,7 +15,7 @@
         <div id="right">
           <div id="design_download"><a href="https://pypi.python.org/pypi/gensim"><img src="{{ pathto('_static/images/download.png', 1) }}" alt="download" /></a></div>
           <div class="space10"></div>
-          <div id="design_install"><div id="command">easy_install -U gensim</div></div>
+          <div id="design_install"><div id="command">pip install gensim</div></div>
         </div>
 
       </div>
@@ -52,7 +52,7 @@
     </script>
 
     <div>
-      <a href="https://github.com/piskvorky/gensim/">
+      <a href="https://github.com/RaRe-Technologies/gensim">
         <img style="position: absolute; top: 0; left: 0; border: 0;" src="{{ pathto('_static/images/forkme_left_white_ffffff.png', 1) }}" alt="Fork me on GitHub" />
       </a>
 <!--       <iframe src="http://ghbtns.com/github-btn.html?user=piskvorky&repo=gensim&type=watch&count=true&size=large"
@@ -126,8 +126,93 @@
     </div>
 
     <div class="podklad">
+      <div class="podkladwrapper">
+        <h3 class="h3gensim" id="install">Installation</h3>
+
+          <!--
+
+          Copy-pasted HTML from install.html generated from install.rst.
+
+          I can't think of a better way to get that RST into this HTML.
+
+          -->
+
+          <div class="section" id="quick-install">
+            <h2>Quick install</h2>
+            <p>Run in your terminal (recommended):</p>
+            <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">--</span><span class="n">upgrade</span> <span class="n">gensim</span>
+            </pre></div>
+            </div>
+            <p>or, alternatively for <cite>conda</cite> environments:</p>
+            <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span> <span class="n">gensim</span>
+            </pre></div>
+            </div>
+            <p>That's it! Congratulations, you can proceed to the <a class="reference internal" href="auto_examples/index.html"><span class="doc">tutorials</span></a>.</p>
+            <p>In case that failed, make sure you're installing into a writeable location.</p>
+          </div>
+
+          <hr class="docutils">
+
+          <div class="section" id="code-dependencies">
+            <h2>Code dependencies</h2>
+            <p>Gensim runs on Linux, Windows and Mac OS X, and should run on any other
+            platform that supports Python 2.7 or 3.5+ and NumPy. Gensim depends on the following software:</p>
+            <ul class="simple">
+              <li><a class="reference external" href="https://www.python.org">Python</a>, tested with versions 2.7, 3.5, 3.6 and 3.7.</li>
+              <li><a class="reference external" href="https://www.numpy.org">NumPy</a> for number crunching.</li>
+              <li><a class="reference external" href="https://pypi.org/project/smart_open/">smart_open</a> for transparently opening files on remote storages or compressed files.</li>
+            </ul>
+          </div>
+
+          <div class="section" id="testing-gensim">
+            <h2>Testing Gensim</h2>
+            <p>Gensim uses continuous integration, automatically running a full test suite on each pull request with</p>
+            <table class="docutils" border="1">
+              <colgroup>
+                <col width="10%">
+                <col width="77%">
+                <col width="12%">
+              </colgroup>
+              <thead valign="bottom">
+                <tr class="row-odd"><th class="head">CI service</th>
+                <th class="head">Task</th>
+                <th class="head">Build badge</th>
+                </tr>
+              </thead>
+              <tbody valign="top">
+                <tr class="row-even">
+                  <td>Travis</td>
+                  <td>Run tests on Linux and check <a class="reference external" href="https://www.python.org/dev/peps/pep-0008/?">code-style</a></td>
+                  <td><a class="reference external" href="https://travis-ci.org/RaRe-Technologies/gensim"><img alt="Travis" src="https://travis-ci.org/RaRe-Technologies/gensim.svg?branch=develop"></a></td>
+                </tr>
+                <tr class="row-odd">
+                  <td>AppVeyor</td>
+                  <td>Run tests on Windows</td>
+                  <td><a class="reference external" href="https://ci.appveyor.com/api/projects/status/r2au32ucpn8gr0tl/branch/develop?svg=true"><img alt="AppVeyor" src="https://ci.appveyor.com/api/projects/status/r2au32ucpn8gr0tl/branch/develop?svg=true"></a></td>
+                </tr>
+                <tr class="row-even">
+                  <td>CircleCI</td>
+                  <td>Build documentation</td>
+                  <td><a class="reference external" href="https://circleci.com/gh/RaRe-Technologies/gensim"><img alt="CircleCI" src="https://circleci.com/gh/RaRe-Technologies/gensim/tree/develop.svg?style=shield"></a></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="section" id="problems">
+            <h2>Problems?</h2>
+            <p>Use the <a class="reference external" href="https://groups.google.com/group/gensim/">Gensim discussion group</a> for
+            questions and troubleshooting. See the <a class="reference internal" href="support.html"><span class="doc">support page</span></a> for commercial support.</p>
+          </div>
+
+      </div>
+    </div>
+
+    <!-- copy-paste ends here -->
+
+    <div class="podklad">
       <div class="podkladwrapper" id="testimonials">
-        <h3 class="h3gensim">Who is using Gensim?<div class="more-info">Doing something interesting with gensim? Ask to be featured here.</div></h3>
+        <h3 class="h3gensim">Who is using Gensim?<div class="more-info">Doing something interesting with Gensim? Ask to be featured here.</div></h3>
 
         <div class="center">
           <ul id="slider_testimonials" class="reference">
@@ -135,16 +220,16 @@
               “Here at Tailwind, we use Gensim to help our customers post interesting and relevant content to Pinterest. No fuss, no muss. Just fast, scalable language processing.” <span class="testimonial-author">Waylon Flinn, <a href="http://tailwindapp.com">Tailwind</a></span>
             </div></li>
             <li><div class="reference8 testimonial">
-              “We are using gensim every day. Over 15 thousand times per day to be precise. Gensim’s LDA module lies at the very core of the analysis we perform on each uploaded publication to figure out what it’s all about. It simply works.” <span class="testimonial-author">Andrius Butkus, <a href="http://issuu.com/">Issuu</a></span>
+              “We are using Gensim every day. Over 15 thousand times per day to be precise. Gensim’s LDA module lies at the very core of the analysis we perform on each uploaded publication to figure out what it’s all about. It simply works.” <span class="testimonial-author">Andrius Butkus, <a href="http://issuu.com/">Issuu</a></span>
             </div></li>
             <li><div class="reference2 testimonial">
               “Gensim hits the sweetest spot of being a simple yet powerful way to access some incredibly complex NLP goodness.” <span class="testimonial-author">Alan J. Salmoni, <a href="http://roistr.com/">Roistr.com</a></span>
             </div></li>
             <li><div class="reference1 testimonial">
-              “I used gensim at Ghent university. I found it easy to build prototypes with various models, extend it with additional features and gain empirical insights quickly. It's a reliable library that can be used beyond prototyping too.” <span class="testimonial-author"><a href="http://dieter.plaetinck.be/">Dieter Plaetinck</a>, <a href="http://www.ibcn.intec.ugent.be/">IBCN group</a></span>
+              “I used Gensim at Ghent university. I found it easy to build prototypes with various models, extend it with additional features and gain empirical insights quickly. It's a reliable library that can be used beyond prototyping too.” <span class="testimonial-author"><a href="http://dieter.plaetinck.be/">Dieter Plaetinck</a>, <a href="http://www.ibcn.intec.ugent.be/">IBCN group</a></span>
             </div></li>
             <li><div class="reference3 testimonial">
-              “We used gensim in several text mining projects at Sports Authority. The data were from free-form text fields in customer surveys, as well as social media sources. Having gensim significantly sped our time to development, and it is still my go-to package for topic modeling with large retail data sets.” <span class="testimonial-author">Josh Hemann, <a href="http://www.sportsauthority.com/home/index.jsp">Sports Authority</a></span>
+              “We used Gensim in several text mining projects at Sports Authority. The data were from free-form text fields in customer surveys, as well as social media sources. Having Gensim significantly sped our time to development, and it is still my go-to package for topic modeling with large retail data sets.” <span class="testimonial-author">Josh Hemann, <a href="http://www.sportsauthority.com/home/index.jsp">Sports Authority</a></span>
             </div></li>
             <li><div class="reference4 testimonial">
               “Semantic analysis is a hot topic in online marketing, but there are few products on the market that are truly powerful.
@@ -159,11 +244,11 @@ programming library should be, in Python or in any language.” <span class="tes
             </div></li>
 -->
             <li><div class="reference6 testimonial">
-              “Based on our experience with gensim on <a href="http://dml.cz">DML-CZ</a>, we naturally opted to use it on a much bigger scale for similarity
-of fulltexts of scientific papers in the European Digital Mathematics Library. In evaluation with other approaches, gensim became a clear winner, especially because of speed, scalability and ease of use.”<span class="testimonial-author">Petr Sojka, <a href="https://eudml.org/">EuDML</a></span>
+              “Based on our experience with Gensim on <a href="http://dml.cz">DML-CZ</a>, we naturally opted to use it on a much bigger scale for similarity
+of fulltexts of scientific papers in the European Digital Mathematics Library. In evaluation with other approaches, Gensim became a clear winner, especially because of speed, scalability and ease of use.”<span class="testimonial-author">Petr Sojka, <a href="https://eudml.org/">EuDML</a></span>
             </div></li>
             <li><div class="reference7 testimonial">
-              “We have been using gensim in several DTU courses related to digital media engineering and find it immensely useful as the tutorial material provides students an excellent introduction to quickly understand the underlying principles in topic modeling based on both LSA and LDA.”<span class="testimonial-author"><a href="http://milab.imm.dtu.dk/people/michael_kai_petersen">Michael Kai Petersen</a>, <a href="http://www.dtu.dk/English/education/MSc_Programs/Digital%20Media%20Engineering.aspx">Technical University of Denmark</a></span>
+              “We have been using Gensim in several DTU courses related to digital media engineering and find it immensely useful as the tutorial material provides students an excellent introduction to quickly understand the underlying principles in topic modeling based on both LSA and LDA.”<span class="testimonial-author"><a href="http://milab.imm.dtu.dk/people/michael_kai_petersen">Michael Kai Petersen</a>, <a href="http://www.dtu.dk/English/education/MSc_Programs/Digital%20Media%20Engineering.aspx">Technical University of Denmark</a></span>
             </div></li>
 
           </ul>
