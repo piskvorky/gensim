@@ -18,9 +18,7 @@ except ImportError:
     from htmlentitydefs import name2codepoint as n2cp
 try:
     import cPickle as _pickle
-    print('import cpickle')
 except ImportError:
-    print('import pickle')
     import pickle as _pickle
 
 import re
@@ -56,6 +54,15 @@ logger = logging.getLogger(__name__)
 
 PAT_ALPHABETIC = re.compile(r'(((?![\d])\w)+)', re.UNICODE)
 RE_HTML_ENTITY = re.compile(r'&(#?)([xX]?)(\w{1,8});', re.UNICODE)
+
+NO_CYTHON = RuntimeError(
+    "Cython extensions are unavailable. "
+    "Without them, this gensim functionality is disabled. "
+    "If you've installed from a package, ask the package maintainer to include Cython extensions. "
+    "If you're building gensim from source yourself, run `python setup.py build_ext --inplace` "
+    "and retry. "
+)
+"""An exception that gensim code raises when Cython extensions are unavailable."""
 
 
 def get_random_state(seed):
@@ -544,7 +551,6 @@ class SaveLoad(object):
         logger.info("saving %s object under %s, separately %s", self.__class__.__name__, fname, separately)
 
         compress, subname = SaveLoad._adapt_by_suffix(fname)
-        print(compress, subname)
 
         restores = self._save_specials(fname, separately, sep_limit, ignore, pickle_protocol,
                                        compress, subname)
@@ -606,11 +612,9 @@ class SaveLoad(object):
         recursive_saveloads = []
         restores = []
         for attrib, val in iteritems(self.__dict__):
-            # better than 'isinstance(val, SaveLoad)' if IPython reloading
-            if hasattr(val, '_save_specials') and type(val) != type:
+            if hasattr(val, '_save_specials'):  # better than 'isinstance(val, SaveLoad)' if IPython reloading
                 recursive_saveloads.append(attrib)
                 cfname = '.'.join((fname, attrib))
-                print(val, compress, subname)
                 restores.extend(val._save_specials(cfname, None, sep_limit, ignore, pickle_protocol, compress, subname))
 
         try:
@@ -693,12 +697,10 @@ class SaveLoad(object):
             Load object from file.
 
         """
-        print(fname_or_handle, type(fname_or_handle), separately, sep_limit, ignore, pickle_protocol)
         try:
             _pickle.dump(self, fname_or_handle, protocol=pickle_protocol)
             logger.info("saved %s object", self.__class__.__name__)
         except TypeError:  # `fname_or_handle` does not have write attribute
-            print("failed")
             self._smart_save(fname_or_handle, separately, sep_limit, ignore, pickle_protocol=pickle_protocol)
 
 
