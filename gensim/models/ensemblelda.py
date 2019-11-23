@@ -272,7 +272,9 @@ class EnsembleLda(SaveLoad):
     def load(cls, *args, **kwargs):
         eLDA = super().load(*args, **kwargs)
         try:
-            eLDA.topic_model_class = importlib.import_module(eLDA.topic_model_class_string)
+            module = importlib.import_module(eLDA.topic_model_module_string)
+            eLDA.topic_model_class = getattr(module, eLDA.topic_model_class_string)
+            del eLDA.topic_model_module_string
             del eLDA.topic_model_class_string
         except:
             logger.error(f'Could not import the "{eLDA.topic_model_class_string}" module and set the '
@@ -282,7 +284,8 @@ class EnsembleLda(SaveLoad):
     load.__doc__ = SaveLoad.load.__doc__
 
     def save(self, *args, **kwargs):
-        self.topic_model_class_string = self.topic_model_class.__module__
+        self.topic_model_module_string = self.topic_model_class.__module__
+        self.topic_model_class_string = self.topic_model_class.__name__
         kwargs['ignore'] = frozenset(kwargs.get('ignore', ())).union(('topic_model_class', ))
         super(EnsembleLda, self).save(*args, **kwargs)
 
