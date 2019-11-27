@@ -150,4 +150,4 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
             for (similarity, t2) in sorted(similarities, reverse=True)
             if similarity > 0
         )
-        return islice(most_similar, topn)
+        return islice(most_similar, int(topn))
