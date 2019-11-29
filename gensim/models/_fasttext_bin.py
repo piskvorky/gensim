@@ -43,7 +43,15 @@ _END_OF_WORD_MARKER = b'\x00'
 
 logger = logging.getLogger(__name__)
 
-_FASTTEXT_FILEFORMAT_MAGIC = 793712314
+# Constants for FastText vesrion and FastText file format magic (both int32)
+# https://github.com/facebookresearch/fastText/blob/master/src/fasttext.cc#L25
+
+_FASTTEXT_VERSION = np.int32(12)
+_FASTTEXT_FILEFORMAT_MAGIC = np.int32(793712314)
+
+
+# _NEW_HEADER_FORMAT is constructed on the basis of args::save method, see
+# https://github.com/facebookresearch/fastText/blob/master/src/args.cc
 
 _NEW_HEADER_FORMAT = [
     ('dim', 'i'),
@@ -51,13 +59,13 @@ _NEW_HEADER_FORMAT = [
     ('epoch', 'i'),
     ('min_count', 'i'),
     ('neg', 'i'),
-    ('_', 'i'),
+    ('word_ngrams', 'i'),   # Unused in loading
     ('loss', 'i'),
     ('model', 'i'),
     ('bucket', 'i'),
     ('minn', 'i'),
     ('maxn', 'i'),
-    ('_', 'i'),
+    ('lr_update_rate', 'i'),   # Unused in loading
     ('t', 'd'),
 ]
 
@@ -311,6 +319,7 @@ def load(fin, encoding='utf-8', full_model=True):
         fin = open(fin, 'rb')
 
     magic, version = _struct_unpack(fin, '@2i')
+    print(version)
     new_format = magic == _FASTTEXT_FILEFORMAT_MAGIC
 
     header_spec = _NEW_HEADER_FORMAT if new_format else _OLD_HEADER_FORMAT
@@ -364,6 +373,131 @@ def _backslashreplace_backport(ex):
     bstr, start, end = ex.object, ex.start, ex.end
     text = u''.join('\\x{:02x}'.format(ord(c)) for c in bstr[start:end])
     return text, end
+
+
+def _sign_model(fout):
+    # Reimplementation of the FastText::signModel function, see
+    # https://github.com/facebookresearch/fastText/blob/master/src/fasttext.cc
+    fout.write(_FASTTEXT_FILEFORMAT_MAGIC.tobytes())
+    fout.write(_FASTTEXT_VERSION.tobytes())
+
+
+def _conv_field_to_bytes(value, field_type):
+    if field_type == 'i':
+        return (np.int32(value).tobytes())
+    elif field_type == 'd':
+        return (np.float64(value).tobytes())
+    else:
+        raise NotImplementedError('Currently conversion to "%s" type is not implemmented.' % type)
+
+
+def _get_field(model, field, field_type):
+
+    if field == 'bucket':
+        res = model.bucket
+    elif field == 'dim':
+        res = model.vector_size
+    elif field == 'epoch':
+        res = model.epochs
+    elif field == 'loss':
+        # `loss` => ns: 1, hs: 2, softmax: 3, one-vs-all: 4
+        # ns = negative sampling loss (default)
+        # hs = hierarchical softmax loss
+        # softmax =  softmax loss
+        # one-vs-all = one vs all loss (supervised)
+        if model.hs == 1:
+            res = 2
+        elif model.hs == 0 and model.negative > 0:
+            res = 1
+        elif model.hs == 0 and model.negative == 0:
+            # TODO Is this right ?!?
+            res = 2
+    elif field == 'maxn':
+        res = model.wv.min_n
+    elif field == 'minn':
+        res = model.wv.min_n
+    elif field == 'min_count':
+        res = model.vocabulary.min_count
+    elif field == 'model':
+        # `model` => cbow:1, sg:2, sup:3
+        # cbow = continous bag of words (default)
+        # sg = skip-gram
+        # sup = supervised
+        res = 1 if model.sg == 1 else 2
+    elif field == 'neg':
+        res = model.negative
+    elif field == 't':
+        res = model.vocabulary.sample
+    elif field == 'word_ngrams':
+        # This is skipped in gensim loading settig, using the default from FB C++ code
+        res = 1
+    elif field == 'ws':
+        res = model.window
+    elif field == 'lr_update_rate':
+        # This is skipped in gensim loading settig, using the default from FB C++ code
+        res = 100
+    else:
+        raise NotImplementedError('Extraction of header field "%s" from Gensim FastText object not implemmented.' % field)
+
+    return _conv_field_to_bytes(res, field_type)
+
+
+def _args_save(fout, model):
+
+    # Reimplementation of the Args::save method, see
+    # https://github.com/facebookresearch/fastText/blob/master/src/args.cc
+
+    for field, field_type in _NEW_HEADER_FORMAT:
+        fout.write(_get_field(model, field, field_type))
+
+
+def _dict_save(fout, model):
+    pass
+
+
+def _save_vocab(fout, model):
+    pass
+
+
+def _save_vector_ngrams(fout, model):
+    pass
+
+
+def _save_hidden_outputs(fout, model):
+    pass
+
+
+def _save(fout, model):
+
+    # Unfortunatelly there is no documentation of the FB binary format
+    # This is just reimplementation of FastText::saveModel method
+    # See https://github.com/facebookresearch/fastText/blob/master/src/fasttext.cc
+
+    #   As of writing this (12.2019) the C++ code looks as follows
+    #
+    #   ```
+    #   signModel(ofs);
+    #   args_->save(ofs);
+    #   dict_->save(ofs);
+    #   ofs.write((char*)&(quant_), sizeof(bool));
+    #   input_->save(ofs);
+    #   ofs.write((char*)&(args_->qout), sizeof(bool));
+    #   output_->save(ofs);
+    #   ```
+
+    _sign_model(fout)
+    _args_save(fout, model)
+    _dict_save(fout, model)
+    _save_vector_ngrams(fout, model)
+    _save_hidden_outputs(fout, model)
+
+
+def save(fout, model):
+    if isinstance(fout, str):
+        with open(fout, "wb") as fout_stream:
+            _save(fout_stream, model)
+    else:
+        _save(fout, model)
 
 
 if six.PY2:
