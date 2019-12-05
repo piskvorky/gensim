@@ -14,10 +14,10 @@ import numpy as np
 
 from gensim import utils
 from gensim.models.word2vec import LineSentence
-from gensim.models.fasttext import FastText as FT_gensim
+from gensim.models.fasttext import FastText as FT_gensim, _unpack, _unpack_copy
 from gensim.models.wrappers.fasttext import FastTextKeyedVectors
 from gensim.models.wrappers.fasttext import FastText as FT_wrapper
-from gensim.models.keyedvectors import Word2VecKeyedVectors
+from gensim.models.keyedvectors import KeyedVectors
 from gensim.test.utils import datapath, get_tmpfile, temporary_file, common_texts as sentences
 import gensim.models._fasttext_bin
 
@@ -188,13 +188,11 @@ class TestFastTextModel(unittest.TestCase):
         model.save(tmpf)
         loaded_model = FT_gensim.load(tmpf)
         self.assertTrue(loaded_model.wv.vectors_norm is None)
-        self.assertTrue(loaded_model.wv.vectors_ngrams_norm is None)
 
         wv = model.wv
         wv.save(tmpf)
         loaded_kv = FastTextKeyedVectors.load(tmpf)
         self.assertTrue(loaded_kv.vectors_norm is None)
-        self.assertTrue(loaded_kv.vectors_ngrams_norm is None)
 
     def model_sanity(self, model):
         self.assertEqual(model.wv.vectors.shape, (len(model.wv.vocab), model.vector_size))
@@ -710,7 +708,10 @@ class TestFastTextModel(unittest.TestCase):
                 others.append(x)
         self.assertTrue(all('terrorism' not in x for x in others))
         model.build_vocab(others)
+        start_vecs = model.wv.vectors_vocab.copy()
         model.train(others, total_examples=model.corpus_count, epochs=model.epochs)
+        # checks that `vectors_vocab` has been changed by training
+        self.assertFalse(np.all(np.equal(start_vecs, model.wv.vectors_vocab)))
         # checks that `vectors` is different from `vectors_vocab`
         self.assertFalse(np.all(np.equal(model.wv.vectors, model.wv.vectors_vocab)))
         self.assertFalse('terrorism' in model.wv.vocab)
@@ -757,7 +758,7 @@ class TestFastTextModel(unittest.TestCase):
         tmpf = get_tmpfile('gensim_fasttext_w2v_format.tst')
         model = FT_gensim(sentences, min_count=1, size=12, bucket=BUCKET)
         model.wv.save_word2vec_format(tmpf, binary=True)
-        loaded_model_kv = Word2VecKeyedVectors.load_word2vec_format(tmpf, binary=True)
+        loaded_model_kv = KeyedVectors.load_word2vec_format(tmpf, binary=True)
         self.assertEqual(len(model.wv.vocab), len(loaded_model_kv.vocab))
         self.assertTrue(np.allclose(model.wv['human'], loaded_model_kv['human']))
 
@@ -1024,7 +1025,7 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         trained = train_gensim()
         native = load_native()
 
-        self.assertEqual(trained.bucket, native.bucket)
+        self.assertEqual(trained.wv.bucket, native.wv.bucket)
         #
         # Only if match_gensim=True in init_post_load
         #
@@ -1113,7 +1114,7 @@ class NativeTrainingContinuationTest(unittest.TestCase):
 
     def test_load_native_pretrained(self):
         model = gensim.models.fasttext.load_facebook_model(datapath('toy-model-pretrained.bin'))
-        actual = model['monarchist']
+        actual = model.wv['monarchist']
         expected = np.array([0.76222, 1.0669, 0.7055, -0.090969, -0.53508])
         self.assertTrue(np.allclose(expected, actual, atol=10e-4))
 
@@ -1507,6 +1508,63 @@ class SaveFacebookFormatReadingTest(unittest.TestCase):
 
     def test_cbow(self):
         self._check_load_fasttext_format(sg=0)
+
+
+class TestFastTextKeyedVectors(unittest.TestCase):
+    def test_ft_kv_backward_compat_w_360(self):
+        kv = KeyedVectors.load(datapath("ft_kv_3.6.0.model.gz"))
+        ft_kv = FastTextKeyedVectors.load(datapath("ft_kv_3.6.0.model.gz"))
+
+        expected = ['trees', 'survey', 'system', 'graph', 'interface']
+        actual = [word for (word, similarity) in kv.most_similar("human", topn=5)]
+
+        self.assertEqual(actual, expected)
+
+        actual = [word for (word, similarity) in ft_kv.most_similar("human", topn=5)]
+
+        self.assertEqual(actual, expected)
+
+
+class UnpackTest(unittest.TestCase):
+    def test_copy_sanity(self):
+        m = np.array(range(9))
+        m.shape = (3, 3)
+        hash2index = {10: 0, 11: 1, 12: 2}
+
+        n = _unpack_copy(m, 25, hash2index)
+        self.assertTrue(np.all(m[0] == n[10]))
+        self.assertTrue(np.all(m[1] == n[11]))
+        self.assertTrue(np.all(m[2] == n[12]))
+
+    def test_sanity(self):
+        m = np.array(range(9))
+        m.shape = (3, 3)
+        hash2index = {10: 0, 11: 1, 12: 2}
+
+        n = _unpack(m, 25, hash2index)
+        self.assertTrue(np.all(np.array([0, 1, 2]) == n[10]))
+        self.assertTrue(np.all(np.array([3, 4, 5]) == n[11]))
+        self.assertTrue(np.all(np.array([6, 7, 8]) == n[12]))
+
+    def test_tricky(self):
+        m = np.array(range(9))
+        m.shape = (3, 3)
+        hash2index = {1: 0, 0: 1, 12: 2}
+
+        n = _unpack(m, 25, hash2index)
+        self.assertTrue(np.all(np.array([3, 4, 5]) == n[0]))
+        self.assertTrue(np.all(np.array([0, 1, 2]) == n[1]))
+        self.assertTrue(np.all(np.array([6, 7, 8]) == n[12]))
+
+    def test_identity(self):
+        m = np.array(range(9))
+        m.shape = (3, 3)
+        hash2index = {0: 0, 1: 1, 2: 2}
+
+        n = _unpack(m, 25, hash2index)
+        self.assertTrue(np.all(np.array([0, 1, 2]) == n[0]))
+        self.assertTrue(np.all(np.array([3, 4, 5]) == n[1]))
+        self.assertTrue(np.all(np.array([6, 7, 8]) == n[2]))
 
 
 if __name__ == '__main__':

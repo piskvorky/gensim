@@ -28,6 +28,7 @@ from gensim.models import Word2Vec, FastText
 from gensim.test.utils import (datapath, get_tmpfile,
     common_texts as texts, common_dictionary as dictionary, common_corpus as corpus)
 from gensim.similarities import UniformTermSimilarityIndex
+from gensim.similarities import WordEmbeddingSimilarityIndex
 from gensim.similarities import SparseTermSimilarityMatrix
 from gensim.similarities import LevenshteinSimilarityIndex
 from gensim.similarities.docsim import _nlargest
@@ -1235,6 +1236,51 @@ class TestLevenshteinSimilarityIndex(unittest.TestCase):
         index = LevenshteinSimilarityIndex(self.dictionary, alpha=1.0, beta=1.0)
         similarity_matrix = SparseTermSimilarityMatrix(index, dictionary)
         self.assertTrue(scipy.sparse.issparse(similarity_matrix.matrix))
+
+
+class TestWordEmbeddingSimilarityIndex(unittest.TestCase):
+    def setUp(self):
+        self.vectors = KeyedVectors.load_word2vec_format(
+            datapath('euclidean_vectors.bin'), binary=True, datatype=numpy.float64)
+
+    def test_most_similar(self):
+        """Test most_similar returns expected results."""
+
+        # check the handling of out-of-dictionary terms
+        index = WordEmbeddingSimilarityIndex(self.vectors)
+        self.assertLess(0, len(list(index.most_similar(u"holiday", topn=10))))
+        self.assertEqual(0, len(list(index.most_similar(u"out-of-dictionary term", topn=10))))
+
+        # check that the topn works as expected
+        index = WordEmbeddingSimilarityIndex(self.vectors)
+        results = list(index.most_similar(u"holiday", topn=10))
+        self.assertLess(0, len(results))
+        self.assertGreaterEqual(10, len(results))
+        results = list(index.most_similar(u"holiday", topn=20))
+        self.assertLess(10, len(results))
+        self.assertGreaterEqual(20, len(results))
+
+        # check that the term itself is not returned
+        index = WordEmbeddingSimilarityIndex(self.vectors)
+        terms = [term for term, similarity in index.most_similar(u"holiday", topn=len(self.vectors.vocab))]
+        self.assertFalse(u"holiday" in terms)
+
+        # check that the threshold works as expected
+        index = WordEmbeddingSimilarityIndex(self.vectors, threshold=0.0)
+        results = list(index.most_similar(u"holiday", topn=10))
+        self.assertLess(0, len(results))
+        self.assertGreaterEqual(10, len(results))
+
+        index = WordEmbeddingSimilarityIndex(self.vectors, threshold=1.0)
+        results = list(index.most_similar(u"holiday", topn=10))
+        self.assertEqual(0, len(results))
+
+        # check that the exponent works as expected
+        index = WordEmbeddingSimilarityIndex(self.vectors, exponent=1.0)
+        first_similarities = numpy.array([similarity for term, similarity in index.most_similar(u"holiday", topn=10)])
+        index = WordEmbeddingSimilarityIndex(self.vectors, exponent=2.0)
+        second_similarities = numpy.array([similarity for term, similarity in index.most_similar(u"holiday", topn=10)])
+        self.assertTrue(numpy.allclose(first_similarities**2.0, second_similarities))
 
 
 if __name__ == '__main__':

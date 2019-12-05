@@ -56,8 +56,7 @@ from six import string_types
 from six.moves import zip, range
 
 from gensim import utils, matutils
-from gensim.models.keyedvectors import Vocab, BaseKeyedVectors
-from gensim.models.utils_any2vec import _save_word2vec_format, _load_word2vec_format
+from gensim.models.keyedvectors import Vocab, KeyedVectors, _save_word2vec_format, _load_word2vec_format
 from numpy import float32 as REAL
 
 try:
@@ -860,7 +859,7 @@ class PoincareBatch(object):
         self._loss_computed = True
 
 
-class PoincareKeyedVectors(BaseKeyedVectors):
+class PoincareKeyedVectors(KeyedVectors):
     """Vectors and vocab for the :class:`~gensim.models.poincare.PoincareModel` training class.
 
     Used to perform operations on the vectors such as vector lookup, distance calculations etc.

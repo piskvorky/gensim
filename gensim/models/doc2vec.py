@@ -79,7 +79,7 @@ from numpy import zeros, float32 as REAL, empty, ones, \
 
 from gensim.utils import call_on_class_only, deprecated
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
-from gensim.models.word2vec import Word2VecKeyedVectors, Word2VecVocab, Word2VecTrainables
+from gensim.models.word2vec import KeyedVectors, Word2VecVocab, Word2VecTrainables
 from gensim.models.word2vec import train_cbow_pair, train_sg_pair, train_batch_sg  # noqa
 from six.moves import range
 from six import string_types, integer_types, itervalues
@@ -183,7 +183,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
     Attributes
     ----------
-    wv : :class:`~gensim.models.keyedvectors.Word2VecKeyedVectors`
+    wv : :class:`~gensim.models.keyedvectors.KeyedVectors`
         This object essentially contains the mapping between words and embeddings. After training, it can be used
         directly to query those embeddings in various ways. See the module level docstring for examples.
 
@@ -342,7 +342,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             dm=dm, dm_concat=dm_concat, dm_tag_count=dm_tag_count,
             vector_size=self.vector_size, **trainables_kwargs)
 
-        self.wv = Word2VecKeyedVectors(self.vector_size)
+        self.wv = KeyedVectors(self.vector_size)
         self.docvecs = docvecs or Doc2VecKeyedVectors(self.vector_size, docvecs_mapfile)
 
         self.comment = comment

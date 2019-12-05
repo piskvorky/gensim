@@ -25,7 +25,6 @@ c_extensions = {
     'gensim.models.word2vec_inner': 'gensim/models/word2vec_inner.c',
     'gensim.corpora._mmreader': 'gensim/corpora/_mmreader.c',
     'gensim.models.fasttext_inner': 'gensim/models/fasttext_inner.c',
-    'gensim.models._utils_any2vec': 'gensim/models/_utils_any2vec.c',
     'gensim._matutils': 'gensim/_matutils.c',
     'gensim.models.nmf_pgd': 'gensim/models/nmf_pgd.c',
 }

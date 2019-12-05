@@ -132,7 +132,7 @@ import itertools
 import warnings
 
 from gensim.utils import keep_vocab_item, call_on_class_only
-from gensim.models.keyedvectors import Vocab, Word2VecKeyedVectors
+from gensim.models.keyedvectors import Vocab, KeyedVectors
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 
 try:
@@ -457,7 +457,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
     Attributes
     ----------
-    wv : :class:`~gensim.models.keyedvectors.Word2VecKeyedVectors`
+    wv : :class:`~gensim.models.keyedvectors.KeyedVectors`
         This object essentially contains the mapping between words and embeddings. After training, it can be used
         directly to query those embeddings in various ways. See the module level docstring for examples.
 
@@ -588,7 +588,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
         self.callbacks = callbacks
         self.load = call_on_class_only
 
-        self.wv = Word2VecKeyedVectors(size)
+        self.wv = KeyedVectors(size)
         self.vocabulary = Word2VecVocab(
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample, sorted_vocab=bool(sorted_vocab),
             null_word=null_word, max_final_vocab=max_final_vocab, ns_exponent=ns_exponent)
@@ -926,7 +926,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
     @deprecated("Method will be removed in 4.0.0, use self.wv.__getitem__() instead")
     def __getitem__(self, words):
         """Deprecated. Use `self.wv.__getitem__` instead.
-        Refer to the documentation for :meth:`~gensim.models.keyedvectors.Word2VecKeyedVectors.__getitem__`.
+        Refer to the documentation for :meth:`~gensim.models.keyedvectors.KeyedVectors.__getitem__`.
 
         """
         return self.wv.__getitem__(words)
@@ -934,7 +934,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
     @deprecated("Method will be removed in 4.0.0, use self.wv.__contains__() instead")
     def __contains__(self, word):
         """Deprecated. Use `self.wv.__contains__` instead.
-        Refer to the documentation for :meth:`~gensim.models.keyedvectors.Word2VecKeyedVectors.__contains__`.
+        Refer to the documentation for :meth:`~gensim.models.keyedvectors.KeyedVectors.__contains__`.
 
         """
         return self.wv.__contains__(word)
@@ -984,7 +984,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
     def init_sims(self, replace=False):
         """Deprecated. Use `self.wv.init_sims` instead.
-        See :meth:`~gensim.models.keyedvectors.Word2VecKeyedVectors.init_sims`.
+        See :meth:`~gensim.models.keyedvectors.KeyedVectors.init_sims`.
 
         """
         if replace and hasattr(self.trainables, 'syn1'):
@@ -1017,18 +1017,18 @@ class Word2Vec(BaseWordEmbeddingsModel):
     @staticmethod
     def log_accuracy(section):
         """Deprecated. Use `self.wv.log_accuracy` instead.
-        See :meth:`~gensim.models.word2vec.Word2VecKeyedVectors.log_accuracy`.
+        See :meth:`~gensim.models.word2vec.KeyedVectors.log_accuracy`.
 
         """
-        return Word2VecKeyedVectors.log_accuracy(section)
+        return KeyedVectors.log_accuracy(section)
 
     @deprecated("Method will be removed in 4.0.0, use self.wv.evaluate_word_analogies() instead")
     def accuracy(self, questions, restrict_vocab=30000, most_similar=None, case_insensitive=True):
         """Deprecated. Use `self.wv.accuracy` instead.
-        See :meth:`~gensim.models.word2vec.Word2VecKeyedVectors.accuracy`.
+        See :meth:`~gensim.models.word2vec.KeyedVectors.accuracy`.
 
         """
-        most_similar = most_similar or Word2VecKeyedVectors.most_similar
+        most_similar = most_similar or KeyedVectors.most_similar
         return self.wv.accuracy(questions, restrict_vocab, most_similar, case_insensitive)
 
     def __str__(self):
