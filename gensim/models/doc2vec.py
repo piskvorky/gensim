@@ -146,13 +146,6 @@ class TaggedDocument(namedtuple('TaggedDocument', 'words tags')):
         return '%s(%s, %s)' % (self.__class__.__name__, self.words, self.tags)
 
 
-# for compatibility
-@deprecated("Class will be removed in 4.0.0, use TaggedDocument instead")
-class LabeledSentence(TaggedDocument):
-    """Deprecated, use :class:`~gensim.models.doc2vec.TaggedDocument` instead."""
-    pass
-
-
 class Doctag(namedtuple('Doctag', 'offset, word_count, doc_count')):
     """A string document tag discovered during the initial vocabulary scan.
     The document-vector equivalent of a Vocab object.
@@ -302,20 +295,6 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             List of callbacks that need to be executed/run at specific stages during training.
 
         """
-        if 'sentences' in kwargs:
-            raise DeprecationWarning(
-                "Parameter 'sentences' was renamed to 'documents', and will be removed in 4.0.0, "
-                "use 'documents' instead."
-            )
-
-        if 'iter' in kwargs:
-            warnings.warn("The parameter `iter` is deprecated, will be removed in 4.0.0, use `epochs` instead.")
-            kwargs['epochs'] = kwargs['iter']
-
-        if 'size' in kwargs:
-            warnings.warn("The parameter `size` is deprecated, will be removed in 4.0.0, use `vector_size` instead.")
-            kwargs['vector_size'] = kwargs['size']
-
         super(Doc2Vec, self).__init__(
             sg=(1 + dm) % 2,
             null_word=dm_concat,
@@ -645,9 +624,6 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             Number of times to train the new document. Larger values take more time, but may improve
             quality and run-to-run stability of inferred vectors. If unspecified, the `epochs` value
             from model initialization will be reused.
-        steps : int, optional, deprecated
-            Previous name for `epochs`, still available for now for backward compatibility: if
-            `epochs` is unspecified but `steps` is, the `steps` value will be used.
 
         Returns
         -------
@@ -660,7 +636,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
         alpha = alpha or self.alpha
         min_alpha = min_alpha or self.min_alpha
-        epochs = epochs or steps or self.epochs
+        epochs = epochs or self.epochs
 
         doctag_vectors, doctag_locks = self.trainables.get_doctag_trainables(doc_words, self.docvecs.vector_size)
         doctag_indexes = [0]
@@ -750,33 +726,6 @@ class Doc2Vec(BaseWordEmbeddingsModel):
         if self.workers > 1:
             segments.append('t%d' % self.workers)
         return '%s(%s)' % (self.__class__.__name__, ','.join(segments))
-
-    def delete_temporary_training_data(self, keep_doctags_vectors=True, keep_inference=True):
-        """Discard parameters that are used in training and score. Use if you're sure you're done training a model.
-
-        Parameters
-        ----------
-        keep_doctags_vectors : bool, optional
-            Set to False if you don't want to save doctags vectors. In this case you will not be able to use
-            :meth:`~gensim.models.keyedvectors.Doc2VecKeyedVectors.most_similar`,
-            :meth:`~gensim.models.keyedvectors.Doc2VecKeyedVectors.similarity`, etc methods.
-        keep_inference : bool, optional
-            Set to False if you don't want to store parameters that are used for
-            :meth:`~gensim.models.doc2vec.Doc2Vec.infer_vector` method.
-
-        """
-        if not keep_inference:
-            if hasattr(self.trainables, 'syn1'):
-                del self.trainables.syn1
-            if hasattr(self.trainables, 'syn1neg'):
-                del self.trainables.syn1neg
-            if hasattr(self.trainables, 'vectors_lockf'):
-                del self.trainables.vectors_lockf
-        self.model_trimmed_post_training = True
-        if self.docvecs and hasattr(self.docvecs, 'vectors_docs') and not keep_doctags_vectors:
-            del self.docvecs.vectors_docs
-        if self.docvecs and hasattr(self.trainables, 'vectors_docs_lockf'):
-            del self.trainables.vectors_docs_lockf
 
     def save_word2vec_format(self, fname, doctag_vec=False, word_vec=True, prefix='*dt_', fvocab=None, binary=False):
         """Store the input-hidden weight matrix in the same format used by the original C word2vec-tool.

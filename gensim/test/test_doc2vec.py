@@ -625,40 +625,6 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertEqual(len(model.docvecs.doctags), len(model2.docvecs.doctags))
         self.assertEqual(len(model.docvecs.offset2doctag), len(model2.docvecs.offset2doctag))
 
-    def test_delete_temporary_training_data(self):
-        """Test doc2vec model after delete_temporary_training_data"""
-        for i in [0, 1]:
-            for j in [0, 1]:
-                model = doc2vec.Doc2Vec(sentences, vector_size=5, min_count=1, window=4, hs=i, negative=j)
-                if i:
-                    self.assertTrue(hasattr(model.trainables, 'syn1'))
-                if j:
-                    self.assertTrue(hasattr(model.trainables, 'syn1neg'))
-                self.assertTrue(hasattr(model, 'syn0_lockf'))
-                model.delete_temporary_training_data(keep_doctags_vectors=False, keep_inference=False)
-                self.assertTrue(len(model['human']), 10)
-                self.assertTrue(model.wv.vocab['graph'].count, 5)
-                self.assertTrue(not hasattr(model.trainables, 'syn1'))
-                self.assertTrue(not hasattr(model.trainables, 'syn1neg'))
-                self.assertTrue(not hasattr(model.trainables, 'syn0_lockf'))
-                self.assertTrue(model.docvecs and not hasattr(model.docvecs, 'vectors_docs'))
-                self.assertTrue(model.docvecs and not hasattr(model.docvecs, 'doctag_syn0_lockf'))
-        model = doc2vec.Doc2Vec(
-            list_corpus, dm=1, dm_mean=1, vector_size=24, window=4, hs=1,
-            negative=0, alpha=0.05, min_count=2, epochs=20
-        )
-        model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True)
-        self.assertTrue(model.docvecs and hasattr(model.docvecs, 'vectors_docs'))
-        self.assertTrue(hasattr(model.trainables, 'syn1'))
-        self.model_sanity(model, keep_training=False)
-        model = doc2vec.Doc2Vec(
-            list_corpus, dm=1, dm_mean=1, vector_size=24, window=4, hs=0,
-            negative=1, alpha=0.05, min_count=2, epochs=20
-        )
-        model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True)
-        self.model_sanity(model, keep_training=False)
-        self.assertTrue(hasattr(model.trainables, 'syn1neg'))
-
     def test_word_vec_non_writeable(self):
         model = keyedvectors.KeyedVectors.load_word2vec_format(datapath('word2vec_pre_kv_c'))
         vector = model['says']

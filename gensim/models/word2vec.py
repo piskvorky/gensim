@@ -147,7 +147,6 @@ from numpy import exp, dot, zeros, random, dtype, float32 as REAL,\
 from scipy.special import expit
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
-from gensim.utils import deprecated
 from six import iteritems, itervalues, string_types
 from six.moves import range
 
@@ -923,22 +922,6 @@ class Word2Vec(BaseWordEmbeddingsModel):
                         self.trainables.vectors_lockf[self.wv.vocab[word].index] = lockf  # lock-factor: 0.0=no changes
         logger.info("merged %d vectors into %s matrix from %s", overlap_count, self.wv.vectors.shape, fname)
 
-    @deprecated("Method will be removed in 4.0.0, use self.wv.__getitem__() instead")
-    def __getitem__(self, words):
-        """Deprecated. Use `self.wv.__getitem__` instead.
-        Refer to the documentation for :meth:`~gensim.models.keyedvectors.KeyedVectors.__getitem__`.
-
-        """
-        return self.wv.__getitem__(words)
-
-    @deprecated("Method will be removed in 4.0.0, use self.wv.__contains__() instead")
-    def __contains__(self, word):
-        """Deprecated. Use `self.wv.__contains__` instead.
-        Refer to the documentation for :meth:`~gensim.models.keyedvectors.KeyedVectors.__contains__`.
-
-        """
-        return self.wv.__contains__(word)
-
     def predict_output_word(self, context_words_list, topn=10):
         """Get the probability distribution of the center word given context words.
 
@@ -982,15 +965,6 @@ class Word2Vec(BaseWordEmbeddingsModel):
         # returning the most probable output words with their probabilities
         return [(self.wv.index2word[index1], prob_values[index1]) for index1 in top_indices]
 
-    def init_sims(self, replace=False):
-        """Deprecated. Use `self.wv.init_sims` instead.
-        See :meth:`~gensim.models.keyedvectors.KeyedVectors.init_sims`.
-
-        """
-        if replace and hasattr(self.trainables, 'syn1'):
-            del self.trainables.syn1
-        return self.wv.init_sims(replace)
-
     def reset_from(self, other_model):
         """Borrow shareable pre-built structures from `other_model` and reset hidden layer weights.
 
@@ -1014,23 +988,6 @@ class Word2Vec(BaseWordEmbeddingsModel):
         self.corpus_count = other_model.corpus_count
         self.trainables.reset_weights(self.hs, self.negative, self.wv)
 
-    @staticmethod
-    def log_accuracy(section):
-        """Deprecated. Use `self.wv.log_accuracy` instead.
-        See :meth:`~gensim.models.word2vec.KeyedVectors.log_accuracy`.
-
-        """
-        return KeyedVectors.log_accuracy(section)
-
-    @deprecated("Method will be removed in 4.0.0, use self.wv.evaluate_word_analogies() instead")
-    def accuracy(self, questions, restrict_vocab=30000, most_similar=None, case_insensitive=True):
-        """Deprecated. Use `self.wv.accuracy` instead.
-        See :meth:`~gensim.models.word2vec.KeyedVectors.accuracy`.
-
-        """
-        most_similar = most_similar or KeyedVectors.most_similar
-        return self.wv.accuracy(questions, restrict_vocab, most_similar, case_insensitive)
-
     def __str__(self):
         """Human readable representation of the model's state.
 
@@ -1044,24 +1001,6 @@ class Word2Vec(BaseWordEmbeddingsModel):
         return "%s(vocab=%s, size=%s, alpha=%s)" % (
             self.__class__.__name__, len(self.wv.index2word), self.wv.vector_size, self.alpha
         )
-
-    def delete_temporary_training_data(self, replace_word_vectors_with_normalized=False):
-        """Discard parameters that are used in training and scoring, to save memory.
-
-        Warnings
-        --------
-        Use only if you're sure you're done training a model.
-
-        Parameters
-        ----------
-        replace_word_vectors_with_normalized : bool, optional
-            If True, forget the original (not normalized) word vectors and only keep
-            the L2-normalized word vectors, to save even more memory.
-
-        """
-        if replace_word_vectors_with_normalized:
-            self.init_sims(replace=True)
-        self._minimize_model()
 
     def save(self, *args, **kwargs):
         """Save the model.
@@ -1088,34 +1027,6 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
         """
         return self.running_training_loss
-
-    @deprecated(
-        "Method will be removed in 4.0.0, keep just_word_vectors = model.wv to retain just the KeyedVectors instance"
-    )
-    def _minimize_model(self, save_syn1=False, save_syn1neg=False, save_vectors_lockf=False):
-        if save_syn1 and save_syn1neg and save_vectors_lockf:
-            return
-        if hasattr(self.trainables, 'syn1') and not save_syn1:
-            del self.trainables.syn1
-        if hasattr(self.trainables, 'syn1neg') and not save_syn1neg:
-            del self.trainables.syn1neg
-        if hasattr(self.trainables, 'vectors_lockf') and not save_vectors_lockf:
-            del self.trainables.vectors_lockf
-        self.model_trimmed_post_training = True
-
-    @classmethod
-    def load_word2vec_format(
-            cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
-            limit=None, datatype=REAL):
-        """Deprecated. Use :meth:`gensim.models.KeyedVectors.load_word2vec_format` instead."""
-        raise DeprecationWarning("Deprecated. Use gensim.models.KeyedVectors.load_word2vec_format instead.")
-
-    def save_word2vec_format(self, fname, fvocab=None, binary=False):
-        """Deprecated. Use `model.wv.save_word2vec_format` instead.
-        See :meth:`gensim.models.KeyedVectors.save_word2vec_format`.
-
-        """
-        raise DeprecationWarning("Deprecated. Use model.wv.save_word2vec_format instead.")
 
     @classmethod
     def load(cls, *args, **kwargs):

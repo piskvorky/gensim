@@ -79,7 +79,7 @@ from gensim.models.doc2vec import Doc2Vec
 from gensim.models.word2vec import Word2Vec
 from gensim.models.fasttext import FastText
 from gensim.models import KeyedVectors
-from gensim.models.keyedvectors import WordEmbeddingsKeyedVectors
+
 try:
     import nmslib
 except ImportError:
@@ -129,7 +129,7 @@ class NmslibIndexer(object):
                 self._build_from_doc2vec()
             elif isinstance(self.model, (Word2Vec, FastText)):
                 self._build_from_word2vec()
-            elif isinstance(self.model, (WordEmbeddingsKeyedVectors, KeyedVectors)):
+            elif isinstance(self.model, (KeyedVectors,)):
                 self._build_from_keyedvectors()
             else:
                 raise ValueError("model must be a Word2Vec, Doc2Vec, FastText or KeyedVectors instance")

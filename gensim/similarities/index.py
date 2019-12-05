@@ -47,7 +47,6 @@ from gensim.models.doc2vec import Doc2Vec
 from gensim.models.word2vec import Word2Vec
 from gensim.models.fasttext import FastText
 from gensim.models import KeyedVectors
-from gensim.models.keyedvectors import WordEmbeddingsKeyedVectors
 
 
 _NOANNOY = ImportError(
@@ -97,7 +96,7 @@ class AnnoyIndexer(object):
                 self.build_from_doc2vec()
             elif isinstance(self.model, (Word2Vec, FastText)):
                 self.build_from_word2vec()
-            elif isinstance(self.model, (WordEmbeddingsKeyedVectors, KeyedVectors)):
+            elif isinstance(self.model, (KeyedVectors,)):
                 self.build_from_keyedvectors()
             else:
                 raise ValueError("Only a Word2Vec, Doc2Vec, FastText or KeyedVectors instance can be used")

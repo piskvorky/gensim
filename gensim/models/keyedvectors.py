@@ -1523,7 +1523,7 @@ class Doc2VecKeyedVectors(KeyedVectors):
             other_vectors = self.vectors_docs
         else:
             other_vectors = self[other_docs]
-        return 1 - WordEmbeddingsKeyedVectors.cosine_similarities(input_vector, other_vectors)
+        return 1 - KeyedVectors.cosine_similarities(input_vector, other_vectors)
 
     def similarity_unseen_docs(self, model, doc_words1, doc_words2, alpha=None, min_alpha=None, steps=None):
         """Compute cosine similarity between two post-bulk out of training documents.

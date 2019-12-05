@@ -993,7 +993,7 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
 class WmdSimilarity(interfaces.SimilarityABC):
     """Compute negative WMD similarity against a corpus of documents.
 
-    See :class:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors` for more information.
+    See :class:`~gensim.models.keyedvectors.KeyedVectors` for more information.
     Also, tutorial `notebook
     <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/WMD_tutorial.ipynb>`_ for more examples.
 
@@ -1052,7 +1052,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
 
         if normalize_w2v_and_replace:
             # Normalize vectors in word2vec class to length 1.
-            w2v_model.init_sims(replace=True)
+            w2v_model.wv.init_sims(replace=True)
 
     def __len__(self):
         """Get size of corpus."""

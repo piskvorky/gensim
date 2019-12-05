@@ -237,13 +237,13 @@ class PoincareModel(utils.SaveLoad):
     def _init_embeddings(self):
         """Randomly initialize vectors for the items in the vocab."""
         shape = (len(self.kv.index2word), self.size)
-        self.kv.syn0 = self._np_random.uniform(self.init_range[0], self.init_range[1], shape).astype(self.dtype)
+        self.kv.vectors = self._np_random.uniform(self.init_range[0], self.init_range[1], shape).astype(self.dtype)
 
     def _update_embeddings(self, old_index2word_len):
         """Randomly initialize vectors for the items in the additional vocab."""
         shape = (len(self.kv.index2word) - old_index2word_len, self.size)
         v = self._np_random.uniform(self.init_range[0], self.init_range[1], shape).astype(self.dtype)
-        self.kv.syn0 = np.concatenate([self.kv.syn0, v])
+        self.kv.vectors = np.concatenate([self.kv.vectors, v])
 
     def _init_node_probabilities(self):
         """Initialize a-priori probabilities."""
@@ -460,8 +460,8 @@ class PoincareModel(utils.SaveLoad):
             indices_v.append(v)
             indices_v.extend(negatives)
 
-        vectors_u = self.kv.syn0[indices_u]
-        vectors_v = self.kv.syn0[indices_v].reshape((batch_size, 1 + self.negative, self.size))
+        vectors_u = self.kv.vectors[indices_u]
+        vectors_v = self.kv.vectors[indices_v].reshape((batch_size, 1 + self.negative, self.size))
         vectors_v = vectors_v.swapaxes(0, 1).swapaxes(1, 2)
         batch = PoincareBatch(vectors_u, vectors_v, indices_u, indices_v, self.regularization_coeff)
         batch.compute_all()
@@ -498,7 +498,7 @@ class PoincareModel(utils.SaveLoad):
         for i, (relation, negatives) in enumerate(zip(relations, all_negatives)):
             u, v = relation
             auto_gradients = self._loss_grad(
-                np.vstack((self.kv.syn0[u], self.kv.syn0[[v] + negatives])), self.regularization_coeff)
+                np.vstack((self.kv.vectors[u], self.kv.vectors[[v] + negatives])), self.regularization_coeff)
             computed_gradients = np.vstack((batch.gradients_u[:, i], batch.gradients_v[:, :, i]))
             diff = np.abs(auto_gradients - computed_gradients).max()
             if diff > max_diff:
@@ -593,16 +593,16 @@ class PoincareModel(utils.SaveLoad):
         u_updates = (self.alpha * (batch.alpha ** 2) / 4 * grad_u).T
         self._handle_duplicates(u_updates, indices_u)
 
-        self.kv.syn0[indices_u] -= u_updates
-        self.kv.syn0[indices_u] = self._clip_vectors(self.kv.syn0[indices_u], self.epsilon)
+        self.kv.vectors[indices_u] -= u_updates
+        self.kv.vectors[indices_u] = self._clip_vectors(self.kv.vectors[indices_u], self.epsilon)
 
         v_updates = self.alpha * (batch.beta ** 2)[:, np.newaxis] / 4 * grad_v
         v_updates = v_updates.swapaxes(1, 2).swapaxes(0, 1)
         v_updates = v_updates.reshape(((1 + self.negative) * batch_size, self.size))
         self._handle_duplicates(v_updates, indices_v)
 
-        self.kv.syn0[indices_v] -= v_updates
-        self.kv.syn0[indices_v] = self._clip_vectors(self.kv.syn0[indices_v], self.epsilon)
+        self.kv.vectors[indices_v] -= v_updates
+        self.kv.vectors[indices_v] = self._clip_vectors(self.kv.vectors[indices_v], self.epsilon)
 
     def train(self, epochs, batch_size=10, print_every=1000, check_gradients_every=None):
         """Train Poincare embeddings using loaded data and model parameters.
@@ -864,143 +864,33 @@ class PoincareKeyedVectors(KeyedVectors):
 
     Used to perform operations on the vectors such as vector lookup, distance calculations etc.
 
+    (May be used to save/load final vectors in the plain word2vec format, via the inherited
+    methods save_word2vec_format() and load_word2vec_format().)
+
+    Examples
+    --------
+    .. sourcecode:: pycon
+
+        >>> from gensim.test.utils import datapath
+        >>>
+        >>> # Read the sample relations file and train the model
+        >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
+        >>> model = PoincareModel(train_data=relations)
+        >>> model.train(epochs=50)
+        >>>
+        >>> # Query the trained model.
+        >>> wv = model.kv.word_vec('kangaroo.n.01')
+
     """
     def __init__(self, vector_size):
         super(PoincareKeyedVectors, self).__init__(vector_size)
         self.max_distance = 0
-        self.index2word = []
-        self.vocab = {}
 
-    @property
-    def vectors(self):
-        return self.syn0
-
-    @vectors.setter
-    def vectors(self, value):
-        self.syn0 = value
-
-    @property
-    def index2entity(self):
-        return self.index2word
-
-    @index2entity.setter
-    def index2entity(self, value):
-        self.index2word = value
-
-    def word_vec(self, word):
-        """Get the word's representations in vector space, as a 1D numpy array.
-
-        Examples
-        --------
-        .. sourcecode:: pycon
-
-            >>> from gensim.test.utils import datapath
-            >>>
-            >>> # Read the sample relations file and train the model
-            >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
-            >>> model = PoincareModel(train_data=relations)
-            >>> model.train(epochs=50)
-            >>>
-            >>> # Query the trained model.
-            >>> wv = model.kv.word_vec('kangaroo.n.01')
-
-        """
-        return super(PoincareKeyedVectors, self).get_vector(word)
-
-    def words_closer_than(self, w1, w2):
-        """Get all words that are closer to `w1` than `w2` is to `w1`.
-
-        Parameters
-        ----------
-        w1 : str
-            Input word.
-        w2 : str
-            Input word.
-
-        Returns
-        -------
-        list (str)
-            List of words that are closer to `w1` than `w2` is to `w1`.
-
-        Examples
-        --------
-        .. sourcecode:: pycon
-
-            >>> from gensim.test.utils import datapath
-            >>>
-            >>> # Read the sample relations file and train the model
-            >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
-            >>> model = PoincareModel(train_data=relations)
-            >>> model.train(epochs=50)
-            >>>
-            >>> # Which term is closer to 'kangaroo' than 'metatherian' is to 'kangaroo'?
-            >>> model.kv.words_closer_than('kangaroo.n.01', 'metatherian.n.01')
-            [u'marsupial.n.01', u'phalanger.n.01']
-
-        """
-        return super(PoincareKeyedVectors, self).closer_than(w1, w2)
-
-    def save_word2vec_format(self, fname, fvocab=None, binary=False, total_vec=None):
-        """Store the input-hidden weight matrix in the same format used by the original
-        C word2vec-tool, for compatibility, using :func:`~gensim.models.utils_any2vec._save_word2vec_format`.
-
-        Parameters
-        ----------
-        fname : str
-            Path to file that will be used for storing.
-        fvocab : str, optional
-            File path used to save the vocabulary.
-        binary : bool, optional
-            If True, the data wil be saved in binary word2vec format, else it will be saved in plain text.
-        total_vec : int, optional
-            Explicitly specify total number of vectors
-            (in case word vectors are appended with document vectors afterwards).
-
-        """
-        _save_word2vec_format(fname, self.vocab, self.syn0, fvocab=fvocab, binary=binary, total_vec=total_vec)
-
-    @classmethod
-    def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
-                             limit=None, datatype=REAL):
-        """Load the input-hidden weight matrix from the original C word2vec-tool format.
-        Use :func:`~gensim.models.utils_any2vec._load_word2vec_format`.
-
-        Note that the information stored in the file is incomplete (the binary tree is missing),
-        so while you can query for word similarity etc., you cannot continue training
-        with a model loaded this way.
-
-        Parameters
-        ----------
-        fname : str
-            The file path to the saved word2vec-format file.
-        fvocab : str, optional
-            File path to the vocabulary.Word counts are read from `fvocab` filename, if set
-            (this is the file generated by `-save-vocab` flag of the original C tool).
-        binary : bool, optional
-            If True, indicates whether the data is in binary word2vec format.
-        encoding : str, optional
-            If you trained the C model using non-utf8 encoding for words, specify that encoding in `encoding`.
-        unicode_errors : str, optional
-            default 'strict', is a string suitable to be passed as the `errors`
-            argument to the unicode() (Python 2.x) or str() (Python 3.x) function. If your source
-            file may include word tokens truncated in the middle of a multibyte unicode character
-            (as is common from the original word2vec.c tool), 'ignore' or 'replace' may help.
-        limit : int, optional
-            Sets a maximum number of word-vectors to read from the file. The default,
-            None, means read all.
-        datatype : type, optional
-            (Experimental) Can coerce dimensions to a non-default float type (such as `np.float16`) to save memory.
-            Such types may result in much slower bulk operations or incompatibility with optimized routines.)
-
-        Returns
-        -------
-        :class:`~gensim.models.poincare.PoincareModel`
-            Loaded Poincare model.
-
-        """
-        return _load_word2vec_format(
-            cls, fname, fvocab=fvocab, binary=binary, encoding=encoding, unicode_errors=unicode_errors,
-            limit=limit, datatype=datatype)
+    def _load_specials(self, *args, **kwargs):
+        super(PoincareKeyedVectors, self)._load_specials(*args, **kwargs)
+        # fixup rename of syn0
+        if not hasattr(self, 'vectors'):
+            self.vectors = self.__dict__.pop('syn0')
 
     @staticmethod
     def vector_distance(vector_1, vector_2):
@@ -1063,7 +953,7 @@ class PoincareKeyedVectors(KeyedVectors):
 
         """
         all_distances = self.distances(node)
-        all_norms = np.linalg.norm(self.syn0, axis=1)
+        all_norms = np.linalg.norm(self.vectors, axis=1)
         node_norm = all_norms[self.vocab[node].index]
         mask = node_norm >= all_norms
         if mask.all():  # No nodes lower in the hierarchy
@@ -1088,7 +978,7 @@ class PoincareKeyedVectors(KeyedVectors):
 
         """
         all_distances = self.distances(node)
-        all_norms = np.linalg.norm(self.syn0, axis=1)
+        all_norms = np.linalg.norm(self.vectors, axis=1)
         node_norm = all_norms[self.vocab[node].index]
         mask = node_norm <= all_norms
         if mask.all():  # No nodes higher in the hierarchy
@@ -1332,10 +1222,10 @@ class PoincareKeyedVectors(KeyedVectors):
         else:
             input_vector = node_or_vector
         if not other_nodes:
-            other_vectors = self.syn0
+            other_vectors = self.vectors
         else:
             other_indices = [self.vocab[node].index for node in other_nodes]
-            other_vectors = self.syn0[other_indices]
+            other_vectors = self.vectors[other_indices]
         return self.vector_distance_batch(input_vector, other_vectors)
 
     def norm(self, node_or_vector):
