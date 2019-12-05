@@ -1367,10 +1367,6 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
             "training on a %i raw words (%i effective words) took %.1fs, %.0f effective words/s",
             raw_word_count, trained_word_count, total_elapsed, trained_word_count / total_elapsed
         )
-        if job_tally < 10 * self.workers:
-            logger.warning(
-                "under 10 jobs per worker: consider setting a smaller `batch_words' for smoother alpha decay"
-            )
 
     # for backward compatibility
     @deprecated("Method will be removed in 4.0.0, use self.wv.most_similar() instead")
