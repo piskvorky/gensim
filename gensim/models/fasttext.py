@@ -1216,15 +1216,15 @@ def _load_fasttext_format(model_file, encoding='utf-8', full_model=True):
         window=m.ws,
         iter=m.epoch,
         negative=m.neg,
-        hs=(m.loss == 1),
-        sg=(m.model == 2),
+        hs=int(m.loss == 2),
+        sg=int(m.model == 2),
         bucket=m.bucket,
         min_count=m.min_count,
         sample=m.t,
         min_n=m.minn,
         max_n=m.maxn,
     )
-
+    model.corpus_total_words = m.ntokens
     model.vocabulary.raw_vocab = m.raw_vocab
     model.vocabulary.nwords = m.nwords
     model.vocabulary.vocab_size = m.vocab_size
