@@ -8,7 +8,6 @@ Automated tests for checking various utils functions.
 """
 from __future__ import unicode_literals
 
-import sys
 import logging
 import unittest
 

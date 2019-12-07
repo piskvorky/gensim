@@ -289,7 +289,7 @@ from collections.abc import Iterable
 import gensim.models._fasttext_bin
 
 from gensim.models.word2vec import Word2VecVocab, Word2VecTrainables
-from gensim.models.keyedvectors import KeyedVectors, _save_word2vec_format
+from gensim.models.keyedvectors import KeyedVectors
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 from gensim.utils import deprecated, call_on_class_only, open, NO_CYTHON
 
@@ -858,6 +858,12 @@ class FastText(BaseWordEmbeddingsModel):
             if not hasattr(model.trainables, 'vectors_ngrams_lockf') and hasattr(model.wv, 'vectors_ngrams'):
                 model.trainables.vectors_ngrams_lockf = ones(len(model.wv.vectors_ngrams), dtype=REAL)
 
+            # fixup mistakenly overdimensioned gensim-3.x lockf arrays
+            if len(model.trainables.vectors_vocab_lockf.shape) > 1:
+                model.trainables.vectors_vocab_lockf = model.trainables.vectors_vocab_lockf[:, 0]
+            if len(model.trainables.vectors_ngrams_lockf.shape) > 1:
+                model.trainables.vectors_ngrams_lockf = model.trainables.vectors_ngrams_lockf[:, 0]
+
             if not hasattr(model.wv, 'bucket'):
                 model.wv.bucket = model.trainables.bucket
         except AttributeError:
@@ -1418,27 +1424,6 @@ class FastTextKeyedVectors(KeyedVectors):
                 return word_vec / np.linalg.norm(word_vec)
             else:
                 return word_vec
-
-    def save_word2vec_format(self, fname, fvocab=None, binary=False, total_vec=None):
-        """Store the input-hidden weight matrix in the same format used by the original
-        C word2vec-tool, for compatibility.
-
-        Parameters
-        ----------
-        fname : str
-            The file path used to save the vectors in
-        fvocab : str, optional
-            Optional file path used to save the vocabulary
-        binary : bool, optional
-            If True, the data wil be saved in binary word2vec format, else it will be saved in plain text.
-        total_vec : int, optional
-            Optional parameter to explicitly specify total no. of vectors
-            (in case word vectors are appended with document vectors afterwards).
-
-        """
-        # from gensim.models.word2vec import save_word2vec_format
-        _save_word2vec_format(
-            fname, self.vocab, self.vectors, fvocab=fvocab, binary=binary, total_vec=total_vec)
 
     def init_ngrams_weights(self, seed):
         """Initialize the vocabulary and ngrams weights prior to training.

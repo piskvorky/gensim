@@ -63,7 +63,6 @@ Infer vector for a new document:
 
 import logging
 import os
-import warnings
 
 try:
     from queue import Queue
@@ -77,7 +76,7 @@ from timeit import default_timer
 from numpy import zeros, float32 as REAL, empty, ones, \
     memmap as np_memmap, vstack, integer, dtype
 
-from gensim.utils import call_on_class_only, deprecated
+from gensim.utils import call_on_class_only
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.models.word2vec import KeyedVectors, Word2VecVocab, Word2VecTrainables
 from gensim.models.word2vec import train_cbow_pair, train_sg_pair, train_batch_sg  # noqa
@@ -376,7 +375,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
         """
         self.wv.vocab = other_model.wv.vocab
-        self.wv.index2word = other_model.wv.index2word
+        self.wv.index2key = other_model.wv.index2key
         self.vocabulary.cum_table = other_model.vocabulary.cum_table
         self.corpus_count = other_model.corpus_count
         self.docvecs.count = other_model.docvecs.count

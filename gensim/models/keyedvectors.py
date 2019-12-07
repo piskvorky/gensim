@@ -297,7 +297,7 @@ class KeyedVectors(utils.SaveLoad):
         for idx in np.nonzero(~in_vocab_mask)[0]:
             entity = entities[idx]
             self.vocab[entity] = Vocab(index=len(self.vocab), count=1)
-            self.index2entity.append(entity)
+            self.index2key.append(entity)
 
         # add vectors for new entities
         self.vectors = vstack((self.vectors, weights[~in_vocab_mask].astype(self.vectors.dtype)))
@@ -339,7 +339,7 @@ class KeyedVectors(utils.SaveLoad):
         e1_index = self.vocab[entity1].index
         e2_index = self.vocab[entity2].index
         closer_node_indices = np.where(all_distances < all_distances[e2_index])[0]
-        return [self.index2entity[index] for index in closer_node_indices if index != e1_index]
+        return [self.index2key[index] for index in closer_node_indices if index != e1_index]
 
     def words_closer_than(self, word1, word2):
         return self.closer_than(word1, word2)
@@ -461,7 +461,7 @@ class KeyedVectors(utils.SaveLoad):
             return dists
         best = matutils.argsort(dists, topn=topn + len(all_words), reverse=True)
         # ignore (don't return) words from the input
-        result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
+        result = [(self.index2key[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
 
     def similar_by_word(self, word, topn=10, restrict_vocab=None):
@@ -691,7 +691,7 @@ class KeyedVectors(utils.SaveLoad):
             return dists
         best = matutils.argsort(dists, topn=topn + len(all_words), reverse=True)
         # ignore (don't return) words from the input
-        result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
+        result = [(self.index2key[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
 
     def doesnt_match(self, words):
@@ -899,7 +899,7 @@ class KeyedVectors(utils.SaveLoad):
             keys 'correct' and 'incorrect'.
 
         """
-        ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
+        ok_vocab = [(w, self.vocab[w]) for w in self.index2key[:restrict_vocab]]
         ok_vocab = {w.upper(): v for w, v in reversed(ok_vocab)} if case_insensitive else dict(ok_vocab)
         oov = 0
         logger.info("Evaluating word analogies for top %i words in the model on %s", restrict_vocab, analogies)
@@ -1031,7 +1031,7 @@ class KeyedVectors(utils.SaveLoad):
             The ratio of pairs with unknown words.
 
         """
-        ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
+        ok_vocab = [(w, self.vocab[w]) for w in self.index2key[:restrict_vocab]]
         ok_vocab = {w.upper(): v for w, v in reversed(ok_vocab)} if case_insensitive else dict(ok_vocab)
 
         similarity_gold = []
@@ -1731,7 +1731,7 @@ def _add_word_to_result(result, counts, word, weights, vocab_size):
 
     result.vocab[word] = Vocab(index=word_id, count=word_count)
     result.vectors[word_id] = weights
-    result.index2word.append(word)
+    result.index2key.append(word)
 
 
 def _add_bytes_to_result(result, counts, chunk, vocab_size, vector_size, datatype, unicode_errors):

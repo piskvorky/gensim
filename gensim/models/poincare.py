@@ -56,8 +56,7 @@ from six import string_types
 from six.moves import zip, range
 
 from gensim import utils, matutils
-from gensim.models.keyedvectors import Vocab, KeyedVectors, _save_word2vec_format, _load_word2vec_format
-from numpy import float32 as REAL
+from gensim.models.keyedvectors import Vocab, KeyedVectors
 
 try:
     from autograd import grad  # Only required for optionally verifying gradients while training
