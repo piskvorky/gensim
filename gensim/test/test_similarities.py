@@ -1225,6 +1225,11 @@ class TestLevenshteinSimilarityIndex(unittest.TestCase):
         second_similarities = numpy.array([similarity for term, similarity in index.most_similar(u"holiday", topn=10)])
         self.assertTrue(numpy.allclose(first_similarities ** 2.0, second_similarities))
 
+        # check propert integration with SparseTermSimilarityMatrix
+        index = LevenshteinSimilarityIndex(self.dictionary, alpha=1.0, beta=1.0)
+        similarity_matrix = SparseTermSimilarityMatrix(index, dictionary)
+        self.assertTrue(scipy.sparse.issparse(similarity_matrix.matrix))
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
