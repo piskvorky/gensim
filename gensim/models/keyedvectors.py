@@ -1383,7 +1383,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         return rcs
 
-    def get_keras_embedding(self, train_embeddings=False, word_index = None):
+    def get_keras_embedding(self, train_embeddings=False, word_index=None):
         """Get a Keras 'Embedding' layer with weights set as the Word2Vec model's learned word embeddings.
 
         Parameters
@@ -1434,7 +1434,6 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             weights=[weights], trainable=train_embeddings
         )
         return layer
-
 
 
 class WordEmbeddingSimilarityIndex(TermSimilarityIndex):
@@ -1549,7 +1548,6 @@ class Word2VecKeyedVectors(WordEmbeddingsKeyedVectors):
         return _load_word2vec_format(
             cls, fname, fvocab=fvocab, binary=binary, encoding=encoding, unicode_errors=unicode_errors,
             limit=limit, datatype=datatype)
-
 
     @classmethod
     def load(cls, fname_or_handle, **kwargs):
