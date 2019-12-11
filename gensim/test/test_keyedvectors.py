@@ -401,7 +401,7 @@ class Word2VecKeyedVectorsTest(unittest.TestCase):
 
 
 try:
-    import keras  # noqa:F401
+    import keras 
     keras_installed = True
 except ImportError:
     keras_installed = False
