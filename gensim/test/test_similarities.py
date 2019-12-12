@@ -657,7 +657,7 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
         self.model = doc2vec.Doc2Vec(sentences, min_count=1)
         self.model.docvecs.init_sims()
         self.index = AnnoyIndexer(self.model, 300)
-        self.vector = self.model.docvecs.vectors_docs_norm[0]
+        self.vector = self.model.docvecs.vectors_norm[0]
 
     def testDocumentIsSimilarToItself(self):
         approx_neighbors = self.index.most_similar(self.vector, 1)
@@ -809,7 +809,7 @@ class TestDoc2VecNmslibIndexer(unittest.TestCase):
         self.model = doc2vec.Doc2Vec(sentences, min_count=1)
         self.model.docvecs.init_sims()
         self.index = NmslibIndexer(self.model)
-        self.vector = self.model.docvecs.vectors_docs_norm[0]
+        self.vector = self.model.docvecs.vectors_norm[0]
 
     def test_document_is_similar_to_itself(self):
         approx_neighbors = self.index.most_similar(self.vector, 1)

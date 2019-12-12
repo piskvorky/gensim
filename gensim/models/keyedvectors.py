@@ -1554,7 +1554,7 @@ def pseudorandom_weak_vector(size, seed_string=None, hashfxn=hash):
     supplied).
 
     Useful for initializing KeyedVectors that will be the starting
-    projection/input layers of *2Vec models.
+    projection/input layers of _2Vec models.
     """
     if seed_string:
         once = np.random.RandomState(hashfxn(seed_string) & 0xffffffff)

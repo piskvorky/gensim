@@ -189,8 +189,8 @@ class NmslibIndexer(object):
 
         docvecs = self.model.docvecs
         docvecs.init_sims()
-        labels = [docvecs.index_to_doctag(i) for i in range(0, docvecs.count)]
-        self._build_from_model(docvecs.vectors_docs_norm, labels)
+        labels = [docvecs.index2key[i] for i in range(0, len(docvecs))]
+        self._build_from_model(docvecs.vectors_norm, labels)
 
     def _build_from_keyedvectors(self):
         """Build an NMSLIB index using word vectors from a KeyedVectors model."""
