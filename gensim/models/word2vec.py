@@ -131,8 +131,8 @@ import threading
 import itertools
 import warnings
 
-from gensim.utils import keep_vocab_item, call_on_class_only
-from gensim.models.keyedvectors import Vocab, KeyedVectors
+from gensim.utils import keep_vocab_item, call_on_class_only, deprecated
+from gensim.models.keyedvectors import Vocab, KeyedVectors, pseudorandom_weak_vector
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 
 try:
@@ -140,9 +140,9 @@ try:
 except ImportError:
     from Queue import Queue, Empty
 
-from numpy import exp, dot, zeros, random, dtype, float32 as REAL,\
+from numpy import exp, dot, zeros, dtype, float32 as REAL,\
     uint32, seterr, array, uint8, vstack, fromstring, sqrt,\
-    empty, sum as np_sum, ones, logaddexp, log, outer
+    sum as np_sum, ones, logaddexp, log, outer
 
 from scipy.special import expit
 
@@ -1599,38 +1599,28 @@ class Word2VecTrainables(utils.SaveLoad):
         else:
             self.update_weights(hs, negative, wv)
 
+    @deprecated("Use gensim.models.keyedvectors.pseudorandom_weak_vector() directly")
     def seeded_vector(self, seed_string, vector_size):
-        """Get a random vector (but deterministic by seed_string)."""
-        # Note: built-in hash() may vary by Python version or even (in Py3.x) per launch
-        once = random.RandomState(self.hashfxn(seed_string) & 0xffffffff)
-        return (once.rand(vector_size) - 0.5) / vector_size
+        return pseudorandom_weak_vector(vector_size, seed_string=seed_string, hashfxn=self.hashfxn)
 
     def reset_weights(self, hs, negative, wv):
         """Reset all projection weights to an initial (untrained) state, but keep the existing vocabulary."""
         logger.info("resetting layer weights")
-        wv.vectors = empty((len(wv.vocab), wv.vector_size), dtype=REAL)
-        # randomize weights vector by vector, rather than materializing a huge random matrix in RAM at once
-        for i in range(len(wv.vocab)):
-            # construct deterministic seed from word AND seed argument
-            wv.vectors[i] = self.seeded_vector(wv.index2key[i] + str(self.seed), wv.vector_size)
+        wv.resize_vectors()
+        wv.randomly_initialize_vectors(seed=self.seed)
         if hs:
             self.syn1 = zeros((len(wv.vocab), self.layer1_size), dtype=REAL)
         if negative:
             self.syn1neg = zeros((len(wv.vocab), self.layer1_size), dtype=REAL)
-        wv.vectors_norm = None
 
         self.vectors_lockf = ones(len(wv.vocab), dtype=REAL)  # zeros suppress learning
 
     def update_weights(self, hs, negative, wv):
         """Copy all the existing weights, and reset the weights for the newly added vocabulary."""
         logger.info("updating layer weights")
-        gained_vocab = len(wv.vocab) - len(wv.vectors)
-        newvectors = empty((gained_vocab, wv.vector_size), dtype=REAL)
-
-        # randomize the remaining words
-        for i in range(len(wv.vectors), len(wv.vocab)):
-            # construct deterministic seed from word AND seed argument
-            newvectors[i - len(wv.vectors)] = self.seeded_vector(wv.index2key[i] + str(self.seed), wv.vector_size)
+        new_range = wv.resize_vectors()
+        gained_vocab = len(new_range)
+        wv.randomly_initialize_vectors(indexes=new_range)
 
         # Raise an error if an online update is run before initial training on a corpus
         if not len(wv.vectors):
@@ -1638,8 +1628,6 @@ class Word2VecTrainables(utils.SaveLoad):
                 "You cannot do an online vocabulary-update of a model which has no prior vocabulary. "
                 "First build the vocabulary of your model with a corpus before doing an online update."
             )
-
-        wv.vectors = vstack([wv.vectors, newvectors])
 
         if hs:
             self.syn1 = vstack([self.syn1, zeros((gained_vocab, self.layer1_size), dtype=REAL)])

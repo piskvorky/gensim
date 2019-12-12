@@ -156,6 +156,8 @@ def load_old_doc2vec(*args, **kwargs):
         # was used.
         new_model.docvecs.max_rawint = -1 if old_model.docvecs.index2doctag else old_model.docvecs.count - 1
         new_model.docvecs.offset2doctag = old_model.docvecs.index2doctag
+    # now upconvert that to gensim-4.0.0+
+    new_model.docvecs._upconvert_old_d2vkv()
 
     new_model.train_count = old_model.__dict__.get('train_count', None)
     new_model.corpus_count = old_model.__dict__.get('corpus_count', None)

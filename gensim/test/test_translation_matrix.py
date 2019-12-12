@@ -3,6 +3,7 @@
 from collections import namedtuple
 import unittest
 import math
+import logging
 
 import numpy as np
 
@@ -116,3 +117,8 @@ class TestBackMappingTranslationMatrix(unittest.TestCase):
         eps = 1e-6
         caculated = cosine(self.target_doc_vec.docvecs[self.train_docs[5].tags], infered_vec)
         self.assertLessEqual(math.fabs(caculated - expected), eps)
+
+
+if __name__ == '__main__':
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+    unittest.main()

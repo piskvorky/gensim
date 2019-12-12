@@ -160,6 +160,7 @@ and so on.
 
 from itertools import chain
 import logging
+from collections import UserList
 from numbers import Integral
 
 try:
@@ -167,7 +168,7 @@ try:
 except ImportError:
     from Queue import Queue, Empty  # noqa:F401
 
-from numpy import dot, float32 as REAL, memmap as np_memmap, \
+from numpy import dot, float32 as REAL, \
     double, array, zeros, vstack, sqrt, newaxis, integer, \
     ndarray, sum as np_sum, prod, argmax, dtype, ascontiguousarray, \
     frombuffer
@@ -175,7 +176,7 @@ import numpy as np
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.corpora.dictionary import Dictionary
-from six import string_types, integer_types, iteritems
+from six import string_types, integer_types
 from six.moves import zip, range
 from scipy import stats
 
@@ -194,51 +195,85 @@ class KeyedVectors(utils.SaveLoad):
 
     """
     def __init__(self, vector_size):
-        self.vectors = zeros((0, vector_size), dtype=REAL)  # was syn0, once upon a time
-        self.vectors_norm = None  # was syn0norm, once upon a time
-        self.vocab = {}
+        self.vectors = zeros((0, vector_size), dtype=REAL)  # fka (formerly known as) syn0
+        self.vectors_norm = None  # fka syn0norm
+        self.map = {}
         self.vector_size = vector_size
         self.index2key = []  # fka index2entity or index2word
-
-    @classmethod
-    def load(cls, fname_or_handle, **kwargs):
-        _kv = super(KeyedVectors, cls).load(fname_or_handle, **kwargs)
-        # handle rename/consolidation into index2key
-        return _kv
+        self.mapfile_path = mapfile_path
 
     def _load_specials(self, *args, **kwargs):
         super(KeyedVectors, self)._load_specials(*args, **kwargs)
+        if hasattr(self, 'doctags'):
+            self._upconvert_old_d2vkv()
         # fixup rename/consolidation into index2key of older index2word, index2entity
         if not hasattr(self, 'index2key'):
             self.index2key = self.__dict__.pop('index2word', self.__dict__.pop('index2word', None))
+        # fixup rename of vocab into map
+        if 'map' not in self.__dict__:
+            self.map = self.__dict__.pop('vocab', None)
 
-    def __getitem__(self, entities):
-        """Get vector representation of `entities`.
+    def resize_vectors(self):
+        """Make vectors match index2key size"""
+        target_count = len(self.index2key)
+        prev_count = len(self.vectors)
+        if prev_count == target_count:
+            return ()
+        prev_vectors = self.vectors
+        if hasattr(self, 'mapfile_path') and self.mapfile_path:
+            self.vectors = np.memmap(self.mapfile_path, shape=(target_count, self.vector_size), mode='w+', dtype=REAL)
+        else:
+            self.vectors = np.empty((target_count, self.vector_size), dtype=REAL)
+        self.vectors[0:min(prev_count, target_count), ] = prev_vectors[0:min(prev_count, target_count), ]
+        self.vectors_norm = None
+        return range(prev_count, target_count)
+
+    def randomly_initialize_vectors(self, indexes=None, seed=0):
+        if indexes is None:
+            indexes = range(0, len(self.vectors))
+        for i in indexes:
+            self.vectors[i] = pseudorandom_weak_vector(self.vectors.shape[1],
+                                                       seed_string=(str(self.index2key[i]) + str(seed)))
+        self.vectors_norm = None
+
+    def __len__(self):
+        return len(self.index2key)
+
+    def __getitem__(self, key_or_keys):
+        """Get vector representation of `key_or_keys`.
 
         Parameters
         ----------
-        entities : {str, list of str}
-            Input entity/entities.
+        key_or_keys : {str, list of str, int, list of int}
+            Requested key or list-of-keys
 
         Returns
         -------
         numpy.ndarray
-            Vector representation for `entities` (1D if `entities` is string, otherwise - 2D).
+            Vector representation for `key_or_keys` (1D if `key_or_keys` is single key, otherwise - 2D).
 
         """
-        if isinstance(entities, string_types):
-            # allow calls like trained_model['office'], as a shorthand for trained_model[['office']]
-            return self.get_vector(entities)
+        if isinstance(key_or_keys, (string_types, integer_types, np.integer)):
+            return self.get_vector(key_or_keys)
 
-        return vstack([self.get_vector(entity) for entity in entities])
+        return vstack([self.get_vector(key) for key in key_or_keys])
+
+    def get_index(self, key):
+        """TODO comment"""
+        if key in self.map:
+            return self.map[key].index
+        elif isinstance(key, (integer_types, np.integer)) and key < len(self.vectors):
+            return key
+        else:
+            raise KeyError("Key '%s' not in vocabulary" % key)
 
     def get_vector(self, key, use_norm=False):
         """Get the entity's representations in vector space, as a 1D numpy array.
 
         Parameters
         ----------
-        key : str
-            Identifier of the vector to return
+        key : str or int
+            Key for vector to return, or int slot
         use_norm : bool, optional
             If True - resulting vector will be L2-normalized (unit euclidean length).
 
@@ -253,15 +288,14 @@ class KeyedVectors(utils.SaveLoad):
             If the given key doesn't exist.
 
         """
-        if key in self.vocab:
-            if use_norm:
-                result = self.vectors_norm[self.vocab[key].index]
-            else:
-                result = self.vectors[self.vocab[key].index]
-            result.setflags(write=False)
-            return result
+        index = self.get_index(key)
+        if use_norm:
+            result = self.vectors_norm[index]
         else:
-            raise KeyError("Key '%s' not in vocabulary" % key)
+            result = self.vectors[index]
+
+        result.setflags(write=False)
+        return result
 
     def word_vec(self, *args, **kwargs):
         """Compatibility alias for get_vector()"""
@@ -326,8 +360,15 @@ class KeyedVectors(utils.SaveLoad):
 
         self.add(entities, weights, replace=True)
 
+    def has_index_for(self, key):
+        """Can this model return an index for this key?"""
+        try:
+            return self.get_index(key) >= 0
+        except KeyError:
+            return False
+
     def __contains__(self, key):
-        return key in self.vocab
+        return self.has_index_for(key)
 
     def most_similar_to_given(self, entity1, entities_list):
         """Get the `entity` from `entities_list` most similar to `entity1`."""
@@ -365,6 +406,14 @@ class KeyedVectors(utils.SaveLoad):
     def index2word(self, value):
         self.index2key = value
 
+    @property
+    def vocab(self):
+        return self.map
+
+    @vocab.setter
+    def vocab(self, value):
+        self.map = value
+
     def save(self, *args, **kwargs):
         """Save KeyedVectors.
 
@@ -383,7 +432,8 @@ class KeyedVectors(utils.SaveLoad):
         kwargs['ignore'] = kwargs.get('ignore', ['vectors_norm'])
         super(KeyedVectors, self).save(*args, **kwargs)
 
-    def most_similar(self, positive=None, negative=None, topn=10, restrict_vocab=None, indexer=None):
+    def most_similar(self, positive=None, negative=None, topn=10, clip_start=0, clip_end=None,
+                     restrict_vocab=None, indexer=None):
         """Find the top-N most similar words.
         Positive words contribute positively towards the similarity, negative words negatively.
 
@@ -401,11 +451,16 @@ class KeyedVectors(utils.SaveLoad):
         topn : int or None, optional
             Number of top-N similar words to return, when `topn` is int. When `topn` is None,
             then similarities for all words are returned.
+        clip_start : int
+            Start clipping index.
+        clip_end : int
+            End clipping index.
         restrict_vocab : int, optional
             Optional integer which limits the range of vectors which
             are searched for most-similar values. For example, restrict_vocab=10000 would
             only check the first 10000 word vectors in the vocabulary order. (This may be
-            meaningful if you've sorted the vocabulary by descending frequency.)
+            meaningful if you've sorted the vocabulary by descending frequency.) If
+            specified, overrides any values of clip_start or clip_end
 
         Returns
         -------
@@ -424,19 +479,24 @@ class KeyedVectors(utils.SaveLoad):
             negative = []
 
         self.init_sims()
+        clip_end = clip_end or len(self.vectors_norm)
 
-        if isinstance(positive, string_types) and not negative:
+        if restrict_vocab:
+            clip_start = 0
+            clip_end = restrict_vocab
+
+        if isinstance(positive, string_types + integer_types + (integer,)) and not negative:
             # allow calls like most_similar('dog'), as a shorthand for most_similar(['dog'])
             positive = [positive]
 
         # add weights for each word, if not already present; default to 1.0 for positive and -1.0 for negative words
         positive = [
-            (word, 1.0) if isinstance(word, string_types + (ndarray,)) else word
-            for word in positive
+            (key, 1.0) if isinstance(key, string_types + integer_types + (ndarray, integer))
+            else key for key in positive
         ]
         negative = [
-            (word, -1.0) if isinstance(word, string_types + (ndarray,)) else word
-            for word in negative
+            (key, -1.0) if isinstance(key, string_types + integer_types + (ndarray, integer))
+            else key for key in negative
         ]
 
         # compute the weighted average of all words
@@ -446,8 +506,8 @@ class KeyedVectors(utils.SaveLoad):
                 mean.append(weight * word)
             else:
                 mean.append(weight * self.word_vec(word, use_norm=True))
-                if word in self.vocab:
-                    all_words.add(self.vocab[word].index)
+                if self.has_index_for(word):
+                    all_words.add(self.get_index(word))
         if not mean:
             raise ValueError("cannot compute similarity with no input")
         mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
@@ -455,13 +515,13 @@ class KeyedVectors(utils.SaveLoad):
         if indexer is not None and isinstance(topn, int):
             return indexer.most_similar(mean, topn)
 
-        limited = self.vectors_norm if restrict_vocab is None else self.vectors_norm[:restrict_vocab]
-        dists = dot(limited, mean)
+        dists = dot(self.vectors_norm[clip_start:clip_end], mean)
         if not topn:
             return dists
         best = matutils.argsort(dists, topn=topn + len(all_words), reverse=True)
         # ignore (don't return) words from the input
-        result = [(self.index2key[sim], float(dists[sim])) for sim in best if sim not in all_words]
+        result = [(self.index2key[sim + clip_start], float(dists[sim]))
+                  for sim in best if (sim + clip_start) not in all_words]
         return result[:topn]
 
     def similar_by_word(self, word, topn=10, restrict_vocab=None):
@@ -1136,25 +1196,57 @@ class KeyedVectors(utils.SaveLoad):
 
         return rcs
 
-    def save_word2vec_format(self, fname, fvocab=None, binary=False, total_vec=None):
+    def save_word2vec_format(self, fname, fvocab=None, binary=False, total_vec=None, write_first_line=True,
+                             prefix='', append=False):
         """Store the input-hidden weight matrix in the same format used by the original
         C word2vec-tool, for compatibility.
 
         Parameters
         ----------
         fname : str
-            The file path used to save the vectors in
+            The file path used to save the vectors in.
         fvocab : str, optional
-            Optional file path used to save the vocabulary
+            File path used to save the vocabulary.
         binary : bool, optional
-            If True, the data will be saved in binary word2vec format, else it will be saved in plain text.
+            If True, the data wil be saved in binary word2vec format, else it will be saved in plain text.
         total_vec : int, optional
-            Optional parameter to explicitly specify total no. of vectors
+            Explicitly specify total number of vectors
             (in case word vectors are appended with document vectors afterwards).
-
+        TODO: doc other params
         """
-        _save_word2vec_format(
-            fname, self.vocab, self.vectors, fvocab=fvocab, binary=binary, total_vec=total_vec)
+        if total_vec is None:
+            total_vec = len(self.index2key)
+        mode = 'wb' if not append else 'ab'
+        sorted_vocab_keys = sorted(self.vocab.keys(), key=lambda k: -self.vocab[k].count)
+
+        if fvocab is not None:
+            logger.info("storing vocabulary in %s", fvocab)
+            with utils.open(fvocab, mode) as vout:
+                for word in sorted_vocab_keys:
+                    vout.write(utils.to_utf8("%s%s %s\n" % (prefix, word, self.vocab[word].count)))
+
+        logger.info("storing %sx%s projection weights into %s", total_vec, self.vector_size, fname)
+        assert (len(self.index2key), self.vector_size) == self.vectors.shape
+
+        # after (possibly-empty) initial range of int-only keys,
+        # store in sorted order: most frequent keys at the top
+        index_id_count = 0
+        for i, val in enumerate(self.index2key):
+            if not (i == val):
+                break
+            index_id_count += 1
+        keys_to_write = chain(range(0, index_id_count), sorted_vocab_keys)
+
+        with utils.open(fname, mode) as fout:
+            if write_first_line:
+                fout.write(utils.to_utf8("%s %s\n" % (total_vec, self.vector_size)))
+            for key in keys_to_write:
+                row = self[key]
+                if binary:
+                    row = row.astype(REAL)
+                    fout.write(utils.to_utf8(prefix + str(key)) + b" " + row.tostring())
+                else:
+                    fout.write(utils.to_utf8("%s%s %s\n" % (prefix, str(key), ' '.join(repr(val) for val in row))))
 
     @classmethod
     def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
@@ -1238,391 +1330,28 @@ class KeyedVectors(utils.SaveLoad):
         )
         return layer
 
+    def _upconvert_old_d2vkv(self):
+        from gensim.models.doc2vec import Doctag
+        self.vocab = self.doctags
+        for k in self.vocab.keys():
+            v = self.vocab[k]
+            if hasattr(v, 'offset'):
+                self.vocab[k] = Doctag(v.offset + self.max_rawint + 1, v.word_count, v.doc_count)
+        if(self.max_rawint > -1):
+            self.index2key = ConcatList([range(0, self.max_rawint + 1), self.offset2doctag])
+        self.vectors = self.vectors_docs
+        del self.doctags
+        del self.vectors_docs
+        del self.count
+        del self.max_rawint
+
+    def similarity_unseen_docs(self, *args, **kwargs):
+        raise NotImplementedError("Call similarity_unseen_docs on a Doc2Vec model instead.")
+
 
 # to help 3.8.1 & older pickles load properly
 Word2VecKeyedVectors = KeyedVectors
-
-
-class Doc2VecKeyedVectors(KeyedVectors):
-
-    def __init__(self, vector_size, mapfile_path):
-        super(Doc2VecKeyedVectors, self).__init__(vector_size=vector_size)
-        self.doctags = {}  # string -> Doctag (only filled if necessary)
-        self.max_rawint = -1  # highest rawint-indexed doctag
-        self.offset2doctag = []  # int offset-past-(max_rawint+1) -> String (only filled if necessary)
-        self.count = 0
-        self.vectors_docs = []
-        self.mapfile_path = mapfile_path
-        self.vector_size = vector_size
-        self.vectors_docs_norm = None
-
-    @property
-    def index2entity(self):
-        return self.offset2doctag
-
-    @index2entity.setter
-    def index2entity(self, value):
-        self.offset2doctag = value
-
-    def __getitem__(self, index):
-        """Get vector representation of `index`.
-
-        Parameters
-        ----------
-        index : {str, list of str}
-            Doctag or sequence of doctags.
-
-        Returns
-        -------
-        numpy.ndarray
-            Vector representation for `index` (1D if `index` is string, otherwise - 2D).
-
-        """
-        if index in self:
-            if isinstance(index, string_types + integer_types + (integer,)):
-                return self.vectors_docs[self._int_index(index, self.doctags, self.max_rawint)]
-            return vstack([self[i] for i in index])
-        raise KeyError("tag '%s' not seen in training corpus/invalid" % index)
-
-    def __contains__(self, index):
-        if isinstance(index, integer_types + (integer,)):
-            return index < self.count
-        else:
-            return index in self.doctags
-
-    def __len__(self):
-        return self.count
-
-    def save(self, *args, **kwargs):
-        """Save object.
-
-        Parameters
-        ----------
-        fname : str
-            Path to the output file.
-
-        See Also
-        --------
-        :meth:`~gensim.models.keyedvectors.Doc2VecKeyedVectors.load`
-            Load object.
-
-        """
-        # don't bother storing the cached normalized vectors
-        kwargs['ignore'] = kwargs.get('ignore', ['vectors_docs_norm'])
-        super(Doc2VecKeyedVectors, self).save(*args, **kwargs)
-
-    def init_sims(self, replace=False):
-        """Precompute L2-normalized vectors.
-
-        Parameters
-        ----------
-        replace : bool, optional
-            If True - forget the original vectors and only keep the normalized ones = saves lots of memory!
-
-        Warnings
-        --------
-        You **cannot continue training** after doing a replace.
-        The model becomes effectively read-only: you can call
-        :meth:`~gensim.models.keyedvectors.Doc2VecKeyedVectors.most_similar`,
-        :meth:`~gensim.models.keyedvectors.Doc2VecKeyedVectors.similarity`, etc., but not train and infer_vector.
-
-        """
-        if getattr(self, 'vectors_docs_norm', None) is None or replace:
-            logger.info("precomputing L2-norms of doc weight vectors")
-            if not replace and self.mapfile_path:
-                self.vectors_docs_norm = np_memmap(
-                    self.mapfile_path + '.vectors_docs_norm', dtype=REAL,
-                    mode='w+', shape=self.vectors_docs.shape)
-            else:
-                self.vectors_docs_norm = _l2_norm(self.vectors_docs, replace=replace)
-
-    def most_similar(self, positive=None, negative=None, topn=10, clip_start=0, clip_end=None, indexer=None):
-        """Find the top-N most similar docvecs from the training set.
-        Positive docvecs contribute positively towards the similarity, negative docvecs negatively.
-
-        This method computes cosine similarity between a simple mean of the projection
-        weight vectors of the given docs. Docs may be specified as vectors, integer indexes
-        of trained docvecs, or if the documents were originally presented with string tags,
-        by the corresponding tags.
-
-        TODO: Accept vectors of out-of-training-set docs, as if from inference.
-
-        Parameters
-        ----------
-        positive : list of {str, int}, optional
-            List of doctags/indexes that contribute positively.
-        negative : list of {str, int}, optional
-            List of doctags/indexes that contribute negatively.
-        topn : int or None, optional
-            Number of top-N similar docvecs to return, when `topn` is int. When `topn` is None,
-            then similarities for all docvecs are returned.
-        clip_start : int
-            Start clipping index.
-        clip_end : int
-            End clipping index.
-
-        Returns
-        -------
-        list of ({str, int}, float)
-            Sequence of (doctag/index, similarity).
-
-        """
-        if isinstance(topn, Integral) and topn < 1:
-            return []
-
-        if positive is None:
-            positive = []
-        if negative is None:
-            negative = []
-
-        self.init_sims()
-        clip_end = clip_end or len(self.vectors_docs_norm)
-
-        if isinstance(positive, string_types + integer_types + (integer,)) and not negative:
-            # allow calls like most_similar('dog'), as a shorthand for most_similar(['dog'])
-            positive = [positive]
-
-        # add weights for each doc, if not already present; default to 1.0 for positive and -1.0 for negative docs
-        positive = [
-            (doc, 1.0) if isinstance(doc, string_types + integer_types + (ndarray, integer))
-            else doc for doc in positive
-        ]
-        negative = [
-            (doc, -1.0) if isinstance(doc, string_types + integer_types + (ndarray, integer))
-            else doc for doc in negative
-        ]
-
-        # compute the weighted average of all docs
-        all_docs, mean = set(), []
-        for doc, weight in positive + negative:
-            if isinstance(doc, ndarray):
-                mean.append(weight * doc)
-            elif doc in self.doctags or doc < self.count:
-                mean.append(weight * self.vectors_docs_norm[self._int_index(doc, self.doctags, self.max_rawint)])
-                all_docs.add(self._int_index(doc, self.doctags, self.max_rawint))
-            else:
-                raise KeyError("doc '%s' not in trained set" % doc)
-        if not mean:
-            raise ValueError("cannot compute similarity with no input")
-        mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
-
-        if indexer is not None and isinstance(topn, int):
-            return indexer.most_similar(mean, topn)
-
-        dists = dot(self.vectors_docs_norm[clip_start:clip_end], mean)
-        if not topn:
-            return dists
-        best = matutils.argsort(dists, topn=topn + len(all_docs), reverse=True)
-        # ignore (don't return) docs from the input
-        result = [
-            (self._index_to_doctag(sim + clip_start, self.offset2doctag, self.max_rawint), float(dists[sim]))
-            for sim in best
-            if (sim + clip_start) not in all_docs
-        ]
-        return result[:topn]
-
-    def doesnt_match(self, docs):
-        """Which document from the given list doesn't go with the others from the training set?
-
-        TODO: Accept vectors of out-of-training-set docs, as if from inference.
-
-        Parameters
-        ----------
-        docs : list of {str, int}
-            Sequence of doctags/indexes.
-
-        Returns
-        -------
-        {str, int}
-            Doctag/index of the document farthest away from the mean of all the documents.
-
-        """
-        self.init_sims()
-
-        docs = [doc for doc in docs if doc in self.doctags or 0 <= doc < self.count]  # filter out unknowns
-        logger.debug("using docs %s", docs)
-        if not docs:
-            raise ValueError("cannot select a doc from an empty list")
-        vectors = vstack(
-            self.vectors_docs_norm[self._int_index(doc, self.doctags, self.max_rawint)] for doc in docs).astype(REAL)
-        mean = matutils.unitvec(vectors.mean(axis=0)).astype(REAL)
-        dists = dot(vectors, mean)
-        return sorted(zip(dists, docs))[0][1]
-
-    def similarity(self, d1, d2):
-        """Compute cosine similarity between two docvecs from the training set.
-
-        TODO: Accept vectors of out-of-training-set docs, as if from inference.
-
-        Parameters
-        ----------
-        d1 : {int, str}
-            Doctag/index of document.
-        d2 : {int, str}
-            Doctag/index of document.
-
-        Returns
-        -------
-        float
-            The cosine similarity between the vectors of the two documents.
-
-        """
-        return dot(matutils.unitvec(self[d1]), matutils.unitvec(self[d2]))
-
-    def n_similarity(self, ds1, ds2):
-        """Compute cosine similarity between two sets of docvecs from the trained set.
-
-        TODO: Accept vectors of out-of-training-set docs, as if from inference.
-
-        Parameters
-        ----------
-        ds1 : list of {str, int}
-            Set of document as sequence of doctags/indexes.
-        ds2 : list of {str, int}
-            Set of document as sequence of doctags/indexes.
-
-        Returns
-        -------
-        float
-            The cosine similarity between the means of the documents in each of the two sets.
-
-        """
-        v1 = [self[doc] for doc in ds1]
-        v2 = [self[doc] for doc in ds2]
-        return dot(matutils.unitvec(array(v1).mean(axis=0)), matutils.unitvec(array(v2).mean(axis=0)))
-
-    def distance(self, d1, d2):
-        """
-        Compute cosine distance between two documents.
-
-        """
-        return 1 - self.similarity(d1, d2)
-
-    # required by base keyed vectors class
-    def distances(self, d1, other_docs=()):
-        """Compute cosine distances from given `d1` to all documents in `other_docs`.
-
-        TODO: Accept vectors of out-of-training-set docs, as if from inference.
-
-        Parameters
-        ----------
-        d1 : {str, numpy.ndarray}
-            Doctag/index of document.
-        other_docs : iterable of {str, int}
-            Sequence of doctags/indexes.
-            If None or empty, distance of `d1` from all doctags in vocab is computed (including itself).
-
-        Returns
-        -------
-        numpy.array
-            Array containing distances to all documents in `other_docs` from input `d1`.
-
-        """
-        input_vector = self[d1]
-        if not other_docs:
-            other_vectors = self.vectors_docs
-        else:
-            other_vectors = self[other_docs]
-        return 1 - KeyedVectors.cosine_similarities(input_vector, other_vectors)
-
-    def similarity_unseen_docs(self, model, doc_words1, doc_words2, alpha=None, min_alpha=None, steps=None):
-        """Compute cosine similarity between two post-bulk out of training documents.
-
-        Parameters
-        ----------
-        model : :class:`~gensim.models.doc2vec.Doc2Vec`
-            An instance of a trained `Doc2Vec` model.
-        doc_words1 : list of str
-            Input document.
-        doc_words2 : list of str
-            Input document.
-        alpha : float, optional
-            The initial learning rate.
-        min_alpha : float, optional
-            Learning rate will linearly drop to `min_alpha` as training progresses.
-        steps : int, optional
-            Number of epoch to train the new document.
-
-        Returns
-        -------
-        float
-            The cosine similarity between `doc_words1` and `doc_words2`.
-
-        """
-        d1 = model.infer_vector(doc_words=doc_words1, alpha=alpha, min_alpha=min_alpha, steps=steps)
-        d2 = model.infer_vector(doc_words=doc_words2, alpha=alpha, min_alpha=min_alpha, steps=steps)
-        return dot(matutils.unitvec(d1), matutils.unitvec(d2))
-
-    def save_word2vec_format(self, fname, prefix='*dt_', fvocab=None,
-                             total_vec=None, binary=False, write_first_line=True):
-        """Store the input-hidden weight matrix in the same format used by the original
-        C word2vec-tool, for compatibility.
-
-        Parameters
-        ----------
-        fname : str
-            The file path used to save the vectors in.
-        prefix : str, optional
-            Uniquely identifies doctags from word vocab, and avoids collision
-            in case of repeated string in doctag and word vocab.
-        fvocab : str, optional
-            UNUSED.
-        total_vec : int, optional
-            Explicitly specify total no. of vectors
-            (in case word vectors are appended with document vectors afterwards)
-        binary : bool, optional
-            If True, the data will be saved in binary word2vec format, else it will be saved in plain text.
-        write_first_line : bool, optional
-            Whether to print the first line in the file. Useful when saving doc-vectors after word-vectors.
-
-        """
-        total_vec = total_vec or len(self)
-        with utils.open(fname, 'ab') as fout:
-            if write_first_line:
-                logger.info("storing %sx%s projection weights into %s", total_vec, self.vectors_docs.shape[1], fname)
-                fout.write(utils.to_utf8("%s %s\n" % (total_vec, self.vectors_docs.shape[1])))
-            # store as in input order
-            for i in range(len(self)):
-                doctag = u"%s%s" % (prefix, self._index_to_doctag(i, self.offset2doctag, self.max_rawint))
-                row = self.vectors_docs[i]
-                if binary:
-                    fout.write(utils.to_utf8(doctag) + b" " + row.tostring())
-                else:
-                    fout.write(utils.to_utf8("%s %s\n" % (doctag, ' '.join("%f" % val for val in row))))
-
-    @staticmethod
-    def _int_index(index, doctags, max_rawint):
-        """Get int index for either string or int index."""
-        if isinstance(index, integer_types + (integer,)):
-            return index
-        else:
-            return max_rawint + 1 + doctags[index].offset
-
-    @staticmethod
-    def _index_to_doctag(i_index, offset2doctag, max_rawint):
-        """Get string key for given `i_index`, if available. Otherwise return raw int doctag (same int)."""
-        candidate_offset = i_index - max_rawint - 1
-        if 0 <= candidate_offset < len(offset2doctag):
-            return offset2doctag[candidate_offset]
-        else:
-            return i_index
-
-    # for backward compatibility
-    def index_to_doctag(self, i_index):
-        """Get string key for given `i_index`, if available. Otherwise return raw int doctag (same int)."""
-        candidate_offset = i_index - self.max_rawint - 1
-        if 0 <= candidate_offset < len(self.offset2doctag):
-            return self.offset2doctag[candidate_offset]
-        else:
-            return i_index
-
-    # for backward compatibility
-    def int_index(self, index, doctags, max_rawint):
-        """Get int index for either string or int index"""
-        if isinstance(index, integer_types + (integer,)):
-            return index
-        else:
-            return max_rawint + 1 + doctags[index].offset
+Doc2VecKeyedVectors = KeyedVectors
 
 
 def _l2_norm(m, replace=False):
@@ -1665,53 +1394,7 @@ class Vocab(object):
         return "%s(%s)" % (self.__class__.__name__, ', '.join(vals))
 
 
-def _save_word2vec_format(fname, vocab, vectors, fvocab=None, binary=False, total_vec=None):
-    """Store the input-hidden weight matrix in the same format used by the original
-    C word2vec-tool, for compatibility.
-
-    Parameters
-    ----------
-    fname : str
-        The file path used to save the vectors in.
-    vocab : dict
-        The vocabulary of words.
-    vectors : numpy.array
-        The vectors to be stored.
-    fvocab : str, optional
-        File path used to save the vocabulary.
-    binary : bool, optional
-        If True, the data wil be saved in binary word2vec format, else it will be saved in plain text.
-    total_vec : int, optional
-        Explicitly specify total number of vectors
-        (in case word vectors are appended with document vectors afterwards).
-
-    """
-    if not (vocab or vectors):
-        raise RuntimeError("no input")
-    if total_vec is None:
-        total_vec = len(vocab)
-    vector_size = vectors.shape[1]
-    if fvocab is not None:
-        logger.info("storing vocabulary in %s", fvocab)
-        with utils.open(fvocab, 'wb') as vout:
-            for word, vocab_ in sorted(iteritems(vocab), key=lambda item: -item[1].count):
-                vout.write(utils.to_utf8("%s %s\n" % (word, vocab_.count)))
-    logger.info("storing %sx%s projection weights into %s", total_vec, vector_size, fname)
-    assert (len(vocab), vector_size) == vectors.shape
-    with utils.open(fname, 'wb') as fout:
-        fout.write(utils.to_utf8("%s %s\n" % (total_vec, vector_size)))
-        # store in sorted order: most frequent words at the top
-        for word, vocab_ in sorted(iteritems(vocab), key=lambda item: -item[1].count):
-            row = vectors[vocab_.index]
-            if binary:
-                row = row.astype(REAL)
-                fout.write(utils.to_utf8(word) + b" " + row.tostring())
-            else:
-                fout.write(utils.to_utf8("%s %s\n" % (word, ' '.join(repr(val) for val in row))))
-
-
 # Functions for internal use by _load_word2vec_format function
-
 
 def _add_word_to_result(result, counts, word, weights, vocab_size):
 
@@ -1859,3 +1542,41 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
 
     logger.info("loaded %s matrix from %s", result.vectors.shape, fname)
     return result
+
+
+def load_word2vec_format(*args, **kwargs):
+    return KeyedVectors.load_word2vec_format(*args, **kwargs)
+
+
+def pseudorandom_weak_vector(size, seed_string=None, hashfxn=hash):
+    """Get a 'random' vector (but somewhat deterministic, at least
+    within the same Python 3 launch or PYTHONHASHSEED, if seed_string
+    supplied).
+
+    Useful for initializing KeyedVectors that will be the starting
+    projection/input layers of *2Vec models.
+    """
+    if seed_string:
+        once = np.random.RandomState(hashfxn(seed_string) & 0xffffffff)
+    else:
+        once = np.random
+    return (once.rand(size).astype(REAL) - 0.5) / size
+
+
+class ConcatList(UserList):
+    def __getitem__(self, index):
+        for subseq in self.data:
+            if index >= len(subseq):
+                index -= len(subseq)
+                continue
+            return subseq[index]
+        else:
+            raise IndexError("ConcatList index out of range")
+
+    def __iter__(self):
+        return iter(chain(*self.data))
+
+    def __len__(self):
+        return sum(len(subseq) for subseq in self.data)
+
+# TODO: implement or stub as NotImplemented other methods
