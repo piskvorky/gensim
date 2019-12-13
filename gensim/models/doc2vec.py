@@ -80,7 +80,6 @@ import numpy as np
 from gensim.utils import call_on_class_only
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.models.word2vec import Word2VecVocab, Word2VecTrainables
-from gensim.models.word2vec import train_cbow_pair, train_sg_pair, train_batch_sg  # noqa
 from six.moves import range
 from six import string_types, integer_types, itervalues
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
