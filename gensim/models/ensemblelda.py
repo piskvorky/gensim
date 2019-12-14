@@ -98,8 +98,6 @@ comments.
 
 """
 
-print('asdf')
-
 import logging
 import os
 from multiprocessing import Process, Pipe, ProcessError
