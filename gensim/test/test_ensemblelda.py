@@ -7,9 +7,6 @@
 Automated tests for checking the EnsembleLda Class
 """
 
-import sys
-sys.path = ['/mnt/data/Code/ensemble_lda_repo/gensim'] + sys.path
-
 import logging
 import unittest
 
@@ -347,7 +344,7 @@ class TestModel(unittest.TestCase):
     def test_inference(self):
         import numpy as np
         # get the most likely token id from topic 0
-        max_id = np.argmax(self.eLDA.get_topics()[0,:])
+        max_id = np.argmax(self.eLDA.get_topics()[0, :])
         self.assertGreater(self.eLDA.classic_model_representation.iterations, 0)
         # topic 0 should be dominant in the inference.
         # the difference between the probabilities should be significant and larger than 0.3
