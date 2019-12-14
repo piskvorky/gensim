@@ -227,45 +227,23 @@ def score_cbow_pair(model, word, l1):
 
 
 class Word2Vec(BaseWordEmbeddingsModel):
-    """Train, use and evaluate neural networks described in https://code.google.com/p/word2vec/.
-
-    Once you're finished training a model (=no more updates, only querying)
-    store and use only the :class:`~gensim.models.keyedvectors.KeyedVectors` instance in `self.wv` to reduce memory.
-
-    The model can be stored/loaded via its :meth:`~gensim.models.word2vec.Word2Vec.save` and
-    :meth:`~gensim.models.word2vec.Word2Vec.load` methods.
-
-    The trained word vectors can also be stored/loaded from a format compatible with the
-    original word2vec implementation via `self.wv.save_word2vec_format`
-    and :meth:`gensim.models.keyedvectors.KeyedVectors.load_word2vec_format`.
-
-    Some important attributes are the following:
-
-    Attributes
-    ----------
-    wv : :class:`~gensim.models.keyedvectors.KeyedVectors`
-        This object essentially contains the mapping between words and embeddings. After training, it can be used
-        directly to query those embeddings in various ways. See the module level docstring for examples.
-
-    vocabulary : :class:`~gensim.models.word2vec.Word2VecVocab`
-        This object represents the vocabulary (sometimes called Dictionary in gensim) of the model.
-        Besides keeping track of all unique words, this object provides extra functionality, such as
-        constructing a huffman tree (frequent words are closer to the root), or discarding extremely rare words.
-
-    trainables : :class:`~gensim.models.word2vec.Word2VecTrainables`
-        This object represents the inner shallow neural network used to train the embeddings. The semantics of the
-        network differ slightly in the two available training modes (CBOW or SG) but you can think of it as a NN with
-        a single projection and hidden layer which we train on the corpus. The weights are then used as our embeddings
-        (which means that the size of the hidden layer is equal to the number of features `self.size`).
-
-    """
-
     def __init__(self, sentences=None, corpus_file=None, size=100, alpha=0.025, window=5, min_count=5,
                  max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
                  sg=0, hs=0, negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
                  trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False, callbacks=(),
                  max_final_vocab=None):
-        """
+        """Train, use and evaluate neural networks described in https://code.google.com/p/word2vec/.
+
+        Once you're finished training a model (=no more updates, only querying)
+        store and use only the :class:`~gensim.models.keyedvectors.KeyedVectors` instance in `self.wv`
+        to reduce memory.
+
+        The full model can be stored/loaded via its :meth:`~gensim.models.word2vec.Word2Vec.save` and
+        :meth:`~gensim.models.word2vec.Word2Vec.load` methods.
+
+        The trained word vectors can also be stored/loaded from a format compatible with the
+        original word2vec implementation via `self.wv.save_word2vec_format`
+        and :meth:`gensim.models.keyedvectors.KeyedVectors.load_word2vec_format`.
 
         Parameters
         ----------
@@ -367,6 +345,26 @@ class Word2Vec(BaseWordEmbeddingsModel):
             >>> from gensim.models import Word2Vec
             >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
             >>> model = Word2Vec(sentences, min_count=1)
+
+        Some important attributes are the following:
+
+        Attributes
+        ----------
+        wv : :class:`~gensim.models.keyedvectors.KeyedVectors`
+            This object essentially contains the mapping between words and embeddings. After training, it can be used
+            directly to query those embeddings in various ways. See the module level docstring for examples.
+
+        vocabulary : :class:`~gensim.models.word2vec.Word2VecVocab`
+            This object represents the vocabulary (sometimes called Dictionary in gensim) of the model.
+            Besides keeping track of all unique words, this object provides extra functionality, such as
+            constructing a huffman tree (frequent words are closer to the root), or discarding extremely rare words.
+
+        trainables : :class:`~gensim.models.word2vec.Word2VecTrainables`
+            This object represents the inner shallow neural network used to train the embeddings. The semantics
+            of the network differ slightly in the two available training modes (CBOW or SG) but you can think of it
+            as a NN with single projection and hidden layer which we train on the corpus. The weights are then used
+            as our embeddings (which means that the size of the hidden layer is equal to the number of features
+            `self.size`).
 
         """
         self.max_final_vocab = max_final_vocab
@@ -851,11 +849,11 @@ class Word2Vec(BaseWordEmbeddingsModel):
 
 
 class BrownCorpus(object):
-    """Iterate over sentences from the `Brown corpus <https://en.wikipedia.org/wiki/Brown_Corpus>`_
-     (part of `NLTK data <https://www.nltk.org/data.html>`_).
-
-    """
     def __init__(self, dirname):
+        """Iterate over sentences from the `Brown corpus <https://en.wikipedia.org/wiki/Brown_Corpus>`_
+        (part of `NLTK data <https://www.nltk.org/data.html>`_).
+
+        """
         self.dirname = dirname
 
     def __iter__(self):
@@ -877,8 +875,8 @@ class BrownCorpus(object):
 
 
 class Text8Corpus(object):
-    """Iterate over sentences from the "text8" corpus, unzipped from http://mattmahoney.net/dc/text8.zip."""
     def __init__(self, fname, max_sentence_length=MAX_WORDS_IN_BATCH):
+        """Iterate over sentences from the "text8" corpus, unzipped from http://mattmahoney.net/dc/text8.zip."""
         self.fname = fname
         self.max_sentence_length = max_sentence_length
 
@@ -905,12 +903,9 @@ class Text8Corpus(object):
 
 
 class LineSentence(object):
-    """Iterate over a file that contains sentences: one line = one sentence.
-    Words must be already preprocessed and separated by whitespace.
-
-    """
     def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None):
-        """
+        """Iterate over a file that contains sentences: one line = one sentence.
+        Words must be already preprocessed and separated by whitespace.
 
         Parameters
         ----------
@@ -957,22 +952,20 @@ class LineSentence(object):
 
 
 class PathLineSentences(object):
-    """Like :class:`~gensim.models.word2vec.LineSentence`, but process all files in a directory
-    in alphabetical order by filename.
-
-    The directory must only contain files that can be read by :class:`gensim.models.word2vec.LineSentence`:
-    .bz2, .gz, and text files. Any file not ending with .bz2 or .gz is assumed to be a text file.
-
-    The format of files (either text, or compressed text files) in the path is one sentence = one line,
-    with words already preprocessed and separated by whitespace.
-
-    Warnings
-    --------
-    Does **not recurse** into subdirectories.
-
-    """
     def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None):
-        """
+        """Like :class:`~gensim.models.word2vec.LineSentence`, but process all files in a directory
+        in alphabetical order by filename.
+
+        The directory must only contain files that can be read by :class:`gensim.models.word2vec.LineSentence`:
+        .bz2, .gz, and text files. Any file not ending with .bz2 or .gz is assumed to be a text file.
+
+        The format of files (either text, or compressed text files) in the path is one sentence = one line,
+        with words already preprocessed and separated by whitespace.
+
+        Warnings
+        --------
+        Does **not recurse** into subdirectories.
+
         Parameters
         ----------
         source : str
@@ -1047,10 +1040,10 @@ def _scan_vocab_worker(stream, progress_queue, max_vocab_size=None, trim_rule=No
 
 
 class Word2VecVocab(utils.SaveLoad):
-    """Vocabulary used by :class:`~gensim.models.word2vec.Word2Vec`."""
     def __init__(
             self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0,
             max_final_vocab=None, ns_exponent=0.75):
+        """Vocabulary used by :class:`~gensim.models.word2vec.Word2Vec`."""
         self.max_vocab_size = max_vocab_size
         self.min_count = min_count
         self.sample = sample
@@ -1372,8 +1365,8 @@ def _assign_binary_codes(vocab):
 
 
 class Word2VecTrainables(utils.SaveLoad):
-    """Represents the inner shallow neural network used to train :class:`~gensim.models.word2vec.Word2Vec`."""
     def __init__(self, vector_size=100, seed=1, hashfxn=hash):
+        """Represents the inner shallow neural network used to train :class:`~gensim.models.word2vec.Word2Vec`."""
         self.hashfxn = hashfxn
         self.layer1_size = vector_size
         self.seed = seed

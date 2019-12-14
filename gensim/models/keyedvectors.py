@@ -188,13 +188,13 @@ logger = logging.getLogger(__name__)
 
 
 class KeyedVectors(utils.SaveLoad):
-    """Abstract base class / interface for various types of word vectors."""
-    """Class containing common methods for operations over word vectors."""
-    """Mapping between words and vectors for the :class:`~gensim.models.Word2Vec` model.
-    Used to perform operations on the vectors such as vector lookup, distance, similarity etc.
+    def __init__(self, vector_size, mapfile_path=None):
+        """Mapping between keys (such as words)  and vectors for :class:`~gensim.models.Word2Vec`
+        and related models.
 
-    """
-    def __init__(self, vector_size):
+        Used to perform operations on the vectors such as vector lookup, distance, similarity etc.
+
+        """
         self.vectors = zeros((0, vector_size), dtype=REAL)  # fka (formerly known as) syn0
         self.vectors_norm = None  # fka syn0norm
         self.map = {}
@@ -1378,11 +1378,11 @@ def _l2_norm(m, replace=False):
 
 
 class Vocab(object):
-    """A single vocabulary item, used internally for collecting per-word frequency/sampling info,
-    and for constructing binary trees (incl. both word leaves and inner nodes).
-
-    """
     def __init__(self, **kwargs):
+        """A single vocabulary item, used internally for collecting per-word frequency/sampling info,
+        and for constructing binary trees (incl. both word leaves and inner nodes).
+
+        """
         self.count = 0
         self.__dict__.update(kwargs)
 

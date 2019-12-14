@@ -54,27 +54,16 @@ logger = logging.getLogger(__name__)
 
 
 class BaseAny2VecModel(utils.SaveLoad):
-    r"""Base class for training, using and evaluating \*2vec model.
-
-    Contains implementation for multi-threaded training. The purpose of this class is to provide a
-    reference interface for concrete embedding implementations, whether the input space is a corpus
-    of words, documents or anything else. At the same time, functionality that we expect to be common
-    for those implementations is provided here to avoid code duplication.
-
-    In the special but usual case where the input space consists of words, a more specialized layer
-    is provided, consider inheriting from :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
-
-    Notes
-    -----
-    A subclass should initialize the following attributes:
-
-    * self.kv - keyed vectors in model (see :class:`~gensim.models.keyedvectors.Word2VecKeyedVectors` as example)
-    * self.vocabulary - vocabulary (see :class:`~gensim.models.word2vec.Word2VecVocab` as example)
-    * self.trainables - internal matrices (see :class:`~gensim.models.word2vec.Word2VecTrainables` as example)
-
-    """
     def __init__(self, workers=3, vector_size=100, epochs=5, callbacks=(), batch_words=10000):
-        """
+        r"""Base class for training, using and evaluating \*2vec model.
+
+        Contains implementation for multi-threaded training. The purpose of this class is to provide a
+        reference interface for concrete embedding implementations, whether the input space is a corpus
+        of words, documents or anything else. At the same time, functionality that we expect to be common
+        for those implementations is provided here to avoid code duplication.
+
+        In the special but usual case where the input space consists of words, a more specialized layer
+        is provided, consider inheriting from :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
 
         Parameters
         ----------
@@ -88,6 +77,14 @@ class BaseAny2VecModel(utils.SaveLoad):
             List of callbacks that need to be executed/run at specific stages during training.
         batch_words : int, optional
             Number of words to be processed by a single job.
+
+        Notes
+        -----
+        A subclass should initialize the following attributes:
+
+        * self.kv - keyed vectors in model (see :class:`~gensim.models.keyedvectors.Word2VecKeyedVectors` as example)
+        * self.vocabulary - vocabulary (see :class:`~gensim.models.word2vec.Word2VecVocab` as example)
+        * self.trainables - internal matrices (see :class:`~gensim.models.word2vec.Word2VecTrainables` as example)
 
         """
         self.vector_size = int(vector_size)
@@ -601,7 +598,7 @@ class BaseAny2VecModel(utils.SaveLoad):
         return super(BaseAny2VecModel, cls).load(fname_or_handle, **kwargs)
 
     def save(self, fname_or_handle, **kwargs):
-        """"Save the object to file.
+        """Save the object to file.
 
         Parameters
         ----------
@@ -620,33 +617,10 @@ class BaseAny2VecModel(utils.SaveLoad):
 
 
 class BaseWordEmbeddingsModel(BaseAny2VecModel):
-    """Base class containing common methods for training, using & evaluating word embeddings learning models.
-
-    See Also
-    --------
-    :class:`~gensim.models.word2vec.Word2Vec`.
-        Word2Vec model - embeddings for words.
-    :class:`~gensim.models.fasttext.FastText`.
-        FastText model - embeddings for words (ngram-based).
-    :class:`~gensim.models.doc2vec.Doc2Vec`.
-        Doc2Vec model - embeddings for documents.
-    :class:`~gensim.models.poincare.PoincareModel`
-        Poincare model - embeddings for graphs.
-
-    """
-    def _clear_post_train(self):
-        raise NotImplementedError()
-
-    def _do_train_job(self, data_iterable, job_parameters, thread_private_mem):
-        raise NotImplementedError()
-
-    def _set_train_params(self, **kwargs):
-        raise NotImplementedError()
-
     def __init__(self, sentences=None, corpus_file=None, workers=3, vector_size=100, epochs=5, callbacks=(),
                  batch_words=10000, trim_rule=None, sg=0, alpha=0.025, window=5, seed=1, hs=0, negative=5,
                  ns_exponent=0.75, cbow_mean=1, min_alpha=0.0001, compute_loss=False, **kwargs):
-        """
+        """Base class containing common methods for training, using & evaluating word embeddings learning models.
 
         Parameters
         ----------
@@ -713,6 +687,17 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         **kwargs : object
             Key word arguments needed to allow children classes to accept more arguments.
 
+        See Also
+        --------
+        :class:`~gensim.models.word2vec.Word2Vec`.
+            Word2Vec model - embeddings for words.
+        :class:`~gensim.models.fasttext.FastText`.
+            FastText model - embeddings for words (ngram-based).
+        :class:`~gensim.models.doc2vec.Doc2Vec`.
+            Doc2Vec model - embeddings for documents.
+        :class:`~gensim.models.poincare.PoincareModel`
+            Poincare model - embeddings for graphs.
+
         """
         self.sg = int(sg)
         if vector_size % 4 != 0:
@@ -752,6 +737,15 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
                     "The rule, if given, is only used to prune vocabulary during build_vocab() "
                     "and is not stored as part of the model. Model initialized without sentences. "
                     "trim_rule provided, if any, will be ignored.")
+
+    def _clear_post_train(self):
+        raise NotImplementedError()
+
+    def _do_train_job(self, data_iterable, job_parameters, thread_private_mem):
+        raise NotImplementedError()
+
+    def _set_train_params(self, **kwargs):
+        raise NotImplementedError()
 
     def __str__(self):
         """Get a human readable representation of the object.

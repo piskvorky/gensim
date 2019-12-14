@@ -313,56 +313,33 @@ except ImportError:
 
 
 class FastText(BaseWordEmbeddingsModel):
-    """Train, use and evaluate word representations learned using the method
-    described in `Enriching Word Vectors with Subword Information <https://arxiv.org/abs/1607.04606>`_, aka FastText.
-
-    The model can be stored/loaded via its :meth:`~gensim.models.fasttext.FastText.save` and
-    :meth:`~gensim.models.fasttext.FastText.load` methods, or loaded from a format compatible with the original
-    Fasttext implementation via :func:`~gensim.models.fasttext.load_facebook_model`.
-
-    Attributes
-    ----------
-    wv : :class:`~gensim.models.fasttext.FastTextKeyedVectors`
-        This object essentially contains the mapping between words and embeddings. These are similar to the embeddings
-        computed in the :class:`~gensim.models.word2vec.Word2Vec`, however here we also include vectors for n-grams.
-        This allows the model to compute embeddings even for **unseen** words (that do not exist in the vocabulary),
-        as the aggregate of the n-grams included in the word. After training the model, this attribute can be used
-        directly to query those embeddings in various ways. Check the module level docstring for some examples.
-    vocabulary : :class:`~gensim.models.fasttext.FastTextVocab`
-        This object represents the vocabulary of the model.
-        Besides keeping track of all unique words, this object provides extra functionality, such as
-        constructing a huffman tree (frequent words are closer to the root), or discarding extremely rare words.
-    trainables : :class:`~gensim.models.fasttext.FastTextTrainables`
-        This object represents the inner shallow neural network used to train the embeddings. This is very
-        similar to the network of the :class:`~gensim.models.word2vec.Word2Vec` model, but it also trains weights
-        for the N-Grams (sequences of more than 1 words). The semantics of the network are almost the same as
-        the one used for the :class:`~gensim.models.word2vec.Word2Vec` model.
-        You can think of it as a NN with a single projection and hidden layer which we train on the corpus.
-        The weights are then used as our embeddings. An important difference however between the two models, is the
-        scoring function used to compute the loss. In the case of FastText, this is modified in word to also account
-        for the internal structure of words, besides their concurrence counts.
-
-    """
     def __init__(self, sentences=None, corpus_file=None, sg=0, hs=0, size=100, alpha=0.025, window=5, min_count=5,
                  max_vocab_size=None, word_ngrams=1, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
                  negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, iter=5, null_word=0, min_n=3, max_n=6,
                  sorted_vocab=1, bucket=2000000, trim_rule=None, batch_words=MAX_WORDS_IN_BATCH, callbacks=(),
                  compatible_hash=True):
-        """
+        """Train, use and evaluate word representations learned using the method
+        described in `Enriching Word Vectors with Subword Information <https://arxiv.org/abs/1607.04606>`_,
+        aka FastText.
+
+        The model can be stored/loaded via its :meth:`~gensim.models.fasttext.FastText.save` and
+        :meth:`~gensim.models.fasttext.FastText.load` methods, or loaded from a format compatible with the
+        original Fasttext implementation via :func:`~gensim.models.fasttext.load_facebook_model`.
 
         Parameters
         ----------
         sentences : iterable of list of str, optional
             Can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
-            See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
-            or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
-            If you don't supply `sentences`, the model is left uninitialized -- use if you plan to initialize it
-            in some other way.
+            See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus'
+            or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such
+            examples. If you don't supply `sentences`, the model is left uninitialized -- use if you plan to
+            initialize it in some other way.
         corpus_file : str, optional
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
             You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
-            `corpus_file` arguments need to be passed (or none of them, in that case, the model is left uninitialized).
+            `corpus_file` arguments need to be passed (or none of them, in that case, the model is left
+            uninitialized).
         min_count : int, optional
             The model ignores all words with total frequency lower than this.
         size : int, optional
@@ -461,6 +438,29 @@ class FastText(BaseWordEmbeddingsModel):
             >>> model = FastText(sentences, min_count=1)
             >>> say_vector = model.wv['say']  # get vector for word
             >>> of_vector = model.wv['of']  # get vector for out-of-vocab word
+
+        Attributes
+        ----------
+        wv : :class:`~gensim.models.fasttext.FastTextKeyedVectors`
+            This object essentially contains the mapping between words and embeddings. These are similar to
+            the embedding computed in the :class:`~gensim.models.word2vec.Word2Vec`, however here we also
+            include vectors for n-grams. This allows the model to compute embeddings even for **unseen**
+            words (that do not exist in the vocabulary), as the aggregate of the n-grams included in the word.
+            After training the model, this attribute can be used directly to query those embeddings in various
+            ways. Check the module level docstring for some examples.
+        vocabulary : :class:`~gensim.models.fasttext.FastTextVocab`
+            This object represents the vocabulary of the model.
+            Besides keeping track of all unique words, this object provides extra functionality, such as
+            constructing a huffman tree (frequent words are closer to the root), or discarding extremely rare words.
+        trainables : :class:`~gensim.models.fasttext.FastTextTrainables`
+            This object represents the inner shallow neural network used to train the embeddings. This is very
+            similar to the network of the :class:`~gensim.models.word2vec.Word2Vec` model, but it also trains weights
+            for the N-Grams (sequences of more than 1 words). The semantics of the network are almost the same as
+            the one used for the :class:`~gensim.models.word2vec.Word2Vec` model.
+            You can think of it as a NN with a single projection and hidden layer which we train on the corpus.
+            The weights are then used as our embeddings. An important difference however between the two models, is the
+            scoring function used to compute the loss. In the case of FastText, this is modified in word to also account
+            for the internal structure of words, besides their concurrence counts.
 
         """
         self.load = call_on_class_only
@@ -1255,55 +1255,55 @@ def save_facebook_model(model, path, encoding="utf-8", lr_update_rate=100, word_
 
 
 class FastTextKeyedVectors(KeyedVectors):
-    """Vectors and vocab for :class:`~gensim.models.fasttext.FastText`.
-
-    Implements significant parts of the FastText algorithm.  For example,
-    the :func:`word_vec` calculates vectors for out-of-vocabulary (OOV)
-    entities.  FastText achieves this by keeping vectors for ngrams:
-    adding the vectors for the ngrams of an entity yields the vector for the
-    entity.
-
-    Similar to a hashmap, this class keeps a fixed number of buckets, and
-    maps all ngrams to buckets using a hash function.
-
-    This class also provides an abstraction over the hash functions used by
-    Gensim's FastText implementation over time.  The hash function connects
-    ngrams to buckets.  Originally, the hash function was broken and
-    incompatible with Facebook's implementation.  The current hash is fully
-    compatible.
-
-    Parameters
-    ----------
-    vector_size : int
-        The dimensionality of all vectors.
-    min_n : int
-        The minimum number of characters in an ngram
-    max_n : int
-        The maximum number of characters in an ngram
-    bucket : int
-        The number of buckets.
-    compatible_hash : boolean
-        If True, uses the Facebook-compatible hash function instead of the
-        Gensim backwards-compatible hash function.
-
-    Attributes
-    ----------
-    vectors_vocab : np.array
-        Each row corresponds to a vector for an entity in the vocabulary.
-        Columns correspond to vector dimensions. When embedded in a full
-        FastText model, these are the full-word-token vectors updated
-        by training, whereas the inherited vectors are the actual per-word
-        vectors synthesized from the full-word-token and all subword (ngram)
-        vectors.
-    vectors_ngrams : np.array
-        A vector for each ngram across all entities in the vocabulary.
-        Each row is a vector that corresponds to a bucket.
-        Columns correspond to vector dimensions.
-    buckets_word : dict
-        Maps vocabulary items (by their index) to the buckets they occur in.
-
-    """
     def __init__(self, vector_size, min_n, max_n, bucket, compatible_hash):
+        """Vectors and vocab for :class:`~gensim.models.fasttext.FastText`.
+
+        Implements significant parts of the FastText algorithm.  For example,
+        the :func:`word_vec` calculates vectors for out-of-vocabulary (OOV)
+        entities.  FastText achieves this by keeping vectors for ngrams:
+        adding the vectors for the ngrams of an entity yields the vector for the
+        entity.
+
+        Similar to a hashmap, this class keeps a fixed number of buckets, and
+        maps all ngrams to buckets using a hash function.
+
+        This class also provides an abstraction over the hash functions used by
+        Gensim's FastText implementation over time.  The hash function connects
+        ngrams to buckets.  Originally, the hash function was broken and
+        incompatible with Facebook's implementation.  The current hash is fully
+        compatible.
+
+        Parameters
+        ----------
+        vector_size : int
+            The dimensionality of all vectors.
+        min_n : int
+            The minimum number of characters in an ngram
+        max_n : int
+            The maximum number of characters in an ngram
+        bucket : int
+            The number of buckets.
+        compatible_hash : boolean
+            If True, uses the Facebook-compatible hash function instead of the
+            Gensim backwards-compatible hash function.
+
+        Attributes
+        ----------
+        vectors_vocab : np.array
+            Each row corresponds to a vector for an entity in the vocabulary.
+            Columns correspond to vector dimensions. When embedded in a full
+            FastText model, these are the full-word-token vectors updated
+            by training, whereas the inherited vectors are the actual per-word
+            vectors synthesized from the full-word-token and all subword (ngram)
+            vectors.
+        vectors_ngrams : np.array
+            A vector for each ngram across all entities in the vocabulary.
+            Each row is a vector that corresponds to a bucket.
+            Columns correspond to vector dimensions.
+        buckets_word : dict
+            Maps vocabulary items (by their index) to the buckets they occur in.
+
+        """
         super(FastTextKeyedVectors, self).__init__(vector_size=vector_size)
         self.vectors_vocab = None  # fka syn0_vocab
         self.vectors_ngrams = None  # fka syn0_ngrams

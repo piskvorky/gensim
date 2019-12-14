@@ -162,43 +162,11 @@ class Doctag(namedtuple('Doctag', 'index, word_count, doc_count')):
 
 
 class Doc2Vec(BaseWordEmbeddingsModel):
-    """Class for training, using and evaluating neural networks described in
-    `Distributed Representations of Sentences and Documents <http://arxiv.org/abs/1405.4053v2>`_.
-
-    Some important internal attributes are the following:
-
-    Attributes
-    ----------
-    wv : :class:`~gensim.models.keyedvectors.KeyedVectors`
-        This object essentially contains the mapping between words and embeddings. After training, it can be used
-        directly to query those embeddings in various ways. See the module level docstring for examples.
-
-    docvecs : :class:`~gensim.models.keyedvectors.KeyedVectors`
-        This object contains the paragraph vectors learned from the training data. There will be one such vector
-        for each unique document tag supplied during training. They may be individually accessed using the tag
-        as an indexed-access key. For example, if one of the training documents used a tag of 'doc003':
-
-        .. sourcecode:: pycon
-
-            >>> model.docvecs['doc003']
-
-    vocabulary : :class:`~gensim.models.doc2vec.Doc2VecVocab`
-        This object represents the vocabulary (sometimes called Dictionary in gensim) of the model.
-        Besides keeping track of all unique words, this object provides extra functionality, such as
-        sorting words by frequency, or discarding extremely rare words.
-
-    trainables : :class:`~gensim.models.doc2vec.Doc2VecTrainables`
-        This object represents the inner shallow neural network used to train the embeddings. The semantics of the
-        network differ slightly in the two available training modes (CBOW or SG) but you can think of it as a NN with
-        a single projection and hidden layer which we train on the corpus. The weights are then used as our embeddings
-        The only addition to the underlying NN used in :class:`~gensim.models.word2vec.Word2Vec` is that the input
-        includes not only the word vectors of each word in the context, but also the paragraph vector.
-
-    """
     def __init__(self, documents=None, corpus_file=None, dm_mean=None, dm=1, dbow_words=0, dm_concat=0,
                  dm_tag_count=1, docvecs=None, docvecs_mapfile=None, comment=None, trim_rule=None, callbacks=(),
                  **kwargs):
-        """
+        """Class for training, using and evaluating neural networks described in
+        `Distributed Representations of Sentences and Documents <http://arxiv.org/abs/1405.4053v2>`_.
 
         Parameters
         ----------
@@ -286,6 +254,36 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
         callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`, optional
             List of callbacks that need to be executed/run at specific stages during training.
+
+        Some important internal attributes are the following:
+
+        Attributes
+        ----------
+        wv : :class:`~gensim.models.keyedvectors.KeyedVectors`
+            This object essentially contains the mapping between words and embeddings. After training, it can be used
+            directly to query those embeddings in various ways. See the module level docstring for examples.
+
+        docvecs : :class:`~gensim.models.keyedvectors.KeyedVectors`
+            This object contains the paragraph vectors learned from the training data. There will be one such vector
+            for each unique document tag supplied during training. They may be individually accessed using the tag
+            as an indexed-access key. For example, if one of the training documents used a tag of 'doc003':
+
+            .. sourcecode:: pycon
+
+                >>> model.docvecs['doc003']
+
+        vocabulary : :class:`~gensim.models.doc2vec.Doc2VecVocab`
+            This object represents the vocabulary (sometimes called Dictionary in gensim) of the model.
+            Besides keeping track of all unique words, this object provides extra functionality, such as
+            sorting words by frequency, or discarding extremely rare words.
+
+        trainables : :class:`~gensim.models.doc2vec.Doc2VecTrainables`
+            This object represents the inner shallow neural network used to train the embeddings. The semantics
+            of the network differ slightly in the two available training modes (CBOW or SG) but you can think
+            of it as a NN with a single projection and hidden layer which we train on the corpus. The weights are
+            then used as our embeddings. The only addition to the underlying NN used in
+            :class:`~gensim.models.word2vec.Word2Vec` is that the input includes not only the word vectors of
+            each word in the context, but also the paragraph vector.
 
         """
         super(Doc2Vec, self).__init__(
@@ -963,13 +961,10 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
 
 class Doc2VecVocab(Word2VecVocab):
-    """Vocabulary used by :class:`~gensim.models.doc2vec.Doc2Vec`.
-
-    This includes a mapping from words found in the corpus to their total frequency count.
-
-    """
     def __init__(self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0, ns_exponent=0.75):
-        """
+        """Vocabulary used by :class:`~gensim.models.doc2vec.Doc2Vec`.
+
+        This includes a mapping from words found in the corpus to their total frequency count.
 
         Parameters
         ----------
@@ -1113,8 +1108,8 @@ class Doc2VecVocab(Word2VecVocab):
 
 
 class Doc2VecTrainables(Word2VecTrainables):
-    """Represents the inner shallow neural network used to train :class:`~gensim.models.doc2vec.Doc2Vec`."""
     def __init__(self, dm=1, dm_concat=0, dm_tag_count=1, vector_size=100, seed=1, hashfxn=hash, window=5):
+        """Represents the inner shallow neural network used to train :class:`~gensim.models.doc2vec.Doc2Vec`."""
         super(Doc2VecTrainables, self).__init__(
             vector_size=vector_size, seed=seed, hashfxn=hashfxn)
         if dm and dm_concat:
@@ -1146,10 +1141,8 @@ class Doc2VecTrainables(Word2VecTrainables):
 
 
 class TaggedBrownCorpus(object):
-    """Reader for the `Brown corpus (part of NLTK data) <http://www.nltk.org/book/ch02.html#tab-brown-sources>`_."""
-
     def __init__(self, dirname):
-        """
+        """Reader for the `Brown corpus (part of NLTK data) <http://www.nltk.org/book/ch02.html#tab-brown-sources>`_.
 
         Parameters
         ----------
@@ -1186,14 +1179,11 @@ class TaggedBrownCorpus(object):
 
 
 class TaggedLineDocument(object):
-    """Iterate over a file that contains documents: one line = :class:`~gensim.models.doc2vec.TaggedDocument` object.
-
-    Words are expected to be already preprocessed and separated by whitespace. Document tags are constructed
-    automatically from the document line number (each document gets a unique integer tag).
-
-    """
     def __init__(self, source):
-        """
+        """Iterate over a file that contains documents: one line = :class:`~gensim.models.doc2vec.TaggedDocument` object.
+
+        Words are expected to be already preprocessed and separated by whitespace. Document tags are constructed
+        automatically from the document line number (each document gets a unique integer tag).
 
         Parameters
         ----------
