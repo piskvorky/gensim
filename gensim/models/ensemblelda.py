@@ -98,6 +98,8 @@ comments.
 
 """
 
+print('asdf')
+
 import logging
 import os
 from multiprocessing import Process, Pipe, ProcessError
@@ -343,8 +345,8 @@ class EnsembleLda(SaveLoad):
         params["eta"] = self.eta
         params["num_topics"] = num_stable_topics
         # adjust params in a way that no training happens
-        params["iterations"] = 0  # no training
         params["passes"] = 0  # no training
+        # iterations is needed for inference, pass it to the model
 
         classic_model_representation = self.topic_model_class(**params)
 
