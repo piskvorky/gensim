@@ -130,8 +130,8 @@ from collections import defaultdict
 import threading
 import itertools
 import warnings
-import time # maohbao
-import smart_open # maohbao
+import time 
+import smart_open 
 
 from gensim.utils import keep_vocab_item, call_on_class_only
 from gensim.models.keyedvectors import Vocab, Word2VecKeyedVectors
@@ -144,7 +144,7 @@ except ImportError:
 
 from numpy import exp, dot, zeros, random, dtype, float32 as REAL,\
     uint32, seterr, array, uint8, vstack, fromstring, sqrt,\
-    empty, sum as np_sum, ones, logaddexp, log, outer, concatenate  #maohbao
+    empty, sum as np_sum, ones, logaddexp, log, outer, concatenate  
 
 from scipy.special import expit
 
@@ -481,7 +481,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
                  sg=0, hs=0, negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
                  trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False, callbacks=(),
                  max_final_vocab=None,
-                 pretrained_emb=None #maohbao
+                 pretrained_emb=None 
                  ):
         """
 
@@ -596,9 +596,9 @@ class Word2Vec(BaseWordEmbeddingsModel):
         self.vocabulary = Word2VecVocab(
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample, sorted_vocab=bool(sorted_vocab),
             null_word=null_word, max_final_vocab=max_final_vocab, ns_exponent=ns_exponent)
-        self.trainables = Word2VecTrainables(pretrained_emb=pretrained_emb, seed=seed, vector_size=size, hashfxn=hashfxn) #maohbao
+        self.trainables = Word2VecTrainables(pretrained_emb=pretrained_emb, seed=seed, vector_size=size, hashfxn=hashfxn) 
 
-        self.pretrained_emb = pretrained_emb #maohbao
+        self.pretrained_emb = pretrained_emb 
 
         super(Word2Vec, self).__init__(
             sentences=sentences, corpus_file=corpus_file, workers=workers, vector_size=size, epochs=iter,
@@ -1681,13 +1681,13 @@ def _assign_binary_codes(vocab):
 
 class Word2VecTrainables(utils.SaveLoad):
     """Represents the inner shallow neural network used to train :class:`~gensim.models.word2vec.Word2Vec`."""
-    def __init__(self, pretrained_emb, vector_size=100, seed=1, hashfxn=hash): #maohbao
+    def __init__(self, pretrained_emb, vector_size=100, seed=1, hashfxn=hash): 
         self.hashfxn = hashfxn
         self.layer1_size = vector_size
         self.seed = seed
 
-        self.pretrained_emb=pretrained_emb  #maohbao
-        self.vector_size=vector_size #maohbao
+        self.pretrained_emb=pretrained_emb  
+        self.vector_size=vector_size 
 
     def prepare_weights(self, hs, negative, wv, update=False, vocabulary=None):
         """Build tables and model weights based on final vocabulary settings."""
@@ -1707,11 +1707,7 @@ class Word2VecTrainables(utils.SaveLoad):
         """Reset all projection weights to an initial (untrained) state, but keep the existing vocabulary."""
         logger.info("resetting layer weights")
         wv.vectors = empty((len(wv.vocab), wv.vector_size), dtype=REAL)
-
-
-
-
-        # maohbao
+        
         #if pre-trained embedding file is given, load it
         p_emb = {}
         syn0_oov = []
@@ -1746,21 +1742,14 @@ class Word2VecTrainables(utils.SaveLoad):
                             logger.info(str(line_no+1) + " lines processed (" + str(time.time()-t) + "s); " + str(len(p_emb)) + " embeddings collected")
                             t = time.time()
 
-
-
-
-
-
-        #maohbao
         '''
         # randomize weights vector by vector, rather than materializing a huge random matrix in RAM at once
         for i in range(len(wv.vocab)):
             # construct deterministic seed from word AND seed argument
             wv.vectors[i] = self.seeded_vector(wv.index2word[i] + str(self.seed), wv.vector_size)
         '''
-
-
-        #maohbao  change xrange to range
+        
+        #change xrange to range
         for i in range(len(wv.vocab)-len(syn0_oov)):
             word = wv.index2word[i]
             if (len(p_emb) > 0) and (word in p_emb):
@@ -1770,9 +1759,6 @@ class Word2VecTrainables(utils.SaveLoad):
                 # construct deterministic seed from word AND seed argument
                 wv.syn0[i] = self.seeded_vector(word + str(self.seed), self.vector_size)
 
-
-
-
         if hs:
             self.syn1 = zeros((len(wv.vocab), self.layer1_size), dtype=REAL)
         if negative:
@@ -1781,8 +1767,6 @@ class Word2VecTrainables(utils.SaveLoad):
 
         self.vectors_lockf = ones(len(wv.vocab), dtype=REAL)  # zeros suppress learning
 
-
-        #maohbao
         # append the oov syn0 weights to syn0
         if len(syn0_oov) > 0:
             wv.syn0 = concatenate((wv.syn0, syn0_oov), axis=0)
@@ -1840,9 +1824,7 @@ if __name__ == "__main__":
     seterr(all='raise')  # don't ignore numpy errors
 
     parser = argparse.ArgumentParser()
-    #maohbao
     parser.add_argument("-pretrained_emb", help="Use pre-trained embeddings; format = original C word2vec-tool non-binary format (i.e. one embedding per word)")
-
     parser.add_argument("-train", help="Use text data from file TRAIN to train the model", required=True)
     parser.add_argument("-output", help="Use file OUTPUT to save the resulting word vectors")
     parser.add_argument("-window", help="Set max skip length WINDOW between words; default is 5", type=int, default=5)
@@ -1887,8 +1869,6 @@ if __name__ == "__main__":
 
     corpus = LineSentence(args.train)
 
-
-    #maohbao
     model = Word2Vec(
     corpus, size=args.size, min_count=args.min_count, workers=args.threads,
     window=args.window, sample=args.sample, sg=skipgram, hs=args.hs,
