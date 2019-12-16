@@ -210,7 +210,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
     """
     def __init__(self, documents=None, corpus_file=None, dm_mean=None, dm=1, dbow_words=0, dm_concat=0,
                  dm_tag_count=1, docvecs=None, docvecs_mapfile=None, comment=None, trim_rule=None, 
-                 pretrained_emb=None, # maohbao
+                 pretrained_emb=None, 
                  callbacks=(), **kwargs):
         """
 
@@ -322,10 +322,10 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             sg=(1 + dm) % 2,
             null_word=dm_concat,
             callbacks=callbacks,
-            pretrained_emb=pretrained_emb, # maohbao
+            pretrained_emb=pretrained_emb, 
             **kwargs)
 
-        self.pretrained_emb=pretrained_emb  # maohbao
+        self.pretrained_emb=pretrained_emb  
 
         self.load = call_on_class_only
 
@@ -1182,7 +1182,7 @@ class Doc2VecTrainables(Word2VecTrainables):
         self.pretrained_emb=pretrained_emb
 
         super(Doc2VecTrainables, self).__init__(
-            self.pretrained_emb, #maohbao
+            self.pretrained_emb, 
             vector_size=vector_size, seed=seed, hashfxn=hashfxn)
         if dm and dm_concat:
             self.layer1_size = (dm_tag_count + (2 * window)) * vector_size
