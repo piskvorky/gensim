@@ -1873,7 +1873,7 @@ if __name__ == "__main__":
     corpus, size=args.size, min_count=args.min_count, workers=args.threads,
     window=args.window, sample=args.sample, sg=skipgram, hs=args.hs,
     negative=args.negative, cbow_mean=1, iter=args.iter,
-    pretrained_emb=args.pretrained_emb #maohbao
+    pretrained_emb=args.pretrained_emb 
     )
 
     if args.output:
