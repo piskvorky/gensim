@@ -1,4 +1,4 @@
-gensim – Topic Modelling in Python
+doc2vec model in gensim – support pretrained word2vec model
 ==================================
 
 [![Build Status](https://travis-ci.org/RaRe-Technologies/gensim.svg?branch=develop)](https://travis-ci.org/RaRe-Technologies/gensim)
