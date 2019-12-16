@@ -209,9 +209,12 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
     """
     def __init__(self, documents=None, corpus_file=None, dm_mean=None, dm=1, dbow_words=0, dm_concat=0,
-                 dm_tag_count=1, docvecs=None, docvecs_mapfile=None, comment=None, trim_rule=None, callbacks=(),
-                 **kwargs):
+                 dm_tag_count=1, docvecs=None, docvecs_mapfile=None, comment=None, trim_rule=None, 
+                 pretrained_emb=None, # maohbao
+                 callbacks=(), **kwargs):
         """
+
+        `pretrained_emb` = takes in pre-trained embedding for word vectors; format = original C word2vec-tool non-binary format (i.e. one embedding per word)
 
         Parameters
         ----------
@@ -319,7 +322,10 @@ class Doc2Vec(BaseWordEmbeddingsModel):
             sg=(1 + dm) % 2,
             null_word=dm_concat,
             callbacks=callbacks,
+            pretrained_emb=pretrained_emb, # maohbao
             **kwargs)
+
+        self.pretrained_emb=pretrained_emb  # maohbao
 
         self.load = call_on_class_only
 
@@ -337,7 +343,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
 
         trainables_keys = ['seed', 'hashfxn', 'window']
         trainables_kwargs = dict((k, kwargs[k]) for k in trainables_keys if k in kwargs)
-        self.trainables = Doc2VecTrainables(
+        self.trainables = Doc2VecTrainables(self.pretrained_emb,
             dm=dm, dm_concat=dm_concat, dm_tag_count=dm_tag_count,
             vector_size=self.vector_size, **trainables_kwargs)
 
@@ -1171,12 +1177,17 @@ class Doc2VecVocab(Word2VecVocab):
 
 class Doc2VecTrainables(Word2VecTrainables):
     """Represents the inner shallow neural network used to train :class:`~gensim.models.doc2vec.Doc2Vec`."""
-    def __init__(self, dm=1, dm_concat=0, dm_tag_count=1, vector_size=100, seed=1, hashfxn=hash, window=5):
+    def __init__(self, pretrained_emb, dm=1, dm_concat=0, dm_tag_count=1, vector_size=100, seed=1, hashfxn=hash, window=5):
+
+        self.pretrained_emb=pretrained_emb
+
         super(Doc2VecTrainables, self).__init__(
+            self.pretrained_emb, #maohbao
             vector_size=vector_size, seed=seed, hashfxn=hashfxn)
         if dm and dm_concat:
             self.layer1_size = (dm_tag_count + (2 * window)) * vector_size
             logger.info("using concatenative %d-dimensional layer1", self.layer1_size)
+
 
     def prepare_weights(self, hs, negative, wv, docvecs, update=False):
         """Build tables and model weights based on final vocabulary settings."""
