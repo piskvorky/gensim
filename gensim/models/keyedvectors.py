@@ -5,20 +5,25 @@
 # Copyright (C) 2018 RaRe Technologies s.r.o.
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""This module implements word vectors and their similarity look-ups.
+"""This module implements word vectors, and more generally sets of vectors keyed by lookup tokens/ints,
+ and various similarity look-ups.
 
 Since trained word vectors are independent from the way they were trained (:class:`~gensim.models.word2vec.Word2Vec`,
 :class:`~gensim.models.fasttext.FastText`, :class:`~gensim.models.wrappers.wordrank.WordRank`,
 :class:`~gensim.models.wrappers.varembed.VarEmbed` etc), they can be represented by a standalone structure,
 as implemented in this module.
 
-The structure is called "KeyedVectors" and is essentially a mapping between *entities*
-and *vectors*. Each entity is identified by its string id, so this is a mapping between {str => 1D numpy array}.
+The structure is called "KeyedVectors" and is essentially a mapping between *keys*
+and *vectors*. Each vector is identified by its lookup key, most often a short string token, so this is usually
+a mapping between {str => 1D numpy array}.
 
-The entity typically corresponds to a word (so the mapping maps words to 1D vectors),
-but for some models, the key can also correspond to a document, a graph node etc. To generalize
-over different use-cases, this module calls the keys **entities**. Each entity is
-always represented by its string id, no matter whether the entity is a word, a document or a graph node.
+The key is, in the original motivating case, a word (so the mapping maps words to 1D vectors),
+but for some models, the key can also correspond to a document, a graph node etc.
+
+(Because some applications may maintain their own integral identifiers, compact and contiguous
+starting at zero, this class also supports use of plain ints as keys – in that case using them as literal
+pointers to the position of the desired vector in the underlying array, and saving the overhead of
+a lookup map entry.)
 
 Why use KeyedVectors instead of a full model?
 =============================================
@@ -35,7 +40,7 @@ Why use KeyedVectors instead of a full model?
 | fasttext/word2vec format  | ✅           | ❌         | do not support further training, but you can still load     |
 |                           |              |            | them into KeyedVectors.                                     |
 +---------------------------+--------------+------------+-------------------------------------------------------------+
-| append new vectors        | ✅           | ✅         | Add new entity-vector entries to the mapping dynamically.   |
+| append new vectors        | ✅           | ✅         | Add new-vector entries to the mapping dynamically.   |
 +---------------------------+--------------+------------+-------------------------------------------------------------+
 | concurrency               | ✅           | ✅         | Thread-safe, allows concurrent vector queries.              |
 +---------------------------+--------------+------------+-------------------------------------------------------------+
@@ -169,13 +174,14 @@ except ImportError:
     from Queue import Queue, Empty  # noqa:F401
 
 from numpy import dot, float32 as REAL, \
-    double, array, zeros, vstack, sqrt, newaxis, integer, \
+    double, array, zeros, vstack, sqrt, newaxis, \
     ndarray, sum as np_sum, prod, argmax, dtype, ascontiguousarray, \
     frombuffer
 import numpy as np
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.corpora.dictionary import Dictionary
+from gensim.utils import deprecated
 from six import string_types, integer_types
 from six.moves import zip, range
 from scipy import stats
@@ -185,6 +191,9 @@ from scipy import stats
 from gensim.models.deprecated.keyedvectors import EuclideanKeyedVectors  # noqa
 
 logger = logging.getLogger(__name__)
+
+
+KEY_TYPES = (string_types, integer_types, np.integer)
 
 
 class KeyedVectors(utils.SaveLoad):
@@ -203,6 +212,7 @@ class KeyedVectors(utils.SaveLoad):
         self.mapfile_path = mapfile_path
 
     def _load_specials(self, *args, **kwargs):
+        """Handle special requirements of `.load()` protocol, usually up-converting older versions."""
         super(KeyedVectors, self)._load_specials(*args, **kwargs)
         if hasattr(self, 'doctags'):
             self._upconvert_old_d2vkv()
@@ -214,7 +224,7 @@ class KeyedVectors(utils.SaveLoad):
             self.map = self.__dict__.pop('vocab', None)
 
     def resize_vectors(self):
-        """Make vectors match index2key size"""
+        """Make underlying vectors match index2key size."""
         target_count = len(self.index2key)
         prev_count = len(self.vectors)
         if prev_count == target_count:
@@ -229,6 +239,10 @@ class KeyedVectors(utils.SaveLoad):
         return range(prev_count, target_count)
 
     def randomly_initialize_vectors(self, indexes=None, seed=0):
+        """Initialize vectors with low-magnitude random vectors, as is typical for pre-trained
+        Word2Vec  and related models.
+
+        """
         if indexes is None:
             indexes = range(0, len(self.vectors))
         for i in indexes:
@@ -253,13 +267,16 @@ class KeyedVectors(utils.SaveLoad):
             Vector representation for `key_or_keys` (1D if `key_or_keys` is single key, otherwise - 2D).
 
         """
-        if isinstance(key_or_keys, (string_types, integer_types, np.integer)):
+        if isinstance(key_or_keys, KEY_TYPES):
             return self.get_vector(key_or_keys)
 
         return vstack([self.get_vector(key) for key in key_or_keys])
 
     def get_index(self, key):
-        """TODO comment"""
+        """Return the integer index (slot/position) where the given key's vector is stored in the
+        backing vectors array.
+
+        """
         if key in self.map:
             return self.map[key].index
         elif isinstance(key, (integer_types, np.integer)) and key < len(self.vectors):
@@ -268,7 +285,7 @@ class KeyedVectors(utils.SaveLoad):
             raise KeyError("Key '%s' not in vocabulary" % key)
 
     def get_vector(self, key, use_norm=False):
-        """Get the entity's representations in vector space, as a 1D numpy array.
+        """Get the key's vector, as a 1D numpy array.
 
         Parameters
         ----------
@@ -301,67 +318,74 @@ class KeyedVectors(utils.SaveLoad):
         """Compatibility alias for get_vector()"""
         return self.get_vector(*args, **kwargs)
 
-    def add(self, entities, weights, replace=False):
-        """Append entities and theirs vectors in a manual way.
-        If some entity is already in the vocabulary, the old vector is kept unless `replace` flag is True.
+    def add(self, keys, weights, replace=False):
+        """Append keys and theirs vectors in a manual way.
+        If some key is already in the vocabulary, the old vector is kept unless `replace` flag is True.
 
         Parameters
         ----------
-        entities : list of str
-            Entities specified by string ids.
+        keys : list of (str or int)
+            keys specified by string or int ids.
         weights: list of numpy.ndarray or numpy.ndarray
             List of 1D np.array vectors or a 2D np.array of vectors.
         replace: bool, optional
-            Flag indicating whether to replace vectors for entities which already exist in the vocabulary,
+            Flag indicating whether to replace vectors for keys which already exist in the map
             if True - replace vectors, otherwise - keep old vectors.
 
         """
-        if isinstance(entities, string_types):
-            entities = [entities]
+        if isinstance(keys, KEY_TYPES):
+            keys = [keys]
             weights = np.array(weights).reshape(1, -1)
         elif isinstance(weights, list):
             weights = np.array(weights)
 
-        in_vocab_mask = np.zeros(len(entities), dtype=np.bool)
-        for idx, entity in enumerate(entities):
-            if entity in self.vocab:
+        in_vocab_mask = np.zeros(len(keys), dtype=np.bool)
+        for idx, key in enumerate(keys):
+            if key in self:
                 in_vocab_mask[idx] = True
 
         # add new entities to the vocab
         for idx in np.nonzero(~in_vocab_mask)[0]:
-            entity = entities[idx]
-            self.vocab[entity] = Vocab(index=len(self.vocab), count=1)
-            self.index2key.append(entity)
+            key = keys[idx]
+            self.map[key] = Vocab(index=len(self.index2key), count=1)
+            self.index2key.append(key)
 
         # add vectors for new entities
         self.vectors = vstack((self.vectors, weights[~in_vocab_mask].astype(self.vectors.dtype)))
 
         # change vectors for in_vocab entities if `replace` flag is specified
         if replace:
-            in_vocab_idxs = [self.vocab[entities[idx]].index for idx in np.nonzero(in_vocab_mask)[0]]
+            in_vocab_idxs = [self.map[keys[idx]].index for idx in np.nonzero(in_vocab_mask)[0]]
             self.vectors[in_vocab_idxs] = weights[in_vocab_mask]
 
-    def __setitem__(self, entities, weights):
-        """Add entities and theirs vectors in a manual way.
-        If some entity is already in the vocabulary, old vector is replaced with the new one.
+    def __setitem__(self, keys, weights):
+        """Add keys and theirs vectors in a manual way.
+        If some key is already in the vocabulary, old vector is replaced with the new one.
         This method is alias for :meth:`~gensim.models.keyedvectors.KeyedVectors.add` with `replace=True`.
 
         Parameters
         ----------
-        entities : {str, list of str}
-            Entities specified by their string ids.
+        keys : {str, int, list of (str or int)}
+            keys specified by their string or int ids.
         weights: list of numpy.ndarray or numpy.ndarray
             List of 1D np.array vectors or 2D np.array of vectors.
 
         """
-        if not isinstance(entities, list):
-            entities = [entities]
+        if not isinstance(keys, list):
+            keys = [keys]
             weights = weights.reshape(1, -1)
 
-        self.add(entities, weights, replace=True)
+        self.add(keys, weights, replace=True)
 
     def has_index_for(self, key):
-        """Can this model return an index for this key?"""
+        """Can this model return a single index for this key?
+
+        Subclasses that synthesize vectors for out-of-vocabulary words (like
+        :class:`~gensim.models.fasttext.FastText`) may respond True for a
+        simple `word in wv` (`__contains__()`) check but False for this
+        more-specific check.
+
+        """
         try:
             return self.get_index(key) >= 0
         except KeyError:
@@ -370,24 +394,25 @@ class KeyedVectors(utils.SaveLoad):
     def __contains__(self, key):
         return self.has_index_for(key)
 
-    def most_similar_to_given(self, entity1, entities_list):
-        """Get the `entity` from `entities_list` most similar to `entity1`."""
-        return entities_list[argmax([self.similarity(entity1, entity) for entity in entities_list])]
+    def most_similar_to_given(self, key1, keys_list):
+        """Get the `key` from `keys_list` most similar to `key1`."""
+        return keys_list[argmax([self.similarity(key1, key) for key in keys_list])]
 
-    def closer_than(self, entity1, entity2):
-        """Get all entities that are closer to `entity1` than `entity2` is to `entity1`."""
-        all_distances = self.distances(entity1)
-        e1_index = self.vocab[entity1].index
-        e2_index = self.vocab[entity2].index
+    def closer_than(self, key1, key2):
+        """Get all keys that are closer to `key1` than `key2` is to `key1`."""
+        all_distances = self.distances(key1)
+        e1_index = self.vocab[key1].index
+        e2_index = self.vocab[key2].index
         closer_node_indices = np.where(all_distances < all_distances[e2_index])[0]
         return [self.index2key[index] for index in closer_node_indices if index != e1_index]
 
+    @deprecated("Use closer_than instead")
     def words_closer_than(self, word1, word2):
         return self.closer_than(word1, word2)
 
-    def rank(self, entity1, entity2):
-        """Rank of the distance of `entity2` from `entity1`, in relation to distances of all entities from `entity1`."""
-        return len(self.closer_than(entity1, entity2)) + 1
+    def rank(self, key1, key2):
+        """Rank of the distance of `key2` from `key1`, in relation to distances of all keys from `key1`."""
+        return len(self.closer_than(key1, key2)) + 1
 
     # backward compatibility
     @property
@@ -434,23 +459,23 @@ class KeyedVectors(utils.SaveLoad):
 
     def most_similar(self, positive=None, negative=None, topn=10, clip_start=0, clip_end=None,
                      restrict_vocab=None, indexer=None):
-        """Find the top-N most similar words.
-        Positive words contribute positively towards the similarity, negative words negatively.
+        """Find the top-N most similar keys.
+        Positive keys contribute positively towards the similarity, negative keys negatively.
 
         This method computes cosine similarity between a simple mean of the projection
-        weight vectors of the given words and the vectors for each word in the model.
+        weight vectors of the given keys and the vectors for each key in the model.
         The method corresponds to the `word-analogy` and `distance` scripts in the original
         word2vec implementation.
 
         Parameters
         ----------
-        positive : list of str, optional
-            List of words that contribute positively.
-        negative : list of str, optional
-            List of words that contribute negatively.
+        positive : list of (str or int or ndarray), optional
+            List of keys that contribute positively.
+        negative : list of (str or int or ndarray), optional
+            List of keys that contribute negatively.
         topn : int or None, optional
-            Number of top-N similar words to return, when `topn` is int. When `topn` is None,
-            then similarities for all words are returned.
+            Number of top-N similar keys to return, when `topn` is int. When `topn` is None,
+            then similarities for all keys are returned.
         clip_start : int
             Start clipping index.
         clip_end : int
@@ -458,15 +483,15 @@ class KeyedVectors(utils.SaveLoad):
         restrict_vocab : int, optional
             Optional integer which limits the range of vectors which
             are searched for most-similar values. For example, restrict_vocab=10000 would
-            only check the first 10000 word vectors in the vocabulary order. (This may be
+            only check the first 10000 key vectors in the vocabulary order. (This may be
             meaningful if you've sorted the vocabulary by descending frequency.) If
             specified, overrides any values of clip_start or clip_end
 
         Returns
         -------
         list of (str, float) or numpy.array
-            When `topn` is int, a sequence of (word, similarity) is returned.
-            When `topn` is None, then similarities for all words are returned as a
+            When `topn` is int, a sequence of (key, similarity) is returned.
+            When `topn` is None, then similarities for all keys are returned as a
             one-dimensional numpy array with the size of the vocabulary.
 
         """
@@ -485,29 +510,29 @@ class KeyedVectors(utils.SaveLoad):
             clip_start = 0
             clip_end = restrict_vocab
 
-        if isinstance(positive, string_types + integer_types + (integer,)) and not negative:
+        if isinstance(positive, KEY_TYPES) and not negative:
             # allow calls like most_similar('dog'), as a shorthand for most_similar(['dog'])
             positive = [positive]
 
-        # add weights for each word, if not already present; default to 1.0 for positive and -1.0 for negative words
+        # add weights for each key, if not already present; default to 1.0 for positive and -1.0 for negative keys
         positive = [
-            (key, 1.0) if isinstance(key, string_types + integer_types + (ndarray, integer))
-            else key for key in positive
+            (item, 1.0) if isinstance(item, KEY_TYPES + (ndarray,))
+            else item for item in positive
         ]
         negative = [
-            (key, -1.0) if isinstance(key, string_types + integer_types + (ndarray, integer))
-            else key for key in negative
+            (item, -1.0) if isinstance(item, KEY_TYPES + (ndarray,))
+            else item for item in negative
         ]
 
-        # compute the weighted average of all words
-        all_words, mean = set(), []
-        for word, weight in positive + negative:
-            if isinstance(word, ndarray):
-                mean.append(weight * word)
+        # compute the weighted average of all keys
+        all_keys, mean = set(), []
+        for key, weight in positive + negative:
+            if isinstance(key, ndarray):
+                mean.append(weight * key)
             else:
-                mean.append(weight * self.word_vec(word, use_norm=True))
-                if self.has_index_for(word):
-                    all_words.add(self.get_index(word))
+                mean.append(weight * self.get_vector(key, use_norm=True))
+                if self.has_index_for(key):
+                    all_keys.add(self.get_index(key))
         if not mean:
             raise ValueError("cannot compute similarity with no input")
         mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
@@ -518,59 +543,63 @@ class KeyedVectors(utils.SaveLoad):
         dists = dot(self.vectors_norm[clip_start:clip_end], mean)
         if not topn:
             return dists
-        best = matutils.argsort(dists, topn=topn + len(all_words), reverse=True)
-        # ignore (don't return) words from the input
+        best = matutils.argsort(dists, topn=topn + len(all_keys), reverse=True)
+        # ignore (don't return) keys from the input
         result = [(self.index2key[sim + clip_start], float(dists[sim]))
-                  for sim in best if (sim + clip_start) not in all_words]
+                  for sim in best if (sim + clip_start) not in all_keys]
         return result[:topn]
 
     def similar_by_word(self, word, topn=10, restrict_vocab=None):
-        """Find the top-N most similar words.
+        """Compatibility alias for similar_by_key()"""
+        return self.similar_by_key(word, topn, restrict_vocab)
+
+    def similar_by_key(self, key, topn=10, restrict_vocab=None):
+        """Find the top-N most similar keys.
 
         Parameters
         ----------
-        word : str
-            Word
+        key : str
+            Key
         topn : int or None, optional
-            Number of top-N similar words to return. If topn is None, similar_by_word returns
+            Number of top-N similar keys to return. If topn is None, similar_by_key returns
             the vector of similarity scores.
         restrict_vocab : int, optional
             Optional integer which limits the range of vectors which
             are searched for most-similar values. For example, restrict_vocab=10000 would
-            only check the first 10000 word vectors in the vocabulary order. (This may be
+            only check the first 10000 key vectors in the vocabulary order. (This may be
             meaningful if you've sorted the vocabulary by descending frequency.)
 
         Returns
         -------
         list of (str, float) or numpy.array
-            When `topn` is int, a sequence of (word, similarity) is returned.
-            When `topn` is None, then similarities for all words are returned as a
+            When `topn` is int, a sequence of (key, similarity) is returned.
+            When `topn` is None, then similarities for all keys are returned as a
             one-dimensional numpy array with the size of the vocabulary.
 
         """
-        return self.most_similar(positive=[word], topn=topn, restrict_vocab=restrict_vocab)
+        return self.most_similar(positive=[key], topn=topn, restrict_vocab=restrict_vocab)
 
     def similar_by_vector(self, vector, topn=10, restrict_vocab=None):
-        """Find the top-N most similar words by vector.
+        """Find the top-N most similar keys by vector.
 
         Parameters
         ----------
         vector : numpy.array
             Vector from which similarities are to be computed.
         topn : int or None, optional
-            Number of top-N similar words to return, when `topn` is int. When `topn` is None,
-            then similarities for all words are returned.
+            Number of top-N similar keys to return, when `topn` is int. When `topn` is None,
+            then similarities for all keys are returned.
         restrict_vocab : int, optional
             Optional integer which limits the range of vectors which
             are searched for most-similar values. For example, restrict_vocab=10000 would
-            only check the first 10000 word vectors in the vocabulary order. (This may be
+            only check the first 10000 key vectors in the vocabulary order. (This may be
             meaningful if you've sorted the vocabulary by descending frequency.)
 
         Returns
         -------
         list of (str, float) or numpy.array
-            When `topn` is int, a sequence of (word, similarity) is returned.
-            When `topn` is None, then similarities for all words are returned as a
+            When `topn` is int, a sequence of (key, similarity) is returned.
+            When `topn` is None, then similarities for all keys are returned as a
             one-dimensional numpy array with the size of the vocabulary.
 
         """
@@ -709,6 +738,7 @@ class KeyedVectors(utils.SaveLoad):
             When `topn` is None, then similarities for all words are returned as a
             one-dimensional numpy array with the size of the vocabulary.
 
+        # TODO: Update to better match & share code with most_similar()
         """
         if isinstance(topn, Integral) and topn < 1:
             return []
@@ -755,17 +785,17 @@ class KeyedVectors(utils.SaveLoad):
         return result[:topn]
 
     def doesnt_match(self, words):
-        """Which word from the given list doesn't go with the others?
+        """Which key from the given list doesn't go with the others?
 
         Parameters
         ----------
         words : list of str
-            List of words.
+            List of keys.
 
         Returns
         -------
         str
-            The word further away from the mean of all words.
+            The key further away from the mean of all keys.
 
         """
         self.init_sims()
@@ -827,7 +857,7 @@ class KeyedVectors(utils.SaveLoad):
             If either `word_or_vector` or any word in `other_words` is absent from vocab.
 
         """
-        if isinstance(word_or_vector, string_types):
+        if isinstance(word_or_vector, KEY_TYPES):
             input_vector = self.word_vec(word_or_vector)
         else:
             input_vector = word_or_vector
@@ -839,15 +869,15 @@ class KeyedVectors(utils.SaveLoad):
         return 1 - self.cosine_similarities(input_vector, other_vectors)
 
     def distance(self, w1, w2):
-        """Compute cosine distance between two words.
+        """Compute cosine distance between two keys.
         Calculate 1 - :meth:`~gensim.models.keyedvectors.KeyedVectors.similarity`.
 
         Parameters
         ----------
         w1 : str
-            Input word.
+            Input key.
         w2 : str
-            Input word.
+            Input key.
 
         Returns
         -------
@@ -858,14 +888,14 @@ class KeyedVectors(utils.SaveLoad):
         return 1 - self.similarity(w1, w2)
 
     def similarity(self, w1, w2):
-        """Compute cosine similarity between two words.
+        """Compute cosine similarity between two keys.
 
         Parameters
         ----------
         w1 : str
-            Input word.
+            Input key.
         w2 : str
-            Input word.
+            Input key.
 
         Returns
         -------
@@ -876,14 +906,14 @@ class KeyedVectors(utils.SaveLoad):
         return dot(matutils.unitvec(self[w1]), matutils.unitvec(self[w2]))
 
     def n_similarity(self, ws1, ws2):
-        """Compute cosine similarity between two sets of words.
+        """Compute cosine similarity between two sets of keys.
 
         Parameters
         ----------
         ws1 : list of str
-            Sequence of words.
+            Sequence of keys.
         ws2: list of str
-            Sequence of words.
+            Sequence of keys.
 
         Returns
         -------
@@ -893,8 +923,8 @@ class KeyedVectors(utils.SaveLoad):
         """
         if not(len(ws1) and len(ws2)):
             raise ZeroDivisionError('At least one of the passed list is empty.')
-        v1 = [self[word] for word in ws1]
-        v2 = [self[word] for word in ws2]
+        v1 = [self[key] for key in ws1]
+        v2 = [self[key] for key in ws2]
         return dot(matutils.unitvec(array(v1).mean(axis=0)), matutils.unitvec(array(v2).mean(axis=0)))
 
     @staticmethod
@@ -1163,7 +1193,7 @@ class KeyedVectors(utils.SaveLoad):
 
         """
         if getattr(self, 'vectors_norm', None) is None or replace:
-            logger.info("precomputing L2-norms of word weight vectors")
+            logger.info("precomputing L2-norms of key weight vectors")
             self.vectors_norm = _l2_norm(self.vectors, replace=replace)
 
     def relative_cosine_similarity(self, wa, wb, topn=10):
@@ -1545,6 +1575,7 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
 
 
 def load_word2vec_format(*args, **kwargs):
+    """Alias for `KeyedVectors.load_word2vec_format(...)`"""
     return KeyedVectors.load_word2vec_format(*args, **kwargs)
 
 
@@ -1564,6 +1595,16 @@ def pseudorandom_weak_vector(size, seed_string=None, hashfxn=hash):
 
 
 class ConcatList(UserList):
+    """Pseudo-list that stitches together multiple underlying sequences, but
+    only offers indexed-access and iteration.
+
+    (Used to support KeyedVectors optimization in case of mixed plain-int and
+    string keys, where all plain-int keys are represented by a simple `range()`
+    object, followed by a real list.)
+
+    # TODO: implement or stub as NotImplemented other necessary methods,
+    # especially slicing?
+    """
     def __getitem__(self, index):
         for subseq in self.data:
             if index >= len(subseq):
@@ -1578,5 +1619,3 @@ class ConcatList(UserList):
 
     def __len__(self):
         return sum(len(subseq) for subseq in self.data)
-
-# TODO: implement or stub as NotImplemented other methods
