@@ -253,13 +253,12 @@ Copyright (c) 2009-now Radim Rehurek
 
 distributed_env = ['Pyro4 >= 4.27']
 
-win_testenv = [
+linux_testenv = [
     'pytest',
     'pytest-rerunfailures',
     'mock',
     'cython',
     'nmslib',
-    'pyemd',
     'testfixtures',
     'Morfessor==2.0.2a4',
     'python-Levenshtein >= 0.10.2',
@@ -269,8 +268,13 @@ win_testenv = [
     # See https://github.com/RaRe-Technologies/gensim/pull/2814
     # 'tensorflow',
     # 'keras',
+    'pyemd',  # see below; keep as last until appveyor issue resolved
 ]
 
+# temporarily remove pyemd to work around appveyor issues
+win_testenv = linux_testenv[:-1]
+
+#
 # This list partially duplicates requirements_docs.txt.
 # The main difference is that we don't include version pins here unless
 # absolutely necessary, whereas requirements_docs.txt includes pins for
