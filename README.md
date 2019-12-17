@@ -26,10 +26,10 @@ Use the model
 ---------------------------
 
 * Clone gensim to your machine
->git clone 
+> git clone 
 
 * install gensim
-python setup.py install
+> python setup.py install
 
 
 2. Train your model 
