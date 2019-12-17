@@ -23,16 +23,17 @@ Use the model
 =============
 
 1.Install the forked gensim
+---------------------------
 
-*Clone gensim to your machine
+* Clone gensim to your machine
 >git clone 
 
-*install gensim
+* install gensim
 python setup.py install
 
 
 2. Train your model 
-
+---------------------------
 
 pretrained_emb = "word2vec_pretrained.txt" # This is a pretrained word2vec model of C text format
 
