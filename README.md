@@ -10,11 +10,11 @@ The default doc2vec model in gensim does't support pretrained word2vec model. Bu
 
 Features and notice
 =============
-1.Support pretrained word2vec when train doc2vec.
-2.Support Python 3.
-3.Support gensim 3.8.
-4.The pretrainned word2vec model should be C text format.
-5.The dimension of the pretrained word2vec and doc2vec should be the same.
+* 1.Support pretrained word2vec when train doc2vec.
+* 2.Support Python 3.
+* 3.Support gensim 3.8.
+* 4.The pretrainned word2vec model should be C text format.
+* 5.The dimension of the pretrained word2vec and doc2vec should be the same.
 
 
 
