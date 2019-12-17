@@ -39,13 +39,13 @@ Use the model
 2.Train your model 
 ---------------------------
 
-> pretrained_emb = "word2vec_pretrained.txt" # This is a pretrained word2vec model of C text format
+> pretrained_emb = "word2vec_pretrained.txt"  # This is a pretrained word2vec model of C text format
 > 
-> model = gensim.models.doc2vec.Doc2Vec(corpus_train,  # This is the document corpus to be trained which should meet gensim's format
-                                       vector_size=50,
-                                       min_count=1, epochs=20,                              
-                                       dm=0,
-                                       pretrained_emb=pretrained_emb) 
+> model = gensim.models.doc2vec.Doc2Vec(corpus_train,  # This is the document corpus to be trained which should meet gensim's format  
+                                       vector_size=50,  
+                                       min_count=1, epochs=20,  
+                                       dm=0,  
+                                       pretrained_emb=pretrained_emb)   
 
 
 
