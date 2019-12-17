@@ -40,7 +40,7 @@ Why use KeyedVectors instead of a full model?
 | fasttext/word2vec format  | ✅           | ❌         | do not support further training, but you can still load     |
 |                           |              |            | them into KeyedVectors.                                     |
 +---------------------------+--------------+------------+-------------------------------------------------------------+
-| append new vectors        | ✅           | ✅         | Add new-vector entries to the mapping dynamically.   |
+| append new vectors        | ✅           | ✅         | Add new-vector entries to the mapping dynamically.          |
 +---------------------------+--------------+------------+-------------------------------------------------------------+
 | concurrency               | ✅           | ✅         | Thread-safe, allows concurrent vector queries.              |
 +---------------------------+--------------+------------+-------------------------------------------------------------+
