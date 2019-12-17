@@ -8,6 +8,8 @@ The default doc2vec model in gensim does't support pretrained word2vec model. Bu
 
 
 
+
+
 Features and notice
 =============
 * 1.Support pretrained word2vec when train doc2vec.
@@ -19,6 +21,8 @@ Features and notice
 
 
 
+
+
 Use the model
 =============
 
@@ -26,28 +30,31 @@ Use the model
 ---------------------------
 
 * Clone gensim to your machine
-> git clone 
+> git clone https://github.com/maohbao/gensim.git
 
 * install gensim
 > python setup.py install
 
 
-2. Train your model 
+2.Train your model 
 ---------------------------
 
-pretrained_emb = "word2vec_pretrained.txt" # This is a pretrained word2vec model of C text format
+> pretrained_emb = "word2vec_pretrained.txt" # This is a pretrained word2vec model of C text format
 
-model = gensim.models.doc2vec.Doc2Vec(corpus_train,  # This is the document corpus to be trained which should meet gensim's format
-                                      vector_size=50,
-                                      min_count=1, epochs=20, 
-                                      dm=0,
-                                      pretrained_emb=pretrained_emb) 
+> model = gensim.models.doc2vec.Doc2Vec(corpus_train,  # This is the document corpus to be trained which should meet gensim's format
+>                                       vector_size=50,
+>                                       min_count=1, epochs=20, 
+>                                       dm=0,
+>                                       pretrained_emb=pretrained_emb) 
+
+
+
 
 
 
 Publications
 =============
 
-1.Jey Han Lau and Timothy Baldwin (2016). An Empirical Evaluation of doc2vec with Practical Insights into Document Embedding Generation. In Proceedings of the 1st Workshop on Representation Learning for NLP, 2016.
+* 1.Jey Han Lau and Timothy Baldwin (2016). An Empirical Evaluation of doc2vec with Practical Insights into Document Embedding Generation. In Proceedings of the 1st Workshop on Representation Learning for NLP, 2016.
 
-2.[The initial forked gensim version](https://github.com/jhlau/gensim)
+* 2.[The initial forked gensim version](https://github.com/jhlau/gensim)
