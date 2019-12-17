@@ -41,7 +41,8 @@ Use the model
 
 > pretrained_emb = "word2vec_pretrained.txt"  # This is a pretrained word2vec model of C text format
 > 
-> model = gensim.models.doc2vec.Doc2Vec(corpus_train,  # This is the document corpus to be trained which should meet gensim's format  
+> model = gensim.models.doc2vec.Doc2Vec(
+                                       corpus_train,  # This is the document corpus to be trained which should meet gensim's format  
                                        vector_size=50,  
                                        min_count=1, epochs=20,  
                                        dm=0,  
