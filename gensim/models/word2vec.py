@@ -126,13 +126,15 @@ import os
 import heapq
 from timeit import default_timer
 from copy import deepcopy
-from collections import defaultdict
+from collections import defaultdict, namedtuple
+from dataclasses import dataclass
+from typing import List
 import threading
 import itertools
 import warnings
 
 from gensim.utils import keep_vocab_item, call_on_class_only, deprecated
-from gensim.models.keyedvectors import Vocab, KeyedVectors, pseudorandom_weak_vector
+from gensim.models.keyedvectors import KeyedVectors, pseudorandom_weak_vector
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 
 try:
@@ -1039,6 +1041,41 @@ def _scan_vocab_worker(stream, progress_queue, max_vocab_size=None, trim_rule=No
     return vocab
 
 
+@dataclass
+class W2VVocab:
+    """A dataclass shape-compatible with keyedvectors.SimpleVocab, extended with the
+    `sample_int` property needed by `Word2Vec` models."""
+    __slots__ = ('count', 'index', 'sample_int')
+    count: int
+    index: int
+    sample_int: int
+
+    def __init__(self, count=0, index=0, sample_int=2**32):
+        self.count, self.index, self.sample_int = count, index, sample_int
+
+    def __lt__(self, other):
+        return self.count < other.count
+
+
+@dataclass
+class W2VHSVocab:
+    """A dataclass shape-compatible with W2VVocab, extended with the `code` and
+    `point` properties needed by hierarchical-sampling (`hs=1`) `Word2Vec` models."""
+    __slots__ = ('count', 'index', 'sample_int', 'code', 'point')
+    count: int
+    index: int
+    sample_int: int
+    code: List[int]
+    point: List[int]
+
+    def __init__(self, count=0, index=0, sample_int=2**32, code=None, point=None):
+        self.count, self.index, self.sample_int, self.code, self.point = \
+            count, index, sample_int, code, point
+
+    def __lt__(self, other):
+        return self.count < other.count
+
+
 class Word2VecVocab(utils.SaveLoad):
     def __init__(
             self, max_vocab_size=None, min_count=5, sample=1e-3, sorted_vocab=True, null_word=0,
@@ -1161,7 +1198,7 @@ class Word2VecVocab(utils.SaveLoad):
                     retain_words.append(word)
                     retain_total += v
                     if not dry_run:
-                        wv.vocab[word] = Vocab(count=v, index=len(wv.index2key))
+                        wv.vocab[word] = W2VVocab(count=v, index=len(wv.index2key))
                         wv.index2key.append(word)
                 else:
                     drop_unique += 1
@@ -1193,7 +1230,7 @@ class Word2VecVocab(utils.SaveLoad):
                         new_words.append(word)
                         new_total += v
                         if not dry_run:
-                            wv.vocab[word] = Vocab(count=v, index=len(wv.index2key))
+                            wv.vocab[word] = W2VVocab(count=v, index=len(wv.index2key))
                             wv.index2key.append(word)
                 else:
                     drop_unique += 1
@@ -1267,7 +1304,7 @@ class Word2VecVocab(utils.SaveLoad):
         return report_values
 
     def add_null_word(self, wv):
-        word, v = '\0', Vocab(count=1, sample_int=0)
+        word, v = '\0', W2VVocab(count=1, sample_int=0)
         v.index = len(wv.vocab)
         wv.index2key.append(word)
         wv.vocab[word] = v
@@ -1305,13 +1342,18 @@ class Word2VecVocab(utils.SaveLoad):
             assert self.cum_table[-1] == domain
 
 
+class Heapitem(namedtuple('Heapitem', 'count, index, left, right')):
+    def __lt__(self, other):
+        return self.count < other.count
+
+
 def _build_heap(vocab):
     heap = list(itervalues(vocab))
     heapq.heapify(heap)
     for i in range(len(vocab) - 1):
         min1, min2 = heapq.heappop(heap), heapq.heappop(heap)
         heapq.heappush(
-            heap, Vocab(count=min1.count + min2.count, index=i + len(vocab), left=min1, right=min2)
+            heap, Heapitem(count=min1.count + min2.count, index=i + len(vocab), left=min1, right=min2)
         )
     return heap
 
@@ -1338,6 +1380,9 @@ def _assign_binary_codes(vocab):
     """
     logger.info("constructing a huffman tree from %i words", len(vocab))
 
+    for k in vocab.keys():
+        # ensure dataclass items sufficient for huffman-encoding
+        vocab[k] = W2VHSVocab(vocab[k].count, vocab[k].index, vocab[k].sample_int)
     heap = _build_heap(vocab)
     if not heap:
         #

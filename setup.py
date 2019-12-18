@@ -333,6 +333,7 @@ install_requires = [
     'scipy >= 0.18.1',
     'six >= 1.5.0',
     'smart_open >= 1.8.1',
+    "dataclasses; python_version < '3.7'",
 ]
 
 setup_requires = [NUMPY_STR]

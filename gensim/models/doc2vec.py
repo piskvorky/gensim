@@ -72,6 +72,7 @@ except ImportError:
 from collections import namedtuple, defaultdict
 from collections.abc import Iterable
 from timeit import default_timer
+from dataclasses import dataclass
 
 from numpy import zeros, float32 as REAL, ones, \
     memmap as np_memmap, vstack, integer, dtype
@@ -145,20 +146,29 @@ class TaggedDocument(namedtuple('TaggedDocument', 'words tags')):
         return '%s(%s, %s)' % (self.__class__.__name__, self.words, self.tags)
 
 
-class Doctag(namedtuple('Doctag', 'index, word_count, doc_count')):
-    """A string document tag discovered during the initial vocabulary scan.
-    The document-vector equivalent of a Vocab object. TODO: merge with Vocab
+@dataclass
+class DoctagVocab:
+    """A dataclass shape-compatible with keyedvectors.SimpleVocab, extended to record
+    details of string document tags discovered during the initial vocabulary scan.
 
     Will not be used if all presented document tags are ints.
     """
-    __slots__ = ()
-
-    def repeat(self, word_count):
-        return self._replace(word_count=self.word_count + word_count, doc_count=self.doc_count + 1)
+    __slots__ = ('doc_count', 'index', 'word_count')
+    doc_count: int  # number of docs where tag appeared
+    index: int  # position in underlying array
+    word_count: int  # number of words in associated docs
 
     @property
     def count(self):
         return self.doc_count
+
+    @count.setter
+    def count(self, new_val):
+        self.doc_count = new_val
+
+
+# compatibility alias, allowing prior namedtuples to unpickle
+Doctag = DoctagVocab
 
 
 class Doc2Vec(BaseWordEmbeddingsModel):
@@ -1030,7 +1040,8 @@ class Doc2VecVocab(Word2VecVocab):
                     max_rawint = max(max_rawint, tag)
                 else:
                     if tag in doctags_lookup:
-                        doctags_lookup[tag] = doctags_lookup[tag].repeat(document_length)
+                        doctags_lookup[tag].doc_count += 1
+                        doctags_lookup[tag].word_count += document_length
                     else:
                         doctags_lookup[tag] = Doctag(index=len(doctags_list), word_count=document_length, doc_count=1)
                         doctags_list.append(tag)
@@ -1046,8 +1057,7 @@ class Doc2VecVocab(Word2VecVocab):
         if max_rawint > -1:
             # adjust indexes/list to account for range of pure-int keyed doctags
             for key in doctags_list:
-                orig = doctags_lookup[key]
-                doctags_lookup[key] = orig._replace(index=orig.index + max_rawint + 1)
+                doctags_lookup[key].index = doctags_lookup[key].index + max_rawint + 1
             doctags_list = ConcatList([range(0, max_rawint + 1), doctags_list])
 
         docvecs.vocab = doctags_lookup

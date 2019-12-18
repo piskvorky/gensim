@@ -166,6 +166,7 @@ and so on.
 from itertools import chain
 import logging
 from collections import UserList
+from dataclasses import dataclass
 from numbers import Integral
 
 try:
@@ -347,7 +348,7 @@ class KeyedVectors(utils.SaveLoad):
         # add new entities to the vocab
         for idx in np.nonzero(~in_vocab_mask)[0]:
             key = keys[idx]
-            self.map[key] = Vocab(index=len(self.index2key), count=1)
+            self.map[key] = SimpleVocab(index=len(self.index2key), count=1)
             self.index2key.append(key)
 
         # add vectors for new entities
@@ -1407,11 +1408,27 @@ def _l2_norm(m, replace=False):
         return (m / dist).astype(REAL)
 
 
-class Vocab(object):
+@dataclass
+class SimpleVocab:
+    """A single vocabulary item, used internally for collecting per-word position in the
+    backing array (.index), and frequency/sampling info from a corpus survey (.count).
+
+    Using a dataclass with fixed __slots__ saves 200+ bytes per entry over the prior
+    approach (which used a freely-expandable __dict__) – but now requires specialized
+    uses to define their own expanded data items, which should always include `count`
+    and `index` properties.
+    """
+    __slots__ = ('count', 'index')
+    count: int
+    index: int
+
+
+class CompatVocab(object):
     def __init__(self, **kwargs):
         """A single vocabulary item, used internally for collecting per-word frequency/sampling info,
         and for constructing binary trees (incl. both word leaves and inner nodes).
 
+        Retained for now to ease the loading of older models.
         """
         self.count = 0
         self.__dict__.update(kwargs)
@@ -1422,6 +1439,10 @@ class Vocab(object):
     def __str__(self):
         vals = ['%s:%r' % (key, self.__dict__[key]) for key in sorted(self.__dict__) if not key.startswith('_')]
         return "%s(%s)" % (self.__class__.__name__, ', '.join(vals))
+
+
+# compatibility alias, allowing older pickle-based `.save()`s to load
+Vocab = CompatVocab
 
 
 # Functions for internal use by _load_word2vec_format function
@@ -1442,7 +1463,7 @@ def _add_word_to_result(result, counts, word, weights, vocab_size):
         logger.warning("vocabulary file is incomplete: '%s' is missing", word)
         word_count = None
 
-    result.vocab[word] = Vocab(index=word_id, count=word_count)
+    result.vocab[word] = SimpleVocab(index=word_id, count=word_count)
     result.vectors[word_id] = weights
     result.index2key.append(word)
 

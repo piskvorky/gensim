@@ -18,8 +18,7 @@ import logging
 import numpy as np
 
 from gensim import utils
-from gensim.models.keyedvectors import KeyedVectors
-from gensim.models.word2vec import Vocab
+from gensim.models.keyedvectors import KeyedVectors, SimpleVocab
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +98,7 @@ class VarEmbed(KeyedVectors):
         self.index2word = [None] * self.vocab_size
         logger.info("Corpus has %i words", len(self.vocab))
         for word_id, word in enumerate(counts):
-            self.vocab[word] = Vocab(index=word_id, count=counts[word])
+            self.vocab[word] = SimpleVocab(index=word_id, count=counts[word])
             self.vectors[word_id] = word_embeddings[word_to_ix[word]]
             self.index2word[word_id] = word
         assert((len(self.vocab), self.vector_size) == self.vectors.shape)
