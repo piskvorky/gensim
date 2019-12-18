@@ -43,7 +43,7 @@ Use the model
 > 
 > model = gensim.models.doc2vec.Doc2Vec(  
                                        corpus_train,  # This is the documents corpus to be trained which should meet gensim's format  
-                                       vector_size=50,  
+                                       vector_size=300,  
                                        min_count=1, epochs=20,  
                                        dm=0,  
                                        pretrained_emb=pretrained_emb)   
