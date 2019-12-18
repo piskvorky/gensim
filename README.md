@@ -56,6 +56,6 @@ Use the model
 Publications
 =============
 
-* 1.Jey Han Lau and Timothy Baldwin (2016). An Empirical Evaluation of doc2vec with Practical Insights into Document Embedding Generation. In Proceedings of the 1st Workshop on Representation Learning for NLP, 2016.
+* 1.Jey Han Lau and Timothy Baldwin (2016). [An Empirical Evaluation of doc2vec with Practical Insights into Document Embedding Generation. In Proceedings of the 1st Workshop on Representation Learning for NLP, 2016.](https://arxiv.org/abs/1607.05368)
 
 * 2.[The initial forked gensim version](https://github.com/jhlau/gensim)
