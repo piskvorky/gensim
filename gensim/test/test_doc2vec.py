@@ -103,9 +103,9 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertEqual(len(model.wv.vocab), len(binary_model_dv.vocab))
 
     def testLoadOldModel(self):
-        """Test loading doc2vec models from previous version"""
+        """Test loading an old doc2vec model from indeterminate version"""
 
-        model_file = 'doc2vec_old'
+        model_file = 'doc2vec_old'  # which version?!?
         model = doc2vec.Doc2Vec.load(datapath(model_file))
         self.assertTrue(model.wv.vectors.shape == (3955, 100))
         self.assertTrue(len(model.wv.vocab) == 3955)
@@ -120,6 +120,9 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertTrue(len(model.docvecs) == 300)
 
         self.model_sanity(model)
+
+    def testLoadOldModelSeparates(self):
+        """Test loading an old doc2vec model from indeterminate version"""
 
         # Model stored in multiple files
         model_file = 'doc2vec_old_sep'
@@ -137,38 +140,63 @@ class TestDoc2VecModel(unittest.TestCase):
 
         self.model_sanity(model)
 
-        # load really old model
+    def test_load_old_models_pre_1_0(self):
+        """Test loading pre-1.0 models"""
         model_file = 'd2v-lee-v0.13.0'
         model = doc2vec.Doc2Vec.load(datapath(model_file))
         self.model_sanity(model)
 
-        # Test loading doc2vec models from all previous versions
         old_versions = [
             '0.12.0', '0.12.1', '0.12.2', '0.12.3', '0.12.4',
             '0.13.0', '0.13.1', '0.13.2', '0.13.3', '0.13.4',
-            '1.0.0', '1.0.1', '2.0.0', '2.1.0', '2.2.0', '2.3.0',
+        ]
+        for old_version in old_versions:
+            self._check_old_version(old_version)
+
+    def test_load_old_models_1_x(self):
+        """Test loading 1.x models"""
+        old_versions = [
+            '1.0.0', '1.0.1',
+        ]
+        for old_version in old_versions:
+            self._check_old_version(old_version)
+
+    def test_load_old_models_2_x(self):
+        """Test loading 2.x models"""
+        old_versions = [
+            '2.0.0', '2.1.0', '2.2.0', '2.3.0',
+        ]
+        for old_version in old_versions:
+            self._check_old_version(old_version)
+
+    def test_load_old_models_3_x(self):
+        """Test loading 3.x models"""
+        old_versions = [
             '3.0.0', '3.1.0', '3.2.0', '3.3.0', '3.4.0'
         ]
-
-        saved_models_dir = datapath('old_d2v_models/d2v_{}.mdl')
         for old_version in old_versions:
-            model = doc2vec.Doc2Vec.load(saved_models_dir.format(old_version))
-            self.assertTrue(len(model.wv.vocab) == 3)
-            self.assertIsNone(model.corpus_total_words)
-            self.assertTrue(model.wv.vectors.shape == (3, 4))
-            self.assertTrue(model.docvecs.vectors.shape == (2, 4))
-            self.assertTrue(len(model.docvecs) == 2)
-            # check if inferring vectors for new documents and similarity search works.
-            doc0_inferred = model.infer_vector(list(DocsLeeCorpus())[0].words)
-            sims_to_infer = model.docvecs.most_similar([doc0_inferred], topn=len(model.docvecs))
-            self.assertTrue(sims_to_infer)
-            # check if inferring vectors and similarity search works after saving and loading back the model
-            tmpf = get_tmpfile('gensim_doc2vec.tst')
-            model.save(tmpf)
-            loaded_model = doc2vec.Doc2Vec.load(tmpf)
-            doc0_inferred = loaded_model.infer_vector(list(DocsLeeCorpus())[0].words)
-            sims_to_infer = loaded_model.docvecs.most_similar([doc0_inferred], topn=len(loaded_model.docvecs))
-            self.assertTrue(sims_to_infer)
+            self._check_old_version(old_version)
+
+    def _check_old_version(self, old_version):
+        logging.info("TESTING LOAD of %s Doc2Vec MODEL", old_version)
+        saved_models_dir = datapath('old_d2v_models/d2v_{}.mdl')
+        model = doc2vec.Doc2Vec.load(saved_models_dir.format(old_version))
+        self.assertTrue(len(model.wv.vocab) == 3)
+        self.assertIsNone(model.corpus_total_words)
+        self.assertTrue(model.wv.vectors.shape == (3, 4))
+        self.assertTrue(model.docvecs.vectors.shape == (2, 4))
+        self.assertTrue(len(model.docvecs) == 2)
+        # check if inferring vectors for new documents and similarity search works.
+        doc0_inferred = model.infer_vector(list(DocsLeeCorpus())[0].words)
+        sims_to_infer = model.docvecs.most_similar([doc0_inferred], topn=len(model.docvecs))
+        self.assertTrue(sims_to_infer)
+        # check if inferring vectors and similarity search works after saving and loading back the model
+        tmpf = get_tmpfile('gensim_doc2vec.tst')
+        model.save(tmpf)
+        loaded_model = doc2vec.Doc2Vec.load(tmpf)
+        doc0_inferred = loaded_model.infer_vector(list(DocsLeeCorpus())[0].words)
+        sims_to_infer = loaded_model.docvecs.most_similar([doc0_inferred], topn=len(loaded_model.docvecs))
+        self.assertTrue(sims_to_infer)
 
     def testDoc2vecTrainParameters(self):
 

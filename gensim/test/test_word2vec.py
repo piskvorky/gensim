@@ -864,9 +864,9 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertRaises(RuntimeError, model_without_neg.predict_output_word, ['system', 'human'])
 
     def testLoadOldModel(self):
-        """Test loading word2vec models from previous version"""
+        """Test loading an old word2vec model of indeterminate version"""
 
-        model_file = 'word2vec_old'
+        model_file = 'word2vec_old'  # which version?!?
         model = word2vec.Word2Vec.load(datapath(model_file))
         self.assertTrue(model.wv.vectors.shape == (12, 100))
         self.assertTrue(len(model.wv.vocab) == 12)
@@ -876,6 +876,9 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(model.vocabulary.cum_table.shape == (12,))
 
         self.onlineSanity(model, trained_model=True)
+
+    def testLoadOldModelSeparates(self):
+        """Test loading an old word2vec model of indeterminate version"""
 
         # Model stored in multiple files
         model_file = 'word2vec_old_sep'
@@ -889,10 +892,43 @@ class TestWord2VecModel(unittest.TestCase):
 
         self.onlineSanity(model, trained_model=True)
 
+    def test_load_old_models_pre_1_0(self):
+        """Test loading pre-1.0 models"""
         # load really old model
         model_file = 'w2v-lee-v0.12.0'
         model = word2vec.Word2Vec.load(datapath(model_file))
         self.onlineSanity(model, trained_model=True)
+
+        old_versions = [
+            '0.12.0', '0.12.1', '0.12.2', '0.12.3', '0.12.4',
+            '0.13.0', '0.13.1', '0.13.2', '0.13.3', '0.13.4',
+        ]
+
+        for old_version in old_versions:
+            self._check_old_version(old_version)
+
+    def test_load_old_models_1_x(self):
+        """Test loading 1.x models"""
+
+        old_versions = [
+            '1.0.0', '1.0.1',
+        ]
+
+        for old_version in old_versions:
+            self._check_old_version(old_version)
+
+    def test_load_old_models_2_x(self):
+        """Test loading 2.x models"""
+
+        old_versions = [
+            '2.0.0', '2.1.0', '2.2.0', '2.3.0',
+        ]
+
+        for old_version in old_versions:
+            self._check_old_version(old_version)
+
+    def test_load_old_models_3_x(self):
+        """Test loading 3.x models"""
 
         # test for max_final_vocab for model saved in 3.3
         model_file = 'word2vec_3.3'
@@ -900,30 +936,30 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertEqual(model.max_final_vocab, None)
         self.assertEqual(model.vocabulary.max_final_vocab, None)
 
-        # Test loading word2vec models from all previous versions
         old_versions = [
-            '0.12.0', '0.12.1', '0.12.2', '0.12.3', '0.12.4',
-            '0.13.0', '0.13.1', '0.13.2', '0.13.3', '0.13.4',
-            '1.0.0', '1.0.1', '2.0.0', '2.1.0', '2.2.0', '2.3.0',
             '3.0.0', '3.1.0', '3.2.0', '3.3.0', '3.4.0'
         ]
 
-        saved_models_dir = datapath('old_w2v_models/w2v_{}.mdl')
         for old_version in old_versions:
-            model = word2vec.Word2Vec.load(saved_models_dir.format(old_version))
-            self.assertIsNone(model.corpus_total_words)
-            self.assertTrue(len(model.wv.vocab) == 3)
-            self.assertTrue(model.wv.vectors.shape == (3, 4))
-            # check if similarity search and online training works.
-            self.assertTrue(len(model.wv.most_similar('sentence')) == 2)
-            model.build_vocab(list_corpus, update=True)
-            model.train(list_corpus, total_examples=model.corpus_count, epochs=model.epochs)
-            # check if similarity search and online training works after saving and loading back the model.
-            tmpf = get_tmpfile('gensim_word2vec.tst')
-            model.save(tmpf)
-            loaded_model = word2vec.Word2Vec.load(tmpf)
-            loaded_model.build_vocab(list_corpus, update=True)
-            loaded_model.train(list_corpus, total_examples=model.corpus_count, epochs=model.epochs)
+            self._check_old_version(old_version)
+
+    def _check_old_version(self, old_version):
+        logging.info("TESTING LOAD of %s Word2Vec MODEL", old_version)
+        saved_models_dir = datapath('old_w2v_models/w2v_{}.mdl')
+        model = word2vec.Word2Vec.load(saved_models_dir.format(old_version))
+        self.assertIsNone(model.corpus_total_words)
+        self.assertTrue(len(model.wv.vocab) == 3)
+        self.assertTrue(model.wv.vectors.shape == (3, 4))
+        # check if similarity search and online training works.
+        self.assertTrue(len(model.wv.most_similar('sentence')) == 2)
+        model.build_vocab(list_corpus, update=True)
+        model.train(list_corpus, total_examples=model.corpus_count, epochs=model.epochs)
+        # check if similarity search and online training works after saving and loading back the model.
+        tmpf = get_tmpfile('gensim_word2vec.tst')
+        model.save(tmpf)
+        loaded_model = word2vec.Word2Vec.load(tmpf)
+        loaded_model.build_vocab(list_corpus, update=True)
+        loaded_model.train(list_corpus, total_examples=model.corpus_count, epochs=model.epochs)
 
     @log_capture()
     def testBuildVocabWarning(self, line):
