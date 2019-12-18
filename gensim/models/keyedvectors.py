@@ -187,9 +187,6 @@ from six import string_types, integer_types
 from six.moves import zip, range
 from scipy import stats
 
-# For backwards compatibility, see https://github.com/RaRe-Technologies/gensim/issues/2201
-#
-from gensim.models.deprecated.keyedvectors import EuclideanKeyedVectors  # noqa
 
 logger = logging.getLogger(__name__)
 
@@ -220,6 +217,11 @@ class KeyedVectors(utils.SaveLoad):
         # fixup rename/consolidation into index2key of older index2word, index2entity
         if not hasattr(self, 'index2key'):
             self.index2key = self.__dict__.pop('index2word', self.__dict__.pop('index2word', None))
+        # fixup rename into vectors of older syn0
+        if not hasattr(self, 'vectors'):
+            self.vectors = self.__dict__.pop('syn0', None)
+            self.vectors_norm = None
+            self.vector_size = self.vectors.shape[1]
         # fixup rename of vocab into map
         if 'map' not in self.__dict__:
             self.map = self.__dict__.pop('vocab', None)
@@ -1383,6 +1385,7 @@ class KeyedVectors(utils.SaveLoad):
 # to help 3.8.1 & older pickles load properly
 Word2VecKeyedVectors = KeyedVectors
 Doc2VecKeyedVectors = KeyedVectors
+EuclideanKeyedVectors = KeyedVectors
 
 
 def _l2_norm(m, replace=False):

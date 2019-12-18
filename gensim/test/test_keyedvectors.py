@@ -142,11 +142,11 @@ class TestKeyedVectors(unittest.TestCase):
         self.assertTrue(np.allclose(self.vectors.similarity('war', 'war'), 1))
         self.assertTrue(np.allclose(self.vectors.similarity('war', 'conflict'), 0.93305397))
 
-    def test_words_closer_than(self):
+    def test_closer_than(self):
         """Test words_closer_than returns expected value for distinct and identical nodes."""
-        self.assertEqual(self.vectors.words_closer_than('war', 'war'), [])
+        self.assertEqual(self.vectors.closer_than('war', 'war'), [])
         expected = set(['conflict', 'administration'])
-        self.assertEqual(set(self.vectors.words_closer_than('war', 'terrorism')), expected)
+        self.assertEqual(set(self.vectors.closer_than('war', 'terrorism')), expected)
 
     def test_rank(self):
         """Test rank returns expected value for distinct and identical nodes."""

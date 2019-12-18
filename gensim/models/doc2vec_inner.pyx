@@ -225,14 +225,14 @@ cdef init_d2v_config(Doc2VecConfig *c, model, alpha, learn_doctags, learn_words,
                      doctag_locks=None, docvecs_count=0):
     c[0].hs = model.hs
     c[0].negative = model.negative
-    c[0].sample = (model.vocabulary.sample != 0)
+    c[0].sample = (model.sample != 0)
     c[0].cbow_mean = model.cbow_mean
     c[0].train_words = train_words
     c[0].learn_doctags = learn_doctags
     c[0].learn_words = learn_words
     c[0].learn_hidden = learn_hidden
     c[0].alpha = alpha
-    c[0].layer1_size = model.trainables.layer1_size
+    c[0].layer1_size = model.layer1_size
     c[0].vector_size = model.docvecs.vector_size
     c[0].workers = model.workers
     c[0].docvecs_count = docvecs_count
@@ -251,28 +251,28 @@ cdef init_d2v_config(Doc2VecConfig *c, model, alpha, learn_doctags, learn_words,
        doctag_vectors = model.docvecs.vectors_docs
     c[0].doctag_vectors = <REAL_t *>(np.PyArray_DATA(doctag_vectors))
     if word_locks is None:
-       word_locks = model.trainables.vectors_lockf
+       word_locks = model.wv.vectors_lockf
     c[0].word_locks = <REAL_t *>(np.PyArray_DATA(word_locks))
     if doctag_locks is None:
-       doctag_locks = model.trainables.vectors_docs_lockf
+       doctag_locks = model.docvecs.vectors_lockf
     c[0].doctag_locks = <REAL_t *>(np.PyArray_DATA(doctag_locks))
 
     if c[0].hs:
-        c[0].syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
+        c[0].syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
 
     if c[0].negative:
-        c[0].syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
-        c[0].cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
-        c[0].cum_table_len = len(model.vocabulary.cum_table)
+        c[0].syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
+        c[0].cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
+        c[0].cum_table_len = len(model.cum_table)
     if c[0].negative or c[0].sample:
         c[0].next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
     # convert Python structures to primitive types, so we can release the GIL
     if work is None:
-       work = zeros(model.trainables.layer1_size, dtype=REAL)
+       work = zeros(model.layer1_size, dtype=REAL)
     c[0].work = <REAL_t *>np.PyArray_DATA(work)
     if neu1 is None:
-       neu1 = zeros(model.trainables.layer1_size, dtype=REAL)
+       neu1 = zeros(model.layer1_size, dtype=REAL)
     c[0].neu1 = <REAL_t *>np.PyArray_DATA(neu1)
 
 

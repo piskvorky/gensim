@@ -454,26 +454,26 @@ cdef void init_ft_config(FastTextConfig *c, model, alpha, _work, _neu1):
     """
     c.hs = model.hs
     c.negative = model.negative
-    c.sample = (model.vocabulary.sample != 0)
+    c.sample = (model.sample != 0)
     c.cbow_mean = model.cbow_mean
     c.window = model.window
     c.workers = model.workers
 
     c.syn0_vocab = <REAL_t *>(np.PyArray_DATA(model.wv.vectors_vocab))
-    c.word_locks_vocab = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_vocab_lockf))
+    c.word_locks_vocab = <REAL_t *>(np.PyArray_DATA(model.wv.vectors_vocab_lockf))
     c.syn0_ngrams = <REAL_t *>(np.PyArray_DATA(model.wv.vectors_ngrams))
-    c.word_locks_ngrams = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_ngrams_lockf))
+    c.word_locks_ngrams = <REAL_t *>(np.PyArray_DATA(model.wv.vectors_ngrams_lockf))
 
     c.alpha = alpha
     c.size = model.wv.vector_size
 
     if c.hs:
-        c.syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
+        c.syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
 
     if c.negative:
-        c.syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
-        c.cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
-        c.cum_table_len = len(model.vocabulary.cum_table)
+        c.syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
+        c.cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
+        c.cum_table_len = len(model.cum_table)
     if c.negative or c.sample:
         c.next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
