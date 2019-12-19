@@ -36,7 +36,7 @@ Use the model
 > python setup.py install
 
 
-2.Train your model 
+2.Train your doc2vec model 
 ---------------------------
 
 > pretrained_emb = "word2vec_pretrained.txt"  # This is a pretrained word2vec model of C text format
