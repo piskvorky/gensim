@@ -6,6 +6,27 @@ the current Python version.
 
 We use this when building/testing gensim in a CI environment (Travis, AppVeyor,
 etc).
+
+The versions we currently target are:
+
+    - 3.5 (AppVeyor, TravisCI)
+    - 3.6 (AppVeyor, TravisCI)
+    - 3.7 (AppVeyor, TravisCI, CircleCI)
+
+AppVeyor builds are Windows.
+CircleCI builds are Linux, and they build documentation only.
+TravisCI builds are Linux and MacOS.
+
+We want to pick numpy and scipy versions that have wheels for the current
+Python version and OS.
+
+You can check whether wheels are available for a particular numpy release here::
+
+    https://pypi.org/project/numpy/1.17.4/#files
+
+or by running::
+
+    python continuous_integration/check_wheels.py numpy
 """
 
 import subprocess
@@ -13,10 +34,11 @@ import sys
 
 
 def main():
-    if sys.version_info[:2] == (3, 7):
-        packages = ['numpy==1.14.5', 'scipy==1.1.0']
-    else:
-        packages = ['numpy==1.11.3', 'scipy==1.0.0']
+    #
+    # We don't support Py2 anymore, so the most recent versions of both
+    # numpy and scipy have what we need.
+    #
+    packages = ['numpy==1.17.4', 'scipy==1.4.1']
     command = [sys.executable, '-m', 'pip', 'install'] + packages
 
     print('sys.executable: %r' % sys.executable, file=sys.stderr)
