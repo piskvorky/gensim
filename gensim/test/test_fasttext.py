@@ -1219,7 +1219,7 @@ class UnicodeVocabTest(unittest.TestCase):
         buf = io.BytesIO()
         buf.name = 'dummy name to keep fasttext happy'
         buf.write(struct.pack('@3i', 2, -1, -1))  # vocab_size, nwords, nlabels
-        buf.write(struct.pack('@1q', 10)) # ntokens
+        buf.write(struct.pack('@1q', 10))  # ntokens
         buf.write(b'hello')
         buf.write(b'\x00')
         buf.write(struct.pack('@qb', 1, -1))
@@ -1235,13 +1235,13 @@ class UnicodeVocabTest(unittest.TestCase):
         self.assertEqual(vocab_size, 2)
         self.assertEqual(nlabels, -1)
 
-        self.assertEqual(ntokens, 11)
+        self.assertEqual(ntokens, 10)
 
     def test_bad_unicode(self):
         buf = io.BytesIO()
         buf.name = 'dummy name to keep fasttext happy'
         buf.write(struct.pack('@3i', 2, -1, -1))  # vocab_size, nwords, nlabels
-        buf.write(struct.pack('@1q', 10)) # ntokens
+        buf.write(struct.pack('@1q', 10))  # ntokens
         #
         # encountered in https://github.com/RaRe-Technologies/gensim/issues/2378
         # The model from downloaded from
@@ -1279,7 +1279,7 @@ class UnicodeVocabTest(unittest.TestCase):
 
         self.assertEqual(vocab_size, 2)
         self.assertEqual(nlabels, -1)
-        self.assertEqual(ntokens, 11)
+        self.assertEqual(ntokens, 10)
 
 
 _BYTES = b'the quick brown fox jumps over the lazy dog'
@@ -1496,7 +1496,8 @@ class SaveFacebookFormatReadingTest(SaveFacebookFormatTest):
             wv = self._get_wordvectors_from_fb_fastttext(fasttext_cmd, fpath, model.wv.index2word)
 
             for i, w in enumerate(model.wv.index2word):
-                diff = calc_max_diff(wv[i,:], model.wv[w])
+                diff = calc_max_diff(wv[i, :], model.wv[w])
+                # Because fasttext command line prints vectors with limited accuracy
                 self.assertLess(diff, 1.0e-4)
 
     def test_load_fasttext_format_cbow(self):

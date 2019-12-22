@@ -81,13 +81,13 @@ _OLD_HEADER_FORMAT = [
     ('epoch', 'i'),
     ('min_count', 'i'),
     ('neg', 'i'),
-    ('word_ngrams', 'i'), # Unused in loading
+    ('word_ngrams', 'i'),  # Unused in loading
     ('loss', 'i'),
     ('model', 'i'),
     ('bucket', 'i'),
     ('minn', 'i'),
     ('maxn', 'i'),
-    ('lr_update_rate', 'i'), # Unused in loading
+    ('lr_update_rate', 'i'),  # Unused in loading
     ('t', 'd'),
 ]
 
@@ -387,7 +387,8 @@ def _backslashreplace_backport(ex):
 
 
 def _sign_model(fout):
-    # Reimplementation of the [FastText::signModel](https://github.com/facebookresearch/fastText/blob/master/src/fasttext.cc)
+    # Reimplementation of the
+    # [FastText::signModel](https://github.com/facebookresearch/fastText/blob/master/src/fasttext.cc)
     fout.write(_FASTTEXT_FILEFORMAT_MAGIC.tobytes())
     fout.write(_FASTTEXT_VERSION.tobytes())
 
@@ -446,7 +447,8 @@ def _get_field_from_model(model, field):
         # This is skipped in gensim loading settig, using the default from FB C++ code
         res = 100
     else:
-        raise NotImplementedError('Extraction of header field "%s" from Gensim FastText object not implemmented.' % field)
+        msg = f'Extraction of header field "{field}" from Gensim FastText object not implemmented.'
+        raise NotImplementedError(msg)
 
     return res
 
@@ -464,7 +466,8 @@ def _args_save(fout, model, fb_fasttext_parameters):
 
 
 def _dict_save(fout, model, encoding):
-    # Reimplementation of the [Dictionary::save](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
+    # Reimplementation of the
+    # [Dictionary::save](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
 
     # out.write((char*)&size_, sizeof(int32_t));
     # out.write((char*)&nwords_, sizeof(int32_t));

@@ -1267,7 +1267,7 @@ def _check_model(m):
 
     try:
         syn1neg = m.trainables.syn1neg
-    except AttributeError as e:
+    except AttributeError:
         syn1neg = None
 
     if syn1neg is not None:
