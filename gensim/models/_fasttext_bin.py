@@ -81,13 +81,13 @@ _OLD_HEADER_FORMAT = [
     ('epoch', 'i'),
     ('min_count', 'i'),
     ('neg', 'i'),
-    ('_', 'i'),
+    ('word_ngrams', 'i'), # Unused in loading
     ('loss', 'i'),
     ('model', 'i'),
     ('bucket', 'i'),
     ('minn', 'i'),
     ('maxn', 'i'),
-    ('_', 'i'),
+    ('lr_update_rate', 'i'), # Unused in loading
     ('t', 'd'),
 ]
 
@@ -185,6 +185,7 @@ def _load_vocab(fin, new_format, encoding='utf-8'):
         The loaded vocabulary.  Keys are words, values are counts.
         The vocabulary size.
         The number of words.
+        The numnber of tokens.
     """
     vocab_size, nwords, nlabels = _struct_unpack(fin, '@3i')
 
@@ -334,7 +335,6 @@ def load(fin, encoding='utf-8', full_model=True):
     header_spec = _NEW_HEADER_FORMAT if new_format else _OLD_HEADER_FORMAT
     model = {name: _struct_unpack(fin, fmt)[0] for (name, fmt) in header_spec}
 
-
     if not new_format:
         model.update(dim=magic, ws=version)
 
@@ -392,19 +392,19 @@ def _sign_model(fout):
     fout.write(_FASTTEXT_VERSION.tobytes())
 
 
-def _conv_field_to_bytes(value, field_type):
+def _conv_field_to_bytes(field_value, field_type):
     if field_type == 'i':
-        return (np.int32(value).tobytes())
+        return (np.int32(field_value).tobytes())
     elif field_type == 'd':
-        return (np.float64(value).tobytes())
+        return (np.float64(field_value).tobytes())
     else:
-        raise NotImplementedError('Currently conversion to "%s" type is not implemmented.' % type)
+        raise NotImplementedError('Currently conversion to "%s" type is not implemmented.' % field_type)
 
 
-def _get_field(model, field, field_type):
+def _get_field_from_model(model, field):
 
     if field == 'bucket':
-        res = model.bucket
+        res = model.trainables.bucket
     elif field == 'dim':
         res = model.vector_size
     elif field == 'epoch':
@@ -423,7 +423,7 @@ def _get_field(model, field, field_type):
             # TODO Is this right ?!?
             res = 2
     elif field == 'maxn':
-        res = model.wv.min_n
+        res = model.wv.max_n
     elif field == 'minn':
         res = model.wv.min_n
     elif field == 'min_count':
@@ -449,15 +449,19 @@ def _get_field(model, field, field_type):
     else:
         raise NotImplementedError('Extraction of header field "%s" from Gensim FastText object not implemmented.' % field)
 
-    return _conv_field_to_bytes(res, field_type)
+    return res
 
 
-def _args_save(fout, model):
+def _args_save(fout, model, fb_fasttext_parameters):
 
     # Reimplementation of the [Args::save](https://github.com/facebookresearch/fastText/blob/master/src/args.cc)
 
     for field, field_type in _NEW_HEADER_FORMAT:
-        fout.write(_get_field(model, field, field_type))
+        if field in fb_fasttext_parameters:
+            field_value = fb_fasttext_parameters[field]
+        else:
+            field_value = _get_field_from_model(model, field)
+        fout.write(_conv_field_to_bytes(field_value, field_type))
 
 
 def _dict_save(fout, model, encoding):
@@ -494,13 +498,14 @@ def _dict_save(fout, model, encoding):
     # prunedidx_size_=-1, -1 value denotes no prunning index (prunning is only supported in supervised mode)
     fout.write(np.int64(-1))
 
-    for word, vocab_entry in model.wv.vocab.items():
+    for word in model.wv.index2word:
+        word_count = model.wv.vocab["the"].count
         fout.write(word.encode(encoding))
         fout.write(_END_OF_WORD_MARKER)
-        fout.write(np.int64(vocab_entry.count).tobytes())
+        fout.write(np.int64(word_count).tobytes())
         fout.write(_DICT_WORD_ENTRY_TYPE_MARKER)
 
-    # We are in unsupervised case, therefore pruned_idx is empty. so we do not need to write anything else
+    # We are in unsupervised case, therefore pruned_idx is empty, so we do not need to write anything else
 
 
 def _input_save(fout, model):
@@ -531,7 +536,7 @@ def _output_save(fout, model):
     fout.write(hidden_output.tobytes())
 
 
-def _save(fout, model, encoding):
+def _save(fout, model, fb_fasttext_parameters, encoding):
 
     # Unfortunatelly there is no documentation of the FB binary format
     # This is just reimplementation of
@@ -550,87 +555,24 @@ def _save(fout, model, encoding):
     #   ```
 
     _sign_model(fout)
-    _args_save(fout, model)
+    _args_save(fout, model, fb_fasttext_parameters)
     _dict_save(fout, model, encoding)
-    fout.write(struct.pack('@?', False))  # TODO Check if quantization works for unsupervised models
+    fout.write(struct.pack('@?', False))  # Save 'quant_', which is False for unsupervisded models
 
     # Save words and ngrams vectors
     _input_save(fout, model)
-    fout.write(struct.pack('@?', False))  # TODO Check if quantization works for unsupervised models
+    fout.write(struct.pack('@?', False))  # Save 'quot_', which is False for unsupervisded models
 
     # Save output layers of the model
     _output_save(fout, model)
 
 
-def save(fout, model, encoding='utf-8'):
+def save(model, fout, fb_fasttext_parameters, encoding):
     if isinstance(fout, str):
         with open(fout, "wb") as fout_stream:
-            _save(fout_stream, model, encoding)
+            _save(fout_stream, model, fb_fasttext_parameters, encoding)
     else:
-        _save(fout, model)
-
-
-# COMPARING FUNCTIONALITY
-
-
-def _sign_load(fin):
-    keys = ['fileformat_magic', 'version']
-    vals = _struct_unpack(fin, '@2i')
-    return dict(zip(keys, vals))
-
-
-def _load_key_fmt_list_to_dict(fin, key_fmt_list):
-    res = {}
-    for key, fmt in key_fmt_list:
-        res[key] = _struct_unpack(fin, fmt)[0]
-    return res
-
-
-def _args_load(fin):
-    return _load_key_fmt_list_to_dict(fin, _NEW_HEADER_FORMAT)
-
-
-def _dict_header_load(fin):
-    DICT_HEADER_FORMAT = [('size', 'i'),
-                          ('nwords', 'i'),
-                          ('nlabels', 'i'),
-                          ('ntokens', 'i'),
-                          ('pruneidx_size', '@q')]
-    return _load_key_fmt_list_to_dict(fin, DICT_HEADER_FORMAT)
-
-
-def _yield_differing_keys(d1, d2):
-    assert set(d1.keys()) == set(d2.keys())
-
-    for k in d1.keys():
-        v1, v2 = d1[k], d2[k]
-
-        if v1 != v2:
-            yield k, v1, v2
-
-    return None
-
-
-def _print_differences_between_dicts(d1, d2):
-    if d1 != d2:
-        for k, v1, v2 in _yield_differing_keys(d1, d2):
-            print('Key "%s" differs -> %s != %s' % (k, str(v1), str(v2)))
-
-
-def compare_fasttext_files(fname1, fname2):
-
-    with open(fname1, 'rb') as fin1, open(fname2, 'rb') as fin2:
-        sign1 = _sign_load(fin1)
-        sign2 = _sign_load(fin2)
-        _print_differences_between_dicts(sign1, sign2)
-
-        args1 = _args_load(fin1)
-        args2 = _args_load(fin2)
-        _print_differences_between_dicts(args1, args2)
-
-        dict_header1 = _dict_header_load(fin1)
-        dict_header2 = _dict_header_load(fin2)
-        _print_differences_between_dicts(dict_header1, dict_header2)
+        _save(fout, model, fb_fasttext_parameters, encoding)
 
 
 if six.PY2:
