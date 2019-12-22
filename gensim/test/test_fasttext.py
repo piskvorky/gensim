@@ -7,6 +7,7 @@ import io
 import logging
 import unittest
 import os
+import subprocess
 import struct
 
 import numpy as np
@@ -1313,9 +1314,13 @@ class SaveFacebookFormatTest(unittest.TestCase):
         return model
 
 
+def calc_max_diff(v1, v2):
+    return np.max(np.abs(v1 - v2))
+
+
 class SaveFacebookFormatRoundtripModelToModelTest(SaveFacebookFormatTest):
 
-    def test_roundtrip_model_model(self):
+    def _check_roundtrip_model_model(self, model_params):
         """
         model1 --save--> FB_FILE --load--> model2
         Test if model1 == model2
@@ -1325,8 +1330,6 @@ class SaveFacebookFormatRoundtripModelToModelTest(SaveFacebookFormatTest):
 
         with temporary_file("roundtrip_model_to_model.bin") as fpath:
 
-            model_params = {"size": 10, "min_count": 1, "hs": 1, "sg": 0,
-                            "negative": 5, "seed": 42, "workers": 1}
             model_orig = self._create_and_save_test_model(fpath, model_params)
 
             gensim.models.fasttext.save_facebook_model(model_orig, fpath)
@@ -1347,15 +1350,25 @@ class SaveFacebookFormatRoundtripModelToModelTest(SaveFacebookFormatTest):
             for w in model_orig.wv.index2word:
                 v_orig = model_orig.wv[w]
                 v_loaded = model_loaded.wv[w]
-                delta = np.abs(v_orig - v_loaded)
+
                 try:
-                    self.assertLess(np.max(delta), MAX_WORDVEC_COMPONENT_DIFFERENCE)
+                    self.assertLess(calc_max_diff(v_orig, v_loaded), MAX_WORDVEC_COMPONENT_DIFFERENCE)
                 except AssertionError as e:
                     s = e.args[0]
                     s += (f" (max difference for components in wordvector of \"{w}\""
                           f" larger than the thershold {MAX_WORDVEC_COMPONENT_DIFFERENCE})")
                     e.args = (s,)
                     raise e
+
+    def test_round_trip_model_model_skipgram(self):
+        model_params = {"size": 10, "min_count": 1, "hs": 1, "sg": 1,
+                "negative": 5, "seed": 42, "workers": 1}
+        self._check_roundtrip_model_model(model_params)
+
+    def test_round_trip_model_model_cbow(self):
+        model_params = {"size": 10, "min_count": 1, "hs": 1, "sg": 0,
+                "negative": 5, "seed": 42, "workers": 1}
+        self._check_roundtrip_model_model(model_params)
 
 
 class SaveFacebookFormatRoundtripFileToFileTest(SaveFacebookFormatTest):
@@ -1410,14 +1423,17 @@ class SaveFacebookFormatRoundtripFileToFileTest(SaveFacebookFormatTest):
         MAX_MATRIX_DIFFERENCE = 1.0e-10
         vectors_ngrams1 = gensim.models._fasttext_bin._load_matrix(fin1, new_format=True)
         vectors_ngrams2 = gensim.models._fasttext_bin._load_matrix(fin2, new_format=True)
-        vectors_delta = np.max(np.abs(vectors_ngrams1 - vectors_ngrams2))
+        vectors_diff = calc_max_diff(vectors_ngrams1, vectors_ngrams2)
+        self.assertLess(vectors_diff, MAX_MATRIX_DIFFERENCE)
+
         hidden_output1 = gensim.models._fasttext_bin._load_matrix(fin1, new_format=True)
         hidden_output2 = gensim.models._fasttext_bin._load_matrix(fin2, new_format=True)
-        hidden_delta = np.max(np.abs(hidden_output1 - hidden_output2))
+        hidden_diff = calc_max_diff(hidden_output1, hidden_output2)
+        self.assertLess(hidden_diff, MAX_MATRIX_DIFFERENCE)
+
+        # Did we reached EOF for both files?
         end1 = fin1.read()
         end2 = fin2.read()
-        self.assertLess(vectors_delta, MAX_MATRIX_DIFFERENCE)
-        self.assertLess(hidden_delta, MAX_MATRIX_DIFFERENCE)
         self.assertEqual(end1, b"")
         self.assertEqual(end2, b"")
 
@@ -1428,27 +1444,70 @@ class SaveFacebookFormatRoundtripFileToFileTest(SaveFacebookFormatTest):
             self._compare_fasttext_dictionary(fin1, fin2)
             self._compare_fasttext_wordvectors(fin1, fin2)
 
-    def test_roundtrip_file_file(self):
-        """
-        FB_FILE1 --load--> model --save-->  FB_FILE2
-        Test if FB_FILE1 == FB_FILE2
-        """
+    def _check_roundtrip_file_file(self, model_params):
+
         with temporary_file("roundtrip_file_to_file1.bin") as fpath1, \
             temporary_file("roundtrip_file_to_file2.bin") as fpath2:
-            model_params = {"size": 10, "min_count": 1, "hs": 1, "sg": 1,
-                            "negative": 0, "seed": 42, "workers": 1}
             self._create_and_save_test_model(fpath1, model_params)
             model = gensim.models.fasttext.load_facebook_model(fpath1)
             gensim.models.fasttext.save_facebook_model(model, fpath2)
             # TODO add better comparison
             self._compare_fasttext_files(fpath1, fpath2)
 
+    def test_roundtrip_file_file_skipgram(self):
+        model_params = {"size": 10, "min_count": 1, "hs": 1, "sg": 1,
+                        "negative": 0, "seed": 42, "workers": 1}
+        self._check_roundtrip_file_file(model_params)
+
+    def test_roundtrip_file_file_cbow(self):
+        model_params = {"size": 10, "min_count": 1, "hs": 1, "sg": 0,
+                        "negative": 0, "seed": 42, "workers": 1}
+        self._check_roundtrip_file_file(model_params)
+
 
 class SaveFacebookFormatReadingTest(SaveFacebookFormatTest):
-    def test_load_fasttext_format(self):
-        if os.environ.get("FT_HOME", None) is None:
+
+    def _parse_wordvectors(self, text):
+        def _conv_line_to_array(line):
+            return np.array([float(s) for s in line.split()[1:]], dtype=np.float32)
+
+        return np.array([_conv_line_to_array(l) for l in text.splitlines()], dtype=np.float32)
+
+    def _get_wordvectors_from_fb_fastttext(self, fasttext_cmd, fasttext_fname, words):
+        cmd = fasttext_cmd + " print-word-vectors " + fasttext_fname
+        process = subprocess.Popen(cmd, stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                shell=True)
+        words_str = '\n'.join(words)
+        out, err = process.communicate(input=words_str.encode("utf-8"))
+        return self._parse_wordvectors(out.decode("utf-8"))
+
+    def _check_load_fasttext_format(self, model_params):
+
+        ft_home = os.environ.get("FT_HOME", None)
+        if ft_home is None:
             self.skipTest("FT_HOME env variable not set")
-        self.assertTrue(True)
+
+        fasttext_cmd = os.path.join(ft_home, "fasttext")
+
+        with temporary_file("load_fasttext.bin") as fpath:
+            model = self._create_and_save_test_model(fpath, model_params)
+            wv = self._get_wordvectors_from_fb_fastttext(fasttext_cmd, fpath, model.wv.index2word)
+
+            for i, w in enumerate(model.wv.index2word):
+                diff = calc_max_diff(wv[i,:], model.wv[w])
+                self.assertLess(diff, 1.0e-4)
+
+    def test_load_fasttext_format_cbow(self):
+        model_params = {"size": 10, "min_count": 1, "hs": 1, "sg": 0,
+                        "negative": 5, "seed": 42, "workers": 1}
+        self._check_load_fasttext_format(model_params)
+
+    def test_load_fasttext_format_skipgram(self):
+        model_params = {"size": 10, "min_count": 1, "hs": 1, "sg": 1,
+                        "negative": 5, "seed": 42, "workers": 1}
+        self._check_load_fasttext_format(model_params)
 
 
 if __name__ == '__main__':

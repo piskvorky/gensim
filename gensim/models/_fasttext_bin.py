@@ -420,7 +420,6 @@ def _get_field_from_model(model, field):
         elif model.hs == 0 and model.negative > 0:
             res = 1
         elif model.hs == 0 and model.negative == 0:
-            # TODO Is this right ?!?
             res = 2
     elif field == 'maxn':
         res = model.wv.max_n
@@ -522,10 +521,6 @@ def _input_save(fout, model):
 
 
 def _output_save(fout, model):
-
-    # TODO Can model.hs and model.negative be both False?
-    # TODO Can model.hs and model.negative be both True?
-
     if model.hs:
         hidden_output = model.trainables.syn1
     if model.negative:
