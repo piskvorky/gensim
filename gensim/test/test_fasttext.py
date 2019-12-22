@@ -1218,7 +1218,7 @@ class UnicodeVocabTest(unittest.TestCase):
         buf = io.BytesIO()
         buf.name = 'dummy name to keep fasttext happy'
         buf.write(struct.pack('@3i', 2, -1, -1))  # vocab_size, nwords, nlabels
-        buf.write(struct.pack('@1q', -1))
+        buf.write(struct.pack('@1q', 10)) # ntokens
         buf.write(b'hello')
         buf.write(b'\x00')
         buf.write(struct.pack('@qb', 1, -1))
@@ -1227,18 +1227,20 @@ class UnicodeVocabTest(unittest.TestCase):
         buf.write(struct.pack('@qb', 2, -1))
         buf.seek(0)
 
-        raw_vocab, vocab_size, nlabels = gensim.models._fasttext_bin._load_vocab(buf, False)
+        raw_vocab, vocab_size, nlabels, ntokens = gensim.models._fasttext_bin._load_vocab(buf, False)
         expected = {'hello': 1, 'world': 2}
         self.assertEqual(expected, dict(raw_vocab))
 
         self.assertEqual(vocab_size, 2)
         self.assertEqual(nlabels, -1)
 
+        self.assertEqual(ntokens, 11)
+
     def test_bad_unicode(self):
         buf = io.BytesIO()
         buf.name = 'dummy name to keep fasttext happy'
         buf.write(struct.pack('@3i', 2, -1, -1))  # vocab_size, nwords, nlabels
-        buf.write(struct.pack('@1q', -1))
+        buf.write(struct.pack('@1q', 10)) # ntokens
         #
         # encountered in https://github.com/RaRe-Technologies/gensim/issues/2378
         # The model from downloaded from
@@ -1265,7 +1267,7 @@ class UnicodeVocabTest(unittest.TestCase):
         buf.write(struct.pack('@qb', 2, -1))
         buf.seek(0)
 
-        raw_vocab, vocab_size, nlabels = gensim.models._fasttext_bin._load_vocab(buf, False)
+        raw_vocab, vocab_size, nlabels, ntokens = gensim.models._fasttext_bin._load_vocab(buf, False)
 
         expected = {
             u'英語版ウィキペディアへの投稿はいつでも\\xe6': 1,
@@ -1276,6 +1278,7 @@ class UnicodeVocabTest(unittest.TestCase):
 
         self.assertEqual(vocab_size, 2)
         self.assertEqual(nlabels, -1)
+        self.assertEqual(ntokens, 11)
 
 
 _BYTES = b'the quick brown fox jumps over the lazy dog'
@@ -1298,6 +1301,154 @@ class TestFromfile(unittest.TestCase):
         array = gensim.models._fasttext_bin._fromfile(fin, _ARRAY.dtype, _ARRAY.shape[0])
         logger.error('array: %r', array)
         self.assertTrue(np.allclose(_ARRAY, array))
+
+
+class SaveFacebookFormatTest(unittest.TestCase):
+    def _create_and_save_test_model(self, fname, model_params):
+        model = FT_gensim(**model_params)
+        lee_data = LineSentence(datapath('lee_background.cor'))
+        model.build_vocab(lee_data)
+        model.train(lee_data, total_examples=model.corpus_count, epochs=model.epochs)
+        gensim.models.fasttext.save_facebook_model(model, fname)
+        return model
+
+
+class SaveFacebookFormatRoundtripModelToModelTest(SaveFacebookFormatTest):
+
+    def test_roundtrip_model_model(self):
+        """
+        model1 --save--> FB_FILE --load--> model2
+        Test if model1 == model2
+        """
+
+        MAX_WORDVEC_COMPONENT_DIFFERENCE = 1.0e-10
+
+        with temporary_file("roundtrip_model_to_model.bin") as fpath:
+
+            model_params = {"size": 10, "min_count": 1, "hs": 1, "sg": 0,
+                            "negative": 5, "seed": 42, "workers": 1}
+            model_orig = self._create_and_save_test_model(fpath, model_params)
+
+            gensim.models.fasttext.save_facebook_model(model_orig, fpath)
+            model_loaded = gensim.models.fasttext.load_facebook_model(fpath)
+
+            self.assertEqual(model_orig.vector_size, model_loaded.vector_size)
+            self.assertEqual(model_orig.window, model_loaded.window)
+            self.assertEqual(model_orig.epochs, model_loaded.epochs)
+            self.assertEqual(model_orig.negative, model_loaded.negative)
+            self.assertEqual(model_orig.hs, model_loaded.hs)
+            self.assertEqual(model_orig.sg, model_loaded.sg)
+            self.assertEqual(model_orig.trainables.bucket, model_loaded.trainables.bucket)
+            self.assertEqual(model_orig.wv.min_n, model_loaded.wv.min_n)
+            self.assertEqual(model_orig.wv.max_n, model_loaded.wv.max_n)
+            self.assertEqual(model_orig.vocabulary.sample, model_loaded.vocabulary.sample)
+            self.assertEqual(set(model_orig.wv.index2word), set(model_loaded.wv.index2word))
+
+            for w in model_orig.wv.index2word:
+                v_orig = model_orig.wv[w]
+                v_loaded = model_loaded.wv[w]
+                delta = np.abs(v_orig - v_loaded)
+                try:
+                    self.assertLess(np.max(delta), MAX_WORDVEC_COMPONENT_DIFFERENCE)
+                except AssertionError as e:
+                    s = e.args[0]
+                    s += (f" (max difference for components in wordvector of \"{w}\""
+                          f" larger than the thershold {MAX_WORDVEC_COMPONENT_DIFFERENCE})")
+                    e.args = (s,)
+                    raise e
+
+
+class SaveFacebookFormatRoundtripFileToFileTest(SaveFacebookFormatTest):
+    def _struct_unpack(self, fin, fmt):
+        num_bytes = struct.calcsize(fmt)
+        return struct.unpack(fmt, fin.read(num_bytes))
+
+    def _sign_load(self, fin):
+        keys = ['fileformat_magic', 'version']
+        vals = self._struct_unpack(fin, '@2i')
+        return dict(zip(keys, vals))
+
+    def _load_key_fmt_list_to_dict(self, fin, key_fmt_list):
+        res = {}
+        for key, fmt in key_fmt_list:
+            res[key] = self._struct_unpack(fin, fmt)[0]
+        return res
+
+    def _args_load(self, fin):
+        return self._load_key_fmt_list_to_dict(fin, gensim.models._fasttext_bin._NEW_HEADER_FORMAT)
+
+    def _add_differing_keys(self, res, d1, d2):
+        keys = set(list(d1.keys()) + list(d2.keys()))
+        for k in keys:
+            v1 = d1.get(k, None)
+            v2 = d2.get(k, None)
+            if v1 != v2:
+                res[k] = [v1, v2]
+
+        return res
+
+    def _compare_fasttext_file_header(self, fin1, fin2):
+        differing_keys = {}
+        sign1 = self._sign_load(fin1)
+        sign2 = self._sign_load(fin2)
+        self._add_differing_keys(differing_keys, sign1, sign2)
+
+        args1 = self._args_load(fin1)
+        args2 = self._args_load(fin2)
+        self._add_differing_keys(differing_keys, args1, args2)
+        self.assertEqual(differing_keys, {})
+
+    def _compare_fasttext_dictionary(self, fin1, fin2):
+        raw_vocab1, vocab_size1, nwords1, ntokens1 = gensim.models._fasttext_bin._load_vocab(fin1, new_format=True)
+        raw_vocab2, vocab_size2, nwords2, ntokens2 = gensim.models._fasttext_bin._load_vocab(fin2, new_format=True)
+        self.assertEqual(raw_vocab1, raw_vocab2)
+        self.assertEqual(vocab_size1, vocab_size2)
+        self.assertEqual(nwords1, nwords2)
+        self.assertEqual(ntokens1, ntokens2)
+
+    def _compare_fasttext_wordvectors(self, fin1, fin2):
+        MAX_MATRIX_DIFFERENCE = 1.0e-10
+        vectors_ngrams1 = gensim.models._fasttext_bin._load_matrix(fin1, new_format=True)
+        vectors_ngrams2 = gensim.models._fasttext_bin._load_matrix(fin2, new_format=True)
+        vectors_delta = np.max(np.abs(vectors_ngrams1 - vectors_ngrams2))
+        hidden_output1 = gensim.models._fasttext_bin._load_matrix(fin1, new_format=True)
+        hidden_output2 = gensim.models._fasttext_bin._load_matrix(fin2, new_format=True)
+        hidden_delta = np.max(np.abs(hidden_output1 - hidden_output2))
+        end1 = fin1.read()
+        end2 = fin2.read()
+        self.assertLess(vectors_delta, MAX_MATRIX_DIFFERENCE)
+        self.assertLess(hidden_delta, MAX_MATRIX_DIFFERENCE)
+        self.assertEqual(end1, b"")
+        self.assertEqual(end2, b"")
+
+    def _compare_fasttext_files(self, fname1, fname2):
+
+        with open(fname1, 'rb') as fin1, open(fname2, 'rb') as fin2:
+            self._compare_fasttext_file_header(fin1, fin2)
+            self._compare_fasttext_dictionary(fin1, fin2)
+            self._compare_fasttext_wordvectors(fin1, fin2)
+
+    def test_roundtrip_file_file(self):
+        """
+        FB_FILE1 --load--> model --save-->  FB_FILE2
+        Test if FB_FILE1 == FB_FILE2
+        """
+        with temporary_file("roundtrip_file_to_file1.bin") as fpath1, \
+            temporary_file("roundtrip_file_to_file2.bin") as fpath2:
+            model_params = {"size": 10, "min_count": 1, "hs": 1, "sg": 1,
+                            "negative": 0, "seed": 42, "workers": 1}
+            self._create_and_save_test_model(fpath1, model_params)
+            model = gensim.models.fasttext.load_facebook_model(fpath1)
+            gensim.models.fasttext.save_facebook_model(model, fpath2)
+            # TODO add better comparison
+            self._compare_fasttext_files(fpath1, fpath2)
+
+
+class SaveFacebookFormatReadingTest(SaveFacebookFormatTest):
+    def test_load_fasttext_format(self):
+        if os.environ.get("FT_HOME", None) is None:
+            self.skipTest("FT_HOME env variable not set")
+        self.assertTrue(True)
 
 
 if __name__ == '__main__':
