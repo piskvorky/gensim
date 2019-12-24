@@ -1709,47 +1709,8 @@ class Word2VecTrainables(utils.SaveLoad):
         wv.vectors = empty((len(wv.vocab), wv.vector_size), dtype=REAL)
         
         #if pre-trained embedding file is given, load it
-        p_emb = {}
-        syn0_oov = []
-        t = time.time()
-        if self.pretrained_emb == None:
-            logger.info("pretrained_emb is None!")
-
-        if self.pretrained_emb != None:
-            logger.info("loading pre-trained embeddings")
-            with smart_open.open(self.pretrained_emb) as fin:
-                header = utils.to_unicode(fin.readline(), encoding="utf8")
-                vocab_size, vector_size = map(int, header.split())
-                if vector_size != self.vector_size:
-                    logger.info("pre-trained embedding vector size is different to the specified training vector size; pre-trained embeddings will be ignored")
-                else:
-                    for line_no, line in enumerate(fin):
-                        parts = utils.to_unicode(line.rstrip(), encoding="utf-8", errors="strict").split(" ")
-                        if len(parts) != self.vector_size + 1:
-                            raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))
-                        word, weights = parts[0], list(map(REAL, parts[1:]))
-                        if word in wv.vocab:
-                            p_emb[word] = weights
-                        else:
-                            #0 count so that it doesn't add itself to the cum_table when loaded in the future;
-                            #max sample_int value so that it is not discarded in word window during test infererence (for doc2vec)
-                            v = Vocab(count=0, sample_int=2**32)
-                            v.index = len(wv.vocab)
-                            wv.index2word.append(word)
-                            wv.vocab[word] = v
-                            syn0_oov.append(weights)
-                        if ((line_no+1) % 10000) == 0 or ((line_no+1) == vocab_size):
-                            logger.info(str(line_no+1) + " lines processed (" + str(time.time()-t) + "s); " + str(len(p_emb)) + " embeddings collected")
-                            t = time.time()
-
-        '''
-        # randomize weights vector by vector, rather than materializing a huge random matrix in RAM at once
-        for i in range(len(wv.vocab)):
-            # construct deterministic seed from word AND seed argument
-            wv.vectors[i] = self.seeded_vector(wv.index2word[i] + str(self.seed), wv.vector_size)
-        '''
+        p_emb, syn0_oov=load_pretrained_emb(self, wv)
         
-        #change xrange to range
         for i in range(len(wv.vocab)-len(syn0_oov)):
             word = wv.index2word[i]
             if (len(p_emb) > 0) and (word in p_emb):
@@ -1767,10 +1728,44 @@ class Word2VecTrainables(utils.SaveLoad):
 
         self.vectors_lockf = ones(len(wv.vocab), dtype=REAL)  # zeros suppress learning
 
-        # append the oov syn0 weights to syn0
         if len(syn0_oov) > 0:
             wv.syn0 = concatenate((wv.syn0, syn0_oov), axis=0)
 
+    def load_pretrained_emb(self, wv):
+        p_emb = {}
+        syn0_oov = []
+        t = time.time()
+        if self.pretrained_emb == None:
+            logger.info("pretrained_emb is None!")           
+            return p_emb, syn0_oov
+
+        logger.info("loading pre-trained embeddings")
+        with smart_open.open(self.pretrained_emb) as fin:
+            header = utils.to_unicode(fin.readline(), encoding="utf8")
+            vocab_size, vector_size = map(int, header.split())
+            if vector_size != self.vector_size:
+                logger.info("pre-trained embedding vector size is different to the specified training vector size; pre-trained embeddings will be ignored")
+            else:
+                for line_no, line in enumerate(fin):
+                    parts = utils.to_unicode(line.rstrip(), encoding="utf-8", errors="strict").split(" ")
+                    if len(parts) != self.vector_size + 1:
+                        raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))
+                    word, weights = parts[0], list(map(REAL, parts[1:]))
+                    if word in wv.vocab:
+                        p_emb[word] = weights
+                    else:
+                        #0 count so that it doesn't add itself to the cum_table when loaded in the future;
+                        #max sample_int value so that it is not discarded in word window during test infererence (for doc2vec)
+                        v = Vocab(count=0, sample_int=2**32)
+                        v.index = len(wv.vocab)
+                        wv.index2word.append(word)
+                        wv.vocab[word] = v
+                        syn0_oov.append(weights)
+                    if ((line_no+1) % 10000) == 0 or ((line_no+1) == vocab_size):
+                        logger.info(str(line_no+1) + " lines processed (" + str(time.time()-t) + "s); " + str(len(p_emb)) + " embeddings collected")
+                        t = time.time()    
+                        
+        return p_emb, syn0_oov                        
 
     def update_weights(self, hs, negative, wv):
         """Copy all the existing weights, and reset the weights for the newly added vocabulary."""
@@ -1870,11 +1865,11 @@ if __name__ == "__main__":
     corpus = LineSentence(args.train)
 
     model = Word2Vec(
-    corpus, size=args.size, min_count=args.min_count, workers=args.threads,
-    window=args.window, sample=args.sample, sg=skipgram, hs=args.hs,
-    negative=args.negative, cbow_mean=1, iter=args.iter,
-    pretrained_emb=args.pretrained_emb 
-    )
+        corpus, size=args.size, min_count=args.min_count, workers=args.threads,
+        window=args.window, sample=args.sample, sg=skipgram, hs=args.hs,
+        negative=args.negative, cbow_mean=1, iter=args.iter,
+        pretrained_emb=args.pretrained_emb 
+        )
 
     if args.output:
         outfile = args.output
