@@ -210,8 +210,7 @@ class Doc2Vec(BaseWordEmbeddingsModel):
     """
     def __init__(self, documents=None, corpus_file=None, dm_mean=None, dm=1, dbow_words=0, dm_concat=0,
                  dm_tag_count=1, docvecs=None, docvecs_mapfile=None, comment=None, trim_rule=None, 
-                 pretrained_emb=None, 
-                 callbacks=(), **kwargs):
+                 callbacks=(), pretrained_emb=None, **kwargs):
         """
 
         `pretrained_emb` = takes in pre-trained embedding for word vectors; format = original C word2vec-tool non-binary format (i.e. one embedding per word)
@@ -1177,7 +1176,7 @@ class Doc2VecVocab(Word2VecVocab):
 
 class Doc2VecTrainables(Word2VecTrainables):
     """Represents the inner shallow neural network used to train :class:`~gensim.models.doc2vec.Doc2Vec`."""
-    def __init__(self, pretrained_emb, dm=1, dm_concat=0, dm_tag_count=1, vector_size=100, seed=1, hashfxn=hash, window=5):
+    def __init__(self, pretrained_emb=None, dm=1, dm_concat=0, dm_tag_count=1, vector_size=100, seed=1, hashfxn=hash, window=5):
 
         self.pretrained_emb=pretrained_emb
 
