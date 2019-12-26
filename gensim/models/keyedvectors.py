@@ -809,7 +809,7 @@ class KeyedVectors(utils.SaveLoad):
             logger.warning("vectors for words %s are not present in the model, ignoring these words", ignored_words)
         if not used_words:
             raise ValueError("cannot select a word from an empty list")
-        vectors = vstack(self.word_vec(word, use_norm=True) for word in used_words).astype(REAL)
+        vectors = vstack([self.word_vec(word, use_norm=True) for word in used_words]).astype(REAL)
         mean = matutils.unitvec(vectors.mean(axis=0)).astype(REAL)
         dists = dot(vectors, mean)
         return sorted(zip(dists, used_words))[0][1]
