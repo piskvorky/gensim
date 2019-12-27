@@ -447,7 +447,7 @@ def _get_field_from_model(model, field):
         # This is skipped in gensim loading settig, using the default from FB C++ code
         res = 100
     else:
-        msg = f'Extraction of header field "{field}" from Gensim FastText object not implemmented.'
+        msg = 'Extraction of header field "' + field + '" from Gensim FastText object not implemmented.'
         raise NotImplementedError(msg)
 
     return res
