@@ -814,7 +814,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertGreaterEqual(overlap_count, 2)
 
     def test_cbow_hs_against_wrapper(self):
-        if self.ft_path is None:
+        if self.ft_path:
             logger.info("FT_HOME env variable not set, skipping test")
             return
 
@@ -1536,14 +1536,14 @@ class SaveFacebookFormatRoundtripFileToFileFacebookTest(SaveFacebookFormatRoundt
             self._compare_fasttext_files(fpath1bin, fpath2bin)
 
     def test_roundtrip_file_file_skipgram(self):
-        if os.environ.get("FT_HOME", None) is None:
+        if not os.environ.get("FT_HOME", None):
             self.skipTest("FT_HOME env variable not set")
         else:
             model_params = {"size": 10, "sg": 1, "seed": 42}
             self._check_roundtrip_file_file(model_params)
 
     def test_roundtrip_file_file_cbow(self):
-        if os.environ.get("FT_HOME", None) is None:
+        if not os.environ.get("FT_HOME", None):
             self.skipTest("FT_HOME env variable not set")
         else:
             model_params = {"size": 10, "sg": 0, "seed": 42}
@@ -1593,7 +1593,7 @@ class SaveFacebookFormatReadingTest(SaveFacebookFormatTest):
                 self.assertLess(diff, 1.0e-4)
 
     def test_load_fasttext_format_cbow(self):
-        if os.environ.get("FT_HOME", None) is None:
+        if not os.environ.get("FT_HOME", None):
             self.skipTest("FT_HOME env variable not set")
         else:
             model_params = {"size": 10, "min_count": 1, "hs": 1, "sg": 0,
@@ -1601,7 +1601,7 @@ class SaveFacebookFormatReadingTest(SaveFacebookFormatTest):
             self._check_load_fasttext_format(model_params)
 
     def test_load_fasttext_format_skipgram(self):
-        if os.environ.get("FT_HOME", None) is None:
+        if not os.environ.get("FT_HOME", None):
             self.skipTest("FT_HOME env variable not set")
         else:
             model_params = {"size": 10, "min_count": 1, "hs": 1, "sg": 1,
