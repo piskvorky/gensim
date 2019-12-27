@@ -501,7 +501,7 @@ def _dict_save(fout, model, encoding):
     fout.write(np.int64(-1))
 
     for word in model.wv.index2word:
-        word_count = model.wv.vocab["the"].count
+        word_count = model.wv.vocab[word].count
         fout.write(word.encode(encoding))
         fout.write(_END_OF_WORD_MARKER)
         fout.write(np.int64(word_count).tobytes())
