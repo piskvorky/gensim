@@ -814,7 +814,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertGreaterEqual(overlap_count, 2)
 
     def test_cbow_hs_against_wrapper(self):
-        if self.ft_path:
+        if self.ft_path is None:
             logger.info("FT_HOME env variable not set, skipping test")
             return
 
