@@ -1360,8 +1360,8 @@ class SaveFacebookFormatRoundtripModelToModelTest(SaveFacebookFormatTest):
                     self.assertLess(calc_max_diff(v_orig, v_loaded), MAX_WORDVEC_COMPONENT_DIFFERENCE)
                 except AssertionError as e:
                     s = e.args[0]
-                    s += (f" (max difference for components in wordvector of \"{w}\""
-                          f" larger than the thershold {MAX_WORDVEC_COMPONENT_DIFFERENCE})")
+                    s += " (max difference for components in wordvector of \"%s\"" % w
+                    s += " larger than the thershold %f" % MAX_WORDVEC_COMPONENT_DIFFERENCE
                     e.args = (s,)
                     raise e
 
@@ -1511,8 +1511,7 @@ class SaveFacebookFormatRoundtripFileToFileFacebookTest(SaveFacebookFormatRoundt
 
         cmd = fasttext_cmd + " " + model_type + " -input " + inp_fname + \
               " -output " + out_base_fname + " -dim " + size + " -seed " + seed
-        print(cmd)
-        process = subprocess.run(cmd, shell=True)
+        subprocess.run(cmd, shell=True)
 
     def _check_roundtrip_file_file(self, model_params):
         ft_home = os.environ.get("FT_HOME", None)
@@ -1524,8 +1523,8 @@ class SaveFacebookFormatRoundtripFileToFileFacebookTest(SaveFacebookFormatRoundt
         # fasttext tool creates both *vec and *bin files so we have to remove both, event thought *vec is unused
 
         with temporary_file("roundtrip_file_to_file1.bin") as fpath1bin, \
-            temporary_file("roundtrip_file_to_file1.vec") as fpath1vec, \
-            temporary_file("roundtrip_file_to_file2.bin") as fpath2bin:
+            temporary_file("roundtrip_file_to_file2.bin") as fpath2bin, \
+            temporary_file("roundtrip_file_to_file1.vec") as fpath1vec:  # noqa:F841
 
             fpath1base = fpath1bin[:-4]
             self._create_and_save_test_model(fpath1base, model_params, fasttext_cmd)
