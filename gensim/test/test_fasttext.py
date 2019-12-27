@@ -1538,15 +1538,16 @@ class SaveFacebookFormatRoundtripFileToFileFacebookTest(SaveFacebookFormatRoundt
     def test_roundtrip_file_file_skipgram(self):
         if os.environ.get("FT_HOME") is None:
             self.skipTest("FT_HOME env variable not set")
-
-        model_params = {"size": 10, "sg": 1, "seed": 42}
-        self._check_roundtrip_file_file(model_params)
+        else:
+            model_params = {"size": 10, "sg": 1, "seed": 42}
+            self._check_roundtrip_file_file(model_params)
 
     def test_roundtrip_file_file_cbow(self):
         if os.environ.get("FT_HOME") is None:
             self.skipTest("FT_HOME env variable not set")
-        model_params = {"size": 10, "sg": 0, "seed": 42}
-        self._check_roundtrip_file_file(model_params)
+        else:
+            model_params = {"size": 10, "sg": 0, "seed": 42}
+            self._check_roundtrip_file_file(model_params)
 
 
 class SaveFacebookFormatReadingTest(SaveFacebookFormatTest):
@@ -1594,16 +1595,18 @@ class SaveFacebookFormatReadingTest(SaveFacebookFormatTest):
     def test_load_fasttext_format_cbow(self):
         if os.environ.get("FT_HOME") is None:
             self.skipTest("FT_HOME env variable not set")
-        model_params = {"size": 10, "min_count": 1, "hs": 1, "sg": 0,
-                        "negative": 5, "seed": 42, "workers": 1}
-        self._check_load_fasttext_format(model_params)
+        else:
+            model_params = {"size": 10, "min_count": 1, "hs": 1, "sg": 0,
+                            "negative": 5, "seed": 42, "workers": 1}
+            self._check_load_fasttext_format(model_params)
 
     def test_load_fasttext_format_skipgram(self):
         if os.environ.get("FT_HOME") is None:
             self.skipTest("FT_HOME env variable not set")
-        model_params = {"size": 10, "min_count": 1, "hs": 1, "sg": 1,
-                        "negative": 5, "seed": 42, "workers": 1}
-        self._check_load_fasttext_format(model_params)
+        else:
+            model_params = {"size": 10, "min_count": 1, "hs": 1, "sg": 1,
+                            "negative": 5, "seed": 42, "workers": 1}
+            self._check_load_fasttext_format(model_params)
 
 
 if __name__ == '__main__':
