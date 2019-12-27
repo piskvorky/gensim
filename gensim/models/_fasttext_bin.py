@@ -469,25 +469,6 @@ def _dict_save(fout, model, encoding):
     # Reimplementation of the
     # [Dictionary::save](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
 
-    # out.write((char*)&size_, sizeof(int32_t));
-    # out.write((char*)&nwords_, sizeof(int32_t));
-    # out.write((char*)&nlabels_, sizeof(int32_t));
-    # out.write((char*)&ntokens_, sizeof(int64_t));
-    # out.write((char*)&pruneidx_size_, sizeof(int64_t));
-    # for (int32_t i = 0; i < size_; i++) {
-    #   entry e = words_[i];
-    #   out.write(e.word.data(), e.word.size() * sizeof(char));
-    #   out.put(0);
-    #   out.write((char*)&(e.count), sizeof(int64_t));
-    #   out.write((char*)&(e.type), sizeof(entry_type));
-    # }
-    # for (const auto pair : pruneidx_) {
-    #   out.write((char*)&(pair.first), sizeof(int32_t));
-    #       out.write((char*)&(pair.second), sizeof(int32_t));
-    # }
-
-    # TODO Check what is the difference between `size` and `nwords`
-
     fout.write(np.int32(len(model.wv.vocab)).tobytes())
 
     fout.write(np.int32(len(model.wv.vocab)).tobytes())
@@ -536,21 +517,14 @@ def _output_save(fout, model):
 
 def _save(fout, model, fb_fasttext_parameters, encoding):
 
-    # Unfortunatelly there is no documentation of the FB binary format
+    # Unfortunatelly, there is no documentation of the FB binary format
     # This is just reimplementation of
+
     # [FastText::saveModel](https://github.com/facebookresearch/fastText/blob/master/src/fasttext.cc)
 
-    #   As of writing this (12.2019) the C++ code looks as follows
-    #
-    #   ```
-    #   signModel(ofs);
-    #   args_->save(ofs);
-    #   dict_->save(ofs);
-    #   ofs.write((char*)&(quant_), sizeof(bool));
-    #   input_->save(ofs);
-    #   ofs.write((char*)&(args_->qout), sizeof(bool));
-    #   output_->save(ofs);
-    #   ```
+    # Based on v0.9.1, more precisely commit da2745fcccb848c7a225a7d558218ee4c64d5333
+
+    # Code follows original C++ naming
 
     _sign_model(fout)
     _args_save(fout, model, fb_fasttext_parameters)
