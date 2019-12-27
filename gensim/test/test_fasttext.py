@@ -1376,16 +1376,10 @@ class SaveFacebookFormatRoundtripModelToModelTest(SaveFacebookFormatTest):
         self._check_roundtrip_model_model(model_params)
 
 
-class SaveFacebookFormatRoundtripFileToFileGensimTest(SaveFacebookFormatTest):
+class SaveFacebookFormatRoundtripFileToFileTest(SaveFacebookFormatTest):
     """
-    This class containts tests that check the following scenario:
-
-    + create binary fastText file model1.bin using Gensim
-    + load file model1.bin to model
-    + save model to model2.bin
-    + check if files model1.bin and model2.bin are identical
+    Base clas for FileToFile Roundtrip tests containing comparing FB binary file functionality
     """
-
     def _struct_unpack(self, fin, fmt):
         num_bytes = struct.calcsize(fmt)
         return struct.unpack(fmt, fin.read(num_bytes))
@@ -1479,6 +1473,17 @@ class SaveFacebookFormatRoundtripFileToFileGensimTest(SaveFacebookFormatTest):
             gensim.models.fasttext.save_facebook_model(model, fpath2)
             self._compare_fasttext_files(fpath1, fpath2)
 
+
+class SaveFacebookFormatRoundtripFileToFileGensimTest(SaveFacebookFormatRoundtripFileToFileTest):
+    """
+    This class containts tests that check the following scenario:
+
+    + create binary fastText file model1.bin using Gensim
+    + load file model1.bin to model
+    + save model to model2.bin
+    + check if files model1.bin and model2.bin are identical
+    """
+
     def test_roundtrip_file_file_skipgram(self):
         model_params = {"size": 10, "min_count": 1, "hs": 1, "sg": 1,
                         "negative": 0, "seed": 42, "workers": 1}
@@ -1490,7 +1495,7 @@ class SaveFacebookFormatRoundtripFileToFileGensimTest(SaveFacebookFormatTest):
         self._check_roundtrip_file_file(model_params)
 
 
-class SaveFacebookFormatRoundtripFileToFileFacebookTest(SaveFacebookFormatRoundtripFileToFileGensimTest):
+class SaveFacebookFormatRoundtripFileToFileFacebookTest(SaveFacebookFormatRoundtripFileToFileTest):
     """
     This class containts tests that check the following scenario:
 
@@ -1514,13 +1519,10 @@ class SaveFacebookFormatRoundtripFileToFileFacebookTest(SaveFacebookFormatRoundt
         subprocess.run(cmd, shell=True)
 
     def _check_roundtrip_file_file(self, model_params):
-        ft_home = os.environ.get("FT_HOME", None)
-        if ft_home is None:
-            self.skipTest("FT_HOME env variable not set")
-
+        ft_home = os.environ.get("FT_HOME")
         fasttext_cmd = os.path.join(ft_home, "fasttext")
 
-        # fasttext tool creates both *vec and *bin files so we have to remove both, event thought *vec is unused
+        # fasttext tool creates both *vec and *bin files, so we have to remove both, even thought *vec is unused
 
         with temporary_file("roundtrip_file_to_file1.bin") as fpath1bin, \
             temporary_file("roundtrip_file_to_file2.bin") as fpath2bin, \
@@ -1533,11 +1535,16 @@ class SaveFacebookFormatRoundtripFileToFileFacebookTest(SaveFacebookFormatRoundt
 
             self._compare_fasttext_files(fpath1bin, fpath2bin)
 
-    def save_test_file_file_skipgram(self):
+    def test_roundtrip_file_file_skipgram(self):
+        if os.environ.get("FT_HOME") is None:
+            self.skipTest("FT_HOME env variable not set")
+
         model_params = {"size": 10, "sg": 1, "seed": 42}
         self._check_roundtrip_file_file(model_params)
 
-    def save_test_file_file_cbow(self):
+    def test_roundtrip_file_file_cbow(self):
+        if os.environ.get("FT_HOME") is None:
+            self.skipTest("FT_HOME env variable not set")
         model_params = {"size": 10, "sg": 0, "seed": 42}
         self._check_roundtrip_file_file(model_params)
 
@@ -1572,10 +1579,7 @@ class SaveFacebookFormatReadingTest(SaveFacebookFormatTest):
 
     def _check_load_fasttext_format(self, model_params):
 
-        ft_home = os.environ.get("FT_HOME", None)
-        if ft_home is None:
-            self.skipTest("FT_HOME env variable not set")
-
+        ft_home = os.environ.get("FT_HOME")
         fasttext_cmd = os.path.join(ft_home, "fasttext")
 
         with temporary_file("load_fasttext.bin") as fpath:
@@ -1588,11 +1592,15 @@ class SaveFacebookFormatReadingTest(SaveFacebookFormatTest):
                 self.assertLess(diff, 1.0e-4)
 
     def test_load_fasttext_format_cbow(self):
+        if os.environ.get("FT_HOME") is None:
+            self.skipTest("FT_HOME env variable not set")
         model_params = {"size": 10, "min_count": 1, "hs": 1, "sg": 0,
                         "negative": 5, "seed": 42, "workers": 1}
         self._check_load_fasttext_format(model_params)
 
     def test_load_fasttext_format_skipgram(self):
+        if os.environ.get("FT_HOME") is None:
+            self.skipTest("FT_HOME env variable not set")
         model_params = {"size": 10, "min_count": 1, "hs": 1, "sg": 1,
                         "negative": 5, "seed": 42, "workers": 1}
         self._check_load_fasttext_format(model_params)
