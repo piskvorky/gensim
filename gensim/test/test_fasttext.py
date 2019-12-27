@@ -1519,7 +1519,7 @@ class SaveFacebookFormatRoundtripFileToFileFacebookTest(SaveFacebookFormatRoundt
         subprocess.run(cmd, shell=True)
 
     def _check_roundtrip_file_file(self, model_params):
-        ft_home = os.environ.get("FT_HOME")
+        ft_home = os.environ.get("FT_HOME", None)
         fasttext_cmd = os.path.join(ft_home, "fasttext")
 
         # fasttext tool creates both *vec and *bin files, so we have to remove both, even thought *vec is unused
@@ -1536,14 +1536,14 @@ class SaveFacebookFormatRoundtripFileToFileFacebookTest(SaveFacebookFormatRoundt
             self._compare_fasttext_files(fpath1bin, fpath2bin)
 
     def test_roundtrip_file_file_skipgram(self):
-        if os.environ.get("FT_HOME") is None:
+        if os.environ.get("FT_HOME", None) is None:
             self.skipTest("FT_HOME env variable not set")
         else:
             model_params = {"size": 10, "sg": 1, "seed": 42}
             self._check_roundtrip_file_file(model_params)
 
     def test_roundtrip_file_file_cbow(self):
-        if os.environ.get("FT_HOME") is None:
+        if os.environ.get("FT_HOME", None) is None:
             self.skipTest("FT_HOME env variable not set")
         else:
             model_params = {"size": 10, "sg": 0, "seed": 42}
@@ -1580,7 +1580,7 @@ class SaveFacebookFormatReadingTest(SaveFacebookFormatTest):
 
     def _check_load_fasttext_format(self, model_params):
 
-        ft_home = os.environ.get("FT_HOME")
+        ft_home = os.environ.get("FT_HOME", None)
         fasttext_cmd = os.path.join(ft_home, "fasttext")
 
         with temporary_file("load_fasttext.bin") as fpath:
@@ -1593,7 +1593,7 @@ class SaveFacebookFormatReadingTest(SaveFacebookFormatTest):
                 self.assertLess(diff, 1.0e-4)
 
     def test_load_fasttext_format_cbow(self):
-        if os.environ.get("FT_HOME") is None:
+        if os.environ.get("FT_HOME", None) is None:
             self.skipTest("FT_HOME env variable not set")
         else:
             model_params = {"size": 10, "min_count": 1, "hs": 1, "sg": 0,
@@ -1601,7 +1601,7 @@ class SaveFacebookFormatReadingTest(SaveFacebookFormatTest):
             self._check_load_fasttext_format(model_params)
 
     def test_load_fasttext_format_skipgram(self):
-        if os.environ.get("FT_HOME") is None:
+        if os.environ.get("FT_HOME", None) is None:
             self.skipTest("FT_HOME env variable not set")
         else:
             model_params = {"size": 10, "min_count": 1, "hs": 1, "sg": 1,
