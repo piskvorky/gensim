@@ -447,11 +447,11 @@ def _get_field_from_model(model, field):
         # softmax =  softmax loss
         # one-vs-all = one vs all loss (supervised)
         if model.hs == 1:
-            res = 2
-        elif model.hs == 0 and model.negative > 0:
             res = 1
-        elif model.hs == 0 and model.negative == 0:
+        elif model.hs == 0:
             res = 2
+        elif model.hs == 0 and model.negative == 0:
+            res = 1
     elif field == 'maxn':
         res = model.wv.max_n
     elif field == 'minn':
