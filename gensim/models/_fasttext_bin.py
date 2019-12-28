@@ -429,7 +429,7 @@ def _get_field_from_model(model, field):
 
     Parameters
     ----------
-    model: FastText
+    model: gensim.models.fasttext.FastText
         model from which `field` is extracted
     field: str
         requested field name, fields are listed in the `_NEW_HEADER_FORMAT` list
@@ -494,7 +494,7 @@ def _args_save(fout, model, fb_fasttext_parameters):
     ----------
     fout: writeable binary stream
         stream to which model is saved
-    model: FastText
+    model: gensim.models.fasttext.FastText
         saved model
     fb_fasttext_parameters: dictionary
         dictionary contain parameters containing `lr_update_rate`, `word_ngrams`
@@ -520,7 +520,7 @@ def _dict_save(fout, model, encoding):
     ----------
     fout: writeable binary stream
         stream to which model is saved
-    model: FastText
+    model: gensim.models.fasttext.FastText
         saved model
     encoding: str
         string encoding used in the output
@@ -559,7 +559,7 @@ def _input_save(fout, model):
     ----------
     fout: writeable binary stream
         stream to which model is saved
-    model: FastText
+    model: gensim.models.fasttext.FastText
         saved model
     """
     vocab_n, vocab_dim = model.wv.vectors_vocab.shape
@@ -586,7 +586,7 @@ def _output_save(fout, model):
     ----------
     fout: writeable binary stream
         stream to which model is saved
-    model: FastText
+    model: gensim.models.fasttext.FastText
         saved model
     """
     if model.hs:
@@ -607,7 +607,7 @@ def save(model, fout, fb_fasttext_parameters, encoding):
     ----------
     fout: file name or writeable binary stream
         stream to which model is saved
-    model: FastText
+    model: gensim.models.fasttext.FastText
         saved model
     fb_fasttext_parameters: dictionary
         dictionary contain parameters containing `lr_update_rate`, `word_ngrams`
