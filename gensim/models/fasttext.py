@@ -1216,7 +1216,7 @@ def _load_fasttext_format(model_file, encoding='utf-8', full_model=True):
         window=m.ws,
         iter=m.epoch,
         negative=m.neg,
-        hs=int(m.loss == 2),
+        hs=int(m.loss == 1),
         sg=int(m.model == 2),
         bucket=m.bucket,
         min_count=m.min_count,

@@ -441,7 +441,7 @@ def _get_field_from_model(model, field):
     elif field == 'epoch':
         res = model.epochs
     elif field == 'loss':
-        # `loss` => ns: 1, hs: 2, softmax: 3, one-vs-all: 4
+        # `loss` => hs: 1, ns: 2, softmax: 3, ova-vs-all: 4
         # ns = negative sampling loss (default)
         # hs = hierarchical softmax loss
         # softmax =  softmax loss
