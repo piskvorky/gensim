@@ -185,7 +185,7 @@ def _load_vocab(fin, new_format, encoding='utf-8'):
         The loaded vocabulary.  Keys are words, values are counts.
         The vocabulary size.
         The number of words.
-        The numnber of tokens.
+        The number of tokens.
     """
     vocab_size, nwords, nlabels = _struct_unpack(fin, '@3i')
 
@@ -387,13 +387,34 @@ def _backslashreplace_backport(ex):
 
 
 def _sign_model(fout):
-    # Reimplementation of the
-    # [FastText::signModel](https://github.com/facebookresearch/fastText/blob/master/src/fasttext.cc)
+    """
+    Write signature of the file in Facebook's native fastText `.bin` format
+    to the binary output stream `fout`. Signature includes magic bytes and version.
+
+    Name mimics original C++ implementation, see
+    [FastText::signModel](https://github.com/facebookresearch/fastText/blob/master/src/fasttext.cc)
+
+    Parameters
+    ----------
+    fout: writeable binary stream
+    """
     fout.write(_FASTTEXT_FILEFORMAT_MAGIC.tobytes())
     fout.write(_FASTTEXT_VERSION.tobytes())
 
 
 def _conv_field_to_bytes(field_value, field_type):
+    """
+    Auxiliary function that converts `field_value` to bytes based on request `field_type`,
+    for saving to the binary file.
+
+    Parameters
+    ----------
+    field_value: numerical
+        contains arguments of the string and start/end indexes of the bad portion.
+
+    field_type: str
+        currently supported `field_types` are `i` for 32-bit integer and `d` for 64-bit float
+    """
     if field_type == 'i':
         return (np.int32(field_value).tobytes())
     elif field_type == 'd':
@@ -403,7 +424,16 @@ def _conv_field_to_bytes(field_value, field_type):
 
 
 def _get_field_from_model(model, field):
+    """
+    Extract `field` from `model`.
 
+    Parameters
+    ----------
+    model: FastText
+        model from which `field` is extracted
+    field: str
+        requested field name, fields are listed in the `_NEW_HEADER_FORMAT` list
+    """
     if field == 'bucket':
         res = model.trainables.bucket
     elif field == 'dim':
@@ -449,14 +479,27 @@ def _get_field_from_model(model, field):
     else:
         msg = 'Extraction of header field "' + field + '" from Gensim FastText object not implemmented.'
         raise NotImplementedError(msg)
-
     return res
 
 
 def _args_save(fout, model, fb_fasttext_parameters):
+    """
+    Saves header with `model` parameters to the binary stream `fout` containing a model in the Facebook's
+    native fastText `.bin` format.
 
-    # Reimplementation of the [Args::save](https://github.com/facebookresearch/fastText/blob/master/src/args.cc)
+    Name mimics original C++ implementation, see
+    [Args::save](https://github.com/facebookresearch/fastText/blob/master/src/args.cc)
 
+    Parameters
+    ----------
+    fout: writeable binary stream
+        stream to which model is saved
+    model: FastText
+        saved model
+    fb_fasttext_parameters: dictionary
+        dictionary contain parameters containing `lr_update_rate`, `word_ngrams`
+        unused by gensim implementation, so they have to be provided externally
+    """
     for field, field_type in _NEW_HEADER_FORMAT:
         if field in fb_fasttext_parameters:
             field_value = fb_fasttext_parameters[field]
@@ -466,9 +509,22 @@ def _args_save(fout, model, fb_fasttext_parameters):
 
 
 def _dict_save(fout, model, encoding):
-    # Reimplementation of the
-    # [Dictionary::save](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
+    """
+    Saves vocabulary from `model` to the to the binary stream `fout` containing a model in the Facebook's
+    native fastText `.bin` format.
 
+    Name mimics the original C++ implementation
+    [Dictionary::save](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
+
+    Parameters
+    ----------
+    fout: writeable binary stream
+        stream to which model is saved
+    model: FastText
+        saved model
+    encoding: str
+        string encoding used in the output
+    """
     fout.write(np.int32(len(model.wv.vocab)).tobytes())
 
     fout.write(np.int32(len(model.wv.vocab)).tobytes())
@@ -492,6 +548,20 @@ def _dict_save(fout, model, encoding):
 
 
 def _input_save(fout, model):
+    """
+    Saves word and ngram vectors from `model` to the binary stream `fout` containing a model in
+    the Facebook's native fastText `.bin` format.
+
+    Corresponding C++ fastText code:
+    DenseMatrix::save[DenseMatrix::save](https://github.com/facebookresearch/fastText/blob/master/src/densematrix.cc)
+
+    Parameters
+    ----------
+    fout: writeable binary stream
+        stream to which model is saved
+    model: FastText
+        saved model
+    """
     vocab_n, vocab_dim = model.wv.vectors_vocab.shape
     ngrams_n, ngrams_dim = model.wv.vectors_ngrams.shape
 
@@ -505,6 +575,20 @@ def _input_save(fout, model):
 
 
 def _output_save(fout, model):
+    """
+    Saves output layer of `model` to the binary stream `fout` containing a model in
+    the Facebook's native fastText `.bin` format.
+
+    Corresponding C++ fastText code:
+    DenseMatrix::save[DenseMatrix::save](https://github.com/facebookresearch/fastText/blob/master/src/densematrix.cc)
+
+    Parameters
+    ----------
+    fout: writeable binary stream
+        stream to which model is saved
+    model: FastText
+        saved model
+    """
     if model.hs:
         hidden_output = model.trainables.syn1
     if model.negative:
@@ -515,36 +599,52 @@ def _output_save(fout, model):
     fout.write(hidden_output.tobytes())
 
 
-def _save(fout, model, fb_fasttext_parameters, encoding):
-
-    # Unfortunatelly, there is no documentation of the FB binary format
-    # This is just reimplementation of
-
-    # [FastText::saveModel](https://github.com/facebookresearch/fastText/blob/master/src/fasttext.cc)
-
-    # Based on v0.9.1, more precisely commit da2745fcccb848c7a225a7d558218ee4c64d5333
-
-    # Code follows original C++ naming
-
-    _sign_model(fout)
-    _args_save(fout, model, fb_fasttext_parameters)
-    _dict_save(fout, model, encoding)
-    fout.write(struct.pack('@?', False))  # Save 'quant_', which is False for unsupervisded models
-
-    # Save words and ngrams vectors
-    _input_save(fout, model)
-    fout.write(struct.pack('@?', False))  # Save 'quot_', which is False for unsupervisded models
-
-    # Save output layers of the model
-    _output_save(fout, model)
-
-
 def save(model, fout, fb_fasttext_parameters, encoding):
+    """
+    Saves word embeddings to the Facebook's native fasttext `.bin` format.
+
+    Parameters
+    ----------
+    fout: file name or writeable binary stream
+        stream to which model is saved
+    model: FastText
+        saved model
+    fb_fasttext_parameters: dictionary
+        dictionary contain parameters containing `lr_update_rate`, `word_ngrams`
+        unused by gensim implementation, so they have to be provided externally
+    encoding: str
+        encoding used in the output file
+
+    Notes
+    -----
+    Unfortunatelly, there is no documentation of the Facebook's native fasttext `.bin` format
+
+    This is just reimplementation of
+    [FastText::saveModel](https://github.com/facebookresearch/fastText/blob/master/src/fasttext.cc)
+
+    Based on v0.9.1, more precisely commit da2745fcccb848c7a225a7d558218ee4c64d5333
+
+    Code follows the original C++ code naming.
+    """
+
+    def _save(model, fout, fb_fasttext_parameters, encoding):
+        _sign_model(fout)
+        _args_save(fout, model, fb_fasttext_parameters)
+        _dict_save(fout, model, encoding)
+        fout.write(struct.pack('@?', False))  # Save 'quant_', which is False for unsupervisded models
+
+        # Save words and ngrams vectors
+        _input_save(fout, model)
+        fout.write(struct.pack('@?', False))  # Save 'quot_', which is False for unsupervisded models
+
+        # Save output layers of the model
+        _output_save(fout, model)
+
     if isinstance(fout, str):
         with open(fout, "wb") as fout_stream:
-            _save(fout_stream, model, fb_fasttext_parameters, encoding)
+            _save(model, fout_stream, fb_fasttext_parameters, encoding)
     else:
-        _save(fout, model, fb_fasttext_parameters, encoding)
+        _save(model, fout, fb_fasttext_parameters, encoding)
 
 
 if six.PY2:
