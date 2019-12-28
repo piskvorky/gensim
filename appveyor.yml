@@ -14,20 +14,20 @@ environment:
     TOX_PARALLEL_NO_SPINNER: 1
 
   matrix:
-    - PYTHON: "C:\\Python36-x64"
-      PYTHON_VERSION: "3.6.10"
+    - PYTHON: "C:\\Python38-x64"
+      PYTHON_VERSION: "3.8.1"
       PYTHON_ARCH: "64"
-      TOXENV: "py36-win"
-
+      TOXENV: "py38-win"
+      
     - PYTHON: "C:\\Python37-x64"
       PYTHON_VERSION: "3.7.6"
       PYTHON_ARCH: "64"
       TOXENV: "py37-win"
       
-    - PYTHON: "C:\\Python38-x64"
-      PYTHON_VERSION: "3.8.1"
+    - PYTHON: "C:\\Python36-x64"
+      PYTHON_VERSION: "3.6.10"
       PYTHON_ARCH: "64"
-      TOXENV: "py38-win"
+      TOXENV: "py36-win"
 
 init:
   - "ECHO %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%"
