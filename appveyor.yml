@@ -56,8 +56,6 @@ install:
   - "python --version"
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
-  - "python continuous_integration/install_wheels.py"
-
 build: false
 
 test_script:
