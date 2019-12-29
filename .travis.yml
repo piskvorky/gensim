@@ -33,5 +33,5 @@ matrix:
 
 install:
   - pip install tox
-  - python continuous_integration/install_wheels.py
+
 script: tox -vv
