@@ -435,11 +435,11 @@ def _get_field_from_model(model, field):
         requested field name, fields are listed in the `_NEW_HEADER_FORMAT` list
     """
     if field == 'bucket':
-        res = model.trainables.bucket
+        return model.trainables.bucket
     elif field == 'dim':
-        res = model.vector_size
+        return model.vector_size
     elif field == 'epoch':
-        res = model.epochs
+        return model.epochs
     elif field == 'loss':
         # `loss` => hs: 1, ns: 2, softmax: 3, ova-vs-all: 4
         # ns = negative sampling loss (default)
@@ -447,39 +447,38 @@ def _get_field_from_model(model, field):
         # softmax =  softmax loss
         # one-vs-all = one vs all loss (supervised)
         if model.hs == 1:
-            res = 1
+            return 1
         elif model.hs == 0:
-            res = 2
+            return 2
         elif model.hs == 0 and model.negative == 0:
-            res = 1
+            return 1
     elif field == 'maxn':
-        res = model.wv.max_n
+        return model.wv.max_n
     elif field == 'minn':
-        res = model.wv.min_n
+        return model.wv.min_n
     elif field == 'min_count':
-        res = model.vocabulary.min_count
+        return model.vocabulary.min_count
     elif field == 'model':
         # `model` => cbow:1, sg:2, sup:3
         # cbow = continous bag of words (default)
         # sg = skip-gram
         # sup = supervised
-        res = 2 if model.sg == 1 else 1
+        return 2 if model.sg == 1 else 1
     elif field == 'neg':
-        res = model.negative
+        return model.negative
     elif field == 't':
-        res = model.vocabulary.sample
+        return model.vocabulary.sample
     elif field == 'word_ngrams':
-        # This is skipped in gensim loading settig, using the default from FB C++ code
-        res = 1
+        # This is skipped in gensim loading setting, using the default from FB C++ code
+        return 1
     elif field == 'ws':
-        res = model.window
+        return model.window
     elif field == 'lr_update_rate':
-        # This is skipped in gensim loading settig, using the default from FB C++ code
-        res = 100
+        # This is skipped in gensim loading setting, using the default from FB C++ code
+        return 100
     else:
         msg = 'Extraction of header field "' + field + '" from Gensim FastText object not implemmented.'
         raise NotImplementedError(msg)
-    return res
 
 
 def _args_save(fout, model, fb_fasttext_parameters):
@@ -599,6 +598,36 @@ def _output_save(fout, model):
     fout.write(hidden_output.tobytes())
 
 
+def _save_to_stream(model, fout, fb_fasttext_parameters, encoding):
+    """
+    Saves word embeddings to binary stream `fout` using the Facebook's native fasttext `.bin` format.
+
+    Parameters
+    ----------
+    fout: file name or writeable binary stream
+        stream to which model is saved
+    model: gensim.models.fasttext.FastText
+        saved model
+    fb_fasttext_parameters: dictionary
+        dictionary contain parameters containing `lr_update_rate`, `word_ngrams`
+        unused by gensim implementation, so they have to be provided externally
+    encoding: str
+        encoding used in the output file
+    """
+
+    _sign_model(fout)
+    _args_save(fout, model, fb_fasttext_parameters)
+    _dict_save(fout, model, encoding)
+    fout.write(struct.pack('@?', False))  # Save 'quant_', which is False for unsupervised models
+
+    # Save words and ngrams vectors
+    _input_save(fout, model)
+    fout.write(struct.pack('@?', False))  # Save 'quot_', which is False for unsupervised models
+
+    # Save output layers of the model
+    _output_save(fout, model)
+
+
 def save(model, fout, fb_fasttext_parameters, encoding):
     """
     Saves word embeddings to the Facebook's native fasttext `.bin` format.
@@ -617,7 +646,7 @@ def save(model, fout, fb_fasttext_parameters, encoding):
 
     Notes
     -----
-    Unfortunatelly, there is no documentation of the Facebook's native fasttext `.bin` format
+    Unfortunately, there is no documentation of the Facebook's native fasttext `.bin` format
 
     This is just reimplementation of
     [FastText::saveModel](https://github.com/facebookresearch/fastText/blob/master/src/fasttext.cc)
@@ -627,24 +656,11 @@ def save(model, fout, fb_fasttext_parameters, encoding):
     Code follows the original C++ code naming.
     """
 
-    def _save(model, fout, fb_fasttext_parameters, encoding):
-        _sign_model(fout)
-        _args_save(fout, model, fb_fasttext_parameters)
-        _dict_save(fout, model, encoding)
-        fout.write(struct.pack('@?', False))  # Save 'quant_', which is False for unsupervisded models
-
-        # Save words and ngrams vectors
-        _input_save(fout, model)
-        fout.write(struct.pack('@?', False))  # Save 'quot_', which is False for unsupervisded models
-
-        # Save output layers of the model
-        _output_save(fout, model)
-
     if isinstance(fout, str):
         with open(fout, "wb") as fout_stream:
-            _save(model, fout_stream, fb_fasttext_parameters, encoding)
+            _save_to_stream(model, fout_stream, fb_fasttext_parameters, encoding)
     else:
-        _save(model, fout, fb_fasttext_parameters, encoding)
+        _save_to_stream(model, fout, fb_fasttext_parameters, encoding)
 
 
 if six.PY2:
