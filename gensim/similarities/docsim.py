@@ -539,7 +539,7 @@ class Similarity(interfaces.SimilarityABC):
             if not is_corpus:
                 # user asked for num_best most similar and query is a single doc
                 results = (convert(shard_no, result) for shard_no, result in enumerate(shard_results))
-                result = heapq.nlargest(self.num_best, itertools.chain(*results), key=lambda item: item[1])
+                result = heapq.nlargest(self.num_best, itertools.chain(*results), key=lambda item: abs(item[1]))
             else:
                 # the trickiest combination: returning num_best results when query was a corpus
                 results = []
@@ -548,7 +548,7 @@ class Similarity(interfaces.SimilarityABC):
                     results.append(shard_result)
                 result = []
                 for parts in zip(*results):
-                    merged = heapq.nlargest(self.num_best, itertools.chain(*parts), key=lambda item: item[1])
+                    merged = heapq.nlargest(self.num_best, itertools.chain(*parts), key=lambda item: abs(item[1]))
                     result.append(merged)
         if pool:
             # gc doesn't seem to collect the Pools, eventually leading to
