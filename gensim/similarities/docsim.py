@@ -233,6 +233,30 @@ def query_shard(args):
     return result
 
 
+def _nlargest(n, iterable):
+    """Helper for extracting n documents with maximum similarity.
+
+    Parameters
+    ----------
+    n : int
+        Number of elements to be extracted
+    iterable : iterable of list of (int, float)
+        Iterable containing documents with computed similarities
+
+    Returns
+    -------
+    :class:`list`
+        List with the n largest elements from the dataset defined by iterable.
+
+    Notes
+    -----
+    Elements are compared by the absolute value of similarity, because negative value of similarity
+    does not mean some form of dissimilarity.
+
+    """
+    return heapq.nlargest(n, itertools.chain(*iterable), key=lambda item: abs(item[1]))
+
+
 class Similarity(interfaces.SimilarityABC):
     """Compute cosine similarity of a dynamic query against a corpus of documents ('the index').
 
@@ -539,7 +563,7 @@ class Similarity(interfaces.SimilarityABC):
             if not is_corpus:
                 # user asked for num_best most similar and query is a single doc
                 results = (convert(shard_no, result) for shard_no, result in enumerate(shard_results))
-                result = heapq.nlargest(self.num_best, itertools.chain(*results), key=lambda item: abs(item[1]))
+                result = _nlargest(self.num_best, results)
             else:
                 # the trickiest combination: returning num_best results when query was a corpus
                 results = []
@@ -548,7 +572,7 @@ class Similarity(interfaces.SimilarityABC):
                     results.append(shard_result)
                 result = []
                 for parts in zip(*results):
-                    merged = heapq.nlargest(self.num_best, itertools.chain(*parts), key=lambda item: abs(item[1]))
+                    merged = _nlargest(self.num_best, parts)
                     result.append(merged)
         if pool:
             # gc doesn't seem to collect the Pools, eventually leading to
