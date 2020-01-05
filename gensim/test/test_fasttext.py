@@ -1333,25 +1333,25 @@ class SaveFacebookFormatModelTest(unittest.TestCase):
 
         with temporary_file("roundtrip_model_to_model.bin") as fpath:
 
-            model_orig = _create_and_save_test_model(fpath, model_params)
+            model_trained = _create_and_save_test_model(fpath, model_params)
 
-            gensim.models.fasttext.save_facebook_model(model_orig, fpath)
+            gensim.models.fasttext.save_facebook_model(model_trained, fpath)
             model_loaded = gensim.models.fasttext.load_facebook_model(fpath)
 
-            self.assertEqual(model_orig.vector_size, model_loaded.vector_size)
-            self.assertEqual(model_orig.window, model_loaded.window)
-            self.assertEqual(model_orig.epochs, model_loaded.epochs)
-            self.assertEqual(model_orig.negative, model_loaded.negative)
-            self.assertEqual(model_orig.hs, model_loaded.hs)
-            self.assertEqual(model_orig.sg, model_loaded.sg)
-            self.assertEqual(model_orig.trainables.bucket, model_loaded.trainables.bucket)
-            self.assertEqual(model_orig.wv.min_n, model_loaded.wv.min_n)
-            self.assertEqual(model_orig.wv.max_n, model_loaded.wv.max_n)
-            self.assertEqual(model_orig.vocabulary.sample, model_loaded.vocabulary.sample)
-            self.assertEqual(set(model_orig.wv.index2word), set(model_loaded.wv.index2word))
+            self.assertEqual(model_trained.vector_size, model_loaded.vector_size)
+            self.assertEqual(model_trained.window, model_loaded.window)
+            self.assertEqual(model_trained.epochs, model_loaded.epochs)
+            self.assertEqual(model_trained.negative, model_loaded.negative)
+            self.assertEqual(model_trained.hs, model_loaded.hs)
+            self.assertEqual(model_trained.sg, model_loaded.sg)
+            self.assertEqual(model_trained.trainables.bucket, model_loaded.trainables.bucket)
+            self.assertEqual(model_trained.wv.min_n, model_loaded.wv.min_n)
+            self.assertEqual(model_trained.wv.max_n, model_loaded.wv.max_n)
+            self.assertEqual(model_trained.vocabulary.sample, model_loaded.vocabulary.sample)
+            self.assertEqual(set(model_trained.wv.index2word), set(model_loaded.wv.index2word))
 
-            for w in model_orig.wv.index2word:
-                v_orig = model_orig.wv[w]
+            for w in model_trained.wv.index2word:
+                v_orig = model_trained.wv[w]
                 v_loaded = model_loaded.wv[w]
 
                 try:
