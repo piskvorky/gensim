@@ -194,7 +194,7 @@ def _load_vocab(fin, new_format, encoding='utf-8'):
         raise NotImplementedError("Supervised fastText models are not supported")
     logger.info("loading %s words for fastText model from %s", vocab_size, fin.name)
 
-    ntokens, = _struct_unpack(fin, '@q')  # number of tokens
+    ntokens = _struct_unpack(fin, '@q')[0]  # number of tokens
 
     if new_format:
         pruneidx_size, = _struct_unpack(fin, '@q')
