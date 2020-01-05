@@ -1320,7 +1320,7 @@ def calc_max_diff(v1, v2):
     return np.max(np.abs(v1 - v2))
 
 
-class SaveFacebookFormatRoundtripModelToModelTest(unittest.TestCase):
+class SaveFacebookFormatModelTest(unittest.TestCase):
     """
     This class containts tests that check the following scenario:
 
@@ -1383,12 +1383,12 @@ def _read_binary_file(fname):
     return data
 
 
-class SaveFacebookFormatRoundtripFileToFileGensimTest(unittest.TestCase):
+class SaveFacebookFormatFileGensimTest(unittest.TestCase):
     """
     This class containts tests that check the following scenario:
 
-    + create binary fastText file model1.bin using Gensim
-    + load file model1.bin to model
+    + create binary fastText file model1.bin using gensim
+    + load file model1.bin to variable model
     + save model to model2.bin
     + check if files model1.bin and model2.bin are identical
     """
@@ -1436,13 +1436,13 @@ def _save_test_model(out_base_fname, model_params, fasttext_cmd):
     subprocess.run(cmd, shell=True)
 
 
-class SaveFacebookFormatRoundtripFileToFileFacebookTest(unittest.TestCase):
+class SaveFacebookFormatFileFastTextTest(unittest.TestCase):
     """
     This class containts tests that check the following scenario:
 
-    + create binary fastText file model1.bin using facebook_binary
-    + load file model1.bin to model
-    + save model to model2.bin
+    + create binary fastText file model1.bin using facebook_binary (FT)
+    + load file model1.bin to variable model
+    + save model to model2.bin using gensim
     + check if files model1.bin and model2.bin are identical
 
     Requires env. variable FT_HOME to point to location of Facebook fastText binary
@@ -1482,7 +1482,7 @@ def _parse_wordvectors(text):
     return np.array([_conv_line_to_array(l) for l in text.splitlines()], dtype=np.float32)
 
 
-def _get_wordvectors_from_fb_fastttext(fasttext_cmd, fasttext_fname, words):
+def _read_wordvectors_using_fasttext(fasttext_cmd, fasttext_fname, words):
     cmd = fasttext_cmd + " print-word-vectors " + fasttext_fname
     process = subprocess.Popen(
         cmd, stdin=subprocess.PIPE,
@@ -1498,9 +1498,9 @@ class SaveFacebookFormatReadingTest(unittest.TestCase):
     """
     This class containts tests that check the following scenario:
 
-    + create fastText model
-    + save file tom model.bin
-    + retrieve word vectors from model.bin to stdout using fasttext Facebook utility
+    + create fastText model using gensim
+    + save file to model.bin
+    + retrieve word vectors from model.bin using fasttext Facebook utility
     + compare vectors retrieved by Facebook utility with those obtained directly from gensim model
 
     Requires env. variable FT_HOME to point to location of Facebook fastText binary
@@ -1513,7 +1513,7 @@ class SaveFacebookFormatReadingTest(unittest.TestCase):
 
         with temporary_file("load_fasttext.bin") as fpath:
             model = _create_and_save_test_model(fpath, model_params)
-            wv = _get_wordvectors_from_fb_fastttext(fasttext_cmd, fpath, model.wv.index2word)
+            wv = _read_wordvectors_using_fasttext(fasttext_cmd, fpath, model.wv.index2word)
 
             for i, w in enumerate(model.wv.index2word):
                 diff = calc_max_diff(wv[i, :], model.wv[w])
