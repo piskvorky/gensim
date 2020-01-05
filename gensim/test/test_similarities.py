@@ -30,6 +30,7 @@ from gensim.test.utils import (datapath, get_tmpfile,
 from gensim.similarities import UniformTermSimilarityIndex
 from gensim.similarities import SparseTermSimilarityMatrix
 from gensim.similarities import LevenshteinSimilarityIndex
+from gensim.similarities.docsim import _nlargest
 from gensim.similarities.levenshtein import levdist, levsim
 
 try:
@@ -531,6 +532,11 @@ class TestSimilarity(unittest.TestCase, _TestSimilarityABC):
         sims = [sim for sim in index]
         self.assertTrue(numpy.allclose(expected, sims))
         index.destroy()
+
+    def testNlargest(self):
+        sims = ([(0, 0.8), (1, 0.2), (2, 0.0), (3, 0.0), (4, -0.1), (5, -0.15)],)
+        expected = [(0, 0.8), (1, 0.2), (5, -0.15)]
+        self.assertTrue(_nlargest(3, sims), expected)
 
 
 class TestWord2VecAnnoyIndexer(unittest.TestCase):
