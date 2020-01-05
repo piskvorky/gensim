@@ -3,7 +3,6 @@
 from __future__ import division
 
 import gzip
-import hashlib
 import io
 import logging
 import unittest
