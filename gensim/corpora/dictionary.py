@@ -472,6 +472,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         self.token2id = {token: idmap[tokenid] for token, tokenid in iteritems(self.token2id)}
         self.id2token = {}
         self.dfs = {idmap[tokenid]: freq for tokenid, freq in iteritems(self.dfs)}
+        self.cfs = {idmap[tokenid]: freq for tokenid, freq in iteritems(self.cfs)}
 
     def save_as_text(self, fname, sort_by_word=True):
         """Save :class:`~gensim.corpora.dictionary.Dictionary` to a text file.

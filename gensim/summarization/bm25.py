@@ -37,6 +37,7 @@ Data:
 """
 
 
+import logging
 import math
 from six import iteritems
 from six.moves import range
@@ -47,6 +48,8 @@ from ..utils import effective_n_jobs
 PARAM_K1 = 1.5
 PARAM_B = 0.75
 EPSILON = 0.25
+
+logger = logging.getLogger(__name__)
 
 
 class BM25(object):
@@ -137,6 +140,13 @@ class BM25(object):
             if idf < 0:
                 negative_idfs.append(word)
         self.average_idf = float(idf_sum) / len(self.idf)
+
+        if self.average_idf < 0:
+            logger.warning(
+                'Average inverse document frequency is less than zero. Your corpus of {} documents'
+                ' is either too small or it does not originate from natural text. BM25 may produce'
+                ' unintuitive results.'.format(self.corpus_size)
+            )
 
         eps = self.epsilon * self.average_idf
         for word in negative_idfs:

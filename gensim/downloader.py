@@ -191,7 +191,7 @@ def _load_info(url=DATA_LIST_URL, encoding='utf-8'):
     If the network access fails, fall back to a local cache.  This cache gets
     updated each time a network request _succeeds_.
     """
-    cache_path = os.path.join(base_dir, 'information.json')
+    cache_path = os.path.join(BASE_DIR, 'information.json')
     _create_base_dir()
 
     try:

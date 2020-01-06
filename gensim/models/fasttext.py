@@ -283,13 +283,13 @@ import logging
 import os
 
 import numpy as np
-from numpy import ones, vstack, float32 as REAL, sum as np_sum
+from numpy import ones, vstack, float32 as REAL
 import six
 from collections import Iterable
 
 import gensim.models._fasttext_bin
 
-from gensim.models.word2vec import Word2VecVocab, Word2VecTrainables, train_sg_pair, train_cbow_pair
+from gensim.models.word2vec import Word2VecVocab, Word2VecTrainables, train_sg_pair, train_cbow_pair  # noqa
 from gensim.models.keyedvectors import FastTextKeyedVectors
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 from gensim.models.utils_any2vec import ft_ngram_hashes
@@ -300,133 +300,15 @@ from gensim.utils import deprecated, call_on_class_only
 logger = logging.getLogger(__name__)
 
 try:
-    from gensim.models.fasttext_inner import train_batch_sg, train_batch_cbow
-    from gensim.models.fasttext_inner import FAST_VERSION, MAX_WORDS_IN_BATCH
-
+    from gensim.models.fasttext_inner import (  # noqa: F401
+        train_batch_sg,
+        train_batch_cbow,
+        FAST_VERSION,
+        MAX_WORDS_IN_BATCH,
+    )
+    from gensim.models.fasttext_corpusfile import train_epoch_sg, train_epoch_cbow
 except ImportError:
-    # failed... fall back to plain numpy (20-80x slower training than the above)
-    FAST_VERSION = -1
-    MAX_WORDS_IN_BATCH = 10000
-
-    def train_batch_cbow(model, sentences, alpha, work=None, neu1=None):
-        """Update CBOW model by training on a sequence of sentences.
-
-        Called internally from :meth:`~gensim.models.fasttext.FastText.train`.
-
-        Notes
-        -----
-        This is the non-optimized, Python version. If you have cython installed, gensim will use the optimized version
-        from :mod:`gensim.models.fasttext_inner` instead.
-
-        Parameters
-        ----------
-        model : :class:`~gensim.models.fasttext.FastText`
-            Model instance.
-        sentences : iterable of list of str
-            Iterable of the sentences.
-        alpha : float
-            Learning rate.
-        work : :class:`numpy.ndarray`, optional
-            UNUSED.
-        neu1 : :class:`numpy.ndarray`, optional
-            UNUSED.
-        Returns
-        -------
-        int
-            Effective number of words trained.
-
-        """
-        result = 0
-        for sentence in sentences:
-            word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab
-                           and model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
-            for pos, word in enumerate(word_vocabs):
-                reduced_window = model.random.randint(model.window)
-                start = max(0, pos - model.window + reduced_window)
-                window_pos = enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start)
-                word2_indices = [word2.index for pos2, word2 in window_pos if (word2 is not None and pos2 != pos)]
-
-                vocab_subwords_indices = []
-                ngrams_subwords_indices = []
-
-                for index in word2_indices:
-                    vocab_subwords_indices += [index]
-                    ngrams_subwords_indices.extend(model.wv.buckets_word[index])
-
-                l1_vocab = np_sum(model.wv.syn0_vocab[vocab_subwords_indices], axis=0)  # 1 x vector_size
-                l1_ngrams = np_sum(model.wv.syn0_ngrams[ngrams_subwords_indices], axis=0)  # 1 x vector_size
-
-                l1 = np_sum([l1_vocab, l1_ngrams], axis=0)
-                subwords_indices = [vocab_subwords_indices] + [ngrams_subwords_indices]
-                if (subwords_indices[0] or subwords_indices[1]) and model.cbow_mean:
-                    l1 /= (len(subwords_indices[0]) + len(subwords_indices[1]))
-
-                # train on the sliding window for target word
-                train_cbow_pair(model, word, subwords_indices, l1, alpha, is_ft=True)
-            result += len(word_vocabs)
-        return result
-
-    def train_batch_sg(model, sentences, alpha, work=None, neu1=None):
-        """Update skip-gram model by training on a sequence of sentences.
-
-        Called internally from :meth:`~gensim.models.fasttext.FastText.train`.
-
-        Notes
-        -----
-        This is the non-optimized, Python version. If you have cython installed, gensim will use the optimized version
-        from :mod:`gensim.models.fasttext_inner` instead.
-
-        Parameters
-        ----------
-        model : :class:`~gensim.models.fasttext.FastText`
-            `FastText` instance.
-        sentences : iterable of list of str
-            Iterable of the sentences directly from disk/network.
-        alpha : float
-            Learning rate.
-        work : :class:`numpy.ndarray`, optional
-            UNUSED.
-        neu1 : :class:`numpy.ndarray`, optional
-            UNUSED.
-
-        Returns
-        -------
-        int
-            Effective number of words trained.
-
-        """
-        result = 0
-        for sentence in sentences:
-            word_vocabs = [model.wv.vocab[w] for w in sentence if w in model.wv.vocab
-                           and model.wv.vocab[w].sample_int > model.random.rand() * 2 ** 32]
-            for pos, word in enumerate(word_vocabs):
-                reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
-                # now go over all words from the (reduced) window, predicting each one in turn
-                start = max(0, pos - model.window + reduced_window)
-
-                subwords_indices = (word.index,)
-                subwords_indices += tuple(model.wv.buckets_word[word.index])
-
-                for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
-                    if pos2 != pos:  # don't train on the `word` itself
-                        train_sg_pair(model, model.wv.index2word[word2.index], subwords_indices, alpha, is_ft=True)
-
-            result += len(word_vocabs)
-        return result
-
-try:
-    from gensim.models.fasttext_corpusfile import train_epoch_sg, train_epoch_cbow, CORPUSFILE_VERSION
-except ImportError:
-    # file-based fasttext is not supported
-    CORPUSFILE_VERSION = -1
-
-    def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
-                       _work, _neu1):
-        raise RuntimeError("Training with corpus_file argument is not supported")
-
-    def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
-                         _work, _neu1):
-        raise RuntimeError("Training with corpus_file argument is not supported")
+    raise utils.NO_CYTHON
 
 
 class FastText(BaseWordEmbeddingsModel):
@@ -598,7 +480,7 @@ class FastText(BaseWordEmbeddingsModel):
         super(FastText, self).__init__(
             sentences=sentences, corpus_file=corpus_file, workers=workers, vector_size=size, epochs=iter,
             callbacks=callbacks, batch_words=batch_words, trim_rule=trim_rule, sg=sg, alpha=alpha, window=window,
-            seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha, fast_version=FAST_VERSION)
+            seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha)
 
     @property
     @deprecated("Attribute will be removed in 4.0.0, use wv.min_n instead")

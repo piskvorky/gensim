@@ -1,0 +1,14 @@
+Sphinx==2.2.0
+sphinx-gallery==0.4.0
+sphinxcontrib-napoleon==0.7
+sphinxcontrib-programoutput==0.15
+memory-profiler==0.55.0
+Pyro4==4.77
+annoy==1.16.2
+scikit-learn==0.21.3
+plotly==4.2.1
+nltk==3.4.5
+testfixtures==6.10.0
+statsmodels==0.10.1
+pyemd==0.5.1
+pandas==0.25.2

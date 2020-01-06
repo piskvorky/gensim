@@ -162,9 +162,6 @@ from types import GeneratorType
 
 logger = logging.getLogger(__name__)
 
-
-# failed... fall back to plain numpy (20-80x slower training than the above)
-FAST_VERSION = -1
 MAX_WORDS_IN_BATCH = 10000
 
 
@@ -588,11 +585,6 @@ class Word2Vec(SaveLoad):
 
         self.load = call_on_class_only
 
-        if FAST_VERSION == -1:
-            logger.warning('Slow version of %s is being used', __name__)
-        else:
-            logger.debug('Fast version of %s is being used', __name__)
-
         self.initialize_word_vectors()
         self.sg = int(sg)
         self.cum_table = None  # for negative sampling
@@ -1007,16 +999,6 @@ class Word2Vec(SaveLoad):
         """
         if self.model_trimmed_post_training:
             raise RuntimeError("Parameters for training were discarded using model_trimmed_post_training method")
-        if FAST_VERSION < 0:
-            warnings.warn(
-                "C extension not loaded for Word2Vec, training will be slow. "
-                "Install a C compiler and reinstall gensim for fast training."
-            )
-            self.neg_labels = []
-            if self.negative > 0:
-                # precompute negative labels optimization for pure-python training
-                self.neg_labels = zeros(self.negative + 1)
-                self.neg_labels[0] = 1.
 
         if compute_loss:
             self.compute_loss = compute_loss
@@ -1234,12 +1216,6 @@ class Word2Vec(SaveLoad):
         .. [#deepir] https://github.com/piskvorky/gensim/blob/develop/docs/notebooks/deepir.ipynb
 
         """
-        if FAST_VERSION < 0:
-            warnings.warn(
-                "C extension compilation failed, scoring will be slow. "
-                "Install a C compiler and reinstall gensim for fastness."
-            )
-
         logger.info(
             "scoring sentences with %i workers on %i vocabulary and %i features, "
             "using sg=%s hs=%s sample=%s and negative=%s",
@@ -1852,7 +1828,6 @@ if __name__ == "__main__":
         level=logging.INFO
     )
     logger.info("running %s", " ".join(sys.argv))
-    logger.info("using optimization %s", FAST_VERSION)
 
     # check and process cmdline input
     program = os.path.basename(sys.argv[0])

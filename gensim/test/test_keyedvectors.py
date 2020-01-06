@@ -367,13 +367,13 @@ class Word2VecKeyedVectorsTest(unittest.TestCase):
         self.vocab_path = datapath("w2v_keyedvectors_load_test.vocab")
 
     def test_load_model_and_vocab_file_strict(self):
-        """Test loading model and voacab files which have decoding errors: strict mode"""
+        """Test loading model and vocab files which have decoding errors: strict mode"""
         with self.assertRaises(UnicodeDecodeError):
             gensim.models.KeyedVectors.load_word2vec_format(
                 self.model_path, fvocab=self.vocab_path, binary=False, unicode_errors="strict")
 
     def test_load_model_and_vocab_file_replace(self):
-        """Test loading model and voacab files which have decoding errors: replace mode"""
+        """Test loading model and vocab files which have decoding errors: replace mode"""
         model = gensim.models.KeyedVectors.load_word2vec_format(
             self.model_path, fvocab=self.vocab_path, binary=False, unicode_errors="replace")
         self.assertEqual(model.vocab[u'ありがとう�'].count, 123)
@@ -386,7 +386,7 @@ class Word2VecKeyedVectorsTest(unittest.TestCase):
             model.get_vector(u'どういたしまして�'), np.array([.1, .2, .3], dtype=np.float32)))
 
     def test_load_model_and_vocab_file_ignore(self):
-        """Test loading model and voacab files which have decoding errors: ignore mode"""
+        """Test loading model and vocab files which have decoding errors: ignore mode"""
         model = gensim.models.KeyedVectors.load_word2vec_format(
             self.model_path, fvocab=self.vocab_path, binary=False, unicode_errors="ignore")
         print(model.vocab.keys())
