@@ -168,13 +168,15 @@ class BM25(object):
             BM25 score.
 
         """
-        score = 0
+        score = 0.0
         doc_freqs = self.doc_freqs[index]
+        numerator_constant = self.k1 + 1
+        denominator_constant = self.k1 * (1 - self.b + self.b * self.doc_len[index] / self.avgdl)
         for word in document:
-            if word not in doc_freqs:
-                continue
-            score += (self.idf[word] * doc_freqs[word] * (self.k1 + 1)
-                      / (doc_freqs[word] + self.k1 * (1 - self.b + self.b * self.doc_len[index] / self.avgdl)))
+            if word in doc_freqs:
+                df = self.doc_freqs[index][word]
+                idf = self.idf[word]
+                score += (idf * df * numerator_constant) / (df + denominator_constant)
         return score
 
     def get_scores(self, document):
