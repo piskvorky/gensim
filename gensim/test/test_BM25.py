@@ -72,15 +72,21 @@ class TestBM25(unittest.TestCase):
 
         first_bm25 = BM25(corpus, k1=first_k1)
         second_bm25 = BM25(corpus, k1=second_k1)
-        self.assertTrue(first_bm25.get_score(doc, index) < second_bm25.get_score(doc, index))
+        first_score = first_bm25.get_score(doc, index)
+        second_score = second_bm25.get_score(doc, index)
+        self.assertLess(first_score, second_score)
 
         first_iter = iter_bm25_bow(corpus, k1=first_k1)
         second_iter = iter_bm25_bow(corpus, k1=second_k1)
-        self.assertTrue(dict(next(iter(first_iter)))[index] < dict(next(iter(second_iter)))[index])
+        first_score = dict(next(iter(first_iter)))[index]
+        second_score = dict(next(iter(second_iter)))[index]
+        self.assertLess(first_score, second_score)
 
         first_weights = get_bm25_weights(corpus, k1=first_k1)
         second_weights = get_bm25_weights(corpus, k1=second_k1)
-        self.assertTrue(first_weights[index] < second_weights[index])
+        first_score = first_weights[index]
+        second_score = second_weights[index]
+        self.assertLess(first_score, second_score)
 
     def test_b(self):
         """ Changing the b parameter should give consistent results """
@@ -92,15 +98,21 @@ class TestBM25(unittest.TestCase):
 
         first_bm25 = BM25(corpus, b=first_b)
         second_bm25 = BM25(corpus, b=second_b)
-        self.assertTrue(first_bm25.get_score(doc, index) < second_bm25.get_score(doc, index))
+        first_score = first_bm25.get_score(doc, index)
+        second_score = second_bm25.get_score(doc, index)
+        self.assertLess(first_score, second_score)
 
         first_iter = iter_bm25_bow(corpus, b=first_b)
         second_iter = iter_bm25_bow(corpus, b=second_b)
-        self.assertTrue(dict(next(iter(first_iter)))[index] < dict(next(iter(second_iter)))[index])
+        first_score = dict(next(iter(first_iter)))[index]
+        second_score = dict(next(iter(second_iter)))[index]
+        self.assertLess(first_score, second_score)
 
         first_weights = get_bm25_weights(corpus, b=first_b)
         second_weights = get_bm25_weights(corpus, b=second_b)
-        self.assertTrue(first_weights[index] < second_weights[index])
+        first_score = first_weights[index]
+        second_score = second_weights[index]
+        self.assertLess(first_score, second_score)
 
     def test_epsilon(self):
         """ Changing the b parameter should give consistent results """
@@ -122,15 +134,21 @@ class TestBM25(unittest.TestCase):
 
         first_bm25 = BM25(corpus, epsilon=first_epsilon)
         second_bm25 = BM25(corpus, epsilon=second_epsilon)
-        self.assertTrue(first_bm25.get_score(doc, index) > second_bm25.get_score(doc, index))
+        first_score = first_bm25.get_score(doc, index)
+        second_score = second_bm25.get_score(doc, index)
+        self.assertGreater(first_score, second_score)
 
         first_iter = iter_bm25_bow(corpus, epsilon=first_epsilon)
         second_iter = iter_bm25_bow(corpus, epsilon=second_epsilon)
-        self.assertTrue(dict(next(iter(first_iter)))[index] > dict(next(iter(second_iter)))[index])
+        first_score = dict(next(iter(first_iter)))[index]
+        second_score = dict(next(iter(second_iter)))[index]
+        self.assertGreater(first_score, second_score)
 
         first_weights = get_bm25_weights(corpus, epsilon=first_epsilon)
         second_weights = get_bm25_weights(corpus, epsilon=second_epsilon)
-        self.assertTrue(first_weights[index] > second_weights[index])
+        first_score = first_weights[index]
+        second_score = second_weights[index]
+        self.assertGreater(first_score, second_score)
 
 
 if __name__ == '__main__':
