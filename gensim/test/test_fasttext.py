@@ -1335,7 +1335,6 @@ class SaveFacebookFormatModelTest(unittest.TestCase):
 
             model_trained = _create_and_save_test_model(fpath, model_params)
 
-            gensim.models.fasttext.save_facebook_model(model_trained, fpath)
             model_loaded = gensim.models.fasttext.load_facebook_model(fpath)
 
             self.assertEqual(model_trained.vector_size, model_loaded.vector_size)
@@ -1365,14 +1364,24 @@ class SaveFacebookFormatModelTest(unittest.TestCase):
 
     def test_round_trip_model_model_skipgram(self):
         model_params = {
-            "size": 10, "min_count": 1, "hs": 1, "sg": 1,
-            "negative": 5, "seed": 42, "workers": 1}
+            "size": 10,
+            "min_count": 1,
+            "hs": 1,
+            "sg": 1,
+            "negative": 5,
+            "seed": 42,
+            "workers": 1}
         self._check_roundtrip_model_model(model_params)
 
     def test_round_trip_model_model_cbow(self):
         model_params = {
-            "size": 10, "min_count": 1, "hs": 1, "sg": 0, "negative": 5,
-            "seed": 42, "workers": 1}
+            "size": 10,
+            "min_count": 1,
+            "hs": 1,
+            "sg": 0,
+            "negative": 5,
+            "seed": 42,
+            "workers": 1}
         self._check_roundtrip_model_model(model_params)
 
 
@@ -1387,9 +1396,9 @@ class SaveFacebookFormatFileGensimTest(unittest.TestCase):
     This class containts tests that check the following scenario:
 
     + create binary fastText file model1.bin using gensim
-    + load file model1.bin to variable model
-    + save model to model2.bin
-    + check if files model1.bin and model2.bin are identical
+    + load file model1.bin to variable `model`
+    + save `model` to model2.bin
+    + check if files model1.bin and model2.bin are byte identical
     """
 
     def _check_roundtrip_file_file(self, model_params):
@@ -1440,9 +1449,9 @@ class SaveFacebookFormatFileFastTextTest(unittest.TestCase):
     This class containts tests that check the following scenario:
 
     + create binary fastText file model1.bin using facebook_binary (FT)
-    + load file model1.bin to variable model
-    + save model to model2.bin using gensim
-    + check if files model1.bin and model2.bin are identical
+    + load file model1.bin to variable `model`
+    + save `model` to model2.bin using gensim
+    + check if files model1.bin and model2.bin are byte-identical
 
     Requires env. variable FT_HOME to point to location of Facebook fastText binary
     """
