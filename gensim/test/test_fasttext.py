@@ -1302,7 +1302,7 @@ class TestFromfile(unittest.TestCase):
         self.assertTrue(np.allclose(_ARRAY, array))
 
 
-def _create_and_save_test_model(fname, model_params):
+def _create_and_save_fb_model(fname, model_params):
     model = FT_gensim(**model_params)
     lee_data = LineSentence(datapath('lee_background.cor'))
     model.build_vocab(lee_data)
@@ -1329,7 +1329,7 @@ class SaveFacebookFormatModelTest(unittest.TestCase):
 
         with temporary_file("roundtrip_model_to_model.bin") as fpath:
 
-            model_trained = _create_and_save_test_model(fpath, model_params)
+            model_trained = _create_and_save_fb_model(fpath, model_params)
 
             model_loaded = gensim.models.fasttext.load_facebook_model(fpath)
 
@@ -1385,7 +1385,7 @@ class SaveFacebookFormatFileGensimTest(unittest.TestCase):
 
         with temporary_file("roundtrip_file_to_file1.bin") as fpath1, \
             temporary_file("roundtrip_file_to_file2.bin") as fpath2:
-            _create_and_save_test_model(fpath1, model_params)
+            _create_and_save_fb_model(fpath1, model_params)
             model = gensim.models.fasttext.load_facebook_model(fpath1)
             gensim.models.fasttext.save_facebook_model(model, fpath2)
             self.assertEqual(_read_binary_file(fpath1), _read_binary_file(fpath2))
@@ -1483,7 +1483,7 @@ class SaveFacebookFormatReadingTest(unittest.TestCase):
             "workers": 1}
 
         with temporary_file("load_fasttext.bin") as fpath:
-            model = _create_and_save_test_model(fpath, model_params)
+            model = _create_and_save_fb_model(fpath, model_params)
             wv = _read_wordvectors_using_fasttext(fpath, model.wv.index2word)
 
         for i, w in enumerate(model.wv.index2word):
