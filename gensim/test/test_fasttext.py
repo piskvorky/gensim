@@ -1385,7 +1385,16 @@ class SaveFacebookFormatFileGensimTest(unittest.TestCase):
     + check if files model1.bin and model2.bin are byte identical
     """
 
-    def _check_roundtrip_file_file(self, model_params):
+    def _check_roundtrip_file_file(self, sg):
+        model_params = {
+            "sg": sg,
+            "size": 10,
+            "min_count": 1,
+            "hs": 1,
+            "negative": 0,
+            "seed": 42,
+            "workers": 1}
+
         with temporary_file("roundtrip_file_to_file1.bin") as fpath1, \
             temporary_file("roundtrip_file_to_file2.bin") as fpath2:
             _create_and_save_test_model(fpath1, model_params)
@@ -1394,26 +1403,10 @@ class SaveFacebookFormatFileGensimTest(unittest.TestCase):
             self.assertEqual(_read_binary_file(fpath1), _read_binary_file(fpath2))
 
     def test_roundtrip_file_file_skipgram(self):
-        model_params = {
-            "size": 10,
-            "min_count": 1,
-            "hs": 1,
-            "sg": 1,
-            "negative": 0,
-            "seed": 42,
-            "workers": 1}
-        self._check_roundtrip_file_file(model_params)
+        self._check_roundtrip_file_file(sg=1)
 
     def test_roundtrip_file_file_cbow(self):
-        model_params = {
-            "size": 10,
-            "min_count": 1,
-            "hs": 1,
-            "sg": 0,
-            "negative": 0,
-            "seed": 42,
-            "workers": 1}
-        self._check_roundtrip_file_file(model_params)
+        self._check_roundtrip_file_file(sg=0)
 
 
 def _save_test_model(out_base_fname, model_params, fasttext_cmd):
@@ -1440,7 +1433,8 @@ class SaveFacebookFormatFileFastTextTest(unittest.TestCase):
     Requires env. variable FT_HOME to point to location of Facebook fastText binary
     """
 
-    def _check_roundtrip_file_file(self, model_params):
+    def _check_roundtrip_file_file(self, sg):
+        model_params = {"size": 10, "sg": sg, "seed": 42}
         ft_home = os.environ.get("FT_HOME", None)
         fasttext_cmd = os.path.join(ft_home, "fasttext")
 
@@ -1458,13 +1452,11 @@ class SaveFacebookFormatFileFastTextTest(unittest.TestCase):
 
     @unittest.skipIf(not os.environ.get("FT_HOME", None), "FT_HOME env variable not set, skipping test")
     def test_roundtrip_file_file_skipgram(self):
-        model_params = {"size": 10, "sg": 1, "seed": 42}
-        self._check_roundtrip_file_file(model_params)
+        self._check_roundtrip_file_file(sg=1)
 
     @unittest.skipIf(not os.environ.get("FT_HOME", None), "FT_HOME env variable not set, skipping test")
     def test_roundtrip_file_file_cbow(self):
-        model_params = {"size": 10, "sg": 0, "seed": 42}
-        self._check_roundtrip_file_file(model_params)
+        self._check_roundtrip_file_file(sg=0)
 
 
 def _parse_wordvectors(text):
@@ -1498,7 +1490,15 @@ class SaveFacebookFormatReadingTest(unittest.TestCase):
     Requires env. variable FT_HOME to point to location of Facebook fastText binary
     """
 
-    def _check_load_fasttext_format(self, model_params):
+    def _check_load_fasttext_format(self, sg):
+        model_params = {
+            "sg": sg,
+            "size": 10,
+            "min_count": 1,
+            "hs": 1,
+            "negative": 5,
+            "seed": 42,
+            "workers": 1}
 
         ft_home = os.environ.get("FT_HOME", None)
         fasttext_cmd = os.path.join(ft_home, "fasttext")
@@ -1514,27 +1514,11 @@ class SaveFacebookFormatReadingTest(unittest.TestCase):
 
     @unittest.skipIf(not os.environ.get("FT_HOME", None), "FT_HOME env variable not set, skipping test")
     def test_load_fasttext_format_cbow(self):
-        model_params = {
-            "size": 10,
-            "min_count": 1,
-            "hs": 1,
-            "sg": 0,
-            "negative": 5,
-            "seed": 42,
-            "workers": 1}
-        self._check_load_fasttext_format(model_params)
+        self._check_load_fasttext_format(sg=0)
 
     @unittest.skipIf(not os.environ.get("FT_HOME", None), "FT_HOME env variable not set, skipping test")
     def test_load_fasttext_format_skipgram(self):
-        model_params = {
-            "size": 10,
-            "min_count": 1,
-            "hs": 1,
-            "sg": 1,
-            "negative": 5,
-            "seed": 42,
-            "workers": 1}
-        self._check_load_fasttext_format(model_params)
+        self._check_load_fasttext_format(sg=1)
 
 
 if __name__ == '__main__':
