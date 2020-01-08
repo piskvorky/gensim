@@ -1337,30 +1337,30 @@ class SaveFacebookFormatModelTest(unittest.TestCase):
 
             model_loaded = gensim.models.fasttext.load_facebook_model(fpath)
 
-            self.assertEqual(model_trained.vector_size, model_loaded.vector_size)
-            self.assertEqual(model_trained.window, model_loaded.window)
-            self.assertEqual(model_trained.epochs, model_loaded.epochs)
-            self.assertEqual(model_trained.negative, model_loaded.negative)
-            self.assertEqual(model_trained.hs, model_loaded.hs)
-            self.assertEqual(model_trained.sg, model_loaded.sg)
-            self.assertEqual(model_trained.trainables.bucket, model_loaded.trainables.bucket)
-            self.assertEqual(model_trained.wv.min_n, model_loaded.wv.min_n)
-            self.assertEqual(model_trained.wv.max_n, model_loaded.wv.max_n)
-            self.assertEqual(model_trained.vocabulary.sample, model_loaded.vocabulary.sample)
-            self.assertEqual(set(model_trained.wv.index2word), set(model_loaded.wv.index2word))
+        self.assertEqual(model_trained.vector_size, model_loaded.vector_size)
+        self.assertEqual(model_trained.window, model_loaded.window)
+        self.assertEqual(model_trained.epochs, model_loaded.epochs)
+        self.assertEqual(model_trained.negative, model_loaded.negative)
+        self.assertEqual(model_trained.hs, model_loaded.hs)
+        self.assertEqual(model_trained.sg, model_loaded.sg)
+        self.assertEqual(model_trained.trainables.bucket, model_loaded.trainables.bucket)
+        self.assertEqual(model_trained.wv.min_n, model_loaded.wv.min_n)
+        self.assertEqual(model_trained.wv.max_n, model_loaded.wv.max_n)
+        self.assertEqual(model_trained.vocabulary.sample, model_loaded.vocabulary.sample)
+        self.assertEqual(set(model_trained.wv.index2word), set(model_loaded.wv.index2word))
 
-            for w in model_trained.wv.index2word:
-                v_orig = model_trained.wv[w]
-                v_loaded = model_loaded.wv[w]
+        for w in model_trained.wv.index2word:
+            v_orig = model_trained.wv[w]
+            v_loaded = model_loaded.wv[w]
 
-                try:
-                    self.assertLess(calc_max_diff(v_orig, v_loaded), MAX_WORDVEC_COMPONENT_DIFFERENCE)
-                except AssertionError as e:
-                    s = e.args[0]
-                    s += " (max difference for components in wordvector of \"%s\"" % w
-                    s += " larger than the thershold %f" % MAX_WORDVEC_COMPONENT_DIFFERENCE
-                    e.args = (s,)
-                    raise e
+            try:
+                self.assertLess(calc_max_diff(v_orig, v_loaded), MAX_WORDVEC_COMPONENT_DIFFERENCE)
+            except AssertionError as e:
+                s = e.args[0]
+                s += " (max difference for components in wordvector of \"%s\"" % w
+                s += " larger than the thershold %f" % MAX_WORDVEC_COMPONENT_DIFFERENCE
+                e.args = (s,)
+                raise e
 
     def test_round_trip_model_model_skipgram(self):
         model_params = {
@@ -1523,10 +1523,10 @@ class SaveFacebookFormatReadingTest(unittest.TestCase):
             model = _create_and_save_test_model(fpath, model_params)
             wv = _read_wordvectors_using_fasttext(fasttext_cmd, fpath, model.wv.index2word)
 
-            for i, w in enumerate(model.wv.index2word):
-                diff = calc_max_diff(wv[i, :], model.wv[w])
-                # Because fasttext command line prints vectors with limited accuracy
-                self.assertLess(diff, 1.0e-4)
+        for i, w in enumerate(model.wv.index2word):
+            diff = calc_max_diff(wv[i, :], model.wv[w])
+            # Because fasttext command line prints vectors with limited accuracy
+            self.assertLess(diff, 1.0e-4)
 
     @unittest.skipIf(not os.environ.get("FT_HOME", None), "FT_HOME env variable not set, skipping test")
     def test_load_fasttext_format_cbow(self):
