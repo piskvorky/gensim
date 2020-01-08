@@ -1363,7 +1363,7 @@ def _read_binary_file(fname):
     return data
 
 
-class SaveFacebookFormatFileGensimTest(unittest.TestCase):
+class SaveGensimByteIdentityTest(unittest.TestCase):
     """
     This class containts tests that check the following scenario:
 
@@ -1410,7 +1410,7 @@ def _save_test_model(out_base_fname, model_params):
 
 
 @unittest.skipIf(not FT_HOME, "FT_HOME env variable not set, skipping test")
-class SaveFacebookFormatFileFastTextTest(unittest.TestCase):
+class SaveFacebookByteIdentityTest(unittest.TestCase):
     """
     This class containts tests that check the following scenario:
 
@@ -1496,7 +1496,6 @@ class SaveFacebookFormatReadingTest(unittest.TestCase):
 
     def test_cbow(self):
         self._check_load_fasttext_format(sg=0)
-
 
 
 if __name__ == '__main__':
