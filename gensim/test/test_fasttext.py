@@ -1321,7 +1321,15 @@ def calc_max_diff(v1, v2):
 
 class SaveFacebookFormatModelTest(unittest.TestCase):
 
-    def _check_roundtrip(self, model_params):
+    def _check_roundtrip(self, sg):
+        model_params  = {
+            "sg": sg,
+            "size": 10,
+            "min_count": 1,
+            "hs": 1,
+            "negative": 5,
+            "seed": 42,
+            "workers": 1}
 
         with temporary_file("roundtrip_model_to_model.bin") as fpath:
 
@@ -1354,27 +1362,11 @@ class SaveFacebookFormatModelTest(unittest.TestCase):
                 e.args = (s,)
                 raise e
 
-    def test_round_trip_model_model_skipgram(self):
-        model_params = {
-            "size": 10,
-            "min_count": 1,
-            "hs": 1,
-            "sg": 1,
-            "negative": 5,
-            "seed": 42,
-            "workers": 1}
-        self._check_roundtrip_model_model(model_params)
+    def test_round_trip_skipgram(self):
+        self._check_roundtrip(sg=1)
 
-    def test_round_trip_model_model_cbow(self):
-        model_params = {
-            "size": 10,
-            "min_count": 1,
-            "hs": 1,
-            "sg": 0,
-            "negative": 5,
-            "seed": 42,
-            "workers": 1}
-        self._check_roundtrip_model_model(model_params)
+    def test_round_trip_cbow(self):
+        self._check_roundtrip(sg=0)
 
 
 def _read_binary_file(fname):
