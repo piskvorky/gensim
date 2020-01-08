@@ -1321,7 +1321,7 @@ def calc_max_diff(v1, v2):
 
 class SaveFacebookFormatModelTest(unittest.TestCase):
 
-    def _check_roundtrip_model_model(self, model_params):
+    def _check_roundtrip(self, model_params):
 
         with temporary_file("roundtrip_model_to_model.bin") as fpath:
 
