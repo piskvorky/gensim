@@ -1348,15 +1348,7 @@ class SaveFacebookFormatModelTest(unittest.TestCase):
         for w in model_trained.wv.index2word:
             v_orig = model_trained.wv[w]
             v_loaded = model_loaded.wv[w]
-
-            try:
-                self.assertLess(calc_max_diff(v_orig, v_loaded), MAX_WORDVEC_COMPONENT_DIFFERENCE)
-            except AssertionError as e:
-                s = e.args[0]
-                s += " (max difference for components in wordvector of \"%s\"" % w
-                s += " larger than the thershold %f" % MAX_WORDVEC_COMPONENT_DIFFERENCE
-                e.args = (s,)
-                raise e
+            self.assertLess(calc_max_diff(v_orig, v_loaded), MAX_WORDVEC_COMPONENT_DIFFERENCE)
 
     def test_round_trip_skipgram(self):
         self._check_roundtrip(sg=1)
