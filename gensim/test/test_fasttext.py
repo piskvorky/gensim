@@ -1350,10 +1350,10 @@ class SaveFacebookFormatModelTest(unittest.TestCase):
             v_loaded = model_loaded.wv[w]
             self.assertLess(calc_max_diff(v_orig, v_loaded), MAX_WORDVEC_COMPONENT_DIFFERENCE)
 
-    def test_round_trip_skipgram(self):
+    def test_skipgram(self):
         self._check_roundtrip(sg=1)
 
-    def test_round_trip_cbow(self):
+    def test_cbow(self):
         self._check_roundtrip(sg=0)
 
 
@@ -1390,10 +1390,10 @@ class SaveFacebookFormatFileGensimTest(unittest.TestCase):
             gensim.models.fasttext.save_facebook_model(model, fpath2)
             self.assertEqual(_read_binary_file(fpath1), _read_binary_file(fpath2))
 
-    def test_roundtrip_file_file_skipgram(self):
+    def test_skipgram(self):
         self._check_roundtrip_file_file(sg=1)
 
-    def test_roundtrip_file_file_cbow(self):
+    def test_cbow(self):
         self._check_roundtrip_file_file(sg=0)
 
 
@@ -1435,10 +1435,10 @@ class SaveFacebookFormatFileFastTextTest(unittest.TestCase):
             gensim.models.fasttext.save_facebook_model(model, fpath2bin)
             self.assertEqual(_read_binary_file(fpath1bin), _read_binary_file(fpath2bin))
 
-    def test_roundtrip_file_file_skipgram(self):
+    def test_skipgram(self):
         self._check_roundtrip_file_file(sg=1)
 
-    def test_roundtrip_file_file_cbow(self):
+    def test_cbow(self):
         self._check_roundtrip_file_file(sg=0)
 
 
@@ -1491,11 +1491,12 @@ class SaveFacebookFormatReadingTest(unittest.TestCase):
             # Because fasttext command line prints vectors with limited accuracy
             self.assertLess(diff, 1.0e-4)
 
-    def test_load_fasttext_format_cbow(self):
+    def test_skipgram(self):
+        self._check_load_fasttext_format(sg=1)
+
+    def test_cbow(self):
         self._check_load_fasttext_format(sg=0)
 
-    def test_load_fasttext_format_skipgram(self):
-        self._check_load_fasttext_format(sg=1)
 
 
 if __name__ == '__main__':
