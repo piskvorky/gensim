@@ -1425,15 +1425,13 @@ class SaveFacebookByteIdentityTest(unittest.TestCase):
 
         # fasttext tool creates both *vec and *bin files, so we have to remove both, even thought *vec is unused
 
-        with temporary_file("roundtrip_file_to_file1.bin") as fpath1bin, \
-            temporary_file("roundtrip_file_to_file2.bin") as fpath2bin, \
-            temporary_file("roundtrip_file_to_file1.vec") as fpath1vec:  # noqa:F841
+        with temporary_file("m1.bin") as m1, temporary_file("m2.bin") as m2, temporary_file("m1.vec") as _:
 
-            fpath1base = fpath1bin[:-4]
-            _save_test_model(fpath1base, model_params)
-            model = gensim.models.fasttext.load_facebook_model(fpath1bin)
-            gensim.models.fasttext.save_facebook_model(model, fpath2bin)
-            self.assertEqual(_read_binary_file(fpath1bin), _read_binary_file(fpath2bin))
+            m1_basename = m1[:-4]
+            _save_test_model(m1_basename, model_params)
+            model = gensim.models.fasttext.load_facebook_model(m1)
+            gensim.models.fasttext.save_facebook_model(model, m2)
+            self.assertEqual(_read_binary_file(m1), _read_binary_file(m2))
 
     def test_skipgram(self):
         self._check_roundtrip_file_file(sg=1)
