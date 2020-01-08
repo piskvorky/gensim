@@ -1448,14 +1448,12 @@ def _parse_wordvectors(text):
 
 
 def _read_wordvectors_using_fasttext(fasttext_fname, words):
-    cmd = FT_CMD + " print-word-vectors " + fasttext_fname
+    cmd = [FT_CMD, "print-word-vectors", fasttext_fname]
     process = subprocess.Popen(
         cmd, stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        shell=True)
+        stdout=subprocess.PIPE)
     words_str = '\n'.join(words)
-    out, err = process.communicate(input=words_str.encode("utf-8"))
+    out, _ = process.communicate(input=words_str.encode("utf-8"))
     return _parse_wordvectors(out.decode("utf-8"))
 
 
