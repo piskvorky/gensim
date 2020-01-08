@@ -1320,14 +1320,6 @@ def calc_max_diff(v1, v2):
 
 
 class SaveFacebookFormatModelTest(unittest.TestCase):
-    """
-    This class containts tests that check the following scenario:
-
-    + create fastText model1
-    + save a model1 to Facebook binary file
-    + load the file as model2
-    + check if  model1 == model2
-    """
 
     def _check_roundtrip_model_model(self, model_params):
 
