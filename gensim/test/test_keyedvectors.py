@@ -401,7 +401,8 @@ class Word2VecKeyedVectorsTest(unittest.TestCase):
 
 
 try:
-    import keras 
+    import keras
+
     keras_installed = True
 except ImportError:
     keras_installed = False
@@ -434,8 +435,8 @@ class WordEmbeddingsKeyedVectorsTest(unittest.TestCase):
         word_index = {'is': 1, 'not_a_real_word': 2}
         embedding_layer = self.vectors.get_keras_embedding(word_index=word_index)
         self.assertEqual(embedding_layer._initial_weights[0].shape, (3, self.vectors.vectors.shape[1]))
-        self.assertTrue(np.array_equal(embedding_layer._initial_weights[0][2, :],
-                                       np.zeros(self.vectors.vectors.shape[1])))
+        self.assertTrue(
+            np.array_equal(embedding_layer._initial_weights[0][2, :], np.zeros(self.vectors.vectors.shape[1])))
 
 
 if __name__ == '__main__':
