@@ -614,14 +614,14 @@ class TestWord2VecModel(unittest.TestCase):
     def testEvaluateWordPairs(self):
         """Test Spearman and Pearson correlation coefficients give sane results on similarity datasets"""
         corpus = word2vec.LineSentence(datapath('head500.noblanks.cor.bz2'))
-        model = word2vec.Word2Vec(corpus, min_count=3, epochs=10)
+        model = word2vec.Word2Vec(corpus, min_count=3, epochs=20)
         correlation = model.wv.evaluate_word_pairs(datapath('wordsim353.tsv'))
         pearson = correlation[0][0]
         spearman = correlation[1][0]
         oov = correlation[2]
-        self.assertTrue(0.1 < pearson < 1.0)
-        self.assertTrue(0.1 < spearman < 1.0)
-        self.assertTrue(0.0 <= oov < 90.0)
+        self.assertTrue(0.1 < pearson < 1.0, "pearson %f not between 0.1 & 1.0" % pearson)
+        self.assertTrue(0.1 < spearman < 1.0, "spearman %f not between 0.1 and 1.0" % spearman)
+        self.assertTrue(0.0 <= oov < 90.0, "oov %f not between 0.0 and 90.0" % oov)
 
     @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
     def testEvaluateWordPairsFromFile(self):
@@ -629,14 +629,14 @@ class TestWord2VecModel(unittest.TestCase):
         with temporary_file(get_tmpfile('gensim_word2vec.tst')) as tf:
             utils.save_as_line_sentence(word2vec.LineSentence(datapath('head500.noblanks.cor.bz2')), tf)
 
-            model = word2vec.Word2Vec(corpus_file=tf, min_count=3, epochs=10)
+            model = word2vec.Word2Vec(corpus_file=tf, min_count=3, epochs=20)
             correlation = model.wv.evaluate_word_pairs(datapath('wordsim353.tsv'))
             pearson = correlation[0][0]
             spearman = correlation[1][0]
             oov = correlation[2]
-            self.assertTrue(0.1 < pearson < 1.0)
-            self.assertTrue(0.1 < spearman < 1.0)
-            self.assertTrue(0.0 <= oov < 90.0)
+            self.assertTrue(0.1 < pearson < 1.0, "pearson %f not between 0.1 & 1.0" % pearson)
+            self.assertTrue(0.1 < spearman < 1.0, "spearman %f not between 0.1 and 1.0" % spearman)
+            self.assertTrue(0.0 <= oov < 90.0, "oov %f not between 0.0 and 90.0" % oov)
 
     def model_sanity(self, model, train=True, with_corpus_file=False):
         """Even tiny models trained on LeeCorpus should pass these sanity checks"""

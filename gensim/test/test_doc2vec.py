@@ -390,7 +390,7 @@ class TestDoc2VecModel(unittest.TestCase):
         """Any non-trivial model on DocsLeeCorpus can pass these sanity checks"""
         fire1 = 0  # doc 0 sydney fires
         fire2 = np.int64(8)  # doc 8 sydney fires
-        tennis1 = 6  # doc 6 tennis
+        alt1 = 29  # doc 29 palestine
 
         # inferred vector should be top10 close to bulk-trained one
         doc0_inferred = model.infer_vector(list(DocsLeeCorpus())[0].words)
@@ -418,11 +418,12 @@ class TestDoc2VecModel(unittest.TestCase):
         for s_id in sims_doc_id:
             self.assertTrue(len(model.docvecs) // 2 <= s_id <= len(model.docvecs) * 2 // 3)
 
-        # tennis doc should be out-of-place among fire news
-        self.assertEqual(model.docvecs.doesnt_match([fire1, tennis1, fire2]), tennis1)
+        # fire docs should be closer than fire-alt
+        self.assertLess(model.docvecs.similarity(fire1, alt1), model.docvecs.similarity(fire1, fire2))
+        self.assertLess(model.docvecs.similarity(fire2, alt1), model.docvecs.similarity(fire1, fire2))
 
-        # fire docs should be closer than fire-tennis
-        self.assertTrue(model.docvecs.similarity(fire1, fire2) > model.docvecs.similarity(fire1, tennis1))
+        # alt doc should be out-of-place among fire news
+        self.assertEqual(model.docvecs.doesnt_match([fire1, alt1, fire2]), alt1)
 
         # keep training after save
         if keep_training:
@@ -533,7 +534,7 @@ class TestDoc2VecModel(unittest.TestCase):
 
     def test_dbow_neg(self):
         """Test DBOW doc2vec training."""
-        model = doc2vec.Doc2Vec(list_corpus, dm=0, hs=0, negative=10, min_count=2, epochs=20)
+        model = doc2vec.Doc2Vec(list_corpus, vector_size=16, dm=0, hs=0, negative=5, min_count=2, epochs=40)
         self.model_sanity(model)
 
     @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
@@ -541,7 +542,7 @@ class TestDoc2VecModel(unittest.TestCase):
         """Test DBOW doc2vec training."""
         with temporary_file(get_tmpfile('gensim_doc2vec.tst')) as corpus_file:
             save_lee_corpus_as_line_sentence(corpus_file)
-            model = doc2vec.Doc2Vec(list_corpus, dm=0, hs=0, negative=10, min_count=2, epochs=20)
+            model = doc2vec.Doc2Vec(list_corpus, vector_size=16, dm=0, hs=0, negative=5, min_count=2, epochs=40)
             self.model_sanity(model)
 
     def test_dmm_neg(self):
@@ -602,12 +603,13 @@ class TestDoc2VecModel(unittest.TestCase):
             self.model_sanity(model)
 
     def test_parallel(self):
-        """Test doc2vec parallel training."""
-        corpus = utils.RepeatCorpus(DocsLeeCorpus(), 10000)
+        """Test doc2vec parallel training with more than default 3 threads."""
+        # repeat the ~300 doc (~60000 word) Lee corpus to get 6000 docs (~1.2M words)
+        corpus = utils.RepeatCorpus(DocsLeeCorpus(), 6000)
 
-        for workers in [2, 4]:
-            model = doc2vec.Doc2Vec(corpus, workers=workers)
-            self.model_sanity(model)
+        # use smaller batches-to-workers for more contention
+        model = doc2vec.Doc2Vec(corpus, workers=6, batch_words=5000)
+        self.model_sanity(model)
 
     def test_deterministic_hs(self):
         """Test doc2vec results identical with identical RNG seed."""
