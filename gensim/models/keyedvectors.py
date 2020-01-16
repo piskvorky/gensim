@@ -1522,7 +1522,7 @@ class Word2VecKeyedVectors(WordEmbeddingsKeyedVectors):
 
         """
         try:
-            from keras.layers import Embedding
+            from tensorflow.keras.layers import Embedding
         except ImportError:
             raise ImportError("Please install Keras to use this function")
         weights = self.vectors
