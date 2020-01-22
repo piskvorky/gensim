@@ -294,9 +294,7 @@ logger = logging.getLogger(__name__)
 
 try:
     from gensim.models.fasttext_inner import (  # noqa: F401
-        train_batch_sg,
-        train_batch_cbow,
-        FAST_VERSION,
+        train_batch_any,
         MAX_WORDS_IN_BATCH,
         compute_ngrams,
         compute_ngrams_bytes,
@@ -680,11 +678,7 @@ class FastText(Word2Vec):
 
         """
         work, neu1 = inits
-        tally = 0
-        if self.sg:
-            tally += train_batch_sg(self, sentences, alpha, work, neu1)
-        else:
-            tally += train_batch_cbow(self, sentences, alpha, work, neu1)
+        tally = train_batch_any(self, sentences, alpha, work, neu1)
 
         return tally, self._raw_word_count(sentences)
 

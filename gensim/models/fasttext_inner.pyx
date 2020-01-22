@@ -7,16 +7,16 @@
 
 """Optimized Cython functions for training a :class:`~gensim.models.fasttext.FastText` model.
 
-The main entry points are :func:`~gensim.models.fasttext_inner.train_batch_sg`
-and :func:`~gensim.models.fasttext_inner.train_batch_cbow`.  They may be
-called directly from Python code.
+The main entry point is :func:`~gensim.models.fasttext_inner.train_batch_any`
+which may  be called directly from Python code.
 
 Notes
 -----
 The implementation of the above functions heavily depends on the
 FastTextConfig struct defined in :file:`gensim/models/fasttext_inner.pxd`.
 
-The FAST_VERSION constant determines what flavor of BLAS we're currently using:
+The gensim.models.word2vec.FAST_VERSION value reports what flavor of BLAS
+we're currently using:
 
     0: double
     1: float
@@ -36,12 +36,6 @@ from libc.math cimport exp
 from libc.math cimport log
 from libc.string cimport memset
 
-# scipy <= 0.15
-try:
-    from scipy.linalg.blas import fblas
-except ImportError:
-    # in scipy > 0.15, fblas function has been removed
-    import scipy.linalg.blas as fblas
 
 #
 # We make use of the following BLAS functions (or their analogs, if BLAS is
@@ -59,14 +53,10 @@ except ImportError:
 #
 # The increments (inc_x and inc_y) are usually 1 in our case.
 #
+# The versions are as chosen in word2vec_inner.pyx, and aliased to `our_` functions
 
-#
-# FIXME: why are we importing EXP_TABLE and then redefining it?
-#
-from word2vec_inner cimport bisect_left, random_int32, scopy, saxpy, dsdot, sscal, \
-     REAL_t, EXP_TABLE, our_dot, our_saxpy, our_dot_double, our_dot_float, our_dot_noblas, our_saxpy_noblas
-
-REAL = np.float32
+from word2vec_inner cimport bisect_left, random_int32, scopy, sscal, \
+     REAL_t, our_dot, our_saxpy
 
 DEF MAX_SENTENCE_LEN = 10000
 DEF MAX_SUBWORDS = 1000
@@ -606,10 +596,7 @@ cdef void fasttext_train_any(FastTextConfig *c, int num_sentences, int sg) nogil
             else:
                 for j in range(window_start, window_end):
                     if j == i:
-                        #
-                        # TODO: why do we ignore the token at the "center" of
-                        # the window?
-                        #
+                        # no reason to train a center word as predicting itself
                         continue
                     if c.hs:
                         fasttext_fast_sentence_sg_hs(c, i, j)
@@ -617,51 +604,7 @@ cdef void fasttext_train_any(FastTextConfig *c, int num_sentences, int sg) nogil
                         fasttext_fast_sentence_sg_neg(c, i, j)
 
 
-def train_batch_sg(model, sentences, alpha, _work, _l1):
-    """Update skip-gram model by training on a sequence of sentences.
-
-    Each sentence is a list of string tokens, which are looked up in the model's
-    vocab dictionary. Called internally from :meth:`~gensim.models.fasttext.FastText.train`.
-
-    Parameters
-    ----------
-    model : :class:`~gensim.models.fasttext.FastText`
-        Model to be trained.
-    sentences : iterable of list of str
-        A single batch: part of the corpus streamed directly from disk/network.
-    alpha : float
-        Learning rate.
-    _work : np.ndarray
-        Private working memory for each worker.
-    _l1 : np.ndarray
-        Private working memory for each worker.
-
-    Returns
-    -------
-    int
-        Effective number of words trained.
-
-    """
-    cdef:
-        FastTextConfig c
-        int num_words = 0
-        int num_sentences = 0
-
-    init_ft_config(&c, model, alpha, _work, _l1)
-
-    num_words, num_sentences = populate_ft_config(&c, model.wv.vocab, model.wv.buckets_word, sentences)
-
-    # precompute "reduced window" offsets in a single randint() call
-    for i, randint in enumerate(model.random.randint(0, c.window, num_words)):
-        c.reduced_windows[i] = randint
-
-    with nogil:
-        fasttext_train_any(&c, num_sentences, 1)
-
-    return num_words
-
-
-def train_batch_cbow(model, sentences, alpha, _work, _neu1):
+def train_batch_any(model, sentences, alpha, _work, _neu1):
     """Update the CBOW model by training on a sequence of sentences.
 
     Each sentence is a list of string tokens, which are looked up in the model's
@@ -838,24 +781,10 @@ def init():
     """Precompute function `sigmoid(x) = 1 / (1 + exp(-x))`, for x values discretized into table EXP_TABLE.
     Also calculate log(sigmoid(x)) into LOG_TABLE.
 
-    Returns
-    -------
-    {0, 1, 2}
-        Enumeration to signify underlying data type returned by the BLAS dot product calculation.
-        0 signifies double, 1 signifies double, and 2 signifies that custom cython loops were used
-        instead of BLAS.
-
+    We recalc, rather than re-use the table from word2vec_inner, because Facebook's FastText
+    code uses a 512-slot table rather than the 1000 precedent of word2vec.c.
     """
-    global our_dot
-    global our_saxpy
-
     cdef int i
-    cdef float *x = [<float>10.0]
-    cdef float *y = [<float>0.01]
-    cdef float expected = <float>0.1
-    cdef int size = 1
-    cdef double d_res
-    cdef float *p_res
 
     # build the sigmoid table
     for i in range(EXP_TABLE_SIZE):
@@ -863,23 +792,6 @@ def init():
         EXP_TABLE[i] = <REAL_t>(EXP_TABLE[i] / (EXP_TABLE[i] + 1))
         LOG_TABLE[i] = <REAL_t>log( EXP_TABLE[i] )
 
-    # check whether sdot returns double or float
-    d_res = dsdot(&size, x, &ONE, y, &ONE)
-    p_res = <float *>&d_res
-    if abs(d_res - expected) < 0.0001:
-        our_dot = our_dot_double
-        our_saxpy = saxpy
-        return 0  # double
-    elif abs(p_res[0] - expected) < 0.0001:
-        our_dot = our_dot_float
-        our_saxpy = saxpy
-        return 1  # float
-    else:
-        # neither => use cython loops, no BLAS
-        # actually, the BLAS is so messed up we'll probably have segfaulted above and never even reach here
-        our_dot = our_dot_noblas
-        our_saxpy = our_saxpy_noblas
-        return 2
 
-FAST_VERSION = init()  # initialize the module
+init()  # initialize the module
 MAX_WORDS_IN_BATCH = MAX_SENTENCE_LEN
