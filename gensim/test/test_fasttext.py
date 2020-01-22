@@ -1328,9 +1328,7 @@ class SaveFacebookFormatModelTest(unittest.TestCase):
             "workers": 1}
 
         with temporary_file("roundtrip_model_to_model.bin") as fpath:
-
             model_trained = _create_and_save_fb_model(fpath, model_params)
-
             model_loaded = gensim.models.fasttext.load_facebook_model(fpath)
 
         self.assertEqual(model_trained.vector_size, model_loaded.vector_size)
@@ -1388,7 +1386,10 @@ class SaveGensimByteIdentityTest(unittest.TestCase):
             _create_and_save_fb_model(fpath1, model_params)
             model = gensim.models.fasttext.load_facebook_model(fpath1)
             gensim.models.fasttext.save_facebook_model(model, fpath2)
-            self.assertEqual(_read_binary_file(fpath1), _read_binary_file(fpath2))
+            bin1 = _read_binary_file(fpath1)
+            bin2 = _read_binary_file(fpath2)
+
+        self.assertEqual(bin1, bin2)
 
     def test_skipgram(self):
         self._check_roundtrip_file_file(sg=1)
