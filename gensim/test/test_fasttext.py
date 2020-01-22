@@ -1405,9 +1405,11 @@ def _save_test_model(out_base_fname, model_params):
     size = str(model_params["size"])
     seed = str(model_params["seed"])
 
-    cmd = FT_CMD + " " + model_type + " -input " + inp_fname + \
-        " -output " + out_base_fname + " -dim " + size + " -seed " + seed
-    subprocess.run(cmd, shell=True)
+    cmd = [
+        FT_CMD, model_type, "-input", inp_fname, "-output",
+        out_base_fname, "-dim", size, "-seed", seed]
+
+    subprocess.check_call(cmd)
 
 
 @unittest.skipIf(not FT_HOME, "FT_HOME env variable not set, skipping test")
