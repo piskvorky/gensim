@@ -1432,7 +1432,10 @@ class SaveFacebookByteIdentityTest(unittest.TestCase):
             _save_test_model(m1_basename, model_params)
             model = gensim.models.fasttext.load_facebook_model(m1)
             gensim.models.fasttext.save_facebook_model(model, m2)
-            self.assertEqual(_read_binary_file(m1), _read_binary_file(m2))
+            bin1 = _read_binary_file(m1)
+            bin2 = _read_binary_file(m2)
+
+        self.assertEqual(bin1, bin2)
 
     def test_skipgram(self):
         self._check_roundtrip_file_file(sg=1)
