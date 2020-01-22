@@ -509,7 +509,7 @@ def _args_save(fout, model, fb_fasttext_parameters):
 
 def _dict_save(fout, model, encoding):
     """
-    Saves vocabulary from `model` to the to the binary stream `fout` containing a model in the Facebook's
+    Saves the dictionary from `model` to the to the binary stream `fout` containing a model in the Facebook's
     native fastText `.bin` format.
 
     Name mimics the original C++ implementation
@@ -518,12 +518,19 @@ def _dict_save(fout, model, encoding):
     Parameters
     ----------
     fout: writeable binary stream
-        stream to which model is saved
+        stream to which the dictionary from the model is saved
     model: gensim.models.fasttext.FastText
-        saved model
+        the model that contains the dictionary to save
     encoding: str
         string encoding used in the output
     """
+
+    # In the FB format the dictionary can contain two types of entries, i.e.
+    # words and labels. The first two fields of the dictionary contain
+    # the dictionary size (size_) and the number of words (nwords_).
+    # In the unsupervised case we have only words (no labels). Hence both fields
+    # are equal.
+
     fout.write(np.int32(len(model.wv.vocab)).tobytes())
 
     fout.write(np.int32(len(model.wv.vocab)).tobytes())
@@ -552,14 +559,14 @@ def _input_save(fout, model):
     the Facebook's native fastText `.bin` format.
 
     Corresponding C++ fastText code:
-    DenseMatrix::save[DenseMatrix::save](https://github.com/facebookresearch/fastText/blob/master/src/densematrix.cc)
+    [DenseMatrix::save](https://github.com/facebookresearch/fastText/blob/master/src/densematrix.cc)
 
     Parameters
     ----------
     fout: writeable binary stream
-        stream to which model is saved
+        stream to which the vectors are saved
     model: gensim.models.fasttext.FastText
-        saved model
+        the model that contains the vectors to save
     """
     vocab_n, vocab_dim = model.wv.vectors_vocab.shape
     ngrams_n, ngrams_dim = model.wv.vectors_ngrams.shape
@@ -579,12 +586,12 @@ def _output_save(fout, model):
     the Facebook's native fastText `.bin` format.
 
     Corresponding C++ fastText code:
-    DenseMatrix::save[DenseMatrix::save](https://github.com/facebookresearch/fastText/blob/master/src/densematrix.cc)
+    [DenseMatrix::save](https://github.com/facebookresearch/fastText/blob/master/src/densematrix.cc)
 
     Parameters
     ----------
     fout: writeable binary stream
-        stream to which model is saved
+        the model that contains the output layer to save
     model: gensim.models.fasttext.FastText
         saved model
     """
@@ -605,9 +612,9 @@ def _save_to_stream(model, fout, fb_fasttext_parameters, encoding):
     Parameters
     ----------
     fout: file name or writeable binary stream
-        stream to which model is saved
+        stream to which the word embeddings are saved
     model: gensim.models.fasttext.FastText
-        saved model
+        the model that contains the word embeddings to save
     fb_fasttext_parameters: dictionary
         dictionary contain parameters containing `lr_update_rate`, `word_ngrams`
         unused by gensim implementation, so they have to be provided externally
