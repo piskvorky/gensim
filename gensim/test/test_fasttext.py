@@ -1426,7 +1426,7 @@ class SaveFacebookByteIdentityTest(unittest.TestCase):
 
         # fasttext tool creates both *vec and *bin files, so we have to remove both, even thought *vec is unused
 
-        with temporary_file("m1.bin") as m1, temporary_file("m2.bin") as m2, temporary_file("m1.vec") as _:
+        with temporary_file("m1.bin") as m1, temporary_file("m2.bin") as m2, temporary_file("m1.vec"):
 
             m1_basename = m1[:-4]
             _save_test_model(m1_basename, model_params)
