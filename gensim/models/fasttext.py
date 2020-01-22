@@ -1297,7 +1297,7 @@ def save_facebook_model(model, path, encoding="utf-8", lr_update_rate=100, word_
     Facebook provides both `.vec` and `.bin` files with their modules.
     The former contains human-readable vectors.
     The latter contains machine-readable vectors along with other model parameters.
-    This function saves only the .bin file**.
+    **This function saves only the .bin file**.
 
     Parameters
     ----------
@@ -1309,12 +1309,12 @@ def save_facebook_model(model, path, encoding="utf-8", lr_update_rate=100, word_
         Specifies the file encoding. Defaults to utf-8.
 
     lr_update_rate : int
-        This parameter is used by Facebook faasttext tool, unused by Gensim.
+        This parameter is used by Facebook fasttext tool, unused by Gensim.
         It defaults to Facebook fasttext default value `100`.
         In very rare circumstances you might wish to fiddle with it.
 
     word_ngrams : int
-        This parameter is used by Facebook faasttext tool, unused by Gensim.
+        This parameter is used by Facebook fasttext tool, unused by Gensim.
         It defaults to Facebook fasttext default value `1`.
         In very rare circumstances you might wish to fiddle with it.
 
