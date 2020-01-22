@@ -1445,7 +1445,7 @@ class SaveFacebookByteIdentityTest(unittest.TestCase):
 
 
 def _read_wordvectors_using_fasttext(fasttext_fname, words):
-    def _conv_line_to_array(line):
+    def line_to_array(line):
         return np.array([float(s) for s in line.split()[1:]], dtype=np.float32)
 
     cmd = [FT_CMD, "print-word-vectors", fasttext_fname]
@@ -1454,7 +1454,7 @@ def _read_wordvectors_using_fasttext(fasttext_fname, words):
         stdout=subprocess.PIPE)
     words_str = '\n'.join(words)
     out, _ = process.communicate(input=words_str.encode("utf-8"))
-    return np.array([_conv_line_to_array(l) for l in out.splitlines()], dtype=np.float32)
+    return np.array([line_to_array(l) for l in out.splitlines()], dtype=np.float32)
 
 
 @unittest.skipIf(not os.environ.get("FT_HOME", None), "FT_HOME env variable not set, skipping test")
