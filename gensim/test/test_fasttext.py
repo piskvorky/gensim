@@ -195,9 +195,23 @@ class TestFastTextModel(unittest.TestCase):
         self.assertTrue(loaded_kv.vectors_norm is None)
 
     def model_sanity(self, model):
+        self.model_structural_sanity(model)
+        # TODO: add semantic tests, where appropriate
+
+    def model_structural_sanity(self, model):
+        """Check a model for basic self-consistency, necessary properties & property
+        correspondences, but no semantic tests."""
         self.assertEqual(model.wv.vectors.shape, (len(model.wv.vocab), model.vector_size))
         self.assertEqual(model.wv.vectors_vocab.shape, (len(model.wv.vocab), model.vector_size))
         self.assertEqual(model.wv.vectors_ngrams.shape, (model.wv.bucket, model.vector_size))
+        self.assertEqual(len(model.wv.vectors_ngrams_lockf), len(model.wv.vectors_ngrams))
+        self.assertEqual(len(model.wv.vectors_vocab_lockf), len(model.wv.index2key))
+        self.assertTrue(np.isfinite(model.wv.vectors_ngrams).all(), "NaN in ngrams")
+        self.assertTrue(np.isfinite(model.wv.vectors_vocab).all(), "NaN in vectors_vocab")
+        if model.negative:
+            self.assertTrue(np.isfinite(model.syn1neg).all(), "NaN in syn1neg")
+        if model.hs:
+            self.assertTrue(np.isfinite(model.syn1).all(), "NaN in syn1neg")
 
     def test_load_fasttext_format(self):
         try:
@@ -970,6 +984,7 @@ def compare_vocabulary(a, b, t):
 
 class NativeTrainingContinuationTest(unittest.TestCase):
     maxDiff = None
+    model_structural_sanity = TestFastTextModel.model_structural_sanity
 
     def setUp(self):
         #
@@ -999,6 +1014,8 @@ class NativeTrainingContinuationTest(unittest.TestCase):
             actual_vector = native.wv.word_vec(word)
             self.assertTrue(np.allclose(expected_vector, actual_vector, atol=1e-5))
 
+        self.model_structural_sanity(native)
+
     def test_out_of_vocab(self):
         """Test for correct representation of out-of-vocab words."""
         native = load_native()
@@ -1006,6 +1023,8 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         for word, expected_vector in self.oov_expected.items():
             actual_vector = native.wv.word_vec(word)
             self.assertTrue(np.allclose(expected_vector, actual_vector, atol=1e-5))
+
+        self.model_structural_sanity(native)
 
     @unittest.skip('this test does not pass currently, I suspect a bug in our FT implementation')
     def test_out_of_vocab_gensim(self):
@@ -1018,6 +1037,8 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         for word, expected_vector in self.oov_expected.items():
             actual_vector = model.wv.word_vec(word)
             self.assertTrue(np.allclose(expected_vector, actual_vector, atol=1e-5))
+
+        self.model_structural_sanity(model)
 
     def test_sanity(self):
         """Compare models trained on toy data.  They should be equal."""
@@ -1034,25 +1055,31 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         compare_vocabulary(trained, native, self)
         compare_nn(trained, native, self)
 
+        self.model_structural_sanity(trained)
+        self.model_structural_sanity(native)
+
     def test_continuation_native(self):
         """Ensure that training has had a measurable effect."""
         native = load_native()
+        self.model_structural_sanity(native)
 
         #
         # Pick a word that's is in both corpuses.
         # Its vectors should be different between training runs.
         #
-        word = 'human'
+        word = 'human'  # FIXME: this isn't actually in model, except via OOV ngrams
         old_vector = native.wv.word_vec(word).tolist()
 
         native.train(list_corpus, total_examples=len(list_corpus), epochs=native.epochs)
 
         new_vector = native.wv.word_vec(word).tolist()
         self.assertNotEqual(old_vector, new_vector)
+        self.model_structural_sanity(native)
 
     def test_continuation_gensim(self):
         """Ensure that continued training has had a measurable effect."""
         model = train_gensim(min_count=0)
+        self.model_structural_sanity(model)
         vectors_ngrams_before = np.copy(model.wv.vectors_ngrams)
 
         word = 'human'
@@ -1065,12 +1092,15 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         new_vector = model.wv.word_vec(word).tolist()
 
         self.assertNotEqual(old_vector, new_vector)
+        self.model_structural_sanity(model)
 
     def test_continuation_load_gensim(self):
         #
         # This is a model from 3.6.0
         #
         model = FT_gensim.load(datapath('compatible-hash-false.model'))
+        self.model_structural_sanity(model)
+
         vectors_ngrams_before = np.copy(model.wv.vectors_ngrams)
         old_vector = model.wv.word_vec('human').tolist()
 
@@ -1079,6 +1109,7 @@ class NativeTrainingContinuationTest(unittest.TestCase):
 
         self.assertFalse(np.allclose(vectors_ngrams_before, model.wv.vectors_ngrams))
         self.assertNotEqual(old_vector, new_vector)
+        self.model_structural_sanity(model)
 
     def test_save_load_gensim(self):
         """Test that serialization works end-to-end.  Not crashing is a success."""
@@ -1094,9 +1125,11 @@ class NativeTrainingContinuationTest(unittest.TestCase):
             train_gensim().save(model_name)
 
             model = FT_gensim.load(model_name)
+            self.model_structural_sanity(model)
             model.train(list_corpus, total_examples=len(list_corpus), epochs=model.epochs)
 
             model.save(model_name)
+            self.model_structural_sanity(model)
 
     def test_save_load_native(self):
         """Test that serialization works end-to-end.  Not crashing is a success."""
@@ -1107,15 +1140,18 @@ class NativeTrainingContinuationTest(unittest.TestCase):
             load_native().save(model_name)
 
             model = FT_gensim.load(model_name)
+            self.model_structural_sanity(model)
             model.train(list_corpus, total_examples=len(list_corpus), epochs=model.epochs)
 
             model.save(model_name)
+            self.model_structural_sanity(model)
 
     def test_load_native_pretrained(self):
         model = gensim.models.fasttext.load_facebook_model(datapath('toy-model-pretrained.bin'))
         actual = model.wv['monarchist']
         expected = np.array([0.76222, 1.0669, 0.7055, -0.090969, -0.53508])
         self.assertTrue(np.allclose(expected, actual, atol=10e-4))
+        self.model_structural_sanity(model)
 
     def test_load_native_vectors(self):
         cap_path = datapath("crime-and-punishment.bin")
@@ -1132,6 +1168,7 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         v1 = model.wv['']
         origin = np.zeros(v1.shape, v1.dtype)
         self.assertTrue(np.allclose(v1, origin))
+        self.model_structural_sanity(model)
 
 
 def _train_model_with_pretrained_vectors():
@@ -1772,16 +1809,6 @@ class TestFastTextKeyedVectors(unittest.TestCase):
 
 
 class UnpackTest(unittest.TestCase):
-    def test_copy_sanity(self):
-        m = np.array(range(9))
-        m.shape = (3, 3)
-        hash2index = {10: 0, 11: 1, 12: 2}
-
-        n = _unpack_copy(m, 25, hash2index)
-        self.assertTrue(np.all(m[0] == n[10]))
-        self.assertTrue(np.all(m[1] == n[11]))
-        self.assertTrue(np.all(m[2] == n[12]))
-
     def test_sanity(self):
         m = np.array(range(9))
         m.shape = (3, 3)
