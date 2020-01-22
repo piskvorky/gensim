@@ -13,6 +13,7 @@ import logging
 from math import sqrt
 
 import numpy as np
+import numpy.matlib
 from scipy import sparse
 
 from gensim.matutils import corpus2csc

@@ -17,6 +17,7 @@ from gensim import utils
 from gensim.utils import deprecated
 
 import numpy as np
+import numpy.matlib
 import scipy.sparse
 from scipy.stats import entropy
 import scipy.linalg
