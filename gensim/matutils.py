@@ -880,7 +880,10 @@ def softcossim(vec1, vec2, similarity_matrix):
     dtype = similarity_matrix.dtype
     vec1 = np.fromiter((vec1[i] if i in vec1 else 0 for i in word_indices), dtype=dtype, count=len(word_indices))
     vec2 = np.fromiter((vec2[i] if i in vec2 else 0 for i in word_indices), dtype=dtype, count=len(word_indices))
-    dense_matrix = similarity_matrix[[[i] for i in word_indices], word_indices].todense()
+    i = np.matlib.eye(similarity_matrix.shape[0])
+    word_mat_cols = i[:, word_indices]
+    word_mat_rows = word_mat_cols.T
+    dense_matrix = word_mat_rows.dot(similarity_matrix.dot(word_mat_cols))
     vec1len = vec1.T.dot(dense_matrix).dot(vec1)[0, 0]
     vec2len = vec2.T.dot(dense_matrix).dot(vec2)[0, 0]
 
