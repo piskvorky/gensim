@@ -504,7 +504,7 @@ class FastText(Word2Vec):
         assert vocab_size > 0, 'expected vocab_size to be initialized already'
 
         self.wv.vectors_ngrams_lockf = ones(len(self.wv.vectors_ngrams), dtype=REAL)
-        self.wv.vectors_vocab_lockf = ones(len(self.wv.vectors_vocab.shape), dtype=REAL)
+        self.wv.vectors_vocab_lockf = ones(len(self.wv.vectors_vocab), dtype=REAL)
 
         if self.hs:
             self.syn1 = hidden_output
@@ -629,7 +629,7 @@ class FastText(Word2Vec):
             report['syn0_ngrams'] = num_buckets * vec_size
             # A tuple (48 bytes) with num_ngrams_word ints (8 bytes) for each word
             # Only used during training, not stored with the model
-            report['buckets_word'] = 48 * len(self.wv.vocab) + 8 * num_ngrams
+            report['buckets_word'] = 48 * len(self.wv.vocab) + 8 * num_ngrams  # FIXME: this looks confused -gojomo
         elif self.word_ngrams > 0:
             logger.warn(
                 'subword information is enabled, but no vocabulary could be found, estimated required memory might be '
@@ -761,11 +761,6 @@ class FastText(Word2Vec):
         if corpus_iterable is not None and not isinstance(corpus_iterable, Iterable):
             raise TypeError("sentences must be an iterable of list, got %r instead" % corpus_iterable)
 
-        if self.wv.buckets_word is None:
-            logger.warn("self.wv.buckets_word was None; fixing.")
-            self.old_vocab_len = len(self.wv.vocab)
-            self.wv.init_ngrams_weights(seed=self.seed)
-
         super(FastText, self).train(
             corpus_iterable=corpus_iterable, corpus_file=corpus_file,
             total_examples=total_examples, total_words=total_words,
@@ -886,6 +881,8 @@ class FastText(Word2Vec):
             model.bucket = model.wv.bucket
 
         _try_upgrade(model.wv)
+        if not hasattr(model.wv, 'buckets_word') or not model.wv.buckets_word:
+            model.wv.recalc_word_ngram_buckets()
 
         return model
 
@@ -1209,6 +1206,11 @@ class FastTextKeyedVectors(KeyedVectors):
         buckets_word : dict
             Maps vocabulary items (by their index) to the buckets they occur in.
 
+        When used in training, FastTextKeyedVectors may be decorated with
+        extra attributes that closely associate with its core attributes,
+        such as the experimental vectors_vocab_lockf and vectors_ngrams_lockf
+        training-update-dampening factors.
+
         """
         super(FastTextKeyedVectors, self).__init__(vector_size=vector_size)
         self.vectors_vocab = None  # fka syn0_vocab
@@ -1346,13 +1348,7 @@ class FastTextKeyedVectors(KeyedVectors):
         Call this **after** the vocabulary has been fully initialized.
 
         """
-        self.buckets_word = _process_fasttext_vocab(
-            self.vocab.items(),
-            self.min_n,
-            self.max_n,
-            self.bucket,
-            self.compatible_hash,
-        )
+        self.recalc_word_ngram_buckets()
 
         rand_obj = np.random
         rand_obj.seed(seed)
@@ -1388,13 +1384,7 @@ class FastTextKeyedVectors(KeyedVectors):
         Call this **after** the vocabulary has been updated.
 
         """
-        self.buckets_word = _process_fasttext_vocab(
-            self.vocab.items(),
-            self.min_n,
-            self.max_n,
-            self.bucket,
-            self.compatible_hash,
-        )
+        self.recalc_word_ngram_buckets()
 
         rand_obj = np.random
         rand_obj.seed(seed)
@@ -1429,7 +1419,7 @@ class FastTextKeyedVectors(KeyedVectors):
         #
         self.vectors_vocab = np.array(fb_vectors[:vocab_words, :])
         self.vectors_ngrams = np.array(fb_vectors[vocab_words:, :])
-        self.buckets_word = None  # This can get initialized later
+        self.recalc_word_ngram_buckets()
         self.adjust_vectors()  # calculate composite full-word vectors
 
     def adjust_vectors(self):
@@ -1445,52 +1435,31 @@ class FastTextKeyedVectors(KeyedVectors):
 
         self.vectors = self.vectors_vocab[:].copy()
         for i, w in enumerate(self.index2key):
-            ngram_hashes = ft_ngram_hashes(w, self.min_n, self.max_n, self.bucket, self.compatible_hash)
-            for nh in ngram_hashes:
+            ngram_buckets = self.buckets_word[i]
+            for nh in ngram_buckets:
                 self.vectors[i] += self.vectors_ngrams[nh]
-            self.vectors[i] /= len(ngram_hashes) + 1
+            self.vectors[i] /= len(ngram_buckets) + 1
 
-def _process_fasttext_vocab(iterable, min_n, max_n, num_buckets, compatible_hash):
-    """
-    Performs a common operation for FastText weight initialization and
-    updates: scan the vocabulary, calculate ngrams and their hashes, keep
-    track of new ngrams, the buckets that each word relates to via its
-    ngrams, etc.
+    def recalc_word_ngram_buckets(self):
+        """
+        Performs a common operation for FastText weight initialization and
+        updates: scan the vocabulary, calculate ngrams and their hashes, keep
+        track of new ngrams, the buckets that each word relates to via its
+        ngrams, etc.
 
-    Parameters
-    ----------
-    iterable : list
-        A list of (word, :class:`Vocab`) tuples.
-    min_n : int
-        The minimum length of ngrams.
-    max_n : int
-        The maximum length of ngrams.
-    num_buckets : int
-        The number of buckets used by the model.
-    compatible_hash : boolean
-        True for compatibility with the Facebook implementation.
-        False for compatibility with the old Gensim implementation.
+        TODO: evaluate if this is even necessary, compared to just recalculating
+        """
+        if self.bucket == 0:
+            self.buckets_word = [np.array([], dtype=np.uint32)] * len(self.index2key)
+            return
 
-    Returns
-    -------
-    dict
-        Keys are indices of entities in the vocabulary (words).  Values are
-        arrays containing indices into vectors_ngrams for each ngram of the
-        word.
+        self.buckets_word = [None] * len(self.index2key)
 
-    """
-    word_indices = {}
-
-    if num_buckets == 0:
-        return {v.index: np.array([], dtype=np.uint32) for w, v in iterable}
-
-    for word, vocab in iterable:
-        wi = []
-        for ngram_hash in ft_ngram_hashes(word, min_n, max_n, num_buckets, compatible_hash):
-            wi.append(ngram_hash)
-        word_indices[vocab.index] = np.array(wi, dtype=np.uint32)
-
-    return word_indices
+        for i, word in enumerate(self.index2key):
+            self.buckets_word[i] = np.array(
+                ft_ngram_hashes(word, self.min_n, self.max_n, self.bucket, self.compatible_hash),
+                dtype=np.uint32,
+            )
 
 
 def _pad_random(m, new_rows, rand):
@@ -1518,6 +1487,8 @@ def _rollback_optimization(kv):
     assert hasattr(kv, 'bucket')
 
     kv.vectors_ngrams = _unpack(kv.vectors_ngrams, kv.bucket, kv.hash2index)
+    if hasattr(kv, 'vectors_ngrams_lockf'):
+        kv.vectors_ngrams_lockf = _unpack(kv.vectors_ngrams_lockf, kv.bucket, kv.hash2index, fill=1.0)
 
     #
     # We have replaced num_ngram_vectors with a property and deprecated it.
@@ -1526,33 +1497,7 @@ def _rollback_optimization(kv):
     del kv.hash2index
 
 
-def _unpack_copy(m, num_rows, hash2index, seed=1):
-    """Same as _unpack, but makes a copy of the matrix.
-
-    Simpler implementation, but uses more RAM.
-
-    """
-    rows, columns = m.shape
-    if rows == num_rows:
-        #
-        # Nothing to do.
-        #
-        return m
-    assert num_rows > rows
-
-    rand_obj = np.random
-    rand_obj.seed(seed)
-
-    n = np.empty((0, columns), dtype=m.dtype)
-    n = _pad_random(n, num_rows, rand_obj)
-
-    for src, dst in hash2index.items():
-        n[src] = m[dst]
-
-    return n
-
-
-def _unpack(m, num_rows, hash2index, seed=1):
+def _unpack(m, num_rows, hash2index, seed=1, fill=None):
     """Restore the array to its natural shape, undoing the optimization.
 
     A packed matrix contains contiguous vectors for ngrams, as well as a hashmap.
@@ -1576,7 +1521,8 @@ def _unpack(m, num_rows, hash2index, seed=1):
         the product of the optimization we are undoing.
     seed : float, optional
         The seed for the PRNG.  Will be used to initialize new rows.
-
+    fill : float or array or None, optional
+        Value for new rows. If None (the default), randomly initialize.
     Returns
     -------
     np.array
@@ -1589,7 +1535,7 @@ def _unpack(m, num_rows, hash2index, seed=1):
     Throw away the old matrix after calling this function, or use np.copy.
 
     """
-    orig_rows, orig_columns = m.shape
+    orig_rows, *more_dims = m.shape
     if orig_rows == num_rows:
         #
         # Nothing to do.
@@ -1597,14 +1543,17 @@ def _unpack(m, num_rows, hash2index, seed=1):
         return m
     assert num_rows > orig_rows
 
-    rand_obj = np.random
-    rand_obj.seed(seed)
+    if fill is None:
+        rand_obj = np.random
+        rand_obj.seed(seed)
 
-    #
-    # Rows at the top of the matrix (the first orig_rows) will contain "packed" learned vectors.
-    # Rows at the bottom of the matrix will be "free": initialized to random values.
-    #
-    m = _pad_random(m, num_rows - orig_rows, rand_obj)
+        #
+        # Rows at the top of the matrix (the first orig_rows) will contain "packed" learned vectors.
+        # Rows at the bottom of the matrix will be "free": initialized to random values.
+        #
+        m = _pad_random(m, num_rows - orig_rows, rand_obj)
+    else:
+        m = np.concatenate([m, [fill] * (num_rows - orig_rows)])
 
     #
     # Swap rows to transform hash2index into the identify function.
