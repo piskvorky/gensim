@@ -50,7 +50,14 @@ def make_c_ext(use_cython=False):
     for module, source in c_extensions.items():
         if use_cython:
             source = source.replace('.c', '.pyx')
-        yield Extension(module, sources=[source], language='c')
+        extra_args = []
+#        extra_args.extend(['-g', '-O0'])  # uncomment if optimization limiting crash info
+        yield Extension(
+            module,
+            sources=[source],
+            language='c',
+            extra_compile_args=extra_args,
+        )
 
 
 def make_cpp_ext(use_cython=False):
@@ -61,7 +68,7 @@ def make_cpp_ext(use_cython=False):
         extra_args.append('-std=c++11')
     elif system == 'Darwin':
         extra_args.extend(['-stdlib=libc++', '-std=c++11'])
-
+#    extra_args.extend(['-g', '-O0'])  # uncomment if optimization limiting crash info
     for module, source in cpp_extensions.items():
         if use_cython:
             source = source.replace('.cpp', '.pyx')
