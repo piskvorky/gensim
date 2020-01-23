@@ -7,6 +7,7 @@ import io
 import logging
 import unittest
 import os
+import subprocess
 import struct
 
 import numpy as np
@@ -33,6 +34,11 @@ logger = logging.getLogger(__name__)
 
 IS_WIN32 = (os.name == "nt") and (struct.calcsize('P') * 8 == 32)
 
+MAX_WORDVEC_COMPONENT_DIFFERENCE = 1.0e-10
+
+FT_HOME = os.environ.get("FT_HOME")
+FT_CMD = os.path.join(FT_HOME, "fasttext") if FT_HOME else None
+
 
 class LeeCorpus(object):
     def __iter__(self):
@@ -56,8 +62,6 @@ new_sentences = [
 class TestFastTextModel(unittest.TestCase):
 
     def setUp(self):
-        ft_home = os.environ.get('FT_HOME', None)
-        self.ft_path = os.path.join(ft_home, 'fasttext') if ft_home else None
         self.test_model_file = datapath('lee_fasttext.bin')
         self.test_model = gensim.models.fasttext.load_facebook_model(self.test_model_file)
         self.test_new_model_file = datapath('lee_fasttext_new.bin')
@@ -811,13 +815,10 @@ class TestFastTextModel(unittest.TestCase):
         # this limit can be increased when using Cython code
         self.assertGreaterEqual(overlap_count, 2)
 
+    @unittest.skipIf(not FT_HOME, "FT_HOME env variable not set, skipping test")
     def test_cbow_hs_against_wrapper(self):
-        if self.ft_path is None:
-            logger.info("FT_HOME env variable not set, skipping test")
-            return
-
         tmpf = get_tmpfile('gensim_fasttext.tst')
-        model_wrapper = FT_wrapper.train(ft_path=self.ft_path, corpus_file=datapath('lee_background.cor'),
+        model_wrapper = FT_wrapper.train(ft_path=FT_CMD, corpus_file=datapath('lee_background.cor'),
                                          output_file=tmpf, model='cbow', size=50, alpha=0.05, window=5, min_count=5,
                                          word_ngrams=1,
                                          loss='hs', sample=1e-3, negative=0, iter=5, min_n=3, max_n=6, sorted_vocab=1,
@@ -834,13 +835,11 @@ class TestFastTextModel(unittest.TestCase):
         self.assertFalse((orig0 == model_gensim.wv.vectors[0]).all())  # vector should vary after training
         self.compare_with_wrapper(model_gensim, model_wrapper)
 
+    @unittest.skipIf(not FT_HOME, "FT_HOME env variable not set, skipping test")
     def test_sg_hs_against_wrapper(self):
-        if self.ft_path is None:
-            logger.info("FT_HOME env variable not set, skipping test")
-            return
 
         tmpf = get_tmpfile('gensim_fasttext.tst')
-        model_wrapper = FT_wrapper.train(ft_path=self.ft_path, corpus_file=datapath('lee_background.cor'),
+        model_wrapper = FT_wrapper.train(ft_path=FT_CMD, corpus_file=datapath('lee_background.cor'),
                                          output_file=tmpf, model='skipgram', size=50, alpha=0.025, window=5,
                                          min_count=5, word_ngrams=1,
                                          loss='hs', sample=1e-3, negative=0, iter=5, min_n=3, max_n=6, sorted_vocab=1,
@@ -1218,7 +1217,7 @@ class UnicodeVocabTest(unittest.TestCase):
         buf = io.BytesIO()
         buf.name = 'dummy name to keep fasttext happy'
         buf.write(struct.pack('@3i', 2, -1, -1))  # vocab_size, nwords, nlabels
-        buf.write(struct.pack('@1q', -1))
+        buf.write(struct.pack('@1q', 10))  # ntokens
         buf.write(b'hello')
         buf.write(b'\x00')
         buf.write(struct.pack('@qb', 1, -1))
@@ -1227,18 +1226,20 @@ class UnicodeVocabTest(unittest.TestCase):
         buf.write(struct.pack('@qb', 2, -1))
         buf.seek(0)
 
-        raw_vocab, vocab_size, nlabels = gensim.models._fasttext_bin._load_vocab(buf, False)
+        raw_vocab, vocab_size, nlabels, ntokens = gensim.models._fasttext_bin._load_vocab(buf, False)
         expected = {'hello': 1, 'world': 2}
         self.assertEqual(expected, dict(raw_vocab))
 
         self.assertEqual(vocab_size, 2)
         self.assertEqual(nlabels, -1)
 
+        self.assertEqual(ntokens, 10)
+
     def test_bad_unicode(self):
         buf = io.BytesIO()
         buf.name = 'dummy name to keep fasttext happy'
         buf.write(struct.pack('@3i', 2, -1, -1))  # vocab_size, nwords, nlabels
-        buf.write(struct.pack('@1q', -1))
+        buf.write(struct.pack('@1q', 10))  # ntokens
         #
         # encountered in https://github.com/RaRe-Technologies/gensim/issues/2378
         # The model from downloaded from
@@ -1265,7 +1266,7 @@ class UnicodeVocabTest(unittest.TestCase):
         buf.write(struct.pack('@qb', 2, -1))
         buf.seek(0)
 
-        raw_vocab, vocab_size, nlabels = gensim.models._fasttext_bin._load_vocab(buf, False)
+        raw_vocab, vocab_size, nlabels, ntokens = gensim.models._fasttext_bin._load_vocab(buf, False)
 
         expected = {
             u'英語版ウィキペディアへの投稿はいつでも\\xe6': 1,
@@ -1276,6 +1277,7 @@ class UnicodeVocabTest(unittest.TestCase):
 
         self.assertEqual(vocab_size, 2)
         self.assertEqual(nlabels, -1)
+        self.assertEqual(ntokens, 10)
 
 
 _BYTES = b'the quick brown fox jumps over the lazy dog'
@@ -1298,6 +1300,200 @@ class TestFromfile(unittest.TestCase):
         array = gensim.models._fasttext_bin._fromfile(fin, _ARRAY.dtype, _ARRAY.shape[0])
         logger.error('array: %r', array)
         self.assertTrue(np.allclose(_ARRAY, array))
+
+
+def _create_and_save_fb_model(fname, model_params):
+    model = FT_gensim(**model_params)
+    lee_data = LineSentence(datapath('lee_background.cor'))
+    model.build_vocab(lee_data)
+    model.train(lee_data, total_examples=model.corpus_count, epochs=model.epochs)
+    gensim.models.fasttext.save_facebook_model(model, fname)
+    return model
+
+
+def calc_max_diff(v1, v2):
+    return np.max(np.abs(v1 - v2))
+
+
+class SaveFacebookFormatModelTest(unittest.TestCase):
+
+    def _check_roundtrip(self, sg):
+        model_params = {
+            "sg": sg,
+            "size": 10,
+            "min_count": 1,
+            "hs": 1,
+            "negative": 5,
+            "seed": 42,
+            "workers": 1}
+
+        with temporary_file("roundtrip_model_to_model.bin") as fpath:
+            model_trained = _create_and_save_fb_model(fpath, model_params)
+            model_loaded = gensim.models.fasttext.load_facebook_model(fpath)
+
+        self.assertEqual(model_trained.vector_size, model_loaded.vector_size)
+        self.assertEqual(model_trained.window, model_loaded.window)
+        self.assertEqual(model_trained.epochs, model_loaded.epochs)
+        self.assertEqual(model_trained.negative, model_loaded.negative)
+        self.assertEqual(model_trained.hs, model_loaded.hs)
+        self.assertEqual(model_trained.sg, model_loaded.sg)
+        self.assertEqual(model_trained.trainables.bucket, model_loaded.trainables.bucket)
+        self.assertEqual(model_trained.wv.min_n, model_loaded.wv.min_n)
+        self.assertEqual(model_trained.wv.max_n, model_loaded.wv.max_n)
+        self.assertEqual(model_trained.vocabulary.sample, model_loaded.vocabulary.sample)
+        self.assertEqual(set(model_trained.wv.index2word), set(model_loaded.wv.index2word))
+
+        for w in model_trained.wv.index2word:
+            v_orig = model_trained.wv[w]
+            v_loaded = model_loaded.wv[w]
+            self.assertLess(calc_max_diff(v_orig, v_loaded), MAX_WORDVEC_COMPONENT_DIFFERENCE)
+
+    def test_skipgram(self):
+        self._check_roundtrip(sg=1)
+
+    def test_cbow(self):
+        self._check_roundtrip(sg=0)
+
+
+def _read_binary_file(fname):
+    with open(fname, "rb") as f:
+        data = f.read()
+    return data
+
+
+class SaveGensimByteIdentityTest(unittest.TestCase):
+    """
+    This class containts tests that check the following scenario:
+
+    + create binary fastText file model1.bin using gensim
+    + load file model1.bin to variable `model`
+    + save `model` to model2.bin
+    + check if files model1.bin and model2.bin are byte identical
+    """
+
+    def _check_roundtrip_file_file(self, sg):
+        model_params = {
+            "sg": sg,
+            "size": 10,
+            "min_count": 1,
+            "hs": 1,
+            "negative": 0,
+            "seed": 42,
+            "workers": 1}
+
+        with temporary_file("roundtrip_file_to_file1.bin") as fpath1, \
+            temporary_file("roundtrip_file_to_file2.bin") as fpath2:
+            _create_and_save_fb_model(fpath1, model_params)
+            model = gensim.models.fasttext.load_facebook_model(fpath1)
+            gensim.models.fasttext.save_facebook_model(model, fpath2)
+            bin1 = _read_binary_file(fpath1)
+            bin2 = _read_binary_file(fpath2)
+
+        self.assertEqual(bin1, bin2)
+
+    def test_skipgram(self):
+        self._check_roundtrip_file_file(sg=1)
+
+    def test_cbow(self):
+        self._check_roundtrip_file_file(sg=0)
+
+
+def _save_test_model(out_base_fname, model_params):
+    inp_fname = datapath('lee_background.cor')
+
+    model_type = "cbow" if model_params["sg"] == 0 else "skipgram"
+    size = str(model_params["size"])
+    seed = str(model_params["seed"])
+
+    cmd = [
+        FT_CMD, model_type, "-input", inp_fname, "-output",
+        out_base_fname, "-dim", size, "-seed", seed]
+
+    subprocess.check_call(cmd)
+
+
+@unittest.skipIf(not FT_HOME, "FT_HOME env variable not set, skipping test")
+class SaveFacebookByteIdentityTest(unittest.TestCase):
+    """
+    This class containts tests that check the following scenario:
+
+    + create binary fastText file model1.bin using facebook_binary (FT)
+    + load file model1.bin to variable `model`
+    + save `model` to model2.bin using gensim
+    + check if files model1.bin and model2.bin are byte-identical
+    """
+
+    def _check_roundtrip_file_file(self, sg):
+        model_params = {"size": 10, "sg": sg, "seed": 42}
+
+        # fasttext tool creates both *vec and *bin files, so we have to remove both, even thought *vec is unused
+
+        with temporary_file("m1.bin") as m1, temporary_file("m2.bin") as m2, temporary_file("m1.vec"):
+
+            m1_basename = m1[:-4]
+            _save_test_model(m1_basename, model_params)
+            model = gensim.models.fasttext.load_facebook_model(m1)
+            gensim.models.fasttext.save_facebook_model(model, m2)
+            bin1 = _read_binary_file(m1)
+            bin2 = _read_binary_file(m2)
+
+        self.assertEqual(bin1, bin2)
+
+    def test_skipgram(self):
+        self._check_roundtrip_file_file(sg=1)
+
+    def test_cbow(self):
+        self._check_roundtrip_file_file(sg=0)
+
+
+def _read_wordvectors_using_fasttext(fasttext_fname, words):
+    def line_to_array(line):
+        return np.array([float(s) for s in line.split()[1:]], dtype=np.float32)
+
+    cmd = [FT_CMD, "print-word-vectors", fasttext_fname]
+    process = subprocess.Popen(
+        cmd, stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE)
+    words_str = '\n'.join(words)
+    out, _ = process.communicate(input=words_str.encode("utf-8"))
+    return np.array([line_to_array(l) for l in out.splitlines()], dtype=np.float32)
+
+
+@unittest.skipIf(not os.environ.get("FT_HOME", None), "FT_HOME env variable not set, skipping test")
+class SaveFacebookFormatReadingTest(unittest.TestCase):
+    """
+    This class containts tests that check the following scenario:
+
+    + create fastText model using gensim
+    + save file to model.bin
+    + retrieve word vectors from model.bin using fasttext Facebook utility
+    + compare vectors retrieved by Facebook utility with those obtained directly from gensim model
+    """
+
+    def _check_load_fasttext_format(self, sg):
+        model_params = {
+            "sg": sg,
+            "size": 10,
+            "min_count": 1,
+            "hs": 1,
+            "negative": 5,
+            "seed": 42,
+            "workers": 1}
+
+        with temporary_file("load_fasttext.bin") as fpath:
+            model = _create_and_save_fb_model(fpath, model_params)
+            wv = _read_wordvectors_using_fasttext(fpath, model.wv.index2word)
+
+        for i, w in enumerate(model.wv.index2word):
+            diff = calc_max_diff(wv[i, :], model.wv[w])
+            # Because fasttext command line prints vectors with limited accuracy
+            self.assertLess(diff, 1.0e-4)
+
+    def test_skipgram(self):
+        self._check_load_fasttext_format(sg=1)
+
+    def test_cbow(self):
+        self._check_load_fasttext_format(sg=0)
 
 
 if __name__ == '__main__':
