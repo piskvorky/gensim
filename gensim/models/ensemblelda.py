@@ -278,8 +278,8 @@ class EnsembleLda(SaveLoad):
                 del self.topic_model_module_string
                 del self.topic_model_class_string
             except ModuleNotFoundError:
-                logger.error('Could not import the "{}" module in order to provide the "{}" class as "topic_model_class" '
-                    'attribute. Try setting this manually instead after loading.'
+                logger.error('Could not import the "{}" module in order to provide the "{}" class as '
+                    '"topic_model_class" attribute. Try setting this manually instead after loading.'
                     .format(self.topic_model_class_string, self.topic_model_class_string))
             except AttributeError:
                 logger.error('Could not import the "{}" class from the "{}" module in order to set the '
