@@ -3,14 +3,15 @@
 #
 # Author: Tobias B <github.com/sezanzeb>
 
-# Opinosis Corpus Source:
-# title:         Opinosis: a graph-based approach to abstractive summarization of highly redundant opinions
-# authors:       Ganesan, Kavita and Zhai, ChengXiang and Han, Jiawei
-# booktitle:     Proceedings of the 23rd International Conference on Computational Linguistics
-# pages:         340-348
-# year:          2010
-# organization:  Association for Computational Linguistics
-# http://kavita-ganesan.com/opinosis-opinion-dataset/
+
+"""Creates a corpus and dictionary from the Opinosis dataset.
+
+References
+----------
+.. [1] Ganesan, Kavita and Zhai, ChengXiang and Han, Jiawei. Opinosis: a graph-based approach to abstractive
+       summarization of highly redundant opinions [online]. In : Proceedings of the 23rd International Conference on
+       Computational Linguistics. 2010. p. 340-348. Available from: https://kavita-ganesan.com/opinosis/
+"""
 
 import os
 import re
@@ -20,7 +21,7 @@ from gensim.parsing.preprocessing import STOPWORDS
 
 
 class OpinosisCorpus():
-    """Creates a corpus and dictionary from the opinosis dataset:
+    """Creates a corpus and dictionary from the Opinosis dataset.
 
     http://kavita-ganesan.com/opinosis-opinion-dataset/
 
@@ -37,7 +38,7 @@ class OpinosisCorpus():
     """
 
     def __init__(self, path):
-        """
+        """Load the downloaded corpus.
 
         Parameters
         ----------
@@ -45,9 +46,7 @@ class OpinosisCorpus():
             Path to the extracted zip file. If 'summaries-gold' is in a folder
             called 'opinosis', then the Path parameter would be 'opinosis',
             either relative to you current working directory or absolute.
-
         """
-
         # citation
         path = os.path.join(path, "summaries-gold")
         dictionary = Dictionary()

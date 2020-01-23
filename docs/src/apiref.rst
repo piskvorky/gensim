@@ -22,6 +22,7 @@ Modules:
     corpora/malletcorpus
     corpora/mmcorpus
     corpora/_mmreader
+    corpora/opinosiscorpus
     corpora/sharded_corpus
     corpora/svmlightcorpus
     corpora/textcorpus
