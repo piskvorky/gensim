@@ -1216,15 +1216,15 @@ def _load_fasttext_format(model_file, encoding='utf-8', full_model=True):
         window=m.ws,
         iter=m.epoch,
         negative=m.neg,
-        hs=(m.loss == 1),
-        sg=(m.model == 2),
+        hs=int(m.loss == 1),
+        sg=int(m.model == 2),
         bucket=m.bucket,
         min_count=m.min_count,
         sample=m.t,
         min_n=m.minn,
         max_n=m.maxn,
     )
-
+    model.corpus_total_words = m.ntokens
     model.vocabulary.raw_vocab = m.raw_vocab
     model.vocabulary.nwords = m.nwords
     model.vocabulary.vocab_size = m.vocab_size
@@ -1250,7 +1250,6 @@ def _load_fasttext_format(model_file, encoding='utf-8', full_model=True):
 
     model.wv.init_post_load(m.vectors_ngrams)
     model.trainables.init_post_load(model, m.hidden_output)
-
     _check_model(model)
 
     logger.info("loaded %s weight matrix for fastText model from %s", m.vectors_ngrams.shape, fin.name)
@@ -1265,7 +1264,13 @@ def _check_model(m):
         'mismatch between vector size in model params ({}) and model vectors ({})'
         .format(m.wv.vector_size, m.wv.vectors_ngrams)
     )
-    if m.trainables.syn1neg is not None:
+
+    try:
+        syn1neg = m.trainables.syn1neg
+    except AttributeError:
+        syn1neg = None
+
+    if syn1neg is not None:
         assert m.wv.vector_size == m.trainables.syn1neg.shape[1], (
             'mismatch between vector size in model params ({}) and trainables ({})'
             .format(m.wv.vector_size, m.wv.vectors_ngrams)
@@ -1282,3 +1287,40 @@ def _check_model(m):
             "mismatch between final vocab size (%s words), and expected vocab size (%s words)",
             len(m.wv.vocab), m.vocabulary.vocab_size
         )
+
+
+def save_facebook_model(model, path, encoding="utf-8", lr_update_rate=100, word_ngrams=1):
+    """Saves word embeddings to the Facebook's native fasttext `.bin` format.
+
+    Notes
+    ------
+    Facebook provides both `.vec` and `.bin` files with their modules.
+    The former contains human-readable vectors.
+    The latter contains machine-readable vectors along with other model parameters.
+    **This function saves only the .bin file**.
+
+    Parameters
+    ----------
+    model : gensim.models.fasttext.FastText
+        FastText model to be saved.
+    path : str
+        Output path and filename (including `.bin` extension)
+    encoding : str, optional
+        Specifies the file encoding. Defaults to utf-8.
+
+    lr_update_rate : int
+        This parameter is used by Facebook fasttext tool, unused by Gensim.
+        It defaults to Facebook fasttext default value `100`.
+        In very rare circumstances you might wish to fiddle with it.
+
+    word_ngrams : int
+        This parameter is used by Facebook fasttext tool, unused by Gensim.
+        It defaults to Facebook fasttext default value `1`.
+        In very rare circumstances you might wish to fiddle with it.
+
+    Returns
+    -------
+    None
+    """
+    fb_fasttext_parameters = {"lr_update_rate": lr_update_rate, "word_ngrams": word_ngrams}
+    gensim.models._fasttext_bin.save(model, path, fb_fasttext_parameters, encoding)
