@@ -272,29 +272,27 @@ class EnsembleLda(SaveLoad):
         # create model that can provide the usual gensim api to the stable topics from the ensemble
         self.generate_gensim_representation()
 
-    @classmethod
-    def load(cls, *args, **kwargs):
-        eLDA = super().load(*args, **kwargs)
-        try:
-            module = importlib.import_module(eLDA.topic_model_module_string)
-            eLDA.topic_model_class = getattr(module, eLDA.topic_model_class_string)
-            del eLDA.topic_model_module_string
-            del eLDA.topic_model_class_string
-        except ModuleNotFoundError:
-            logger.error('Could not import the "{}" module in order to provide the "{}" class as "topic_model_class" '
-                'attribute. Try setting this manually instead after loading.'
-                .format(eLDA.topic_model_class_string, eLDA.topic_model_class_string))
-        except AttributeError:
-            logger.error('Could not import the "{}" class from the "{}" module in order to set the '
-                '"topic_model_class" attribute. Try setting this manually instead after loading.'
-                .format(eLDA.topic_model_class_string, eLDA.topic_model_module_string))
-        return eLDA
-
-    load.__doc__ = SaveLoad.load.__doc__
+    def get_topic_model_class(self):
+        if self.topic_model_class is None:
+            try:
+                module = importlib.import_module(self.topic_model_module_string)
+                self.topic_model_class = getattr(module, self.topic_model_class_string)
+                del self.topic_model_module_string
+                del self.topic_model_class_string
+            except ModuleNotFoundError:
+                logger.error('Could not import the "{}" module in order to provide the "{}" class as '
+                    '"topic_model_class" attribute. Try setting this manually instead after loading.'
+                    .format(self.topic_model_class_string, self.topic_model_class_string))
+            except AttributeError:
+                logger.error('Could not import the "{}" class from the "{}" module in order to set the '
+                    '"topic_model_class" attribute. Try setting this manually instead after loading.'
+                    .format(self.topic_model_class_string, self.topic_model_module_string))
+        return self.topic_model_class
 
     def save(self, *args, **kwargs):
-        self.topic_model_module_string = self.topic_model_class.__module__
-        self.topic_model_class_string = self.topic_model_class.__name__
+        if self.get_topic_model_class() is not None:
+            self.topic_model_module_string = self.topic_model_class.__module__
+            self.topic_model_class_string = self.topic_model_class.__name__
         kwargs['ignore'] = frozenset(kwargs.get('ignore', ())).union(('topic_model_class', ))
         super(EnsembleLda, self).save(*args, **kwargs)
 
@@ -350,7 +348,7 @@ class EnsembleLda(SaveLoad):
         params["passes"] = 0  # no training
         # iterations is needed for inference, pass it to the model
 
-        classic_model_representation = self.topic_model_class(**params)
+        classic_model_representation = self.get_topic_model_class()(**params)
 
         # when eta was None, use what gensim generates as default eta for the following tasks:
         eta = classic_model_representation.eta
@@ -646,7 +644,7 @@ class EnsembleLda(SaveLoad):
 
             kwArgs["random_state"] = random_states[i]
 
-            tm = self.topic_model_class(**kwArgs)
+            tm = self.get_topic_model_class()(**kwArgs)
 
             # adds the lambda (that is the unnormalized get_topics) to ttda, which is
             # a list of all those lambdas
