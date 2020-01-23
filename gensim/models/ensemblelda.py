@@ -3,6 +3,8 @@
 #
 # Authors: Tobias Brigl <github.com/sezanzeb>, Alex Salles <alex.salles@gmail.com>,
 # Alex Loosley <aloosley@alumni.brown.edu>, Data Reply Munich
+#
+
 
 """Ensemble Latent Dirichlet Allocation (eLDA), a method of training a topic model ensemble.
 
@@ -93,11 +95,10 @@ is presented, further developed, or used as the basis for a published result.
 
 Other Notes
 -----------
-.. The adjectives stable and reliable (topics) are used somewhat interchangeably throughout the doc strings and
+The adjectives stable and reliable (topics) are used somewhat interchangeably throughout the doc strings and
 comments.
 
 """
-
 import logging
 import os
 from multiprocessing import Process, Pipe, ProcessError
@@ -170,10 +171,13 @@ class EnsembleLda(SaveLoad):
             (technically a divergence) from distribution A to B is more of a measure of if A is contained in B.  At a
             high level, this involves using distribution A to mask distribution B and then calculating the cosine
             distance between the two.  The masking can be done in two ways:
-                mass: forms mask by taking the top ranked terms until their cumulative mass reaches the
-                    `masking_threshold`
-                rank: forms mask by taking the top ranked terms (by mass) until the `masking_threshold` is reached.
-                    For example, a ranking threshold of 0.11 means the top 0.11 terms by weight are used to form a mask.
+
+            1. mass: forms mask by taking the top ranked terms until their cumulative mass reaches the
+            'masking_threshold'
+
+            2. rank: forms mask by taking the top ranked terms (by mass) until the 'masking_threshold' is reached.
+            For example, a ranking threshold of 0.11 means the top 0.11 terms by weight are used to form a mask.
+
         masking_threshold : float, optional
             Default: None, which uses 0.95 for "mass", and 0.11 for masking_method "rank".  In general, too small a mask
             threshold leads to inaccurate calculations (no signal) and too big a mask leads to noisy distance
@@ -1132,32 +1136,32 @@ class EnsembleLda(SaveLoad):
 class CBDBSCAN():
     """A Variation of the DBSCAN algorithm called Checkback DBSCAN (CBDBSCAN).
 
-    The algorithm works based on DBSCAN-like parameters `eps` and `min_samples` that respectively define how far a
+    The algorithm works based on DBSCAN-like parameters 'eps' and 'min_samples' that respectively define how far a
     "nearby" point is, and the minimum number of nearby points needed to label a candidate datapoint a core of a
     cluster. (See https://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html).
 
     The algorithm works as follows:
-    1. (A)symmetric distance matrix provided at fit-time (called `amatrix`).
-    For the sake of example below, assume the there are only five topics (amatrix contains distances with dim 5x5),
-        T_1, T_2, T_3, T_4, T_5:
+
+    1. (A)symmetric distance matrix provided at fit-time (called 'amatrix').
+       For the sake of example below, assume the there are only five topics (amatrix contains distances with dim 5x5),
+       T_1, T_2, T_3, T_4, T_5:
     2. Start by scanning a candidate topic with respect to a parent topic
-        (e.g. T_1 with respect to parent None)
-    3. Check which topics are nearby the candidate topic using `self.eps` as a threshold and call them neighbours
-        (e.g. assume T_3, T_4, and T_5 are nearby and become neighbours)
-    4. If there are more neighbours than `self.min_samples`, the candidate topic becomes a core candidate for a cluster
-        (e.g. if `min_samples`=1, then T_1 becomes the first core of a cluster)
+       (e.g. T_1 with respect to parent None)
+    3. Check which topics are nearby the candidate topic using 'self.eps' as a threshold and call them neighbours
+       (e.g. assume T_3, T_4, and T_5 are nearby and become neighbours)
+    4. If there are more neighbours than 'self.min_samples', the candidate topic becomes a core candidate for a cluster
+       (e.g. if 'min_samples'=1, then T_1 becomes the first core of a cluster)
     5. If candidate is a core, CheckBack (CB) to find the fraction of neighbours that are either the parent or the
-        parent's neighbours.  If this fraction is more than 75%, give the candidate the same label as its parent.
-        (e.g. in the trivial case there is no parent (or neighbours of that parent), a new incremental label is given)
+       parent's neighbours.  If this fraction is more than 75%, give the candidate the same label as its parent.
+       (e.g. in the trivial case there is no parent (or neighbours of that parent), a new incremental label is given)
     6. If candidate is a core, recursively scan the next nearby topic (e.g. scan T_3) labeling the previous topic as
-        the parent and the previous neighbours as the parent_neighbours - repeat steps
-        2.-6.
-        2. (e.g. Scan candidate T_3 with respect to parent T_1 that has parent_neighbours T_3, T_4, and T_5)
-        3. (e.g. T5 is the only neighbour)
-        4. (e.g. number of neighbours is 1, therefore candidate T_3 becomes a core)
-        5. (e.g. CheckBack finds that two of the four parent and parent neighbours are neighbours of candidate T_3.
-            Therefore the candidate T_3 does NOT get the same label as its parent T_1)
-        6. (e.g. Scan candidate T_5 with respect to parent T_3 that has parent_neighbours T_5)
+       the parent and the previous neighbours as the parent_neighbours - repeat steps 2-6:
+       2. (e.g. Scan candidate T_3 with respect to parent T_1 that has parent_neighbours T_3, T_4, and T_5)
+       3. (e.g. T5 is the only neighbour)
+       4. (e.g. number of neighbours is 1, therefore candidate T_3 becomes a core)
+       5. (e.g. CheckBack finds that two of the four parent and parent neighbours are neighbours of candidate T_3.
+       \ \ \ Therefore the candidate T_3 does NOT get the same label as its parent T_1)
+       6. (e.g. Scan candidate T_5 with respect to parent T_3 that has parent_neighbours T_5)
 
     The CB step has the effect that it enforces cluster compactness and allows the model to avoid creating clusters for
     unreliable topics made of a composition of multiple reliable topics (something that occurs often LDA models that is

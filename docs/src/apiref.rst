@@ -29,6 +29,7 @@ Modules:
     corpora/wikicorpus
     models/ldamodel
     models/ldamulticore
+    models/ensemblelda
     models/nmf
     models/lsimodel
     models/ldaseqmodel

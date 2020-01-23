@@ -13,7 +13,7 @@ If you're thinking about contributing documentation, please see :ref:`sphx_glr_a
 
 .. raw:: html
 
-    <div style='clear:both'></div>
+    <div class="sphx-glr-clear"></div>
 
 
 
@@ -33,9 +33,9 @@ Understanding this functionality is vital for using gensim effectively.
 
 .. only:: html
 
-    .. figure:: /auto_examples/core/images/thumb/sphx_glr_run_core_concepts_thumb.png
+ .. figure:: /auto_examples/core/images/thumb/sphx_glr_run_core_concepts_thumb.png
 
-        :ref:`sphx_glr_auto_examples_core_run_core_concepts.py`
+     :ref:`sphx_glr_auto_examples_core_run_core_concepts.py`
 
 .. raw:: html
 
@@ -53,9 +53,9 @@ Understanding this functionality is vital for using gensim effectively.
 
 .. only:: html
 
-    .. figure:: /auto_examples/core/images/thumb/sphx_glr_run_corpora_and_vector_spaces_thumb.png
+ .. figure:: /auto_examples/core/images/thumb/sphx_glr_run_corpora_and_vector_spaces_thumb.png
 
-        :ref:`sphx_glr_auto_examples_core_run_corpora_and_vector_spaces.py`
+     :ref:`sphx_glr_auto_examples_core_run_corpora_and_vector_spaces.py`
 
 .. raw:: html
 
@@ -73,9 +73,9 @@ Understanding this functionality is vital for using gensim effectively.
 
 .. only:: html
 
-    .. figure:: /auto_examples/core/images/thumb/sphx_glr_run_topics_and_transformations_thumb.png
+ .. figure:: /auto_examples/core/images/thumb/sphx_glr_run_topics_and_transformations_thumb.png
 
-        :ref:`sphx_glr_auto_examples_core_run_topics_and_transformations.py`
+     :ref:`sphx_glr_auto_examples_core_run_topics_and_transformations.py`
 
 .. raw:: html
 
@@ -93,9 +93,9 @@ Understanding this functionality is vital for using gensim effectively.
 
 .. only:: html
 
-    .. figure:: /auto_examples/core/images/thumb/sphx_glr_run_similarity_queries_thumb.png
+ .. figure:: /auto_examples/core/images/thumb/sphx_glr_run_similarity_queries_thumb.png
 
-        :ref:`sphx_glr_auto_examples_core_run_similarity_queries.py`
+     :ref:`sphx_glr_auto_examples_core_run_similarity_queries.py`
 
 .. raw:: html
 
@@ -108,7 +108,7 @@ Understanding this functionality is vital for using gensim effectively.
    /auto_examples/core/run_similarity_queries
 .. raw:: html
 
-    <div style='clear:both'></div>
+    <div class="sphx-glr-clear"></div>
 
 
 
@@ -127,9 +127,9 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. only:: html
 
-    .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_word2vec_thumb.png
+ .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_word2vec_thumb.png
 
-        :ref:`sphx_glr_auto_examples_tutorials_run_word2vec.py`
+     :ref:`sphx_glr_auto_examples_tutorials_run_word2vec.py`
 
 .. raw:: html
 
@@ -147,9 +147,9 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. only:: html
 
-    .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_doc2vec_lee_thumb.png
+ .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_doc2vec_lee_thumb.png
 
-        :ref:`sphx_glr_auto_examples_tutorials_run_doc2vec_lee.py`
+     :ref:`sphx_glr_auto_examples_tutorials_run_doc2vec_lee.py`
 
 .. raw:: html
 
@@ -167,9 +167,9 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. only:: html
 
-    .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_fasttext_thumb.png
+ .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_fasttext_thumb.png
 
-        :ref:`sphx_glr_auto_examples_tutorials_run_fasttext.py`
+     :ref:`sphx_glr_auto_examples_tutorials_run_fasttext.py`
 
 .. raw:: html
 
@@ -187,9 +187,9 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. only:: html
 
-    .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_annoy_thumb.png
+ .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_annoy_thumb.png
 
-        :ref:`sphx_glr_auto_examples_tutorials_run_annoy.py`
+     :ref:`sphx_glr_auto_examples_tutorials_run_annoy.py`
 
 .. raw:: html
 
@@ -207,9 +207,9 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. only:: html
 
-    .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_lda_thumb.png
+ .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_lda_thumb.png
 
-        :ref:`sphx_glr_auto_examples_tutorials_run_lda.py`
+     :ref:`sphx_glr_auto_examples_tutorials_run_lda.py`
 
 .. raw:: html
 
@@ -227,9 +227,9 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. only:: html
 
-    .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_distance_metrics_thumb.png
+ .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_distance_metrics_thumb.png
 
-        :ref:`sphx_glr_auto_examples_tutorials_run_distance_metrics.py`
+     :ref:`sphx_glr_auto_examples_tutorials_run_distance_metrics.py`
 
 .. raw:: html
 
@@ -247,9 +247,9 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. only:: html
 
-    .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_wmd_thumb.png
+ .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_wmd_thumb.png
 
-        :ref:`sphx_glr_auto_examples_tutorials_run_wmd.py`
+     :ref:`sphx_glr_auto_examples_tutorials_run_wmd.py`
 
 .. raw:: html
 
@@ -267,9 +267,9 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. only:: html
 
-    .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_summarization_thumb.png
+ .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_summarization_thumb.png
 
-        :ref:`sphx_glr_auto_examples_tutorials_run_summarization.py`
+     :ref:`sphx_glr_auto_examples_tutorials_run_summarization.py`
 
 .. raw:: html
 
@@ -287,9 +287,9 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. only:: html
 
-    .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_pivoted_doc_norm_thumb.png
+ .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_pivoted_doc_norm_thumb.png
 
-        :ref:`sphx_glr_auto_examples_tutorials_run_pivoted_doc_norm.py`
+     :ref:`sphx_glr_auto_examples_tutorials_run_pivoted_doc_norm.py`
 
 .. raw:: html
 
@@ -302,7 +302,7 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
    /auto_examples/tutorials/run_pivoted_doc_norm
 .. raw:: html
 
-    <div style='clear:both'></div>
+    <div class="sphx-glr-clear"></div>
 
 
 
@@ -321,9 +321,9 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
 .. only:: html
 
-    .. figure:: /auto_examples/howtos/images/thumb/sphx_glr_run_downloader_api_thumb.png
+ .. figure:: /auto_examples/howtos/images/thumb/sphx_glr_run_downloader_api_thumb.png
 
-        :ref:`sphx_glr_auto_examples_howtos_run_downloader_api.py`
+     :ref:`sphx_glr_auto_examples_howtos_run_downloader_api.py`
 
 .. raw:: html
 
@@ -341,9 +341,9 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
 .. only:: html
 
-    .. figure:: /auto_examples/howtos/images/thumb/sphx_glr_run_doc_thumb.png
+ .. figure:: /auto_examples/howtos/images/thumb/sphx_glr_run_doc_thumb.png
 
-        :ref:`sphx_glr_auto_examples_howtos_run_doc.py`
+     :ref:`sphx_glr_auto_examples_howtos_run_doc.py`
 
 .. raw:: html
 
@@ -361,9 +361,9 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
 .. only:: html
 
-    .. figure:: /auto_examples/howtos/images/thumb/sphx_glr_run_doc2vec_imdb_thumb.png
+ .. figure:: /auto_examples/howtos/images/thumb/sphx_glr_run_doc2vec_imdb_thumb.png
 
-        :ref:`sphx_glr_auto_examples_howtos_run_doc2vec_imdb.py`
+     :ref:`sphx_glr_auto_examples_howtos_run_doc2vec_imdb.py`
 
 .. raw:: html
 
@@ -381,9 +381,9 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
 .. only:: html
 
-    .. figure:: /auto_examples/howtos/images/thumb/sphx_glr_run_compare_lda_thumb.png
+ .. figure:: /auto_examples/howtos/images/thumb/sphx_glr_run_compare_lda_thumb.png
 
-        :ref:`sphx_glr_auto_examples_howtos_run_compare_lda.py`
+     :ref:`sphx_glr_auto_examples_howtos_run_compare_lda.py`
 
 .. raw:: html
 
@@ -396,7 +396,7 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
    /auto_examples/howtos/run_compare_lda
 .. raw:: html
 
-    <div style='clear:both'></div>
+    <div class="sphx-glr-clear"></div>
 
 
 
@@ -440,7 +440,7 @@ Blog posts, tutorial videos, hackathons and other useful Gensim resources, from 
 
 .. raw:: html
 
-    <div style='clear:both'></div>
+    <div class="sphx-glr-clear"></div>
 
 
 
@@ -452,13 +452,13 @@ Blog posts, tutorial videos, hackathons and other useful Gensim resources, from 
 
   .. container:: sphx-glr-download
 
-    :download:`Download all examples in Python source code: auto_examples_python.zip <//home/misha/git/gensim/docs/src/auto_examples/auto_examples_python.zip>`
+    :download:`Download all examples in Python source code: auto_examples_python.zip <//Users/a.loosley/Alex/Repos/gensim/docs/src/auto_examples/auto_examples_python.zip>`
 
 
 
   .. container:: sphx-glr-download
 
-    :download:`Download all examples in Jupyter notebooks: auto_examples_jupyter.zip <//home/misha/git/gensim/docs/src/auto_examples/auto_examples_jupyter.zip>`
+    :download:`Download all examples in Jupyter notebooks: auto_examples_jupyter.zip <//Users/a.loosley/Alex/Repos/gensim/docs/src/auto_examples/auto_examples_jupyter.zip>`
 
 
 .. only:: html
