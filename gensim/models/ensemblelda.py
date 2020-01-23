@@ -1154,11 +1154,12 @@ class CBDBSCAN():
        (e.g. in the trivial case there is no parent (or neighbours of that parent), a new incremental label is given)
     6. If candidate is a core, recursively scan the next nearby topic (e.g. scan T_3) labeling the previous topic as
        the parent and the previous neighbours as the parent_neighbours - repeat steps 2-6:
+
        2. (e.g. Scan candidate T_3 with respect to parent T_1 that has parent_neighbours T_3, T_4, and T_5)
        3. (e.g. T5 is the only neighbour)
        4. (e.g. number of neighbours is 1, therefore candidate T_3 becomes a core)
        5. (e.g. CheckBack finds that two of the four parent and parent neighbours are neighbours of candidate T_3.
-       \ \ \ Therefore the candidate T_3 does NOT get the same label as its parent T_1)
+          Therefore the candidate T_3 does NOT get the same label as its parent T_1)
        6. (e.g. Scan candidate T_5 with respect to parent T_3 that has parent_neighbours T_5)
 
     The CB step has the effect that it enforces cluster compactness and allows the model to avoid creating clusters for
