@@ -465,7 +465,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         save_freq = max(1, int(10000 / self.chunksize))  # save every 10k docs, roughly
         chunks_processed = 0
         try:
-            start_time = time.process_time()
+            start_time = time.time()
         except AttributeError:
             start_time = time.clock()
 
@@ -512,7 +512,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         """
         try:
-            start_time = time.process_time()
+            start_time = time.time()
         except AttributeError:
             start_time = time.clock()
         return (
