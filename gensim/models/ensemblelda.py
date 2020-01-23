@@ -110,8 +110,6 @@ from gensim import utils
 from gensim.models import ldamodel, ldamulticore, basemodel
 from gensim.utils import SaveLoad
 
-print('#')
-
 logger = logging.getLogger(__name__)
 
 
