@@ -408,19 +408,18 @@ except ImportError:
     keras_installed = False
 
 
+@unittest.skipUnless(keras_installed, 'keras needs to be installed for this test')
 class WordEmbeddingsKeyedVectorsTest(unittest.TestCase):
     def setUp(self):
         self.vectors = EuclideanKeyedVectors.load_word2vec_format(
             datapath('euclidean_vectors.bin'), binary=True, datatype=np.float64)
 
-    @unittest.skipIf(not keras_installed, 'keras needs to be installed for this test')
     def test_get_keras_embedding_word_index_none(self):
         embedding_layer = self.vectors.get_keras_embedding()
         self.assertEqual(self.vectors.vectors.shape, embedding_layer._initial_weights[0].shape)
         self.assertTrue(np.array_equal(
             self.vectors['is'], embedding_layer._initial_weights[0][self.vectors.vocab['is'].index, :]))
 
-    @unittest.skipIf(not keras_installed, 'keras needs to be installed for this test')
     def test_get_keras_embedding_word_index_passed(self):
         word_index = {'is': 1, 'to': 2}
         embedding_layer = self.vectors.get_keras_embedding(word_index=word_index)
@@ -428,7 +427,6 @@ class WordEmbeddingsKeyedVectorsTest(unittest.TestCase):
         self.assertTrue(np.array_equal(
             self.vectors['is'], embedding_layer._initial_weights[0][1, :]))
 
-    @unittest.skipIf(not keras_installed, 'keras needs to be installed for this test')
     @patch('numpy.random.normal')
     def test_get_keras_embedding_word_index_passed_with_oov_word(self, normal_func):
         normal_func.return_value = np.zeros((3, self.vectors.vectors.shape[1]))
