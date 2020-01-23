@@ -13,7 +13,7 @@ import unittest
 import numpy as np
 from copy import deepcopy
 
-from gensim.models import EnsembleLda, LdaMulticore
+from gensim.models import EnsembleLda, LdaMulticore, LdaModel
 from gensim.test.utils import datapath, get_tmpfile, common_corpus, common_dictionary
 
 num_topics = 2
@@ -138,9 +138,16 @@ class TestModel(unittest.TestCase):
         self.eLDA_mu.save(fname)
         loaded_eLDA_mu = EnsembleLda.load(fname)
 
+        # topic_model_class will be lazy loaded and should be None first
+        assert loaded_eLDA.topic_model_class is None
+
         # was it stored and loaded correctly?
-        # memory friendly
+        # memory friendly.
         loaded_eLDA_representation = loaded_eLDA.generate_gensim_representation()
+
+        # generating the representation also lazily loads the topic_model_class
+        assert loaded_eLDA.topic_model_class == LdaModel
+
         topics = loaded_eLDA_representation.get_topics()
         ttda = loaded_eLDA.ttda
         amatrix = loaded_eLDA.asymmetric_distance_matrix
