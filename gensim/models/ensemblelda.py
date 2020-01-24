@@ -189,7 +189,6 @@ class EnsembleLda(SaveLoad):
             Parameters for each gensim model (e.g. :py:class:`gensim.models.LdaModel`) in the ensemble.
 
         """
-
         # INTERNAL PARAMETERS
         # Set random state
         # nps max random state of 2**32 - 1 is too large for windows:
@@ -273,6 +272,7 @@ class EnsembleLda(SaveLoad):
         self.generate_gensim_representation()
 
     def get_topic_model_class(self):
+        """Get the class that is used for :meth:`gensim.models.EnsembleLda.generate_gensim_representation`."""
         if self.topic_model_class is None:
             try:
                 module = importlib.import_module(self.topic_model_module_string)
@@ -290,6 +290,7 @@ class EnsembleLda(SaveLoad):
         return self.topic_model_class
 
     def save(self, *args, **kwargs):
+        """See :meth:`gensim.utils.SaveLoad.save`."""
         if self.get_topic_model_class() is not None:
             self.topic_model_module_string = self.topic_model_class.__module__
             self.topic_model_class_string = self.topic_model_class.__name__
@@ -1106,22 +1107,22 @@ class EnsembleLda(SaveLoad):
                 raise ValueError("use generate_gensim_representation() first")
 
     def __getitem__(self, i):
-        """See :py:class:`gensim.models.LdaModel`."""
+        """See :meth:`gensim.models.LdaModel.__getitem__`."""
         self._has_gensim_representation()
         return self.classic_model_representation[i]
 
     def inference(self, *posargs, **kwargs):
-        """See :py:class:`gensim.models.LdaModel`."""
+        """See :meth:`gensim.models.LdaModel.inference`."""
         self._has_gensim_representation()
         return self.classic_model_representation.inference(*posargs, **kwargs)
 
     def log_perplexity(self, *posargs, **kwargs):
-        """See :py:class:`gensim.models.LdaModel`."""
+        """See :meth:`gensim.models.LdaModel.log_perplexity`."""
         self._has_gensim_representation()
         return self.classic_model_representation.log_perplexity(*posargs, **kwargs)
 
     def print_topics(self, *posargs, **kwargs):
-        """See :py:class:`gensim.models.LdaModel`."""
+        """See :meth:`gensim.models.LdaModel.print_topics`."""
         self._has_gensim_representation()
         return self.classic_model_representation.print_topics(*posargs, **kwargs)
 

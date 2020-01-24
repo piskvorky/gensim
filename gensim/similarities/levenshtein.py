@@ -8,7 +8,7 @@
 This module provides a namespace for functions that use the Levenshtein distance.
 """
 
-from itertools import islice
+import itertools
 import logging
 from math import floor
 
@@ -150,4 +150,4 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
             for (similarity, t2) in sorted(similarities, reverse=True)
             if similarity > 0
         )
-        return islice(most_similar, topn)
+        return itertools.islice(most_similar, int(topn))
