@@ -792,6 +792,9 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         With a single positive example, rankings will be the same as in the default
         :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.most_similar`.
 
+        Allows calls like most_similar_cosmul('dog', 'cat'), as a shorthand for
+        most_similar_cosmul(['dog'], ['cat']) where 'dog' is positive and 'cat' negative
+
         Parameters
         ----------
         positive : list of str, optional
@@ -1030,7 +1033,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
     def evaluate_word_analogies(
             self, analogies, restrict_vocab=300000, case_insensitive=True,
-            dummy4unknown=False, most_similar=most_similar):
+            dummy4unknown=False, similarity_function='most_similar'):
         """Compute performance of the model on an analogy test set.
 
         This is modern variant of :meth:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.accuracy`, see
@@ -1059,8 +1062,8 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         dummy4unknown : bool, optional
             If True - produce zero accuracies for 4-tuples with out-of-vocabulary words.
             Otherwise, these tuples are skipped entirely and not used in the evaluation.
-        most_similar : function, optional
-            Function used for similarity calculation.
+        similarity_function : str, optional
+            Function name used for similarity calculation.
 
         Returns
         -------
@@ -1113,7 +1116,9 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                     predicted = None
                     # find the most likely prediction using 3CosAdd (vector offset) method
                     # TODO: implement 3CosMul and set-based methods for solving analogies
-                    sims = most_similar(self, positive=[b, c], negative=[a], topn=5, restrict_vocab=restrict_vocab)
+                    sims = getattr(self, similarity_function)(
+                        positive=[b, c], negative=[a], topn=5, restrict_vocab=restrict_vocab
+                    )
                     self.vocab = original_vocab
                     for element in sims:
                         predicted = element[0].upper() if case_insensitive else element[0]
