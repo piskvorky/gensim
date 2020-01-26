@@ -376,6 +376,7 @@ if __name__ == "__main__":
     parser.add_argument(
         '-m', '--min-article-character',
         help="Ignore articles with fewer characters than this (article stubs). Default: %(default)s.",
+        type=int,
         default=200
     )
     parser.add_argument(
