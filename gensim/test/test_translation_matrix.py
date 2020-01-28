@@ -111,7 +111,7 @@ class TestBackMappingTranslationMatrix(unittest.TestCase):
             self.source_doc_vec, self.target_doc_vec, self.train_docs[:5]
         )
         model.train(self.train_docs[:5])
-        backmapped_vec = model.infer_vector(self.target_doc_vec.docvecs[self.train_docs[5].tags])
+        backmapped_vec = model.infer_vector(self.target_doc_vec.dv[self.train_docs[5].tags])
         self.assertEqual(backmapped_vec.shape, (8, ))
 
         d2v_inferred_vector = self.source_doc_vec.infer_vector(self.train_docs[5].words)

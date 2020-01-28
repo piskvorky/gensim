@@ -12,10 +12,9 @@ Automated tests for checking the poincare module from the models package.
 import logging
 import unittest
 
-from mock import patch
 import numpy as np
 
-from gensim.models.keyedvectors import KeyedVectors, FastTextKeyedVectors, REAL
+from gensim.models.keyedvectors import KeyedVectors, REAL
 from gensim.test.utils import datapath
 import gensim.models.keyedvectors
 

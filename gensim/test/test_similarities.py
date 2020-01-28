@@ -655,9 +655,9 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
         from gensim.similarities.index import AnnoyIndexer
 
         self.model = doc2vec.Doc2Vec(sentences, min_count=1)
-        self.model.docvecs.init_sims()
+        self.model.dv.init_sims()
         self.index = AnnoyIndexer(self.model, 300)
-        self.vector = self.model.docvecs.vectors_norm[0]
+        self.vector = self.model.dv.vectors_norm[0]
 
     def testDocumentIsSimilarToItself(self):
         approx_neighbors = self.index.most_similar(self.vector, 1)
@@ -667,8 +667,8 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
         self.assertAlmostEqual(similarity, 1.0, places=2)
 
     def testApproxNeighborsMatchExact(self):
-        approx_neighbors = self.model.docvecs.most_similar([self.vector], topn=5, indexer=self.index)
-        exact_neighbors = self.model.docvecs.most_similar(
+        approx_neighbors = self.model.dv.most_similar([self.vector], topn=5, indexer=self.index)
+        exact_neighbors = self.model.dv.most_similar(
             positive=[self.vector], topn=5)
 
         approx_words = [neighbor[0] for neighbor in approx_neighbors]
@@ -807,9 +807,9 @@ class TestDoc2VecNmslibIndexer(unittest.TestCase):
         from gensim.similarities.nmslib import NmslibIndexer
 
         self.model = doc2vec.Doc2Vec(sentences, min_count=1)
-        self.model.docvecs.init_sims()
+        self.model.dv.init_sims()
         self.index = NmslibIndexer(self.model)
-        self.vector = self.model.docvecs.vectors_norm[0]
+        self.vector = self.model.dv.vectors_norm[0]
 
     def test_document_is_similar_to_itself(self):
         approx_neighbors = self.index.most_similar(self.vector, 1)
@@ -819,8 +819,8 @@ class TestDoc2VecNmslibIndexer(unittest.TestCase):
         self.assertAlmostEqual(similarity, 1.0, places=2)
 
     def test_approx_neighbors_match_exact(self):
-        approx_neighbors = self.model.docvecs.most_similar([self.vector], topn=5, indexer=self.index)
-        exact_neighbors = self.model.docvecs.most_similar(
+        approx_neighbors = self.model.dv.most_similar([self.vector], topn=5, indexer=self.index)
+        exact_neighbors = self.model.dv.most_similar(
             positive=[self.vector], topn=5)
 
         approx_words = [neighbor[0] for neighbor in approx_neighbors]

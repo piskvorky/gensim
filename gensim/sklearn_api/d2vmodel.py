@@ -35,8 +35,8 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
     <https://cs.stanford.edu/~quocle/paragraph_vector.pdf>`_.
 
     """
-    def __init__(self, dm_mean=None, dm=1, dbow_words=0, dm_concat=0, dm_tag_count=1, docvecs=None,
-                 docvecs_mapfile=None, comment=None, trim_rule=None, vector_size=100, alpha=0.025, window=5,
+    def __init__(self, dm_mean=None, dm=1, dbow_words=0, dm_concat=0, dm_tag_count=1, dv=None,
+                 dv_mapfile=None, comment=None, trim_rule=None, vector_size=100, alpha=0.025, window=5,
                  min_count=5, max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
                  hs=0, negative=5, cbow_mean=1,
                  hashfxn=hash, epochs=5, sorted_vocab=1, batch_words=10000):
@@ -60,11 +60,10 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
             in the context strung together.
         dm_tag_count : int, optional
             Expected constant number of document tags per document, when using dm_concat mode.
-        docvecs : :class:`~gensim.models.keyedvectors.Doc2VecKeyedVectors`
+        dv : :class:`~gensim.models.keyedvectors.KeyedVectors`
             A mapping from a string or int tag to its vector representation.
-            Either this or `docvecs_mapfile` **MUST** be supplied.
-        docvecs_mapfile : str, optional
-            Path to a file containing the docvecs mapping. If `docvecs` is None, this file will be used to create it.
+        dv_mapfile : str, optional
+            Path to a file containing the docvecs mapping. If `dv` is None, this file will be used to create it.
         comment : str, optional
             A model descriptive comment, used for logging and debugging purposes.
         trim_rule : function ((str, int, int) -> int), optional
@@ -123,8 +122,8 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
         self.dbow_words = dbow_words
         self.dm_concat = dm_concat
         self.dm_tag_count = dm_tag_count
-        self.docvecs = docvecs
-        self.docvecs_mapfile = docvecs_mapfile
+        self.dv = dv
+        self.dv_mapfile = dv_mapfile
         self.comment = comment
         self.trim_rule = trim_rule
 
@@ -167,7 +166,7 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
         self.gensim_model = models.Doc2Vec(
             documents=d2v_sentences, dm_mean=self.dm_mean, dm=self.dm,
             dbow_words=self.dbow_words, dm_concat=self.dm_concat, dm_tag_count=self.dm_tag_count,
-            docvecs=self.docvecs, docvecs_mapfile=self.docvecs_mapfile, comment=self.comment,
+            dv=self.dv, dv_mapfile=self.dv_mapfile, comment=self.comment,
             trim_rule=self.trim_rule, vector_size=self.vector_size, alpha=self.alpha, window=self.window,
             min_count=self.min_count, max_vocab_size=self.max_vocab_size, sample=self.sample,
             seed=self.seed, workers=self.workers, min_alpha=self.min_alpha, hs=self.hs,

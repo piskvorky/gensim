@@ -16,7 +16,7 @@ import numpy as np
 
 from gensim import utils
 from gensim.models.word2vec import LineSentence
-from gensim.models.fasttext import FastText as FT_gensim, FastTextKeyedVectors, _unpack, _unpack_copy
+from gensim.models.fasttext import FastText as FT_gensim, FastTextKeyedVectors, _unpack
 from gensim.models.keyedvectors import KeyedVectors
 from gensim.test.utils import datapath, get_tmpfile, temporary_file, common_texts as sentences
 import gensim.models._fasttext_bin
@@ -825,61 +825,6 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(model.wv.vectors_vocab.shape, (12, 100))
         self.assertEqual(model.wv.vectors_ngrams.shape, (2000000, 100))
 
-    def compare_with_wrapper(self, model_gensim, model_wrapper):
-        # make sure we get >=2 overlapping words for top-10 similar words suggested for `night`
-        sims_gensim = model_gensim.wv.most_similar('night', topn=10)
-        sims_gensim_words = (list(map(lambda x: x[0], sims_gensim)))  # get similar words
-
-        sims_wrapper = model_wrapper.most_similar('night', topn=10)
-        sims_wrapper_words = (list(map(lambda x: x[0], sims_wrapper)))  # get similar words
-
-        overlap_count = len(set(sims_gensim_words).intersection(sims_wrapper_words))
-
-        # overlap increases as we increase `iter` value, min overlap set to 2 to avoid unit-tests taking too long
-        # this limit can be increased when using Cython code
-        self.assertGreaterEqual(overlap_count, 2)
-
-    @unittest.skipIf(not FT_HOME, "FT_HOME env variable not set, skipping test")
-    def test_cbow_hs_against_wrapper(self):
-        tmpf = get_tmpfile('gensim_fasttext.tst')
-        model_wrapper = FT_wrapper.train(ft_path=FT_CMD, corpus_file=datapath('lee_background.cor'),
-                                         output_file=tmpf, model='cbow', vector_size=50, alpha=0.05, window=5, min_count=5,
-                                         word_ngrams=1,
-                                         loss='hs', sample=1e-3, negative=0, epochs=5, min_n=3, max_n=6, sorted_vocab=1,
-                                         threads=12)
-
-        model_gensim = FT_gensim(vector_size=48, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0,
-                                 min_count=5, epochs=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-                                 sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET)
-
-        lee_data = LineSentence(datapath('lee_background.cor'))
-        model_gensim.build_vocab(lee_data)
-        orig0 = np.copy(model_gensim.wv.vectors[0])
-        model_gensim.train(lee_data, total_examples=model_gensim.corpus_count, epochs=model_gensim.epochs)
-        self.assertFalse((orig0 == model_gensim.wv.vectors[0]).all())  # vector should vary after training
-        self.compare_with_wrapper(model_gensim, model_wrapper)
-
-    @unittest.skipIf(not FT_HOME, "FT_HOME env variable not set, skipping test")
-    def test_sg_hs_against_wrapper(self):
-
-        tmpf = get_tmpfile('gensim_fasttext.tst')
-        model_wrapper = FT_wrapper.train(ft_path=FT_CMD, corpus_file=datapath('lee_background.cor'),
-                                         output_file=tmpf, model='skipgram', vector_size=48, alpha=0.025, window=5,
-                                         min_count=5, word_ngrams=1,
-                                         loss='hs', sample=1e-3, negative=0, epochs=5, min_n=3, max_n=6, sorted_vocab=1,
-                                         threads=12)
-
-        model_gensim = FT_gensim(vector_size=48, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=1, negative=0,
-                                 min_count=5, epochs=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-                                 sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET)
-
-        lee_data = LineSentence(datapath('lee_background.cor'))
-        model_gensim.build_vocab(lee_data)
-        orig0 = np.copy(model_gensim.wv.vectors[0])
-        model_gensim.train(lee_data, total_examples=model_gensim.corpus_count, epochs=model_gensim.epochs)
-        self.assertFalse((orig0 == model_gensim.wv.vectors[0]).all())  # vector should vary after training
-        self.compare_with_wrapper(model_gensim, model_wrapper)
-
 
 with open(datapath('toy-data.txt')) as fin:
     TOY_SENTENCES = [fin.read().strip().split(' ')]
@@ -1632,10 +1577,10 @@ class SaveFacebookFormatModelTest(unittest.TestCase):
         self.assertEqual(model_trained.negative, model_loaded.negative)
         self.assertEqual(model_trained.hs, model_loaded.hs)
         self.assertEqual(model_trained.sg, model_loaded.sg)
-        self.assertEqual(model_trained.trainables.bucket, model_loaded.trainables.bucket)
+        self.assertEqual(model_trained.bucket, model_loaded.bucket)
         self.assertEqual(model_trained.wv.min_n, model_loaded.wv.min_n)
         self.assertEqual(model_trained.wv.max_n, model_loaded.wv.max_n)
-        self.assertEqual(model_trained.vocabulary.sample, model_loaded.vocabulary.sample)
+        self.assertEqual(model_trained.sample, model_loaded.sample)
         self.assertEqual(set(model_trained.wv.index2word), set(model_loaded.wv.index2word))
 
         for w in model_trained.wv.index2word:

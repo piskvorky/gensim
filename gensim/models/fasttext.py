@@ -287,7 +287,8 @@ import gensim.models._fasttext_bin
 
 from gensim.models.word2vec import Word2Vec
 from gensim.models.keyedvectors import KeyedVectors
-from gensim.utils import deprecated, call_on_class_only, open, NO_CYTHON
+from gensim import utils
+from gensim.utils import deprecated, call_on_class_only
 
 
 logger = logging.getLogger(__name__)
@@ -303,7 +304,7 @@ try:
     )
     from gensim.models.fasttext_corpusfile import train_epoch_sg, train_epoch_cbow
 except ImportError:
-    raise NO_CYTHON
+    raise utils.NO_CYTHON
 
 
 class FastText(Word2Vec):
@@ -1047,7 +1048,7 @@ def _load_fasttext_format(model_file, encoding='utf-8', full_model=True):
         The loaded model.
 
     """
-    with open(model_file, 'rb') as fin:
+    with utils.open(model_file, 'rb') as fin:
         m = gensim.models._fasttext_bin.load(fin, encoding=encoding, full_model=full_model)
 
     model = FastText(
@@ -1101,7 +1102,8 @@ def _check_model(m):
         'mismatch between vector size in model params ({}) and model vectors ({})'
         .format(m.wv.vector_size, m.wv.vectors_ngrams)
     )
-    if m.syn1neg is not None:
+
+    if hasattr(m, 'syn1neg') and m.syn1neg is not None:
         assert m.wv.vector_size == m.syn1neg.shape[1], (
             'mismatch between vector size in model params ({}) and trainables ({})'
             .format(m.wv.vector_size, m.wv.vectors_ngrams)

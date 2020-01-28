@@ -435,7 +435,7 @@ def _get_field_from_model(model, field):
         requested field name, fields are listed in the `_NEW_HEADER_FORMAT` list
     """
     if field == 'bucket':
-        return model.trainables.bucket
+        return model.bucket
     elif field == 'dim':
         return model.vector_size
     elif field == 'epoch':
@@ -457,7 +457,7 @@ def _get_field_from_model(model, field):
     elif field == 'minn':
         return model.wv.min_n
     elif field == 'min_count':
-        return model.vocabulary.min_count
+        return model.min_count
     elif field == 'model':
         # `model` => cbow:1, sg:2, sup:3
         # cbow = continous bag of words (default)
@@ -467,7 +467,7 @@ def _get_field_from_model(model, field):
     elif field == 'neg':
         return model.negative
     elif field == 't':
-        return model.vocabulary.sample
+        return model.sample
     elif field == 'word_ngrams':
         # This is skipped in gensim loading setting, using the default from FB C++ code
         return 1
@@ -596,9 +596,9 @@ def _output_save(fout, model):
         saved model
     """
     if model.hs:
-        hidden_output = model.trainables.syn1
+        hidden_output = model.syn1
     if model.negative:
-        hidden_output = model.trainables.syn1neg
+        hidden_output = model.syn1neg
 
     hidden_n, hidden_dim = hidden_output.shape
     fout.write(struct.pack('@2q', hidden_n, hidden_dim))

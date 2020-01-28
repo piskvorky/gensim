@@ -171,7 +171,7 @@ Doctag = DoctagVocab
 
 class Doc2Vec(Word2Vec):
     def __init__(self, documents=None, corpus_file=None, vector_size=100, dm_mean=None, dm=1, dbow_words=0, dm_concat=0,
-                 dm_tag_count=1, docvecs=None, docvecs_mapfile=None, comment=None, trim_rule=None, callbacks=(),
+                 dm_tag_count=1, dv=None, dv_mapfile=None, comment=None, trim_rule=None, callbacks=(),
                  window=5, epochs=10, **kwargs):
         """Class for training, using and evaluating neural networks described in
         `Distributed Representations of Sentences and Documents <http://arxiv.org/abs/1405.4053v2>`_.
@@ -271,7 +271,7 @@ class Doc2Vec(Word2Vec):
             This object essentially contains the mapping between words and embeddings. After training, it can be used
             directly to query those embeddings in various ways. See the module level docstring for examples.
 
-        docvecs : :class:`~gensim.models.keyedvectors.KeyedVectors`
+        dv : :class:`~gensim.models.keyedvectors.KeyedVectors`
             This object contains the paragraph vectors learned from the training data. There will be one such vector
             for each unique document tag supplied during training. They may be individually accessed using the tag
             as an indexed-access key. For example, if one of the training documents used a tag of 'doc003':
@@ -293,7 +293,7 @@ class Doc2Vec(Word2Vec):
             logger.info("using concatenative %d-dimensional layer1", self.layer1_size)
 
         self.vector_size = vector_size
-        self.dv = docvecs or KeyedVectors(self.vector_size, mapfile_path=docvecs_mapfile)
+        self.dv = dv or KeyedVectors(self.vector_size, mapfile_path=dv_mapfile)
 
         super(Doc2Vec, self).__init__(
             sentences=corpus_iterable,
@@ -863,7 +863,7 @@ class Doc2Vec(Word2Vec):
 
         """
         total_words, corpus_count = self.scan_vocab(
-            corpus_iterable=corpus_iterable, corpus_file=corpus_file, docvecs=self.dv,
+            corpus_iterable=corpus_iterable, corpus_file=corpus_file,
             progress_per=progress_per, trim_rule=trim_rule
         )
         self.corpus_count = corpus_count
@@ -992,7 +992,7 @@ class Doc2Vec(Word2Vec):
         self.raw_vocab = vocab
         return total_words, corpus_count
 
-    def scan_vocab(self, corpus_iterable=None, corpus_file=None, docvecs=None, progress_per=10000, trim_rule=None):
+    def scan_vocab(self, corpus_iterable=None, corpus_file=None, progress_per=10000, trim_rule=None):
         """Create the models Vocabulary: A mapping from unique words in the corpus to their frequency count.
 
         Parameters
@@ -1003,8 +1003,6 @@ class Doc2Vec(Word2Vec):
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
             You may use this argument instead of `documents` to get performance boost. Only one of `documents` or
             `corpus_file` arguments need to be passed (not both of them).
-        docvecs : list of :class:`~gensim.models.keyedvectors.KeyedVectors`
-            The vector representations of the documents in our corpus. Each of them has a size == `vector_size`.
         progress_per : int
             Progress will be logged every `progress_per` documents.
         trim_rule : function, optional
