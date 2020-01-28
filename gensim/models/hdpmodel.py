@@ -464,10 +464,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         save_freq = max(1, int(10000 / self.chunksize))  # save every 10k docs, roughly
         chunks_processed = 0
-        try:
-            start_time = time.time()
-        except AttributeError:
-            start_time = time.clock()
+        start_time = time.perf_counter()
 
         while True:
             for chunk in utils.grouper(corpus, self.chunksize):
@@ -511,16 +508,12 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             If True - model is updated, False otherwise.
 
         """
-        try:
-            start_time = time.time()
-        except AttributeError:
-            start_time = time.clock()
         return (
             # chunk limit reached
             (self.max_chunks and chunks_processed == self.max_chunks)
 
             # time limit reached
-            or (self.max_time and start_time - start_time > self.max_time)
+            or (self.max_time and time.perf_counter() - start_time > self.max_time)
 
             # no limits and whole corpus has been processed once
             or (not self.max_chunks and not self.max_time and docs_processed >= self.m_D))

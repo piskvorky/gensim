@@ -17,11 +17,10 @@ matrix:
     - python: '3.6'
       env: TOXENV="flake8,flake8-docs"
 
-    - python: '3.5'
-      env: TOXENV="py35-linux"
-
-    - python: '3.6'
-      env: TOXENV="py36-linux"
+    - python: '3.8'
+      env:
+        - TOXENV="py38-linux"
+      dist: bionic
 
     - python: '3.7'
       env:
@@ -30,8 +29,23 @@ matrix:
       dist: xenial
       sudo: true
 
+    - python: '3.6'
+      env: TOXENV="py36-linux"
+
 
 install:
   - pip install tox
+  - sudo apt-get install -y gdb  # install gdb
+
+
+before_script:
+  - ulimit -c unlimited -S       # enable core dumps
+
 
 script: tox -vv
+
+
+after_failure:
+  - pwd
+  - COREFILE=$(find . -maxdepth 1 -name "core*" | head -n 1) # find core file
+  - if [[ -f "$COREFILE" ]]; then EXECFILE=$(gdb -c "$COREFILE" -batch | grep "Core was generated" | tr -d "\`" | cut -d' ' -f5); file "$COREFILE"; gdb -c "$COREFILE" "$EXECFILE" -x continuous_integration/debug.gdb -batch; fi
