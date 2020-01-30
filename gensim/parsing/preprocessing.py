@@ -106,7 +106,7 @@ def remove_stopwords(s):
 
     """
     s = utils.to_unicode(s)
-    return " ".join(w for w in s.split() if w not in STOPWORDS)
+    return " ".join(w for w in s.split() if w.lower() not in STOPWORDS)
 
 
 def strip_punctuation(s):
