@@ -1395,7 +1395,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         word_index : {str : int}
             A mapping from tokens to their indices the way they will be provided in the input to the embedding layer.
             The embedding of each token will be placed at the corresponding index in the returned matrix.
-            Tokens not in the index are ignored and not placed in the returned layer embedding matrix.
+            Tokens not in the index are ignored.
             This is useful when the token indices are produced by a process that is not coupled with the embedding
             model, e.x. an Keras Tokenizer object.
             If None, the embedding matrix in the embedding layer will be indexed according to self.vocab
