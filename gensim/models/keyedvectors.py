@@ -1412,7 +1412,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         Warnings
         --------
-        Current method work only if `Keras <https://pypi.org/project/Keras/>`_ installed.
+        Current method works only if `Keras <https://pypi.org/project/Keras/>`_ installed.
 
         """
         try:
