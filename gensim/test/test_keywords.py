@@ -101,6 +101,11 @@ class TestKeywordsTest(unittest.TestCase):
         kwds = keywords(text, deacc=False, scores=True)
         self.assertFalse(len(kwds))
 
+    def test_keywords_with_words_greater_than_lemmas(self):
+        # words parameter is greater than number of words in text variable
+        text = 'Test string small length'
+        kwds = keywords(text, words=5, split=True)
+        self.assertIsNotNone(kwds)
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
