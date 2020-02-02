@@ -403,12 +403,12 @@ class Word2VecKeyedVectorsTest(unittest.TestCase):
 try:
     import keras  # noqa: F401
 
-    keras_installed = True
+    KERAS_INSTALLED = True
 except ImportError:
-    keras_installed = False
+    KERAS_INSTALLED = False
 
 
-@unittest.skipUnless(keras_installed, 'keras needs to be installed for this test')
+@unittest.skipUnless(KERAS_INSTALLED, 'keras needs to be installed for this test')
 class WordEmbeddingsKeyedVectorsTest(unittest.TestCase):
     def setUp(self):
         self.vectors = EuclideanKeyedVectors.load_word2vec_format(

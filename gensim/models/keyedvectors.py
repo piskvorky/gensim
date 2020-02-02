@@ -1428,7 +1428,6 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
                 if word in self.vocab:
                     weights[index] = self.get_vector(word)
 
-        # set `trainable` as `False` to use the pretrained word embedding
         layer = Embedding(
             input_dim=weights.shape[0], output_dim=weights.shape[1],
             weights=[weights], trainable=train_embeddings
