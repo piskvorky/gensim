@@ -568,7 +568,7 @@ class EnsembleLda(SaveLoad):
 
         for i in range(workers):
             try:
-                parentConn, childConn = Pipe()
+                parent_conn, child_conn = Pipe()
                 num_subprocess_models = 0
                 if i == workers - 1:  # i is a index, hence -1
                     # is this the last worker that needs to be created?
@@ -581,10 +581,10 @@ class EnsembleLda(SaveLoad):
                 random_states_for_worker = random_states[-num_models_unhandled:][:num_subprocess_models]
 
                 process = Process(target=self._generate_topic_models,
-                            args=(num_subprocess_models, random_states_for_worker, childConn))
+                            args=(num_subprocess_models, random_states_for_worker, child_conn))
 
                 processes.append(process)
-                pipes.append((parentConn, childConn))
+                pipes.append((parent_conn, child_conn))
                 process.start()
 
                 num_models_unhandled -= num_subprocess_models
@@ -726,7 +726,7 @@ class EnsembleLda(SaveLoad):
 
         for i in range(workers):
             try:
-                parentConn, childConn = Pipe()
+                parent_conn, child_conn = Pipe()
 
                 # Load Balancing, for example if there are 9 ttdas and 4 workers, the load will be balanced 2, 2, 2, 3.
                 n_ttdas = 0
@@ -738,11 +738,11 @@ class EnsembleLda(SaveLoad):
                     n_ttdas = int((len(self.ttda) - ttdas_sent) / (workers - i))
 
                 process = Process(target=self._asymmetric_distance_matrix_worker,
-                            args=(i, ttdas_sent, n_ttdas, childConn, threshold, method))
+                            args=(i, ttdas_sent, n_ttdas, child_conn, threshold, method))
                 ttdas_sent += n_ttdas
 
                 processes.append(process)
-                pipes.append((parentConn, childConn))
+                pipes.append((parent_conn, child_conn))
                 process.start()
 
             except ProcessError:
