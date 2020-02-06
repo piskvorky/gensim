@@ -8,7 +8,7 @@
 
 """Ensemble Latent Dirichlet Allocation (eLDA), a method of training a topic model ensemble.
 
-Extracts reliable topics that are consistently learned accross multiple LDA models. eLDA has the added benefit that
+Extracts reliable topics that are consistently learned across multiple LDA models. eLDA has the added benefit that
 the user does not need to know the exact number of topics the topic model should extract ahead of time
 
 For more details read our paper (https://www.hip70890b.de/machine_learning/ensemble_LDA/).
@@ -319,7 +319,7 @@ class EnsembleLda(SaveLoad):
         -------
         :py:class:`gensim.models.LdaModel`
             A Gensim LDA Model classic_model_representation for which:
-            classic_model_representation.get_topics() == self.get_topics()
+            ``classic_model_representation.get_topics() == self.get_topics()``
 
         """
         logger.info("generating classic gensim model representation based on results from the ensemble")
@@ -374,7 +374,7 @@ class EnsembleLda(SaveLoad):
         # the factor, that will be used when get_topics() is used, for normalization
         # will never change, because the sum for eta as well as the sum for sstats is constant.
         # Therefore predicting normalization_factor becomes super easy.
-        # corpus is a mapping of id to occurences
+        # corpus is a mapping of id to occurrences
 
         # so one can also easily calculate the
         # right sstats, so that get_topics() will return the stable topics no
@@ -394,7 +394,7 @@ class EnsembleLda(SaveLoad):
         return classic_model_representation
 
     def add_model(self, target, num_new_models=None):
-        """Add the ttda of another model to the ensemble.
+        """Add the topic term distribution array (ttda) of another model to the ensemble.
 
         This way, multiple topic models can be connected to an ensemble manually. Make sure that all the models use
         the exact same dictionary/idword mapping.
@@ -403,12 +403,12 @@ class EnsembleLda(SaveLoad):
             self._generate_asymmetric_distance_matrix()
             self.recluster()
 
-        The ttda of another ensemble can also be used, in that case set num_new_models to the num_models parameter
-        of the ensemble, that means the number of classic models in the ensemble that generated the ttda. This is
-        important, because that information is used to estimate "min_samples" for _generate_topic_clusters.
+        The ttda of another ensemble can also be used, in that case set ``num_new_models`` to the ``num_models``
+        parameter of the ensemble, that means the number of classic models in the ensemble that generated the ttda.
+        This is important, because that information is used to estimate "min_samples" for _generate_topic_clusters.
 
         If you trained this ensemble in the past with a certain Dictionary that you want to reuse for other
-        models, you can get it from: self.id2word.
+        models, you can get it from: ``self.id2word``.
 
         Parameters
         ----------
@@ -435,7 +435,7 @@ class EnsembleLda(SaveLoad):
 
             If target is a 2D-array of float values, it assumes 1.
 
-            If the ensemble has memory_friendly_ttda set to False, then it will always use the number of models in
+            If the ensemble has ``memory_friendly_ttda`` set to False, then it will always use the number of models in
             the target parameter.
 
         """
@@ -775,7 +775,7 @@ class EnsembleLda(SaveLoad):
         return self.asymmetric_distance_matrix
 
     def _calculate_asymmetric_distance_matrix_chunk(self, ttda1, ttda2, threshold, start_index, method):
-        """Calculate an (asymmetric) distance from each topic in ttda1 to each topic in ttda2.
+        """Calculate an (asymmetric) distance from each topic in ``ttda1`` to each topic in ``ttda2``.
 
         Parameters
         ----------
@@ -783,10 +783,10 @@ class EnsembleLda(SaveLoad):
             Two ttda matrices that are going to be used for distance calculation. Each row in ttda corresponds to one
             topic. Each cell in the resulting matrix corresponds to the distance between a topic pair.
         threshold : float, optional
-            threshold defaults to: {"mass": 0.95, "rank": 0.11}, depending on the selected method
+            threshold defaults to: ``{"mass": 0.95, "rank": 0.11}``, depending on the selected method
         start_index : int
             this function might be used in multiprocessing, so start_index has to be set as ttda1 is a chunk of the
-            complete ttda in that case. start_index would be 0 if ttda1 == self.ttda. When self.ttda is split into two
+            complete ttda in that case. start_index would be 0 if ``ttda1 == self.ttda``. When self.ttda is split into two
             pieces, each 100 ttdas long, then start_index should be be 100. default is 0
         method : {'mass', 'rank}, optional
             method can be "mass" for the original masking method or "rank" for a faster masking method that selects
@@ -796,7 +796,7 @@ class EnsembleLda(SaveLoad):
         Returns
         -------
         2D Numpy.numpy.ndarray of floats
-            Asymmetric distance matrix of size len(ttda1) by len(ttda2).
+            Asymmetric distance matrix of size ``len(ttda1)`` by ``len(ttda2)``.
 
         """
         # initialize the distance matrix. ndarray is faster than zeros
@@ -860,14 +860,15 @@ class EnsembleLda(SaveLoad):
     def _generate_topic_clusters(self, eps=0.1, min_samples=None):
         """Run the CBDBSCAN algorithm on all the detected topics and label them with label-indices.
 
-        The final approval and generation of stable topics is done in _generate_stable_topics().
+        The final approval and generation of stable topics is done in ``_generate_stable_topics()``.
 
         Parameters
         ----------
         eps : float
-            eps is 0.1 by default.
-        min_samples : int
-            min_samples is int(self.num_models / 2)
+            dbscan distance scale
+        min_samples : int, optional
+            defaults to ``int(self.num_models / 2)``, dbscan min neighbours threshold which corresponds to finding
+            stable topics and should scale with the number of models, ``self.num_models``
 
         """
         if min_samples is None:
@@ -878,18 +879,16 @@ class EnsembleLda(SaveLoad):
         self.cluster_model = CBDBSCAN(eps=eps, min_samples=min_samples)
         self.cluster_model.fit(self.asymmetric_distance_matrix)
 
-    def _validate_core(self, core):
-        """Check if the core has only a single valid parent, which is also the label assigned to the core.
-
-        If the presumed core is not even a core returns False.
+    def _is_valid_core(self, topic):
+        """Check if the topic is a valid core.
 
         Parameters
         ----------
-        core : {'is_core', 'valid_parents', 'labels'}
-            eps is 0.1 by default.
+        topic : {'is_core', 'valid_parents', 'label'}
+            topic to validate
 
         """
-        return core["is_core"] and (core["valid_parents"] == {core["label"]})
+        return topic["is_core"] and (topic["valid_parents"] == {topic["label"]})
 
     def _group_by_labels(self, results):
         """Group all the learned cores by their label, which was assigned in the cluster_model.
@@ -969,31 +968,32 @@ class EnsembleLda(SaveLoad):
         return sorted_clusters
 
     def _remove_from_all_sets(self, label, clusters):
-        """Remove a label from every set in "neighboring_labels" for each core in clusters."""
+        """Remove a label from every set in "neighboring_labels" for each core in ``clusters``."""
         for cluster in clusters:
             for neighboring_labels_set in cluster["neighboring_labels"]:
                 if label in neighboring_labels_set:
                     neighboring_labels_set.remove(label)
 
     def _contains_isolated_cores(self, label, cluster, min_cores):
-        """Check if the cluster has at least min_cores of cores that belong to no other cluster."""
+        """Check if the cluster has at least ``min_cores`` of cores that belong to no other cluster."""
         return sum(map(lambda x: x == {label}, cluster["neighboring_labels"])) >= min_cores
 
     def _generate_stable_topics(self, min_cores=None):
         """Generate stable topics out of the clusters.
 
         The function finds clusters of topics using a variant of DBScan.  If a cluster has enough core topics
-        (c.f. parameter min_cores), then this cluster represents a stable topic.  The stable topic is specifically
+        (c.f. parameter ``min_cores``), then this cluster represents a stable topic.  The stable topic is specifically
         calculated as the average over all topic-term distributions of the core topics in the cluster.
 
         This function is the last step that has to be done in the ensemble.  After this step is complete,
-        Stable topics can be retrieved afterwards using the get_topics() method.
+        Stable topics can be retrieved afterwards using the :meth:`gensim.models.ensemblelda.EnsembleLda.get_topics`
+        method.
 
         Parameters
         ----------
         min_cores : int
             Minimum number of core topics needed to form a cluster that represents a stable topic.
-                Using None defaults to min_cores = min(3, max(1, int(self.num_models /4 +1)))
+                Using ``None`` defaults to ``min_cores = min(3, max(1, int(self.num_models /4 +1)))``
 
         """
         # min_cores being 0 makes no sense. there has to be a core for a cluster
@@ -1039,7 +1039,7 @@ class EnsembleLda(SaveLoad):
             topic["valid_parents"] = {label for label in topic["neighboring_labels"] if label in valid_labels}
 
         # keeping only VALID cores
-        valid_core_mask = np.vectorize(self._validate_core)(results)
+        valid_core_mask = np.vectorize(self._is_valid_core)(results)
         valid_topics = self.ttda[valid_core_mask]
         topic_labels = np.array([topic["label"] for topic in results])[valid_core_mask]
         unique_labels = np.unique(topic_labels)
@@ -1059,20 +1059,20 @@ class EnsembleLda(SaveLoad):
     def recluster(self, eps=0.1, min_samples=None, min_cores=None):
         """Reapply CBDBSCAN clustering and stable topic generation.
 
-        Stable topics can be retrieved using get_topics().
+        Stable topics can be retrieved using :meth:`gensim.models.ensemblelda.EnsembleLda.get_topics`.
 
         Parameters
         ----------
         eps : float
             epsilon for the CBDBSCAN algorithm, having the same meaning as in classic DBSCAN clustering.
-            default: 0.1
+            default: ``0.1``
         min_samples : int
             The minimum number of samples in the neighborhood of a topic to be considered a core in CBDBSCAN.
-            default: int(self.num_models / 2)
+            default: ``int(self.num_models / 2)``
         min_cores : int
             how many cores a cluster has to have, to be treated as stable topic. That means, how many topics
             that look similar have to be present, so that the average topic in those is used as stable topic.
-            default: min(3, max(1, int(self.num_models /4 +1)))
+            default: ``min(3, max(1, int(self.num_models /4 +1)))``
 
         """
         # if new models were added to the ensemble, the distance matrix needs to be generated again
