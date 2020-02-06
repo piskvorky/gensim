@@ -530,6 +530,31 @@ class EnsembleLda(SaveLoad):
         # tell recluster that the distance matrix needs to be regenerated
         self.asymmetric_distance_matrix_outdated = True
 
+    def _teardown(self, pipes, processes, i):
+        """close pipes and terminate processes
+
+        Parameters
+        ----------
+            pipes : {list of :class:`multiprocessing.Pipe`}
+                list of pipes that the processes use to communicate with the parent
+            processes : {list of :class:`multiprocessing.Process`}
+                list of worker processes
+            i : int
+                index of the process that could not be started
+
+        """
+        logger.error("could not start process {}".format(i))
+
+        for pipe in pipes:
+            pipe[1].close()
+            pipe[0].close()
+
+        for process in processes:
+            if process.is_alive():
+                process.terminate()
+            del process
+
+
     def _generate_topic_models_multiproc(self, num_models, ensemble_workers):
         """Generate the topic models to form the ensemble in a multiprocessed way.
 
@@ -567,21 +592,22 @@ class EnsembleLda(SaveLoad):
         num_models_unhandled = num_models  # how many more models need to be trained by workers?
 
         for i in range(workers):
+            parentConn, childConn = Pipe()
+            num_subprocess_models = 0
+            if i == workers - 1:  # i is a index, hence -1
+                # is this the last worker that needs to be created?
+                # then task that worker with all the remaining models
+                num_subprocess_models = num_models_unhandled
+            else:
+                num_subprocess_models = int(num_models_unhandled / (workers - i))
+
+            # get the chunk from the random states that is meant to be for those models
+            random_states_for_worker = random_states[-num_models_unhandled:][:num_subprocess_models]
+
             try:
-                parentConn, childConn = Pipe()
-                num_subprocess_models = 0
-                if i == workers - 1:  # i is a index, hence -1
-                    # is this the last worker that needs to be created?
-                    # then task that worker with all the remaining models
-                    num_subprocess_models = num_models_unhandled
-                else:
-                    num_subprocess_models = int(num_models_unhandled / (workers - i))
-
-                # get the chunk from the random states that is meant to be for those models
-                random_states_for_worker = random_states[-num_models_unhandled:][:num_subprocess_models]
-
-                process = Process(target=self._generate_topic_models,
-                            args=(num_subprocess_models, random_states_for_worker, childConn))
+                process = Process(
+                    target=self._generate_topic_models,
+                    args=(num_subprocess_models, random_states_for_worker, childConn))
 
                 processes.append(process)
                 pipes.append((parentConn, childConn))
@@ -590,18 +616,8 @@ class EnsembleLda(SaveLoad):
                 num_models_unhandled -= num_subprocess_models
 
             except ProcessError:
-                logger.error("could not start process {}".format(i))
-                # close all pipes
-                for pipe in pipes:
-                    pipe[1].close()
-                    pipe[0].close()
-                # end all processes
-                for process in processes:
-                    if process.is_alive():
-                        process.terminate()
-                    del process
-                # stop
-                raise
+                self._teardown(pipes, processes, i)
+                raise ProcessError
 
         # aggregate results
         # will also block until workers are finished
@@ -746,18 +762,8 @@ class EnsembleLda(SaveLoad):
                 process.start()
 
             except ProcessError:
-                logger.error("could not start process {}".format(i))
-
-                for pipe in pipes:
-                    pipe[1].close()
-                    pipe[0].close()
-
-                for process in processes:
-                    if process.is_alive():
-                        process.terminate()
-                    del process
-
-                raise
+                self._teardown(pipes, processes, i)
+                raise ProcessError
 
         distances = []
         # note, that the following loop maintains order in how the ttda will be concatenated
