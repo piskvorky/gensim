@@ -280,11 +280,13 @@ class EnsembleLda(SaveLoad):
                 del self.topic_model_module_string
                 del self.topic_model_class_string
             except ModuleNotFoundError:
-                logger.error('Could not import the "{}" module in order to provide the "{}" class as '
+                logger.error(
+                    'Could not import the "{}" module in order to provide the "{}" class as '
                     '"topic_model_class" attribute. Try setting this manually instead after loading.'
                     .format(self.topic_model_class_string, self.topic_model_class_string))
             except AttributeError:
-                logger.error('Could not import the "{}" class from the "{}" module in order to set the '
+                logger.error(
+                    'Could not import the "{}" class from the "{}" module in order to set the '
                     '"topic_model_class" attribute. Try setting this manually instead after loading.'
                     .format(self.topic_model_class_string, self.topic_model_module_string))
         return self.topic_model_class
@@ -487,9 +489,10 @@ class EnsembleLda(SaveLoad):
 
             # 1. ttda array
             if isinstance(target.dtype.type(), (np.number, float)):
-                raise ValueError('ttda arrays cannot be added to ensembles, for which memory_friendly_ttda=False, '
-                                 'you can call convert_to_memory_friendly, but it will discard the stored gensim'
-                                 'models and only keep the relevant topic term distributions from them.')
+                raise ValueError(
+                    'ttda arrays cannot be added to ensembles, for which memory_friendly_ttda=False, '
+                    'you can call convert_to_memory_friendly, but it will discard the stored gensim '
+                    'models and only keep the relevant topic term distributions from them.')
 
             # 2. list of ensembles
             elif isinstance(target[0], type(self)):
@@ -509,15 +512,17 @@ class EnsembleLda(SaveLoad):
             # in this case, len(self.tms) should
             # always match self.num_models
             if num_new_models is not None and num_new_models + self.num_models != len(self.tms):
-                logger.info('num_new_models will be ignored. num_models should match the number of '
-                            'stored models for a memory unfriendly ensemble')
+                logger.info(
+                    'num_new_models will be ignored. num_models should match the number of '
+                    'stored models for a memory unfriendly ensemble')
             self.num_models = len(self.tms)
 
         logger.info("ensemble contains {} models and {} topics now".format(self.num_models, len(self.ttda)))
 
         if self.ttda.shape[1] != ttda.shape[1]:
-            raise ValueError(("target ttda dimensions do not match. Topics must be {} but was"
-                                "{} elements large").format(self.ttda.shape[-1], ttda.shape[-1]))
+            raise ValueError(
+                "target ttda dimensions do not match. Topics must be {} but was {} elements large"
+                    .format(self.ttda.shape[-1], ttda.shape[-1]))
         self.ttda = np.append(self.ttda, ttda, axis=0)
 
         # tell recluster that the distance matrix needs to be regenerated
@@ -636,16 +641,16 @@ class EnsembleLda(SaveLoad):
 
         assert len(random_states) == num_models
 
-        kwArgs = self.gensim_kw_args.copy()
+        kwargs = self.gensim_kw_args.copy()
 
         tm = None  # remember one of the topic models from the following
         # loop, in order to collect some properties from it afterwards.
 
         for i in range(num_models):
 
-            kwArgs["random_state"] = random_states[i]
+            kwargs["random_state"] = random_states[i]
 
-            tm = self.get_topic_model_class()(**kwArgs)
+            tm = self.get_topic_model_class()(**kwargs)
 
             # adds the lambda (that is the unnormalized get_topics) to ttda, which is
             # a list of all those lambdas
@@ -721,8 +726,7 @@ class EnsembleLda(SaveLoad):
             try:
                 parentConn, childConn = Pipe()
 
-                # figure out how many ttdas to send to the worker
-                # 9 ttdas to 4 workers: 2 2 2 3
+                # Load Balancing, for example if there are 9 ttdas and 4 workers, the load will be balanced 2, 2, 2, 3.
                 n_ttdas = 0
                 if i == workers - 1:  # i is a index, hence -1
                     # is this the last worker that needs to be created?
@@ -741,15 +745,16 @@ class EnsembleLda(SaveLoad):
 
             except ProcessError:
                 logger.error("could not start process {}".format(i))
-                # close all pipes
+
                 for pipe in pipes:
                     pipe[1].close()
                     pipe[0].close()
-                # end all processes
+
                 for process in processes:
                     if process.is_alive():
                         process.terminate()
                     del process
+
                 raise
 
         distances = []
