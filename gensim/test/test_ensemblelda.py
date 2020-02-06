@@ -28,11 +28,12 @@ class TestModel(unittest.TestCase):
         random_state = 0
 
         self.eLDA = EnsembleLda(corpus=common_corpus, id2word=common_dictionary, num_topics=num_topics,
-                                passes=passes, num_models=num_models, random_state=random_state)
+                                passes=passes, num_models=num_models, random_state=random_state,
+                                topic_model_class=LdaModel)
 
         self.eLDA_mu = EnsembleLda(corpus=common_corpus, id2word=common_dictionary, num_topics=num_topics,
                                    passes=passes, num_models=num_models, random_state=random_state,
-                                   memory_friendly_ttda=False)
+                                   memory_friendly_ttda=False, topic_model_class=LdaModel)
 
     def check_ttda(self, ensemble):
         """tests the integrity of the ttda of any ensemble"""
@@ -175,12 +176,12 @@ class TestModel(unittest.TestCase):
         workers = 3
 
         # memory friendly. contains List of topic word distributions
-        eLDA_multi = EnsembleLda(corpus=common_corpus, id2word=common_dictionary,
+        eLDA_multi = EnsembleLda(corpus=common_corpus, id2word=common_dictionary, topic_model_class=LdaModel,
                                  num_topics=num_topics, passes=passes, num_models=num_models,
                                  random_state=random_state, ensemble_workers=workers, distance_workers=workers)
 
         # memory unfriendly. contains List of models
-        eLDA_multi_mu = EnsembleLda(corpus=common_corpus, id2word=common_dictionary,
+        eLDA_multi_mu = EnsembleLda(corpus=common_corpus, id2word=common_dictionary, topic_model_class=LdaModel,
                                     num_topics=num_topics, passes=passes, num_models=num_models,
                                     random_state=random_state, ensemble_workers=workers, distance_workers=workers,
                                     memory_friendly_ttda=False)
