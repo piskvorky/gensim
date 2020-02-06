@@ -137,7 +137,7 @@ class EnsembleLda(SaveLoad):
             Examples:
                 * 'ldamulticore' (default, recommended)
                 * 'lda'
-        ensemble_workers : number, optional
+        ensemble_workers : int, optional
             Spawns that many processes and distributes the models from the ensemble to those as evenly as possible.
             num_models should be a multiple of ensemble_workers.
 
@@ -164,7 +164,7 @@ class EnsembleLda(SaveLoad):
             If False, any topic term matrix can be suplied to add_model.
         min_samples : int, optional
             Required int of nearby topics for a topic to be considered as 'core' in the CBDBSCAN clustering.
-        masking_method : {'mass', 'rank'}, optional
+        masking_method : str, optional
             Choose one of "mass" (default) or "rank" (percentile, faster).
 
             For clustering, distances between topic-term distributions are asymmetric.  In particular, the distance
