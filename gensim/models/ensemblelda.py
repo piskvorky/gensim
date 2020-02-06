@@ -573,34 +573,34 @@ class EnsembleLda(SaveLoad):
                 # get the chunk from the random states that is meant to be for those models
                 random_states_for_worker = random_states[-num_models_unhandled:][:num_subprocess_models]
 
-                p = Process(target=self._generate_topic_models,
+                process = Process(target=self._generate_topic_models,
                             args=(num_subprocess_models, random_states_for_worker, childConn))
 
-                processes += [p]
-                pipes += [(parentConn, childConn)]
-                p.start()
+                processes.append(process)
+                pipes.append((parentConn, childConn))
+                process.start()
 
                 num_models_unhandled -= num_subprocess_models
 
             except ProcessError:
                 logger.error("could not start process {}".format(i))
                 # close all pipes
-                for p in pipes:
-                    p[1].close()
-                    p[0].close()
+                for pipe in pipes:
+                    pipe[1].close()
+                    pipe[0].close()
                 # end all processes
-                for p in processes:
-                    if p.is_alive():
-                        p.terminate()
-                    del p
+                for process in processes:
+                    if process.is_alive():
+                        process.terminate()
+                    del process
                 # stop
                 raise
 
         # aggregate results
         # will also block until workers are finished
-        for p in pipes:
-            answer = p[0].recv()  # [0], because that is the parentConn
-            p[0].close()
+        for pipe in pipes:
+            answer = pipe[0].recv()  # [0], because that is the parentConn
+            pipe[0].close()
             # this does basically the same as the _generate_topic_models function (concatenate all the ttdas):
             if not self.memory_friendly_ttda:
                 self.tms += answer
@@ -610,8 +610,8 @@ class EnsembleLda(SaveLoad):
             self.ttda = np.concatenate([self.ttda, ttda])
 
         # end all processes
-        for p in processes:
-            p.terminate()
+        for process in processes:
+            process.terminate()
 
     def _generate_topic_models(self, num_models, random_states=None, pipe=None):
         """Train the topic models that form the ensemble.
@@ -731,39 +731,39 @@ class EnsembleLda(SaveLoad):
                 else:
                     n_ttdas = int((len(self.ttda) - ttdas_sent) / (workers - i))
 
-                p = Process(target=self._asymmetric_distance_matrix_worker,
+                process = Process(target=self._asymmetric_distance_matrix_worker,
                             args=(i, ttdas_sent, n_ttdas, childConn, threshold, method))
                 ttdas_sent += n_ttdas
 
-                processes += [p]
-                pipes += [(parentConn, childConn)]
-                p.start()
+                processes.append(process)
+                pipes.append((parentConn, childConn))
+                process.start()
 
             except ProcessError:
                 logger.error("could not start process {}".format(i))
                 # close all pipes
-                for p in pipes:
-                    p[1].close()
-                    p[0].close()
+                for pipe in pipes:
+                    pipe[1].close()
+                    pipe[0].close()
                 # end all processes
-                for p in processes:
-                    if p.is_alive():
-                        p.terminate()
-                    del p
+                for process in processes:
+                    if process.is_alive():
+                        process.terminate()
+                    del process
                 raise
 
         distances = []
         # note, that the following loop maintains order in how the ttda will be concatenated
         # which is very important. Ordering in ttda has to be the same as when using only one process
-        for p in pipes:
-            answer = p[0].recv()  # [0], because that is the parentConn
-            p[0].close()  # child conn will be closed from inside the worker
+        for pipe in pipes:
+            answer = pipe[0].recv()  # [0], because that is the parentConn
+            pipe[0].close()  # child conn will be closed from inside the worker
             # this does basically the same as the _generate_topic_models function (concatenate all the ttdas):
-            distances += [answer[1]]
+            distances.append(answer[1])
 
         # end all processes
-        for p in processes:
-            p.terminate()
+        for process in processes:
+            process.terminate()
 
         self.asymmetric_distance_matrix = np.concatenate(distances)
 
