@@ -122,7 +122,7 @@ class EnsembleLda(SaveLoad):
 
     """
 
-    def __init__(self, topic_model_class="lda", num_models=3,
+    def __init__(self, topic_model_class="ldamulticore", num_models=3,
                  min_cores=None,  # default value from _generate_stable_topics()
                  epsilon=0.1, ensemble_workers=1, memory_friendly_ttda=True,
                  min_samples=None, masking_method="mass", masking_threshold=None,
@@ -135,13 +135,13 @@ class EnsembleLda(SaveLoad):
         ----------
         topic_model_class : str, topic model, optional
             Examples:
-                'ldamulticore' (recommended), 'lda' (default),
+                * 'ldamulticore' (default, recommended)
+                * 'lda'
         ensemble_workers : number, optional
             Spawns that many processes and distributes the models from the ensemble to those as evenly as possible.
             num_models should be a multiple of ensemble_workers.
 
-            Setting it to 0 or 1 will both use the nonmultiprocessing version. Default:1
-                gensim.models.ldamodel, gensim.models.ldamulticore
+            Setting it to 0 or 1 will both use the non-multiprocessing version. Default: 1
         num_models : int, optional
             How many LDA models to train in this ensemble.
             Default: 3
@@ -153,7 +153,7 @@ class EnsembleLda(SaveLoad):
             Spawns that many processes and distributes the models from the ensemble to those as evenly as possible.
             num_models should be a multiple of ensemble_workers.
 
-            Setting it to 0 or 1 will both use the nonmultiprocessing version. Default:1
+            Setting it to 0 or 1 will both use the nonmultiprocessing version. Default: 1
         memory_friendly_ttda : boolean, optional
             If True, the models in the ensemble are deleted after training and only a concatenation of each model's
             topic term distribution (called ttda) is kept to save memory.
@@ -179,12 +179,12 @@ class EnsembleLda(SaveLoad):
             For example, a ranking threshold of 0.11 means the top 0.11 terms by weight are used to form a mask.
 
         masking_threshold : float, optional
-            Default: None, which uses 0.95 for "mass", and 0.11 for masking_method "rank".  In general, too small a mask
-            threshold leads to inaccurate calculations (no signal) and too big a mask leads to noisy distance
-            calculations.  Defaults are often a good sweet spot for this hyperparameter.
+            Default: None, which uses ``0.95`` for "mass", and ``0.11`` for masking_method "rank".  In general, too
+            small a mask threshold leads to inaccurate calculations (no signal) and too big a mask leads to noisy
+            distance calculations.  Defaults are often a good sweet spot for this hyperparameter.
         distance_workers : int, optional
-            When distance_workers is None, it defaults to os.cpu_count() for maximum performance. Default is 1, which
-            is not multiprocessed. Set to > 1 to enable multiprocessing.
+            When ``distance_workers`` is ``None``, it defaults to ``os.cpu_count()`` for maximum performance. Default is
+            1, which is not multiprocessed. Set to ``> 1`` to enable multiprocessing.
         **gensim_kw_args
             Parameters for each gensim model (e.g. :py:class:`gensim.models.LdaModel`) in the ensemble.
 
@@ -399,9 +399,9 @@ class EnsembleLda(SaveLoad):
         This way, multiple topic models can be connected to an ensemble manually. Make sure that all the models use
         the exact same dictionary/idword mapping.
 
-        In order to generate new stable topics afterwards, use
-            self._generate_asymmetric_distance_matrix()
-            self.recluster()
+        In order to generate new stable topics afterwards, use:
+            1. ``self._generate_asymmetric_distance_matrix()``
+            2. ``self.``:meth:`~gensim.models.ensemblelda.EnsembleLda.recluster`
 
         The ttda of another ensemble can also be used, in that case set ``num_new_models`` to the ``num_models``
         parameter of the ensemble, that means the number of classic models in the ensemble that generated the ttda.
@@ -986,7 +986,7 @@ class EnsembleLda(SaveLoad):
         calculated as the average over all topic-term distributions of the core topics in the cluster.
 
         This function is the last step that has to be done in the ensemble.  After this step is complete,
-        Stable topics can be retrieved afterwards using the :meth:`gensim.models.ensemblelda.EnsembleLda.get_topics`
+        Stable topics can be retrieved afterwards using the :meth:`~gensim.models.ensemblelda.EnsembleLda.get_topics`
         method.
 
         Parameters
@@ -1059,7 +1059,7 @@ class EnsembleLda(SaveLoad):
     def recluster(self, eps=0.1, min_samples=None, min_cores=None):
         """Reapply CBDBSCAN clustering and stable topic generation.
 
-        Stable topics can be retrieved using :meth:`gensim.models.ensemblelda.EnsembleLda.get_topics`.
+        Stable topics can be retrieved using :meth:`~gensim.models.ensemblelda.EnsembleLda.get_topics`.
 
         Parameters
         ----------
@@ -1181,7 +1181,6 @@ class CBDBSCAN():
         ----------
         eps : float
             epsilon for the CBDBSCAN algorithm, having the same meaning as in classic DBSCAN clustering.
-            default: 0.1
         min_samples : int
             The minimum number of samples in the neighborhood of a topic to be considered a core in CBDBSCAN.
 
@@ -1212,15 +1211,14 @@ class CBDBSCAN():
         def scan_topic(topic_index, current_label=None, parent_neighbors=None):
             """Extend the cluster in one direction.
 
-            Results are accumulated in topic_clustering_results, a variable outside of this function.
+            Results are accumulated to ``self.results``.
 
             Parameters
             ----------
             topic_index : int
-                The topic that might be added to the existing cluster, or which might create a new cluster if
-                neccessary.
+                The topic that might be added to the existing cluster, or which might create a new cluster if necessary.
             current_label : int
-                The label of the cluster that might be suitable for topic_index
+                The label of the cluster that might be suitable for ``topic_index``
 
             """
             neighbors_sorted = sorted(
