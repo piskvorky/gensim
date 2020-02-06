@@ -54,33 +54,21 @@ class OpinosisCorpus():
         stemmer = PorterStemmer()
 
         for directory, b, filenames in os.walk(path):
-            # iterates over folders, so in this
-            # scope a new topic is prepared
-
-            # root directory?
-            if len(filenames) == 0:
-                continue
-
-            # folder = directory.split(os.sep)[-1]
-            # print("processing folder ", "'"+folder+"'", "...")
-
+            # each subdirectory of path is one collection of reviews to a specific product
             # now get the corpus/documents
             for filename in filenames:
-
                 filepath = directory + os.sep + filename
                 # write down the document and the topicId and split into train and testdata
                 with open(filepath) as file:
-
                     doc = file.read()
-                    # overwrite dictionary, add corpus to test or train afterwards
-                    # the following function takes an array of documents, so wrap it in square braces
-                    processed = [
-                        stemmer.stem(token) for token in re.findall(r'\w+', doc.lower())
-                        if token not in STOPWORDS
-                    ]
 
-                    dictionary.add_documents([processed])
-                    corpus += [dictionary.doc2bow(processed)]
+                preprocessed_doc = [
+                    stemmer.stem(token) for token in re.findall(r'\w+', doc.lower())
+                    if token not in STOPWORDS
+                ]
+
+                dictionary.add_documents([preprocessed_doc])
+                corpus += [dictionary.doc2bow(preprocessed_doc)]
 
         # and return the results the same way the other corpus generating functions do
         self.corpus = corpus

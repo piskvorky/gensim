@@ -274,6 +274,8 @@ class EnsembleLda(SaveLoad):
     def get_topic_model_class(self):
         """Get the class that is used for :meth:`gensim.models.EnsembleLda.generate_gensim_representation`."""
         if self.topic_model_class is None:
+            instruction = 'Try setting topic_model_class manually to what the individual models were based on, ' \
+                'e.g. LdaMulticore.'
             try:
                 module = importlib.import_module(self.topic_model_module_string)
                 self.topic_model_class = getattr(module, self.topic_model_class_string)
@@ -282,13 +284,13 @@ class EnsembleLda(SaveLoad):
             except ModuleNotFoundError:
                 logger.error(
                     'Could not import the "{}" module in order to provide the "{}" class as '
-                    '"topic_model_class" attribute. Try setting this manually instead after loading.'
-                    .format(self.topic_model_class_string, self.topic_model_class_string))
+                    '"topic_model_class" attribute. {}'
+                    .format(self.topic_model_class_string, self.topic_model_class_string, instruction))
             except AttributeError:
                 logger.error(
                     'Could not import the "{}" class from the "{}" module in order to set the '
-                    '"topic_model_class" attribute. Try setting this manually instead after loading.'
-                    .format(self.topic_model_class_string, self.topic_model_module_string))
+                    '"topic_model_class" attribute. {}'
+                    .format(self.topic_model_class_string, self.topic_model_module_string, instruction))
         return self.topic_model_class
 
     def save(self, *args, **kwargs):
@@ -363,7 +365,7 @@ class EnsembleLda(SaveLoad):
         # to generate the proper sstats for the new gensim model:
         # transform to dimensionality of stable_topics. axis=1 is summed
         eta_sum = 0
-        if int == type(eta) or float == type(eta):
+        if isinstance(eta, (int, float)):
             eta_sum = [eta * len(stable_topics[0])] * num_stable_topics
         else:
             if len(eta.shape) == 1:  # [e1, e2, e3]
