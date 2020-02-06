@@ -321,7 +321,7 @@ NUMPY_STR = 'numpy >= 1.11.3'
 # to build with any sane version of Cython, so we should update this pin
 # periodically.
 #
-CYTHON_STR = 'Cython==0.29.3'
+CYTHON_STR = 'Cython==0.29.14'
 
 install_requires = [
     NUMPY_STR,
