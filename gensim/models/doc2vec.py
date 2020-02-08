@@ -70,7 +70,8 @@ try:
 except ImportError:
     from Queue import Queue  # noqa:F401
 
-from collections import namedtuple, defaultdict, Iterable
+from collections import namedtuple, defaultdict
+from collections.abc import Iterable
 from timeit import default_timer
 
 from numpy import zeros, float32 as REAL, empty, ones, \
