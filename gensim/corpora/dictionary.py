@@ -9,12 +9,7 @@
 from __future__ import with_statement
 
 from collections import defaultdict
-try:
-    # this is the py3 way
-    from collections.abc import Mapping
-except ImportError:
-    # this is the py2 way, it is deprecated in py3.1 and will be removed in removed in py3.9
-    from collections import Mapping
+from collections.abc import Mapping
 import sys
 import logging
 import itertools
