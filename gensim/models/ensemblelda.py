@@ -522,9 +522,8 @@ class EnsembleLda(SaveLoad):
         logger.info("ensemble contains {} models and {} topics now".format(self.num_models, len(self.ttda)))
 
         if self.ttda.shape[1] != ttda.shape[1]:
-            raise ValueError(
-                "target ttda dimensions do not match. Topics must be {} but was {} elements large"
-                    .format(self.ttda.shape[-1], ttda.shape[-1]))
+            raise ValueError("target ttda dimensions do not match. Topics must be {} but was {} elements large"
+                .format(self.ttda.shape[-1], ttda.shape[-1]))
         self.ttda = np.append(self.ttda, ttda, axis=0)
 
         # tell recluster that the distance matrix needs to be regenerated
@@ -553,7 +552,6 @@ class EnsembleLda(SaveLoad):
             if process.is_alive():
                 process.terminate()
             del process
-
 
     def _generate_topic_models_multiproc(self, num_models, ensemble_workers):
         """Generate the topic models to form the ensemble in a multiprocessed way.
@@ -794,8 +792,8 @@ class EnsembleLda(SaveLoad):
             threshold defaults to: ``{"mass": 0.95, "rank": 0.11}``, depending on the selected method
         start_index : int
             this function might be used in multiprocessing, so start_index has to be set as ttda1 is a chunk of the
-            complete ttda in that case. start_index would be 0 if ``ttda1 == self.ttda``. When self.ttda is split into two
-            pieces, each 100 ttdas long, then start_index should be be 100. default is 0
+            complete ttda in that case. start_index would be 0 if ``ttda1 == self.ttda``. When self.ttda is split into
+            two pieces, each 100 ttdas long, then start_index should be be 100. default is 0
         method : {'mass', 'rank}, optional
             method can be "mass" for the original masking method or "rank" for a faster masking method that selects
             by rank of largest elements in the topic term distribution, to determine which tokens are relevant for the
