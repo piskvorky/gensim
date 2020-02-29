@@ -255,6 +255,15 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
         for ent, vector in zip(entities, vectors):
             self.assertTrue(np.allclose(kv[ent], vector))
 
+    def test_add_type(self):
+        kv = EuclideanKeyedVectors(2)
+        words, vectors = ["a"], np.array([1., 1.], dtype=np.float32).reshape(1, -1)
+
+        assert kv.vectors.dtype == np.float64  # default dtype of empty KV
+
+        kv.add(words, vectors)
+        assert kv.vectors.dtype == np.float32  # new dtype of KV (copied from passed vectors)
+
     def test_set_item(self):
         """Test that __setitem__ works correctly."""
         vocab_size = len(self.vectors.vocab)
