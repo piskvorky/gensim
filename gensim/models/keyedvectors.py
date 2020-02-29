@@ -308,6 +308,7 @@ class BaseKeyedVectors(utils.SaveLoad):
             self.index2entity.append(entity)
 
         # add vectors for new entities
+        self.vectors = self.vectors.astype(weights.dtype)  # cast existing vectors to 'weights' type
         self.vectors = vstack((self.vectors, weights[~in_vocab_mask]))
 
         # change vectors for in_vocab entities if `replace` flag is specified
