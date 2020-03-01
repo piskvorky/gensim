@@ -256,13 +256,14 @@ class TestKeyedVectors(unittest.TestCase):
             self.assertTrue(np.allclose(kv[ent], vector))
 
     def test_add_type(self):
-        kv = KeyedVectors(2)
-        words, vectors = ["a"], np.array([1., 1.], dtype=np.float32).reshape(1, -1)
+        dtype = np.float32
+        kv = KeyedVectors(2, dtype=dtype)
+        words, vectors = ["a"], np.array([1., 1.], dtype=np.float16).reshape(1, -1)
 
-        assert kv.vectors.dtype == np.float64  # default dtype of empty KV
+        assert kv.vectors.dtype == dtype
 
         kv.add(words, vectors)
-        assert kv.vectors.dtype == np.float32  # new dtype of KV (copied from passed vectors)
+        assert kv.vectors.dtype == dtype
 
     def test_set_item(self):
         """Test that __setitem__ works correctly."""

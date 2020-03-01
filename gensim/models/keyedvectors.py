@@ -214,8 +214,8 @@ class Vocab(object):
 
 class BaseKeyedVectors(utils.SaveLoad):
     """Abstract base class / interface for various types of word vectors."""
-    def __init__(self, vector_size):
-        self.vectors = zeros((0, vector_size))
+    def __init__(self, vector_size, dtype=REAL):
+        self.vectors = zeros((0, vector_size), dtype=dtype)
         self.vocab = {}
         self.vector_size = vector_size
         self.index2entity = []
@@ -308,8 +308,7 @@ class BaseKeyedVectors(utils.SaveLoad):
             self.index2entity.append(entity)
 
         # add vectors for new entities
-        self.vectors = self.vectors.astype(weights.dtype)  # cast existing vectors to 'weights' type
-        self.vectors = vstack((self.vectors, weights[~in_vocab_mask]))
+        self.vectors = vstack((self.vectors, weights[~in_vocab_mask].astype(self.vectors.dtype)))
 
         # change vectors for in_vocab entities if `replace` flag is specified
         if replace:
@@ -377,8 +376,8 @@ class BaseKeyedVectors(utils.SaveLoad):
 
 class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
     """Class containing common methods for operations over word vectors."""
-    def __init__(self, vector_size):
-        super(WordEmbeddingsKeyedVectors, self).__init__(vector_size=vector_size)
+    def __init__(self, vector_size, dtype=REAL):
+        super(WordEmbeddingsKeyedVectors, self).__init__(vector_size=vector_size, dtype=REAL)
         self.vectors_norm = None
         self.index2word = []
 
@@ -1551,8 +1550,8 @@ KeyedVectors = Word2VecKeyedVectors  # alias for backward compatibility
 
 class Doc2VecKeyedVectors(BaseKeyedVectors):
 
-    def __init__(self, vector_size, mapfile_path):
-        super(Doc2VecKeyedVectors, self).__init__(vector_size=vector_size)
+    def __init__(self, vector_size, mapfile_path, dtype=REAL):
+        super(Doc2VecKeyedVectors, self).__init__(vector_size=vector_size, dtype=REAL)
         self.doctags = {}  # string -> Doctag (only filled if necessary)
         self.max_rawint = -1  # highest rawint-indexed doctag
         self.offset2doctag = []  # int offset-past-(max_rawint+1) -> String (only filled if necessary)
