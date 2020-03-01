@@ -866,8 +866,8 @@ class PoincareKeyedVectors(BaseKeyedVectors):
     Used to perform operations on the vectors such as vector lookup, distance calculations etc.
 
     """
-    def __init__(self, vector_size, dtype=REAL):
-        super(PoincareKeyedVectors, self).__init__(vector_size, dtype=REAL)
+    def __init__(self, vector_size):
+        super(PoincareKeyedVectors, self).__init__(vector_size)
         self.max_distance = 0
         self.index2word = []
         self.vocab = {}

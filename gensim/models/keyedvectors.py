@@ -214,8 +214,8 @@ class Vocab(object):
 
 class BaseKeyedVectors(utils.SaveLoad):
     """Abstract base class / interface for various types of word vectors."""
-    def __init__(self, vector_size, dtype=REAL):
-        self.vectors = zeros((0, vector_size), dtype=dtype)
+    def __init__(self, vector_size):
+        self.vectors = zeros((0, vector_size), dtype=REAL)
         self.vocab = {}
         self.vector_size = vector_size
         self.index2entity = []
@@ -376,8 +376,8 @@ class BaseKeyedVectors(utils.SaveLoad):
 
 class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
     """Class containing common methods for operations over word vectors."""
-    def __init__(self, vector_size, dtype=REAL):
-        super(WordEmbeddingsKeyedVectors, self).__init__(vector_size=vector_size, dtype=REAL)
+    def __init__(self, vector_size):
+        super(WordEmbeddingsKeyedVectors, self).__init__(vector_size=vector_size)
         self.vectors_norm = None
         self.index2word = []
 
@@ -1550,8 +1550,8 @@ KeyedVectors = Word2VecKeyedVectors  # alias for backward compatibility
 
 class Doc2VecKeyedVectors(BaseKeyedVectors):
 
-    def __init__(self, vector_size, mapfile_path, dtype=REAL):
-        super(Doc2VecKeyedVectors, self).__init__(vector_size=vector_size, dtype=REAL)
+    def __init__(self, vector_size, mapfile_path):
+        super(Doc2VecKeyedVectors, self).__init__(vector_size=vector_size)
         self.doctags = {}  # string -> Doctag (only filled if necessary)
         self.max_rawint = -1  # highest rawint-indexed doctag
         self.offset2doctag = []  # int offset-past-(max_rawint+1) -> String (only filled if necessary)
@@ -2113,7 +2113,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         elif self.bucket == 0:
             raise KeyError('cannot calculate vector for OOV word without ngrams')
         else:
-            word_vec = np.zeros(self.vectors_ngrams.shape[1], dtype=np.float32)
+            word_vec = np.zeros(self.vectors_ngrams.shape[1], dtype=REAL)
             if use_norm:
                 ngram_weights = self.vectors_ngrams_norm
             else:

@@ -16,7 +16,7 @@ import numpy as np
 
 from gensim.corpora import Dictionary
 from gensim.models.keyedvectors import KeyedVectors, WordEmbeddingSimilarityIndex, \
-    FastTextKeyedVectors
+    FastTextKeyedVectors, REAL
 from gensim.test.utils import datapath
 
 import gensim.models.keyedvectors
@@ -256,14 +256,13 @@ class TestKeyedVectors(unittest.TestCase):
             self.assertTrue(np.allclose(kv[ent], vector))
 
     def test_add_type(self):
-        dtype = np.float32
-        kv = KeyedVectors(2, dtype=dtype)
-        words, vectors = ["a"], np.array([1., 1.], dtype=np.float16).reshape(1, -1)
+        kv = KeyedVectors(2)
+        assert kv.vectors.dtype == REAL
 
-        assert kv.vectors.dtype == dtype
-
+        words, vectors = ["a"], np.array([1., 1.], dtype=np.float64).reshape(1, -1)
         kv.add(words, vectors)
-        assert kv.vectors.dtype == dtype
+
+        assert kv.vectors.dtype == REAL
 
     def test_set_item(self):
         """Test that __setitem__ works correctly."""
