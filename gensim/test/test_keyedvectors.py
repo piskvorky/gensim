@@ -15,7 +15,7 @@ import unittest
 import numpy as np
 
 from gensim.corpora import Dictionary
-from gensim.models.keyedvectors import KeyedVectors as EuclideanKeyedVectors, WordEmbeddingSimilarityIndex, \
+from gensim.models.keyedvectors import KeyedVectors, WordEmbeddingSimilarityIndex, \
     FastTextKeyedVectors
 from gensim.test.utils import datapath
 
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 class TestWordEmbeddingSimilarityIndex(unittest.TestCase):
     def setUp(self):
-        self.vectors = EuclideanKeyedVectors.load_word2vec_format(
+        self.vectors = KeyedVectors.load_word2vec_format(
             datapath('euclidean_vectors.bin'), binary=True, datatype=np.float64)
 
     def test_most_similar(self):
@@ -70,9 +70,9 @@ class TestWordEmbeddingSimilarityIndex(unittest.TestCase):
         self.assertTrue(np.allclose(first_similarities**2.0, second_similarities))
 
 
-class TestEuclideanKeyedVectors(unittest.TestCase):
+class TestKeyedVectors(unittest.TestCase):
     def setUp(self):
-        self.vectors = EuclideanKeyedVectors.load_word2vec_format(
+        self.vectors = KeyedVectors.load_word2vec_format(
             datapath('euclidean_vectors.bin'), binary=True, datatype=np.float64)
 
     def test_similarity_matrix(self):
@@ -227,7 +227,7 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
             self.assertTrue(np.allclose(self.vectors[ent], vector))
 
         # Test `add` on empty kv.
-        kv = EuclideanKeyedVectors(self.vectors.vector_size)
+        kv = KeyedVectors(self.vectors.vector_size)
         for ent, vector in zip(entities, vectors):
             kv.add(ent, vector)
 
@@ -248,7 +248,7 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
             self.assertTrue(np.allclose(self.vectors[ent], vector))
 
         # Test `add` on empty kv.
-        kv = EuclideanKeyedVectors(self.vectors.vector_size)
+        kv = KeyedVectors(self.vectors.vector_size)
         kv[entities] = vectors
         self.assertEqual(len(kv.vocab), len(entities))
 
@@ -256,7 +256,7 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
             self.assertTrue(np.allclose(kv[ent], vector))
 
     def test_add_type(self):
-        kv = EuclideanKeyedVectors(2)
+        kv = KeyedVectors(2)
         words, vectors = ["a"], np.array([1., 1.], dtype=np.float32).reshape(1, -1)
 
         assert kv.vectors.dtype == np.float64  # default dtype of empty KV
@@ -296,7 +296,7 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
             self.assertTrue(np.allclose(self.vectors[ent], vector))
 
     def test_ft_kv_backward_compat_w_360(self):
-        kv = EuclideanKeyedVectors.load(datapath("ft_kv_3.6.0.model.gz"))
+        kv = KeyedVectors.load(datapath("ft_kv_3.6.0.model.gz"))
         ft_kv = FastTextKeyedVectors.load(datapath("ft_kv_3.6.0.model.gz"))
 
         expected = ['trees', 'survey', 'system', 'graph', 'interface']
