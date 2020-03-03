@@ -333,7 +333,7 @@ class TestFastTextModel(unittest.TestCase):
         v1 = self.test_model.wv[word]
         v2 = self.test_model.wv[top_neighbor]
         top_similarity_direct = self.test_model.wv.cosine_similarities(v1, v2.reshape(1, -1))[0]
-        self.assertAlmostEqual(top_similarity, top_similarity_direct)
+        self.assertAlmostEqual(top_similarity, top_similarity_direct, places=6)
 
     def test_n_similarity(self):
         # In vocab, sanity check
