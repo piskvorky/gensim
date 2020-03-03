@@ -326,6 +326,15 @@ class TestFastTextModel(unittest.TestCase):
         except KeyError:
             self.fail('Unable to access vector for cp-852 word')
 
+    def test_oov_similarity(self):
+        word = 'someoovword'
+        most_similar = self.test_model.wv.most_similar(word)
+        top_neighbor, top_similarity = most_similar[0]
+        v1 = self.test_model.vw[word]
+        v2 = self.test_model.vw[top_neighbor]
+        top_similarity_direct = self.test_model.wv.cosine_similarity(v1, v2.reshape(1, -1))[0]
+        self.assertAlmostEqual(top_similarity, top_similarity_direct)
+
     def test_n_similarity(self):
         # In vocab, sanity check
         self.assertTrue(np.allclose(self.test_model.wv.n_similarity(['the', 'and'], ['and', 'the']), 1.0))
