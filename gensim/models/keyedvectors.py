@@ -160,7 +160,7 @@ and so on.
 
 from __future__ import division  # py3 "true division"
 
-from itertools import chain
+from itertools import chain, combinations
 import logging
 from numbers import Integral
 
@@ -173,6 +173,9 @@ from numpy import dot, float32 as REAL, memmap as np_memmap, \
     double, array, zeros, vstack, sqrt, newaxis, integer, \
     ndarray, sum as np_sum, prod, argmax
 import numpy as np
+
+import re
+from gensim.models import Word2Vec
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.corpora.dictionary import Dictionary
@@ -570,7 +573,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         return result[:topn]
 
 
-    def evaluate_top_k(file, model, k, topk_in_cat=True, debug=False):
+    def evaluate_top_k_similar(self, file, model, k, topk_in_cat=True, debug=False):
         """Compute the performance of a model on a topk similarity test
         for a given txt file.
 
@@ -600,7 +603,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
             and the value is the accuracy of the odd-one-out task for that pairing.
     
         """
-    
+
         # read in test set file as dictionary where each category is a key
         # and the corresponding value is the list of words belonging to it.
         cats = {}
@@ -991,7 +994,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         dists = dot(vectors, mean)
         return sorted(zip(dists, used_words))[0][1]
     
-    def evaluate_doesnt_match(cat_file, model, k_in=3, eval_dupes=False, debug=False):
+    def evaluate_doesnt_match(self, cat_file, model, k_in=3, eval_dupes=False, debug=False):
         """Compute the performance of a model on the doesnt match task
         for a given test set.
 
