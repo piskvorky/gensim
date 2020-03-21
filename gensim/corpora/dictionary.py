@@ -8,7 +8,8 @@
 
 from __future__ import with_statement
 
-from collections import Mapping, defaultdict
+from collections import defaultdict
+from collections.abc import Mapping
 import sys
 import logging
 import itertools

@@ -7,8 +7,7 @@
 Unit tests for the `corpora.Dictionary` class.
 """
 
-
-from collections import Mapping
+from collections.abc import Mapping
 from itertools import chain
 import logging
 import unittest
