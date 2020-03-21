@@ -215,7 +215,7 @@ class Vocab(object):
 class BaseKeyedVectors(utils.SaveLoad):
     """Abstract base class / interface for various types of word vectors."""
     def __init__(self, vector_size):
-        self.vectors = zeros((0, vector_size))
+        self.vectors = zeros((0, vector_size), dtype=REAL)
         self.vocab = {}
         self.vector_size = vector_size
         self.index2entity = []
@@ -308,7 +308,7 @@ class BaseKeyedVectors(utils.SaveLoad):
             self.index2entity.append(entity)
 
         # add vectors for new entities
-        self.vectors = vstack((self.vectors, weights[~in_vocab_mask]))
+        self.vectors = vstack((self.vectors, weights[~in_vocab_mask].astype(self.vectors.dtype)))
 
         # change vectors for in_vocab entities if `replace` flag is specified
         if replace:
@@ -2113,7 +2113,7 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
         elif self.bucket == 0:
             raise KeyError('cannot calculate vector for OOV word without ngrams')
         else:
-            word_vec = np.zeros(self.vectors_ngrams.shape[1], dtype=np.float32)
+            word_vec = np.zeros(self.vectors_ngrams.shape[1], dtype=REAL)
             ngram_hashes = ft_ngram_hashes(word, self.min_n, self.max_n, self.bucket, self.compatible_hash)
             if len(ngram_hashes) == 0:
                 #
