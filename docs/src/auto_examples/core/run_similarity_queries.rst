@@ -241,8 +241,8 @@ order, and obtain the final answer to the query `"Human computer interaction"`:
 
 
     sims = sorted(enumerate(sims), key=lambda item: -item[1])
-    for i, s in enumerate(sims):
-        print(s, documents[i])
+    for doc_position, doc_score in sims:
+        print(doc_score, documents[doc_position])
 
 
 
