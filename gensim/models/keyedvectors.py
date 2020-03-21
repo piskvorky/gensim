@@ -2114,10 +2114,6 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
             raise KeyError('cannot calculate vector for OOV word without ngrams')
         else:
             word_vec = np.zeros(self.vectors_ngrams.shape[1], dtype=REAL)
-            if use_norm:
-                ngram_weights = self.vectors_ngrams_norm
-            else:
-                ngram_weights = self.vectors_ngrams
             ngram_hashes = ft_ngram_hashes(word, self.min_n, self.max_n, self.bucket, self.compatible_hash)
             if len(ngram_hashes) == 0:
                 #
@@ -2131,8 +2127,11 @@ class FastTextKeyedVectors(WordEmbeddingsKeyedVectors):
                 logger.warning('could not extract any ngrams from %r, returning origin vector', word)
                 return word_vec
             for nh in ngram_hashes:
-                word_vec += ngram_weights[nh]
-            return word_vec / len(ngram_hashes)
+                word_vec += self.vectors_ngrams[nh]
+            result = word_vec / len(ngram_hashes)
+            if use_norm:
+                result /= sqrt(sum(result ** 2))
+            return result
 
     def init_sims(self, replace=False):
         """Precompute L2-normalized vectors.
