@@ -11,6 +11,7 @@ Automated tests for checking the poincare module from the models package.
 
 import logging
 import unittest
+from mock import patch
 
 import numpy as np
 
@@ -20,7 +21,6 @@ from gensim.models.keyedvectors import KeyedVectors, WordEmbeddingSimilarityInde
 from gensim.test.utils import datapath
 
 import gensim.models.keyedvectors
-
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ class TestWordEmbeddingSimilarityIndex(unittest.TestCase):
         first_similarities = np.array([similarity for term, similarity in index.most_similar(u"holiday", topn=10)])
         index = WordEmbeddingSimilarityIndex(self.vectors, exponent=2.0)
         second_similarities = np.array([similarity for term, similarity in index.most_similar(u"holiday", topn=10)])
-        self.assertTrue(np.allclose(first_similarities**2.0, second_similarities))
+        self.assertTrue(np.allclose(first_similarities ** 2.0, second_similarities))
 
 
 class TestKeyedVectors(unittest.TestCase):
@@ -120,7 +120,7 @@ class TestKeyedVectors(unittest.TestCase):
             'skillful', 'skilful', 'dear', 'near', 'dependable', 'safe', 'secure', 'right', 'ripe', 'well',
             'effective', 'in_effect', 'in_force', 'serious', 'sound', 'salutary', 'honest', 'undecomposed',
             'unspoiled', 'unspoilt', 'thoroughly', 'soundly'
-        ]   # synonyms for "good" as per wordnet
+        ]  # synonyms for "good" as per wordnet
         cos_sim = []
         for i in range(len(wordnet_syn)):
             if wordnet_syn[i] in self.vectors.vocab:
@@ -407,6 +407,43 @@ class Word2VecKeyedVectorsTest(unittest.TestCase):
             model.get_vector(u'ありがとう'), np.array([.6, .6, .6], dtype=np.float32)))
         self.assertTrue(np.array_equal(
             model.get_vector(u'どういたしまして'), np.array([.1, .2, .3], dtype=np.float32)))
+
+
+try:
+    import keras  # noqa: F401
+
+    KERAS_INSTALLED = True
+except ImportError:
+    KERAS_INSTALLED = False
+
+
+@unittest.skipUnless(KERAS_INSTALLED, 'keras needs to be installed for this test')
+class WordEmbeddingsKeyedVectorsTest(unittest.TestCase):
+    def setUp(self):
+        self.vectors = EuclideanKeyedVectors.load_word2vec_format(
+            datapath('euclidean_vectors.bin'), binary=True, datatype=np.float64)
+
+    def test_get_keras_embedding_word_index_none(self):
+        embedding_layer = self.vectors.get_keras_embedding()
+        self.assertEqual(self.vectors.vectors.shape, embedding_layer._initial_weights[0].shape)
+        self.assertTrue(np.array_equal(
+            self.vectors['is'], embedding_layer._initial_weights[0][self.vectors.vocab['is'].index, :]))
+
+    def test_get_keras_embedding_word_index_passed(self):
+        word_index = {'is': 1, 'to': 2}
+        embedding_layer = self.vectors.get_keras_embedding(word_index=word_index)
+        self.assertEqual(embedding_layer._initial_weights[0].shape, (3, self.vectors.vectors.shape[1]))
+        self.assertTrue(np.array_equal(
+            self.vectors['is'], embedding_layer._initial_weights[0][1, :]))
+
+    @patch('numpy.random.normal')
+    def test_get_keras_embedding_word_index_passed_with_oov_word(self, normal_func):
+        normal_func.return_value = np.zeros((3, self.vectors.vectors.shape[1]))
+        word_index = {'is': 1, 'not_a_real_word': 2}
+        embedding_layer = self.vectors.get_keras_embedding(word_index=word_index)
+        self.assertEqual(embedding_layer._initial_weights[0].shape, (3, self.vectors.vectors.shape[1]))
+        self.assertTrue(
+            np.array_equal(embedding_layer._initial_weights[0][2, :], np.zeros(self.vectors.vectors.shape[1])))
 
 
 if __name__ == '__main__':

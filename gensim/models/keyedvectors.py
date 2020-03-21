@@ -1383,6 +1383,57 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
 
         return rcs
 
+    def get_keras_embedding(self, train_embeddings=False, word_index=None):
+        """Get a Keras 'Embedding' layer with weights set as the Word2Vec model's learned word embeddings.
+
+        Parameters
+        ----------
+        train_embeddings : bool
+            If False, the weights are frozen and stopped from being updated.
+            If True, the weights can/will be further trained/updated.
+
+        word_index : {str : int}
+            A mapping from tokens to their indices the way they will be provided in the input to the embedding layer.
+            The embedding of each token will be placed at the corresponding index in the returned matrix.
+            Tokens not in the index are ignored.
+            This is useful when the token indices are produced by a process that is not coupled with the embedding
+            model, e.x. an Keras Tokenizer object.
+            If None, the embedding matrix in the embedding layer will be indexed according to self.vocab
+
+        Returns
+        -------
+        `keras.layers.Embedding`
+            Embedding layer.
+
+        Raises
+        ------
+        ImportError
+            If `Keras <https://pypi.org/project/Keras/>`_ not installed.
+
+        Warnings
+        --------
+        Current method works only if `Keras <https://pypi.org/project/Keras/>`_ installed.
+
+        """
+        try:
+            from keras.layers import Embedding
+        except ImportError:
+            raise ImportError("Please install Keras to use this function")
+        if word_index is None:
+            weights = self.vectors
+        else:
+            max_index = max(word_index.values())
+            weights = np.random.normal(size=(max_index + 1, self.vectors.shape[1]))
+            for word, index in word_index.items():
+                if word in self.vocab:
+                    weights[index] = self.get_vector(word)
+
+        layer = Embedding(
+            input_dim=weights.shape[0], output_dim=weights.shape[1],
+            weights=[weights], trainable=train_embeddings
+        )
+        return layer
+
 
 class WordEmbeddingSimilarityIndex(TermSimilarityIndex):
     """
@@ -1496,44 +1547,6 @@ class Word2VecKeyedVectors(WordEmbeddingsKeyedVectors):
         return _load_word2vec_format(
             cls, fname, fvocab=fvocab, binary=binary, encoding=encoding, unicode_errors=unicode_errors,
             limit=limit, datatype=datatype)
-
-    def get_keras_embedding(self, train_embeddings=False):
-        """Get a Keras 'Embedding' layer with weights set as the Word2Vec model's learned word embeddings.
-
-        Parameters
-        ----------
-        train_embeddings : bool
-            If False, the weights are frozen and stopped from being updated.
-            If True, the weights can/will be further trained/updated.
-
-        Returns
-        -------
-        `keras.layers.Embedding`
-            Embedding layer.
-
-        Raises
-        ------
-        ImportError
-            If `Keras <https://pypi.org/project/Keras/>`_ not installed.
-
-        Warnings
-        --------
-        Current method work only if `Keras <https://pypi.org/project/Keras/>`_ installed.
-
-        """
-        try:
-            from keras.layers import Embedding
-        except ImportError:
-            raise ImportError("Please install Keras to use this function")
-        weights = self.vectors
-
-        # set `trainable` as `False` to use the pretrained word embedding
-        # No extra mem usage here as `Embedding` layer doesn't create any new matrix for weights
-        layer = Embedding(
-            input_dim=weights.shape[0], output_dim=weights.shape[1],
-            weights=[weights], trainable=train_embeddings
-        )
-        return layer
 
     @classmethod
     def load(cls, fname_or_handle, **kwargs):
