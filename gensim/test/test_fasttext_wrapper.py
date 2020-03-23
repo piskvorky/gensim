@@ -319,7 +319,7 @@ class TestFastText(unittest.TestCase):
         self.assertFalse('a!@' in self.test_model.wv.vocab)
         self.assertFalse('a!@' in self.test_model)
 
-    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed or have some issues")
+    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed")
     def testWmdistance(self):
         """Tests wmdistance for docs with in-vocab and out-of-vocab words"""
         doc = ['night', 'payment']
