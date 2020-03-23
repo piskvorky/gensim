@@ -393,7 +393,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertFalse('nights' in self.test_model.wv.vocab)
         self.assertTrue('nights' in self.test_model.wv)
 
-    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed or have some issues")
+    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed")
     def test_wm_distance(self):
         doc = ['night', 'payment']
         oov_doc = ['nights', 'forests', 'payments']
