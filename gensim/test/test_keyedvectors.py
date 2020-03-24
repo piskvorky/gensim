@@ -420,7 +420,7 @@ except ImportError:
 @unittest.skipUnless(KERAS_INSTALLED, 'keras needs to be installed for this test')
 class WordEmbeddingsKeyedVectorsTest(unittest.TestCase):
     def setUp(self):
-        self.vectors = EuclideanKeyedVectors.load_word2vec_format(
+        self.vectors = KeyedVectors.load_word2vec_format(
             datapath('euclidean_vectors.bin'), binary=True, datatype=np.float64)
 
     def test_get_keras_embedding_word_index_none(self):
