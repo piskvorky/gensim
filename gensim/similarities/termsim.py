@@ -303,9 +303,14 @@ class SparseTermSimilarityMatrix(SaveLoad):
         References
         ----------
         The soft cosine measure was perhaps first described by [sidorovetal14]_.
+        Further notes on the efficient implementation of the soft cosine measure are described by
+        [novotny18]_.
 
         .. [sidorovetal14] Grigori Sidorov et al., "Soft Similarity and Soft Cosine Measure: Similarity
            of Features in Vector Space Model", 2014, http://www.cys.cic.ipn.mx/ojs/index.php/CyS/article/view/2043/1921.
+
+        .. [novotny18] Vít Novotný, "Implementation Notes for the Soft Cosine Measure", 2018,
+           http://dx.doi.org/10.1145/3269206.3269317.
 
         """
         if not X or not Y:
