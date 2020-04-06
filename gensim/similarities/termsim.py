@@ -8,12 +8,14 @@
 This module provides classes that deal with term similarities.
 """
 
+from array import array
 from itertools import chain
 import logging
 from math import sqrt
 import warnings
 
 import numpy as np
+from six.moves import range
 from scipy import sparse
 
 from gensim.matutils import corpus2csc
@@ -169,6 +171,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
         Whether the symmetry of the term similarity matrix will be enforced. Symmetry is a necessary
         precondition for positive definiteness, which is necessary if you later wish to derive a
         unique change-of-basis matrix from the term similarity matrix using Cholesky factorization.
+        Setting symmetric to False will significantly reduce memory usage during matrix construction.
     dominant: bool, optional
         Whether the strict column diagonal dominance of the term similarity matrix will be enforced.
         Strict diagonal dominance and symmetry are sufficient preconditions for positive
@@ -186,9 +189,8 @@ class SparseTermSimilarityMatrix(SaveLoad):
     ----------
     matrix : :class:`scipy.sparse.csc_matrix`
         The encapsulated sparse term similarity matrix.
-    """
-    PROGRESS_MESSAGE_PERIOD = 1000  # how many columns are processed between progress messages
 
+    """
     def __init__(self, source, dictionary=None, tfidf=None, symmetric=True, dominant=False,
                  nonzero_limit=100, dtype=np.float32, positive_definite=None):
         if sparse.issparse(source):
@@ -222,24 +224,38 @@ class SparseTermSimilarityMatrix(SaveLoad):
                 term_index for term_index, _
                 in sorted(
                     tfidf.idfs.items(),
-                    key=lambda x: (lambda term_index, term_idf: (term_idf, -term_index))(*x), reverse=True)]
+                    key=lambda x: (lambda term_index, term_idf: (term_idf, -term_index))(*x),
+                    reverse=True,
+                )
+            ]
 
-        column_nonzero = np.array([0] * matrix_order, dtype=_shortest_uint_dtype(nonzero_limit))
-        column_sum = np.zeros(matrix_order, dtype=dtype)
-        matrix = sparse.identity(matrix_order, dtype=dtype, format="dok")
+        if dtype is np.float16 or dtype is np.float32:
+            similarity_type_code = 'f'
+        elif dtype is np.float64:
+            similarity_type_code = 'd'
+        else:
+            raise ValueError('Dtype %s is unsupported, use numpy.float16, float32, or float64.' % dtype)
+        nonzero_counter_dtype = _shortest_uint_dtype(nonzero_limit)
 
-        for column_number, t1_index in enumerate(columns):
-            if column_number % self.PROGRESS_MESSAGE_PERIOD == 0:
-                logger.info(
-                    "PROGRESS: at %.02f%% columns (%d / %d, %.06f%% density, "
-                    "%.06f%% projected density)",
-                    100.0 * (column_number + 1) / matrix_order, column_number + 1, matrix_order,
-                    100.0 * matrix.getnnz() / matrix_order**2,
-                    100.0 * np.clip(
-                        (1.0 * (matrix.getnnz() - matrix_order) / matrix_order**2)
-                        * (1.0 * matrix_order / (column_number + 1))
-                        + (1.0 / matrix_order),  # add density correspoding to the main diagonal
-                        0.0, 1.0))
+        column_nonzero = np.array([0] * matrix_order, dtype=nonzero_counter_dtype)
+        if dominant:
+            column_sum = np.zeros(matrix_order, dtype=dtype)
+        if symmetric:
+            assigned_cells = set()
+        row_buffer = array('Q')
+        column_buffer = array('Q')
+        data_buffer = array(similarity_type_code)
+
+        try:
+            from tqdm import tqdm as progress_bar
+        except ImportError:
+            def progress_bar(iterable):
+                return iterable
+
+        for column_number, t1_index in enumerate(progress_bar(columns)):
+            column_buffer.append(column_number)
+            row_buffer.append(column_number)
+            data_buffer.append(1.0)
 
             t1 = dictionary[t1_index]
             num_nonzero = column_nonzero[t1_index]
@@ -255,7 +271,9 @@ class SparseTermSimilarityMatrix(SaveLoad):
             else:
                 rows = sorted(
                     most_similar,
-                    key=lambda x: (lambda term_index, _: (tfidf.idfs[term_index], -term_index))(*x), reverse=True)
+                    key=lambda x: (lambda term_index, _: (tfidf.idfs[term_index], -term_index))(*x),
+                    reverse=True,
+                )
 
             for row_number, (t2_index, similarity) in zip(range(num_rows), rows):
                 if dominant and column_sum[t1_index] + abs(similarity) >= 1.0:
@@ -263,22 +281,41 @@ class SparseTermSimilarityMatrix(SaveLoad):
                 if symmetric:
                     if column_nonzero[t2_index] < nonzero_limit \
                             and (not dominant or column_sum[t2_index] + abs(similarity) < 1.0) \
-                            and not (t1_index, t2_index) in matrix:
-                        matrix[t1_index, t2_index] = similarity
+                            and (t1_index, t2_index) not in assigned_cells:
+                        assigned_cells.add((t1_index, t2_index))
+                        column_buffer.append(t1_index)
+                        row_buffer.append(t2_index)
+                        data_buffer.append(similarity)
                         column_nonzero[t1_index] += 1
-                        column_sum[t1_index] += abs(similarity)
-                        matrix[t2_index, t1_index] = similarity
+
+                        assigned_cells.add((t2_index, t1_index))
+                        column_buffer.append(t2_index)
+                        row_buffer.append(t1_index)
+                        data_buffer.append(similarity)
                         column_nonzero[t2_index] += 1
-                        column_sum[t2_index] += abs(similarity)
+
+                        if dominant:
+                            column_sum[t1_index] += abs(similarity)
+                            column_sum[t2_index] += abs(similarity)
                 else:
-                    matrix[t1_index, t2_index] = similarity
-                    column_sum[t1_index] += abs(similarity)
+                    column_buffer.append(t1_index)
+                    row_buffer.append(t2_index)
+                    data_buffer.append(similarity)
+                    column_nonzero[t1_index] += 1
+
+                    if dominant:
+                        column_sum[t1_index] += abs(similarity)
+
+        data_buffer = np.frombuffer(data_buffer, dtype=dtype)
+        row_buffer = np.frombuffer(row_buffer, dtype=np.uint64)
+        column_buffer = np.frombuffer(column_buffer, dtype=np.uint64)
+        matrix = sparse.coo_matrix((data_buffer, (row_buffer, column_buffer)), shape=(matrix_order, matrix_order))
 
         logger.info(
             "constructed a sparse term similarity matrix with %0.06f%% density",
-            100.0 * matrix.getnnz() / matrix_order**2)
+            100.0 * matrix.getnnz() / matrix_order**2,
+        )
 
-        matrix = matrix.T
         assert sparse.issparse(matrix)
         self.__init__(matrix)
 
