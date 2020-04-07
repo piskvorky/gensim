@@ -55,6 +55,16 @@ class TermSimilarityIndex(SaveLoad):
         """
         raise NotImplementedError
 
+    def __str__(self):
+        return "%s(%s)" % (
+            self.__class__.__name__,
+            ', '.join(
+                '%s=%s' % (key, value)
+                for key, value
+                in vars(self).items()
+            )
+        )
+
 
 class UniformTermSimilarityIndex(TermSimilarityIndex):
     """
