@@ -395,7 +395,7 @@ setup(
         NUMPY_STR,
         'scipy >= 0.18.1',
         'six >= 1.5.0',
-        'smart_open >= 1.8.1, < 1.11',
+        'smart_open >= 1.8.1, < 1.11',  # smart_open >= 1.11 is py3+ only. TODO: Remove once we drop py2.7 from gensim too.
     ],
     tests_require=linux_testenv,
     extras_require={
