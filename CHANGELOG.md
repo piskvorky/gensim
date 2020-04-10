@@ -7,6 +7,28 @@ Changes
 
 * Pin `smart_open` version for compatibility with Py2.7
 
+### :warning: Deprecations (will be removed in the next major release)
+
+* Remove
+    - `gensim.models.FastText.load_fasttext_format`: use load_facebook_vectors to load embeddings only (faster, less CPU/memory usage, does not support training continuation) and load_facebook_model to load full model (slower, more CPU/memory intensive, supports training continuation)
+    - `gensim.models.wrappers.fasttext` (obsoleted by the new native `gensim.models.fasttext` implementation)
+    - `gensim.examples`
+    - `gensim.nosy`
+    - `gensim.scripts.word2vec_standalone`
+    - `gensim.scripts.make_wiki_lemma`
+    - `gensim.scripts.make_wiki_online`
+    - `gensim.scripts.make_wiki_online_lemma`
+    - `gensim.scripts.make_wiki_online_nodebug`
+    - `gensim.scripts.make_wiki` (all of these obsoleted by the new native  `gensim.scripts.segment_wiki` implementation)
+    - "deprecated" functions and attributes
+
+* Move
+    - `gensim.scripts.make_wikicorpus` ➡ `gensim.scripts.make_wiki.py`
+    - `gensim.summarization` ➡ `gensim.models.summarization`
+    - `gensim.topic_coherence` ➡ `gensim.models._coherence`
+    - `gensim.utils` ➡ `gensim.utils.utils` (old imports will continue to work)
+    - `gensim.parsing.*` ➡ `gensim.utils.text_utils`
+
 ## 3.8.1, 2019-09-23
 
 ### :red_circle: Bug fixes
