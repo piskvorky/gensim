@@ -349,9 +349,24 @@ if need_cython():
     install_requires.append(CYTHON_STR)
     setup_requires.append(CYTHON_STR)
 
+install_requires = [
+    NUMPY_STR,
+    'scipy >= 1.0.0',
+    'six >= 1.5.0',
+]
+
+#
+# smart_open >= 1.11 is py3+ only.
+# TODO: Remove the pin once we drop py2.7 from gensim too.
+#
+if PY2:
+    install_requires.append('smart_open >= 1.8.1, < 1.11')
+else:
+    install_requires.append('smart_open >= 1.8.1')
+
 setup(
     name='gensim',
-    version='3.8.1',
+    version='3.8.2',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
