@@ -345,6 +345,21 @@ if not (os.name == 'nt' and sys.version_info[0] < 3):
                   extra_link_args=extra_args)
     )
 
+install_requires = [
+    NUMPY_STR,
+    'scipy >= 0.18.1',
+    'six >= 1.5.0',
+]
+
+#
+# smart_open >= 1.11 is py3+ only.
+# TODO: Remove the pin once we drop py2.7 from gensim too.
+#
+if PY2:
+    install_requires.append('smart_open >= 1.8.1, < 1.11')
+else:
+    install_requires.append('smart_open >= 1.8.1')
+
 setup(
     name='gensim',
     version='3.8.1',
@@ -391,12 +406,7 @@ setup(
     setup_requires=[
         NUMPY_STR,
     ],
-    install_requires=[
-        NUMPY_STR,
-        'scipy >= 0.18.1',
-        'six >= 1.5.0',
-        'smart_open >= 1.8.1, < 1.11',  # smart_open >= 1.11 is py3+ only. TODO: Remove once we drop py2.7 from gensim too.
-    ],
+    install_requires=install_requires,
     tests_require=linux_testenv,
     extras_require={
         'distributed': distributed_env,
