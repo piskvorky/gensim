@@ -276,8 +276,8 @@ if sys.version_info < (3, 7):
     ])
 
 if (3, 0) < sys.version_info < (3, 7):
-    linux_testenv.extend(['nmslib'])    
-    
+    linux_testenv.extend(['nmslib'])
+
 docs_testenv = linux_testenv + distributed_env + [
     'sphinx',
     'sphinxcontrib-napoleon',
@@ -345,9 +345,24 @@ if not (os.name == 'nt' and sys.version_info[0] < 3):
                   extra_link_args=extra_args)
     )
 
+install_requires = [
+    NUMPY_STR,
+    'scipy >= 1.0.0',
+    'six >= 1.5.0',
+]
+
+#
+# smart_open >= 1.11 is py3+ only.
+# TODO: Remove the pin once we drop py2.7 from gensim too.
+#
+if PY2:
+    install_requires.append('smart_open >= 1.8.1, < 1.11')
+else:
+    install_requires.append('smart_open >= 1.8.1')
+
 setup(
     name='gensim',
-    version='3.8.1',
+    version='3.8.2',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
@@ -360,7 +375,7 @@ setup(
 
     url='http://radimrehurek.com/gensim',
     download_url='http://pypi.python.org/pypi/gensim',
-    
+
     license='LGPLv2.1',
 
     keywords='Singular Value Decomposition, SVD, Latent Semantic Indexing, '
@@ -391,12 +406,7 @@ setup(
     setup_requires=[
         NUMPY_STR,
     ],
-    install_requires=[
-        NUMPY_STR,
-        'scipy >= 0.18.1',
-        'six >= 1.5.0',
-        'smart_open >= 1.8.1',
-    ],
+    install_requires=install_requires,
     tests_require=linux_testenv,
     extras_require={
         'distributed': distributed_env,
