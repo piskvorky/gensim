@@ -1,6 +1,12 @@
 Changes
 =======
 
+## 3.8.2, 2020-04-10
+
+### :red_circle: Bug fixes
+
+* Pin `smart_open` version for compatibility with Py2.7
+
 ## 3.8.1, 2019-09-23
 
 ### :red_circle: Bug fixes
