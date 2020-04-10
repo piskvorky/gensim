@@ -347,7 +347,7 @@ if not (os.name == 'nt' and sys.version_info[0] < 3):
 
 install_requires = [
     NUMPY_STR,
-    'scipy >= 0.18.1',
+    'scipy >= 1.0.0',
     'six >= 1.5.0',
 ]
 
