@@ -36,10 +36,13 @@ Initialize a model with e.g.:
 
 .. sourcecode:: pycon
 
-    >>> from gensim.test.utils import common_texts, get_tmpfile
+    >>> from gensim.test.utils import common_texts
     >>> from gensim.models import Word2Vec
+    >>> from tempfile import mkdtemp
+    >>> from os import chdir
     >>>
-    >>> path = get_tmpfile("word2vec.model")
+    >>> path = mkdtemp() # make a note of this path if you need it for later
+    >>> chdir(path)
     >>>
     >>> model = Word2Vec(common_texts, size=100, window=5, min_count=1, workers=4)
     >>> model.save("word2vec.model")
@@ -70,10 +73,8 @@ fast loading and sharing the vectors in RAM between processes:
 
     >>> from gensim.models import KeyedVectors
     >>>
-    >>> path = get_tmpfile("wordvectors.kv")
-    >>>
-    >>> model.wv.save(path)
-    >>> wv = KeyedVectors.load("model.wv", mmap='r')
+    >>> model.wv.save("wordvectors.kv")
+    >>> wv = KeyedVectors.load("wordvectors.kv", mmap='r')
     >>> vector = wv['computer']  # numpy vector of a word
 
 Gensim can also load word vectors in the "word2vec C format", as a
