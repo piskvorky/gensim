@@ -32,9 +32,8 @@ except (ImportError, ValueError):
 
 logger = logging.getLogger(__name__)
 
-IS_WIN32 = (os.name == "nt") and (struct.calcsize('P') * 8 == 32)
-
 MAX_WORDVEC_COMPONENT_DIFFERENCE = 1.0e-10
+BUCKET = 5000
 
 FT_HOME = os.environ.get("FT_HOME")
 FT_CMD = os.path.join(FT_HOME, "fasttext") if FT_HOME else None
@@ -67,7 +66,7 @@ class TestFastTextModel(unittest.TestCase):
         self.test_new_model_file = datapath('lee_fasttext_new.bin')
 
     def test_training(self):
-        model = FT_gensim(size=10, min_count=1, hs=1, negative=0, seed=42, workers=1)
+        model = FT_gensim(size=10, min_count=1, hs=1, negative=0, seed=42, workers=1, bucket=BUCKET)
         model.build_vocab(sentences)
         self.model_sanity(model)
 
@@ -87,7 +86,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(sims, sims2)
 
         # build vocab and train in one step; must be the same as above
-        model2 = FT_gensim(sentences, size=10, min_count=1, hs=1, negative=0, seed=42, workers=1)
+        model2 = FT_gensim(sentences, size=10, min_count=1, hs=1, negative=0, seed=42, workers=1, bucket=BUCKET)
         self.models_equal(model, model2)
 
         # verify oov-word vector retrieval
@@ -99,7 +98,7 @@ class TestFastTextModel(unittest.TestCase):
 
     def testFastTextTrainParameters(self):
 
-        model = FT_gensim(size=10, min_count=1, hs=1, negative=0, seed=42, workers=1)
+        model = FT_gensim(size=10, min_count=1, hs=1, negative=0, seed=42, workers=1, bucket=BUCKET)
         model.build_vocab(sentences=sentences)
 
         self.assertRaises(TypeError, model.train, corpus_file=11111)
@@ -112,7 +111,7 @@ class TestFastTextModel(unittest.TestCase):
         with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
             utils.save_as_line_sentence(sentences, corpus_file)
 
-            model = FT_gensim(size=10, min_count=1, hs=1, negative=0, seed=42, workers=1)
+            model = FT_gensim(size=10, min_count=1, hs=1, negative=0, seed=42, workers=1, bucket=BUCKET)
             model.build_vocab(corpus_file=corpus_file)
             self.model_sanity(model)
 
@@ -151,10 +150,9 @@ class TestFastTextModel(unittest.TestCase):
         most_common_word = max(model.wv.vocab.items(), key=lambda item: item[1].count)[0]
         self.assertTrue(np.allclose(model.wv[most_common_word], model2.wv[most_common_word]))
 
-    @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_persistence(self):
         tmpf = get_tmpfile('gensim_fasttext.tst')
-        model = FT_gensim(sentences, min_count=1)
+        model = FT_gensim(sentences, min_count=1, bucket=BUCKET)
         model.save(tmpf)
         self.models_equal(model, FT_gensim.load(tmpf))
         #  test persistence of the KeyedVectors of a model
@@ -169,7 +167,7 @@ class TestFastTextModel(unittest.TestCase):
             utils.save_as_line_sentence(sentences, corpus_file)
 
             tmpf = get_tmpfile('gensim_fasttext.tst')
-            model = FT_gensim(corpus_file=corpus_file, min_count=1)
+            model = FT_gensim(corpus_file=corpus_file, min_count=1, bucket=BUCKET)
             model.save(tmpf)
             self.models_equal(model, FT_gensim.load(tmpf))
             #  test persistence of the KeyedVectors of a model
@@ -179,10 +177,9 @@ class TestFastTextModel(unittest.TestCase):
             self.assertTrue(np.allclose(wv.vectors_ngrams, loaded_wv.vectors_ngrams))
             self.assertEqual(len(wv.vocab), len(loaded_wv.vocab))
 
-    @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_norm_vectors_not_saved(self):
         tmpf = get_tmpfile('gensim_fasttext.tst')
-        model = FT_gensim(sentences, min_count=1)
+        model = FT_gensim(sentences, min_count=1, bucket=BUCKET)
         model.init_sims()
         model.save(tmpf)
         loaded_model = FT_gensim.load(tmpf)
@@ -406,7 +403,7 @@ class TestFastTextModel(unittest.TestCase):
         model_gensim = FT_gensim(
             size=50, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0,
             min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-            sorted_vocab=1, workers=1, min_alpha=0.0)
+            sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET)
 
         lee_data = LineSentence(datapath('lee_background.cor'))
         model_gensim.build_vocab(lee_data)
@@ -435,7 +432,7 @@ class TestFastTextModel(unittest.TestCase):
             model_gensim = FT_gensim(
                 size=50, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0,
                 min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-                sorted_vocab=1, workers=1, min_alpha=0.0)
+                sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET * 4)
 
             lee_data = LineSentence(datapath('lee_background.cor'))
             utils.save_as_line_sentence(lee_data, corpus_file)
@@ -468,7 +465,7 @@ class TestFastTextModel(unittest.TestCase):
         model_gensim = FT_gensim(
             size=50, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=1, negative=0,
             min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-            sorted_vocab=1, workers=1, min_alpha=0.0)
+            sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET)
 
         lee_data = LineSentence(datapath('lee_background.cor'))
         model_gensim.build_vocab(lee_data)
@@ -497,7 +494,7 @@ class TestFastTextModel(unittest.TestCase):
             model_gensim = FT_gensim(
                 size=50, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=1, negative=0,
                 min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-                sorted_vocab=1, workers=1, min_alpha=0.0)
+                sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET)
 
             lee_data = LineSentence(datapath('lee_background.cor'))
             utils.save_as_line_sentence(lee_data, corpus_file)
@@ -530,7 +527,7 @@ class TestFastTextModel(unittest.TestCase):
         model_gensim = FT_gensim(
             size=50, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=5,
             min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-            sorted_vocab=1, workers=1, min_alpha=0.0)
+            sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET)
 
         lee_data = LineSentence(datapath('lee_background.cor'))
         model_gensim.build_vocab(lee_data)
@@ -559,7 +556,7 @@ class TestFastTextModel(unittest.TestCase):
             model_gensim = FT_gensim(
                 size=50, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=5,
                 min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-                sorted_vocab=1, workers=1, min_alpha=0.0)
+                sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET)
 
             lee_data = LineSentence(datapath('lee_background.cor'))
             utils.save_as_line_sentence(lee_data, corpus_file)
@@ -592,7 +589,7 @@ class TestFastTextModel(unittest.TestCase):
         model_gensim = FT_gensim(
             size=50, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=0, negative=5,
             min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-            sorted_vocab=1, workers=1, min_alpha=0.0)
+            sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET * 4)
 
         lee_data = LineSentence(datapath('lee_background.cor'))
         model_gensim.build_vocab(lee_data)
@@ -621,7 +618,7 @@ class TestFastTextModel(unittest.TestCase):
             model_gensim = FT_gensim(
                 size=50, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=0, negative=5,
                 min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-                sorted_vocab=1, workers=1, min_alpha=0.0)
+                sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET * 4)
 
             lee_data = LineSentence(datapath('lee_background.cor'))
             utils.save_as_line_sentence(lee_data, corpus_file)
@@ -650,7 +647,7 @@ class TestFastTextModel(unittest.TestCase):
             self.assertGreaterEqual(overlap_count, 2)
 
     def test_online_learning(self):
-        model_hs = FT_gensim(sentences, size=10, min_count=1, seed=42, hs=1, negative=0)
+        model_hs = FT_gensim(sentences, size=10, min_count=1, seed=42, hs=1, negative=0, bucket=BUCKET)
         self.assertTrue(len(model_hs.wv.vocab), 12)
         self.assertTrue(model_hs.wv.vocab['graph'].count, 3)
         model_hs.build_vocab(new_sentences, update=True)  # update vocab
@@ -664,7 +661,7 @@ class TestFastTextModel(unittest.TestCase):
             utils.save_as_line_sentence(sentences, corpus_file)
             utils.save_as_line_sentence(new_sentences, new_corpus_file)
 
-            model_hs = FT_gensim(corpus_file=corpus_file, size=10, min_count=1, seed=42, hs=1, negative=0)
+            model_hs = FT_gensim(corpus_file=corpus_file, size=10, min_count=1, seed=42, hs=1, negative=0, bucket=BUCKET)
             self.assertTrue(len(model_hs.wv.vocab), 12)
             self.assertTrue(model_hs.wv.vocab['graph'].count, 3)
             model_hs.build_vocab(corpus_file=new_corpus_file, update=True)  # update vocab
@@ -674,7 +671,7 @@ class TestFastTextModel(unittest.TestCase):
 
     def test_online_learning_after_save(self):
         tmpf = get_tmpfile('gensim_fasttext.tst')
-        model_neg = FT_gensim(sentences, size=10, min_count=0, seed=42, hs=0, negative=5)
+        model_neg = FT_gensim(sentences, size=10, min_count=0, seed=42, hs=0, negative=5, bucket=BUCKET)
         model_neg.save(tmpf)
         model_neg = FT_gensim.load(tmpf)
         self.assertTrue(len(model_neg.wv.vocab), 12)
@@ -689,7 +686,7 @@ class TestFastTextModel(unittest.TestCase):
             utils.save_as_line_sentence(new_sentences, new_corpus_file)
 
             tmpf = get_tmpfile('gensim_fasttext.tst')
-            model_neg = FT_gensim(corpus_file=corpus_file, size=10, min_count=0, seed=42, hs=0, negative=5)
+            model_neg = FT_gensim(corpus_file=corpus_file, size=10, min_count=0, seed=42, hs=0, negative=5, bucket=BUCKET)
             model_neg.save(tmpf)
             model_neg = FT_gensim.load(tmpf)
             self.assertTrue(len(model_neg.wv.vocab), 12)
@@ -720,33 +717,29 @@ class TestFastTextModel(unittest.TestCase):
         sim = model.wv.n_similarity(['war'], ['terrorism'])
         self.assertLess(0., sim)
 
-    @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_sg_hs_online(self):
-        model = FT_gensim(sg=1, window=2, hs=1, negative=0, min_count=3, iter=1, seed=42, workers=1)
+        model = FT_gensim(sg=1, window=2, hs=1, negative=0, min_count=3, iter=1, seed=42, workers=1, bucket=BUCKET)
         self.online_sanity(model)
 
-    @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_sg_neg_online(self):
-        model = FT_gensim(sg=1, window=2, hs=0, negative=5, min_count=3, iter=1, seed=42, workers=1)
+        model = FT_gensim(sg=1, window=2, hs=0, negative=5, min_count=3, iter=1, seed=42, workers=1, bucket=BUCKET)
         self.online_sanity(model)
 
-    @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_cbow_hs_online(self):
         model = FT_gensim(
-            sg=0, cbow_mean=1, alpha=0.05, window=2, hs=1, negative=0, min_count=3, iter=1, seed=42, workers=1
+            sg=0, cbow_mean=1, alpha=0.05, window=2, hs=1, negative=0, min_count=3, iter=1, seed=42, workers=1, bucket=BUCKET
         )
         self.online_sanity(model)
 
-    @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_cbow_neg_online(self):
         model = FT_gensim(
             sg=0, cbow_mean=1, alpha=0.05, window=2, hs=0, negative=5,
-            min_count=5, iter=1, seed=42, workers=1, sample=0
+            min_count=5, iter=1, seed=42, workers=1, sample=0, bucket=BUCKET
         )
         self.online_sanity(model)
 
     def test_get_vocab_word_vecs(self):
-        model = FT_gensim(size=10, min_count=1, seed=42)
+        model = FT_gensim(size=10, min_count=1, seed=42, bucket=BUCKET)
         model.build_vocab(sentences)
         original_syn0_vocab = np.copy(model.wv.vectors_vocab)
         model.wv.adjust_vectors()
@@ -755,7 +748,7 @@ class TestFastTextModel(unittest.TestCase):
     def test_persistence_word2vec_format(self):
         """Test storing/loading the model in word2vec format."""
         tmpf = get_tmpfile('gensim_fasttext_w2v_format.tst')
-        model = FT_gensim(sentences, min_count=1, size=10)
+        model = FT_gensim(sentences, min_count=1, size=10, bucket=BUCKET)
         model.wv.save_word2vec_format(tmpf, binary=True)
         loaded_model_kv = Word2VecKeyedVectors.load_word2vec_format(tmpf, binary=True)
         self.assertEqual(len(model.wv.vocab), len(loaded_model_kv.vocab))
@@ -769,7 +762,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(model.wv.vectors_ngrams.shape, (20, 10))
 
     def test_estimate_memory(self):
-        model = FT_gensim(sg=1, hs=1, size=10, negative=5, min_count=3)
+        model = FT_gensim(sg=1, hs=1, size=10, negative=5, min_count=3, bucket=BUCKET)
         model.build_vocab(sentences)
         report = model.estimate_memory()
         self.assertEqual(report['vocab'], 2800)
@@ -835,7 +828,7 @@ class TestFastTextModel(unittest.TestCase):
 
         model_gensim = FT_gensim(size=50, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0,
                                  min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-                                 sorted_vocab=1, workers=1, min_alpha=0.0)
+                                 sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET)
 
         lee_data = LineSentence(datapath('lee_background.cor'))
         model_gensim.build_vocab(lee_data)
@@ -856,7 +849,7 @@ class TestFastTextModel(unittest.TestCase):
 
         model_gensim = FT_gensim(size=50, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=1, negative=0,
                                  min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-                                 sorted_vocab=1, workers=1, min_alpha=0.0)
+                                 sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET)
 
         lee_data = LineSentence(datapath('lee_background.cor'))
         model_gensim.build_vocab(lee_data)
@@ -1334,6 +1327,7 @@ class SaveFacebookFormatModelTest(unittest.TestCase):
             "hs": 1,
             "negative": 5,
             "seed": 42,
+            "bucket": BUCKET,
             "workers": 1}
 
         with temporary_file("roundtrip_model_to_model.bin") as fpath:
@@ -1387,6 +1381,7 @@ class SaveGensimByteIdentityTest(unittest.TestCase):
             "min_count": 1,
             "hs": 1,
             "negative": 0,
+            "bucket": BUCKET,
             "seed": 42,
             "workers": 1}
 
@@ -1486,6 +1481,7 @@ class SaveFacebookFormatReadingTest(unittest.TestCase):
             "min_count": 1,
             "hs": 1,
             "negative": 5,
+            "bucket": BUCKET,
             "seed": 42,
             "workers": 1}
 
