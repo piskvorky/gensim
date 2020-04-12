@@ -32,6 +32,7 @@ except (ImportError, ValueError):
 
 logger = logging.getLogger(__name__)
 
+IS_WIN32 = (os.name == "nt") and (struct.calcsize('P') * 8 == 32)
 MAX_WORDVEC_COMPONENT_DIFFERENCE = 1.0e-10
 BUCKET = 5000
 
@@ -776,6 +777,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(report['buckets_word'], 640)
         self.assertEqual(report['total'], 6160)
 
+    @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def testLoadOldModel(self):
         """Test loading fasttext models from previous version"""
 
