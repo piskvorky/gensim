@@ -661,7 +661,8 @@ class TestFastTextModel(unittest.TestCase):
             utils.save_as_line_sentence(sentences, corpus_file)
             utils.save_as_line_sentence(new_sentences, new_corpus_file)
 
-            model_hs = FT_gensim(corpus_file=corpus_file, size=10, min_count=1, seed=42, hs=1, negative=0, bucket=BUCKET)
+            model_hs = FT_gensim(
+                corpus_file=corpus_file, size=10, min_count=1, seed=42, hs=1, negative=0, bucket=BUCKET)
             self.assertTrue(len(model_hs.wv.vocab), 12)
             self.assertTrue(model_hs.wv.vocab['graph'].count, 3)
             model_hs.build_vocab(corpus_file=new_corpus_file, update=True)  # update vocab
@@ -686,7 +687,8 @@ class TestFastTextModel(unittest.TestCase):
             utils.save_as_line_sentence(new_sentences, new_corpus_file)
 
             tmpf = get_tmpfile('gensim_fasttext.tst')
-            model_neg = FT_gensim(corpus_file=corpus_file, size=10, min_count=0, seed=42, hs=0, negative=5, bucket=BUCKET)
+            model_neg = FT_gensim(
+                corpus_file=corpus_file, size=10, min_count=0, seed=42, hs=0, negative=5, bucket=BUCKET)
             model_neg.save(tmpf)
             model_neg = FT_gensim.load(tmpf)
             self.assertTrue(len(model_neg.wv.vocab), 12)
@@ -727,7 +729,8 @@ class TestFastTextModel(unittest.TestCase):
 
     def test_cbow_hs_online(self):
         model = FT_gensim(
-            sg=0, cbow_mean=1, alpha=0.05, window=2, hs=1, negative=0, min_count=3, iter=1, seed=42, workers=1, bucket=BUCKET
+            sg=0, cbow_mean=1, alpha=0.05, window=2, hs=1, negative=0, min_count=3, iter=1, seed=42, workers=1,
+            bucket=BUCKET,
         )
         self.online_sanity(model)
 
