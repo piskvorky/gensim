@@ -304,7 +304,7 @@ docs_testenv = linux_testenv + distributed_env + [
     'statsmodels',
     'pyemd',
     'pandas',
-    'matplotlib',  # sphinx-gallery expect this deps
+    'matplotlib',  # sphinx-gallery expects this dep
 ]
 
 if sys.version_info < (3, 7):
