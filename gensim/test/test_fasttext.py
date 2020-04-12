@@ -34,6 +34,9 @@ logger = logging.getLogger(__name__)
 
 IS_WIN32 = (os.name == "nt") and (struct.calcsize('P') * 8 == 32)
 MAX_WORDVEC_COMPONENT_DIFFERENCE = 1.0e-10
+
+# Limit the size of FastText ngram buckets, for RAM reasons.
+# See https://github.com/RaRe-Technologies/gensim/issues/2790
 BUCKET = 5000
 
 FT_HOME = os.environ.get("FT_HOME")
