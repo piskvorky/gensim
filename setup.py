@@ -284,7 +284,7 @@ linux_testenv = win_testenv[:]
 #   https://packaging.python.org/discussions/install-requires-vs-requirements/
 #
 docs_testenv = linux_testenv + distributed_env + [
-    'sphinx',
+    'sphinx <= 2.4.4',  # avoid `sphinx >= 3.0` that breaks build
     'sphinxcontrib-napoleon',
     'plotly',
     #
@@ -304,6 +304,7 @@ docs_testenv = linux_testenv + distributed_env + [
     'statsmodels',
     'pyemd',
     'pandas',
+    'matplotlib',  # sphinx-gallery expects this dep
 ]
 
 if sys.version_info < (3, 7):

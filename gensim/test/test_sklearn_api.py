@@ -1299,7 +1299,7 @@ class TestPhrasesTransformerCustomScorer(unittest.TestCase):
 
 class TestFastTextWrapper(unittest.TestCase):
     def setUp(self):
-        self.model = FTTransformer(size=10, min_count=0, seed=42)
+        self.model = FTTransformer(size=10, min_count=0, seed=42, bucket=5000)
         self.model.fit(texts)
 
     def testTransform(self):
@@ -1327,12 +1327,11 @@ class TestFastTextWrapper(unittest.TestCase):
 
     def testConsistencyWithGensimModel(self):
         # training a FTTransformer
-        self.model = FTTransformer(size=10, min_count=0, seed=42, workers=1)
+        self.model = FTTransformer(size=10, min_count=0, seed=42, workers=1, bucket=5000)
         self.model.fit(texts)
 
         # training a Gensim FastText model with the same params
-        gensim_ftmodel = models.FastText(texts, size=10, min_count=0, seed=42,
-                                         workers=1)
+        gensim_ftmodel = models.FastText(texts, size=10, min_count=0, seed=42, workers=1, bucket=5000)
 
         # vectors returned by FTTransformer
         vecs_transformer_api = self.model.transform(
@@ -1350,7 +1349,7 @@ class TestFastTextWrapper(unittest.TestCase):
         self.assertTrue(passed)
 
     def testPipeline(self):
-        model = FTTransformer(size=10, min_count=1)
+        model = FTTransformer(size=10, min_count=1, bucket=5000)
         model.fit(w2v_texts)
 
         class_dict = {'mathematics': 1, 'physics': 0}
@@ -1396,7 +1395,7 @@ class TestFastTextWrapper(unittest.TestCase):
         self.assertTrue(passed)
 
     def testModelNotFitted(self):
-        ftmodel_wrapper = FTTransformer(size=10, min_count=0, seed=42)
+        ftmodel_wrapper = FTTransformer(size=10, min_count=0, seed=42, bucket=5000)
         word = texts[0][0]
         self.assertRaises(NotFittedError, ftmodel_wrapper.transform, word)
 

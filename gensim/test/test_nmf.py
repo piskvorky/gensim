@@ -98,7 +98,7 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         vec = matutils.sparse2full(transformed, 2)
         expected = [0.35023746, 0.64976251]
         # must contain the same values, up to re-ordering
-        self.assertTrue(np.allclose(sorted(vec), sorted(expected), rtol=1e-4))
+        self.assertTrue(np.allclose(sorted(vec), sorted(expected), rtol=1e-3))
 
     def testTopTopics(self):
         top_topics = self.model.top_topics(common_corpus)
