@@ -16,7 +16,8 @@ if len(logger.handlers) == 0:  # To ensure reload() doesn't add another one
 # newer versions.  The below NullHandler is necessary because gensim is pinned
 # to an older smart_open version for Python 2.7 users.
 #
-logging.getLogger('smart_open').addHandler(logging.NullHandler())
+if len(logging.getLogger('smart_open').handlers) == 0:
+    logging.getLogger('smart_open').addHandler(logging.NullHandler())
 
 #
 # Perform the imports after logging handlers are set up, to prevent
