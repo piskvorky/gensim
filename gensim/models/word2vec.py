@@ -41,7 +41,7 @@ Initialize a model with e.g.:
     >>> from tempfile import mkdtemp
     >>> from os import chdir
     >>>
-    >>> path = mkdtemp() # make a note of this path if you need it for later
+    >>> path = mkdtemp()  # make a note of this path if you need it for later
     >>> chdir(path)
     >>>
     >>> model = Word2Vec(common_texts, size=100, window=5, min_count=1, workers=4)
