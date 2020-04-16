@@ -366,7 +366,7 @@ else:
 
 setup(
     name='gensim',
-    version='3.8.2',
+    version='3.8.3',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
