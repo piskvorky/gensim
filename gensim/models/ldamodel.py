@@ -355,7 +355,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Parameters
         ----------
         corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`).
             If not given, the model is left untrained (presumably because you want to call
             :meth:`~gensim.models.ldamodel.LdaModel.update` manually).
         num_topics : int, optional
@@ -846,7 +846,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Parameters
         ----------
         corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`) used to update the
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`) used to update the
             model.
         chunksize :  int, optional
             Number of documents to be used in each training chunk.
@@ -1061,7 +1061,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Parameters
         ----------
         corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`) used to estimate the
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`) used to estimate the
             variational bounds.
         gamma : numpy.ndarray, optional
             Topic weight variational parameters for each document. If not supplied, it will be inferred from the model.
