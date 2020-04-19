@@ -1238,7 +1238,7 @@ class InputQueue(multiprocessing.Process):
             self.q.put(wrapped_chunk.pop(), block=True)
 
 
-if os.name == 'nt':
+if os.name == 'nt' or (sys.platform == "darwin" and sys.version_info >= (3, 8)):
     def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
         """Split `corpus` into fixed-sized chunks, using :func:`~gensim.utils.chunkize_serial`.
 
