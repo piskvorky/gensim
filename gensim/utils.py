@@ -1241,7 +1241,7 @@ class InputQueue(multiprocessing.Process):
 # Multiprocessing on Windows (and on OSX with python3.8+) uses "spawn" mode, which
 # causes issues with pickling.
 # So for these two platforms, use simpler serial processing in `chunkize`.
-# See https://github.com/RaRe-Technologies/gensim/pull/2800/files#r410890171
+# See https://github.com/RaRe-Technologies/gensim/pull/2800#discussion_r410890171
 if os.name == 'nt' or (sys.platform == "darwin" and sys.version_info >= (3, 8)):
     def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
         """Split `corpus` into fixed-sized chunks, using :func:`~gensim.utils.chunkize_serial`.
