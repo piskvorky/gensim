@@ -1238,6 +1238,7 @@ class InputQueue(multiprocessing.Process):
             self.q.put(wrapped_chunk.pop(), block=True)
 
 
+# Avoid multiprocessing issue on Windows and OSX with python3.8+
 if os.name == 'nt' or (sys.platform == "darwin" and sys.version_info >= (3, 8)):
     def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
         """Split `corpus` into fixed-sized chunks, using :func:`~gensim.utils.chunkize_serial`.
@@ -1260,7 +1261,8 @@ if os.name == 'nt' or (sys.platform == "darwin" and sys.version_info >= (3, 8)):
 
         """
         if maxsize > 0:
-            warnings.warn("detected Windows; aliasing chunkize to chunkize_serial")
+            entity = "Windows" if os.name == 'nt' else "OSX with python3.8+"
+            warnings.warn("detected {entity}; aliasing chunkize to chunkize_serial".format(entity=entity))
         for chunk in chunkize_serial(corpus, chunksize, as_numpy=as_numpy):
             yield chunk
 else:
