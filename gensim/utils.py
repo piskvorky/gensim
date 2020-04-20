@@ -1265,7 +1265,7 @@ if os.name == 'nt' or (sys.platform == "darwin" and sys.version_info >= (3, 8)):
         """
         if maxsize > 0:
             entity = "Windows" if os.name == 'nt' else "OSX with python3.8+"
-            warnings.warn("detected {entity}; aliasing chunkize to chunkize_serial".format(entity=entity))
+            warnings.warn("detected %s; aliasing chunkize to chunkize_serial" % entity)
         for chunk in chunkize_serial(corpus, chunksize, as_numpy=as_numpy):
             yield chunk
 else:
