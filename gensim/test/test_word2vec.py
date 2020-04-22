@@ -1021,7 +1021,7 @@ class TestWord2VecModel(unittest.TestCase):
 
 class TestWMD(unittest.TestCase):
 
-    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed or have some issues")
+    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed")
     def testNonzero(self):
         '''Test basic functionality with a test sentence.'''
 
@@ -1033,7 +1033,7 @@ class TestWMD(unittest.TestCase):
         # Check that distance is non-zero.
         self.assertFalse(distance == 0.0)
 
-    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed or have some issues")
+    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed")
     def testSymmetry(self):
         '''Check that distance is symmetric.'''
 
@@ -1044,7 +1044,7 @@ class TestWMD(unittest.TestCase):
         distance2 = model.wv.wmdistance(sentence2, sentence1)
         self.assertTrue(np.allclose(distance1, distance2))
 
-    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed or have some issues")
+    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed")
     def testIdenticalSentences(self):
         '''Check that the distance from a sentence to itself is zero.'''
 
