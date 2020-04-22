@@ -7,7 +7,7 @@ gensim – Topic Modelling in Python
 [![Downloads](https://pepy.tech/badge/gensim/month)](https://pepy.tech/project/gensim/month)
 [![DOI](https://zenodo.org/badge/DOI/10.13140/2.1.2393.1847.svg)](https://doi.org/10.13140/2.1.2393.1847)
 [![Mailing List](https://img.shields.io/badge/-Mailing%20List-brightgreen.svg)](https://groups.google.com/forum/#!forum/gensim)
-[![Follow](https://img.shields.io/twitter/follow/gensim_py.svg?style=social&label=Follow)](https://twitter.com/gensim_py)
+[![Follow](https://img.shields.io/twitter/follow/gensim_py.svg?style=social&style=flat&logo=twitter&label=Follow)](https://twitter.com/gensim_py)
 
 Gensim is a Python library for *topic modelling*, *document indexing*
 and *similarity retrieval* with large corpora. Target audience is the
