@@ -1,12 +1,15 @@
 gensim – Topic Modelling in Python
 ==================================
 
-[![Build Status](https://travis-ci.org/RaRe-Technologies/gensim.svg?branch=develop)](https://travis-ci.org/RaRe-Technologies/gensim)
-[![GitHub release](https://img.shields.io/github/release/rare-technologies/gensim.svg?maxAge=3600)](https://github.com/RaRe-Technologies/gensim/releases)
-[![Downloads](https://img.shields.io/pypi/dm/gensim?color=blue)](https://pepy.tech/project/gensim/month)
-[![DOI](https://zenodo.org/badge/DOI/10.13140/2.1.2393.1847.svg)](https://doi.org/10.13140/2.1.2393.1847)
-[![Mailing List](https://img.shields.io/badge/-Mailing%20List-blue.svg)](https://groups.google.com/forum/#!forum/gensim)
-[![Follow](https://img.shields.io/twitter/follow/gensim_py.svg?style=social&style=flat&logo=twitter&label=Follow&color=blue)](https://twitter.com/gensim_py)
+[comment]: # (The following image URLs are obfuscated = proxied and cached through Google because of:
+              https://github.com/RaRe-Technologies/gensim/issues/2805 )
+
+[![Build Status](https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&refresh=3600&url=https%3A%2F%2Ftravis-ci.org%2FRaRe-Technologies%2Fgensim.svg%3Fbranch%3Ddevelop)](https://travis-ci.org/RaRe-Technologies/gensim)
+[![GitHub release](https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&refresh=3600&url=https%3A%2F%2Fimg.shields.io%2Fgithub%2Frelease%2Frare-technologies%2Fgensim.svg%3FmaxAge%3D3600)](https://github.com/RaRe-Technologies/gensim/releases)
+[![Downloads](https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&refresh=86400&url=https%3A%2F%2Fimg.shields.io%2Fpypi%2Fdm%2Fgensim%3Fcolor%3Dblue)](https://pepy.tech/project/gensim/month)
+[![DOI](https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&refresh=604800&url=https%3A%2F%2Fzenodo.org%2Fbadge%2FDOI%2F10.13140%2F2.1.2393.1847.svg)](https://doi.org/10.13140/2.1.2393.1847)
+[![Mailing List](https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&refresh=604800&url=https%3A%2F%2Fimg.shields.io%2Fbadge%2F-Mailing%2520List-blue.svg)](https://groups.google.com/forum/#!forum/gensim)
+[![Follow](https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&refresh=604800&url=https%3A%2F%2Fimg.shields.io%2Ftwitter%2Ffollow%2Fgensim_py.svg%3Fstyle%3Dsocial%26style%3Dflat%26logo%3Dtwitter%26label%3DFollow%26color%3Dblue)](https://twitter.com/gensim_py)
 
 Gensim is a Python library for *topic modelling*, *document indexing*
 and *similarity retrieval* with large corpora. Target audience is the
