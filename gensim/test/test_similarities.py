@@ -570,7 +570,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
                     for line in infile:
                         yield line.lower().strip().split()
 
-        model = FastText(LeeReader(datapath('lee.cor')))
+        model = FastText(LeeReader(datapath('lee.cor')), bucket=5000)
         model.init_sims()
         index = self.indexer(model, 10)
 
@@ -733,7 +733,7 @@ class TestWord2VecNmslibIndexer(unittest.TestCase):
                     for line in infile:
                         yield line.lower().strip().split()
 
-        model = FastText(LeeReader(datapath('lee.cor')))
+        model = FastText(LeeReader(datapath('lee.cor')), bucket=5000)
         model.init_sims()
         index = self.indexer(model)
 
