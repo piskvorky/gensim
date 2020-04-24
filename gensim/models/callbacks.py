@@ -184,7 +184,7 @@ class CoherenceMetric(Metric):
         Parameters
         ----------
         corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`).
         texts : list of char (str of length 1), optional
             Tokenized texts needed for coherence models that use sliding window based probability estimator.
         dictionary : :class:`~gensim.corpora.dictionary.Dictionary`, optional
@@ -267,7 +267,7 @@ class PerplexityMetric(Metric):
         Parameters
         ----------
         corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`).
         logger : {'shell', 'visdom'}, optional
            Monitor training process using one of the available methods. 'shell' will print the perplexity value in
            the active shell, while 'visdom' will visualize the coherence value with increasing epochs using the Visdom

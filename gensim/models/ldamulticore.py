@@ -112,7 +112,7 @@ class LdaMulticore(LdaModel):
         Parameters
         ----------
         corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`).
             If not given, the model is left untrained (presumably because you want to call
             :meth:`~gensim.models.ldamodel.LdaModel.update` manually).
         num_topics : int, optional
@@ -206,7 +206,7 @@ class LdaMulticore(LdaModel):
         Parameters
         ----------
         corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`) used to update the
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`) used to update the
             model.
         chunks_as_numpy : bool
             Whether each chunk passed to the inference step should be a np.ndarray or not. Numpy can in some settings
