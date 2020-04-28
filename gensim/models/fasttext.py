@@ -308,9 +308,17 @@ try:
         FAST_VERSION,
         MAX_WORDS_IN_BATCH,
     )
+except ImportError:
+    raise gensim.utils.NO_CYTHON
+
+try:
     from gensim.models.fasttext_corpusfile import train_epoch_sg, train_epoch_cbow
 except ImportError:
-    raise utils.NO_CYTHON
+    #
+    # corpusfile is unavailable under Py2.7 on Windows.
+    # This is not fatal, life goes on.
+    #
+    pass
 
 
 class FastText(BaseWordEmbeddingsModel):
