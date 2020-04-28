@@ -52,7 +52,6 @@ The model can be updated (trained) with new documents via
 from __future__ import with_statement
 
 import logging
-import time
 import warnings
 
 import numpy as np
@@ -64,6 +63,12 @@ from gensim.matutils import dirichlet_expectation, mean_absolute_difference
 from gensim.models import basemodel, ldamodel
 
 from gensim.utils import deprecated
+
+import six
+if six.PY2:
+    from time import time as perf_counter
+else:
+    from time import perf_counter
 
 logger = logging.getLogger(__name__)
 
@@ -464,7 +469,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         save_freq = max(1, int(10000 / self.chunksize))  # save every 10k docs, roughly
         chunks_processed = 0
-        start_time = time.perf_counter()
+        start_time = perf_counter()
 
         while True:
             for chunk in utils.grouper(corpus, self.chunksize):
@@ -513,7 +518,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             (self.max_chunks and chunks_processed == self.max_chunks)
 
             # time limit reached
-            or (self.max_time and time.perf_counter() - start_time > self.max_time)
+            or (self.max_time and perf_counter() - start_time > self.max_time)
 
             # no limits and whole corpus has been processed once
             or (not self.max_chunks and not self.max_time and docs_processed >= self.m_D))

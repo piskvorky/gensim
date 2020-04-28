@@ -24,13 +24,18 @@ import os
 import math
 import numpy
 import scipy.sparse as sparse
-import time
 
 from six.moves import range
 
 import gensim
 from gensim.corpora import IndexedCorpus
 from gensim.interfaces import TransformedCorpus
+
+import six
+if six.PY2:
+    from time import time as perf_counter
+else:
+    from time import perf_counter
 
 logger = logging.getLogger(__name__)
 
@@ -280,12 +285,12 @@ class ShardedCorpus(IndexedCorpus):
         self.dim = proposed_dim
         self.offsets = [0]
 
-        start_time = time.perf_counter()
+        start_time = perf_counter()
 
         logger.info('Running init from corpus.')
 
         for n, doc_chunk in enumerate(gensim.utils.grouper(corpus, chunksize=shardsize)):
-            logger.info('Chunk no. %d at %f s', n, time.perf_counter() - start_time)
+            logger.info('Chunk no. %d at %f s', n, perf_counter() - start_time)
 
             current_shard = numpy.zeros((len(doc_chunk), self.dim), dtype=dtype)
             logger.debug('Current chunk dimension: %d x %d', len(doc_chunk), self.dim)
@@ -300,7 +305,7 @@ class ShardedCorpus(IndexedCorpus):
 
             self.save_shard(current_shard)
 
-        end_time = time.perf_counter()
+        end_time = perf_counter()
         logger.info('Built %d shards in %f s.', self.n_shards, end_time - start_time)
 
     def init_by_clone(self):
