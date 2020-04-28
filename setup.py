@@ -13,7 +13,7 @@ Run with::
 import distutils.cmd
 import distutils.log
 import itertools
-import os.path
+import os
 import platform
 import shutil
 import sys
@@ -39,6 +39,14 @@ cpp_extensions = {
     'gensim.models.fasttext_corpusfile': 'gensim/models/fasttext_corpusfile.cpp',
     'gensim.models.doc2vec_corpusfile': 'gensim/models/doc2vec_corpusfile.cpp',
 }
+
+if os.name == 'nt' and PY2:
+    #
+    # The corpusfile extensions don't work under Py2.7 on Win, so disable them.
+    #
+    cpp_extensions = {
+        'gensim.models.doc2vec_inner': 'gensim/models/doc2vec_inner.cpp',
+    }
 
 
 def need_cython():
