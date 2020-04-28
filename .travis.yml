@@ -32,6 +32,9 @@ matrix:
     - python: '3.6'
       env: TOXENV="py36-linux"
 
+    - python: '2.7'
+      env: TOXENV="py27-linux"
+
 
 install:
   - pip install tox
