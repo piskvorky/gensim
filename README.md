@@ -69,23 +69,23 @@ NumPy. This is optional, but using an optimized BLAS such as [ATLAS] or
 magnitude. On OS X, NumPy picks up the BLAS that comes with it
 automatically, so you don’t need to do anything special.
 
-The simple way to install gensim is:
+Install the latest version of gensim:
 
-    pip install -U gensim
+```bash
+    pip install --upgrade gensim
+```
 
 Or, if you have instead downloaded and unzipped the [source tar.gz]
-package, you’d run:
+package:
 
-    python setup.py test
+```bash
     python setup.py install
+```
 
-For alternative modes of installation (without root privileges,
-development installation, optional install features), see the
-[documentation].
+For alternative modes of installation, see the [documentation].
 
-This version has been tested under Python 2.7, 3.5 and 3.6. Gensim’s github repo is hooked
-against [Travis CI for automated testing] on every commit push and pull
-request. Support for Python 2.6, 3.3 and 3.4 was dropped in gensim 1.0.0. Install gensim 0.13.4 if you *must* use Python 2.6, 3.3 or 3.4. Support for Python 2.5 was dropped in gensim 0.10.0; install gensim 0.9.1 if you *must* use Python 2.5). 
+Gensim is being `continuously tested <https://travis-ci.org/RaRe-Technologies/gensim>`_ under Python 3.5, 3.6, 3.7 and 3.8.
+Support for Python 2.7 was dropped in gensim 4.0.0 – install gensim 3.8.3 if you must use Python 2.7.
 
 How come gensim is so fast and memory efficient? Isn’t it pure Python, and isn’t Python slow and greedy?
 --------------------------------------------------------------------------------------------------------
@@ -113,14 +113,14 @@ Documentation
   [Tutorials]: https://radimrehurek.com/gensim/auto_examples/
   [Official Documentation and Walkthrough]: http://radimrehurek.com/gensim/
   [Official API Documentation]: http://radimrehurek.com/gensim/apiref.html
-  
+
 ---------
 
 Adopters
 --------
 
 | Company | Logo | Industry | Use of Gensim |
-|---------|------|----------|---------------|                          
+|---------|------|----------|---------------|
 | [RARE Technologies](http://rare-technologies.com) | ![rare](docs/src/readme_images/rare.png) | ML & NLP consulting | Creators of Gensim – this is us! |
 | [Amazon](http://www.amazon.com/) |  ![amazon](docs/src/readme_images/amazon.png) | Retail |  Document similarity. |
 | [National Institutes of Health](https://github.com/NIHOPA/pipeline_word2vec) | ![nih](docs/src/readme_images/nih.png) | Health | Processing grants and publications with word2vec. |
@@ -169,8 +169,8 @@ BibTeX entry:
   [Talentpair]: https://avatars3.githubusercontent.com/u/8418395?v=3&s=100
   [citing gensim in academic papers and theses]: https://scholar.google.cz/citations?view_op=view_citation&hl=en&user=9vG_kV0AAAAJ&citation_for_view=9vG_kV0AAAAJ:u-x6o8ySG0sC
 
-  
-  
+
+
   [documentation and Jupyter Notebook tutorials]: https://github.com/RaRe-Technologies/gensim/#documentation
   [Vector Space Model]: http://en.wikipedia.org/wiki/Vector_space_model
   [unsupervised document analysis]: http://en.wikipedia.org/wiki/Latent_semantic_indexing

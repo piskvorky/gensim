@@ -21,7 +21,7 @@ from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
 
 if sys.version_info[:2] < (3, 5):
-    raise Exception('This version of gensim needs 3.5 or later.')
+    raise Exception('This version of gensim needs Python 3.5 or later.')
 
 c_extensions = {
     'gensim.models.word2vec_inner': 'gensim/models/word2vec_inner.c',
@@ -169,11 +169,11 @@ Features
 * All algorithms are **memory-independent** w.r.t. the corpus size (can process input larger than RAM, streamed, out-of-core),
 * **Intuitive interfaces**
 
-  * easy to plug in your own input corpus/datastream (trivial streaming API)
-  * easy to extend with other Vector Space algorithms (trivial transformation API)
+  * easy to plug in your own input corpus/datastream (simple streaming API)
+  * easy to extend with other Vector Space algorithms (simple transformation API)
 
 * Efficient multicore implementations of popular algorithms, such as online **Latent Semantic Analysis (LSA/LSI/SVD)**,
-  **Latent Dirichlet Allocation (LDA)**, **Random Projections (RP)**, **Hierarchical Dirichlet Process (HDP)**  or **word2vec deep learning**.
+  **Latent Dirichlet Allocation (LDA)**, **Random Projections (RP)**, **Hierarchical Dirichlet Process (HDP)** or **word2vec deep learning**.
 * **Distributed computing**: can run *Latent Semantic Analysis* and *Latent Dirichlet Allocation* on a cluster of computers.
 * Extensive `documentation and Jupyter Notebook tutorials <https://github.com/RaRe-Technologies/gensim/#documentation>`_.
 
@@ -190,21 +190,20 @@ You must have them installed prior to installing `gensim`.
 
 It is also recommended you install a fast BLAS library before installing NumPy. This is optional, but using an optimized BLAS such as `ATLAS <http://math-atlas.sourceforge.net/>`_ or `OpenBLAS <http://xianyi.github.io/OpenBLAS/>`_ is known to improve performance by as much as an order of magnitude. On OS X, NumPy picks up the BLAS that comes with it automatically, so you don't need to do anything special.
 
-The simple way to install `gensim` is::
+Install the latest version of gensim::
 
-    pip install -U gensim
+    pip install --upgrade gensim
 
-Or, if you have instead downloaded and unzipped the `source tar.gz <http://pypi.python.org/pypi/gensim>`_ package,
-you'd run::
+Or, if you have instead downloaded and unzipped the `source tar.gz <http://pypi.python.org/pypi/gensim>`_ package::
 
-    python setup.py test
     python setup.py install
 
 
-For alternative modes of installation (without root privileges, development
-installation, optional install features), see the `install documentation <http://radimrehurek.com/gensim/install.html>`_.
+For alternative modes of installation, see the `documentation <http://radimrehurek.com/gensim/install.html>`_.
 
-This version has been tested under Python 2.7, 3.5 and 3.6. Support for Python 2.6, 3.3 and 3.4 was dropped in gensim 1.0.0. Install gensim 0.13.4 if you *must* use Python 2.6, 3.3 or 3.4. Support for Python 2.5 was dropped in gensim 0.10.0; install gensim 0.9.1 if you *must* use Python 2.5). Gensim's github repo is hooked against `Travis CI for automated testing <https://travis-ci.org/RaRe-Technologies/gensim>`_ on every commit push and pull request.
+Gensim is being `continuously tested <https://travis-ci.org/RaRe-Technologies/gensim>`_ under Python 3.5, 3.6, 3.7 and 3.8.
+Support for Python 2.7 was dropped in gensim 4.0.0 – install gensim 3.8.3 if you must use Python 2.7.
+
 
 How come gensim is so fast and memory efficient? Isn't it pure Python, and isn't Python slow and greedy?
 --------------------------------------------------------------------------------------------------------
@@ -262,7 +261,7 @@ win_testenv = [
     'pytest-rerunfailures',
     'mock',
     'cython',
-    # temporarily remove pyemd to work around appveyor issues
+    # Temporarily remove pyemd to work around appveyor issues. XXX done?
     # 'pyemd',
     'testfixtures',
     'Morfessor==2.0.2a4',
@@ -307,13 +306,13 @@ docs_testenv = linux_testenv + distributed_env + [
     'matplotlib',  # sphinx-gallery expects this dep
 ]
 
-if sys.version_info < (3, 7):
+if sys.version_info < (3, 7):  # XXX why?
     linux_testenv.extend([
         'tensorflow <= 1.3.0',
         'keras >= 2.0.4, <= 2.1.4',
     ])
 
-if (3, 0) < sys.version_info < (3, 7):
+if (3, 0) < sys.version_info < (3, 7):  # XXX why?
     linux_testenv.extend(['nmslib'])
 
 NUMPY_STR = 'numpy >= 1.11.3'
@@ -374,6 +373,7 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Scientific/Engineering :: Information Analysis',
         'Topic :: Text Processing :: Linguistic',
