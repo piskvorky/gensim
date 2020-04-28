@@ -297,8 +297,7 @@ from gensim.models.keyedvectors import FastTextKeyedVectors
 from gensim.models.base_any2vec import BaseWordEmbeddingsModel
 from gensim.models.utils_any2vec import ft_ngram_hashes
 
-from gensim import utils
-from gensim.utils import deprecated, call_on_class_only
+import gensim.utils
 
 logger = logging.getLogger(__name__)
 
@@ -465,8 +464,8 @@ class FastText(BaseWordEmbeddingsModel):
             >>> of_vector = model.wv['of']  # get vector for out-of-vocab word
 
         """
-        self.load = call_on_class_only
-        self.load_fasttext_format = call_on_class_only
+        self.load = gensim.utils.call_on_class_only
+        self.load_fasttext_format = gensim.utils.call_on_class_only
         self.callbacks = callbacks
         self.word_ngrams = int(word_ngrams)
         if self.word_ngrams <= 1 and max_n == 0:
@@ -486,52 +485,52 @@ class FastText(BaseWordEmbeddingsModel):
             seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha)
 
     @property
-    @deprecated("Attribute will be removed in 4.0.0, use wv.min_n instead")
+    @gensim.utils.deprecated("Attribute will be removed in 4.0.0, use wv.min_n instead")
     def min_n(self):
         return self.wv.min_n
 
     @property
-    @deprecated("Attribute will be removed in 4.0.0, use wv.max_n instead")
+    @gensim.utils.deprecated("Attribute will be removed in 4.0.0, use wv.max_n instead")
     def max_n(self):
         return self.wv.max_n
 
     @property
-    @deprecated("Attribute will be removed in 4.0.0, use trainables.bucket instead")
+    @gensim.utils.deprecated("Attribute will be removed in 4.0.0, use trainables.bucket instead")
     def bucket(self):
         return self.trainables.bucket
 
     @property
-    @deprecated("Attribute will be removed in 4.0.0, use self.trainables.vectors_vocab_lockf instead")
+    @gensim.utils.deprecated("Attribute will be removed in 4.0.0, use self.trainables.vectors_vocab_lockf instead")
     def syn0_vocab_lockf(self):
         return self.trainables.vectors_vocab_lockf
 
     @syn0_vocab_lockf.setter
-    @deprecated("Attribute will be removed in 4.0.0, use self.trainables.vectors_vocab_lockf instead")
+    @gensim.utils.deprecated("Attribute will be removed in 4.0.0, use self.trainables.vectors_vocab_lockf instead")
     def syn0_vocab_lockf(self, value):
         self.trainables.vectors_vocab_lockf = value
 
     @syn0_vocab_lockf.deleter
-    @deprecated("Attribute will be removed in 4.0.0, use self.trainables.vectors_vocab_lockf instead")
+    @gensim.utils.deprecated("Attribute will be removed in 4.0.0, use self.trainables.vectors_vocab_lockf instead")
     def syn0_vocab_lockf(self):
         del self.trainables.vectors_vocab_lockf
 
     @property
-    @deprecated("Attribute will be removed in 4.0.0, use self.trainables.vectors_ngrams_lockf instead")
+    @gensim.utils.deprecated("Attribute will be removed in 4.0.0, use self.trainables.vectors_ngrams_lockf instead")
     def syn0_ngrams_lockf(self):
         return self.trainables.vectors_ngrams_lockf
 
     @syn0_ngrams_lockf.setter
-    @deprecated("Attribute will be removed in 4.0.0, use self.trainables.vectors_ngrams_lockf instead")
+    @gensim.utils.deprecated("Attribute will be removed in 4.0.0, use self.trainables.vectors_ngrams_lockf instead")
     def syn0_ngrams_lockf(self, value):
         self.trainables.vectors_ngrams_lockf = value
 
     @syn0_ngrams_lockf.deleter
-    @deprecated("Attribute will be removed in 4.0.0, use self.trainables.vectors_ngrams_lockf instead")
+    @gensim.utils.deprecated("Attribute will be removed in 4.0.0, use self.trainables.vectors_ngrams_lockf instead")
     def syn0_ngrams_lockf(self):
         del self.trainables.vectors_ngrams_lockf
 
     @property
-    @deprecated("Attribute will be removed in 4.0.0, use self.wv.num_ngram_vectors instead")
+    @gensim.utils.deprecated("Attribute will be removed in 4.0.0, use self.wv.num_ngram_vectors instead")
     def num_ngram_vectors(self):
         return self.wv.num_ngram_vectors
 
@@ -832,7 +831,7 @@ class FastText(BaseWordEmbeddingsModel):
         """
         self._clear_post_train()
 
-    @deprecated("Method will be removed in 4.0.0, use self.wv.__getitem__() instead")
+    @gensim.utils.deprecated("Method will be removed in 4.0.0, use self.wv.__getitem__() instead")
     def __getitem__(self, words):
         """Deprecated. Use self.wv.__getitem__() instead.
 
@@ -841,7 +840,7 @@ class FastText(BaseWordEmbeddingsModel):
         """
         return self.wv.__getitem__(words)
 
-    @deprecated("Method will be removed in 4.0.0, use self.wv.__contains__() instead")
+    @gensim.utils.deprecated("Method will be removed in 4.0.0, use self.wv.__contains__() instead")
     def __contains__(self, word):
         """Deprecated. Use self.wv.__contains__() instead.
 
@@ -851,7 +850,7 @@ class FastText(BaseWordEmbeddingsModel):
         return self.wv.__contains__(word)
 
     @classmethod
-    @deprecated(
+    @gensim.utils.deprecated(
         'use load_facebook_vectors (to use pretrained embeddings) or load_facebook_model '
         '(to continue training with the loaded full model, more RAM) instead'
     )
@@ -864,7 +863,7 @@ class FastText(BaseWordEmbeddingsModel):
         """
         return load_facebook_model(model_file, encoding=encoding)
 
-    @deprecated(
+    @gensim.utils.deprecated(
         'use load_facebook_vectors (to use pretrained embeddings) or load_facebook_model '
         '(to continue training with the loaded full model, more RAM) instead'
     )
@@ -940,7 +939,7 @@ class FastText(BaseWordEmbeddingsModel):
 
         return model
 
-    @deprecated("Method will be removed in 4.0.0, use self.wv.accuracy() instead")
+    @gensim.utils.deprecated("Method will be removed in 4.0.0, use self.wv.accuracy() instead")
     def accuracy(self, questions, restrict_vocab=30000, most_similar=None, case_insensitive=True):
         most_similar = most_similar or FastTextKeyedVectors.most_similar
         return self.wv.accuracy(questions, restrict_vocab, most_similar, case_insensitive)
@@ -1211,7 +1210,7 @@ def _load_fasttext_format(model_file, encoding='utf-8', full_model=True):
         The loaded model.
 
     """
-    with utils.open(model_file, 'rb') as fin:
+    with gensim.utils.open(model_file, 'rb') as fin:
         m = gensim.models._fasttext_bin.load(fin, encoding=encoding, full_model=full_model)
 
     model = FastText(
