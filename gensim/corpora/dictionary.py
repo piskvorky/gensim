@@ -9,7 +9,10 @@
 from __future__ import with_statement
 
 from collections import defaultdict
-from collections.abc import Mapping
+try:
+    from collections.abc import Mapping
+except ImportError:
+    from collections import Mapping
 import sys
 import logging
 import itertools

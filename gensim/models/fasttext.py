@@ -285,7 +285,10 @@ import os
 import numpy as np
 from numpy import ones, vstack, float32 as REAL
 import six
-from collections.abc import Iterable
+try:
+    from collections.abc import Iterable
+except ImportError:
+    from collections import Iterable
 
 import gensim.models._fasttext_bin
 

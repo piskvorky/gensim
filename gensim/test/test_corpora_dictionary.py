@@ -7,7 +7,10 @@
 Unit tests for the `corpora.Dictionary` class.
 """
 
-from collections.abc import Mapping
+try:
+    from collections.abc import Mapping
+except ImportError:
+    from collections import Mapping
 from itertools import chain
 import logging
 import unittest

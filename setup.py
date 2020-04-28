@@ -20,8 +20,9 @@ import sys
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
 
-if sys.version_info[:2] < (3, 5):
-    raise Exception('This version of gensim needs 3.5 or later.')
+PY2 = sys.version_info[:2] == (2, 7)
+if sys.version_info[:2] < (3, 5) and not PY2:
+    raise Exception('This version of gensim requires Py2.7, or Py3.5 or greater')
 
 c_extensions = {
     'gensim.models.word2vec_inner': 'gensim/models/word2vec_inner.c',
@@ -316,7 +317,18 @@ if sys.version_info < (3, 7):
 if (3, 0) < sys.version_info < (3, 7):
     linux_testenv.extend(['nmslib'])
 
-NUMPY_STR = 'numpy >= 1.11.3'
+if PY2:
+    #
+    # https://www.scipy.org/scipylib/faq.html#python-version-support
+    #
+    NUMPY_STR = 'numpy <= 1.16.1'
+    SCIPY_STR = 'scipy <= 1.2.3'
+    SO_STR = 'smart_open == 1.10.1'
+else:
+    NUMPY_STR = 'numpy >= 1.11.3'
+    SCIPY_STR = 'scipy >= 0.18.1'
+    SO_STR = 'smart_open'
+
 #
 # We pin the Cython version for reproducibility.  We expect our extensions
 # to build with any sane version of Cython, so we should update this pin
@@ -326,9 +338,9 @@ CYTHON_STR = 'Cython==0.29.14'
 
 install_requires = [
     NUMPY_STR,
-    'scipy >= 0.18.1',
+    SCIPY_STR,
     'six >= 1.5.0',
-    'smart_open >= 1.8.1',
+    SO_STR,
 ]
 
 setup_requires = [NUMPY_STR]
