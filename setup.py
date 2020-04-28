@@ -317,17 +317,21 @@ if sys.version_info < (3, 7):
 if (3, 0) < sys.version_info < (3, 7):
     linux_testenv.extend(['nmslib'])
 
+#
+# smart_open >= 1.11 is py3+ only.
+# TODO: Remove the pin once we drop py2.7 from gensim too.
+#
 if PY2:
     #
     # https://www.scipy.org/scipylib/faq.html#python-version-support
     #
     NUMPY_STR = 'numpy <= 1.16.1'
     SCIPY_STR = 'scipy <= 1.2.3'
-    SO_STR = 'smart_open == 1.10.1'
+    SO_STR = 'smart_open >= 1.8.1, < 1.11'
 else:
     NUMPY_STR = 'numpy >= 1.11.3'
     SCIPY_STR = 'scipy >= 0.18.1'
-    SO_STR = 'smart_open'
+    SO_STR = 'smart_open >= 1.8.1'
 
 #
 # We pin the Cython version for reproducibility.  We expect our extensions
@@ -348,21 +352,6 @@ setup_requires = [NUMPY_STR]
 if need_cython():
     install_requires.append(CYTHON_STR)
     setup_requires.append(CYTHON_STR)
-
-install_requires = [
-    NUMPY_STR,
-    'scipy >= 1.0.0',
-    'six >= 1.5.0',
-]
-
-#
-# smart_open >= 1.11 is py3+ only.
-# TODO: Remove the pin once we drop py2.7 from gensim too.
-#
-if PY2:
-    install_requires.append('smart_open >= 1.8.1, < 1.11')
-else:
-    install_requires.append('smart_open >= 1.8.1')
 
 setup(
     name='gensim',
