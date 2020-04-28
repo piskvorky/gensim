@@ -58,11 +58,7 @@ install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   - "python -m pip install -U pip tox"
 
-  # Next line only to demo that py3.8-on-Appveyor *could* install Cython from wheel just fine,
-  # despite mysterious following attempt/failure to build-and-use Cython on that one Appveyor config.
-  # Delete when py3.8-on-Appveyor starts working normally,
-  # see comment at <https://github.com/RaRe-Technologies/gensim/pull/2715#issuecomment-569457589>
-  - "python -m pip install Cython==0.29.14 numpy==1.18.0"
+  - "python -m pip install Cython==0.29.14"
 
   # Check that we have the expected versions and architecture
   - "pip --version"
