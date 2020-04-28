@@ -11,6 +11,7 @@ import subprocess
 import struct
 
 import numpy as np
+import six
 
 from gensim import utils
 from gensim.models.word2vec import LineSentence
