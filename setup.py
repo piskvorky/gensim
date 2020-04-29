@@ -267,12 +267,12 @@ win_testenv = [
     'python-Levenshtein >= 0.10.2',
     'visdom >= 0.1.8, != 0.1.8.7',
     'scikit-learn',
-    # The following packages are commented out because they don't install on Windows. So
-    # skip the related tests in AppVeyor. We still test them in Travis (Linux).
+    # The following packages are commented out because they don't install on Windows. So skip the
+    # related tests in AppVeyor. We still test them in Linux via Travis, see linux_testenv below.
     # See https://github.com/RaRe-Technologies/gensim/pull/2814
     # 'tensorflow',
     # 'keras',
-    # 'pyemd',
+    'pyemd',
 ]
 
 # This list partially duplicates requirements_docs.txt.

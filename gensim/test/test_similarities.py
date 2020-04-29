@@ -708,7 +708,7 @@ class TestWord2VecNmslibIndexer(unittest.TestCase):
         try:
             import nmslib  # noqa:F401
         except ImportError:
-            raise unittest.SkipTest("Nmslib library is not available")
+            raise unittest.SkipTest("NMSLIB library is not available")
 
         from gensim.similarities.nmslib import NmslibIndexer
         self.indexer = NmslibIndexer
@@ -801,7 +801,7 @@ class TestDoc2VecNmslibIndexer(unittest.TestCase):
         try:
             import nmslib  # noqa:F401
         except ImportError:
-            raise unittest.SkipTest("Nmslib library is not available")
+            raise unittest.SkipTest("NMSLIB library is not available")
 
         from gensim.similarities.nmslib import NmslibIndexer
 
