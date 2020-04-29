@@ -262,6 +262,7 @@ win_testenv = [
     'mock',
     'cython',
     'nmslib',
+    'pyemd',
     'testfixtures',
     'Morfessor==2.0.2a4',
     'python-Levenshtein >= 0.10.2',
@@ -272,7 +273,6 @@ win_testenv = [
     # See https://github.com/RaRe-Technologies/gensim/pull/2814
     # 'tensorflow',
     # 'keras',
-    'pyemd',
 ]
 
 # This list partially duplicates requirements_docs.txt.
@@ -312,8 +312,7 @@ docs_testenv = win_testenv + distributed_env + [
 # because the libraries below are too tricky to install there.
 linux_testenv = win_testenv + [
     # 'tensorflow',
-    # 'keras',
-    # 'pyemd',
+    'keras',
 ]
 
 NUMPY_STR = 'numpy >= 1.11.3'
