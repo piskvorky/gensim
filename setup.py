@@ -261,8 +261,7 @@ win_testenv = [
     'pytest-rerunfailures',
     'mock',
     'cython',
-    # Temporarily remove pyemd to work around appveyor issues. XXX done?
-    # 'pyemd',
+    'pyemd',
     'testfixtures',
     'Morfessor==2.0.2a4',
     'python-Levenshtein >= 0.10.2',
@@ -270,9 +269,6 @@ win_testenv = [
     'scikit-learn',
 ]
 
-linux_testenv = win_testenv[:]
-
-#
 # This list partially duplicates requirements_docs.txt.
 # The main difference is that we don't include version pins here unless
 # absolutely necessary, whereas requirements_docs.txt includes pins for
@@ -282,18 +278,19 @@ linux_testenv = win_testenv[:]
 #
 #   https://packaging.python.org/discussions/install-requires-vs-requirements/
 #
-docs_testenv = linux_testenv + distributed_env + [
-    'sphinx <= 2.4.4',  # avoid `sphinx >= 3.0` that breaks build
+docs_testenv = win_testenv + distributed_env + [
+    'sphinx <= 2.4.4',  # avoid `sphinx >= 3.0` that breaks the build
+    'sphinx-gallery',
+    'sphinxcontrib.programoutput',
     'sphinxcontrib-napoleon',
+    'matplotlib',  # expected by sphinx-gallery
     'plotly',
     #
     # Pattern is a PITA to install, it requires mysqlclient, which in turn
-    # requires MySQL dev tools be installed.  We don't need it for building
+    # requires MySQL dev tools be installed. We don't need it for building
     # documentation.
     #
     # 'Pattern==3.6',  # Need 3.6 or later for Py3 support
-    'sphinxcontrib.programoutput',
-    'sphinx-gallery',
     'memory_profiler',
     'annoy',
     'Pyro4',
@@ -303,17 +300,17 @@ docs_testenv = linux_testenv + distributed_env + [
     'statsmodels',
     'pyemd',
     'pandas',
-    'matplotlib',  # sphinx-gallery expects this dep
 ]
 
-if sys.version_info < (3, 7):  # XXX why?
-    linux_testenv.extend([
-        'tensorflow <= 1.3.0',
-        'keras >= 2.0.4, <= 2.1.4',
-    ])
+# Add additional requirements when testing on Linux, compared to Windows.
+linux_testenv = win_testenv[:]
 
-if (3, 0) < sys.version_info < (3, 7):  # XXX why?
-    linux_testenv.extend(['nmslib'])
+linux_testenv.extend([
+    'tensorflow <= 1.3.0',
+    'keras >= 2.0.4, <= 2.1.4',
+])
+
+linux_testenv.extend(['nmslib'])
 
 NUMPY_STR = 'numpy >= 1.11.3'
 #
@@ -321,7 +318,7 @@ NUMPY_STR = 'numpy >= 1.11.3'
 # to build with any sane version of Cython, so we should update this pin
 # periodically.
 #
-CYTHON_STR = 'Cython==0.29.14'
+CYTHON_STR = 'Cython==0.29.17'
 
 install_requires = [
     NUMPY_STR,
