@@ -49,13 +49,6 @@ If this feature list left you scratching your head, you can first read
 more about the [Vector Space Model] and [unsupervised document analysis]
 on Wikipedia.
 
-Support
-------------
-
-Ask open-ended or research questions on the [Gensim Mailing List](https://groups.google.com/forum/#!forum/gensim).
-
-Raise bugs on [Github](https://github.com/RaRe-Technologies/gensim/blob/develop/CONTRIBUTING.md) but **make sure you follow the [issue template](https://github.com/RaRe-Technologies/gensim/blob/develop/ISSUE_TEMPLATE.md)**. Issues that are not bugs or fail to follow the issue template will be closed without inspection.
-
 Installation
 ------------
 
@@ -84,7 +77,7 @@ package:
 
 For alternative modes of installation, see the [documentation].
 
-Gensim is being `continuously tested <https://travis-ci.org/RaRe-Technologies/gensim>`_ under Python 3.5, 3.6, 3.7 and 3.8.
+Gensim is being [continuously tested](https://travis-ci.org/RaRe-Technologies/gensim) under Python 3.5, 3.6, 3.7 and 3.8.
 Support for Python 2.7 was dropped in gensim 4.0.0 – install gensim 3.8.3 if you must use Python 2.7.
 
 How come gensim is so fast and memory efficient? Isn’t it pure Python, and isn’t Python slow and greedy?
@@ -113,6 +106,13 @@ Documentation
   [Tutorials]: https://radimrehurek.com/gensim/auto_examples/
   [Official Documentation and Walkthrough]: http://radimrehurek.com/gensim/
   [Official API Documentation]: http://radimrehurek.com/gensim/apiref.html
+
+Support
+-------
+
+Ask open-ended or research questions on the [Gensim Mailing List](https://groups.google.com/forum/#!forum/gensim).
+
+Raise bugs on [Github](https://github.com/RaRe-Technologies/gensim/blob/develop/CONTRIBUTING.md) but **make sure you follow the [issue template](https://github.com/RaRe-Technologies/gensim/blob/develop/ISSUE_TEMPLATE.md)**. Issues that are not bugs or fail to follow the issue template will be closed without inspection.
 
 ---------
 

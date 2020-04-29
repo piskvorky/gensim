@@ -311,7 +311,7 @@ docs_testenv = win_testenv + distributed_env + [
 # Add additional requirements for testing on Linux. We skip some tests on Windows,
 # because the libraries below are too tricky to install there.
 linux_testenv = win_testenv + [
-    # 'tensorflow',
+    'tensorflow',
     'keras',
 ]
 
