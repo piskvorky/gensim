@@ -306,8 +306,8 @@ docs_testenv = win_testenv + distributed_env + [
 linux_testenv = win_testenv[:]
 
 linux_testenv.extend([
-    'tensorflow <= 1.3.0',
-    'keras >= 2.0.4, <= 2.1.4',
+    'tensorflow',
+    'keras',
 ])
 
 linux_testenv.extend(['nmslib'])
