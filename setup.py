@@ -308,10 +308,14 @@ docs_testenv = win_testenv + distributed_env + [
 
 # Add additional requirements for testing on Linux. We skip some tests on Windows,
 # because the libraries below are too tricky to install there.
-linux_testenv = win_testenv + [
-    'tensorflow',
-    'keras',
-]
+linux_testenv = win_testenv[:]
+if sys.version_info >= (3, 7):
+    # HACK: Installing tensorflow causes a segfault in Travis on py3.6. Other Pythons work – a mystery.
+    # See https://github.com/RaRe-Technologies/gensim/pull/2814#issuecomment-621477948
+    linux_testenv += [
+        'tensorflow',
+        'keras',
+    ]
 
 NUMPY_STR = 'numpy >= 1.11.3'
 #
