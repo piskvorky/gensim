@@ -1,0 +1,70 @@
+# ##########
+#
+# A basic build against a single Python target
+#
+# The Azure Pipelines hierarchy goes [Pipeline] -> [Stages] -> [Jobs] -> [Steps]
+# We only have 1 Stage and 1 Job, so we're using the shortcut syntax that includes only the properties for a single Job
+#
+# ##########
+
+# We'll define some variables for later use
+variables:
+  pythonVersion: 3.7
+  package: simple_package
+  srcDirectory: src/$(package)
+  testsDirectory: tests/$(package)
+
+# Trigger only when simple_package or its build has been modified
+trigger:
+  branches:
+    include:
+      - "*"       # We're only uploading to build artifacts, so it's safe to trigger on all branches
+  paths:
+    include:
+    - .azure-pipelines/simple_package.0-basic-build.yml
+    - src/simple_package/*
+    - tests/simple_package/*
+
+# Run on a Microsoft-hosted agent running Ubuntu-16.04
+# https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops
+pool:
+  vmImage: ubuntu-16.04
+
+# Steps are the specific tasks that execute code and do things
+steps:
+
+# Use a specific Python version
+- task: UsePythonVersion@0
+  displayName: Use Python $(pythonVersion)
+  inputs:
+    versionSpec: $(pythonVersion)
+
+# Install some tools needed for build (pylint, flake8, etc)
+- bash: pip install -r requirements.build.txt -U --upgrade-strategy eager
+  displayName: Install packages for build
+
+# Lint via pylint. We need to find all .py files under src/simple_package and run pylint to avoid errors
+- bash: find $(srcDirectory) $(testsDirectory) -type f -name "*.py" | xargs pylint
+  displayName: "Linting: pylint"
+
+# Lint via flake8. flake8 has better discovery, so we can invoke it directly
+- bash: flake8
+  displayName: "Linting: flake8"
+  workingDirectory: $(srcDirectory)
+
+# Run tests
+- bash: pytest
+  displayName: Run tests
+  workingDirectory: $(testsDirectory)
+
+# Our built source dist & wheel will land in src/simple_package/dist
+- bash: python setup.py sdist bdist_wheel
+  displayName: Build package
+  workingDirectory: $(srcDirectory)
+
+# Upload everything in src/simple_package/dist to the build artifacts for later use or debugging
+- task: PublishPipelineArtifact@0
+  displayName: Publish artifacts
+  inputs:
+    artifactName: dist
+    targetPath: $(srcDirectory)/dist
