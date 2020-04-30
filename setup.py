@@ -20,8 +20,6 @@ import sys
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
 
-if sys.version_info[:2] < (3, 5):
-    raise Exception('This version of gensim needs Python 3.5 or later.')
 
 c_extensions = {
     'gensim.models.word2vec_inner': 'gensim/models/word2vec_inner.c',
@@ -380,6 +378,7 @@ setup(
     ],
 
     test_suite="gensim.test",
+    python_requires='>=3.5',
     setup_requires=setup_requires,
     install_requires=install_requires,
     tests_require=linux_testenv,

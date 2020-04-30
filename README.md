@@ -77,7 +77,7 @@ package:
 
 For alternative modes of installation, see the [documentation].
 
-Gensim is being [continuously tested](https://travis-ci.org/RaRe-Technologies/gensim) under Python 3.5, 3.6, 3.7 and 3.8.
+Gensim is being [continuously tested](https://travis-ci.org/RaRe-Technologies/gensim) under Python 3.6, 3.7 and 3.8.
 Support for Python 2.7 was dropped in gensim 4.0.0 – install gensim 3.8.3 if you must use Python 2.7.
 
 How come gensim is so fast and memory efficient? Isn’t it pure Python, and isn’t Python slow and greedy?

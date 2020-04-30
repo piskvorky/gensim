@@ -25,9 +25,11 @@ matrix:
     - python: '3.7'
       env:
         - TOXENV="py37-linux"
-        - BOTO_CONFIG="/dev/null"  # XXX: why is this here?
+      # The following two lines used to be necessary because Travis left files lying around in ~/.aws/,
+      # messing up our tests. Now fixed since https://github.com/travis-ci/travis-ci/issues/7940
+        # - BOTO_CONFIG="/dev/null"
+      #sudo: true
       dist: xenial
-      sudo: true  # XXX: why is this here vs. others?
 
     - python: '3.6'
       env: TOXENV="py36-linux"
