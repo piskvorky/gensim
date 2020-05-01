@@ -68,6 +68,7 @@ NMSLIB can find approximate nearest neighbors much faster.
 Compared to Annoy, NMSLIB has more parameters to control the build and query time and accuracy.
 NMSLIB can achieve faster and more accurate nearest neighbors search than annoy.
 """
+from __future__ import absolute_import  # avoid import collision on py2 (nmslib.py - "bad" name)
 
 from smart_open import open
 try:
