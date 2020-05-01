@@ -11,15 +11,15 @@ Automated tests for checking the poincare module from the models package.
 
 import logging
 import unittest
-from mock import patch
 
+from mock import patch
 import numpy as np
 
 from gensim.corpora import Dictionary
-from gensim.models.keyedvectors import KeyedVectors, WordEmbeddingSimilarityIndex, \
-    FastTextKeyedVectors, REAL
+from gensim.models.keyedvectors import (
+    KeyedVectors, WordEmbeddingSimilarityIndex, FastTextKeyedVectors, REAL,
+)
 from gensim.test.utils import datapath
-
 import gensim.models.keyedvectors
 
 logger = logging.getLogger(__name__)
