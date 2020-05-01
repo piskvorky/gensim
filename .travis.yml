@@ -47,10 +47,7 @@ before_script:
   - ulimit -c unlimited -S  # enable core dumps
 
 
-script:
-  - pip install nmslib
-  - python --version
-  - python -c "import nmslib; print(dir(nmslib)); print(nmslib.init())"
+script: tox -vv
 
 
 after_failure:
