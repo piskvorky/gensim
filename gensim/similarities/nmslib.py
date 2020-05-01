@@ -8,10 +8,10 @@
 Intro
 -----
 
-This module contains integration Nmslib with :class:`~gensim.models.word2vec.Word2Vec`,
+This module contains integration NMSLIB with :class:`~gensim.models.word2vec.Word2Vec`,
 :class:`~gensim.models.doc2vec.Doc2Vec`, :class:`~gensim.models.fasttext.FastText` and
 :class:`~gensim.models.keyedvectors.KeyedVectors`.
-To use nmslib, instantiate a :class:`~gensim.similarities.nmslib.NmslibIndexer` class
+To use NMSLIB, instantiate a :class:`~gensim.similarities.nmslib.NmslibIndexer` class
 and pass the instance as the indexer parameter to your model's most_similar method
 (e.g. :py:func:`~gensim.models.doc2vec.most_similar`).
 
@@ -50,23 +50,23 @@ Load and save example
     >>> model.most_similar("cat", topn=2, indexer=new_indexer)
     [('cat', 1.0), ('meow', 0.5595494508743286)]
 
-What is Nmslib
--------------
+What is NMSLIB
+--------------
 
 Non-Metric Space Library (NMSLIB) is an efficient cross-platform similarity search library and a toolkit
 for evaluation of similarity search methods. The core-library does not have any third-party dependencies.
-More information about Nmslib: `github repository <https://github.com/nmslib/nmslib>`_.
+More information about NMSLIB: `github repository <https://github.com/nmslib/nmslib>`_.
 
-Why use Nmslib?
--------------
+Why use NMSIB?
+--------------
 
 The current implementation for finding k nearest neighbors in a vector space in gensim has linear complexity
 via brute force in the number of indexed documents, although with extremely low constant factors.
 The retrieved results are exact, which is an overkill in many applications:
 approximate results retrieved in sub-linear time may be enough.
-Nmslib can find approximate nearest neighbors much faster.
-Compared to annoy, nmslib has more parameters to control the build and query time and accuracy.
-Nmslib can achieve faster and more accurate nearest neighbors search than annoy.
+NMSLIB can find approximate nearest neighbors much faster.
+Compared to Annoy, NMSLIB has more parameters to control the build and query time and accuracy.
+NMSLIB can achieve faster and more accurate nearest neighbors search than annoy.
 """
 
 from smart_open import open
@@ -84,12 +84,12 @@ try:
     import nmslib
 except ImportError:
     raise ImportError(
-        "Nmslib has not been installed, if you wish to use the nmslib indexer, please run `pip install nmslib`"
+        "NMSLIB not installed. To use the NMSLIB indexer, please run `pip install nmslib`."
     )
 
 
 class NmslibIndexer(object):
-    """This class allows to use `Nmslib <https://github.com/nmslib/nmslib>`_ as indexer for `most_similar` method
+    """This class allows to use `NMSLIB <https://github.com/nmslib/nmslib>`_ as indexer for `most_similar` method
     from :class:`~gensim.models.word2vec.Word2Vec`, :class:`~gensim.models.doc2vec.Doc2Vec`,
     :class:`~gensim.models.fasttext.FastText` and :class:`~gensim.models.keyedvectors.Word2VecKeyedVectors` classes.
 
@@ -102,9 +102,9 @@ class NmslibIndexer(object):
         model : :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
             Model, that will be used as source for index.
         index_params : dict, optional
-            index_params for Nmslib indexer.
+            index_params for NMSLIB indexer.
         query_time_params : dict, optional
-            query_time_params for Nmslib indexer.
+            query_time_params for NMSLIB indexer.
 
         """
         if index_params is None:
@@ -179,13 +179,13 @@ class NmslibIndexer(object):
         return nmslib_instance
 
     def _build_from_word2vec(self):
-        """Build an Nmslib index using word vectors from a Word2Vec model."""
+        """Build an NMSLIB index using word vectors from a Word2Vec model."""
 
         self.model.init_sims()
         self._build_from_model(self.model.wv.vectors_norm, self.model.wv.index2word)
 
     def _build_from_doc2vec(self):
-        """Build an Nmslib index using document vectors from a Doc2Vec model."""
+        """Build an NMSLIB index using document vectors from a Doc2Vec model."""
 
         docvecs = self.model.docvecs
         docvecs.init_sims()
@@ -193,7 +193,7 @@ class NmslibIndexer(object):
         self._build_from_model(docvecs.vectors_docs_norm, labels)
 
     def _build_from_keyedvectors(self):
-        """Build an Nmslib index using word vectors from a KeyedVectors model."""
+        """Build an NMSLIB index using word vectors from a KeyedVectors model."""
 
         self.model.init_sims()
         self._build_from_model(self.model.vectors_norm, self.model.index2word)

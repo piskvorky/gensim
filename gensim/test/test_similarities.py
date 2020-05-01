@@ -544,8 +544,8 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
     def setUp(self):
         try:
             import annoy  # noqa:F401
-        except ImportError:
-            raise unittest.SkipTest("Annoy library is not available")
+        except ImportError as e:
+            raise unittest.SkipTest("Annoy library is not available: %s" % e)
 
         from gensim.similarities.index import AnnoyIndexer
         self.indexer = AnnoyIndexer
@@ -648,8 +648,8 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
     def setUp(self):
         try:
             import annoy  # noqa:F401
-        except ImportError:
-            raise unittest.SkipTest("Annoy library is not available")
+        except ImportError as e:
+            raise unittest.SkipTest("Annoy library is not available: %s" % e)
 
         from gensim.similarities.index import AnnoyIndexer
 
@@ -707,8 +707,8 @@ class TestWord2VecNmslibIndexer(unittest.TestCase):
     def setUp(self):
         try:
             import nmslib  # noqa:F401
-        except ImportError:
-            raise unittest.SkipTest("Nmslib library is not available")
+        except ImportError as e:
+            raise unittest.SkipTest("NMSLIB library is not available: %s" % e)
 
         from gensim.similarities.nmslib import NmslibIndexer
         self.indexer = NmslibIndexer
@@ -800,8 +800,8 @@ class TestDoc2VecNmslibIndexer(unittest.TestCase):
     def setUp(self):
         try:
             import nmslib  # noqa:F401
-        except ImportError:
-            raise unittest.SkipTest("Nmslib library is not available")
+        except ImportError as e:
+            raise unittest.SkipTest("NMSLIB library is not available: %s" % e)
 
         from gensim.similarities.nmslib import NmslibIndexer
 
