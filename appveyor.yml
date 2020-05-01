@@ -68,7 +68,9 @@ install:
 build: false
 
 test_script:
-  - tox -vv
+  - pip install nmslib
+  - python --version
+  - python -c "import nmslib; print(dir(nmslib)); print(nmslib.init())"
 
 cache:
   # Use the appveyor cache to avoid re-downloading large archives such
