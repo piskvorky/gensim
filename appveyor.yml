@@ -68,7 +68,7 @@ install:
 build: false
 
 test_script:
-  - tox -vv
+  - tox -vv gensim/test/test_similarities.py::TestWord2VecNmslibIndexer
 
 cache:
   # Use the appveyor cache to avoid re-downloading large archives such

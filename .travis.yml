@@ -47,7 +47,7 @@ before_script:
   - ulimit -c unlimited -S  # enable core dumps
 
 
-script: tox -vv
+script: tox -vv gensim/test/test_similarities.py::TestWord2VecNmslibIndexer
 
 
 after_failure:
