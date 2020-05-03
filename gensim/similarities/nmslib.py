@@ -14,8 +14,7 @@ search with Gensim's :class:`~gensim.models.word2vec.Word2Vec`, :class:`~gensim.
 vector embeddings.
 
 To use NMSLIB, instantiate a :class:`~gensim.similarities.nmslib.NmslibIndexer` class
-and pass the instance as the indexer parameter to your model's most_similar() method
-(e.g. :py:func:`~gensim.models.doc2vec.most_similar`).
+and pass the instance as the indexer parameter to your model's most_similar() method.
 
 Example usage
 -------------
@@ -26,11 +25,11 @@ Example usage
     >>> from gensim.models import Word2Vec
     >>>
     >>> sentences = [['cute', 'cat', 'say', 'meow'], ['cute', 'dog', 'say', 'woof']]
-    >>> model = Word2Vec(sentences, min_count=1, seed=1)
+    >>> model = Word2Vec(sentences, min_count=1, iter=10, seed=2)
     >>>
     >>> indexer = NmslibIndexer(model)
-    >>> model.most_similar("cat", topn=2, indexer=indexer)
-    [('cat', 1.0), ('meow', 0.5595494508743286)]
+    >>> model.wv.most_similar("cat", topn=2, indexer=indexer)
+    [('cat', 1.0), ('meow', 0.16398882865905762)]
 
 Load and save example
 ---------------------
@@ -42,14 +41,14 @@ Load and save example
     >>> from tempfile import mkstemp
     >>>
     >>> sentences = [['cute', 'cat', 'say', 'meow'], ['cute', 'dog', 'say', 'woof']]
-    >>> model = Word2Vec(sentences, min_count=1, seed=1, iter=10)
+    >>> model = Word2Vec(sentences, min_count=1, seed=2, iter=10)
     >>>
     >>> indexer = NmslibIndexer(model)
     >>> _, temp_fn = mkstemp()
     >>> indexer.save(temp_fn)
     >>>
     >>> new_indexer = NmslibIndexer.load(temp_fn)
-    >>> model.most_similar("cat", topn=2, indexer=new_indexer)
+    >>> model.wv.most_similar("cat", topn=2, indexer=new_indexer)
     [('cat', 1.0), ('meow', 0.5595494508743286)]
 
 What is NMSLIB

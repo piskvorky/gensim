@@ -821,7 +821,7 @@ class TestDoc2VecNmslibIndexer(unittest.TestCase):
         approx_neighbors = self.model.docvecs.most_similar([self.vector], topn=5, indexer=self.index)
         exact_neighbors = self.model.docvecs.most_similar([self.vector], topn=5)
 
-        approx_tags = [tag for tag, similarity  in approx_neighbors]
+        approx_tags = [tag for tag, similarity in approx_neighbors]
         exact_tags = [tag for tag, similarity in exact_neighbors]
 
         self.assertEqual(approx_tags, exact_tags)
