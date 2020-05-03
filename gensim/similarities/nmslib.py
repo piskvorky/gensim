@@ -5,16 +5,17 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-Intro
------
-
 This module integrates `NMSLIB <https://github.com/nmslib/nmslib>`_ fast similarity
 search with Gensim's :class:`~gensim.models.word2vec.Word2Vec`, :class:`~gensim.models.doc2vec.Doc2Vec`,
 :class:`~gensim.models.fasttext.FastText` and :class:`~gensim.models.keyedvectors.KeyedVectors`
 vector embeddings.
 
-To use NMSLIB, instantiate a :class:`~gensim.similarities.nmslib.NmslibIndexer` class
-and pass the instance as the indexer parameter to your model's most_similar() method.
+.. Important::
+    To use this module, you must have the external ``nmslib`` library installed.
+    To install it, run ``pip install nmslib``.
+
+To use the integration, instantiate a :class:`~gensim.similarities.nmslib.NmslibIndexer` class
+and pass the instance as the `indexer` parameter to your model's most_similar() method.
 
 Example usage
 -------------
@@ -73,7 +74,7 @@ NMSLIB often achieves faster and more accurate nearest neighbors search than Ann
 
 """
 
-# avoid import collision on py2: this module has the same name as the actual NMSLIB library
+# Avoid import collisions on py2: this module has the same name as the actual NMSLIB library.
 from __future__ import absolute_import
 
 from smart_open import open

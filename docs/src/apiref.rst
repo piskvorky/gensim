@@ -72,7 +72,8 @@ Modules:
     models/base_any2vec
     similarities/docsim
     similarities/termsim
-    similarities/index
+    similarities/annoy
+    similarities/nmslib
     sklearn_api/atmodel
     sklearn_api/d2vmodel
     sklearn_api/hdp

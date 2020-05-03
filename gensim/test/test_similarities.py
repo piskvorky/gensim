@@ -547,7 +547,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         except ImportError as e:
             raise unittest.SkipTest("Annoy library is not available: %s" % e)
 
-        from gensim.similarities.index import AnnoyIndexer
+        from gensim.similarities.annoy import AnnoyIndexer
         self.indexer = AnnoyIndexer
 
     def testWord2Vec(self):
@@ -580,7 +580,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         self.assertLoadedIndexEqual(index, model)
 
     def testAnnoyIndexingOfKeyedVectors(self):
-        from gensim.similarities.index import AnnoyIndexer
+        from gensim.similarities.annoy import AnnoyIndexer
         keyVectors_file = datapath('lee_fasttext.vec')
         model = KeyedVectors.load_word2vec_format(keyVectors_file)
         index = AnnoyIndexer(model, 10)
@@ -590,7 +590,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         self.assertApproxNeighborsMatchExact(model, model, index)
 
     def testLoadMissingRaisesError(self):
-        from gensim.similarities.index import AnnoyIndexer
+        from gensim.similarities.annoy import AnnoyIndexer
         test_index = AnnoyIndexer()
 
         self.assertRaises(IOError, test_index.load, fname='test-index')
@@ -629,7 +629,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         self.assertTrue(os.path.exists(fname + '.d'))
 
     def assertLoadedIndexEqual(self, index, model):
-        from gensim.similarities.index import AnnoyIndexer
+        from gensim.similarities.annoy import AnnoyIndexer
 
         fname = get_tmpfile('gensim_similarities.tst.pkl')
         index.save(fname)
@@ -651,7 +651,7 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
         except ImportError as e:
             raise unittest.SkipTest("Annoy library is not available: %s" % e)
 
-        from gensim.similarities.index import AnnoyIndexer
+        from gensim.similarities.annoy import AnnoyIndexer
 
         self.model = doc2vec.Doc2Vec(SENTENCES, min_count=1)
         self.model.init_sims()
@@ -682,13 +682,13 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
         self.assertTrue(os.path.exists(fname + '.d'))
 
     def testLoadNotExist(self):
-        from gensim.similarities.index import AnnoyIndexer
+        from gensim.similarities.annoy import AnnoyIndexer
         self.test_index = AnnoyIndexer()
 
         self.assertRaises(IOError, self.test_index.load, fname='test-index')
 
     def testSaveLoad(self):
-        from gensim.similarities.index import AnnoyIndexer
+        from gensim.similarities.annoy import AnnoyIndexer
 
         fname = get_tmpfile('gensim_similarities.tst.pkl')
         self.index.save(fname)

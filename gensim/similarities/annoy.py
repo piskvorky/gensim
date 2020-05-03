@@ -5,36 +5,19 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-Intro
------
-This module contains integration Annoy with :class:`~gensim.models.word2vec.Word2Vec`,
-:class:`~gensim.models.doc2vec.Doc2Vec`, :class:`~gensim.models.fasttext.FastText` and
-:class:`~gensim.models.keyedvectors.KeyedVectors`.
+This module integrates Spotify's `Annoy <https://github.com/spotify/annoy>`_ (Approximate Nearest Neighbors Oh Yeah)
+with Gensim's :class:`~gensim.models.word2vec.Word2Vec`, :class:`~gensim.models.doc2vec.Doc2Vec`,
+:class:`~gensim.models.fasttext.FastText` and :class:`~gensim.models.keyedvectors.KeyedVectors` word embeddings.
 
 .. Important::
-    To use this module, you must have the ``annoy`` library install.
+    To use this module, you must have the ``annoy`` library installed.
     To install it, run ``pip install annoy``.
 
-
-What is Annoy
--------------
-Annoy (Approximate Nearest Neighbors Oh Yeah) is a C++ library with Python bindings to search for points in space
-that are close to a given query point. It also creates large read-only file-based data structures that are mmapped
-into memory so that many processes may share the same data.
-
-
-How it works
-------------
-Using `random projections <https://en.wikipedia.org/wiki/Locality-sensitive_hashing#Random_projection>`_
-and by building up a tree. At every intermediate node in the tree, a random hyperplane is chosen,
-which divides the space into two subspaces. This hyperplane is chosen by sampling two points from the subset
-and taking the hyperplane equidistant from them.
-
-More information about Annoy: `github repository <https://github.com/spotify/annoy>`_,
-`author in twitter <https://twitter.com/fulhack>`_
-and `annoy-user maillist <https://groups.google.com/forum/#!forum/annoy-user>`_.
-
 """
+
+# Avoid import collisions on py2: this module has the same name as the actual Annoy library.
+from __future__ import absolute_import
+
 import os
 
 try:
@@ -50,16 +33,14 @@ from gensim.models import KeyedVectors
 from gensim.models.keyedvectors import WordEmbeddingsKeyedVectors
 
 
-_NOANNOY = ImportError(
-    "Annoy is not installed, if you wish to use the annoy "
-    "indexer, please run `pip install annoy`"
-)
+_NOANNOY = ImportError("Annoy not installed. To use the Annoy indexer, please run `pip install annoy`.")
 
 
 class AnnoyIndexer(object):
-    """This class allows to use `Annoy <https://github.com/spotify/annoy>`_ as indexer for `most_similar` method
-    from :class:`~gensim.models.word2vec.Word2Vec`, :class:`~gensim.models.doc2vec.Doc2Vec`,
-    :class:`~gensim.models.fasttext.FastText` and :class:`~gensim.models.keyedvectors.Word2VecKeyedVectors` classes.
+    """This class allows the use of `Annoy <https://github.com/spotify/annoy>`_ for fast (approximate)
+    vector retrieval in `most_similar()` calls of
+    :class:`~gensim.models.word2vec.Word2Vec`, :class:`~gensim.models.doc2vec.Doc2Vec`,
+    :class:`~gensim.models.fasttext.FastText` and :class:`~gensim.models.keyedvectors.Word2VecKeyedVectors` models.
 
     """
 
@@ -68,7 +49,7 @@ class AnnoyIndexer(object):
         Parameters
         ----------
         model : :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`, optional
-            Model, that will be used as source for index.
+            Use vectors from this model as the source for the index.
         num_trees : int, optional
             Number of trees for Annoy indexer.
 
@@ -76,7 +57,7 @@ class AnnoyIndexer(object):
         --------
         .. sourcecode:: pycon
 
-            >>> from gensim.similarities.index import AnnoyIndexer
+            >>> from gensim.similarities.annoy import AnnoyIndexer
             >>> from gensim.models import Word2Vec
             >>>
             >>> sentences = [['cute', 'cat', 'say', 'meow'], ['cute', 'dog', 'say', 'woof']]
@@ -135,7 +116,7 @@ class AnnoyIndexer(object):
         --------
         .. sourcecode:: pycon
 
-            >>> from gensim.similarities.index import AnnoyIndexer
+            >>> from gensim.similarities.annoy import AnnoyIndexer
             >>> from gensim.models import Word2Vec
             >>> from tempfile import mkstemp
             >>>
