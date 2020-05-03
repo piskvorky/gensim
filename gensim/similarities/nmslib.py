@@ -108,7 +108,9 @@ class NmslibIndexer(object):
         model : :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
             Model, that will be used as source for index.
         index_params : dict, optional
-            index_params for NMSLIB indexer.
+            Indexing parameters passed through to NMSLIB:
+            https://github.com/nmslib/nmslib/blob/master/manual/methods.md#graph-based-search-methods-sw-graph-and-hnsw
+
             If not specified, defaults to `{'M': 100, 'indexThreadQty': 1, 'efConstruction': 100, 'post': 0}`.
         query_time_params : dict, optional
             query_time_params for NMSLIB indexer.
@@ -116,7 +118,6 @@ class NmslibIndexer(object):
 
         """
         if index_params is None:
-            # See https://github.com/nmslib/nmslib/blob/master/manual/methods.md#graph-based-search-methods-sw-graph-and-hnsw
             index_params = {'M': 100, 'indexThreadQty': 1, 'efConstruction': 100, 'post': 0}
         if query_time_params is None:
             query_time_params = {'efSearch': 100}
