@@ -8,7 +8,6 @@
 Automated tests for similarity algorithms (the similarities package).
 """
 
-
 import logging
 import unittest
 import math
@@ -25,8 +24,9 @@ from gensim.models import KeyedVectors
 from gensim.models import TfidfModel
 from gensim import matutils, similarities
 from gensim.models import Word2Vec, FastText
-from gensim.test.utils import (datapath, get_tmpfile,
-    common_texts as texts, common_dictionary as dictionary, common_corpus as corpus)
+from gensim.test.utils import (
+    datapath, get_tmpfile, common_texts as TEXTS, common_dictionary as DICTIONARY, common_corpus as CORPUS,
+)
 from gensim.similarities import UniformTermSimilarityIndex
 from gensim.similarities import SparseTermSimilarityMatrix
 from gensim.similarities import LevenshteinSimilarityIndex
@@ -39,7 +39,7 @@ try:
 except (ImportError, ValueError):
     PYEMD_EXT = False
 
-sentences = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(texts)]
+SENTENCES = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(TEXTS)]
 
 
 class _TestSimilarityABC(object):
@@ -49,13 +49,13 @@ class _TestSimilarityABC(object):
 
     def factoryMethod(self):
         """Creates a SimilarityABC instance."""
-        return self.cls(corpus, num_features=len(dictionary))
+        return self.cls(CORPUS, num_features=len(DICTIONARY))
 
     def testFull(self, num_best=None, shardsize=100):
         if self.cls == similarities.Similarity:
-            index = self.cls(None, corpus, num_features=len(dictionary), shardsize=shardsize)
+            index = self.cls(None, CORPUS, num_features=len(DICTIONARY), shardsize=shardsize)
         else:
-            index = self.cls(corpus, num_features=len(dictionary))
+            index = self.cls(CORPUS, num_features=len(DICTIONARY))
         if isinstance(index, similarities.MatrixSimilarity):
             expected = numpy.array([
                 [0.57735026, 0.57735026, 0.57735026, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
@@ -71,7 +71,7 @@ class _TestSimilarityABC(object):
             # HACK: dictionary can be in different order, so compare in sorted order
             self.assertTrue(numpy.allclose(sorted(expected.flat), sorted(index.index.flat)))
         index.num_best = num_best
-        query = corpus[0]
+        query = CORPUS[0]
         sims = index[query]
         expected = [(0, 0.99999994), (2, 0.28867513), (3, 0.23570226), (1, 0.23570226)][: num_best]
 
@@ -128,10 +128,10 @@ class _TestSimilarityABC(object):
 
     def testChunking(self):
         if self.cls == similarities.Similarity:
-            index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
+            index = self.cls(None, CORPUS, num_features=len(DICTIONARY), shardsize=5)
         else:
-            index = self.cls(corpus, num_features=len(dictionary))
-        query = corpus[:3]
+            index = self.cls(CORPUS, num_features=len(DICTIONARY))
+        query = CORPUS[:3]
         sims = index[query]
         expected = numpy.array([
             [0.99999994, 0.23570226, 0.28867513, 0.23570226, 0.0, 0.0, 0.0, 0.0, 0.0],
@@ -154,9 +154,9 @@ class _TestSimilarityABC(object):
 
     def testIter(self):
         if self.cls == similarities.Similarity:
-            index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
+            index = self.cls(None, CORPUS, num_features=len(DICTIONARY), shardsize=5)
         else:
-            index = self.cls(corpus, num_features=len(dictionary))
+            index = self.cls(CORPUS, num_features=len(DICTIONARY))
         sims = [sim for sim in index]
         expected = numpy.array([
             [0.99999994, 0.23570226, 0.28867513, 0.23570226, 0.0, 0.0, 0.0, 0.0, 0.0],
@@ -301,19 +301,19 @@ class TestMatrixSimilarity(unittest.TestCase, _TestSimilarityABC):
 class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
     def setUp(self):
         self.cls = similarities.WmdSimilarity
-        self.w2v_model = Word2Vec(texts, min_count=1)
+        self.w2v_model = Word2Vec(TEXTS, min_count=1)
 
     def factoryMethod(self):
         # Override factoryMethod.
-        return self.cls(texts, self.w2v_model)
+        return self.cls(TEXTS, self.w2v_model)
 
     @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed")
     def testFull(self, num_best=None):
         # Override testFull.
 
-        index = self.cls(texts, self.w2v_model)
+        index = self.cls(TEXTS, self.w2v_model)
         index.num_best = num_best
-        query = texts[0]
+        query = TEXTS[0]
         sims = index[query]
 
         if num_best is not None:
@@ -333,8 +333,8 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
         # NOTE: this could be implemented for other similarities as well (i.e.
         # in _TestSimilarityABC).
 
-        index = self.cls(texts, self.w2v_model, num_best=3)
-        query = texts[0]
+        index = self.cls(TEXTS, self.w2v_model, num_best=3)
+        query = TEXTS[0]
         sims = index[query]
         sims2 = numpy.asarray(sims)[:, 1]  # Just the similarities themselves.
 
@@ -346,8 +346,8 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
     def testChunking(self):
         # Override testChunking.
 
-        index = self.cls(texts, self.w2v_model)
-        query = texts[:3]
+        index = self.cls(TEXTS, self.w2v_model)
+        query = TEXTS[:3]
         sims = index[query]
 
         for i in range(3):
@@ -365,7 +365,7 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
     def testIter(self):
         # Override testIter.
 
-        index = self.cls(texts, self.w2v_model)
+        index = self.cls(TEXTS, self.w2v_model)
         for sims in index:
             self.assertTrue(numpy.alltrue(sims >= 0.0))
             self.assertTrue(numpy.alltrue(sims <= 1.0))
@@ -374,22 +374,22 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
 class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
     def setUp(self):
         self.cls = similarities.SoftCosineSimilarity
-        self.tfidf = TfidfModel(dictionary=dictionary)
+        self.tfidf = TfidfModel(dictionary=DICTIONARY)
         similarity_matrix = scipy.sparse.identity(12, format="lil")
-        similarity_matrix[dictionary.token2id["user"], dictionary.token2id["human"]] = 0.5
-        similarity_matrix[dictionary.token2id["human"], dictionary.token2id["user"]] = 0.5
+        similarity_matrix[DICTIONARY.token2id["user"], DICTIONARY.token2id["human"]] = 0.5
+        similarity_matrix[DICTIONARY.token2id["human"], DICTIONARY.token2id["user"]] = 0.5
         self.similarity_matrix = SparseTermSimilarityMatrix(similarity_matrix)
 
     def factoryMethod(self):
         # Override factoryMethod.
-        return self.cls(corpus, self.similarity_matrix)
+        return self.cls(CORPUS, self.similarity_matrix)
 
     def testFull(self, num_best=None):
         # Override testFull.
 
         # Single query
-        index = self.cls(corpus, self.similarity_matrix, num_best=num_best)
-        query = dictionary.doc2bow(texts[0])
+        index = self.cls(CORPUS, self.similarity_matrix, num_best=num_best)
+        query = DICTIONARY.doc2bow(TEXTS[0])
         sims = index[query]
         if num_best is not None:
             # Sparse array.
@@ -403,8 +403,8 @@ class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
 
         # Corpora
         for query in (
-                corpus,  # Basic text corpus.
-                self.tfidf[corpus]):  # Transformed corpus without slicing support.
+                CORPUS,  # Basic text corpus.
+                self.tfidf[CORPUS]):  # Transformed corpus without slicing support.
             index = self.cls(query, self.similarity_matrix, num_best=num_best)
             sims = index[query]
             if num_best is not None:
@@ -425,8 +425,8 @@ class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
         """ Check that similarities are non-increasing when `num_best` is not `None`."""
         # NOTE: this could be implemented for other similarities as well (i.e. in _TestSimilarityABC).
 
-        index = self.cls(corpus, self.similarity_matrix, num_best=5)
-        query = dictionary.doc2bow(texts[0])
+        index = self.cls(CORPUS, self.similarity_matrix, num_best=5)
+        query = DICTIONARY.doc2bow(TEXTS[0])
         sims = index[query]
         sims2 = numpy.asarray(sims)[:, 1]  # Just the similarities themselves.
 
@@ -437,8 +437,8 @@ class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
     def testChunking(self):
         # Override testChunking.
 
-        index = self.cls(corpus, self.similarity_matrix)
-        query = [dictionary.doc2bow(document) for document in texts[:3]]
+        index = self.cls(CORPUS, self.similarity_matrix)
+        query = [DICTIONARY.doc2bow(document) for document in TEXTS[:3]]
         sims = index[query]
 
         for i in range(3):
@@ -456,7 +456,7 @@ class TestSoftCosineSimilarity(unittest.TestCase, _TestSimilarityABC):
     def testIter(self):
         # Override testIter.
 
-        index = self.cls(corpus, self.similarity_matrix)
+        index = self.cls(CORPUS, self.similarity_matrix)
         for sims in index:
             self.assertTrue(numpy.alltrue(sims >= 0.0))
             self.assertTrue(numpy.alltrue(sims <= 1.0))
@@ -468,13 +468,13 @@ class TestSparseMatrixSimilarity(unittest.TestCase, _TestSimilarityABC):
 
     def testMaintainSparsity(self):
         """Sparsity is correctly maintained when maintain_sparsity=True"""
-        num_features = len(dictionary)
+        num_features = len(DICTIONARY)
 
-        index = self.cls(corpus, num_features=num_features)
-        dense_sims = index[corpus]
+        index = self.cls(CORPUS, num_features=num_features)
+        dense_sims = index[CORPUS]
 
-        index = self.cls(corpus, num_features=num_features, maintain_sparsity=True)
-        sparse_sims = index[corpus]
+        index = self.cls(CORPUS, num_features=num_features, maintain_sparsity=True)
+        sparse_sims = index[CORPUS]
 
         self.assertFalse(scipy.sparse.issparse(dense_sims))
         self.assertTrue(scipy.sparse.issparse(sparse_sims))
@@ -482,13 +482,13 @@ class TestSparseMatrixSimilarity(unittest.TestCase, _TestSimilarityABC):
 
     def testMaintainSparsityWithNumBest(self):
         """Tests that sparsity is correctly maintained when maintain_sparsity=True and num_best is not None"""
-        num_features = len(dictionary)
+        num_features = len(DICTIONARY)
 
-        index = self.cls(corpus, num_features=num_features, maintain_sparsity=False, num_best=3)
-        dense_topn_sims = index[corpus]
+        index = self.cls(CORPUS, num_features=num_features, maintain_sparsity=False, num_best=3)
+        dense_topn_sims = index[CORPUS]
 
-        index = self.cls(corpus, num_features=num_features, maintain_sparsity=True, num_best=3)
-        scipy_topn_sims = index[corpus]
+        index = self.cls(CORPUS, num_features=num_features, maintain_sparsity=True, num_best=3)
+        scipy_topn_sims = index[CORPUS]
 
         self.assertFalse(scipy.sparse.issparse(dense_topn_sims))
         self.assertTrue(scipy.sparse.issparse(scipy_topn_sims))
@@ -501,7 +501,7 @@ class TestSimilarity(unittest.TestCase, _TestSimilarityABC):
 
     def factoryMethod(self):
         # Override factoryMethod.
-        return self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
+        return self.cls(None, CORPUS, num_features=len(DICTIONARY), shardsize=5)
 
     def testSharding(self):
         for num_best in [None, 0, 1, 9, 1000]:
@@ -510,10 +510,10 @@ class TestSimilarity(unittest.TestCase, _TestSimilarityABC):
 
     def testReopen(self):
         """test re-opening partially full shards"""
-        index = similarities.Similarity(None, corpus[:5], num_features=len(dictionary), shardsize=9)
-        _ = index[corpus[0]]  # noqa:F841 forces shard close
-        index.add_documents(corpus[5:])
-        query = corpus[0]
+        index = similarities.Similarity(None, CORPUS[:5], num_features=len(DICTIONARY), shardsize=9)
+        _ = index[CORPUS[0]]  # noqa:F841 forces shard close
+        index.add_documents(CORPUS[5:])
+        query = CORPUS[0]
         sims = index[query]
         expected = [(0, 0.99999994), (2, 0.28867513), (3, 0.23570226), (1, 0.23570226)]
         expected = matutils.sparse2full(expected, len(index))
@@ -526,7 +526,7 @@ class TestSimilarity(unittest.TestCase, _TestSimilarityABC):
         # to be mmaped!
 
     def testChunksize(self):
-        index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
+        index = self.cls(None, CORPUS, num_features=len(DICTIONARY), shardsize=5)
         expected = [sim for sim in index]
         index.chunksize = len(index) - 1
         sims = [sim for sim in index]
@@ -551,7 +551,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         self.indexer = AnnoyIndexer
 
     def testWord2Vec(self):
-        model = word2vec.Word2Vec(texts, min_count=1)
+        model = word2vec.Word2Vec(TEXTS, min_count=1)
         model.init_sims()
         index = self.indexer(model, 10)
 
@@ -653,7 +653,7 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
 
         from gensim.similarities.index import AnnoyIndexer
 
-        self.model = doc2vec.Doc2Vec(sentences, min_count=1)
+        self.model = doc2vec.Doc2Vec(SENTENCES, min_count=1)
         self.model.init_sims()
         self.index = AnnoyIndexer(self.model, 300)
         self.vector = self.model.docvecs.vectors_docs_norm[0]
@@ -714,7 +714,7 @@ class TestWord2VecNmslibIndexer(unittest.TestCase):
         self.indexer = NmslibIndexer
 
     def test_word2vec(self):
-        model = word2vec.Word2Vec(texts, min_count=1)
+        model = word2vec.Word2Vec(TEXTS, min_count=1)
         model.init_sims()
         index = self.indexer(model)
 
@@ -768,10 +768,10 @@ class TestWord2VecNmslibIndexer(unittest.TestCase):
     def assertApproxNeighborsMatchExact(self, model, wv, index):
         vector = wv.vectors_norm[0]
         approx_neighbors = model.wv.most_similar([vector], topn=5, indexer=index)
-        exact_neighbors = model.wv.most_similar(positive=[vector], topn=5)
+        exact_neighbors = model.wv.most_similar([vector], topn=5)
 
-        approx_words = [neighbor[0] for neighbor in approx_neighbors]
-        exact_words = [neighbor[0] for neighbor in exact_neighbors]
+        approx_words = [word_id for word_id, similarity in approx_neighbors]
+        exact_words = [word_id for word_id, similarity in exact_neighbors]
 
         self.assertEqual(approx_words, exact_words)
 
@@ -805,7 +805,7 @@ class TestDoc2VecNmslibIndexer(unittest.TestCase):
 
         from gensim.similarities.nmslib import NmslibIndexer
 
-        self.model = doc2vec.Doc2Vec(sentences, min_count=1)
+        self.model = doc2vec.Doc2Vec(SENTENCES, min_count=1)
         self.model.init_sims()
         self.index = NmslibIndexer(self.model)
         self.vector = self.model.docvecs.vectors_docs_norm[0]
@@ -819,13 +819,12 @@ class TestDoc2VecNmslibIndexer(unittest.TestCase):
 
     def test_approx_neighbors_match_exact(self):
         approx_neighbors = self.model.docvecs.most_similar([self.vector], topn=5, indexer=self.index)
-        exact_neighbors = self.model.docvecs.most_similar(
-            positive=[self.vector], topn=5)
+        exact_neighbors = self.model.docvecs.most_similar([self.vector], topn=5)
 
-        approx_words = [neighbor[0] for neighbor in approx_neighbors]
-        exact_words = [neighbor[0] for neighbor in exact_neighbors]
+        approx_tags = [tag for tag, similarity  in approx_neighbors]
+        exact_tags = [tag for tag, similarity in exact_neighbors]
 
-        self.assertEqual(approx_words, exact_words)
+        self.assertEqual(approx_tags, exact_tags)
 
     def test_save(self):
         fname = get_tmpfile('gensim_similarities.tst.pkl')
@@ -1233,7 +1232,7 @@ class TestLevenshteinSimilarityIndex(unittest.TestCase):
 
         # check proper integration with SparseTermSimilarityMatrix
         index = LevenshteinSimilarityIndex(self.dictionary, alpha=1.0, beta=1.0)
-        similarity_matrix = SparseTermSimilarityMatrix(index, dictionary)
+        similarity_matrix = SparseTermSimilarityMatrix(index, DICTIONARY)
         self.assertTrue(scipy.sparse.issparse(similarity_matrix.matrix))
 
 

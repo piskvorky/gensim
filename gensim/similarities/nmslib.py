@@ -238,4 +238,4 @@ class NmslibIndexer(object):
 
         # NMSLIB returns cosine distance (not similarity), which is simply `dist = 1 - cossim`.
         # So, convert back to similarities here.
-        return [(self.labels[ids[i]], 1 - distances[i]) for i in range(len(ids))]
+        return [(self.labels[id_], 1.0 - distance) for id_, distance in zip(ids, distances)]
