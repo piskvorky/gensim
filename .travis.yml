@@ -1,0 +1,53 @@
+sudo: false
+
+cache:
+  apt: true
+  directories:
+  - $HOME/.cache/pip
+  - $HOME/.ccache
+  - $HOME/.pip-cache
+dist: trusty
+language: python
+env:
+  TOX_PARALLEL_NO_SPINNER: 1
+
+
+matrix:
+  include:
+    - python: '3.6'
+      env: TOXENV="flake8,flake8-docs"
+
+    - python: '3.8'
+      env:
+        - TOXENV="py38-linux"
+      dist: bionic
+
+    - python: '3.7'
+      env:
+        - TOXENV="py37-linux"
+      # The following two lines used to be necessary because Travis left files lying around in ~/.aws/,
+      # messing up our tests. Now fixed since https://github.com/travis-ci/travis-ci/issues/7940
+        # - BOTO_CONFIG="/dev/null"
+      #sudo: true
+      dist: xenial
+
+    - python: '3.6'
+      env: TOXENV="py36-linux"
+
+
+install:
+  - pip install tox
+  - sudo apt-get install -y gdb
+
+
+before_script:
+  - ulimit -c unlimited -S  # enable core dumps
+
+
+script: tox -vv
+
+
+after_failure:
+  - pwd
+  - COREFILE=$(find . -maxdepth 1 -name "core*" | head -n 1)
+  - if [[ -f "$COREFILE" ]]; then EXECFILE=$(gdb -c "$COREFILE" -batch | grep "Core was generated" | tr -d "\`" | cut -d' ' -f5); file "$COREFILE"; gdb -c "$COREFILE" "$EXECFILE" -x continuous_integration/debug.gdb -batch; fi
