@@ -20,11 +20,10 @@ steps:
   displayName: 'Use Python $(python.version)'
 
 - script: |
-    echo "TEST"
     python -m pip install --upgrade pip
     python -m pip install tox
   displayName: 'Install tox'
 
 - script: |
-    tox -vv
+    tox -vv gensim/test/test_corpora.py  gensim/test/test_varembed_wrapper.py gensim/test/test_ldamodel.py gensim/test/test_sklearn_api.py
   displayName: 'Testing'
