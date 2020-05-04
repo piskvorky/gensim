@@ -183,7 +183,6 @@ class IndexedCorpus(interfaces.CorpusABC):
         if isinstance(docno, (slice, list, numpy.ndarray)):
             return utils.SlicedCorpus(self, docno)
         elif isinstance(docno, six.integer_types + (numpy.integer,)):
-            raise RuntimeError("Offsets: " + str(self.index.tolist()))
             return self.docbyoffset(self.index[docno])
             # TODO: no `docbyoffset` method, should be defined in this class
         else:

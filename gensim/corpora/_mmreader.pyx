@@ -196,7 +196,7 @@ cdef class MmReader(object):
         previd, document = -1, []
         for line in fin:
             if (sscanf(line, "%lld %lld %lg", &docid, &termid, &val) != 3):
-                raise ValueError("unable to parse line: {}".format(line))
+                raise ValueError("unable to parse line: {} (input: {})".format(line, self.input))
 
             if not self.transposed:
                 termid, docid = docid, termid
