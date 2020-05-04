@@ -5,6 +5,7 @@
 
 trigger:
 - master
+- develop
 
 
 pool:
