@@ -7,6 +7,7 @@
 
 Examples
 --------
+
 Extract keywords from text
 
 .. sourcecode:: pycon
@@ -20,19 +21,13 @@ Extract keywords from text
     >>> keywords(text).split('\\n')
     [u'natural language', u'machine', u'frequently']
 
-
-Notes
------
-Check tags in http://www.clips.ua.ac.be/pages/mbsp-tags and use only first two letters
-for `INCLUDING_FILTER` and `EXCLUDING_FILTER`
-
-Data:
------
-.. data:: WINDOW_SIZE - Size of window, number of consecutive tokens in processing.
-.. data:: INCLUDING_FILTER - Including part of speech filters.
-.. data:: EXCLUDING_FILTER - Excluding part of speech filters.
-
 """
+
+from itertools import combinations as _combinations
+
+from six.moves.queue import Queue as _Queue
+from six.moves import range
+from six import iteritems
 
 from gensim.summarization.pagerank_weighted import pagerank_weighted as _pagerank
 from gensim.summarization.textcleaner import clean_text_by_word as _clean_text_by_word
@@ -40,14 +35,13 @@ from gensim.summarization.textcleaner import tokenize_by_word as _tokenize_by_wo
 from gensim.summarization.commons import build_graph as _build_graph
 from gensim.summarization.commons import remove_unreachable_nodes as _remove_unreachable_nodes
 from gensim.utils import to_unicode
-from itertools import combinations as _combinations
-from six.moves.queue import Queue as _Queue
-from six.moves import range
-from six import iteritems
 
 
+# Number of consecutive tokens in processing.
 WINDOW_SIZE = 2
 
+# POS tags from http://www.clips.ua.ac.be/pages/mbsp-tags
+# Use only the first two letters here.
 INCLUDING_FILTER = ['NN', 'JJ']
 EXCLUDING_FILTER = []
 

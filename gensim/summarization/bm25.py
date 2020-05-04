@@ -13,7 +13,6 @@ descibed in [1]_, also you may check Wikipedia page [2]_.
 .. [2] Okapi BM25 on Wikipedia, https://en.wikipedia.org/wiki/Okapi_BM25
 
 
-
 Examples
 --------
 
@@ -27,22 +26,17 @@ Examples
     ... ]
     >>> result = get_bm25_weights(corpus, n_jobs=-1)
 
-
-Data:
------
-.. data:: PARAM_K1 - Free smoothing parameter for BM25.
-.. data:: PARAM_B - Free smoothing parameter for BM25.
-.. data:: EPSILON - Constant used for negative idf of document in corpus.
-
 """
 
 
 import logging
 import math
-from six import iteritems
-from six.moves import range
 from functools import partial
 from multiprocessing import Pool
+
+from six import iteritems
+from six.moves import range
+
 from ..utils import effective_n_jobs
 
 PARAM_K1 = 1.5

@@ -50,6 +50,7 @@ Modules:
     models/_fasttext_bin
     models/phrases
     models/poincare
+    viz/poincare
     models/coherencemodel
     models/basemodel
     models/callbacks
@@ -112,4 +113,3 @@ Modules:
     summarization/summariser
     summarization/syntactic_unit
     summarization/textcleaner
-    viz/poincare

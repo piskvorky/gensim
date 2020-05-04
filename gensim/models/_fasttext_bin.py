@@ -1,4 +1,10 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# Authors: Michael Penkov <m@penkov.dev>
+# Copyright (C) 2019 RaRe Technologies s.r.o.
+# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+
 """Load models from the native binary format released by Facebook.
 
 The main entry point is the :func:`~gensim.models._fasttext_bin.load` function.

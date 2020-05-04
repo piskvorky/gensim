@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Author: Shiva Manne <manneshiva@gmail.com>
+# Author: Radim Rehurek <me@radimrehurek.com>
 # Copyright (C) 2018 RaRe Technologies s.r.o.
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""This module implements the word2vec family of algorithms, using highly optimized C routines,
+"""
+Introduction
+============
+
+This module implements the word2vec family of algorithms, using highly optimized C routines,
 data streaming and Pythonic interfaces.
 
 The word2vec algorithms include skip-gram and CBOW models, using either

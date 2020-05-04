@@ -4,7 +4,7 @@
 """Module contains common utilities used in automated code tests for Gensim modules.
 
 Attributes:
------------
+
 module_path : str
     Full path to this module directory.
 
@@ -19,7 +19,7 @@ common_corpus : list of list of (int, int)
 
 
 Examples:
----------
+
 It's easy to keep objects in temporary folder and reuse'em if needed:
 
 .. sourcecode:: pycon

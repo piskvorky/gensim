@@ -5,13 +5,17 @@
 # Copyright (C) 2018 RaRe Technologies s.r.o.
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""Learn word representations via Fasttext: `Enriching Word Vectors with Subword Information
+"""
+Introduction
+------------
+
+Learn word representations via fastText: `Enriching Word Vectors with Subword Information
 <https://arxiv.org/abs/1607.04606>`_.
 
 This module allows training word embeddings from a training corpus with the additional ability to obtain word vectors
 for out-of-vocabulary words.
 
-This module contains a fast native C implementation of Fasttext with Python interfaces. It is **not** only a wrapper
+This module contains a fast native C implementation of fastText with Python interfaces. It is **not** only a wrapper
 around Facebook's implementation.
 
 This module supports loading models trained with Facebook's fastText implementation.
@@ -19,9 +23,6 @@ It also supports continuing training from such models.
 
 For a tutorial see `this notebook
 <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/FastText_Tutorial.ipynb>`_.
-
-**Make sure you have a C compiler before installing Gensim, to use the optimized (compiled) Fasttext
-training routines.**
 
 Usage examples
 --------------

@@ -1,5 +1,5 @@
-:mod:`models._utils_any2vec` -- Cython utils for any2vec models
-===============================================================
+:mod:`models._utils_any2vec` -- Compiled extension for any2vec models
+=====================================================================
 
 .. automodule:: gensim.models._utils_any2vec
     :synopsis: Cython utils for any2vec models
