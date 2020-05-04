@@ -24,6 +24,7 @@ steps:
   displayName: 'Use Python $(python.version)'
 
 - script: |
+    echo "TEST"
     python -m pip install --upgrade pip
     python -m pip install tox
   displayName: 'Install tox'
