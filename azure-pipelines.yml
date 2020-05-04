@@ -26,7 +26,6 @@ steps:
 
 - script: |
     python -c "import platform; print(platform.platform())"
-    hexdump -c gensim/test/test_data/testcorpus.mallet
-    tox -vv gensim/test/test_corpora.py
+    call tox -vv gensim/test/test_corpora.py
     # (others failed) gensim/test/test_corpora.py gensim/test/test_varembed_wrapper.py gensim/test/test_ldamodel.py gensim/test/test_sklearn_api.py
   displayName: 'Testing'
