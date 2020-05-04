@@ -194,6 +194,8 @@ cdef class MmReader(object):
 
         fin.seek(offset)  # works for gzip/bz2 input, too
         previd, document = -1, []
+        fin.seek(0)
+        raise ValueError("unable to parse line: {} (input bytes: {})".format(line, list(enumerate(fin.read()))))
         for line in fin:
             if (sscanf(line, "%lld %lld %lg", &docid, &termid, &val) != 3):
                 fin.seek(0)
