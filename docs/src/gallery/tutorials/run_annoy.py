@@ -5,7 +5,7 @@ Fast Similarity Queries with Annoy and Word2Vec
 Introduces the annoy library for similarity queries using a Word2Vec model.
 """
 
-LOGS = False
+LOGS = False  # Set to True if you want to see progress in logs.
 if LOGS:
     import logging
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
@@ -38,7 +38,7 @@ if LOGS:
 # ------------------------
 import gensim.downloader as api
 text8_path = api.load('text8', return_path=True)
-text8_path
+print(text8_path)
 
 ###############################################################################
 # 2. Train the Word2Vec model
@@ -101,7 +101,7 @@ for neighbor in approximate_neighbors:
     print(neighbor)
 
 normal_neighbors = model.wv.most_similar([vector], topn=11)
-print("\nNormal (not Annoy-indexed) Neighbors")
+print("\nExact Neighbors")
 for neighbor in normal_neighbors:
     print(neighbor)
 
@@ -379,7 +379,7 @@ for neighbor in approximate_neighbors:
     print(neighbor)
 
 normal_neighbors = wv.most_similar([vector], topn=11)
-print("\nNormal (not Annoy-indexed) Neighbors")
+print("\nExact Neighbors")
 for neighbor in normal_neighbors:
     print(neighbor)
 

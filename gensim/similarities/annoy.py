@@ -146,19 +146,17 @@ class AnnoyIndexer(object):
             with utils.open(fname_dict, 'rb') as f:
                 d = _pickle.loads(f.read())
             self.num_trees = d['num_trees']
-            self.index = AnnoyIndex(d['f'])
+            self.index = AnnoyIndex(d['f'], metric='angular')
             self.index.load(fname)
             self.labels = d['labels']
 
     def build_from_word2vec(self):
         """Build an Annoy index using word vectors from a Word2Vec model."""
-
         self.model.init_sims()
         return self._build_from_model(self.model.wv.vectors_norm, self.model.wv.index2word, self.model.vector_size)
 
     def build_from_doc2vec(self):
         """Build an Annoy index using document vectors from a Doc2Vec model."""
-
         docvecs = self.model.docvecs
         docvecs.init_sims()
         labels = [docvecs.index_to_doctag(i) for i in range(0, docvecs.count)]
@@ -166,7 +164,6 @@ class AnnoyIndexer(object):
 
     def build_from_keyedvectors(self):
         """Build an Annoy index using word vectors from a KeyedVectors model."""
-
         self.model.init_sims()
         return self._build_from_model(self.model.vectors_norm, self.model.index2word, self.model.vector_size)
 
@@ -176,7 +173,7 @@ class AnnoyIndexer(object):
         except ImportError:
             raise _NOANNOY
 
-        index = AnnoyIndex(num_features)
+        index = AnnoyIndex(num_features, metric='angular')
 
         for vector_num, vector in enumerate(vectors):
             index.add_item(vector_num, vector)
@@ -201,7 +198,6 @@ class AnnoyIndexer(object):
             List of most similar items in format [(`item`, `cosine_distance`), ... ]
 
         """
-
         ids, distances = self.index.get_nns_by_vector(
             vector, num_neighbors, include_distances=True)
 
