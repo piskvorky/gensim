@@ -264,7 +264,6 @@ win_testenv = [
     'testfixtures',
     'Morfessor==2.0.2a4',
     'python-Levenshtein >= 0.10.2',
-    'visdom >= 0.1.8, != 0.1.8.7',
     'scikit-learn',
     # The following packages are commented out because they don't install on Windows. So skip the
     # related tests in AppVeyor. We still test them in Linux via Travis, see linux_testenv below.
@@ -282,7 +281,8 @@ win_testenv = [
 #
 #   https://packaging.python.org/discussions/install-requires-vs-requirements/
 #
-docs_testenv = win_testenv + distributed_env + [
+visdom_req = ['visdom >= 0.1.8, != 0.1.8.7']
+docs_testenv = win_testenv + distributed_env + visdom_req + [
     'sphinx <= 2.4.4',  # avoid `sphinx >= 3.0` that breaks the build
     'sphinx-gallery',
     'sphinxcontrib.programoutput',
@@ -308,7 +308,7 @@ docs_testenv = win_testenv + distributed_env + [
 
 # Add additional requirements for testing on Linux. We skip some tests on Windows,
 # because the libraries below are too tricky to install there.
-linux_testenv = win_testenv[:]
+linux_testenv = win_testenv[:] + visdom_req
 if sys.version_info >= (3, 7):
     # HACK: Installing tensorflow causes a segfault in Travis on py3.6. Other Pythons work – a mystery.
     # See https://github.com/RaRe-Technologies/gensim/pull/2814#issuecomment-621477948
