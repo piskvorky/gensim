@@ -120,6 +120,7 @@ class CoherenceModel(interfaces.TransformationABC):
         >>> coherence = cm.get_coherence()  # get coherence value
 
     """
+
     def __init__(self, model=None, topics=None, texts=None, corpus=None, dictionary=None,
                  window_size=None, keyed_vectors=None, coherence='c_v', topn=20, processes=-1):
         """
@@ -441,16 +442,16 @@ class CoherenceModel(interfaces.TransformationABC):
         self._topics = new_topics
 
     def _ensure_elements_are_ids(self, topic):
-            elements_are_tokens = np.array([self.dictionary.token2id[token] for token in topic if token in self.dictionary.token2id])
-            topic_tokens_from_id = (self.dictionary.id2token[_id] for _id in topic if _id in self.dictionary.id2token)
-            elements_are_ids = np.array([self.dictionary.token2id[token] for token in topic_tokens_from_id])
-            if elements_are_tokens.size > elements_are_ids.size:
-                return elements_are_tokens
-            elif elements_are_ids.size > elements_are_tokens.size:
-                return elements_are_ids
-            else:
-                raise Exception("Topic list is not a list of lists of tokens or ids")
-                
+        elements_are_tokens = np.array([self.dictionary.token2id[token]
+                                       for token in topic if token in self.dictionary.token2id])
+        topic_tokens_from_id = (self.dictionary.id2token[_id] for _id in topic if _id in self.dictionary.id2token)
+        elements_are_ids = np.array([self.dictionary.token2id[token] for token in topic_tokens_from_id])
+        if elements_are_tokens.size > elements_are_ids.size:
+            return elements_are_tokens
+        elif elements_are_ids.size > elements_are_tokens.size:
+            return elements_are_ids
+        else:
+            raise Exception("Topic list is not a list of lists of tokens or ids")
 
     def _update_accumulator(self, new_topics):
         if self._relevant_ids_will_differ(new_topics):
