@@ -38,7 +38,7 @@ if LOGS:
 # ------------------------
 import gensim.downloader as api
 text8_path = api.load('text8', return_path=True)
-print(text8_path)
+print("Using corpus from", text8_path)
 
 ###############################################################################
 # 2. Train the Word2Vec model
@@ -61,7 +61,7 @@ params = {
     'negative': 5
 }
 model = Word2Vec(Text8Corpus(text8_path), **params)
-print(model)
+print("Using model", model)
 
 ###############################################################################
 # 3. Construct AnnoyIndex with model & make a similarity query
@@ -119,7 +119,7 @@ for neighbor in normal_neighbors:
 model.init_sims()
 annoy_index = AnnoyIndexer(model, 100)
 
-# Dry run to make sure both indices are fully in RAM
+# Dry run to make sure both indexes are fully in RAM
 vector = model.wv.vectors_norm[0]
 model.wv.most_similar([vector], topn=5, indexer=annoy_index)
 model.wv.most_similar([vector], topn=5)
@@ -128,10 +128,7 @@ import time
 import numpy as np
 
 def avg_query_time(annoy_index=None, queries=1000):
-    """
-    Average query time of a most_similar method over 1000 random queries,
-    uses annoy if given an indexer
-    """
+    """Average query time of a most_similar method over 1000 random queries."""
     total_time = 0
     for _ in range(queries):
         rand_vec = model.wv.vectors_norm[np.random.randint(0, len(model.wv.vocab))]
@@ -140,7 +137,7 @@ def avg_query_time(annoy_index=None, queries=1000):
         total_time += time.process_time() - start_time
     return total_time / queries
 
-queries = 10000
+queries = 1000
 
 gensim_time = avg_query_time(queries=queries)
 annoy_time = avg_query_time(annoy_index, queries=queries)
@@ -210,7 +207,7 @@ assert approximate_neighbors == approximate_neighbors2
 #
 
 ###############################################################################
-# 6. Save memory via memory-mapping indices saved to disk
+# 6. Save memory via memory-mapping indexes saved to disk
 # -------------------------------------------------------
 #
 # Annoy library has a useful feature that indices can be memory-mapped from
@@ -230,8 +227,8 @@ import os
 import psutil
 
 ###############################################################################
-# Bad example: two processes load the Word2vec model from disk and create there
-# own Annoy indices from that model.
+# Bad example: two processes load the Word2vec model from disk and create their
+# own Annoy index from that model.
 #
 
 model.save('/tmp/mymodel.pkl')
@@ -255,7 +252,7 @@ p2.join()
 
 ###############################################################################
 # Good example: two processes load both the Word2vec model and index from disk
-# and memory-map the index
+# and memory-map the index.
 #
 
 model.save('/tmp/mymodel.pkl')

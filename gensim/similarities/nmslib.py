@@ -231,7 +231,7 @@ class NmslibIndexer(object):
         Returns
         -------
         list of (str, float)
-            List of most similar items in the format `[(item, cosine_similarity), ... ].
+            List of most similar items in the format `[(item, cosine_similarity), ... ]`.
 
         """
         ids, distances = self.index.knnQueryBatch(vector.reshape(1, -1), k=num_neighbors)[0]
