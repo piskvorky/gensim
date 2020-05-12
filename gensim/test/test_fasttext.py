@@ -37,7 +37,7 @@ MAX_WORDVEC_COMPONENT_DIFFERENCE = 1.0e-10
 
 # Limit the size of FastText ngram buckets, for RAM reasons.
 # See https://github.com/RaRe-Technologies/gensim/issues/2790
-BUCKET = 5000
+BUCKET = 10000
 
 FT_HOME = os.environ.get("FT_HOME")
 FT_CMD = os.path.join(FT_HOME, "fasttext") if FT_HOME else None
@@ -418,7 +418,7 @@ class TestFastTextModel(unittest.TestCase):
 
         model_gensim = FT_gensim(
             vector_size=48, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0,
-            min_count=5, epochs=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
+            min_count=5, epochs=10, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
             sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET)
 
         lee_data = LineSentence(datapath('lee_background.cor'))
@@ -440,14 +440,17 @@ class TestFastTextModel(unittest.TestCase):
             u'flights',
             u'during',
             u'comes']
-        overlap_count = len(set(sims_gensim_words).intersection(expected_sims_words))
-        self.assertGreaterEqual(overlap_count, 2)
+        overlaps = set(sims_gensim_words).intersection(expected_sims_words)
+        overlap_count = len(overlaps)
+        self.assertGreaterEqual(
+            overlap_count, 2,
+            "only %i overlap in expected %s & actual %s" % (overlap_count, expected_sims_words, sims_gensim_words))
 
     def test_cbow_hs_training_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
             model_gensim = FT_gensim(
                 vector_size=48, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0,
-                min_count=5, epochs=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
+                min_count=5, epochs=10, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
                 sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET * 4)
 
             lee_data = LineSentence(datapath('lee_background.cor'))
@@ -473,14 +476,17 @@ class TestFastTextModel(unittest.TestCase):
                 u'flights',
                 u'during',
                 u'comes']
-            overlap_count = len(set(sims_gensim_words).intersection(expected_sims_words))
-            self.assertGreaterEqual(overlap_count, 2)
+            overlaps = set(sims_gensim_words).intersection(expected_sims_words)
+            overlap_count = len(overlaps)
+            self.assertGreaterEqual(
+                overlap_count, 2,
+                "only %i overlap in expected %s & actual %s" % (overlap_count, expected_sims_words, sims_gensim_words))
 
     def test_sg_hs_training(self):
 
         model_gensim = FT_gensim(
             vector_size=48, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=1, negative=0,
-            min_count=5, epochs=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
+            min_count=5, epochs=10, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
             sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET)
 
         lee_data = LineSentence(datapath('lee_background.cor'))
@@ -502,14 +508,17 @@ class TestFastTextModel(unittest.TestCase):
             u'manslaughter',
             u'north',
             u'flight']
-        overlap_count = len(set(sims_gensim_words).intersection(expected_sims_words))
-        self.assertGreaterEqual(overlap_count, 2)
+        overlaps = set(sims_gensim_words).intersection(expected_sims_words)
+        overlap_count = len(overlaps)
+        self.assertGreaterEqual(
+            overlap_count, 2,
+            "only %i overlap in expected %s & actual %s" % (overlap_count, expected_sims_words, sims_gensim_words))
 
     def test_sg_hs_training_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
             model_gensim = FT_gensim(
                 vector_size=48, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=1, negative=0,
-                min_count=5, epochs=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
+                min_count=5, epochs=10, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
                 sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET)
 
             lee_data = LineSentence(datapath('lee_background.cor'))
@@ -535,14 +544,17 @@ class TestFastTextModel(unittest.TestCase):
                 u'manslaughter',
                 u'north',
                 u'flight']
-            overlap_count = len(set(sims_gensim_words).intersection(expected_sims_words))
-            self.assertGreaterEqual(overlap_count, 2)
+            overlaps = set(sims_gensim_words).intersection(expected_sims_words)
+            overlap_count = len(overlaps)
+            self.assertGreaterEqual(
+                overlap_count, 2,
+                "only %i overlap in expected %s & actual %s" % (overlap_count, expected_sims_words, sims_gensim_words))
 
     def test_cbow_neg_training(self):
 
         model_gensim = FT_gensim(
             vector_size=48, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=5,
-            min_count=5, epochs=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
+            min_count=5, epochs=10, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
             sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET)
 
         lee_data = LineSentence(datapath('lee_background.cor'))
@@ -564,14 +576,17 @@ class TestFastTextModel(unittest.TestCase):
             u'remains',
             u'overnight',
             u'running']
-        overlap_count = len(set(sims_gensim_words).intersection(expected_sims_words))
-        self.assertGreaterEqual(overlap_count, 2)
+        overlaps = set(sims_gensim_words).intersection(expected_sims_words)
+        overlap_count = len(overlaps)
+        self.assertGreaterEqual(
+            overlap_count, 2,
+            "only %i overlap in expected %s & actual %s" % (overlap_count, expected_sims_words, sims_gensim_words))
 
     def test_cbow_neg_training_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
             model_gensim = FT_gensim(
                 vector_size=48, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=5,
-                min_count=5, epochs=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
+                min_count=5, epochs=10, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
                 sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET)
 
             lee_data = LineSentence(datapath('lee_background.cor'))
@@ -597,14 +612,17 @@ class TestFastTextModel(unittest.TestCase):
                 u'remains',
                 u'overnight',
                 u'running']
-            overlap_count = len(set(sims_gensim_words).intersection(expected_sims_words))
-            self.assertGreaterEqual(overlap_count, 2)
+            overlaps = set(sims_gensim_words).intersection(expected_sims_words)
+            overlap_count = len(overlaps)
+            self.assertGreaterEqual(
+                overlap_count, 2,
+                "only %i overlap in expected %s & actual %s" % (overlap_count, expected_sims_words, sims_gensim_words))
 
     def test_sg_neg_training(self):
 
         model_gensim = FT_gensim(
             vector_size=48, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=0, negative=5,
-            min_count=5, epochs=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
+            min_count=5, epochs=10, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
             sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET * 4)
 
         lee_data = LineSentence(datapath('lee_background.cor'))
@@ -626,14 +644,17 @@ class TestFastTextModel(unittest.TestCase):
             u'firm',
             u'singles',
             u'death']
-        overlap_count = len(set(sims_gensim_words).intersection(expected_sims_words))
-        self.assertGreaterEqual(overlap_count, 2)
+        overlaps = set(sims_gensim_words).intersection(expected_sims_words)
+        overlap_count = len(overlaps)
+        self.assertGreaterEqual(
+            overlap_count, 2,
+            "only %i overlap in expected %s & actual %s" % (overlap_count, expected_sims_words, sims_gensim_words))
 
     def test_sg_neg_training_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
             model_gensim = FT_gensim(
                 vector_size=48, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=0, negative=5,
-                min_count=5, epochs=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
+                min_count=5, epochs=10, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
                 sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET * 4)
 
             lee_data = LineSentence(datapath('lee_background.cor'))
@@ -659,8 +680,11 @@ class TestFastTextModel(unittest.TestCase):
                 u'firm',
                 u'singles',
                 u'death']
-            overlap_count = len(set(sims_gensim_words).intersection(expected_sims_words))
-            self.assertGreaterEqual(overlap_count, 2)
+            overlaps = set(sims_gensim_words).intersection(expected_sims_words)
+            overlap_count = len(overlaps)
+            self.assertGreaterEqual(
+                overlap_count, 2,
+                "only %i overlap in expected %s & actual %s" % (overlap_count, expected_sims_words, sims_gensim_words))
 
     def test_online_learning(self):
         model_hs = FT_gensim(sentences, vector_size=12, min_count=1, seed=42, hs=1, negative=0, bucket=BUCKET)
