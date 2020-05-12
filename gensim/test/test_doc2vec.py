@@ -665,17 +665,17 @@ class TestDoc2VecModel(unittest.TestCase):
             vector *= 0
 
     @log_capture()
-    def testBuildVocabWarning(self, line):
+    def testBuildVocabWarning(self, loglines):
         """Test if logger warning is raised on non-ideal input to a doc2vec model"""
         raw_sentences = ['human', 'machine']
         sentences = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(raw_sentences)]
         model = doc2vec.Doc2Vec()
         model.build_vocab(sentences)
         warning = "Each 'words' should be a list of words (usually unicode strings)."
-        self.assertTrue(warning in str(line))
+        self.assertTrue(warning in str(loglines))
 
     @log_capture()
-    def testTrainWarning(self, line):
+    def testTrainWarning(self, loglines):
         """Test if warning is raised if alpha rises during subsequent calls to train()"""
         raw_sentences = [['human'],
                          ['graph', 'trees']]
@@ -689,7 +689,7 @@ class TestDoc2VecModel(unittest.TestCase):
             if epoch == 5:
                 model.alpha += 0.05
         warning = "Effective 'alpha' higher than previous training cycles"
-        self.assertTrue(warning in str(line))
+        self.assertTrue(warning in str(loglines))
 
     def testLoadOnClassError(self):
         """Test if exception is raised when loading doc2vec model on instance"""

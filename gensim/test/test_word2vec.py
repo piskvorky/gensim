@@ -244,12 +244,12 @@ class TestWord2VecModel(unittest.TestCase):
 
     def onlineSanity(self, model, trained_model=False):
         terro, others = [], []
-        for x in list_corpus:
-            if 'terrorism' in x:
-                terro.append(x)
+        for line in list_corpus:
+            if 'terrorism' in line:
+                terro.append(line)
             else:
-                others.append(x)
-        self.assertTrue(all('terrorism' not in x for x in others))
+                others.append(line)
+        self.assertTrue(all('terrorism' not in line for line in others))
         model.build_vocab(others, update=trained_model)
         model.train(others, total_examples=model.corpus_count, epochs=model.epochs)
         self.assertFalse('terrorism' in model.wv.vocab)
@@ -974,16 +974,16 @@ class TestWord2VecModel(unittest.TestCase):
         loaded_model.train(list_corpus, total_examples=model.corpus_count, epochs=model.epochs)
 
     @log_capture()
-    def testBuildVocabWarning(self, line):
+    def testBuildVocabWarning(self, loglines):
         """Test if warning is raised on non-ideal input to a word2vec model"""
         sentences = ['human', 'machine']
         model = word2vec.Word2Vec()
         model.build_vocab(sentences)
         warning = "Each 'sentences' item should be a list of words (usually unicode strings)."
-        self.assertTrue(warning in str(line))
+        self.assertTrue(warning in str(loglines))
 
     @log_capture()
-    def testTrainWarning(self, line):
+    def testTrainWarning(self, loglines):
         """Test if warning is raised if alpha rises during subsequent calls to train()"""
         sentences = [
             ['human'],
@@ -998,7 +998,7 @@ class TestWord2VecModel(unittest.TestCase):
             if epoch == 5:
                 model.alpha += 0.05
         warning = "Effective 'alpha' higher than previous training cycles"
-        self.assertTrue(warning in str(line))
+        self.assertTrue(warning in str(loglines))
 
     def test_train_with_explicit_param(self):
         model = word2vec.Word2Vec(vector_size=2, min_count=1, hs=1, negative=0)

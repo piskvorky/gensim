@@ -739,12 +739,12 @@ class TestFastTextModel(unittest.TestCase):
 
     def online_sanity(self, model):
         terro, others = [], []
-        for x in list_corpus:
-            if 'terrorism' in x:
-                terro.append(x)
+        for line in list_corpus:
+            if 'terrorism' in line:
+                terro.append(line)
             else:
-                others.append(x)
-        self.assertTrue(all('terrorism' not in x for x in others))
+                others.append(line)
+        self.assertTrue(all('terrorism' not in line for line in others))
         model.build_vocab(others)
         start_vecs = model.wv.vectors_vocab.copy()
         model.train(others, total_examples=model.corpus_count, epochs=model.epochs)

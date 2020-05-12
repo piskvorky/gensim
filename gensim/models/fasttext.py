@@ -1644,5 +1644,5 @@ def ft_ngram_hashes(word, minn, maxn, num_buckets, fb_compatible=True):
 
 
 # BACKWARD COMPATIBILITY FOR OLDER PICKLES
-from gensim.models import keyedvectors  # noqa: F402
+from gensim.models import keyedvectors  # noqa: E402
 keyedvectors.FastTextKeyedVectors = FastTextKeyedVectors
