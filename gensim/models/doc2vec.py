@@ -333,13 +333,9 @@ class Doc2Vec(Word2Vec):
         self.dv = value
 
     def _clear_post_train(self):
-        """Alias for :meth:`~gensim.models.doc2vec.Doc2Vec.clear_sims`."""
-        self.clear_sims()
-
-    def clear_sims(self):
         """Resets the current word vectors. """
-        self.wv.vectors_norm = None
-        self.dv.vectors_norm = None
+        self.wv.norms = None
+        self.dv.norms = None
 
     def reset_weights(self):
         super(Doc2Vec, self).reset_weights()

@@ -84,7 +84,7 @@ class TestFastTextModel(unittest.TestCase):
         self.model_sanity(model)
 
         # test querying for "most similar" by vector
-        graph_vector = model.wv.vectors_norm[model.wv.vocab['graph'].index]
+        graph_vector = model.wv.get_vector('graph', use_norm=True)
         sims2 = model.wv.most_similar(positive=[graph_vector], topn=11)
         sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
         self.assertEqual(sims, sims2)
@@ -129,7 +129,7 @@ class TestFastTextModel(unittest.TestCase):
             self.model_sanity(model)
 
             # test querying for "most similar" by vector
-            graph_vector = model.wv.vectors_norm[model.wv.vocab['graph'].index]
+            graph_vector = model.wv.get_vector('graph', use_norm=True)
             sims2 = model.wv.most_similar(positive=[graph_vector], topn=11)
             sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
             self.assertEqual(sims, sims2)
@@ -180,19 +180,6 @@ class TestFastTextModel(unittest.TestCase):
             loaded_wv = FastTextKeyedVectors.load(tmpf)
             self.assertTrue(np.allclose(wv.vectors_ngrams, loaded_wv.vectors_ngrams))
             self.assertEqual(len(wv.vocab), len(loaded_wv.vocab))
-
-    def test_norm_vectors_not_saved(self):
-        tmpf = get_tmpfile('gensim_fasttext.tst')
-        model = FT_gensim(sentences, min_count=1, bucket=BUCKET)
-        model.init_sims()
-        model.save(tmpf)
-        loaded_model = FT_gensim.load(tmpf)
-        self.assertTrue(loaded_model.wv.vectors_norm is None)
-
-        wv = model.wv
-        wv.save(tmpf)
-        loaded_kv = FastTextKeyedVectors.load(tmpf)
-        self.assertTrue(loaded_kv.vectors_norm is None)
 
     def model_sanity(self, model):
         self.model_structural_sanity(model)

@@ -842,7 +842,7 @@ class FastText(Word2Vec):
 
         """
         kwargs['ignore'] = kwargs.get(
-            'ignore', ['vectors_norm', 'buckets_word'])
+            'ignore', []) + ['buckets_word', ]
         super(FastText, self).save(*args, **kwargs)
 
     @classmethod
@@ -1280,7 +1280,6 @@ class FastTextKeyedVectors(KeyedVectors):
         """
         # don't bother storing the cached normalized vectors
         ignore_attrs = [
-            'vectors_norm',
             'buckets_word',
             'hash2index',
         ]

@@ -345,20 +345,6 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(sentences, min_count=1, trim_rule=rule)
         self.assertTrue("human" not in model.wv.vocab)
 
-    def testVectorsNormNotSaved(self):
-        """Test vectors_norm isn't saved in model file"""
-        tmpf = get_tmpfile('gensim_word2vec.tst')
-        model = word2vec.Word2Vec(sentences, min_count=1)
-        model.wv.init_sims()
-        model.save(tmpf)
-        loaded_model = word2vec.Word2Vec.load(tmpf)
-        self.assertTrue(loaded_model.wv.vectors_norm is None)
-
-        wv = model.wv
-        wv.save(tmpf)
-        loaded_kv = keyedvectors.KeyedVectors.load(tmpf)
-        self.assertTrue(loaded_kv.vectors_norm is None)
-
     def obsolete_testLoadPreKeyedVectorModel(self):
         """Test loading pre-KeyedVectors word2vec model"""
 
@@ -390,13 +376,11 @@ class TestWord2VecModel(unittest.TestCase):
         """Test storing/loading the entire model in word2vec format."""
         tmpf = get_tmpfile('gensim_word2vec.tst')
         model = word2vec.Word2Vec(sentences, min_count=1)
-        model.wv.init_sims()
         model.wv.save_word2vec_format(tmpf, binary=True)
         binary_model_kv = keyedvectors.KeyedVectors.load_word2vec_format(tmpf, binary=True)
-        binary_model_kv.init_sims(replace=False)
         self.assertTrue(np.allclose(model.wv['human'], binary_model_kv['human']))
         norm_only_model = keyedvectors.KeyedVectors.load_word2vec_format(tmpf, binary=True)
-        norm_only_model.init_sims(replace=True)
+        norm_only_model.unit_normalize_all()
         self.assertFalse(np.allclose(model.wv['human'], norm_only_model['human']))
         self.assertTrue(np.allclose(model.wv.vectors_norm[model.wv.vocab['human'].index], norm_only_model['human']))
         limited_model_kv = keyedvectors.KeyedVectors.load_word2vec_format(tmpf, binary=True, limit=3)
@@ -409,7 +393,6 @@ class TestWord2VecModel(unittest.TestCase):
     def testNoTrainingCFormat(self):
         tmpf = get_tmpfile('gensim_word2vec.tst')
         model = word2vec.Word2Vec(sentences, min_count=1)
-        model.wv.init_sims()
         model.wv.save_word2vec_format(tmpf, binary=True)
         kv = keyedvectors.KeyedVectors.load_word2vec_format(tmpf, binary=True)
         binary_model = word2vec.Word2Vec()
@@ -419,7 +402,6 @@ class TestWord2VecModel(unittest.TestCase):
     def testTooShortBinaryWord2VecFormat(self):
         tfile = get_tmpfile('gensim_word2vec.tst')
         model = word2vec.Word2Vec(sentences, min_count=1)
-        model.wv.init_sims()
         model.wv.save_word2vec_format(tfile, binary=True)
         f = open(tfile, 'r+b')
         f.write(b'13')  # write wrong (too-long) vector count
@@ -429,7 +411,6 @@ class TestWord2VecModel(unittest.TestCase):
     def testTooShortTextWord2VecFormat(self):
         tfile = get_tmpfile('gensim_word2vec.tst')
         model = word2vec.Word2Vec(sentences, min_count=1)
-        model.wv.init_sims()
         model.wv.save_word2vec_format(tfile, binary=False)
         f = open(tfile, 'r+b')
         f.write(b'13')  # write wrong (too-long) vector count
@@ -440,13 +421,11 @@ class TestWord2VecModel(unittest.TestCase):
         """Test storing/loading the entire model in word2vec non-binary format."""
         tmpf = get_tmpfile('gensim_word2vec.tst')
         model = word2vec.Word2Vec(sentences, min_count=1)
-        model.wv.init_sims()
         model.wv.save_word2vec_format(tmpf, binary=False)
         text_model = keyedvectors.KeyedVectors.load_word2vec_format(tmpf, binary=False)
-        text_model.init_sims(False)
         self.assertTrue(np.allclose(model.wv['human'], text_model['human'], atol=1e-6))
         norm_only_model = keyedvectors.KeyedVectors.load_word2vec_format(tmpf, binary=False)
-        norm_only_model.init_sims(True)
+        norm_only_model.unit_normalize_all()
         self.assertFalse(np.allclose(model.wv['human'], norm_only_model['human'], atol=1e-6))
         self.assertTrue(np.allclose(
             model.wv.vectors_norm[model.wv.vocab['human'].index], norm_only_model['human'], atol=1e-4
@@ -456,7 +435,6 @@ class TestWord2VecModel(unittest.TestCase):
         """Test storing/loading the entire model and vocabulary in word2vec format."""
         tmpf = get_tmpfile('gensim_word2vec.tst')
         model = word2vec.Word2Vec(sentences, min_count=1)
-        model.wv.init_sims()
         testvocab = get_tmpfile('gensim_word2vec.vocab')
         model.wv.save_word2vec_format(tmpf, testvocab, binary=True)
         binary_model_with_vocab_kv = keyedvectors.KeyedVectors.load_word2vec_format(tmpf, testvocab, binary=True)
@@ -466,7 +444,6 @@ class TestWord2VecModel(unittest.TestCase):
         """Test storing/loading the entire model and vocabulary in word2vec format."""
         tmpf = get_tmpfile('gensim_word2vec.tst')
         model = word2vec.Word2Vec(sentences, min_count=1)
-        model.wv.init_sims()
         testvocab = get_tmpfile('gensim_word2vec.vocab')
         model.wv.save_word2vec_format(tmpf, testvocab, binary=True)
         kv_binary_model_with_vocab = keyedvectors.KeyedVectors.load_word2vec_format(tmpf, testvocab, binary=True)
@@ -478,7 +455,6 @@ class TestWord2VecModel(unittest.TestCase):
          It was possible prior to 1.0.0 release, now raises Exception"""
         tmpf = get_tmpfile('gensim_word2vec.tst')
         model = word2vec.Word2Vec(sentences, min_count=1)
-        model.wv.init_sims()
         testvocab = get_tmpfile('gensim_word2vec.vocab')
         model.wv.save_word2vec_format(tmpf, testvocab, binary=True)
         binary_model_with_vocab_kv = keyedvectors.KeyedVectors.load_word2vec_format(tmpf, testvocab, binary=True)
@@ -857,7 +833,6 @@ class TestWord2VecModel(unittest.TestCase):
 
         # when required model parameters have been deleted
         tmpf = get_tmpfile('gensim_word2vec.tst')
-        model_with_neg.wv.init_sims()
         model_with_neg.wv.save_word2vec_format(tmpf, binary=True)
         kv_model_with_neg = keyedvectors.KeyedVectors.load_word2vec_format(tmpf, binary=True)
         binary_model_with_neg = word2vec.Word2Vec()

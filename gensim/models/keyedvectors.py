@@ -175,7 +175,7 @@ except ImportError:
     from Queue import Queue, Empty  # noqa:F401
 
 from numpy import dot, float32 as REAL, \
-    double, array, zeros, vstack, sqrt, newaxis, \
+    double, array, zeros, vstack, \
     ndarray, sum as np_sum, prod, argmax, dtype, ascontiguousarray, \
     frombuffer
 import numpy as np
@@ -203,7 +203,7 @@ class KeyedVectors(utils.SaveLoad):
 
         """
         self.vectors = zeros((0, vector_size), dtype=REAL)  # fka (formerly known as) syn0
-        self.vectors_norm = None  # fka syn0norm
+        self.norms = None
         self.map = {}
         self.vector_size = vector_size
         self.index2key = []  # fka index2entity or index2word
@@ -220,8 +220,10 @@ class KeyedVectors(utils.SaveLoad):
         # fixup rename into vectors of older syn0
         if not hasattr(self, 'vectors'):
             self.vectors = self.__dict__.pop('syn0', None)
-            self.vectors_norm = None
             self.vector_size = self.vectors.shape[1]
+        # ensure at least a 'None' in 'norms' to force recalc
+        if not hasattr(self, 'norms'):
+            self.norms = None
         # fixup rename of vocab into map
         if 'map' not in self.__dict__:
             self.map = self.__dict__.pop('vocab', None)
@@ -238,7 +240,7 @@ class KeyedVectors(utils.SaveLoad):
         else:
             self.vectors = np.empty((target_count, self.vector_size), dtype=REAL)
         self.vectors[0:min(prev_count, target_count), ] = prev_vectors[0:min(prev_count, target_count), ]
-        self.vectors_norm = None
+        self.norms = None
         return range(prev_count, target_count)
 
     def randomly_initialize_vectors(self, indexes=None, seed=0):
@@ -251,7 +253,7 @@ class KeyedVectors(utils.SaveLoad):
         for i in indexes:
             self.vectors[i] = pseudorandom_weak_vector(self.vectors.shape[1],
                                                        seed_string=(str(self.index2key[i]) + str(seed)))
-        self.vectors_norm = None
+        self.norms = None
 
     def __len__(self):
         return len(self.index2key)
@@ -310,7 +312,7 @@ class KeyedVectors(utils.SaveLoad):
         """
         index = self.get_index(key)
         if use_norm:
-            result = self.vectors_norm[index]
+            result = self.vectors[index] / self.norms[index]
         else:
             result = self.vectors[index]
 
@@ -419,6 +421,26 @@ class KeyedVectors(utils.SaveLoad):
 
     # backward compatibility
     @property
+    def vectors_norm(self):
+        self.fill_norms()
+        return self.vectors / self.norms[..., np.newaxis]
+
+    def fill_norms(self, force=False):
+        """
+        Ensure per-vector norms are available.
+
+        (Any code which modifies vectors should ensure the
+        accompanying norms are recalculated, or 'None'-out
+        'norms' to trigger full recalc later.)
+        """
+        if self.norms is None or force:
+            self.norms = np.linalg.norm(self.vectors, axis=1)
+
+    @vectors_norm.setter
+    def vectors_norm(self, _):
+        pass  # no-op; shouldn't be set
+
+    @property
     def index2entity(self):
         return self.index2key
 
@@ -456,8 +478,6 @@ class KeyedVectors(utils.SaveLoad):
             Load saved model.
 
         """
-        # don't bother storing the cached normalized vectors
-        kwargs['ignore'] = kwargs.get('ignore', ['vectors_norm'])
         super(KeyedVectors, self).save(*args, **kwargs)
 
     def most_similar(self, positive=None, negative=None, topn=10, clip_start=0, clip_end=None,
@@ -506,8 +526,8 @@ class KeyedVectors(utils.SaveLoad):
         if negative is None:
             negative = []
 
-        self.init_sims()
-        clip_end = clip_end or len(self.vectors_norm)
+        self.fill_norms()
+        clip_end = clip_end or len(self.vectors)
 
         if restrict_vocab:
             clip_start = 0
@@ -543,7 +563,7 @@ class KeyedVectors(utils.SaveLoad):
         if indexer is not None and isinstance(topn, int):
             return indexer.most_similar(mean, topn)
 
-        dists = dot(self.vectors_norm[clip_start:clip_end], mean)
+        dists = dot(self.vectors[clip_start:clip_end], mean) / self.norms[clip_start:clip_end]
         if not topn:
             return dists
         best = matutils.argsort(dists, topn=topn + len(all_keys), reverse=True)
@@ -688,8 +708,9 @@ class KeyedVectors(utils.SaveLoad):
                 if t2 not in docset2 or distance_matrix[i, j] != 0.0:
                     continue
 
-                # Compute Euclidean distance between word vectors.
-                distance_matrix[i, j] = distance_matrix[j, i] = sqrt(np_sum((self[t1] - self[t2])**2))
+                # Compute Euclidean distance between unit-normed word vectors.
+                distance_matrix[i, j] = distance_matrix[j, i] = np.sqrt(
+                    np_sum((self.get_vector(t1, use_norm=True) - self.get_vector(t2, use_norm=True))**2))
 
         if np_sum(distance_matrix) == 0.0:
             # `emd` gets stuck if the distance matrix contains only zeros.
@@ -751,7 +772,7 @@ class KeyedVectors(utils.SaveLoad):
         if negative is None:
             negative = []
 
-        self.init_sims()
+        self.fill_norms()
 
         if isinstance(positive, string_types) and not negative:
             # allow calls like most_similar_cosmul('dog'), as a shorthand for most_similar_cosmul(['dog'])
@@ -776,8 +797,8 @@ class KeyedVectors(utils.SaveLoad):
 
         # equation (4) of Levy & Goldberg "Linguistic Regularities...",
         # with distances shifted to [0,1] per footnote (7)
-        pos_dists = [((1 + dot(self.vectors_norm, term)) / 2) for term in positive]
-        neg_dists = [((1 + dot(self.vectors_norm, term)) / 2) for term in negative]
+        pos_dists = [((1 + dot(self.vectors, term) / self.norms) / 2) for term in positive]
+        neg_dists = [((1 + dot(self.vectors, term) / self.norms) / 2) for term in negative]
         dists = prod(pos_dists, axis=0) / (prod(neg_dists, axis=0) + 0.000001)
 
         if not topn:
@@ -801,7 +822,7 @@ class KeyedVectors(utils.SaveLoad):
             The key further away from the mean of all keys.
 
         """
-        self.init_sims()
+        self.fill_norms()
 
         used_words = [word for word in words if word in self]
         if len(used_words) != len(words):
@@ -1179,25 +1200,37 @@ class KeyedVectors(utils.SaveLoad):
         self.log_evaluate_word_pairs(pearson, spearman, oov_ratio, pairs)
         return pearson, spearman, oov_ratio
 
+    @deprecated("use fill_norms instead")
     def init_sims(self, replace=False):
-        """Precompute L2-normalized vectors.
+        """Precompute data helpful for bulk similarity calculations.
+
+        :meth:`~gensim.models.keyedvectors.KeyedVectors.fill_norms` now preferred for this purpose.
 
         Parameters
         ----------
         replace : bool, optional
-            If True - forget the original vectors and only keep the normalized ones = saves lots of memory!
+            If True - forget the original vectors and only keep the normalized ones.
 
         Warnings
         --------
-        You **cannot continue training** after doing a replace.
-        The model becomes effectively read-only: you can call
-        :meth:`~gensim.models.keyedvectors.KeyedVectors.most_similar`,
-        :meth:`~gensim.models.keyedvectors.KeyedVectors.similarity`, etc., but not train.
+        You **cannot sensibly continue training** after doing a replace on a model's
+        internal KeyedVectors, and a replace is no longer necessary to save RAM.
 
         """
-        if getattr(self, 'vectors_norm', None) is None or replace:
-            logger.info("precomputing L2-norms of key weight vectors")
-            self.vectors_norm = _l2_norm(self.vectors, replace=replace)
+        self.fill_norms()
+        if replace:
+            logger.warning("destructive init_sims(replace=True) deprecated & no longer required for space-efficiency")
+            self.unit_normalize_all()
+
+    def unit_normalize_all(self):
+        """Destructively scale all vectors to unit-length.
+
+        (You cannot sensibly continue training after such a step.)
+
+        """
+        self.fill_norms()
+        self.vectors /= self.norms[..., np.newaxis]
+        self.norms = np.ones((len(self.vectors),))
 
     def relative_cosine_similarity(self, wa, wb, topn=10):
         """Compute the relative cosine similarity between two words given top-n similar words,
@@ -1386,29 +1419,6 @@ class KeyedVectors(utils.SaveLoad):
 Word2VecKeyedVectors = KeyedVectors
 Doc2VecKeyedVectors = KeyedVectors
 EuclideanKeyedVectors = KeyedVectors
-
-
-def _l2_norm(m, replace=False):
-    """Return an L2-normalized version of a matrix.
-
-    Parameters
-    ----------
-    m : np.array
-        The matrix to normalize.
-    replace : boolean, optional
-        If True, modifies the existing matrix.
-
-    Returns
-    -------
-    The normalized matrix.  If replace=True, this will be the same as m.
-
-    """
-    dist = sqrt((m ** 2).sum(-1))[..., newaxis]
-    if replace:
-        m /= dist
-        return m
-    else:
-        return (m / dist).astype(REAL)
 
 
 @dataclass

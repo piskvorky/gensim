@@ -181,21 +181,18 @@ class NmslibIndexer(object):
     def _build_from_word2vec(self):
         """Build an NMSLIB index using word vectors from a Word2Vec model."""
 
-        self.model.wv.init_sims()
         self._build_from_model(self.model.wv.vectors_norm, self.model.wv.index2word)
 
     def _build_from_doc2vec(self):
         """Build an NMSLIB index using document vectors from a Doc2Vec model."""
 
         docvecs = self.model.dv
-        docvecs.init_sims()
         labels = [docvecs.index2key[i] for i in range(0, len(docvecs))]
         self._build_from_model(docvecs.vectors_norm, labels)
 
     def _build_from_keyedvectors(self):
         """Build an NMSLIB index using word vectors from a KeyedVectors model."""
 
-        self.model.init_sims()
         self._build_from_model(self.model.vectors_norm, self.model.index2word)
 
     def _build_from_model(self, vectors, labels):

@@ -849,7 +849,7 @@ class Word2Vec(utils.SaveLoad):
         if self.negative:
             pad = zeros((gained_vocab, self.layer1_size), dtype=REAL)
             self.syn1neg = vstack([self.syn1neg, pad])
-        self.wv.vectors_norm = None
+        self.wv.norms = None
 
         # do not suppress learning for already learned words
         self.wv.vectors_lockf = ones(len(self.wv.vocab), dtype=REAL)  # zeros suppress learning
@@ -894,8 +894,8 @@ class Word2Vec(utils.SaveLoad):
         return tally, self._raw_word_count(sentences)
 
     def _clear_post_train(self):
-        """Remove all L2-normalized word vectors from the model."""
-        self.wv.vectors_norm = None
+        """Clear any cached vector lengths from the model."""
+        self.wv.norms = None
 
     def train(self, corpus_iterable=None, corpus_file=None, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None, word_count=0,
@@ -1735,20 +1735,12 @@ class Word2Vec(utils.SaveLoad):
                 pass  # already out of loop; continue to next push
 
         elapsed = default_timer() - start
-        self.clear_sims()
+        self.wv.norms = None  # clear any cached lengths
         logger.info(
             "scoring %i sentences took %.1fs, %.0f sentences/s",
             sentence_count, elapsed, sentence_count / elapsed
         )
         return sentence_scores[:sentence_count]
-
-    def clear_sims(self):
-        """Remove all L2-normalized word vectors from the model, to free up memory.
-
-        You can recompute them later again using the :meth:`~gensim.models.word2vec.Word2Vec.init_sims` method.
-
-        """
-        self.wv.vectors_norm = None
 
     def intersect_word2vec_format(self, fname, lockf=0.0, binary=False, encoding='utf8', unicode_errors='strict'):
         """Merge in an input-hidden weight matrix loaded from the original C word2vec-tool format,
@@ -1901,8 +1893,8 @@ class Word2Vec(utils.SaveLoad):
             Path to the file.
 
         """
-        # don't bother storing the cached normalized vectors, recalculable table
-        kwargs['ignore'] = kwargs.get('ignore', ['vectors_norm', 'cum_table'])
+        # don't bother storing recalculable table
+        kwargs['ignore'] = kwargs.get('ignore', []) + ['cum_table', ]
         super(Word2Vec, self).save(*args, **kwargs)
 
     def get_latest_training_loss(self):
