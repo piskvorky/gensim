@@ -794,15 +794,20 @@ class TestWord2VecModel(unittest.TestCase):
 
     def testParallel(self):
         """Test word2vec parallel training."""
-        corpus = utils.RepeatCorpus(LeeCorpus(), 10000)
+        corpus = utils.RepeatCorpus(LeeCorpus(), 10000)  # repeats about 33 times
 
-        for workers in [2, 4]:
-            model = word2vec.Word2Vec(corpus, workers=workers)
-            sims = model.wv.most_similar('israeli')  # noqa:F841
+        for workers in [4, ]:  # [4, 2]
+            model = word2vec.Word2Vec(corpus, vector_size=24, min_count=(5 * 33), workers=workers)
+            origin_word = 'israeli'
+            expected_neighbor = 'palestinian'
+            sims = model.wv.most_similar(origin_word, topn=len(model.wv))
             # the exact vectors and therefore similarities may differ, due to different thread collisions/randomization
             # so let's test only for top3
-            # TODO: commented out for now; find a more robust way to compare against "gold standard"
-            # self.assertTrue('palestinian' in [sims[i][0] for i in range(3)])
+            from gensim.models.word2vec import FAST_VERSION
+            print(FAST_VERSION)
+            print(sims[:20])
+            neighbor_rank = [word for word, sim in sims].index(expected_neighbor)
+            self.assertLess(neighbor_rank, 10)
 
     def testRNG(self):
         """Test word2vec results identical with identical RNG seed."""
@@ -1129,4 +1134,4 @@ if __name__ == '__main__':
         format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s',
         level=logging.DEBUG
     )
-    unittest.main()
+    unittest.main(module='gensim.test.test_word2vec')
