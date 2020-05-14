@@ -245,6 +245,7 @@ class TestMmCorpusWithIndex(CorpusTestCase):
         self.assertEqual(f, 0)
         self.assertEqual(s, 0)
 
+    @unittest.skipIf(AZURE, 'see <https://github.com/RaRe-Technologies/gensim/pull/2836>')
     def test_load(self):
         self.assertEqual(self.corpus.num_docs, 9)
         self.assertEqual(self.corpus.num_terms, 12)
