@@ -24,7 +24,7 @@ from gensim import matutils, utils
 from gensim.test import basetmtests
 from gensim.test.utils import datapath, get_tmpfile, common_texts
 
-AZURE = bool(os.environ['PIPELINE_WORKSPACE'])
+AZURE = bool(os.environ.get('PIPELINE_WORKSPACE'))
 
 dictionary = Dictionary(common_texts)
 corpus = [dictionary.doc2bow(text) for text in common_texts]

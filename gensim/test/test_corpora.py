@@ -27,7 +27,7 @@ from gensim.utils import to_unicode
 from gensim.test.utils import datapath, get_tmpfile, common_corpus
 
 
-AZURE = bool(os.environ['PIPELINE_WORKSPACE'])
+AZURE = bool(os.environ.get('PIPELINE_WORKSPACE'))
 
 
 class DummyTransformer(object):

@@ -30,7 +30,7 @@ except ImportError:
 varembed_model_vector_file = datapath('varembed_vectors.pkl')
 varembed_model_morfessor_file = datapath('varembed_morfessor.bin')
 
-AZURE = bool(os.environ['PIPELINE_WORKSPACE'])
+AZURE = bool(os.environ.get('PIPELINE_WORKSPACE'))
 
 
 @unittest.skipIf(AZURE, 'see <https://github.com/RaRe-Technologies/gensim/pull/2836>')

@@ -28,7 +28,7 @@ from gensim.corpora import mmcorpus, Dictionary
 from gensim import matutils, models
 from gensim.test.utils import datapath, common_texts
 
-AZURE = bool(os.environ['PIPELINE_WORKSPACE'])
+AZURE = bool(os.environ.get('PIPELINE_WORKSPACE'))
 
 texts = [
     ['complier', 'system', 'computer'],
