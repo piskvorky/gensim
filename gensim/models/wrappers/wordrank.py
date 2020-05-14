@@ -41,11 +41,6 @@ Examples
     >>> model = Wordrank.train(path_to_wordrank_binary, corpus_file='text8', out_name='wr_model')
     >>>
     >>> print(model["hello"])  # prints vector for given words
-
-Warnings
---------
-Note that the wrapper might not work in a docker container for large datasets due to memory limits (caused by MPI).
-
 """
 
 from __future__ import division
