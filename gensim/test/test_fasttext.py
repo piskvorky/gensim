@@ -703,12 +703,12 @@ class TestFastTextModel(unittest.TestCase):
 
     def online_sanity(self, model):
         terro, others = [], []
-        for l in list_corpus:
-            if 'terrorism' in l:
-                terro.append(l)
+        for x in list_corpus:
+            if 'terrorism' in x:
+                terro.append(x)
             else:
-                others.append(l)
-        self.assertTrue(all('terrorism' not in l for l in others))
+                others.append(x)
+        self.assertTrue(all('terrorism' not in x for x in others))
         model.build_vocab(others)
         model.train(others, total_examples=model.corpus_count, epochs=model.epochs)
         # checks that `vectors` is different from `vectors_vocab`
@@ -1468,7 +1468,7 @@ def _read_wordvectors_using_fasttext(fasttext_fname, words):
         stdout=subprocess.PIPE)
     words_str = '\n'.join(words)
     out, _ = process.communicate(input=words_str.encode("utf-8"))
-    return np.array([line_to_array(l) for l in out.splitlines()], dtype=np.float32)
+    return np.array([line_to_array(line) for line in out.splitlines()], dtype=np.float32)
 
 
 @unittest.skipIf(not os.environ.get("FT_HOME", None), "FT_HOME env variable not set, skipping test")
