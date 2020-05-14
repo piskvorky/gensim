@@ -233,28 +233,28 @@ cdef init_d2v_config(Doc2VecConfig *c, model, alpha, learn_doctags, learn_words,
     c[0].learn_hidden = learn_hidden
     c[0].alpha = alpha
     c[0].layer1_size = model.layer1_size
-    c[0].vector_size = model.docvecs.vector_size
+    c[0].vector_size = model.dv.vector_size
     c[0].workers = model.workers
     c[0].docvecs_count = docvecs_count
 
     c[0].window = model.window
     c[0].expected_doctag_len = model.dm_tag_count
 
-    if '\0' in model.wv.vocab:
-        c[0].null_word_index = model.wv.vocab['\0'].index
+    if '\0' in model.wv:
+        c[0].null_word_index = model.wv.get_index('\0')
 
     # default vectors, locks from syn0/doctag_syn0
     if word_vectors is None:
        word_vectors = model.wv.vectors
     c[0].word_vectors = <REAL_t *>(np.PyArray_DATA(word_vectors))
     if doctag_vectors is None:
-       doctag_vectors = model.docvecs.vectors_docs
+       doctag_vectors = model.dv.vectors
     c[0].doctag_vectors = <REAL_t *>(np.PyArray_DATA(doctag_vectors))
     if word_locks is None:
        word_locks = model.wv.vectors_lockf
     c[0].word_locks = <REAL_t *>(np.PyArray_DATA(word_locks))
     if doctag_locks is None:
-       doctag_locks = model.docvecs.vectors_lockf
+       doctag_locks = model.dv.vectors_lockf
     c[0].doctag_locks = <REAL_t *>(np.PyArray_DATA(doctag_locks))
 
     if c[0].hs:
@@ -332,22 +332,24 @@ def train_document_dbow(model, doc_words, doctag_indexes, alpha, work=None,
     init_d2v_config(&c, model, alpha, learn_doctags, learn_words, learn_hidden, train_words=train_words, work=work,
                     neu1=None, word_vectors=word_vectors, word_locks=word_locks,
                     doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
-
     c.doctag_len = <int>min(MAX_DOCUMENT_LEN, len(doctag_indexes))
+    vocab_sample_ints = model.wv.expandos['sample_int']
+    if c.hs:
+        vocab_codes = model.wv.expandos['code']
+        vocab_points = model.wv.expandos['point']
 
-    vlookup = model.wv.vocab
     i = 0
     for token in doc_words:
-        predict_word = vlookup[token] if token in vlookup else None
-        if predict_word is None:  # shrink document to leave out word
+        word_index = model.wv.key_to_index[token] if token in model.wv.key_to_index else None
+        if word_index is None:  # shrink document to leave out word
             continue  # leaving i unchanged
-        if c.sample and predict_word.sample_int < random_int32(&c.next_random):
+        if c.sample and vocab_sample_ints[word_index] < random_int32(&c.next_random):
             continue
-        c.indexes[i] = predict_word.index
+        c.indexes[i] = word_index
         if c.hs:
-            c.codelens[i] = <int>len(predict_word.code)
-            c.codes[i] = <np.uint8_t *>np.PyArray_DATA(predict_word.code)
-            c.points[i] = <np.uint32_t *>np.PyArray_DATA(predict_word.point)
+            c.codelens[i] = <int>len(vocab_codes[word_index])
+            c.codes[i] = <np.uint8_t *>np.PyArray_DATA(vocab_codes[word_index])
+            c.points[i] = <np.uint32_t *>np.PyArray_DATA(vocab_points[word_index])
         result += 1
         i += 1
         if i == MAX_DOCUMENT_LEN:
@@ -458,22 +460,24 @@ def train_document_dm(model, doc_words, doctag_indexes, alpha, work=None, neu1=N
     init_d2v_config(&c, model, alpha, learn_doctags, learn_words, learn_hidden, train_words=False,
                     work=work, neu1=neu1, word_vectors=word_vectors, word_locks=word_locks,
                     doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
-
     c.doctag_len = <int>min(MAX_DOCUMENT_LEN, len(doctag_indexes))
+    vocab_sample_ints = model.wv.expandos['sample_int']
+    if c.hs:
+        vocab_codes = model.wv.expandos['code']
+        vocab_points = model.wv.expandos['point']
 
-    vlookup = model.wv.vocab
     i = 0
     for token in doc_words:
-        predict_word = vlookup[token] if token in vlookup else None
-        if predict_word is None:  # shrink document to leave out word
+        word_index = model.wv.key_to_index[token] if token in model.wv.key_to_index else None
+        if word_index is None:  # shrink document to leave out word
             continue  # leaving i unchanged
-        if c.sample and predict_word.sample_int < random_int32(&c.next_random):
+        if c.sample and vocab_sample_ints[word_index] < random_int32(&c.next_random):
             continue
-        c.indexes[i] = predict_word.index
+        c.indexes[i] = word_index
         if c.hs:
-            c.codelens[i] = <int>len(predict_word.code)
-            c.codes[i] = <np.uint8_t *>np.PyArray_DATA(predict_word.code)
-            c.points[i] = <np.uint32_t *>np.PyArray_DATA(predict_word.point)
+            c.codelens[i] = <int>len(vocab_codes[word_index])
+            c.codes[i] = <np.uint8_t *>np.PyArray_DATA(vocab_codes[word_index])
+            c.points[i] = <np.uint32_t *>np.PyArray_DATA(vocab_points[word_index])
         result += 1
         i += 1
         if i == MAX_DOCUMENT_LEN:
@@ -596,25 +600,27 @@ def train_document_dm_concat(model, doc_words, doctag_indexes, alpha, work=None,
 
     init_d2v_config(&c, model, alpha, learn_doctags, learn_words, learn_hidden, train_words=False, work=work, neu1=neu1,
                     word_vectors=word_vectors, word_locks=word_locks, doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
-
     c.doctag_len = <int>min(MAX_DOCUMENT_LEN, len(doctag_indexes))
+    vocab_sample_ints = model.wv.expandos['sample_int']
+    if c.hs:
+        vocab_codes = model.wv.expandos['code']
+        vocab_points = model.wv.expandos['point']
 
     if c.doctag_len != c.expected_doctag_len:
         return 0  # skip doc without expected number of tags
 
-    vlookup = model.wv.vocab
     i = 0
     for token in doc_words:
-        predict_word = vlookup[token] if token in vlookup else None
-        if predict_word is None:  # shrink document to leave out word
+        word_index = model.wv.key_to_index[token] if token in model.wv.key_to_index else None
+        if word_index is None:  # shrink document to leave out word
             continue  # leaving i unchanged
-        if c.sample and predict_word.sample_int < random_int32(&c.next_random):
+        if c.sample and vocab_sample_ints[word_index] < random_int32(&c.next_random):
             continue
-        c.indexes[i] = predict_word.index
+        c.indexes[i] = word_index
         if c.hs:
-            c.codelens[i] = <int>len(predict_word.code)
-            c.codes[i] = <np.uint8_t *>np.PyArray_DATA(predict_word.code)
-            c.points[i] = <np.uint32_t *>np.PyArray_DATA(predict_word.point)
+            c.codelens[i] = <int>len(vocab_codes[word_index])
+            c.codes[i] = <np.uint8_t *>np.PyArray_DATA(vocab_codes[word_index])
+            c.points[i] = <np.uint32_t *>np.PyArray_DATA(vocab_points[word_index])
         result += 1
         i += 1
         if i == MAX_DOCUMENT_LEN:

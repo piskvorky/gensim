@@ -41,15 +41,19 @@ cdef class CythonVocab:
     def __init__(self, wv, hs=0, fasttext=0):
         cdef VocabItem word
 
-        for py_token, vocab_item in iteritems(wv.vocab):
+        vocab_sample_ints = wv.expandos['sample_int']
+        if hs:
+            vocab_codes = wv.expandos['code']
+            vocab_points = wv.expandos['point']
+        for py_token in wv.key_to_index.keys():
             token = any2utf8(py_token)
-            word.index = vocab_item.index
-            word.sample_int = vocab_item.sample_int
+            word.index = wv.get_index(py_token)
+            word.sample_int = vocab_sample_ints[word.index]
 
             if hs:
-                word.code = <np.uint8_t *>np.PyArray_DATA(vocab_item.code)
-                word.code_len = <int>len(vocab_item.code)
-                word.point = <np.uint32_t *>np.PyArray_DATA(vocab_item.point)
+                word.code = <np.uint8_t *>np.PyArray_DATA(vocab_codes[word.index])
+                word.code_len = <int>len(vocab_codes[word.index])
+                word.point = <np.uint32_t *>np.PyArray_DATA(vocab_points[word.index])
 
             # subwords information, used only in FastText model
             if fasttext:

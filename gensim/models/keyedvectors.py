@@ -165,8 +165,7 @@ and so on.
 
 from itertools import chain
 import logging
-from collections import UserList
-from dataclasses import dataclass
+from collections import UserList, UserDict
 from numbers import Integral
 
 try:
@@ -202,11 +201,15 @@ class KeyedVectors(utils.SaveLoad):
         Used to perform operations on the vectors such as vector lookup, distance, similarity etc.
 
         """
+        self.vector_size = vector_size
         self.vectors = zeros((0, vector_size), dtype=REAL)  # fka (formerly known as) syn0
         self.norms = None
-        self.map = {}
-        self.vector_size = vector_size
-        self.index2key = []  # fka index2entity or index2word
+
+        self.index_to_key = []  # fka index2entity or index2word
+        self.key_to_index = {}
+
+        self.expandos = {}  # dynamically-expandable per-vector named, numpy-typed attributes
+
         self.mapfile_path = mapfile_path
 
     def _load_specials(self, *args, **kwargs):
@@ -214,9 +217,9 @@ class KeyedVectors(utils.SaveLoad):
         super(KeyedVectors, self)._load_specials(*args, **kwargs)
         if hasattr(self, 'doctags'):
             self._upconvert_old_d2vkv()
-        # fixup rename/consolidation into index2key of older index2word, index2entity
-        if not hasattr(self, 'index2key'):
-            self.index2key = self.__dict__.pop('index2word', self.__dict__.pop('index2word', None))
+        # fixup rename/consolidation into index_to_key of older index2word, index2entity
+        if not hasattr(self, 'index_to_key'):
+            self.index_to_key = self.__dict__.pop('index2word', self.__dict__.pop('index2word', None))
         # fixup rename into vectors of older syn0
         if not hasattr(self, 'vectors'):
             self.vectors = self.__dict__.pop('syn0', None)
@@ -224,13 +227,66 @@ class KeyedVectors(utils.SaveLoad):
         # ensure at least a 'None' in 'norms' to force recalc
         if not hasattr(self, 'norms'):
             self.norms = None
+        # ensure at least an empty 'expandos'
+        if not hasattr(self, 'expandos'):
+            self.expandos = {}
         # fixup rename of vocab into map
-        if 'map' not in self.__dict__:
-            self.map = self.__dict__.pop('vocab', None)
+        if 'key_to_index' not in self.__dict__:
+            self._upconvert_old_vocab()
+
+    def _upconvert_old_vocab(self):
+        """Convert a loaded, prior-version instance that had a 'vocab' dict of data objects"""
+        old_vocab = self.__dict__.pop('vocab', None)
+        self.key_to_index = {}
+        for k in old_vocab.keys():
+            old_v = old_vocab[k]
+            self.key_to_index[k] = old_v.index
+            for attr in old_v.__dict__.keys():
+                self.set_vecattr(old_v.index, attr, old_v.__dict__[attr])
+        # special case to enforce required type on `sample_int`
+        if 'sample_int' in self.expandos:
+            self.expandos['sample_int'] = self.expandos['sample_int'].astype(np.uint32)
+
+    def allocate_vecattrs(self, attrs=None, types=None):
+        """Ensure arrays for given per-vector extra-attribute names & types exist, at right size.
+
+        The length of the index_to_key list is canonical 'intended size' of KeyedVectors,
+        even if other properties (vectors array) hasn't yet been allocated or expanded.
+        So this allocation targets that size.
+        """
+        # with no arguments, simply adjust sizes of existing
+        if attrs is None:
+            attrs = list(self.expandos.keys())
+            types = [self.expandos[attr].dtype for attr in attrs]
+        target_size = len(self.index_to_key)
+        for attr, t in zip(attrs, types):
+            if attr not in self.expandos:
+                self.expandos[attr] = np.zeros(target_size, dtype=t)
+                continue
+            prev_expando = self.expandos[attr]
+            if not np.issubdtype(t, prev_expando.dtype):
+                raise TypeError("can't allocate {0} for existing {1}".format(t, prev_expando.dtype))
+            if len(prev_expando) == target_size:
+                continue  # no resizing necessary
+            prev_count = len(prev_expando)
+            self.expandos[attr] = np.zeros(target_size, dtype=prev_expando.dtype)
+            self.expandos[attr][0:min(prev_count, target_size), ] = \
+                prev_expando[0:min(prev_count, target_size), ]
+
+    def set_vecattr(self, key, attr, val):
+        """ TODO """
+        self.allocate_vecattrs(attrs=[attr], types=[type(val)])
+        index = self.get_index(key)
+        self.expandos[attr][index] = val
+
+    def get_vecattr(self, key, attr):
+        """ TODO """
+        index = self.get_index(key)
+        return self.expandos[attr][index]
 
     def resize_vectors(self):
-        """Make underlying vectors match index2key size."""
-        target_count = len(self.index2key)
+        """Make underlying vectors match index_to_key size."""
+        target_count = len(self.index_to_key)
         prev_count = len(self.vectors)
         if prev_count == target_count:
             return ()
@@ -238,8 +294,9 @@ class KeyedVectors(utils.SaveLoad):
         if hasattr(self, 'mapfile_path') and self.mapfile_path:
             self.vectors = np.memmap(self.mapfile_path, shape=(target_count, self.vector_size), mode='w+', dtype=REAL)
         else:
-            self.vectors = np.empty((target_count, self.vector_size), dtype=REAL)
+            self.vectors = np.zeros((target_count, self.vector_size), dtype=REAL)
         self.vectors[0:min(prev_count, target_count), ] = prev_vectors[0:min(prev_count, target_count), ]
+        self.allocate_vecattrs()
         self.norms = None
         return range(prev_count, target_count)
 
@@ -252,11 +309,11 @@ class KeyedVectors(utils.SaveLoad):
             indexes = range(0, len(self.vectors))
         for i in indexes:
             self.vectors[i] = pseudorandom_weak_vector(self.vectors.shape[1],
-                                                       seed_string=(str(self.index2key[i]) + str(seed)))
+                                                       seed_string=(str(self.index_to_key[i]) + str(seed)))
         self.norms = None
 
     def __len__(self):
-        return len(self.index2key)
+        return len(self.index_to_key)
 
     def __getitem__(self, key_or_keys):
         """Get vector representation of `key_or_keys`.
@@ -282,12 +339,12 @@ class KeyedVectors(utils.SaveLoad):
         backing vectors array.
 
         """
-        if key in self.map:
-            return self.map[key].index
-        elif isinstance(key, (integer_types, np.integer)) and key < len(self.vectors):
+        if key in self.key_to_index:
+            return self.key_to_index[key]
+        elif isinstance(key, (integer_types, np.integer)) and key < len(self.index_to_key):
             return key
         else:
-            raise KeyError("Key '%s' not in vocabulary" % key)
+            raise KeyError("Key '%s' not present" % key)
 
     def get_vector(self, key, use_norm=False):
         """Get the key's vector, as a 1D numpy array.
@@ -312,19 +369,20 @@ class KeyedVectors(utils.SaveLoad):
         """
         index = self.get_index(key)
         if use_norm:
+            self.fill_norms()
             result = self.vectors[index] / self.norms[index]
         else:
             result = self.vectors[index]
 
-        result.setflags(write=False)
+        result.setflags(write=False)  # disallow direct tampering that would invalidate `norms` etc
         return result
 
     def word_vec(self, *args, **kwargs):
         """Compatibility alias for get_vector()"""
         return self.get_vector(*args, **kwargs)
 
-    def add(self, keys, weights, replace=False):
-        """Append keys and theirs vectors in a manual way.
+    def add(self, keys, weights, extras=None, replace=False):
+        """Append keys and their vectors in a manual way.
         If some key is already in the vocabulary, the old vector is kept unless `replace` flag is True.
 
         Parameters
@@ -343,6 +401,12 @@ class KeyedVectors(utils.SaveLoad):
             weights = np.array(weights).reshape(1, -1)
         elif isinstance(weights, list):
             weights = np.array(weights)
+        if extras is None:
+            extras = {}
+
+        # TODO? warn if not matching extras already present?
+        # initially allocate extras, check type compatibility
+        self.allocate_vecattrs(extras.keys(), [extras[k].dtype for k in extras.keys()])
 
         in_vocab_mask = np.zeros(len(keys), dtype=np.bool)
         for idx, key in enumerate(keys):
@@ -352,16 +416,20 @@ class KeyedVectors(utils.SaveLoad):
         # add new entities to the vocab
         for idx in np.nonzero(~in_vocab_mask)[0]:
             key = keys[idx]
-            self.map[key] = SimpleVocab(index=len(self.index2key), count=1)
-            self.index2key.append(key)
+            self.key_to_index[key] = len(self.index_to_key)
+            self.index_to_key.append(key)
 
-        # add vectors for new entities
+        # add vectors, extras for new entities
         self.vectors = vstack((self.vectors, weights[~in_vocab_mask].astype(self.vectors.dtype)))
+        for attr, extra in extras:
+            self.expandos[attr] = np.vstack((self.expandos[attr], extra[~in_vocab_mask]))
 
-        # change vectors for in_vocab entities if `replace` flag is specified
+        # change vectors, extras for in_vocab entities if `replace` flag is specified
         if replace:
-            in_vocab_idxs = [self.map[keys[idx]].index for idx in np.nonzero(in_vocab_mask)[0]]
+            in_vocab_idxs = [self.get_index(keys[idx]) for idx in np.nonzero(in_vocab_mask)[0]]
             self.vectors[in_vocab_idxs] = weights[in_vocab_mask]
+            for attr, extra in extras:
+                self.expandos[attr][in_vocab_idxs] = extra[in_vocab_mask]
 
     def __setitem__(self, keys, weights):
         """Add keys and theirs vectors in a manual way.
@@ -406,10 +474,10 @@ class KeyedVectors(utils.SaveLoad):
     def closer_than(self, key1, key2):
         """Get all keys that are closer to `key1` than `key2` is to `key1`."""
         all_distances = self.distances(key1)
-        e1_index = self.vocab[key1].index
-        e2_index = self.vocab[key2].index
+        e1_index = self.get_index(key1)
+        e2_index = self.get_index(key2)
         closer_node_indices = np.where(all_distances < all_distances[e2_index])[0]
-        return [self.index2key[index] for index in closer_node_indices if index != e1_index]
+        return [self.index_to_key[index] for index in closer_node_indices if index != e1_index]
 
     @deprecated("Use closer_than instead")
     def words_closer_than(self, word1, word2):
@@ -442,27 +510,68 @@ class KeyedVectors(utils.SaveLoad):
 
     @property
     def index2entity(self):
-        return self.index2key
+        return self.index_to_key
 
     @index2entity.setter
     def index2entity(self, value):
-        self.index2key = value
+        self.index_to_key = value
 
     @property
     def index2word(self):
-        return self.index2key
+        return self.index_to_key
 
     @index2word.setter
     def index2word(self, value):
-        self.index2key = value
+        self.index_to_key = value
+#
+#    @property
+#    def vocab(self):
+#        return self.map
+#
+#    @vocab.setter
+#    def vocab(self, value):
+#        self.map = value
 
     @property
-    def vocab(self):
-        return self.map
+    def novlookup(self):
+        """ pseudodict providing pseudovocab objects """
+        class Vocaboid(object):
+            def __init__(self, kv, index):
+                self.kv = kv
+                self.index = index
 
-    @vocab.setter
-    def vocab(self, value):
-        self.map = value
+            def __getattr__(self, attr):
+                if attr not in self.kv.expandos:
+                    raise AttributeError("Attribute '{0}' not in parent KeyedVectors".format(attr))
+                return self.kv.get_vecattr(self.index, attr)
+
+        class VocaboidDict(UserDict):
+            def __init__(self, kv):
+                super(VocaboidDict, self).__init__()
+                self.data = kv
+
+            def __getitem__(self, key):
+                return Vocaboid(self.data, self.data.get_index(key))
+
+            def __contains(self, key):
+                return key in self.data
+
+        return VocaboidDict(self)
+
+    def sort_by_descending_frequency(self):
+        """Sort the vocabulary so the most frequent words have the lowest indexes."""
+        if not len(self):
+            return  # noop if empty
+        count_sorted_indexes = np.argsort(self.expandos['count'])[::-1]
+        self.index_to_key = list(np.array(self.index_to_key)[count_sorted_indexes])
+        self.allocate_vecattrs()
+        for k in self.expandos:
+            self.expandos[k] = self.expandos[k][count_sorted_indexes]
+        if len(self.vectors):
+            logger.warning("sorting after vectors allocated expensive & error-prone")
+            self.vectors = self.vectors[count_sorted_indexes]
+        for i, word in enumerate(self.index_to_key):
+            self.key_to_index[word] = i
 
     def save(self, *args, **kwargs):
         """Save KeyedVectors.
@@ -568,7 +677,7 @@ class KeyedVectors(utils.SaveLoad):
             return dists
         best = matutils.argsort(dists, topn=topn + len(all_keys), reverse=True)
         # ignore (don't return) keys from the input
-        result = [(self.index2key[sim + clip_start], float(dists[sim]))
+        result = [(self.index_to_key[sim + clip_start], float(dists[sim]))
                   for sim in best if (sim + clip_start) not in all_keys]
         return result[:topn]
 
@@ -779,8 +888,8 @@ class KeyedVectors(utils.SaveLoad):
             positive = [positive]
 
         all_words = {
-            self.vocab[word].index for word in positive + negative
-            if not isinstance(word, ndarray) and word in self.vocab
+            self.get_index(word) for word in positive + negative
+            if not isinstance(word, ndarray) and word in self.key_to_index
             }
 
         positive = [
@@ -805,7 +914,7 @@ class KeyedVectors(utils.SaveLoad):
             return dists
         best = matutils.argsort(dists, topn=topn + len(all_words), reverse=True)
         # ignore (don't return) words from the input
-        result = [(self.index2key[sim], float(dists[sim])) for sim in best if sim not in all_words]
+        result = [(self.index_to_key[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
 
     def doesnt_match(self, words):
@@ -888,7 +997,7 @@ class KeyedVectors(utils.SaveLoad):
         if not other_words:
             other_vectors = self.vectors
         else:
-            other_indices = [self.vocab[word].index for word in other_words]
+            other_indices = [self.get_index(word) for word in other_words]
             other_vectors = self.vectors[other_indices]
         return 1 - self.cosine_similarities(input_vector, other_vectors)
 
@@ -1013,8 +1122,11 @@ class KeyedVectors(utils.SaveLoad):
             keys 'correct' and 'incorrect'.
 
         """
-        ok_vocab = [(w, self.vocab[w]) for w in self.index2key[:restrict_vocab]]
-        ok_vocab = {w.upper(): v for w, v in reversed(ok_vocab)} if case_insensitive else dict(ok_vocab)
+        ok_keys = self.index_to_key[:restrict_vocab]
+        if case_insensitive:
+            ok_vocab = {k.upper(): self.get_index(k) for k in reversed(ok_keys)}
+        else:
+            ok_vocab = {k: self.get_index(k) for k in reversed(ok_keys)}
         oov = 0
         logger.info("Evaluating word analogies for top %i words in the model on %s", restrict_vocab, analogies)
         sections, section = [], None
@@ -1048,14 +1160,14 @@ class KeyedVectors(utils.SaveLoad):
                         else:
                             logger.debug("Skipping line #%i with OOV words: %s", line_no, line.strip())
                         continue
-                    original_vocab = self.vocab
-                    self.vocab = ok_vocab
+                    original_key_to_index = self.key_to_index
+                    self.key_to_index = ok_vocab
                     ignore = {a, b, c}  # input words to be ignored
                     predicted = None
                     # find the most likely prediction using 3CosAdd (vector offset) method
                     # TODO: implement 3CosMul and set-based methods for solving analogies
                     sims = self.most_similar(positive=[b, c], negative=[a], topn=5, restrict_vocab=restrict_vocab)
-                    self.vocab = original_vocab
+                    self.key_to_index = original_key_to_index
                     for element in sims:
                         predicted = element[0].upper() if case_insensitive else element[0]
                         if predicted in ok_vocab and predicted not in ignore:
@@ -1145,15 +1257,18 @@ class KeyedVectors(utils.SaveLoad):
             The ratio of pairs with unknown words.
 
         """
-        ok_vocab = [(w, self.vocab[w]) for w in self.index2key[:restrict_vocab]]
-        ok_vocab = {w.upper(): v for w, v in reversed(ok_vocab)} if case_insensitive else dict(ok_vocab)
+        ok_keys = self.index_to_key[:restrict_vocab]
+        if case_insensitive:
+            ok_vocab = {k.upper(): self.get_index(k) for k in reversed(ok_keys)}
+        else:
+            ok_vocab = {k: self.get_index(k) for k in reversed(ok_keys)}
 
         similarity_gold = []
         similarity_model = []
         oov = 0
 
-        original_vocab = self.vocab
-        self.vocab = ok_vocab
+        original_key_to_index = self.key_to_index
+        self.key_to_index = ok_vocab
 
         with utils.open(pairs, 'rb') as fin:
             for line_no, line in enumerate(fin):
@@ -1183,7 +1298,7 @@ class KeyedVectors(utils.SaveLoad):
                             continue
                     similarity_gold.append(sim)  # Similarity from the dataset
                     similarity_model.append(self.similarity(a, b))  # Similarity from the model
-        self.vocab = original_vocab
+        self.key_to_index = original_key_to_index
         spearman = stats.spearmanr(similarity_gold, similarity_model)
         pearson = stats.pearsonr(similarity_gold, similarity_model)
         if dummy4unknown:
@@ -1263,7 +1378,7 @@ class KeyedVectors(utils.SaveLoad):
         return rcs
 
     def save_word2vec_format(self, fname, fvocab=None, binary=False, total_vec=None, write_first_line=True,
-                             prefix='', append=False):
+                             prefix='', append=False, sort_attr='count'):
         """Store the input-hidden weight matrix in the same format used by the original
         C word2vec-tool, for compatibility.
 
@@ -1281,23 +1396,23 @@ class KeyedVectors(utils.SaveLoad):
         TODO: doc other params
         """
         if total_vec is None:
-            total_vec = len(self.index2key)
+            total_vec = len(self.index_to_key)
         mode = 'wb' if not append else 'ab'
-        sorted_vocab_keys = sorted(self.vocab.keys(), key=lambda k: -self.vocab[k].count)
+        sorted_vocab_keys = sorted(self.key_to_index.keys(), key=lambda k: -self.get_vecattr(k, sort_attr))
 
         if fvocab is not None:
             logger.info("storing vocabulary in %s", fvocab)
             with utils.open(fvocab, mode) as vout:
                 for word in sorted_vocab_keys:
-                    vout.write(utils.to_utf8("%s%s %s\n" % (prefix, word, self.vocab[word].count)))
+                    vout.write(utils.to_utf8("%s%s %s\n" % (prefix, word, self.get_vecattr(word, sort_attr))))
 
         logger.info("storing %sx%s projection weights into %s", total_vec, self.vector_size, fname)
-        assert (len(self.index2key), self.vector_size) == self.vectors.shape
+        assert (len(self.index_to_key), self.vector_size) == self.vectors.shape
 
         # after (possibly-empty) initial range of int-only keys,
         # store in sorted order: most frequent keys at the top
         index_id_count = 0
-        for i, val in enumerate(self.index2key):
+        for i, val in enumerate(self.index_to_key):
             if not (i == val):
                 break
             index_id_count += 1
@@ -1358,6 +1473,66 @@ class KeyedVectors(utils.SaveLoad):
             cls, fname, fvocab=fvocab, binary=binary, encoding=encoding, unicode_errors=unicode_errors,
             limit=limit, datatype=datatype)
 
+    def intersect_word2vec_format(self, fname, lockf=0.0, binary=False, encoding='utf8', unicode_errors='strict'):
+        """Merge in an input-hidden weight matrix loaded from the original C word2vec-tool format,
+        where it intersects with the current vocabulary.
+
+        No words are added to the existing vocabulary, but intersecting words adopt the file's weights, and
+        non-intersecting words are left alone.
+
+        Parameters
+        ----------
+        fname : str
+            The file path to load the vectors from.
+        lockf : float, optional
+            Lock-factor value to be set for any imported word-vectors; the
+            default value of 0.0 prevents further updating of the vector during subsequent
+            training. Use 1.0 to allow further training updates of merged vectors.
+        binary : bool, optional
+            If True, `fname` is in the binary word2vec C format.
+        encoding : str, optional
+            Encoding of `text` for `unicode` function (python2 only).
+        unicode_errors : str, optional
+            Error handling behaviour, used as parameter for `unicode` function (python2 only).
+
+        """
+        overlap_count = 0
+        logger.info("loading projection weights from %s", fname)
+        with utils.open(fname, 'rb') as fin:
+            header = utils.to_unicode(fin.readline(), encoding=encoding)
+            vocab_size, vector_size = (int(x) for x in header.split())  # throws for invalid file format
+            if not vector_size == self.vector_size:
+                raise ValueError("incompatible vector size %d in file %s" % (vector_size, fname))
+                # TOCONSIDER: maybe mismatched vectors still useful enough to merge (truncating/padding)?
+            if binary:
+                binary_len = dtype(REAL).itemsize * vector_size
+                for _ in range(vocab_size):
+                    # mixed text and binary: read text first, then binary
+                    word = []
+                    while True:
+                        ch = fin.read(1)
+                        if ch == b' ':
+                            break
+                        if ch != b'\n':  # ignore newlines in front of words (some binary files have)
+                            word.append(ch)
+                    word = utils.to_unicode(b''.join(word), encoding=encoding, errors=unicode_errors)
+                    weights = np.fromstring(fin.read(binary_len), dtype=REAL)
+                    if word in self.key_to_index:
+                        overlap_count += 1
+                        self.vectors[self.get_index(word)] = weights
+                        self.wv.vectors_lockf[self.get_index(word)] = lockf  # lock-factor: 0.0=no changes
+            else:
+                for line_no, line in enumerate(fin):
+                    parts = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
+                    if len(parts) != vector_size + 1:
+                        raise ValueError("invalid vector on line %s (is this really the text format?)" % line_no)
+                    word, weights = parts[0], [REAL(x) for x in parts[1:]]
+                    if word in self.key_to_index:
+                        overlap_count += 1
+                        self.vectors[self.get_index(word)] = weights
+                        self.wv.vectors_lockf[self.get_index(word)] = lockf  # lock-factor: 0.0=no changes
+        logger.info("merged %d vectors into %s matrix from %s", overlap_count, self.wv.vectors.shape, fname)
+
     def get_keras_embedding(self, train_embeddings=False):
         """Get a Keras 'Embedding' layer with weights set as the Word2Vec model's learned word embeddings.
 
@@ -1397,19 +1572,23 @@ class KeyedVectors(utils.SaveLoad):
         return layer
 
     def _upconvert_old_d2vkv(self):
-        from gensim.models.doc2vec import Doctag
         self.vocab = self.doctags
-        for k in self.vocab.keys():
-            v = self.vocab[k]
-            if hasattr(v, 'offset'):
-                self.vocab[k] = Doctag(v.offset + self.max_rawint + 1, v.word_count, v.doc_count)
+        self._upconvert_old_vocab()  # destroys 'vocab', fills 'key_to_index' & 'extras'
+        for k in self.key_to_index.keys():
+            old_offset = self.get_vecattr(k, 'offset')
+            true_index = old_offset + self.max_rawint + 1
+            self.key_to_index[k] = true_index
+        del self.expandos['offset']  # no longer needed
         if(self.max_rawint > -1):
-            self.index2key = ConcatList([range(0, self.max_rawint + 1), self.offset2doctag])
+            self.index_to_key = list(range(0, self.max_rawint + 1)) + self.offset2doctag
+        else:
+            self.index_to_key = self.offset2doctag
         self.vectors = self.vectors_docs
         del self.doctags
         del self.vectors_docs
         del self.count
         del self.max_rawint
+        del self.offset2doctag
 
     def similarity_unseen_docs(self, *args, **kwargs):
         raise NotImplementedError("Call similarity_unseen_docs on a Doc2Vec model instead.")
@@ -1419,21 +1598,6 @@ class KeyedVectors(utils.SaveLoad):
 Word2VecKeyedVectors = KeyedVectors
 Doc2VecKeyedVectors = KeyedVectors
 EuclideanKeyedVectors = KeyedVectors
-
-
-@dataclass
-class SimpleVocab:
-    """A single vocabulary item, used internally for collecting per-word position in the
-    backing array (.index), and frequency/sampling info from a corpus survey (.count).
-
-    Using a dataclass with fixed __slots__ saves 200+ bytes per entry over the prior
-    approach (which used a freely-expandable __dict__) – but now requires specialized
-    uses to define their own expanded data items, which should always include `count`
-    and `index` properties.
-    """
-    __slots__ = ('count', 'index')
-    count: int
-    index: int
 
 
 class CompatVocab(object):
@@ -1462,8 +1626,8 @@ Vocab = CompatVocab
 
 def _add_word_to_result(result, counts, word, weights, vocab_size):
 
-    word_id = len(result.vocab)
-    if word in result.vocab:
+    word_id = len(result)
+    if result.has_index_for(word):
         logger.warning("duplicate word '%s' in word2vec file, ignoring all but first", word)
         return
     if counts is None:
@@ -1476,16 +1640,17 @@ def _add_word_to_result(result, counts, word, weights, vocab_size):
         logger.warning("vocabulary file is incomplete: '%s' is missing", word)
         word_count = None
 
-    result.vocab[word] = SimpleVocab(index=word_id, count=word_count)
+    result.key_to_index[word] = word_id
+    result.index_to_key.append(word)
+    result.set_vecattr(word, 'count', word_count)
     result.vectors[word_id] = weights
-    result.index2key.append(word)
 
 
 def _add_bytes_to_result(result, counts, chunk, vocab_size, vector_size, datatype, unicode_errors):
     start = 0
     processed_words = 0
     bytes_per_vector = vector_size * dtype(REAL).itemsize
-    max_words = vocab_size - len(result.vocab)
+    max_words = vocab_size - len(result)
     for _ in range(max_words):
         i_space = chunk.find(b' ', start)
         i_vector = i_space + 1
@@ -1596,13 +1761,13 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
                 vocab_size, vector_size, datatype, unicode_errors, binary_chunk_size)
         else:
             _word2vec_read_text(fin, result, counts, vocab_size, vector_size, datatype, unicode_errors, encoding)
-    if result.vectors.shape[0] != len(result.vocab):
+    if result.vectors.shape[0] != len(result):
         logger.info(
             "duplicate words detected, shrinking matrix size from %i to %i",
-            result.vectors.shape[0], len(result.vocab)
+            result.vectors.shape[0], len(result)
         )
-        result.vectors = ascontiguousarray(result.vectors[: len(result.vocab)])
-    assert (len(result.vocab), vector_size) == result.vectors.shape
+        result.vectors = ascontiguousarray(result.vectors[: len(result)])
+    assert (len(result), vector_size) == result.vectors.shape
 
     logger.info("loaded %s matrix from %s", result.vectors.shape, fname)
     return result

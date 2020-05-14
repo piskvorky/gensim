@@ -475,7 +475,7 @@ cdef void init_ft_config(FastTextConfig *c, model, alpha, _work, _neu1):
     c.neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
 
 
-cdef object populate_ft_config(FastTextConfig *c, vocab, buckets_word, sentences):
+cdef object populate_ft_config(FastTextConfig *c, wv, buckets_word, sentences):
     """Prepare C structures so we can go "full C" and release the Python GIL.
 
     We create indices over the sentences.  We also perform some calculations for
@@ -487,7 +487,7 @@ cdef object populate_ft_config(FastTextConfig *c, vocab, buckets_word, sentences
     ----------
     c : FastTextConfig*
         A pointer to the struct that will contain the populated indices.
-    vocab : dict
+    wv : FastTextKeyedVectors
         The vocabulary
     buckets_word : list
         A list containing the buckets each word appears in
@@ -514,24 +514,29 @@ cdef object populate_ft_config(FastTextConfig *c, vocab, buckets_word, sentences
     cdef int effective_words = 0
     cdef int effective_sentences = 0
     c.sentence_idx[0] = 0  # indices of the first sentence always start at 0
+
+    vocab_sample_ints = wv.expandos['sample_int']
+    if c.hs:
+        vocab_codes = wv.expandos['code']
+        vocab_points = wv.expandos['point']
     for sent in sentences:
         if not sent:
             continue  # ignore empty sentences; leave effective_sentences unchanged
         for token in sent:
-            word = vocab[token] if token in vocab else None
-            if word is None:
+            word_index = wv.key_to_index[token] if wv.has_index_for(token) else None
+            if word_index is None:
                 continue  # leaving `effective_words` unchanged = shortening the sentence = expanding the window
-            if c.sample and word.sample_int < random_int32(&c.next_random):
+            if c.sample and vocab_sample_ints[word_index] < random_int32(&c.next_random):
                 continue
-            c.indexes[effective_words] = word.index
+            c.indexes[effective_words] = word_index
 
-            c.subwords_idx_len[effective_words] = <int>(len(buckets_word[word.index]))
-            c.subwords_idx[effective_words] = <np.uint32_t *>np.PyArray_DATA(buckets_word[word.index])
+            c.subwords_idx_len[effective_words] = <int>(len(buckets_word[word_index]))
+            c.subwords_idx[effective_words] = <np.uint32_t *>np.PyArray_DATA(buckets_word[word_index])
 
             if c.hs:
-                c.codelens[effective_words] = <int>len(word.code)
-                c.codes[effective_words] = <np.uint8_t *>np.PyArray_DATA(word.code)
-                c.points[effective_words] = <np.uint32_t *>np.PyArray_DATA(word.point)
+                c.codelens[effective_words] = <int>len(vocab_codes[word_index])
+                c.codes[effective_words] = <np.uint8_t *>np.PyArray_DATA(vocab_codes[word_index])
+                c.points[effective_words] = <np.uint32_t *>np.PyArray_DATA(vocab_points[word_index])
 
             effective_words += 1
             if effective_words == MAX_SENTENCE_LEN:
@@ -639,7 +644,7 @@ def train_batch_any(model, sentences, alpha, _work, _neu1):
 
     init_ft_config(&c, model, alpha, _work, _neu1)
 
-    num_words, num_sentences = populate_ft_config(&c, model.wv.vocab, model.wv.buckets_word, sentences)
+    num_words, num_sentences = populate_ft_config(&c, model.wv, model.wv.buckets_word, sentences)
 
     # precompute "reduced window" offsets in a single randint() call
     for i, randint in enumerate(model.random.randint(0, c.window, num_words)):

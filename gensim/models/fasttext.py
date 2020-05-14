@@ -498,7 +498,7 @@ class FastText(Word2Vec):
 
     def init_post_load(self, hidden_output):
         num_vectors = len(self.wv.vectors)
-        vocab_size = len(self.wv.vocab)
+        vocab_size = len(self.wv)
         vector_size = self.wv.vector_size
 
         assert num_vectors > 0, 'expected num_vectors to be initialized already'
@@ -574,7 +574,7 @@ class FastText(Word2Vec):
         """
         if not update:
             self.wv.init_ngrams_weights(self.seed)
-        elif not len(self.wv.vocab):
+        elif not len(self.wv):
             raise RuntimeError(
                 "You cannot do an online vocabulary-update of a model which has no prior vocabulary. "
                 "First build the vocabulary of your model with a corpus "
@@ -582,7 +582,7 @@ class FastText(Word2Vec):
                 "before doing an online update."
             )
         else:
-            self.old_vocab_len = len(self.wv.vocab)
+            self.old_vocab_len = len(self.wv)
 
         retval = super(FastText, self).build_vocab(
             corpus_iterable=corpus_iterable, corpus_file=corpus_file, update=update, progress_per=progress_per,
@@ -599,24 +599,24 @@ class FastText(Word2Vec):
         self.wv.adjust_vectors()  # ensure composite-word vecs reflect latest training
 
     def estimate_memory(self, vocab_size=None, report=None):
-        vocab_size = vocab_size or len(self.wv.vocab)
+        vocab_size = vocab_size or len(self.wv)
         vec_size = self.vector_size * np.dtype(np.float32).itemsize
         l1_size = self.layer1_size * np.dtype(np.float32).itemsize
         report = report or {}
-        report['vocab'] = len(self.wv.vocab) * (700 if self.hs else 500)
-        report['syn0_vocab'] = len(self.wv.vocab) * vec_size
+        report['vocab'] = len(self.wv) * (700 if self.hs else 500)
+        report['syn0_vocab'] = len(self.wv) * vec_size
         num_buckets = self.bucket
         if self.hs:
-            report['syn1'] = len(self.wv.vocab) * l1_size
+            report['syn1'] = len(self.wv) * l1_size
         if self.negative:
-            report['syn1neg'] = len(self.wv.vocab) * l1_size
-        if self.word_ngrams > 0 and self.wv.vocab:
+            report['syn1neg'] = len(self.wv) * l1_size
+        if self.word_ngrams > 0 and len(self.wv):
             num_buckets = num_ngrams = 0
 
             if self.bucket:
                 buckets = set()
                 num_ngrams = 0
-                for word in self.wv.vocab:
+                for word in self.wv.key_to_index:
                     hashes = ft_ngram_hashes(
                         word,
                         self.wv.min_n,
@@ -630,7 +630,7 @@ class FastText(Word2Vec):
             report['syn0_ngrams'] = num_buckets * vec_size
             # A tuple (48 bytes) with num_ngrams_word ints (8 bytes) for each word
             # Only used during training, not stored with the model
-            report['buckets_word'] = 48 * len(self.wv.vocab) + 8 * num_ngrams  # FIXME: this looks confused -gojomo
+            report['buckets_word'] = 48 * len(self.wv) + 8 * num_ngrams  # FIXME: this looks confused -gojomo
         elif self.word_ngrams > 0:
             logger.warn(
                 'subword information is enabled, but no vocabulary could be found, estimated required memory might be '
@@ -639,7 +639,7 @@ class FastText(Word2Vec):
         report['total'] = sum(report.values())
         logger.info(
             "estimated required memory for %i words, %i buckets and %i dimensions: %i bytes",
-            len(self.wv.vocab), num_buckets, self.vector_size, report['total']
+            len(self.wv), num_buckets, self.vector_size, report['total']
         )
         return report
 
@@ -1109,16 +1109,16 @@ def _check_model(m):
             .format(m.wv.vector_size, m.wv.vectors_ngrams)
         )
 
-    assert len(m.wv.vocab) == m.nwords, (
+    assert len(m.wv) == m.nwords, (
         'mismatch between final vocab size ({} words), '
-        'and expected number of words ({} words)'.format(len(m.wv.vocab), m.nwords)
+        'and expected number of words ({} words)'.format(len(m.wv), m.nwords)
     )
 
-    if len(m.wv.vocab) != m.vocab_size:
+    if len(m.wv) != m.vocab_size:
         # expecting to log this warning only for pretrained french vector, wiki.fr
         logger.warning(
             "mismatch between final vocab size (%s words), and expected vocab size (%s words)",
-            len(m.wv.vocab), m.vocab_size
+            len(m.wv), m.vocab_size
         )
 
 
@@ -1258,7 +1258,7 @@ class FastTextKeyedVectors(KeyedVectors):
             >>> from gensim.models import FastText
             >>> cap_path = datapath("crime-and-punishment.bin")
             >>> model = FastText.load_fasttext_format(cap_path, full_model=False)
-            >>> 'steamtrain' in model.wv.vocab  # If False, is an OOV term
+            >>> 'steamtrain' in model.wv.key_to_index  # If False, is an OOV term
             False
 
         """
@@ -1307,7 +1307,7 @@ class FastTextKeyedVectors(KeyedVectors):
             If word and all ngrams not in vocabulary.
 
         """
-        if word in self.vocab:
+        if word in self.key_to_index:
             return super(FastTextKeyedVectors, self).get_vector(word, use_norm)
         elif self.bucket == 0:
             raise KeyError('cannot calculate vector for OOV word without ngrams')
@@ -1355,7 +1355,7 @@ class FastTextKeyedVectors(KeyedVectors):
         rand_obj.seed(seed)
 
         lo, hi = -1.0 / self.vector_size, 1.0 / self.vector_size
-        vocab_shape = (len(self.vocab), self.vector_size)
+        vocab_shape = (len(self), self.vector_size)
         ngrams_shape = (self.bucket, self.vector_size)
         self.vectors_vocab = rand_obj.uniform(lo, hi, vocab_shape).astype(REAL)
 
@@ -1390,13 +1390,13 @@ class FastTextKeyedVectors(KeyedVectors):
         rand_obj = np.random
         rand_obj.seed(seed)
 
-        new_vocab = len(self.vocab) - old_vocab_len
+        new_vocab = len(self) - old_vocab_len
         self.vectors_vocab = _pad_random(self.vectors_vocab, new_vocab, rand_obj)
 
     def init_post_load(self, fb_vectors):
         """Perform initialization after loading a native Facebook model.
 
-        Expects that the vocabulary (self.vocab) has already been initialized.
+        Expects that the vocabulary (self.key_to_index) has already been initialized.
 
         Parameters
         ----------
@@ -1409,7 +1409,7 @@ class FastTextKeyedVectors(KeyedVectors):
             No longer supported.
 
         """
-        vocab_words = len(self.vocab)
+        vocab_words = len(self)
         assert fb_vectors.shape[0] == vocab_words + self.bucket, 'unexpected number of vectors'
         assert fb_vectors.shape[1] == self.vector_size, 'unexpected vector dimensionality'
 
@@ -1435,7 +1435,7 @@ class FastTextKeyedVectors(KeyedVectors):
             return
 
         self.vectors = self.vectors_vocab[:].copy()
-        for i, w in enumerate(self.index2key):
+        for i, w in enumerate(self.index_to_key):
             ngram_buckets = self.buckets_word[i]
             for nh in ngram_buckets:
                 self.vectors[i] += self.vectors_ngrams[nh]
@@ -1451,12 +1451,12 @@ class FastTextKeyedVectors(KeyedVectors):
         TODO: evaluate if this is even necessary, compared to just recalculating
         """
         if self.bucket == 0:
-            self.buckets_word = [np.array([], dtype=np.uint32)] * len(self.index2key)
+            self.buckets_word = [np.array([], dtype=np.uint32)] * len(self.index_to_key)
             return
 
-        self.buckets_word = [None] * len(self.index2key)
+        self.buckets_word = [None] * len(self.index_to_key)
 
-        for i, word in enumerate(self.index2key):
+        for i, word in enumerate(self.index_to_key):
             self.buckets_word[i] = np.array(
                 ft_ngram_hashes(word, self.min_n, self.max_n, self.bucket, self.compatible_hash),
                 dtype=np.uint32,

@@ -482,7 +482,7 @@ cdef init_w2v_config(Word2VecConfig *c, model, alpha, compute_loss, _work, _neu1
 
     if c[0].hs:
         c[0].syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
-
+        
     if c[0].negative:
         c[0].syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
         c[0].cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
@@ -528,25 +528,27 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
     cdef int sent_idx, idx_start, idx_end
 
     init_w2v_config(&c, model, alpha, compute_loss, _work)
-
+    vocab_sample_ints = model.wv.expandos['sample_int']
+    if c.hs:
+        vocab_codes = model.wv.expandos['code']
+        vocab_points = model.wv.expandos['point']
 
     # prepare C structures so we can go "full C" and release the Python GIL
-    vlookup = model.wv.vocab
     c.sentence_idx[0] = 0  # indices of the first sentence always start at 0
     for sent in sentences:
         if not sent:
             continue  # ignore empty sentences; leave effective_sentences unchanged
         for token in sent:
-            word = vlookup[token] if token in vlookup else None
-            if word is None:
+            if token not in model.wv.key_to_index:
                 continue  # leaving `effective_words` unchanged = shortening the sentence = expanding the window
-            if c.sample and word.sample_int < random_int32(&c.next_random):
+            word_index = model.wv.key_to_index[token]
+            if c.sample and vocab_sample_ints[word_index] < random_int32(&c.next_random):
                 continue
-            c.indexes[effective_words] = word.index
+            c.indexes[effective_words] = word_index
             if c.hs:
-                c.codelens[effective_words] = <int>len(word.code)
-                c.codes[effective_words] = <np.uint8_t *>np.PyArray_DATA(word.code)
-                c.points[effective_words] = <np.uint32_t *>np.PyArray_DATA(word.point)
+                c.codelens[effective_words] = <int>len(vocab_codes[word_index])
+                c.codes[effective_words] = <np.uint8_t *>np.PyArray_DATA(vocab_codes[word_index])
+                c.points[effective_words] = <np.uint32_t *>np.PyArray_DATA(vocab_points[word_index])
             effective_words += 1
             if effective_words == MAX_SENTENCE_LEN:
                 break  # TODO: log warning, tally overflow?
@@ -620,24 +622,27 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
     cdef int sent_idx, idx_start, idx_end
 
     init_w2v_config(&c, model, alpha, compute_loss, _work, _neu1)
+    vocab_sample_ints = model.wv.expandos['sample_int']
+    if c.hs:
+        vocab_codes = model.wv.expandos['code']
+        vocab_points = model.wv.expandos['point']
 
     # prepare C structures so we can go "full C" and release the Python GIL
-    vlookup = model.wv.vocab
     c.sentence_idx[0] = 0  # indices of the first sentence always start at 0
     for sent in sentences:
         if not sent:
             continue  # ignore empty sentences; leave effective_sentences unchanged
         for token in sent:
-            word = vlookup[token] if token in vlookup else None
-            if word is None:
+            if token not in model.wv.key_to_index:
                 continue  # leaving `effective_words` unchanged = shortening the sentence = expanding the window
-            if c.sample and word.sample_int < random_int32(&c.next_random):
+            word_index = model.wv.key_to_index[token]
+            if c.sample and vocab_sample_ints[word_index] < random_int32(&c.next_random):
                 continue
-            c.indexes[effective_words] = word.index
+            c.indexes[effective_words] = word_index
             if c.hs:
-                c.codelens[effective_words] = <int>len(word.code)
-                c.codes[effective_words] = <np.uint8_t *>np.PyArray_DATA(word.code)
-                c.points[effective_words] = <np.uint32_t *>np.PyArray_DATA(word.point)
+                c.codelens[effective_words] = <int>len(vocab_codes[word_index])
+                c.codes[effective_words] = <np.uint8_t *>np.PyArray_DATA(vocab_codes[word_index])
+                c.points[effective_words] = <np.uint32_t *>np.PyArray_DATA(vocab_points[word_index])
             effective_words += 1
             if effective_words == MAX_SENTENCE_LEN:
                 break  # TODO: log warning, tally overflow?
@@ -714,16 +719,17 @@ def score_sentence_sg(model, sentence, _work):
     # convert Python structures to primitive types, so we can release the GIL
     c.work = <REAL_t *>np.PyArray_DATA(_work)
 
-    vlookup = model.wv.vocab
+    vocab_codes = model.wv.expandos['code']
+    vocab_points = model.wv.expandos['point']
     i = 0
     for token in sentence:
-        word = vlookup[token] if token in vlookup else None
-        if word is None:
-            continue  # should drop the
-        c.indexes[i] = word.index
-        c.codelens[i] = <int>len(word.code)
-        c.codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
-        c.points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
+        word_index = model.wv.key_to_index[token] if token in model.wv.key_to_index else None
+        if word_index is None:
+            continue  # for score, should this be a default negative value?
+        c.indexes[i] = word_index
+        c.codelens[i] = <int>len(vocab_codes[word_index])
+        c.codes[i] = <np.uint8_t *>np.PyArray_DATA(vocab_codes[word_index])
+        c.points[i] = <np.uint32_t *>np.PyArray_DATA(vocab_points[word_index])
         result += 1
         i += 1
         if i == MAX_SENTENCE_LEN:
@@ -810,16 +816,17 @@ def score_sentence_cbow(model, sentence, _work, _neu1):
     c.work = <REAL_t *>np.PyArray_DATA(_work)
     c.neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
 
-    vlookup = model.wv.vocab
+    vocab_codes = model.wv.expandos['code']
+    vocab_points = model.wv.expandos['point']
     i = 0
     for token in sentence:
-        word = vlookup[token] if token in vlookup else None
-        if word is None:
+        word_index = model.wv.key_to_index[token] if token in model.wv.key_to_index else None
+        if word_index is None:
             continue  # for score, should this be a default negative value?
-        c.indexes[i] = word.index
-        c.codelens[i] = <int>len(word.code)
-        c.codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
-        c.points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
+        c.indexes[i] = word_index
+        c.codelens[i] = <int>len(vocab_codes[word_index])
+        c.codes[i] = <np.uint8_t *>np.PyArray_DATA(vocab_codes[word_index])
+        c.points[i] = <np.uint32_t *>np.PyArray_DATA(vocab_points[word_index])
         result += 1
         i += 1
         if i == MAX_SENTENCE_LEN:

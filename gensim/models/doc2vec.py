@@ -83,7 +83,7 @@ from gensim.utils import deprecated
 from gensim.models import Word2Vec
 from six.moves import range
 from six import string_types, integer_types, itervalues
-from gensim.models.keyedvectors import KeyedVectors, ConcatList, pseudorandom_weak_vector
+from gensim.models.keyedvectors import KeyedVectors, pseudorandom_weak_vector
 
 logger = logging.getLogger(__name__)
 
@@ -145,11 +145,12 @@ class TaggedDocument(namedtuple('TaggedDocument', 'words tags')):
 
 
 @dataclass
-class DoctagVocab:
+class Doctag:
     """A dataclass shape-compatible with keyedvectors.SimpleVocab, extended to record
     details of string document tags discovered during the initial vocabulary scan.
 
-    Will not be used if all presented document tags are ints.
+    Will not be used if all presented document tags are ints. No longer used in a
+    completed model: just used during initial scan, and for backward compatibility.
     """
     __slots__ = ('doc_count', 'index', 'word_count')
     doc_count: int  # number of docs where tag appeared
@@ -163,10 +164,6 @@ class DoctagVocab:
     @count.setter
     def count(self, new_val):
         self.doc_count = new_val
-
-
-# compatibility alias, allowing prior namedtuples to unpickle
-Doctag = DoctagVocab
 
 
 class Doc2Vec(Word2Vec):
@@ -352,18 +349,26 @@ class Doc2Vec(Word2Vec):
     def reset_from(self, other_model):
         """Copy shareable data structures from another (possibly pre-trained) model.
 
+        This specifically causes some structures to be shared, so is limited to
+        structures (like those rleated to the known word/tag vocabularies) that
+        won't change during training or thereafter. Beware vocabulary edits/updates
+        to either model afterwards: the partial sharing and out-of-band modification
+        may leave the other model in a broken state.
+
         Parameters
         ----------
         other_model : :class:`~gensim.models.doc2vec.Doc2Vec`
             Other model whose internal data structures will be copied over to the current object.
 
         """
-        self.wv.vocab = other_model.wv.vocab
-        self.wv.index2key = other_model.wv.index2key
+        self.wv.key_to_index = other_model.wv.key_to_index
+        self.wv.index_to_key = other_model.wv.index_to_key
+        self.wv.expandos = other_model.wv.expandos
         self.cum_table = other_model.cum_table
         self.corpus_count = other_model.corpus_count
-        self.dv.vocab = other_model.dv.vocab
-        self.dv.index2key = other_model.dv.index2key
+        self.dv.key_to_index = other_model.dv.key_to_index
+        self.dv.index_to_key = other_model.dv.index_to_key
+        self.dv.expandos = other_model.dv.expandos
         self.reset_weights()
 
     def _do_train_epoch(self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
@@ -583,7 +588,7 @@ class Doc2Vec(Word2Vec):
             The estimated RAM required to look up a tag in bytes.
 
         """
-        return 60 * len(self.dv.vocab) + 140 * len(self.dv.vocab)
+        return 60 * len(self.dv) + 140 * len(self.dv)
 
     def infer_vector(self, doc_words, alpha=None, min_alpha=None, epochs=None, steps=None):
         """Infer a vector for given post-bulk training document.
@@ -666,7 +671,7 @@ class Doc2Vec(Word2Vec):
 
         """
         if isinstance(tag, string_types + integer_types + (integer,)):
-            if tag not in self.wv.vocab:
+            if tag not in self.wv:
                 return self.dv[tag]
             return self.wv[tag]
         return vstack([self[i] for i in tag])
@@ -748,7 +753,8 @@ class Doc2Vec(Word2Vec):
                 append = True
             self.dv.save_word2vec_format(
                 fname, prefix=prefix, fvocab=fvocab, binary=binary,
-                write_first_line=write_first_line, append=append)
+                write_first_line=write_first_line, append=append,
+                sort_attr='doc_count')
 
     def init_sims(self, replace=False):
         """Pre-compute L2-normalized vectors.
@@ -981,10 +987,13 @@ class Doc2Vec(Word2Vec):
             # adjust indexes/list to account for range of pure-int keyed doctags
             for key in doctags_list:
                 doctags_lookup[key].index = doctags_lookup[key].index + max_rawint + 1
-            doctags_list = ConcatList([range(0, max_rawint + 1), doctags_list])
+            doctags_list = list(range(0, max_rawint + 1)) + doctags_list
 
-        self.dv.map = doctags_lookup
-        self.dv.index2key = doctags_list
+        self.dv.index_to_key = doctags_list
+        for t, dt in doctags_lookup.items():
+            self.dv.key_to_index[t] = dt.index
+            self.dv.set_vecattr(t, 'word_count', dt.word_count)
+            self.dv.set_vecattr(t, 'doc_count', dt.doc_count)
         self.raw_vocab = vocab
         return total_words, corpus_count
 

@@ -66,7 +66,7 @@ cdef struct Word2VecConfig:
     REAL_t *syn1
     np.uint32_t *points[MAX_SENTENCE_LEN]
     np.uint8_t *codes[MAX_SENTENCE_LEN]
-
+    
     # For negative sampling
     REAL_t *syn1neg
     np.uint32_t *cum_table

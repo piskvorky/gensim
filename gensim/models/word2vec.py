@@ -125,10 +125,7 @@ import sys
 import os
 import heapq
 from timeit import default_timer
-from copy import deepcopy
 from collections import defaultdict, namedtuple
-from dataclasses import dataclass
-from typing import List
 from types import GeneratorType
 import threading
 import itertools
@@ -142,9 +139,7 @@ try:
 except ImportError:
     from Queue import Queue, Empty
 
-from numpy import exp, dot, zeros, dtype, float32 as REAL,\
-    uint32, seterr, array, uint8, vstack, fromstring, sqrt,\
-    sum as np_sum, ones, logaddexp
+from numpy import float32 as REAL
 import numpy as np
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
@@ -178,55 +173,6 @@ except ImportError:
     def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
                          _work, _neu1, compute_loss):
         raise RuntimeError("Training with corpus_file argument is not supported")
-
-
-def score_sg_pair(model, word, word2):
-    """Score the trained Skip-gram model on a pair of words.
-
-    Parameters
-    ----------
-    model : :class:`~gensim.models.word2vec.Word2Vec`
-        The trained model.
-    word : :class:`~gensim.models.keyedvectors.Vocab`
-        Vocabulary representation of the first word.
-    word2 : :class:`~gensim.models.keyedvectors.Vocab`
-        Vocabulary representation of the second word.
-
-    Returns
-    -------
-    float
-        Logarithm of the sum of exponentiations of input words.
-
-    """
-    l1 = model.wv.syn0[word2.index]
-    l2a = deepcopy(model.syn1[word.point])  # 2d matrix, codelen x layer1_size
-    sgn = (-1.0) ** word.code  # ch function, 0-> 1, 1 -> -1
-    lprob = -logaddexp(0, -sgn * dot(l1, l2a.T))
-    return sum(lprob)
-
-
-def score_cbow_pair(model, word, l1):
-    """Score the trained CBOW model on a pair of words.
-
-    Parameters
-    ----------
-    model : :class:`~gensim.models.word2vec.Word2Vec`
-        The trained model.
-    word : :class:`~gensim.models.keyedvectors.Vocab`
-        Vocabulary representation of the first word.
-    l1 : list of float
-        Vector representation of the second word.
-
-    Returns
-    -------
-    float
-        Logarithm of the sum of exponentiations of input words.
-
-    """
-    l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
-    sgn = (-1.0) ** word.code  # ch function, 0-> 1, 1 -> -1
-    lprob = -logaddexp(0, -sgn * dot(l1, l2a.T))
-    return sum(lprob)
 
 
 class Word2Vec(utils.SaveLoad):
@@ -328,7 +274,7 @@ class Word2Vec(utils.SaveLoad):
                 * `min_count` (int) - the minimum count threshold.
         sorted_vocab : {0, 1}, optional
             If 1, sort the vocabulary by descending frequency before assigning word indexes.
-            See :meth:`~gensim.models.word2vec.Word2VecVocab.sort_vocab()`.
+            See :meth:`~gensim.models.keyedvectors.KeyedVectors.sort_by_descending_frequency()`.
         batch_words : int, optional
             Target size (in words) for batches of examples passed to worker threads (and
             thus cython routines).(Larger batches will be passed if individual
@@ -573,14 +519,6 @@ class Word2Vec(utils.SaveLoad):
 
         return total_words, corpus_count
 
-    def sort_vocab(self):
-        """Sort the vocabulary so the most frequent words have the lowest indexes."""
-        if len(self.wv.vectors):
-            raise RuntimeError("cannot sort vocabulary after model weights already initialized.")
-        self.wv.index2key.sort(key=lambda word: self.wv.vocab[word].count, reverse=True)
-        for i, word in enumerate(self.wv.index2key):
-            self.wv.vocab[word].index = i
-
     def prepare_vocab(
             self, update=False, keep_raw_vocab=False, trim_rule=None,
             min_count=None, sample=None, dry_run=False):
@@ -623,22 +561,26 @@ class Word2Vec(utils.SaveLoad):
             retain_total, retain_words = 0, []
             # Discard words less-frequent than min_count
             if not dry_run:
-                self.wv.index2key = []
+                self.wv.index_to_key = []
                 # make stored settings match these applied settings
                 self.min_count = min_count
                 self.sample = sample
-                self.wv.vocab = {}
+                self.wv.key_to_index = {}
 
             for word, v in iteritems(self.raw_vocab):
                 if keep_vocab_item(word, v, self.effective_min_count, trim_rule=trim_rule):
                     retain_words.append(word)
                     retain_total += v
                     if not dry_run:
-                        self.wv.vocab[word] = W2VVocab(count=v, index=len(self.wv.index2key))
-                        self.wv.index2key.append(word)
+                        self.wv.key_to_index[word] = len(self.wv.index_to_key)
+                        self.wv.index_to_key.append(word)
                 else:
                     drop_unique += 1
                     drop_total += v
+            if not dry_run:
+                # now update counts
+                for word in self.wv.index_to_key:
+                    self.wv.set_vecattr(word, 'count', self.raw_vocab[word])
             original_unique_total = len(retain_words) + drop_unique
             retain_unique_pct = len(retain_words) * 100 / max(original_unique_total, 1)
             logger.info(
@@ -657,20 +599,25 @@ class Word2Vec(utils.SaveLoad):
             new_words = pre_exist_words = []
             for word, v in iteritems(self.raw_vocab):
                 if keep_vocab_item(word, v, self.effective_min_count, trim_rule=trim_rule):
-                    if word in self.wv.vocab:
+                    if self.wv.has_index_for(word):
                         pre_exist_words.append(word)
                         pre_exist_total += v
                         if not dry_run:
-                            self.wv.vocab[word].count += v
+                            pass
                     else:
                         new_words.append(word)
                         new_total += v
                         if not dry_run:
-                            self.wv.vocab[word] = W2VVocab(count=v, index=len(self.wv.index2key))
-                            self.wv.index2key.append(word)
+                            self.wv.key_to_index[word] = len(self.wv.index_to_key)
+                            self.wv.index_to_key.append(word)
                 else:
                     drop_unique += 1
                     drop_total += v
+            if not dry_run:
+                # now update counts
+                self.wv.allocate_vecattrs(attrs=['count'], types=[type(0)])
+                for word in self.wv.index_to_key:
+                    self.wv.set_vecattr(word, 'count', self.wv.get_vecattr(word, 'count') + self.raw_vocab.get(word, 0))
             original_unique_total = len(pre_exist_words) + len(new_words) + drop_unique
             pre_exist_unique_pct = len(pre_exist_words) * 100 / max(original_unique_total, 1)
             new_unique_pct = len(new_words) * 100 / max(original_unique_total, 1)
@@ -692,12 +639,12 @@ class Word2Vec(utils.SaveLoad):
             threshold_count = sample * retain_total
         else:
             # new shorthand: sample >= 1 means downsample all words with higher count than sample
-            threshold_count = int(sample * (3 + sqrt(5)) / 2)
+            threshold_count = int(sample * (3 + np.sqrt(5)) / 2)
 
         downsample_total, downsample_unique = 0, 0
         for w in retain_words:
             v = self.raw_vocab[w]
-            word_probability = (sqrt(v / threshold_count) + 1) * (threshold_count / v)
+            word_probability = (np.sqrt(v / threshold_count) + 1) * (threshold_count / v)
             if word_probability < 1.0:
                 downsample_unique += 1
                 downsample_total += word_probability * v
@@ -705,7 +652,7 @@ class Word2Vec(utils.SaveLoad):
                 word_probability = 1.0
                 downsample_total += v
             if not dry_run:
-                self.wv.vocab[w].sample_int = int(round(word_probability * 2**32))
+                self.wv.set_vecattr(w, 'sample_int', np.uint32(word_probability * (2**32 - 1)))
 
         if not dry_run and not keep_raw_vocab:
             logger.info("deleting the raw counts dictionary of %i items", len(self.raw_vocab))
@@ -729,7 +676,8 @@ class Word2Vec(utils.SaveLoad):
             self.add_null_word()
 
         if self.sorted_vocab and not update:
-            self.sort_vocab()
+            self.wv.sort_by_descending_frequency()
+
         if self.hs:
             # add info about each word's Huffman encoding
             self.create_binary_tree()
@@ -755,14 +703,14 @@ class Word2Vec(utils.SaveLoad):
             A dictionary from string representations of the model's memory consuming members to their size in bytes.
 
         """
-        vocab_size = vocab_size or len(self.wv.vocab)
+        vocab_size = vocab_size or len(self.wv)
         report = report or {}
         report['vocab'] = vocab_size * (700 if self.hs else 500)
-        report['vectors'] = vocab_size * self.vector_size * dtype(REAL).itemsize
+        report['vectors'] = vocab_size * self.vector_size * np.dtype(REAL).itemsize
         if self.hs:
-            report['syn1'] = vocab_size * self.layer1_size * dtype(REAL).itemsize
+            report['syn1'] = vocab_size * self.layer1_size * np.dtype(REAL).itemsize
         if self.negative:
-            report['syn1neg'] = vocab_size * self.layer1_size * dtype(REAL).itemsize
+            report['syn1neg'] = vocab_size * self.layer1_size * np.dtype(REAL).itemsize
         report['total'] = sum(report.values())
         logger.info(
             "estimated required memory for %i words and %i dimensions: %i bytes",
@@ -771,10 +719,10 @@ class Word2Vec(utils.SaveLoad):
         return report
 
     def add_null_word(self):
-        word, v = '\0', W2VVocab(count=1, sample_int=0)
-        v.index = len(self.wv.vocab)
-        self.wv.index2key.append(word)
-        self.wv.vocab[word] = v
+        word = '\0'
+        self.wv.key_to_index[word] = len(self.wv)
+        self.wv.index_to_key.append(word)
+        self.wv.set_vecattr(word, 'count', 1)
 
     def create_binary_tree(self):
         """Create a `binary Huffman tree <https://en.wikipedia.org/wiki/Huffman_coding>`_ using stored vocabulary
@@ -782,7 +730,7 @@ class Word2Vec(utils.SaveLoad):
         Called internally from :meth:`~gensim.models.word2vec.Word2VecVocab.build_vocab`.
 
         """
-        _assign_binary_codes(self.wv.vocab)
+        _assign_binary_codes(self.wv)
 
     def make_cum_table(self, domain=2**31 - 1):
         """Create a cumulative-distribution table using stored vocabulary word counts for
@@ -793,15 +741,17 @@ class Word2Vec(utils.SaveLoad):
         That insertion point is the drawn index, coming up in proportion equal to the increment at that slot.
 
         """
-        vocab_size = len(self.wv.index2key)
-        self.cum_table = zeros(vocab_size, dtype=uint32)
+        vocab_size = len(self.wv.index_to_key)
+        self.cum_table = np.zeros(vocab_size, dtype=np.uint32)
         # compute sum of all power (Z in paper)
         train_words_pow = 0.0
         for word_index in range(vocab_size):
-            train_words_pow += self.wv.vocab[self.wv.index2key[word_index]].count**self.ns_exponent
+            count = self.wv.get_vecattr(word_index, 'count')
+            train_words_pow += count**self.ns_exponent
         cumulative = 0.0
         for word_index in range(vocab_size):
-            cumulative += self.wv.vocab[self.wv.index2key[word_index]].count**self.ns_exponent
+            count = self.wv.get_vecattr(word_index, 'count')
+            cumulative += count**self.ns_exponent
             self.cum_table[word_index] = round(cumulative / train_words_pow * domain)
         if len(self.cum_table) > 0:
             assert self.cum_table[-1] == domain
@@ -824,11 +774,11 @@ class Word2Vec(utils.SaveLoad):
         self.wv.resize_vectors()
         self.wv.randomly_initialize_vectors(seed=self.seed)
         if self.hs:
-            self.syn1 = zeros((len(self.wv.vocab), self.layer1_size), dtype=REAL)
+            self.syn1 = np.zeros((len(self.wv), self.layer1_size), dtype=REAL)
         if self.negative:
-            self.syn1neg = zeros((len(self.wv.vocab), self.layer1_size), dtype=REAL)
+            self.syn1neg = np.zeros((len(self.wv), self.layer1_size), dtype=REAL)
 
-        self.wv.vectors_lockf = ones(len(self.wv.vocab), dtype=REAL)  # zeros suppress learning
+        self.wv.vectors_lockf = np.ones(len(self.wv), dtype=REAL)  # zeros suppress learning
 
     def update_weights(self):
         """Copy all the existing weights, and reset the weights for the newly added vocabulary."""
@@ -845,14 +795,14 @@ class Word2Vec(utils.SaveLoad):
             )
 
         if self.hs:
-            self.syn1 = vstack([self.syn1, zeros((gained_vocab, self.layer1_size), dtype=REAL)])
+            self.syn1 = np.vstack([self.syn1, np.zeros((gained_vocab, self.layer1_size), dtype=REAL)])
         if self.negative:
-            pad = zeros((gained_vocab, self.layer1_size), dtype=REAL)
-            self.syn1neg = vstack([self.syn1neg, pad])
+            pad = np.zeros((gained_vocab, self.layer1_size), dtype=REAL)
+            self.syn1neg = np.vstack([self.syn1neg, pad])
         self.wv.norms = None
 
         # do not suppress learning for already learned words
-        self.wv.vectors_lockf = ones(len(self.wv.vocab), dtype=REAL)  # zeros suppress learning
+        self.wv.vectors_lockf = np.ones(len(self.wv), dtype=REAL)  # zeros suppress learning
 
     def _do_train_epoch(self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
                         total_examples=None, total_words=None, **kwargs):
@@ -1465,7 +1415,7 @@ class Word2Vec(utils.SaveLoad):
         if self.alpha > self.min_alpha_yet_reached:
             logger.warning("Effective 'alpha' higher than previous training cycles")
 
-        if not self.wv.vocab:  # should be set by `build_vocab`
+        if not self.wv.key_to_index:  # should be set by `build_vocab`
             raise RuntimeError("you must first build vocabulary before training the model")
         if not len(self.wv.vectors):
             raise RuntimeError("you must initialize vectors before training the model")
@@ -1488,7 +1438,7 @@ class Word2Vec(utils.SaveLoad):
         logger.info(
             "training model with %i workers on %i vocabulary and %i features, "
             "using sg=%s hs=%s sample=%s negative=%s window=%s",
-            self.workers, len(self.wv.vocab), self.layer1_size, self.sg,
+            self.workers, len(self.wv), self.layer1_size, self.sg,
             self.hs, self.sample, self.negative, self.window
         )
 
@@ -1648,11 +1598,11 @@ class Word2Vec(utils.SaveLoad):
         logger.info(
             "scoring sentences with %i workers on %i vocabulary and %i features, "
             "using sg=%s hs=%s sample=%s and negative=%s",
-            self.workers, len(self.wv.vocab), self.layer1_size, self.sg, self.hs,
+            self.workers, len(self.wv), self.layer1_size, self.sg, self.hs,
             self.sample, self.negative
         )
 
-        if not self.wv.vocab:
+        if not self.wv.key_to_index:
             raise RuntimeError("you must first build vocabulary before scoring new data")
 
         if not self.hs:
@@ -1663,7 +1613,7 @@ class Word2Vec(utils.SaveLoad):
 
         def worker_loop():
             """Compute log probability for each sentence, lifting lists of sentences from the jobs queue."""
-            work = zeros(1, dtype=REAL)  # for sg hs, we actually only need one memory loc (running sum)
+            work = np.zeros(1, dtype=REAL)  # for sg hs, we actually only need one memory loc (running sum)
             neu1 = matutils.zeros_aligned(self.layer1_size, dtype=REAL)
             while True:
                 job = job_queue.get()
@@ -1742,68 +1692,13 @@ class Word2Vec(utils.SaveLoad):
         )
         return sentence_scores[:sentence_count]
 
-    def intersect_word2vec_format(self, fname, lockf=0.0, binary=False, encoding='utf8', unicode_errors='strict'):
-        """Merge in an input-hidden weight matrix loaded from the original C word2vec-tool format,
-        where it intersects with the current vocabulary.
-
-        No words are added to the existing vocabulary, but intersecting words adopt the file's weights, and
-        non-intersecting words are left alone.
-
-        Parameters
-        ----------
-        fname : str
-            The file path to load the vectors from.
-        lockf : float, optional
-            Lock-factor value to be set for any imported word-vectors; the
-            default value of 0.0 prevents further updating of the vector during subsequent
-            training. Use 1.0 to allow further training updates of merged vectors.
-        binary : bool, optional
-            If True, `fname` is in the binary word2vec C format.
-        encoding : str, optional
-            Encoding of `text` for `unicode` function (python2 only).
-        unicode_errors : str, optional
-            Error handling behaviour, used as parameter for `unicode` function (python2 only).
-
-        """
-        overlap_count = 0
-        logger.info("loading projection weights from %s", fname)
-        with utils.open(fname, 'rb') as fin:
-            header = utils.to_unicode(fin.readline(), encoding=encoding)
-            vocab_size, vector_size = (int(x) for x in header.split())  # throws for invalid file format
-            if not vector_size == self.wv.vector_size:
-                raise ValueError("incompatible vector size %d in file %s" % (vector_size, fname))
-                # TOCONSIDER: maybe mismatched vectors still useful enough to merge (truncating/padding)?
-            if binary:
-                binary_len = dtype(REAL).itemsize * vector_size
-                for _ in range(vocab_size):
-                    # mixed text and binary: read text first, then binary
-                    word = []
-                    while True:
-                        ch = fin.read(1)
-                        if ch == b' ':
-                            break
-                        if ch != b'\n':  # ignore newlines in front of words (some binary files have)
-                            word.append(ch)
-                    word = utils.to_unicode(b''.join(word), encoding=encoding, errors=unicode_errors)
-                    weights = fromstring(fin.read(binary_len), dtype=REAL)
-                    if word in self.wv.vocab:
-                        overlap_count += 1
-                        self.wv.vectors[self.wv.vocab[word].index] = weights
-                        self.wv.vectors_lockf[self.wv.vocab[word].index] = lockf  # lock-factor: 0.0=no changes
-            else:
-                for line_no, line in enumerate(fin):
-                    parts = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
-                    if len(parts) != vector_size + 1:
-                        raise ValueError("invalid vector on line %s (is this really the text format?)" % line_no)
-                    word, weights = parts[0], [REAL(x) for x in parts[1:]]
-                    if word in self.wv.vocab:
-                        overlap_count += 1
-                        self.wv.vectors[self.wv.vocab[word].index] = weights
-                        self.wv.vectors_lockf[self.wv.vocab[word].index] = lockf  # lock-factor: 0.0=no changes
-        logger.info("merged %d vectors into %s matrix from %s", overlap_count, self.wv.vectors.shape, fname)
-
     def predict_output_word(self, context_words_list, topn=10):
         """Get the probability distribution of the center word given context words.
+
+        Note this performs a CBOW-style propagation, even in SG models,
+        and doesn't quite weight the surrounding words the same as in
+        training -- so it's just one crude way of using a trained model
+        as a predictor.
 
         Parameters
         ----------
@@ -1827,23 +1722,21 @@ class Word2Vec(utils.SaveLoad):
         if not hasattr(self.wv, 'vectors') or not hasattr(self, 'syn1neg'):
             raise RuntimeError("Parameters required for predicting the output words not found.")
 
-        word_vocabs = [self.wv.vocab[w] for w in context_words_list if w in self.wv.vocab]
-        if not word_vocabs:
+        word2_indices = [self.wv.get_index(w) for w in context_words_list if w in self.wv]
+        if not word2_indices:
             logger.warning("All the input context words are out-of-vocabulary for the current model.")
             return None
 
-        word2_indices = [word.index for word in word_vocabs]
-
-        l1 = np_sum(self.wv.vectors[word2_indices], axis=0)
+        l1 = np.sum(self.wv.vectors[word2_indices], axis=0)
         if word2_indices and self.cbow_mean:
             l1 /= len(word2_indices)
 
         # propagate hidden -> output and take softmax to get probabilities
-        prob_values = exp(dot(l1, self.syn1neg.T))
+        prob_values = np.exp(np.dot(l1, self.syn1neg.T))
         prob_values /= sum(prob_values)
         top_indices = matutils.argsort(prob_values, topn=topn, reverse=True)
         # returning the most probable output words with their probabilities
-        return [(self.wv.index2key[index1], prob_values[index1]) for index1 in top_indices]
+        return [(self.wv.index_to_key[index1], prob_values[index1]) for index1 in top_indices]
 
     def reset_from(self, other_model):
         """Borrow shareable pre-built structures from `other_model` and reset hidden layer weights.
@@ -1862,8 +1755,10 @@ class Word2Vec(utils.SaveLoad):
             Another model to copy the internal structures from.
 
         """
-        self.wv.vocab = other_model.wv.vocab
-        self.wv.index2key = other_model.wv.index2key
+        self.wv.key_to_index = other_model.wv.key_to_index
+        self.wv.index_to_key = other_model.wv.index_to_key
+        self.wv.expandos = other_model.wv.expandos
+        self.wv.norms = None
         self.cum_table = other_model.cum_table
         self.corpus_count = other_model.corpus_count
         self.reset_weights()
@@ -1879,7 +1774,7 @@ class Word2Vec(utils.SaveLoad):
 
         """
         return "%s(vocab=%s, size=%s, alpha=%s)" % (
-            self.__class__.__name__, len(self.wv.index2key), self.wv.vector_size, self.alpha
+            self.__class__.__name__, len(self.wv.index_to_key), self.wv.vector_size, self.alpha
         )
 
     def save(self, *args, **kwargs):
@@ -1943,7 +1838,7 @@ class Word2Vec(utils.SaveLoad):
             if not hasattr(model, 'corpus_total_words'):
                 model.corpus_total_words = None
             if not hasattr(model.wv, 'vectors_lockf') and hasattr(model.wv, 'vectors'):
-                model.wv.vectors_lockf = getattr(model, 'vectors_lockf', ones(len(model.wv.vectors), dtype=REAL))
+                model.wv.vectors_lockf = getattr(model, 'vectors_lockf', np.ones(len(model.wv.vectors), dtype=REAL))
             if not hasattr(model, 'random'):
                 model.random = np.random.RandomState(model.seed)
             if not hasattr(model, 'train_count'):
@@ -2134,41 +2029,6 @@ class PathLineSentences(object):
                         i += self.max_sentence_length
 
 
-@dataclass
-class W2VVocab:
-    """A dataclass shape-compatible with keyedvectors.SimpleVocab, extended with the
-    `sample_int` property needed by `Word2Vec` models."""
-    __slots__ = ('count', 'index', 'sample_int')
-    count: int
-    index: int
-    sample_int: int
-
-    def __init__(self, count=0, index=0, sample_int=2**32):
-        self.count, self.index, self.sample_int = count, index, sample_int
-
-    def __lt__(self, other):
-        return self.count < other.count
-
-
-@dataclass
-class W2VHSVocab:
-    """A dataclass shape-compatible with W2VVocab, extended with the `code` and
-    `point` properties needed by hierarchical-sampling (`hs=1`) `Word2Vec` models."""
-    __slots__ = ('count', 'index', 'sample_int', 'code', 'point')
-    count: int
-    index: int
-    sample_int: int
-    code: List[int]
-    point: List[int]
-
-    def __init__(self, count=0, index=0, sample_int=2**32, code=None, point=None):
-        self.count, self.index, self.sample_int, self.code, self.point = \
-            count, index, sample_int, code, point
-
-    def __lt__(self, other):
-        return self.count < other.count
-
-
 class Word2VecVocab(utils.SaveLoad):
     """Obsolete class retained for now as load-compatibility state capture"""
     pass
@@ -2184,43 +2044,34 @@ class Heapitem(namedtuple('Heapitem', 'count, index, left, right')):
         return self.count < other.count
 
 
-def _build_heap(vocab):
-    heap = list(itervalues(vocab))
+def _build_heap(wv):
+    heap = list(Heapitem(wv.get_vecattr(i, 'count'), i, None, None) for i in range(len(wv.index_to_key)))
     heapq.heapify(heap)
-    for i in range(len(vocab) - 1):
+    for i in range(len(wv) - 1):
         min1, min2 = heapq.heappop(heap), heapq.heappop(heap)
         heapq.heappush(
-            heap, Heapitem(count=min1.count + min2.count, index=i + len(vocab), left=min1, right=min2)
+            heap, Heapitem(count=min1.count + min2.count, index=i + len(wv), left=min1, right=min2)
         )
     return heap
 
 
-def _assign_binary_codes(vocab):
+def _assign_binary_codes(wv):
     """
     Appends a binary code to each vocab term.
 
     Parameters
     ----------
-    vocab : dict
-        A dictionary of :class:`gensim.models.word2vec.Vocab` objects.
-
-    Notes
-    -----
-    Expects each term to have an .index attribute that contains the order in
-    which the term was added to the vocabulary.  E.g. term.index == 0 means the
-    term was added to the vocab first.
+    wv : KeyedVectors
+        A collection of word-vectors.
 
     Sets the .code and .point attributes of each node.
     Each code is a numpy.array containing 0s and 1s.
     Each point is an integer.
 
     """
-    logger.info("constructing a huffman tree from %i words", len(vocab))
+    logger.info("constructing a huffman tree from %i words", len(wv))
 
-    for k in vocab.keys():
-        # ensure dataclass items sufficient for huffman-encoding
-        vocab[k] = W2VHSVocab(vocab[k].count, vocab[k].index, vocab[k].sample_int)
-    heap = _build_heap(vocab)
+    heap = _build_heap(wv)
     if not heap:
         #
         # TODO: how can we end up with an empty heap?
@@ -2233,15 +2084,18 @@ def _assign_binary_codes(vocab):
     stack = [(heap[0], [], [])]
     while stack:
         node, codes, points = stack.pop()
-        if node.index < len(vocab):
+        if node[1] < len(wv):  # node[1] = index
             # leaf node => store its path from the root
-            node.code, node.point = codes, points
+            k = node[1]
+            wv.set_vecattr(k, 'code', codes)
+            wv.set_vecattr(k, 'point', points)
+            # node.code, node.point = codes, points
             max_depth = max(len(codes), max_depth)
         else:
             # inner node => continue recursion
-            points = array(list(points) + [node.index - len(vocab)], dtype=uint32)
-            stack.append((node.left, array(list(codes) + [0], dtype=uint8), points))
-            stack.append((node.right, array(list(codes) + [1], dtype=uint8), points))
+            points = np.array(list(points) + [node.index - len(wv)], dtype=np.uint32)
+            stack.append((node.left, np.array(list(codes) + [0], dtype=np.uint8), points))
+            stack.append((node.right, np.array(list(codes) + [1], dtype=np.uint8), points))
 
     logger.info("built huffman tree with maximum node depth %i", max_depth)
 
@@ -2264,7 +2118,7 @@ if __name__ == "__main__":
 
     from gensim.models.word2vec import Word2Vec  # noqa:F811 avoid referencing __main__ in pickle
 
-    seterr(all='raise')  # don't ignore numpy errors
+    np.seterr(all='raise')  # don't ignore numpy errors
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-train", help="Use text data from file TRAIN to train the model", required=True)

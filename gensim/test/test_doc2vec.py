@@ -90,17 +90,17 @@ class TestDoc2VecModel(unittest.TestCase):
         test_doc_word = get_tmpfile('gensim_doc2vec.dw')
         model.save_word2vec_format(test_doc_word, doctag_vec=True, word_vec=True, binary=False)
         binary_model_dv = keyedvectors.KeyedVectors.load_word2vec_format(test_doc_word, binary=False)
-        self.assertEqual(len(model.wv.vocab) + len(model.dv), len(binary_model_dv.vocab))
+        self.assertEqual(len(model.wv) + len(model.dv), len(binary_model_dv))
         # test saving document embedding only
         test_doc = get_tmpfile('gensim_doc2vec.d')
         model.save_word2vec_format(test_doc, doctag_vec=True, word_vec=False, binary=True)
         binary_model_dv = keyedvectors.KeyedVectors.load_word2vec_format(test_doc, binary=True)
-        self.assertEqual(len(model.dv), len(binary_model_dv.vocab))
+        self.assertEqual(len(model.dv), len(binary_model_dv))
         # test saving word embedding only
         test_word = get_tmpfile('gensim_doc2vec.w')
         model.save_word2vec_format(test_word, doctag_vec=False, word_vec=True, binary=True)
         binary_model_dv = keyedvectors.KeyedVectors.load_word2vec_format(test_word, binary=True)
-        self.assertEqual(len(model.wv.vocab), len(binary_model_dv.vocab))
+        self.assertEqual(len(model.wv), len(binary_model_dv))
 
     def obsolete_testLoadOldModel(self):
         """Test loading an old doc2vec model from indeterminate version"""
@@ -108,10 +108,10 @@ class TestDoc2VecModel(unittest.TestCase):
         model_file = 'doc2vec_old'  # which version?!?
         model = doc2vec.Doc2Vec.load(datapath(model_file))
         self.assertTrue(model.wv.vectors.shape == (3955, 100))
-        self.assertTrue(len(model.wv.vocab) == 3955)
+        self.assertTrue(len(model.wv) == 3955)
         self.assertTrue(len(model.wv.index2word) == 3955)
         self.assertIsNone(model.corpus_total_words)
-        self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
+        self.assertTrue(model.syn1neg.shape == (len(model.wv), model.vector_size))
         self.assertTrue(model.wv.vectors_lockf.shape == (3955, ))
         self.assertTrue(model.cum_table.shape == (3955, ))
 
@@ -128,10 +128,10 @@ class TestDoc2VecModel(unittest.TestCase):
         model_file = 'doc2vec_old_sep'
         model = doc2vec.Doc2Vec.load(datapath(model_file))
         self.assertTrue(model.wv.vectors.shape == (3955, 100))
-        self.assertTrue(len(model.wv.vocab) == 3955)
+        self.assertTrue(len(model.wv) == 3955)
         self.assertTrue(len(model.wv.index2word) == 3955)
         self.assertIsNone(model.corpus_total_words)
-        self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
+        self.assertTrue(model.syn1neg.shape == (len(model.wv), model.vector_size))
         self.assertTrue(model.wv.vectors_lockf.shape == (3955, ))
         self.assertTrue(model.cum_table.shape == (3955, ))
         self.assertTrue(model.dv.vectors.shape == (300, 100))
@@ -189,7 +189,7 @@ class TestDoc2VecModel(unittest.TestCase):
         logging.info("TESTING LOAD of %s Doc2Vec MODEL", old_version)
         saved_models_dir = datapath('old_d2v_models/d2v_{}.mdl')
         model = doc2vec.Doc2Vec.load(saved_models_dir.format(old_version))
-        self.assertTrue(len(model.wv.vocab) == 3)
+        self.assertTrue(len(model.wv) == 3)
         self.assertIsNone(model.corpus_total_words)
         self.assertTrue(model.wv.vectors.shape == (3, 4))
         self.assertTrue(model.dv.vectors.shape == (2, 4))
@@ -358,13 +358,13 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertEqual(model.dv[0].shape, (100,))
         self.assertEqual(model.dv['_*0'].shape, (100,))
         self.assertTrue(all(model.dv['_*0'] == model.dv[0]))
-        self.assertTrue(max(d.index for d in model.dv.map.values()) < len(model.dv.index2key))
+        self.assertTrue(max(model.dv.key_to_index.values()) < len(model.dv.index_to_key))
         self.assertLess(
-            max(model.dv.get_index(str_key) for str_key in model.dv.map.keys()),
+            max(model.dv.get_index(str_key) for str_key in model.dv.key_to_index.keys()),
             len(model.dv.vectors)
         )
         # verify dv.most_similar() returns string doctags rather than indexes
-        self.assertEqual(model.dv.index2key[0], model.dv.most_similar([model.dv[0]])[0][0])
+        self.assertEqual(model.dv.index_to_key[0], model.dv.most_similar([model.dv[0]])[0][0])
 
     def test_empty_errors(self):
         # no input => "RuntimeError: you must first build vocabulary before training the model"
@@ -395,7 +395,9 @@ class TestDoc2VecModel(unittest.TestCase):
         # inferred vector should be top10 close to bulk-trained one
         doc0_inferred = model.infer_vector(list(DocsLeeCorpus())[0].words)
         sims_to_infer = model.dv.most_similar([doc0_inferred], topn=len(model.dv))
-        f_rank = [docid for docid, sim in sims_to_infer].index(fire1)
+        sims_ids = [docid for docid, sim in sims_to_infer]
+        self.assertTrue(fire1 in sims_ids, "{0} not found in {1}".format(fire1, sims_to_infer))
+        f_rank = sims_ids.index(fire1)
         self.assertLess(f_rank, 10)
 
         # fire2 should be top30 close to fire1
@@ -643,20 +645,21 @@ class TestDoc2VecModel(unittest.TestCase):
         mixed_tag_corpus = [doc2vec.TaggedDocument(words, [i, words[0]]) for i, words in enumerate(raw_sentences)]
         model = doc2vec.Doc2Vec()
         model.build_vocab(mixed_tag_corpus)
-        expected_length = len(sentences) + len(model.dv.map)  # 9 sentences, 7 unique first tokens
+        expected_length = len(sentences) + len(model.dv.key_to_index)  # 9 sentences, 7 unique first tokens
         self.assertEqual(len(model.dv.vectors), expected_length)
+        # TODO: test saving in word2vec format
 
     def models_equal(self, model, model2):
         # check words/hidden-weights
-        self.assertEqual(len(model.wv.vocab), len(model2.wv.vocab))
+        self.assertEqual(len(model.wv), len(model2.wv))
         self.assertTrue(np.allclose(model.wv.vectors, model2.wv.vectors))
         if model.hs:
             self.assertTrue(np.allclose(model.syn1, model2.syn1))
         if model.negative:
             self.assertTrue(np.allclose(model.syn1neg, model2.syn1neg))
         # check docvecs
-        self.assertEqual(len(model.dv.map), len(model2.dv.map))
-        self.assertEqual(len(model.dv.index2key), len(model2.dv.index2key))
+        self.assertEqual(len(model.dv), len(model2.dv))
+        self.assertEqual(len(model.dv.index_to_key), len(model2.dv.index_to_key))
 
     def test_word_vec_non_writeable(self):
         model = keyedvectors.KeyedVectors.load_word2vec_format(datapath('word2vec_pre_kv_c'))
