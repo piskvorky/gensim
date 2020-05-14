@@ -688,7 +688,7 @@ class ShardedCorpus(IndexedCorpus):
         if (result_stop - result_start) != (stop - start):
             raise ValueError(
                 'Result start/stop range different than stop/start range (%d - %d vs. %d - %d)'
-                .format(result_start, result_stop, start, stop)
+                % (result_start, result_stop, start, stop)
             )
 
         # Dense data: just copy using numpy's slice notation

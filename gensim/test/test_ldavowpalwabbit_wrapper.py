@@ -43,7 +43,7 @@ def get_corpus():
     dict_path = datapath('ldavowpalwabbit.dict.txt')
     dictionary = Dictionary.load_from_text(dict_path)
     with open(text_path) as fhandle:
-        corpus = [dictionary.doc2bow(l.strip().split()) for l in fhandle]
+        corpus = [dictionary.doc2bow(line.strip().split()) for line in fhandle]
     return corpus, dictionary
 
 

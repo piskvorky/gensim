@@ -1461,7 +1461,7 @@ class PoincareRelations(object):
             if sys.version_info[0] < 3:
                 lines = file_obj
             else:
-                lines = (l.decode(self.encoding) for l in file_obj)
+                lines = (line.decode(self.encoding) for line in file_obj)
             # csv.reader requires bytestring input in python2, unicode input in python3
             reader = csv.reader(lines, delimiter=self.delimiter)
             for row in reader:
