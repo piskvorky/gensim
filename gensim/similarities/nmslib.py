@@ -187,7 +187,7 @@ class NmslibIndexer(object):
         """Build an NMSLIB index using document vectors from a Doc2Vec model."""
 
         docvecs = self.model.dv
-        labels = [docvecs.index2key[i] for i in range(0, len(docvecs))]
+        labels = docvecs.index_to_key
         self._build_from_model(docvecs.vectors_norm, labels)
 
     def _build_from_keyedvectors(self):

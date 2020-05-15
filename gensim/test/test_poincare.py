@@ -57,24 +57,24 @@ class TestPoincareModel(unittest.TestCase):
         self.data_large = PoincareRelations(datapath('poincare_hypernyms_large.tsv'))
 
     def models_equal(self, model_1, model_2):
-        self.assertEqual(len(model_1.kv.vocab), len(model_2.kv.vocab))
-        self.assertEqual(set(model_1.kv.vocab.keys()), set(model_2.kv.vocab.keys()))
+        self.assertEqual(len(model_1.kv), len(model_2.kv))
+        self.assertEqual(set(model_1.kv.index_to_key), set(model_2.kv.index_to_key))
         self.assertTrue(np.allclose(model_1.kv.vectors, model_2.kv.vectors))
 
     def test_data_counts(self):
         """Tests whether data has been loaded correctly and completely."""
         model = PoincareModel(self.data)
         self.assertEqual(len(model.all_relations), 5)
-        self.assertEqual(len(model.node_relations[model.kv.vocab['kangaroo.n.01'].index]), 3)
-        self.assertEqual(len(model.kv.vocab), 7)
+        self.assertEqual(len(model.node_relations[model.kv.get_index('kangaroo.n.01')]), 3)
+        self.assertEqual(len(model.kv), 7)
         self.assertTrue('mammal.n.01' not in model.node_relations)
 
     def test_data_counts_with_bytes(self):
         """Tests whether input bytes data is loaded correctly and completely."""
         model = PoincareModel([(b'\x80\x01c', b'\x50\x71a'), (b'node.1', b'node.2')])
         self.assertEqual(len(model.all_relations), 2)
-        self.assertEqual(len(model.node_relations[model.kv.vocab[b'\x80\x01c'].index]), 1)
-        self.assertEqual(len(model.kv.vocab), 4)
+        self.assertEqual(len(model.node_relations[model.kv.get_index(b'\x80\x01c')]), 1)
+        self.assertEqual(len(model.kv), 4)
         self.assertTrue(b'\x50\x71a' not in model.node_relations)
 
     def test_persistence(self):
@@ -96,12 +96,12 @@ class TestPoincareModel(unittest.TestCase):
     def test_online_learning(self):
         """Tests whether additional input data is loaded correctly and completely."""
         model = PoincareModel(self.data, burn_in=0, negative=3)
-        self.assertEqual(len(model.kv.vocab), 7)
-        self.assertEqual(model.kv.vocab['kangaroo.n.01'].count, 3)
-        self.assertEqual(model.kv.vocab['cat.n.01'].count, 1)
+        self.assertEqual(len(model.kv), 7)
+        self.assertEqual(model.kv.get_vecattr('kangaroo.n.01', 'count'), 3)
+        self.assertEqual(model.kv.get_vecattr('cat.n.01', 'count'), 1)
         model.build_vocab([('kangaroo.n.01', 'cat.n.01')], update=True)  # update vocab
-        self.assertEqual(model.kv.vocab['kangaroo.n.01'].count, 4)
-        self.assertEqual(model.kv.vocab['cat.n.01'].count, 2)
+        self.assertEqual(model.kv.get_vecattr('kangaroo.n.01', 'count'), 4)
+        self.assertEqual(model.kv.get_vecattr('cat.n.01', 'count'), 2)
 
     def test_train_after_load(self):
         """Tests whether the model can be trained correctly after loading from disk."""
@@ -117,7 +117,7 @@ class TestPoincareModel(unittest.TestCase):
         """Tests whether model from older gensim version is loaded correctly."""
         loaded = PoincareModel.load(datapath('poincare_test_3.4.0'))
         self.assertEqual(loaded.kv.vectors.shape, (239, 2))
-        self.assertEqual(len(loaded.kv.vocab), 239)
+        self.assertEqual(len(loaded.kv), 239)
         self.assertEqual(loaded.size, 2)
         self.assertEqual(len(loaded.all_relations), 200)
 
@@ -268,7 +268,7 @@ class TestPoincareKeyedVectors(unittest.TestCase):
         self.assertEqual(len(self.vectors.most_similar('dog.n.01', topn=10)), 10)
 
         predicted = self.vectors.most_similar('dog.n.01', topn=None)
-        self.assertEqual(len(predicted), len(self.vectors.vocab) - 1)
+        self.assertEqual(len(predicted), len(self.vectors) - 1)
         self.assertEqual(predicted[-1][0], 'gallant_fox.n.01')
 
     def test_most_similar_raises_keyerror(self):
@@ -311,7 +311,7 @@ class TestPoincareKeyedVectors(unittest.TestCase):
         self.assertTrue(np.allclose(distances, [4.5278745, 0]))
 
         distances = self.vectors.distances('dog.n.01')
-        self.assertEqual(len(distances), len(self.vectors.vocab))
+        self.assertEqual(len(distances), len(self.vectors))
         self.assertTrue(np.allclose(distances[-1], 10.04756))
 
     def test_distances_with_vector_input(self):
@@ -321,7 +321,7 @@ class TestPoincareKeyedVectors(unittest.TestCase):
         self.assertTrue(np.allclose(distances, [4.5278745, 0]))
 
         distances = self.vectors.distances(input_vector)
-        self.assertEqual(len(distances), len(self.vectors.vocab))
+        self.assertEqual(len(distances), len(self.vectors))
         self.assertTrue(np.allclose(distances[-1], 10.04756))
 
     def test_poincare_distances_batch(self):

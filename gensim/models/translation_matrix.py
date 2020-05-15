@@ -151,12 +151,12 @@ class Space(object):
             # if the lexicon is not provided, using the all the Keyedvectors's words as default
             for item in lexicon:
                 words.append(item)
-                mat.append(lang_vec.vectors[lang_vec.vocab[item].index])
+                mat.append(lang_vec.vectors[lang_vec.get_index(item)])
 
         else:
-            for item in lang_vec.vocab.keys():
+            for item in lang_vec.index_to_key:
                 words.append(item)
-                mat.append(lang_vec.vectors[lang_vec.vocab[item].index])
+                mat.append(lang_vec.vectors[lang_vec.get_index(item)])
 
         return Space(mat, words)
 

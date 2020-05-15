@@ -56,7 +56,7 @@ from six import string_types
 from six.moves import zip, range
 
 from gensim import utils, matutils
-from gensim.models.keyedvectors import Vocab, KeyedVectors
+from gensim.models.keyedvectors import KeyedVectors
 
 try:
     from autograd import grad  # Only required for optionally verifying gradients while training
@@ -206,51 +206,49 @@ class PoincareModel(utils.SaveLoad):
             >>> model.train(epochs=50)
 
         """
-        old_index2word_len = len(self.kv.index2word)
+        old_index_to_key_len = len(self.kv.index_to_key)
 
         logger.info("loading relations from train data..")
         for relation in relations:
             if len(relation) != 2:
                 raise ValueError('Relation pair "%s" should have exactly two items' % repr(relation))
             for item in relation:
-                if item in self.kv.vocab:
-                    self.kv.vocab[item].count += 1
+                if item in self.kv.key_to_index:
+                    self.kv.set_vecattr(item, 'count', self.kv.get_vecattr(item, 'count') + 1)
                 else:
-                    self.kv.vocab[item] = Vocab(count=1, index=len(self.kv.index2word))
-                    self.kv.index2word.append(item)
+                    self.kv.key_to_index[item] = len(self.kv.index_to_key)
+                    self.kv.index_to_key.append(item)
+                    self.kv.set_vecattr(item, 'count', 1)
+
             node_1, node_2 = relation
-            node_1_index, node_2_index = self.kv.vocab[node_1].index, self.kv.vocab[node_2].index
+            node_1_index, node_2_index = self.kv.key_to_index[node_1], self.kv.key_to_index[node_2]
             self.node_relations[node_1_index].add(node_2_index)
             relation = (node_1_index, node_2_index)
             self.all_relations.append(relation)
-        logger.info("loaded %d relations from train data, %d nodes", len(self.all_relations), len(self.kv.vocab))
-        self.indices_set = set(range(len(self.kv.index2word)))  # Set of all node indices
-        self.indices_array = np.fromiter(range(len(self.kv.index2word)), dtype=int)  # Numpy array of all node indices
+        logger.info("loaded %d relations from train data, %d nodes", len(self.all_relations), len(self.kv))
+        self.indices_set = set(range(len(self.kv.index_to_key)))  # Set of all node indices
+        self.indices_array = np.fromiter(range(len(self.kv.index_to_key)), dtype=int)  # Numpy array of all node indices
         self._init_node_probabilities()
 
         if not update:
             self._init_embeddings()
         else:
-            self._update_embeddings(old_index2word_len)
+            self._update_embeddings(old_index_to_key_len)
 
     def _init_embeddings(self):
         """Randomly initialize vectors for the items in the vocab."""
-        shape = (len(self.kv.index2word), self.size)
+        shape = (len(self.kv.index_to_key), self.size)
         self.kv.vectors = self._np_random.uniform(self.init_range[0], self.init_range[1], shape).astype(self.dtype)
 
-    def _update_embeddings(self, old_index2word_len):
+    def _update_embeddings(self, old_index_to_key_len):
         """Randomly initialize vectors for the items in the additional vocab."""
-        shape = (len(self.kv.index2word) - old_index2word_len, self.size)
+        shape = (len(self.kv.index_to_key) - old_index_to_key_len, self.size)
         v = self._np_random.uniform(self.init_range[0], self.init_range[1], shape).astype(self.dtype)
         self.kv.vectors = np.concatenate([self.kv.vectors, v])
 
     def _init_node_probabilities(self):
         """Initialize a-priori probabilities."""
-        counts = np.fromiter((
-                self.kv.vocab[self.kv.index2word[i]].count
-                for i in range(len(self.kv.index2word))
-            ),
-            dtype=np.float64, count=len(self.kv.index2word))
+        counts = self.kv.expandos['count'].astype(np.float64)
         self._node_counts_cumsum = np.cumsum(counts)
         self._node_probabilities = counts / counts.sum()
 
@@ -288,14 +286,14 @@ class PoincareModel(utils.SaveLoad):
 
         """
         node_relations = self.node_relations[node_index]
-        num_remaining_nodes = len(self.kv.vocab) - len(node_relations)
+        num_remaining_nodes = len(self.kv) - len(node_relations)
         if num_remaining_nodes < self.negative:
             raise ValueError(
                 'Cannot sample %d negative nodes from a set of %d negative nodes for %s' %
-                (self.negative, num_remaining_nodes, self.kv.index2word[node_index])
+                (self.negative, num_remaining_nodes, self.kv.index_to_key[node_index])
             )
 
-        positive_fraction = float(len(node_relations)) / len(self.kv.vocab)
+        positive_fraction = float(len(node_relations)) / len(self.kv)
         if positive_fraction < 0.01:
             # If number of positive relations is a small fraction of total nodes
             # re-sample till no positively connected nodes are chosen
@@ -953,13 +951,13 @@ class PoincareKeyedVectors(KeyedVectors):
         """
         all_distances = self.distances(node)
         all_norms = np.linalg.norm(self.vectors, axis=1)
-        node_norm = all_norms[self.vocab[node].index]
+        node_norm = all_norms[self.get_index(node)]
         mask = node_norm >= all_norms
         if mask.all():  # No nodes lower in the hierarchy
             return None
         all_distances = np.ma.array(all_distances, mask=mask)
         closest_child_index = np.ma.argmin(all_distances)
-        return self.index2word[closest_child_index]
+        return self.index_to_key[closest_child_index]
 
     def closest_parent(self, node):
         """Get the node closest to `node` that is higher in the hierarchy than `node`.
@@ -978,13 +976,13 @@ class PoincareKeyedVectors(KeyedVectors):
         """
         all_distances = self.distances(node)
         all_norms = np.linalg.norm(self.vectors, axis=1)
-        node_norm = all_norms[self.vocab[node].index]
+        node_norm = all_norms[self.get_index(node)]
         mask = node_norm <= all_norms
         if mask.all():  # No nodes higher in the hierarchy
             return None
         all_distances = np.ma.array(all_distances, mask=mask)
         closest_child_index = np.ma.argmin(all_distances)
-        return self.index2word[closest_child_index]
+        return self.index_to_key[closest_child_index]
 
     def descendants(self, node, max_depth=5):
         """Get the list of recursively closest children from the given node, up to a max depth of `max_depth`.
@@ -1155,11 +1153,11 @@ class PoincareKeyedVectors(KeyedVectors):
         if not restrict_vocab:
             all_distances = self.distances(node_or_vector)
         else:
-            nodes_to_use = self.index2word[:restrict_vocab]
+            nodes_to_use = self.index_to_key[:restrict_vocab]
             all_distances = self.distances(node_or_vector, nodes_to_use)
 
         if isinstance(node_or_vector, string_types + (int,)):
-            node_index = self.vocab[node_or_vector].index
+            node_index = self.get_index(node_or_vector)
         else:
             node_index = None
         if not topn:
@@ -1167,7 +1165,7 @@ class PoincareKeyedVectors(KeyedVectors):
         else:
             closest_indices = matutils.argsort(all_distances, topn=1 + topn)
         result = [
-            (self.index2word[index], float(all_distances[index]))
+            (self.index_to_key[index], float(all_distances[index]))
             for index in closest_indices if (not node_index or index != node_index)  # ignore the input node
         ]
         if topn:
@@ -1223,7 +1221,7 @@ class PoincareKeyedVectors(KeyedVectors):
         if not other_nodes:
             other_vectors = self.vectors
         else:
-            other_indices = [self.vocab[node].index for node in other_nodes]
+            other_indices = [self.get_index(node) for node in other_nodes]
             other_vectors = self.vectors[other_indices]
         return self.vector_distance_batch(input_vector, other_vectors)
 
@@ -1424,14 +1422,13 @@ class ReconstructionEvaluation(object):
 
         """
         items = set()
-        embedding_vocab = embedding.vocab
         relations = defaultdict(set)
         with utils.open(file_path, 'r') as f:
             reader = csv.reader(f, delimiter='\t')
             for row in reader:
                 assert len(row) == 2, 'Hypernym pair has more than two items'
-                item_1_index = embedding_vocab[row[0]].index
-                item_2_index = embedding_vocab[row[1]].index
+                item_1_index = embedding.get_index(row[0])
+                item_2_index = embedding.get_index(row[1])
                 relations[item_1_index].add(item_2_index)
                 items.update([item_1_index, item_2_index])
         self.items = items
@@ -1502,7 +1499,7 @@ class ReconstructionEvaluation(object):
             if item not in self.relations:
                 continue
             item_relations = list(self.relations[item])
-            item_term = self.embedding.index2word[item]
+            item_term = self.embedding.index_to_key[item]
             item_distances = self.embedding.distances(item_term)
             positive_relation_ranks, avg_precision = \
                 self.get_positive_relation_ranks_and_avg_prec(item_distances, item_relations)
@@ -1530,7 +1527,6 @@ class LinkPredictionEvaluation(object):
 
         """
         items = set()
-        embedding_vocab = embedding.vocab
         relations = {'known': defaultdict(set), 'unknown': defaultdict(set)}
         data_files = {'known': train_path, 'unknown': test_path}
         for relation_type, data_file in data_files.items():
@@ -1538,8 +1534,8 @@ class LinkPredictionEvaluation(object):
                 reader = csv.reader(f, delimiter='\t')
                 for row in reader:
                     assert len(row) == 2, 'Hypernym pair has more than two items'
-                    item_1_index = embedding_vocab[row[0]].index
-                    item_2_index = embedding_vocab[row[1]].index
+                    item_1_index = embedding.get_index(row[0])
+                    item_2_index = embedding.get_index(row[1])
                     relations[relation_type][item_1_index].add(item_2_index)
                     items.update([item_1_index, item_2_index])
         self.items = items
@@ -1614,7 +1610,7 @@ class LinkPredictionEvaluation(object):
                 continue
             unknown_relations = list(self.relations['unknown'][item])
             known_relations = list(self.relations['known'][item])
-            item_term = self.embedding.index2word[item]
+            item_term = self.embedding.index_to_key[item]
             item_distances = self.embedding.distances(item_term)
             unknown_relation_ranks, avg_precision = \
                 self.get_unknown_relation_ranks_and_avg_prec(item_distances, unknown_relations, known_relations)
@@ -1727,7 +1723,7 @@ class LexicalEntailmentEvaluation(object):
                 'pygtrie could not be imported, please install pygtrie in order to use LexicalEntailmentEvaluation')
 
         vocab_trie = Trie()
-        for key in embedding.vocab:
+        for key in embedding.key_to_index:
             vocab_trie[key] = True
         return vocab_trie
 

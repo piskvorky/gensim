@@ -523,18 +523,26 @@ class KeyedVectors(utils.SaveLoad):
     @index2word.setter
     def index2word(self, value):
         self.index_to_key = value
-#
-#    @property
-#    def vocab(self):
-#        return self.map
-#
-#    @vocab.setter
-#    def vocab(self, value):
-#        self.map = value
 
     @property
-    def novlookup(self):
-        """ pseudodict providing pseudovocab objects """
+    def vocab(self):
+        raise NotImplementedError(
+            "The .vocab dict of 'Vocab' propery objects, one per key, has been removed.\n"
+            "See the KeyedVectors .key_to_index dict, .index_to_key list, and methods\n"
+            ".get_vecattr(key, attr)/.set_vecattr(key, attr, new_val) for replacement\n"
+            "functionality."
+        )
+
+    @vocab.setter
+    def vocab(self, value):
+        self.vocab()  # trigger above NotImplementedError
+
+    @property
+    def pseudovocab(self):
+        """ pseudodict providing pseudovocab objects
+
+        not efficient, temp backcompat workaround 'just in case' a .vocab use can't adapt
+        """
         class Vocaboid(object):
             def __init__(self, kv, index):
                 self.kv = kv
@@ -553,7 +561,7 @@ class KeyedVectors(utils.SaveLoad):
             def __getitem__(self, key):
                 return Vocaboid(self.data, self.data.get_index(key))
 
-            def __contains(self, key):
+            def __contains__(self, key):
                 return key in self.data
 
         return VocaboidDict(self)

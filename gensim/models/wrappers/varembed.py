@@ -33,7 +33,7 @@ class VarEmbed(KeyedVectors):
 
     """
     def __init__(self):
-        self.vector_size = 0
+        super(VarEmbed, self).__init__(vector_size=0)
         self.vocab_size = 0
 
     @classmethod
@@ -95,13 +95,13 @@ class VarEmbed(KeyedVectors):
         self.vocab_size = len(counts)
         self.vector_size = word_embeddings.shape[1]
         self.vectors = np.zeros((self.vocab_size, self.vector_size))
-        self.index_to_word = [None] * self.vocab_size
-        logger.info("Corpus has %i words", len(self.vocab))
+        self.index_to_key = [None] * self.vocab_size
+        logger.info("Corpus has %i words", len(self))
         for word_id, word in enumerate(counts):
+            self.index_to_key[word_id] = word
             self.key_to_index[word] = word_id
-            self.set_extra(word, 'count', counts[word])
+            self.set_vecattr(word, 'count', counts[word])
             self.vectors[word_id] = word_embeddings[word_to_ix[word]]
-            self.index2word[word_id] = word
         assert((len(self.key_to_index), self.vector_size) == self.vectors.shape)
         logger.info("Loaded matrix of %d size and %d dimensions", self.vocab_size, self.vector_size)
 

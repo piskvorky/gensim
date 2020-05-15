@@ -145,7 +145,7 @@ class WordEmbeddingSimilarityIndex(TermSimilarityIndex):
         super(WordEmbeddingSimilarityIndex, self).__init__()
 
     def most_similar(self, t1, topn=10):
-        if t1 not in self.keyedvectors.vocab:
+        if t1 not in self.keyedvectors:
             logger.debug('an out-of-dictionary term "%s"', t1)
         else:
             most_similar = self.keyedvectors.most_similar(positive=[t1], topn=topn, **self.kwargs)
