@@ -838,4 +838,4 @@ def read_su_sentiment_rotten_tomatoes(dirname, lowercase=True):
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
-    unittest.main()
+    unittest.main(module='gensim.test.test_doc2vec')
