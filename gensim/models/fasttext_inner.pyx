@@ -513,9 +513,11 @@ cdef object populate_ft_config(FastTextConfig *c, wv, buckets_word, sentences):
     """
     cdef int effective_words = 0
     cdef int effective_sentences = 0
+    cdef np.uint32_t *vocab_sample_ints
     c.sentence_idx[0] = 0  # indices of the first sentence always start at 0
 
-    vocab_sample_ints = wv.expandos['sample_int']
+    if c.sample:
+        vocab_sample_ints = <np.uint32_t *>np.PyArray_DATA(wv.expandos['sample_int'])
     if c.hs:
         vocab_codes = wv.expandos['code']
         vocab_points = wv.expandos['point']

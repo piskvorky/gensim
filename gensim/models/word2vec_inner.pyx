@@ -482,7 +482,7 @@ cdef init_w2v_config(Word2VecConfig *c, model, alpha, compute_loss, _work, _neu1
 
     if c[0].hs:
         c[0].syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
-        
+
     if c[0].negative:
         c[0].syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
         c[0].cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
@@ -526,9 +526,11 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
     cdef int i, j, k
     cdef int effective_words = 0, effective_sentences = 0
     cdef int sent_idx, idx_start, idx_end
+    cdef np.uint32_t *vocab_sample_ints
 
     init_w2v_config(&c, model, alpha, compute_loss, _work)
-    vocab_sample_ints = model.wv.expandos['sample_int']
+    if c.sample:
+        vocab_sample_ints = <np.uint32_t *>np.PyArray_DATA(model.wv.expandos['sample_int'])
     if c.hs:
         vocab_codes = model.wv.expandos['code']
         vocab_points = model.wv.expandos['point']
@@ -620,9 +622,11 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
     cdef int i, j, k
     cdef int effective_words = 0, effective_sentences = 0
     cdef int sent_idx, idx_start, idx_end
+    cdef np.uint32_t *vocab_sample_ints
 
     init_w2v_config(&c, model, alpha, compute_loss, _work, _neu1)
-    vocab_sample_ints = model.wv.expandos['sample_int']
+    if c.sample:
+        vocab_sample_ints = <np.uint32_t *>np.PyArray_DATA(model.wv.expandos['sample_int'])
     if c.hs:
         vocab_codes = model.wv.expandos['code']
         vocab_points = model.wv.expandos['point']
