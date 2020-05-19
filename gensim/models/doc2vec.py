@@ -745,15 +745,15 @@ class Doc2Vec(Word2Vec):
             self.wv.save_word2vec_format(fname, fvocab, binary, total_vec)
         # save document vectors
         if doctag_vec:
-            write_first_line = True
+            write_header = True
             append = False
             if word_vec:
                 # simply appending to existing file
-                write_first_line = False
+                write_header = False
                 append = True
             self.dv.save_word2vec_format(
                 fname, prefix=prefix, fvocab=fvocab, binary=binary,
-                write_first_line=write_first_line, append=append,
+                write_header=write_header, append=append,
                 sort_attr='doc_count')
 
     def init_sims(self, replace=False):

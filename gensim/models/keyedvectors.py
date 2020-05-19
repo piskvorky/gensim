@@ -163,8 +163,10 @@ and so on.
 
 """
 
-from itertools import chain
 import logging
+import sys
+import itertools
+from itertools import chain
 from collections import UserList, UserDict
 from numbers import Integral
 
@@ -1385,7 +1387,7 @@ class KeyedVectors(utils.SaveLoad):
 
         return rcs
 
-    def save_word2vec_format(self, fname, fvocab=None, binary=False, total_vec=None, write_first_line=True,
+    def save_word2vec_format(self, fname, fvocab=None, binary=False, total_vec=None, write_header=True,
                              prefix='', append=False, sort_attr='count'):
         """Store the input-hidden weight matrix in the same format used by the original
         C word2vec-tool, for compatibility.
@@ -1401,17 +1403,23 @@ class KeyedVectors(utils.SaveLoad):
         total_vec : int, optional
             Explicitly specify total number of vectors
             (in case word vectors are appended with document vectors afterwards).
-        TODO: doc other params
+        write_header : bool, optional
+            If False, don't write the 1st line declaring the count of vectors and dimensions.
+        TODO: doc prefix, append, sort_attr
         """
         if total_vec is None:
             total_vec = len(self.index_to_key)
         mode = 'wb' if not append else 'ab'
-        sorted_vocab_keys = sorted(self.key_to_index.keys(), key=lambda k: -self.get_vecattr(k, sort_attr))
+        if 'count' in self.expandos:
+            # if frequency-info available, store in most-to-least-frequent order
+            store_order_vocab_keys = sorted(self.key_to_index.keys(), key=lambda k: -self.get_vecattr(k, sort_attr))
+        else:
+            store_order_vocab_keys = self.index_to_key
 
         if fvocab is not None:
             logger.info("storing vocabulary in %s", fvocab)
             with utils.open(fvocab, mode) as vout:
-                for word in sorted_vocab_keys:
+                for word in store_order_vocab_keys:
                     vout.write(utils.to_utf8("%s%s %s\n" % (prefix, word, self.get_vecattr(word, sort_attr))))
 
         logger.info("storing %sx%s projection weights into %s", total_vec, self.vector_size, fname)
@@ -1424,10 +1432,10 @@ class KeyedVectors(utils.SaveLoad):
             if not (i == val):
                 break
             index_id_count += 1
-        keys_to_write = chain(range(0, index_id_count), sorted_vocab_keys)
+        keys_to_write = chain(range(0, index_id_count), store_order_vocab_keys)
 
         with utils.open(fname, mode) as fout:
-            if write_first_line:
+            if write_header:
                 fout.write(utils.to_utf8("%s %s\n" % (total_vec, self.vector_size)))
             for key in keys_to_write:
                 row = self[key]
@@ -1439,7 +1447,7 @@ class KeyedVectors(utils.SaveLoad):
 
     @classmethod
     def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
-                             limit=None, datatype=REAL):
+                             limit=None, datatype=REAL, no_header=False):
         """Load the input-hidden weight matrix from the original C word2vec-tool format.
 
         Warnings
@@ -1470,7 +1478,11 @@ class KeyedVectors(utils.SaveLoad):
         datatype : type, optional
             (Experimental) Can coerce dimensions to a non-default float type (such as `np.float16`) to save memory.
             Such types may result in much slower bulk operations or incompatibility with optimized routines.)
-
+        no_header : bool, optional
+            Default False means a usual word2ve-format file, with a 1st line declaring the count of
+            following vectors & number of dimensions. If True, the file is assumed lack a declaratory
+            (vocab_size, vector_size) header and instead start with the 1st vector, and an extra
+            reading-pass will be used to discover the number of vectors. Works only with `binary=False`.
         Returns
         -------
         :class:`~gensim.models.keyedvectors.KeyedVectors`
@@ -1479,7 +1491,7 @@ class KeyedVectors(utils.SaveLoad):
         """
         return _load_word2vec_format(
             cls, fname, fvocab=fvocab, binary=binary, encoding=encoding, unicode_errors=unicode_errors,
-            limit=limit, datatype=datatype)
+            limit=limit, datatype=datatype, no_header=no_header)
 
     def intersect_word2vec_format(self, fname, lockf=0.0, binary=False, encoding='utf8', unicode_errors='strict'):
         """Merge in an input-hidden weight matrix loaded from the original C word2vec-tool format,
@@ -1698,15 +1710,31 @@ def _word2vec_read_text(fin, result, counts, vocab_size, vector_size, datatype, 
         line = fin.readline()
         if line == b'':
             raise EOFError("unexpected end of input; is count incorrect or file otherwise damaged?")
-        parts = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
-        if len(parts) != vector_size + 1:
-            raise ValueError("invalid vector on line %s (is this really the text format?)" % line_no)
-        word, weights = parts[0], [datatype(x) for x in parts[1:]]
+        word, weights = _word2vec_line_to_vector(line, datatype, unicode_errors, encoding)
         _add_word_to_result(result, counts, word, weights, vocab_size)
 
 
+def _word2vec_line_to_vector(line, datatype, unicode_errors, encoding):
+    parts = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
+    word, weights = parts[0], [datatype(x) for x in parts[1:]]
+    return word, weights
+
+
+def _word2vec_detect_sizes_text(fin, limit, datatype, unicode_errors, encoding):
+    vector_size = None
+    for vocab_size in itertools.count():
+        line = fin.readline()
+        if line == b'' or vocab_size == limit:  # EOF/max: return what we've got
+            break
+        if vector_size:
+            continue  # don't bother parsing lines past the 1st
+        word, weights = _word2vec_line_to_vector(line, datatype, unicode_errors, encoding)
+        vector_size = len(weights)
+    return vocab_size, vector_size
+
+
 def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
-                          limit=None, datatype=REAL, binary_chunk_size=100 * 1024):
+                          limit=sys.maxsize, datatype=REAL, no_header=False, binary_chunk_size=100 * 1024):
     """Load the input-hidden weight matrix from the original C word2vec-tool format.
 
     Note that the information stored in the file is incomplete (the binary tree is missing),
@@ -1756,8 +1784,17 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
 
     logger.info("loading projection weights from %s", fname)
     with utils.open(fname, 'rb') as fin:
-        header = utils.to_unicode(fin.readline(), encoding=encoding)
-        vocab_size, vector_size = (int(x) for x in header.split())  # throws for invalid file format
+        if no_header:
+            # deduce both vocab_size & vector_size from 1st pass over file
+            if binary:
+                raise NotImplementedError("no_header only available for text-format files")
+            else:  # text
+                vocab_size, vector_size = _word2vec_detect_sizes_text(fin, limit, datatype, unicode_errors, encoding)
+            fin.close()
+            fin = utils.open(fname, 'rb')
+        else:
+            header = utils.to_unicode(fin.readline(), encoding=encoding)
+            vocab_size, vector_size = (int(x) for x in header.split())  # throws for invalid file format
         if limit:
             vocab_size = min(vocab_size, limit)
         result = cls(vector_size)
