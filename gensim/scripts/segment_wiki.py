@@ -61,10 +61,7 @@ import logging
 import multiprocessing
 import re
 import sys
-try:
-    from xml.etree import cElementTree as ET
-except ImportError:
-    from xml.etree import ElementTree as ET
+from xml.etree import ElementTree as ET
 from functools import partial
 
 from gensim.corpora.wikicorpus import IGNORED_NAMESPACES, WikiCorpus, filter_wiki, find_interlinks, get_namespace, utils
