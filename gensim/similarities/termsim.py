@@ -267,6 +267,9 @@ class SparseTermSimilarityMatrix(SaveLoad):
             row_buffer.append(column_number)
             data_buffer.append(1.0)
 
+            if nonzero_limit <= 0:
+                continue
+
             t1 = dictionary[t1_index]
             num_nonzero = column_nonzero[t1_index]
             num_rows = nonzero_limit - num_nonzero
