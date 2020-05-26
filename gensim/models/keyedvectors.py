@@ -1540,7 +1540,7 @@ class KeyedVectors(utils.SaveLoad):
                     if word in self.key_to_index:
                         overlap_count += 1
                         self.vectors[self.get_index(word)] = weights
-                        self.wv.vectors_lockf[self.get_index(word)] = lockf  # lock-factor: 0.0=no changes
+                        self.vectors_lockf[self.get_index(word)] = lockf  # lock-factor: 0.0=no changes
             else:
                 for line_no, line in enumerate(fin):
                     parts = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
@@ -1550,7 +1550,7 @@ class KeyedVectors(utils.SaveLoad):
                     if word in self.key_to_index:
                         overlap_count += 1
                         self.vectors[self.get_index(word)] = weights
-                        self.wv.vectors_lockf[self.get_index(word)] = lockf  # lock-factor: 0.0=no changes
+                        self.vectors_lockf[self.get_index(word)] = lockf  # lock-factor: 0.0=no changes
         logger.info("merged %d vectors into %s matrix from %s", overlap_count, self.wv.vectors.shape, fname)
 
     def get_keras_embedding(self, train_embeddings=False):

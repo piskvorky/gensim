@@ -548,6 +548,8 @@ class TestWord2VecModel(unittest.TestCase):
             # remember two vectors
             locked0 = np.copy(model.wv.vectors[0])
             unlocked1 = np.copy(model.wv.vectors[1])
+            # alocate a full lockf array (not just default single val for all)
+            model.wv.vectors_lockf = np.ones(len(model.wv), dtype=np.float32)
             # lock the vector in slot 0 against change
             model.wv.vectors_lockf[0] = 0.0
 
@@ -839,7 +841,7 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(len(model.wv) == 12)
         self.assertTrue(len(model.wv.index2word) == 12)
         self.assertTrue(model.syn1neg.shape == (len(model.wv), model.wv.vector_size))
-        self.assertTrue(model.wv.vectors_lockf.shape == (12,))
+        self.assertTrue(len(model.wv.vectors_lockf.shape) > 0)
         self.assertTrue(model.cum_table.shape == (12,))
 
         self.onlineSanity(model, trained_model=True)
@@ -854,7 +856,7 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(len(model.wv) == 12)
         self.assertTrue(len(model.wv.index2word) == 12)
         self.assertTrue(model.syn1neg.shape == (len(model.wv), model.wv.vector_size))
-        self.assertTrue(model.wv.vectors_lockf.shape == (12,))
+        self.assertTrue(len(model.wv.vectors_lockf.shape) > 0)
         self.assertTrue(model.cum_table.shape == (12,))
 
         self.onlineSanity(model, trained_model=True)

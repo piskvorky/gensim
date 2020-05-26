@@ -113,8 +113,10 @@ cdef void fasttext_fast_sentence_sg_neg(FastTextConfig *c, int i, int j) nogil:
         REAL_t *work = c.work
         REAL_t *l1 = c.neu1
         unsigned long long next_random = c.next_random
-        REAL_t *word_locks_vocab = c.word_locks_vocab
-        REAL_t *word_locks_ngrams = c.word_locks_ngrams
+        REAL_t *vocab_lockf = c.vocab_lockf
+        np.uint32_t vocab_lockf_len = c.vocab_lockf_len
+        REAL_t *ngrams_lockf = c.ngrams_lockf
+        np.uint32_t ngrams_lockf_len = c.ngrams_lockf_len
 
     cdef long long row1 = word2_index * size, row2
     cdef unsigned long long modulo = 281474976710655ULL
@@ -156,9 +158,10 @@ cdef void fasttext_fast_sentence_sg_neg(FastTextConfig *c, int i, int j) nogil:
         g = (label - f) * alpha
         our_saxpy(&size, &g, &syn1neg[row2], &ONE, work, &ONE)
         our_saxpy(&size, &g, l1, &ONE, &syn1neg[row2], &ONE)
-    our_saxpy(&size, &word_locks_vocab[word2_index], work, &ONE, &syn0_vocab[row1], &ONE)
+    our_saxpy(&size, &vocab_lockf[word2_index % vocab_lockf_len], work, &ONE, &syn0_vocab[row1], &ONE)
     for d in range(subwords_len):
-        our_saxpy(&size, &word_locks_ngrams[subwords_index[d]], work, &ONE, &syn0_ngrams[subwords_index[d]*size], &ONE)
+        our_saxpy(&size, &ngrams_lockf[subwords_index[d] % ngrams_lockf_len],
+                  work, &ONE, &syn0_ngrams[subwords_index[d]*size], &ONE)
 
     c.next_random = next_random
 
@@ -192,8 +195,10 @@ cdef void fasttext_fast_sentence_sg_hs(FastTextConfig *c, int i, int j) nogil:
         REAL_t alpha = c.alpha
         REAL_t *work = c.work
         REAL_t *l1 = c.neu1
-        REAL_t *word_locks_vocab = c.word_locks_vocab
-        REAL_t *word_locks_ngrams = c.word_locks_ngrams
+        REAL_t *vocab_lockf = c.vocab_lockf
+        np.uint32_t vocab_lockf_len = c.vocab_lockf_len
+        REAL_t *ngrams_lockf = c.ngrams_lockf
+        np.uint32_t ngrams_lockf_len = c.ngrams_lockf_len
 
     #
     # b : long long
@@ -240,10 +245,10 @@ cdef void fasttext_fast_sentence_sg_hs(FastTextConfig *c, int i, int j) nogil:
         our_saxpy(&size, &g, &syn1[row2], &ONE, work, &ONE)
         our_saxpy(&size, &g, l1, &ONE, &syn1[row2], &ONE)
 
-    our_saxpy(&size, &word_locks_vocab[word2_index], work, &ONE, &syn0_vocab[row1], &ONE)
+    our_saxpy(&size, &vocab_lockf[word2_index % vocab_lockf_len], work, &ONE, &syn0_vocab[row1], &ONE)
     for d in range(subwords_len):
         row2 = subwords_index[d] * size
-        our_saxpy(&size, &word_locks_ngrams[subwords_index[d]], work, &ONE, &syn0_ngrams[row2], &ONE)
+        our_saxpy(&size, &ngrams_lockf[subwords_index[d] % ngrams_lockf_len], work, &ONE, &syn0_ngrams[row2], &ONE)
 
 
 cdef void fasttext_fast_sentence_cbow_neg(FastTextConfig *c, int i, int j, int k) nogil:
@@ -283,8 +288,10 @@ cdef void fasttext_fast_sentence_cbow_neg(FastTextConfig *c, int i, int j, int k
         REAL_t *work = c.work
         int cbow_mean = c.cbow_mean
         unsigned long long next_random = c.next_random
-        REAL_t *word_locks_vocab = c.word_locks_vocab
-        REAL_t *word_locks_ngrams = c.word_locks_ngrams
+        REAL_t *vocab_lockf = c.vocab_lockf
+        np.uint32_t vocab_lockf_len = c.vocab_lockf_len
+        REAL_t *ngrams_lockf = c.ngrams_lockf
+        np.uint32_t ngrams_lockf_len = c.ngrams_lockf_len
 
     cdef long long row2
     cdef unsigned long long modulo = 281474976710655ULL
@@ -342,9 +349,9 @@ cdef void fasttext_fast_sentence_cbow_neg(FastTextConfig *c, int i, int j, int k
     for m in range(j,k):
         if m == i:
             continue
-        our_saxpy(&size, &word_locks_vocab[indexes[m]], work, &ONE, &syn0_vocab[indexes[m]*size], &ONE)
+        our_saxpy(&size, &vocab_lockf[indexes[m] % vocab_lockf_len], work, &ONE, &syn0_vocab[indexes[m]*size], &ONE)
         for d in range(subwords_idx_len[m]):
-            our_saxpy(&size, &word_locks_ngrams[subwords_idx[m][d]], work, &ONE, &syn0_ngrams[subwords_idx[m][d]*size], &ONE)
+            our_saxpy(&size, &ngrams_lockf[subwords_idx[m][d] % ngrams_lockf_len], work, &ONE, &syn0_ngrams[subwords_idx[m][d]*size], &ONE)
 
     c.next_random = next_random
 
@@ -380,8 +387,10 @@ cdef void fasttext_fast_sentence_cbow_hs(FastTextConfig *c, int i, int j, int k)
         REAL_t alpha = c.alpha
         REAL_t *work = c.work
         int cbow_mean = c.cbow_mean
-        REAL_t *word_locks_vocab = c.word_locks_vocab
-        REAL_t *word_locks_ngrams = c.word_locks_ngrams
+        REAL_t *vocab_lockf = c.vocab_lockf
+        np.uint32_t vocab_lockf_len = c.vocab_lockf_len
+        REAL_t *ngrams_lockf = c.ngrams_lockf
+        np.uint32_t ngrams_lockf_len = c.ngrams_lockf_len
 
     cdef long long b
     cdef long long row2
@@ -421,9 +430,9 @@ cdef void fasttext_fast_sentence_cbow_hs(FastTextConfig *c, int i, int j, int k)
     for m in range(j,k):
         if m == i:
             continue
-        our_saxpy(&size, &word_locks_vocab[indexes[m]], work, &ONE, &syn0_vocab[indexes[m]*size], &ONE)
+        our_saxpy(&size, &vocab_lockf[indexes[m] % vocab_lockf_len], work, &ONE, &syn0_vocab[indexes[m]*size], &ONE)
         for d in range(subwords_idx_len[m]):
-            our_saxpy(&size, &word_locks_ngrams[subwords_idx[m][d]], work, &ONE, &syn0_ngrams[subwords_idx[m][d]*size], &ONE)
+            our_saxpy(&size, &ngrams_lockf[subwords_idx[m][d] % ngrams_lockf_len], work, &ONE, &syn0_ngrams[subwords_idx[m][d]*size], &ONE)
 
 
 cdef void init_ft_config(FastTextConfig *c, model, alpha, _work, _neu1):
@@ -453,9 +462,13 @@ cdef void init_ft_config(FastTextConfig *c, model, alpha, _work, _neu1):
     c.workers = model.workers
 
     c.syn0_vocab = <REAL_t *>(np.PyArray_DATA(model.wv.vectors_vocab))
-    c.word_locks_vocab = <REAL_t *>(np.PyArray_DATA(model.wv.vectors_vocab_lockf))
     c.syn0_ngrams = <REAL_t *>(np.PyArray_DATA(model.wv.vectors_ngrams))
-    c.word_locks_ngrams = <REAL_t *>(np.PyArray_DATA(model.wv.vectors_ngrams_lockf))
+
+    # EXPERIMENTAL lockf scaled suppression/enablement of training
+    c.vocab_lockf = <REAL_t *>(np.PyArray_DATA(model.wv.vectors_vocab_lockf))
+    c.vocab_lockf_len = len(model.wv.vectors_vocab_lockf)
+    c.ngrams_lockf = <REAL_t *>(np.PyArray_DATA(model.wv.vectors_ngrams_lockf))
+    c.ngrams_lockf_len = len(model.wv.vectors_ngrams_lockf)
 
     c.alpha = alpha
     c.size = model.wv.vector_size

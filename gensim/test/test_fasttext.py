@@ -191,8 +191,8 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(model.wv.vectors.shape, (len(model.wv), model.vector_size))
         self.assertEqual(model.wv.vectors_vocab.shape, (len(model.wv), model.vector_size))
         self.assertEqual(model.wv.vectors_ngrams.shape, (model.wv.bucket, model.vector_size))
-        self.assertEqual(len(model.wv.vectors_ngrams_lockf), len(model.wv.vectors_ngrams))
-        self.assertEqual(len(model.wv.vectors_vocab_lockf), len(model.wv.index_to_key))
+        self.assertLessEqual(len(model.wv.vectors_ngrams_lockf), len(model.wv.vectors_ngrams))
+        self.assertLessEqual(len(model.wv.vectors_vocab_lockf), len(model.wv.index_to_key))
         self.assertTrue(np.isfinite(model.wv.vectors_ngrams).all(), "NaN in ngrams")
         self.assertTrue(np.isfinite(model.wv.vectors_vocab).all(), "NaN in vectors_vocab")
         if model.negative:

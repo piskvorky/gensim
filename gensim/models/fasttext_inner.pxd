@@ -59,13 +59,17 @@ cdef struct FastTextConfig:
     REAL_t *syn0_ngrams
 
     #
+    # EXPERIMENTAL
     # The arrays below selectively enable/disable training for specific vocab
-    # terms and ngrams.  If word_locks_vocab[i] is 0, training is disabled;
-    # if it is 1, training is enabled.
+    # terms and ngrams.  If vocab_locks[i] is 0.0, training is disabled;
+    # if it is 1.0, normal training is enabled. Other values scale updates.
+    # If undersized for vocab/ngrams, (index % actual_size) is used -
+    # so that a minimal single-element `lockf` can apply to all slots.
     #
-    REAL_t *word_locks_vocab
-    REAL_t *word_locks_ngrams
-
+    REAL_t *vocab_lockf
+    np.uint32_t vocab_lockf_len
+    REAL_t *ngrams_lockf
+    np.uint32_t ngrams_lockf_len
     #
     # Working memory.  These are typically large enough to hold a single
     # vector each.

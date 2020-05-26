@@ -778,7 +778,7 @@ class Word2Vec(utils.SaveLoad):
         if self.negative:
             self.syn1neg = np.zeros((len(self.wv), self.layer1_size), dtype=REAL)
 
-        self.wv.vectors_lockf = np.ones(len(self.wv), dtype=REAL)  # zeros suppress learning
+        self.wv.vectors_lockf = np.ones(1, dtype=REAL)  # 0.0 values suppress word-backprop-updates; 1.0 allows
 
     def update_weights(self):
         """Copy all the existing weights, and reset the weights for the newly added vocabulary."""
@@ -802,7 +802,7 @@ class Word2Vec(utils.SaveLoad):
         self.wv.norms = None
 
         # do not suppress learning for already learned words
-        self.wv.vectors_lockf = np.ones(len(self.wv), dtype=REAL)  # zeros suppress learning
+        self.wv.vectors_lockf = np.ones(1, dtype=REAL)  # 0.0 values suppress word-backprop-updates; 1.0 allows
 
     def _do_train_epoch(self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
                         total_examples=None, total_words=None, **kwargs):
@@ -1838,7 +1838,7 @@ class Word2Vec(utils.SaveLoad):
             if not hasattr(model, 'corpus_total_words'):
                 model.corpus_total_words = None
             if not hasattr(model.wv, 'vectors_lockf') and hasattr(model.wv, 'vectors'):
-                model.wv.vectors_lockf = getattr(model, 'vectors_lockf', np.ones(len(model.wv.vectors), dtype=REAL))
+                model.wv.vectors_lockf = getattr(model, 'vectors_lockf', np.ones(1, dtype=REAL))
             if not hasattr(model, 'random'):
                 model.random = np.random.RandomState(model.seed)
             if not hasattr(model, 'train_count'):

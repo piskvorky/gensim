@@ -74,8 +74,7 @@ from collections.abc import Iterable
 from timeit import default_timer
 from dataclasses import dataclass
 
-from numpy import zeros, float32 as REAL, ones, \
-    memmap as np_memmap, vstack, integer, dtype
+from numpy import zeros, float32 as REAL, vstack, integer, dtype
 import numpy as np
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
@@ -338,13 +337,7 @@ class Doc2Vec(Word2Vec):
         super(Doc2Vec, self).reset_weights()
         self.dv.resize_vectors()
         self.dv.randomly_initialize_vectors()
-        if self.dv.mapfile_path:
-            self.dv.vectors_lockf = np_memmap(
-                self.dv.mapfile_path + '.vectors_lockf', dtype=REAL, mode='w+', shape=(len(self.dv.vectors),)
-            )
-            self.dv.vectors_lockf.fill(1.0)
-        else:
-            self.dv.vectors_lockf = ones((len(self.dv.vectors),), dtype=REAL)  # zeros suppress learning
+        self.dv.vectors_lockf = np.ones(1, dtype=REAL)  # 0.0 values suppress word-backprop-updates; 1.0 allows
 
     def reset_from(self, other_model):
         """Copy shareable data structures from another (possibly pre-trained) model.
@@ -375,7 +368,7 @@ class Doc2Vec(Word2Vec):
                         total_examples=None, total_words=None, offsets=None, start_doctags=None, **kwargs):
         work, neu1 = thread_private_mem
         doctag_vectors = self.dv.vectors
-        doctag_locks = self.dv.vectors_lockf
+        doctags_lockf = self.dv.vectors_lockf
 
         offset = offsets[thread_id]
         start_doctag = start_doctags[thread_id]
@@ -384,17 +377,17 @@ class Doc2Vec(Word2Vec):
             examples, tally, raw_tally = d2v_train_epoch_dbow(
                 self, corpus_file, offset, start_doctag, cython_vocab, cur_epoch,
                 total_examples, total_words, work, neu1, len(self.dv),
-                doctag_vectors=doctag_vectors, doctag_locks=doctag_locks, train_words=self.dbow_words)
+                doctag_vectors=doctag_vectors, doctags_lockf=doctags_lockf, train_words=self.dbow_words)
         elif self.dm_concat:
             examples, tally, raw_tally = d2v_train_epoch_dm_concat(
                 self, corpus_file, offset, start_doctag, cython_vocab, cur_epoch,
                 total_examples, total_words, work, neu1, len(self.dv),
-                doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
+                doctag_vectors=doctag_vectors, doctags_lockf=doctags_lockf)
         else:
             examples, tally, raw_tally = d2v_train_epoch_dm(
                 self, corpus_file, offset, start_doctag, cython_vocab, cur_epoch,
                 total_examples, total_words, work, neu1, len(self.dv),
-                doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
+                doctag_vectors=doctag_vectors, doctags_lockf=doctags_lockf)
 
         return examples, tally, raw_tally
 
@@ -421,21 +414,21 @@ class Doc2Vec(Word2Vec):
         for doc in job:
             doctag_indexes = [self.dv.get_index(tag) for tag in doc.tags if tag in self.dv]
             doctag_vectors = self.dv.vectors
-            doctag_locks = self.dv.vectors_lockf
+            doctags_lockf = self.dv.vectors_lockf
             if self.sg:
                 tally += train_document_dbow(
                     self, doc.words, doctag_indexes, alpha, work, train_words=self.dbow_words,
-                    doctag_vectors=doctag_vectors, doctag_locks=doctag_locks
+                    doctag_vectors=doctag_vectors, doctags_lockf=doctags_lockf
                 )
             elif self.dm_concat:
                 tally += train_document_dm_concat(
                     self, doc.words, doctag_indexes, alpha, work, neu1,
-                    doctag_vectors=doctag_vectors, doctag_locks=doctag_locks
+                    doctag_vectors=doctag_vectors, doctags_lockf=doctags_lockf
                 )
             else:
                 tally += train_document_dm(
                     self, doc.words, doctag_indexes, alpha, work, neu1,
-                    doctag_vectors=doctag_vectors, doctag_locks=doctag_locks
+                    doctag_vectors=doctag_vectors, doctags_lockf=doctags_lockf
                 )
         return tally, self._raw_word_count(job)
 
@@ -628,7 +621,7 @@ class Doc2Vec(Word2Vec):
         doctag_vectors = pseudorandom_weak_vector(self.dv.vector_size, seed_string=' '.join(doc_words))
         doctag_vectors = doctag_vectors.reshape(1, self.dv.vector_size)
 
-        doctag_locks = np.ones(1, dtype=REAL)
+        doctags_lockf = np.ones(1, dtype=REAL)
         doctag_indexes = [0]
         work = zeros(self.layer1_size, dtype=REAL)
         if not self.sg:
@@ -640,17 +633,17 @@ class Doc2Vec(Word2Vec):
             if self.sg:
                 train_document_dbow(
                     self, doc_words, doctag_indexes, alpha, work,
-                    learn_words=False, learn_hidden=False, doctag_vectors=doctag_vectors, doctag_locks=doctag_locks
+                    learn_words=False, learn_hidden=False, doctag_vectors=doctag_vectors, doctags_lockf=doctags_lockf
                 )
             elif self.dm_concat:
                 train_document_dm_concat(
                     self, doc_words, doctag_indexes, alpha, work, neu1,
-                    learn_words=False, learn_hidden=False, doctag_vectors=doctag_vectors, doctag_locks=doctag_locks
+                    learn_words=False, learn_hidden=False, doctag_vectors=doctag_vectors, doctags_lockf=doctags_lockf
                 )
             else:
                 train_document_dm(
                     self, doc_words, doctag_indexes, alpha, work, neu1,
-                    learn_words=False, learn_hidden=False, doctag_vectors=doctag_vectors, doctag_locks=doctag_locks
+                    learn_words=False, learn_hidden=False, doctag_vectors=doctag_vectors, doctags_lockf=doctags_lockf
                 )
             alpha -= alpha_delta
 

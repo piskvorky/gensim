@@ -489,12 +489,16 @@ class FastText(Word2Vec):
         super(FastText, self).prepare_weights(update=update)
         if not update:
             self.wv.init_ngrams_weights(self.seed)
-            self.wv.vectors_vocab_lockf = ones(len(self.wv.vectors_vocab), dtype=REAL)
-            self.wv.vectors_ngrams_lockf = ones(len(self.wv.vectors_ngrams), dtype=REAL)
+            # EXPERIMENTAL lockf feature; create minimal no-op lockf arrays (1 element of 1.0)
+            # advanced users should directly resize/adjust as necessary
+            self.wv.vectors_vocab_lockf = ones(1, dtype=REAL)
+            self.wv.vectors_ngrams_lockf = ones(1, dtype=REAL)
         else:
             self.wv.update_ngrams_weights(self.seed, self.old_vocab_len)
-            self.wv.vectors_vocab_lockf = _pad_ones(self.wv.vectors_vocab_lockf, len(self.wv.vectors_vocab))
-            self.wv.vectors_ngrams_lockf = _pad_ones(self.wv.vectors_ngrams_lockf, len(self.wv.vectors_ngrams))
+            # EXPERIMENTAL lockf feature; create minimal no-op lockf arrays (1 element of 1.0)
+            # advanced users should directly resize/adjust as necessary
+            self.wv.vectors_vocab_lockf = ones(1, dtype=REAL)
+            self.wv.vectors_ngrams_lockf = ones(1, dtype=REAL)
 
     def init_post_load(self, hidden_output):
         num_vectors = len(self.wv.vectors)
@@ -504,8 +508,10 @@ class FastText(Word2Vec):
         assert num_vectors > 0, 'expected num_vectors to be initialized already'
         assert vocab_size > 0, 'expected vocab_size to be initialized already'
 
-        self.wv.vectors_ngrams_lockf = ones(len(self.wv.vectors_ngrams), dtype=REAL)
-        self.wv.vectors_vocab_lockf = ones(len(self.wv.vectors_vocab), dtype=REAL)
+        # EXPERIMENTAL lockf feature; create minimal no-op lockf arrays (1 element of 1.0)
+        # advanced users should directly resize/adjust as necessary
+        self.wv.vectors_ngrams_lockf = ones(1, dtype=REAL)
+        self.wv.vectors_vocab_lockf = ones(1, dtype=REAL)
 
         if self.hs:
             self.syn1 = hidden_output
@@ -869,15 +875,15 @@ class FastText(Word2Vec):
 
         if not hasattr(model.wv, 'vectors_vocab_lockf') and hasattr(model.wv, 'vectors_vocab'):
             # TODO: try trainables-location
-            model.wv.vectors_vocab_lockf = ones(len(model.wv.vectors_vocab), dtype=REAL)
+            model.wv.vectors_vocab_lockf = ones(1, dtype=REAL)
         if not hasattr(model, 'vectors_ngrams_lockf') and hasattr(model.wv, 'vectors_ngrams'):
             # TODO: try trainables-location
-            model.wv.vectors_ngrams_lockf = ones(len(model.wv.vectors_ngrams), dtype=REAL)
+            model.wv.vectors_ngrams_lockf = ones(1, dtype=REAL)
         # fixup mistakenly overdimensioned gensim-3.x lockf arrays
         if len(model.wv.vectors_vocab_lockf.shape) > 1:
-            model.wv.vectors_vocab_lockf = model.wv.vectors_vocab_lockf[:, 0]
+            model.wv.vectors_vocab_lockf = ones(1, dtype=REAL)
         if len(model.wv.vectors_ngrams_lockf.shape) > 1:
-            model.wv.vectors_ngrams_lockf = model.wv.vectors_ngrams_lockf[:, 0]
+            model.wv.vectors_ngrams_lockf = ones(1, dtype=REAL)
         if not hasattr(model, 'bucket'):
             model.bucket = model.wv.bucket
 
@@ -1489,7 +1495,8 @@ def _rollback_optimization(kv):
 
     kv.vectors_ngrams = _unpack(kv.vectors_ngrams, kv.bucket, kv.hash2index)
     if hasattr(kv, 'vectors_ngrams_lockf'):
-        kv.vectors_ngrams_lockf = _unpack(kv.vectors_ngrams_lockf, kv.bucket, kv.hash2index, fill=1.0)
+        # just clobber with no-op lockf array: vanishingly unlikely this experimental feature used in old files
+        kv.vectors_ngrams_lockf = ones(1, dtype=REAL)
 
     #
     # We have replaced num_ngram_vectors with a property and deprecated it.

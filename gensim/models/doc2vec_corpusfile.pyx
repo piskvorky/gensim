@@ -93,9 +93,9 @@ cdef void prepare_c_structures_for_batch(vector[string] &doc_words, int sample, 
 
 
 def d2v_train_epoch_dbow(model, corpus_file, offset, start_doctag, _cython_vocab, _cur_epoch, _expected_examples,
-                         _expected_words, work, neu1, docvecs_count, word_vectors=None, word_locks=None,
+                         _expected_words, work, neu1, docvecs_count, word_vectors=None, words_lockf=None,
                          train_words=False, learn_doctags=True, learn_words=True, learn_hidden=True,
-                         doctag_vectors=None, doctag_locks=None):
+                         doctag_vectors=None, doctags_lockf=None):
     """Train distributed bag of words model ("PV-DBOW") by training on a corpus file.
 
     Called internally from :meth:`~gensim.models.doc2vec.Doc2Vec.train`.
@@ -124,13 +124,13 @@ def d2v_train_epoch_dbow(model, corpus_file, offset, start_doctag, _cython_vocab
         Whether or not the weights of the hidden layer will be updated.
     word_vectors : numpy.ndarray, optional
         The vector representation for each word in the vocabulary. If None, these will be retrieved from the model.
-    word_locks : numpy.ndarray, optional
-        A learning lock factor for each weight in the hidden layer for words, value 0 completely blocks updates,
-        a value of 1 allows to update word-vectors.
+    words_lockf : numpy.ndarray, optional
+        EXPERIMENTAL. A learning lock factor for each word-vector, value 0.0 completely blocks updates, a value
+        of 1.0 allows normal updates to word-vectors.
     doctag_vectors : numpy.ndarray, optional
         Vector representations of the tags. If None, these will be retrieved from the model.
-    doctag_locks : numpy.ndarray, optional
-        The lock factors for each tag, same as `word_locks`, but for document-vectors.
+    doctags_lockf : numpy.ndarray, optional
+        EXPERIMENTAL. The lock factors for each tag, same as `words_lockf`, but for document-vectors.
 
     Returns
     -------
@@ -162,8 +162,8 @@ def d2v_train_epoch_dbow(model, corpus_file, offset, start_doctag, _cython_vocab
 
     init_d2v_config(
         &c, model, _alpha, learn_doctags, learn_words, learn_hidden, train_words=train_words,
-        work=work, neu1=neu1, word_vectors=word_vectors, word_locks=word_locks,
-        doctag_vectors=doctag_vectors, doctag_locks=doctag_locks, docvecs_count=docvecs_count)
+        work=work, neu1=neu1, word_vectors=word_vectors, words_lockf=words_lockf,
+        doctag_vectors=doctag_vectors, doctags_lockf=doctags_lockf, docvecs_count=docvecs_count)
 
     # release GIL & train on the full corpus, document by document
     with nogil:
@@ -196,27 +196,29 @@ def d2v_train_epoch_dbow(model, corpus_file, offset, start_doctag, _cython_vocab
                             # we reuse the DBOW function, as it is equivalent to skip-gram for this purpose
                             fast_document_dbow_hs(
                                 c.points[i], c.codes[i], c.codelens[i], c.word_vectors, c.syn1, c.layer1_size,
-                                c.indexes[j], c.alpha, c.work, c.learn_words, c.learn_hidden, c.word_locks)
+                                c.indexes[j], c.alpha, c.work, c.learn_words, c.learn_hidden, c.words_lockf,
+                                c.words_lockf_len)
 
                         if c.negative:
                             # we reuse the DBOW function, as it is equivalent to skip-gram for this purpose
                             c.next_random = fast_document_dbow_neg(
                                 c.negative, c.cum_table, c.cum_table_len, c.word_vectors, c.syn1neg,
                                 c.layer1_size, c.indexes[i], c.indexes[j], c.alpha, c.work,
-                                c.next_random, c.learn_words, c.learn_hidden, c.word_locks)
+                                c.next_random, c.learn_words, c.learn_hidden, c.words_lockf, c.words_lockf_len)
 
                 # docvec-training
                 if _doc_tag < c.docvecs_count:
                     if c.hs:
                         fast_document_dbow_hs(
                             c.points[i], c.codes[i], c.codelens[i], c.doctag_vectors, c.syn1, c.layer1_size,
-                            _doc_tag, c.alpha, c.work, c.learn_doctags, c.learn_hidden, c.doctag_locks)
+                            _doc_tag, c.alpha, c.work, c.learn_doctags, c.learn_hidden, c.doctags_lockf,
+                            c.doctags_lockf_len)
 
                     if c.negative:
                         c.next_random = fast_document_dbow_neg(
                             c.negative, c.cum_table, c.cum_table_len, c.doctag_vectors, c.syn1neg,
                             c.layer1_size, c.indexes[i], _doc_tag, c.alpha, c.work, c.next_random,
-                            c.learn_doctags, c.learn_hidden, c.doctag_locks)
+                            c.learn_doctags, c.learn_hidden, c.doctags_lockf, c.doctags_lockf_len)
 
             total_documents += 1
             total_effective_words += effective_words
@@ -230,8 +232,8 @@ def d2v_train_epoch_dbow(model, corpus_file, offset, start_doctag, _cython_vocab
 
 
 def d2v_train_epoch_dm(model, corpus_file, offset, start_doctag, _cython_vocab, _cur_epoch, _expected_examples,
-                       _expected_words, work, neu1, docvecs_count, word_vectors=None, word_locks=None,
-                       learn_doctags=True, learn_words=True, learn_hidden=True, doctag_vectors=None, doctag_locks=None):
+                       _expected_words, work, neu1, docvecs_count, word_vectors=None, words_lockf=None,
+                       learn_doctags=True, learn_words=True, learn_hidden=True, doctag_vectors=None, doctags_lockf=None):
     """Train distributed memory model ("PV-DM") by training on a corpus file.
     This method implements the DM model with a projection (input) layer that is either the sum or mean of the context
     vectors, depending on the model's `dm_mean` configuration field.
@@ -259,13 +261,13 @@ def d2v_train_epoch_dm(model, corpus_file, offset, start_doctag, _cython_vocab, 
         Whether or not the weights of the hidden layer will be updated.
     word_vectors : numpy.ndarray, optional
         The vector representation for each word in the vocabulary. If None, these will be retrieved from the model.
-    word_locks : numpy.ndarray, optional
-        A learning lock factor for each weight in the hidden layer for words, value 0 completely blocks updates,
-        a value of 1 allows to update word-vectors.
+    words_lockf : numpy.ndarray, optional
+        EXPERIMENTAL. A learning lock factor for each word-vector, value 0.0 completely blocks updates, a value
+        of 1.0 allows normal updates to word-vectors.
     doctag_vectors : numpy.ndarray, optional
         Vector representations of the tags. If None, these will be retrieved from the model.
-    doctag_locks : numpy.ndarray, optional
-        The lock factors for each tag, same as `word_locks`, but for document-vectors.
+    doctags_lockf : numpy.ndarray, optional
+        EXPERIMENTAL. The lock factors for each tag, same as `words_lockf`, but for document-vectors.
 
     Returns
     -------
@@ -298,8 +300,8 @@ def d2v_train_epoch_dm(model, corpus_file, offset, start_doctag, _cython_vocab, 
 
     init_d2v_config(
         &c, model, _alpha, learn_doctags, learn_words, learn_hidden, train_words=False,
-        work=work, neu1=neu1, word_vectors=word_vectors, word_locks=word_locks,
-        doctag_vectors=doctag_vectors, doctag_locks=doctag_locks, docvecs_count=docvecs_count)
+        work=work, neu1=neu1, word_vectors=word_vectors, words_lockf=words_lockf,
+        doctag_vectors=doctag_vectors, doctags_lockf=doctags_lockf, docvecs_count=docvecs_count)
 
     # release GIL & train on the full corpus, document by document
     with nogil:
@@ -357,14 +359,14 @@ def d2v_train_epoch_dm(model, corpus_file, offset, start_doctag, _cython_vocab, 
                     sscal(&c.layer1_size, &inv_count, c.work, &ONE)  # (does this need BLAS-variants like saxpy?)
                 # apply accumulated error in work
                 if c.learn_doctags and _doc_tag < c.docvecs_count:
-                    our_saxpy(&c.layer1_size, &c.doctag_locks[_doc_tag], c.work,
+                    our_saxpy(&c.layer1_size, &c.doctags_lockf[_doc_tag % c.doctags_lockf_len], c.work,
                               &ONE, &c.doctag_vectors[_doc_tag * c.layer1_size], &ONE)
                 if c.learn_words:
                     for m in range(j, k):
                         if m == i:
                             continue
                         else:
-                             our_saxpy(&c.layer1_size, &c.word_locks[c.indexes[m]], c.work, &ONE,
+                             our_saxpy(&c.layer1_size, &c.words_lockf[c.indexes[m] % c.words_lockf_len], c.work, &ONE,
                                        &c.word_vectors[c.indexes[m] * c.layer1_size], &ONE)
 
             total_documents += 1
@@ -378,9 +380,9 @@ def d2v_train_epoch_dm(model, corpus_file, offset, start_doctag, _cython_vocab, 
 
 
 def d2v_train_epoch_dm_concat(model, corpus_file, offset, start_doctag, _cython_vocab, _cur_epoch, _expected_examples,
-                              _expected_words, work, neu1, docvecs_count, word_vectors=None, word_locks=None,
+                              _expected_words, work, neu1, docvecs_count, word_vectors=None, words_lockf=None,
                               learn_doctags=True, learn_words=True, learn_hidden=True, doctag_vectors=None,
-                              doctag_locks=None):
+                              doctags_lockf=None):
     """Train distributed memory model ("PV-DM") by training on a corpus file, using a concatenation of the context
      window word vectors (rather than a sum or average).
      This might be slower since the input at each batch will be significantly larger.
@@ -408,13 +410,13 @@ def d2v_train_epoch_dm_concat(model, corpus_file, offset, start_doctag, _cython_
         Whether or not the weights of the hidden layer will be updated.
     word_vectors : numpy.ndarray, optional
         The vector representation for each word in the vocabulary. If None, these will be retrieved from the model.
-    word_locks : numpy.ndarray, optional
-        A learning lock factor for each weight in the hidden layer for words, value 0 completely blocks updates,
-        a value of 1 allows to update word-vectors.
+    words_lockf : numpy.ndarray, optional
+        EXPERIMENTAL. A learning lock factor for each word-vector, value 0.0 completely blocks updates, a value
+        of 1.0 allows normal updates to word-vectors.
     doctag_vectors : numpy.ndarray, optional
         Vector representations of the tags. If None, these will be retrieved from the model.
-    doctag_locks : numpy.ndarray, optional
-        The lock factors for each tag, same as `word_locks`, but for document-vectors.
+    doctags_lockf : numpy.ndarray, optional
+        EXPERIMENTAL. The lock factors for each tag, same as `words_lockf`, but for document-vectors.
 
     Returns
     -------
@@ -446,8 +448,8 @@ def d2v_train_epoch_dm_concat(model, corpus_file, offset, start_doctag, _cython_
 
     init_d2v_config(
         &c, model, _alpha, learn_doctags, learn_words, learn_hidden, train_words=False,
-        work=work, neu1=neu1, word_vectors=word_vectors, word_locks=word_locks,
-        doctag_vectors=doctag_vectors, doctag_locks=doctag_locks, docvecs_count=docvecs_count)
+        work=work, neu1=neu1, word_vectors=word_vectors, words_lockf=words_lockf,
+        doctag_vectors=doctag_vectors, doctags_lockf=doctags_lockf, docvecs_count=docvecs_count)
 
     # release GIL & train on the full corpus, document by document
     with nogil:
@@ -503,11 +505,11 @@ def d2v_train_epoch_dm_concat(model, corpus_file, offset, start_doctag, _cython_
                         c.indexes[i], c.alpha, c.work, c.layer1_size, c.vector_size, c.learn_hidden)
 
                 if c.learn_doctags and _doc_tag < c.docvecs_count:
-                    our_saxpy(&c.vector_size, &c.doctag_locks[_doc_tag], &c.work[m * c.vector_size],
+                    our_saxpy(&c.vector_size, &c.doctags_lockf[_doc_tag % c.doctags_lockf_len], &c.work[m * c.vector_size],
                               &ONE, &c.doctag_vectors[_doc_tag * c.vector_size], &ONE)
                 if c.learn_words:
                     for m in range(2 * c.window):
-                        our_saxpy(&c.vector_size, &c.word_locks[c.window_indexes[m]], &c.work[(c.doctag_len + m) * c.vector_size],
+                        our_saxpy(&c.vector_size, &c.words_lockf[c.window_indexes[m] % c.words_lockf_len], &c.work[(c.doctag_len + m) * c.vector_size],
                                   &ONE, &c.word_vectors[c.window_indexes[m] * c.vector_size], &ONE)
 
             total_documents += 1
