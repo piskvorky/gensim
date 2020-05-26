@@ -1449,12 +1449,10 @@ class FastTextKeyedVectors(KeyedVectors):
 
     def recalc_word_ngram_buckets(self):
         """
-        Performs a common operation for FastText weight initialization and
-        updates: scan the vocabulary, calculate ngrams and their hashes, keep
-        track of new ngrams, the buckets that each word relates to via its
-        ngrams, etc.
+        Scans the vocabulary, calculates ngrams and their hashes, and cache the
+        list of ngrams for each known word.
 
-        TODO: evaluate if this is even necessary, compared to just recalculating
+        TODO: evaluate if precaching even necessary, compared to recalculating as needed
         """
         if self.bucket == 0:
             self.buckets_word = [np.array([], dtype=np.uint32)] * len(self.index_to_key)
