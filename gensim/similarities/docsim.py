@@ -978,7 +978,7 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
         is_corpus, query = utils.is_corpus(query)
         if not is_corpus and isinstance(query, numpy.ndarray):
             query = [self.corpus[i] for i in query]  # convert document indexes to actual documents
-        result = self.similarity_matrix.inner_product(query, self.corpus, normalized=True)
+        result = self.similarity_matrix.inner_product(query, self.corpus, normalized=(True, True))
 
         if scipy.sparse.issparse(result):
             return numpy.asarray(result.todense())

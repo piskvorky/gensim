@@ -332,7 +332,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
         assert sparse.issparse(matrix)
         self.__init__(matrix)
 
-    def inner_product(self, X, Y, normalized=False):
+    def inner_product(self, X, Y, normalized=(False, False)):
         """Get the inner product(s) between real vectors / corpora X and Y.
 
         Return the inner product(s) between real vectors / corpora vec1 and vec2 expressed in a
@@ -345,10 +345,11 @@ class SparseTermSimilarityMatrix(SaveLoad):
             A query vector / corpus in the sparse bag-of-words format.
         vec2 : list of (int, float) or iterable of list of (int, float)
             A document vector / corpus in the sparse bag-of-words format.
-        normalized : bool, optional
-            Whether the inner product should be L2-normalized. The normalized inner product
-            corresponds to the Soft Cosine Measure (SCM). SCM is a number between <-1.0, 1.0>,
-            where higher is more similar.
+        normalized : tuple of {True, False, 'maintain'}, optional
+            First/second value specifies whether the query/document vectors in the inner product
+            will be L2-normalized (True; corresponds to the soft cosine measure), maintain their
+            L2-norm during change of basis ('maintain'; corresponds to query expansion with partial
+            membership), or kept as-is (False; corresponds to query expansion; default).
 
         Returns
         -------
@@ -371,8 +372,29 @@ class SparseTermSimilarityMatrix(SaveLoad):
         if not X or not Y:
             return self.matrix.dtype.type(0.0)
 
+        if normalized in (True, False):
+            warnings.warn(
+                'Boolean parameter normalized will be removed in 4.0.0, use '
+                'normalized=({normalized}, {normalized}) instead of '
+                'normalized={normalized}'.format(normalized=normalized),
+                category=DeprecationWarning,
+            )
+            normalized = (normalized, normalized)
+
+        normalized_X, normalized_Y = normalized
+        valid_normalized_values = (True, False, 'maintain')
+
+        if normalized_X not in valid_normalized_values:
+            raise ValueError('{} is not a valid value of normalize'.format(normalized_X))
+        if normalized_Y not in valid_normalized_values:
+            raise ValueError('{} is not a valid value of normalize'.format(normalized_Y))
+
         is_corpus_X, X = is_corpus(X)
         is_corpus_Y, Y = is_corpus(Y)
+
+        non_negative_norm_assertion_message = u"sparse documents must not contain any explicit " \
+            u"zero entries and the similarity matrix S must satisfy x^T * S * x >= 0 for any " \
+            u"nonzero bag-of-words vector x."
 
         if not is_corpus_X and not is_corpus_Y:
             X = dict(X)
@@ -385,22 +407,37 @@ class SparseTermSimilarityMatrix(SaveLoad):
 
             result = X.T.dot(matrix).dot(Y)
 
-            if normalized:
+            norm = 1.0
+
+            if normalized_X:
                 X_norm = X.T.dot(matrix).dot(X)[0, 0]
+                assert X_norm >= 0.0, non_negative_norm_assertion_message
+                if normalized_X is 'maintain' and X_norm > 0.0:
+                    X_norm /= X.T.dot(X)
+                X_norm = sqrt(X_norm)
+                if X_norm > 0.0:
+                    norm *= X_norm
+
+            if normalized_Y:
                 Y_norm = Y.T.dot(matrix).dot(Y)[0, 0]
+                assert Y_norm >= 0.0, non_negative_norm_assertion_message
+                if normalized_Y is 'maintain' and Y_norm > 0.0:
+                    Y_norm /= Y.T.dot(Y)
+                Y_norm = sqrt(Y_norm)
+                if Y_norm > 0.0:
+                    norm *= Y_norm
 
-                assert \
-                    X_norm > 0.0 and Y_norm > 0.0, \
-                    u"sparse documents must not contain any explicit zero entries and the similarity matrix S " \
-                    u"must satisfy x^T * S * x > 0 for any nonzero bag-of-words vector x."
+            if normalized_X or normalized_Y:
+                result *= 1.0 / norm
 
-                result /= sqrt(X_norm) * sqrt(Y_norm)
+            if normalized_X is True and normalized_Y is True:
                 result = np.clip(result, -1.0, 1.0)
 
             return result[0, 0]
         elif not is_corpus_X or not is_corpus_Y:
             if is_corpus_X and not is_corpus_Y:
-                is_corpus_X, X, is_corpus_Y, Y = is_corpus_Y, Y, is_corpus_X, X  # make Y the corpus
+                is_corpus_X, X, is_corpus_Y, Y, normalized_X, normalized_Y = \
+                    is_corpus_Y, Y, is_corpus_X, X, normalized_Y, normalized_X  # make Y the corpus
                 transposed = True
             else:
                 transposed = False
@@ -414,23 +451,30 @@ class SparseTermSimilarityMatrix(SaveLoad):
             X = np.array([X[i] if i in X else 0 for i in word_indices], dtype=dtype)
             Y = corpus2csc(Y, num_terms=self.matrix.shape[0], dtype=dtype)[word_indices, :].todense()
             matrix = self.matrix[word_indices[:, None], word_indices].todense()
-            if normalized:
-                # use the following equality: np.diag(A.T.dot(B).dot(A)) == A.T.dot(B).multiply(A.T).sum(axis=1).T
+
+            # use the following equality: np.diag(A.T.dot(B).dot(A)) == A.T.dot(B).multiply(A.T).sum(axis=1).T
+
+            if normalized_X:
                 X_norm = np.multiply(X.T.dot(matrix), X.T).sum(axis=1).T
+                assert X_norm.min() >= 0.0, non_negative_norm_assertion_message
+                if normalized_X is 'maintain':
+                    X_norm /= X.T.dot(X)
+                X_norm = np.sqrt(X_norm)
+                X = np.multiply(X, 1.0 / X_norm).T
+                X = np.nan_to_num(X)  # account for division by zero
+
+            if normalized_Y:
                 Y_norm = np.multiply(Y.T.dot(matrix), Y.T).sum(axis=1).T
-
-                assert \
-                    X_norm.min() > 0.0 and Y_norm.min() >= 0.0, \
-                    u"sparse documents must not contain any explicit zero entries and the similarity matrix S " \
-                    u"must satisfy x^T * S * x > 0 for any nonzero bag-of-words vector x."
-
-                X = np.multiply(X, 1 / np.sqrt(X_norm)).T
-                Y = np.multiply(Y, 1 / np.sqrt(Y_norm))
-                Y = np.nan_to_num(Y)  # Account for division by zero when Y_norm.min() == 0.0
+                assert Y_norm.min() >= 0.0, non_negative_norm_assertion_message
+                if normalized_Y is 'maintain':
+                    Y_norm /= np.multiply(Y.T, Y.T).sum(axis=1).T
+                Y_norm = np.sqrt(Y_norm)
+                Y = np.multiply(Y, 1.0 / Y_norm)
+                Y = np.nan_to_num(Y)  # account for division by zero
 
             result = X.T.dot(matrix).dot(Y)
 
-            if normalized:
+            if normalized_X is True and normalized_Y is True:
                 result = np.clip(result, -1.0, 1.0)
 
             if transposed:
@@ -443,23 +487,29 @@ class SparseTermSimilarityMatrix(SaveLoad):
             Y = corpus2csc(Y if is_corpus_Y else [Y], num_terms=self.matrix.shape[0], dtype=dtype)
             matrix = self.matrix
 
-            if normalized:
-                # use the following equality: np.diag(A.T.dot(B).dot(A)) == A.T.dot(B).multiply(A.T).sum(axis=1).T
+            # use the following equality: np.diag(A.T.dot(B).dot(A)) == A.T.dot(B).multiply(A.T).sum(axis=1).T
+
+            if normalized_X:
                 X_norm = X.T.dot(matrix).multiply(X.T).sum(axis=1).T
+                assert X_norm.min() >= 0.0, non_negative_norm_assertion_message
+                if normalized_X is 'maintain':
+                    X_norm /= X.T.multiply(X.T).sum(axis=1).T
+                X_norm = np.sqrt(X_norm)
+                X = X.multiply(sparse.csr_matrix(1.0 / X_norm))
+                X[X == np.inf] = 0  # account for division by zero
+
+            if normalized_Y:
                 Y_norm = Y.T.dot(matrix).multiply(Y.T).sum(axis=1).T
-
-                assert \
-                    X_norm.min() > 0.0 and Y_norm.min() >= 0.0, \
-                    u"sparse documents must not contain any explicit zero entries and the similarity matrix S " \
-                    u"must satisfy x^T * S * x > 0 for any nonzero bag-of-words vector x."
-
-                X = X.multiply(sparse.csr_matrix(1 / np.sqrt(X_norm)))
-                Y = Y.multiply(sparse.csr_matrix(1 / np.sqrt(Y_norm)))
-                Y[Y == np.inf] = 0  # Account for division by zero when Y_norm.min() == 0.0
+                assert Y_norm.min() >= 0.0, non_negative_norm_assertion_message
+                if normalized_Y is 'maintain':
+                    Y_norm /= Y.T.multiply(Y.T).sum(axis=1).T
+                Y_norm = np.sqrt(Y_norm)
+                Y = Y.multiply(sparse.csr_matrix(1.0 / Y_norm))
+                Y[Y == np.inf] = 0  # account for division by zero
 
             result = X.T.dot(matrix).dot(Y)
 
-            if normalized:
+            if normalized_X is True and normalized_Y is True:
                 result.data = np.clip(result.data, -1.0, 1.0)
 
             return result
