@@ -13,7 +13,7 @@ number of vectors and its dimension which is only difference regard to GloVe.
 Notes
 -----
 
-GloVe format (real example can be found on the
+GloVe format (a real example can be found on the
 `Stanford site <https://nlp.stanford.edu/projects/glove/>`_) ::
 
     word1 0.123 0.134 0.532 0.152
