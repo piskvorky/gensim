@@ -13,7 +13,8 @@ number of vectors and its dimension which is only difference regard to GloVe.
 Notes
 -----
 
-GloVe format (real example can be founded `on Stanford size <https://nlp.stanford.edu/projects/glove/>`_) ::
+GloVe format (a real example can be found on the
+`Stanford site <https://nlp.stanford.edu/projects/glove/>`_) ::
 
     word1 0.123 0.134 0.532 0.152
     word2 0.934 0.412 0.532 0.159
@@ -22,7 +23,8 @@ GloVe format (real example can be founded `on Stanford size <https://nlp.stanfor
     word9 0.334 0.241 0.324 0.188
 
 
-Word2Vec format (real example can be founded `on w2v old repository <https://code.google.com/archive/p/word2vec/>`_) ::
+Word2Vec format (a real example can be found in the
+`old w2v repository <https://code.google.com/archive/p/word2vec/>`_) ::
 
     9 4
     word1 0.123 0.134 0.532 0.152
