@@ -964,8 +964,7 @@ class TestWord2VecModel(unittest.TestCase):
     @log_capture()
     def testHighBatchWordsWarning(self, line):
         """Test if warning is raised on using batch_words greater than the maximum allowed value"""
-        sentences = ['human', 'machine']
-        model = word2vec.Word2Vec(batch_words=20000)
+        word2vec.Word2Vec(batch_words=20000)
         warning = "batch_words should be less than or equal to " + str(MAX_WORDS_IN_BATCH)
         self.assertTrue(warning in str(line))
 

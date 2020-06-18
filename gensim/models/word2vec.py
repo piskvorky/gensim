@@ -595,8 +595,9 @@ class Word2Vec(BaseWordEmbeddingsModel):
         self.trainables = Word2VecTrainables(seed=seed, vector_size=size, hashfxn=hashfxn)
 
         if batch_words > MAX_WORDS_IN_BATCH:
-            logger.warning("batch_words should be less than or equal to %d. Standard cython code "
-                           "truncates to the maximum if the individual texts are longer than %d words",
+            logger.warning("batch_words should be less than or equal to %d. "
+                           "Standard cython code truncates to the maximum if "
+                           "the individual texts are longer than %d words",
                            MAX_WORDS_IN_BATCH, MAX_WORDS_IN_BATCH)
 
         super(Word2Vec, self).__init__(
