@@ -563,9 +563,9 @@ class Word2Vec(BaseWordEmbeddingsModel):
             If 1, sort the vocabulary by descending frequency before assigning word indexes.
             See :meth:`~gensim.models.word2vec.Word2VecVocab.sort_vocab()`.
         batch_words : int, optional
-            Target size (in words) for batches of examples passed to worker threads (and
-            thus cython routines).(Larger batches will be passed if individual
-            texts are longer than 10000 words, but the standard cython code truncates to that maximum.)
+            Target size (in words) for batches of examples passed to worker threads, and
+            thus cython routines. Larger batches will be passed if individual texts are longer
+            than 10000 words, but the standard cython code truncates to that maximum.
         compute_loss: bool, optional
             If True, computes and stores loss value which can be retrieved using
             :meth:`~gensim.models.word2vec.Word2Vec.get_latest_training_loss`.
@@ -593,6 +593,11 @@ class Word2Vec(BaseWordEmbeddingsModel):
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample, sorted_vocab=bool(sorted_vocab),
             null_word=null_word, max_final_vocab=max_final_vocab, ns_exponent=ns_exponent)
         self.trainables = Word2VecTrainables(seed=seed, vector_size=size, hashfxn=hashfxn)
+
+        if batch_words > MAX_WORDS_IN_BATCH:
+            logger.warning("batch_words should be less than or equal to %d. Standard cython code "
+                           "truncates to the maximum if the individual texts are longer than %d words",
+                           MAX_WORDS_IN_BATCH, MAX_WORDS_IN_BATCH)
 
         super(Word2Vec, self).__init__(
             sentences=sentences, corpus_file=corpus_file, workers=workers, vector_size=size, epochs=iter,
