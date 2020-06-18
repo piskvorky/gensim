@@ -598,9 +598,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
             logger.warning(
                 "batch_words %d should be less than or equal to %d. "
                 "Cython code will truncate texts that are longer than %d words.",
-                batch_words,
-                MAX_WORDS_IN_BATCH,
-                MAX_WORDS_IN_BATCH
+                batch_words, MAX_WORDS_IN_BATCH, MAX_WORDS_IN_BATCH
             )
 
         super(Word2Vec, self).__init__(
