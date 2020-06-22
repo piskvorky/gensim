@@ -1691,8 +1691,8 @@ class Word2VecTrainables(utils.SaveLoad):
     def seeded_vector(self, seed_string, vector_size):
         """Get a random vector (but deterministic by seed_string)."""
         # Note: built-in hash() may vary by Python version or even (in Py3.x) per launch
-        once = random.RandomState(self.hashfxn(seed_string) & 0xffffffff)
-        return (once.rand(vector_size) - 0.5) / vector_size
+        once = random.Generator(random.SFC64(self.hashfxn(seed_string) & 0xffffffff))
+        return (once.random(vector_size) - 0.5) / vector_size
 
     def reset_weights(self, hs, negative, wv):
         """Reset all projection weights to an initial (untrained) state, but keep the existing vocabulary."""
