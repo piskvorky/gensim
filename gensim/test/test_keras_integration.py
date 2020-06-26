@@ -1,3 +1,4 @@
+import os
 import sys
 import unittest
 import numpy as np
@@ -46,7 +47,7 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
         self.assertEqual(sims, sims2)
 
     @unittest.skipIf(
-        sys.version_info[:2] == (3, 8),
+        os.environ['TRAVIS'] == 'true' and sys.version_info[:2] == (3, 8),
         'see https://github.com/RaRe-Technologies/gensim/issues/2865'
     )
     def testEmbeddingLayerCosineSim(self):
