@@ -42,7 +42,7 @@ import scipy.sparse
 from six import iterkeys, iteritems, itervalues, u, string_types, unichr
 from six.moves import range
 
-from smart_open import smart_open
+from smart_open import open
 
 from multiprocessing import cpu_count
 
@@ -54,6 +54,15 @@ logger = logging.getLogger(__name__)
 
 PAT_ALPHABETIC = re.compile(r'(((?![\d])\w)+)', re.UNICODE)
 RE_HTML_ENTITY = re.compile(r'&(#?)([xX]?)(\w{1,8});', re.UNICODE)
+
+NO_CYTHON = RuntimeError(
+    "Cython extensions are unavailable. "
+    "Without them, this gensim functionality is disabled. "
+    "If you've installed from a package, ask the package maintainer to include Cython extensions. "
+    "If you're building gensim from source yourself, run `python setup.py build_ext --inplace` "
+    "and retry. "
+)
+"""An exception that gensim code raises when Cython extensions are unavailable."""
 
 
 def get_random_state(seed):
@@ -128,7 +137,7 @@ def file_or_filename(input):
     """
     if isinstance(input, string_types):
         # input was a filename: open as file
-        return smart_open(input)
+        return open(input, 'rb')
     else:
         # input already a file-like object; just reset to the beginning
         input.seek(0)
@@ -1229,7 +1238,11 @@ class InputQueue(multiprocessing.Process):
             self.q.put(wrapped_chunk.pop(), block=True)
 
 
-if os.name == 'nt':
+# Multiprocessing on Windows (and on OSX with python3.8+) uses "spawn" mode, which
+# causes issues with pickling.
+# So for these two platforms, use simpler serial processing in `chunkize`.
+# See https://github.com/RaRe-Technologies/gensim/pull/2800#discussion_r410890171
+if os.name == 'nt' or (sys.platform == "darwin" and sys.version_info >= (3, 8)):
     def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
         """Split `corpus` into fixed-sized chunks, using :func:`~gensim.utils.chunkize_serial`.
 
@@ -1251,7 +1264,8 @@ if os.name == 'nt':
 
         """
         if maxsize > 0:
-            warnings.warn("detected Windows; aliasing chunkize to chunkize_serial")
+            entity = "Windows" if os.name == 'nt' else "OSX with python3.8+"
+            warnings.warn("detected %s; aliasing chunkize to chunkize_serial" % entity)
         for chunk in chunkize_serial(corpus, chunksize, as_numpy=as_numpy):
             yield chunk
 else:
@@ -1360,7 +1374,7 @@ def pickle(obj, fname, protocol=2):
         Pickle protocol number. Default is 2 in order to support compatibility across python 2.x and 3.x.
 
     """
-    with smart_open(fname, 'wb') as fout:  # 'b' for binary, needed on Windows
+    with open(fname, 'wb') as fout:  # 'b' for binary, needed on Windows
         _pickle.dump(obj, fout, protocol=protocol)
 
 
@@ -1378,7 +1392,7 @@ def unpickle(fname):
         Python object loaded from `fname`.
 
     """
-    with smart_open(fname, 'rb') as f:
+    with open(fname, 'rb') as f:
         # Because of loading from S3 load can't be used (missing readline in smart_open)
         if sys.version_info > (3, 0):
             return _pickle.load(f, encoding='latin1')
@@ -2079,7 +2093,7 @@ def save_as_line_sentence(corpus, filename):
     corpus : iterable of iterables of strings
 
     """
-    with smart_open(filename, mode='wb', encoding='utf8') as fout:
+    with open(filename, mode='wb', encoding='utf8') as fout:
         for sentence in corpus:
             line = any2unicode(' '.join(sentence) + '\n')
             fout.write(line)

@@ -39,10 +39,9 @@ import threading
 from six.moves import range
 from six import itervalues, string_types
 from gensim import matutils
-from numpy import float32 as REAL, ones, random, dtype, zeros
+from numpy import float32 as REAL, ones, random, dtype
 from types import GeneratorType
 from gensim.utils import deprecated
-import warnings
 import os
 import copy
 
@@ -647,7 +646,7 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
     def __init__(self, sentences=None, corpus_file=None, workers=3, vector_size=100, epochs=5, callbacks=(),
                  batch_words=10000, trim_rule=None, sg=0, alpha=0.025, window=5, seed=1, hs=0, negative=5,
-                 ns_exponent=0.75, cbow_mean=1, min_alpha=0.0001, compute_loss=False, fast_version=0, **kwargs):
+                 ns_exponent=0.75, cbow_mean=1, min_alpha=0.0001, compute_loss=False, **kwargs):
         """
 
         Parameters
@@ -712,8 +711,6 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
         compute_loss : bool, optional
             If True, loss will be computed while training the Word2Vec model and stored in
             :attr:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel.running_training_loss` attribute.
-        fast_version : {-1, 1}, optional
-            Whether or not the fast cython implementation of the internal training methods is available. 1 means it is.
         **kwargs : object
             Key word arguments needed to allow children classes to accept more arguments.
 
@@ -737,17 +734,6 @@ class BaseWordEmbeddingsModel(BaseAny2VecModel):
 
         super(BaseWordEmbeddingsModel, self).__init__(
             workers=workers, vector_size=vector_size, epochs=epochs, callbacks=callbacks, batch_words=batch_words)
-
-        if fast_version < 0:
-            warnings.warn(
-                "C extension not loaded, training will be slow. "
-                "Install a C compiler and reinstall gensim for fast training."
-            )
-            self.neg_labels = []
-            if self.negative > 0:
-                # precompute negative labels optimization for pure-python training
-                self.neg_labels = zeros(self.negative + 1)
-                self.neg_labels[0] = 1.
 
         if sentences is not None or corpus_file is not None:
             self._check_input_data_sanity(data_iterable=sentences, corpus_file=corpus_file)

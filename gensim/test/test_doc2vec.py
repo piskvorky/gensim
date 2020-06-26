@@ -190,7 +190,7 @@ class TestDoc2VecModel(unittest.TestCase):
         lines = ['line1\n', 'line2\n', 'line3\n', 'line4\n', 'line5\n']
         tmpf = get_tmpfile('gensim_doc2vec.tst')
 
-        with utils.smart_open(tmpf, 'wb', encoding='utf8') as fout:
+        with utils.open(tmpf, 'wb', encoding='utf8') as fout:
             for line in lines:
                 fout.write(utils.any2unicode(line))
 
@@ -224,7 +224,7 @@ class TestDoc2VecModel(unittest.TestCase):
         lines = ['line1\n', 'line2\n', 'line3\n', 'line4\n', 'line5\n']
         tmpf = get_tmpfile('gensim_doc2vec.tst')
 
-        with utils.smart_open(tmpf, 'wb', encoding='utf8') as fout:
+        with utils.open(tmpf, 'wb', encoding='utf8') as fout:
             for line in lines:
                 fout.write(utils.any2unicode(line))
 
@@ -257,7 +257,7 @@ class TestDoc2VecModel(unittest.TestCase):
         lines = ['line1\n', 'line2\n', 'line3\n', 'line4\n', 'line5\n']
         tmpf = get_tmpfile('gensim_doc2vec.tst')
 
-        with utils.smart_open(tmpf, 'wb', encoding='utf8') as fout:
+        with utils.open(tmpf, 'wb', encoding='utf8') as fout:
             for line in lines:
                 fout.write(utils.any2unicode(line))
 
@@ -572,9 +572,6 @@ class TestDoc2VecModel(unittest.TestCase):
 
     def test_parallel(self):
         """Test doc2vec parallel training."""
-        if doc2vec.FAST_VERSION < 0:  # don't test the plain NumPy version for parallelism (too slow)
-            return
-
         corpus = utils.RepeatCorpus(DocsLeeCorpus(), 10000)
 
         for workers in [2, 4]:
@@ -669,17 +666,17 @@ class TestDoc2VecModel(unittest.TestCase):
             vector *= 0
 
     @log_capture()
-    def testBuildVocabWarning(self, l):
+    def testBuildVocabWarning(self, line):
         """Test if logger warning is raised on non-ideal input to a doc2vec model"""
         raw_sentences = ['human', 'machine']
         sentences = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(raw_sentences)]
         model = doc2vec.Doc2Vec()
         model.build_vocab(sentences)
         warning = "Each 'words' should be a list of words (usually unicode strings)."
-        self.assertTrue(warning in str(l))
+        self.assertTrue(warning in str(line))
 
     @log_capture()
-    def testTrainWarning(self, l):
+    def testTrainWarning(self, line):
         """Test if warning is raised if alpha rises during subsequent calls to train()"""
         raw_sentences = [['human'],
                          ['graph', 'trees']]
@@ -693,7 +690,7 @@ class TestDoc2VecModel(unittest.TestCase):
             if epoch == 5:
                 model.alpha += 0.05
         warning = "Effective 'alpha' higher than previous training cycles"
-        self.assertTrue(warning in str(l))
+        self.assertTrue(warning in str(line))
 
     def testLoadOnClassError(self):
         """Test if exception is raised when loading doc2vec model on instance"""
@@ -839,5 +836,4 @@ def read_su_sentiment_rotten_tomatoes(dirname, lowercase=True):
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
-    logging.info("using optimization %s", doc2vec.FAST_VERSION)
     unittest.main()

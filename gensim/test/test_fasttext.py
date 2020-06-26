@@ -7,12 +7,10 @@ import io
 import logging
 import unittest
 import os
+import subprocess
 import struct
-import six
 
 import numpy as np
-
-import smart_open
 
 from gensim import utils
 from gensim.models.word2vec import LineSentence
@@ -35,6 +33,14 @@ except (ImportError, ValueError):
 logger = logging.getLogger(__name__)
 
 IS_WIN32 = (os.name == "nt") and (struct.calcsize('P') * 8 == 32)
+MAX_WORDVEC_COMPONENT_DIFFERENCE = 1.0e-10
+
+# Limit the size of FastText ngram buckets, for RAM reasons.
+# See https://github.com/RaRe-Technologies/gensim/issues/2790
+BUCKET = 5000
+
+FT_HOME = os.environ.get("FT_HOME")
+FT_CMD = os.path.join(FT_HOME, "fasttext") if FT_HOME else None
 
 
 class LeeCorpus(object):
@@ -59,14 +65,12 @@ new_sentences = [
 class TestFastTextModel(unittest.TestCase):
 
     def setUp(self):
-        ft_home = os.environ.get('FT_HOME', None)
-        self.ft_path = os.path.join(ft_home, 'fasttext') if ft_home else None
         self.test_model_file = datapath('lee_fasttext.bin')
         self.test_model = gensim.models.fasttext.load_facebook_model(self.test_model_file)
         self.test_new_model_file = datapath('lee_fasttext_new.bin')
 
     def test_training(self):
-        model = FT_gensim(size=10, min_count=1, hs=1, negative=0, seed=42, workers=1)
+        model = FT_gensim(size=10, min_count=1, hs=1, negative=0, seed=42, workers=1, bucket=BUCKET)
         model.build_vocab(sentences)
         self.model_sanity(model)
 
@@ -86,7 +90,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(sims, sims2)
 
         # build vocab and train in one step; must be the same as above
-        model2 = FT_gensim(sentences, size=10, min_count=1, hs=1, negative=0, seed=42, workers=1)
+        model2 = FT_gensim(sentences, size=10, min_count=1, hs=1, negative=0, seed=42, workers=1, bucket=BUCKET)
         self.models_equal(model, model2)
 
         # verify oov-word vector retrieval
@@ -98,7 +102,7 @@ class TestFastTextModel(unittest.TestCase):
 
     def testFastTextTrainParameters(self):
 
-        model = FT_gensim(size=10, min_count=1, hs=1, negative=0, seed=42, workers=1)
+        model = FT_gensim(size=10, min_count=1, hs=1, negative=0, seed=42, workers=1, bucket=BUCKET)
         model.build_vocab(sentences=sentences)
 
         self.assertRaises(TypeError, model.train, corpus_file=11111)
@@ -107,12 +111,11 @@ class TestFastTextModel(unittest.TestCase):
         self.assertRaises(TypeError, model.train, sentences=None, corpus_file=None)
         self.assertRaises(TypeError, model.train, corpus_file=sentences)
 
-    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
     def test_training_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
             utils.save_as_line_sentence(sentences, corpus_file)
 
-            model = FT_gensim(size=10, min_count=1, hs=1, negative=0, seed=42, workers=1)
+            model = FT_gensim(size=10, min_count=1, hs=1, negative=0, seed=42, workers=1, bucket=BUCKET)
             model.build_vocab(corpus_file=corpus_file)
             self.model_sanity(model)
 
@@ -151,10 +154,9 @@ class TestFastTextModel(unittest.TestCase):
         most_common_word = max(model.wv.vocab.items(), key=lambda item: item[1].count)[0]
         self.assertTrue(np.allclose(model.wv[most_common_word], model2.wv[most_common_word]))
 
-    @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_persistence(self):
         tmpf = get_tmpfile('gensim_fasttext.tst')
-        model = FT_gensim(sentences, min_count=1)
+        model = FT_gensim(sentences, min_count=1, bucket=BUCKET)
         model.save(tmpf)
         self.models_equal(model, FT_gensim.load(tmpf))
         #  test persistence of the KeyedVectors of a model
@@ -164,14 +166,12 @@ class TestFastTextModel(unittest.TestCase):
         self.assertTrue(np.allclose(wv.vectors_ngrams, loaded_wv.vectors_ngrams))
         self.assertEqual(len(wv.vocab), len(loaded_wv.vocab))
 
-    @unittest.skipIf(os.name == 'nt',
-        "corpus_file is not supported for Windows + Py2 and avoid memory error with Appveyor x32")
     def test_persistence_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext1.tst')) as corpus_file:
             utils.save_as_line_sentence(sentences, corpus_file)
 
             tmpf = get_tmpfile('gensim_fasttext.tst')
-            model = FT_gensim(corpus_file=corpus_file, min_count=1)
+            model = FT_gensim(corpus_file=corpus_file, min_count=1, bucket=BUCKET)
             model.save(tmpf)
             self.models_equal(model, FT_gensim.load(tmpf))
             #  test persistence of the KeyedVectors of a model
@@ -181,10 +181,9 @@ class TestFastTextModel(unittest.TestCase):
             self.assertTrue(np.allclose(wv.vectors_ngrams, loaded_wv.vectors_ngrams))
             self.assertEqual(len(wv.vocab), len(loaded_wv.vocab))
 
-    @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_norm_vectors_not_saved(self):
         tmpf = get_tmpfile('gensim_fasttext.tst')
-        model = FT_gensim(sentences, min_count=1)
+        model = FT_gensim(sentences, min_count=1, bucket=BUCKET)
         model.init_sims()
         model.save(tmpf)
         loaded_model = FT_gensim.load(tmpf)
@@ -328,6 +327,15 @@ class TestFastTextModel(unittest.TestCase):
         except KeyError:
             self.fail('Unable to access vector for cp-852 word')
 
+    def test_oov_similarity(self):
+        word = 'someoovword'
+        most_similar = self.test_model.wv.most_similar(word)
+        top_neighbor, top_similarity = most_similar[0]
+        v1 = self.test_model.wv[word]
+        v2 = self.test_model.wv[top_neighbor]
+        top_similarity_direct = self.test_model.wv.cosine_similarities(v1, v2.reshape(1, -1))[0]
+        self.assertAlmostEqual(top_similarity, top_similarity_direct, places=6)
+
     def test_n_similarity(self):
         # In vocab, sanity check
         self.assertTrue(np.allclose(self.test_model.wv.n_similarity(['the', 'and'], ['and', 'the']), 1.0))
@@ -386,7 +394,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertFalse('nights' in self.test_model.wv.vocab)
         self.assertTrue('nights' in self.test_model.wv)
 
-    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed or have some issues")
+    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed")
     def test_wm_distance(self):
         doc = ['night', 'payment']
         oov_doc = ['nights', 'forests', 'payments']
@@ -399,7 +407,7 @@ class TestFastTextModel(unittest.TestCase):
         model_gensim = FT_gensim(
             size=50, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0,
             min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-            sorted_vocab=1, workers=1, min_alpha=0.0)
+            sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET)
 
         lee_data = LineSentence(datapath('lee_background.cor'))
         model_gensim.build_vocab(lee_data)
@@ -423,13 +431,12 @@ class TestFastTextModel(unittest.TestCase):
         overlap_count = len(set(sims_gensim_words).intersection(expected_sims_words))
         self.assertGreaterEqual(overlap_count, 2)
 
-    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
     def test_cbow_hs_training_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
             model_gensim = FT_gensim(
                 size=50, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0,
                 min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-                sorted_vocab=1, workers=1, min_alpha=0.0)
+                sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET * 4)
 
             lee_data = LineSentence(datapath('lee_background.cor'))
             utils.save_as_line_sentence(lee_data, corpus_file)
@@ -462,7 +469,7 @@ class TestFastTextModel(unittest.TestCase):
         model_gensim = FT_gensim(
             size=50, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=1, negative=0,
             min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-            sorted_vocab=1, workers=1, min_alpha=0.0)
+            sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET)
 
         lee_data = LineSentence(datapath('lee_background.cor'))
         model_gensim.build_vocab(lee_data)
@@ -486,13 +493,12 @@ class TestFastTextModel(unittest.TestCase):
         overlap_count = len(set(sims_gensim_words).intersection(expected_sims_words))
         self.assertGreaterEqual(overlap_count, 2)
 
-    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
     def test_sg_hs_training_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
             model_gensim = FT_gensim(
                 size=50, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=1, negative=0,
                 min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-                sorted_vocab=1, workers=1, min_alpha=0.0)
+                sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET)
 
             lee_data = LineSentence(datapath('lee_background.cor'))
             utils.save_as_line_sentence(lee_data, corpus_file)
@@ -525,7 +531,7 @@ class TestFastTextModel(unittest.TestCase):
         model_gensim = FT_gensim(
             size=50, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=5,
             min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-            sorted_vocab=1, workers=1, min_alpha=0.0)
+            sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET)
 
         lee_data = LineSentence(datapath('lee_background.cor'))
         model_gensim.build_vocab(lee_data)
@@ -549,13 +555,12 @@ class TestFastTextModel(unittest.TestCase):
         overlap_count = len(set(sims_gensim_words).intersection(expected_sims_words))
         self.assertGreaterEqual(overlap_count, 2)
 
-    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
     def test_cbow_neg_training_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
             model_gensim = FT_gensim(
                 size=50, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=5,
                 min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-                sorted_vocab=1, workers=1, min_alpha=0.0)
+                sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET)
 
             lee_data = LineSentence(datapath('lee_background.cor'))
             utils.save_as_line_sentence(lee_data, corpus_file)
@@ -588,7 +593,7 @@ class TestFastTextModel(unittest.TestCase):
         model_gensim = FT_gensim(
             size=50, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=0, negative=5,
             min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-            sorted_vocab=1, workers=1, min_alpha=0.0)
+            sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET * 4)
 
         lee_data = LineSentence(datapath('lee_background.cor'))
         model_gensim.build_vocab(lee_data)
@@ -612,13 +617,12 @@ class TestFastTextModel(unittest.TestCase):
         overlap_count = len(set(sims_gensim_words).intersection(expected_sims_words))
         self.assertGreaterEqual(overlap_count, 2)
 
-    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
     def test_sg_neg_training_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
             model_gensim = FT_gensim(
                 size=50, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=0, negative=5,
                 min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-                sorted_vocab=1, workers=1, min_alpha=0.0)
+                sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET * 4)
 
             lee_data = LineSentence(datapath('lee_background.cor'))
             utils.save_as_line_sentence(lee_data, corpus_file)
@@ -647,7 +651,7 @@ class TestFastTextModel(unittest.TestCase):
             self.assertGreaterEqual(overlap_count, 2)
 
     def test_online_learning(self):
-        model_hs = FT_gensim(sentences, size=10, min_count=1, seed=42, hs=1, negative=0)
+        model_hs = FT_gensim(sentences, size=10, min_count=1, seed=42, hs=1, negative=0, bucket=BUCKET)
         self.assertTrue(len(model_hs.wv.vocab), 12)
         self.assertTrue(model_hs.wv.vocab['graph'].count, 3)
         model_hs.build_vocab(new_sentences, update=True)  # update vocab
@@ -655,14 +659,14 @@ class TestFastTextModel(unittest.TestCase):
         self.assertTrue(model_hs.wv.vocab['graph'].count, 4)
         self.assertTrue(model_hs.wv.vocab['artificial'].count, 4)
 
-    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
     def test_online_learning_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext1.tst')) as corpus_file, \
                 temporary_file(get_tmpfile('gensim_fasttext2.tst')) as new_corpus_file:
             utils.save_as_line_sentence(sentences, corpus_file)
             utils.save_as_line_sentence(new_sentences, new_corpus_file)
 
-            model_hs = FT_gensim(corpus_file=corpus_file, size=10, min_count=1, seed=42, hs=1, negative=0)
+            model_hs = FT_gensim(
+                corpus_file=corpus_file, size=10, min_count=1, seed=42, hs=1, negative=0, bucket=BUCKET)
             self.assertTrue(len(model_hs.wv.vocab), 12)
             self.assertTrue(model_hs.wv.vocab['graph'].count, 3)
             model_hs.build_vocab(corpus_file=new_corpus_file, update=True)  # update vocab
@@ -672,7 +676,7 @@ class TestFastTextModel(unittest.TestCase):
 
     def test_online_learning_after_save(self):
         tmpf = get_tmpfile('gensim_fasttext.tst')
-        model_neg = FT_gensim(sentences, size=10, min_count=0, seed=42, hs=0, negative=5)
+        model_neg = FT_gensim(sentences, size=10, min_count=0, seed=42, hs=0, negative=5, bucket=BUCKET)
         model_neg.save(tmpf)
         model_neg = FT_gensim.load(tmpf)
         self.assertTrue(len(model_neg.wv.vocab), 12)
@@ -680,7 +684,6 @@ class TestFastTextModel(unittest.TestCase):
         model_neg.train(new_sentences, total_examples=model_neg.corpus_count, epochs=model_neg.epochs)
         self.assertEqual(len(model_neg.wv.vocab), 14)
 
-    @unittest.skipIf(os.name == 'nt' and six.PY2, "corpus_file training is not supported on Windows + Py27")
     def test_online_learning_after_save_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext1.tst')) as corpus_file, \
                 temporary_file(get_tmpfile('gensim_fasttext2.tst')) as new_corpus_file:
@@ -688,7 +691,8 @@ class TestFastTextModel(unittest.TestCase):
             utils.save_as_line_sentence(new_sentences, new_corpus_file)
 
             tmpf = get_tmpfile('gensim_fasttext.tst')
-            model_neg = FT_gensim(corpus_file=corpus_file, size=10, min_count=0, seed=42, hs=0, negative=5)
+            model_neg = FT_gensim(
+                corpus_file=corpus_file, size=10, min_count=0, seed=42, hs=0, negative=5, bucket=BUCKET)
             model_neg.save(tmpf)
             model_neg = FT_gensim.load(tmpf)
             self.assertTrue(len(model_neg.wv.vocab), 12)
@@ -699,12 +703,12 @@ class TestFastTextModel(unittest.TestCase):
 
     def online_sanity(self, model):
         terro, others = [], []
-        for l in list_corpus:
-            if 'terrorism' in l:
-                terro.append(l)
+        for x in list_corpus:
+            if 'terrorism' in x:
+                terro.append(x)
             else:
-                others.append(l)
-        self.assertTrue(all('terrorism' not in l for l in others))
+                others.append(x)
+        self.assertTrue(all('terrorism' not in x for x in others))
         model.build_vocab(others)
         model.train(others, total_examples=model.corpus_count, epochs=model.epochs)
         # checks that `vectors` is different from `vectors_vocab`
@@ -719,33 +723,30 @@ class TestFastTextModel(unittest.TestCase):
         sim = model.wv.n_similarity(['war'], ['terrorism'])
         self.assertLess(0., sim)
 
-    @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_sg_hs_online(self):
-        model = FT_gensim(sg=1, window=2, hs=1, negative=0, min_count=3, iter=1, seed=42, workers=1)
+        model = FT_gensim(sg=1, window=2, hs=1, negative=0, min_count=3, iter=1, seed=42, workers=1, bucket=BUCKET)
         self.online_sanity(model)
 
-    @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_sg_neg_online(self):
-        model = FT_gensim(sg=1, window=2, hs=0, negative=5, min_count=3, iter=1, seed=42, workers=1)
+        model = FT_gensim(sg=1, window=2, hs=0, negative=5, min_count=3, iter=1, seed=42, workers=1, bucket=BUCKET)
         self.online_sanity(model)
 
-    @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_cbow_hs_online(self):
         model = FT_gensim(
-            sg=0, cbow_mean=1, alpha=0.05, window=2, hs=1, negative=0, min_count=3, iter=1, seed=42, workers=1
+            sg=0, cbow_mean=1, alpha=0.05, window=2, hs=1, negative=0, min_count=3, iter=1, seed=42, workers=1,
+            bucket=BUCKET,
         )
         self.online_sanity(model)
 
-    @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def test_cbow_neg_online(self):
         model = FT_gensim(
             sg=0, cbow_mean=1, alpha=0.05, window=2, hs=0, negative=5,
-            min_count=5, iter=1, seed=42, workers=1, sample=0
+            min_count=5, iter=1, seed=42, workers=1, sample=0, bucket=BUCKET
         )
         self.online_sanity(model)
 
     def test_get_vocab_word_vecs(self):
-        model = FT_gensim(size=10, min_count=1, seed=42)
+        model = FT_gensim(size=10, min_count=1, seed=42, bucket=BUCKET)
         model.build_vocab(sentences)
         original_syn0_vocab = np.copy(model.wv.vectors_vocab)
         model.wv.adjust_vectors()
@@ -754,7 +755,7 @@ class TestFastTextModel(unittest.TestCase):
     def test_persistence_word2vec_format(self):
         """Test storing/loading the model in word2vec format."""
         tmpf = get_tmpfile('gensim_fasttext_w2v_format.tst')
-        model = FT_gensim(sentences, min_count=1, size=10)
+        model = FT_gensim(sentences, min_count=1, size=10, bucket=BUCKET)
         model.wv.save_word2vec_format(tmpf, binary=True)
         loaded_model_kv = Word2VecKeyedVectors.load_word2vec_format(tmpf, binary=True)
         self.assertEqual(len(model.wv.vocab), len(loaded_model_kv.vocab))
@@ -768,7 +769,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(model.wv.vectors_ngrams.shape, (20, 10))
 
     def test_estimate_memory(self):
-        model = FT_gensim(sg=1, hs=1, size=10, negative=5, min_count=3)
+        model = FT_gensim(sg=1, hs=1, size=10, negative=5, min_count=3, bucket=BUCKET)
         model.build_vocab(sentences)
         report = model.estimate_memory()
         self.assertEqual(report['vocab'], 2800)
@@ -779,6 +780,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(report['buckets_word'], 640)
         self.assertEqual(report['total'], 6160)
 
+    @unittest.skipIf(IS_WIN32, "avoid memory error with Appveyor x32")
     def testLoadOldModel(self):
         """Test loading fasttext models from previous version"""
 
@@ -823,13 +825,10 @@ class TestFastTextModel(unittest.TestCase):
         # this limit can be increased when using Cython code
         self.assertGreaterEqual(overlap_count, 2)
 
+    @unittest.skipIf(not FT_HOME, "FT_HOME env variable not set, skipping test")
     def test_cbow_hs_against_wrapper(self):
-        if self.ft_path is None:
-            logger.info("FT_HOME env variable not set, skipping test")
-            return
-
         tmpf = get_tmpfile('gensim_fasttext.tst')
-        model_wrapper = FT_wrapper.train(ft_path=self.ft_path, corpus_file=datapath('lee_background.cor'),
+        model_wrapper = FT_wrapper.train(ft_path=FT_CMD, corpus_file=datapath('lee_background.cor'),
                                          output_file=tmpf, model='cbow', size=50, alpha=0.05, window=5, min_count=5,
                                          word_ngrams=1,
                                          loss='hs', sample=1e-3, negative=0, iter=5, min_n=3, max_n=6, sorted_vocab=1,
@@ -837,7 +836,7 @@ class TestFastTextModel(unittest.TestCase):
 
         model_gensim = FT_gensim(size=50, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0,
                                  min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-                                 sorted_vocab=1, workers=1, min_alpha=0.0)
+                                 sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET)
 
         lee_data = LineSentence(datapath('lee_background.cor'))
         model_gensim.build_vocab(lee_data)
@@ -846,13 +845,11 @@ class TestFastTextModel(unittest.TestCase):
         self.assertFalse((orig0 == model_gensim.wv.vectors[0]).all())  # vector should vary after training
         self.compare_with_wrapper(model_gensim, model_wrapper)
 
+    @unittest.skipIf(not FT_HOME, "FT_HOME env variable not set, skipping test")
     def test_sg_hs_against_wrapper(self):
-        if self.ft_path is None:
-            logger.info("FT_HOME env variable not set, skipping test")
-            return
 
         tmpf = get_tmpfile('gensim_fasttext.tst')
-        model_wrapper = FT_wrapper.train(ft_path=self.ft_path, corpus_file=datapath('lee_background.cor'),
+        model_wrapper = FT_wrapper.train(ft_path=FT_CMD, corpus_file=datapath('lee_background.cor'),
                                          output_file=tmpf, model='skipgram', size=50, alpha=0.025, window=5,
                                          min_count=5, word_ngrams=1,
                                          loss='hs', sample=1e-3, negative=0, iter=5, min_n=3, max_n=6, sorted_vocab=1,
@@ -860,7 +857,7 @@ class TestFastTextModel(unittest.TestCase):
 
         model_gensim = FT_gensim(size=50, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=1, negative=0,
                                  min_count=5, iter=5, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-                                 sorted_vocab=1, workers=1, min_alpha=0.0)
+                                 sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET)
 
         lee_data = LineSentence(datapath('lee_background.cor'))
         model_gensim.build_vocab(lee_data)
@@ -995,7 +992,7 @@ class NativeTrainingContinuationTest(unittest.TestCase):
     def test_in_vocab(self):
         """Test for correct representation of in-vocab words."""
         native = load_native()
-        with smart_open.smart_open(datapath('toy-model.vec'), 'r', encoding='utf-8') as fin:
+        with utils.open(datapath('toy-model.vec'), 'r', encoding='utf-8') as fin:
             expected = dict(load_vec(fin))
 
         for word, expected_vector in expected.items():
@@ -1187,7 +1184,7 @@ class HashTest(unittest.TestCase):
         # ./fasttext skipgram -minCount 0 -bucket 100 -input crime-and-punishment.txt -output crime-and-punishment -dim 5  # noqa: E501
         #
         self.model = gensim.models.fasttext.load_facebook_model(datapath('crime-and-punishment.bin'))
-        with smart_open.smart_open(datapath('crime-and-punishment.vec'), 'r', encoding='utf-8') as fin:
+        with utils.open(datapath('crime-and-punishment.vec'), 'r', encoding='utf-8') as fin:
             self.expected = dict(load_vec(fin))
 
     def test_ascii(self):
@@ -1230,7 +1227,7 @@ class UnicodeVocabTest(unittest.TestCase):
         buf = io.BytesIO()
         buf.name = 'dummy name to keep fasttext happy'
         buf.write(struct.pack('@3i', 2, -1, -1))  # vocab_size, nwords, nlabels
-        buf.write(struct.pack('@1q', -1))
+        buf.write(struct.pack('@1q', 10))  # ntokens
         buf.write(b'hello')
         buf.write(b'\x00')
         buf.write(struct.pack('@qb', 1, -1))
@@ -1239,18 +1236,20 @@ class UnicodeVocabTest(unittest.TestCase):
         buf.write(struct.pack('@qb', 2, -1))
         buf.seek(0)
 
-        raw_vocab, vocab_size, nlabels = gensim.models._fasttext_bin._load_vocab(buf, False)
+        raw_vocab, vocab_size, nlabels, ntokens = gensim.models._fasttext_bin._load_vocab(buf, False)
         expected = {'hello': 1, 'world': 2}
         self.assertEqual(expected, dict(raw_vocab))
 
         self.assertEqual(vocab_size, 2)
         self.assertEqual(nlabels, -1)
 
+        self.assertEqual(ntokens, 10)
+
     def test_bad_unicode(self):
         buf = io.BytesIO()
         buf.name = 'dummy name to keep fasttext happy'
         buf.write(struct.pack('@3i', 2, -1, -1))  # vocab_size, nwords, nlabels
-        buf.write(struct.pack('@1q', -1))
+        buf.write(struct.pack('@1q', 10))  # ntokens
         #
         # encountered in https://github.com/RaRe-Technologies/gensim/issues/2378
         # The model from downloaded from
@@ -1277,7 +1276,7 @@ class UnicodeVocabTest(unittest.TestCase):
         buf.write(struct.pack('@qb', 2, -1))
         buf.seek(0)
 
-        raw_vocab, vocab_size, nlabels = gensim.models._fasttext_bin._load_vocab(buf, False)
+        raw_vocab, vocab_size, nlabels, ntokens = gensim.models._fasttext_bin._load_vocab(buf, False)
 
         expected = {
             u'英語版ウィキペディアへの投稿はいつでも\\xe6': 1,
@@ -1288,6 +1287,7 @@ class UnicodeVocabTest(unittest.TestCase):
 
         self.assertEqual(vocab_size, 2)
         self.assertEqual(nlabels, -1)
+        self.assertEqual(ntokens, 10)
 
 
 _BYTES = b'the quick brown fox jumps over the lazy dog'
@@ -1310,6 +1310,203 @@ class TestFromfile(unittest.TestCase):
         array = gensim.models._fasttext_bin._fromfile(fin, _ARRAY.dtype, _ARRAY.shape[0])
         logger.error('array: %r', array)
         self.assertTrue(np.allclose(_ARRAY, array))
+
+
+def _create_and_save_fb_model(fname, model_params):
+    model = FT_gensim(**model_params)
+    lee_data = LineSentence(datapath('lee_background.cor'))
+    model.build_vocab(lee_data)
+    model.train(lee_data, total_examples=model.corpus_count, epochs=model.epochs)
+    gensim.models.fasttext.save_facebook_model(model, fname)
+    return model
+
+
+def calc_max_diff(v1, v2):
+    return np.max(np.abs(v1 - v2))
+
+
+class SaveFacebookFormatModelTest(unittest.TestCase):
+
+    def _check_roundtrip(self, sg):
+        model_params = {
+            "sg": sg,
+            "size": 10,
+            "min_count": 1,
+            "hs": 1,
+            "negative": 5,
+            "seed": 42,
+            "bucket": BUCKET,
+            "workers": 1}
+
+        with temporary_file("roundtrip_model_to_model.bin") as fpath:
+            model_trained = _create_and_save_fb_model(fpath, model_params)
+            model_loaded = gensim.models.fasttext.load_facebook_model(fpath)
+
+        self.assertEqual(model_trained.vector_size, model_loaded.vector_size)
+        self.assertEqual(model_trained.window, model_loaded.window)
+        self.assertEqual(model_trained.epochs, model_loaded.epochs)
+        self.assertEqual(model_trained.negative, model_loaded.negative)
+        self.assertEqual(model_trained.hs, model_loaded.hs)
+        self.assertEqual(model_trained.sg, model_loaded.sg)
+        self.assertEqual(model_trained.trainables.bucket, model_loaded.trainables.bucket)
+        self.assertEqual(model_trained.wv.min_n, model_loaded.wv.min_n)
+        self.assertEqual(model_trained.wv.max_n, model_loaded.wv.max_n)
+        self.assertEqual(model_trained.vocabulary.sample, model_loaded.vocabulary.sample)
+        self.assertEqual(set(model_trained.wv.index2word), set(model_loaded.wv.index2word))
+
+        for w in model_trained.wv.index2word:
+            v_orig = model_trained.wv[w]
+            v_loaded = model_loaded.wv[w]
+            self.assertLess(calc_max_diff(v_orig, v_loaded), MAX_WORDVEC_COMPONENT_DIFFERENCE)
+
+    def test_skipgram(self):
+        self._check_roundtrip(sg=1)
+
+    def test_cbow(self):
+        self._check_roundtrip(sg=0)
+
+
+def _read_binary_file(fname):
+    with open(fname, "rb") as f:
+        data = f.read()
+    return data
+
+
+class SaveGensimByteIdentityTest(unittest.TestCase):
+    """
+    This class containts tests that check the following scenario:
+
+    + create binary fastText file model1.bin using gensim
+    + load file model1.bin to variable `model`
+    + save `model` to model2.bin
+    + check if files model1.bin and model2.bin are byte identical
+    """
+
+    def _check_roundtrip_file_file(self, sg):
+        model_params = {
+            "sg": sg,
+            "size": 10,
+            "min_count": 1,
+            "hs": 1,
+            "negative": 0,
+            "bucket": BUCKET,
+            "seed": 42,
+            "workers": 1}
+
+        with temporary_file("roundtrip_file_to_file1.bin") as fpath1, \
+            temporary_file("roundtrip_file_to_file2.bin") as fpath2:
+            _create_and_save_fb_model(fpath1, model_params)
+            model = gensim.models.fasttext.load_facebook_model(fpath1)
+            gensim.models.fasttext.save_facebook_model(model, fpath2)
+            bin1 = _read_binary_file(fpath1)
+            bin2 = _read_binary_file(fpath2)
+
+        self.assertEqual(bin1, bin2)
+
+    def test_skipgram(self):
+        self._check_roundtrip_file_file(sg=1)
+
+    def test_cbow(self):
+        self._check_roundtrip_file_file(sg=0)
+
+
+def _save_test_model(out_base_fname, model_params):
+    inp_fname = datapath('lee_background.cor')
+
+    model_type = "cbow" if model_params["sg"] == 0 else "skipgram"
+    size = str(model_params["size"])
+    seed = str(model_params["seed"])
+
+    cmd = [
+        FT_CMD, model_type, "-input", inp_fname, "-output",
+        out_base_fname, "-dim", size, "-seed", seed]
+
+    subprocess.check_call(cmd)
+
+
+@unittest.skipIf(not FT_HOME, "FT_HOME env variable not set, skipping test")
+class SaveFacebookByteIdentityTest(unittest.TestCase):
+    """
+    This class containts tests that check the following scenario:
+
+    + create binary fastText file model1.bin using facebook_binary (FT)
+    + load file model1.bin to variable `model`
+    + save `model` to model2.bin using gensim
+    + check if files model1.bin and model2.bin are byte-identical
+    """
+
+    def _check_roundtrip_file_file(self, sg):
+        model_params = {"size": 10, "sg": sg, "seed": 42}
+
+        # fasttext tool creates both *vec and *bin files, so we have to remove both, even thought *vec is unused
+
+        with temporary_file("m1.bin") as m1, temporary_file("m2.bin") as m2, temporary_file("m1.vec"):
+
+            m1_basename = m1[:-4]
+            _save_test_model(m1_basename, model_params)
+            model = gensim.models.fasttext.load_facebook_model(m1)
+            gensim.models.fasttext.save_facebook_model(model, m2)
+            bin1 = _read_binary_file(m1)
+            bin2 = _read_binary_file(m2)
+
+        self.assertEqual(bin1, bin2)
+
+    def test_skipgram(self):
+        self._check_roundtrip_file_file(sg=1)
+
+    def test_cbow(self):
+        self._check_roundtrip_file_file(sg=0)
+
+
+def _read_wordvectors_using_fasttext(fasttext_fname, words):
+    def line_to_array(line):
+        return np.array([float(s) for s in line.split()[1:]], dtype=np.float32)
+
+    cmd = [FT_CMD, "print-word-vectors", fasttext_fname]
+    process = subprocess.Popen(
+        cmd, stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE)
+    words_str = '\n'.join(words)
+    out, _ = process.communicate(input=words_str.encode("utf-8"))
+    return np.array([line_to_array(line) for line in out.splitlines()], dtype=np.float32)
+
+
+@unittest.skipIf(not os.environ.get("FT_HOME", None), "FT_HOME env variable not set, skipping test")
+class SaveFacebookFormatReadingTest(unittest.TestCase):
+    """
+    This class containts tests that check the following scenario:
+
+    + create fastText model using gensim
+    + save file to model.bin
+    + retrieve word vectors from model.bin using fasttext Facebook utility
+    + compare vectors retrieved by Facebook utility with those obtained directly from gensim model
+    """
+
+    def _check_load_fasttext_format(self, sg):
+        model_params = {
+            "sg": sg,
+            "size": 10,
+            "min_count": 1,
+            "hs": 1,
+            "negative": 5,
+            "bucket": BUCKET,
+            "seed": 42,
+            "workers": 1}
+
+        with temporary_file("load_fasttext.bin") as fpath:
+            model = _create_and_save_fb_model(fpath, model_params)
+            wv = _read_wordvectors_using_fasttext(fpath, model.wv.index2word)
+
+        for i, w in enumerate(model.wv.index2word):
+            diff = calc_max_diff(wv[i, :], model.wv[w])
+            # Because fasttext command line prints vectors with limited accuracy
+            self.assertLess(diff, 1.0e-4)
+
+    def test_skipgram(self):
+        self._check_load_fasttext_format(sg=1)
+
+    def test_cbow(self):
+        self._check_load_fasttext_format(sg=0)
 
 
 if __name__ == '__main__':

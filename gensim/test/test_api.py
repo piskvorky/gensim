@@ -2,7 +2,6 @@ import logging
 import unittest
 import os
 import gensim.downloader as api
-from gensim.downloader import base_dir
 import shutil
 import numpy as np
 
@@ -13,24 +12,24 @@ import numpy as np
 )
 class TestApi(unittest.TestCase):
     def test_base_dir_creation(self):
-        if os.path.isdir(base_dir):
-            shutil.rmtree(base_dir)
+        if os.path.isdir(api.BASE_DIR):
+            shutil.rmtree(api.BASE_DIR)
         api._create_base_dir()
-        self.assertTrue(os.path.isdir(base_dir))
-        os.rmdir(base_dir)
+        self.assertTrue(os.path.isdir(api.BASE_DIR))
+        os.rmdir(api.BASE_DIR)
 
     def test_load_dataset(self):
-        dataset_path = os.path.join(base_dir, "__testing_matrix-synopsis", "__testing_matrix-synopsis.gz")
-        if os.path.isdir(base_dir):
-            shutil.rmtree(base_dir)
+        dataset_path = os.path.join(api.BASE_DIR, "__testing_matrix-synopsis", "__testing_matrix-synopsis.gz")
+        if os.path.isdir(api.BASE_DIR):
+            shutil.rmtree(api.BASE_DIR)
         self.assertEqual(api.load("__testing_matrix-synopsis", return_path=True), dataset_path)
-        shutil.rmtree(base_dir)
+        shutil.rmtree(api.BASE_DIR)
         self.assertEqual(len(list(api.load("__testing_matrix-synopsis"))), 1)
-        shutil.rmtree(base_dir)
+        shutil.rmtree(api.BASE_DIR)
 
     def test_load_model(self):
-        if os.path.isdir(base_dir):
-            shutil.rmtree(base_dir)
+        if os.path.isdir(api.BASE_DIR):
+            shutil.rmtree(api.BASE_DIR)
         vector_dead = np.array([
             0.17403787, -0.10167074, -0.00950371, -0.10367849, -0.14034484,
             -0.08751217, 0.10030612, 0.07677923, -0.32563496, 0.01929072,
@@ -44,23 +43,23 @@ class TestApi(unittest.TestCase):
             0.00414471, -0.02296237, 0.18336892, -0.23840059, 0.17924534
         ])
         dataset_path = os.path.join(
-            base_dir, "__testing_word2vec-matrix-synopsis", "__testing_word2vec-matrix-synopsis.gz"
+            api.BASE_DIR, "__testing_word2vec-matrix-synopsis", "__testing_word2vec-matrix-synopsis.gz"
         )
         model = api.load("__testing_word2vec-matrix-synopsis")
         vector_dead_calc = model.wv["dead"]
         self.assertTrue(np.allclose(vector_dead, vector_dead_calc))
-        shutil.rmtree(base_dir)
+        shutil.rmtree(api.BASE_DIR)
         self.assertEqual(api.load("__testing_word2vec-matrix-synopsis", return_path=True), dataset_path)
-        shutil.rmtree(base_dir)
+        shutil.rmtree(api.BASE_DIR)
 
     def test_multipart_load(self):
         dataset_path = os.path.join(
-            base_dir, '__testing_multipart-matrix-synopsis', '__testing_multipart-matrix-synopsis.gz'
+            api.BASE_DIR, '__testing_multipart-matrix-synopsis', '__testing_multipart-matrix-synopsis.gz'
         )
-        if os.path.isdir(base_dir):
-            shutil.rmtree(base_dir)
+        if os.path.isdir(api.BASE_DIR):
+            shutil.rmtree(api.BASE_DIR)
         self.assertEqual(dataset_path, api.load("__testing_multipart-matrix-synopsis", return_path=True))
-        shutil.rmtree(base_dir)
+        shutil.rmtree(api.BASE_DIR)
         dataset = api.load("__testing_multipart-matrix-synopsis")
         self.assertEqual(len(list(dataset)), 1)
 

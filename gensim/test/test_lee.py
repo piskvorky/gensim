@@ -52,13 +52,13 @@ class TestLeeTest(unittest.TestCase):
 
         # read in the corpora
         latin1 = partial(utils.to_unicode, encoding='latin1')
-        with utils.smart_open(os.path.join(pre_path, bg_corpus_file)) as f:
+        with utils.open(os.path.join(pre_path, bg_corpus_file), 'rb') as f:
             bg_corpus = preprocess_documents(latin1(line) for line in f)
-        with utils.smart_open(os.path.join(pre_path, corpus_file)) as f:
+        with utils.open(os.path.join(pre_path, corpus_file), 'rb') as f:
             corpus = preprocess_documents(latin1(line) for line in f)
-        with utils.smart_open(os.path.join(pre_path, bg_corpus_file)) as f:
+        with utils.open(os.path.join(pre_path, bg_corpus_file), 'rb') as f:
             bg_corpus2 = [preprocess_string(latin1(s), filters=DEFAULT_FILTERS[:-1]) for s in f]
-        with utils.smart_open(os.path.join(pre_path, corpus_file)) as f:
+        with utils.open(os.path.join(pre_path, corpus_file), 'rb') as f:
             corpus2 = [preprocess_string(latin1(s), filters=DEFAULT_FILTERS[:-1]) for s in f]
 
         # read the human similarity data

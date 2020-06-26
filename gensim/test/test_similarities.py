@@ -17,7 +17,7 @@ import os
 import numpy
 import scipy
 
-from smart_open import smart_open
+from gensim import utils
 from gensim.corpora import Dictionary
 from gensim.models import word2vec
 from gensim.models import doc2vec
@@ -30,6 +30,7 @@ from gensim.test.utils import (datapath, get_tmpfile,
 from gensim.similarities import UniformTermSimilarityIndex
 from gensim.similarities import SparseTermSimilarityMatrix
 from gensim.similarities import LevenshteinSimilarityIndex
+from gensim.similarities.docsim import _nlargest
 from gensim.similarities.levenshtein import levdist, levsim
 
 try:
@@ -85,7 +86,7 @@ class _TestSimilarityABC(object):
 
     def testNumBest(self):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
-            self.skipTest("pyemd not installed or have some issues")
+            self.skipTest("pyemd not installed")
 
         for num_best in [None, 0, 1, 9, 1000]:
             self.testFull(num_best=num_best)
@@ -116,7 +117,7 @@ class _TestSimilarityABC(object):
     def testEmptyQuery(self):
         index = self.factoryMethod()
         if isinstance(index, similarities.WmdSimilarity) and not PYEMD_EXT:
-            self.skipTest("pyemd not installed or have some issues")
+            self.skipTest("pyemd not installed")
 
         query = []
         try:
@@ -174,7 +175,7 @@ class _TestSimilarityABC(object):
 
     def testPersistency(self):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
-            self.skipTest("pyemd not installed or have some issues")
+            self.skipTest("pyemd not installed")
 
         fname = get_tmpfile('gensim_similarities.tst.pkl')
         index = self.factoryMethod()
@@ -194,7 +195,7 @@ class _TestSimilarityABC(object):
 
     def testPersistencyCompressed(self):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
-            self.skipTest("pyemd not installed or have some issues")
+            self.skipTest("pyemd not installed")
 
         fname = get_tmpfile('gensim_similarities.tst.pkl.gz')
         index = self.factoryMethod()
@@ -214,7 +215,7 @@ class _TestSimilarityABC(object):
 
     def testLarge(self):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
-            self.skipTest("pyemd not installed or have some issues")
+            self.skipTest("pyemd not installed")
 
         fname = get_tmpfile('gensim_similarities.tst.pkl')
         index = self.factoryMethod()
@@ -236,7 +237,7 @@ class _TestSimilarityABC(object):
 
     def testLargeCompressed(self):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
-            self.skipTest("pyemd not installed or have some issues")
+            self.skipTest("pyemd not installed")
 
         fname = get_tmpfile('gensim_similarities.tst.pkl.gz')
         index = self.factoryMethod()
@@ -258,7 +259,7 @@ class _TestSimilarityABC(object):
 
     def testMmap(self):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
-            self.skipTest("pyemd not installed or have some issues")
+            self.skipTest("pyemd not installed")
 
         fname = get_tmpfile('gensim_similarities.tst.pkl')
         index = self.factoryMethod()
@@ -281,7 +282,7 @@ class _TestSimilarityABC(object):
 
     def testMmapCompressed(self):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
-            self.skipTest("pyemd not installed or have some issues")
+            self.skipTest("pyemd not installed")
 
         fname = get_tmpfile('gensim_similarities.tst.pkl.gz')
         index = self.factoryMethod()
@@ -306,7 +307,7 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
         # Override factoryMethod.
         return self.cls(texts, self.w2v_model)
 
-    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed or have some issues")
+    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed")
     def testFull(self, num_best=None):
         # Override testFull.
 
@@ -325,7 +326,7 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
             self.assertTrue(numpy.alltrue(sims[1:] > 0.0))
             self.assertTrue(numpy.alltrue(sims[1:] < 1.0))
 
-    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed or have some issues")
+    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed")
     def testNonIncreasing(self):
         ''' Check that similarities are non-increasing when `num_best` is not
         `None`.'''
@@ -341,7 +342,7 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
         cond = sum(numpy.diff(sims2) < 0) == len(sims2) - 1
         self.assertTrue(cond)
 
-    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed or have some issues")
+    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed")
     def testChunking(self):
         # Override testChunking.
 
@@ -360,7 +361,7 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
                 self.assertTrue(numpy.alltrue(sim > 0.0))
                 self.assertTrue(numpy.alltrue(sim <= 1.0))
 
-    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed or have some issues")
+    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed")
     def testIter(self):
         # Override testIter.
 
@@ -532,14 +533,19 @@ class TestSimilarity(unittest.TestCase, _TestSimilarityABC):
         self.assertTrue(numpy.allclose(expected, sims))
         index.destroy()
 
+    def testNlargest(self):
+        sims = ([(0, 0.8), (1, 0.2), (2, 0.0), (3, 0.0), (4, -0.1), (5, -0.15)],)
+        expected = [(0, 0.8), (1, 0.2), (5, -0.15)]
+        self.assertTrue(_nlargest(3, sims), expected)
+
 
 class TestWord2VecAnnoyIndexer(unittest.TestCase):
 
     def setUp(self):
         try:
             import annoy  # noqa:F401
-        except ImportError:
-            raise unittest.SkipTest("Annoy library is not available")
+        except ImportError as e:
+            raise unittest.SkipTest("Annoy library is not available: %s" % e)
 
         from gensim.similarities.index import AnnoyIndexer
         self.indexer = AnnoyIndexer
@@ -560,11 +566,11 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
                 self.fn = fn
 
             def __iter__(self):
-                with smart_open(self.fn, 'r', encoding="latin_1") as infile:
+                with utils.open(self.fn, 'r', encoding="latin_1") as infile:
                     for line in infile:
                         yield line.lower().strip().split()
 
-        model = FastText(LeeReader(datapath('lee.cor')))
+        model = FastText(LeeReader(datapath('lee.cor')), bucket=5000)
         model.init_sims()
         index = self.indexer(model, 10)
 
@@ -642,8 +648,8 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
     def setUp(self):
         try:
             import annoy  # noqa:F401
-        except ImportError:
-            raise unittest.SkipTest("Annoy library is not available")
+        except ImportError as e:
+            raise unittest.SkipTest("Annoy library is not available: %s" % e)
 
         from gensim.similarities.index import AnnoyIndexer
 
@@ -694,6 +700,156 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
         self.assertEqual(self.index.index.f, self.index2.index.f)
         self.assertEqual(self.index.labels, self.index2.labels)
         self.assertEqual(self.index.num_trees, self.index2.num_trees)
+
+
+class TestWord2VecNmslibIndexer(unittest.TestCase):
+
+    def setUp(self):
+        try:
+            import nmslib  # noqa:F401
+        except ImportError as e:
+            raise unittest.SkipTest("NMSLIB library is not available: %s" % e)
+
+        from gensim.similarities.nmslib import NmslibIndexer
+        self.indexer = NmslibIndexer
+
+    def test_word2vec(self):
+        model = word2vec.Word2Vec(texts, min_count=1)
+        model.init_sims()
+        index = self.indexer(model)
+
+        self.assertVectorIsSimilarToItself(model.wv, index)
+        self.assertApproxNeighborsMatchExact(model, model.wv, index)
+        self.assertIndexSaved(index)
+        self.assertLoadedIndexEqual(index, model)
+
+    def test_fasttext(self):
+        class LeeReader(object):
+            def __init__(self, fn):
+                self.fn = fn
+
+            def __iter__(self):
+                with utils.open(self.fn, 'r', encoding="latin_1") as infile:
+                    for line in infile:
+                        yield line.lower().strip().split()
+
+        model = FastText(LeeReader(datapath('lee.cor')), bucket=5000)
+        model.init_sims()
+        index = self.indexer(model)
+
+        self.assertVectorIsSimilarToItself(model.wv, index)
+        self.assertApproxNeighborsMatchExact(model, model.wv, index)
+        self.assertIndexSaved(index)
+        self.assertLoadedIndexEqual(index, model)
+
+    def test_indexing_keyedvectors(self):
+        from gensim.similarities.nmslib import NmslibIndexer
+        keyVectors_file = datapath('lee_fasttext.vec')
+        model = KeyedVectors.load_word2vec_format(keyVectors_file)
+        index = NmslibIndexer(model)
+
+        self.assertVectorIsSimilarToItself(model, index)
+        self.assertApproxNeighborsMatchExact(model, model, index)
+
+    def test_load_missing_raises_error(self):
+        from gensim.similarities.nmslib import NmslibIndexer
+
+        self.assertRaises(IOError, NmslibIndexer.load, fname='test-index')
+
+    def assertVectorIsSimilarToItself(self, wv, index):
+        vector = wv.vectors_norm[0]
+        label = wv.index2word[0]
+        approx_neighbors = index.most_similar(vector, 1)
+        word, similarity = approx_neighbors[0]
+
+        self.assertEqual(word, label)
+        self.assertAlmostEqual(similarity, 1.0, places=2)
+
+    def assertApproxNeighborsMatchExact(self, model, wv, index):
+        vector = wv.vectors_norm[0]
+        approx_neighbors = model.wv.most_similar([vector], topn=5, indexer=index)
+        exact_neighbors = model.wv.most_similar(positive=[vector], topn=5)
+
+        approx_words = [neighbor[0] for neighbor in approx_neighbors]
+        exact_words = [neighbor[0] for neighbor in exact_neighbors]
+
+        self.assertEqual(approx_words, exact_words)
+
+    def assertIndexSaved(self, index):
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
+        index.save(fname)
+        self.assertTrue(os.path.exists(fname))
+        self.assertTrue(os.path.exists(fname + '.d'))
+
+    def assertLoadedIndexEqual(self, index, model):
+        from gensim.similarities.nmslib import NmslibIndexer
+
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
+        index.save(fname)
+
+        index2 = NmslibIndexer.load(fname)
+        index2.model = model
+
+        self.assertEqual(index.labels, index2.labels)
+        self.assertEqual(index.index_params, index2.index_params)
+        self.assertEqual(index.query_time_params, index2.query_time_params)
+
+
+class TestDoc2VecNmslibIndexer(unittest.TestCase):
+
+    def setUp(self):
+        try:
+            import nmslib  # noqa:F401
+        except ImportError as e:
+            raise unittest.SkipTest("NMSLIB library is not available: %s" % e)
+
+        from gensim.similarities.nmslib import NmslibIndexer
+
+        self.model = doc2vec.Doc2Vec(sentences, min_count=1)
+        self.model.init_sims()
+        self.index = NmslibIndexer(self.model)
+        self.vector = self.model.docvecs.vectors_docs_norm[0]
+
+    def test_document_is_similar_to_itself(self):
+        approx_neighbors = self.index.most_similar(self.vector, 1)
+        doc, similarity = approx_neighbors[0]
+
+        self.assertEqual(doc, 0)
+        self.assertAlmostEqual(similarity, 1.0, places=2)
+
+    def test_approx_neighbors_match_exact(self):
+        approx_neighbors = self.model.docvecs.most_similar([self.vector], topn=5, indexer=self.index)
+        exact_neighbors = self.model.docvecs.most_similar(
+            positive=[self.vector], topn=5)
+
+        approx_words = [neighbor[0] for neighbor in approx_neighbors]
+        exact_words = [neighbor[0] for neighbor in exact_neighbors]
+
+        self.assertEqual(approx_words, exact_words)
+
+    def test_save(self):
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
+        self.index.save(fname)
+        self.assertTrue(os.path.exists(fname))
+        self.assertTrue(os.path.exists(fname + '.d'))
+
+    def test_load_not_exist(self):
+        from gensim.similarities.nmslib import NmslibIndexer
+
+        self.assertRaises(IOError, NmslibIndexer.load, fname='test-index')
+
+    def test_save_load(self):
+        from gensim.similarities.nmslib import NmslibIndexer
+
+        fname = get_tmpfile('gensim_similarities.tst.pkl')
+        self.index.save(fname)
+
+        self.index2 = NmslibIndexer.load(fname)
+        self.index2.model = self.model
+
+        self.assertEqual(self.index.labels, self.index2.labels)
+        self.assertEqual(self.index.index_params, self.index2.index_params)
+        self.assertEqual(self.index.query_time_params, self.index2.query_time_params)
 
 
 class TestUniformTermSimilarityIndex(unittest.TestCase):
@@ -1074,6 +1230,11 @@ class TestLevenshteinSimilarityIndex(unittest.TestCase):
         index = LevenshteinSimilarityIndex(self.dictionary, alpha=1.0, beta=2.0)
         second_similarities = numpy.array([similarity for term, similarity in index.most_similar(u"holiday", topn=10)])
         self.assertTrue(numpy.allclose(first_similarities ** 2.0, second_similarities))
+
+        # check proper integration with SparseTermSimilarityMatrix
+        index = LevenshteinSimilarityIndex(self.dictionary, alpha=1.0, beta=1.0)
+        similarity_matrix = SparseTermSimilarityMatrix(index, dictionary)
+        self.assertTrue(scipy.sparse.issparse(similarity_matrix.matrix))
 
 
 if __name__ == '__main__':

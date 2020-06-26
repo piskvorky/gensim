@@ -280,12 +280,12 @@ class ShardedCorpus(IndexedCorpus):
         self.dim = proposed_dim
         self.offsets = [0]
 
-        start_time = time.clock()
+        start_time = time.perf_counter()
 
         logger.info('Running init from corpus.')
 
         for n, doc_chunk in enumerate(gensim.utils.grouper(corpus, chunksize=shardsize)):
-            logger.info('Chunk no. %d at %f s', n, time.clock() - start_time)
+            logger.info('Chunk no. %d at %f s', n, time.perf_counter() - start_time)
 
             current_shard = numpy.zeros((len(doc_chunk), self.dim), dtype=dtype)
             logger.debug('Current chunk dimension: %d x %d', len(doc_chunk), self.dim)
@@ -300,7 +300,7 @@ class ShardedCorpus(IndexedCorpus):
 
             self.save_shard(current_shard)
 
-        end_time = time.clock()
+        end_time = time.perf_counter()
         logger.info('Built %d shards in %f s.', self.n_shards, end_time - start_time)
 
     def init_by_clone(self):
@@ -688,7 +688,7 @@ class ShardedCorpus(IndexedCorpus):
         if (result_stop - result_start) != (stop - start):
             raise ValueError(
                 'Result start/stop range different than stop/start range (%d - %d vs. %d - %d)'
-                .format(result_start, result_stop, start, stop)
+                % (result_start, result_stop, start, stop)
             )
 
         # Dense data: just copy using numpy's slice notation

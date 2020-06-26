@@ -11,6 +11,10 @@ This module contains integration Annoy with :class:`~gensim.models.word2vec.Word
 :class:`~gensim.models.doc2vec.Doc2Vec`, :class:`~gensim.models.fasttext.FastText` and
 :class:`~gensim.models.keyedvectors.KeyedVectors`.
 
+.. Important::
+    To use this module, you must have the ``annoy`` library install.
+    To install it, run ``pip install annoy``.
+
 
 What is Annoy
 -------------
@@ -33,23 +37,23 @@ and `annoy-user maillist <https://groups.google.com/forum/#!forum/annoy-user>`_.
 """
 import os
 
-from smart_open import smart_open
 try:
     import cPickle as _pickle
 except ImportError:
     import pickle as _pickle
 
+from gensim import utils
 from gensim.models.doc2vec import Doc2Vec
 from gensim.models.word2vec import Word2Vec
 from gensim.models.fasttext import FastText
 from gensim.models import KeyedVectors
 from gensim.models.keyedvectors import WordEmbeddingsKeyedVectors
-try:
-    from annoy import AnnoyIndex
-except ImportError:
-    raise ImportError(
-        "Annoy has not been installed, if you wish to use the annoy indexer, please run `pip install annoy`"
-    )
+
+
+_NOANNOY = ImportError(
+    "Annoy is not installed, if you wish to use the annoy "
+    "indexer, please run `pip install annoy`"
+)
 
 
 class AnnoyIndexer(object):
@@ -116,7 +120,7 @@ class AnnoyIndexer(object):
         fname_dict = fname + '.d'
         self.index.save(fname)
         d = {'f': self.model.vector_size, 'num_trees': self.num_trees, 'labels': self.labels}
-        with smart_open(fname_dict, 'wb') as fout:
+        with utils.open(fname_dict, 'wb') as fout:
             _pickle.dump(d, fout, protocol=protocol)
 
     def load(self, fname):
@@ -153,7 +157,12 @@ class AnnoyIndexer(object):
                 "Can't find index files '%s' and '%s' - Unable to restore AnnoyIndexer state." % (fname, fname_dict)
             )
         else:
-            with smart_open(fname_dict) as f:
+            try:
+                from annoy import AnnoyIndex
+            except ImportError:
+                raise _NOANNOY
+
+            with utils.open(fname_dict, 'rb') as f:
                 d = _pickle.loads(f.read())
             self.num_trees = d['num_trees']
             self.index = AnnoyIndex(d['f'])
@@ -181,6 +190,11 @@ class AnnoyIndexer(object):
         return self._build_from_model(self.model.vectors_norm, self.model.index2word, self.model.vector_size)
 
     def _build_from_model(self, vectors, labels, num_features):
+        try:
+            from annoy import AnnoyIndex
+        except ImportError:
+            raise _NOANNOY
+
         index = AnnoyIndex(num_features)
 
         for vector_num, vector in enumerate(vectors):

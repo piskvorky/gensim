@@ -16,9 +16,9 @@ import logging
 import os.path
 import unittest
 
-from smart_open import smart_open
 import numpy as np
 
+from gensim import utils
 from gensim.scripts.segment_wiki import segment_all_articles, segment_and_write_all_articles
 from gensim.test.utils import datapath, get_tmpfile
 
@@ -70,9 +70,10 @@ class TestSegmentWiki(unittest.TestCase):
         self.assertTrue(first_sentence in first_section_text)
 
         # Check interlinks
-        self.assertTrue(interlinks['self-governance'] == 'self-governed')
-        self.assertTrue(interlinks['Hierarchy'] == 'hierarchical')
-        self.assertTrue(interlinks['Pierre-Joseph Proudhon'] == 'Proudhon')
+        self.assertEqual(len(interlinks), 685)
+        self.assertTrue(interlinks[0] == ("political philosophy", "political philosophy"))
+        self.assertTrue(interlinks[1] == ("self-governance", "self-governed"))
+        self.assertTrue(interlinks[2] == ("stateless society", "stateless societies"))
 
     def test_generator_len(self):
         expected_num_articles = 106
@@ -85,7 +86,8 @@ class TestSegmentWiki(unittest.TestCase):
         segment_and_write_all_articles(self.fname, tmpf, workers=1)
 
         expected_num_articles = 106
-        num_articles = sum(1 for line in smart_open(tmpf))
+        with utils.open(tmpf, 'rb') as f:
+            num_articles = sum(1 for line in f)
         self.assertEqual(num_articles, expected_num_articles)
 
     def test_segment_and_write_all_articles(self):
@@ -104,9 +106,11 @@ class TestSegmentWiki(unittest.TestCase):
         self.assertEqual(section_titles, self.expected_section_titles)
 
         # Check interlinks
-        self.assertTrue(interlinks['self-governance'] == 'self-governed')
-        self.assertTrue(interlinks['Hierarchy'] == 'hierarchical')
-        self.assertTrue(interlinks['Pierre-Joseph Proudhon'] == 'Proudhon')
+        # JSON has no tuples, only lists. So, we convert lists to tuples explicitly before comparison.
+        self.assertEqual(len(interlinks), 685)
+        self.assertEqual(tuple(interlinks[0]), ("political philosophy", "political philosophy"))
+        self.assertEqual(tuple(interlinks[1]), ("self-governance", "self-governed"))
+        self.assertEqual(tuple(interlinks[2]), ("stateless society", "stateless societies"))
 
 
 class TestWord2Vec2Tensor(unittest.TestCase):
@@ -120,14 +124,14 @@ class TestWord2Vec2Tensor(unittest.TestCase):
     def testConversion(self):
         word2vec2tensor(word2vec_model_path=self.datapath, tensor_filename=self.output_folder)
 
-        with smart_open(self.metadata_file, 'rb') as f:
+        with utils.open(self.metadata_file, 'rb') as f:
             metadata = f.readlines()
 
-        with smart_open(self.tensor_file, 'rb') as f:
+        with utils.open(self.tensor_file, 'rb') as f:
             vectors = f.readlines()
 
         # check if number of words and vector size in tensor file line up with word2vec
-        with smart_open(self.datapath, 'rb') as f:
+        with utils.open(self.datapath, 'rb') as f:
             first_line = f.readline().strip()
 
         number_words, vector_size = map(int, first_line.split(b' '))

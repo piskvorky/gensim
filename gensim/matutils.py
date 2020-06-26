@@ -24,7 +24,7 @@ from scipy.linalg.lapack import get_lapack_funcs
 from scipy.linalg.special_matrices import triu
 from scipy.special import psi  # gamma function utils
 
-from six import iteritems, itervalues, string_types
+from six import iteritems, itervalues
 from six.moves import zip, range
 
 
@@ -698,7 +698,7 @@ def unitvec(vec, norm='l2', return_norm=False):
     ----------
     vec : {numpy.ndarray, scipy.sparse, list of (int, float)}
         Input vector in any format
-    norm : {'l1', 'l2'}, optional
+    norm : {'l1', 'l2', 'unique'}, optional
         Metric to normalize in.
     return_norm : bool, optional
         Return the length of vector `vec`, in addition to the normalized vector itself?
@@ -715,8 +715,9 @@ def unitvec(vec, norm='l2', return_norm=False):
     Zero-vector will be unchanged.
 
     """
-    if norm not in ('l1', 'l2'):
-        raise ValueError("'%s' is not a supported norm. Currently supported norms are 'l1' and 'l2'." % norm)
+    supported_norms = ('l1', 'l2', 'unique')
+    if norm not in supported_norms:
+        raise ValueError("'%s' is not a supported norm. Currently supported norms are %s." % (norm, supported_norms))
 
     if scipy.sparse.issparse(vec):
         vec = vec.tocsr()
@@ -724,6 +725,8 @@ def unitvec(vec, norm='l2', return_norm=False):
             veclen = np.sum(np.abs(vec.data))
         if norm == 'l2':
             veclen = np.sqrt(np.sum(vec.data ** 2))
+        if norm == 'unique':
+            veclen = vec.nnz
         if veclen > 0.0:
             if np.issubdtype(vec.dtype, np.integer):
                 vec = vec.astype(np.float)
@@ -746,6 +749,8 @@ def unitvec(vec, norm='l2', return_norm=False):
                 veclen = 0.0
             else:
                 veclen = blas_nrm2(vec)
+        if norm == 'unique':
+            veclen = np.count_nonzero(vec)
         if veclen > 0.0:
             if np.issubdtype(vec.dtype, np.integer):
                 vec = vec.astype(np.float)
@@ -772,6 +777,8 @@ def unitvec(vec, norm='l2', return_norm=False):
             length = float(sum(abs(val) for _, val in vec))
         if norm == 'l2':
             length = 1.0 * math.sqrt(sum(val ** 2 for _, val in vec))
+        if norm == 'unique':
+            length = 1.0 * len(vec)
         assert length > 0.0, "sparse documents must not contain any explicit zero entries"
         if return_norm:
             return ret_normalized_vec(vec, length), length
@@ -1236,7 +1243,7 @@ class MmWriter(object):
         self.fname = fname
         if fname.endswith(".gz") or fname.endswith('.bz2'):
             raise NotImplementedError("compressed output not supported with MmWriter")
-        self.fout = utils.smart_open(self.fname, 'wb+')  # open for both reading and writing
+        self.fout = utils.open(self.fname, 'wb+')  # open for both reading and writing
         self.headers_written = False
 
     def write_headers(self, num_docs, num_terms, num_nnz):
@@ -1416,184 +1423,6 @@ class MmWriter(object):
 
 
 try:
-    # try to load fast, cythonized code if possible
-    from gensim.corpora._mmreader import MmReader
+    from gensim.corpora._mmreader import MmReader  # noqa: F401
 except ImportError:
-    FAST_VERSION = -1
-
-    class MmReader(object):
-        """Matrix market file reader, used internally in :class:`~gensim.corpora.mmcorpus.MmCorpus`.
-
-        Wrap a term-document matrix on disk (in matrix-market format), and present it
-        as an object which supports iteration over the rows (~documents).
-
-        Attributes
-        ----------
-        num_docs : int
-            Number of documents in market matrix file.
-        num_terms : int
-            Number of terms.
-        num_nnz : int
-            Number of non-zero terms.
-
-        Notes
-        -----
-        Note that the file is read into memory one document at a time, not the whole matrix at once
-        (unlike e.g. `scipy.io.mmread` and other implementations).
-        This allows us to process corpora which are larger than the available RAM.
-
-        """
-        def __init__(self, input, transposed=True):
-            """
-
-            Parameters
-            ----------
-            input : {str, file-like object}
-                Path to the input file in MM format or a file-like object that supports `seek()`
-                (e.g. smart_open objects).
-            transposed : bool, optional
-                Do lines represent `doc_id, term_id, value`, instead of `term_id, doc_id, value`?
-
-            """
-            logger.info("initializing corpus reader from %s", input)
-            self.input, self.transposed = input, transposed
-            with utils.open_file(self.input) as lines:
-                try:
-                    header = utils.to_unicode(next(lines)).strip()
-                    if not header.lower().startswith('%%matrixmarket matrix coordinate real general'):
-                        raise ValueError(
-                            "File %s not in Matrix Market format with coordinate real general; instead found: \n%s" %
-                            (self.input, header)
-                        )
-                except StopIteration:
-                    pass
-
-                self.num_docs = self.num_terms = self.num_nnz = 0
-                for lineno, line in enumerate(lines):
-                    line = utils.to_unicode(line)
-                    if not line.startswith('%'):
-                        self.num_docs, self.num_terms, self.num_nnz = (int(x) for x in line.split())
-                        if not self.transposed:
-                            self.num_docs, self.num_terms = self.num_terms, self.num_docs
-                        break
-
-            logger.info(
-                "accepted corpus with %i documents, %i features, %i non-zero entries",
-                self.num_docs, self.num_terms, self.num_nnz
-            )
-
-        def __len__(self):
-            """Get the corpus size: total number of documents."""
-            return self.num_docs
-
-        def __str__(self):
-            return ("MmCorpus(%i documents, %i features, %i non-zero entries)" %
-                    (self.num_docs, self.num_terms, self.num_nnz))
-
-        def skip_headers(self, input_file):
-            """Skip file headers that appear before the first document.
-
-            Parameters
-            ----------
-            input_file : iterable of str
-                Iterable taken from file in MM format.
-
-            """
-            for line in input_file:
-                if line.startswith(b'%'):
-                    continue
-                break
-
-        def __iter__(self):
-            """Iterate through all documents in the corpus.
-
-            Notes
-            ------
-            Note that the total number of vectors returned is always equal to the number of rows specified
-            in the header: empty documents are inserted and yielded where appropriate, even if they are not explicitly
-            stored in the Matrix Market file.
-
-            Yields
-            ------
-            (int, list of (int, number))
-                Document id and document in sparse bag-of-words format.
-
-            """
-            with utils.file_or_filename(self.input) as lines:
-                self.skip_headers(lines)
-
-                previd = -1
-                for line in lines:
-                    docid, termid, val = utils.to_unicode(line).split()  # needed for python3
-                    if not self.transposed:
-                        termid, docid = docid, termid
-                    # -1 because matrix market indexes are 1-based => convert to 0-based
-                    docid, termid, val = int(docid) - 1, int(termid) - 1, float(val)
-                    assert previd <= docid, "matrix columns must come in ascending order"
-                    if docid != previd:
-                        # change of document: return the document read so far (its id is prevId)
-                        if previd >= 0:
-                            yield previd, document  # noqa:F821
-
-                        # return implicit (empty) documents between previous id and new id
-                        # too, to keep consistent document numbering and corpus length
-                        for previd in range(previd + 1, docid):
-                            yield previd, []
-
-                        # from now on start adding fields to a new document, with a new id
-                        previd = docid
-                        document = []
-
-                    document.append((termid, val,))  # add another field to the current document
-
-            # handle the last document, as a special case
-            if previd >= 0:
-                yield previd, document
-
-            # return empty documents between the last explicit document and the number
-            # of documents as specified in the header
-            for previd in range(previd + 1, self.num_docs):
-                yield previd, []
-
-        def docbyoffset(self, offset):
-            """Get the document at file offset `offset` (in bytes).
-
-            Parameters
-            ----------
-            offset : int
-                File offset, in bytes, of the desired document.
-
-            Returns
-            ------
-            list of (int, str)
-                Document in sparse bag-of-words format.
-
-            """
-            # empty documents are not stored explicitly in MM format, so the index marks
-            # them with a special offset, -1.
-            if offset == -1:
-                return []
-            if isinstance(self.input, string_types):
-                fin, close_fin = utils.smart_open(self.input), True
-            else:
-                fin, close_fin = self.input, False
-
-            fin.seek(offset)  # works for gzip/bz2 input, too
-            previd, document = -1, []
-            for line in fin:
-                docid, termid, val = line.split()
-                if not self.transposed:
-                    termid, docid = docid, termid
-                # -1 because matrix market indexes are 1-based => convert to 0-based
-                docid, termid, val = int(docid) - 1, int(termid) - 1, float(val)
-                assert previd <= docid, "matrix columns must come in ascending order"
-                if docid != previd:
-                    if previd >= 0:
-                        break
-                    previd = docid
-
-                document.append((termid, val,))  # add another field to the current document
-
-            if close_fin:
-                fin.close()
-            return document
+    raise utils.NO_CYTHON

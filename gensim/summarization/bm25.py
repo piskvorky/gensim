@@ -37,6 +37,7 @@ Data:
 """
 
 
+import logging
 import math
 from six import iteritems
 from six.moves import range
@@ -47,6 +48,8 @@ from ..utils import effective_n_jobs
 PARAM_K1 = 1.5
 PARAM_B = 0.75
 EPSILON = 0.25
+
+logger = logging.getLogger(__name__)
 
 
 class BM25(object):
@@ -66,14 +69,36 @@ class BM25(object):
         List of document lengths.
     """
 
-    def __init__(self, corpus):
+    def __init__(self, corpus, k1=PARAM_K1, b=PARAM_B, epsilon=EPSILON):
         """
         Parameters
         ----------
         corpus : list of list of str
             Given corpus.
+        k1 : float
+            Constant used for influencing the term frequency saturation. After saturation is reached, additional
+            presence for the term adds a significantly less additional score. According to [1]_, experiments suggest
+            that 1.2 < k1 < 2 yields reasonably good results, although the optimal value depends on factors such as
+            the type of documents or queries.
+        b : float
+            Constant used for influencing the effects of different document lengths relative to average document length.
+            When b is bigger, lengthier documents (compared to average) have more impact on its effect. According to
+            [1]_, experiments suggest that 0.5 < b < 0.8 yields reasonably good results, although the optimal value
+            depends on factors such as the type of documents or queries.
+        epsilon : float
+            Constant used as floor value for idf of a document in the corpus. When epsilon is positive, it restricts
+            negative idf values. Negative idf implies that adding a very common term to a document penalize the overall
+            score (with 'very common' meaning that it is present in more than half of the documents). That can be
+            undesirable as it means that an identical document would score less than an almost identical one (by
+            removing the referred term). Increasing epsilon above 0 raises the sense of how rare a word has to be (among
+            different documents) to receive an extra score.
 
         """
+
+        self.k1 = k1
+        self.b = b
+        self.epsilon = epsilon
+
         self.corpus_size = 0
         self.avgdl = 0
         self.doc_freqs = []
@@ -116,7 +141,14 @@ class BM25(object):
                 negative_idfs.append(word)
         self.average_idf = float(idf_sum) / len(self.idf)
 
-        eps = EPSILON * self.average_idf
+        if self.average_idf < 0:
+            logger.warning(
+                'Average inverse document frequency is less than zero. Your corpus of {} documents'
+                ' is either too small or it does not originate from natural text. BM25 may produce'
+                ' unintuitive results.'.format(self.corpus_size)
+            )
+
+        eps = self.epsilon * self.average_idf
         for word in negative_idfs:
             self.idf[word] = eps
 
@@ -136,13 +168,15 @@ class BM25(object):
             BM25 score.
 
         """
-        score = 0
+        score = 0.0
         doc_freqs = self.doc_freqs[index]
+        numerator_constant = self.k1 + 1
+        denominator_constant = self.k1 * (1 - self.b + self.b * self.doc_len[index] / self.avgdl)
         for word in document:
-            if word not in doc_freqs:
-                continue
-            score += (self.idf[word] * doc_freqs[word] * (PARAM_K1 + 1)
-                      / (doc_freqs[word] + PARAM_K1 * (1 - PARAM_B + PARAM_B * self.doc_len[index] / self.avgdl)))
+            if word in doc_freqs:
+                df = self.doc_freqs[index][word]
+                idf = self.idf[word]
+                score += (idf * df * numerator_constant) / (df + denominator_constant)
         return score
 
     def get_scores(self, document):
@@ -226,7 +260,7 @@ def _get_scores(bm25, document):
     return bm25.get_scores(document)
 
 
-def iter_bm25_bow(corpus, n_jobs=1):
+def iter_bm25_bow(corpus, n_jobs=1, k1=PARAM_K1, b=PARAM_B, epsilon=EPSILON):
     """Yield BM25 scores (weights) of documents in corpus.
     Each document has to be weighted with every document in given corpus.
 
@@ -236,6 +270,23 @@ def iter_bm25_bow(corpus, n_jobs=1):
         Corpus of documents.
     n_jobs : int
         The number of processes to use for computing bm25.
+    k1 : float
+        Constant used for influencing the term frequency saturation. After saturation is reached, additional
+        presence for the term adds a significantly less additional score. According to [1]_, experiments suggest
+        that 1.2 < k1 < 2 yields reasonably good results, although the optimal value depends on factors such as
+        the type of documents or queries.
+    b : float
+        Constant used for influencing the effects of different document lengths relative to average document length.
+        When b is bigger, lengthier documents (compared to average) have more impact on its effect. According to
+        [1]_, experiments suggest that 0.5 < b < 0.8 yields reasonably good results, although the optimal value
+        depends on factors such as the type of documents or queries.
+    epsilon : float
+        Constant used as floor value for idf of a document in the corpus. When epsilon is positive, it restricts
+        negative idf values. Negative idf implies that adding a very common term to a document penalize the overall
+        score (with 'very common' meaning that it is present in more than half of the documents). That can be
+        undesirable as it means that an identical document would score less than an almost identical one (by
+        removing the referred term). Increasing epsilon above 0 raises the sense of how rare a word has to be (among
+        different documents) to receive an extra score.
 
     Yields
     -------
@@ -255,7 +306,7 @@ def iter_bm25_bow(corpus, n_jobs=1):
         >>> result = iter_bm25_weights(corpus, n_jobs=-1)
 
     """
-    bm25 = BM25(corpus)
+    bm25 = BM25(corpus, k1, b, epsilon)
 
     n_processes = effective_n_jobs(n_jobs)
     if n_processes == 1:
@@ -272,7 +323,7 @@ def iter_bm25_bow(corpus, n_jobs=1):
     pool.join()
 
 
-def get_bm25_weights(corpus, n_jobs=1):
+def get_bm25_weights(corpus, n_jobs=1, k1=PARAM_K1, b=PARAM_B, epsilon=EPSILON):
     """Returns BM25 scores (weights) of documents in corpus.
     Each document has to be weighted with every document in given corpus.
 
@@ -282,6 +333,23 @@ def get_bm25_weights(corpus, n_jobs=1):
         Corpus of documents.
     n_jobs : int
         The number of processes to use for computing bm25.
+    k1 : float
+        Constant used for influencing the term frequency saturation. After saturation is reached, additional
+        presence for the term adds a significantly less additional score. According to [1]_, experiments suggest
+        that 1.2 < k1 < 2 yields reasonably good results, although the optimal value depends on factors such as
+        the type of documents or queries.
+    b : float
+        Constant used for influencing the effects of different document lengths relative to average document length.
+        When b is bigger, lengthier documents (compared to average) have more impact on its effect. According to
+        [1]_, experiments suggest that 0.5 < b < 0.8 yields reasonably good results, although the optimal value
+        depends on factors such as the type of documents or queries.
+    epsilon : float
+        Constant used as floor value for idf of a document in the corpus. When epsilon is positive, it restricts
+        negative idf values. Negative idf implies that adding a very common term to a document penalize the overall
+        score (with 'very common' meaning that it is present in more than half of the documents). That can be
+        undesirable as it means that an identical document would score less than an almost identical one (by
+        removing the referred term). Increasing epsilon above 0 raises the sense of how rare a word has to be (among
+        different documents) to receive an extra score.
 
     Returns
     -------
@@ -301,7 +369,7 @@ def get_bm25_weights(corpus, n_jobs=1):
         >>> result = get_bm25_weights(corpus, n_jobs=-1)
 
     """
-    bm25 = BM25(corpus)
+    bm25 = BM25(corpus, k1, b, epsilon)
 
     n_processes = effective_n_jobs(n_jobs)
     if n_processes == 1:

@@ -25,14 +25,14 @@ class TestKeywordsTest(unittest.TestCase):
     def test_text_keywords(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
 
-        with utils.smart_open(os.path.join(pre_path, "mihalcea_tarau.txt"), mode="r") as f:
+        with utils.open(os.path.join(pre_path, "mihalcea_tarau.txt"), mode="r") as f:
             text = f.read()
 
         # calculate keywords
         generated_keywords = keywords(text, split=True)
 
         # To be compared to the reference.
-        with utils.smart_open(os.path.join(pre_path, "mihalcea_tarau.kw.txt"), mode="r") as f:
+        with utils.open(os.path.join(pre_path, "mihalcea_tarau.kw.txt"), mode="r") as f:
             kw = f.read().strip().split("\n")
 
         self.assertEqual({str(x) for x in generated_keywords}, {str(x) for x in kw})
@@ -40,7 +40,7 @@ class TestKeywordsTest(unittest.TestCase):
     def test_text_keywords_words(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
 
-        with utils.smart_open(os.path.join(pre_path, "mihalcea_tarau.txt"), mode="r") as f:
+        with utils.open(os.path.join(pre_path, "mihalcea_tarau.txt"), mode="r") as f:
             text = f.read()
 
         # calculate exactly 13 keywords
@@ -51,14 +51,14 @@ class TestKeywordsTest(unittest.TestCase):
     def test_text_keywords_pos(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
 
-        with utils.smart_open(os.path.join(pre_path, "mihalcea_tarau.txt"), mode="r") as f:
+        with utils.open(os.path.join(pre_path, "mihalcea_tarau.txt"), mode="r") as f:
             text = f.read()
 
         # calculate keywords using only certain parts of speech
         generated_keywords_nnvbjj = keywords(text, pos_filter=['NN', 'VB', 'JJ'], ratio=0.3, split=True)
 
         # To be compared to the reference.
-        with utils.smart_open(os.path.join(pre_path, "mihalcea_tarau.kwpos.txt"), mode="r") as f:
+        with utils.open(os.path.join(pre_path, "mihalcea_tarau.kwpos.txt"), mode="r") as f:
             kw = f.read().strip().split("\n")
 
         self.assertEqual({str(x) for x in generated_keywords_nnvbjj}, {str(x) for x in kw})
@@ -66,7 +66,7 @@ class TestKeywordsTest(unittest.TestCase):
     def test_text_summarization_raises_exception_on_short_input_text(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
 
-        with utils.smart_open(os.path.join(pre_path, "testsummarization_unrelated.txt"), mode="r") as f:
+        with utils.open(os.path.join(pre_path, "testsummarization_unrelated.txt"), mode="r") as f:
             text = f.read()
 
         # Keeps the first 8 sentences to make the text shorter.
@@ -77,7 +77,7 @@ class TestKeywordsTest(unittest.TestCase):
     def test_keywords_ratio(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
 
-        with utils.smart_open(os.path.join(pre_path, "mihalcea_tarau.txt"), mode="r") as f:
+        with utils.open(os.path.join(pre_path, "mihalcea_tarau.txt"), mode="r") as f:
             text = f.read()
 
         # Check ratio parameter is well behaved.  Because length is taken on tokenized clean text
@@ -100,6 +100,12 @@ class TestKeywordsTest(unittest.TestCase):
         text = 'Sitio construcción. Estaremos línea.'
         kwds = keywords(text, deacc=False, scores=True)
         self.assertFalse(len(kwds))
+
+    def test_keywords_with_words_greater_than_lemmas(self):
+        # words parameter is greater than number of words in text variable
+        text = 'Test string small length'
+        kwds = keywords(text, words=5, split=True)
+        self.assertIsNotNone(kwds)
 
 
 if __name__ == '__main__':

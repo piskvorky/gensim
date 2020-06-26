@@ -1,0 +1,29 @@
+pool:
+  vmImage: 'vs2017-win2016'
+
+strategy:
+  matrix:
+    py36:
+      python.version: '3.6'
+      TOXENV: "py36-win"
+    py37:
+      python.version: '3.7'
+      TOXENV: "py37-win"
+    py38:
+      python.version: '3.8'
+      TOXENV: "py38-win"
+
+steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '$(python.version)'
+  displayName: 'Use Python $(python.version)'
+
+- script: |
+    python -m pip install --upgrade pip
+    python -m pip install tox
+  displayName: 'Install tox'
+
+- script: |
+    tox -vv
+  displayName: 'Testing'

@@ -74,7 +74,7 @@ class SvmLightCorpus(IndexedCorpus):
         """
         lineno = -1
         self.labels = []
-        with utils.smart_open(self.fname) as fin:
+        with utils.open(self.fname, 'rb') as fin:
             for lineno, line in enumerate(fin):
                 doc = self.line2doc(line)
                 if doc is not None:
@@ -115,7 +115,7 @@ class SvmLightCorpus(IndexedCorpus):
             # Cast any sequence (incl. a numpy array) to a list, to simplify the processing below.
             labels = list(labels)
         offsets = []
-        with utils.smart_open(fname, 'wb') as fout:
+        with utils.open(fname, 'wb') as fout:
             for docno, doc in enumerate(corpus):
                 label = labels[docno] if labels else 0  # target class is 0 by default
                 offsets.append(fout.tell())
@@ -135,7 +135,7 @@ class SvmLightCorpus(IndexedCorpus):
         tuple of (int, float)
 
         """
-        with utils.smart_open(self.fname) as f:
+        with utils.open(self.fname, 'rb') as f:
             f.seek(offset)
             return self.line2doc(f.readline())[0]
             # TODO: it brakes if gets None from line2doc

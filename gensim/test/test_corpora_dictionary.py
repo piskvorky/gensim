@@ -7,8 +7,7 @@
 Unit tests for the `corpora.Dictionary` class.
 """
 
-
-from collections import Mapping
+from collections.abc import Mapping
 from itertools import chain
 import logging
 import unittest
@@ -76,6 +75,25 @@ class TestDictionary(unittest.TestCase):
         expected = {0: 1, 1: 1, 2: 1}
         self.assertEqual(d.dfs, expected)
 
+    def testDocFreqAndCollectionFreq(self):
+        # one doc
+        texts = [['human', 'human', 'human']]
+        d = Dictionary(texts)
+        self.assertEqual(d.cfs, {0: 3})
+        self.assertEqual(d.dfs, {0: 1})
+
+        # two docs
+        texts = [['human', 'human'], ['human']]
+        d = Dictionary(texts)
+        self.assertEqual(d.cfs, {0: 3})
+        self.assertEqual(d.dfs, {0: 2})
+
+        # three docs
+        texts = [['human'], ['human'], ['human']]
+        d = Dictionary(texts)
+        self.assertEqual(d.cfs, {0: 3})
+        self.assertEqual(d.dfs, {0: 3})
+
     def testBuild(self):
         d = Dictionary(self.texts)
 
@@ -105,8 +123,10 @@ class TestDictionary(unittest.TestCase):
     def testFilter(self):
         d = Dictionary(self.texts)
         d.filter_extremes(no_below=2, no_above=1.0, keep_n=4)
-        expected = {0: 3, 1: 3, 2: 3, 3: 3}
-        self.assertEqual(d.dfs, expected)
+        dfs_expected = {0: 3, 1: 3, 2: 3, 3: 3}
+        cfs_expected = {0: 4, 1: 3, 2: 3, 3: 3}
+        self.assertEqual(d.dfs, dfs_expected)
+        self.assertEqual(d.cfs, cfs_expected)
 
     def testFilterKeepTokens_keepTokens(self):
         # provide keep_tokens argument, keep the tokens given

@@ -8,7 +8,7 @@
 
 
 """This script allows converting word-vectors from word2vec format into Tensorflow 2D tensor and metadata format.
-This script used for for word-vector visualization on `Embedding Visualization <http://projector.tensorflow.org/>`_.
+This script used for word-vector visualization on `Embedding Visualization <http://projector.tensorflow.org/>`_.
 
 
 How to use
@@ -44,8 +44,8 @@ import sys
 import logging
 import argparse
 
-from smart_open import smart_open
 import gensim
+from gensim import utils
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +69,7 @@ def word2vec2tensor(word2vec_model_path, tensor_filename, binary=False):
     outfiletsv = tensor_filename + '_tensor.tsv'
     outfiletsvmeta = tensor_filename + '_metadata.tsv'
 
-    with smart_open(outfiletsv, 'wb') as file_vector, smart_open(outfiletsvmeta, 'wb') as file_metadata:
+    with utils.open(outfiletsv, 'wb') as file_vector, utils.open(outfiletsvmeta, 'wb') as file_metadata:
         for word in model.index2word:
             file_metadata.write(gensim.utils.to_utf8(word) + gensim.utils.to_utf8('\n'))
             vector_row = '\t'.join(str(x) for x in model[word])

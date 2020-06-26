@@ -162,9 +162,6 @@ from types import GeneratorType
 
 logger = logging.getLogger(__name__)
 
-
-# failed... fall back to plain numpy (20-80x slower training than the above)
-FAST_VERSION = -1
 MAX_WORDS_IN_BATCH = 10000
 
 
@@ -588,11 +585,6 @@ class Word2Vec(SaveLoad):
 
         self.load = call_on_class_only
 
-        if FAST_VERSION == -1:
-            logger.warning('Slow version of %s is being used', __name__)
-        else:
-            logger.debug('Fast version of %s is being used', __name__)
-
         self.initialize_word_vectors()
         self.sg = int(sg)
         self.cum_table = None  # for negative sampling
@@ -1007,16 +999,6 @@ class Word2Vec(SaveLoad):
         """
         if self.model_trimmed_post_training:
             raise RuntimeError("Parameters for training were discarded using model_trimmed_post_training method")
-        if FAST_VERSION < 0:
-            warnings.warn(
-                "C extension not loaded for Word2Vec, training will be slow. "
-                "Install a C compiler and reinstall gensim for fast training."
-            )
-            self.neg_labels = []
-            if self.negative > 0:
-                # precompute negative labels optimization for pure-python training
-                self.neg_labels = zeros(self.negative + 1)
-                self.neg_labels[0] = 1.
 
         if compute_loss:
             self.compute_loss = compute_loss
@@ -1234,12 +1216,6 @@ class Word2Vec(SaveLoad):
         .. [#deepir] https://github.com/piskvorky/gensim/blob/develop/docs/notebooks/deepir.ipynb
 
         """
-        if FAST_VERSION < 0:
-            warnings.warn(
-                "C extension compilation failed, scoring will be slow. "
-                "Install a C compiler and reinstall gensim for fastness."
-            )
-
         logger.info(
             "scoring sentences with %i workers on %i vocabulary and %i features, "
             "using sg=%s hs=%s sample=%s and negative=%s",
@@ -1413,7 +1389,7 @@ class Word2Vec(SaveLoad):
         """
         overlap_count = 0
         logger.info("loading projection weights from %s", fname)
-        with utils.smart_open(fname) as fin:
+        with utils.open(fname, 'rb') as fin:
             header = utils.to_unicode(fin.readline(), encoding=encoding)
             vocab_size, vector_size = (int(x) for x in header.split())  # throws for invalid file format
             if not vector_size == self.vector_size:
@@ -1699,16 +1675,17 @@ class BrownCorpus(object):
             fname = os.path.join(self.dirname, fname)
             if not os.path.isfile(fname):
                 continue
-            for line in utils.smart_open(fname):
-                line = utils.to_unicode(line)
-                # each file line is a single sentence in the Brown corpus
-                # each token is WORD/POS_TAG
-                token_tags = [t.split('/') for t in line.split() if len(t.split('/')) == 2]
-                # ignore words with non-alphabetic tags like ",", "!" etc (punctuation, weird stuff)
-                words = ["%s/%s" % (token.lower(), tag[:2]) for token, tag in token_tags if tag[:2].isalpha()]
-                if not words:  # don't bother sending out empty sentences
-                    continue
-                yield words
+            with utils.open(fname, 'rb') as fin:
+                for line in fin:
+                    line = utils.to_unicode(line)
+                    # each file line is a single sentence in the Brown corpus
+                    # each token is WORD/POS_TAG
+                    token_tags = [t.split('/') for t in line.split() if len(t.split('/')) == 2]
+                    # ignore words with non-alphabetic tags like ",", "!" etc (punctuation, weird stuff)
+                    words = ["%s/%s" % (token.lower(), tag[:2]) for token, tag in token_tags if tag[:2].isalpha()]
+                    if not words:  # don't bother sending out empty sentences
+                        continue
+                    yield words
 
 
 class Text8Corpus(object):
@@ -1722,7 +1699,7 @@ class Text8Corpus(object):
         # the entire corpus is one gigantic line -- there are no sentence marks at all
         # so just split the sequence of tokens arbitrarily: 1 sentence = 1000 tokens
         sentence, rest = [], b''
-        with utils.smart_open(self.fname) as fin:
+        with utils.open(self.fname, 'rb') as fin:
             while True:
                 text = rest + fin.read(8192)  # avoid loading the entire file (=1 line) into RAM
                 if text == rest:  # EOF
@@ -1778,7 +1755,7 @@ class LineSentence(object):
                     i += self.max_sentence_length
         except AttributeError:
             # If it didn't work like a file, use it as a string filename
-            with utils.smart_open(self.source) as fin:
+            with utils.open(self.source, 'rb') as fin:
                 for line in itertools.islice(fin, self.limit):
                     line = utils.to_unicode(line).split()
                     i = 0
@@ -1833,7 +1810,7 @@ class PathLineSentences(object):
         """iterate through the files"""
         for file_name in self.input_files:
             logger.info('reading file %s', file_name)
-            with utils.smart_open(file_name) as fin:
+            with utils.open(file_name, 'rb') as fin:
                 for line in itertools.islice(fin, self.limit):
                     line = utils.to_unicode(line).split()
                     i = 0
@@ -1851,7 +1828,6 @@ if __name__ == "__main__":
         level=logging.INFO
     )
     logger.info("running %s", " ".join(sys.argv))
-    logger.info("using optimization %s", FAST_VERSION)
 
     # check and process cmdline input
     program = os.path.basename(sys.argv[0])

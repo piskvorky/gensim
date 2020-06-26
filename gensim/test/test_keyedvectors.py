@@ -12,22 +12,22 @@ Automated tests for checking the poincare module from the models package.
 import logging
 import unittest
 
+from mock import patch
 import numpy as np
 
 from gensim.corpora import Dictionary
-from gensim.models.keyedvectors import KeyedVectors as EuclideanKeyedVectors, WordEmbeddingSimilarityIndex, \
-    FastTextKeyedVectors
+from gensim.models.keyedvectors import (
+    KeyedVectors, WordEmbeddingSimilarityIndex, FastTextKeyedVectors, REAL,
+)
 from gensim.test.utils import datapath
-
 import gensim.models.keyedvectors
-
 
 logger = logging.getLogger(__name__)
 
 
 class TestWordEmbeddingSimilarityIndex(unittest.TestCase):
     def setUp(self):
-        self.vectors = EuclideanKeyedVectors.load_word2vec_format(
+        self.vectors = KeyedVectors.load_word2vec_format(
             datapath('euclidean_vectors.bin'), binary=True, datatype=np.float64)
 
     def test_most_similar(self):
@@ -67,12 +67,12 @@ class TestWordEmbeddingSimilarityIndex(unittest.TestCase):
         first_similarities = np.array([similarity for term, similarity in index.most_similar(u"holiday", topn=10)])
         index = WordEmbeddingSimilarityIndex(self.vectors, exponent=2.0)
         second_similarities = np.array([similarity for term, similarity in index.most_similar(u"holiday", topn=10)])
-        self.assertTrue(np.allclose(first_similarities**2.0, second_similarities))
+        self.assertTrue(np.allclose(first_similarities ** 2.0, second_similarities))
 
 
-class TestEuclideanKeyedVectors(unittest.TestCase):
+class TestKeyedVectors(unittest.TestCase):
     def setUp(self):
-        self.vectors = EuclideanKeyedVectors.load_word2vec_format(
+        self.vectors = KeyedVectors.load_word2vec_format(
             datapath('euclidean_vectors.bin'), binary=True, datatype=np.float64)
 
     def test_similarity_matrix(self):
@@ -109,6 +109,9 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
         predicted = self.vectors.most_similar('war', topn=0)
         self.assertEqual(len(predicted), 0)
 
+        predicted = self.vectors.most_similar('war', topn=np.uint8(0))
+        self.assertEqual(len(predicted), 0)
+
     def test_relative_cosine_similarity(self):
         """Test relative_cosine_similarity returns expected results with an input of a word pair and topn"""
         wordnet_syn = [
@@ -117,7 +120,7 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
             'skillful', 'skilful', 'dear', 'near', 'dependable', 'safe', 'secure', 'right', 'ripe', 'well',
             'effective', 'in_effect', 'in_force', 'serious', 'sound', 'salutary', 'honest', 'undecomposed',
             'unspoiled', 'unspoilt', 'thoroughly', 'soundly'
-        ]   # synonyms for "good" as per wordnet
+        ]  # synonyms for "good" as per wordnet
         cos_sim = []
         for i in range(len(wordnet_syn)):
             if wordnet_syn[i] in self.vectors.vocab:
@@ -224,7 +227,7 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
             self.assertTrue(np.allclose(self.vectors[ent], vector))
 
         # Test `add` on empty kv.
-        kv = EuclideanKeyedVectors(self.vectors.vector_size)
+        kv = KeyedVectors(self.vectors.vector_size)
         for ent, vector in zip(entities, vectors):
             kv.add(ent, vector)
 
@@ -245,12 +248,21 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
             self.assertTrue(np.allclose(self.vectors[ent], vector))
 
         # Test `add` on empty kv.
-        kv = EuclideanKeyedVectors(self.vectors.vector_size)
+        kv = KeyedVectors(self.vectors.vector_size)
         kv[entities] = vectors
         self.assertEqual(len(kv.vocab), len(entities))
 
         for ent, vector in zip(entities, vectors):
             self.assertTrue(np.allclose(kv[ent], vector))
+
+    def test_add_type(self):
+        kv = KeyedVectors(2)
+        assert kv.vectors.dtype == REAL
+
+        words, vectors = ["a"], np.array([1., 1.], dtype=np.float64).reshape(1, -1)
+        kv.add(words, vectors)
+
+        assert kv.vectors.dtype == REAL
 
     def test_set_item(self):
         """Test that __setitem__ works correctly."""
@@ -284,7 +296,7 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
             self.assertTrue(np.allclose(self.vectors[ent], vector))
 
     def test_ft_kv_backward_compat_w_360(self):
-        kv = EuclideanKeyedVectors.load(datapath("ft_kv_3.6.0.model.gz"))
+        kv = KeyedVectors.load(datapath("ft_kv_3.6.0.model.gz"))
         ft_kv = FastTextKeyedVectors.load(datapath("ft_kv_3.6.0.model.gz"))
 
         expected = ['trees', 'survey', 'system', 'graph', 'interface']
@@ -356,6 +368,82 @@ class Gensim320Test(unittest.TestCase):
         path = datapath('old_keyedvectors_320.dat')
         vectors = gensim.models.keyedvectors.KeyedVectors.load(path)
         self.assertTrue(vectors.word_vec('computer') is not None)
+
+
+class Word2VecKeyedVectorsTest(unittest.TestCase):
+    def setUp(self):
+        self.model_path = datapath("w2v_keyedvectors_load_test.modeldata")
+        self.vocab_path = datapath("w2v_keyedvectors_load_test.vocab")
+
+    def test_load_model_and_vocab_file_strict(self):
+        """Test loading model and vocab files which have decoding errors: strict mode"""
+        with self.assertRaises(UnicodeDecodeError):
+            gensim.models.KeyedVectors.load_word2vec_format(
+                self.model_path, fvocab=self.vocab_path, binary=False, unicode_errors="strict")
+
+    def test_load_model_and_vocab_file_replace(self):
+        """Test loading model and vocab files which have decoding errors: replace mode"""
+        model = gensim.models.KeyedVectors.load_word2vec_format(
+            self.model_path, fvocab=self.vocab_path, binary=False, unicode_errors="replace")
+        self.assertEqual(model.vocab[u'ありがとう�'].count, 123)
+        self.assertEqual(model.vocab[u'どういたしまして�'].count, 789)
+        self.assertEqual(model.vocab[u'ありがとう�'].index, 0)
+        self.assertEqual(model.vocab[u'どういたしまして�'].index, 1)
+        self.assertTrue(np.array_equal(
+            model.get_vector(u'ありがとう�'), np.array([.6, .6, .6], dtype=np.float32)))
+        self.assertTrue(np.array_equal(
+            model.get_vector(u'どういたしまして�'), np.array([.1, .2, .3], dtype=np.float32)))
+
+    def test_load_model_and_vocab_file_ignore(self):
+        """Test loading model and vocab files which have decoding errors: ignore mode"""
+        model = gensim.models.KeyedVectors.load_word2vec_format(
+            self.model_path, fvocab=self.vocab_path, binary=False, unicode_errors="ignore")
+        print(model.vocab.keys())
+        self.assertEqual(model.vocab[u'ありがとう'].count, 123)
+        self.assertEqual(model.vocab[u'どういたしまして'].count, 789)
+        self.assertEqual(model.vocab[u'ありがとう'].index, 0)
+        self.assertEqual(model.vocab[u'どういたしまして'].index, 1)
+        self.assertTrue(np.array_equal(
+            model.get_vector(u'ありがとう'), np.array([.6, .6, .6], dtype=np.float32)))
+        self.assertTrue(np.array_equal(
+            model.get_vector(u'どういたしまして'), np.array([.1, .2, .3], dtype=np.float32)))
+
+
+try:
+    import keras  # noqa: F401
+
+    KERAS_INSTALLED = True
+except ImportError:
+    KERAS_INSTALLED = False
+
+
+@unittest.skipUnless(KERAS_INSTALLED, 'keras needs to be installed for this test')
+class WordEmbeddingsKeyedVectorsTest(unittest.TestCase):
+    def setUp(self):
+        self.vectors = KeyedVectors.load_word2vec_format(
+            datapath('euclidean_vectors.bin'), binary=True, datatype=np.float64)
+
+    def test_get_keras_embedding_word_index_none(self):
+        embedding_layer = self.vectors.get_keras_embedding()
+        self.assertEqual(self.vectors.vectors.shape, embedding_layer._initial_weights[0].shape)
+        self.assertTrue(np.array_equal(
+            self.vectors['is'], embedding_layer._initial_weights[0][self.vectors.vocab['is'].index, :]))
+
+    def test_get_keras_embedding_word_index_passed(self):
+        word_index = {'is': 1, 'to': 2}
+        embedding_layer = self.vectors.get_keras_embedding(word_index=word_index)
+        self.assertEqual(embedding_layer._initial_weights[0].shape, (3, self.vectors.vectors.shape[1]))
+        self.assertTrue(np.array_equal(
+            self.vectors['is'], embedding_layer._initial_weights[0][1, :]))
+
+    @patch('numpy.random.normal')
+    def test_get_keras_embedding_word_index_passed_with_oov_word(self, normal_func):
+        normal_func.return_value = np.zeros((3, self.vectors.vectors.shape[1]))
+        word_index = {'is': 1, 'not_a_real_word': 2}
+        embedding_layer = self.vectors.get_keras_embedding(word_index=word_index)
+        self.assertEqual(embedding_layer._initial_weights[0].shape, (3, self.vectors.vectors.shape[1]))
+        self.assertTrue(
+            np.array_equal(embedding_layer._initial_weights[0][2, :], np.zeros(self.vectors.vectors.shape[1])))
 
 
 if __name__ == '__main__':

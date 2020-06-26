@@ -464,7 +464,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         save_freq = max(1, int(10000 / self.chunksize))  # save every 10k docs, roughly
         chunks_processed = 0
-        start_time = time.clock()
+        start_time = time.perf_counter()
 
         while True:
             for chunk in utils.grouper(corpus, self.chunksize):
@@ -513,7 +513,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             (self.max_chunks and chunks_processed == self.max_chunks)
 
             # time limit reached
-            or (self.max_time and time.clock() - start_time > self.max_time)
+            or (self.max_time and time.perf_counter() - start_time > self.max_time)
 
             # no limits and whole corpus has been processed once
             or (not self.max_chunks and not self.max_time and docs_processed >= self.m_D))
@@ -863,7 +863,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             logger.error("cannot store options without having specified an output directory")
             return
         fname = '%s/options.dat' % self.outputdir
-        with utils.smart_open(fname, 'wb') as fout:
+        with utils.open(fname, 'wb') as fout:
             fout.write('tau: %s\n' % str(self.m_tau - 1))
             fout.write('chunksize: %s\n' % str(self.chunksize))
             fout.write('var_converge: %s\n' % str(self.m_var_converge))

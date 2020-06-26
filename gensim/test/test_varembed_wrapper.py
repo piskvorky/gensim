@@ -11,6 +11,7 @@ Automated tests for VarEmbed wrapper.
 """
 
 import logging
+import os
 import sys
 
 import numpy as np
@@ -29,7 +30,10 @@ except ImportError:
 varembed_model_vector_file = datapath('varembed_vectors.pkl')
 varembed_model_morfessor_file = datapath('varembed_morfessor.bin')
 
+AZURE = bool(os.environ.get('PIPELINE_WORKSPACE'))
 
+
+@unittest.skipIf(AZURE, 'see <https://github.com/RaRe-Technologies/gensim/pull/2836>')
 class TestVarembed(unittest.TestCase):
     def testLoadVarembedFormat(self):
         """Test storing/loading the entire model."""

@@ -241,12 +241,12 @@ class TestWord2VecModel(unittest.TestCase):
 
     def onlineSanity(self, model, trained_model=False):
         terro, others = [], []
-        for l in list_corpus:
-            if 'terrorism' in l:
-                terro.append(l)
+        for x in list_corpus:
+            if 'terrorism' in x:
+                terro.append(x)
             else:
-                others.append(l)
-        self.assertTrue(all('terrorism' not in l for l in others))
+                others.append(x)
+        self.assertTrue(all('terrorism' not in x for x in others))
         model.build_vocab(others, update=trained_model)
         model.train(others, total_examples=model.corpus_count, epochs=model.epochs)
         self.assertFalse('terrorism' in model.wv.vocab)
@@ -813,9 +813,6 @@ class TestWord2VecModel(unittest.TestCase):
 
     def testParallel(self):
         """Test word2vec parallel training."""
-        if word2vec.FAST_VERSION < 0:  # don't test the plain np version for parallelism (too slow)
-            return
-
         corpus = utils.RepeatCorpus(LeeCorpus(), 10000)
 
         for workers in [2, 4]:
@@ -955,16 +952,16 @@ class TestWord2VecModel(unittest.TestCase):
             loaded_model.train(list_corpus, total_examples=model.corpus_count, epochs=model.epochs)
 
     @log_capture()
-    def testBuildVocabWarning(self, l):
+    def testBuildVocabWarning(self, line):
         """Test if warning is raised on non-ideal input to a word2vec model"""
         sentences = ['human', 'machine']
         model = word2vec.Word2Vec()
         model.build_vocab(sentences)
         warning = "Each 'sentences' item should be a list of words (usually unicode strings)."
-        self.assertTrue(warning in str(l))
+        self.assertTrue(warning in str(line))
 
     @log_capture()
-    def testTrainWarning(self, l):
+    def testTrainWarning(self, line):
         """Test if warning is raised if alpha rises during subsequent calls to train()"""
         sentences = [
             ['human'],
@@ -979,7 +976,7 @@ class TestWord2VecModel(unittest.TestCase):
             if epoch == 5:
                 model.alpha += 0.05
         warning = "Effective 'alpha' higher than previous training cycles"
-        self.assertTrue(warning in str(l))
+        self.assertTrue(warning in str(line))
 
     def test_train_with_explicit_param(self):
         model = word2vec.Word2Vec(size=2, min_count=1, hs=1, negative=0)
@@ -1024,7 +1021,7 @@ class TestWord2VecModel(unittest.TestCase):
 
 class TestWMD(unittest.TestCase):
 
-    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed or have some issues")
+    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed")
     def testNonzero(self):
         '''Test basic functionality with a test sentence.'''
 
@@ -1036,7 +1033,7 @@ class TestWMD(unittest.TestCase):
         # Check that distance is non-zero.
         self.assertFalse(distance == 0.0)
 
-    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed or have some issues")
+    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed")
     def testSymmetry(self):
         '''Check that distance is symmetric.'''
 
@@ -1047,7 +1044,7 @@ class TestWMD(unittest.TestCase):
         distance2 = model.wv.wmdistance(sentence2, sentence1)
         self.assertTrue(np.allclose(distance1, distance2))
 
-    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed or have some issues")
+    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed")
     def testIdenticalSentences(self):
         '''Check that the distance from a sentence to itself is zero.'''
 
@@ -1060,7 +1057,7 @@ class TestWMD(unittest.TestCase):
 class TestWord2VecSentenceIterators(unittest.TestCase):
     def testLineSentenceWorksWithFilename(self):
         """Does LineSentence work with a filename argument?"""
-        with utils.smart_open(datapath('lee_background.cor')) as orig:
+        with utils.open(datapath('lee_background.cor'), 'rb') as orig:
             sentences = word2vec.LineSentence(datapath('lee_background.cor'))
             for words in sentences:
                 self.assertEqual(words, utils.to_unicode(orig.readline()).split())
@@ -1069,41 +1066,41 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
     def testCythonLineSentenceWorksWithFilename(self):
         """Does CythonLineSentence work with a filename argument?"""
         from gensim.models import word2vec_corpusfile
-        with utils.smart_open(datapath('lee_background.cor')) as orig:
+        with utils.open(datapath('lee_background.cor'), 'rb') as orig:
             sentences = word2vec_corpusfile.CythonLineSentence(datapath('lee_background.cor'))
             for words in sentences:
                 self.assertEqual(words, orig.readline().split())
 
     def testLineSentenceWorksWithCompressedFile(self):
         """Does LineSentence work with a compressed file object argument?"""
-        with utils.smart_open(datapath('head500.noblanks.cor')) as orig:
+        with utils.open(datapath('head500.noblanks.cor'), 'rb') as orig:
             sentences = word2vec.LineSentence(bz2.BZ2File(datapath('head500.noblanks.cor.bz2')))
             for words in sentences:
                 self.assertEqual(words, utils.to_unicode(orig.readline()).split())
 
     def testLineSentenceWorksWithNormalFile(self):
         """Does LineSentence work with a file object argument, rather than filename?"""
-        with utils.smart_open(datapath('head500.noblanks.cor')) as orig:
-            with utils.smart_open(datapath('head500.noblanks.cor')) as fin:
+        with utils.open(datapath('head500.noblanks.cor'), 'rb') as orig:
+            with utils.open(datapath('head500.noblanks.cor'), 'rb') as fin:
                 sentences = word2vec.LineSentence(fin)
                 for words in sentences:
                     self.assertEqual(words, utils.to_unicode(orig.readline()).split())
 
     def testPathLineSentences(self):
         """Does PathLineSentences work with a path argument?"""
-        with utils.smart_open(os.path.join(datapath('PathLineSentences'), '1.txt')) as orig1,\
-        utils.smart_open(os.path.join(datapath('PathLineSentences'), '2.txt.bz2')) as orig2:
-            sentences = word2vec.PathLineSentences(datapath('PathLineSentences'))
-            orig = orig1.readlines() + orig2.readlines()
-            orig_counter = 0  # to go through orig while matching PathLineSentences
-            for words in sentences:
-                self.assertEqual(words, utils.to_unicode(orig[orig_counter]).split())
-                orig_counter += 1
+        with utils.open(os.path.join(datapath('PathLineSentences'), '1.txt'), 'rb') as orig1:
+            with utils.open(os.path.join(datapath('PathLineSentences'), '2.txt.bz2'), 'rb') as orig2:
+                sentences = word2vec.PathLineSentences(datapath('PathLineSentences'))
+                orig = orig1.readlines() + orig2.readlines()
+                orig_counter = 0  # to go through orig while matching PathLineSentences
+                for words in sentences:
+                    self.assertEqual(words, utils.to_unicode(orig[orig_counter]).split())
+                    orig_counter += 1
 
     def testPathLineSentencesOneFile(self):
         """Does PathLineSentences work with a single file argument?"""
         test_file = os.path.join(datapath('PathLineSentences'), '1.txt')
-        with utils.smart_open(test_file) as orig:
+        with utils.open(test_file, 'rb') as orig:
             sentences = word2vec.PathLineSentences(test_file)
             for words in sentences:
                 self.assertEqual(words, utils.to_unicode(orig.readline()).split())
@@ -1135,5 +1132,4 @@ if __name__ == '__main__':
         format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s',
         level=logging.DEBUG
     )
-    logging.info("using optimization %s", word2vec.FAST_VERSION)
     unittest.main()

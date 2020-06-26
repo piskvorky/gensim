@@ -143,7 +143,7 @@ class LsiTransformer(TransformerMixin, BaseEstimator):
         Parameters
         ----------
         X : {iterable of list of (int, number), scipy.sparse matrix}
-            Stream of document vectors or sparse matrix of shape: [`num_terms`, `num_documents`].
+            Stream of document vectors or sparse matrix of shape: [`num_documents`, `num_terms`].
 
         Returns
         -------
