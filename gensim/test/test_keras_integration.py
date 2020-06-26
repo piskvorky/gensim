@@ -1,3 +1,4 @@
+import sys
 import unittest
 import numpy as np
 from gensim.models import word2vec
@@ -44,6 +45,10 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
         sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
         self.assertEqual(sims, sims2)
 
+    @unittest.skipIf(
+        sys.version_info[:2] == (3, 8),
+        'see https://github.com/RaRe-Technologies/gensim/issues/2865'
+    )
     def testEmbeddingLayerCosineSim(self):
         """
         Test Keras 'Embedding' layer returned by 'get_embedding_layer' function for a simple word similarity task.
