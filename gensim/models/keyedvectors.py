@@ -1348,7 +1348,7 @@ class WordEmbeddingsKeyedVectors(BaseKeyedVectors):
         if getattr(self, 'vectors_norm', None) is None or replace:
             logger.info("precomputing L2-norms of word weight vectors")
             self.vectors_norm = _l2_norm(self.vectors, replace=replace)
-        elif (len(self.vectors_norm) == len(self.vectors)):  # if all of the vectors are precomputed
+        elif len(self.vectors_norm) == len(self.vectors):  # all vectors are precomputed
             pass
         else:  # when some newly added vectors in self.vectors are not precomputed
             logger.info("adding L2-norm vectors for new documents")
