@@ -346,7 +346,7 @@ class FastText(BaseWordEmbeddingsModel):
                  max_vocab_size=None, word_ngrams=1, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
                  negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, iter=5, null_word=0, min_n=3, max_n=6,
                  sorted_vocab=1, bucket=2000000, trim_rule=None, batch_words=MAX_WORDS_IN_BATCH, callbacks=(),
-                 compatible_hash=True):
+                 compatible_hash=True, max_final_vocab=None):
         """
 
         Parameters
@@ -448,6 +448,12 @@ class FastText(BaseWordEmbeddingsModel):
             Older versions were not 100% compatible due to a bug.
             To use the older, incompatible hash function, set this to False.
 
+        max_final_vocab : int, optional
+            Limits the vocab to a target vocab size by automatically selecting
+            ``min_count```.  If the specified ``min_count`` is more than the
+            automatically calculated ``min_count``, the former will be used.
+            Set to ``None`` if not required.
+
         Examples
         --------
         Initialize and train a `FastText` model:
@@ -472,7 +478,9 @@ class FastText(BaseWordEmbeddingsModel):
         self.wv = FastTextKeyedVectors(size, min_n, max_n, bucket, compatible_hash)
         self.vocabulary = FastTextVocab(
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample,
-            sorted_vocab=bool(sorted_vocab), null_word=null_word, ns_exponent=ns_exponent)
+            sorted_vocab=bool(sorted_vocab), null_word=null_word, ns_exponent=ns_exponent,
+            max_final_vocab=max_final_vocab,
+        )
         self.trainables = FastTextTrainables(vector_size=size, seed=seed, bucket=bucket, hashfxn=hashfxn)
         self.trainables.prepare_weights(hs, negative, self.wv, update=False, vocabulary=self.vocabulary)
         self.wv.bucket = self.trainables.bucket
