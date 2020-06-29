@@ -406,7 +406,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
             if normalized_X:
                 X_norm = X.T.dot(matrix).dot(X)[0, 0]
                 assert X_norm >= 0.0, non_negative_norm_assertion_message
-                if normalized_X is 'maintain' and X_norm > 0.0:
+                if normalized_X == 'maintain' and X_norm > 0.0:
                     X_norm /= X.T.dot(X)
                 X_norm = sqrt(X_norm)
                 if X_norm > 0.0:
@@ -415,7 +415,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
             if normalized_Y:
                 Y_norm = Y.T.dot(matrix).dot(Y)[0, 0]
                 assert Y_norm >= 0.0, non_negative_norm_assertion_message
-                if normalized_Y is 'maintain' and Y_norm > 0.0:
+                if normalized_Y == 'maintain' and Y_norm > 0.0:
                     Y_norm /= Y.T.dot(Y)
                 Y_norm = sqrt(Y_norm)
                 if Y_norm > 0.0:
@@ -451,7 +451,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
             if normalized_X:
                 X_norm = np.multiply(X.T.dot(matrix), X.T).sum(axis=1).T
                 assert X_norm.min() >= 0.0, non_negative_norm_assertion_message
-                if normalized_X is 'maintain':
+                if normalized_X == 'maintain':
                     X_norm /= X.T.dot(X)
                 X_norm = np.sqrt(X_norm)
                 X = np.multiply(X, 1.0 / X_norm).T
@@ -460,7 +460,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
             if normalized_Y:
                 Y_norm = np.multiply(Y.T.dot(matrix), Y.T).sum(axis=1).T
                 assert Y_norm.min() >= 0.0, non_negative_norm_assertion_message
-                if normalized_Y is 'maintain':
+                if normalized_Y == 'maintain':
                     Y_norm /= np.multiply(Y.T, Y.T).sum(axis=1).T
                 Y_norm = np.sqrt(Y_norm)
                 Y = np.multiply(Y, 1.0 / Y_norm)
@@ -486,7 +486,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
             if normalized_X:
                 X_norm = X.T.dot(matrix).multiply(X.T).sum(axis=1).T
                 assert X_norm.min() >= 0.0, non_negative_norm_assertion_message
-                if normalized_X is 'maintain':
+                if normalized_X == 'maintain':
                     X_norm /= X.T.multiply(X.T).sum(axis=1).T
                 X_norm = np.sqrt(X_norm)
                 X = X.multiply(sparse.csr_matrix(1.0 / X_norm))
@@ -495,7 +495,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
             if normalized_Y:
                 Y_norm = Y.T.dot(matrix).multiply(Y.T).sum(axis=1).T
                 assert Y_norm.min() >= 0.0, non_negative_norm_assertion_message
-                if normalized_Y is 'maintain':
+                if normalized_Y == 'maintain':
                     Y_norm /= Y.T.multiply(Y.T).sum(axis=1).T
                 Y_norm = np.sqrt(Y_norm)
                 Y = Y.multiply(sparse.csr_matrix(1.0 / Y_norm))
