@@ -59,7 +59,7 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
         embedding_b = embedding_layer(input_b)
         similarity = dot([embedding_a, embedding_b], axes=2, normalize=True)
 
-        model = Model(input=[input_a, input_b], output=similarity)
+        model = Model([input_a, input_b], similarity)
         model.compile(optimizer='sgd', loss='mse')
 
         word_a = 'graph'
