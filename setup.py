@@ -354,7 +354,7 @@ setup(
     url='http://radimrehurek.com/gensim',
     download_url='http://pypi.python.org/pypi/gensim',
 
-    license='LGPLv2.1',
+    license='LGPL-2.1-only',
 
     keywords='Singular Value Decomposition, SVD, Latent Semantic Indexing, '
         'LSA, LSI, Latent Dirichlet Allocation, LDA, '
@@ -369,7 +369,6 @@ setup(
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
         'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
