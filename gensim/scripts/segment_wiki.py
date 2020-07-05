@@ -61,10 +61,7 @@ import logging
 import multiprocessing
 import re
 import sys
-try:
-    from xml.etree import cElementTree as ET
-except ImportError:
-    from xml.etree import ElementTree as ET
+from xml.etree import ElementTree
 from functools import partial
 
 from gensim.corpora.wikicorpus import IGNORED_NAMESPACES, WikiCorpus, filter_wiki, find_interlinks, get_namespace, utils
@@ -186,7 +183,7 @@ def extract_page_xmls(f):
         XML strings for page tags.
 
     """
-    elems = (elem for _, elem in ET.iterparse(f, events=("end",)))
+    elems = (elem for _, elem in ElementTree.iterparse(f, events=("end",)))
 
     elem = next(elems)
     namespace = get_namespace(elem.tag)
@@ -195,7 +192,7 @@ def extract_page_xmls(f):
 
     for elem in elems:
         if elem.tag == page_tag:
-            yield ET.tostring(elem)
+            yield ElementTree.tostring(elem)
             # Prune the element tree, as per
             # http://www.ibm.com/developerworks/xml/library/x-hiperfparse/
             # except that we don't need to prune backlinks from the parent
@@ -224,7 +221,7 @@ def segment(page_xml, include_interlinks=False):
         (Optionally) [(interlink_article, interlink_text), ...]).
 
     """
-    elem = ET.fromstring(page_xml)
+    elem = ElementTree.fromstring(page_xml)
     filter_namespaces = ('0',)
     namespace = get_namespace(elem.tag)
     ns_mapping = {"ns": namespace}
