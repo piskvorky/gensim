@@ -1343,8 +1343,7 @@ class FastTextKeyedVectors(KeyedVectors):
         """
         self.recalc_word_ngram_buckets()
 
-        rand_obj = np.random
-        rand_obj.seed(seed)
+        rand_obj = np.random.default_rng(seed=seed)  # use new instance of numpy's recommended generator/algorithm
 
         lo, hi = -1.0 / self.vector_size, 1.0 / self.vector_size
         vocab_shape = (len(self), self.vector_size)
