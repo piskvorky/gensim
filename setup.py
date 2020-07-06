@@ -324,7 +324,7 @@ if sys.version_info >= (3, 7):
     # See https://github.com/RaRe-Technologies/gensim/pull/2814#issuecomment-621477948
     linux_testenv += [
         'tensorflow',
-        'keras',
+        'keras==2.3.1',
     ]
 
 NUMPY_STR = 'numpy >= 1.11.3'
@@ -382,11 +382,11 @@ setup(
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3 :: Only',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Scientific/Engineering :: Information Analysis',
         'Topic :: Text Processing :: Linguistic',

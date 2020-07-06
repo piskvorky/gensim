@@ -313,7 +313,7 @@ class FastText(Word2Vec):
                  max_vocab_size=None, word_ngrams=1, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
                  negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, epochs=5, null_word=0, min_n=3, max_n=6,
                  sorted_vocab=1, bucket=2000000, trim_rule=None, batch_words=MAX_WORDS_IN_BATCH, callbacks=(),
-                 compatible_hash=True):
+                 compatible_hash=True, max_final_vocab=None):
         """Train, use and evaluate word representations learned using the method
         described in `Enriching Word Vectors with Subword Information <https://arxiv.org/abs/1607.04606>`_,
         aka FastText.
@@ -321,6 +321,7 @@ class FastText(Word2Vec):
         The model can be stored/loaded via its :meth:`~gensim.models.fasttext.FastText.save` and
         :meth:`~gensim.models.fasttext.FastText.load` methods, or loaded from a format compatible with the
         original Fasttext implementation via :func:`~gensim.models.fasttext.load_facebook_model`.
+        """
 
         Parameters
         ----------
@@ -422,6 +423,12 @@ class FastText(Word2Vec):
             Older versions were not 100% compatible due to a bug.
             To use the older, incompatible hash function, set this to False.
 
+        max_final_vocab : int, optional
+            Limits the vocab to a target vocab size by automatically selecting
+            ``min_count```.  If the specified ``min_count`` is more than the
+            automatically calculated ``min_count``, the former will be used.
+            Set to ``None`` if not required.
+
         Examples
         --------
         Initialize and train a `FastText` model:
@@ -473,7 +480,8 @@ class FastText(Word2Vec):
         super(FastText, self).__init__(
             sentences=sentences, corpus_file=corpus_file, workers=workers, vector_size=vector_size, epochs=epochs,
             callbacks=callbacks, batch_words=batch_words, trim_rule=trim_rule, sg=sg, alpha=alpha, window=window,
-            max_vocab_size=max_vocab_size, min_count=min_count, sample=sample, sorted_vocab=sorted_vocab,
+            max_vocab_size=max_vocab_size, max_final_vocab=max_final_vocab,
+            min_count=min_count, sample=sample, sorted_vocab=sorted_vocab,
             null_word=null_word, ns_exponent=ns_exponent, hashfxn=hashfxn,
             seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha)
 
