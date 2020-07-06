@@ -634,7 +634,10 @@ class FastText(Word2Vec):
             # Only used during training, not stored with the model
             report['buckets_word'] = 48 * len(self.wv) + 8 * num_ngrams  # FIXME: this looks confused -gojomo
         elif self.word_ngrams > 0:
-            logger.warning('subword information is enabled, but no vocabulary could be found, estimated required memory might be inaccurate!')
+            logger.warning(
+                'Subword information is enabled, but no vocabulary could be found. '
+                'Estimated required memory might be inaccurate!',
+            )
         report['total'] = sum(report.values())
         logger.info(
             "estimated required memory for %i words, %i buckets and %i dimensions: %i bytes",
@@ -1095,18 +1098,24 @@ def _check_model(m):
     """Model sanity checks. Run after everything has been completely initialized."""
     if m.wv.vector_size != m.wv.vectors_ngrams.shape[1]:
         raise ValueError(
-            'mismatch between vector size in model params (%s) and model vectors (%s)' % (m.wv.vector_size, m.wv.vectors_ngrams)
+            'mismatch between vector size in model params (%s) and model vectors (%s)' % (
+                m.wv.vector_size, m.wv.vectors_ngrams,
+            )
         )
 
     if hasattr(m, 'syn1neg') and m.syn1neg is not None:
         if m.wv.vector_size != m.syn1neg.shape[1]:
             raise ValueError(
-                'mismatch between vector size in model params (%s) and trainables (%s)' % (m.wv.vector_size, m.wv.vectors_ngrams)
+                'mismatch between vector size in model params (%s) and trainables (%s)' % (
+                    m.wv.vector_size, m.wv.vectors_ngrams,
+                )
             )
 
     if len(m.wv) != m.nwords:
         raise ValueError(
-            'mismatch between final vocab size (%s words), and expected number of words (%s words)' % (len(m.wv), m.nwords)
+            'mismatch between final vocab size (%s words), and expected number of words (%s words)' % (
+                len(m.wv), m.nwords,
+            )
         )
 
     if len(m.wv) != m.vocab_size:

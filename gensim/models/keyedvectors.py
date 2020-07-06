@@ -575,7 +575,8 @@ class KeyedVectors(utils.SaveLoad):
         self.index_to_key = list(np.array(self.index_to_key)[count_sorted_indexes])
         self.allocate_vecattrs()
         for k in self.expandos:
-            self.expandos[k] = self.expandos[k][count_sorted_indexes]  # uses numpy's "fancy indexing" to shuffle in one step
+            # Use numpy's "fancy indexing" to permutate the entire array in one step.
+            self.expandos[k] = self.expandos[k][count_sorted_indexes]
         if len(self.vectors):
             logger.warning("sorting after vectors have been allocated is expensive & error-prone")
             self.vectors = self.vectors[count_sorted_indexes]
