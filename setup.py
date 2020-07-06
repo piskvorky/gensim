@@ -170,7 +170,7 @@ Target audience is the *natural language processing* (NLP) and *information retr
 Features
 ---------
 
-* All algorithms are **memory-independent** w.r.t. the corpus size (can process input larger than RAM, streamed, out-of-core),
+* All algorithms are **memory-independent** w.r.t. the corpus size (can process input larger than RAM, streamed, out-of-core)
 * **Intuitive interfaces**
 
   * easy to plug in your own input corpus/datastream (simple streaming API)
@@ -260,7 +260,10 @@ Copyright (c) 2009-now Radim Rehurek
 
 distributed_env = ['Pyro4 >= 4.27']
 
-linux_testenv = [
+visdom_req = ['visdom >= 0.1.8, != 0.1.8.7']
+
+# packages included for build-testing everywhere
+core_testenv = [
     'pytest',
     'pytest-rerunfailures',
     'mock',
@@ -270,16 +273,22 @@ linux_testenv = [
     'Morfessor==2.0.2a4',
     'python-Levenshtein >= 0.10.2',
     'scikit-learn',
-    # The following packages are commented out because they don't install on Windows. So skip the
-    # related tests in AppVeyor. We still test them in Linux via Travis, see linux_testenv below.
-    # See https://github.com/RaRe-Technologies/gensim/pull/2814
-    # 'tensorflow',
-    # 'keras',
-    'pyemd',  # see below; keep as last until appveyor issue resolved
 ]
 
-# temporarily remove pyemd to work around appveyor issues
-win_testenv = linux_testenv[:-1]
+# Add additional requirements for testing on Linux that are skipped on Windows.
+linux_testenv = core_testenv[:] + visdom_req + ['pyemd', ]
+if sys.version_info >= (3, 7):
+    # HACK: Installing tensorflow causes a segfault in Travis on py3.6. Other Pythons work – a mystery.
+    # See https://github.com/RaRe-Technologies/gensim/pull/2814#issuecomment-621477948
+    linux_testenv += [
+        'tensorflow',
+        'keras==2.3.1',
+    ]
+
+# Skip problematic/uninstallable  packages (& thus related conditional tests) in Windows builds.
+# We still test them in Linux via Travis, see linux_testenv above.
+# See https://github.com/RaRe-Technologies/gensim/pull/2814
+win_testenv = core_testenv[:]
 
 #
 # This list partially duplicates requirements_docs.txt.
@@ -291,8 +300,8 @@ win_testenv = linux_testenv[:-1]
 #
 #   https://packaging.python.org/discussions/install-requires-vs-requirements/
 #
-visdom_req = ['visdom >= 0.1.8, != 0.1.8.7']
-docs_testenv = win_testenv + distributed_env + visdom_req + [
+
+docs_testenv = core_testenv + distributed_env + visdom_req + [
     'sphinx <= 2.4.4',  # avoid `sphinx >= 3.0` that breaks the build
     'sphinx-gallery',
     'sphinxcontrib.programoutput',
@@ -316,17 +325,6 @@ docs_testenv = win_testenv + distributed_env + visdom_req + [
     'pandas',
 ]
 
-# Add additional requirements for testing on Linux. We skip some tests on Windows,
-# because the libraries below are too tricky to install there.
-linux_testenv = win_testenv[:] + visdom_req
-if sys.version_info >= (3, 7):
-    # HACK: Installing tensorflow causes a segfault in Travis on py3.6. Other Pythons work – a mystery.
-    # See https://github.com/RaRe-Technologies/gensim/pull/2814#issuecomment-621477948
-    linux_testenv += [
-        'tensorflow',
-        'keras==2.3.1',
-    ]
-
 NUMPY_STR = 'numpy >= 1.11.3'
 #
 # We pin the Cython version for reproducibility.  We expect our extensions
@@ -340,7 +338,7 @@ install_requires = [
     'scipy >= 0.18.1',
     'six >= 1.5.0',
     'smart_open >= 1.8.1',
-    "dataclasses; python_version < '3.7'",
+    "dataclasses; python_version < '3.7'",  # pre-py3.7 needs `dataclasses` backport for use of `dataclass` in doc2vec.py
 ]
 
 setup_requires = [NUMPY_STR]
