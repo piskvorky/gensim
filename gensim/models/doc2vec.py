@@ -1067,12 +1067,10 @@ class Doc2Vec(Word2Vec):
 
 class Doc2VecVocab(utils.SaveLoad):
     """Obsolete class retained for now as load-compatibility state capture"""
-    pass
 
 
 class Doc2VecTrainables(utils.SaveLoad):
     """Obsolete class retained for now as load-compatibility state capture"""
-    pass
 
 
 class TaggedBrownCorpus(object):

@@ -41,7 +41,9 @@ def need_cython():
     """Return True if we need Cython to translate any of the extensions.
 
     If the extensions have already been translated to C/C++, then we don't need
-    to install Cython and perform the translation."""
+    to install Cython and perform the translation.
+
+    """
     expected = list(c_extensions.values()) + list(cpp_extensions.values())
     return any([not os.path.isfile(f) for f in expected])
 
@@ -260,12 +262,13 @@ Copyright (c) 2009-now Radim Rehurek
 
 distributed_env = ['Pyro4 >= 4.27']
 
-linux_testenv = [
+win_testenv = [
     'pytest',
     'pytest-rerunfailures',
     'mock',
     'cython',
     'nmslib',
+    'pyemd',
     'testfixtures',
     'Morfessor==2.0.2a4',
     'python-Levenshtein >= 0.10.2',
@@ -275,11 +278,7 @@ linux_testenv = [
     # See https://github.com/RaRe-Technologies/gensim/pull/2814
     # 'tensorflow',
     # 'keras',
-    'pyemd',  # see below; keep as last until appveyor issue resolved
 ]
-
-# temporarily remove pyemd to work around appveyor issues
-win_testenv = linux_testenv[:-1]
 
 #
 # This list partially duplicates requirements_docs.txt.

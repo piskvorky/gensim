@@ -256,7 +256,7 @@ class KeyedVectors(utils.SaveLoad):
         even if other properties (vectors array) hasn't yet been allocated or expanded.
         So this allocation targets that size.
         """
-        # with no arguments, simply adjust sizes of existing
+        # With no arguments, simply adjust sizes of existing arrays.
         if attrs is None:
             attrs = list(self.expandos.keys())
             types = [self.expandos[attr].dtype for attr in attrs]
@@ -276,13 +276,13 @@ class KeyedVectors(utils.SaveLoad):
                 prev_expando[0:min(prev_count, target_size), ]
 
     def set_vecattr(self, key, attr, val):
-        """ TODO """
+        """ FIXME """
         self.allocate_vecattrs(attrs=[attr], types=[type(val)])
         index = self.get_index(key)
         self.expandos[attr][index] = val
 
     def get_vecattr(self, key, attr):
-        """ TODO """
+        """ FIXME """
         index = self.get_index(key)
         return self.expandos[attr][index]
 
@@ -304,7 +304,7 @@ class KeyedVectors(utils.SaveLoad):
 
     def randomly_initialize_vectors(self, indexes=None, seed=0):
         """Initialize vectors with low-magnitude random vectors, as is typical for pre-trained
-        Word2Vec  and related models.
+        Word2Vec and related models.
 
         """
         if indexes is None:
@@ -379,9 +379,7 @@ class KeyedVectors(utils.SaveLoad):
         result.setflags(write=False)  # disallow direct tampering that would invalidate `norms` etc
         return result
 
-    def word_vec(self, *args, **kwargs):
-        """Compatibility alias for get_vector()"""
-        return self.get_vector(*args, **kwargs)
+    word_vec = get_vector  # Compatibility alias
 
     def add(self, keys, weights, extras=None, replace=False):
         """Append keys and their vectors in a manual way.
@@ -394,8 +392,8 @@ class KeyedVectors(utils.SaveLoad):
         weights: list of numpy.ndarray or numpy.ndarray
             List of 1D np.array vectors or a 2D np.array of vectors.
         replace: bool, optional
-            Flag indicating whether to replace vectors for keys which already exist in the map
-            if True - replace vectors, otherwise - keep old vectors.
+            Flag indicating whether to replace vectors for keys which already exist in the map.
+            If True - replace vectors, otherwise - keep old vectors.
 
         """
         if isinstance(keys, KEY_TYPES):
@@ -499,9 +497,9 @@ class KeyedVectors(utils.SaveLoad):
         """
         Ensure per-vector norms are available.
 
-        (Any code which modifies vectors should ensure the
-        accompanying norms are recalculated, or 'None'-out
-        'norms' to trigger full recalc later.)
+        Any code which modifies vectors should ensure the accompanying norms are
+        either recalculated or 'None', to trigger full recalc later.
+
         """
         if self.norms is None or force:
             self.norms = np.linalg.norm(self.vectors, axis=1)
@@ -541,9 +539,10 @@ class KeyedVectors(utils.SaveLoad):
 
     @property
     def pseudovocab(self):
-        """ pseudodict providing pseudovocab objects
+        """A pseudodict providing pseudovocab objects.
 
-        not efficient, temp backcompat workaround 'just in case' a .vocab use can't adapt
+        Not efficient, a temporary workaround for backward campatibility 'just in case' a .vocab use can't adapt.
+
         """
         class Vocaboid(object):
             def __init__(self, kv, index):
@@ -576,9 +575,9 @@ class KeyedVectors(utils.SaveLoad):
         self.index_to_key = list(np.array(self.index_to_key)[count_sorted_indexes])
         self.allocate_vecattrs()
         for k in self.expandos:
-            self.expandos[k] = self.expandos[k][count_sorted_indexes]
+            self.expandos[k] = self.expandos[k][count_sorted_indexes]  # uses numpy's "fancy indexing" to shuffle in one step
         if len(self.vectors):
-            logger.warning("sorting after vectors allocated expensive & error-prone")
+            logger.warning("sorting after vectors have been allocated is expensive & error-prone")
             self.vectors = self.vectors[count_sorted_indexes]
         for i, word in enumerate(self.index_to_key):
             self.key_to_index[word] = i
@@ -627,7 +626,7 @@ class KeyedVectors(utils.SaveLoad):
             are searched for most-similar values. For example, restrict_vocab=10000 would
             only check the first 10000 key vectors in the vocabulary order. (This may be
             meaningful if you've sorted the vocabulary by descending frequency.) If
-            specified, overrides any values of clip_start or clip_end
+            specified, overrides any values of ``clip_start`` or ``clip_end``.
 
         Returns
         -------
@@ -881,8 +880,8 @@ class KeyedVectors(utils.SaveLoad):
             When `topn` is None, then similarities for all words are returned as a
             one-dimensional numpy array with the size of the vocabulary.
 
-        # TODO: Update to better match & share code with most_similar()
         """
+        # FIXME: Update to better match & share code with most_similar()
         if isinstance(topn, Integral) and topn < 1:
             return []
 
@@ -1479,10 +1478,11 @@ class KeyedVectors(utils.SaveLoad):
             (Experimental) Can coerce dimensions to a non-default float type (such as `np.float16`) to save memory.
             Such types may result in much slower bulk operations or incompatibility with optimized routines.)
         no_header : bool, optional
-            Default False means a usual word2ve-format file, with a 1st line declaring the count of
-            following vectors & number of dimensions. If True, the file is assumed lack a declaratory
+            Default False means a usual word2vec-format file, with a 1st line declaring the count of
+            following vectors & number of dimensions. If True, the file is assumed to lack a declaratory
             (vocab_size, vector_size) header and instead start with the 1st vector, and an extra
             reading-pass will be used to discover the number of vectors. Works only with `binary=False`.
+
         Returns
         -------
         :class:`~gensim.models.keyedvectors.KeyedVectors`

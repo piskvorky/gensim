@@ -277,14 +277,13 @@ It consists of several important classes:
 
 import logging
 import os
+from collections.abc import Iterable
 
 import numpy as np
 from numpy import ones, vstack, float32 as REAL
 import six
-from collections.abc import Iterable
 
 import gensim.models._fasttext_bin
-
 from gensim.models.word2vec import Word2Vec
 from gensim.models.keyedvectors import KeyedVectors
 from gensim import utils
@@ -308,6 +307,7 @@ except ImportError:
 
 
 class FastText(Word2Vec):
+
     def __init__(self, sentences=None, corpus_file=None, sg=0, hs=0, vector_size=100, alpha=0.025,
                  window=5, min_count=5,
                  max_vocab_size=None, word_ngrams=1, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
@@ -501,7 +501,7 @@ class FastText(Word2Vec):
             self.wv.vectors_vocab_lockf = ones(1, dtype=REAL)
             self.wv.vectors_ngrams_lockf = ones(1, dtype=REAL)
 
-    def init_post_load(self, hidden_output):
+    def _init_post_load(self, hidden_output):
         num_vectors = len(self.wv.vectors)
         vocab_size = len(self.wv)
         vector_size = self.wv.vector_size
@@ -606,6 +606,7 @@ class FastText(Word2Vec):
         self.wv.adjust_vectors()  # ensure composite-word vecs reflect latest training
 
     def estimate_memory(self, vocab_size=None, report=None):
+        """Estimate memory that will be needed to train a model, and print the estimates to log."""
         vocab_size = vocab_size or len(self.wv)
         vec_size = self.vector_size * np.dtype(np.float32).itemsize
         l1_size = self.layer1_size * np.dtype(np.float32).itemsize
@@ -624,13 +625,7 @@ class FastText(Word2Vec):
                 buckets = set()
                 num_ngrams = 0
                 for word in self.wv.key_to_index:
-                    hashes = ft_ngram_hashes(
-                        word,
-                        self.wv.min_n,
-                        self.wv.max_n,
-                        self.bucket,
-                        self.wv.compatible_hash
-                    )
+                    hashes = ft_ngram_hashes(word, self.wv.min_n, self.wv.max_n, self.bucket, self.wv.compatible_hash)
                     num_ngrams += len(hashes)
                     buckets.update(hashes)
                 num_buckets = len(buckets)
@@ -639,14 +634,11 @@ class FastText(Word2Vec):
             # Only used during training, not stored with the model
             report['buckets_word'] = 48 * len(self.wv) + 8 * num_ngrams  # FIXME: this looks confused -gojomo
         elif self.word_ngrams > 0:
-            logger.warn(
-                'subword information is enabled, but no vocabulary could be found, estimated required memory might be '
-                'inaccurate!'
-            )
+            logger.warning('subword information is enabled, but no vocabulary could be found, estimated required memory might be inaccurate!')
         report['total'] = sum(report.values())
         logger.info(
             "estimated required memory for %i words, %i buckets and %i dimensions: %i bytes",
-            len(self.wv), num_buckets, self.vector_size, report['total']
+            len(self.wv), num_buckets, self.vector_size, report['total'],
         )
         return report
 
@@ -848,8 +840,7 @@ class FastText(Word2Vec):
             Load :class:`~gensim.models.fasttext.FastText` model.
 
         """
-        kwargs['ignore'] = kwargs.get(
-            'ignore', []) + ['buckets_word', ]
+        kwargs['ignore'] = kwargs.get('ignore', []) + ['buckets_word', ]
         super(FastText, self).save(*args, **kwargs)
 
     @classmethod
@@ -898,17 +889,16 @@ class FastText(Word2Vec):
 class FastTextVocab(utils.SaveLoad):
     """This is a redundant class. It exists only to maintain backwards compatibility
     with older gensim versions."""
-    pass
 
 
 class FastTextTrainables(utils.SaveLoad):
     """Obsolete class retained for backward-compatible load()s"""
-    pass
 
 
 def _pad_ones(m, new_len):
     """Pad array with additional entries filled with ones."""
-    assert len(m) <= new_len, 'the new number of rows %i must be greater than old %i' % (new_len, len(m))
+    if len(m) > new_len:
+        raise ValueError('the new number of rows %i must be greater than old %i' % (new_len, len(m)))
     new_arr = np.ones(new_len, dtype=REAL)
     new_arr[:len(m)] = m
     return new_arr
@@ -1093,7 +1083,7 @@ def _load_fasttext_format(model_file, encoding='utf-8', full_model=True):
     model.num_original_vectors = m.vectors_ngrams.shape[0]
 
     model.wv.init_post_load(m.vectors_ngrams)
-    model.init_post_load(m.hidden_output)
+    model._init_post_load(m.hidden_output)
 
     _check_model(model)
 
@@ -1102,30 +1092,28 @@ def _load_fasttext_format(model_file, encoding='utf-8', full_model=True):
 
 
 def _check_model(m):
-    #
-    # These checks only make sense after everything has been completely initialized.
-    #
-    assert m.wv.vector_size == m.wv.vectors_ngrams.shape[1], (
-        'mismatch between vector size in model params ({}) and model vectors ({})'
-        .format(m.wv.vector_size, m.wv.vectors_ngrams)
-    )
-
-    if hasattr(m, 'syn1neg') and m.syn1neg is not None:
-        assert m.wv.vector_size == m.syn1neg.shape[1], (
-            'mismatch between vector size in model params ({}) and trainables ({})'
-            .format(m.wv.vector_size, m.wv.vectors_ngrams)
+    """Model sanity checks. Run after everything has been completely initialized."""
+    if m.wv.vector_size != m.wv.vectors_ngrams.shape[1]:
+        raise ValueError(
+            'mismatch between vector size in model params (%s) and model vectors (%s)' % (m.wv.vector_size, m.wv.vectors_ngrams)
         )
 
-    assert len(m.wv) == m.nwords, (
-        'mismatch between final vocab size ({} words), '
-        'and expected number of words ({} words)'.format(len(m.wv), m.nwords)
-    )
+    if hasattr(m, 'syn1neg') and m.syn1neg is not None:
+        if m.wv.vector_size != m.syn1neg.shape[1]:
+            raise ValueError(
+                'mismatch between vector size in model params (%s) and trainables (%s)' % (m.wv.vector_size, m.wv.vectors_ngrams)
+            )
+
+    if len(m.wv) != m.nwords:
+        raise ValueError(
+            'mismatch between final vocab size (%s words), and expected number of words (%s words)' % (len(m.wv), m.nwords)
+        )
 
     if len(m.wv) != m.vocab_size:
         # expecting to log this warning only for pretrained french vector, wiki.fr
         logger.warning(
             "mismatch between final vocab size (%s words), and expected vocab size (%s words)",
-            len(m.wv), m.vocab_size
+            len(m.wv), m.vocab_size,
         )
 
 
@@ -1412,8 +1400,6 @@ class FastTextKeyedVectors(KeyedVectors):
             and ngrams.  This comes directly from the binary model.
             The order of the vectors must correspond to the indices in
             the vocabulary.
-        match_gensim : boolean, optional
-            No longer supported.
 
         """
         vocab_words = len(self)
@@ -1442,7 +1428,7 @@ class FastTextKeyedVectors(KeyedVectors):
             return
 
         self.vectors = self.vectors_vocab[:].copy()
-        for i, w in enumerate(self.index_to_key):
+        for i, _ in enumerate(self.index_to_key):
             ngram_buckets = self.buckets_word[i]
             for nh in ngram_buckets:
                 self.vectors[i] += self.vectors_ngrams[nh]
@@ -1450,11 +1436,10 @@ class FastTextKeyedVectors(KeyedVectors):
 
     def recalc_word_ngram_buckets(self):
         """
-        Scans the vocabulary, calculates ngrams and their hashes, and cache the
-        list of ngrams for each known word.
+        Scan the vocabulary, calculate ngrams and their hashes, and cache the list of ngrams for each known word.
 
-        TODO: evaluate if precaching even necessary, compared to recalculating as needed
         """
+        # FIXME: evaluate if precaching even necessary, compared to recalculating as needed
         if self.bucket == 0:
             self.buckets_word = [np.array([], dtype=np.uint32)] * len(self.index_to_key)
             return
@@ -1463,14 +1448,13 @@ class FastTextKeyedVectors(KeyedVectors):
 
         for i, word in enumerate(self.index_to_key):
             self.buckets_word[i] = np.array(
-                ft_ngram_hashes(word, self.min_n, self.max_n, self.bucket, self.compatible_hash),
-                dtype=np.uint32,
+                ft_ngram_hashes(word, self.min_n, self.max_n, self.bucket, self.compatible_hash), dtype=np.uint32,
             )
 
 
 def _pad_random(m, new_rows, rand):
     """Pad a matrix with additional rows filled with random values."""
-    rows, columns = m.shape
+    _, columns = m.shape
     low, high = -1.0 / columns, 1.0 / columns
     suffix = rand.uniform(low, high, (new_rows, columns)).astype(REAL)
     return vstack([m, suffix])
@@ -1479,8 +1463,8 @@ def _pad_random(m, new_rows, rand):
 def _rollback_optimization(kv):
     """Undo the optimization that pruned buckets.
 
-    This unfortunate optimization saves memory and CPU cycles, but breaks
-    compatibility with Facebook's model by introducing divergent behavior
+    This unfortunate optimization saved memory and CPU cycles in pre-4.0 Gensim versions,
+    but broke compatibility with Facebook's model by introducing divergent behavior
     for OOV words.
 
     """

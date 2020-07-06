@@ -22,10 +22,10 @@ from __future__ import print_function
 import logging
 import os
 import math
-import numpy
-import scipy.sparse as sparse
 import time
 
+import numpy
+import scipy.sparse as sparse
 from six.moves import range
 
 import gensim
@@ -263,9 +263,7 @@ class ShardedCorpus(IndexedCorpus):
 
         is_corpus, corpus = gensim.utils.is_corpus(corpus)
         if not is_corpus:
-            raise ValueError(
-                "Cannot initialize shards without a corpus to read from! (Got corpus type: {0})".format(type(corpus))
-            )
+            raise ValueError("Cannot initialize shards without a corpus to read from! Got corpus type: %s" % type(corpus))
 
         proposed_dim = self._guess_n_features(corpus)
         if proposed_dim != self.dim:
@@ -360,7 +358,7 @@ class ShardedCorpus(IndexedCorpus):
 
         filename = self._shard_name(n)
         if not os.path.isfile(filename):
-            raise ValueError('Attempting to load nonexistent shard no. {0}'.format(n))
+            raise ValueError('Attempting to load nonexistent shard no. %s' % n)
         shard = gensim.utils.unpickle(filename)
 
         self.current_shard = shard
@@ -387,11 +385,9 @@ class ShardedCorpus(IndexedCorpus):
         """
         k = int(offset / self.shardsize)
         if offset >= self.n_docs:
-            raise ValueError('Too high offset specified ({0}), available '
-                             'docs: {1}'.format(offset, self.n_docs))
+            raise ValueError('Too high offset specified (%s), available docs: %s' % (offset, self.n_docs))
         if offset < 0:
-            raise ValueError('Negative offset {0} currently not'
-                             ' supported.'.format(offset))
+            raise ValueError('Negative offset %s currently not supported.' % offset)
         return k
 
     def in_current(self, offset):
@@ -440,9 +436,8 @@ class ShardedCorpus(IndexedCorpus):
             if new_stop > self.n_docs:
                 # Sanity check
                 assert new_shard_idx == n_new_shards - 1, \
-                    'Shard no. {0} that ends at {1} over last document' \
-                    ' ({2}) is not the last projected shard ({3})???' \
-                    ''.format(new_shard_idx, new_stop, self.n_docs, n_new_shards)
+                    'Shard no. %r that ends at %r over last document (%r) is not the last projected shard (%r)' % (
+                        new_shard_idx, new_stop, self.n_docs, n_new_shards)
                 new_stop = self.n_docs
 
             new_shard = self[new_start:new_stop]
@@ -524,9 +519,8 @@ class ShardedCorpus(IndexedCorpus):
         else:
             if not self.dim:
                 raise TypeError(
-                    "Couldn't find number of features, refusing to guess "
-                    "(dimension set to {0}, type of corpus: {1})."
-                    .format(self.dim, type(corpus))
+                    "Couldn't find number of features, refusing to guess (dimension set to %s, type of corpus: %s)." % (
+                        self.dim, type(corpus))
                 )
             else:
                 logger.warning("Couldn't find number of features, trusting supplied dimension (%d)", self.dim)
@@ -591,7 +585,7 @@ class ShardedCorpus(IndexedCorpus):
             start = offset.start
             stop = offset.stop
             if stop > self.n_docs:
-                raise IndexError('Requested slice offset {0} out of range ({1} docs)'.format(stop, self.n_docs))
+                raise IndexError('Requested slice offset %s out of range (%s docs)' % (stop, self.n_docs))
 
             # - get range of shards over which to iterate
             first_shard = self.shard_by_offset(start)
@@ -687,8 +681,8 @@ class ShardedCorpus(IndexedCorpus):
         """
         if (result_stop - result_start) != (stop - start):
             raise ValueError(
-                'Result start/stop range different than stop/start range ({0} - {1} vs. {2} - {3})'
-                .format(result_start, result_stop, start, stop)
+                'Result start/stop range different than stop/start range (%s - %s vs. %s - %s)' % (
+                result_start, result_stop, start, stop)
             )
 
         # Dense data: just copy using numpy's slice notation
@@ -702,8 +696,8 @@ class ShardedCorpus(IndexedCorpus):
         else:
             if s_result.shape != (result_start, self.dim):
                 raise ValueError(
-                    'Assuption about sparse s_result shape invalid: {0} expected rows, {1} real rows.'
-                    .format(result_start, s_result.shape[0])
+                    'Assuption about sparse s_result shape invalid: %s expected rows, %s real rows.' % (
+                    result_start, s_result.shape[0])
                 )
 
             tmp_matrix = self.current_shard[start:stop]
