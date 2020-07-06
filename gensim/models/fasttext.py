@@ -321,7 +321,6 @@ class FastText(Word2Vec):
         The model can be stored/loaded via its :meth:`~gensim.models.fasttext.FastText.save` and
         :meth:`~gensim.models.fasttext.FastText.load` methods, or loaded from a format compatible with the
         original Fasttext implementation via :func:`~gensim.models.fasttext.load_facebook_model`.
-        """
 
         Parameters
         ----------
