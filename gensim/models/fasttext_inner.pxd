@@ -46,7 +46,7 @@ cdef struct FastTextConfig:
     #
     # Model parameters.  These get copied as-is from the Python model.
     #
-    int hs, negative, sample, size, window, cbow_mean, workers
+    int sg, hs, negative, sample, size, window, cbow_mean, workers
     REAL_t alpha
 
     #
@@ -146,4 +146,4 @@ cdef void fasttext_fast_sentence_cbow_neg(FastTextConfig *c, int i, int j, int k
 cdef void fasttext_fast_sentence_cbow_hs(FastTextConfig *c, int i, int j, int k) nogil
 
 
-cdef void fasttext_train_any(FastTextConfig *c, int num_sentences, int sg) nogil
+cdef void fasttext_train_any(FastTextConfig *c, int num_sentences) nogil

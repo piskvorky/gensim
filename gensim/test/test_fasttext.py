@@ -20,7 +20,7 @@ from gensim.models.fasttext import FastText as FT_gensim, FastTextKeyedVectors, 
 from gensim.models.keyedvectors import KeyedVectors
 from gensim.test.utils import datapath, get_tmpfile, temporary_file, common_texts as sentences
 import gensim.models._fasttext_bin
-from gensim.models.fasttext_inner import compute_ngrams, compute_ngrams_bytes, ft_hash_broken, ft_hash_bytes
+from gensim.models.fasttext_inner import compute_ngrams, compute_ngrams_bytes, ft_hash_bytes
 
 import gensim.models.fasttext
 
@@ -1164,7 +1164,6 @@ def hash_main(alg):
     assert six.PY3, 'this only works under Py3'
 
     hashmap = {
-        'cy_broken': ft_hash_broken,
         'cy_bytes': ft_hash_bytes,
     }
     try:
@@ -1188,7 +1187,7 @@ class FTHashFunctionsTest(unittest.TestCase):
         #
         # $ echo word1 ... wordN | python -c 'from gensim.test.test_fasttext import hash_main;hash_main("alg")'  # noqa: E501
         #
-        # where alg is one of py_bytes, py_broken, cy_bytes, cy_broken.
+        # where alg is cy_bytes (previous options had included: py_bytes, py_broken, cy_bytes, cy_broken.)
 
         #
         self.expected = {
@@ -1207,30 +1206,10 @@ class FTHashFunctionsTest(unittest.TestCase):
             u'札幌': 3909947444,
             u'西区': 3653372632,
         }
-        self.expected_broken = {
-            u'команда': 962806708,
-            u'маленьких': 3633597485,
-            u'друзей': 214728041,
-            u'возит': 3590926132,
-            u'грузы': 3674544745,
-            u'всех': 3931012458,
-            u'быстрей': 822471432,
-            u'mysterious': 1903186891,
-            u'asteroid': 1988297200,
-            u'odyssey': 310195777,
-            u'introduction': 2848265721,
-            u'北海道': 4017049120,
-            u'札幌': 1706980764,
-            u'西区': 1113327900,
-        }
 
     def test_cython(self):
         actual = {k: ft_hash_bytes(k.encode('utf-8')) for k in self.expected}
         self.assertEqual(self.expected, actual)
-
-    def test_cython_broken(self):
-        actual = {k: ft_hash_broken(k) for k in self.expected}
-        self.assertEqual(self.expected_broken, actual)
 
 
 #

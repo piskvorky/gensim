@@ -454,6 +454,7 @@ cdef void init_ft_config(FastTextConfig *c, model, alpha, _work, _neu1):
         Private working memory for each worker.
 
     """
+    c.sg = model.sg
     c.hs = model.hs
     c.negative = model.negative
     c.sample = (model.sample != 0)
@@ -568,7 +569,7 @@ cdef object populate_ft_config(FastTextConfig *c, wv, buckets_word, sentences):
     return effective_words, effective_sentences
 
 
-cdef void fasttext_train_any(FastTextConfig *c, int num_sentences, int sg) nogil:
+cdef void fasttext_train_any(FastTextConfig *c, int num_sentences) nogil:
     """Performs training on a fully initialized and populated configuration.
 
     Parameters
@@ -577,8 +578,6 @@ cdef void fasttext_train_any(FastTextConfig *c, int num_sentences, int sg) nogil
         A pointer to the configuration struct.
     num_sentences : int
         The number of sentences to train.
-    sg : int
-        1 for skipgram, 0 for CBOW.
 
     """
     cdef:
@@ -611,7 +610,7 @@ cdef void fasttext_train_any(FastTextConfig *c, int num_sentences, int sg) nogil
             # window_start = max(sentence_start, i - c.window + c.reduced_windows[i])
             # window_end = min(sentence_end, i + c.window + 1 - c.reduced_windows[i])
             #
-            if sg == 0:
+            if c.sg == 0:
                 if c.hs:
                     fasttext_fast_sentence_cbow_hs(c, i, window_start, window_end)
                 if c.negative:
@@ -667,7 +666,7 @@ def train_batch_any(model, sentences, alpha, _work, _neu1):
 
     # release GIL & train on all sentences in the batch
     with nogil:
-        fasttext_train_any(&c, num_sentences, 0)
+        fasttext_train_any(&c, num_sentences)
 
     return num_words
 
