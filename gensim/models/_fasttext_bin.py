@@ -435,7 +435,7 @@ def _get_field_from_model(model, field):
         requested field name, fields are listed in the `_NEW_HEADER_FORMAT` list
     """
     if field == 'bucket':
-        return model.bucket
+        return model.wv.bucket
     elif field == 'dim':
         return model.vector_size
     elif field == 'epoch':

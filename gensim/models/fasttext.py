@@ -299,7 +299,6 @@ try:
         MAX_WORDS_IN_BATCH,
         compute_ngrams,
         compute_ngrams_bytes,
-        ft_hash_broken,
         ft_hash_bytes,
     )
     from gensim.models.fasttext_corpusfile import train_epoch_sg, train_epoch_cbow
@@ -313,7 +312,7 @@ class FastText(Word2Vec):
                  max_vocab_size=None, word_ngrams=1, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
                  negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, epochs=5, null_word=0, min_n=3, max_n=6,
                  sorted_vocab=1, bucket=2000000, trim_rule=None, batch_words=MAX_WORDS_IN_BATCH, callbacks=(),
-                 compatible_hash=True, max_final_vocab=None):
+                 max_final_vocab=None):
         """Train, use and evaluate word representations learned using the method
         described in `Enriching Word Vectors with Subword Information <https://arxiv.org/abs/1607.04606>`_,
         aka FastText.
@@ -415,13 +414,6 @@ class FastText(Word2Vec):
             memory usage of the model. This option specifies the number of buckets used by the model.
         callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`, optional
             List of callbacks that need to be executed/run at specific stages during training.
-
-        compatible_hash: bool, optional
-            By default, newer versions of Gensim's FastText use a hash function
-            that is 100% compatible with Facebook's FastText.
-            Older versions were not 100% compatible due to a bug.
-            To use the older, incompatible hash function, set this to False.
-
         max_final_vocab : int, optional
             Limits the vocab to a target vocab size by automatically selecting
             ``min_count```.  If the specified ``min_count`` is more than the
@@ -472,8 +464,7 @@ class FastText(Word2Vec):
         if self.word_ngrams <= 1 and max_n == 0:
             bucket = 0
 
-        self.wv = FastTextKeyedVectors(vector_size, min_n, max_n, bucket, compatible_hash)
-        self.bucket = bucket
+        self.wv = FastTextKeyedVectors(vector_size, min_n, max_n, bucket)
         self.wv.bucket = bucket
 
         super(FastText, self).__init__(
@@ -618,7 +609,7 @@ class FastText(Word2Vec):
         report = report or {}
         report['vocab'] = len(self.wv) * (700 if self.hs else 500)
         report['syn0_vocab'] = len(self.wv) * vec_size
-        num_buckets = self.bucket
+        num_buckets = self.wv.bucket
         if self.hs:
             report['syn1'] = len(self.wv) * l1_size
         if self.negative:
@@ -626,7 +617,7 @@ class FastText(Word2Vec):
         if self.word_ngrams > 0 and len(self.wv):
             num_buckets = num_ngrams = 0
 
-            if self.bucket:
+            if self.wv.bucket:
                 buckets = set()
                 num_ngrams = 0
                 for word in self.wv.key_to_index:
@@ -634,8 +625,7 @@ class FastText(Word2Vec):
                         word,
                         self.wv.min_n,
                         self.wv.max_n,
-                        self.bucket,
-                        self.wv.compatible_hash
+                        self.wv.bucket,
                     )
                     num_ngrams += len(hashes)
                     buckets.update(hashes)
@@ -891,10 +881,8 @@ class FastText(Word2Vec):
             model.wv.vectors_vocab_lockf = ones(1, dtype=REAL)
         if len(model.wv.vectors_ngrams_lockf.shape) > 1:
             model.wv.vectors_ngrams_lockf = ones(1, dtype=REAL)
-        if not hasattr(model, 'bucket'):
-            model.bucket = model.wv.bucket
-
-        _try_upgrade(model.wv)
+        if hasattr(model, 'bucket'):
+            del model.bucket  # should only exist in one place: the wv subcomponent
         if not hasattr(model.wv, 'buckets_word') or not model.wv.buckets_word:
             model.wv.recalc_word_ngram_buckets()
 
@@ -1173,7 +1161,7 @@ def save_facebook_model(model, path, encoding="utf-8", lr_update_rate=100, word_
 
 
 class FastTextKeyedVectors(KeyedVectors):
-    def __init__(self, vector_size, min_n, max_n, bucket, compatible_hash):
+    def __init__(self, vector_size, min_n, max_n, bucket):
         """Vectors and vocab for :class:`~gensim.models.fasttext.FastText`.
 
         Implements significant parts of the FastText algorithm.  For example,
@@ -1185,12 +1173,6 @@ class FastTextKeyedVectors(KeyedVectors):
         Similar to a hashmap, this class keeps a fixed number of buckets, and
         maps all ngrams to buckets using a hash function.
 
-        This class also provides an abstraction over the hash functions used by
-        Gensim's FastText implementation over time.  The hash function connects
-        ngrams to buckets.  Originally, the hash function was broken and
-        incompatible with Facebook's implementation.  The current hash is fully
-        compatible.
-
         Parameters
         ----------
         vector_size : int
@@ -1201,9 +1183,6 @@ class FastTextKeyedVectors(KeyedVectors):
             The maximum number of characters in an ngram
         bucket : int
             The number of buckets.
-        compatible_hash : boolean
-            If True, uses the Facebook-compatible hash function instead of the
-            Gensim backwards-compatible hash function.
 
         Attributes
         ----------
@@ -1234,15 +1213,15 @@ class FastTextKeyedVectors(KeyedVectors):
         self.min_n = min_n
         self.max_n = max_n
         self.bucket = bucket  # count of buckets, fka num_ngram_vectors
-        self.compatible_hash = compatible_hash
+        self.compatible_hash = True
 
     @classmethod
     def load(cls, fname_or_handle, **kwargs):
         model = super(FastTextKeyedVectors, cls).load(fname_or_handle, **kwargs)
         if isinstance(model, FastTextKeyedVectors):
-            if not hasattr(model, 'compatible_hash'):
-                model.compatible_hash = False
-        _try_upgrade(model)
+            if not hasattr(model, 'compatible_hash') or model.compatible_hash is False:
+                raise TypeError("Pre-gensim-3.8.x Fasttext models with nonstandard hashing are no longer compatible."
+                                "Loading into gensim-3.8.3 & re-saving may create a compatible model.")
         return model
 
     def __contains__(self, word):
@@ -1327,7 +1306,7 @@ class FastTextKeyedVectors(KeyedVectors):
         else:
             word_vec = np.zeros(self.vectors_ngrams.shape[1], dtype=np.float32)
             ngram_weights = self.vectors_ngrams
-            ngram_hashes = ft_ngram_hashes(word, self.min_n, self.max_n, self.bucket, self.compatible_hash)
+            ngram_hashes = ft_ngram_hashes(word, self.min_n, self.max_n, self.bucket)
             if len(ngram_hashes) == 0:
                 #
                 # If it is impossible to extract _any_ ngrams from the input
@@ -1469,7 +1448,7 @@ class FastTextKeyedVectors(KeyedVectors):
 
         for i, word in enumerate(self.index_to_key):
             self.buckets_word[i] = np.array(
-                ft_ngram_hashes(word, self.min_n, self.max_n, self.bucket, self.compatible_hash),
+                ft_ngram_hashes(word, self.min_n, self.max_n, self.bucket),
                 dtype=np.uint32,
             )
 
@@ -1480,34 +1459,6 @@ def _pad_random(m, new_rows, rand):
     low, high = -1.0 / columns, 1.0 / columns
     suffix = rand.uniform(low, high, (new_rows, columns)).astype(REAL)
     return vstack([m, suffix])
-
-
-def _rollback_optimization(kv):
-    """Undo the optimization that pruned buckets.
-
-    This unfortunate optimization saves memory and CPU cycles, but breaks
-    compatibility with Facebook's model by introducing divergent behavior
-    for OOV words.
-
-    """
-    logger.warning(
-        "This saved FastText model was trained with an optimization we no longer support. "
-        "The current Gensim version automatically reverses this optimization during loading. "
-        "Save the loaded model to a new file and reload to suppress this message."
-    )
-    assert hasattr(kv, 'hash2index')
-    assert hasattr(kv, 'bucket')
-
-    kv.vectors_ngrams = _unpack(kv.vectors_ngrams, kv.bucket, kv.hash2index)
-    if hasattr(kv, 'vectors_ngrams_lockf'):
-        # just clobber with no-op lockf array: vanishingly unlikely this experimental feature used in old files
-        kv.vectors_ngrams_lockf = ones(1, dtype=REAL)
-
-    #
-    # We have replaced num_ngram_vectors with a property and deprecated it.
-    # We can't delete it because the new attribute masks the member.
-    #
-    del kv.hash2index
 
 
 def _unpack(m, num_rows, hash2index, seed=1, fill=None):
@@ -1587,19 +1538,6 @@ def _unpack(m, num_rows, hash2index, seed=1, fill=None):
     return m
 
 
-def _try_upgrade(wv):
-    if hasattr(wv, 'hash2index'):
-        _rollback_optimization(wv)
-
-    if not hasattr(wv, 'compatible_hash'):
-        logger.warning(
-            "This older model was trained with a buggy hash function. "
-            "The model will continue to work, but consider training it "
-            "from scratch."
-        )
-        wv.compatible_hash = False
-
-
 #
 # UTF-8 bytes that begin with 10 are subsequent bytes of a multi-byte sequence,
 # as opposed to a new character.
@@ -1623,7 +1561,7 @@ def _is_utf8_continue(b):
     return _byte_to_int(b) & _MB_MASK == _MB_START
 
 
-def ft_ngram_hashes(word, minn, maxn, num_buckets, fb_compatible=True):
+def ft_ngram_hashes(word, minn, maxn, num_buckets):
     """Calculate the ngrams of the word and hash them.
 
     Parameters
@@ -1636,21 +1574,14 @@ def ft_ngram_hashes(word, minn, maxn, num_buckets, fb_compatible=True):
         Maximum ngram length
     num_buckets : int
         The number of buckets
-    fb_compatible : boolean, optional
-        True for compatibility with the Facebook implementation.
-        False for compatibility with the old Gensim implementation.
 
     Returns
     -------
         A list of hashes (integers), one per each detected ngram.
 
     """
-    if fb_compatible:
-        encoded_ngrams = compute_ngrams_bytes(word, minn, maxn)
-        hashes = [ft_hash_bytes(n) % num_buckets for n in encoded_ngrams]
-    else:
-        text_ngrams = compute_ngrams(word, minn, maxn)
-        hashes = [ft_hash_broken(n) % num_buckets for n in text_ngrams]
+    encoded_ngrams = compute_ngrams_bytes(word, minn, maxn)
+    hashes = [ft_hash_bytes(n) % num_buckets for n in encoded_ngrams]
     return hashes
 
 

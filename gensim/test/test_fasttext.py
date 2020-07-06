@@ -247,7 +247,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(model.epochs, 5)
         self.assertEqual(model.negative, 5)
         self.assertEqual(model.sample, 0.0001)
-        self.assertEqual(model.bucket, 1000)
+        self.assertEqual(model.wv.bucket, 1000)
         self.assertEqual(model.wv.max_n, 6)
         self.assertEqual(model.wv.min_n, 3)
         self.assertEqual(model.wv.vectors.shape, (len(model.wv), model.vector_size))
@@ -300,7 +300,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(new_model.epochs, 5)
         self.assertEqual(new_model.negative, 5)
         self.assertEqual(new_model.sample, 0.0001)
-        self.assertEqual(new_model.bucket, 1000)
+        self.assertEqual(new_model.wv.bucket, 1000)
         self.assertEqual(new_model.wv.max_n, 6)
         self.assertEqual(new_model.wv.min_n, 3)
         self.assertEqual(new_model.wv.vectors.shape, (len(new_model.wv), new_model.vector_size))
@@ -1030,23 +1030,6 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         self.assertNotEqual(old_vector, new_vector)
         self.model_structural_sanity(model)
 
-    def test_continuation_load_gensim(self):
-        #
-        # This is a model from 3.6.0
-        #
-        model = FT_gensim.load(datapath('compatible-hash-false.model'))
-        self.model_structural_sanity(model)
-
-        vectors_ngrams_before = np.copy(model.wv.vectors_ngrams)
-        old_vector = model.wv.word_vec('human').tolist()
-
-        model.train(list_corpus, total_examples=len(list_corpus), epochs=model.epochs)
-        new_vector = model.wv.word_vec('human').tolist()
-
-        self.assertFalse(np.allclose(vectors_ngrams_before, model.wv.vectors_ngrams))
-        self.assertNotEqual(old_vector, new_vector)
-        self.model_structural_sanity(model)
-
     def test_save_load_gensim(self):
         """Test that serialization works end-to-end.  Not crashing is a success."""
         #
@@ -1128,20 +1111,10 @@ class HashCompatibilityTest(unittest.TestCase):
     def test_compatibility_true(self):
         m = FT_gensim.load(datapath('compatible-hash-true.model'))
         self.assertTrue(m.wv.compatible_hash)
-        self.assertEqual(m.bucket, m.wv.bucket)
-
-    def test_compatibility_false(self):
-        #
-        # Originally obtained using and older version of gensim (e.g. 3.6.0).
-        #
-        m = FT_gensim.load(datapath('compatible-hash-false.model'))
-        self.assertFalse(m.wv.compatible_hash)
-        self.assertEqual(m.bucket, m.wv.bucket)
 
     def test_hash_native(self):
         m = load_native()
         self.assertTrue(m.wv.compatible_hash)
-        self.assertEqual(m.bucket, m.wv.bucket)
 
 
 class FTHashResultsTest(unittest.TestCase):
@@ -1568,7 +1541,7 @@ class SaveFacebookFormatModelTest(unittest.TestCase):
         self.assertEqual(model_trained.negative, model_loaded.negative)
         self.assertEqual(model_trained.hs, model_loaded.hs)
         self.assertEqual(model_trained.sg, model_loaded.sg)
-        self.assertEqual(model_trained.bucket, model_loaded.bucket)
+        self.assertEqual(model_trained.wv.bucket, model_loaded.wv.bucket)
         self.assertEqual(model_trained.wv.min_n, model_loaded.wv.min_n)
         self.assertEqual(model_trained.wv.max_n, model_loaded.wv.max_n)
         self.assertEqual(model_trained.sample, model_loaded.sample)
@@ -1727,21 +1700,6 @@ class SaveFacebookFormatReadingTest(unittest.TestCase):
 
     def test_cbow(self):
         self._check_load_fasttext_format(sg=0)
-
-
-class TestFastTextKeyedVectors(unittest.TestCase):
-    def test_ft_kv_backward_compat_w_360(self):
-        kv = KeyedVectors.load(datapath("ft_kv_3.6.0.model.gz"))
-        ft_kv = FastTextKeyedVectors.load(datapath("ft_kv_3.6.0.model.gz"))
-
-        expected = ['trees', 'survey', 'system', 'graph', 'interface']
-        actual = [word for (word, similarity) in kv.most_similar("human", topn=5)]
-
-        self.assertEqual(actual, expected)
-
-        actual = [word for (word, similarity) in ft_kv.most_similar("human", topn=5)]
-
-        self.assertEqual(actual, expected)
 
 
 class UnpackTest(unittest.TestCase):
