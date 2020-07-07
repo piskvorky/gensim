@@ -945,7 +945,7 @@ class NativeTrainingContinuationTest(unittest.TestCase):
             expected = dict(load_vec(fin))
 
         for word, expected_vector in expected.items():
-            actual_vector = native.wv.word_vec(word)
+            actual_vector = native.wv.get_vector(word)
             self.assertTrue(np.allclose(expected_vector, actual_vector, atol=1e-5))
 
         self.model_structural_sanity(native)
@@ -955,7 +955,7 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         native = load_native()
 
         for word, expected_vector in self.oov_expected.items():
-            actual_vector = native.wv.word_vec(word)
+            actual_vector = native.wv.get_vector(word)
             self.assertTrue(np.allclose(expected_vector, actual_vector, atol=1e-5))
 
         self.model_structural_sanity(native)
@@ -971,7 +971,7 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         model = train_gensim()
 
         for word, expected_vector in self.oov_expected.items():
-            actual_vector = model.wv.word_vec(word)
+            actual_vector = model.wv.get_vector(word)
             self.assertTrue(np.allclose(expected_vector, actual_vector, atol=1e-5))
 
         self.model_structural_sanity(model)
@@ -1004,11 +1004,11 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         # Its vectors should be different between training runs.
         #
         word = 'human'  # FIXME: this isn't actually in model, except via OOV ngrams
-        old_vector = native.wv.word_vec(word).tolist()
+        old_vector = native.wv.get_vector(word).tolist()
 
         native.train(list_corpus, total_examples=len(list_corpus), epochs=native.epochs)
 
-        new_vector = native.wv.word_vec(word).tolist()
+        new_vector = native.wv.get_vector(word).tolist()
         self.assertNotEqual(old_vector, new_vector)
         self.model_structural_sanity(native)
 
@@ -1019,13 +1019,13 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         vectors_ngrams_before = np.copy(model.wv.vectors_ngrams)
 
         word = 'human'
-        old_vector = model.wv.word_vec(word).tolist()
+        old_vector = model.wv.get_vector(word).tolist()
 
         model.train(list_corpus, total_examples=len(list_corpus), epochs=model.epochs)
 
         vectors_ngrams_after = np.copy(model.wv.vectors_ngrams)
         self.assertFalse(np.allclose(vectors_ngrams_before, vectors_ngrams_after))
-        new_vector = model.wv.word_vec(word).tolist()
+        new_vector = model.wv.get_vector(word).tolist()
 
         self.assertNotEqual(old_vector, new_vector)
         self.model_structural_sanity(model)

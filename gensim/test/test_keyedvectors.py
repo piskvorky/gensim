@@ -299,7 +299,7 @@ class Gensim320Test(unittest.TestCase):
     def test(self):
         path = datapath('old_keyedvectors_320.dat')
         vectors = gensim.models.keyedvectors.KeyedVectors.load(path)
-        self.assertTrue(vectors.word_vec('computer') is not None)
+        self.assertTrue(vectors.get_vector('computer') is not None)
 
 
 def save_dict_to_word2vec_formated_file(fname, word2vec_dict):

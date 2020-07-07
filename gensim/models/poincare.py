@@ -876,7 +876,7 @@ class PoincareKeyedVectors(KeyedVectors):
         >>> model.train(epochs=50)
         >>>
         >>> # Query the trained model.
-        >>> wv = model.kv.word_vec('kangaroo.n.01')
+        >>> wv = model.kv.get_vector('kangaroo.n.01')
 
     """
     def __init__(self, vector_size, vector_count, dtype=REAL):
@@ -1067,8 +1067,8 @@ class PoincareKeyedVectors(KeyedVectors):
             If either of `w1` and `w2` is absent from vocab.
 
         """
-        vector_1 = self.word_vec(w1)
-        vector_2 = self.word_vec(w2)
+        vector_1 = self.get_vector(w1)
+        vector_2 = self.get_vector(w2)
         return self.vector_distance(vector_1, vector_2)
 
     def similarity(self, w1, w2):
@@ -1215,7 +1215,7 @@ class PoincareKeyedVectors(KeyedVectors):
 
         """
         if isinstance(node_or_vector, string_types):
-            input_vector = self.word_vec(node_or_vector)
+            input_vector = self.get_vector(node_or_vector)
         else:
             input_vector = node_or_vector
         if not other_nodes:
@@ -1260,7 +1260,7 @@ class PoincareKeyedVectors(KeyedVectors):
 
         """
         if isinstance(node_or_vector, string_types):
-            input_vector = self.word_vec(node_or_vector)
+            input_vector = self.get_vector(node_or_vector)
         else:
             input_vector = node_or_vector
         return np.linalg.norm(input_vector)
@@ -1676,7 +1676,7 @@ class LexicalEntailmentEvaluation(object):
                     min_term_1, min_term_2 = term_1, term_2
                     min_distance = distance
         assert min_term_1 is not None and min_term_2 is not None
-        vector_1, vector_2 = embedding.word_vec(min_term_1), embedding.word_vec(min_term_2)
+        vector_1, vector_2 = embedding.get_vector(min_term_1), embedding.get_vector(min_term_2)
         norm_1, norm_2 = np.linalg.norm(vector_1), np.linalg.norm(vector_2)
         return -1 * (1 + self.alpha * (norm_2 - norm_1)) * min_distance
 

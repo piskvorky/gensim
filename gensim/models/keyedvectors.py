@@ -139,7 +139,7 @@ Some of them are already built-in
     >>> vector.shape
     (100,)
     >>>
-    >>> vector = word_vectors.wv.word_vec('office', use_norm=True)
+    >>> vector = word_vectors.wv.get_vector('office', use_norm=True)
     >>> vector.shape
     (100,)
 
@@ -380,7 +380,10 @@ class KeyedVectors(utils.SaveLoad):
         result.setflags(write=False)  # disallow direct tampering that would invalidate `norms` etc
         return result
 
-    word_vec = get_vector  # Compatibility alias for get_vector()
+    @deprecated("Use get_vector instead")
+    def word_vec(self, *args, **kwargs):
+        """Compatibility alias for get_vector(); must exist so subclass calls reach subclass get_vector()"""
+        return self.get_vector(*args, **kwargs)
 
     def add_one(self, key, vector):
         """Add one new vector at the given key, into existing slot if available.
@@ -901,11 +904,11 @@ class KeyedVectors(utils.SaveLoad):
             }
 
         positive = [
-            self.word_vec(word, use_norm=True) if isinstance(word, str) else word
+            self.get_vector(word, use_norm=True) if isinstance(word, str) else word
             for word in positive
         ]
         negative = [
-            self.word_vec(word, use_norm=True) if isinstance(word, str) else word
+            self.get_vector(word, use_norm=True) if isinstance(word, str) else word
             for word in negative
         ]
 
@@ -949,7 +952,7 @@ class KeyedVectors(utils.SaveLoad):
             logger.warning("vectors for words %s are not present in the model, ignoring these words", ignored_words)
         if not used_words:
             raise ValueError("cannot select a word from an empty list")
-        vectors = vstack([self.word_vec(word, use_norm=use_norm) for word in used_words]).astype(REAL)
+        vectors = vstack([self.get_vector(word, use_norm=use_norm) for word in used_words]).astype(REAL)
         mean = matutils.unitvec(vectors.mean(axis=0)).astype(REAL)
         dists = dot(vectors, mean)
         return sorted(zip(dists, used_words), reverse=True)
@@ -1017,7 +1020,7 @@ class KeyedVectors(utils.SaveLoad):
 
         """
         if isinstance(word_or_vector, KEY_TYPES):
-            input_vector = self.word_vec(word_or_vector)
+            input_vector = self.get_vector(word_or_vector)
         else:
             input_vector = word_or_vector
         if not other_words:
