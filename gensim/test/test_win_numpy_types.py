@@ -13,6 +13,16 @@ import struct
 
 
 class TestWinNumpying(unittest.TestCase):
+    def testTiny(self):
+        a = np.empty(1, dtype=type(2**32))
+        a[0] = 2**32
+
+    def oneliner0(self):
+        np.array([2**32])
+
+    def oneliner1(self):
+        np.array([2**32], dtype=type(2**32))
+
     def testAscending(self):
         print("platform: %i" % (struct.calcsize("P") * 8))
         print(type(0))
