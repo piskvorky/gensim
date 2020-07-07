@@ -13,8 +13,10 @@ import struct
 
 
 class TestWinNumpying(unittest.TestCase):
-    def testStuff(self):
+    def testAscending(self):
         print("platform: %i" % (struct.calcsize("P") * 8))
+        print(type(0))
+        print(type(2**32))
         kv = KeyedVectors(10, 3)
         kv.add_one('zero', np.arange(10))
         kv.add_one('one', np.arange(10))
@@ -24,6 +26,20 @@ class TestWinNumpying(unittest.TestCase):
         print(kv.expandos['probe_int'].dtype)
         print(kv.expandos['probe_int'])
         kv.set_vecattr('tons', 'probe_int', 2**32)
+        print(kv.expandos['probe_int'])
+
+    def testDescending(self):
+        print("platform: %i" % (struct.calcsize("P") * 8))
+        print(type(0))
+        print(type(2**32))
+        kv = KeyedVectors(10, 3)
+        kv.add_one('zero', np.arange(10))
+        kv.add_one('one', np.arange(10))
+        kv.add_one('tons', np.arange(10))
+        kv.set_vecattr('tons', 'probe_int', 2**32)
+        kv.set_vecattr('one', 'probe_int', 1)
+        kv.set_vecattr('zero', 'probe_int', 0)
+        print(kv.expandos['probe_int'].dtype)
         print(kv.expandos['probe_int'])
 
 
