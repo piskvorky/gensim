@@ -379,8 +379,6 @@ class KeyedVectors(utils.SaveLoad):
         return result
 
     word_vec = get_vector  # Compatibility alias for get_vector()
-        """Compatibility alias for get_vector()"""
-        return self.get_vector(*args, **kwargs)
 
     def add_one(self, key, vector):
         """Add one new vector at the given key, into existing slot if available.
@@ -574,7 +572,7 @@ class KeyedVectors(utils.SaveLoad):
         self.index_to_key = list(np.array(self.index_to_key)[count_sorted_indexes])
         self.allocate_vecattrs()
         for k in self.expandos:
-            self.expandos[k] = self.expandos[k][count_sorted_indexes]  # uses numpy's "fancy indexing" to shuffle in one step
+            self.expandos[k] = self.expandos[k][count_sorted_indexes]  # numpy "fancy indexing" for 1-step shuffle
         if len(self.vectors):
             logger.warning("sorting after vectors have been allocated is expensive & error-prone")
             self.vectors = self.vectors[count_sorted_indexes]
