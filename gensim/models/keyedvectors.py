@@ -67,7 +67,7 @@ For example, using the Word2Vec algorithm to train the vectors
     >>> from gensim.test.utils import lee_corpus_list
     >>> from gensim.models import Word2Vec
     >>>
-    >>> model = Word2Vec(common_texts, size=24, epochs=100)
+    >>> model = Word2Vec(lee_corpus_list, size=24, epochs=100)
     >>> word_vectors = model.wv
 
 Persist the word vectors to disk with
@@ -261,6 +261,8 @@ class KeyedVectors(utils.SaveLoad):
             types = [self.expandos[attr].dtype for attr in attrs]
         target_size = len(self.index_to_key)
         for attr, t in zip(attrs, types):
+            if t is int:
+                t = np.int64  # ensure 'int' type 64-bit (numpy-on-Windows https://github.com/numpy/numpy/issues/9464)
             if attr not in self.expandos:
                 self.expandos[attr] = np.zeros(target_size, dtype=t)
                 continue
