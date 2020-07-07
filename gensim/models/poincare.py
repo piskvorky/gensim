@@ -50,7 +50,7 @@ import time
 
 import numpy as np
 from collections import defaultdict, Counter
-from numpy import random as np_random
+from numpy import random as np_random, float32 as REAL
 from scipy.stats import spearmanr
 from six import string_types
 from six.moves import zip, range
@@ -149,7 +149,7 @@ class PoincareModel(utils.SaveLoad):
 
         """
         self.train_data = train_data
-        self.kv = PoincareKeyedVectors(size)
+        self.kv = PoincareKeyedVectors(size, 0)
         self.all_relations = []
         self.node_relations = defaultdict(set)
         self._negatives_buffer = NegativesBuffer([])
@@ -879,8 +879,8 @@ class PoincareKeyedVectors(KeyedVectors):
         >>> wv = model.kv.word_vec('kangaroo.n.01')
 
     """
-    def __init__(self, vector_size):
-        super(PoincareKeyedVectors, self).__init__(vector_size)
+    def __init__(self, vector_size, vector_count, dtype=REAL):
+        super(PoincareKeyedVectors, self).__init__(vector_size, vector_count, dtype=dtype)
         self.max_distance = 0
 
     def _load_specials(self, *args, **kwargs):
