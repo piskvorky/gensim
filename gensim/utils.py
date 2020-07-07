@@ -64,6 +64,9 @@ NO_CYTHON = RuntimeError(
 )
 """An exception that gensim code raises when Cython extensions are unavailable."""
 
+#: A default, shared numpy-Generator-based PRNG for any/all uses that don't require seeding
+default_prng = np.random.default_rng()
+
 
 def get_random_state(seed):
     """Generate :class:`numpy.random.RandomState` based on input seed.

@@ -64,22 +64,20 @@ For example, using the Word2Vec algorithm to train the vectors
 
 .. sourcecode:: pycon
 
-    >>> from gensim.test.utils import common_texts
+    >>> from gensim.test.utils import lee_corpus_list
     >>> from gensim.models import Word2Vec
     >>>
-    >>> model = Word2Vec(common_texts, size=100, window=5, min_count=1, workers=4)
+    >>> model = Word2Vec(common_texts, size=24, epochs=100)
     >>> word_vectors = model.wv
 
 Persist the word vectors to disk with
 
 .. sourcecode:: pycon
 
-    >>> from gensim.test.utils import get_tmpfile
     >>> from gensim.models import KeyedVectors
     >>>
-    >>> fname = get_tmpfile("vectors.kv")
-    >>> word_vectors.save(fname)
-    >>> word_vectors = KeyedVectors.load(fname, mmap='r')
+    >>> word_vectors.save('vectors.kv')
+    >>> reloaded_word_vectors = KeyedVectors.load('vectors.kv')
 
 The vectors can also be instantiated from an existing file on disk
 in the original Google's word2vec C format as a KeyedVectors instance
@@ -166,14 +164,9 @@ and so on.
 import logging
 import sys
 import itertools
+import warnings
 from itertools import chain
-from collections import UserList, UserDict
 from numbers import Integral
-
-try:
-    from queue import Queue, Empty
-except ImportError:
-    from Queue import Queue, Empty  # noqa:F401
 
 from numpy import dot, float32 as REAL, \
     double, array, zeros, vstack, \
@@ -184,31 +177,37 @@ import numpy as np
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.corpora.dictionary import Dictionary
 from gensim.utils import deprecated
-from six import string_types, integer_types
-from six.moves import zip, range
 from scipy import stats
 
 
 logger = logging.getLogger(__name__)
 
 
-KEY_TYPES = (string_types, integer_types, np.integer)
+KEY_TYPES = (str, int, np.integer)
 
 
 class KeyedVectors(utils.SaveLoad):
-    def __init__(self, vector_size, mapfile_path=None):
+    def __init__(self, vector_size, count=0, dtype=REAL, mapfile_path=None):
         """Mapping between keys (such as words)  and vectors for :class:`~gensim.models.Word2Vec`
         and related models.
 
         Used to perform operations on the vectors such as vector lookup, distance, similarity etc.
 
+        To support the needs of specific models and other downstream uses, each key may also have
+        additional attributes set and read via the `set_vecattr(key, attr, value)` and `get_vecattr(key, attr)`
+        methods. Note that all such attributes under the same `attr` name must have compatible `numpy`
+        types, as the type and storage array for such attributes is established by the 1st time such
+        `attr` is set.
+
         """
         self.vector_size = vector_size
-        self.vectors = zeros((0, vector_size), dtype=REAL)  # fka (formerly known as) syn0
-        self.norms = None
-
-        self.index_to_key = []  # fka index2entity or index2word
+        # pre-allocating `index_to_key` to full size helps avoid redundant re-allocations, esp for `expandos`
+        self.index_to_key = [None] * count  # fka index2entity or index2word
+        self.next_index = 0  # pointer to where next new entry will land
         self.key_to_index = {}
+
+        self.vectors = zeros((count, vector_size), dtype=dtype)  # fka (formerly known as) syn0
+        self.norms = None
 
         self.expandos = {}  # dynamically-expandable per-vector named, numpy-typed attributes
 
@@ -237,7 +236,7 @@ class KeyedVectors(utils.SaveLoad):
             self._upconvert_old_vocab()
 
     def _upconvert_old_vocab(self):
-        """Convert a loaded, prior-version instance that had a 'vocab' dict of data objects"""
+        """Convert a loaded, pre-gensim-4.0.0 version instance that had a 'vocab' dict of data objects"""
         old_vocab = self.__dict__.pop('vocab', None)
         self.key_to_index = {}
         for k in old_vocab.keys():
@@ -256,7 +255,7 @@ class KeyedVectors(utils.SaveLoad):
         even if other properties (vectors array) hasn't yet been allocated or expanded.
         So this allocation targets that size.
         """
-        # with no arguments, simply adjust sizes of existing
+        # with no arguments, adjust lengths of existing storage arrays to match length of index_to_key
         if attrs is None:
             attrs = list(self.expandos.keys())
             types = [self.expandos[attr].dtype for attr in attrs]
@@ -276,13 +275,13 @@ class KeyedVectors(utils.SaveLoad):
                 prev_expando[0:min(prev_count, target_size), ]
 
     def set_vecattr(self, key, attr, val):
-        """ TODO """
+        """Set attribute associated with given key to value. TODO: param docs"""
         self.allocate_vecattrs(attrs=[attr], types=[type(val)])
         index = self.get_index(key)
         self.expandos[attr][index] = val
 
     def get_vecattr(self, key, attr):
-        """ TODO """
+        """Get attribute value associate with given key. TODO: param docs"""
         index = self.get_index(key)
         return self.expandos[attr][index]
 
@@ -343,7 +342,7 @@ class KeyedVectors(utils.SaveLoad):
         """
         if key in self.key_to_index:
             return self.key_to_index[key]
-        elif isinstance(key, (integer_types, np.integer)) and key < len(self.index_to_key):
+        elif isinstance(key, (int, np.integer)) and key < len(self.index_to_key):
             return key
         else:
             raise KeyError("Key '%s' not present" % key)
@@ -382,6 +381,34 @@ class KeyedVectors(utils.SaveLoad):
     def word_vec(self, *args, **kwargs):
         """Compatibility alias for get_vector()"""
         return self.get_vector(*args, **kwargs)
+
+    def add_one(self, key, vector):
+        """Add one new vector at the given key, into existing slot if available.
+
+        Warning: using this repeatedly is inefficient, requiring a full reallocation & copy,
+        if this instance hasn't been preallocated to be ready fro such incremental additions.
+
+        returns: actual index used TODO: other param docs
+        """
+
+        target_index = self.next_index
+        if target_index >= len(self) or self.index_to_key[target_index] is not None:
+            # must append at end by expanding existing structures
+            target_index = len(self)
+            warnings.warn(
+                "Adding single vectors to a KeyedVectors which grows by one each time can be costly. "
+                "Consider adding in batches or preallocating to the required size.",
+                UserWarning)
+            self.add([key], [vector])
+            self.allocate_vecattrs()  # grow any adjunct arrays
+            self.next_index = target_index + 1
+        else:
+            # can add to existing slot
+            self.index_to_key[target_index] = key
+            self.key_to_index[key] = target_index
+            self.vectors[target_index] = vector
+            self.next_index += 1
+        return target_index
 
     def add(self, keys, weights, extras=None, replace=False):
         """Append keys and their vectors in a manual way.
@@ -489,7 +516,7 @@ class KeyedVectors(utils.SaveLoad):
         """Rank of the distance of `key2` from `key1`, in relation to distances of all keys from `key1`."""
         return len(self.closer_than(key1, key2)) + 1
 
-    # backward compatibility
+    # backward compatibility; some would be annotated `@deprecated` if that stacked with @property/.setter
     @property
     def vectors_norm(self):
         self.fill_norms()
@@ -538,35 +565,6 @@ class KeyedVectors(utils.SaveLoad):
     @vocab.setter
     def vocab(self, value):
         self.vocab()  # trigger above NotImplementedError
-
-    @property
-    def pseudovocab(self):
-        """ pseudodict providing pseudovocab objects
-
-        not efficient, temp backcompat workaround 'just in case' a .vocab use can't adapt
-        """
-        class Vocaboid(object):
-            def __init__(self, kv, index):
-                self.kv = kv
-                self.index = index
-
-            def __getattr__(self, attr):
-                if attr not in self.kv.expandos:
-                    raise AttributeError("Attribute '{0}' not in parent KeyedVectors".format(attr))
-                return self.kv.get_vecattr(self.index, attr)
-
-        class VocaboidDict(UserDict):
-            def __init__(self, kv):
-                super(VocaboidDict, self).__init__()
-                self.data = kv
-
-            def __getitem__(self, key):
-                return Vocaboid(self.data, self.data.get_index(key))
-
-            def __contains__(self, key):
-                return key in self.data
-
-        return VocaboidDict(self)
 
     def sort_by_descending_frequency(self):
         """Sort the vocabulary so the most frequent words have the lowest indexes."""
@@ -893,7 +891,7 @@ class KeyedVectors(utils.SaveLoad):
 
         self.fill_norms()
 
-        if isinstance(positive, string_types) and not negative:
+        if isinstance(positive, str) and not negative:
             # allow calls like most_similar_cosmul('dog'), as a shorthand for most_similar_cosmul(['dog'])
             positive = [positive]
 
@@ -903,11 +901,11 @@ class KeyedVectors(utils.SaveLoad):
             }
 
         positive = [
-            self.word_vec(word, use_norm=True) if isinstance(word, string_types) else word
+            self.word_vec(word, use_norm=True) if isinstance(word, str) else word
             for word in positive
         ]
         negative = [
-            self.word_vec(word, use_norm=True) if isinstance(word, string_types) else word
+            self.word_vec(word, use_norm=True) if isinstance(word, str) else word
             for word in negative
         ]
 
@@ -927,6 +925,35 @@ class KeyedVectors(utils.SaveLoad):
         result = [(self.index_to_key[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
 
+    def rank_by_centrality(self, words, use_norm=True):
+        """Rank the given words by similarity to the centroid of all the words.
+
+        Parameters
+        ----------
+        words : list of str
+            List of keys.
+        use_norm : bool, optional
+            Whether to calculate centroid using unit-normed vectors; default True.
+
+        Returns
+        -------
+        list of (float, str)
+            Ranked list of (similarity, key), most-similar to the centroid first.
+
+        """
+        self.fill_norms()
+
+        used_words = [word for word in words if word in self]
+        if len(used_words) != len(words):
+            ignored_words = set(words) - set(used_words)
+            logger.warning("vectors for words %s are not present in the model, ignoring these words", ignored_words)
+        if not used_words:
+            raise ValueError("cannot select a word from an empty list")
+        vectors = vstack([self.word_vec(word, use_norm=use_norm) for word in used_words]).astype(REAL)
+        mean = matutils.unitvec(vectors.mean(axis=0)).astype(REAL)
+        dists = dot(vectors, mean)
+        return sorted(zip(dists, used_words), reverse=True)
+
     def doesnt_match(self, words):
         """Which key from the given list doesn't go with the others?
 
@@ -941,18 +968,7 @@ class KeyedVectors(utils.SaveLoad):
             The key further away from the mean of all keys.
 
         """
-        self.fill_norms()
-
-        used_words = [word for word in words if word in self]
-        if len(used_words) != len(words):
-            ignored_words = set(words) - set(used_words)
-            logger.warning("vectors for words %s are not present in the model, ignoring these words", ignored_words)
-        if not used_words:
-            raise ValueError("cannot select a word from an empty list")
-        vectors = vstack([self.word_vec(word, use_norm=True) for word in used_words]).astype(REAL)
-        mean = matutils.unitvec(vectors.mean(axis=0)).astype(REAL)
-        dists = dot(vectors, mean)
-        return sorted(zip(dists, used_words))[0][1]
+        return self.rank_by_centrality(words)[-1][1]
 
     @staticmethod
     def cosine_similarities(vector_1, vectors_all):
@@ -1592,6 +1608,8 @@ class KeyedVectors(utils.SaveLoad):
         return layer
 
     def _upconvert_old_d2vkv(self):
+        """Convert a deserialized older Doc2VecKeyedVectors instance to latest generic KeyedVectors"""
+
         self.vocab = self.doctags
         self._upconvert_old_vocab()  # destroys 'vocab', fills 'key_to_index' & 'extras'
         for k in self.key_to_index.keys():
@@ -1644,14 +1662,16 @@ Vocab = CompatVocab
 
 # Functions for internal use by _load_word2vec_format function
 
-def _add_word_to_result(result, counts, word, weights, vocab_size):
+def _add_word_to_kv(kv, counts, word, weights, vocab_size):
 
-    word_id = len(result)
-    if result.has_index_for(word):
+    if kv.has_index_for(word):
         logger.warning("duplicate word '%s' in word2vec file, ignoring all but first", word)
         return
+    word_id = kv.add_one(word, weights)
+
     if counts is None:
         # most common scenario: no vocab file given. just make up some bogus counts, in descending order
+        # TODO: make this faking optional, include more realistic (Zipf-based) fake numbers
         word_count = vocab_size - word_id
     elif word in counts:
         # use count from the vocab file
@@ -1659,18 +1679,15 @@ def _add_word_to_result(result, counts, word, weights, vocab_size):
     else:
         logger.warning("vocabulary file is incomplete: '%s' is missing", word)
         word_count = None
-
-    result.key_to_index[word] = word_id
-    result.index_to_key.append(word)
-    result.set_vecattr(word, 'count', word_count)
-    result.vectors[word_id] = weights
+    kv.set_vecattr(word, 'count', word_count)
 
 
-def _add_bytes_to_result(result, counts, chunk, vocab_size, vector_size, datatype, unicode_errors):
+def _add_bytes_to_kv(kv, counts, chunk, vocab_size, vector_size, datatype, unicode_errors):
     start = 0
     processed_words = 0
     bytes_per_vector = vector_size * dtype(REAL).itemsize
-    max_words = vocab_size - len(result)
+    max_words = vocab_size - kv.next_index  # don't read more than kv preallocated to hold
+    assert max_words > 0
     for _ in range(max_words):
         i_space = chunk.find(b' ', start)
         i_vector = i_space + 1
@@ -1682,22 +1699,22 @@ def _add_bytes_to_result(result, counts, chunk, vocab_size, vector_size, datatyp
         # Some binary files are reported to have obsolete new line in the beginning of word, remove it
         word = word.lstrip('\n')
         vector = frombuffer(chunk, offset=i_vector, count=vector_size, dtype=REAL).astype(datatype)
-        _add_word_to_result(result, counts, word, vector, vocab_size)
+        _add_word_to_kv(kv, counts, word, vector, vocab_size)
         start = i_vector + bytes_per_vector
         processed_words += 1
 
     return processed_words, chunk[start:]
 
 
-def _word2vec_read_binary(fin, result, counts, vocab_size, vector_size, datatype, unicode_errors, binary_chunk_size):
+def _word2vec_read_binary(fin, kv, counts, vocab_size, vector_size, datatype, unicode_errors, binary_chunk_size):
     chunk = b''
     tot_processed_words = 0
 
     while tot_processed_words < vocab_size:
         new_chunk = fin.read(binary_chunk_size)
         chunk += new_chunk
-        processed_words, chunk = _add_bytes_to_result(
-            result, counts, chunk, vocab_size, vector_size, datatype, unicode_errors)
+        processed_words, chunk = _add_bytes_to_kv(
+            kv, counts, chunk, vocab_size, vector_size, datatype, unicode_errors)
         tot_processed_words += processed_words
         if len(new_chunk) < binary_chunk_size:
             break
@@ -1705,13 +1722,13 @@ def _word2vec_read_binary(fin, result, counts, vocab_size, vector_size, datatype
         raise EOFError("unexpected end of input; is count incorrect or file otherwise damaged?")
 
 
-def _word2vec_read_text(fin, result, counts, vocab_size, vector_size, datatype, unicode_errors, encoding):
+def _word2vec_read_text(fin, kv, counts, vocab_size, vector_size, datatype, unicode_errors, encoding):
     for line_no in range(vocab_size):
         line = fin.readline()
         if line == b'':
             raise EOFError("unexpected end of input; is count incorrect or file otherwise damaged?")
         word, weights = _word2vec_line_to_vector(line, datatype, unicode_errors, encoding)
-        _add_word_to_result(result, counts, word, weights, vocab_size)
+        _add_word_to_kv(kv, counts, word, weights, vocab_size)
 
 
 def _word2vec_line_to_vector(line, datatype, unicode_errors, encoding):
@@ -1797,25 +1814,23 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
             vocab_size, vector_size = (int(x) for x in header.split())  # throws for invalid file format
         if limit:
             vocab_size = min(vocab_size, limit)
-        result = cls(vector_size)
-        result.vector_size = vector_size
-        result.vectors = zeros((vocab_size, vector_size), dtype=datatype)
+        kv = cls(vector_size, vocab_size, dtype=datatype)
 
         if binary:
-            _word2vec_read_binary(fin, result, counts,
+            _word2vec_read_binary(fin, kv, counts,
                 vocab_size, vector_size, datatype, unicode_errors, binary_chunk_size)
         else:
-            _word2vec_read_text(fin, result, counts, vocab_size, vector_size, datatype, unicode_errors, encoding)
-    if result.vectors.shape[0] != len(result):
+            _word2vec_read_text(fin, kv, counts, vocab_size, vector_size, datatype, unicode_errors, encoding)
+    if kv.vectors.shape[0] != len(kv):
         logger.info(
             "duplicate words detected, shrinking matrix size from %i to %i",
-            result.vectors.shape[0], len(result)
+            kv.vectors.shape[0], len(kv)
         )
-        result.vectors = ascontiguousarray(result.vectors[: len(result)])
-    assert (len(result), vector_size) == result.vectors.shape
+        kv.vectors = ascontiguousarray(kv.vectors[: len(kv)])
+    assert (len(kv), vector_size) == kv.vectors.shape
 
-    logger.info("loaded %s matrix from %s", result.vectors.shape, fname)
-    return result
+    logger.info("loaded %s matrix from %s", kv.vectors.shape, fname)
+    return kv
 
 
 def load_word2vec_format(*args, **kwargs):
@@ -1824,42 +1839,13 @@ def load_word2vec_format(*args, **kwargs):
 
 
 def pseudorandom_weak_vector(size, seed_string=None, hashfxn=hash):
-    """Get a 'random' vector (but somewhat deterministic, at least
-    within the same Python 3 launch or PYTHONHASHSEED, if seed_string
-    supplied).
+    """Get a 'random' vector (but deterministically derived from seed_string if supplied).
 
     Useful for initializing KeyedVectors that will be the starting
     projection/input layers of _2Vec models.
     """
     if seed_string:
-        once = np.random.RandomState(hashfxn(seed_string) & 0xffffffff)
+        once = np.random.Generator(np.random.SFC64(hashfxn(seed_string) & 0xffffffff))
     else:
-        once = np.random
-    return (once.rand(size).astype(REAL) - 0.5) / size
-
-
-class ConcatList(UserList):
-    """Pseudo-list that stitches together multiple underlying sequences, but
-    only offers indexed-access and iteration.
-
-    (Used to support KeyedVectors optimization in case of mixed plain-int and
-    string keys, where all plain-int keys are represented by a simple `range()`
-    object, followed by a real list.)
-
-    # TODO: implement or stub as NotImplemented other necessary methods,
-    # especially slicing?
-    """
-    def __getitem__(self, index):
-        for subseq in self.data:
-            if index >= len(subseq):
-                index -= len(subseq)
-                continue
-            return subseq[index]
-        else:
-            raise IndexError("ConcatList index out of range")
-
-    def __iter__(self):
-        return iter(chain(*self.data))
-
-    def __len__(self):
-        return sum(len(subseq) for subseq in self.data)
+        once = utils.default_prng
+    return (once.random(size).astype(REAL) - 0.5) / size
