@@ -8,7 +8,7 @@
 """Optimized Cython functions for training a :class:`~gensim.models.fasttext.FastText` model.
 
 The main entry point is :func:`~gensim.models.fasttext_inner.train_batch_any`
-which may  be called directly from Python code.
+which may be called directly from Python code.
 
 Notes
 -----
