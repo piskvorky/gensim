@@ -20,7 +20,8 @@ import numpy as np
 
 from gensim import utils
 from gensim.models import word2vec, keyedvectors
-from gensim.test.utils import datapath, get_tmpfile, temporary_file, common_texts as sentences
+from gensim.test.utils import datapath, get_tmpfile, temporary_file, common_texts as sentences, \
+    LeeCorpus, lee_corpus_list
 from testfixtures import log_capture
 
 try:
@@ -29,15 +30,6 @@ try:
 except (ImportError, ValueError):
     PYEMD_EXT = False
 
-
-class LeeCorpus(object):
-    def __iter__(self):
-        with open(datapath('lee_background.cor')) as f:
-            for line in f:
-                yield utils.simple_preprocess(line)
-
-
-list_corpus = list(LeeCorpus())
 
 new_sentences = [
     ['computer', 'artificial', 'intelligence'],
@@ -225,7 +217,7 @@ class TestWord2VecModel(unittest.TestCase):
 
     def onlineSanity(self, model, trained_model=False):
         terro, others = [], []
-        for line in list_corpus:
+        for line in lee_corpus_list:
             if 'terrorism' in line:
                 terro.append(line)
             else:
@@ -601,15 +593,15 @@ class TestWord2VecModel(unittest.TestCase):
         """Even tiny models trained on LeeCorpus should pass these sanity checks"""
         # run extra before/after training tests if train=True
         if train:
-            model.build_vocab(list_corpus)
+            model.build_vocab(lee_corpus_list)
             orig0 = np.copy(model.wv.vectors[0])
 
             if with_corpus_file:
                 tmpfile = get_tmpfile('gensim_word2vec.tst')
-                utils.save_as_line_sentence(list_corpus, tmpfile)
+                utils.save_as_line_sentence(lee_corpus_list, tmpfile)
                 model.train(corpus_file=tmpfile, total_words=model.corpus_total_words, epochs=model.epochs)
             else:
-                model.train(list_corpus, total_examples=model.corpus_count, epochs=model.epochs)
+                model.train(lee_corpus_list, total_examples=model.corpus_count, epochs=model.epochs)
             self.assertFalse((orig0 == model.wv.vectors[1]).all())  # vector should vary after training
         sims = model.wv.most_similar('war', topn=len(model.wv.index2word))
         t_rank = [word for word, score in sims].index('terrorism')
@@ -785,10 +777,7 @@ class TestWord2VecModel(unittest.TestCase):
             expected_neighbor = 'palestinian'
             sims = model.wv.most_similar(origin_word, topn=len(model.wv))
             # the exact vectors and therefore similarities may differ, due to different thread collisions/randomization
-            # so let's test only for top3
-            from gensim.models.word2vec import FAST_VERSION
-            print(FAST_VERSION)
-            print(sims[:20])
+            # so let's test only for top10
             neighbor_rank = [word for word, sim in sims].index(expected_neighbor)
             self.assertLess(neighbor_rank, 10)
 
@@ -928,14 +917,14 @@ class TestWord2VecModel(unittest.TestCase):
             raise ae
         # check if similarity search and online training works.
         self.assertTrue(len(model.wv.most_similar('sentence')) == 2)
-        model.build_vocab(list_corpus, update=True)
-        model.train(list_corpus, total_examples=model.corpus_count, epochs=model.epochs)
+        model.build_vocab(lee_corpus_list, update=True)
+        model.train(lee_corpus_list, total_examples=model.corpus_count, epochs=model.epochs)
         # check if similarity search and online training works after saving and loading back the model.
         tmpf = get_tmpfile('gensim_word2vec.tst')
         model.save(tmpf)
         loaded_model = word2vec.Word2Vec.load(tmpf)
-        loaded_model.build_vocab(list_corpus, update=True)
-        loaded_model.train(list_corpus, total_examples=model.corpus_count, epochs=model.epochs)
+        loaded_model.build_vocab(lee_corpus_list, update=True)
+        loaded_model.train(lee_corpus_list, total_examples=model.corpus_count, epochs=model.epochs)
 
     @log_capture()
     def testBuildVocabWarning(self, loglines):

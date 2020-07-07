@@ -73,6 +73,7 @@ import os
 import shutil
 
 from gensim.corpora import Dictionary
+from gensim.utils import simple_preprocess
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 
@@ -205,3 +206,13 @@ common_texts = [
 
 common_dictionary = Dictionary(common_texts)
 common_corpus = [common_dictionary.doc2bow(text) for text in common_texts]
+
+
+class LeeCorpus(object):
+    def __iter__(self):
+        with open(datapath('lee_background.cor')) as f:
+            for line in f:
+                yield simple_preprocess(line)
+
+
+lee_corpus_list = list(LeeCorpus())
