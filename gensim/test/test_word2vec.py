@@ -772,14 +772,14 @@ class TestWord2VecModel(unittest.TestCase):
         corpus = utils.RepeatCorpus(LeeCorpus(), 10000)  # repeats about 33 times
 
         for workers in [4, ]:  # [4, 2]
-            model = word2vec.Word2Vec(corpus, vector_size=12, min_count=(5 * 33), workers=workers)
+            model = word2vec.Word2Vec(corpus, vector_size=16, min_count=(10 * 33), workers=workers)
             origin_word = 'israeli'
             expected_neighbor = 'palestinian'
             sims = model.wv.most_similar(origin_word, topn=len(model.wv))
             # the exact vectors and therefore similarities may differ, due to different thread collisions/randomization
             # so let's test only for top10
             neighbor_rank = [word for word, sim in sims].index(expected_neighbor)
-            self.assertLess(neighbor_rank, 10)
+            self.assertLess(neighbor_rank, 20)
 
     def testRNG(self):
         """Test word2vec results identical with identical RNG seed."""
