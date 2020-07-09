@@ -42,7 +42,7 @@ import scipy.sparse
 from six import iterkeys, iteritems, itervalues, u, string_types, unichr
 from six.moves import range
 
-from smart_open import open
+from smart_open import smart_open
 
 from multiprocessing import cpu_count
 
