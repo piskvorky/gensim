@@ -184,7 +184,7 @@ class Word2Vec(utils.SaveLoad):
         """Train, use and evaluate neural networks described in https://code.google.com/p/word2vec/.
 
         Once you're finished training a model (=no more updates, only querying)
-        store and use only the :class:`~gensim.models.keyedvectors.KeyedVectors` instance in `self.wv`
+        store and use only the :class:`~gensim.models.keyedvectors.KeyedVectors` instance in ``self.wv``
         to reduce memory.
 
         The full model can be stored/loaded via its :meth:`~gensim.models.word2vec.Word2Vec.save` and

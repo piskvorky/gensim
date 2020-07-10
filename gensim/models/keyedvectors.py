@@ -255,7 +255,7 @@ class KeyedVectors(utils.SaveLoad):
         even if other properties (vectors array) hasn't yet been allocated or expanded.
         So this allocation targets that size.
         """
-        # with no arguments, adjust lengths of existing storage arrays to match length of index_to_key
+        # with no arguments, adjust lengths of existing vecattr arrays to match length of index_to_key
         if attrs is None:
             attrs = list(self.expandos.keys())
             types = [self.expandos[attr].dtype for attr in attrs]
@@ -529,9 +529,9 @@ class KeyedVectors(utils.SaveLoad):
         """
         Ensure per-vector norms are available.
 
-        (Any code which modifies vectors should ensure the
-        accompanying norms are either recalculated or 'None', to trigger a full recalc later.
-        'norms' to trigger full recalc later.)
+        Any code which modifies vectors should ensure the accompanying norms are
+        either recalculated or 'None', to trigger full recalc later.
+
         """
         if self.norms is None or force:
             self.norms = np.linalg.norm(self.vectors, axis=1)
@@ -577,7 +577,8 @@ class KeyedVectors(utils.SaveLoad):
         self.index_to_key = list(np.array(self.index_to_key)[count_sorted_indexes])
         self.allocate_vecattrs()
         for k in self.expandos:
-            self.expandos[k] = self.expandos[k][count_sorted_indexes]  # numpy "fancy indexing" for 1-step shuffle
+            # Use numpy's "fancy indexing" to permutate the entire array in one step.
+            self.expandos[k] = self.expandos[k][count_sorted_indexes]
         if len(self.vectors):
             logger.warning("sorting after vectors have been allocated is expensive & error-prone")
             self.vectors = self.vectors[count_sorted_indexes]
@@ -628,7 +629,7 @@ class KeyedVectors(utils.SaveLoad):
             are searched for most-similar values. For example, restrict_vocab=10000 would
             only check the first 10000 key vectors in the vocabulary order. (This may be
             meaningful if you've sorted the vocabulary by descending frequency.) If
-            specified, overrides any values of `clip_start` or `clip_end`.
+            specified, overrides any values of ``clip_start`` or ``clip_end``.
 
         Returns
         -------
@@ -882,8 +883,8 @@ class KeyedVectors(utils.SaveLoad):
             When `topn` is None, then similarities for all words are returned as a
             one-dimensional numpy array with the size of the vocabulary.
 
-        # TODO: Update to better match & share code with most_similar()
         """
+        # FIXME: Update to better match & share code with most_similar()
         if isinstance(topn, Integral) and topn < 1:
             return []
 
@@ -1502,6 +1503,7 @@ class KeyedVectors(utils.SaveLoad):
             following vectors & number of dimensions. If True, the file is assumed to lack a declaratory
             (vocab_size, vector_size) header and instead start with the 1st vector, and an extra
             reading-pass will be used to discover the number of vectors. Works only with `binary=False`.
+
         Returns
         -------
         :class:`~gensim.models.keyedvectors.KeyedVectors`
@@ -1674,7 +1676,7 @@ def _add_word_to_kv(kv, counts, word, weights, vocab_size):
 
     if counts is None:
         # most common scenario: no vocab file given. just make up some bogus counts, in descending order
-        # TODO: make this faking optional, include more realistic (Zipf-based) fake numbers
+        # FIXME(someday): make this faking optional, include more realistic (Zipf-based) fake numbers
         word_count = vocab_size - word_id
     elif word in counts:
         # use count from the vocab file

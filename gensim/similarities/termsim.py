@@ -115,8 +115,10 @@ def _shortest_uint_dtype(max_value):
 
 class WordEmbeddingSimilarityIndex(TermSimilarityIndex):
     """
-    Computes cosine similarities between word embeddings and retrieves the closest word embeddings
-    by cosine similarity for a given word embedding.
+    Use objects of this class to:
+
+    1) Compute cosine similarities between word embeddings.
+    2) Retrieve the closest word embeddings (by cosine similarity) to a given word embedding.
 
     Parameters
     ----------

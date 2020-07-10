@@ -41,7 +41,9 @@ def need_cython():
     """Return True if we need Cython to translate any of the extensions.
 
     If the extensions have already been translated to C/C++, then we don't need
-    to install Cython and perform the translation."""
+    to install Cython and perform the translation.
+
+    """
     expected = list(c_extensions.values()) + list(cpp_extensions.values())
     return any([not os.path.isfile(f) for f in expected])
 
@@ -269,6 +271,7 @@ core_testenv = [
     'mock',
     'cython',
     'nmslib',
+    'pyemd',
     'testfixtures',
     'Morfessor==2.0.2a4',
     'python-Levenshtein >= 0.10.2',

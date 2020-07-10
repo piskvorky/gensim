@@ -347,7 +347,7 @@ def train_document_dbow(model, doc_words, doctag_indexes, alpha, work=None,
 
     i = 0
     for token in doc_words:
-        word_index = model.wv.key_to_index[token] if token in model.wv.key_to_index else None
+        word_index = model.wv.key_to_index.get(token, None)
         if word_index is None:  # shrink document to leave out word
             continue  # leaving i unchanged
         if c.sample and vocab_sample_ints[word_index] < random_int32(&c.next_random):
@@ -480,7 +480,7 @@ def train_document_dm(model, doc_words, doctag_indexes, alpha, work=None, neu1=N
 
     i = 0
     for token in doc_words:
-        word_index = model.wv.key_to_index[token] if token in model.wv.key_to_index else None
+        word_index = model.wv.key_to_index.get(token, None)
         if word_index is None:  # shrink document to leave out word
             continue  # leaving i unchanged
         if c.sample and vocab_sample_ints[word_index] < random_int32(&c.next_random):
@@ -625,7 +625,7 @@ def train_document_dm_concat(model, doc_words, doctag_indexes, alpha, work=None,
 
     i = 0
     for token in doc_words:
-        word_index = model.wv.key_to_index[token] if token in model.wv.key_to_index else None
+        word_index = model.wv.key_to_index.get(token, None)
         if word_index is None:  # shrink document to leave out word
             continue  # leaving i unchanged
         if c.sample and vocab_sample_ints[word_index] < random_int32(&c.next_random):

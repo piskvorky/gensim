@@ -730,7 +730,24 @@ def score_sentence_sg(model, sentence, _work):
     for token in sentence:
         word_index = model.wv.key_to_index[token] if token in model.wv.key_to_index else None
         if word_index is None:
-            continue  # for score, should this be a default negative value?
+            # For score, should this be a default negative value?
+            #
+            # See comment by @gojomo at https://github.com/RaRe-Technologies/gensim/pull/2698/files#r445827846 :
+            #
+            # These 'score' functions are a long-ago contribution from @mataddy whose
+            # current function/utility is unclear.
+            # I've continued to apply mechanical updates to match other changes, and the code
+            # still compiles & passes the one (trivial, form-but-not-function) unit test. But it's an
+            # idiosyncratic technique, and only works for the non-default hs mode. Here, in lieu of the
+            # previous cryptic # should drop the comment, I've asked if for the purposes of this
+            # particular kind of 'scoring' (really, loss-tallying indicating how divergent this new
+            # text is from what the model learned during training), shouldn't completely missing
+            # words imply something very negative, as opposed to nothing-at-all? But probably, this
+            # functionality should be dropped. (And ultimately, a talented cleanup of the largely-broken
+            # loss-tallying functions might provide a cleaner window into this same measure of how
+            # well a text contrasts with model expectations - such as a way to report loss from a
+            # single invocation of one fo the inner train methods, without changing the model.)
+            continue
         c.indexes[i] = word_index
         c.codelens[i] = <int>len(vocab_codes[word_index])
         c.codes[i] = <np.uint8_t *>np.PyArray_DATA(vocab_codes[word_index])

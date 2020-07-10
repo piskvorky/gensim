@@ -54,11 +54,13 @@ cdef int ONE = 1
 cdef REAL_t ONEF = <REAL_t>1.0
 
 
-cdef void prepare_c_structures_for_batch(vector[string] &doc_words, int sample, int hs, int window, long long *total_words,
-                                         int *effective_words, unsigned long long *next_random, cvocab_t *vocab,
-                                         np.uint32_t *indexes, int *codelens, np.uint8_t **codes, np.uint32_t **points,
-                                         np.uint32_t *reduced_windows, int *document_len, int train_words,
-                                         int docvecs_count, int doc_tag) nogil:
+cdef void prepare_c_structures_for_batch(
+        vector[string] &doc_words, int sample, int hs, int window, long long *total_words,
+        int *effective_words, unsigned long long *next_random, cvocab_t *vocab,
+        np.uint32_t *indexes, int *codelens, np.uint8_t **codes, np.uint32_t **points,
+        np.uint32_t *reduced_windows, int *document_len, int train_words,
+        int docvecs_count, int doc_tag,
+    ) nogil:
     cdef VocabItem predict_word
     cdef string token
     cdef int i = 0
@@ -92,10 +94,12 @@ cdef void prepare_c_structures_for_batch(vector[string] &doc_words, int sample, 
         effective_words[0] += 1
 
 
-def d2v_train_epoch_dbow(model, corpus_file, offset, start_doctag, _cython_vocab, _cur_epoch, _expected_examples,
-                         _expected_words, work, neu1, docvecs_count, word_vectors=None, words_lockf=None,
-                         train_words=False, learn_doctags=True, learn_words=True, learn_hidden=True,
-                         doctag_vectors=None, doctags_lockf=None):
+def d2v_train_epoch_dbow(
+        model, corpus_file, offset, start_doctag, _cython_vocab, _cur_epoch, _expected_examples,
+        _expected_words, work, neu1, docvecs_count, word_vectors=None, words_lockf=None,
+        train_words=False, learn_doctags=True, learn_words=True, learn_hidden=True,
+        doctag_vectors=None, doctags_lockf=None,
+    ):
     """Train distributed bag of words model ("PV-DBOW") by training on a corpus file.
 
     Called internally from :meth:`~gensim.models.doc2vec.Doc2Vec.train`.
@@ -231,9 +235,11 @@ def d2v_train_epoch_dbow(model, corpus_file, offset, start_doctag, _cython_vocab
     return total_documents, total_effective_words, total_words
 
 
-def d2v_train_epoch_dm(model, corpus_file, offset, start_doctag, _cython_vocab, _cur_epoch, _expected_examples,
-                       _expected_words, work, neu1, docvecs_count, word_vectors=None, words_lockf=None,
-                       learn_doctags=True, learn_words=True, learn_hidden=True, doctag_vectors=None, doctags_lockf=None):
+def d2v_train_epoch_dm(
+        model, corpus_file, offset, start_doctag, _cython_vocab, _cur_epoch, _expected_examples,
+        _expected_words, work, neu1, docvecs_count, word_vectors=None, words_lockf=None,
+        learn_doctags=True, learn_words=True, learn_hidden=True, doctag_vectors=None, doctags_lockf=None,
+    ):
     """Train distributed memory model ("PV-DM") by training on a corpus file.
     This method implements the DM model with a projection (input) layer that is either the sum or mean of the context
     vectors, depending on the model's `dm_mean` configuration field.
@@ -359,30 +365,35 @@ def d2v_train_epoch_dm(model, corpus_file, offset, start_doctag, _cython_vocab, 
                     sscal(&c.layer1_size, &inv_count, c.work, &ONE)  # (does this need BLAS-variants like saxpy?)
                 # apply accumulated error in work
                 if c.learn_doctags and _doc_tag < c.docvecs_count:
-                    our_saxpy(&c.layer1_size, &c.doctags_lockf[_doc_tag % c.doctags_lockf_len], c.work,
-                              &ONE, &c.doctag_vectors[_doc_tag * c.layer1_size], &ONE)
+                    our_saxpy(
+                        &c.layer1_size, &c.doctags_lockf[_doc_tag % c.doctags_lockf_len], c.work,
+                        &ONE, &c.doctag_vectors[_doc_tag * c.layer1_size], &ONE)
                 if c.learn_words:
                     for m in range(j, k):
                         if m == i:
                             continue
                         else:
-                             our_saxpy(&c.layer1_size, &c.words_lockf[c.indexes[m] % c.words_lockf_len], c.work, &ONE,
-                                       &c.word_vectors[c.indexes[m] * c.layer1_size], &ONE)
+                             our_saxpy(
+                                &c.layer1_size, &c.words_lockf[c.indexes[m] % c.words_lockf_len], c.work, &ONE,
+                                &c.word_vectors[c.indexes[m] * c.layer1_size], &ONE)
 
             total_documents += 1
             total_effective_words += effective_words
             _doc_tag += 1
 
-            c.alpha = get_next_alpha(start_alpha, end_alpha, total_documents, total_words, expected_examples,
-                                    expected_words, cur_epoch, num_epochs)
+            c.alpha = get_next_alpha(
+                start_alpha, end_alpha, total_documents, total_words, expected_examples,
+                expected_words, cur_epoch, num_epochs)
 
     return total_documents, total_effective_words, total_words
 
 
-def d2v_train_epoch_dm_concat(model, corpus_file, offset, start_doctag, _cython_vocab, _cur_epoch, _expected_examples,
-                              _expected_words, work, neu1, docvecs_count, word_vectors=None, words_lockf=None,
-                              learn_doctags=True, learn_words=True, learn_hidden=True, doctag_vectors=None,
-                              doctags_lockf=None):
+def d2v_train_epoch_dm_concat(
+        model, corpus_file, offset, start_doctag, _cython_vocab, _cur_epoch, _expected_examples,
+        _expected_words, work, neu1, docvecs_count, word_vectors=None, words_lockf=None,
+        learn_doctags=True, learn_words=True, learn_hidden=True, doctag_vectors=None,
+        doctags_lockf=None,
+    ):
     """Train distributed memory model ("PV-DM") by training on a corpus file, using a concatenation of the context
      window word vectors (rather than a sum or average).
      This might be slower since the input at each batch will be significantly larger.
@@ -477,8 +488,7 @@ def d2v_train_epoch_dm_concat(model, corpus_file, offset, start_doctag, _cython_
                 # compose l1 & clear work
                 if _doc_tag < c.docvecs_count:
                     # doc vector(s)
-                    memcpy(&c.neu1[0], &c.doctag_vectors[_doc_tag * c.vector_size],
-                           c.vector_size * cython.sizeof(REAL_t))
+                    memcpy(&c.neu1[0], &c.doctag_vectors[_doc_tag * c.vector_size], c.vector_size * cython.sizeof(REAL_t))
                 n = 0
                 for m in range(j, k):
                     # word vectors in window
@@ -490,8 +500,9 @@ def d2v_train_epoch_dm_concat(model, corpus_file, offset, start_doctag, _cython_
                         c.window_indexes[n] = c.indexes[m]
                     n += 1
                 for m in range(2 * c.window):
-                    memcpy(&c.neu1[(c.doctag_len + m) * c.vector_size], &c.word_vectors[c.window_indexes[m] * c.vector_size],
-                           c.vector_size * cython.sizeof(REAL_t))
+                    memcpy(
+                        &c.neu1[(c.doctag_len + m) * c.vector_size], &c.word_vectors[c.window_indexes[m] * c.vector_size],
+                        c.vector_size * cython.sizeof(REAL_t))
                 memset(c.work, 0, c.layer1_size * cython.sizeof(REAL_t))  # work to accumulate l1 error
 
                 if c.hs:
@@ -505,19 +516,22 @@ def d2v_train_epoch_dm_concat(model, corpus_file, offset, start_doctag, _cython_
                         c.indexes[i], c.alpha, c.work, c.layer1_size, c.vector_size, c.learn_hidden)
 
                 if c.learn_doctags and _doc_tag < c.docvecs_count:
-                    our_saxpy(&c.vector_size, &c.doctags_lockf[_doc_tag % c.doctags_lockf_len], &c.work[m * c.vector_size],
-                              &ONE, &c.doctag_vectors[_doc_tag * c.vector_size], &ONE)
+                    our_saxpy(
+                        &c.vector_size, &c.doctags_lockf[_doc_tag % c.doctags_lockf_len], &c.work[m * c.vector_size],
+                        &ONE, &c.doctag_vectors[_doc_tag * c.vector_size], &ONE)
                 if c.learn_words:
                     for m in range(2 * c.window):
-                        our_saxpy(&c.vector_size, &c.words_lockf[c.window_indexes[m] % c.words_lockf_len], &c.work[(c.doctag_len + m) * c.vector_size],
-                                  &ONE, &c.word_vectors[c.window_indexes[m] * c.vector_size], &ONE)
+                        our_saxpy(
+                            &c.vector_size, &c.words_lockf[c.window_indexes[m] % c.words_lockf_len], &c.work[(c.doctag_len + m) * c.vector_size],
+                            &ONE, &c.word_vectors[c.window_indexes[m] * c.vector_size], &ONE)
 
             total_documents += 1
             total_effective_words += effective_words
             _doc_tag += 1
 
-            c.alpha = get_next_alpha(start_alpha, end_alpha, total_documents, total_words, expected_examples,
-                                    expected_words, cur_epoch, num_epochs)
+            c.alpha = get_next_alpha(
+                start_alpha, end_alpha, total_documents, total_words, expected_examples,
+                expected_words, cur_epoch, num_epochs)
 
     return total_documents, total_effective_words, total_words
 
