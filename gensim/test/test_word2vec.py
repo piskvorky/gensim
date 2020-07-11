@@ -248,7 +248,7 @@ class TestWord2VecModel(unittest.TestCase):
         """Test CBOW w/ hierarchical softmax"""
         model = word2vec.Word2Vec(
             sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0,
-            min_count=3, epochs=10, seed=42, workers=2
+            min_count=3, epochs=20, seed=42, workers=2
         )
         self.onlineSanity(model)
 
