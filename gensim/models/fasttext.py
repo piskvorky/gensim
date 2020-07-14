@@ -406,12 +406,14 @@ class FastText(Word2Vec):
         max_n : int, optional
             Max length of char ngrams to be used for training word representations. Set `max_n` to be
             lesser than `min_n` to avoid char ngrams being used.
-        word_ngrams : {1,0}, optional
-            If 1, uses enriches word vectors with subword(n-grams) information.
-            If 0, this is equivalent to :class:`~gensim.models.word2vec.Word2Vec`.
+        word_ngrams : int, optional
+            In Facebook's FastText, "max length of word ngram" - but gensim only supports the
+            default of 1 (regular unigram word handling).
         bucket : int, optional
             Character ngrams are hashed into a fixed number of buckets, in order to limit the
             memory usage of the model. This option specifies the number of buckets used by the model.
+            The default value of 2000000 consumes as much memory as having 2000000 more in-vocabulary
+            words in your model.
         callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`, optional
             List of callbacks that need to be executed/run at specific stages during training.
         max_final_vocab : int, optional
@@ -442,26 +444,16 @@ class FastText(Word2Vec):
             words (that do not exist in the vocabulary), as the aggregate of the n-grams included in the word.
             After training the model, this attribute can be used directly to query those embeddings in various
             ways. Check the module level docstring for some examples.
-        vocabulary : :class:`~gensim.models.fasttext.FastTextVocab`
-            This object represents the vocabulary of the model.
-            Besides keeping track of all unique words, this object provides extra functionality, such as
-            constructing a huffman tree (frequent words are closer to the root), or discarding extremely rare words.
-        trainables : :class:`~gensim.models.fasttext.FastTextTrainables`
-            This object represents the inner shallow neural network used to train the embeddings. This is very
-            similar to the network of the :class:`~gensim.models.word2vec.Word2Vec` model, but it also trains weights
-            for the N-Grams (sequences of more than 1 words). The semantics of the network are almost the same as
-            the one used for the :class:`~gensim.models.word2vec.Word2Vec` model.
-            You can think of it as a NN with a single projection and hidden layer which we train on the corpus.
-            The weights are then used as our embeddings. An important difference however between the two models, is the
-            scoring function used to compute the loss. In the case of FastText, this is modified in word to also account
-            for the internal structure of words, besides their concurrence counts.
 
         """
         self.load = call_on_class_only
         self.load_fasttext_format = call_on_class_only
         self.callbacks = callbacks
-        self.word_ngrams = int(word_ngrams)
-        if self.word_ngrams <= 1 and max_n == 0:
+        if word_ngrams != 1:
+            raise NotImplementedError("Gensim's FastText implementation does not yet support word_ngrams != 1.")
+        self.word_ngrams = word_ngrams
+        if max_n < min_n:
+            # with no eligible char-ngram lengths, no buckets need be allocated
             bucket = 0
 
         self.wv = FastTextKeyedVectors(vector_size, min_n, max_n, bucket)
@@ -615,26 +607,16 @@ class FastText(Word2Vec):
             report['syn1'] = len(self.wv) * l1_size
         if self.negative:
             report['syn1neg'] = len(self.wv) * l1_size
-        if self.word_ngrams > 0 and len(self.wv):
-            num_buckets = num_ngrams = 0
-
-            if self.wv.bucket:
-                buckets = set()
-                num_ngrams = 0
-                for word in self.wv.key_to_index:
-                    hashes = ft_ngram_hashes(word, self.wv.min_n, self.wv.max_n, self.wv.bucket)
-                    num_ngrams += len(hashes)
-                    buckets.update(hashes)
-                num_buckets = len(buckets)
-            report['syn0_ngrams'] = num_buckets * vec_size
-            # A tuple (48 bytes) with num_ngrams_word ints (8 bytes) for each word
+        if self.wv.bucket:
+            report['syn0_ngrams'] = self.wv.bucket * vec_size
+            num_ngrams = 0
+            for word in self.wv.key_to_index:
+                hashes = ft_ngram_hashes(word, self.wv.min_n, self.wv.max_n, self.wv.bucket)
+                num_ngrams += len(hashes)
+            # A list (64 bytes) with one np.array (100 bytes) per key, with a total of
+            # num_ngrams uint32s (4 bytes) amongst them
             # Only used during training, not stored with the model
-            report['buckets_word'] = 48 * len(self.wv) + 8 * num_ngrams  # FIXME: this looks confused -gojomo
-        elif self.word_ngrams > 0:
-            logger.warning(
-                'Subword information is enabled, but no vocabulary could be found. '
-                'Estimated required memory might be inaccurate!',
-            )
+            report['buckets_word'] = 64 + (100 * len(self.wv)) + (4 * num_ngrams)  # FIXME: caching & calc sensible?
         report['total'] = sum(report.values())
         logger.info(
             "estimated required memory for %i words, %i buckets and %i dimensions: %i bytes",
@@ -879,7 +861,7 @@ class FastText(Word2Vec):
         if hasattr(model, 'bucket'):
             del model.bucket  # should only exist in one place: the wv subcomponent
         if not hasattr(model.wv, 'buckets_word') or not model.wv.buckets_word:
-            model.wv.recalc_word_ngram_buckets()
+            model.wv.recalc_char_ngram_buckets()
 
         return model
 
@@ -1195,8 +1177,8 @@ class FastTextKeyedVectors(KeyedVectors):
             A vector for each ngram across all entities in the vocabulary.
             Each row is a vector that corresponds to a bucket.
             Columns correspond to vector dimensions.
-        buckets_word : dict
-            Maps vocabulary items (by their index) to the buckets they occur in.
+        buckets_word : list of np.array
+            For each key (by its index), report bucket slots their subwords map to.
 
         When used in training, FastTextKeyedVectors may be decorated with
         extra attributes that closely associate with its core attributes,
@@ -1339,7 +1321,7 @@ class FastTextKeyedVectors(KeyedVectors):
         Call this **after** the vocabulary has been fully initialized.
 
         """
-        self.recalc_word_ngram_buckets()
+        self.recalc_char_ngram_buckets()
 
         rand_obj = np.random.default_rng(seed=seed)  # use new instance of numpy's recommended generator/algorithm
 
@@ -1374,7 +1356,7 @@ class FastTextKeyedVectors(KeyedVectors):
         Call this **after** the vocabulary has been updated.
 
         """
-        self.recalc_word_ngram_buckets()
+        self.recalc_char_ngram_buckets()
 
         rand_obj = np.random
         rand_obj.seed(seed)
@@ -1407,7 +1389,7 @@ class FastTextKeyedVectors(KeyedVectors):
         #
         self.vectors_vocab = np.array(fb_vectors[:vocab_words, :])
         self.vectors_ngrams = np.array(fb_vectors[vocab_words:, :])
-        self.recalc_word_ngram_buckets()
+        self.recalc_char_ngram_buckets()
         self.adjust_vectors()  # calculate composite full-word vectors
 
     def adjust_vectors(self):
@@ -1428,7 +1410,7 @@ class FastTextKeyedVectors(KeyedVectors):
                 self.vectors[i] += self.vectors_ngrams[nh]
             self.vectors[i] /= len(ngram_buckets) + 1
 
-    def recalc_word_ngram_buckets(self):
+    def recalc_char_ngram_buckets(self):
         """
         Scan the vocabulary, calculate ngrams and their hashes, and cache the list of ngrams for each known word.
 
@@ -1444,7 +1426,7 @@ class FastTextKeyedVectors(KeyedVectors):
             self.buckets_word[i] = np.array(
                 ft_ngram_hashes(word, self.min_n, self.max_n, self.bucket),
                 dtype=np.uint32,
-            )
+           )
 
 
 def _pad_random(m, new_rows, rand):

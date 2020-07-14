@@ -803,9 +803,11 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(report['syn0_vocab'], 192)
         self.assertEqual(report['syn1'], 192)
         self.assertEqual(report['syn1neg'], 192)
-        self.assertEqual(report['syn0_ngrams'], 2688)
-        self.assertEqual(report['buckets_word'], 640)
-        self.assertEqual(report['total'], 6704)
+        # FIXME: these fixed numbers for particular implementation generations encumber changes without real QA
+        # perhaps instead verify reports' total is within some close factor of a deep-audit of actual memory used?
+        self.assertEqual(report['syn0_ngrams'], model.vector_size * np.dtype(np.float32).itemsize * BUCKET)
+        self.assertEqual(report['buckets_word'], 688)
+        self.assertEqual(report['total'], 484064)
 
     def obsolete_testLoadOldModel(self):
         """Test loading fasttext models from previous version"""
