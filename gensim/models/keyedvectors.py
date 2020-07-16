@@ -337,15 +337,18 @@ class KeyedVectors(utils.SaveLoad):
 
         return vstack([self.get_vector(key) for key in key_or_keys])
 
-    def get_index(self, key):
+    def get_index(self, key, default=None):
         """Return the integer index (slot/position) where the given key's vector is stored in the
         backing vectors array.
 
         """
-        if key in self.key_to_index:
-            return self.key_to_index[key]
-        elif isinstance(key, (int, np.integer)) and key < len(self.index_to_key):
+        val = self.key_to_index.get(key, -1)
+        if val >= 0:
+            return val
+        elif isinstance(key, (int, np.integer)) and key < len(self.index_to_key) and key >= 0:
             return key
+        elif default is not None:
+            return default
         else:
             raise KeyError("Key '%s' not present" % key)
 
@@ -491,10 +494,7 @@ class KeyedVectors(utils.SaveLoad):
         more-specific check.
 
         """
-        try:
-            return self.get_index(key) >= 0
-        except KeyError:
-            return False
+        return self.get_index(key, -1) >= 0
 
     def __contains__(self, key):
         return self.has_index_for(key)
