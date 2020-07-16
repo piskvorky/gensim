@@ -476,7 +476,7 @@ cdef object populate_ft_config(FastTextConfig *c, wv, buckets_word, sentences):
         if not sent:
             continue  # ignore empty sentences; leave effective_sentences unchanged
         for token in sent:
-            word_index = wv.key_to_index[token] if wv.has_index_for(token) else None
+            word_index = wv.key_to_index.get(token, None)
             if word_index is None:
                 continue  # leaving `effective_words` unchanged = shortening the sentence = expanding the window
             if c.sample and vocab_sample_ints[word_index] < random_int32(&c.next_random):
