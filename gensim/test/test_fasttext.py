@@ -962,22 +962,6 @@ class NativeTrainingContinuationTest(unittest.TestCase):
 
         self.model_structural_sanity(native)
 
-    @unittest.skip('this test does not pass currently, I suspect a bug in our FT implementation')
-    def test_out_of_vocab_gensim(self):
-        """Test whether gensim gives similar results to FB for OOV words.
-
-        Seems to be broken for our toy model.
-
-        # GM: probably unreasonable to expect identical results given alg randomization & thread jitter
-        """
-        model = train_gensim()
-
-        for word, expected_vector in self.oov_expected.items():
-            actual_vector = model.wv.get_vector(word)
-            self.assertTrue(np.allclose(expected_vector, actual_vector, atol=1e-5))
-
-        self.model_structural_sanity(model)
-
     def test_sanity(self):
         """Compare models trained on toy data.  They should be equal."""
         trained = train_gensim()
