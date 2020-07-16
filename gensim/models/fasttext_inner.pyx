@@ -483,8 +483,11 @@ cdef object populate_ft_config(FastTextConfig *c, wv, buckets_word, sentences):
                 continue
             c.indexes[effective_words] = word_index
 
-            c.subwords_idx_len[effective_words] = <int>(len(buckets_word[word_index]))
-            c.subwords_idx[effective_words] = <np.uint32_t *>np.PyArray_DATA(buckets_word[word_index])
+            if wv.bucket:
+                c.subwords_idx_len[effective_words] = <int>(len(buckets_word[word_index]))
+                c.subwords_idx[effective_words] = <np.uint32_t *>np.PyArray_DATA(buckets_word[word_index])
+            else:
+                c.subwords_idx_len[effective_words] = 0
 
             if c.hs:
                 c.codelens[effective_words] = <int>len(vocab_codes[word_index])
