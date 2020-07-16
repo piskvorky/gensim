@@ -345,7 +345,7 @@ class KeyedVectors(utils.SaveLoad):
         val = self.key_to_index.get(key, -1)
         if val >= 0:
             return val
-        elif isinstance(key, (int, np.integer)) and key < len(self.index_to_key) and key >= 0:
+        elif isinstance(key, (int, np.integer)) and 0 <= key < len(self.index_to_key):
             return key
         elif default is not None:
             return default
