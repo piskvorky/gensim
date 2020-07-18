@@ -314,7 +314,7 @@ if sys.version_info >= (3, 7):
     # See https://github.com/RaRe-Technologies/gensim/pull/2814#issuecomment-621477948
     linux_testenv += [
         'tensorflow',
-        'keras==2.3.1',
+        'keras',
     ]
 
 NUMPY_STR = 'numpy >= 1.11.3'
