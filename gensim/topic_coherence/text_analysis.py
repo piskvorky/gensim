@@ -621,7 +621,7 @@ class WordVectorsAccumulator(UsesDictionary):
 
     def not_in_vocab(self, words):
         uniq_words = set(utils.flatten(words))
-        return set(word for word in uniq_words if word not in self.model.vocab)
+        return set(word for word in uniq_words if word not in self.model)
 
     def get_occurrences(self, word):
         """Return number of docs the word occurs in, once `accumulate` has been called."""
@@ -629,7 +629,7 @@ class WordVectorsAccumulator(UsesDictionary):
             self.token2id[word]  # is this a token or an id?
         except KeyError:
             word = self.dictionary.id2token[word]
-        return self.model.vocab[word].count
+        return self.model.get_vecattr(word, 'count')
 
     def get_co_occurrences(self, word1, word2):
         """Return number of docs the words co-occur in, once `accumulate` has been called."""
@@ -663,4 +663,4 @@ class WordVectorsAccumulator(UsesDictionary):
             ids = [ids]
 
         words = [self.dictionary.id2token[word_id] for word_id in ids]
-        return [word for word in words if word in self.model.vocab]
+        return [word for word in words if word in self.model]

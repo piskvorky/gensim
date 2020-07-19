@@ -204,7 +204,8 @@ class TestLdaSeq(unittest.TestCase):
         corpus = [dictionary.doc2bow(text) for text in texts]
         self.ldaseq = ldaseqmodel.LdaSeqModel(
             corpus=corpus, id2word=dictionary, num_topics=2,
-            time_slice=[10, 10, 11], initialize='own', sstats=sstats
+            time_slice=[10, 10, 11], initialize='own', sstats=sstats,
+            passes=2, lda_inference_max_iter=10, em_min_iter=1, em_max_iter=4
         )
 
     # testing topic word proportions

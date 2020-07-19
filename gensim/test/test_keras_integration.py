@@ -25,7 +25,7 @@ from gensim.test.utils import common_texts
 
 class TestKerasWord2VecWrapper(unittest.TestCase):
     def setUp(self):
-        self.model_cos_sim = word2vec.Word2Vec(common_texts, size=100, min_count=1, hs=1)
+        self.model_cos_sim = word2vec.Word2Vec(common_texts, vector_size=100, min_count=1, hs=1)
         self.model_twenty_ng = word2vec.Word2Vec(min_count=1)
 
     def testWord2VecTraining(self):
@@ -33,13 +33,13 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
         Test word2vec training.
         """
         model = self.model_cos_sim
-        self.assertTrue(model.wv.vectors.shape == (len(model.wv.vocab), 100))
-        self.assertTrue(model.trainables.syn1.shape == (len(model.wv.vocab), 100))
+        self.assertTrue(model.wv.vectors.shape == (len(model.wv), 100))
+        self.assertTrue(model.syn1.shape == (len(model.wv), 100))
         sims = model.wv.most_similar('graph', topn=10)
         # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
 
         # test querying for "most similar" by vector
-        graph_vector = model.wv.vectors_norm[model.wv.vocab['graph'].index]
+        graph_vector = model.wv.vectors_norm[model.wv.get_index('graph')]
         sims2 = model.wv.most_similar(positive=[graph_vector], topn=11)
         sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
         self.assertEqual(sims, sims2)
@@ -65,8 +65,8 @@ class TestKerasWord2VecWrapper(unittest.TestCase):
         word_a = 'graph'
         word_b = 'trees'
         output = model.predict([
-            np.asarray([keras_w2v_model.wv.vocab[word_a].index]),
-            np.asarray([keras_w2v_model.wv.vocab[word_b].index])
+            np.asarray([keras_w2v_model.wv.get_index(word_a)]),
+            np.asarray([keras_w2v_model.wv.get_index(word_b)])
         ])
         # output is the cosine distance between the two words (as a similarity measure)
 

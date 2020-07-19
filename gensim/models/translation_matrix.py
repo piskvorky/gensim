@@ -84,7 +84,7 @@ Apply model
 
 .. sourcecode:: pycon
 
-    >>> result = model_trans.infer_vector(dst_model.docvecs[data[3].tags])
+    >>> result = model_trans.infer_vector(dst_model.dv[data[3].tags])
 
 
 References
@@ -151,12 +151,12 @@ class Space(object):
             # if the lexicon is not provided, using the all the Keyedvectors's words as default
             for item in lexicon:
                 words.append(item)
-                mat.append(lang_vec.vectors[lang_vec.vocab[item].index])
+                mat.append(lang_vec.vectors[lang_vec.get_index(item)])
 
         else:
-            for item in lang_vec.vocab.keys():
+            for item in lang_vec.index_to_key:
                 words.append(item)
-                mat.append(lang_vec.vectors[lang_vec.vocab[item].index])
+                mat.append(lang_vec.vectors[lang_vec.get_index(item)])
 
         return Space(mat, words)
 
@@ -392,7 +392,7 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
         >>> model_trans = BackMappingTranslationMatrix(src_model, dst_model)
         >>> trans_matrix = model_trans.train(data)
         >>>
-        >>> result = model_trans.infer_vector(dst_model.docvecs[data[3].tags])
+        >>> result = model_trans.infer_vector(dst_model.dv[data[3].tags])
 
     """
     def __init__(self, source_lang_vec, target_lang_vec, tagged_docs=None, random_state=None):
@@ -436,8 +436,8 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
             Translation matrix that mapping from the source model's vector to target model's vector.
 
         """
-        m1 = [self.source_lang_vec.docvecs[item.tags].flatten() for item in tagged_docs]
-        m2 = [self.target_lang_vec.docvecs[item.tags].flatten() for item in tagged_docs]
+        m1 = [self.source_lang_vec.dv[item.tags].flatten() for item in tagged_docs]
+        m2 = [self.target_lang_vec.dv[item.tags].flatten() for item in tagged_docs]
 
         self.translation_matrix = np.linalg.lstsq(m2, m1, -1)[0]
         return self.translation_matrix

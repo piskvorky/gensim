@@ -3,8 +3,11 @@ Changes
 
 ## Unreleased
 
+This release contains a major refactoring.
+
 ### :+1: Improvements
 
+* KeyedVectors  & X2Vec API streamlining, consistency (PR [#2698](https://github.com/RaRe-Technologies/gensim/pull/2698), __[@gojomo](https://github.com/gojomo)__)
 * No more wheels for x32 platforms (if you need x32 binaries, please build them yourself).
   (__[menshikh-iv](https://github.com/menshikh-iv)__, [#6](https://github.com/RaRe-Technologies/gensim-wheels/pull/6))
 * Speed up random number generation in word2vec model (PR [#2864](https://github.com/RaRe-Technologies/gensim/pull/2864), __[@zygm0nt](https://github.com/zygm0nt)__)

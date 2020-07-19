@@ -38,7 +38,7 @@ class TestWordrank(unittest.TestCase):
         model = wordrank.Wordrank.load_wordrank_model(self.wr_file)
         vocab_size, dim = 76, 50
         self.assertEqual(model.vectors.shape, (vocab_size, dim))
-        self.assertEqual(len(model.vocab), vocab_size)
+        self.assertEqual(len(model), vocab_size)
         os.remove(self.wr_file + '.w2vformat')
 
     def testEnsemble(self):
@@ -71,8 +71,8 @@ class TestWordrank(unittest.TestCase):
         self.assertTrue(numpy.allclose(self.test_model['night'], self.test_model[['night']]))
 
     def models_equal(self, model, model2):
-        self.assertEqual(len(model.vocab), len(model2.vocab))
-        self.assertEqual(set(model.vocab.keys()), set(model2.vocab.keys()))
+        self.assertEqual(len(model), len(model2))
+        self.assertEqual(set(model.index_to_key), set(model2.index_to_key))
         self.assertTrue(numpy.allclose(model.syn0, model2.syn0))
 
 

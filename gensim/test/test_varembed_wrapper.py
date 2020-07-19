@@ -48,7 +48,7 @@ class TestVarembed(unittest.TestCase):
     def model_sanity(self, model):
         """Check vocabulary and vector size"""
         self.assertEqual(model.vectors.shape, (model.vocab_size, model.vector_size))
-        self.assertTrue(model.vectors.shape[0] == len(model.vocab))
+        self.assertTrue(model.vectors.shape[0] == len(model))
 
     @unittest.skipIf(sys.version_info < (2, 7), 'Supported only on Python 2.7 and above')
     def testAddMorphemesToEmbeddings(self):

@@ -28,6 +28,7 @@ from gensim.models import Word2Vec, FastText
 from gensim.test.utils import (datapath, get_tmpfile,
     common_texts as texts, common_dictionary as dictionary, common_corpus as corpus)
 from gensim.similarities import UniformTermSimilarityIndex
+from gensim.similarities import WordEmbeddingSimilarityIndex
 from gensim.similarities import SparseTermSimilarityMatrix
 from gensim.similarities import LevenshteinSimilarityIndex
 from gensim.similarities.docsim import _nlargest
@@ -301,7 +302,7 @@ class TestMatrixSimilarity(unittest.TestCase, _TestSimilarityABC):
 class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
     def setUp(self):
         self.cls = similarities.WmdSimilarity
-        self.w2v_model = Word2Vec(texts, min_count=1)
+        self.w2v_model = Word2Vec(texts, min_count=1).wv
 
     def factoryMethod(self):
         # Override factoryMethod.
@@ -552,11 +553,10 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
 
     def testWord2Vec(self):
         model = word2vec.Word2Vec(texts, min_count=1)
-        model.init_sims()
         index = self.indexer(model, 10)
 
         self.assertVectorIsSimilarToItself(model.wv, index)
-        self.assertApproxNeighborsMatchExact(model, model.wv, index)
+        self.assertApproxNeighborsMatchExact(model.wv, model.wv, index)
         self.assertIndexSaved(index)
         self.assertLoadedIndexEqual(index, model)
 
@@ -571,11 +571,10 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
                         yield line.lower().strip().split()
 
         model = FastText(LeeReader(datapath('lee.cor')), bucket=5000)
-        model.init_sims()
         index = self.indexer(model, 10)
 
         self.assertVectorIsSimilarToItself(model.wv, index)
-        self.assertApproxNeighborsMatchExact(model, model.wv, index)
+        self.assertApproxNeighborsMatchExact(model.wv, model.wv, index)
         self.assertIndexSaved(index)
         self.assertLoadedIndexEqual(index, model)
 
@@ -606,8 +605,8 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
 
     def assertApproxNeighborsMatchExact(self, model, wv, index):
         vector = wv.vectors_norm[0]
-        approx_neighbors = model.wv.most_similar([vector], topn=5, indexer=index)
-        exact_neighbors = model.wv.most_similar(positive=[vector], topn=5)
+        approx_neighbors = model.most_similar([vector], topn=5, indexer=index)
+        exact_neighbors = model.most_similar(positive=[vector], topn=5)
 
         approx_words = [neighbor[0] for neighbor in approx_neighbors]
         exact_words = [neighbor[0] for neighbor in exact_neighbors]
@@ -616,11 +615,11 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
 
     def assertAllSimilaritiesDisableIndexer(self, model, wv, index):
         vector = wv.vectors_norm[0]
-        approx_similarities = model.wv.most_similar([vector], topn=None, indexer=index)
-        exact_similarities = model.wv.most_similar(positive=[vector], topn=None)
+        approx_similarities = model.most_similar([vector], topn=None, indexer=index)
+        exact_similarities = model.most_similar(positive=[vector], topn=None)
 
         self.assertEqual(approx_similarities, exact_similarities)
-        self.assertEqual(len(approx_similarities), len(wv.vectors.vocab))
+        self.assertEqual(len(approx_similarities), len(wv.vectors))
 
     def assertIndexSaved(self, index):
         fname = get_tmpfile('gensim_similarities.tst.pkl')
@@ -654,9 +653,8 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
         from gensim.similarities.index import AnnoyIndexer
 
         self.model = doc2vec.Doc2Vec(sentences, min_count=1)
-        self.model.init_sims()
         self.index = AnnoyIndexer(self.model, 300)
-        self.vector = self.model.docvecs.vectors_docs_norm[0]
+        self.vector = self.model.dv.vectors_norm[0]
 
     def testDocumentIsSimilarToItself(self):
         approx_neighbors = self.index.most_similar(self.vector, 1)
@@ -666,8 +664,8 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
         self.assertAlmostEqual(similarity, 1.0, places=2)
 
     def testApproxNeighborsMatchExact(self):
-        approx_neighbors = self.model.docvecs.most_similar([self.vector], topn=5, indexer=self.index)
-        exact_neighbors = self.model.docvecs.most_similar(
+        approx_neighbors = self.model.dv.most_similar([self.vector], topn=5, indexer=self.index)
+        exact_neighbors = self.model.dv.most_similar(
             positive=[self.vector], topn=5)
 
         approx_words = [neighbor[0] for neighbor in approx_neighbors]
@@ -715,11 +713,10 @@ class TestWord2VecNmslibIndexer(unittest.TestCase):
 
     def test_word2vec(self):
         model = word2vec.Word2Vec(texts, min_count=1)
-        model.init_sims()
         index = self.indexer(model)
 
         self.assertVectorIsSimilarToItself(model.wv, index)
-        self.assertApproxNeighborsMatchExact(model, model.wv, index)
+        self.assertApproxNeighborsMatchExact(model.wv, model.wv, index)
         self.assertIndexSaved(index)
         self.assertLoadedIndexEqual(index, model)
 
@@ -734,11 +731,10 @@ class TestWord2VecNmslibIndexer(unittest.TestCase):
                         yield line.lower().strip().split()
 
         model = FastText(LeeReader(datapath('lee.cor')), bucket=5000)
-        model.init_sims()
         index = self.indexer(model)
 
         self.assertVectorIsSimilarToItself(model.wv, index)
-        self.assertApproxNeighborsMatchExact(model, model.wv, index)
+        self.assertApproxNeighborsMatchExact(model.wv, model.wv, index)
         self.assertIndexSaved(index)
         self.assertLoadedIndexEqual(index, model)
 
@@ -767,8 +763,8 @@ class TestWord2VecNmslibIndexer(unittest.TestCase):
 
     def assertApproxNeighborsMatchExact(self, model, wv, index):
         vector = wv.vectors_norm[0]
-        approx_neighbors = model.wv.most_similar([vector], topn=5, indexer=index)
-        exact_neighbors = model.wv.most_similar(positive=[vector], topn=5)
+        approx_neighbors = model.most_similar([vector], topn=5, indexer=index)
+        exact_neighbors = model.most_similar(positive=[vector], topn=5)
 
         approx_words = [neighbor[0] for neighbor in approx_neighbors]
         exact_words = [neighbor[0] for neighbor in exact_neighbors]
@@ -806,9 +802,8 @@ class TestDoc2VecNmslibIndexer(unittest.TestCase):
         from gensim.similarities.nmslib import NmslibIndexer
 
         self.model = doc2vec.Doc2Vec(sentences, min_count=1)
-        self.model.init_sims()
         self.index = NmslibIndexer(self.model)
-        self.vector = self.model.docvecs.vectors_docs_norm[0]
+        self.vector = self.model.dv.vectors_norm[0]
 
     def test_document_is_similar_to_itself(self):
         approx_neighbors = self.index.most_similar(self.vector, 1)
@@ -818,8 +813,8 @@ class TestDoc2VecNmslibIndexer(unittest.TestCase):
         self.assertAlmostEqual(similarity, 1.0, places=2)
 
     def test_approx_neighbors_match_exact(self):
-        approx_neighbors = self.model.docvecs.most_similar([self.vector], topn=5, indexer=self.index)
-        exact_neighbors = self.model.docvecs.most_similar(
+        approx_neighbors = self.model.dv.most_similar([self.vector], topn=5, indexer=self.index)
+        exact_neighbors = self.model.dv.most_similar(
             positive=[self.vector], topn=5)
 
         approx_words = [neighbor[0] for neighbor in approx_neighbors]
@@ -1235,6 +1230,51 @@ class TestLevenshteinSimilarityIndex(unittest.TestCase):
         index = LevenshteinSimilarityIndex(self.dictionary, alpha=1.0, beta=1.0)
         similarity_matrix = SparseTermSimilarityMatrix(index, dictionary)
         self.assertTrue(scipy.sparse.issparse(similarity_matrix.matrix))
+
+
+class TestWordEmbeddingSimilarityIndex(unittest.TestCase):
+    def setUp(self):
+        self.vectors = KeyedVectors.load_word2vec_format(
+            datapath('euclidean_vectors.bin'), binary=True, datatype=numpy.float64)
+
+    def test_most_similar(self):
+        """Test most_similar returns expected results."""
+
+        # check the handling of out-of-dictionary terms
+        index = WordEmbeddingSimilarityIndex(self.vectors)
+        self.assertLess(0, len(list(index.most_similar(u"holiday", topn=10))))
+        self.assertEqual(0, len(list(index.most_similar(u"out-of-dictionary term", topn=10))))
+
+        # check that the topn works as expected
+        index = WordEmbeddingSimilarityIndex(self.vectors)
+        results = list(index.most_similar(u"holiday", topn=10))
+        self.assertLess(0, len(results))
+        self.assertGreaterEqual(10, len(results))
+        results = list(index.most_similar(u"holiday", topn=20))
+        self.assertLess(10, len(results))
+        self.assertGreaterEqual(20, len(results))
+
+        # check that the term itself is not returned
+        index = WordEmbeddingSimilarityIndex(self.vectors)
+        terms = [term for term, similarity in index.most_similar(u"holiday", topn=len(self.vectors))]
+        self.assertFalse(u"holiday" in terms)
+
+        # check that the threshold works as expected
+        index = WordEmbeddingSimilarityIndex(self.vectors, threshold=0.0)
+        results = list(index.most_similar(u"holiday", topn=10))
+        self.assertLess(0, len(results))
+        self.assertGreaterEqual(10, len(results))
+
+        index = WordEmbeddingSimilarityIndex(self.vectors, threshold=1.0)
+        results = list(index.most_similar(u"holiday", topn=10))
+        self.assertEqual(0, len(results))
+
+        # check that the exponent works as expected
+        index = WordEmbeddingSimilarityIndex(self.vectors, exponent=1.0)
+        first_similarities = numpy.array([similarity for term, similarity in index.most_similar(u"holiday", topn=10)])
+        index = WordEmbeddingSimilarityIndex(self.vectors, exponent=2.0)
+        second_similarities = numpy.array([similarity for term, similarity in index.most_similar(u"holiday", topn=10)])
+        self.assertTrue(numpy.allclose(first_similarities**2.0, second_similarities))
 
 
 if __name__ == '__main__':
