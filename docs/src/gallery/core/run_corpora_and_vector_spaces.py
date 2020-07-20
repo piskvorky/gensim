@@ -133,12 +133,24 @@ print(corpus)
 # Instead, let's assume the documents are stored in a file on disk, one document per line. Gensim
 # only requires that a corpus must be able to return one document vector at a time:
 #
-from smart_open import open  # for transparently opening remote files
+## Create Sample Document to Read From - We can assume it is stored on disk ## 
+with open('/tmp/mycorpus.txt', 'w') as the_file:
+    the_file.write(
+        """Human machine interface for lab abc computer applications
+A survey of user opinion of computer system response time
+The EPS user interface management system
+System and human system engineering testing of EPS
+Relation of user perceived response time to error measurement
+The generation of random binary unordered trees
+The intersection graph of paths in trees
+Graph minors IV Widths of trees and well quasi ordering
+Graph minors A survey""")
 
+###############################################################################
 
 class MyCorpus(object):
     def __iter__(self):
-        for line in open('https://radimrehurek.com/gensim/mycorpus.txt'):
+        for line in open('/tmp/mycorpus.txt'):
             # assume there's one document per line, tokens separated by whitespace
             yield dictionary.doc2bow(line.lower().split())
 
@@ -181,7 +193,7 @@ for vector in corpus_memory_friendly:  # load one vector into memory at a time
 
 from six import iteritems
 # collect statistics about all tokens
-dictionary = corpora.Dictionary(line.lower().split() for line in open('https://radimrehurek.com/gensim/mycorpus.txt'))
+dictionary = corpora.Dictionary(line.lower().split() for line in open('/tmp/mycorpus.txt'))
 # remove stop words and words that appear only once
 stop_ids = [
     dictionary.token2id[stopword]
