@@ -35,10 +35,11 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
     <https://cs.stanford.edu/~quocle/paragraph_vector.pdf>`_.
 
     """
-    def __init__(self, dm_mean=None, dm=1, dbow_words=0, dm_concat=0, dm_tag_count=1, docvecs=None,
-                 docvecs_mapfile=None, comment=None, trim_rule=None, size=100, alpha=0.025, window=5, min_count=5,
-                 max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001, hs=0, negative=5, cbow_mean=1,
-                 hashfxn=hash, iter=5, sorted_vocab=1, batch_words=10000):
+    def __init__(self, dm_mean=None, dm=1, dbow_words=0, dm_concat=0, dm_tag_count=1, dv=None,
+                 dv_mapfile=None, comment=None, trim_rule=None, vector_size=100, alpha=0.025, window=5,
+                 min_count=5, max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
+                 hs=0, negative=5, cbow_mean=1,
+                 hashfxn=hash, epochs=5, sorted_vocab=1, batch_words=10000):
         """
 
         Parameters
@@ -59,11 +60,10 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
             in the context strung together.
         dm_tag_count : int, optional
             Expected constant number of document tags per document, when using dm_concat mode.
-        docvecs : :class:`~gensim.models.keyedvectors.Doc2VecKeyedVectors`
+        dv : :class:`~gensim.models.keyedvectors.KeyedVectors`
             A mapping from a string or int tag to its vector representation.
-            Either this or `docvecs_mapfile` **MUST** be supplied.
-        docvecs_mapfile : str, optional
-            Path to a file containing the docvecs mapping. If `docvecs` is None, this file will be used to create it.
+        dv_mapfile : str, optional
+            Path to a file containing the docvecs mapping. If `dv` is None, this file will be used to create it.
         comment : str, optional
             A model descriptive comment, used for logging and debugging purposes.
         trim_rule : function ((str, int, int) -> int), optional
@@ -72,7 +72,7 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
             be trimmed away (:attr:`gensim.utils.RULE_DISCARD`), or handled using the default
             (:attr:`gensim.utils.RULE_DEFAULT`).
             If None, then :func:`gensim.utils.keep_vocab_item` will be used.
-        size : int, optional
+        vector_size : int, optional
             Dimensionality of the feature vectors.
         alpha : float, optional
             The initial learning rate.
@@ -108,7 +108,7 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
             Same as `dm_mean`, **unused**.
         hashfxn : function (object -> int), optional
             A hashing function. Used to create an initial random reproducible vector by hashing the random seed.
-        iter : int, optional
+        epochs : int, optional
             Number of epochs to iterate through the corpus.
         sorted_vocab : bool, optional
             Whether the vocabulary should be sorted internally.
@@ -122,13 +122,13 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
         self.dbow_words = dbow_words
         self.dm_concat = dm_concat
         self.dm_tag_count = dm_tag_count
-        self.docvecs = docvecs
-        self.docvecs_mapfile = docvecs_mapfile
+        self.dv = dv
+        self.dv_mapfile = dv_mapfile
         self.comment = comment
         self.trim_rule = trim_rule
 
         # attributes associated with gensim.models.Word2Vec
-        self.size = size
+        self.vector_size = vector_size
         self.alpha = alpha
         self.window = window
         self.min_count = min_count
@@ -141,7 +141,7 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
         self.negative = negative
         self.cbow_mean = int(cbow_mean)
         self.hashfxn = hashfxn
-        self.iter = iter
+        self.epochs = epochs
         self.sorted_vocab = sorted_vocab
         self.batch_words = batch_words
 
@@ -166,12 +166,12 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
         self.gensim_model = models.Doc2Vec(
             documents=d2v_sentences, dm_mean=self.dm_mean, dm=self.dm,
             dbow_words=self.dbow_words, dm_concat=self.dm_concat, dm_tag_count=self.dm_tag_count,
-            docvecs=self.docvecs, docvecs_mapfile=self.docvecs_mapfile, comment=self.comment,
-            trim_rule=self.trim_rule, vector_size=self.size, alpha=self.alpha, window=self.window,
+            dv=self.dv, dv_mapfile=self.dv_mapfile, comment=self.comment,
+            trim_rule=self.trim_rule, vector_size=self.vector_size, alpha=self.alpha, window=self.window,
             min_count=self.min_count, max_vocab_size=self.max_vocab_size, sample=self.sample,
             seed=self.seed, workers=self.workers, min_alpha=self.min_alpha, hs=self.hs,
             negative=self.negative, cbow_mean=self.cbow_mean, hashfxn=self.hashfxn,
-            epochs=self.iter, sorted_vocab=self.sorted_vocab, batch_words=self.batch_words
+            epochs=self.epochs, sorted_vocab=self.sorted_vocab, batch_words=self.batch_words
         )
         return self
 

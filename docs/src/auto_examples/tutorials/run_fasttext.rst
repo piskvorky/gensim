@@ -479,7 +479,7 @@ The example training corpus is a toy corpus, results are not expected to be good
  .. code-block:: none
 
     /Volumes/work/workspace/gensim_misha/gensim/models/keyedvectors.py:877: FutureWarning: arrays to stack must be passed as a "sequence" type such as list or tuple. Support for non-sequence iterables such as generators is deprecated as of NumPy 1.16 and will raise an error in the future.
-      vectors = vstack(self.word_vec(word, use_norm=True) for word in used_words).astype(REAL)
+      vectors = vstack(self.get_vector(word, use_norm=True) for word in used_words).astype(REAL)
     'breakfast'
 
 

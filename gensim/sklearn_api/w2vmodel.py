@@ -18,7 +18,7 @@ Examples
     >>> from gensim.sklearn_api import W2VTransformer
     >>>
     >>> # Create a model to represent each word by a 10 dimensional vector.
-    >>> model = W2VTransformer(size=10, min_count=1, seed=1)
+    >>> model = W2VTransformer(vector_size=10, min_count=1, seed=1)
     >>>
     >>> # What is the vector representation of the word 'graph'?
     >>> wordvecs = model.fit(common_texts).transform(['graph', 'system'])
@@ -40,14 +40,14 @@ class W2VTransformer(TransformerMixin, BaseEstimator):
     Estimation of Word Representations in Vector Space" <https://arxiv.org/abs/1301.3781>`_.
 
     """
-    def __init__(self, size=100, alpha=0.025, window=5, min_count=5, max_vocab_size=None, sample=1e-3, seed=1,
-                 workers=3, min_alpha=0.0001, sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
+    def __init__(self, vector_size=100, alpha=0.025, window=5, min_count=5, max_vocab_size=None, sample=1e-3, seed=1,
+                 workers=3, min_alpha=0.0001, sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, epochs=5, null_word=0,
                  trim_rule=None, sorted_vocab=1, batch_words=10000):
         """
 
         Parameters
         ----------
-        size : int
+        vector_size : int
             Dimensionality of the feature vectors.
         alpha : float
             The initial learning rate.
@@ -85,7 +85,7 @@ class W2VTransformer(TransformerMixin, BaseEstimator):
             If 0, use the sum of the context word vectors. If 1, use the mean, only applies when cbow is used.
         hashfxn : callable (object -> int), optional
             A hashing function. Used to create an initial random reproducible vector by hashing the random seed.
-        iter : int
+        epochs : int
             Number of iterations (epochs) over the corpus.
         null_word : int {1, 0}
             If 1, a null pseudo-word will be created for padding when using concatenative L1 (run-of-words)
@@ -106,7 +106,7 @@ class W2VTransformer(TransformerMixin, BaseEstimator):
 
         """
         self.gensim_model = None
-        self.size = size
+        self.vector_size = vector_size
         self.alpha = alpha
         self.window = window
         self.min_count = min_count
@@ -120,7 +120,7 @@ class W2VTransformer(TransformerMixin, BaseEstimator):
         self.negative = negative
         self.cbow_mean = int(cbow_mean)
         self.hashfxn = hashfxn
-        self.iter = iter
+        self.epochs = epochs
         self.null_word = null_word
         self.trim_rule = trim_rule
         self.sorted_vocab = sorted_vocab
@@ -144,11 +144,11 @@ class W2VTransformer(TransformerMixin, BaseEstimator):
 
         """
         self.gensim_model = models.Word2Vec(
-            sentences=X, size=self.size, alpha=self.alpha,
+            sentences=X, vector_size=self.vector_size, alpha=self.alpha,
             window=self.window, min_count=self.min_count, max_vocab_size=self.max_vocab_size,
             sample=self.sample, seed=self.seed, workers=self.workers, min_alpha=self.min_alpha,
             sg=self.sg, hs=self.hs, negative=self.negative, cbow_mean=self.cbow_mean,
-            hashfxn=self.hashfxn, iter=self.iter, null_word=self.null_word, trim_rule=self.trim_rule,
+            hashfxn=self.hashfxn, epochs=self.epochs, null_word=self.null_word, trim_rule=self.trim_rule,
             sorted_vocab=self.sorted_vocab, batch_words=self.batch_words
         )
         return self
@@ -163,7 +163,7 @@ class W2VTransformer(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        np.ndarray of shape [`len(words)`, `size`]
+        np.ndarray of shape [`len(words)`, `vector_size`]
             A 2D array where each row is the vector of one word.
 
         """
@@ -176,7 +176,7 @@ class W2VTransformer(TransformerMixin, BaseEstimator):
         if isinstance(words, six.string_types):
             words = [words]
         vectors = [self.gensim_model.wv[word] for word in words]
-        return np.reshape(np.array(vectors), (len(words), self.size))
+        return np.reshape(np.array(vectors), (len(words), self.vector_size))
 
     def partial_fit(self, X):
         raise NotImplementedError(

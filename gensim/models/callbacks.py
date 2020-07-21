@@ -569,7 +569,7 @@ class Callback(object):
 
 
 class CallbackAny2Vec(object):
-    """Base class to build callbacks for :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`.
+    """Base class to build callbacks for :class:`~gensim.models.word2vec.Word2Vec` & subclasses.
 
     Callbacks are used to apply custom functions over the model at specific points
     during training (epoch start, batch end etc.). This is a base class and its purpose is to be inherited by
@@ -584,7 +584,7 @@ class CallbackAny2Vec(object):
 
         Parameters
         ----------
-        model : :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
+        model : :class:`~gensim.models.word2vec.Word2Vec` or subclass
             Current model.
 
         """
@@ -595,7 +595,7 @@ class CallbackAny2Vec(object):
 
         Parameters
         ----------
-        model : :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
+        model : :class:`~gensim.models.word2vec.Word2Vec` or subclass
             Current model.
 
         """
@@ -606,7 +606,7 @@ class CallbackAny2Vec(object):
 
         Parameters
         ----------
-        model : :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
+        model : :class:`~gensim.models.word2vec.Word2Vec` or subclass
             Current model.
 
         """
@@ -617,7 +617,7 @@ class CallbackAny2Vec(object):
 
         Parameters
         ----------
-        model : :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
+        model : :class:`~gensim.models.word2vec.Word2Vec` or subclass
             Current model.
 
         """
@@ -628,7 +628,7 @@ class CallbackAny2Vec(object):
 
         Parameters
         ----------
-        model : :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
+        model : :class:`~gensim.models.word2vec.Word2Vec` or subclass
             Current model.
 
         """
@@ -639,7 +639,7 @@ class CallbackAny2Vec(object):
 
         Parameters
         ----------
-        model : :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
+        model : :class:`~gensim.models.word2vec.Word2Vec` or subclass
             Current model.
 
         """

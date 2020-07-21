@@ -435,7 +435,7 @@ def _get_field_from_model(model, field):
         requested field name, fields are listed in the `_NEW_HEADER_FORMAT` list
     """
     if field == 'bucket':
-        return model.trainables.bucket
+        return model.wv.bucket
     elif field == 'dim':
         return model.vector_size
     elif field == 'epoch':
@@ -457,7 +457,7 @@ def _get_field_from_model(model, field):
     elif field == 'minn':
         return model.wv.min_n
     elif field == 'min_count':
-        return model.vocabulary.min_count
+        return model.min_count
     elif field == 'model':
         # `model` => cbow:1, sg:2, sup:3
         # cbow = continous bag of words (default)
@@ -467,7 +467,7 @@ def _get_field_from_model(model, field):
     elif field == 'neg':
         return model.negative
     elif field == 't':
-        return model.vocabulary.sample
+        return model.sample
     elif field == 'word_ngrams':
         # This is skipped in gensim loading setting, using the default from FB C++ code
         return 1
@@ -531,9 +531,9 @@ def _dict_save(fout, model, encoding):
     # In the unsupervised case we have only words (no labels). Hence both fields
     # are equal.
 
-    fout.write(np.int32(len(model.wv.vocab)).tobytes())
+    fout.write(np.int32(len(model.wv)).tobytes())
 
-    fout.write(np.int32(len(model.wv.vocab)).tobytes())
+    fout.write(np.int32(len(model.wv)).tobytes())
 
     # nlabels=0 <- no labels  we are in unsupervised mode
     fout.write(np.int32(0).tobytes())
@@ -544,7 +544,7 @@ def _dict_save(fout, model, encoding):
     fout.write(np.int64(-1))
 
     for word in model.wv.index2word:
-        word_count = model.wv.vocab[word].count
+        word_count = model.wv.get_vecattr(word, 'count')
         fout.write(word.encode(encoding))
         fout.write(_END_OF_WORD_MARKER)
         fout.write(np.int64(word_count).tobytes())
@@ -572,7 +572,7 @@ def _input_save(fout, model):
     ngrams_n, ngrams_dim = model.wv.vectors_ngrams.shape
 
     assert vocab_dim == ngrams_dim
-    assert vocab_n == len(model.wv.vocab)
+    assert vocab_n == len(model.wv)
     assert ngrams_n == model.wv.bucket
 
     fout.write(struct.pack('@2q', vocab_n + ngrams_n, vocab_dim))
@@ -596,9 +596,9 @@ def _output_save(fout, model):
         saved model
     """
     if model.hs:
-        hidden_output = model.trainables.syn1
+        hidden_output = model.syn1
     if model.negative:
-        hidden_output = model.trainables.syn1neg
+        hidden_output = model.syn1neg
 
     hidden_n, hidden_dim = hidden_output.shape
     fout.write(struct.pack('@2q', hidden_n, hidden_dim))
