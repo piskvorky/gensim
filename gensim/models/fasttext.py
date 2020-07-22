@@ -279,6 +279,7 @@ import logging
 import os
 
 import numpy as np
+import itertools as it
 from numpy import ones, vstack, float32 as REAL
 import six
 from collections.abc import Iterable
@@ -822,7 +823,6 @@ class FastText(Word2Vec):
             Load :class:`~gensim.models.fasttext.FastText` model.
 
         """
-        kwargs['ignore'] = kwargs.get('ignore', []) + ['buckets_word', ]
         super(FastText, self).save(*args, **kwargs)
 
     @classmethod
@@ -845,25 +845,15 @@ class FastText(Word2Vec):
             Save :class:`~gensim.models.fasttext.FastText` model.
 
         """
-        model = super(FastText, cls).load(*args, rethrow=True, **kwargs)
+        return super(FastText, cls).load(*args, rethrow=True, **kwargs)
 
-        if not hasattr(model.wv, 'vectors_vocab_lockf') and hasattr(model.wv, 'vectors_vocab'):
-            # TODO: try trainables-location
-            model.wv.vectors_vocab_lockf = ones(1, dtype=REAL)
-        if not hasattr(model, 'vectors_ngrams_lockf') and hasattr(model.wv, 'vectors_ngrams'):
-            # TODO: try trainables-location
-            model.wv.vectors_ngrams_lockf = ones(1, dtype=REAL)
-        # fixup mistakenly overdimensioned gensim-3.x lockf arrays
-        if len(model.wv.vectors_vocab_lockf.shape) > 1:
-            model.wv.vectors_vocab_lockf = ones(1, dtype=REAL)
-        if len(model.wv.vectors_ngrams_lockf.shape) > 1:
-            model.wv.vectors_ngrams_lockf = ones(1, dtype=REAL)
-        if hasattr(model, 'bucket'):
-            del model.bucket  # should only exist in one place: the wv subcomponent
-        if not hasattr(model.wv, 'buckets_word') or not model.wv.buckets_word:
-            model.wv.recalc_char_ngram_buckets()
-
-        return model
+    def _load_specials(self, *args, **kwargs):
+        """Handle special requirements of `.load()` protocol, usually up-converting older versions."""
+        super(FastText, self)._load_specials(*args, **kwargs)
+        if hasattr(self, 'bucket'):
+            # should only exist in one place: the wv subcomponent
+            self.wv.bucket = self.bucket
+            del self.bucket
 
 
 class FastTextVocab(utils.SaveLoad):
@@ -1197,12 +1187,47 @@ class FastTextKeyedVectors(KeyedVectors):
 
     @classmethod
     def load(cls, fname_or_handle, **kwargs):
-        model = super(FastTextKeyedVectors, cls).load(fname_or_handle, **kwargs)
-        if isinstance(model, FastTextKeyedVectors):
-            if not hasattr(model, 'compatible_hash') or model.compatible_hash is False:
-                raise TypeError("Pre-gensim-3.8.x Fasttext models with nonstandard hashing are no longer compatible."
-                                "Loading into gensim-3.8.3 & re-saving may create a compatible model.")
-        return model
+        """Load a previously saved `FastTextKeyedVectors` model.
+
+        Parameters
+        ----------
+        fname : str
+            Path to the saved file.
+
+        Returns
+        -------
+        :class:`~gensim.models.fasttext.FastTextKeyedVectors`
+            Loaded model.
+
+        See Also
+        --------
+        :meth:`~gensim.models.fasttext.FastTextKeyedVectors.save`
+            Save :class:`~gensim.models.fasttext.FastTextKeyedVectors` model.
+
+        """
+        return super(FastTextKeyedVectors, cls).load(fname_or_handle, **kwargs)
+
+    def _load_specials(self, *args, **kwargs):
+        """Handle special requirements of `.load()` protocol, usually up-converting older versions."""
+        super(FastTextKeyedVectors, self)._load_specials(*args, **kwargs)
+        if not isinstance(self, FastTextKeyedVectors):
+            raise TypeError("Loaded object of type %s, not expected FastTextKeyedVectors" % type(self))
+        if not hasattr(self, 'compatible_hash') or self.compatible_hash is False:
+            raise TypeError("Pre-gensim-3.8.x Fasttext models with nonstandard hashing are no longer compatible."
+                            "Loading into gensim-3.8.3 & re-saving may create a compatible model.")
+        if not hasattr(self, 'vectors_vocab_lockf') and hasattr(self, 'vectors_vocab'):
+            self.vectors_vocab_lockf = ones(1, dtype=REAL)
+        if not hasattr(self, 'vectors_ngrams_lockf') and hasattr(self, 'vectors_ngrams'):
+            self.vectors_ngrams_lockf = ones(1, dtype=REAL)
+        # fixup mistakenly overdimensioned gensim-3.x lockf arrays
+        if len(self.vectors_vocab_lockf.shape) > 1:
+            self.vectors_vocab_lockf = ones(1, dtype=REAL)
+        if len(self.vectors_ngrams_lockf.shape) > 1:
+            self.vectors_ngrams_lockf = ones(1, dtype=REAL)
+        if not hasattr(self, 'buckets_word') or not self.buckets_word:
+            self.recalc_char_ngram_buckets()
+        if not hasattr(self, 'vectors') or self.vectors is None:
+            self.adjust_vectors()  # recompose full-word vectors
 
     def __contains__(self, word):
         """Check if `word` or any character ngrams in `word` are present in the vocabulary.
@@ -1250,13 +1275,14 @@ class FastTextKeyedVectors(KeyedVectors):
             Load object.
 
         """
-        # don't bother storing the cached normalized vectors
-        ignore_attrs = [
-            'buckets_word',
-            'hash2index',
-        ]
-        kwargs['ignore'] = kwargs.get('ignore', ignore_attrs)
         super(FastTextKeyedVectors, self).save(*args, **kwargs)
+
+    def _save_specials(self, fname, separately, sep_limit, ignore, pickle_protocol, compress, subname):
+        """Arrange any special handling for the gensim.utils.SaveLoad protocol"""
+        # don't save properties that are merely calculated from others
+        ignore = set(it.chain(ignore, ('buckets_word', 'vectors')))
+        return super(FastTextKeyedVectors, self)._save_specials(
+            fname, separately, sep_limit, ignore, pickle_protocol, compress, subname)
 
     def get_vector(self, word, use_norm=False):
         """Get `word` representations in vector space, as a 1D numpy array.

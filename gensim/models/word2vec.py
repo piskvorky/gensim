@@ -128,7 +128,7 @@ from timeit import default_timer
 from collections import defaultdict, namedtuple
 from types import GeneratorType
 import threading
-import itertools
+import itertools as it
 import copy
 
 from gensim.utils import keep_vocab_item, call_on_class_only, deprecated
@@ -1788,20 +1788,14 @@ class Word2Vec(utils.SaveLoad):
             Path to the file.
 
         """
-        # don't bother storing recalculable table
-        kwargs['ignore'] = kwargs.get('ignore', []) + ['cum_table', ]
         super(Word2Vec, self).save(*args, **kwargs)
 
-    def get_latest_training_loss(self):
-        """Get current value of the training loss.
-
-        Returns
-        -------
-        float
-            Current training loss.
-
-        """
-        return self.running_training_loss
+    def _save_specials(self, fname, separately, sep_limit, ignore, pickle_protocol, compress, subname):
+        """Arrange any special handling for the gensim.utils.SaveLoad protocol"""
+        # don't save properties that are merely calculated from others
+        ignore = set(it.chain(ignore, ('cum_table',)))
+        return super(Word2Vec, self)._save_specials(
+            fname, separately, sep_limit, ignore, pickle_protocol, compress, subname)
 
     @classmethod
     def load(cls, *args, rethrow=False, **kwargs):
@@ -1828,48 +1822,64 @@ class Word2Vec(utils.SaveLoad):
             if not isinstance(model, Word2Vec):
                 rethrow = True
                 raise AttributeError("Model of type %s can't be loaded by %s" % (type(model), str(cls)))
-            # for backward compatibility
-            if not hasattr(model, 'ns_exponent'):
-                model.ns_exponent = 0.75
-            if model.negative and hasattr(model.wv, 'index2word'):
-                model.make_cum_table()  # rebuild cum_table from vocabulary  ## TODO: ???
-            if not hasattr(model, 'corpus_count'):
-                model.corpus_count = None
-            if not hasattr(model, 'corpus_total_words'):
-                model.corpus_total_words = None
-            if not hasattr(model.wv, 'vectors_lockf') and hasattr(model.wv, 'vectors'):
-                model.wv.vectors_lockf = getattr(model, 'vectors_lockf', np.ones(1, dtype=REAL))
-            if not hasattr(model, 'random'):
-                model.random = np.random.RandomState(model.seed)
-            if not hasattr(model, 'train_count'):
-                model.train_count = 0
-                model.total_train_time = 0
-            if not hasattr(model, 'epochs'):
-                model.epochs = model.iter
-                del model.iter
-            if not hasattr(model, 'max_final_vocab'):
-                model.max_final_vocab = None
-            if hasattr(model, 'vocabulary'):  # re-integrate state that had been moved
-                for a in ('max_vocab_size', 'min_count', 'sample', 'sorted_vocab', 'null_word', 'raw_vocab'):
-                    setattr(model, a, getattr(model.vocabulary, a))
-                del model.vocabulary
-            if hasattr(model, 'trainables'):  # re-integrate state that had been moved
-                for a in ('hashfxn', 'layer1_size', 'seed', 'syn1neg', 'syn1'):
-                    if hasattr(model.trainables, a):
-                        setattr(model, a, getattr(model.trainables, a))
-                if hasattr(model, 'syn1'):
-                    model.syn1 = model.syn1
-                    del model.syn1
-                del model.trainables
             return model
         except AttributeError as ae:
             if rethrow:
                 raise ae
             logger.error(
                 "Model load error. Was model saved using code from an older Gensim Version? "
-                "Try loading older model using gensim-3.8.1, then re-saving, to restore "
+                "Try loading older model using gensim-3.8.3, then re-saving, to restore "
                 "compatibility with current code.")
             raise ae
+
+    def _load_specials(self, *args, **kwargs):
+        """Handle special requirements of `.load()` protocol, usually up-converting older versions."""
+        super(Word2Vec, self)._load_specials(*args, **kwargs)
+        # for backward compatibility, add/rearrange properties from prior versions
+        if not hasattr(self, 'ns_exponent'):
+            self.ns_exponent = 0.75
+        if self.negative and hasattr(self.wv, 'index_to_key'):
+            self.make_cum_table()  # rebuild cum_table from vocabulary
+        if not hasattr(self, 'corpus_count'):
+            self.corpus_count = None
+        if not hasattr(self, 'corpus_total_words'):
+            self.corpus_total_words = None
+        if not hasattr(self.wv, 'vectors_lockf') and hasattr(self.wv, 'vectors'):
+            self.wv.vectors_lockf = getattr(self, 'vectors_lockf', np.ones(1, dtype=REAL))
+        if not hasattr(self, 'random'):
+            # use new instance of numpy's recommended generator/algorithm
+            self.random = np.random.default_rng(seed=self.seed)
+        if not hasattr(self, 'train_count'):
+            self.train_count = 0
+            self.total_train_time = 0
+        if not hasattr(self, 'epochs'):
+            self.epochs = self.iter
+            del self.iter
+        if not hasattr(self, 'max_final_vocab'):
+            self.max_final_vocab = None
+        if hasattr(self, 'vocabulary'):  # re-integrate state that had been moved
+            for a in ('max_vocab_size', 'min_count', 'sample', 'sorted_vocab', 'null_word', 'raw_vocab'):
+                setattr(self, a, getattr(self.vocabulary, a))
+            del self.vocabulary
+        if hasattr(self, 'trainables'):  # re-integrate state that had been moved
+            for a in ('hashfxn', 'layer1_size', 'seed', 'syn1neg', 'syn1'):
+                if hasattr(self.trainables, a):
+                    setattr(self, a, getattr(self.trainables, a))
+            if hasattr(self, 'syn1'):
+                self.syn1 = self.syn1
+                del self.syn1
+            del self.trainables
+
+    def get_latest_training_loss(self):
+        """Get current value of the training loss.
+
+        Returns
+        -------
+        float
+            Current training loss.
+
+        """
+        return self.running_training_loss
 
 
 class BrownCorpus(object):
@@ -1958,7 +1968,7 @@ class LineSentence(object):
             # Assume it is a file-like object and try treating it as such
             # Things that don't have seek will trigger an exception
             self.source.seek(0)
-            for line in itertools.islice(self.source, self.limit):
+            for line in it.islice(self.source, self.limit):
                 line = utils.to_unicode(line).split()
                 i = 0
                 while i < len(line):
@@ -1967,7 +1977,7 @@ class LineSentence(object):
         except AttributeError:
             # If it didn't work like a file, use it as a string filename
             with utils.open(self.source, 'rb') as fin:
-                for line in itertools.islice(fin, self.limit):
+                for line in it.islice(fin, self.limit):
                     line = utils.to_unicode(line).split()
                     i = 0
                     while i < len(line):
@@ -2021,7 +2031,7 @@ class PathLineSentences(object):
         for file_name in self.input_files:
             logger.info('reading file %s', file_name)
             with utils.open(file_name, 'rb') as fin:
-                for line in itertools.islice(fin, self.limit):
+                for line in it.islice(fin, self.limit):
                     line = utils.to_unicode(line).split()
                     i = 0
                     while i < len(line):
