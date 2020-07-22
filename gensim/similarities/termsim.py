@@ -131,7 +131,6 @@ class SparseTermSimilarityMatrix(SaveLoad):
     >>> from gensim.models import Word2Vec, WordEmbeddingSimilarityIndex
     >>> from gensim.similarities import SoftCosineSimilarity, SparseTermSimilarityMatrix
     >>> from gensim.similarities.index import AnnoyIndexer
-    >>> from scikits.sparse.cholmod import cholesky
     >>>
     >>> model = Word2Vec(common_texts, size=20, min_count=1)  # train word-vectors
     >>> annoy = AnnoyIndexer(model, num_trees=2)  # use annoy for faster word similarity lookups
@@ -143,6 +142,8 @@ class SparseTermSimilarityMatrix(SaveLoad):
     >>>
     >>> query = 'graph trees computer'.split()  # make a query
     >>> sims = docsim_index[dictionary.doc2bow(query)]  # calculate similarity of query to each doc from bow_corpus
+    >>>
+    >>> from scikits.sparse.cholmod import cholesky
     >>>
     >>> word_embeddings = cholesky(similarity_matrix.matrix).L()  # obtain word embeddings from similarity matrix
 
