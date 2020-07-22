@@ -1401,6 +1401,7 @@ class FastTextKeyedVectors(KeyedVectors):
 
         """
         if self.bucket == 0:
+            self.vectors = self.vectors_vocab  # no ngrams influence
             return
 
         self.vectors = self.vectors_vocab[:].copy()
