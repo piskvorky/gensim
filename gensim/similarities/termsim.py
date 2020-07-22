@@ -358,8 +358,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
         if normalized in (True, False):
             warnings.warn(
                 'Boolean parameter normalized will be removed in 4.0.0, use '
-                'normalized=({normalized}, {normalized}) instead of '
-                'normalized={normalized}'.format(normalized=normalized),
+                'normalized=(%s, %s) instead of normalized=%s' % tuple([normalized] * 3),
                 category=DeprecationWarning,
             )
             normalized = (normalized, normalized)
