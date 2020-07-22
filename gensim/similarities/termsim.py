@@ -210,6 +210,12 @@ class SparseTermSimilarityMatrix(SaveLoad):
 
         logger.info("constructing a sparse term similarity matrix using %s", index)
 
+        def _tfidf_sort_key(term_index):
+            if isinstance(term_index, tuple):
+                term_index, *_ = term_index
+            term_idf = tfidf.idfs[term_index]
+            return (-term_idf, term_index)
+
         if nonzero_limit is None:
             nonzero_limit = matrix_order
 
@@ -219,14 +225,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
         else:
             assert max(tfidf.idfs) == matrix_order - 1
             logger.info("iterating over columns in tf-idf order")
-            columns = [
-                term_index for term_index, _
-                in sorted(
-                    tfidf.idfs.items(),
-                    key=lambda x: (lambda term_index, term_idf: (term_idf, -term_index))(*x),
-                    reverse=True,
-                )
-            ]
+            columns = sorted(tfidf.idfs.keys(), key=_tfidf_sort_key)
 
         if dtype is np.float16 or dtype is np.float32:
             similarity_type_code = 'f'
@@ -271,11 +270,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
             if tfidf is None:
                 rows = sorted(most_similar)
             else:
-                rows = sorted(
-                    most_similar,
-                    key=lambda x: (lambda term_index, _: (tfidf.idfs[term_index], -term_index))(*x),
-                    reverse=True,
-                )
+                rows = sorted(most_similar, key=_tfidf_sort_key)
 
             for row_number, (t2_index, similarity) in zip(range(num_rows), rows):
                 if dominant and column_sum[t1_index] + abs(similarity) >= 1.0:
