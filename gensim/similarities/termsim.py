@@ -428,8 +428,9 @@ class SparseTermSimilarityMatrix(SaveLoad):
             return result[0, 0]
         elif not is_corpus_X or not is_corpus_Y:
             if is_corpus_X and not is_corpus_Y:
-                is_corpus_X, X, is_corpus_Y, Y, normalized_X, normalized_Y = \
-                    is_corpus_Y, Y, is_corpus_X, X, normalized_Y, normalized_X  # make Y the corpus
+                X, Y = Y, X  # make Y the corpus
+                is_corpus_X, is_corpus_Y = is_corpus_Y, is_corpus_X
+                normalized_X, normalized_Y = normalized_Y, normalized_X
                 transposed = True
             else:
                 transposed = False
