@@ -1039,44 +1039,44 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         self.assertTrue(isinstance(matrix, scipy.sparse.csc_matrix))
         self.assertTrue(numpy.all(matrix.todense() == expected_matrix))
 
+    def test_inner_product_zerovector_zerovector(self):
+        """Test the inner product between two zero vectors."""
+
+        self.assertEqual(0.0, self.uniform_matrix.inner_product([], []))
+        self.assertEqual(0.0, self.uniform_matrix.inner_product([], [], normalized=(False, 'maintain')))
+        self.assertEqual(0.0, self.uniform_matrix.inner_product([], [], normalized=(False, True)))
+        self.assertEqual(0.0, self.uniform_matrix.inner_product([], [], normalized=('maintain', False)))
+        self.assertEqual(0.0, self.uniform_matrix.inner_product([], [], normalized=('maintain', 'maintain')))
+        self.assertEqual(0.0, self.uniform_matrix.inner_product([], [], normalized=('maintain', True)))
+        self.assertEqual(0.0, self.uniform_matrix.inner_product([], [], normalized=(True, False)))
+        self.assertEqual(0.0, self.uniform_matrix.inner_product([], [], normalized=(True, 'maintain')))
+        self.assertEqual(0.0, self.uniform_matrix.inner_product([], [], normalized=(True, True)))
+
+    def test_inner_product_zerovector_vector(self):
+        """Test the inner product between a zero vector and a vector."""
+
+        self.assertEqual(0.0, self.uniform_matrix.inner_product([], self.vec2))
+        self.assertEqual(0.0, self.uniform_matrix.inner_product([], self.vec2, normalized=(False, 'maintain')))
+        self.assertEqual(0.0, self.uniform_matrix.inner_product([], self.vec2, normalized=(False, True)))
+        self.assertEqual(0.0, self.uniform_matrix.inner_product([], self.vec2, normalized=('maintain', False)))
+        self.assertEqual(0.0, self.uniform_matrix.inner_product([], self.vec2, normalized=('maintain', 'maintain')))
+        self.assertEqual(0.0, self.uniform_matrix.inner_product([], self.vec2, normalized=('maintain', True)))
+        self.assertEqual(0.0, self.uniform_matrix.inner_product([], self.vec2, normalized=(True, False)))
+        self.assertEqual(0.0, self.uniform_matrix.inner_product([], self.vec2, normalized=(True, 'maintain')))
+        self.assertEqual(0.0, self.uniform_matrix.inner_product([], self.vec2, normalized=(True, True)))
+
     def test_inner_product_vector_zerovector(self):
         """Test the inner product between a vector and a zero vector."""
 
-        self.assertEqual(0.0, self.uniform_matrix.inner_product([], self.vec2))
         self.assertEqual(0.0, self.uniform_matrix.inner_product(self.vec1, []))
-        self.assertEqual(0.0, self.uniform_matrix.inner_product([], []))
-
-        self.assertEqual(0.0, self.uniform_matrix.inner_product([], self.vec2, normalized=(False, 'maintain')))
         self.assertEqual(0.0, self.uniform_matrix.inner_product(self.vec1, [], normalized=(False, 'maintain')))
-        self.assertEqual(0.0, self.uniform_matrix.inner_product([], [], normalized=(False, 'maintain')))
-
-        self.assertEqual(0.0, self.uniform_matrix.inner_product([], self.vec2, normalized=(False, True)))
         self.assertEqual(0.0, self.uniform_matrix.inner_product(self.vec1, [], normalized=(False, True)))
-        self.assertEqual(0.0, self.uniform_matrix.inner_product([], [], normalized=(False, True)))
-
-        self.assertEqual(0.0, self.uniform_matrix.inner_product([], self.vec2, normalized=('maintain', False)))
         self.assertEqual(0.0, self.uniform_matrix.inner_product(self.vec1, [], normalized=('maintain', False)))
-        self.assertEqual(0.0, self.uniform_matrix.inner_product([], [], normalized=('maintain', False)))
-
-        self.assertEqual(0.0, self.uniform_matrix.inner_product([], self.vec2, normalized=('maintain', 'maintain')))
         self.assertEqual(0.0, self.uniform_matrix.inner_product(self.vec1, [], normalized=('maintain', 'maintain')))
-        self.assertEqual(0.0, self.uniform_matrix.inner_product([], [], normalized=('maintain', 'maintain')))
-
-        self.assertEqual(0.0, self.uniform_matrix.inner_product([], self.vec2, normalized=('maintain', True)))
         self.assertEqual(0.0, self.uniform_matrix.inner_product(self.vec1, [], normalized=('maintain', True)))
-        self.assertEqual(0.0, self.uniform_matrix.inner_product([], [], normalized=('maintain', True)))
-
-        self.assertEqual(0.0, self.uniform_matrix.inner_product([], self.vec2, normalized=(True, False)))
         self.assertEqual(0.0, self.uniform_matrix.inner_product(self.vec1, [], normalized=(True, False)))
-        self.assertEqual(0.0, self.uniform_matrix.inner_product([], [], normalized=(True, False)))
-
-        self.assertEqual(0.0, self.uniform_matrix.inner_product([], self.vec2, normalized=(True, 'maintain')))
         self.assertEqual(0.0, self.uniform_matrix.inner_product(self.vec1, [], normalized=(True, 'maintain')))
-        self.assertEqual(0.0, self.uniform_matrix.inner_product([], [], normalized=(True, 'maintain')))
-
-        self.assertEqual(0.0, self.uniform_matrix.inner_product([], self.vec2, normalized=(True, True)))
         self.assertEqual(0.0, self.uniform_matrix.inner_product(self.vec1, [], normalized=(True, True)))
-        self.assertEqual(0.0, self.uniform_matrix.inner_product([], [], normalized=(True, True)))
 
     def test_inner_product_vector_vector(self):
         """Test the inner product between two vectors."""
