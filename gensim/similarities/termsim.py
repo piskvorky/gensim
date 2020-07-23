@@ -242,6 +242,115 @@ def _create_source(index, dictionary, tfidf, symmetric, dominant, nonzero_limit,
     return matrix
 
 
+def _normalize_dense_vector(vector, matrix, normalization):
+    """Normalize a dense vector after a change of basis.
+
+    Parameters
+    ----------
+    vector : 1xN ndarray
+        A dense vector.
+    matrix : NxN ndarray
+        A change-of-basis matrix.
+    normalization : {True, False, 'maintain'}
+        Whether the vector will be L2-normalized (True; corresponds to the soft
+        cosine measure), maintain its L2-norm during the change of basis
+        ('maintain'; corresponds to query expansion with partial membership),
+        or kept as-is (False; corresponds to query expansion).
+
+    Returns
+    -------
+    vector : ndarray
+        The normalized dense vector.
+
+    """
+    if not normalization:
+        return vector
+
+    vector_norm = vector.T.dot(matrix).dot(vector)[0, 0]
+    assert vector_norm >= 0.0, NON_NEGATIVE_NORM_ASSERTION_MESSAGE
+    if normalization == 'maintain' and vector_norm > 0.0:
+        vector_norm /= vector.T.dot(vector)
+    vector_norm = sqrt(vector_norm)
+
+    normalized_vector = vector
+    if vector_norm > 0.0:
+        normalized_vector /= vector_norm
+
+    return normalized_vector
+
+
+def _normalize_dense_corpus(corpus, matrix, normalization):
+    """Normalize a dense corpus after a change of basis.
+
+    Parameters
+    ----------
+    corpus : MxN ndarray
+        A dense corpus.
+    matrix : NxN ndarray
+        A change-of-basis matrix.
+    normalization : {True, False, 'maintain'}
+        Whether the vector will be L2-normalized (True; corresponds to the soft
+        cosine measure), maintain its L2-norm during the change of basis
+        ('maintain'; corresponds to query expansion with partial membership),
+        or kept as-is (False; corresponds to query expansion).
+
+    Returns
+    -------
+    normalized_corpus : ndarray
+        The normalized dense corpus.
+
+    """
+    if not normalization:
+        return corpus
+
+    # use the following equality: np.diag(A.T.dot(B).dot(A)) == A.T.dot(B).multiply(A.T).sum(axis=1).T
+    corpus_norm = np.multiply(corpus.T.dot(matrix), corpus.T).sum(axis=1).T
+    assert corpus_norm.min() >= 0.0, NON_NEGATIVE_NORM_ASSERTION_MESSAGE
+    if normalization == 'maintain':
+        corpus_norm /= np.multiply(corpus.T, corpus.T).sum(axis=1).T
+    corpus_norm = np.sqrt(corpus_norm)
+
+    normalized_corpus = np.multiply(corpus, 1.0 / corpus_norm)
+    normalized_corpus = np.nan_to_num(normalized_corpus)  # account for division by zero
+    return normalized_corpus
+
+
+def _normalize_sparse_corpus(corpus, matrix, normalization):
+    """Normalize a sparse corpus after a change of basis.
+
+    Parameters
+    ----------
+    corpus : MxN :class:`scipy.sparse.csc_matrix`
+        A sparse corpus.
+    matrix : NxN :class:`scipy.sparse.csc_matrix`
+        A change-of-basis matrix.
+    normalization : {True, False, 'maintain'}
+        Whether the vector will be L2-normalized (True; corresponds to the soft
+        cosine measure), maintain its L2-norm during the change of basis
+        ('maintain'; corresponds to query expansion with partial membership),
+        or kept as-is (False; corresponds to query expansion).
+
+    Returns
+    -------
+    normalized_corpus : :class:`scipy.sparse.csc_matrix`
+        The normalized sparse corpus.
+
+    """
+    if not normalization:
+        return corpus
+
+    # use the following equality: np.diag(A.T.dot(B).dot(A)) == A.T.dot(B).multiply(A.T).sum(axis=1).T
+    corpus_norm = corpus.T.dot(matrix).multiply(corpus.T).sum(axis=1).T
+    assert corpus_norm.min() >= 0.0, NON_NEGATIVE_NORM_ASSERTION_MESSAGE
+    if normalization == 'maintain':
+        corpus_norm /= corpus.T.multiply(corpus.T).sum(axis=1).T
+    corpus_norm = np.sqrt(corpus_norm)
+
+    normalized_corpus = corpus.multiply(sparse.csr_matrix(1.0 / corpus_norm))
+    normalized_corpus[normalized_corpus == np.inf] = 0  # account for division by zero
+    return normalized_corpus
+
+
 class SparseTermSimilarityMatrix(SaveLoad):
     """
     Builds a sparse term similarity matrix using a term similarity index.
@@ -397,30 +506,9 @@ class SparseTermSimilarityMatrix(SaveLoad):
             Y = np.array([Y[i] if i in Y else 0 for i in word_indices], dtype=dtype)
             matrix = self.matrix[word_indices[:, None], word_indices].todense()
 
+            X = _normalize_dense_vector(X, matrix, normalized_X)
+            Y = _normalize_dense_vector(Y, matrix, normalized_Y)
             result = X.T.dot(matrix).dot(Y)
-
-            norm = 1.0
-
-            if normalized_X:
-                X_norm = X.T.dot(matrix).dot(X)[0, 0]
-                assert X_norm >= 0.0, NON_NEGATIVE_NORM_ASSERTION_MESSAGE
-                if normalized_X == 'maintain' and X_norm > 0.0:
-                    X_norm /= X.T.dot(X)
-                X_norm = sqrt(X_norm)
-                if X_norm > 0.0:
-                    norm *= X_norm
-
-            if normalized_Y:
-                Y_norm = Y.T.dot(matrix).dot(Y)[0, 0]
-                assert Y_norm >= 0.0, NON_NEGATIVE_NORM_ASSERTION_MESSAGE
-                if normalized_Y == 'maintain' and Y_norm > 0.0:
-                    Y_norm /= Y.T.dot(Y)
-                Y_norm = sqrt(Y_norm)
-                if Y_norm > 0.0:
-                    norm *= Y_norm
-
-            if normalized_X or normalized_Y:
-                result *= 1.0 / norm
 
             if normalized_X is True and normalized_Y is True:
                 result = np.clip(result, -1.0, 1.0)
@@ -445,27 +533,9 @@ class SparseTermSimilarityMatrix(SaveLoad):
             Y = corpus2csc(Y, num_terms=self.matrix.shape[0], dtype=dtype)[word_indices, :].todense()
             matrix = self.matrix[word_indices[:, None], word_indices].todense()
 
-            # use the following equality: np.diag(A.T.dot(B).dot(A)) == A.T.dot(B).multiply(A.T).sum(axis=1).T
-
-            if normalized_X:
-                X_norm = np.multiply(X.T.dot(matrix), X.T).sum(axis=1).T
-                assert X_norm.min() >= 0.0, NON_NEGATIVE_NORM_ASSERTION_MESSAGE
-                if normalized_X == 'maintain':
-                    X_norm /= X.T.dot(X)
-                X_norm = np.sqrt(X_norm)
-                X = np.multiply(X, 1.0 / X_norm).T
-                X = np.nan_to_num(X)  # account for division by zero
-
-            if normalized_Y:
-                Y_norm = np.multiply(Y.T.dot(matrix), Y.T).sum(axis=1).T
-                assert Y_norm.min() >= 0.0, NON_NEGATIVE_NORM_ASSERTION_MESSAGE
-                if normalized_Y == 'maintain':
-                    Y_norm /= np.multiply(Y.T, Y.T).sum(axis=1).T
-                Y_norm = np.sqrt(Y_norm)
-                Y = np.multiply(Y, 1.0 / Y_norm)
-                Y = np.nan_to_num(Y)  # account for division by zero
-
-            result = X.T.dot(matrix).dot(Y)
+            X = _normalize_dense_vector(X, matrix, normalized_X)
+            Y = _normalize_dense_corpus(Y, matrix, normalized_Y)
+            result = X.dot(matrix).dot(Y)
 
             if normalized_X is True and normalized_Y is True:
                 result = np.clip(result, -1.0, 1.0)
@@ -480,26 +550,8 @@ class SparseTermSimilarityMatrix(SaveLoad):
             Y = corpus2csc(Y if is_corpus_Y else [Y], num_terms=self.matrix.shape[0], dtype=dtype)
             matrix = self.matrix
 
-            # use the following equality: np.diag(A.T.dot(B).dot(A)) == A.T.dot(B).multiply(A.T).sum(axis=1).T
-
-            if normalized_X:
-                X_norm = X.T.dot(matrix).multiply(X.T).sum(axis=1).T
-                assert X_norm.min() >= 0.0, NON_NEGATIVE_NORM_ASSERTION_MESSAGE
-                if normalized_X == 'maintain':
-                    X_norm /= X.T.multiply(X.T).sum(axis=1).T
-                X_norm = np.sqrt(X_norm)
-                X = X.multiply(sparse.csr_matrix(1.0 / X_norm))
-                X[X == np.inf] = 0  # account for division by zero
-
-            if normalized_Y:
-                Y_norm = Y.T.dot(matrix).multiply(Y.T).sum(axis=1).T
-                assert Y_norm.min() >= 0.0, NON_NEGATIVE_NORM_ASSERTION_MESSAGE
-                if normalized_Y == 'maintain':
-                    Y_norm /= Y.T.multiply(Y.T).sum(axis=1).T
-                Y_norm = np.sqrt(Y_norm)
-                Y = Y.multiply(sparse.csr_matrix(1.0 / Y_norm))
-                Y[Y == np.inf] = 0  # account for division by zero
-
+            X = _normalize_sparse_corpus(X, matrix, normalized_X)
+            Y = _normalize_sparse_corpus(Y, matrix, normalized_Y)
             result = X.T.dot(matrix).dot(Y)
 
             if normalized_X is True and normalized_Y is True:
