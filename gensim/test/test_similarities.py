@@ -1039,47 +1039,143 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         self.assertTrue(isinstance(matrix, scipy.sparse.csc_matrix))
         self.assertTrue(numpy.all(matrix.todense() == expected_matrix))
 
-    def test_inner_product_zerovector_zerovector(self):
-        """Test the inner product between two zero vectors."""
+    def test_inner_product_zerovector_zerovector_default(self):
+        """Test the inner product between two zero vectors with the default normalization."""
 
         self.assertEqual(0.0, self.uniform_matrix.inner_product([], []))
+
+    def test_inner_product_zerovector_zerovector_false_maintain(self):
+        """Test the inner product between two zero vectors with the (False, 'maintain') normalization."""
+
         self.assertEqual(0.0, self.uniform_matrix.inner_product([], [], normalized=(False, 'maintain')))
+
+    def test_inner_product_zerovector_zerovector_false_true(self):
+        """Test the inner product between two zero vectors with the (False, True) normalization."""
+
         self.assertEqual(0.0, self.uniform_matrix.inner_product([], [], normalized=(False, True)))
+
+    def test_inner_product_zerovector_zerovector_maintain_false(self):
+        """Test the inner product between two zero vectors with the ('maintain', False) normalization."""
+
         self.assertEqual(0.0, self.uniform_matrix.inner_product([], [], normalized=('maintain', False)))
+
+    def test_inner_product_zerovector_zerovector_maintain_maintain(self):
+        """Test the inner product between two zero vectors with the ('maintain', 'maintain') normalization."""
+
         self.assertEqual(0.0, self.uniform_matrix.inner_product([], [], normalized=('maintain', 'maintain')))
+
+    def test_inner_product_zerovector_zerovector_maintain_true(self):
+        """Test the inner product between two zero vectors with the ('maintain', True) normalization."""
+
         self.assertEqual(0.0, self.uniform_matrix.inner_product([], [], normalized=('maintain', True)))
+
+    def test_inner_product_zerovector_zerovector_true_false(self):
+        """Test the inner product between two zero vectors with the (True, False) normalization."""
+
         self.assertEqual(0.0, self.uniform_matrix.inner_product([], [], normalized=(True, False)))
+
+    def test_inner_product_zerovector_zerovector_true_maintain(self):
+        """Test the inner product between two zero vectors with the (True, 'maintain') normalization."""
+
         self.assertEqual(0.0, self.uniform_matrix.inner_product([], [], normalized=(True, 'maintain')))
+
+    def test_inner_product_zerovector_zerovector_true_true(self):
+        """Test the inner product between two zero vectors with the (True, True) normalization."""
+
         self.assertEqual(0.0, self.uniform_matrix.inner_product([], [], normalized=(True, True)))
 
-    def test_inner_product_zerovector_vector(self):
-        """Test the inner product between a zero vector and a vector."""
+    def test_inner_product_zerovector_vector_default(self):
+        """Test the inner product between a zero vector and a vector with the default normalization."""
 
         self.assertEqual(0.0, self.uniform_matrix.inner_product([], self.vec2))
+
+    def test_inner_product_zerovector_vector_false_maintain(self):
+        """Test the inner product between a zero vector and a vector with the (False, 'maintain') normalization."""
+
         self.assertEqual(0.0, self.uniform_matrix.inner_product([], self.vec2, normalized=(False, 'maintain')))
+
+    def test_inner_product_zerovector_vector_false_true(self):
+        """Test the inner product between a zero vector and a vector with the (False, True) normalization."""
+
         self.assertEqual(0.0, self.uniform_matrix.inner_product([], self.vec2, normalized=(False, True)))
+
+    def test_inner_product_zerovector_vector_maintain_false(self):
+        """Test the inner product between a zero vector and a vector with the ('maintain', False) normalization."""
+
         self.assertEqual(0.0, self.uniform_matrix.inner_product([], self.vec2, normalized=('maintain', False)))
+
+    def test_inner_product_zerovector_vector_maintain_maintain(self):
+        """Test the inner product between a zero vector and a vector with the ('maintain', 'maintain') normalization."""
+
         self.assertEqual(0.0, self.uniform_matrix.inner_product([], self.vec2, normalized=('maintain', 'maintain')))
+
+    def test_inner_product_zerovector_vector_maintain_true(self):
+        """Test the inner product between a zero vector and a vector with the ('maintain', True) normalization."""
+
         self.assertEqual(0.0, self.uniform_matrix.inner_product([], self.vec2, normalized=('maintain', True)))
+
+    def test_inner_product_zerovector_vector_true_false(self):
+        """Test the inner product between a zero vector and a vector with the (True, False) normalization."""
+
         self.assertEqual(0.0, self.uniform_matrix.inner_product([], self.vec2, normalized=(True, False)))
+
+    def test_inner_product_zerovector_vector_true_maintain(self):
+        """Test the inner product between a zero vector and a vector with the (True, 'maintain') normalization."""
+
         self.assertEqual(0.0, self.uniform_matrix.inner_product([], self.vec2, normalized=(True, 'maintain')))
+
+    def test_inner_product_zerovector_vector_true_true(self):
+        """Test the inner product between a zero vector and a vector with the (True, True) normalization."""
+
         self.assertEqual(0.0, self.uniform_matrix.inner_product([], self.vec2, normalized=(True, True)))
 
-    def test_inner_product_vector_zerovector(self):
-        """Test the inner product between a vector and a zero vector."""
+    def test_inner_product_vector_zerovector_default(self):
+        """Test the inner product between a vector and a zero vector with the default normalization."""
 
         self.assertEqual(0.0, self.uniform_matrix.inner_product(self.vec1, []))
+
+    def test_inner_product_vector_zerovector_false_maintain(self):
+        """Test the inner product between a vector and a zero vector with the (False, 'maintain') normalization."""
+
         self.assertEqual(0.0, self.uniform_matrix.inner_product(self.vec1, [], normalized=(False, 'maintain')))
+
+    def test_inner_product_vector_zerovector_false_true(self):
+        """Test the inner product between a vector and a zero vector with the (False, True) normalization."""
+
         self.assertEqual(0.0, self.uniform_matrix.inner_product(self.vec1, [], normalized=(False, True)))
+
+    def test_inner_product_vector_zerovector_maintain_false(self):
+        """Test the inner product between a vector and a zero vector with the ('maintain', False) normalization."""
+
         self.assertEqual(0.0, self.uniform_matrix.inner_product(self.vec1, [], normalized=('maintain', False)))
+
+    def test_inner_product_vector_zerovector_maintain_maintain(self):
+        """Test the inner product between a vector and a zero vector with the ('maintain', 'maintain') normalization."""
+
         self.assertEqual(0.0, self.uniform_matrix.inner_product(self.vec1, [], normalized=('maintain', 'maintain')))
+
+    def test_inner_product_vector_zerovector_maintain_true(self):
+        """Test the inner product between a vector and a zero vector with the ('maintain', True) normalization."""
+
         self.assertEqual(0.0, self.uniform_matrix.inner_product(self.vec1, [], normalized=('maintain', True)))
+
+    def test_inner_product_vector_zerovector_true_false(self):
+        """Test the inner product between a vector and a zero vector with the (True, False) normalization."""
+
         self.assertEqual(0.0, self.uniform_matrix.inner_product(self.vec1, [], normalized=(True, False)))
+
+    def test_inner_product_vector_zerovector_true_maintain(self):
+        """Test the inner product between a vector and a zero vector with the (True, 'maintain') normalization."""
+
         self.assertEqual(0.0, self.uniform_matrix.inner_product(self.vec1, [], normalized=(True, 'maintain')))
+
+    def test_inner_product_vector_zerovector_true_true(self):
+        """Test the inner product between a vector and a zero vector with the (True, True) normalization."""
+
         self.assertEqual(0.0, self.uniform_matrix.inner_product(self.vec1, [], normalized=(True, True)))
 
-    def test_inner_product_vector_vector(self):
-        """Test the inner product between two vectors."""
+    def test_inner_product_vector_vector_default(self):
+        """Test the inner product between two vectors with the default normalization."""
 
         expected_result = 0.0
         expected_result += 2 * 1.0 * 1  # government * s_{ij} * government
@@ -1089,22 +1185,34 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         self.assertAlmostEqual(expected_result, result, places=5)
 
+    def test_inner_product_vector_vector_false_maintain(self):
+        """Test the inner product between two vectors with the (False, 'maintain') normalization."""
+
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec2, self.vec2))
         expected_result *= math.sqrt(self.identity_matrix.inner_product(self.vec2, self.vec2))
         result = self.uniform_matrix.inner_product(self.vec1, self.vec2, normalized=(False, 'maintain'))
         self.assertAlmostEqual(expected_result, result, places=5)
 
+    def test_inner_product_vector_vector_false_true(self):
+        """Test the inner product between two vectors with the (False, True) normalization."""
+
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec2, self.vec2))
         result = self.uniform_matrix.inner_product(self.vec1, self.vec2, normalized=(False, True))
         self.assertAlmostEqual(expected_result, result, places=5)
+
+    def test_inner_product_vector_vector_maintain_false(self):
+        """Test the inner product between two vectors with the ('maintain', False) normalization."""
 
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec1, self.vec1))
         expected_result *= math.sqrt(self.identity_matrix.inner_product(self.vec1, self.vec1))
         result = self.uniform_matrix.inner_product(self.vec1, self.vec2, normalized=('maintain', False))
         self.assertAlmostEqual(expected_result, result, places=5)
+
+    def test_inner_product_vector_vector_maintain_maintain(self):
+        """Test the inner product between two vectors with the ('maintain', 'maintain') normalization."""
 
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec1, self.vec1))
@@ -1114,6 +1222,9 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         result = self.uniform_matrix.inner_product(self.vec1, self.vec2, normalized=('maintain', 'maintain'))
         self.assertAlmostEqual(expected_result, result, places=5)
 
+    def test_inner_product_vector_vector_maintain_true(self):
+        """Test the inner product between two vectors with the ('maintain', True) normalization."""
+
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec1, self.vec1))
         expected_result *= math.sqrt(self.identity_matrix.inner_product(self.vec1, self.vec1))
@@ -1121,10 +1232,16 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         result = self.uniform_matrix.inner_product(self.vec1, self.vec2, normalized=('maintain', True))
         self.assertAlmostEqual(expected_result, result, places=5)
 
+    def test_inner_product_vector_vector_true_false(self):
+        """Test the inner product between two vectors with the (True, False) normalization."""
+
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec1, self.vec1))
         result = self.uniform_matrix.inner_product(self.vec1, self.vec2, normalized=(True, False))
         self.assertAlmostEqual(expected_result, result, places=5)
+
+    def test_inner_product_vector_vector_true_maintain(self):
+        """Test the inner product between two vectors with the (True, 'maintain') normalization."""
 
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec1, self.vec1))
@@ -1133,14 +1250,17 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         result = self.uniform_matrix.inner_product(self.vec1, self.vec2, normalized=(True, 'maintain'))
         self.assertAlmostEqual(expected_result, result, places=5)
 
+    def test_inner_product_vector_vector_true_true(self):
+        """Test the inner product between two vectors with the (True, True) normalization."""
+
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec1, self.vec1))
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec2, self.vec2))
         result = self.uniform_matrix.inner_product(self.vec1, self.vec2, normalized=(True, True))
         self.assertAlmostEqual(expected_result, result, places=5)
 
-    def test_inner_product_vector_corpus(self):
-        """Test the inner product between a vector and a corpus."""
+    def test_inner_product_vector_corpus_default(self):
+        """Test the inner product between a vector and a corpus with the default normalization."""
 
         expected_result = 0.0
         expected_result += 2 * 1.0 * 1  # government * s_{ij} * government
@@ -1152,6 +1272,9 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         self.assertTrue(isinstance(result, numpy.ndarray))
         self.assertTrue(numpy.allclose(expected_result, result))
 
+    def test_inner_product_vector_corpus_false_maintain(self):
+        """Test the inner product between a vector and a corpus with the (False, 'maintain') normalization."""
+
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec2, self.vec2))
         expected_result *= math.sqrt(self.identity_matrix.inner_product(self.vec2, self.vec2))
@@ -1160,12 +1283,18 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         self.assertTrue(isinstance(result, numpy.ndarray))
         self.assertTrue(numpy.allclose(expected_result, result))
 
+    def test_inner_product_vector_corpus_false_true(self):
+        """Test the inner product between a vector and a corpus with the (False, True) normalization."""
+
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec2, self.vec2))
         expected_result = numpy.full((1, 2), expected_result)
         result = self.uniform_matrix.inner_product(self.vec1, [self.vec2] * 2, normalized=(False, True))
         self.assertTrue(isinstance(result, numpy.ndarray))
         self.assertTrue(numpy.allclose(expected_result, result))
+
+    def test_inner_product_vector_corpus_maintain_false(self):
+        """Test the inner product between a vector and a corpus with the ('maintain', False) normalization."""
 
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec1, self.vec1))
@@ -1174,6 +1303,9 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         result = self.uniform_matrix.inner_product(self.vec1, [self.vec2] * 2, normalized=('maintain', False))
         self.assertTrue(isinstance(result, numpy.ndarray))
         self.assertTrue(numpy.allclose(expected_result, result))
+
+    def test_inner_product_vector_corpus_maintain_maintain(self):
+        """Test the inner product between a vector and a corpus with the ('maintain', 'maintain') normalization."""
 
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec1, self.vec1))
@@ -1185,6 +1317,9 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         self.assertTrue(isinstance(result, numpy.ndarray))
         self.assertTrue(numpy.allclose(expected_result, result))
 
+    def test_inner_product_vector_corpus_maintain_true(self):
+        """Test the inner product between a vector and a corpus with the ('maintain', True) normalization."""
+
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec1, self.vec1))
         expected_result *= math.sqrt(self.identity_matrix.inner_product(self.vec1, self.vec1))
@@ -1194,12 +1329,18 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         self.assertTrue(isinstance(result, numpy.ndarray))
         self.assertTrue(numpy.allclose(expected_result, result))
 
+    def test_inner_product_vector_corpus_true_false(self):
+        """Test the inner product between a vector and a corpus with the (True, False) normalization."""
+
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec1, self.vec1))
         expected_result = numpy.full((1, 2), expected_result)
         result = self.uniform_matrix.inner_product(self.vec1, [self.vec2] * 2, normalized=(True, False))
         self.assertTrue(isinstance(result, numpy.ndarray))
         self.assertTrue(numpy.allclose(expected_result, result))
+
+    def test_inner_product_vector_corpus_true_maintain(self):
+        """Test the inner product between a vector and a corpus with the (True, 'maintain') normalization."""
 
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec1, self.vec1))
@@ -1210,6 +1351,9 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         self.assertTrue(isinstance(result, numpy.ndarray))
         self.assertTrue(numpy.allclose(expected_result, result))
 
+    def test_inner_product_vector_corpus_true_true(self):
+        """Test the inner product between a vector and a corpus with the (True, True) normalization."""
+
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec1, self.vec1))
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec2, self.vec2))
@@ -1218,8 +1362,8 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         self.assertTrue(isinstance(result, numpy.ndarray))
         self.assertTrue(numpy.allclose(expected_result, result))
 
-    def test_inner_product_corpus_vector(self):
-        """Test the inner product between a corpus and a vector."""
+    def test_inner_product_corpus_vector_default(self):
+        """Test the inner product between a corpus and a vector with the default normalization."""
 
         expected_result = 0.0
         expected_result += 2 * 1.0 * 1  # government * s_{ij} * government
@@ -1231,6 +1375,9 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         self.assertTrue(isinstance(result, numpy.ndarray))
         self.assertTrue(numpy.allclose(expected_result, result))
 
+    def test_inner_product_corpus_vector_false_maintain(self):
+        """Test the inner product between a corpus and a vector with the (False, 'maintain') normalization."""
+
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec2, self.vec2))
         expected_result *= math.sqrt(self.identity_matrix.inner_product(self.vec2, self.vec2))
@@ -1239,12 +1386,18 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         self.assertTrue(isinstance(result, numpy.ndarray))
         self.assertTrue(numpy.allclose(expected_result, result))
 
+    def test_inner_product_corpus_vector_false_true(self):
+        """Test the inner product between a corpus and a vector with the (False, True) normalization."""
+
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec2, self.vec2))
         expected_result = numpy.full((3, 1), expected_result)
         result = self.uniform_matrix.inner_product([self.vec1] * 3, self.vec2, normalized=(False, True))
         self.assertTrue(isinstance(result, numpy.ndarray))
         self.assertTrue(numpy.allclose(expected_result, result))
+
+    def test_inner_product_corpus_vector_maintain_false(self):
+        """Test the inner product between a corpus and a vector with the ('maintain', False) normalization."""
 
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec1, self.vec1))
@@ -1253,6 +1406,9 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         result = self.uniform_matrix.inner_product([self.vec1] * 3, self.vec2, normalized=('maintain', False))
         self.assertTrue(isinstance(result, numpy.ndarray))
         self.assertTrue(numpy.allclose(expected_result, result))
+
+    def test_inner_product_corpus_vector_maintain_maintain(self):
+        """Test the inner product between a corpus and a vector with the ('maintain', 'maintain') normalization."""
 
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec1, self.vec1))
@@ -1264,6 +1420,9 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         self.assertTrue(isinstance(result, numpy.ndarray))
         self.assertTrue(numpy.allclose(expected_result, result))
 
+    def test_inner_product_corpus_vector_maintain_true(self):
+        """Test the inner product between a corpus and a vector with the ('maintain', True) normalization."""
+
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec1, self.vec1))
         expected_result *= math.sqrt(self.identity_matrix.inner_product(self.vec1, self.vec1))
@@ -1273,12 +1432,18 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         self.assertTrue(isinstance(result, numpy.ndarray))
         self.assertTrue(numpy.allclose(expected_result, result))
 
+    def test_inner_product_corpus_vector_true_false(self):
+        """Test the inner product between a corpus and a vector with the (True, False) normalization."""
+
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec1, self.vec1))
         expected_result = numpy.full((3, 1), expected_result)
         result = self.uniform_matrix.inner_product([self.vec1] * 3, self.vec2, normalized=(True, False))
         self.assertTrue(isinstance(result, numpy.ndarray))
         self.assertTrue(numpy.allclose(expected_result, result))
+
+    def test_inner_product_corpus_vector_true_maintain(self):
+        """Test the inner product between a corpus and a vector with the (True, 'maintain') normalization."""
 
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec1, self.vec1))
@@ -1289,6 +1454,9 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         self.assertTrue(isinstance(result, numpy.ndarray))
         self.assertTrue(numpy.allclose(expected_result, result))
 
+    def test_inner_product_corpus_vector_true_true(self):
+        """Test the inner product between a corpus and a vector with the (True, True) normalization."""
+
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec1, self.vec1))
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec2, self.vec2))
@@ -1297,8 +1465,8 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         self.assertTrue(isinstance(result, numpy.ndarray))
         self.assertTrue(numpy.allclose(expected_result, result))
 
-    def test_inner_product_corpus_corpus(self):
-        """Test the inner product between two corpora."""
+    def test_inner_product_corpus_corpus_default(self):
+        """Test the inner product between two corpora with the default normalization."""
 
         expected_result = 0.0
         expected_result += 2 * 1.0 * 1  # government * s_{ij} * government
@@ -1310,6 +1478,9 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         self.assertTrue(isinstance(result, scipy.sparse.csr_matrix))
         self.assertTrue(numpy.allclose(expected_result, result.todense()))
 
+    def test_inner_product_corpus_corpus_false_maintain(self):
+        """Test the inner product between two corpora with the (False, 'maintain')."""
+
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec2, self.vec2))
         expected_result *= math.sqrt(self.identity_matrix.inner_product(self.vec2, self.vec2))
@@ -1318,12 +1489,18 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         self.assertTrue(isinstance(result, scipy.sparse.csr_matrix))
         self.assertTrue(numpy.allclose(expected_result, result.todense()))
 
+    def test_inner_product_corpus_corpus_false_true(self):
+        """Test the inner product between two corpora with the (False, True)."""
+
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec2, self.vec2))
         expected_result = numpy.full((3, 2), expected_result)
         result = self.uniform_matrix.inner_product([self.vec1] * 3, [self.vec2] * 2, normalized=(False, True))
         self.assertTrue(isinstance(result, scipy.sparse.csr_matrix))
         self.assertTrue(numpy.allclose(expected_result, result.todense()))
+
+    def test_inner_product_corpus_corpus_maintain_false(self):
+        """Test the inner product between two corpora with the ('maintain', False)."""
 
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec1, self.vec1))
@@ -1332,6 +1509,9 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         result = self.uniform_matrix.inner_product([self.vec1] * 3, [self.vec2] * 2, normalized=('maintain', False))
         self.assertTrue(isinstance(result, scipy.sparse.csr_matrix))
         self.assertTrue(numpy.allclose(expected_result, result.todense()))
+
+    def test_inner_product_corpus_corpus_maintain_maintain(self):
+        """Test the inner product between two corpora with the ('maintain', 'maintain')."""
 
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec1, self.vec1))
@@ -1344,6 +1524,9 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         self.assertTrue(isinstance(result, scipy.sparse.csr_matrix))
         self.assertTrue(numpy.allclose(expected_result, result.todense()))
 
+    def test_inner_product_corpus_corpus_maintain_true(self):
+        """Test the inner product between two corpora with the ('maintain', True)."""
+
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec1, self.vec1))
         expected_result *= math.sqrt(self.identity_matrix.inner_product(self.vec1, self.vec1))
@@ -1353,12 +1536,18 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         self.assertTrue(isinstance(result, scipy.sparse.csr_matrix))
         self.assertTrue(numpy.allclose(expected_result, result.todense()))
 
+    def test_inner_product_corpus_corpus_true_false(self):
+        """Test the inner product between two corpora with the (True, False)."""
+
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec1, self.vec1))
         expected_result = numpy.full((3, 2), expected_result)
         result = self.uniform_matrix.inner_product([self.vec1] * 3, [self.vec2] * 2, normalized=(True, False))
         self.assertTrue(isinstance(result, scipy.sparse.csr_matrix))
         self.assertTrue(numpy.allclose(expected_result, result.todense()))
+
+    def test_inner_product_corpus_corpus_true_maintain(self):
+        """Test the inner product between two corpora with the (True, 'maintain')."""
 
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec1, self.vec1))
@@ -1368,6 +1557,9 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         result = self.uniform_matrix.inner_product([self.vec1] * 3, [self.vec2] * 2, normalized=(True, 'maintain'))
         self.assertTrue(isinstance(result, scipy.sparse.csr_matrix))
         self.assertTrue(numpy.allclose(expected_result, result.todense()))
+
+    def test_inner_product_corpus_corpus_true_true(self):
+        """Test the inner product between two corpora with the (True, True)."""
 
         expected_result = self.uniform_matrix.inner_product(self.vec1, self.vec2)
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec1, self.vec1))
