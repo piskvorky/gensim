@@ -23,6 +23,10 @@ from gensim.utils import SaveLoad, is_corpus
 
 logger = logging.getLogger(__name__)
 
+NON_NEGATIVE_NORM_ASSERTION_MESSAGE = u"sparse documents must not contain any explicit " \
+    u"zero entries and the similarity matrix S must satisfy x^T * S * x >= 0 for any " \
+    u"nonzero bag-of-words vector x."
+
 
 class TermSimilarityIndex(SaveLoad):
     """
@@ -376,10 +380,6 @@ class SparseTermSimilarityMatrix(SaveLoad):
         is_corpus_X, X = is_corpus(X)
         is_corpus_Y, Y = is_corpus(Y)
 
-        non_negative_norm_assertion_message = u"sparse documents must not contain any explicit " \
-            u"zero entries and the similarity matrix S must satisfy x^T * S * x >= 0 for any " \
-            u"nonzero bag-of-words vector x."
-
         if not is_corpus_X and not is_corpus_Y:
             X = dict(X)
             Y = dict(Y)
@@ -395,7 +395,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
 
             if normalized_X:
                 X_norm = X.T.dot(matrix).dot(X)[0, 0]
-                assert X_norm >= 0.0, non_negative_norm_assertion_message
+                assert X_norm >= 0.0, NON_NEGATIVE_NORM_ASSERTION_MESSAGE
                 if normalized_X == 'maintain' and X_norm > 0.0:
                     X_norm /= X.T.dot(X)
                 X_norm = sqrt(X_norm)
@@ -404,7 +404,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
 
             if normalized_Y:
                 Y_norm = Y.T.dot(matrix).dot(Y)[0, 0]
-                assert Y_norm >= 0.0, non_negative_norm_assertion_message
+                assert Y_norm >= 0.0, NON_NEGATIVE_NORM_ASSERTION_MESSAGE
                 if normalized_Y == 'maintain' and Y_norm > 0.0:
                     Y_norm /= Y.T.dot(Y)
                 Y_norm = sqrt(Y_norm)
@@ -440,7 +440,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
 
             if normalized_X:
                 X_norm = np.multiply(X.T.dot(matrix), X.T).sum(axis=1).T
-                assert X_norm.min() >= 0.0, non_negative_norm_assertion_message
+                assert X_norm.min() >= 0.0, NON_NEGATIVE_NORM_ASSERTION_MESSAGE
                 if normalized_X == 'maintain':
                     X_norm /= X.T.dot(X)
                 X_norm = np.sqrt(X_norm)
@@ -449,7 +449,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
 
             if normalized_Y:
                 Y_norm = np.multiply(Y.T.dot(matrix), Y.T).sum(axis=1).T
-                assert Y_norm.min() >= 0.0, non_negative_norm_assertion_message
+                assert Y_norm.min() >= 0.0, NON_NEGATIVE_NORM_ASSERTION_MESSAGE
                 if normalized_Y == 'maintain':
                     Y_norm /= np.multiply(Y.T, Y.T).sum(axis=1).T
                 Y_norm = np.sqrt(Y_norm)
@@ -475,7 +475,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
 
             if normalized_X:
                 X_norm = X.T.dot(matrix).multiply(X.T).sum(axis=1).T
-                assert X_norm.min() >= 0.0, non_negative_norm_assertion_message
+                assert X_norm.min() >= 0.0, NON_NEGATIVE_NORM_ASSERTION_MESSAGE
                 if normalized_X == 'maintain':
                     X_norm /= X.T.multiply(X.T).sum(axis=1).T
                 X_norm = np.sqrt(X_norm)
@@ -484,7 +484,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
 
             if normalized_Y:
                 Y_norm = Y.T.dot(matrix).multiply(Y.T).sum(axis=1).T
-                assert Y_norm.min() >= 0.0, non_negative_norm_assertion_message
+                assert Y_norm.min() >= 0.0, NON_NEGATIVE_NORM_ASSERTION_MESSAGE
                 if normalized_Y == 'maintain':
                     Y_norm /= Y.T.multiply(Y.T).sum(axis=1).T
                 Y_norm = np.sqrt(Y_norm)
