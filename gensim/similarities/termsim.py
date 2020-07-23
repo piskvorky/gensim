@@ -172,6 +172,16 @@ def _create_source(index, dictionary, tfidf, symmetric, dominant, nonzero_limit,
     else:
         raise ValueError('Dtype %s is unsupported, use numpy.float16, float32, or float64.' % dtype)
 
+    def cell_full(t1_index, t2_index, similarity):
+        if dominant and column_sum[t1_index] + abs(similarity) >= 1.0:
+            return True  # after adding the similarity, the matrix would cease to be strongly diagonally dominant
+        assert column_nonzero[t1_index] <= nonzero_limit
+        if column_nonzero[t1_index] == nonzero_limit:
+            return True  # after adding the similarity, the column would contain more than nonzero_limit elements
+        if symmetric and (t1_index, t2_index) in assigned_cells:
+            return True  # a similarity has already been assigned to this cell
+        return False
+
     def populate_buffers(t1_index, t2_index, similarity):
         column_buffer.append(t1_index)
         row_buffer.append(t2_index)
@@ -210,14 +220,12 @@ def _create_source(index, dictionary, tfidf, symmetric, dominant, nonzero_limit,
         else:
             rows = sorted(most_similar, key=tfidf_sort_key)
 
-        for row_number, (t2_index, similarity) in zip(range(num_rows), rows):
-            if dominant and column_sum[t1_index] + abs(similarity) >= 1.0:
-                break
+        for t2_index, similarity in rows:
+            if cell_full(t1_index, t2_index, similarity):
+                continue
             if not symmetric:
                 populate_buffers(t1_index, t2_index, similarity)
-            elif column_nonzero[t2_index] < nonzero_limit \
-                    and (not dominant or column_sum[t2_index] + abs(similarity) < 1.0) \
-                    and (t1_index, t2_index) not in assigned_cells:
+            elif not cell_full(t2_index, t1_index, similarity):
                 populate_buffers(t1_index, t2_index, similarity)
                 populate_buffers(t2_index, t1_index, similarity)
 
