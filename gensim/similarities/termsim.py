@@ -242,6 +242,16 @@ class SparseTermSimilarityMatrix(SaveLoad):
         else:
             raise ValueError('Dtype %s is unsupported, use numpy.float16, float32, or float64.' % dtype)
 
+        def populate_buffers(t1_index, t2_index, similarity):
+            column_buffer.append(t1_index)
+            row_buffer.append(t2_index)
+            data_buffer.append(similarity)
+            column_nonzero[t1_index] += 1
+            if symmetric:
+                assigned_cells.add((t1_index, t2_index))
+            if dominant:
+                column_sum[t1_index] += abs(similarity)
+
         try:
             from tqdm import tqdm as progress_bar
         except ImportError:
@@ -273,33 +283,13 @@ class SparseTermSimilarityMatrix(SaveLoad):
             for row_number, (t2_index, similarity) in zip(range(num_rows), rows):
                 if dominant and column_sum[t1_index] + abs(similarity) >= 1.0:
                     break
-                if symmetric:
-                    if column_nonzero[t2_index] < nonzero_limit \
-                            and (not dominant or column_sum[t2_index] + abs(similarity) < 1.0) \
-                            and (t1_index, t2_index) not in assigned_cells:
-                        assigned_cells.add((t1_index, t2_index))
-                        column_buffer.append(t1_index)
-                        row_buffer.append(t2_index)
-                        data_buffer.append(similarity)
-                        column_nonzero[t1_index] += 1
-
-                        assigned_cells.add((t2_index, t1_index))
-                        column_buffer.append(t2_index)
-                        row_buffer.append(t1_index)
-                        data_buffer.append(similarity)
-                        column_nonzero[t2_index] += 1
-
-                        if dominant:
-                            column_sum[t1_index] += abs(similarity)
-                            column_sum[t2_index] += abs(similarity)
-                else:
-                    column_buffer.append(t1_index)
-                    row_buffer.append(t2_index)
-                    data_buffer.append(similarity)
-                    column_nonzero[t1_index] += 1
-
-                    if dominant:
-                        column_sum[t1_index] += abs(similarity)
+                if not symmetric:
+                    populate_buffers(t1_index, t2_index, similarity)
+                elif column_nonzero[t2_index] < nonzero_limit \
+                        and (not dominant or column_sum[t2_index] + abs(similarity) < 1.0) \
+                        and (t1_index, t2_index) not in assigned_cells:
+                    populate_buffers(t1_index, t2_index, similarity)
+                    populate_buffers(t2_index, t1_index, similarity)
 
         data_buffer = np.frombuffer(data_buffer, dtype=dtype)
         row_buffer = np.frombuffer(row_buffer, dtype=np.uint64)
