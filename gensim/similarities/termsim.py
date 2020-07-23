@@ -226,12 +226,6 @@ class SparseTermSimilarityMatrix(SaveLoad):
             logger.info("iterating over columns in tf-idf order")
             columns = sorted(tfidf.idfs.keys(), key=_tfidf_sort_key)
 
-        if dtype is np.float16 or dtype is np.float32:
-            similarity_type_code = 'f'
-        elif dtype is np.float64:
-            similarity_type_code = 'd'
-        else:
-            raise ValueError('Dtype %s is unsupported, use numpy.float16, float32, or float64.' % dtype)
         nonzero_counter_dtype = _shortest_uint_dtype(nonzero_limit)
 
         column_nonzero = np.array([0] * matrix_order, dtype=nonzero_counter_dtype)
@@ -241,7 +235,12 @@ class SparseTermSimilarityMatrix(SaveLoad):
             assigned_cells = set()
         row_buffer = array('Q')
         column_buffer = array('Q')
-        data_buffer = array(similarity_type_code)
+        if dtype is np.float16 or dtype is np.float32:
+            data_buffer = array('f')
+        elif dtype is np.float64:
+            data_buffer = array('d')
+        else:
+            raise ValueError('Dtype %s is unsupported, use numpy.float16, float32, or float64.' % dtype)
 
         try:
             from tqdm import tqdm as progress_bar
