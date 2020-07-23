@@ -120,6 +120,116 @@ def _shortest_uint_dtype(max_value):
     return np.uint64
 
 
+def _create_source(index, dictionary, tfidf, symmetric, dominant, nonzero_limit, dtype):
+    """Build a sparse term similarity matrix using a term similarity index.
+
+    Returns
+    -------
+    matrix : :class:`scipy.sparse.coo_matrix`
+        The sparse term similarity matrix.
+
+    """
+    assert isinstance(index, TermSimilarityIndex)
+    assert dictionary is not None
+    matrix_order = len(dictionary)
+
+    logger.info("constructing a sparse term similarity matrix using %s", index)
+
+    if nonzero_limit is None:
+        nonzero_limit = matrix_order
+
+    def tfidf_sort_key(term_index):
+        if isinstance(term_index, tuple):
+            term_index, *_ = term_index
+        term_idf = tfidf.idfs[term_index]
+        return (-term_idf, term_index)
+
+    if tfidf is None:
+        logger.info("iterating over columns in dictionary order")
+        columns = sorted(dictionary.keys())
+    else:
+        assert max(tfidf.idfs) == matrix_order - 1
+        logger.info("iterating over columns in tf-idf order")
+        columns = sorted(tfidf.idfs.keys(), key=tfidf_sort_key)
+
+    nonzero_counter_dtype = _shortest_uint_dtype(nonzero_limit)
+
+    column_nonzero = np.array([0] * matrix_order, dtype=nonzero_counter_dtype)
+    if dominant:
+        column_sum = np.zeros(matrix_order, dtype=dtype)
+    if symmetric:
+        assigned_cells = set()
+    row_buffer = array('Q')
+    column_buffer = array('Q')
+    if dtype is np.float16 or dtype is np.float32:
+        data_buffer = array('f')
+    elif dtype is np.float64:
+        data_buffer = array('d')
+    else:
+        raise ValueError('Dtype %s is unsupported, use numpy.float16, float32, or float64.' % dtype)
+
+    def populate_buffers(t1_index, t2_index, similarity):
+        column_buffer.append(t1_index)
+        row_buffer.append(t2_index)
+        data_buffer.append(similarity)
+        column_nonzero[t1_index] += 1
+        if symmetric:
+            assigned_cells.add((t1_index, t2_index))
+        if dominant:
+            column_sum[t1_index] += abs(similarity)
+
+    try:
+        from tqdm import tqdm as progress_bar
+    except ImportError:
+        def progress_bar(iterable):
+            return iterable
+
+    for column_number, t1_index in enumerate(progress_bar(columns)):
+        column_buffer.append(column_number)
+        row_buffer.append(column_number)
+        data_buffer.append(1.0)
+
+        if nonzero_limit <= 0:
+            continue
+
+        t1 = dictionary[t1_index]
+        num_nonzero = column_nonzero[t1_index]
+        num_rows = nonzero_limit - num_nonzero
+        most_similar = [
+            (dictionary.token2id[term], similarity)
+            for term, similarity in index.most_similar(t1, topn=num_rows)
+            if term in dictionary.token2id
+        ] if num_rows > 0 else []
+
+        if tfidf is None:
+            rows = sorted(most_similar)
+        else:
+            rows = sorted(most_similar, key=tfidf_sort_key)
+
+        for row_number, (t2_index, similarity) in zip(range(num_rows), rows):
+            if dominant and column_sum[t1_index] + abs(similarity) >= 1.0:
+                break
+            if not symmetric:
+                populate_buffers(t1_index, t2_index, similarity)
+            elif column_nonzero[t2_index] < nonzero_limit \
+                    and (not dominant or column_sum[t2_index] + abs(similarity) < 1.0) \
+                    and (t1_index, t2_index) not in assigned_cells:
+                populate_buffers(t1_index, t2_index, similarity)
+                populate_buffers(t2_index, t1_index, similarity)
+
+    data_buffer = np.frombuffer(data_buffer, dtype=dtype)
+    row_buffer = np.frombuffer(row_buffer, dtype=np.uint64)
+    column_buffer = np.frombuffer(column_buffer, dtype=np.uint64)
+    matrix = sparse.coo_matrix((data_buffer, (row_buffer, column_buffer)), shape=(matrix_order, matrix_order))
+
+    logger.info(
+        "constructed a sparse term similarity matrix with %0.06f%% density",
+        100.0 * matrix.getnnz() / matrix_order**2,
+    )
+
+    return matrix
+
+
 class SparseTermSimilarityMatrix(SaveLoad):
     """
     Builds a sparse term similarity matrix using a term similarity index.
@@ -190,10 +300,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
 
     """
     def __init__(self, source, dictionary=None, tfidf=None, symmetric=True, dominant=False,
-                 nonzero_limit=100, dtype=np.float32, positive_definite=None):
-        if sparse.issparse(source):
-            self.matrix = source.tocsc()  # encapsulate the passed sparse matrix
-            return
+            nonzero_limit=100, dtype=np.float32, positive_definite=None):
 
         if positive_definite is not None:
             warnings.warn(
@@ -202,107 +309,13 @@ class SparseTermSimilarityMatrix(SaveLoad):
             )
             dominant = positive_definite
 
-        index = source
-        assert isinstance(index, TermSimilarityIndex)
-        assert dictionary is not None
-        matrix_order = len(dictionary)
+        if not sparse.issparse(source):
+            index = source
+            args = (index, dictionary, tfidf, symmetric, dominant, nonzero_limit, dtype)
+            source = _create_source(*args)
+            assert sparse.issparse(source)
 
-        logger.info("constructing a sparse term similarity matrix using %s", index)
-
-        def tfidf_sort_key(term_index):
-            if isinstance(term_index, tuple):
-                term_index, *_ = term_index
-            term_idf = tfidf.idfs[term_index]
-            return (-term_idf, term_index)
-
-        if nonzero_limit is None:
-            nonzero_limit = matrix_order
-
-        if tfidf is None:
-            logger.info("iterating over columns in dictionary order")
-            columns = sorted(dictionary.keys())
-        else:
-            assert max(tfidf.idfs) == matrix_order - 1
-            logger.info("iterating over columns in tf-idf order")
-            columns = sorted(tfidf.idfs.keys(), key=tfidf_sort_key)
-
-        nonzero_counter_dtype = _shortest_uint_dtype(nonzero_limit)
-
-        column_nonzero = np.array([0] * matrix_order, dtype=nonzero_counter_dtype)
-        if dominant:
-            column_sum = np.zeros(matrix_order, dtype=dtype)
-        if symmetric:
-            assigned_cells = set()
-        row_buffer = array('Q')
-        column_buffer = array('Q')
-        if dtype is np.float16 or dtype is np.float32:
-            data_buffer = array('f')
-        elif dtype is np.float64:
-            data_buffer = array('d')
-        else:
-            raise ValueError('Dtype %s is unsupported, use numpy.float16, float32, or float64.' % dtype)
-
-        def populate_buffers(t1_index, t2_index, similarity):
-            column_buffer.append(t1_index)
-            row_buffer.append(t2_index)
-            data_buffer.append(similarity)
-            column_nonzero[t1_index] += 1
-            if symmetric:
-                assigned_cells.add((t1_index, t2_index))
-            if dominant:
-                column_sum[t1_index] += abs(similarity)
-
-        try:
-            from tqdm import tqdm as progress_bar
-        except ImportError:
-            def progress_bar(iterable):
-                return iterable
-
-        for column_number, t1_index in enumerate(progress_bar(columns)):
-            column_buffer.append(column_number)
-            row_buffer.append(column_number)
-            data_buffer.append(1.0)
-
-            if nonzero_limit <= 0:
-                continue
-
-            t1 = dictionary[t1_index]
-            num_nonzero = column_nonzero[t1_index]
-            num_rows = nonzero_limit - num_nonzero
-            most_similar = [
-                (dictionary.token2id[term], similarity)
-                for term, similarity in index.most_similar(t1, topn=num_rows)
-                if term in dictionary.token2id
-            ] if num_rows > 0 else []
-
-            if tfidf is None:
-                rows = sorted(most_similar)
-            else:
-                rows = sorted(most_similar, key=tfidf_sort_key)
-
-            for row_number, (t2_index, similarity) in zip(range(num_rows), rows):
-                if dominant and column_sum[t1_index] + abs(similarity) >= 1.0:
-                    break
-                if not symmetric:
-                    populate_buffers(t1_index, t2_index, similarity)
-                elif column_nonzero[t2_index] < nonzero_limit \
-                        and (not dominant or column_sum[t2_index] + abs(similarity) < 1.0) \
-                        and (t1_index, t2_index) not in assigned_cells:
-                    populate_buffers(t1_index, t2_index, similarity)
-                    populate_buffers(t2_index, t1_index, similarity)
-
-        data_buffer = np.frombuffer(data_buffer, dtype=dtype)
-        row_buffer = np.frombuffer(row_buffer, dtype=np.uint64)
-        column_buffer = np.frombuffer(column_buffer, dtype=np.uint64)
-        matrix = sparse.coo_matrix((data_buffer, (row_buffer, column_buffer)), shape=(matrix_order, matrix_order))
-
-        logger.info(
-            "constructed a sparse term similarity matrix with %0.06f%% density",
-            100.0 * matrix.getnnz() / matrix_order**2,
-        )
-
-        assert sparse.issparse(matrix)
-        self.__init__(matrix)
+        self.matrix = source.tocsc()
 
     def inner_product(self, X, Y, normalized=(False, False)):
         """Get the inner product(s) between real vectors / corpora X and Y.
