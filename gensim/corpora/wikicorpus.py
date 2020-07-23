@@ -25,8 +25,9 @@ import multiprocessing
 import re
 import signal
 from pickle import PicklingError
-from xml.etree.cElementTree import \
-    iterparse  # LXML isn't faster, so let's go with the built-in solution
+# LXML isn't faster, so let's go with the built-in solution
+from xml.etree.ElementTree import iterparse
+
 
 from gensim import utils
 # cannot import whole gensim.corpora, because that imports wikicorpus...

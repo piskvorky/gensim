@@ -97,6 +97,49 @@ class UniformTermSimilarityIndex(TermSimilarityIndex):
             yield (t2, self.term_similarity)
 
 
+class WordEmbeddingSimilarityIndex(TermSimilarityIndex):
+    """
+    Use objects of this class to:
+
+    1) Compute cosine similarities between word embeddings.
+    2) Retrieve the closest word embeddings (by cosine similarity) to a given word embedding.
+
+    Parameters
+    ----------
+    keyedvectors : :class:`~gensim.models.keyedvectors.KeyedVectors`
+        The word embeddings.
+    threshold : float, optional
+        Only embeddings more similar than `threshold` are considered when retrieving word embeddings
+        closest to a given word embedding.
+    exponent : float, optional
+        Take the word embedding similarities larger than `threshold` to the power of `exponent`.
+    kwargs : dict or None
+        A dict with keyword arguments that will be passed to the `keyedvectors.most_similar` method
+        when retrieving the word embeddings closest to a given word embedding.
+
+    See Also
+    --------
+    :class:`~gensim.similarities.termsim.SparseTermSimilarityMatrix`
+        Build a term similarity matrix and compute the Soft Cosine Measure.
+
+    """
+    def __init__(self, keyedvectors, threshold=0.0, exponent=2.0, kwargs=None):
+        self.keyedvectors = keyedvectors
+        self.threshold = threshold
+        self.exponent = exponent
+        self.kwargs = kwargs or {}
+        super(WordEmbeddingSimilarityIndex, self).__init__()
+
+    def most_similar(self, t1, topn=10):
+        if t1 not in self.keyedvectors:
+            logger.debug('an out-of-dictionary term "%s"', t1)
+        else:
+            most_similar = self.keyedvectors.most_similar(positive=[t1], topn=topn, **self.kwargs)
+            for t2, similarity in most_similar:
+                if similarity > self.threshold:
+                    yield (t2, similarity**self.exponent)
+
+
 def _shortest_uint_dtype(max_value):
     """Get the shortest unsingned integer data-type required for representing values up to a given
     maximum value.

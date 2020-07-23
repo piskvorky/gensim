@@ -184,7 +184,7 @@ class CoherenceMetric(Metric):
         Parameters
         ----------
         corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`).
         texts : list of char (str of length 1), optional
             Tokenized texts needed for coherence models that use sliding window based probability estimator.
         dictionary : :class:`~gensim.corpora.dictionary.Dictionary`, optional
@@ -267,7 +267,7 @@ class PerplexityMetric(Metric):
         Parameters
         ----------
         corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`).
         logger : {'shell', 'visdom'}, optional
            Monitor training process using one of the available methods. 'shell' will print the perplexity value in
            the active shell, while 'visdom' will visualize the coherence value with increasing epochs using the Visdom
@@ -569,7 +569,7 @@ class Callback(object):
 
 
 class CallbackAny2Vec(object):
-    """Base class to build callbacks for :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`.
+    """Base class to build callbacks for :class:`~gensim.models.word2vec.Word2Vec` & subclasses.
 
     Callbacks are used to apply custom functions over the model at specific points
     during training (epoch start, batch end etc.). This is a base class and its purpose is to be inherited by
@@ -584,7 +584,7 @@ class CallbackAny2Vec(object):
 
         Parameters
         ----------
-        model : :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
+        model : :class:`~gensim.models.word2vec.Word2Vec` or subclass
             Current model.
 
         """
@@ -595,7 +595,7 @@ class CallbackAny2Vec(object):
 
         Parameters
         ----------
-        model : :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
+        model : :class:`~gensim.models.word2vec.Word2Vec` or subclass
             Current model.
 
         """
@@ -606,7 +606,7 @@ class CallbackAny2Vec(object):
 
         Parameters
         ----------
-        model : :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
+        model : :class:`~gensim.models.word2vec.Word2Vec` or subclass
             Current model.
 
         """
@@ -617,7 +617,7 @@ class CallbackAny2Vec(object):
 
         Parameters
         ----------
-        model : :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
+        model : :class:`~gensim.models.word2vec.Word2Vec` or subclass
             Current model.
 
         """
@@ -628,7 +628,7 @@ class CallbackAny2Vec(object):
 
         Parameters
         ----------
-        model : :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
+        model : :class:`~gensim.models.word2vec.Word2Vec` or subclass
             Current model.
 
         """
@@ -639,7 +639,7 @@ class CallbackAny2Vec(object):
 
         Parameters
         ----------
-        model : :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
+        model : :class:`~gensim.models.word2vec.Word2Vec` or subclass
             Current model.
 
         """

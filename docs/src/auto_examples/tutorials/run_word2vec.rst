@@ -308,7 +308,7 @@ Which of the below does not belong in the sequence?
  .. code-block:: none
 
     /home/misha/git/gensim/gensim/models/keyedvectors.py:877: FutureWarning: arrays to stack must be passed as a "sequence" type such as list or tuple. Support for non-sequence iterables such as generators is deprecated as of NumPy 1.16 and will raise an error in the future.
-      vectors = vstack(self.word_vec(word, use_norm=True) for word in used_words).astype(REAL)
+      vectors = vstack(self.get_vector(word, use_norm=True) for word in used_words).astype(REAL)
     car
 
 

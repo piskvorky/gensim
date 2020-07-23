@@ -354,8 +354,10 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+        corpus : iterable of list of (int, float), optional
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`).
+            If you have a CSC in-memory matrix, you can convert it to a
+            streamed corpus with the help of gensim.matutils.Sparse2Corpus.
             If not given, the model is left untrained (presumably because you want to call
             :meth:`~gensim.models.ldamodel.LdaModel.update` manually).
         num_topics : int, optional
@@ -626,7 +628,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        chunk : {list of list of (int, float), scipy.sparse.csc}
+        chunk : list of list of (int, float)
             The corpus chunk on which the inference step will be performed.
         collect_sstats : bool, optional
             If set to True, also collect (and return) sufficient statistics needed to update the model's topic-word
@@ -725,7 +727,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        chunk : {list of list of (int, float), scipy.sparse.csc}
+        chunk : list of list of (int, float)
             The corpus chunk on which the inference step will be performed.
         state : :class:`~gensim.models.ldamodel.LdaState`, optional
             The state to be updated with the newly accumulated sufficient statistics. If none, the models
@@ -803,7 +805,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        chunk : {list of list of (int, float), scipy.sparse.csc}
+        chunk : list of list of (int, float)
             The corpus chunk on which the inference step will be performed.
         total_docs : int, optional
             Number of docs used for evaluation of the perplexity.
@@ -845,8 +847,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`) used to update the
+        corpus : iterable of list of (int, float), optional
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`) used to update the
             model.
         chunksize :  int, optional
             Number of documents to be used in each training chunk.
@@ -1060,8 +1062,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`) used to estimate the
+        corpus : iterable of list of (int, float), optional
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`) used to estimate the
             variational bounds.
         gamma : numpy.ndarray, optional
             Topic weight variational parameters for each document. If not supplied, it will be inferred from the model.

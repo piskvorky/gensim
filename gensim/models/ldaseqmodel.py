@@ -73,7 +73,7 @@ class LdaSeqModel(utils.SaveLoad):
         Parameters
         ----------
         corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`).
             If not given, the model is left untrained (presumably because you want to call
             :meth:`~gensim.models.ldamodel.LdaSeqModel.update` manually).
         time_slice : list of int, optional
@@ -225,7 +225,7 @@ class LdaSeqModel(utils.SaveLoad):
         Parameters
         ----------
         corpus : {iterable of list of (int, float), scipy.sparse.csc}
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`).
         lda_inference_max_iter : int
             Maximum number of iterations for the inference step of LDA.
         em_min_iter : int
@@ -314,7 +314,7 @@ class LdaSeqModel(utils.SaveLoad):
         Parameters
         ----------
         corpus : {iterable of list of (int, float), scipy.sparse.csc}
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`).
         topic_suffstats : numpy.ndarray
             Sufficient statistics for time slice 0, used for initializing the model if `initialize == 'own'`,
             expected shape (`self.vocab_len`, `num_topics`).
@@ -368,7 +368,7 @@ class LdaSeqModel(utils.SaveLoad):
         Parameters
         ----------
         corpus : {iterable of list of (int, float), scipy.sparse.csc}
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`).
         topic_suffstats : numpy.ndarray
             Sufficient statistics of the current model, expected shape (`self.vocab_len`, `num_topics`).
         gammas : numpy.ndarray

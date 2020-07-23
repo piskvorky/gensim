@@ -2,7 +2,7 @@
 # encoding: utf-8
 from collections import namedtuple
 import unittest
-import math
+import logging
 
 import numpy as np
 
@@ -91,28 +91,35 @@ class TestBackMappingTranslationMatrix(unittest.TestCase):
         filename = datapath("alldata-id-10.txt")
         train_docs = read_sentiment_docs(filename)
         self.train_docs = train_docs
-        self.source_doc_vec_file = datapath("small_tag_doc_5_iter50")
-        self.target_doc_vec_file = datapath("large_tag_doc_10_iter50")
-
-        self.source_doc_vec = Doc2Vec.load(self.source_doc_vec_file)
-        self.target_doc_vec = Doc2Vec.load(self.target_doc_vec_file)
+        self.source_doc_vec = Doc2Vec(documents=train_docs[:5], vector_size=8, epochs=50, seed=1)
+        self.target_doc_vec = Doc2Vec(documents=train_docs, vector_size=8, epochs=50, seed=2)
 
     def test_translation_matrix(self):
         model = translation_matrix.BackMappingTranslationMatrix(
             self.source_doc_vec, self.target_doc_vec, self.train_docs[:5]
         )
         transmat = model.train(self.train_docs[:5])
-        self.assertEqual(transmat.shape, (100, 100))
+        self.assertEqual(transmat.shape, (8, 8))
 
     def test_infer_vector(self):
+        """Test that translation gives similar results to traditional inference.
+
+        This may not be completely sensible/salient with such tiny data, but
+        replaces a nonsensical test.
+        """
         model = translation_matrix.BackMappingTranslationMatrix(
             self.source_doc_vec, self.target_doc_vec, self.train_docs[:5]
         )
         model.train(self.train_docs[:5])
-        infered_vec = model.infer_vector(self.target_doc_vec.docvecs[self.train_docs[5].tags])
-        self.assertEqual(infered_vec.shape, (100, ))
+        backmapped_vec = model.infer_vector(self.target_doc_vec.dv[self.train_docs[5].tags])
+        self.assertEqual(backmapped_vec.shape, (8, ))
 
-        expected = 0.6453547135
-        eps = 1e-6
-        caculated = cosine(self.target_doc_vec.docvecs[self.train_docs[5].tags], infered_vec)
-        self.assertLessEqual(math.fabs(caculated - expected), eps)
+        d2v_inferred_vector = self.source_doc_vec.infer_vector(self.train_docs[5].words)
+
+        distance = cosine(backmapped_vec, d2v_inferred_vector)
+        self.assertLessEqual(distance, 0.1)
+
+
+if __name__ == '__main__':
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+    unittest.main()

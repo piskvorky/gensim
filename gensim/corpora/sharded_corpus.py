@@ -22,10 +22,10 @@ from __future__ import print_function
 import logging
 import os
 import math
-import numpy
-import scipy.sparse as sparse
 import time
 
+import numpy
+import scipy.sparse as sparse
 from six.moves import range
 
 import gensim
@@ -263,9 +263,7 @@ class ShardedCorpus(IndexedCorpus):
 
         is_corpus, corpus = gensim.utils.is_corpus(corpus)
         if not is_corpus:
-            raise ValueError(
-                "Cannot initialize shards without a corpus to read from! (Got corpus type: {0})".format(type(corpus))
-            )
+            raise ValueError("Cannot initialize shards without a corpus to read from! Corpus type: %s" % type(corpus))
 
         proposed_dim = self._guess_n_features(corpus)
         if proposed_dim != self.dim:
@@ -360,7 +358,7 @@ class ShardedCorpus(IndexedCorpus):
 
         filename = self._shard_name(n)
         if not os.path.isfile(filename):
-            raise ValueError('Attempting to load nonexistent shard no. {0}'.format(n))
+            raise ValueError('Attempting to load nonexistent shard no. %s' % n)
         shard = gensim.utils.unpickle(filename)
 
         self.current_shard = shard
@@ -387,11 +385,9 @@ class ShardedCorpus(IndexedCorpus):
         """
         k = int(offset / self.shardsize)
         if offset >= self.n_docs:
-            raise ValueError('Too high offset specified ({0}), available '
-                             'docs: {1}'.format(offset, self.n_docs))
+            raise ValueError('Too high offset specified (%s), available docs: %s' % (offset, self.n_docs))
         if offset < 0:
-            raise ValueError('Negative offset {0} currently not'
-                             ' supported.'.format(offset))
+            raise ValueError('Negative offset %s currently not supported.' % offset)
         return k
 
     def in_current(self, offset):
@@ -411,7 +407,7 @@ class ShardedCorpus(IndexedCorpus):
         """
         if self.current_shard_n == self.n_shards:
             return False  # There's no next shard.
-        return (self.offsets[self.current_shard_n + 1] <= offset) and (offset < self.offsets[self.current_shard_n + 2])
+        return self.offsets[self.current_shard_n + 1] <= offset and offset < self.offsets[self.current_shard_n + 2]
 
     def resize_shards(self, shardsize):
         """
@@ -440,9 +436,8 @@ class ShardedCorpus(IndexedCorpus):
             if new_stop > self.n_docs:
                 # Sanity check
                 assert new_shard_idx == n_new_shards - 1, \
-                    'Shard no. {0} that ends at {1} over last document' \
-                    ' ({2}) is not the last projected shard ({3})???' \
-                    ''.format(new_shard_idx, new_stop, self.n_docs, n_new_shards)
+                    'Shard no. %r that ends at %r over last document (%r) is not the last projected shard (%r)' % (
+                        new_shard_idx, new_stop, self.n_docs, n_new_shards)
                 new_stop = self.n_docs
 
             new_shard = self[new_start:new_stop]
@@ -466,9 +461,9 @@ class ShardedCorpus(IndexedCorpus):
             for old_shard_n, old_shard_name in enumerate(old_shard_names):
                 os.remove(old_shard_name)
         except Exception as e:
-            logger.error(
-                'Exception occurred during old shard no. %d removal: %s.\nAttempting to at least move new shards in.',
-                old_shard_n, str(e)
+            logger.exception(
+                'Error during old shard no. %d removal: %s.\nAttempting to at least move new shards in.',
+                old_shard_n, str(e),
             )
         finally:
             # If something happens with cleaning up - try to at least get the
@@ -479,7 +474,7 @@ class ShardedCorpus(IndexedCorpus):
             # If something happens when we're in this stage, we're screwed.
             except Exception as e:
                 logger.exception(e)
-                raise RuntimeError('Resizing completely failed for some reason. Sorry, dataset is probably ruined...')
+                raise RuntimeError('Resizing completely failed. Sorry, dataset is probably ruined...')
             finally:
                 # Sets the new shard stats.
                 self.n_shards = n_new_shards
@@ -524,19 +519,18 @@ class ShardedCorpus(IndexedCorpus):
         else:
             if not self.dim:
                 raise TypeError(
-                    "Couldn't find number of features, refusing to guess "
-                    "(dimension set to {0}, type of corpus: {1})."
-                    .format(self.dim, type(corpus))
+                    "Couldn't find number of features, refusing to guess. Dimension: %s, corpus: %s)" % (
+                        self.dim, type(corpus),
+                    )
                 )
-            else:
-                logger.warning("Couldn't find number of features, trusting supplied dimension (%d)", self.dim)
-                n_features = self.dim
+            logger.warning("Couldn't find number of features, trusting supplied dimension (%d)", self.dim)
+            n_features = self.dim
 
         if self.dim and n_features != self.dim:
             logger.warning(
                 "Discovered inconsistent dataset dim (%d) and feature count from corpus (%d). "
                 "Coercing to dimension given by argument.",
-                self.dim, n_features
+                self.dim, n_features,
             )
 
         return n_features
@@ -591,7 +585,7 @@ class ShardedCorpus(IndexedCorpus):
             start = offset.start
             stop = offset.stop
             if stop > self.n_docs:
-                raise IndexError('Requested slice offset {0} out of range ({1} docs)'.format(stop, self.n_docs))
+                raise IndexError('Requested slice offset %s out of range (%s docs)' % (stop, self.n_docs))
 
             # - get range of shards over which to iterate
             first_shard = self.shard_by_offset(start)
@@ -674,21 +668,23 @@ class ShardedCorpus(IndexedCorpus):
 
     def __add_to_slice(self, s_result, result_start, result_stop, start, stop):
         """
-        Add the rows of the current shard from `start` to `stop`
+        Add rows of the current shard from `start` to `stop`
         into rows `result_start` to `result_stop` of `s_result`.
 
-        Operation is based on the self.sparse_serialize setting. If the shard
+        Operation is based on the ``self.sparse_serialize`` setting. If the shard
         contents are dense, then s_result is assumed to be an ndarray that
         already supports row indices `result_start:result_stop`. If the shard
         contents are sparse, assumes that s_result has `result_start` rows
         and we should add them up to `result_stop`.
 
-        Returns the resulting s_result.
+        Return the resulting ``s_result``.
+
         """
         if (result_stop - result_start) != (stop - start):
             raise ValueError(
-                'Result start/stop range different than stop/start range (%d - %d vs. %d - %d)'
-                .format(result_start, result_stop, start, stop)
+                'Result start/stop range different than stop/start range (%s - %s vs. %s - %s)' % (
+                    result_start, result_stop, start, stop,
+                )
             )
 
         # Dense data: just copy using numpy's slice notation
@@ -699,16 +695,16 @@ class ShardedCorpus(IndexedCorpus):
 
         # A bit more difficult, we're using a different structure to build the
         # result.
-        else:
-            if s_result.shape != (result_start, self.dim):
-                raise ValueError(
-                    'Assuption about sparse s_result shape invalid: {0} expected rows, {1} real rows.'
-                    .format(result_start, s_result.shape[0])
+        if s_result.shape != (result_start, self.dim):
+            raise ValueError(
+                'Assuption about sparse s_result shape invalid: %s expected rows, %s real rows.' % (
+                    result_start, s_result.shape[0],
                 )
+            )
 
-            tmp_matrix = self.current_shard[start:stop]
-            s_result = sparse.vstack([s_result, tmp_matrix])
-            return s_result
+        tmp_matrix = self.current_shard[start:stop]
+        s_result = sparse.vstack([s_result, tmp_matrix])
+        return s_result
 
     def _getitem_format(self, s_result):
         if self.sparse_serialization:
@@ -817,5 +813,9 @@ class ShardedCorpus(IndexedCorpus):
 
         Ignore the parameters id2word, index_fname, progress_cnt, labels
         and metadata. They currently do nothing and are here only to
-        provide a compatible method signature with superclass."""
-        serializer.save_corpus(fname, corpus, id2word=id2word, progress_cnt=progress_cnt, metadata=metadata, **kwargs)
+        provide a compatible method signature with superclass.
+
+        """
+        serializer.save_corpus(
+            fname, corpus, id2word=id2word, progress_cnt=progress_cnt, metadata=metadata, **kwargs,
+        )
