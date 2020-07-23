@@ -1339,7 +1339,8 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         expected_result /= math.sqrt(self.uniform_matrix.inner_product(self.vec2, self.vec2))
         expected_result *= math.sqrt(self.identity_matrix.inner_product(self.vec2, self.vec2))
         expected_result = numpy.full((3, 2), expected_result)
-        result = self.uniform_matrix.inner_product([self.vec1] * 3, [self.vec2] * 2, normalized=('maintain', 'maintain'))
+        result = self.uniform_matrix.inner_product([self.vec1] * 3, [self.vec2] * 2,
+            normalized=('maintain', 'maintain'))
         self.assertTrue(isinstance(result, scipy.sparse.csr_matrix))
         self.assertTrue(numpy.allclose(expected_result, result.todense()))
 
