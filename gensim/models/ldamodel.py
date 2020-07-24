@@ -378,8 +378,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Can be set to an 1D array of length equal to the number of expected topics that expresses
             our a-priori belief for the each topics' probability.
             Alternatively default prior selecting strategies can be employed by supplying a string:
-
-                * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / topicno`.
+                
+                * 'symmetric': Default; uses a fixed symmetric prior per topic,
+                * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / (topic_index + sqrt(topic_no))`,
                 * 'auto': Learns an asymmetric prior from the corpus (not available if `distributed==True`).
         eta : {float, np.array, str}, optional
             A-priori belief on word probability, this can be:
@@ -536,7 +537,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             If `name` == 'alpha', then the prior can be:
 
                 * an 1D array of length equal to the number of expected topics,
-                * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / topicno`.
+                * 'symmetric': Uses a fixed symmetric prior per topic,
+                * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / (topic_index + sqrt(topic_no))`,
                 * 'auto': Learns an asymmetric prior from the corpus.
         name : {'alpha', 'eta'}
             Whether the `prior` is parameterized by the alpha vector (1 parameter per topic)
