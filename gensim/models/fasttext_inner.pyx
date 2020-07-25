@@ -242,22 +242,32 @@ cdef void fasttext_fast_sentence_cbow_neg(FastTextConfig *c, int i, int j, int k
 
     cdef long long row2
     cdef unsigned long long modulo = 281474976710655ULL
-    cdef REAL_t f, g, count, inv_count = 1.0, label, f_dot
+    cdef REAL_t f, g, count, inv_count = 1.0, label, f_dot, positional_feature
     cdef np.uint32_t target_index, word_index
-    cdef int d, m
+    cdef int d, m, n, o
 
     word_index = c.indexes[i]
 
     memset(c.neu1, 0, c.size * cython.sizeof(REAL_t))
     count = <REAL_t>0.0
+    n = j - i + c.window
     for m in range(j, k):
         if m == i:
             continue
         count += ONEF
-        our_saxpy(&c.size, &ONEF, &c.syn0_vocab[c.indexes[m] * c.size], &ONE, c.neu1, &ONE)
-        for d in range(c.subwords_idx_len[m]):
-            count += ONEF
-            our_saxpy(&c.size, &ONEF, &c.syn0_ngrams[c.subwords_idx[m][d] * c.size], &ONE, c.neu1, &ONE)
+        if c.pdw:
+            for d in range(c.size):  # TODO make into a Hadamard product using a BLAS primitive: DSBMV, followed by SAXPY
+                c.neu1[d] += c.syn0_vocab[c.indexes[m] * c.size + d] * c.syn0_positions[n * c.size + d]
+            for o in range(c.subwords_idx_len[m]):
+                count += ONEF
+                for d in range(c.size):  # TODO make into a Hadamard product using a BLAS primitive: DSBMV, followed by SAXPY
+                    c.neu1[d] += c.syn0_ngrams[c.subwords_idx[m][o] * c.size + d] * c.syn0_positions[n * c.size + d]
+        else:
+            our_saxpy(&c.size, &ONEF, &c.syn0_vocab[c.indexes[m] * c.size], &ONE, c.neu1, &ONE)
+            for o in range(c.subwords_idx_len[m]):
+                count += ONEF
+                our_saxpy(&c.size, &ONEF, &c.syn0_ngrams[c.subwords_idx[m][o] * c.size], &ONE, c.neu1, &ONE)
+        n += 1
 
     if count > (<REAL_t>0.5):
         inv_count = ONEF / count
@@ -293,16 +303,29 @@ cdef void fasttext_fast_sentence_cbow_neg(FastTextConfig *c, int i, int j, int k
     if not c.cbow_mean:  # divide error over summed window vectors
         sscal(&c.size, &inv_count, c.work, &ONE)
 
-    for m in range(j,k):
+    n = j - i + c.window
+    for m in range(j, k):
         if m == i:
             continue
-        our_saxpy(
-            &c.size, &c.vocab_lockf[c.indexes[m] % c.vocab_lockf_len], c.work, &ONE,
-            &c.syn0_vocab[c.indexes[m]*c.size], &ONE)
-        for d in range(c.subwords_idx_len[m]):
+        if c.pdw:
+            for d in range(c.size):  # TODO make into a Hadamard product using a BLAS primitive: DSBMV, followed by SAXPY
+                positional_feature = c.syn0_positions[n * c.size + d]
+                c.syn0_positions[n * c.size + d] += c.work[d] * c.syn0_vocab[c.indexes[m] * c.size + d]
+                c.syn0_vocab[c.indexes[m] * c.size + d] += c.vocab_lockf[c.indexes[m] % c.vocab_lockf_len] * c.work[d] * positional_feature
+            for o in range(c.subwords_idx_len[m]):
+                for d in range(c.size):  # TODO make into two Hadamard products using a BLAS primitive: DSBMV, followed by SAXPY
+                    positional_feature = c.syn0_positions[n * c.size + d]
+                    c.syn0_positions[n * c.size + d] += c.work[d] * c.syn0_ngrams[c.subwords_idx[m][o] * c.size + d]
+                    c.syn0_ngrams[c.subwords_idx[m][o] * c.size + d] += c.ngrams_lockf[c.subwords_idx[m][o] % c.ngrams_lockf_len] * c.work[d] * positional_feature
+        else:
             our_saxpy(
-                &c.size, &c.ngrams_lockf[c.subwords_idx[m][d] % c.ngrams_lockf_len], c.work, &ONE,
-                &c.syn0_ngrams[c.subwords_idx[m][d]*c.size], &ONE)
+                &c.size, &c.vocab_lockf[c.indexes[m] % c.vocab_lockf_len], c.work, &ONE,
+                &c.syn0_vocab[c.indexes[m] * c.size], &ONE)
+            for o in range(c.subwords_idx_len[m]):
+                our_saxpy(
+                    &c.size, &c.ngrams_lockf[c.subwords_idx[m][o] % c.ngrams_lockf_len], c.work, &ONE,
+                    &c.syn0_ngrams[c.subwords_idx[m][o] * c.size], &ONE)
+        n += 1
 
 
 cdef void fasttext_fast_sentence_cbow_hs(FastTextConfig *c, int i, int j, int k) nogil:
@@ -398,9 +421,12 @@ cdef void init_ft_config(FastTextConfig *c, model, alpha, _work, _neu1):
     c.cbow_mean = model.cbow_mean
     c.window = model.window
     c.workers = model.workers
+    c.pdw = model.position_dependent_weights
 
     c.syn0_vocab = <REAL_t *>(np.PyArray_DATA(model.wv.vectors_vocab))
     c.syn0_ngrams = <REAL_t *>(np.PyArray_DATA(model.wv.vectors_ngrams))
+    if c.pdw:
+        c.syn0_positions = <REAL_t *>(np.PyArray_DATA(model.wv.vectors_positions))
 
     # EXPERIMENTAL lockf scaled suppression/enablement of training
     c.vocab_lockf = <REAL_t *>(np.PyArray_DATA(model.wv.vectors_vocab_lockf))

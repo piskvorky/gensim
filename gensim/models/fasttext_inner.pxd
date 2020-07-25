@@ -46,17 +46,18 @@ cdef struct FastTextConfig:
     #
     # Model parameters.  These get copied as-is from the Python model.
     #
-    int sg, hs, negative, sample, size, window, cbow_mean, workers
+    int sg, hs, pdw, negative, sample, size, window, cbow_mean, workers
     REAL_t alpha
 
     #
-    # The syn0_vocab and syn0_ngrams arrays store vectors for vocabulary terms
-    # and ngrams, respectively, as 1D arrays in scanline order. For example,
-    # syn0_vocab[i * size : (i + 1) * size] contains the elements for the ith
-    # vocab term.
+    # The syn0_vocab, syn0_ngrams, and syn0_positions arrays store vectors for
+    # vocabulary terms, ngrams, and positions, respectively, as 1D arrays in
+    # scanline order. For example, syn0_vocab[i * size : (i + 1) * size]
+    # contains the elements for the ith vocab term.
     #
     REAL_t *syn0_vocab
     REAL_t *syn0_ngrams
+    REAL_t *syn0_positions
 
     #
     # EXPERIMENTAL
