@@ -378,7 +378,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Can be set to an 1D array of length equal to the number of expected topics that expresses
             our a-priori belief for the each topics' probability.
             Alternatively default prior selecting strategies can be employed by supplying a string:
-                
+
                 * 'symmetric': Default; uses a fixed symmetric prior per topic,
                 * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / (topic_index + sqrt(topic_no))`,
                 * 'auto': Learns an asymmetric prior from the corpus (not available if `distributed==True`).
