@@ -18,7 +18,7 @@ from libc.stdio cimport sscanf
 logger = logging.getLogger(__name__)
 
 
-cdef class MmReader(object):
+cdef class MmReader():
     """Matrix market file reader (fast Cython version), used internally in :class:`~gensim.corpora.mmcorpus.MmCorpus`.
 
     Wrap a term-document matrix on disk (in matrix-market format), and present it
@@ -27,7 +27,7 @@ cdef class MmReader(object):
     Attributes
     ----------
     num_docs : int
-        Number of documents in market matrix file.
+        Number of documents in the market matrix file.
     num_terms : int
         Number of terms.
     num_nnz : int

@@ -2,7 +2,6 @@
 ==============================================================================
 
 .. automodule:: gensim.summarization.commons
-    :synopsis: Common graph functions
     :synopsis: Common graph functions used in TextRank summarization
     :members:
     :inherited-members:

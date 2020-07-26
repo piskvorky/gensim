@@ -51,9 +51,9 @@ from gensim.models.word2vec import Text8Corpus
 # Using params from Word2Vec_FastText_Comparison
 params = {
     'alpha': 0.05,
-    'size': 100,
+    'vector_size': 100,
     'window': 5,
-    'iter': 5,
+    'epochs': 5,
     'min_count': 5,
     'sample': 1e-4,
     'sg': 1,
@@ -131,7 +131,7 @@ def avg_query_time(annoy_index=None, queries=1000):
     """Average query time of a most_similar method over 1000 random queries."""
     total_time = 0
     for _ in range(queries):
-        rand_vec = model.wv.vectors_norm[np.random.randint(0, len(model.wv.vocab))]
+        rand_vec = model.wv.vectors_norm[np.random.randint(0, len(model.wv))]
         start_time = time.process_time()
         model.wv.most_similar([rand_vec], topn=5, indexer=annoy_index)
         total_time += time.process_time() - start_time

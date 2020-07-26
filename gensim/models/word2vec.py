@@ -807,6 +807,23 @@ class Word2Vec(utils.SaveLoad):
         # do not suppress learning for already learned words
         self.wv.vectors_lockf = np.ones(1, dtype=REAL)  # 0.0 values suppress word-backprop-updates; 1.0 allows
 
+    def init_sims(self, replace=False):
+        """
+        Precompute L2-normalized vectors.
+
+        Parameters
+        ----------
+        replace : bool
+            If True, forget the original vectors and only keep the normalized ones to save RAM.
+
+        """
+        # init_sims() resides in KeyedVectors because it deals with input layer mainly, but because the
+        # hidden layer is not an attribute of KeyedVectors, it has to be deleted in this class.
+        # The normalizing of input layer happens inside of KeyedVectors.
+        if replace and hasattr(self, 'syn1'):
+            del self.syn1
+        self.wv.init_sims(replace=replace)
+
     def _do_train_epoch(self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
                         total_examples=None, total_words=None, **kwargs):
         work, neu1 = thread_private_mem
