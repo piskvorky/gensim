@@ -14,7 +14,8 @@ for online training.
 
 The core estimation code is based on the `onlineldavb.py script
 <https://github.com/blei-lab/onlineldavb/blob/master/onlineldavb.py>`_, by `Hoffman, Blei, Bach:
-Online Learning for Latent Dirichlet Allocation, NIPS 2010 <http://www.cs.princeton.edu/~mdhoffma>`_.
+Online Learning for Latent Dirichlet Allocation, NIPS 2010
+<https://scholar.google.com/citations?hl=en&user=IeHKeGYAAAAJ&view_op=list_works>`_.
 
 The algorithm:
 
