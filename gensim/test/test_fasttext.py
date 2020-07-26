@@ -1378,7 +1378,7 @@ class ZeroBucketTest(unittest.TestCase):
         self.assertRaises(KeyError, model.wv.word_vec, 'streamtrain')
 
     def test_cbow_neg(self):
-        """See gensim.test.test_word2vec.TestWord2VecModel.test_cbow_neg"""
+        """See `gensim.test.test_word2vec.TestWord2VecModel.test_cbow_neg`."""
         model = FT_gensim(
             sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=15,
             min_count=5, epochs=10, workers=2, sample=0,
