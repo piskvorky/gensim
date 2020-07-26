@@ -1368,7 +1368,7 @@ def _read_fb(fin):
 
 
 class ZeroBucketTest(unittest.TestCase):
-    """Tests FastText with no buckets/no-ngrams (essentially FastText-as-Word2Vec"""
+    """Test FastText with no buckets / no-ngrams: essentially FastText-as-Word2Vec."""
     def test_in_vocab(self):
         model = train_gensim(bucket=0)
         self.assertIsNotNone(model.wv['anarchist'])
