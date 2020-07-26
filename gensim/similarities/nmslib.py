@@ -69,8 +69,9 @@ The retrieved results are exact, which is an overkill in many applications:
 approximate results retrieved in sub-linear time may be enough.
 
 NMSLIB can find approximate nearest neighbors much faster, similar to Spotify's Annoy library.
-Compared to :py:class:`~gensim.similarities.annoy.Annoy`, NMSLIB has more parameters to control the build and query time and accuracy.
-NMSLIB often achieves faster and more accurate nearest neighbors search than Annoy.
+Compared to :py:class:`~gensim.similarities.annoy.Annoy`, NMSLIB has more parameters to
+control the build and query time and accuracy. NMSLIB often achieves faster and more accurate
+nearest neighbors search than Annoy.
 
 """
 
