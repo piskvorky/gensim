@@ -5,7 +5,11 @@
 # Copyright (C) 2018 RaRe Technologies s.r.o.
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""Learn paragraph and document embeddings via the distributed memory and distributed bag of words models from
+"""
+Introduction
+============
+
+Learn paragraph and document embeddings via the distributed memory and distributed bag of words models from
 `Quoc Le and Tomas Mikolov: "Distributed Representations of Sentences and Documents"
 <http://arxiv.org/pdf/1405.4053v2.pdf>`_.
 
@@ -63,25 +67,19 @@ Infer vector for a new document:
 
 import logging
 import os
-
-try:
-    from queue import Queue
-except ImportError:
-    from Queue import Queue  # noqa:F401
-
 from collections import namedtuple, defaultdict
 from collections.abc import Iterable
 from timeit import default_timer
-from dataclasses import dataclass
 
+from dataclasses import dataclass
 from numpy import zeros, float32 as REAL, vstack, integer, dtype
 import numpy as np
+from six.moves import range
+from six import string_types, integer_types, itervalues
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.utils import deprecated
 from gensim.models import Word2Vec
-from six.moves import range
-from six import string_types, integer_types, itervalues
 from gensim.models.keyedvectors import KeyedVectors, pseudorandom_weak_vector
 
 logger = logging.getLogger(__name__)

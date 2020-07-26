@@ -13,7 +13,7 @@ Run with::
 import distutils.cmd
 import distutils.log
 import itertools
-import os.path
+import os
 import platform
 import shutil
 import sys
@@ -352,7 +352,7 @@ if need_cython():
 
 setup(
     name='gensim',
-    version='3.8.1',
+    version='4.0.0.dev0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 

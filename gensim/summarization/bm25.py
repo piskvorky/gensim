@@ -13,7 +13,6 @@ descibed in [1]_, also you may check Wikipedia page [2]_.
 .. [2] Okapi BM25 on Wikipedia, https://en.wikipedia.org/wiki/Okapi_BM25
 
 
-
 Examples
 --------
 
@@ -27,22 +26,13 @@ Examples
     ... ]
     >>> result = get_bm25_weights(corpus, n_jobs=-1)
 
-
-Data:
------
-.. data:: PARAM_K1 - Free smoothing parameter for BM25.
-.. data:: PARAM_B - Free smoothing parameter for BM25.
-.. data:: EPSILON - Constant used for negative idf of document in corpus.
-
 """
-
 
 import logging
 import math
-from six import iteritems
-from six.moves import range
 from functools import partial
 from multiprocessing import Pool
+
 from ..utils import effective_n_jobs
 
 PARAM_K1 = 1.5
@@ -52,8 +42,8 @@ EPSILON = 0.25
 logger = logging.getLogger(__name__)
 
 
-class BM25(object):
-    """Implementation of Best Matching 25 ranking function.
+class BM25():
+    """Implementation of the BM25 (Best Matching 25) ranking function.
 
     Attributes
     ----------
@@ -67,6 +57,7 @@ class BM25(object):
         Dictionary with inversed documents frequencies for whole `corpus`. Words used as keys and frequencies as values.
     doc_len : list of int
         List of document lengths.
+
     """
 
     def __init__(self, corpus, k1=PARAM_K1, b=PARAM_B, epsilon=EPSILON):

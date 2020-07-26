@@ -303,9 +303,7 @@ class Gensim320Test(unittest.TestCase):
 
 
 def save_dict_to_word2vec_formated_file(fname, word2vec_dict):
-
-    with gensim.utils.open(fname, "bw") as f:
-
+    with gensim.utils.open(fname, "wb") as f:
         num_words = len(word2vec_dict)
         vector_length = len(list(word2vec_dict.values())[0])
 

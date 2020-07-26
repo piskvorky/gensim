@@ -22,7 +22,6 @@ Once these statistical patterns are found, any plain text documents (sentence, p
    Space Model <http://en.wikipedia.org/wiki/Vector_space_model>`_ and `unsupervised
    document analysis <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_ on Wikipedia.
 
-
 .. _design:
 
 Features
@@ -50,7 +49,6 @@ The **principal design objectives** behind Gensim are:
     We also built a high performance commercial server for NLP, document analysis, indexing, search and clustering: https://scaletext.ai. ScaleText is available both on-prem and as SaaS.
 
     Reach out at info@scaletext.com if you need an industry-grade NLP tool with professional support.
-
 
 .. _availability:
 

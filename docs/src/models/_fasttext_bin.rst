@@ -1,8 +1,8 @@
-:mod:`models._fasttext_bin` -- Facebook I/O
-===========================================
+:mod:`models._fasttext_bin` -- Facebook's fastText I/O
+======================================================
 
 .. automodule:: gensim.models._fasttext_bin
-    :synopsis: Facebook I/O
+    :synopsis: I/O routines for Facebook's fastText format
     :members:
     :inherited-members:
     :special-members: __getitem__

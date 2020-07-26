@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 from __future__ import division
 
 import gzip
@@ -10,7 +11,6 @@ import os
 import subprocess
 import struct
 import sys
-import six
 
 import numpy as np
 
@@ -1146,9 +1146,6 @@ class FTHashResultsTest(unittest.TestCase):
 
 def hash_main(alg):
     """Generate hash values for test from standard input."""
-
-    assert six.PY3, 'this only works under Py3'
-
     hashmap = {
         'cy_bytes': ft_hash_bytes,
     }
@@ -1210,7 +1207,6 @@ def ngram_main():
     minn = int(sys.argv[2])
     maxn = int(sys.argv[3])
 
-    assert six.PY3, 'this only works under Py3'
     assert minn <= maxn, 'expected sane command-line parameters'
 
     hashmap = {
