@@ -660,8 +660,7 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
 
     def testApproxNeighborsMatchExact(self):
         approx_neighbors = self.model.dv.most_similar([self.vector], topn=5, indexer=self.index)
-        exact_neighbors = self.model.dv.most_similar(
-            positive=[self.vector], topn=5)
+        exact_neighbors = self.model.dv.most_similar([self.vector], topn=5)
 
         approx_words = [neighbor[0] for neighbor in approx_neighbors]
         exact_words = [neighbor[0] for neighbor in exact_neighbors]
@@ -759,7 +758,7 @@ class TestWord2VecNmslibIndexer(unittest.TestCase):
     def assertApproxNeighborsMatchExact(self, model, wv, index):
         vector = wv.vectors_norm[0]
         approx_neighbors = model.most_similar([vector], topn=5, indexer=index)
-        exact_neighbors = model.wv.most_similar([vector], topn=5)
+        exact_neighbors = model.most_similar([vector], topn=5)
 
         approx_words = [word_id for word_id, similarity in approx_neighbors]
         exact_words = [word_id for word_id, similarity in exact_neighbors]
