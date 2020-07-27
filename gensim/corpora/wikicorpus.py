@@ -620,7 +620,7 @@ class WikiCorpus(TextCorpus):
         Unless a dictionary is provided, this scans the corpus once, to determine its vocabulary.
 
         """
-        self.fname = fname
+        self.input = fname
         self.filter_namespaces = filter_namespaces
         self.filter_articles = filter_articles
         self.metadata = False
@@ -677,7 +677,7 @@ class WikiCorpus(TextCorpus):
         texts = \
             ((text, self.lemmatize, title, pageid, tokenization_params)
              for title, text, pageid
-             in extract_pages(bz2.BZ2File(self.fname), self.filter_namespaces, self.filter_articles))
+             in extract_pages(bz2.BZ2File(self.input), self.filter_namespaces, self.filter_articles))
         pool = multiprocessing.Pool(self.processes, init_to_ignore_interrupt)
 
         try:
