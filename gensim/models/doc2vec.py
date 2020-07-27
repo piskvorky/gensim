@@ -74,8 +74,6 @@ from timeit import default_timer
 from dataclasses import dataclass
 from numpy import zeros, float32 as REAL, vstack, integer, dtype
 import numpy as np
-from six.moves import range
-from six import string_types, integer_types, itervalues
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.utils import deprecated
@@ -609,7 +607,7 @@ class Doc2Vec(Word2Vec):
             The inferred paragraph vector for the new document.
 
         """
-        if isinstance(doc_words, string_types):
+        if isinstance(doc_words, str):  # a common mistake; fail with a nicer error
             raise TypeError("Parameter doc_words of infer_vector() must be a list of strings (not a single string).")
 
         alpha = alpha or self.alpha
@@ -661,7 +659,7 @@ class Doc2Vec(Word2Vec):
             The vector representations of each tag as a matrix (will be 1D if `tag` was a single tag)
 
         """
-        if isinstance(tag, string_types + integer_types + (integer,)):
+        if isinstance(tag, (str, int, integer,)):
             if tag not in self.wv:
                 return self.dv[tag]
             return self.wv[tag]
@@ -898,13 +896,13 @@ class Doc2Vec(Word2Vec):
             If true, the new provided words in `word_freq` dict will be added to model's vocab.
 
         """
-        logger.info("Processing provided word frequencies")
+        logger.info("processing provided word frequencies")
         # Instead of scanning text, this will assign provided word frequencies dictionary(word_freq)
-        # to be directly the raw vocab
+        # to be directly the raw vocab.
         raw_vocab = word_freq
         logger.info(
-            "collected %i different raw word, with total frequency of %i",
-            len(raw_vocab), sum(itervalues(raw_vocab))
+            "collected %i different raw words, with total frequency of %i",
+            len(raw_vocab), sum(raw_vocab.values()),
         )
 
         # Since no documents are provided, this is to control the corpus_count
@@ -929,11 +927,11 @@ class Doc2Vec(Word2Vec):
         doctags_list = []
         for document_no, document in enumerate(corpus_iterable):
             if not checked_string_types:
-                if isinstance(document.words, string_types):
+                if isinstance(document.words, str):
                     logger.warning(
                         "Each 'words' should be a list of words (usually unicode strings). "
                         "First 'words' here is instead plain %s.",
-                        type(document.words)
+                        type(document.words),
                     )
                 checked_string_types += 1
             if document_no % progress_per == 0:
@@ -948,7 +946,7 @@ class Doc2Vec(Word2Vec):
 
             for tag in document.tags:
                 # Note a document tag during initial corpus scan, for structure sizing.
-                if isinstance(tag, integer_types + (integer,)):
+                if isinstance(tag, (int, integer,)):
                     max_rawint = max(max_rawint, tag)
                 else:
                     if tag in doctags_lookup:
