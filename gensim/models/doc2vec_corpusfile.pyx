@@ -50,20 +50,20 @@ from gensim.models.word2vec_corpusfile cimport (
 
 DEF MAX_DOCUMENT_LEN = 10000
 
-cdef int ONE = 1
+cdef long long ONE = 1
 cdef REAL_t ONEF = <REAL_t>1.0
 
 
 cdef void prepare_c_structures_for_batch(
-        vector[string] &doc_words, int sample, int hs, int window, long long *total_words,
-        int *effective_words, unsigned long long *next_random, cvocab_t *vocab,
-        np.uint32_t *indexes, int *codelens, np.uint8_t **codes, np.uint32_t **points,
-        np.uint32_t *reduced_windows, int *document_len, int train_words,
-        int docvecs_count, int doc_tag,
+        vector[string] &doc_words, long long sample, long long hs, long long window, long long *total_words,
+        long long *effective_words, unsigned long long *next_random, cvocab_t *vocab,
+        np.uint32_t *indexes, long long *codelens, np.uint8_t **codes, np.uint32_t **points,
+        np.uint32_t *reduced_windows, long long *document_len, long long train_words,
+        long long docvecs_count, long long doc_tag,
     ) nogil:
     cdef VocabItem predict_word
     cdef string token
-    cdef int i = 0
+    cdef long long i = 0
 
     total_words[0] += doc_words.size()
 
@@ -144,8 +144,8 @@ def d2v_train_epoch_dbow(
     """
     cdef Doc2VecConfig c
 
-    cdef int cur_epoch = _cur_epoch
-    cdef int num_epochs = model.epochs
+    cdef long long cur_epoch = _cur_epoch
+    cdef long long num_epochs = model.epochs
     cdef long long expected_examples = (-1 if _expected_examples is None else _expected_examples)
     cdef long long expected_words = (-1 if _expected_words is None else _expected_words)
     cdef REAL_t start_alpha = model.alpha
@@ -155,14 +155,14 @@ def d2v_train_epoch_dbow(
     cdef CythonLineSentence input_stream = CythonLineSentence(corpus_file, offset)
     cdef CythonVocab vocab = _cython_vocab
 
-    cdef int i, j, document_len
-    cdef int effective_words = 0
+    cdef long long i, j, document_len
+    cdef long long effective_words = 0
     cdef long long total_documents = 0
     cdef long long total_effective_words = 0, total_words = 0
-    cdef int sent_idx, idx_start, idx_end
+    cdef long long sent_idx, idx_start, idx_end
 
     cdef vector[string] doc_words
-    cdef int _doc_tag = start_doctag
+    cdef long long _doc_tag = start_doctag
 
     init_d2v_config(
         &c, model, _alpha, learn_doctags, learn_words, learn_hidden, train_words=train_words,
@@ -283,8 +283,8 @@ def d2v_train_epoch_dm(
     """
     cdef Doc2VecConfig c
 
-    cdef int cur_epoch = _cur_epoch
-    cdef int num_epochs = model.epochs
+    cdef long long cur_epoch = _cur_epoch
+    cdef long long num_epochs = model.epochs
     cdef long long expected_examples = (-1 if _expected_examples is None else _expected_examples)
     cdef long long expected_words = (-1 if _expected_words is None else _expected_words)
     cdef REAL_t start_alpha = model.alpha
@@ -294,15 +294,15 @@ def d2v_train_epoch_dm(
     cdef CythonLineSentence input_stream = CythonLineSentence(corpus_file, offset)
     cdef CythonVocab vocab = _cython_vocab
 
-    cdef int i, j, k, m, document_len
-    cdef int effective_words = 0
+    cdef long long i, j, k, m, document_len
+    cdef long long effective_words = 0
     cdef long long total_documents = 0
     cdef long long total_effective_words = 0, total_words = 0
-    cdef int sent_idx, idx_start, idx_end
+    cdef long long sent_idx, idx_start, idx_end
     cdef REAL_t count, inv_count = 1.0
 
     cdef vector[string] doc_words
-    cdef int _doc_tag = start_doctag
+    cdef long long _doc_tag = start_doctag
 
     init_d2v_config(
         &c, model, _alpha, learn_doctags, learn_words, learn_hidden, train_words=False,
@@ -437,8 +437,8 @@ def d2v_train_epoch_dm_concat(
     """
     cdef Doc2VecConfig c
 
-    cdef int cur_epoch = _cur_epoch
-    cdef int num_epochs = model.epochs
+    cdef long long cur_epoch = _cur_epoch
+    cdef long long num_epochs = model.epochs
     cdef long long expected_examples = (-1 if _expected_examples is None else _expected_examples)
     cdef long long expected_words = (-1 if _expected_words is None else _expected_words)
     cdef REAL_t start_alpha = model.alpha
@@ -448,14 +448,14 @@ def d2v_train_epoch_dm_concat(
     cdef CythonLineSentence input_stream = CythonLineSentence(corpus_file, offset)
     cdef CythonVocab vocab = _cython_vocab
 
-    cdef int i, j, k, m, n, document_len
-    cdef int effective_words = 0
+    cdef long long i, j, k, m, n, document_len
+    cdef long long effective_words = 0
     cdef long long total_documents = 0
     cdef long long total_effective_words = 0, total_words = 0
-    cdef int sent_idx, idx_start, idx_end
+    cdef long long sent_idx, idx_start, idx_end
 
     cdef vector[string] doc_words
-    cdef int _doc_tag = start_doctag
+    cdef long long _doc_tag = start_doctag
 
     init_d2v_config(
         &c, model, _alpha, learn_doctags, learn_words, learn_hidden, train_words=False,
