@@ -890,6 +890,10 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         self.vec1 = self.dictionary.doc2bow([u"government", u"government", u"denied"])
         self.vec2 = self.dictionary.doc2bow([u"government", u"holiday"])
 
+    def test_empty_dictionary(self):
+        with self.assertRaises(ValueError):
+            SparseTermSimilarityMatrix(self.index, [])
+
     def test_type(self):
         """Test the type of the produced matrix."""
         matrix = SparseTermSimilarityMatrix(self.index, self.dictionary).matrix

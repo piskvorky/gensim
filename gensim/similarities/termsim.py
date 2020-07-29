@@ -180,6 +180,9 @@ def _create_source(index, dictionary, tfidf, symmetric, dominant, nonzero_limit,
     assert dictionary is not None
     matrix_order = len(dictionary)
 
+    if matrix_order == 0:
+        raise ValueError('Dictionary provided to SparseTermSimilarityMatrix must not be empty')
+
     logger.info("constructing a sparse term similarity matrix using %s", index)
 
     if nonzero_limit is None:
@@ -461,6 +464,11 @@ class SparseTermSimilarityMatrix(SaveLoad):
     ----------
     matrix : :class:`scipy.sparse.csc_matrix`
         The encapsulated sparse term similarity matrix.
+
+    Raises
+    ------
+    ValueError
+        If `dictionary` is empty.
 
     """
     def __init__(self, source, dictionary=None, tfidf=None, symmetric=True, dominant=False,
