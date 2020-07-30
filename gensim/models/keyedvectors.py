@@ -527,6 +527,10 @@ class KeyedVectors(utils.SaveLoad):
             "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4#init_sims"
         )
 
+    @vectors_norm.setter
+    def vectors_norm(self, _):
+        pass  # no-op; shouldn't be set
+
     def get_normed_vectors(self):
         # TODO: what's the way for users to get from a matrix index (integer) to the
         # corresponding key (string)?
