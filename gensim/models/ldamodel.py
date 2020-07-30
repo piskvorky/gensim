@@ -560,11 +560,15 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if isinstance(prior, six.string_types):
             if prior == 'symmetric':
                 logger.info("using symmetric %s at %s", name, 1.0 / self.num_topics)
-                init_prior = np.fromiter((1.0 / self.num_topics for i in range(prior_shape)),
-                    dtype=self.dtype, count=prior_shape)
+                init_prior = np.fromiter(
+                    (1.0 / self.num_topics for i in range(prior_shape)),
+                    dtype=self.dtype, count=prior_shape,
+                )
             elif prior == 'asymmetric':
-                init_prior = np.fromiter((1.0 / (i + np.sqrt(prior_shape)) for i in range(prior_shape)),
-                    dtype=self.dtype, count=prior_shape)
+                init_prior = np.fromiter(
+                    (1.0 / (i + np.sqrt(prior_shape)) for i in range(prior_shape)),
+                    dtype=self.dtype, count=prior_shape,
+                )
                 init_prior /= init_prior.sum()
                 logger.info("using asymmetric %s %s", name, list(init_prior))
             elif prior == 'auto':

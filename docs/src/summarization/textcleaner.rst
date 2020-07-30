@@ -1,8 +1,8 @@
-:mod:`summarization.textcleaner` -- Summarization pre-processing
-================================================================
+:mod:`summarization.textcleaner` -- Preprocessing for TextRank summarization
+============================================================================
 
 .. automodule:: gensim.summarization.textcleaner
-    :synopsis: Summarization pre-processing
+    :synopsis: Preprocessing used in the TextRank summarization
     :members:
     :inherited-members:
     :undoc-members:

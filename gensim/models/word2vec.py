@@ -5,7 +5,10 @@
 # Copyright (C) 2018 RaRe Technologies s.r.o.
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""This module implements the word2vec family of algorithms, using highly optimized C routines,
+"""
+Introduction
+============
+This module implements the word2vec family of algorithms, using highly optimized C routines,
 data streaming and Pythonic interfaces.
 
 The word2vec algorithms include skip-gram and CBOW models, using either
@@ -803,6 +806,31 @@ class Word2Vec(utils.SaveLoad):
 
         # do not suppress learning for already learned words
         self.wv.vectors_lockf = np.ones(1, dtype=REAL)  # 0.0 values suppress word-backprop-updates; 1.0 allows
+
+    @deprecated(
+        "Gensim 4.0.0 implemented internal optimizations that make calls to init_sims() unnecessary. "
+        "init_sims() is now obsoleted and will be completely removed in future versions. "
+        "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4#init_sims"
+    )
+    def init_sims(self, replace=False):
+        """
+        Precompute L2-normalized vectors. Obsoleted.
+
+        If you need a single unit-normalized vector for some key, call
+        :meth:`~gensim.models.keyedvectors.KeyedVectors.get_vector` instead:
+        ``word2vec_model.wv.get_vector(key, norm=True)``.
+
+        To refresh norms after you performed some atypical out-of-band vector tampering,
+        call `:meth:`~gensim.models.keyedvectors.KeyedVectors.fill_norms()` instead.
+
+        Parameters
+        ----------
+        replace : bool
+            If True, forget the original trained vectors and only keep the normalized ones.
+            You lose information if you do this.
+
+        """
+        self.wv.init_sims(replace=replace)
 
     def _do_train_epoch(self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
                         total_examples=None, total_words=None, **kwargs):

@@ -142,7 +142,7 @@ no random-walk static ranks, just a semantic extension over the boolean keyword 
 
  .. code-block:: none
 
-    [(0, 0.4618210045327158), (1, 0.07002766527900064)]
+    [(0, 0.46182100453271613), (1, 0.07002766527900031)]
 
 
 
@@ -254,15 +254,15 @@ order, and obtain the final answer to the query `"Human computer interaction"`:
 
  .. code-block:: none
 
-    (2, 0.9984453) Human machine interface for lab abc computer applications
-    (0, 0.998093) A survey of user opinion of computer system response time
-    (3, 0.9865886) The EPS user interface management system
-    (1, 0.93748635) System and human system engineering testing of EPS
-    (4, 0.90755945) Relation of user perceived response time to error measurement
-    (8, 0.050041765) The generation of random binary unordered trees
-    (7, -0.09879464) The intersection graph of paths in trees
-    (6, -0.10639259) Graph minors IV Widths of trees and well quasi ordering
-    (5, -0.12416792) Graph minors A survey
+    0.9984453 The EPS user interface management system
+    0.998093 Human machine interface for lab abc computer applications
+    0.9865886 System and human system engineering testing of EPS
+    0.93748635 A survey of user opinion of computer system response time
+    0.90755945 Relation of user perceived response time to error measurement
+    0.050041765 Graph minors A survey
+    -0.09879464 Graph minors IV Widths of trees and well quasi ordering
+    -0.10639259 The intersection graph of paths in trees
+    -0.12416792 The generation of random binary unordered trees
 
 
 
@@ -319,17 +319,17 @@ on large datasets easily, and to facilitate prototyping of new algorithms for re
 
  .. code-block:: none
 
-    /Volumes/work/workspace/gensim_misha/docs/src/gallery/core/run_similarity_queries.py:194: UserWarning: Matplotlib is currently using agg, which is a non-GUI backend, so cannot show the figure.
-      plt.show()
+    /Volumes/work/workspace/vew/gensim3.6/lib/python3.6/site-packages/matplotlib/figure.py:445: UserWarning: Matplotlib is currently using agg, which is a non-GUI backend, so cannot show the figure.
+      % get_backend())
 
 
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.663 seconds)
+   **Total running time of the script:** ( 0 minutes  1.211 seconds)
 
-**Estimated memory usage:**  6 MB
+**Estimated memory usage:**  39 MB
 
 
 .. _sphx_glr_download_auto_examples_core_run_similarity_queries.py:

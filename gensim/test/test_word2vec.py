@@ -355,7 +355,7 @@ class TestWord2VecModel(unittest.TestCase):
         norm_only_model = keyedvectors.KeyedVectors.load_word2vec_format(tmpf, binary=True)
         norm_only_model.unit_normalize_all()
         self.assertFalse(np.allclose(model.wv['human'], norm_only_model['human']))
-        self.assertTrue(np.allclose(model.wv.get_vector('human', use_norm=True), norm_only_model['human']))
+        self.assertTrue(np.allclose(model.wv.get_vector('human', norm=True), norm_only_model['human']))
         limited_model_kv = keyedvectors.KeyedVectors.load_word2vec_format(tmpf, binary=True, limit=3)
         self.assertEqual(len(limited_model_kv.vectors), 3)
         half_precision_model_kv = keyedvectors.KeyedVectors.load_word2vec_format(
@@ -401,7 +401,7 @@ class TestWord2VecModel(unittest.TestCase):
         norm_only_model.unit_normalize_all()
         self.assertFalse(np.allclose(model.wv['human'], norm_only_model['human'], atol=1e-6))
         self.assertTrue(np.allclose(
-            model.wv.get_vector('human', use_norm=True), norm_only_model['human'], atol=1e-4
+            model.wv.get_vector('human', norm=True), norm_only_model['human'], atol=1e-4
         ))
 
     def testPersistenceWord2VecFormatWithVocab(self):
@@ -489,7 +489,7 @@ class TestWord2VecModel(unittest.TestCase):
         # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
 
         # test querying for "most similar" by vector
-        graph_vector = model.wv.vectors_norm[model.wv.get_index('graph')]
+        graph_vector = model.wv.get_vector('graph', norm=True)
         sims2 = model.wv.most_similar(positive=[graph_vector], topn=11)
         sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
         self.assertEqual(sims, sims2)
@@ -516,7 +516,7 @@ class TestWord2VecModel(unittest.TestCase):
             # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
 
             # test querying for "most similar" by vector
-            graph_vector = model.wv.vectors_norm[model.wv.get_index('graph')]
+            graph_vector = model.wv.get_vector('graph', norm=True)
             sims2 = model.wv.most_similar(positive=[graph_vector], topn=11)
             sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
             self.assertEqual(sims, sims2)
@@ -670,7 +670,7 @@ class TestWord2VecModel(unittest.TestCase):
         # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
 
         # test querying for "most similar" by vector
-        graph_vector = model.wv.vectors_norm[model.wv.get_index('graph')]
+        graph_vector = model.wv.get_vector('graph', norm=True)
         sims2 = model.wv.most_similar_cosmul(positive=[graph_vector], topn=11)
         sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
         self.assertEqual(sims, sims2)
@@ -689,7 +689,7 @@ class TestWord2VecModel(unittest.TestCase):
         # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
 
         # test querying for "most similar" by vector
-        graph_vector = model.wv.vectors_norm[model.wv.get_index('graph')]
+        graph_vector = model.wv.get_vector('graph', norm=True)
         sims2 = model.wv.most_similar(positive=[graph_vector], topn=11)
         sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
         self.assertEqual(sims, sims2)
@@ -712,7 +712,7 @@ class TestWord2VecModel(unittest.TestCase):
         # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
 
         # test querying for "most similar" by vector
-        graph_vector = model.wv.vectors_norm[model.wv.get_index('graph')]
+        graph_vector = model.wv.get_vector('graph', norm=True)
         sims2 = model.wv.most_similar(positive=[graph_vector], topn=11)
         sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
         self.assertEqual(sims, sims2)
@@ -735,7 +735,7 @@ class TestWord2VecModel(unittest.TestCase):
         # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
 
         # test querying for "most similar" by vector
-        graph_vector = model.wv.vectors_norm[model.wv.get_index('graph')]
+        graph_vector = model.wv.get_vector('graph', norm=True)
         sims2 = model.wv.most_similar(positive=[graph_vector], topn=11)
         sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
         self.assertEqual(sims, sims2)

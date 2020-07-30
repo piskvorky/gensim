@@ -1,5 +1,5 @@
 :mod:`parsing.porter` -- Porter Stemming Algorithm
-=========================================================
+==================================================
 
 .. automodule:: gensim.parsing.porter
     :synopsis: Porter Stemming Algorithm
