@@ -150,20 +150,21 @@ class AnnoyIndexer():
 
     def build_from_word2vec(self):
         """Build an Annoy index using word vectors from a Word2Vec model."""
-        self.model.init_sims()
-        return self._build_from_model(self.model.wv.get_normed_vectors(), self.model.wv.index2word, self.model.vector_size)
+        return self._build_from_model(
+            self.model.wv.get_normed_vectors(), self.model.wv.index2word, self.model.vector_size,
+        )
 
     def build_from_doc2vec(self):
         """Build an Annoy index using document vectors from a Doc2Vec model."""
         docvecs = self.model.docvecs
-        docvecs.init_sims()
         labels = [docvecs.index_to_doctag(i) for i in range(docvecs.count)]
         return self._build_from_model(docvecs.vectors_docs_norm, labels, self.model.vector_size)
 
     def build_from_keyedvectors(self):
         """Build an Annoy index using word vectors from a KeyedVectors model."""
-        self.model.init_sims()
-        return self._build_from_model(self.model.get_normed_vectors(), self.model.index2word, self.model.vector_size)
+        return self._build_from_model(
+            self.model.get_normed_vectors(), self.model.index2word, self.model.vector_size,
+        )
 
     def _build_from_model(self, vectors, labels, num_features):
         try:

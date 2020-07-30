@@ -297,7 +297,7 @@ class KeyedVectors(utils.SaveLoad):
             self.vectors = np.memmap(self.mapfile_path, shape=(target_count, self.vector_size), mode='w+', dtype=REAL)
         else:
             self.vectors = np.zeros((target_count, self.vector_size), dtype=REAL)
-        self.vectors[0 : min(prev_count, target_count), ] = prev_vectors[0 : min(prev_count, target_count), ]
+        self.vectors[0: min(prev_count, target_count), ] = prev_vectors[0: min(prev_count, target_count), ]
         self.allocate_vecattrs()
         self.norms = None
         return range(prev_count, target_count)

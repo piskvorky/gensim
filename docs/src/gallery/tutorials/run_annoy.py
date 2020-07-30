@@ -116,7 +116,6 @@ for neighbor in normal_neighbors:
 # -------------------------------------
 
 # Set up the model and vector that we are using in the comparison
-model.init_sims()
 annoy_index = AnnoyIndexer(model, 100)
 
 # Dry run to make sure both indexes are fully in RAM
