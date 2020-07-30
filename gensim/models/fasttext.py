@@ -1269,9 +1269,9 @@ class FastTextKeyedVectors(KeyedVectors):
         Parameters
         ----------
         word : str
-            Input word
+            Input word.
         norm : bool, optional
-            If True - resulting vector will be L2-normalized (unit euclidean length).
+            If True, resulting vector will be L2-normalized (unit Euclidean length).
 
         Returns
         -------
@@ -1281,7 +1281,7 @@ class FastTextKeyedVectors(KeyedVectors):
         Raises
         ------
         KeyError
-            If word and all ngrams not in vocabulary.
+            If word and all its ngrams not in vocabulary.
 
         """
         if word in self.key_to_index:

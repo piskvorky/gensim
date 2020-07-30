@@ -358,10 +358,10 @@ class KeyedVectors(utils.SaveLoad):
 
         Parameters
         ----------
-        key : str or int
-            Key for vector to return, or int slot
+        key : str
+            Key for vector to return.
         norm : bool, optional
-            If True - resulting vector will be L2-normalized (unit euclidean length).
+            If True, the resulting vector will be L2-normalized (unit Euclidean length).
 
         Returns
         -------
