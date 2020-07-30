@@ -747,7 +747,8 @@ class Doc2Vec(Word2Vec):
 
     @deprecated(
         "Gensim 4.0.0 implemented internal optimizations that make calls to init_sims() unnecessary. "
-        "init_sims() is now obsoleted and will be completely removed in future versions."
+        "init_sims() is now obsoleted and will be completely removed in future versions. "
+        "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4#init_sims"
     )
     def init_sims(self, replace=False):
         """

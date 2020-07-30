@@ -165,19 +165,18 @@ import logging
 import sys
 import itertools
 import warnings
-from itertools import chain
 from numbers import Integral
 
-from numpy import dot, float32 as REAL, \
-    double, array, zeros, vstack, \
-    ndarray, sum as np_sum, prod, argmax, dtype, ascontiguousarray, \
-    frombuffer
+from numpy import (
+    dot, float32 as REAL, double, array, zeros, vstack,
+    ndarray, sum as np_sum, prod, argmax, dtype, ascontiguousarray, frombuffer,
+)
 import numpy as np
+from scipy import stats
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.corpora.dictionary import Dictionary
 from gensim.utils import deprecated
-from scipy import stats
 
 
 logger = logging.getLogger(__name__)
@@ -519,9 +518,17 @@ class KeyedVectors(utils.SaveLoad):
         """Rank of the distance of `key2` from `key1`, in relation to distances of all keys from `key1`."""
         return len(self.closer_than(key1, key2)) + 1
 
-    # backward compatibility; some would be annotated `@deprecated` if that stacked with @property/.setter
     @property
     def vectors_norm(self):
+        raise ValueError(
+            "The vectors_norm attribute became a get_normed_vectors() method in Gensim 4.0.0. "
+            "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4#init_sims"
+        )
+
+    def get_normed_vectors(self):
+        # TODO: what's the way for users to get from a matrix index (integer) to the
+        # corresponding key (string)?
+        # Shouldn't we return this as a mapping (dict), or even a new KeyedVectors instance?
         self.fill_norms()
         return self.vectors / self.norms[..., np.newaxis]
 
@@ -1215,8 +1222,8 @@ class KeyedVectors(utils.SaveLoad):
 
         total = {
             'section': 'Total accuracy',
-            'correct': list(chain.from_iterable(s['correct'] for s in sections)),
-            'incorrect': list(chain.from_iterable(s['incorrect'] for s in sections)),
+            'correct': list(itertools.chain.from_iterable(s['correct'] for s in sections)),
+            'incorrect': list(itertools.chain.from_iterable(s['incorrect'] for s in sections)),
         }
 
         oov_ratio = float(oov) / quadruplets_no * 100
@@ -1345,7 +1352,10 @@ class KeyedVectors(utils.SaveLoad):
         self.log_evaluate_word_pairs(pearson, spearman, oov_ratio, pairs)
         return pearson, spearman, oov_ratio
 
-    @deprecated("use fill_norms() instead")
+    @deprecated(
+        "Use fill_norms() instead. "
+        "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4#init_sims"
+    )
     def init_sims(self, replace=False):
         """Precompute data helpful for bulk similarity calculations.
 
@@ -1454,7 +1464,7 @@ class KeyedVectors(utils.SaveLoad):
             if not (i == val):
                 break
             index_id_count += 1
-        keys_to_write = chain(range(0, index_id_count), store_order_vocab_keys)
+        keys_to_write = itertools.chain(range(0, index_id_count), store_order_vocab_keys)
 
         with utils.open(fname, mode) as fout:
             if write_header:
