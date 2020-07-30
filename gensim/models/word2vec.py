@@ -779,6 +779,7 @@ class Word2Vec(utils.SaveLoad):
             self.syn1neg = np.zeros((len(self.wv), self.layer1_size), dtype=REAL)
 
         self.wv.vectors_lockf = np.ones(1, dtype=REAL)  # 0.0 values suppress word-backprop-updates; 1.0 allows
+        logger.info("weights initialized")
 
     def update_weights(self):
         """Copy all the existing weights, and reset the weights for the newly added vocabulary."""
